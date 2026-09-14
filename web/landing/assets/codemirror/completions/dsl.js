@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 819
+ * Total functions: 811
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -484,7 +484,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">array_expand</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$function</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ArrayExpand</span> <span class=\"fn-param\">$expand</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Function\\ArrayExpand\\ArrayExpand::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayExpand</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Expands each value into entry, if there are more than one value, multiple rows will be created.<br>Array keys are ignored, only values are used to create new rows.<br>Before:<br>  +--+-------------------+<br>  |id|              array|<br>  +--+-------------------+<br>  | 1|{\"a\":1,\"b\":2,\"c\":3}|<br>  +--+-------------------+<br>After:<br>  +--+--------+<br>  |id|expanded|<br>  +--+--------+<br>  | 1|       1|<br>  | 1|       2|<br>  | 1|       3|<br>  +--+--------+
+                    Expands each value into entry, if there are more than one value, multiple rows will be created.<br>Array keys are ignored, only values are used to create new rows.<br>Nested in another function (structure(), concat(), ...) it still gives one row per element. Several<br>expands in one expression are zipped to the longest list; a shorter one gives null, so its element<br>type becomes nullable. It is refused inside another array_expand() and in filter(), until(),<br>duplicateRow(), aggregate(), over() and onEach().<br>Before:<br>  +--+-------------------+<br>  |id|              array|<br>  +--+-------------------+<br>  | 1|{\"a\":1,\"b\":2,\"c\":3}|<br>  +--+-------------------+<br>After:<br>  +--+--------+<br>  |id|expanded|<br>  +--+--------+<br>  | 1|       1|<br>  | 1|       2|<br>  | 1|       3|<br>  +--+--------+
                 </div>
                             `
             return div
@@ -739,7 +739,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">array_unpack</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction|array</span> <span class=\"fn-param\">$array</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayUnpack</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param array<array-key, mixed>|ScalarFunction $array
+                    Unpacks each element of an array into a new entry, using the array key as the entry name.<br>Before:<br>+--+-------------------+<br>|id|              array|<br>+--+-------------------+<br>| 1|{\"a\":1,\"b\":2,\"c\":3}|<br>| 2|{\"d\":4,\"e\":5,\"f\":6}|<br>+--+-------------------+<br>After:<br>+--+-----+-----+-----+-----+-----+<br>|id|arr.b|arr.c|arr.d|arr.e|arr.f|<br>+--+-----+-----+-----+-----+-----+<br>| 1|    2|    3|     |     |     |<br>| 2|     |     |    4|    5|    6|<br>+--+-----+-----+-----+-----+-----+<br>@param array<array-key, mixed>|ScalarFunction $array
                 </div>
                             `
             return div
@@ -3126,69 +3126,6 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\definition_from_type(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:type" + "}" + ", " + "$" + "{" + "3:nullable" + "}" + ", " + "$" + "{" + "4:metadata" + "}" + ")"),
         boost: 10
     },                {
-        label: "delay_exponential",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">delay_exponential</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Duration</span> <span class=\"fn-param\">$base</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$multiplier</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">2</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Duration</span> <span class=\"fn-param\">$max_delay</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Exponential</span>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\delay_exponential(" + "$" + "{" + "1:base" + "}" + ", " + "$" + "{" + "2:multiplier" + "}" + ", " + "$" + "{" + "3:max_delay" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "delay_fixed",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">delay_fixed</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Duration</span> <span class=\"fn-param\">$delay</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Fixed</span>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\delay_fixed(" + "$" + "{" + "1:delay" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "delay_jitter",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">delay_jitter</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">DelayFactory</span> <span class=\"fn-param\">$delay</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">float</span> <span class=\"fn-param\">$jitter_factor</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Jitter</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @param float $jitter_factor a value between 0 and 1 representing the maximum percentage of jitter to apply
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\delay_jitter(" + "$" + "{" + "1:delay" + "}" + ", " + "$" + "{" + "2:jitter_factor" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "delay_linear",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">delay_linear</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Duration</span> <span class=\"fn-param\">$delay</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Duration</span> <span class=\"fn-param\">$increment</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Linear</span>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\delay_linear(" + "$" + "{" + "1:delay" + "}" + ", " + "$" + "{" + "2:increment" + "}" + ")"),
-        boost: 10
-    },                {
         label: "delete",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -3427,66 +3364,6 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\PostgreSql\\DSL\\drop_owned(" + "$" + "{" + "1:roles" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "duration_microseconds",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">duration_microseconds</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$microseconds</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Duration</span>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\duration_microseconds(" + "$" + "{" + "1:microseconds" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "duration_milliseconds",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">duration_milliseconds</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$milliseconds</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Duration</span>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\duration_milliseconds(" + "$" + "{" + "1:milliseconds" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "duration_minutes",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">duration_minutes</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$minutes</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Duration</span>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\duration_minutes(" + "$" + "{" + "1:minutes" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "duration_seconds",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">duration_seconds</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$seconds</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Duration</span>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\duration_seconds(" + "$" + "{" + "1:seconds" + "}" + ")"),
         boost: 10
     },                {
         label: "empty_generator",
@@ -8496,57 +8373,6 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Telemetry\\DSL\\resource_detector(" + "$" + "{" + "1:detectors" + "}" + ")"),
         boost: 10
     },                {
-        label: "retry_any_throwable",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">retry_any_throwable</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AnyThrowable</span>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\retry_any_throwable(" + "$" + "{" + "1:limit" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "retry_any_throwable_except",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">retry_any_throwable_except</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$exception_types</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AnyThrowableExcept</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @param array<class-string<\\Throwable>> $exception_types
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\retry_any_throwable_except(" + "$" + "{" + "1:exception_types" + "}" + ", " + "$" + "{" + "2:limit" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "retry_on_exception_types",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">retry_on_exception_types</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$exception_types</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OnExceptionTypes</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @param array<class-string<\\Throwable>> $exception_types
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\retry_on_exception_types(" + "$" + "{" + "1:exception_types" + "}" + ", " + "$" + "{" + "2:limit" + "}" + ")"),
-        boost: 10
-    },                {
         label: "returning",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -10698,6 +10524,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\string_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },                {
+        label: "structure",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">structure</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$elements</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Structure</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Builds a structure from scalar functions: one element per key, in key order.<br>An element is nullable when its function is; the structure itself never is.<br>@param array<array-key, ScalarFunction> $elements
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\structure(" + "$" + "{" + "1:elements" + "}" + ")"),
+        boost: 10
+    },                {
         label: "structure_element",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -10714,6 +10558,60 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\Types\\DSL\\structure_element(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:type" + "}" + ", " + "$" + "{" + "3:optional" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "structure_get",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">structure_get</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayGet</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Alias for \`array_get\`.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\structure_get(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:path" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "structure_get_collection",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">structure_get_collection</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ScalarFunction|array</span> <span class=\"fn-param\">$keys</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayGetCollection</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Alias for \`array_get_collection\`.<br>@param array<array-key, mixed>|ScalarFunction $keys
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\structure_get_collection(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:keys" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "structure_get_collection_first",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">structure_get_collection_first</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$keys</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayGetCollection</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Alias for \`array_get_collection_first\`.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\structure_get_collection_first(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:keys" + "}" + ")"),
         boost: 10
     },                {
         label: "structure_ref",
@@ -11074,12 +10972,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_branch</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$condition</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Loader</span> <span class=\"fn-param\">$loader</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Transformation</span> <span class=\"fn-param\">$transformation</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">BranchingLoader</span>
+                    <span class=\"fn-name\">to_branch</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$condition</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Loader|Sink</span> <span class=\"fn-param\">$sink</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Branched</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\to_branch(" + "$" + "{" + "1:condition" + "}" + ", " + "$" + "{" + "2:loader" + "}" + ", " + "$" + "{" + "3:transformation" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\to_branch(" + "$" + "{" + "1:condition" + "}" + ", " + "$" + "{" + "2:sink" + "}" + ")"),
         boost: 10
     },                {
         label: "to_chartjs",
@@ -11260,15 +11158,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_dbal_transaction</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Connection|array</span> <span class=\"fn-param\">$connection</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Loader</span> <span class=\"fn-param\">$loaders</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TransactionalDbalLoader</span>
+                    <span class=\"fn-name\">to_dbal_transaction</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Connection|array</span> <span class=\"fn-param\">$connection</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Loader|Sink</span> <span class=\"fn-param\">$sinks</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Sink</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Execute multiple loaders within database transactions.<br>Each batch of rows is loaded in its own transaction; rows a wrapped Transformation delivers when<br>the loader is closed (blocking operations drain there) are committed in one final transaction.<br>If any loader fails, the open transaction is rolled back.<br>Atomicity requires every wrapped loader to use the same connection as the wrapper: pass one live<br>Connection to both - a wrapped loader built from array params opens its own connection and<br>escapes the transaction.<br>@param array<string, mixed>|Connection $connection<br>@param Loader ...$loaders - Loaders to execute within the transaction<br>@throws InvalidArgumentException
+                    Write every sink within database transactions.<br>Each batch of rows is written in its own transaction; rows a sink\'s Transformation delivers when<br>the run ends (blocking operations drain there) are committed in one final transaction.<br>If any sink fails, the open transaction is rolled back.<br>A plain Loader child is a bare sink root; a to_transformation(...) child delivers inside the same<br>transaction. Every child\'s loader must use the same connection as the transaction: pass one live<br>Connection to both - a loader built from array params opens its own connection and escapes the<br>transaction.<br>@param array<string, mixed>|Connection $connection<br>@param Loader|Sink ...$sinks - sinks written within the transaction<br>@throws InvalidArgumentException
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\to_dbal_transaction(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:loaders" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\to_dbal_transaction(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:sinks" + "}" + ")"),
         boost: 10
     },                {
         label: "to_excel",
@@ -11428,15 +11326,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_pgsql_transaction</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Client</span> <span class=\"fn-param\">$client</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Loader</span> <span class=\"fn-param\">$loaders</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TransactionalPostgreSqlLoader</span>
+                    <span class=\"fn-name\">to_pgsql_transaction</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Client</span> <span class=\"fn-param\">$client</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Loader|Sink</span> <span class=\"fn-param\">$sinks</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Sink</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Execute multiple loaders within PostgreSQL transactions.<br>Each batch of rows is loaded in its own transaction; rows a wrapped Transformation delivers when<br>the loader is closed (blocking operations drain there) are committed in one final transaction.<br>If any loader fails, the open transaction is rolled back.<br>All wrapped loaders must use the same Client instance as the wrapper - a loader holding its own<br>Client escapes the transaction.
+                    Write every sink within PostgreSQL transactions.<br>Each batch of rows is written in its own transaction; rows a sink\'s Transformation delivers when<br>the run ends (blocking operations drain there) are committed in one final transaction.<br>If any sink fails, the open transaction is rolled back.<br>Every sink\'s loader must use the same Client instance as the transaction - a loader holding its own<br>Client escapes it.
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\Adapter\\PostgreSql\\to_pgsql_transaction(" + "$" + "{" + "1:client" + "}" + ", " + "$" + "{" + "2:loaders" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\PostgreSql\\to_pgsql_transaction(" + "$" + "{" + "1:client" + "}" + ", " + "$" + "{" + "2:sinks" + "}" + ")"),
         boost: 10
     },                {
         label: "to_seal_delete",
@@ -11569,12 +11467,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_transformation</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Transformer|Transformation</span> <span class=\"fn-param\">$transformer</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Loader</span> <span class=\"fn-param\">$loader</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TransformerLoader</span>
+                    <span class=\"fn-name\">to_transformation</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Transformer|Transformation</span> <span class=\"fn-param\">$transformer</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Loader|Sink</span> <span class=\"fn-param\">$sink</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Transformed</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\to_transformation(" + "$" + "{" + "1:transformer" + "}" + ", " + "$" + "{" + "2:loader" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\to_transformation(" + "$" + "{" + "1:transformer" + "}" + ", " + "$" + "{" + "2:sink" + "}" + ")"),
         boost: 10
     },                {
         label: "to_xml",
@@ -13774,21 +13672,6 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\with_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:function" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "write_with_retries",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dloaders",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">write_with_retries</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Loader</span> <span class=\"fn-param\">$loader</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">RetryStrategy</span> <span class=\"fn-param\">$retry_strategy</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Retry\\RetryStrategy\\AnyThrowableExcept::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DelayFactory</span> <span class=\"fn-param\">$delay_factory</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Retry\\DelayFactory\\Fixed\\FixedMilliseconds::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Sleep</span> <span class=\"fn-param\">$sleep</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Time\\SystemSleep::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RetryLoader</span>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\write_with_retries(" + "$" + "{" + "1:loader" + "}" + ", " + "$" + "{" + "2:retry_strategy" + "}" + ", " + "$" + "{" + "3:delay_factory" + "}" + ", " + "$" + "{" + "4:sleep" + "}" + ")"),
         boost: 10
     },                {
         label: "xml_element_schema",

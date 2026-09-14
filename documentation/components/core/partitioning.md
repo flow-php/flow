@@ -112,7 +112,7 @@ use function Flow\ETL\DSL\{data_frame, lit, ref, to_output};
 
 data_frame()
     ->read(from_csv(__DIR__ . '/output/date=*/{department}.csv'))
-    ->filterPartitions(ref('department')->equals(lit('sales')))
+    ->filter(ref('department')->equals(lit('sales')))
     ->write(to_output())
     ->run();
 ```
@@ -227,8 +227,8 @@ it as another type.
 
 ### Partition Pruning
 
-`filterPartitions()` evaluates partition metadata and skips whole directories; `filter()` reads
-everything and then discards.
+The planner pushes a `filter()` that reads only partition columns into the source, so whole directories
+are skipped; a filter on a body column still reads everything and then discards.
 
 ```php
 <?php
@@ -238,7 +238,7 @@ use function Flow\ETL\DSL\{data_frame, lit, ref, to_output};
 
 data_frame()
     ->read(from_csv(__DIR__ . '/output/date=*/department=*/*.csv'))
-    ->filterPartitions(ref('date')->greaterThanEqual(lit('2024-01-01')))
+    ->filter(ref('date')->greaterThanEqual(lit('2024-01-01')))
     ->write(to_output())
     ->run();
 ```

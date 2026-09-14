@@ -10,7 +10,7 @@ use Flow\ETL\Dataset\Memory\Consumption;
 use Flow\ETL\Dataset\Statistics\HighResolutionTime;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
-use Flow\ETL\Pipeline\Optimizer\Optimization;
+use Flow\ETL\Planner\Rule;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 use Flow\Telemetry\Attributes;
@@ -226,9 +226,9 @@ final class TelemetryContext
                 'dataframe_name' => $context->config->name(),
                 'cache' => $context->cache()::class,
                 'serializer' => $context->config->serializer()::class,
-                'optimizers' => array_map(
-                    static fn(Optimization $optimization) => $optimization::class,
-                    $context->config->optimizer()->optimizations(),
+                'planner_rules' => array_map(
+                    static fn(Rule $rule) => $rule::class,
+                    $context->config->planner()->rules(),
                 ),
                 'telemetry' => [
                     'trace_loading' => $this->options->traceLoading,
@@ -412,10 +412,6 @@ final class TelemetryContext
         return $this->tracer->context()->withActiveSpan($dataFrameSpan->context());
     }
 
-    /**
-     * Transformations drain first: TransformerLoader nests transform() inside load(), so a transformation
-     * scope is always the inner one and must be detached before the loading scope that wraps it.
-     */
     private function drain(): void
     {
         $this->transformationSpans->drain($this->tracer, self::SPAN_NEVER_COMPLETED);

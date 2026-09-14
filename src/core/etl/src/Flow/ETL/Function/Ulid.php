@@ -44,6 +44,12 @@ final class Ulid implements ScalarFunction
         return $this->ref === null ? [] : [$this->ref];
     }
 
+    public function deterministic(): bool
+    {
+        // ulid() generates, ulid($ref) only converts $ref
+        return $this->ref !== null && $this->ref->deterministic();
+    }
+
     /**
      * @param list<FunctionTree> $children
      */

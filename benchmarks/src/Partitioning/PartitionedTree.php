@@ -23,7 +23,7 @@ use function substr;
  * every phpbench iteration rebuild the whole tree before it could measure a read.
  *
  * The read path must be a glob. from_csv() over a bare partitioned directory silently reads 0 rows,
- * and a following filterPartitions() then throws "Column ... does not exist." from Row.php.
+ * and a following partition filter() then fails at bind: "Schema definition for entry ... not found."
  */
 final class PartitionedTree
 {

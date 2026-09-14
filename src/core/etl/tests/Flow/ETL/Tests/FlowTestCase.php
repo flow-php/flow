@@ -7,9 +7,12 @@ namespace Flow\ETL\Tests;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\RewindableExtractor;
+use Flow\ETL\Extractor\Scan;
+use Flow\ETL\Extractor\Scannable;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Generator;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -111,11 +114,12 @@ abstract class FlowTestCase extends TestCase
         Extractor $extractor,
         ?FlowContext $flowContext = null,
         string $message = '',
+        Scan $scan = new Scan(),
     ): void {
         $flowContext ??= flow_context();
         $extractedRows = rows(schema());
 
-        foreach ($extractor->extract($flowContext) as $nextRows) {
+        foreach (self::scanned($extractor, $flowContext, $scan) as $nextRows) {
             $extractedRows = $extractedRows->merge($nextRows);
         }
 
@@ -127,11 +131,12 @@ abstract class FlowTestCase extends TestCase
         Extractor $extractor,
         ?FlowContext $flowContext = null,
         string $message = '',
+        Scan $scan = new Scan(),
     ): void {
         $flowContext ??= flow_context();
         $totalRows = 0;
 
-        foreach ($extractor->extract($flowContext) as $rows) {
+        foreach (self::scanned($extractor, $flowContext, $scan) as $rows) {
             $totalRows += $rows->count();
         }
 
@@ -143,15 +148,24 @@ abstract class FlowTestCase extends TestCase
         Extractor $extractor,
         ?FlowContext $flowContext = null,
         string $message = '',
+        Scan $scan = new Scan(),
     ): void {
         $flowContext ??= flow_context();
         $extractedRows = rows(schema());
 
-        foreach ($extractor->extract($flowContext) as $nextRows) {
+        foreach (self::scanned($extractor, $flowContext, $scan) as $nextRows) {
             $extractedRows = $extractedRows->merge($nextRows);
         }
 
         static::assertEquals($expectedRows, $extractedRows, $message);
+    }
+
+    /**
+     * @return Generator<int, Rows>
+     */
+    final public static function scanned(Extractor $extractor, FlowContext $context, Scan $scan): Generator
+    {
+        return $extractor instanceof Scannable ? $extractor->extract($context, $scan) : $extractor->extract($context);
     }
 
     public function repositoryRoot(): string

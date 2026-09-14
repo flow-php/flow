@@ -15,7 +15,6 @@ use Flow\ETL\Dataset\Statistics\HighResolutionTime;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
-use Throwable;
 
 use function gc_collect_cycles;
 
@@ -90,15 +89,6 @@ final class StatisticsCollector
                     }
                 }
             }
-        }
-    }
-
-    public function end(?Throwable $exception = null): void
-    {
-        if ($exception !== null) {
-            $this->context->telemetry()->dataFrameFailed($this->context, $exception);
-        } else {
-            $this->context->telemetry()->dataFrameCompleted($this->context);
         }
     }
 

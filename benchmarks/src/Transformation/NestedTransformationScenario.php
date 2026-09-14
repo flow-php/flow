@@ -7,6 +7,7 @@ namespace Flow\Benchmarks\Transformation;
 use Flow\Benchmarks\BenchmarkConfig;
 use Flow\Benchmarks\Datasets\Datasets;
 use Flow\ETL\Loader;
+use Flow\ETL\Sink;
 
 use function Flow\ETL\DSL\data_frame;
 use function Flow\Floe\DSL\from_floe;
@@ -15,7 +16,7 @@ final readonly class NestedTransformationScenario
 {
     public function __construct(
         private int $rows,
-        private Loader $loader,
+        private Loader|Sink $sink,
     ) {}
 
     public function run(): void
@@ -23,7 +24,7 @@ final readonly class NestedTransformationScenario
         data_frame(BenchmarkConfig::builder())
             ->read(from_floe(Datasets::orders($this->rows)->floe()))
             ->batchSize(1000)
-            ->write($this->loader)
+            ->write($this->sink)
             ->run();
     }
 }

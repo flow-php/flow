@@ -9,6 +9,7 @@ use Flow\ETL\Adapter\PostgreSql\Tests\Double\StubCursor;
 use Flow\ETL\Adapter\PostgreSql\Tests\Mother\ColumnMother;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
+use Flow\ETL\Extractor\Scan;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function array_map;
@@ -184,9 +185,8 @@ final class PostgreSqlCursorExtractorTest extends FlowTestCase
                 new StubCursor(array_map(static fn(int $id): array => ['id' => (string) $id], range(1501, 2500))),
             );
         $extractor = from_pgsql_cursor($client, 'SELECT id FROM t');
-        $extractor->pushLimit(1500);
 
-        self::assertExtractedRowsCount(1500, $extractor);
+        self::assertExtractedRowsCount(1500, $extractor, scan: new Scan(limit: 1500));
         // FETCH 1000, then FETCH 500 - a full narrowed fetch, which only the limit itself can stop
         static::assertSame(2, $client->callsTo('cursor'));
     }

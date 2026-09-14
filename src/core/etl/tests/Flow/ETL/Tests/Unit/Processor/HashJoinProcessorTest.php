@@ -14,10 +14,10 @@ use Flow\ETL\Join\Join;
 use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\Double\SpyBucketsStorage;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\FrameOutputMother;
 use Flow\ETL\Tests\Mother\HashJoinProcessorMother;
 use Flow\ETL\Tests\Mother\RowsMother;
 
-use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
@@ -34,7 +34,7 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_bind_derives_the_joined_schema_from_both_sides(): void
     {
         $processor = HashJoinProcessorMother::resident(
-            df()->read(from_rows(rows(
+            FrameOutputMother::reading(from_rows(rows(
                 schema(int_schema('id'), str_schema('name')),
                 row(['id' => 1, 'name' => 'Alice']),
             ))),
@@ -62,7 +62,7 @@ final class HashJoinProcessorTest extends FlowTestCase
         $leftBiggerJoined = [];
 
         $processor = HashJoinProcessorMother::grace(
-            df()->read(from_rows($smaller)),
+            FrameOutputMother::reading(from_rows($smaller)),
             Expression::on(['id' => 'user_id']),
             Join::inner,
         );
@@ -113,12 +113,12 @@ final class HashJoinProcessorTest extends FlowTestCase
         foreach (['grace', 'resident'] as $mode) {
             $processor = $mode === 'grace'
                 ? HashJoinProcessorMother::grace(
-                    df()->read(from_rows($rightRows)),
+                    FrameOutputMother::reading(from_rows($rightRows)),
                     Expression::on(['id' => 'user_id']),
                     Join::left,
                 )
                 : HashJoinProcessorMother::resident(
-                    df()->read(from_rows($rightRows)),
+                    FrameOutputMother::reading(from_rows($rightRows)),
                     Expression::on(['id' => 'user_id']),
                     Join::left,
                 );
@@ -155,7 +155,7 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_handles_empty_left_side(): void
     {
         $processor = HashJoinProcessorMother::grace(
-            df()->read(from_rows(rows(
+            FrameOutputMother::reading(from_rows(rows(
                 schema(int_schema('user_id'), str_schema('name')),
                 row(['user_id' => 1, 'name' => 'Alice']),
             ))),
@@ -173,7 +173,7 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_handles_empty_right_side(): void
     {
         $processor = HashJoinProcessorMother::grace(
-            df()->read(from_rows(rows(schema()))),
+            FrameOutputMother::reading(from_rows(rows(schema()))),
             Expression::on(['id' => 'user_id']),
             Join::inner,
         );
@@ -197,7 +197,7 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_inner_join(): void
     {
         $processor = HashJoinProcessorMother::grace(
-            df()->read(from_rows(rows(
+            FrameOutputMother::reading(from_rows(rows(
                 schema(int_schema('user_id'), str_schema('name')),
                 row(['user_id' => 1, 'name' => 'Alice']),
                 row(['user_id' => 2, 'name' => 'Bob']),
@@ -239,7 +239,7 @@ final class HashJoinProcessorTest extends FlowTestCase
         $storage = new SpyBucketsStorage(new MemoryBuckets());
 
         $processor = HashJoinProcessorMother::grace(
-            df()->read(from_rows(rows(
+            FrameOutputMother::reading(from_rows(rows(
                 schema(int_schema('user_id'), str_schema('name')),
                 row(['user_id' => 1, 'name' => 'Alice']),
             ))),
@@ -259,7 +259,7 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_inner_join_emits_every_matching_right_row(): void
     {
         $processor = HashJoinProcessorMother::grace(
-            df()->read(from_rows(rows(
+            FrameOutputMother::reading(from_rows(rows(
                 schema(int_schema('user_id'), str_schema('role')),
                 row(['user_id' => 1, 'role' => 'admin']),
                 row(['user_id' => 1, 'role' => 'writer']),
@@ -294,7 +294,7 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_left_anti_join(): void
     {
         $processor = HashJoinProcessorMother::grace(
-            df()->read(from_rows(rows(schema(int_schema('user_id')), row(['user_id' => 1])))),
+            FrameOutputMother::reading(from_rows(rows(schema(int_schema('user_id')), row(['user_id' => 1])))),
             Expression::on(['id' => 'user_id']),
             Join::left_anti,
         );
@@ -319,7 +319,7 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_left_anti_join_keeps_null_key_left_rows(): void
     {
         $processor = HashJoinProcessorMother::grace(
-            df()->read(from_rows(rows(schema(int_schema('user_id')), row(['user_id' => 1])))),
+            FrameOutputMother::reading(from_rows(rows(schema(int_schema('user_id')), row(['user_id' => 1])))),
             Expression::on(['id' => 'user_id']),
             Join::left_anti,
         );
@@ -344,7 +344,7 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_left_join(): void
     {
         $processor = HashJoinProcessorMother::grace(
-            df()->read(from_rows(rows(
+            FrameOutputMother::reading(from_rows(rows(
                 schema(int_schema('user_id'), str_schema('name')),
                 row(['user_id' => 1, 'name' => 'Alice']),
             ))),
@@ -380,7 +380,7 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_left_join_pads_null_key_left_rows(): void
     {
         $processor = HashJoinProcessorMother::grace(
-            df()->read(from_rows(rows(
+            FrameOutputMother::reading(from_rows(rows(
                 schema(int_schema('user_id'), str_schema('name')),
                 row(['user_id' => 1, 'name' => 'Alice']),
             ))),
@@ -416,7 +416,7 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_non_equality_join_falls_back_to_a_single_bucket(): void
     {
         $processor = HashJoinProcessorMother::grace(
-            df()->read(from_rows(rows(
+            FrameOutputMother::reading(from_rows(rows(
                 schema(int_schema('user_id'), str_schema('name')),
                 row(['user_id' => 1, 'name' => 'Alice']),
                 row(['user_id' => 2, 'name' => 'Bob']),
@@ -445,7 +445,7 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_resident_storage_preserves_left_row_order(): void
     {
         $processor = HashJoinProcessorMother::resident(
-            df()->read(from_rows(rows(
+            FrameOutputMother::reading(from_rows(rows(
                 schema(int_schema('user_id'), str_schema('name')),
                 row(['user_id' => 1, 'name' => 'Alice']),
                 row(['user_id' => 2, 'name' => 'Bob']),
@@ -483,7 +483,7 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_right_join(): void
     {
         $processor = HashJoinProcessorMother::grace(
-            df()->read(from_rows(rows(
+            FrameOutputMother::reading(from_rows(rows(
                 schema(int_schema('user_id'), str_schema('name')),
                 row(['user_id' => 1, 'name' => 'Alice']),
                 row(['user_id' => 2, 'name' => 'Bob']),
@@ -520,7 +520,7 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_right_join_pads_null_key_right_rows(): void
     {
         $processor = HashJoinProcessorMother::grace(
-            df()->read(from_rows(rows(
+            FrameOutputMother::reading(from_rows(rows(
                 schema(int_schema('user_id', nullable: true), str_schema('name')),
                 row(['user_id' => 1, 'name' => 'Alice']),
                 row(['user_id' => null, 'name' => 'Bob']),
@@ -559,7 +559,7 @@ final class HashJoinProcessorTest extends FlowTestCase
         $storage = new SpyBucketsStorage(new MemoryBuckets());
 
         $processor = HashJoinProcessorMother::grace(
-            df()->read(from_rows(rows(
+            FrameOutputMother::reading(from_rows(rows(
                 schema(int_schema('user_id'), str_schema('name')),
                 row(['user_id' => 1, 'name' => 'Alice']),
             ))),
@@ -582,7 +582,7 @@ final class HashJoinProcessorTest extends FlowTestCase
         $storage = new SpyBucketsStorage(new MemoryBuckets());
 
         $processor = HashJoinProcessorMother::grace(
-            df()->read(from_rows(rows(schema()))),
+            FrameOutputMother::reading(from_rows(rows(schema()))),
             Expression::on(['id' => 'user_id']),
             Join::left,
             $storage,
@@ -604,7 +604,7 @@ final class HashJoinProcessorTest extends FlowTestCase
     {
         $upstream = (new CountingExtractor(schema(int_schema('id')), RowsMother::sequentialIds(5)))->withBatchSize(1);
         $joined = HashJoinProcessorMother::resident(
-            df()->read(from_rows(RowsMother::sequentialIds(5))),
+            FrameOutputMother::reading(from_rows(RowsMother::sequentialIds(5))),
             Expression::on(['id' => 'id']),
             Join::inner,
             batchSize: 1,
@@ -625,7 +625,7 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_duplicated_entries_outside_join_columns_throw_join_exception(): void
     {
         $processor = HashJoinProcessorMother::grace(
-            df()->read(from_rows(rows(
+            FrameOutputMother::reading(from_rows(rows(
                 schema(int_schema('user_id'), str_schema('name')),
                 row(['user_id' => 1, 'name' => 'Alice']),
             ))),
@@ -643,5 +643,22 @@ final class HashJoinProcessorTest extends FlowTestCase
         );
 
         iterator_to_array($processor->process($generator, flow_context()), false);
+    }
+
+    public function test_the_right_side_is_pulled_through_a_frame_output(): void
+    {
+        $right = FrameOutputMother::reading(from_rows(rows(
+            schema(int_schema('id'), str_schema('name')),
+            row(['id' => 1, 'name' => 'Alice']),
+        )));
+        $processor = HashJoinProcessorMother::resident($right, Expression::on(['id' => 'id'], 'r_'), Join::inner);
+
+        $generator = (static function () {
+            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
+        })();
+
+        $batches = iterator_to_array($processor->process($generator, flow_context()), false);
+
+        static::assertSame([['id' => 1, 'r_id' => 1, 'r_name' => 'Alice']], $batches[0]->toArray());
     }
 }

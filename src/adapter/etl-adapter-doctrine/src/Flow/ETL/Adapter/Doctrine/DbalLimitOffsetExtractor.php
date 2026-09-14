@@ -10,9 +10,9 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
-use Flow\ETL\Extractor\LimitPushDown;
-use Flow\ETL\Extractor\PushesLimit;
 use Flow\ETL\Extractor\RewindableExtractor;
+use Flow\ETL\Extractor\Scan;
+use Flow\ETL\Extractor\Scannable;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
@@ -23,10 +23,9 @@ use function count;
 use function is_numeric;
 use function min;
 
-final class DbalLimitOffsetExtractor implements BatchableExtractor, Extractor, LimitPushDown, RewindableExtractor
+final class DbalLimitOffsetExtractor implements BatchableExtractor, Extractor, RewindableExtractor, Scannable
 {
     use Batches;
-    use PushesLimit;
 
     private ?int $maximum = null;
 
@@ -73,7 +72,7 @@ final class DbalLimitOffsetExtractor implements BatchableExtractor, Extractor, L
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, Scan $scan = new Scan()): Generator
     {
         $schema = $this->schema();
 
@@ -85,7 +84,7 @@ final class DbalLimitOffsetExtractor implements BatchableExtractor, Extractor, L
             $this->offset = $this->queryBuilder->getFirstResult();
         }
 
-        $pushed = $this->pushedLimit();
+        $pushed = $scan->limit;
         $maximum = match (true) {
             $this->maximum !== null && $pushed !== null => min($this->maximum, $pushed),
             $this->maximum !== null => $this->maximum,

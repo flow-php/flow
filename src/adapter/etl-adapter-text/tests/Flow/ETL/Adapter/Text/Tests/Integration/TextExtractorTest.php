@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Text\Tests\Integration;
 
 use Flow\ETL\Adapter\Text\TextExtractor;
+use Flow\ETL\Extractor\Scan;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Double\RecordingFilesystem;
@@ -36,9 +37,9 @@ final class TextExtractorTest extends FlowTestCase
     public function test_limit(): void
     {
         $extractor = from_text(path_real(__DIR__ . '/../Fixtures/orders_flow.csv'));
-        $extractor->withBatchSize(1)->pushLimit(2);
+        $extractor->withBatchSize(1);
 
-        self::assertExtractedRowsCount(2, $extractor, flow_context(config()));
+        self::assertExtractedRowsCount(2, $extractor, flow_context(config()), scan: new Scan(limit: 2));
     }
 
     public function test_partition_columns_are_not_leaking_between_streams(): void
@@ -97,9 +98,8 @@ final class TextExtractorTest extends FlowTestCase
     public function test_limit_reached_on_the_first_file_tail_batch_skips_the_remaining_files(): void
     {
         $extractor = from_text(__DIR__ . '/../Fixtures/cross_stream/*/data.txt')->withBatchSize(10);
-        $extractor->pushLimit(1);
 
-        static::assertCount(1, ExtractedRows::of($extractor));
+        static::assertCount(1, ExtractedRows::of($extractor, scan: new Scan(limit: 1)));
     }
 
     public function test_metadata_columns_extend_a_declared_schema(): void
@@ -125,9 +125,8 @@ final class TextExtractorTest extends FlowTestCase
             path_real(__DIR__ . '/../Fixtures/parity_lines.txt'),
             $filesystem,
         ))->withBatchSize(1);
-        $extractor->pushLimit(1);
 
-        iterator_to_array($extractor->extract(flow_context(config())));
+        iterator_to_array($extractor->extract(flow_context(config()), new Scan(limit: 1)));
 
         static::assertContains('closeSource', $filesystem->calls);
     }

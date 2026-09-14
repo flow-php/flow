@@ -10,6 +10,7 @@ use Flow\ETL\ErrorHandler\SkipRows;
 use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\ErrorHandler\TransformationError;
 use Flow\ETL\Pipeline\Segment;
+use Flow\ETL\Processor\BatchingProcessor;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Context\MemoryTelemetryContext;
 use Flow\ETL\Tests\Double\CountingExtractor;
@@ -229,5 +230,17 @@ final class SegmentTest extends FlowTestCase
 
         static::assertInstanceOf(RuntimeException::class, $thrown);
         static::assertCount(1, $telemetry->logs->entriesContaining('Error during extraction.'));
+    }
+
+    public function test_extractor_returns_the_extractor_it_was_constructed_with(): void
+    {
+        $extractor = new CountingExtractor(schema(int_schema('id')));
+
+        static::assertSame($extractor, (new Segment(extractor: $extractor))->extractor());
+    }
+
+    public function test_extractor_is_null_behind_a_processor(): void
+    {
+        static::assertNull((new Segment(new BatchingProcessor(10)))->extractor());
     }
 }

@@ -13,6 +13,7 @@ use Flow\ETL\Config;
 use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
+use Flow\ETL\Extractor\Scan;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Rows;
@@ -87,9 +88,9 @@ final class ExcelExtractorTest extends FlowTestCase
     public function test_extract_excel_file_with_limit(string $fixtureName): void
     {
         $extractor = from_excel($fixtureName);
-        $extractor->withBatchSize(1)->pushLimit(5);
+        $extractor->withBatchSize(1);
 
-        $rows = df()->extract($extractor)->fetch()->toArray();
+        $rows = df()->read($extractor)->limit(5)->fetch()->toArray();
 
         static::assertCount(5, $rows);
 
@@ -489,10 +490,10 @@ final class ExcelExtractorTest extends FlowTestCase
     {
         $before = ExcelFixtureContext::sharedStringsFolders();
 
-        $extractor = from_excel(ExcelFixtureContext::file('orders_flow.xlsx'));
-        $extractor->pushLimit(1);
-
-        df()->read($extractor)->run();
+        df()
+            ->read(from_excel(ExcelFixtureContext::file('orders_flow.xlsx')))
+            ->limit(1)
+            ->run();
 
         static::assertSame([], ExcelFixtureContext::leakedSharedStringsFoldersSince($before));
     }
@@ -500,9 +501,9 @@ final class ExcelExtractorTest extends FlowTestCase
     public function test_limit_pays_the_sample_but_yields_only_the_limit(): void
     {
         $extractor = from_excel(ExcelFixtureContext::file('orders_1k.xlsx'));
-        $extractor->withBatchSize(1)->pushLimit(5);
+        $extractor->withBatchSize(1);
 
-        static::assertCount(5, df()->extract($extractor)->fetch()->toArray());
+        static::assertCount(5, df()->read($extractor)->limit(5)->fetch()->toArray());
         static::assertNotEmpty($extractor->schema()->references()->names());
     }
 
@@ -771,8 +772,7 @@ final class ExcelExtractorTest extends FlowTestCase
     public function test_limit_reached_on_the_first_file_tail_batch_skips_the_remaining_files(): void
     {
         $extractor = from_excel(ExcelFixtureContext::file('cross_stream/*/*.xlsx'))->withBatchSize(10);
-        $extractor->pushLimit(2);
 
-        static::assertCount(2, ExtractedRows::of($extractor));
+        static::assertCount(2, ExtractedRows::of($extractor, scan: new Scan(limit: 2)));
     }
 }

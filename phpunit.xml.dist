@@ -196,6 +196,9 @@
         <testsuite name="bridge-telemetry-otlp-integration">
             <directory>src/bridge/telemetry/otlp/tests/Flow/Bridge/Telemetry/OTLP/Tests/Integration</directory>
         </testsuite>
+        <testsuite name="adapter-avro-unit">
+            <directory>src/adapter/etl-adapter-avro/tests/Flow/ETL/Adapter/Avro/Tests/Unit</directory>
+        </testsuite>
         <testsuite name="adapter-avro-integration">
             <directory>src/adapter/etl-adapter-avro/tests/Flow/ETL/Adapter/Avro/Tests/Integration</directory>
         </testsuite>

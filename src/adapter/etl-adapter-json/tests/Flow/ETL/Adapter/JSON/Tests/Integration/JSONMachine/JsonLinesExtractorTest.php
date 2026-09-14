@@ -10,6 +10,7 @@ use Flow\ETL\Adapter\JSON\Tests\Context\JsonFixtureContext;
 use Flow\ETL\Config;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
+use Flow\ETL\Extractor\Scan;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Schema\Definition\StringDefinition;
 use Flow\ETL\Tests\Context\ExtractedRows;
@@ -180,9 +181,9 @@ final class JsonLinesExtractorTest extends FlowTestCase
     public function test_limit(): void
     {
         $extractor = from_json_lines(path(__DIR__ . '/../../Fixtures/timezones.jsonl'));
-        $extractor->withBatchSize(1)->pushLimit(2);
+        $extractor->withBatchSize(1);
 
-        self::assertExtractedRowsCount(2, $extractor, flow_context(config()));
+        self::assertExtractedRowsCount(2, $extractor, flow_context(config()), scan: new Scan(limit: 2));
     }
 
     public function test_schema_appends_the_metadata_column(): void
@@ -533,8 +534,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
         }
 
         if ($mode === 'limit') {
-            $extractor->pushLimit(2);
-            iterator_to_array($extractor->extract(flow_context(config())));
+            iterator_to_array($extractor->extract(flow_context(config()), new Scan(limit: 2)));
         }
 
         if ($mode === 'stop') {

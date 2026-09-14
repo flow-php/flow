@@ -11,4 +11,4 @@ output
     └── PRODUCT02.csv
 ```
 
-Reading with the same placeholder pattern recreates the partitions from the path, including support for partition pruning with `filterPartitions()`. Keep in mind that this layout is not self-describing - a plain glob like `output/**/*.csv` will read the data but won't recognize any partitions.
+Reading with the same placeholder pattern recreates the partitions from the path, including support for partition pruning through `filter()`. Keep in mind that this layout is not self-describing - a plain glob like `output/**/*.csv` will read the data but won't recognize any partitions.

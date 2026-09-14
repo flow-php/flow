@@ -191,9 +191,9 @@ final class GoogleSheetExtractorTest extends FlowTestCase
             '1234567890',
             'Sheet',
         );
-        $extractor->withBatchSize(1)->pushLimit(2);
+        $extractor->withBatchSize(1);
 
-        static::assertCount(2, df()->extract($extractor)->fetch()->toArray());
+        static::assertCount(2, df()->read($extractor)->limit(2)->fetch()->toArray());
     }
 
     public function test_extract_without_cut_extra_columns(): void
@@ -378,9 +378,9 @@ final class GoogleSheetExtractorTest extends FlowTestCase
             '1234567890',
             'Sheet',
         );
-        $extractor->withBatchSize(1)->pushLimit(1);
+        $extractor->withBatchSize(1);
 
-        static::assertCount(1, df()->extract($extractor)->fetch()->toArray());
+        static::assertCount(1, df()->read($extractor)->limit(1)->fetch()->toArray());
         static::assertCount(4, $this->context->requests());
     }
 }

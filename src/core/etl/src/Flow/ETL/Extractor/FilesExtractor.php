@@ -21,13 +21,12 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function sprintf;
 
-final class FilesExtractor implements BatchableExtractor, Extractor, FileExtractor, LimitPushDown, RewindableExtractor
+final class FilesExtractor implements BatchableExtractor, Extractor, FileExtractor, RewindableExtractor
 {
     private ?Schema $schema = null;
 
     use Batches;
     use PathFiltering;
-    use PushesLimit;
 
     private readonly Filesystem $filesystem;
 
@@ -56,14 +55,14 @@ final class FilesExtractor implements BatchableExtractor, Extractor, FileExtract
     /**
      * @return Generator<int, \Flow\ETL\Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, Scan $scan = new Scan()): Generator
     {
         $batchSize = $this->batchSize();
         $schema = $this->schema();
         $buffer = [];
         $yielded = 0;
 
-        foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $fileStatus) {
+        foreach ((new FileListing($this->filesystem))->list($this->path, $scan->pathFilter) as $fileStatus) {
             $extension = $fileStatus->path->extension();
 
             $buffer[] = [
@@ -92,9 +91,7 @@ final class FilesExtractor implements BatchableExtractor, Extractor, FileExtract
 
             $buffer = [];
 
-            $limit = $this->pushedLimit();
-
-            if ($limit !== null && $yielded >= $limit) {
+            if ($scan->limit !== null && $yielded >= $scan->limit) {
                 return;
             }
         }
@@ -102,6 +99,12 @@ final class FilesExtractor implements BatchableExtractor, Extractor, FileExtract
         if ($buffer !== []) {
             yield array_to_rows($buffer, $schema, $context->hydrator());
         }
+    }
+
+    public function partitionSchema(): Schema
+    {
+        // it emits path and partitions columns, never a partition column of its own
+        return new Schema();
     }
 
     public function source(): Path

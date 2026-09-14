@@ -7,7 +7,7 @@ namespace Flow\ETL\Join;
 use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\Config;
 use Flow\ETL\Config\Join\JoinAlgorithmBuilder;
-use Flow\ETL\DataFrame;
+use Flow\ETL\Plan\FrameOutput;
 use Flow\ETL\Processor;
 use Flow\ETL\Processor\HashJoinProcessor;
 
@@ -23,7 +23,7 @@ final readonly class JoinSteps
      * @return list<Processor>
      */
     public static function of(
-        DataFrame $right,
+        FrameOutput $right,
         Expression $on,
         Join $type,
         Config $config,

@@ -27,7 +27,7 @@ final readonly class PartitionedReadScenario
         $frame = data_frame(BenchmarkConfig::builder())->read(from_csv($tree->glob()));
 
         if ($this->pruned) {
-            $frame = $frame->filterPartitions(ref($this->cardinality->column())->equals(lit($tree->firstValue())));
+            $frame = $frame->filter(ref($this->cardinality->column())->equals(lit($tree->firstValue())));
         }
 
         $rows = 0;

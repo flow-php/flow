@@ -8,6 +8,9 @@ use DateTimeImmutable;
 use Flow\ETL\Config\Telemetry\TelemetryContext;
 use Flow\ETL\Config\Telemetry\TelemetryOptions;
 use Flow\ETL\Loader\StreamLoader;
+use Flow\ETL\Planner\Rule\CombineLimits;
+use Flow\ETL\Planner\Rule\PushFilterIntoSource;
+use Flow\ETL\Planner\Rule\PushLimitIntoSource;
 use Flow\ETL\Tests\Context\MemoryTelemetryContext;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\LimitTransformer;
@@ -938,5 +941,36 @@ final class TelemetryContextTest extends FlowTestCase
                 return $this->now;
             }
         };
+    }
+
+    public function test_planner_rules_are_logged(): void
+    {
+        $logProcessor = new MemoryLogProcessor(new VoidExporter());
+        $clock = $this->createFrozenClock();
+        $contextStorage = new MemoryContextStorage();
+
+        $telemetry = new Telemetry(
+            Resource::create(['service.name' => 'flow-test']),
+            new TracerProvider(new MemorySpanProcessor(new VoidExporter()), $clock, $contextStorage),
+            new MeterProvider(new MemoryMetricProcessor(new VoidExporter()), $clock),
+            new LoggerProvider($logProcessor, $clock, $contextStorage),
+        );
+
+        $telemetryContext = new TelemetryContext(
+            $telemetry->logger('flow-php'),
+            $telemetry->tracer('flow-php'),
+            $telemetry->meter('flow-php'),
+            new TelemetryOptions(),
+        );
+
+        $telemetryContext->dataFrameStarted(flow_context(config_builder()->withTelemetry($telemetry)->build()));
+
+        $debugLogs = $logProcessor->entriesWithSeverity(Severity::DEBUG);
+
+        static::assertCount(1, $debugLogs);
+        static::assertSame(
+            [CombineLimits::class, PushLimitIntoSource::class, PushFilterIntoSource::class],
+            $debugLogs[0]->record->attributes->get('planner_rules'),
+        );
     }
 }

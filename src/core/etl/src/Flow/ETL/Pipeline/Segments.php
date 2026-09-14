@@ -9,8 +9,6 @@ use Flow\ETL\Loader;
 use Flow\ETL\Processor;
 use Flow\ETL\Transformer;
 
-use function count;
-
 /**
  * Manages pipeline segments, grouping steps at Processor boundaries.
  *
@@ -38,15 +36,9 @@ final class Segments
         }
     }
 
-    public function replaceExtractor(Extractor $extractor): void
+    public function extractor(): ?Extractor
     {
-        if ($this->segments === []) {
-            $this->currentSegment = $this->currentSegment->withExtractor($extractor);
-
-            return;
-        }
-
-        $this->segments[0] = $this->segments[0]->withExtractor($extractor);
+        return ($this->segments[0] ?? $this->currentSegment)->extractor();
     }
 
     /**
@@ -57,51 +49,6 @@ final class Segments
     public function all(): array
     {
         return [...$this->segments, $this->currentSegment];
-    }
-
-    /**
-     * Get the current (most recent) segment.
-     *
-     * Returns the last completed segment if any exist, otherwise the current segment being built.
-     */
-    public function current(): Segment
-    {
-        if ($this->segments === []) {
-            return $this->currentSegment;
-        }
-
-        return $this->segments[count($this->segments) - 1];
-    }
-
-    /**
-     * Check if any segment contains a step of the given class.
-     *
-     * @param class-string<Loader|Processor|Transformer> $class
-     */
-    public function has(string $class): bool
-    {
-        foreach ($this->segments as $segment) {
-            if ($segment->has($class)) {
-                return true;
-            }
-        }
-
-        return $this->currentSegment->has($class);
-    }
-
-    public function segmentFor(Transformer|Loader|Processor $step): ?Segment
-    {
-        foreach ($this->segments as $segment) {
-            if ($segment->contains($step)) {
-                return $segment;
-            }
-        }
-
-        if ($this->currentSegment->contains($step)) {
-            return $this->currentSegment;
-        }
-
-        return null;
     }
 
     /**

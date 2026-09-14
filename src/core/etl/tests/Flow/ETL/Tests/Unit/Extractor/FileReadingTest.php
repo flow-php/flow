@@ -9,7 +9,7 @@ use Flow\ETL\Extractor\SourceFile;
 use Flow\ETL\Tests\Context\SelfDescribingFilesContext;
 use Flow\ETL\Tests\Double\FileReadingExtractor;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\Filesystem\Path\Filter\OnlyFiles;
+use Flow\Filesystem\Tests\Double\RejectingFilter;
 
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
@@ -71,18 +71,6 @@ final class FileReadingTest extends FlowTestCase
         static::assertSame(0, $second->advanced);
     }
 
-    public function test_the_path_filter_forgets_the_memo(): void
-    {
-        $extractor = new FileReadingExtractor();
-        $extractor->derive(SelfDescribingFilesContext::describing(schema(int_schema('id')))->generator());
-        $extractor->withPathFilter(new OnlyFiles());
-
-        static::assertEquals(
-            schema(str_schema('name')),
-            $extractor->derive(SelfDescribingFilesContext::describing(schema(str_schema('name')))->generator()),
-        );
-    }
-
     public function test_union_by_name_folds_every_file(): void
     {
         $files = SelfDescribingFilesContext::describing(schema(int_schema('id')), schema(str_schema('name')));
@@ -107,6 +95,25 @@ final class FileReadingTest extends FlowTestCase
             ],
             iterator_to_array(
                 (new FileReadingExtractor())->listing($filesystem, path('memory://orders/*/*.csv')),
+                false,
+            ),
+        );
+    }
+
+    public function test_source_files_lists_only_what_the_scan_filter_admits(): void
+    {
+        $filesystem = memory_filesystem();
+        $filesystem->writeTo(path('memory://orders/year=2024/a.csv'))->close();
+        $filesystem->writeTo(path('memory://orders/year=2025/b.csv'))->close();
+
+        static::assertSame(
+            [],
+            iterator_to_array(
+                (new FileReadingExtractor())->listing(
+                    $filesystem,
+                    path('memory://orders/*/*.csv'),
+                    new RejectingFilter(),
+                ),
                 false,
             ),
         );

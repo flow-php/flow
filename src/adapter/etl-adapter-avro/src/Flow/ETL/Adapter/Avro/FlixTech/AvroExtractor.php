@@ -9,6 +9,7 @@ use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\PathFiltering;
+use Flow\ETL\Extractor\Scan;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
@@ -32,7 +33,7 @@ final class AvroExtractor implements Extractor, FileExtractor
         );
     }
 
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, Scan $scan = new Scan()): Generator
     {
         yield new Rows(new Schema());
     }
@@ -44,6 +45,12 @@ final class AvroExtractor implements Extractor, FileExtractor
         }
 
         throw SchemaNotDerivableException::extractor(self::class);
+    }
+
+    public function partitionSchema(): Schema
+    {
+        // the constructor always throws, so no instance ever lists a partition
+        return new Schema();
     }
 
     public function source(): Path

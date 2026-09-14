@@ -11,13 +11,14 @@ use Flow\ETL\ErrorHandler\LoadingError;
 use Flow\ETL\ErrorHandler\TransformationAction;
 use Flow\ETL\ErrorHandler\TransformationError;
 use Flow\ETL\Exception\LimitReachedException;
+use Flow\ETL\Exception\SideRootFailure;
+use Flow\ETL\Exception\TransactionRolledBack;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\Loader\Discardable;
-use Flow\ETL\Loader\LoaderTree;
 use Flow\ETL\Processor;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
@@ -25,8 +26,6 @@ use Generator;
 use SplObjectStorage;
 use Throwable;
 
-use function array_map;
-use function array_merge;
 use function count;
 
 /**
@@ -54,15 +53,6 @@ final readonly class Segment
     public function add(Transformer|Loader $step): void
     {
         $this->steps->offsetSet($step);
-    }
-
-    public function contains(Transformer|Loader|Processor $step): bool
-    {
-        if ($step instanceof Processor) {
-            return $this->processor === $step;
-        }
-
-        return $this->steps->offsetExists($step);
     }
 
     /**
@@ -145,6 +135,15 @@ final readonly class Segment
                         $rows = $limit->rows ?? new Rows($rows->schema());
                         $stop = true;
                     } catch (Throwable $failure) {
+                        if ($failure instanceof SideRootFailure) {
+                            throw $failure->cause;
+                        }
+
+                        if ($failure instanceof TransactionRolledBack) {
+                            $step = $failure->loader;
+                            $failure = $failure->cause;
+                        }
+
                         if ($step instanceof Transformer) {
                             if (
                                 $context->errorHandler()->onTransformation(new TransformationError(
@@ -222,9 +221,8 @@ final readonly class Segment
     }
 
     /**
-     * A completed run ends only the outermost loader: a wrapper's closure() drains its stream before forwarding, and
-     * that ordering is the wrapper's to own. A dead run has no such ordering, and a wrapper that forgets to forward
-     * would strand the sink it wraps - so discarding walks the whole loader tree instead of trusting each wrapper.
+     * Every planner-built wrapper forwards discard() to its children (SinkFeed, TransactionalSinks), so each step is
+     * ended directly - there is no user-supplied wrapper left to distrust.
      *
      * @param array<Loader> $loaders
      *
@@ -233,11 +231,6 @@ final readonly class Segment
     private function endLoaders(array $loaders, FlowContext $context, bool $completed): array
     {
         $ending = [];
-
-        if (!$completed) {
-            $tree = new LoaderTree();
-            $loaders = array_merge(...array_map(static fn(Loader $loader): array => $tree->flatten($loader), $loaders));
-        }
 
         foreach ($loaders as $loader) {
             try {
@@ -255,13 +248,9 @@ final readonly class Segment
 
                     // a closure() that threw published at most part of its output; the rest is abandoned as on
                     // a failed run
-                    foreach ((new LoaderTree())->flatten($loader) as $node) {
-                        if (!$node instanceof Discardable) {
-                            continue;
-                        }
-
+                    if ($loader instanceof Discardable) {
                         try {
-                            $node->discard($context);
+                            $loader->discard($context);
                         } catch (Throwable $discardFailure) {
                             $context
                                 ->telemetry()
@@ -285,24 +274,9 @@ final readonly class Segment
         return $ending;
     }
 
-    /**
-     * Check if segment contains a step of the given class.
-     *
-     * @param class-string<Loader|Processor|Transformer> $class
-     */
-    public function has(string $class): bool
+    public function extractor(): ?Extractor
     {
-        if ($this->processor instanceof $class) {
-            return true;
-        }
-
-        foreach ($this->steps as $step) {
-            if ($step instanceof $class) {
-                return true;
-            }
-        }
-
-        return false;
+        return $this->extractor;
     }
 
     public function processor(): ?Processor
@@ -316,17 +290,6 @@ final readonly class Segment
     public function steps(): array
     {
         return iterator_to_array($this->steps);
-    }
-
-    public function withExtractor(Extractor $extractor): self
-    {
-        $segment = new self($this->processor, $extractor);
-
-        foreach ($this->steps as $step) {
-            $segment->steps->offsetSet($step);
-        }
-
-        return $segment;
     }
 
     public function withProcessor(Processor $processor): self

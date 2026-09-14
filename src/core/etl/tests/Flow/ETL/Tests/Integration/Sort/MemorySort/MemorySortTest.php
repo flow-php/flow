@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Sort\MemorySort;
 
-use Flow\ETL\Pipeline;
+use Flow\ETL\Pipeline\Segments;
 use Flow\ETL\Processor\MemorySortProcessor;
+use Flow\ETL\Tests\Context\ExecutedSegments;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function array_map;
@@ -38,9 +39,9 @@ final class MemorySortTest extends FlowTestCase
         $processor = new MemorySortProcessor(refs(ref('id')->desc()));
 
         $context = flow_context();
-        $pipeline = new Pipeline(from_array($randomizedInput));
+        $segments = new Segments(from_array($randomizedInput));
 
-        $sortedOutput = iterator_to_array($processor->process($pipeline->process($context), $context));
+        $sortedOutput = iterator_to_array($processor->process(ExecutedSegments::of($segments, $context), $context));
 
         static::assertEquals($input, array_merge(...array_map(static fn($row) => $row->toArray(), $sortedOutput)));
     }

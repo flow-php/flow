@@ -11,6 +11,9 @@ use Flow\ETL\Cache\Implementation\InMemoryCache;
 use Flow\ETL\Config\Cache\CacheConfig;
 use Flow\ETL\Config\Sort\ExternalSortConfig;
 use Flow\ETL\Config\Sort\MemorySortConfig;
+use Flow\ETL\Executor;
+use Flow\ETL\Planner;
+use Flow\ETL\Planner\Rule\PushLimitIntoSource;
 use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Tests\Double\SpySerializer;
@@ -175,5 +178,29 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
 
         static::assertInstanceOf(ExternalSortConfig::class, $config->sort);
         static::assertSame($storage, $config->sort->bucketing->storage);
+    }
+
+    public function test_planner_defaults_to_planner_default(): void
+    {
+        static::assertEquals(Planner::default(), config_builder()->build()->planner());
+    }
+
+    public function test_planner_can_be_overridden(): void
+    {
+        $planner = Planner::default()->without(PushLimitIntoSource::class);
+
+        static::assertSame($planner, config_builder()->planner($planner)->build()->planner());
+    }
+
+    public function test_executor_defaults_to_an_executor(): void
+    {
+        static::assertEquals(new Executor(), config_builder()->build()->executor());
+    }
+
+    public function test_executor_can_be_overridden(): void
+    {
+        $executor = new Executor();
+
+        static::assertSame($executor, config_builder()->executor($executor)->build()->executor());
     }
 }

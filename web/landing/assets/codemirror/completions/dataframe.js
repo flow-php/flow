@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DataFrame Methods
  *
- * DataFrame methods: 49
+ * DataFrame methods: 55
  * DataFrame-returning methods from classes: 3
  *
  * This completer triggers after DataFrame-returning methods
@@ -10,11 +10,29 @@
 import { CompletionContext, snippet } from "@codemirror/autocomplete"
 
 // Map of DataFrame-returning methods grouped by class
-const dataframeReturningMethods = {"flow":["extract","from","process","read"],"groupeddataframe":["aggregate"],"dataframe":["aggregate","batchBy","batchSize","cache","collect","collectRefs","constrain","crossJoin","drop","dropDuplicates","duplicateRow","filter","filterPartitions","filters","join","joinEach","limit","load","match","offset","onError","repartition","rename","renameEach","rows","select","sortBy","transform","until","void","with","withEntries","withEntry","write"]};
+const dataframeReturningMethods = {"flow":["extract","from","process","read"],"groupeddataframe":["aggregate"],"dataframe":["addRowIndex","aggregate","batchBy","batchSize","cache","collect","collectRefs","constrain","crossJoin","drop","dropDuplicates","duplicateRow","filter","fork","filters","join","joinEach","limit","load","match","offset","onError","repartition","rename","renameEach","rows","select","sortBy","transform","until","void","with","withEntries","withEntry","write"]};
 
 // DataFrame methods
 const dataframeMethods = [
     {
+        label: "addRowIndex",
+        type: "method",
+        detail: "Flow\\\\ETL\\\\DataFrame",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">addRowIndex</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$column</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;index&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">StartFrom</span> <span class=\"fn-param\">$startFrom</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Transformation\\AddRowIndex\\StartFrom::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @lazy
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("addRowIndex(" + "$" + "{" + "1:column" + "}" + ", " + "$" + "{" + "2:startFrom" + "}" + ")"),
+        boost: 10
+    },        {
         label: "aggregate",
         type: "method",
         detail: "Flow\\\\ETL\\\\DataFrame",
@@ -297,22 +315,94 @@ const dataframeMethods = [
         apply: snippet("extractor()"),
         boost: 10
     },        {
-        label: "filterPartitions",
+        label: "snapshot",
         type: "method",
         detail: "Flow\\\\ETL\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">filterPartitions</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Filter|ScalarFunction</span> <span class=\"fn-param\">$filter</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                    <span class=\"fn-name\">snapshot</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Snapshot</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @lazy<br>@throws RuntimeException
+                    @internal the planner and from_data_frame() take the snapshot a frame embeds
                 </div>
                             `
             return div
         },
-        apply: snippet("filterPartitions(" + "$" + "{" + "1:filter" + "}" + ")"),
+        apply: snippet("snapshot()"),
+        boost: 10
+    },        {
+        label: "fork",
+        type: "method",
+        detail: "Flow\\\\ETL\\\\DataFrame",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">fork</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @internal a frame over this frame\'s root, private to the Sink it is handed to: the root keeps its identity<br>          (Sink\\Roots attaches by it) and the FlowContext is a copy, so onError() on the fork never reaches<br>          this frame
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("fork()"),
+        boost: 10
+    },        {
+        label: "logical",
+        type: "method",
+        detail: "Flow\\\\ETL\\\\DataFrame",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">logical</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">LogicalPlan</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @internal
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("logical()"),
+        boost: 10
+    },        {
+        label: "cursor",
+        type: "method",
+        detail: "Flow\\\\ETL\\\\DataFrame",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">cursor</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Node</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @internal the end of this frame\'s chain - the node the next verb wraps and a Sink attaches to
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("cursor()"),
+        boost: 10
+    },        {
+        label: "sinks",
+        type: "method",
+        detail: "Flow\\\\ETL\\\\DataFrame",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">sinks</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">array</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @internal<br>@return Sinks
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("sinks()"),
         boost: 10
     },        {
         label: "filters",
@@ -502,7 +592,7 @@ const dataframeMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">load</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Loader</span> <span class=\"fn-param\">$loader</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                    <span class=\"fn-name\">load</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Loader|Sink</span> <span class=\"fn-param\">$sink</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @lazy
@@ -510,7 +600,7 @@ const dataframeMethods = [
                             `
             return div
         },
-        apply: snippet("load(" + "$" + "{" + "1:loader" + "}" + ")"),
+        apply: snippet("load(" + "$" + "{" + "1:sink" + "}" + ")"),
         boost: 10
     },        {
         label: "match",
@@ -601,6 +691,24 @@ const dataframeMethods = [
             return div
         },
         apply: snippet("printRows(" + "$" + "{" + "1:limit" + "}" + ", " + "$" + "{" + "2:truncate" + "}" + ", " + "$" + "{" + "3:formatter" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "explain",
+        type: "method",
+        detail: "Flow\\\\ETL\\\\DataFrame",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">explain</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    The logical plan as a tree: one line per node with its declarations, a subtree several consumers share<br>printed once. Answers from the plan without reading a row.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("explain()"),
         boost: 10
     },        {
         label: "printSchema",
@@ -877,7 +985,7 @@ const dataframeMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">write</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Loader</span> <span class=\"fn-param\">$loader</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                    <span class=\"fn-name\">write</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Loader|Sink</span> <span class=\"fn-param\">$sink</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @lazy<br>Alias for ETL::load function.
@@ -885,7 +993,7 @@ const dataframeMethods = [
                             `
             return div
         },
-        apply: snippet("write(" + "$" + "{" + "1:loader" + "}" + ")"),
+        apply: snippet("write(" + "$" + "{" + "1:sink" + "}" + ")"),
         boost: 10
     }        ]
 

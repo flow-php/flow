@@ -9,6 +9,7 @@ use Flow\ETL\Adapter\PostgreSql\Tests\Double\StubCursor;
 use Flow\ETL\Adapter\PostgreSql\Tests\Mother\ColumnMother;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
+use Flow\ETL\Extractor\Scan;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -222,9 +223,8 @@ final class PostgreSqlLimitOffsetExtractorTest extends FlowTestCase
             ->willCountTotal(1000)
             ->willReturnCursors(new StubCursor([['id' => '1'], ['id' => '2']]), new StubCursor([['id' => '3']]));
         $extractor = from_pgsql_limit_offset($client, 'SELECT id FROM t ORDER BY id')->withBatchSize(2);
-        $extractor->pushLimit(3);
 
-        self::assertExtractedRowsCount(3, $extractor);
+        self::assertExtractedRowsCount(3, $extractor, scan: new Scan(limit: 3));
         // countTotal() is the only caller of fetchScalarInt()
         static::assertSame(0, $client->callsTo('fetchScalarInt'));
     }

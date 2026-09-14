@@ -11,10 +11,9 @@ use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\FileReading;
-use Flow\ETL\Extractor\LimitPushDown;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
-use Flow\ETL\Extractor\PushesLimit;
 use Flow\ETL\Extractor\RewindableExtractor;
+use Flow\ETL\Extractor\Scan;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\RawRowValues;
@@ -40,14 +39,12 @@ final class XMLReaderExtractor implements
     BatchableExtractor,
     Extractor,
     FileExtractor,
-    LimitPushDown,
     MetadataColumnsExtractor,
     RewindableExtractor
 {
     private ?Schema $schema = null;
 
     use Batches;
-    use PushesLimit;
     use FileReading;
 
     private readonly Filesystem $filesystem;
@@ -99,7 +96,7 @@ final class XMLReaderExtractor implements
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, Scan $scan = new Scan()): Generator
     {
         $hydrator = $context->hydrator();
         $batchSize = $this->batchSize();
@@ -111,7 +108,7 @@ final class XMLReaderExtractor implements
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
         $schema = $fileColumns->declare($baseSchema);
 
-        foreach ($this->sourceFiles($this->filesystem, $this->path) as $source) {
+        foreach ($this->sourceFiles($this->filesystem, $this->path, $scan->pathFilter) as $source) {
             $constants = $fileColumns->forFile($source, $schema);
 
             $xmlReader = new XMLReader();
@@ -168,9 +165,7 @@ final class XMLReaderExtractor implements
                                     return;
                                 }
 
-                                $limit = $this->pushedLimit();
-
-                                if ($limit !== null && $yielded >= $limit) {
+                                if ($scan->limit !== null && $yielded >= $scan->limit) {
                                     return;
                                 }
                             }
@@ -197,9 +192,7 @@ final class XMLReaderExtractor implements
                         return;
                     }
 
-                    $limit = $this->pushedLimit();
-
-                    if ($limit !== null && $yielded >= $limit) {
+                    if ($scan->limit !== null && $yielded >= $scan->limit) {
                         return;
                     }
                 }
@@ -212,6 +205,11 @@ final class XMLReaderExtractor implements
     public function schema(): Schema
     {
         return $this->fileColumns($this->filesystem, $this->path)->declare($this->schema ?? schema(xml_schema('node')));
+    }
+
+    public function partitionSchema(): Schema
+    {
+        return $this->fileColumns($this->filesystem, $this->path)->partitions($this->schema ?? new Schema());
     }
 
     public function source(): Path

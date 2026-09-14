@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
-use Flow\ETL\DataFrame;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Join\JoinSchema;
 use Flow\ETL\Pipeline\BoundStep;
+use Flow\ETL\Plan\FrameOutput;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
@@ -19,13 +19,13 @@ final class CrossJoinRowsTransformer implements Transformer
     private ?Rows $rows = null;
 
     public function __construct(
-        private readonly DataFrame $dataFrame,
+        private readonly FrameOutput $frame,
         private readonly string $prefix = '',
     ) {}
 
     public function bind(Schema $input): BoundStep
     {
-        return new BoundStep($this, (new JoinSchema($this->prefix))->cross($input, $this->dataFrame->schema()));
+        return new BoundStep($this, (new JoinSchema($this->prefix))->cross($input, $this->frame->schema()));
     }
 
     public function transform(Rows $rows, FlowContext $context): Rows
@@ -51,7 +51,7 @@ final class CrossJoinRowsTransformer implements Transformer
     private function rows(): Rows
     {
         if ($this->rows === null) {
-            $this->rows = $this->dataFrame->fetch();
+            $this->rows = $this->frame->fetch();
         }
 
         return $this->rows;

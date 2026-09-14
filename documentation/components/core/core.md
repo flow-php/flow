@@ -42,7 +42,26 @@ These methods execute the entire pipeline and return results:
 - **Output operations**: `run()`, `forEach()`, `printRows()`
 - **Schema inspection**: `display()`
 
-`schema()` and `printSchema()` are **not** triggers - they answer from the plan without reading a row.
+`schema()`, `printSchema()` and `explain()` are **not** triggers - they answer from the plan without reading a row.
+`explain()` prints the logical plan: one line per node with what the planner knows about it, a subtree two
+consumers share printed once.
+
+```php
+echo data_frame()
+    ->read(from_csv('orders.csv'))
+    ->filter(ref('email')->isNotNull())
+    ->write(to_json('out.json'))
+    ->explain();
+```
+
+```text
+#1 SinkMultiple  preserving · opaque · streaming
+  #2 Result  preserving · transparent · streaming
+    #3 Filter(IsNotNull)  reducing · transparent · streaming
+      #4 Read(CSVExtractor, scan: limit=∅ files=OnlyFiles)  source · transparent · streaming
+  #5 Write(JsonLoader)  preserving · opaque · streaming
+    #3 (shared)
+```
 
 > **Important**: Build your complete pipeline with lazy operations, then execute once with a trigger operation for optimal performance.
 
@@ -116,9 +135,6 @@ For detailed information about specific DataFrame operations, see the following 
 - **[Schema](/documentation/components/core/schema.md)** - Schema management and validation
 - **[Constraints](/documentation/components/core/constraints.md)** - Data integrity constraints and business rules
 - **[Error Handling](/documentation/components/core/error-handling.md)** - Error management strategies
-
-### Reliability & Recovery
-- **[Retry Mechanisms](/documentation/components/core/retry.md)** - Automatic retry for transient failures
 
 ### Observability
 - **[Telemetry](/documentation/components/core/telemetry.md)** - Distributed tracing, metrics, and logging integration

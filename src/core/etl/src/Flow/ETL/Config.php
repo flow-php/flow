@@ -13,7 +13,6 @@ use Flow\ETL\Config\Repartition\HashRepartitionConfig;
 use Flow\ETL\Config\Sort\ExternalSortConfig;
 use Flow\ETL\Config\Sort\MemorySortConfig;
 use Flow\ETL\Config\Telemetry\TelemetryConfig;
-use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Row\Hydrator;
 use Flow\Serializer\Serializer;
 use Psr\Clock\ClockInterface;
@@ -33,7 +32,8 @@ final readonly class Config
         private string $version,
         private Serializer $serializer,
         private ClockInterface $clock,
-        private Optimizer $optimizer,
+        private Planner $planner,
+        private Executor $executor,
         private Hydrator $hydrator,
         public CacheConfig $cache,
         public MemorySortConfig|ExternalSortConfig $sort,
@@ -71,6 +71,11 @@ final readonly class Config
         return $this->clock;
     }
 
+    public function executor(): Executor
+    {
+        return $this->executor;
+    }
+
     /**
      * @return Hydrator
      */
@@ -89,9 +94,9 @@ final readonly class Config
         return $this->name;
     }
 
-    public function optimizer(): Optimizer
+    public function planner(): Planner
     {
-        return $this->optimizer;
+        return $this->planner;
     }
 
     public function randomValueGenerator(): RandomValueGenerator

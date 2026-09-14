@@ -6,12 +6,12 @@ namespace Flow\Floe\Tests\Unit;
 
 use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Extractor\Scan;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\RowsMother;
-use Flow\Filesystem\Path\Filter\Filters;
-use Flow\Filesystem\Path\Filter\OnlyFiles;
+use Flow\Filesystem\Tests\Double\RejectingFilter;
 use Flow\Floe\FloeExtractor;
 use Flow\Floe\Tests\Context\FloeEngineContext;
 
@@ -130,21 +130,6 @@ final class FloeExtractorTest extends FlowTestCase
         );
     }
 
-    public function test_change_limit_to_zero_throws(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-
-        from_floe(path('memory://x.floe'), filesystem: memory_filesystem())->pushLimit(0);
-    }
-
-    public function test_default_filter_keeps_only_files(): void
-    {
-        static::assertInstanceOf(
-            OnlyFiles::class,
-            from_floe(path('memory://x.floe'), filesystem: memory_filesystem())->filter(),
-        );
-    }
-
     public function test_extract_adds_input_file_uri_when_configured(): void
     {
         $context = flow_context(config_builder()->build());
@@ -193,11 +178,10 @@ final class FloeExtractorTest extends FlowTestCase
         $loader->closure($context);
 
         $extractor = from_floe($path, filesystem: $memory);
-        $extractor->pushLimit(2);
 
         $ids = [];
 
-        foreach ($extractor->extract($context) as $batch) {
+        foreach ($extractor->extract($context, new Scan(limit: 2)) as $batch) {
             foreach ($batch->all() as $extractedRow) {
                 $ids[] = $extractedRow->get('id');
             }
@@ -308,17 +292,6 @@ final class FloeExtractorTest extends FlowTestCase
 
         static::assertSame($extractor->schema()->references()->names(), $batches[0]->first()->names());
         static::assertSame($path->uri(), $batches[0]->first()->get('_input_file_uri'));
-    }
-
-    public function test_is_limited_reflects_change_limit(): void
-    {
-        $extractor = from_floe(path('memory://x.floe'), filesystem: memory_filesystem());
-
-        static::assertNull($extractor->pushedLimit());
-
-        $extractor->pushLimit(5);
-
-        static::assertNotNull($extractor->pushedLimit());
     }
 
     public function test_negative_offset_throws(): void
@@ -501,16 +474,22 @@ final class FloeExtractorTest extends FlowTestCase
         static::assertSame($counting->readFromCalls, $counting->closedStreams());
     }
 
-    public function test_schema_forgets_the_fold_when_the_path_filter_narrows(): void
+    public function test_a_scan_filter_narrows_the_read_but_not_the_schema(): void
     {
         $counting = new CountingFilesystem($memory = memory_filesystem());
         FloeEngineContext::writePartitionedFiles($memory);
 
         $extractor = from_floe(path('memory://parts/*/*.floe'), filesystem: $counting);
-        $extractor->schema();
-        $extractor->withPathFilter(new OnlyFiles())->schema();
+        $schema = $extractor->schema();
 
-        static::assertSame(2, $counting->readFromCalls);
+        $batches = iterator_to_array($extractor->extract(
+            flow_context(config()),
+            new Scan(pathFilter: new RejectingFilter()),
+        ));
+
+        static::assertSame([], $batches);
+        static::assertSame(1, $counting->readFromCalls);
+        static::assertEquals($schema, $extractor->schema());
     }
 
     public function test_source_returns_path(): void
@@ -519,15 +498,6 @@ final class FloeExtractorTest extends FlowTestCase
             'memory://x.floe',
             from_floe(path('memory://x.floe'), filesystem: memory_filesystem())->source()->uri(),
         );
-    }
-
-    public function test_with_path_filter_composes_filters(): void
-    {
-        $extractor = from_floe(path('memory://x.floe'), filesystem: memory_filesystem())
-            ->withPathFilter(new OnlyFiles())
-            ->withPathFilter(new OnlyFiles());
-
-        static::assertInstanceOf(Filters::class, $extractor->filter());
     }
 
     public function test_is_repeatable(): void

@@ -10,6 +10,7 @@ use Flow\ETL\Adapter\Doctrine\Tests\Context\InMemorySqlite;
 use Flow\ETL\Adapter\Doctrine\Tests\Context\SelectQueryCounter;
 use Flow\ETL\Adapter\Doctrine\Tests\Double\NativeHandleStub;
 use Flow\ETL\Exception\SchemaNotDerivableException;
+use Flow\ETL\Extractor\Scan;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 use stdClass;
@@ -183,10 +184,9 @@ final class DbalLimitOffsetExtractorTest extends FlowTestCase
             $connection,
             $connection->createQueryBuilder()->select('*')->from('users')->orderBy('id'),
         ))->withBatchSize(2);
-        $extractor->pushLimit(5);
         $counter->reset();
 
-        self::assertExtractedRowsCount(5, $extractor);
+        self::assertExtractedRowsCount(5, $extractor, scan: new Scan(limit: 5));
         // the three pages of the unlimited read, without the COUNT(*) in front of them
         static::assertSame(3, $counter->count);
         static::assertStringNotContainsString('COUNT(*)', implode(' ', $counter->queries));

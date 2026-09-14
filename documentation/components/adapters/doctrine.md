@@ -123,8 +123,8 @@ data_frame()
 
 ## Transactional Loading
 
-`to_dbal_transaction()` wraps one or more loaders so every delivery happens inside a transaction: each batch of rows
-is loaded in its own transaction, and if any loader throws, the open transaction is rolled back:
+`to_dbal_transaction()` writes one or more sinks inside transactions: each batch of rows is written in its own
+transaction, and if any sink throws, the open transaction is rolled back:
 
 ```php
 use function Flow\ETL\DSL\{data_frame, from_array};
@@ -140,29 +140,32 @@ data_frame()
     ->run();
 ```
 
-Atomicity requires every wrapped loader to use the same connection as the wrapper - pass one live `Connection` to
-`to_dbal_transaction()` and to every wrapped loader. A loader built from array params (like
+A plain loader child is a bare sink root; a `to_transformation(...)` child delivers inside the same transaction.
+Every child's loader must use the same connection as the transaction - pass one live `Connection` to
+`to_dbal_transaction()` and to every child. A loader built from array params (like
 `to_dbal_table_insert(['url' => $url], 'users')`) opens its own connection and escapes the transaction.
 
-Wrapped `to_transformation()` / `to_branch(...)->withTransformation(...)` steps with blocking operations (`sortBy()`,
+Sinks with blocking operations (`to_transformation()` / `to_branch(...)->withTransformation(...)` with `sortBy()`,
 `aggregate()`, `groupBy()->aggregate()`, `pivot()`, window functions, `collect()`, `join()` - see
-[transformations](../core/transformations.md)) buffer the stream and deliver it when the pipeline closes the loader;
+[transformations](../core/transformations.md)) buffer the stream and deliver it when the run ends;
 `to_dbal_transaction()` opens one final transaction around that delivery - the whole drained stream commits
-atomically, a failure during it rolls back.
+atomically, a failure during it rolls back and surfaces from `run()`.
 
-Do not place `write_with_retries()` inside the wrapper: on databases that abort the transaction after a failed
-statement (PostgreSQL), every retry attempt fails too. Wrap the transaction instead -
-`write_with_retries(to_dbal_transaction(...))` gives each attempt a fresh transaction (see
-[retry](../core/retry.md)).
+Inside the transaction every sink runs throw-only: a failure rolls the batch back first, and only then the frame's
+`onError()` handler decides whether the run continues.
 
-Use `withIsolationLevel()` to set the transaction isolation level; it applies to every transaction the wrapper opens,
-including the final one:
+To set the isolation level, build the transaction yourself; it applies to every transaction opened, including the
+final one, and the previous level is restored when each one ends:
 
 ```php
 use Doctrine\DBAL\TransactionIsolationLevel;
+use Flow\ETL\Adapter\Doctrine\DbalTransaction;
+use Flow\ETL\Sink\Transactional;
 
-to_dbal_transaction($connection, to_dbal_table_insert($connection, 'users'))
-    ->withIsolationLevel(TransactionIsolationLevel::SERIALIZABLE);
+new Transactional(
+    DbalTransaction::fromConnection($connection)->withIsolationLevel(TransactionIsolationLevel::SERIALIZABLE),
+    to_dbal_table_insert($connection, 'users'),
+);
 ```
 
 ## Extractor - DbalQuery

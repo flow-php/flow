@@ -233,7 +233,7 @@ When `collect_metrics` is enabled:
 
 Structured logs are emitted at DEBUG level for pipeline events:
 
-- **Pipeline start** - Logged with configuration details (cache type, serializer, optimizers, spill storages)
+- **Pipeline start** - Logged with configuration details (cache type, serializer, planner rules, spill storages)
 - **Pipeline completion** - Logged with summary statistics (total rows, memory usage)
 - **Errors** - Logged at ERROR level with exception details
 

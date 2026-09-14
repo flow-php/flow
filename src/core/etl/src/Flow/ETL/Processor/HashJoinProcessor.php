@@ -10,7 +10,6 @@ use Flow\ETL\Bucketing\HashBucketing;
 use Flow\ETL\Bucketing\NativeHasher;
 use Flow\ETL\Bucketing\ResidentBucketsStorage;
 use Flow\ETL\Bucketing\SingleBucketHasher;
-use Flow\ETL\DataFrame;
 use Flow\ETL\Exception\DuplicatedEntriesException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\JoinException;
@@ -25,6 +24,7 @@ use Flow\ETL\Join\HashJoin\NullRowBuilder;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Join\JoinShape;
 use Flow\ETL\Pipeline\BoundStep;
+use Flow\ETL\Plan\FrameOutput;
 use Flow\ETL\Processor;
 use Flow\ETL\RandomValueGenerator;
 use Flow\ETL\Row\Reference;
@@ -53,7 +53,7 @@ final class HashJoinProcessor implements Processor
      * @param int<1, max> $batchSize
      */
     public function __construct(
-        private readonly DataFrame $right,
+        private readonly FrameOutput $right,
         private readonly Expression $expression,
         private readonly Join $type,
         private readonly Buckets $leftBuckets,

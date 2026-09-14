@@ -8,9 +8,9 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
-use Flow\ETL\Extractor\LimitPushDown;
-use Flow\ETL\Extractor\PushesLimit;
 use Flow\ETL\Extractor\RewindableExtractor;
+use Flow\ETL\Extractor\Scan;
+use Flow\ETL\Extractor\Scannable;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
@@ -27,10 +27,9 @@ use function Flow\PostgreSql\DSL\sql_to_count_query;
 use function Flow\PostgreSql\DSL\sql_to_paginated_query;
 use function min;
 
-final class PostgreSqlLimitOffsetExtractor implements BatchableExtractor, Extractor, LimitPushDown, RewindableExtractor
+final class PostgreSqlLimitOffsetExtractor implements BatchableExtractor, Extractor, RewindableExtractor, Scannable
 {
     use Batches;
-    use PushesLimit;
 
     private ?int $maximum = null;
 
@@ -53,7 +52,7 @@ final class PostgreSqlLimitOffsetExtractor implements BatchableExtractor, Extrac
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, Scan $scan = new Scan()): Generator
     {
         $sql = $this->query instanceof Sql ? $this->query->toSql() : $this->query;
 
@@ -65,7 +64,7 @@ final class PostgreSqlLimitOffsetExtractor implements BatchableExtractor, Extrac
 
         $schema = $this->schema();
 
-        $pushed = $this->pushedLimit();
+        $pushed = $scan->limit;
         $maximum = match (true) {
             $this->maximum !== null && $pushed !== null => min($this->maximum, $pushed),
             $this->maximum !== null => $this->maximum,

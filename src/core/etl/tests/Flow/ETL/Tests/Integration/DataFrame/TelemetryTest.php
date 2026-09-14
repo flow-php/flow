@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use DateTimeImmutable;
+use Flow\Clock\FakeClock;
 use Flow\ETL\Bucketing\Storage\FilesystemBuckets;
-use Flow\ETL\Loader\RetryLoader;
+use Flow\ETL\Sink\Transactional;
 use Flow\ETL\Tests\Context\MemoryTelemetryContext;
+use Flow\ETL\Tests\Double\RecordingTransaction;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\RowsMother;
 use Flow\ETL\Transformer\LimitTransformer;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
@@ -22,23 +24,29 @@ use Flow\Telemetry\Resource;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\TracerProvider;
-use Psr\Clock\ClockInterface;
 
 use function array_filter;
 use function array_keys;
+use function array_map;
+use function array_values;
 use function count;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_data_frame;
+use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\limit;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\telemetry_options;
 use function Flow\ETL\DSL\to_array;
+use function Flow\ETL\DSL\to_branch;
 use function Flow\ETL\DSL\to_transformation;
 use function Flow\ETL\DSL\with_entry;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
+use function in_array;
 use function str_contains;
 use function str_ends_with;
 use function str_starts_with;
@@ -50,7 +58,7 @@ final class TelemetryTest extends FlowTestCase
         $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
         $logProcessor = new MemoryLogProcessor(new VoidExporter());
-        $clock = $this->createFrozenClock();
+        $clock = new FakeClock();
         $contextStorage = new MemoryContextStorage();
 
         $telemetry = new Telemetry(
@@ -80,7 +88,7 @@ final class TelemetryTest extends FlowTestCase
         $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
         $logProcessor = new MemoryLogProcessor(new VoidExporter());
-        $clock = $this->createFrozenClock();
+        $clock = new FakeClock();
         $contextStorage = new MemoryContextStorage();
 
         $telemetry = new Telemetry(
@@ -129,7 +137,7 @@ final class TelemetryTest extends FlowTestCase
         $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
         $logProcessor = new MemoryLogProcessor(new VoidExporter());
-        $clock = $this->createFrozenClock();
+        $clock = new FakeClock();
         $contextStorage = new MemoryContextStorage();
 
         $telemetry = new Telemetry(
@@ -181,7 +189,7 @@ final class TelemetryTest extends FlowTestCase
         $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
         $logProcessor = new MemoryLogProcessor(new VoidExporter());
-        $clock = $this->createFrozenClock();
+        $clock = new FakeClock();
         $contextStorage = new MemoryContextStorage();
 
         $telemetry = new Telemetry(
@@ -223,7 +231,7 @@ final class TelemetryTest extends FlowTestCase
         $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
         $logProcessor = new MemoryLogProcessor(new VoidExporter());
-        $clock = $this->createFrozenClock();
+        $clock = new FakeClock();
         $contextStorage = new MemoryContextStorage();
 
         $telemetry = new Telemetry(
@@ -260,7 +268,7 @@ final class TelemetryTest extends FlowTestCase
         $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
         $logProcessor = new MemoryLogProcessor(new VoidExporter());
-        $clock = $this->createFrozenClock();
+        $clock = new FakeClock();
         $contextStorage = new MemoryContextStorage();
 
         $telemetry = new Telemetry(
@@ -330,7 +338,7 @@ final class TelemetryTest extends FlowTestCase
         ));
     }
 
-    public function test_limit_reached_inside_transformer_loader_is_not_reported_as_failure(): void
+    public function test_limit_reached_inside_a_sink_root_is_not_reported_as_failure(): void
     {
         $context = new MemoryTelemetryContext(telemetry_options(trace_loading: true));
 
@@ -395,28 +403,6 @@ final class TelemetryTest extends FlowTestCase
         static::assertSame(5, $entries[0]->record->attributes->get('limit'));
     }
 
-    public function test_retry_loader_exports_nested_spans_once(): void
-    {
-        $context = new MemoryTelemetryContext(telemetry_options(trace_loading: true));
-
-        $output = [];
-        df($context->config)
-            ->read(from_array([['id' => 1], ['id' => 2]])->withBatchSize(1))
-            ->load(new RetryLoader(to_array($output)))
-            ->run();
-
-        $endedSpans = $context->spans->endedSpans();
-
-        static::assertCount(2, array_filter(
-            $endedSpans,
-            static fn(Span $span): bool => $span->name() === 'RetryLoader',
-        ));
-        static::assertCount(2, array_filter(
-            $endedSpans,
-            static fn(Span $span): bool => $span->name() === 'ArrayLoader',
-        ));
-    }
-
     public function test_telemetry_disabled_by_default_uses_void_providers(): void
     {
         $config = config_builder()->build();
@@ -433,7 +419,50 @@ final class TelemetryTest extends FlowTestCase
         static::assertSame(1, $output[0]['id']);
     }
 
-    public function test_transformation_loader_builds_one_nested_dataframe_span_per_run(): void
+    public function test_loading_rows_on_a_branch_counts_the_rows_written(): void
+    {
+        $context = new MemoryTelemetryContext(telemetry_options(trace_loading: true));
+
+        $output = [];
+        df($context->config)
+            ->read(from_rows(...RowsMother::descendingIdBatches()))
+            ->write(to_branch(ref('id')->greaterThanEqual(lit(2)), to_array($output)))
+            ->run();
+
+        static::assertSame(
+            [2, 2],
+            array_values(array_map(
+                static fn(Span $span): mixed => $span->attributes()['flow.etl.loading.rows'],
+                array_filter(
+                    $context->spans->endedSpans(),
+                    static fn(Span $span): bool => $span->name() === 'ArrayLoader',
+                ),
+            )),
+        );
+    }
+
+    public function test_planner_built_sink_steps_emit_no_span(): void
+    {
+        $context = new MemoryTelemetryContext(telemetry_options(trace_loading: true));
+
+        $output = [];
+        df($context->config)
+            ->read(from_array([['id' => 1], ['id' => 2]]))
+            ->write(new Transactional(new RecordingTransaction(), to_transformation(limit(1), to_array($output))))
+            ->run();
+
+        static::assertCount(1, $output);
+        static::assertSame(
+            [],
+            array_values(array_filter($context->spans->endedSpans(), static fn(Span $span): bool => in_array(
+                $span->name(),
+                ['SinkFeed', 'TransactionalSinks'],
+                true,
+            ))),
+        );
+    }
+
+    public function test_a_sink_root_builds_no_dataframe_span_of_its_own(): void
     {
         $context = new MemoryTelemetryContext();
 
@@ -451,8 +480,8 @@ final class TelemetryTest extends FlowTestCase
 
         $isDataFrameSpan = static fn(Span $span): bool => str_starts_with($span->name(), 'DataFrame ');
 
-        static::assertCount(2, array_filter($context->spans->startedSpans(), $isDataFrameSpan));
-        static::assertCount(2, array_filter($context->spans->endedSpans(), $isDataFrameSpan));
+        static::assertCount(1, array_filter($context->spans->startedSpans(), $isDataFrameSpan));
+        static::assertCount(1, array_filter($context->spans->endedSpans(), $isDataFrameSpan));
     }
 
     public function test_until_condition_is_logged_without_exception_attribute(): void
@@ -478,17 +507,77 @@ final class TelemetryTest extends FlowTestCase
         static::assertSame(0, $entries[0]->record->attributes->get('limit'));
     }
 
-    private function createFrozenClock(DateTimeImmutable $now = new DateTimeImmutable()): ClockInterface
+    public function test_a_joins_right_side_builds_one_balanced_dataframe_span_per_run(): void
     {
-        return new readonly class($now) implements ClockInterface {
-            public function __construct(
-                private DateTimeImmutable $now,
-            ) {}
+        $context = new MemoryTelemetryContext();
+        $right = df($context->config)->read(from_array([['id' => 1, 'name' => 'a']]));
 
-            public function now(): DateTimeImmutable
-            {
-                return $this->now;
-            }
-        };
+        df($context->config)
+            ->read(from_array([['id' => 1]]))
+            ->join($right, join_on(['id' => 'id'], 'r_'))
+            ->run();
+
+        $isDataFrameSpan = static fn(Span $span): bool => str_starts_with($span->name(), 'DataFrame ');
+
+        static::assertCount(2, array_filter($context->spans->startedSpans(), $isDataFrameSpan));
+        static::assertCount(2, array_filter($context->spans->endedSpans(), $isDataFrameSpan));
+    }
+
+    public function test_a_cross_joins_right_side_builds_one_balanced_dataframe_span_per_run(): void
+    {
+        $context = new MemoryTelemetryContext();
+        $right = df($context->config)->read(from_array([['name' => 'a']]));
+
+        df($context->config)
+            ->read(from_array([['id' => 1]]))
+            ->crossJoin($right, 'r_')
+            ->run();
+
+        $isDataFrameSpan = static fn(Span $span): bool => str_starts_with($span->name(), 'DataFrame ');
+
+        static::assertCount(2, array_filter($context->spans->startedSpans(), $isDataFrameSpan));
+        static::assertCount(2, array_filter($context->spans->endedSpans(), $isDataFrameSpan));
+    }
+
+    public function test_an_inlined_nested_frame_builds_one_balanced_dataframe_span_per_run(): void
+    {
+        $context = new MemoryTelemetryContext();
+        $inner = df($context->config)->read(from_array([['id' => 1]]))->select('id');
+
+        df($context->config)->read(from_data_frame($inner))->run();
+
+        $isDataFrameSpan = static fn(Span $span): bool => str_starts_with($span->name(), 'DataFrame ');
+
+        static::assertCount(2, array_filter($context->spans->startedSpans(), $isDataFrameSpan));
+        static::assertCount(2, array_filter($context->spans->endedSpans(), $isDataFrameSpan));
+    }
+
+    public function test_an_abandoned_inlined_nested_frame_closes_both_dataframe_spans(): void
+    {
+        $context = new MemoryTelemetryContext();
+        $inner = df($context->config)->read(from_array([['id' => 1], ['id' => 2]]))->select('id');
+
+        foreach (df($context->config)->read(from_data_frame($inner))->batchSize(1)->get() as $_rows) {
+            break;
+        }
+
+        $isDataFrameSpan = static fn(Span $span): bool => str_starts_with($span->name(), 'DataFrame ');
+
+        static::assertCount(2, array_filter($context->spans->startedSpans(), $isDataFrameSpan));
+        static::assertCount(2, array_filter($context->spans->endedSpans(), $isDataFrameSpan));
+    }
+
+    public function test_a_frame_run_twice_builds_two_balanced_dataframe_spans(): void
+    {
+        $context = new MemoryTelemetryContext();
+        $frame = df($context->config)->read(from_array([['id' => 1]]));
+
+        $frame->count();
+        $frame->fetch();
+
+        $isDataFrameSpan = static fn(Span $span): bool => str_starts_with($span->name(), 'DataFrame ');
+
+        static::assertCount(2, array_filter($context->spans->startedSpans(), $isDataFrameSpan));
+        static::assertCount(2, array_filter($context->spans->endedSpans(), $isDataFrameSpan));
     }
 }

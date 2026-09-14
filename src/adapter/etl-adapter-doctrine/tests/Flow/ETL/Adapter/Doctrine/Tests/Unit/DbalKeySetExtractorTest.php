@@ -8,6 +8,7 @@ use Doctrine\DBAL\Logging\Middleware;
 use Flow\ETL\Adapter\Doctrine\DbalKeySetExtractor;
 use Flow\ETL\Adapter\Doctrine\Tests\Context\InMemorySqlite;
 use Flow\ETL\Adapter\Doctrine\Tests\Context\SelectQueryCounter;
+use Flow\ETL\Extractor\Scan;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\Adapter\Doctrine\pagination_key_asc;
@@ -75,10 +76,9 @@ final class DbalKeySetExtractorTest extends FlowTestCase
             $connection->createQueryBuilder()->select('*')->from('users'),
             pagination_key_set(pagination_key_asc('id')),
         );
-        $extractor->pushLimit(1500);
         $counter->reset();
 
-        self::assertExtractedRowsCount(1500, $extractor);
+        self::assertExtractedRowsCount(1500, $extractor, scan: new Scan(limit: 1500));
         // 1000, then a page narrowed to the 500 still wanted - and no third query for row 1501
         static::assertSame(2, $counter->count);
     }

@@ -105,20 +105,13 @@ Columns that may only become null in later batches, declare the schema explicitl
 Build `Config` through `Config::builder()` / `Config::default()`. A `Loader` holding per-run state (an open stream, a
 writer, a counter) implements `Discardable` and drops that state in `discard()`.
 
-### 7) `flow-php/etl` - `RetryLoader` no longer retries `InvalidLogicException` by default
+### 7) `flow-php/etl` - `write_with_retries()` and the retry surface are removed
 
-| Before                                                               | After                                                           |
-|----------------------------------------------------------------------|-----------------------------------------------------------------|
-| `new RetryLoader($loader)` default strategy `new AnyThrowable(3)`    | `new AnyThrowableExcept([InvalidLogicException::class], 3)`     |
-| `write_with_retries($loader)` default strategy `new AnyThrowable(3)` | `new AnyThrowableExcept([InvalidLogicException::class], 3)`     |
-| an `InvalidLogicException` was attempted 4 times with delays between | attempted once, no delay                                        |
-| -                                                                    | `retry_any_throwable_except([InvalidLogicException::class], 3)` |
-
-To keep retrying every throwable:
-
-```php
-write_with_retries($loader, retry_any_throwable(3));
-```
+| Before                                                                         | After                   |
+|--------------------------------------------------------------------------------|-------------------------|
+| `write_with_retries($loader, retry_any_throwable(3))`                          | removed, no replacement |
+| `Loader\RetryLoader`, `FailedRetryException`, `ReplayAware`, `Flow\ETL\Time\*` | removed                 |
+| `retry_*()`, `delay_*()`, `duration_*()` DSL functions                         | removed                 |
 
 ### 8) `flow-php/etl` - operations inside a `Transformation` answer for the whole stream
 
@@ -131,8 +124,8 @@ write_with_retries($loader, retry_any_throwable(3));
 | `$df->batchBy(...)` / `batch_size(...)` cut chunks at the incoming batches                                                                                               | cut chunks over the stream                                                                                                                                                                |
 | `$df->join(...)` inside a `Transformation` emitted rows in input order                                                                                                   | emits rows grouped by key                                                                                                                                                                 |
 | `$df->partitionBy(...)` inside a `Transformation`                                                                                                                        | removed - `$df->repartition(...)` groups the whole stream by key, see 60)                                                                                                                 |
-| a `Transformation` calling `$df->fetch()` / `count()` / `schema()` silently answered over an empty stream                                                                | throws `InvalidLogicException`                                                                                                                                                            |
-| `write_with_retries($loader)` around `to_transformation(...)` (any wrapped step) or around a `to_branch(...)` armed with `withTransformation(...)`, at any nesting depth | throws `InvalidLogicException` at the first `load()`, use `to_transformation(..., write_with_retries($loader))` or `to_branch(..., write_with_retries($loader))->withTransformation(...)` |
+| a `Transformation` calling `$df->fetch()` / `count()` / `schema()` silently answered over an empty stream | executes the prefix plan, see 114) |
+| `write_with_retries($loader)` around `to_transformation(...)` or `to_branch(...)` | removed with the retry surface, see 7) |
 | `Flow\ETL\Extractor\SwappableRowsExtractor`                                                                                                                              | removed                                                                                                                                                                                   |
 
 ### 9) `flow-php/etl` - `to_branch()->withTransformation()` drives its `Transformation` once over the whole stream
@@ -142,18 +135,18 @@ write_with_retries($loader, retry_any_throwable(3));
 | the `Transformation` ran on each filtered batch in its own `DataFrame`                        | one nested pipeline spans the stream                                                          |
 | `$df->sortBy(...)` in a branch transformation sorted each batch alone                         | sorts the whole branch stream                                                                 |
 | `$df->aggregate(...)` / `limit()` / other `Processor`-backed operations answered per batch    | answer once for the stream                                                                    |
-| a `Transformation` calling `$df->fetch()` / `count()` / `schema()` returned per-batch answers | throws `InvalidLogicException`                                                                |
-| the wrapped loader received exactly one `load()` per outer batch                              | receives output as the transformation produces it; blocking operations deliver at `closure()` |
-| telemetry `flow.etl.loading.rows` counted post-filter, post-transformation rows               | counts the rows offered to the branch                                                         |
+| a `Transformation` calling `$df->fetch()` / `count()` / `schema()` returned per-batch answers | executes the prefix plan, see 114) |
+| the branch's loader received exactly one `load()` per outer batch                             | receives output as the transformation produces it; blocking operations deliver at `closure()` |
+| telemetry `flow.etl.loading.rows` counted post-filter, post-transformation rows per `load()` | counts the rows the branch's loader writes; an empty batch never reaches the loader |
 
 ### 10) `flow-php/etl-adapter-doctrine`, `-postgresql` - transactional loaders run `closure()` in a transaction
 
 | Before                                                                                                      | After                                                                               |
 |-------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
-| `to_dbal_transaction()` / `to_pgsql_transaction()` never called `closure()` on wrapped loaders              | forwards `closure()` to every wrapped loader, inside one final transaction          |
-| blocking operations inside a wrapped `Transformation` answered per batch, each batch in its own transaction | answer for the whole stream, delivered at `closure()` in a single transaction       |
+| `to_dbal_transaction()` / `to_pgsql_transaction()` never called `closure()` on their loaders                 | forwards `closure()` to every sink, inside one final transaction                    |
+| blocking operations inside a sink's `Transformation` answered per batch, each batch in its own transaction  | answer for the whole stream, delivered at `closure()` in a single transaction       |
 | -                                                                                                           | a failure during the final transaction rolls back the drained delivery and rethrows |
-| `withIsolationLevel()` applied to per-batch transactions                                                    | applies to every transaction the wrapper opens                                      |
+| `withIsolationLevel()` applied to per-batch transactions                                                    | applies to every transaction opened - set on `DbalTransaction` / `PostgreSqlTransaction`, see 115) |
 
 ### 11) `flow-php/etl` - Floe on-disk format v2, existing `.floe` files must be rewritten
 
@@ -293,7 +286,7 @@ data_frame()->read(from_csv(path('aws-s3://x.csv'), filesystem: $fs))->run();
 | Before                                                              | After                                                                                |
 |---------------------------------------------------------------------|--------------------------------------------------------------------------------------|
 | `$df->saveMode(overwrite())` / `$df->mode(overwrite())`             | `to_csv($path)->saveMode(overwrite())` - per sink                                    |
-| `$df->saveMode(overwrite())->write(write_with_retries(to_csv($p)))` | `$df->write(write_with_retries(to_csv($p)->saveMode(overwrite())))`                  |
+| `$df->saveMode(overwrite())->write(to_transformation($t, to_csv($p)))` | `$df->write(to_transformation($t, to_csv($p)->saveMode(overwrite())))`             |
 | `to_text($path)` returned `Loader`                                  | returns `TextLoader`                                                                 |
 | `LoaderFactory::get()` returned `Loader`                            | returns `Loader&FileLoader`                                                          |
 | `flow read --config .flow.php aws-s3://bucket/x.csv`                | `flow pipeline:run pipeline.php`, with the filesystem built inside the pipeline file |
@@ -684,6 +677,8 @@ $adults = new Rows($rows->schema(), ...array_filter($rows->all(), fn (Row $row):
 | a pushed limit replaced the `limit()` step, so the extractor had to stop at it | the `limit()` step stays; stopping early is optional                             |
 | `new LimitReachedException($limit, $previous)`                                 | `new LimitReachedException($limit, $rows, $previous)` - pass `previous:` by name |
 
+`LimitPushDown` and `PushesLimit` are removed again in 0.44 - see 110).
+
 ### 36) `flow-php/etl` - `ErrorHandler` answers per stage: extraction, transformation, loading
 
 | Before                                                                                            | After                                                                                            |
@@ -695,7 +690,7 @@ $adults = new Rows($rows->schema(), ...array_filter($rows->all(), fn (Row $row):
 | `IgnoreError`: a failed transformation ran the remaining steps on the half-transformed batch      | the batch is dropped                                                                             |
 | `SkipRows` / `skip_rows_handler()`: a failed transformation emitted the half-transformed batch    | the batch is dropped                                                                             |
 | `SkipRows`: a failed loader was swallowed and the batch's remaining steps skipped                 | rethrown                                                                                         |
-| `SkipRows`: a drain failure of `to_transformation()` / `to_branch()` at `closure()` was swallowed | rethrown                                                                                         |
+| `SkipRows`: a drain failure of `to_transformation()` / `to_branch()` at `closure()` was swallowed | offered to `onTransformation()` once - `SkipRows` drops the buffered batch, see 114)            |
 
 The error objects and the action enums are in `Flow\ETL\ErrorHandler`.
 
@@ -1027,6 +1022,8 @@ A custom `Flow\ETL\Function\ScalarFunction\UnpackResults` function must return a
 | `filterPartitions(ref('date')->equals(lit('2024-01-01')))` - throws `Can't compare '(date == string)'`        | matches `date=2024-01-01`                                                                                                                    |
 | a `DateTimeImmutable` or `bool` literal over `files()` / `from_path_partitions()` - matched                   | matches nothing; compare a string literal                                                                                                    |
 | `new ScalarFunctionFilter($function, $entryFactory, $caster, $context)`                                       | `new ScalarFunctionFilter($function, Schema $partitions, $context)`                                                                          |
+
+`filterPartitions()` is removed later in 0.44 - see 111).
 
 ### 62) `flow-php/etl` / `flow-php/types` - missing-column and type-mismatch messages changed
 
@@ -1530,6 +1527,102 @@ Recurse with `data/**/*.parquet`, not `data/**.parquet`. `webmozart/glob` is no 
 |-----------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
 | `partitionBy(partition_by('date'))` - file body carries an all-null `date` column | file body without `date`                                                                             |
 | `from_parquet()` types `date` from that body column, e.g. `datetime`              | `string` - declare it: `from_parquet($path)->partitionTypes(partition_types(date: type_datetime()))` |
+
+### 109) `flow-php/etl` - `Optimizer` replaced by `Planner`, the `Pipeline` class removed
+
+| Before                                                                                                                                                                                            | After                                                                                                                           |
+|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
+| `Config::optimizer()`, `new Config(..., Optimizer $optimizer, ...)`                                                                                                                               | removed - `Config::planner()` / `Config::executor()`, `new Config(..., Planner $planner, Executor $executor, ...)`              |
+| `config_builder()->optimizer($optimizer)`                                                                                                                                                         | `config_builder()->planner(Planner $planner)`, `->executor(Executor $executor)`                                                 |
+| `Flow\ETL\Pipeline` (class, with `Pipeline::has()`), `Pipeline\Optimizer`, `Pipeline\Optimizer\Optimization`, `Pipeline\Optimizer\LimitOptimization`, `Pipeline\BoundPlan`, `Pipeline\PlanBinder` | removed - a `Planner\Rule` rewrites the `Plan\LogicalPlan`: `apply(LogicalPlan $plan, FlowContext $context): LogicalPlan`       |
+| -                                                                                                                                                                                                 | `Flow\ETL\Plan` interface (`root(): Plan\Pipeline`): `Plan\Described` carries `$schema`, `Plan\Raw` and `Plan\Refusal` do not   |
+| `Segments::replaceExtractor()` / `has()` / `current()` / `segmentFor()`, `Segment::withExtractor()` / `has()` / `contains()`                                                                      | removed - `Segments::extractor()` / `Segment::extractor()`                                                                      |
+| `new DataFrame(Pipeline $pipeline, $context)`                                                                                                                                                     | `new DataFrame(Extractor $extractor, Config\|FlowContext $context)`; `snapshot()`, `logical()`, `fork()` added, all `@internal` |
+| `new HashJoinProcessor(DataFrame $right, ...)`, `new CrossJoinRowsTransformer(DataFrame $frame, ...)`, `JoinSteps::of(DataFrame ...)`                                                             | take `Plan\FrameOutput`                                                                                                         |
+| `InvalidLogicException::cyclicPlanOnDescribe()`                                                                                                                                                   | removed                                                                                                                         |
+| telemetry debug-log field `optimizers`                                                                                                                                                            | `planner_rules`                                                                                                                 |
+
+### 110) `flow-php/etl` - `Scannable` and `Scan` replace `LimitPushDown` and `withPathFilter()`
+
+| Before                                                                                 | After                                                                                                                               |
+|----------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
+| `Extractor\LimitPushDown` + `PushesLimit` trait, `pushLimit()` / `pushedLimit()`       | removed - implement `Extractor\Scannable`: `extract(FlowContext $context, Scan $scan = new Scan()): Generator`, read `$scan->limit` |
+| `FileExtractor::withPathFilter($filter)` / `filter()`, `PathFiltering` held the filter | removed - `FileExtractor extends Scannable`, list with `$scan->pathFilter`                                                          |
+| `interface FileExtractor`                                                              | gains `partitionSchema(): Schema` - every implementor must add it                                                                   |
+| `interface Function\FunctionTree`                                                      | gains `deterministic(): bool` - implementors using neither `ScalarFunctionChain` nor `ResolvesFromChildren` must add it             |
+| -                                                                                      | `Extractor\NestedPlan` added; `DataFrameExtractor implements NestedPlan` (constructor unchanged)                                    |
+
+### 111) `flow-php/etl` - `filterPartitions()` removed, the planner pushes `filter()` into the source
+
+| Before                                                          | After                                                                                                                              |
+|-----------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| `$df->filterPartitions(ref('date')->equals(lit('2024-01-01')))` | `$df->filter(ref('date')->equals(lit('2024-01-01')))` - pushed into the source as a path filter, only matching partitions are read |
+| `$df->filterPartitions(new OnlyFiles())` (`Path\Filter` form)   | removed, no replacement                                                                                                            |
+| a filter on a column the file source does not declare - 0 rows  | throws `SchemaDefinitionNotFoundException` at plan time                                                                            |
+| a partition-predicate error was thrown by the verb              | thrown at plan / bind time - a planner rule can fail a plan                                                                        |
+| `->write($sink)->filter(...)` narrowed the earlier sink         | a filter is pushed only when every root reaches the source through it - the sink gets every row                                    |
+
+### 112) `flow-php/etl` - frames are snapshotted when embedded, fewer limits are pushed
+
+| Before                                                                                                                                         | After                                                                                                                                                  |
+|------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `$left->join($right, ...); $right->select('id');` - the `select()` was part of the join's right side                                           | ignored - a frame is snapshotted at `join()` / `from_data_frame()` time                                                                                |
+| `$frame->join(df()->read(from_data_frame($frame)), ...)` threw `InvalidLogicException` "Cannot describe this plan:"                            | runs as a self-join against the snapshot; a run-time cycle still throws `cyclicPlanOnRun()`                                                            |
+| `->rows($t)->limit(n)`, `->transform($t)->limit(n)`, `->void()->limit(n)` pushed the limit into the source for seven allow-listed transformers | not pushed - `->withEntry(...)->limit(n)` still pushes; with several sinks the widest limit is pushed, a `limit(3)` inside a sink limits the whole run |
+| -                                                                                                                                              | `schema()` followed by a terminal verb plans twice, `Extractor::schema()` is called once per planning - memoise a sniffing extractor                   |
+
+### 113) `flow-php/etl` - one balanced `DataFrame` telemetry span per run
+
+| Before                                                                                                  | After                                                       |
+|---------------------------------------------------------------------------------------------------------|-------------------------------------------------------------|
+| the `DataFrame` span started when the frame was built                                                   | starts when the run starts - `Execution\Run` owns both ends |
+| a planning failure under `schema()` emitted no span                                                     | `dataFrameStarted` + `dataFrameFailed` for every verb       |
+| an abandoned `get*()` generator left its span open                                                      | closes it                                                   |
+| a failure inside a verb's own loop body (a `forEach` callback, the formatter) closed the span as failed | closed as completed                                         |
+| a non-inlined `from_data_frame()` frame emitted no span                                                 | one balanced span per run                                   |
+| `to_dbal_transaction()` / `to_pgsql_transaction()` emitted their own span                               | no span                                                     |
+
+### 114) `flow-php/etl` - `to_branch()` / `to_transformation()` return a `Sink`, the wrapper loaders are removed
+
+| Before                                                                                                | After                                                                                                                                                                                                                                             |
+|-------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `to_branch($condition, $loader, $transformation)` returned `BranchingLoader`                          | `to_branch($condition, $sink)->withTransformation($transformation)` returns `Sink\Branched`                                                                                                                                                       |
+| `to_transformation($transformation, $loader)` returned `TransformerLoader`                            | returns `Sink\Transformed`; both take a `Loader` or another `Sink`, neither is accepted where a `Loader` is required                                                                                                                              |
+| `Loader\OverridingLoader`, `Loader\LoaderTree`, `Loader\TransformerLoader`, `Loader\BranchingLoader`  | removed - `Flow\ETL\Sink` interface, `Sink\Roots`                                                                                                                                                                                                 |
+| a `Transformation` calling `fetch()` / `count()` / `run()` / `onError()` / `snapshot()` inside a sink | executes the prefix plan, as `from_data_frame()` executes a frame; `onError()` applies to that sink's own context, never to the outer frame                                                                                                       |
+| an unresolved column or a non-boolean condition in a sink failed at the first batch                   | fails at plan time; one undescribable sink operation makes the whole plan run raw                                                                                                                                                                 |
+| a transformer failing inside a non-transactional sink was a LOADING error                             | a TRANSFORMATION error offered to `onTransformation()` once: `SkipRows` / `IgnoreError` drop the batch (after a blocking operation, the whole buffered batch); a `limit()` completing the sink mid-load is a LOADING error on `Pipeline\SinkFeed` |
+
+### 115) `flow-php/etl-adapter-doctrine`, `-postgresql` - `to_dbal_transaction()` / `to_pgsql_transaction()` are transaction roots
+
+| Before                                                                                     | After                                                                                                                                                                                                                                  |
+|--------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `to_dbal_transaction($connection, Loader ...$loaders): TransactionalDbalLoader`            | `to_dbal_transaction($connection, Loader\|Sink ...$sinks): Sink` - `Sink\Transactional` over a `DbalTransaction`; `TransactionalDbalLoader` removed                                                                                    |
+| `to_pgsql_transaction($client, Loader ...$loaders): TransactionalPostgreSqlLoader`         | `to_pgsql_transaction($client, Loader\|Sink ...$sinks): Sink` - over a `PostgreSqlTransaction`; `TransactionalPostgreSqlLoader` removed                                                                                                |
+| `to_dbal_transaction(...)->withIsolationLevel($level)`                                     | `new Transactional((new DbalTransaction($connection))->withIsolationLevel($level), ...$sinks)` - returns a new instance; the same on `PostgreSqlTransaction`, which runs `SET TRANSACTION` after `BEGIN` and rolls back a failed `SET` |
+| a failure a non-throwing `onError()` handler suppressed still committed the batch          | the batch (or the closure drain) rolls back and is never re-delivered; the handler only decides whether the run continues - the failing sink restarts on the next batch, its buffered rows lost                                        |
+| `LoadingError::$loader` for a `begin()` / `commit()` failure was `TransactionalDbalLoader` | `Pipeline\TransactionalSinks`; for a sink failure, the sink's own loader when bare, `Pipeline\SinkFeed` otherwise; the exception is always the cause, never `TransactionRolledBack`                                                    |
+
+### 116) `flow-php/etl` - the logical plan has one root
+
+`LogicalPlan` (internal API) no longer carries a `sinks` list beside its `root`. Every consumer is a node: the
+caller's stream is a `Result`, and a plan with several consumers has a `SinkMultiple` root whose first child is
+that `Result` and whose other children are the sink roots. `LogicalPlan::withSinks()` is gone, `sinkRoots()` and
+`consumers()` read the root. `DataFrame::logical()` builds the plan on demand; `DataFrame::cursor()` and
+`DataFrame::sinks()` (both `@internal`) expose the chain end and the attached sinks. A rule over the plan sees one
+tree; a blocking node directly under the `Result` still ends the root pipeline.
+
+### 117) `flow-php/etl` - `DataFrame::explain()` prints the logical plan
+
+```php
+echo df()->read(from_csv('orders.csv'))->filter(ref('email')->isNotNull())->write(to_json('out.json'))->explain();
+```
+
+One line per node with its declarations (`rowCount · transparency · materialization`, plus `redefines` when the
+node introduces or renames columns); a subtree several consumers share is printed once and referenced as
+`#n (shared)` afterwards. Not a trigger: no row is read. `Node::redefines()` is a new declaration every node
+answers, which is what `filter()` push-down now asks instead of a class list - a `duplicateRow()` that defines a
+partition column correctly blocks the push.
 
 ---
 
@@ -3295,6 +3388,8 @@ This applies to all Definition implementations: `BooleanDefinition`, `DateDefini
 |------------------------------|-----------------------------------|
 | `FileExtractor::addFilter()` | `FileExtractor::withPathFilter()` |
 | `PathFiltering::addFilter()` | `PathFiltering::withPathFilter()` |
+
+`withPathFilter()` is removed in 0.44 - see 110) of that version.
 
 ### 7) Removed deprecated ScalarFunctionChain methods
 

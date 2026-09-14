@@ -8,9 +8,9 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
-use Flow\ETL\Extractor\LimitPushDown;
-use Flow\ETL\Extractor\PushesLimit;
 use Flow\ETL\Extractor\RewindableExtractor;
+use Flow\ETL\Extractor\Scan;
+use Flow\ETL\Extractor\Scannable;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
@@ -35,10 +35,9 @@ use function random_bytes;
  *
  * Note: Requires a transaction context (auto-started if not in one).
  */
-final class PostgreSqlCursorExtractor implements BatchableExtractor, Extractor, LimitPushDown, RewindableExtractor
+final class PostgreSqlCursorExtractor implements BatchableExtractor, Extractor, RewindableExtractor, Scannable
 {
     use Batches;
-    use PushesLimit;
 
     private ?string $cursorName = null;
 
@@ -63,7 +62,7 @@ final class PostgreSqlCursorExtractor implements BatchableExtractor, Extractor, 
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, Scan $scan = new Scan()): Generator
     {
         $encoder = new PostgreSqlEncoder();
         $cursorName = $this->cursorName ?? 'flow_cursor_' . bin2hex(random_bytes(8));
@@ -79,7 +78,7 @@ final class PostgreSqlCursorExtractor implements BatchableExtractor, Extractor, 
         try {
             $this->client->execute(declare_cursor($cursorName, $this->query), $this->parameters);
 
-            $pushed = $this->pushedLimit();
+            $pushed = $scan->limit;
             $maximum = match (true) {
                 $this->maximum !== null && $pushed !== null => min($this->maximum, $pushed),
                 $this->maximum !== null => $this->maximum,

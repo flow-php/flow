@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Pipeline;
 
-use Flow\ETL\ErrorHandler\ExtractionError;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline\BoundStep;
@@ -13,54 +12,17 @@ use Flow\ETL\Processor;
 use Flow\ETL\Processor\BatchingProcessor;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
-use Flow\ETL\Tests\Double\RecordingErrorHandler;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\ETL\Tests\Mother\RowsMother;
 use Flow\ETL\Transformer;
 use Generator;
-use PHPUnit\Framework\Attributes\TestWith;
-use RuntimeException;
 
-use function Flow\ETL\DSL\config;
-use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
-use function iterator_to_array;
 
 final class SegmentsTest extends FlowTestCase
 {
-    #[TestWith([false])]
-    #[TestWith([true])]
-    public function test_replacing_the_extractor_reaches_the_segment_that_reads_it(bool $behindProcessor): void
-    {
-        $segments = new Segments(from_rows(rows(schema())));
-
-        if ($behindProcessor) {
-            $segments->add(new BatchingProcessor(10));
-        }
-
-        $replacement = from_rows(rows(schema()));
-        $segments->replaceExtractor($replacement);
-
-        $handler = new RecordingErrorHandler();
-
-        iterator_to_array($segments->all()[0]->execute(
-            (static function (): Generator {
-                yield RowsMother::sequentialIds(1);
-
-                throw new RuntimeException('source failed');
-            })(),
-            flow_context(config())->setErrorHandler($handler),
-        ));
-
-        $error = $handler->errors[0];
-
-        static::assertInstanceOf(ExtractionError::class, $error);
-        static::assertSame($replacement, $error->extractor);
-    }
-
-    public function test_add_loader_to_current_segment(): void
+    public function test_add_loader_goes_into_the_only_segment(): void
     {
         $segments = new Segments();
         $loader = $this->createStubLoader();
@@ -68,10 +30,10 @@ final class SegmentsTest extends FlowTestCase
         $segments->add($loader);
 
         static::assertCount(1, $segments->all());
-        static::assertSame([$loader], $segments->current()->steps());
+        static::assertSame([$loader], $segments->all()[0]->steps());
     }
 
-    public function test_add_multiple_transformers_and_loaders_to_current_segment(): void
+    public function test_add_multiple_transformers_and_loaders_go_into_the_only_segment(): void
     {
         $segments = new Segments();
         $transformer1 = $this->createStubTransformer();
@@ -83,7 +45,7 @@ final class SegmentsTest extends FlowTestCase
         $segments->add($loader);
 
         static::assertCount(1, $segments->all());
-        static::assertSame([$transformer1, $transformer2, $loader], $segments->current()->steps());
+        static::assertSame([$transformer1, $transformer2, $loader], $segments->all()[0]->steps());
     }
 
     public function test_add_processor_creates_new_segment(): void
@@ -118,7 +80,7 @@ final class SegmentsTest extends FlowTestCase
         static::assertSame($processor, $allSegments[0]->processor());
     }
 
-    public function test_add_transformer_to_current_segment(): void
+    public function test_add_transformer_goes_into_the_only_segment(): void
     {
         $segments = new Segments();
         $transformer = $this->createStubTransformer();
@@ -126,7 +88,7 @@ final class SegmentsTest extends FlowTestCase
         $segments->add($transformer);
 
         static::assertCount(1, $segments->all());
-        static::assertSame([$transformer], $segments->current()->steps());
+        static::assertSame([$transformer], $segments->all()[0]->steps());
     }
 
     public function test_all_returns_all_segments_including_current(): void
@@ -147,94 +109,6 @@ final class SegmentsTest extends FlowTestCase
         static::assertSame($processor, $allSegments[0]->processor());
         static::assertSame([$transformer2], $allSegments[1]->steps());
         static::assertNull($allSegments[1]->processor());
-    }
-
-    public function test_current_returns_current_segment_when_no_processors(): void
-    {
-        $segments = new Segments();
-        $transformer = $this->createStubTransformer();
-
-        $segments->add($transformer);
-
-        static::assertSame([$transformer], $segments->current()->steps());
-        static::assertNull($segments->current()->processor());
-    }
-
-    public function test_current_returns_last_completed_segment_when_processors_exist(): void
-    {
-        $segments = new Segments();
-        $transformer = $this->createStubTransformer();
-        $processor = $this->createStubProcessor();
-
-        $segments->add($transformer);
-        $segments->add($processor);
-
-        static::assertSame([$transformer], $segments->current()->steps());
-        static::assertSame($processor, $segments->current()->processor());
-    }
-
-    public function test_has_finds_loader_in_completed_segment(): void
-    {
-        $segments = new Segments();
-        $loader = $this->createStubLoader();
-        $processor = $this->createStubProcessor();
-
-        $segments->add($loader);
-        $segments->add($processor);
-
-        static::assertTrue($segments->has($loader::class));
-    }
-
-    public function test_has_finds_loader_in_current_segment(): void
-    {
-        $segments = new Segments();
-        $loader = $this->createStubLoader();
-
-        $segments->add($loader);
-
-        static::assertTrue($segments->has($loader::class));
-    }
-
-    public function test_has_finds_processor_in_completed_segment(): void
-    {
-        $segments = new Segments();
-        $processor = $this->createStubProcessor();
-
-        $segments->add($processor);
-
-        static::assertTrue($segments->has($processor::class));
-    }
-
-    public function test_has_finds_transformer_in_completed_segment(): void
-    {
-        $segments = new Segments();
-        $transformer = $this->createStubTransformer();
-        $processor = $this->createStubProcessor();
-
-        $segments->add($transformer);
-        $segments->add($processor);
-
-        static::assertTrue($segments->has($transformer::class));
-    }
-
-    public function test_has_finds_transformer_in_current_segment(): void
-    {
-        $segments = new Segments();
-        $transformer = $this->createStubTransformer();
-
-        $segments->add($transformer);
-
-        static::assertTrue($segments->has($transformer::class));
-    }
-
-    public function test_has_returns_false_when_class_not_present(): void
-    {
-        $segments = new Segments();
-        $transformer = $this->createStubTransformer();
-
-        $segments->add($transformer);
-
-        static::assertFalse($segments->has(Loader::class));
     }
 
     public function test_multiple_processors_create_multiple_segments(): void
@@ -268,7 +142,23 @@ final class SegmentsTest extends FlowTestCase
         $segments = new Segments();
 
         static::assertCount(1, $segments->all());
-        static::assertSame([], $segments->current()->steps());
+        static::assertSame([], $segments->all()[0]->steps());
+    }
+
+    public function test_extractor_returns_the_extractor_of_the_first_segment(): void
+    {
+        $extractor = from_rows(rows(schema()));
+        $segments = new Segments($extractor);
+
+        $segments->add(new BatchingProcessor(10));
+        $segments->add($this->createStubTransformer());
+
+        static::assertSame($extractor, $segments->extractor());
+    }
+
+    public function test_extractor_is_null_when_the_segments_were_built_without_one(): void
+    {
+        static::assertNull((new Segments())->extractor());
     }
 
     public function test_steps_returns_all_steps_flattened_including_processors(): void

@@ -33,6 +33,11 @@ final class Now implements ScalarFunction
         return [$this->timeZone];
     }
 
+    public function deterministic(): bool
+    {
+        return false;
+    }
+
     /**
      * @param list<FunctionTree> $children
      */

@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Pipeline;
 
-use Flow\ETL\Pipeline;
+use Flow\ETL\Pipeline\Segments;
 use Flow\ETL\Processor\WindowProcessor;
+use Flow\ETL\Tests\Context\ExecutedSegments;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\ETL\DSL\config;
@@ -26,19 +27,19 @@ final class WindowFunctionPipelineTest extends TestCase
 {
     public function test_handles_empty_input(): void
     {
-        $pipeline = new Pipeline(from_rows(rows(schema(int_schema('id')))));
+        $segments = new Segments(from_rows(rows(schema(int_schema('id')))));
 
         $window = window()->orderBy(ref('id'));
-        $pipeline->add(new WindowProcessor('row_num', row_number()->over($window)));
+        $segments->add(new WindowProcessor('row_num', row_number()->over($window)));
 
-        $result = iterator_to_array($pipeline->process(flow_context(config())));
+        $result = iterator_to_array(ExecutedSegments::of($segments, flow_context(config())));
 
         static::assertCount(0, $result);
     }
 
     public function test_handles_no_order_by(): void
     {
-        $pipeline = new Pipeline(from_rows(rows(
+        $segments = new Segments(from_rows(rows(
             schema(str_schema('dept'), int_schema('value')),
             row(['dept' => 'IT', 'value' => 100]),
             row(['dept' => 'IT', 'value' => 150]),
@@ -46,10 +47,10 @@ final class WindowFunctionPipelineTest extends TestCase
 
         $window = window()->partitionBy(ref('dept'));
 
-        $pipeline->add(new WindowProcessor('total', sum(ref('value'))->over($window)));
+        $segments->add(new WindowProcessor('total', sum(ref('value'))->over($window)));
 
         $context = flow_context(config());
-        $result = iterator_to_array($pipeline->process($context));
+        $result = iterator_to_array(ExecutedSegments::of($segments, $context));
 
         static::assertCount(1, $result);
         static::assertCount(2, $result[0]);
@@ -63,17 +64,17 @@ final class WindowFunctionPipelineTest extends TestCase
         // the shuffle is upstream of this processor now, so the test hands it what a shuffle produces:
         // one Rows per partition key
         $schema = schema(str_schema('dept'), int_schema('salary'));
-        $pipeline = new Pipeline(from_rows(
+        $segments = new Segments(from_rows(
             rows($schema, row(['dept' => 'IT', 'salary' => 5000])),
             rows($schema, row(['dept' => 'HR', 'salary' => 4000])),
         ));
 
         $window = window()->partitionBy(ref('dept'))->orderBy(ref('salary'));
 
-        $pipeline->add(new WindowProcessor('row_num', row_number()->over($window)));
+        $segments->add(new WindowProcessor('row_num', row_number()->over($window)));
 
         $context = flow_context(config());
-        $result = iterator_to_array($pipeline->process($context));
+        $result = iterator_to_array(ExecutedSegments::of($segments, $context));
 
         static::assertCount(2, $result);
         static::assertCount(1, $result[0]);
@@ -83,17 +84,17 @@ final class WindowFunctionPipelineTest extends TestCase
     public function test_processes_multiple_partitions_separately(): void
     {
         $schema = schema(str_schema('dept'), int_schema('salary'));
-        $pipeline = new Pipeline(from_rows(
+        $segments = new Segments(from_rows(
             rows($schema, row(['dept' => 'IT', 'salary' => 5000]), row(['dept' => 'IT', 'salary' => 6000])),
             rows($schema, row(['dept' => 'HR', 'salary' => 4000]), row(['dept' => 'HR', 'salary' => 4500])),
         ));
 
         $window = window()->partitionBy(ref('dept'))->orderBy(ref('salary'));
 
-        $pipeline->add(new WindowProcessor('row_num', row_number()->over($window)));
+        $segments->add(new WindowProcessor('row_num', row_number()->over($window)));
 
         $context = flow_context(config());
-        $result = iterator_to_array($pipeline->process($context));
+        $result = iterator_to_array(ExecutedSegments::of($segments, $context));
 
         static::assertCount(2, $result);
 
@@ -108,7 +109,7 @@ final class WindowFunctionPipelineTest extends TestCase
 
     public function test_processes_single_partition_without_partition_by(): void
     {
-        $pipeline = new Pipeline(from_rows(rows(
+        $segments = new Segments(from_rows(rows(
             schema(int_schema('id'), int_schema('value')),
             row(['id' => 1, 'value' => 100]),
             row(['id' => 2, 'value' => 150]),
@@ -116,10 +117,10 @@ final class WindowFunctionPipelineTest extends TestCase
         )));
 
         $window = window()->orderBy(ref('id'));
-        $pipeline->add(new WindowProcessor('row_num', row_number()->over($window)));
+        $segments->add(new WindowProcessor('row_num', row_number()->over($window)));
 
         $context = flow_context(config());
-        $result = iterator_to_array($pipeline->process($context));
+        $result = iterator_to_array(ExecutedSegments::of($segments, $context));
 
         static::assertCount(1, $result);
         static::assertCount(3, $result[0]);
@@ -131,7 +132,7 @@ final class WindowFunctionPipelineTest extends TestCase
 
     public function test_sorts_partition_by_order_by(): void
     {
-        $pipeline = new Pipeline(from_rows(rows(
+        $segments = new Segments(from_rows(rows(
             schema(str_schema('dept'), int_schema('salary')),
             row(['dept' => 'IT', 'salary' => 6000]),
             row(['dept' => 'IT', 'salary' => 5000]),
@@ -140,10 +141,10 @@ final class WindowFunctionPipelineTest extends TestCase
 
         $window = window()->partitionBy(ref('dept'))->orderBy(ref('salary'));
 
-        $pipeline->add(new WindowProcessor('row_num', row_number()->over($window)));
+        $segments->add(new WindowProcessor('row_num', row_number()->over($window)));
 
         $context = flow_context(config());
-        $result = iterator_to_array($pipeline->process($context));
+        $result = iterator_to_array(ExecutedSegments::of($segments, $context));
 
         static::assertEquals(5000, $result[0][0]->get('salary'));
         static::assertEquals(6000, $result[0][1]->get('salary'));

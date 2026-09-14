@@ -22,6 +22,7 @@ final class DatabaseContext
         private readonly Connection $connection,
         private readonly InsertQueryCounter $insertQueryCounter,
         private readonly SelectQueryCounter $selectQueryCounter,
+        private readonly CommitCounter $commitCounter,
     ) {}
 
     public function connection(): Connection
@@ -67,6 +68,11 @@ final class DatabaseContext
         /** @var array<int<0, max>|string, ParameterType|string|Type> $doctrineTypes */
         $doctrineTypes = $types;
         $this->connection->insert($tableName, $data, $doctrineTypes);
+    }
+
+    public function numberOfCommits(): int
+    {
+        return $this->commitCounter->count;
     }
 
     public function numberOfExecutedInsertQueries(): int

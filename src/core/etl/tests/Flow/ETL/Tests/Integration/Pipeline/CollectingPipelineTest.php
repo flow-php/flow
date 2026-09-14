@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Pipeline;
 
-use Flow\ETL\Pipeline;
+use Flow\ETL\Pipeline\Segments;
 use Flow\ETL\Processor\CollectingProcessor;
+use Flow\ETL\Tests\Context\ExecutedSegments;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\config;
@@ -18,7 +19,7 @@ final class CollectingPipelineTest extends FlowTestCase
 {
     public function test_collecting(): void
     {
-        $pipeline = new Pipeline(from_all(
+        $segments = new Segments(from_all(
             from_array([
                 ['id' => 1],
                 ['id' => 2],
@@ -39,8 +40,8 @@ final class CollectingPipelineTest extends FlowTestCase
                 ['id' => 13],
             ]),
         ));
-        $pipeline->add(new CollectingProcessor());
+        $segments->add(new CollectingProcessor());
 
-        static::assertCount(1, iterator_to_array($pipeline->process(flow_context(config()))));
+        static::assertCount(1, iterator_to_array(ExecutedSegments::of($segments, flow_context(config()))));
     }
 }

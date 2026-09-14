@@ -11,9 +11,9 @@ use Doctrine\DBAL\Types\Type;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
-use Flow\ETL\Extractor\LimitPushDown;
-use Flow\ETL\Extractor\PushesLimit;
 use Flow\ETL\Extractor\RewindableExtractor;
+use Flow\ETL\Extractor\Scan;
+use Flow\ETL\Extractor\Scannable;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
@@ -30,10 +30,9 @@ use function count;
  * A pushed limit is global across parameter sets - their batches are concatenated - and no set is queried
  * once it is reached. The query is a raw string, so the first queried set is never bounded server-side.
  */
-final class DbalQueryExtractor implements BatchableExtractor, Extractor, LimitPushDown, RewindableExtractor
+final class DbalQueryExtractor implements BatchableExtractor, Extractor, RewindableExtractor, Scannable
 {
     use Batches;
-    use PushesLimit;
 
     private ParametersSet $parametersSet;
 
@@ -84,13 +83,13 @@ final class DbalQueryExtractor implements BatchableExtractor, Extractor, LimitPu
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, Scan $scan = new Scan()): Generator
     {
         $schema = $this->schema();
         $hydrator = $context->hydrator();
         $encoder = new DbalEncoder();
         $yielded = 0;
-        $maximum = $this->pushedLimit();
+        $maximum = $scan->limit;
 
         foreach ($this->parametersSet->all() as $parameters) {
             if ($maximum !== null && $yielded >= $maximum) {

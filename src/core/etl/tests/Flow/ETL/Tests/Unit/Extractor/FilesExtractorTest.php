@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Extractor;
 
 use Flow\ETL\Extractor\FilesExtractor;
+use Flow\ETL\Extractor\Scan;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\FlowTestCase;
@@ -54,9 +55,8 @@ final class FilesExtractorTest extends FlowTestCase
     public function test_extracting_files_from_directory_with_limit(): void
     {
         $extractor = files(__DIR__ . '/Fixtures/FileListExtractor/**/*')->withBatchSize(1);
-        $extractor->pushLimit(2);
 
-        self::assertExtractedRowsCount(2, $extractor);
+        self::assertExtractedRowsCount(2, $extractor, scan: new Scan(limit: 2));
     }
 
     public function test_is_repeatable(): void

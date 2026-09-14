@@ -20,6 +20,13 @@ interface FunctionTree
     public function resolved(): bool;
 
     /**
+     * True when this node and every node in children() produce the same value for the same input row.
+     * False for a generator (now(), uuid, a random string): a caller that evaluates the tree once per FILE
+     * or per partition instead of once per row must refuse a non-deterministic one.
+     */
+    public function deterministic(): bool;
+
+    /**
      * A copy of this node with $children in place of children(): same count, same order, same
      * per-element narrowing. Never mutates $this.
      *

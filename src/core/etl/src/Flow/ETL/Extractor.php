@@ -27,6 +27,9 @@ interface Extractor
      * FlowContext: a source that needs the pipeline's context to describe itself has not moved
      * the answer to bind time.
      *
+     * Called once per RUN - every run plans afresh - so it MUST be idempotent and cheap on repeat: memoise
+     * what it sniffs, as CSVExtractor and ArrayExtractor do.
+     *
      * @throws SchemaNotDerivableException when the source cannot describe what it will produce
      */
     public function schema(): Schema;

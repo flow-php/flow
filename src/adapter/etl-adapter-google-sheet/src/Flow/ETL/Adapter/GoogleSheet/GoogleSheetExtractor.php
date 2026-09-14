@@ -10,11 +10,11 @@ use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\InfersSchema;
-use Flow\ETL\Extractor\LimitPushDown;
 use Flow\ETL\Extractor\MetadataColumns;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
-use Flow\ETL\Extractor\PushesLimit;
 use Flow\ETL\Extractor\RewindableExtractor;
+use Flow\ETL\Extractor\Scan;
+use Flow\ETL\Extractor\Scannable;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\RawRowValues;
@@ -39,12 +39,11 @@ final class GoogleSheetExtractor implements
     BatchableExtractor,
     Extractor,
     InfersSchema,
-    LimitPushDown,
     MetadataColumnsExtractor,
-    RewindableExtractor
+    RewindableExtractor,
+    Scannable
 {
     use Batches;
-    use PushesLimit;
     use MetadataColumns;
 
     /**
@@ -82,7 +81,7 @@ final class GoogleSheetExtractor implements
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, Scan $scan = new Scan()): Generator
     {
         $reader = new GoogleSheetReader($this->service, $this->spreadsheetId, $this->columnRange, $this->readOptions);
         $sampler = new GoogleSheetSampler($reader, $this->inference->sampleSize);
@@ -158,9 +157,7 @@ final class GoogleSheetExtractor implements
                 return;
             }
 
-            $limit = $this->pushedLimit();
-
-            if ($limit !== null && $yielded >= $limit) {
+            if ($scan->limit !== null && $yielded >= $scan->limit) {
                 return;
             }
         }

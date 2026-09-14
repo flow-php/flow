@@ -11,9 +11,9 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
-use Flow\ETL\Extractor\LimitPushDown;
-use Flow\ETL\Extractor\PushesLimit;
 use Flow\ETL\Extractor\RewindableExtractor;
+use Flow\ETL\Extractor\Scan;
+use Flow\ETL\Extractor\Scannable;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
@@ -35,10 +35,9 @@ use function is_string;
 use function min;
 use function sprintf;
 
-final class PostgreSqlKeySetExtractor implements BatchableExtractor, Extractor, LimitPushDown, RewindableExtractor
+final class PostgreSqlKeySetExtractor implements BatchableExtractor, Extractor, RewindableExtractor, Scannable
 {
     use Batches;
-    use PushesLimit;
 
     private ?int $maximum = null;
 
@@ -62,7 +61,7 @@ final class PostgreSqlKeySetExtractor implements BatchableExtractor, Extractor, 
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, Scan $scan = new Scan()): Generator
     {
         $sql = $this->query instanceof Sql ? $this->query->toSql() : $this->query;
 
@@ -71,7 +70,7 @@ final class PostgreSqlKeySetExtractor implements BatchableExtractor, Extractor, 
         $encoder = new PostgreSqlEncoder();
         $yielded = 0;
         $cursorValues = null;
-        $pushed = $this->pushedLimit();
+        $pushed = $scan->limit;
         $maximum = match (true) {
             $this->maximum !== null && $pushed !== null => min($this->maximum, $pushed),
             $this->maximum !== null => $this->maximum,
