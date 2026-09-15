@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\Tests\Unit;
 
+use Flow\ETL\Adapter\PostgreSql\ReadQuery;
 use Flow\ETL\Adapter\PostgreSql\ResultSchema;
 use Flow\ETL\Adapter\PostgreSql\Tests\Double\SpyClient;
 use Flow\ETL\Adapter\PostgreSql\Tests\Mother\ColumnMother;
@@ -15,6 +16,7 @@ use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
 
+use function extension_loaded;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_null;
@@ -74,12 +76,33 @@ final class ResultSchemaTest extends FlowTestCase
         }
     }
 
+    /**
+     * @return Generator<string, array{string}>
+     */
+    public static function provide_states_only_the_query_can_cause(): Generator
+    {
+        yield 'undefined table' => ['42P01'];
+        yield 'undefined column' => ['42703'];
+        yield 'undefined function' => ['42883'];
+        yield 'undefined object' => ['42704'];
+        yield 'insufficient privilege' => ['42501'];
+    }
+
+    protected function setUp(): void
+    {
+        if (!extension_loaded('pg_query')) {
+            static::markTestSkipped(
+                'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true`',
+            );
+        }
+    }
+
     #[DataProvider('provide_mapped_postgresql_types')]
     public function test_every_mapped_postgresql_type_becomes_a_nullable_definition(string $type): void
     {
         $schema = (new ResultSchema())->of(
             (new SpyClient())->willDescribe(ColumnMother::of(['value' => $type])),
-            'SELECT value FROM t',
+            ReadQuery::of('SELECT value FROM t', self::class),
             [],
             self::class,
         );
@@ -98,7 +121,7 @@ final class ResultSchemaTest extends FlowTestCase
 
         (new ResultSchema())->of(
             (new SpyClient())->willDescribe(ColumnMother::of(['value' => $type])),
-            'SELECT value FROM t',
+            ReadQuery::of('SELECT value FROM t', self::class),
             [],
             self::class,
         );
@@ -108,7 +131,7 @@ final class ResultSchemaTest extends FlowTestCase
     {
         $schema = (new ResultSchema())->of(
             (new SpyClient())->willDescribe(ColumnMother::of(['tags' => '_int4'])),
-            'SELECT tags FROM t',
+            ReadQuery::of('SELECT tags FROM t', self::class),
             [],
             self::class,
         );
@@ -122,18 +145,65 @@ final class ResultSchemaTest extends FlowTestCase
 
     public function test_a_refused_probe_becomes_a_schema_not_derivable_exception(): void
     {
-        $this->expectException(SchemaNotDerivableException::class);
-        $this->expectExceptionMessage('PostgreSQL refused the zero-row probe of this query (Query execution failed');
-
-        (new ResultSchema())->of(
-            (new SpyClient())->willRefuseDescribe(QueryException::executionFailed(
-                'SELECT 1;;',
-                PostgreSqlError::unknown('syntax error at or near ";"'),
-            )),
+        $refused = QueryException::executionFailed(
             'SELECT 1;;',
-            [],
-            self::class,
+            PostgreSqlError::unknown('syntax error at or near ";"'),
         );
+
+        try {
+            (new ResultSchema())->of(
+                (new SpyClient())->willRefuseDescribe($refused),
+                ReadQuery::of('SELECT 1;;', self::class),
+                [],
+                self::class,
+            );
+            static::fail('a refused probe must not describe');
+        } catch (SchemaNotDerivableException $e) {
+            static::assertSame($refused, $e->getPrevious());
+            static::assertStringContainsString(
+                'PostgreSQL refused the zero-row probe of this query (Query execution failed',
+                $e->getMessage(),
+            );
+            static::assertStringContainsString(
+                'If the query runs as written, declare the schema with ->withSchema() to skip the probe.',
+                $e->getMessage(),
+            );
+        }
+    }
+
+    public function test_a_rethrown_database_error_inside_an_open_transaction_rolls_back_to_the_savepoint(): void
+    {
+        $client = (new SpyClient(
+            transactionNestingLevel: 1,
+        ))->willRefuseDescribe(QueryException::executionFailed('SELECT id FROM t', PostgreSqlError::fromDiagnostics(
+            '42P01',
+            'relation "t" does not exist',
+        )));
+
+        try {
+            (new ResultSchema())->of($client, ReadQuery::of('SELECT id FROM t', self::class), [], self::class);
+        } catch (QueryException) {
+        }
+
+        static::assertSame(['beginTransaction', 'describe', 'rollBack'], $client->calls);
+    }
+
+    #[DataProvider('provide_states_only_the_query_can_cause')]
+    public function test_a_query_naming_a_missing_object_rethrows_the_database_error(string $state): void
+    {
+        $refused = QueryException::executionFailed('SELECT id FROM t', PostgreSqlError::fromDiagnostics($state, 'x'));
+
+        try {
+            (new ResultSchema())->of(
+                (new SpyClient())->willRefuseDescribe($refused),
+                ReadQuery::of('SELECT id FROM t', self::class),
+                [],
+                self::class,
+            );
+            static::fail('a refused probe must not describe');
+        } catch (QueryException $e) {
+            static::assertSame($refused, $e);
+        }
     }
 
     public function test_a_refused_probe_inside_an_open_transaction_rolls_back_to_the_savepoint(): void
@@ -144,7 +214,7 @@ final class ResultSchemaTest extends FlowTestCase
         ));
 
         try {
-            (new ResultSchema())->of($client, 'SELECT 1;;', [], self::class);
+            (new ResultSchema())->of($client, ReadQuery::of('SELECT 1;;', self::class), [], self::class);
         } catch (SchemaNotDerivableException) {
         }
 
@@ -154,14 +224,14 @@ final class ResultSchemaTest extends FlowTestCase
     public function test_a_savepoint_wraps_the_probe_inside_an_open_transaction(): void
     {
         $nested = (new SpyClient(transactionNestingLevel: 1))->willDescribe(ColumnMother::of(['id' => 'int8']));
-        (new ResultSchema())->of($nested, 'SELECT id FROM t', [], self::class);
+        (new ResultSchema())->of($nested, ReadQuery::of('SELECT id FROM t', self::class), [], self::class);
 
         // Rolled back, not committed: the probe is a read-only LIMIT 0, so discarding the savepoint
         // is equivalent and closes every failure path with one unconditional finally.
         static::assertSame(['beginTransaction', 'describe', 'rollBack'], $nested->calls);
 
         $topLevel = (new SpyClient())->willDescribe(ColumnMother::of(['id' => 'int8']));
-        (new ResultSchema())->of($topLevel, 'SELECT id FROM t', [], self::class);
+        (new ResultSchema())->of($topLevel, ReadQuery::of('SELECT id FROM t', self::class), [], self::class);
 
         static::assertSame(['describe'], $topLevel->calls);
     }
@@ -176,7 +246,7 @@ final class ResultSchemaTest extends FlowTestCase
         );
 
         try {
-            (new ResultSchema())->of($client, 'SELECT id FROM t', [], self::class);
+            (new ResultSchema())->of($client, ReadQuery::of('SELECT id FROM t', self::class), [], self::class);
             static::fail('the throwable should propagate');
         } catch (RuntimeException $e) {
             static::assertSame('parser blew up', $e->getMessage());
@@ -189,7 +259,7 @@ final class ResultSchemaTest extends FlowTestCase
     {
         $schema = (new ResultSchema())->of(
             (new SpyClient())->willDescribe([ColumnMother::pair('a', 'int8'), ColumnMother::pair('a', 'text')]),
-            'SELECT id AS a, label AS a FROM t',
+            ReadQuery::of('SELECT id AS a, label AS a FROM t', self::class),
             [],
             self::class,
         );
@@ -202,7 +272,12 @@ final class ResultSchemaTest extends FlowTestCase
     {
         $client = (new SpyClient())->willDescribe(ColumnMother::of(['id' => 'int8']));
 
-        (new ResultSchema())->of($client, 'SELECT id FROM t WHERE id > $1', [42], self::class);
+        (new ResultSchema())->of(
+            $client,
+            ReadQuery::of('SELECT id FROM t WHERE id > $1', self::class),
+            [42],
+            self::class,
+        );
 
         // ResultSchema hands the parameters straight through; PgSqlClient::describe() is what
         // substitutes nulls, so the adapter only has to prove it does not rewrite them.

@@ -404,6 +404,10 @@ The library ships two default mappers, both available via DSL functions, plus an
 
 Modify existing SQL queries programmatically - useful for adding pagination to queries.
 
+The pagination helpers and modifiers take exactly one read-only `SELECT` or `VALUES` statement. Anything else -
+`INSERT ... RETURNING`, two statements, a data-modifying `WITH`, `SELECT ... INTO` - throws
+`InvalidStatementException`.
+
 ### Offset Pagination
 
 Add LIMIT/OFFSET pagination to any SELECT query:
@@ -662,6 +666,20 @@ $query->traverse(new KeysetPaginationModifier(new KeysetPaginationConfig(
 )));
 echo $query->deparse();
 // SELECT * FROM users WHERE created_at > $1 OR (created_at = $1 AND id > $2) ORDER BY created_at, id LIMIT 10
+```
+
+Pass `param()` instead of a number to leave the value to the query's parameters - every page then sends the same SQL:
+
+```php
+<?php
+
+use Flow\PostgreSql\AST\Transformers\{PaginationConfig, PaginationModifier};
+
+use function Flow\PostgreSql\DSL\{param, sql_parse};
+
+$query = sql_parse('SELECT * FROM users WHERE active = $1 ORDER BY id');
+$query->traverse(new PaginationModifier(new PaginationConfig(limit: param(2), offset: param(3))));
+echo $query->deparse(); // SELECT * FROM users WHERE active = $1 ORDER BY id LIMIT $2 OFFSET $3
 ```
 
 ### Raw AST Access

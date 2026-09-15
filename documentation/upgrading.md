@@ -1258,8 +1258,10 @@ Keep every column a string: `from_csv($path)->inferSchema(infer_schema()->allStr
 | `pdo_pgsql`, `pdo_mysql`, any other | every column                                                                    | driver values | throws `SchemaNotDerivableException` - use the `pgsql` / `mysqli` driver or `->withSchema(...)` |
 
 Applies to `from_dbal_query()`, `from_dbal_queries()`, `from_dbal_limit_offset()`, `from_dbal_limit_offset_qb()` and
-`from_dbal_key_set_qb()` without `->withSchema()`. A query the driver cannot describe (multi-statement, data-modifying
-CTE, `INSERT ... RETURNING`) also throws. Declare `->withSchema(...)` to pick the types.
+`from_dbal_key_set_qb()` without `->withSchema()`. A missing table or column throws what the read throws
+(`TableNotFoundException`, `InvalidFieldNameException`, on SQLite `DriverException`); any other query the driver
+refuses to describe throws
+`SchemaNotDerivableException` with the DBAL exception as `getPrevious()`. Declare `->withSchema(...)` to pick the types.
 
 ### 83) `flow-php/etl-adapter-doctrine`, `-postgresql` - `withPageSize()` / `withFetchSize()` become `withBatchSize()`
 
@@ -1373,8 +1375,9 @@ Applies to `from_json()` and `from_json_lines()` unless the row names one.
 | `record`, `point`, `line`, `lseg`, `box`, `path`, `polygon`, `circle` | `string`                | throws `SchemaNotDerivableException` |
 
 Applies to `from_pgsql_cursor()`, `from_pgsql_limit_offset()` and `from_pgsql_key_set()` without `->withSchema()`. A
-query that cannot run as a subquery (multi-statement, data-modifying CTE, `INSERT ... RETURNING`) also throws
-`SchemaNotDerivableException`. Declare `->withSchema(...)` to pick the types.
+missing table, column, function, type or privilege throws PostgreSQL's `QueryException`, as the read does; a query
+that writes (a data-modifying `WITH`, `SELECT ... INTO`) throws `InvalidArgumentException` before any query runs.
+Declare `->withSchema(...)` to pick the types.
 
 ### 93) `flow-php/etl-adapter-postgresql` - `pgsql_table_to_flow_schema()` maps arrays, text-like types, `oid`, `timetz`
 
@@ -1531,6 +1534,56 @@ Recurse with `data/**/*.parquet`, not `data/**.parquet`. `webmozart/glob` is no 
 |-----------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
 | `partitionBy(partition_by('date'))` - file body carries an all-null `date` column | file body without `date`                                                                             |
 | `from_parquet()` types `date` from that body column, e.g. `datetime`              | `string` - declare it: `from_parquet($path)->partitionTypes(partition_types(date: type_datetime()))` |
+
+### 109) `flow-php/etl-adapter-postgresql` - a failed `from_pgsql_cursor()` read throws its own error and rolls back
+
+| Before                                                                                                     | After                                                   |
+|------------------------------------------------------------------------------------------------------------|---------------------------------------------------------|
+| `QueryException` `[25P02] Invalid transaction state. SQL: CLOSE flow_cursor_...`, real error in `getPrevious()` | the failing statement's own `QueryException`       |
+| the client left inside an aborted transaction - every later query fails with `25P02`                        | the extractor's own transaction rolled back             |
+| a failure while reading rows (e.g. a row that does not match the schema) committed the transaction         | rolled back                                             |
+
+### 110) `flow-php/etl-adapter-postgresql` - `from_pgsql_*()` read exactly one read-only `SELECT` or `VALUES` statement
+
+| Query                                                                     | Before                                        | After                                   |
+|---------------------------------------------------------------------------|-----------------------------------------------|-----------------------------------------|
+| `INSERT ... RETURNING` through `from_pgsql_cursor()`                      | the PHP process crashes (segfault)            | `InvalidArgumentException`, nothing runs |
+| `INSERT ... RETURNING` through `from_pgsql_key_set()`                     | the `INSERT` runs, then `QueryException` `08P01` | `InvalidArgumentException`, nothing runs |
+| two statements through `from_pgsql_cursor()`                              | the second statement silently dropped         | `InvalidArgumentException`              |
+| two statements through `from_pgsql_limit_offset()` / `from_pgsql_key_set()` | `QueryException` `42601`                    | `InvalidArgumentException`              |
+| a data-modifying `WITH` through `from_pgsql_key_set()`                    | the write runs once per page - an `INSERT` twice, an `UPDATE` never ends | `InvalidArgumentException`, nothing runs |
+| `SELECT ... INTO` through `from_pgsql_key_set()`                          | the table is created                          | `InvalidArgumentException`, nothing runs |
+| either through `from_pgsql_cursor()` / `from_pgsql_limit_offset()`        | `QueryException` after a round trip           | `InvalidArgumentException`, nothing runs |
+
+### 111) `flow-php/postgresql` - `declare_cursor()` over SQL takes exactly one `SELECT` or `VALUES`
+
+| Before                                                                                 | After                       |
+|----------------------------------------------------------------------------------------|-----------------------------|
+| `declare_cursor('c', 'INSERT INTO t VALUES (1) RETURNING id')->toSql()` - segfault      | `InvalidArgumentException`  |
+| `declare_cursor('c', 'SELECT 1; SELECT 2')` - the second statement silently dropped     | `InvalidArgumentException`  |
+
+### 112) `flow-php/postgresql` - `SelectStatement::hasIntoClause()` sees `SELECT ... INTO` in a `UNION` / `INTERSECT` / `EXCEPT`
+
+| `sql_parse($sql)->statements()->first()->hasIntoClause()`, `$sql` | Before  | After  |
+|-------------------------------------------------------------------|---------|--------|
+| `SELECT id INTO t FROM x UNION SELECT 1`                          | `false` | `true` |
+
+### 113) `flow-php/postgresql` - `sql_to_*_query()` and the pagination modifiers take exactly one read-only `SELECT` or `VALUES`
+
+| Before                                                                              | After                       |
+|-------------------------------------------------------------------------------------|-----------------------------|
+| `sql_to_paginated_query('UPDATE t SET a = 1 RETURNING id', 10)` - returned unchanged | `InvalidStatementException` |
+| `sql_to_limited_query('SELECT 1; SELECT 2', 10)` - every statement paginated         | `InvalidStatementException` |
+| `sql_to_keyset_query()` over a data-modifying `WITH` - the write paginated          | `InvalidStatementException` |
+| `sql_to_count_query('SELECT id INTO t FROM x')` - counted                           | `InvalidStatementException` |
+
+Applies to `PaginationModifier`, `CountModifier` and `KeysetPaginationModifier` passed to `ParsedQuery::traverse()`.
+
+### 114) `flow-php/etl-adapter-postgresql` - `from_pgsql_limit_offset()` requires the query's own `ORDER BY`
+
+| Query                                            | Before                      | After                      |
+|--------------------------------------------------|-----------------------------|----------------------------|
+| `SELECT * FROM (SELECT id FROM t ORDER BY id) s` | pages in no defined order   | `InvalidArgumentException` |
 
 ---
 

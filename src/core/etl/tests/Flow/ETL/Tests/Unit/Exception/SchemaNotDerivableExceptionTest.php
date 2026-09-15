@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Exception;
 
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Tests\FlowTestCase;
+use RuntimeException;
 
 final class SchemaNotDerivableExceptionTest extends FlowTestCase
 {
@@ -37,6 +38,30 @@ final class SchemaNotDerivableExceptionTest extends FlowTestCase
             SchemaNotDerivableException::function(
                 'array_get',
                 'the array operand declares "list<string>", which is not a structure',
+            )->getMessage(),
+        );
+    }
+
+    public function test_probe_refused_chains_the_driver_error(): void
+    {
+        $cause = new RuntimeException('relation "missing" does not exist');
+
+        static::assertSame(
+            $cause,
+            SchemaNotDerivableException::probeRefused('PostgreSqlCursorExtractor', 'refused', $cause)->getPrevious(),
+        );
+    }
+
+    public function test_probe_refused_names_the_refusal_and_the_conditional_way_out(): void
+    {
+        static::assertSame(
+            'PostgreSqlCursorExtractor cannot describe what it will produce before producing it: PostgreSQL refused '
+            . 'the zero-row probe of this query (boom). If the query runs as written, declare the schema with '
+            . '->withSchema() to skip the probe.',
+            SchemaNotDerivableException::probeRefused(
+                'PostgreSqlCursorExtractor',
+                'PostgreSQL refused the zero-row probe of this query (boom)',
+                new RuntimeException('boom'),
             )->getMessage(),
         );
     }

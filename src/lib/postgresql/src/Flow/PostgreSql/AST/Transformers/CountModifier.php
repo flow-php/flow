@@ -6,11 +6,13 @@ namespace Flow\PostgreSql\AST\Transformers;
 
 use Flow\PostgreSql\AST\ModificationContext;
 use Flow\PostgreSql\AST\NodeModifier;
+use Flow\PostgreSql\ParsedQuery;
 use Flow\PostgreSql\Protobuf\AST\A_Star;
 use Flow\PostgreSql\Protobuf\AST\Alias;
 use Flow\PostgreSql\Protobuf\AST\ColumnRef;
 use Flow\PostgreSql\Protobuf\AST\FuncCall;
 use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ParseResult;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\RangeSubselect;
 use Flow\PostgreSql\Protobuf\AST\ResTarget;
@@ -27,11 +29,17 @@ final readonly class CountModifier implements NodeModifier
 {
     public static function nodeClasses(): array
     {
-        return [SelectStmt::class];
+        return [ParseResult::class, SelectStmt::class];
     }
 
     public function modify(object $node, ModificationContext $context): int|object|null
     {
+        if ($node instanceof ParseResult) {
+            (new ParsedQuery($node))->statements()->assertReadOnlySelect();
+
+            return null;
+        }
+
         /** @var SelectStmt $node */
         if (!$context->isTopLevel()) {
             return null;

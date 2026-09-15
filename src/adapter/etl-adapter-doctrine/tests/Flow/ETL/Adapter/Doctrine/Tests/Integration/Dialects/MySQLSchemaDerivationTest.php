@@ -6,6 +6,8 @@ namespace Flow\ETL\Adapter\Doctrine\Tests\Integration\Dialects;
 
 use DateInterval;
 use DateTimeImmutable;
+use Doctrine\DBAL\Exception\InvalidFieldNameException;
+use Doctrine\DBAL\Exception\TableNotFoundException;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\PrimaryKeyConstraint;
 use Doctrine\DBAL\Schema\Table;
@@ -14,11 +16,12 @@ use Doctrine\DBAL\Types\Types;
 use Flow\ETL\Adapter\Doctrine\MysqliResultColumns;
 use Flow\ETL\Adapter\Doctrine\Order;
 use Flow\ETL\Adapter\Doctrine\OrderBy;
+use Flow\ETL\Adapter\Doctrine\ProbeRefusal;
 use Flow\ETL\Adapter\Doctrine\Tests\Context\MysqlSessionStatus;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
-use Flow\ETL\Exception\SchemaNotDerivableException;
 use mysqli;
 use mysqli_driver;
+use mysqli_sql_exception;
 
 use function array_keys;
 use function Flow\ETL\Adapter\Doctrine\from_dbal_key_set_qb;
@@ -259,9 +262,12 @@ final class MySQLSchemaDerivationTest extends IntegrationTestCase
         try {
             (new MysqliResultColumns())->of($native, 'SELECT id FROM missing', self::class);
             static::fail('a query the database refuses must not describe');
-        } catch (SchemaNotDerivableException $e) {
+        } catch (ProbeRefusal $e) {
             static::assertStringContainsString('MySQL refused to prepare this query', $e->getMessage());
             static::assertStringContainsString('missing', $e->getMessage());
+            // the errno is what DBAL's MySQL converter keys on
+            static::assertSame(1146, $e->getCode());
+            static::assertSame('42S02', $e->getSQLState());
         } finally {
             mysqli_report($reporting);
         }
@@ -272,9 +278,34 @@ final class MySQLSchemaDerivationTest extends IntegrationTestCase
         $native = $this->mysqlDatabaseContext->connection()->getNativeConnection();
         static::assertInstanceOf(mysqli::class, $native);
 
-        $this->expectException(SchemaNotDerivableException::class);
-        $this->expectExceptionMessageMatches('/MySQL refused to prepare this query \(.*missing.*doesn\'t exist/');
+        try {
+            (new MysqliResultColumns())->of($native, 'SELECT id FROM missing', self::class);
+            static::fail('a query the database refuses must not describe');
+        } catch (ProbeRefusal $e) {
+            static::assertMatchesRegularExpression(
+                '/MySQL refused to prepare this query \(.*missing.*doesn\'t exist/',
+                $e->getMessage(),
+            );
+            static::assertSame(1146, $e->getCode());
+            static::assertInstanceOf(mysqli_sql_exception::class, $e->getPrevious());
+        }
+    }
 
-        (new MysqliResultColumns())->of($native, 'SELECT id FROM missing', self::class);
+    public function test_a_missing_column_throws_what_the_read_throws(): void
+    {
+        $this->expectException(InvalidFieldNameException::class);
+
+        data_frame()
+            ->read(from_dbal_query($this->mysqlDatabaseContext->connection(), 'SELECT missing FROM orders'))
+            ->fetch();
+    }
+
+    public function test_a_missing_table_throws_what_the_read_throws(): void
+    {
+        $this->expectException(TableNotFoundException::class);
+
+        data_frame()
+            ->read(from_dbal_query($this->mysqlDatabaseContext->connection(), 'SELECT id FROM missing'))
+            ->fetch();
     }
 }

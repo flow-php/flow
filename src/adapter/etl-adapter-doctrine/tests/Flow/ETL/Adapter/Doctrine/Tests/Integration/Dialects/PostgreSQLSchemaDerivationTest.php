@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration\Dialects;
 
 use DateTimeImmutable;
+use Doctrine\DBAL\Exception\InvalidFieldNameException;
+use Doctrine\DBAL\Exception\TableNotFoundException;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\PrimaryKeyConstraint;
 use Doctrine\DBAL\Schema\Table;
@@ -14,6 +16,7 @@ use Flow\ETL\Adapter\Doctrine\DescribeQuery;
 use Flow\ETL\Adapter\Doctrine\Order;
 use Flow\ETL\Adapter\Doctrine\OrderBy;
 use Flow\ETL\Adapter\Doctrine\PgSqlResultColumns;
+use Flow\ETL\Adapter\Doctrine\ProbeRefusal;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use PgSql\Connection as PgSqlConnection;
@@ -246,16 +249,52 @@ final class PostgreSQLSchemaDerivationTest extends IntegrationTestCase
         static::assertSame($afterFirst, $this->pgsqlDatabaseContext->numberOfExecutedSelectQueries());
     }
 
+    public function test_a_missing_column_throws_what_the_read_throws(): void
+    {
+        $this->expectException(InvalidFieldNameException::class);
+
+        data_frame()
+            ->read(from_dbal_query($this->pgsqlDatabaseContext->connection(), 'SELECT missing FROM orders'))
+            ->fetch();
+    }
+
+    public function test_a_missing_table_throws_what_the_read_throws(): void
+    {
+        $this->expectException(TableNotFoundException::class);
+
+        data_frame()
+            ->read(from_dbal_query($this->pgsqlDatabaseContext->connection(), 'SELECT id FROM missing'))
+            ->fetch();
+    }
+
+    public function test_a_refused_probe_leaves_the_connection_usable(): void
+    {
+        $native = $this->pgsqlDatabaseContext->connection()->getNativeConnection();
+        static::assertInstanceOf(PgSqlConnection::class, $native);
+
+        try {
+            (new PgSqlResultColumns())->of($native, (new DescribeQuery())->of('SELECT id FROM missing'));
+            static::fail('a query the database refuses must not describe');
+        } catch (ProbeRefusal) {
+        }
+
+        static::assertSame(1, $this->pgsqlDatabaseContext->connection()->fetchOne('SELECT 1'));
+    }
+
     public function test_the_native_type_probe_refuses_with_the_driver_message(): void
     {
         $native = $this->pgsqlDatabaseContext->connection()->getNativeConnection();
         static::assertInstanceOf(PgSqlConnection::class, $native);
 
-        $this->expectException(SchemaNotDerivableException::class);
-        $this->expectExceptionMessageMatches(
-            '/PostgreSQL refused the zero-row probe of this query \(.*relation "missing" does not exist/',
-        );
-
-        (new PgSqlResultColumns())->of($native, (new DescribeQuery())->of('SELECT id FROM missing'), self::class);
+        try {
+            (new PgSqlResultColumns())->of($native, (new DescribeQuery())->of('SELECT id FROM missing'));
+            static::fail('a query the database refuses must not describe');
+        } catch (ProbeRefusal $e) {
+            static::assertMatchesRegularExpression(
+                '/PostgreSQL refused the zero-row probe of this query \(.*relation "missing" does not exist/',
+                $e->getMessage(),
+            );
+            static::assertSame('42P01', $e->getSQLState());
+        }
     }
 }

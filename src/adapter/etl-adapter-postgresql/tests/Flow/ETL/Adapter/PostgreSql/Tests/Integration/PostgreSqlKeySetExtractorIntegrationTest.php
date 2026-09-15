@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\PostgreSql\Tests\Integration;
 
 use Flow\ETL\Adapter\PostgreSql\Tests\IntegrationTestCase;
+use Flow\ETL\Exception\InvalidArgumentException;
 
 use function array_column;
 use function Flow\ETL\Adapter\PostgreSql\from_pgsql_key_set;
@@ -14,6 +15,8 @@ use function Flow\ETL\Adapter\PostgreSql\pgsql_pagination_key_set;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_all;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\schema;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\column;
 use function Flow\PostgreSql\DSL\column_type_integer;
@@ -44,6 +47,74 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
         );
 
         $this->insertTestData(25);
+    }
+
+    public function test_a_data_modifying_cte_is_refused_before_it_runs(): void
+    {
+        try {
+            df()
+                ->read(from_pgsql_key_set(
+                    $this->client,
+                    // raw SQL on purpose: the query builder cannot express a data-modifying WITH
+                    sprintf(
+                        'WITH x AS (INSERT INTO %s (id, name) VALUES (98, \'x\') RETURNING id) SELECT id FROM x ORDER BY id',
+                        $this->tableName,
+                    ),
+                    pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+                )->withSchema(schema(int_schema('id', nullable: true))))
+                ->fetch();
+            static::fail('a query that writes must not be read');
+        } catch (InvalidArgumentException $e) {
+            static::assertStringContainsString(
+                'Expected a read-only SELECT - the query holds a data-modifying WITH or SELECT ... INTO',
+                $e->getMessage(),
+            );
+        }
+
+        static::assertCount(
+            25,
+            df()
+                ->read(from_pgsql_key_set(
+                    $this->client,
+                    select(col('id'))->from(table($this->tableName)),
+                    pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+                ))
+                ->fetch(),
+        );
+    }
+
+    public function test_a_non_select_statement_is_refused_before_it_runs(): void
+    {
+        try {
+            df()
+                ->read(from_pgsql_key_set(
+                    $this->client,
+                    insert()
+                        ->into($this->tableName)
+                        ->columns('id', 'name')
+                        ->values(literal(98), literal('x'))
+                        ->returning(col('id')),
+                    pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+                )->withSchema(schema(int_schema('id', nullable: true))))
+                ->fetch();
+            static::fail('an INSERT must not be read');
+        } catch (InvalidArgumentException $e) {
+            static::assertStringContainsString(
+                'reads exactly one read-only SELECT or VALUES statement',
+                $e->getMessage(),
+            );
+        }
+
+        static::assertCount(
+            25,
+            df()
+                ->read(from_pgsql_key_set(
+                    $this->client,
+                    select(col('id'))->from(table($this->tableName)),
+                    pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+                ))
+                ->fetch(),
+        );
     }
 
     public function test_extracts_all_rows_with_keyset_pagination(): void

@@ -9,6 +9,7 @@ use Flow\PostgreSql\Client\Client;
 
 use function extension_loaded;
 use function Flow\Bridge\PHPUnit\PostgreSQL\DSL\static_pgsql_client;
+use function Flow\PostgreSql\DSL\pgsql_client;
 use function Flow\PostgreSql\DSL\pgsql_connection_dsn;
 use function getenv;
 
@@ -19,6 +20,12 @@ use function getenv;
  */
 abstract class IntegrationTestCase extends FlowTestCase
 {
+    /**
+     * Outside the transaction StaticClient opens for every test, so an extractor reading through it runs its own
+     * transaction. Nothing rolls back what it commits: a test that writes through it cleans up after itself.
+     */
+    protected Client $autoCommitClient;
+
     protected Client $client;
 
     protected function setUp(): void
@@ -38,5 +45,13 @@ abstract class IntegrationTestCase extends FlowTestCase
         }
 
         $this->client = static_pgsql_client(pgsql_connection_dsn($dsn));
+        $this->autoCommitClient = pgsql_client(pgsql_connection_dsn($dsn));
+    }
+
+    protected function tearDown(): void
+    {
+        $this->autoCommitClient->close();
+
+        parent::tearDown();
     }
 }

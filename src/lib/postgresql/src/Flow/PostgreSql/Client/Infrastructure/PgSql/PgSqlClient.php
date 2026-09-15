@@ -213,7 +213,16 @@ final class PgSqlClient implements Client
      */
     public function describe(Sql|string $sql, array $parameters = []): array
     {
-        $result = $this->query((new DescribeQuery())->of($sql), array_fill(0, count($parameters), null));
+        $describe = new DescribeQuery();
+
+        try {
+            $result = $this->query($describe->of($sql), array_fill(0, count($parameters), null));
+        } catch (QueryException $e) {
+            throw QueryException::executionFailed(
+                $sql instanceof Sql ? $sql->toSql() : $sql,
+                $describe->errorIn($sql, $e->error()),
+            );
+        }
 
         try {
             return array_map(static fn(array $column): array => [

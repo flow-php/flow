@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\Doctrine;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
@@ -35,6 +36,8 @@ final class DbalLimitOffsetExtractor implements BatchableExtractor, Extractor, L
     private ?Schema $schema = null;
 
     private ?Schema $derived = null;
+
+    private ?SchemaNotDerivableException $refusal = null;
 
     public function __construct(
         private readonly Connection $connection,
@@ -164,13 +167,25 @@ final class DbalLimitOffsetExtractor implements BatchableExtractor, Extractor, L
 
     public function schema(): Schema
     {
-        return (
-            $this->schema ?? ($this->derived ??= (new DbalResultSchema())->of(
+        if ($this->schema !== null) {
+            return $this->schema;
+        }
+
+        if ($this->refusal !== null) {
+            throw $this->refusal;
+        }
+
+        try {
+            return $this->derived ??= (new DbalResultSchema())->of(
                 $this->connection,
                 $this->queryBuilder->getSQL(),
                 self::class,
-            ))
-        );
+            );
+        } catch (SchemaNotDerivableException $refusal) {
+            $this->refusal = $refusal;
+
+            throw $refusal;
+        }
     }
 
     public function withMaximum(int $maximum): self

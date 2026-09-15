@@ -11,10 +11,13 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\PostgreSql\Client\Exception\PostgreSqlError;
+use Flow\PostgreSql\Client\Exception\QueryException;
 
 use function array_map;
 use function extension_loaded;
 use function Flow\ETL\Adapter\PostgreSql\from_pgsql_limit_offset;
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
@@ -22,6 +25,58 @@ use function iterator_to_array;
 
 final class PostgreSqlLimitOffsetExtractorTest extends FlowTestCase
 {
+    public function test_a_failing_read_probes_once(): void
+    {
+        $client = (new SpyClient())->willRefuseDescribe(QueryException::executionFailed(
+            'SELECT id FROM t ORDER BY id',
+            PostgreSqlError::unknown('boom'),
+        ));
+
+        try {
+            df()->read(from_pgsql_limit_offset($client, 'SELECT id FROM t ORDER BY id'))->fetch();
+        } catch (SchemaNotDerivableException) {
+        }
+
+        static::assertSame(1, $client->callsTo('describe'));
+    }
+
+    public function test_a_non_select_statement_is_refused_before_any_round_trip(): void
+    {
+        $client = new SpyClient();
+
+        // the SELECT guard runs before the ORDER BY guard, so an INSERT is not told it lacks an ORDER BY
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('reads exactly one read-only SELECT or VALUES statement');
+
+        try {
+            iterator_to_array(
+                from_pgsql_limit_offset($client, 'INSERT INTO t VALUES (1) RETURNING id')
+                    ->withSchema(schema(int_schema('id', nullable: true)))
+                    ->extract(flow_context()),
+            );
+        } finally {
+            static::assertSame([], $client->calls);
+        }
+    }
+
+    public function test_a_subquery_order_does_not_order_the_pages(): void
+    {
+        $client = new SpyClient();
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('LIMIT/OFFSET pagination requires ORDER BY clause for deterministic results');
+
+        try {
+            iterator_to_array(
+                from_pgsql_limit_offset($client, 'SELECT * FROM (SELECT id FROM t ORDER BY id) s')->extract(
+                    flow_context(),
+                ),
+            );
+        } finally {
+            static::assertSame([], $client->calls);
+        }
+    }
+
     protected function setUp(): void
     {
         if (!extension_loaded('pg_query')) {
@@ -83,6 +138,27 @@ final class PostgreSqlLimitOffsetExtractorTest extends FlowTestCase
         );
     }
 
+    public function test_every_page_sends_the_same_sql_with_new_parameters(): void
+    {
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willCountTotal(3)
+            ->willReturnCursors(new StubCursor([['id' => '1'], ['id' => '2']]), new StubCursor([['id' => '3']]));
+
+        iterator_to_array(
+            from_pgsql_limit_offset($client, 'SELECT id FROM t WHERE id > $1 ORDER BY id', [0])
+                ->withBatchSize(2)
+                ->extract(flow_context()),
+        );
+
+        $page = 'SELECT id FROM t WHERE id > $1 ORDER BY id LIMIT $2 OFFSET $3';
+
+        static::assertSame(
+            [['sql' => $page, 'parameters' => [0, 2, 0]], ['sql' => $page, 'parameters' => [0, 2, 2]]],
+            $client->cursorQueries,
+        );
+    }
+
     public function test_extract_casts_through_the_derived_schema(): void
     {
         $client = (new SpyClient())
@@ -127,7 +203,7 @@ final class PostgreSqlLimitOffsetExtractorTest extends FlowTestCase
                 from_pgsql_limit_offset($client, 'SELECT location FROM t ORDER BY location')->extract(flow_context()),
             );
         } finally {
-            // The probe runs after the local ORDER BY guard and before countTotal(), so a refused
+            // The probe runs after the local ORDER BY guard and before the count query, so a refused
             // probe costs exactly one round trip and never reaches the counting query.
             static::assertSame(['describe'], $client->calls);
         }
@@ -225,7 +301,7 @@ final class PostgreSqlLimitOffsetExtractorTest extends FlowTestCase
         $extractor->pushLimit(3);
 
         self::assertExtractedRowsCount(3, $extractor);
-        // countTotal() is the only caller of fetchScalarInt()
+        // the count query is the only caller of fetchScalarInt()
         static::assertSame(0, $client->callsTo('fetchScalarInt'));
     }
 

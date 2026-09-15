@@ -8,11 +8,16 @@ use Flow\ETL\Adapter\PostgreSql\Tests\Double\SpyClient;
 use Flow\ETL\Adapter\PostgreSql\Tests\Double\StubCursor;
 use Flow\ETL\Adapter\PostgreSql\Tests\Mother\ColumnMother;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\PostgreSql\Client\Exception\PostgreSqlError;
+use Flow\PostgreSql\Client\Exception\QueryException;
+use RuntimeException;
 
 use function array_map;
 use function Flow\ETL\Adapter\PostgreSql\from_pgsql_cursor;
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
@@ -21,6 +26,136 @@ use function range;
 
 final class PostgreSqlCursorExtractorTest extends FlowTestCase
 {
+    public function test_a_close_failure_never_replaces_the_read_failure(): void
+    {
+        $client = (new SpyClient(transactionNestingLevel: 1))
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willReturnCursors(new StubCursor([['id' => 'abc']]))
+            ->willFailExecute(2, QueryException::executionFailed('CLOSE c', PostgreSqlError::fromDiagnostics(
+                '25P02',
+                'aborted',
+            )));
+
+        $this->expectException(SchemaMismatchException::class);
+
+        iterator_to_array(from_pgsql_cursor($client, 'SELECT id FROM t')->extract(flow_context()));
+    }
+
+    public function test_a_declare_that_fails_inside_a_callers_transaction_closes_nothing(): void
+    {
+        $client = (new SpyClient(transactionNestingLevel: 1))
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willFailExecute(1, QueryException::executionFailed('DECLARE c', PostgreSqlError::fromDiagnostics(
+                '42P01',
+                'x',
+            )));
+
+        try {
+            iterator_to_array(from_pgsql_cursor($client, 'SELECT id FROM t')->extract(flow_context()));
+        } catch (QueryException) {
+        }
+
+        // a CLOSE of a cursor that was never declared raises 34000 and would abort the caller's healthy transaction
+        static::assertSame(['beginTransaction', 'describe', 'rollBack', 'execute'], $client->calls);
+    }
+
+    public function test_a_failed_declare_rolls_back_its_own_transaction_and_rethrows_it(): void
+    {
+        $failure = QueryException::executionFailed('DECLARE c', PostgreSqlError::fromDiagnostics('42P01', 'x'));
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willFailExecute(1, $failure);
+
+        try {
+            iterator_to_array(from_pgsql_cursor($client, 'SELECT id FROM t')->extract(flow_context()));
+            static::fail('the read must fail');
+        } catch (QueryException $e) {
+            static::assertSame($failure, $e);
+        }
+
+        static::assertSame(['describe', 'beginTransaction', 'execute', 'rollBack'], $client->calls);
+    }
+
+    public function test_a_failed_read_inside_a_callers_transaction_closes_its_cursor(): void
+    {
+        $client = (new SpyClient(transactionNestingLevel: 1))
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willReturnCursors(new StubCursor([['id' => 'abc']]));
+
+        try {
+            iterator_to_array(from_pgsql_cursor($client, 'SELECT id FROM t')->extract(flow_context()));
+        } catch (SchemaMismatchException) {
+        }
+
+        static::assertSame(
+            ['beginTransaction', 'describe', 'rollBack', 'execute', 'cursor', 'execute'],
+            $client->calls,
+        );
+    }
+
+    public function test_a_failed_read_rolls_back_its_own_transaction_instead_of_committing(): void
+    {
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willReturnCursors(new StubCursor([['id' => 'abc']]));
+
+        try {
+            iterator_to_array(from_pgsql_cursor($client, 'SELECT id FROM t')->extract(flow_context()));
+        } catch (SchemaMismatchException) {
+        }
+
+        static::assertSame(['describe', 'beginTransaction', 'execute', 'cursor', 'rollBack'], $client->calls);
+    }
+
+    public function test_a_failing_read_probes_once(): void
+    {
+        $client = (new SpyClient())->willRefuseDescribe(QueryException::executionFailed(
+            'SELECT id FROM t ORDER BY id',
+            PostgreSqlError::unknown('boom'),
+        ));
+
+        try {
+            df()->read(from_pgsql_cursor($client, 'SELECT id FROM t ORDER BY id'))->fetch();
+        } catch (SchemaNotDerivableException) {
+        }
+
+        static::assertSame(1, $client->callsTo('describe'));
+    }
+
+    public function test_a_non_select_statement_is_refused_before_any_round_trip(): void
+    {
+        $client = new SpyClient();
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('reads exactly one read-only SELECT or VALUES statement');
+
+        try {
+            iterator_to_array(
+                from_pgsql_cursor($client, 'INSERT INTO t VALUES (1) RETURNING id')
+                    ->withSchema(schema(int_schema('id', nullable: true)))
+                    ->extract(flow_context()),
+            );
+        } finally {
+            static::assertSame([], $client->calls);
+        }
+    }
+
+    public function test_a_rollback_failure_never_replaces_the_read_failure(): void
+    {
+        $failure = QueryException::executionFailed('DECLARE c', PostgreSqlError::fromDiagnostics('42P01', 'x'));
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willFailExecute(1, $failure)
+            ->willFailRollBack(new RuntimeException('connection lost'));
+
+        try {
+            iterator_to_array(from_pgsql_cursor($client, 'SELECT id FROM t')->extract(flow_context()));
+            static::fail('the read must fail');
+        } catch (QueryException $e) {
+            static::assertSame($failure, $e);
+        }
+    }
+
     public function test_a_declared_schema_runs_no_query(): void
     {
         $client = new SpyClient();

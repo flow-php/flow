@@ -10,12 +10,15 @@ use Flow\ETL\Adapter\PostgreSql\Tests\Mother\ColumnMother;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\PostgreSql\Client\Exception\PostgreSqlError;
+use Flow\PostgreSql\Client\Exception\QueryException;
 
 use function array_map;
 use function extension_loaded;
 use function Flow\ETL\Adapter\PostgreSql\from_pgsql_key_set;
 use function Flow\ETL\Adapter\PostgreSql\pgsql_pagination_key_asc;
 use function Flow\ETL\Adapter\PostgreSql\pgsql_pagination_key_set;
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
@@ -24,6 +27,82 @@ use function range;
 
 final class PostgreSqlKeySetExtractorTest extends FlowTestCase
 {
+    public function test_a_failing_read_probes_once(): void
+    {
+        $client = (new SpyClient())->willRefuseDescribe(QueryException::executionFailed(
+            'SELECT id FROM t ORDER BY id',
+            PostgreSqlError::unknown('boom'),
+        ));
+
+        try {
+            df()
+                ->read(from_pgsql_key_set(
+                    $client,
+                    'SELECT id FROM t ORDER BY id',
+                    pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+                ))
+                ->fetch();
+        } catch (SchemaNotDerivableException) {
+        }
+
+        static::assertSame(1, $client->callsTo('describe'));
+    }
+
+    public function test_a_non_select_statement_is_refused_before_any_round_trip(): void
+    {
+        $client = new SpyClient();
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('reads exactly one read-only SELECT or VALUES statement');
+
+        try {
+            iterator_to_array(
+                from_pgsql_key_set(
+                    $client,
+                    'INSERT INTO t VALUES (1) RETURNING id',
+                    pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+                )
+                    ->withSchema(schema(int_schema('id', nullable: true)))
+                    ->extract(flow_context()),
+            );
+        } finally {
+            static::assertSame([], $client->calls);
+        }
+    }
+
+    public function test_every_page_sends_the_same_sql_with_new_parameters(): void
+    {
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willReturnCursors(
+                new StubCursor([['id' => '1'], ['id' => '2']]),
+                new StubCursor([['id' => '3']]),
+                new StubCursor(),
+            );
+
+        iterator_to_array(
+            from_pgsql_key_set(
+                $client,
+                'SELECT id FROM t WHERE active = $1',
+                pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+                [true],
+            )
+                ->withBatchSize(2)
+                ->extract(flow_context()),
+        );
+
+        $nextPage = 'SELECT id FROM t WHERE active = $1 AND id > $3 ORDER BY id ASC LIMIT $2';
+
+        static::assertSame(
+            [
+                ['sql' => 'SELECT id FROM t WHERE active = $1 ORDER BY id ASC LIMIT $2', 'parameters' => [true, 2]],
+                ['sql' => $nextPage, 'parameters' => [true, 2, '2']],
+                ['sql' => $nextPage, 'parameters' => [true, 2, '3']],
+            ],
+            $client->cursorQueries,
+        );
+    }
+
     protected function setUp(): void
     {
         if (!extension_loaded('pg_query')) {

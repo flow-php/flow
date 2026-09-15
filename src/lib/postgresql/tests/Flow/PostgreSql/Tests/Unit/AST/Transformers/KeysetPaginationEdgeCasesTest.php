@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\AST\Transformers;
 
+use Flow\PostgreSql\AST\Nodes\Exception\InvalidStatementException;
 use Flow\PostgreSql\AST\Transformers\SortOrder;
 use PHPUnit\Framework\TestCase;
 
@@ -20,6 +21,17 @@ final class KeysetPaginationEdgeCasesTest extends TestCase
                 'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
             );
         }
+    }
+
+    public function test_a_statement_without_a_select_is_refused(): void
+    {
+        $this->expectException(InvalidStatementException::class);
+        $this->expectExceptionMessage('Expected exactly one SELECT or VALUES statement');
+
+        sql_to_keyset_query('UPDATE users SET active = true RETURNING id', 10, [sql_keyset_column(
+            'id',
+            SortOrder::ASC,
+        )]);
     }
 
     public function test_audit_log_iteration(): void

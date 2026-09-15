@@ -6,6 +6,8 @@ namespace Flow\PostgreSql\AST\Nodes;
 
 use ArrayIterator;
 use Countable;
+use Flow\PostgreSql\AST\Nodes\Exception\InvalidStatementException;
+use Flow\PostgreSql\AST\Nodes\Statement\SelectStatement;
 use IteratorAggregate;
 use Traversable;
 
@@ -29,6 +31,26 @@ final readonly class Statements implements Countable, IteratorAggregate
     public function all(): array
     {
         return $this->statements;
+    }
+
+    /**
+     * @throws InvalidStatementException
+     */
+    public function assertReadOnlySelect(): SelectStatement
+    {
+        $select = $this->first();
+
+        if (!$this->isSingle() || !$select instanceof SelectStatement) {
+            throw new InvalidStatementException('Expected exactly one SELECT or VALUES statement');
+        }
+
+        if ($select->hasDataModifyingCte() || $select->hasIntoClause()) {
+            throw new InvalidStatementException(
+                'Expected a read-only SELECT - the query holds a data-modifying WITH or SELECT ... INTO',
+            );
+        }
+
+        return $select;
     }
 
     public function count(): int

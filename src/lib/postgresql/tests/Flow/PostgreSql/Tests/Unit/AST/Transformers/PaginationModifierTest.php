@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\AST\Transformers;
 
+use Flow\PostgreSql\AST\Nodes\Exception\InvalidStatementException;
 use Flow\PostgreSql\AST\Transformers\PaginationConfig;
 use Flow\PostgreSql\AST\Transformers\PaginationModifier;
 use Flow\PostgreSql\Exception\PaginationException;
@@ -12,6 +13,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 use function extension_loaded;
+use function Flow\PostgreSql\DSL\param;
 use function Flow\PostgreSql\DSL\sql_parse;
 
 final class PaginationModifierTest extends TestCase
@@ -179,6 +181,29 @@ final class PaginationModifierTest extends TestCase
             new PaginationConfig(10),
             'SELECT * FROM ((SELECT id FROM users UNION SELECT id FROM admins) UNION SELECT id FROM guests) _pagination_subq LIMIT 10',
         ];
+
+        yield 'limit and offset as parameters' => [
+            'SELECT * FROM users WHERE active = $1 ORDER BY id',
+            new PaginationConfig(param(2), param(3)),
+            'SELECT * FROM users WHERE active = $1 ORDER BY id LIMIT $2 OFFSET $3',
+        ];
+
+        yield 'union with limit and offset as parameters wraps in subquery' => [
+            'SELECT id FROM users UNION SELECT id FROM admins ORDER BY id',
+            new PaginationConfig(param(1), param(2)),
+            'SELECT * FROM (SELECT id FROM users UNION SELECT id FROM admins ORDER BY id) _pagination_subq LIMIT $1 OFFSET $2',
+        ];
+    }
+
+    /**
+     * @return Generator<string, array{string}>
+     */
+    public static function notOneReadOnlySelectProvider(): Generator
+    {
+        yield 'update returning' => ['UPDATE users SET active = true RETURNING id'];
+        yield 'two statements' => ['SELECT id FROM users ORDER BY id; SELECT id FROM admins ORDER BY id'];
+        yield 'data-modifying with' => ['WITH x AS (DELETE FROM users RETURNING id) SELECT id FROM x ORDER BY id'];
+        yield 'select into' => ['SELECT id INTO copy FROM users ORDER BY id'];
     }
 
     protected function setUp(): void
@@ -188,6 +213,23 @@ final class PaginationModifierTest extends TestCase
                 'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
             );
         }
+    }
+
+    #[DataProvider('notOneReadOnlySelectProvider')]
+    public function test_a_query_that_is_not_one_read_only_select_is_refused(string $sql): void
+    {
+        $this->expectException(InvalidStatementException::class);
+        $this->expectExceptionMessageMatches('/^Expected (exactly one SELECT or VALUES statement|a read-only SELECT)/');
+
+        sql_parse($sql)->traverse(new PaginationModifier(new PaginationConfig(10)));
+    }
+
+    public function test_offset_parameter_without_order_by_throws_exception(): void
+    {
+        $this->expectException(PaginationException::class);
+        $this->expectExceptionMessage('OFFSET without ORDER BY produces non-deterministic results');
+
+        sql_parse('SELECT * FROM users')->traverse(new PaginationModifier(new PaginationConfig(param(1), param(2))));
     }
 
     public function test_offset_without_order_by_throws_exception(): void

@@ -9,6 +9,7 @@ use Flow\PostgreSql\AST\NodeModifier;
 use Flow\PostgreSql\AST\Traverser;
 use Flow\PostgreSql\AST\Visitors\ParamRefCollector;
 use Flow\PostgreSql\Exception\PaginationException;
+use Flow\PostgreSql\ParsedQuery;
 use Flow\PostgreSql\Protobuf\AST\A_Const;
 use Flow\PostgreSql\Protobuf\AST\A_Expr;
 use Flow\PostgreSql\Protobuf\AST\A_Expr_Kind;
@@ -19,10 +20,12 @@ use Flow\PostgreSql\Protobuf\AST\Integer;
 use Flow\PostgreSql\Protobuf\AST\LimitOption;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ParamRef;
+use Flow\PostgreSql\Protobuf\AST\ParseResult;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\SelectStmt;
 use Flow\PostgreSql\Protobuf\AST\SortBy;
 use Flow\PostgreSql\Protobuf\AST\SortByDir;
+use Flow\PostgreSql\QueryBuilder\Expression\Parameter;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 use function count;
@@ -50,11 +53,17 @@ final class KeysetPaginationModifier implements NodeModifier
 
     public static function nodeClasses(): array
     {
-        return [SelectStmt::class];
+        return [ParseResult::class, SelectStmt::class];
     }
 
     public function modify(object $node, ModificationContext $context): int|object|null
     {
+        if ($node instanceof ParseResult) {
+            (new ParsedQuery($node))->statements()->assertReadOnlySelect();
+
+            return null;
+        }
+
         /** @var SelectStmt $node */
         if (!$context->isTopLevel()) {
             return null;
@@ -64,23 +73,28 @@ final class KeysetPaginationModifier implements NodeModifier
             throw new PaginationException('Keyset pagination requires at least one column');
         }
 
-        $this->parameterOffset = $this->detectMaxParamNumber($context);
-
         if (!$this->hasOrderBy($node)) {
             $this->addOrderByFromKeyset($node);
         }
 
         $this->applyLimit($node);
 
-        if ($this->config->cursor !== null) {
-            if (count($this->config->cursor) !== count($this->config->columns)) {
+        $cursor = $this->config->cursor;
+
+        if ($cursor instanceof Parameter) {
+            $this->parameterOffset = $cursor->number() - 1;
+            $this->applyKeysetWhere($node);
+        } elseif ($cursor !== null) {
+            if (count($cursor) !== count($this->config->columns)) {
                 throw new PaginationException(sprintf(
                     'Cursor values count (%d) must match columns count (%d)',
-                    count($this->config->cursor),
+                    count($cursor),
                     count($this->config->columns),
                 ));
             }
 
+            // after applyLimit(), so a LIMIT given as a parameter is counted too
+            $this->parameterOffset = $this->detectMaxParamNumber($context);
             $this->applyKeysetWhere($node);
         }
 
@@ -131,7 +145,7 @@ final class KeysetPaginationModifier implements NodeModifier
     private function applyLimit(SelectStmt $stmt): void
     {
         $stmt->setLimitOption(LimitOption::LIMIT_OPTION_COUNT);
-        $stmt->setLimitCount($this->createIntegerNode($this->config->limit));
+        $stmt->setLimitCount($this->createValueNode($this->config->limit));
     }
 
     private function buildComparisonExpr(Node $leftColumnRef, int $paramNumber, string $operator): Node
@@ -225,8 +239,12 @@ final class KeysetPaginationModifier implements NodeModifier
         return $columnRefNode;
     }
 
-    private function createIntegerNode(int $value): Node
+    private function createValueNode(int|Parameter $value): Node
     {
+        if ($value instanceof Parameter) {
+            return $value->toAst();
+        }
+
         $integer = new Integer();
         $integer->setIval($value);
 

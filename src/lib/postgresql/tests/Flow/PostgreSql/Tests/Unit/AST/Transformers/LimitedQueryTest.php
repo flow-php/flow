@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\AST\Transformers;
 
+use Flow\PostgreSql\AST\Nodes\Exception\InvalidStatementException;
 use PHPUnit\Framework\TestCase;
 
 use function extension_loaded;
@@ -18,6 +19,14 @@ final class LimitedQueryTest extends TestCase
                 'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it.',
             );
         }
+    }
+
+    public function test_a_statement_without_a_select_is_refused(): void
+    {
+        $this->expectException(InvalidStatementException::class);
+        $this->expectExceptionMessage('Expected exactly one SELECT or VALUES statement');
+
+        sql_to_limited_query('UPDATE users SET active = true RETURNING id', 10);
     }
 
     public function test_limit_does_not_add_offset(): void

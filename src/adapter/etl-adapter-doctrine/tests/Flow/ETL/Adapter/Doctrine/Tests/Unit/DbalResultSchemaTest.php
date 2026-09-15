@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Unit;
 
+use Doctrine\DBAL\Exception\DriverException;
+use Doctrine\DBAL\Exception\SyntaxErrorException;
+use Doctrine\DBAL\Exception\TableNotFoundException;
 use Flow\ETL\Adapter\Doctrine\DbalResultSchema;
 use Flow\ETL\Adapter\Doctrine\Tests\Context\InMemorySqlite;
 use Flow\ETL\Adapter\Doctrine\Tests\Double\NativeHandleStub;
@@ -17,6 +20,36 @@ use function Flow\ETL\DSL\str_schema;
 
 final class DbalResultSchemaTest extends FlowTestCase
 {
+    public function test_a_missing_sqlite_column_rethrows_what_the_read_throws(): void
+    {
+        $this->expectException(DriverException::class);
+        $this->expectExceptionMessage('no such column: nope');
+
+        (new DbalResultSchema())->of(
+            InMemorySqlite::withUsers(InMemorySqlite::connection(), 1),
+            'SELECT nope FROM users',
+            self::class,
+        );
+    }
+
+    public function test_a_missing_table_rethrows_what_the_read_throws(): void
+    {
+        $this->expectException(TableNotFoundException::class);
+
+        (new DbalResultSchema())->of(InMemorySqlite::connection(), 'SELECT id FROM missing', self::class);
+    }
+
+    public function test_a_query_the_probe_cannot_wrap_chains_the_driver_error(): void
+    {
+        try {
+            (new DbalResultSchema())->of(InMemorySqlite::connection(), 'SELECT 1; SELECT 2', self::class);
+            static::fail('a query the probe cannot wrap must not describe');
+        } catch (SchemaNotDerivableException $e) {
+            static::assertInstanceOf(SyntaxErrorException::class, $e->getPrevious());
+            static::assertStringContainsString('If the query runs as written', $e->getMessage());
+        }
+    }
+
     public function test_a_query_that_binds_parameters_describes(): void
     {
         static::assertEquals(

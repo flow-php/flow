@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Cursor;
 
+use Flow\PostgreSql\ParsedQuery;
 use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Protobuf\AST\DeclareCursorStmt;
 use Flow\PostgreSql\Protobuf\AST\Node;
@@ -33,12 +34,9 @@ final class DeclareCursorBuilder implements DeclareCursorOptionsStep
         return new self($cursorName, $node);
     }
 
-    public static function createFromSql(string $cursorName, string|Sql $query): DeclareCursorOptionsStep
+    public static function createFromParsed(string $cursorName, ParsedQuery $query): DeclareCursorOptionsStep
     {
-        $sql = $query instanceof Sql ? $query->toSql() : $query;
-        $parser = new Parser();
-        $parsed = $parser->parse($sql);
-        $rawStmts = $parsed->raw()->getStmts();
+        $rawStmts = $query->raw()->getStmts();
 
         if (count($rawStmts) === 0) {
             throw new InvalidArgumentException('Query cannot be empty');
@@ -51,7 +49,21 @@ final class DeclareCursorBuilder implements DeclareCursorOptionsStep
             throw new InvalidArgumentException('Invalid query: no statement found');
         }
 
+        // PostgreSQL's DECLARE takes one SELECT or VALUES; libpg_query deparses the query with an unchecked
+        // castNode(SelectStmt, ...), so any other statement crashes the process instead of failing
+        if (count($rawStmts) > 1 || $stmtNode->getSelectStmt() === null) {
+            throw new InvalidArgumentException('DECLARE CURSOR takes exactly one SELECT or VALUES statement');
+        }
+
         return new self($cursorName, $stmtNode);
+    }
+
+    public static function createFromSql(string $cursorName, string|Sql $query): DeclareCursorOptionsStep
+    {
+        return self::createFromParsed(
+            $cursorName,
+            (new Parser())->parse($query instanceof Sql ? $query->toSql() : $query),
+        );
     }
 
     public function binary(): DeclareCursorOptionsStep

@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Unit;
 
+use Exception;
+use Flow\ETL\Adapter\Doctrine\ProbeRefusal;
 use Flow\ETL\Adapter\Doctrine\SqliteResultSchema;
 use Flow\ETL\Adapter\Doctrine\Tests\Context\InMemorySqlite;
-use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Tests\FlowTestCase;
+use PDOException;
 
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -43,22 +45,30 @@ final class SqliteResultSchemaTest extends FlowTestCase
 
     public function test_a_query_the_database_refuses_is_refused_with_its_message(): void
     {
-        $this->expectException(SchemaNotDerivableException::class);
-        $this->expectExceptionMessageMatches(
-            '/SQLite refused the zero-row probe of this query \(.*no such table: missing/',
-        );
-
-        (new SqliteResultSchema())->of(InMemorySqlite::pdo(), 'SELECT id FROM missing', self::class);
+        try {
+            (new SqliteResultSchema())->of(InMemorySqlite::pdo(), 'SELECT id FROM missing', self::class);
+            static::fail('a query the database refuses must not describe');
+        } catch (ProbeRefusal $e) {
+            static::assertMatchesRegularExpression(
+                '/SQLite refused the zero-row probe of this query \(.*no such table: missing/',
+                $e->getMessage(),
+            );
+            static::assertInstanceOf(PDOException::class, $e->getPrevious());
+        }
     }
 
     public function test_a_query_the_native_sqlite3_refuses_is_refused_with_its_message(): void
     {
-        $this->expectException(SchemaNotDerivableException::class);
-        $this->expectExceptionMessageMatches(
-            '/SQLite refused the zero-row probe of this query \(.*no such table: missing/',
-        );
-
-        (new SqliteResultSchema())->of(InMemorySqlite::sqlite3(), 'SELECT id FROM missing', self::class);
+        try {
+            (new SqliteResultSchema())->of(InMemorySqlite::sqlite3(), 'SELECT id FROM missing', self::class);
+            static::fail('a query the database refuses must not describe');
+        } catch (ProbeRefusal $e) {
+            static::assertMatchesRegularExpression(
+                '/SQLite refused the zero-row probe of this query \(.*no such table: missing/',
+                $e->getMessage(),
+            );
+            static::assertInstanceOf(Exception::class, $e->getPrevious());
+        }
     }
 
     public function test_every_column_is_named_and_typed_string(): void

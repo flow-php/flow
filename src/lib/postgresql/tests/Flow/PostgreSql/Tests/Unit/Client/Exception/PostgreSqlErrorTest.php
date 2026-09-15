@@ -36,6 +36,42 @@ final class PostgreSqlErrorTest extends TestCase
         static::assertSame(15, $error->position);
     }
 
+    public function test_with_position_keeps_the_category_of_an_unknown_error(): void
+    {
+        $error = PostgreSqlError::unknown('connection lost')->withPosition(7);
+
+        static::assertSame(PostgreSqlErrorCategory::UNKNOWN, $error->category);
+        static::assertSame('00000', $error->sqlState);
+        static::assertSame('connection lost', $error->message);
+        static::assertSame(7, $error->position);
+    }
+
+    public function test_with_position_keeps_every_other_diagnostic(): void
+    {
+        $error = PostgreSqlError::fromDiagnostics(
+            '23505',
+            'dup',
+            'detail',
+            'hint',
+            'public',
+            'users',
+            'email',
+            'key',
+            15,
+        )->withPosition(null);
+
+        static::assertSame('23505', $error->sqlState);
+        static::assertSame(PostgreSqlErrorCategory::INTEGRITY_CONSTRAINT_VIOLATION, $error->category);
+        static::assertSame('dup', $error->message);
+        static::assertSame('detail', $error->detail);
+        static::assertSame('hint', $error->hint);
+        static::assertSame('public', $error->schema);
+        static::assertSame('users', $error->table);
+        static::assertSame('email', $error->column);
+        static::assertSame('key', $error->constraint);
+        static::assertNull($error->position);
+    }
+
     public function test_from_diagnostics_with_minimal_fields(): void
     {
         $error = PostgreSqlError::fromDiagnostics('42601', 'syntax error at or near "FORM"');

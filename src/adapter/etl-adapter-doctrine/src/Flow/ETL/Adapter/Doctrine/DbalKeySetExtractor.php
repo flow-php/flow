@@ -10,6 +10,7 @@ use Flow\ETL\Adapter\Doctrine\Pagination\Key;
 use Flow\ETL\Adapter\Doctrine\Pagination\KeySet;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
@@ -49,6 +50,8 @@ final class DbalKeySetExtractor implements BatchableExtractor, Extractor, LimitP
     private ?Schema $schema = null;
 
     private ?Schema $derived = null;
+
+    private ?SchemaNotDerivableException $refusal = null;
 
     public function __construct(
         private readonly Connection $connection,
@@ -191,14 +194,26 @@ final class DbalKeySetExtractor implements BatchableExtractor, Extractor, LimitP
 
     public function schema(): Schema
     {
-        // The base builder, never the page SQL: the key_<sha1> alias lives on a per-page clone.
-        return (
-            $this->schema ?? ($this->derived ??= (new DbalResultSchema())->of(
+        if ($this->schema !== null) {
+            return $this->schema;
+        }
+
+        if ($this->refusal !== null) {
+            throw $this->refusal;
+        }
+
+        try {
+            // The base builder, never the page SQL: the key_<sha1> alias lives on a per-page clone.
+            return $this->derived ??= (new DbalResultSchema())->of(
                 $this->connection,
                 $this->queryBuilder->getSQL(),
                 self::class,
-            ))
-        );
+            );
+        } catch (SchemaNotDerivableException $refusal) {
+            $this->refusal = $refusal;
+
+            throw $refusal;
+        }
     }
 
     public function withKeyAliasSuffix(string $keyAliasSuffix): self

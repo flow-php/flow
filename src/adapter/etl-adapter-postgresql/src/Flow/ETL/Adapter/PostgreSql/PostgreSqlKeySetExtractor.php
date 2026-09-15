@@ -8,6 +8,7 @@ use Flow\ETL\Adapter\PostgreSql\Pagination\Key;
 use Flow\ETL\Adapter\PostgreSql\Pagination\KeySet;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
@@ -23,10 +24,9 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 use Generator;
 
 use function array_key_exists;
-use function array_merge;
+use function count;
 use function end;
 use function explode;
-use function Flow\PostgreSql\DSL\sql_to_keyset_query;
 use function get_debug_type;
 use function is_bool;
 use function is_float;
@@ -43,6 +43,10 @@ final class PostgreSqlKeySetExtractor implements BatchableExtractor, Extractor, 
     private ?int $maximum = null;
 
     private ?Schema $derivedSchema = null;
+
+    private ?ReadQuery $read = null;
+
+    private ?SchemaNotDerivableException $refusal = null;
 
     private ?Schema $schema = null;
 
@@ -64,7 +68,7 @@ final class PostgreSqlKeySetExtractor implements BatchableExtractor, Extractor, 
      */
     public function extract(FlowContext $context): Generator
     {
-        $sql = $this->query instanceof Sql ? $this->query->toSql() : $this->query;
+        $read = $this->read ??= ReadQuery::of($this->query, self::class);
 
         $schema = $this->schema();
 
@@ -77,19 +81,23 @@ final class PostgreSqlKeySetExtractor implements BatchableExtractor, Extractor, 
             $this->maximum !== null => $this->maximum,
             default => $pushed,
         };
+        $first = count($this->parameters) + 1;
+        $firstPage = $read->keySetFirstPage($this->keySet, $first);
+        $nextPage = null;
 
         while (true) {
             if ($maximum !== null && $yielded >= $maximum) {
                 return;
             }
 
-            $paginatedSql = $this->applyKeysetPagination(
-                $sql,
-                $maximum === null ? $this->batchSize : min($this->batchSize, $maximum - $yielded),
-                $cursorValues,
+            $cursor = $this->client->cursor(
+                $cursorValues === null ? $firstPage : ($nextPage ??= $read->keySetNextPage($this->keySet, $first)),
+                [
+                    ...$this->parameters,
+                    $maximum === null ? $this->batchSize : min($this->batchSize, $maximum - $yielded),
+                    ...($cursorValues ?? []),
+                ],
             );
-
-            $cursor = $this->client->cursor($paginatedSql, array_merge($this->parameters, $cursorValues ?? []));
 
             $hasRows = false;
             $lastRow = null;
@@ -128,14 +136,26 @@ final class PostgreSqlKeySetExtractor implements BatchableExtractor, Extractor, 
 
     public function schema(): Schema
     {
-        return (
-            $this->schema ?? ($this->derivedSchema ??= (new ResultSchema())->of(
+        if ($this->schema !== null) {
+            return $this->schema;
+        }
+
+        if ($this->refusal !== null) {
+            throw $this->refusal;
+        }
+
+        try {
+            return $this->derivedSchema ??= (new ResultSchema())->of(
                 $this->client,
-                $this->query,
+                $this->read ??= ReadQuery::of($this->query, self::class),
                 $this->parameters,
                 self::class,
-            ))
-        );
+            );
+        } catch (SchemaNotDerivableException $refusal) {
+            $this->refusal = $refusal;
+
+            throw $refusal;
+        }
     }
 
     public function withMaximum(int $maximum): self
@@ -154,14 +174,6 @@ final class PostgreSqlKeySetExtractor implements BatchableExtractor, Extractor, 
         $this->schema = $schema;
 
         return $this;
-    }
-
-    /**
-     * @param null|list<null|bool|float|int|string> $cursorValues
-     */
-    private function applyKeysetPagination(string $sql, int $limit, ?array $cursorValues): string
-    {
-        return sql_to_keyset_query($sql, $limit, $this->keySet->toKeysetColumns(), $cursorValues);
     }
 
     /**
