@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-09-15
+## [0.44.1] - 2026-09-15
 
 ### Added
 - [#2634](https://github.com/flow-php/flow/pull/2634) - **flow-php/postgresql - Traverser hands the whole query to handlers registered for ParseResult** - [@norberttech](https://github.com/norberttech)
@@ -10,11 +10,8 @@
 ### Changed
 - [87d973](https://github.com/flow-php/flow/commit/87d973bcc6ac6e89b81a831ba0cb9f653acff758) - **fix(flow-php/etl): drop @internal from FunctionTree::withChildren() to stop Symfony deprecation warnings** - [@norberttech](https://github.com/norberttech)
 - [#2634](https://github.com/flow-php/flow/pull/2634) - **flow-php/etl-adapter-postgresql - extractors parse the query once per read and page with one SQL string** - [@norberttech](https://github.com/norberttech)
-- [#2633](https://github.com/flow-php/flow/pull/2633) - **SFTP filesystem bridge now requires phpseclib/phpseclib ^4.0; sftp_client() returns and sftp_filesystem() accepts
-phpseclib4\Net\SFTP, and key based authentication takes a phpseclib4\Crypt\Common\PrivateKey** - [@MrHDOLEK](https://github.com/MrHDOLEK)
-- [#2633](https://github.com/flow-php/flow/pull/2633) - **A lost SFTP session raises phpseclib4\Exception\InvalidStateException from list(), status(), SourceStream::size() and remote
-directory creation, while mv(), rm(), SourceStream::content(), SourceStream::read() and block uploads keep raising
-Flow\Filesystem\Exception\RuntimeException** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#2633](https://github.com/flow-php/flow/pull/2633) - **SFTP filesystem bridge now requires phpseclib/phpseclib ^4.0; sftp_client() returns and sftp_filesystem() accepts phpseclib4\Net\SFTP, and key based authentication takes a phpseclib4\Crypt\Common\PrivateKey** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#2633](https://github.com/flow-php/flow/pull/2633) - **A lost SFTP session raises phpseclib4\Exception\InvalidStateException from list(), status(), SourceStream::size() and remote directory creation, while mv(), rm(), SourceStream::content(), SourceStream::read() and block uploads keep raising Flow\Filesystem\Exception\RuntimeException** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2632](https://github.com/flow-php/flow/pull/2632) - **flow-php/arrow-ext - build fails when no version source is available** - [@norberttech](https://github.com/norberttech)
 - [#2632](https://github.com/flow-php/flow/pull/2632) - **flow-php/flow-php-ext - build fails when no version source is available** - [@norberttech](https://github.com/norberttech)
 - [#2632](https://github.com/flow-php/flow/pull/2632) - **flow-php/pg-query-ext - build fails when no version source is available** - [@norberttech](https://github.com/norberttech)
