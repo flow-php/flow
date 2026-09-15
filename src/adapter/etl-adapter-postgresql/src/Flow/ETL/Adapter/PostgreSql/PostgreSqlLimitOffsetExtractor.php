@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\PostgreSql;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
@@ -21,10 +22,6 @@ use Generator;
 
 use function ceil;
 use function count;
-use function Flow\PostgreSql\DSL\sql_parse;
-use function Flow\PostgreSql\DSL\sql_query_order_by;
-use function Flow\PostgreSql\DSL\sql_to_count_query;
-use function Flow\PostgreSql\DSL\sql_to_paginated_query;
 use function min;
 
 final class PostgreSqlLimitOffsetExtractor implements BatchableExtractor, Extractor, LimitPushDown, RewindableExtractor
@@ -35,6 +32,10 @@ final class PostgreSqlLimitOffsetExtractor implements BatchableExtractor, Extrac
     private ?int $maximum = null;
 
     private ?Schema $derivedSchema = null;
+
+    private ?ReadQuery $read = null;
+
+    private ?SchemaNotDerivableException $refusal = null;
 
     private ?Schema $schema = null;
 
@@ -55,9 +56,9 @@ final class PostgreSqlLimitOffsetExtractor implements BatchableExtractor, Extrac
      */
     public function extract(FlowContext $context): Generator
     {
-        $sql = $this->query instanceof Sql ? $this->query->toSql() : $this->query;
+        $read = $this->read ??= ReadQuery::of($this->query, self::class);
 
-        if (!sql_query_order_by(sql_parse($sql))->hasOrderBy()) {
+        if (!$read->isOrdered()) {
             throw new InvalidArgumentException(
                 'LIMIT/OFFSET pagination requires ORDER BY clause for deterministic results',
             );
@@ -72,7 +73,7 @@ final class PostgreSqlLimitOffsetExtractor implements BatchableExtractor, Extrac
             default => $pushed,
         };
 
-        $total = $maximum ?? $this->countTotal($sql);
+        $total = $maximum ?? $this->client->fetchScalarInt($read->count(), $this->parameters);
 
         if ($total === 0) {
             return;
@@ -81,15 +82,13 @@ final class PostgreSqlLimitOffsetExtractor implements BatchableExtractor, Extrac
         $encoder = new PostgreSqlEncoder();
         $yielded = 0;
         $pages = (int) ceil($total / $this->batchSize);
+        $pageSql = $read->page(count($this->parameters) + 1);
 
         for ($page = 0; $page < $pages; $page++) {
             // the request asks only for what is still wanted, while the offset keeps striding by the batch size
             $pageSize = $maximum === null ? $this->batchSize : min($this->batchSize, $maximum - $yielded);
-            $offset = $page * $this->batchSize;
 
-            $paginatedSql = $this->applyPagination($sql, $pageSize, $offset);
-
-            $cursor = $this->client->cursor($paginatedSql, $this->parameters);
+            $cursor = $this->client->cursor($pageSql, [...$this->parameters, $pageSize, $page * $this->batchSize]);
 
             $rawBatch = [];
 
@@ -127,14 +126,26 @@ final class PostgreSqlLimitOffsetExtractor implements BatchableExtractor, Extrac
 
     public function schema(): Schema
     {
-        return (
-            $this->schema ?? ($this->derivedSchema ??= (new ResultSchema())->of(
+        if ($this->schema !== null) {
+            return $this->schema;
+        }
+
+        if ($this->refusal !== null) {
+            throw $this->refusal;
+        }
+
+        try {
+            return $this->derivedSchema ??= (new ResultSchema())->of(
                 $this->client,
-                $this->query,
+                $this->read ??= ReadQuery::of($this->query, self::class),
                 $this->parameters,
                 self::class,
-            ))
-        );
+            );
+        } catch (SchemaNotDerivableException $refusal) {
+            $this->refusal = $refusal;
+
+            throw $refusal;
+        }
     }
 
     public function withMaximum(int $maximum): self
@@ -153,15 +164,5 @@ final class PostgreSqlLimitOffsetExtractor implements BatchableExtractor, Extrac
         $this->schema = $schema;
 
         return $this;
-    }
-
-    private function applyPagination(string $sql, int $limit, int $offset): string
-    {
-        return sql_to_paginated_query($sql, $limit, $offset);
-    }
-
-    private function countTotal(string $sql): int
-    {
-        return $this->client->fetchScalarInt(sql_to_count_query($sql), $this->parameters);
     }
 }

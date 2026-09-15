@@ -7,6 +7,7 @@ namespace Flow\PostgreSql\DSL;
 use Flow\Documentation\Attribute\DocumentationDSL;
 use Flow\Documentation\Attribute\Module;
 use Flow\Documentation\Attribute\Type as DSLType;
+use Flow\PostgreSql\ParsedQuery;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\QueryBuilder\Clause\ConflictTarget;
 use Flow\PostgreSql\QueryBuilder\Clause\CTE;
@@ -1169,13 +1170,17 @@ function rollback_prepared(string $transactionId): PreparedTransactionFinalStep
  *   Produces: DECLARE my_cursor NO SCROLL CURSOR WITH HOLD FOR SELECT * FROM users WHERE active = true
  *
  * @param string $cursorName Unique cursor name
- * @param SelectFinalStep|Sql|string $query Query to iterate over
+ * @param ParsedQuery|SelectFinalStep|Sql|string $query Query to iterate over
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function declare_cursor(string $cursorName, SelectFinalStep|string|Sql $query): DeclareCursorOptionsStep
+function declare_cursor(string $cursorName, SelectFinalStep|string|Sql|ParsedQuery $query): DeclareCursorOptionsStep
 {
     if ($query instanceof SelectFinalStep) {
         return DeclareCursorBuilder::create($cursorName, $query);
+    }
+
+    if ($query instanceof ParsedQuery) {
+        return DeclareCursorBuilder::createFromParsed($cursorName, $query);
     }
 
     return DeclareCursorBuilder::createFromSql($cursorName, $query);

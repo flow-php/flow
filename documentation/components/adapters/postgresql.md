@@ -44,6 +44,10 @@ All extractors support:
 - Maximum row limits
 - Custom schema definitions
 
+Every extractor reads exactly one read-only `SELECT` or `VALUES` statement - anything else throws
+`InvalidArgumentException` before a query runs. Schema derivation and its errors:
+[PostgreSQL sources](../core/schema.md#postgresql-sources-describe-themselves-and-keep-withschema).
+
 ### Loader
 
 A flexible loader supporting:
@@ -60,7 +64,8 @@ This is the **only way** to achieve true low-memory streaming with PHP's ext-pgs
 has no unbuffered query mode.
 
 > **Note:** This extractor automatically manages transactions. Cursors require a transaction context,
-> which is auto-started if not already in one.
+> which is auto-started if not already in one. A failed read rolls back the transaction the extractor started;
+> inside a transaction you opened, the rollback is yours.
 
 ### Basic Usage
 

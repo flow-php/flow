@@ -169,6 +169,9 @@ to_dbal_transaction($connection, to_dbal_table_insert($connection, 'users'))
 
 This simple but powerful extractor let you extract data from a single or multiple parametrized queries.
 
+`from_dbal_*()` extractors derive their schema from the query unless `->withSchema()` declares it - how that works
+and fails: [Doctrine DBAL sources](../core/schema.md#doctrine-dbal-sources-describe-themselves-and-keep-withschema).
+
 ### Single Query
 ```php 
 use function Flow\ETL\DSL\{data_frame, to_output};

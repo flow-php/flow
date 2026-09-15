@@ -34,6 +34,9 @@ final class SpyClient implements Client
     /** @var list<string> */
     public array $calls = [];
 
+    /** @var list<array{sql: string, parameters: list<mixed>}> */
+    public array $cursorQueries = [];
+
     /** @var list<array{name: string, type: ColumnType}> */
     private array $describeAnswer = [];
 
@@ -50,6 +53,8 @@ final class SpyClient implements Client
     /** @var array<int, Throwable> */
     private array $executeFailures = [];
 
+    private ?Throwable $rollBackFailure = null;
+
     public function __construct(
         private int $transactionNestingLevel = 0,
     ) {}
@@ -65,6 +70,13 @@ final class SpyClient implements Client
     public function willFailExecute(int $call, Throwable $failure): self
     {
         $this->executeFailures[$call] = $failure;
+
+        return $this;
+    }
+
+    public function willFailRollBack(Throwable $failure): self
+    {
+        $this->rollBackFailure = $failure;
 
         return $this;
     }
@@ -122,6 +134,7 @@ final class SpyClient implements Client
     public function cursor(Sql|string $sql, array $parameters = []): Cursor
     {
         $this->calls[] = 'cursor';
+        $this->cursorQueries[] = ['sql' => $sql instanceof Sql ? $sql->toSql() : $sql, 'parameters' => $parameters];
 
         if ($this->cursors === []) {
             throw new RuntimeException('SpyClient has no cursor left to hand out');
@@ -154,6 +167,10 @@ final class SpyClient implements Client
     {
         $this->calls[] = 'rollBack';
         $this->transactionNestingLevel--;
+
+        if ($this->rollBackFailure !== null) {
+            throw $this->rollBackFailure;
+        }
     }
 
     public function close(): void

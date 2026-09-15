@@ -7,6 +7,7 @@ namespace Flow\PostgreSql\AST\Transformers;
 use Flow\PostgreSql\AST\ModificationContext;
 use Flow\PostgreSql\AST\NodeModifier;
 use Flow\PostgreSql\Exception\PaginationException;
+use Flow\PostgreSql\ParsedQuery;
 use Flow\PostgreSql\Protobuf\AST\A_Const;
 use Flow\PostgreSql\Protobuf\AST\A_Star;
 use Flow\PostgreSql\Protobuf\AST\Alias;
@@ -14,10 +15,12 @@ use Flow\PostgreSql\Protobuf\AST\ColumnRef;
 use Flow\PostgreSql\Protobuf\AST\Integer;
 use Flow\PostgreSql\Protobuf\AST\LimitOption;
 use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ParseResult;
 use Flow\PostgreSql\Protobuf\AST\RangeSubselect;
 use Flow\PostgreSql\Protobuf\AST\ResTarget;
 use Flow\PostgreSql\Protobuf\AST\SelectStmt;
 use Flow\PostgreSql\Protobuf\AST\SetOperation;
+use Flow\PostgreSql\QueryBuilder\Expression\Parameter;
 
 use function count;
 
@@ -39,17 +42,23 @@ final readonly class PaginationModifier implements NodeModifier
 
     public static function nodeClasses(): array
     {
-        return [SelectStmt::class];
+        return [ParseResult::class, SelectStmt::class];
     }
 
     public function modify(object $node, ModificationContext $context): int|object|null
     {
+        if ($node instanceof ParseResult) {
+            (new ParsedQuery($node))->statements()->assertReadOnlySelect();
+
+            return null;
+        }
+
         /** @var SelectStmt $node */
         if (!$context->isTopLevel()) {
             return null;
         }
 
-        if ($this->config->offset > 0 && !$this->hasOrderBy($node)) {
+        if ($this->hasOffset() && !$this->hasOrderBy($node)) {
             throw new PaginationException('OFFSET without ORDER BY produces non-deterministic results');
         }
 
@@ -65,17 +74,21 @@ final readonly class PaginationModifier implements NodeModifier
     private function applyPagination(SelectStmt $stmt): void
     {
         $stmt->setLimitOption(LimitOption::LIMIT_OPTION_COUNT);
-        $stmt->setLimitCount($this->createIntegerNode($this->config->limit));
+        $stmt->setLimitCount($this->createValueNode($this->config->limit));
 
-        if ($this->config->offset > 0) {
-            $stmt->setLimitOffset($this->createIntegerNode($this->config->offset));
+        if ($this->hasOffset()) {
+            $stmt->setLimitOffset($this->createValueNode($this->config->offset));
         } else {
             $stmt->clearLimitOffset();
         }
     }
 
-    private function createIntegerNode(int $value): Node
+    private function createValueNode(int|Parameter $value): Node
     {
+        if ($value instanceof Parameter) {
+            return $value->toAst();
+        }
+
         $integer = new Integer();
         $integer->setIval($value);
 
@@ -85,6 +98,12 @@ final readonly class PaginationModifier implements NodeModifier
         $node->setAConst($aConst);
 
         return $node;
+    }
+
+    private function hasOffset(): bool
+    {
+        // a parameter's value is known only when the query runs, so it counts as an offset
+        return $this->config->offset instanceof Parameter || $this->config->offset > 0;
     }
 
     private function hasOrderBy(SelectStmt $stmt): bool
@@ -134,10 +153,10 @@ final readonly class PaginationModifier implements NodeModifier
         $outerSelect->setTargetList([$resTargetNode]);
         $outerSelect->setFromClause([$rangeSubselectNode]);
         $outerSelect->setLimitOption(LimitOption::LIMIT_OPTION_COUNT);
-        $outerSelect->setLimitCount($this->createIntegerNode($this->config->limit));
+        $outerSelect->setLimitCount($this->createValueNode($this->config->limit));
 
-        if ($this->config->offset > 0) {
-            $outerSelect->setLimitOffset($this->createIntegerNode($this->config->offset));
+        if ($this->hasOffset()) {
+            $outerSelect->setLimitOffset($this->createValueNode($this->config->offset));
         }
 
         $resultNode = new Node();

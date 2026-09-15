@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Exception;
 
+use Throwable;
+
 use function sprintf;
 
 class SchemaNotDerivableException extends InvalidArgumentException
@@ -29,6 +31,20 @@ class SchemaNotDerivableException extends InvalidArgumentException
     public static function function(string $function, string $reason): self
     {
         return new self(sprintf('%s() cannot describe the column it produces: %s.', $function, $reason));
+    }
+
+    public static function probeRefused(string $extractor, string $refusal, Throwable $previous): self
+    {
+        return new self(
+            sprintf(
+                '%s cannot describe what it will produce before producing it: %s. If the query runs as written, '
+                . 'declare the schema with ->withSchema() to skip the probe.',
+                $extractor,
+                $refusal,
+            ),
+            0,
+            $previous,
+        );
     }
 
     public static function nonRewindable(string $extractor): self

@@ -118,4 +118,20 @@ final readonly class PostgreSqlError
     {
         return $this->category->safeMessage();
     }
+
+    public function withPosition(?int $position): self
+    {
+        return new self(
+            $this->sqlState,
+            $this->category,
+            $this->message,
+            $this->detail,
+            $this->hint,
+            $this->schema,
+            $this->table,
+            $this->column,
+            $this->constraint,
+            $position,
+        );
+    }
 }

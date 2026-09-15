@@ -5,14 +5,19 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\PostgreSql\Tests\Integration;
 
 use Flow\ETL\Adapter\PostgreSql\Tests\IntegrationTestCase;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
+use Flow\PostgreSql\Client\Exception\QueryException;
 
 use function array_column;
 use function Flow\ETL\Adapter\PostgreSql\from_pgsql_cursor;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_all;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\schema;
 use function Flow\PostgreSql\DSL\asc;
+use function Flow\PostgreSql\DSL\binary_expr;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\column;
 use function Flow\PostgreSql\DSL\column_type_array;
@@ -21,11 +26,13 @@ use function Flow\PostgreSql\DSL\column_type_integer;
 use function Flow\PostgreSql\DSL\column_type_text;
 use function Flow\PostgreSql\DSL\create;
 use function Flow\PostgreSql\DSL\delete;
+use function Flow\PostgreSql\DSL\func;
 use function Flow\PostgreSql\DSL\insert;
 use function Flow\PostgreSql\DSL\literal;
 use function Flow\PostgreSql\DSL\select;
 use function Flow\PostgreSql\DSL\star;
 use function Flow\PostgreSql\DSL\table;
+use function Flow\PostgreSql\DSL\table_func;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_string;
@@ -193,13 +200,76 @@ final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
         static::assertCount(5, df()->read($extractor)->fetch()->toArray());
     }
 
-    public function test_a_refused_probe_does_not_mask_itself_with_25P02(): void
+    public function test_a_missing_table_throws_the_database_error(): void
     {
-        // A probe that fails inside the extractor's own transaction used to poison it, and the
-        // finally block's CLOSE then threw 25P02 over the real error. Deriving first prevents that.
-        $this->expectException(SchemaNotDerivableException::class);
+        $query = select(col('id'))->from(table('flow_probe_missing'));
+
+        try {
+            df()->read(from_pgsql_cursor($this->autoCommitClient, $query))->fetch();
+            static::fail('a read of a missing table must fail');
+        } catch (QueryException $e) {
+            static::assertSame('42P01', $e->error()->sqlState);
+            static::assertSame($query->toSql(), $e->sql());
+            static::assertSame(16, $e->error()->position);
+        }
+
+        static::assertSame(0, $this->autoCommitClient->getTransactionNestingLevel());
+    }
+
+    public function test_a_multi_statement_query_is_refused_before_any_round_trip(): void
+    {
+        // raw SQL on purpose: the query builder cannot express two statements
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('reads exactly one read-only SELECT or VALUES statement');
 
         df()->read(from_pgsql_cursor($this->client, 'SELECT id FROM ' . $this->tableName . '; SELECT 1'))->fetch();
+    }
+
+    public function test_a_non_select_statement_is_refused_even_with_a_declared_schema(): void
+    {
+        try {
+            df()
+                ->read(from_pgsql_cursor(
+                    $this->client,
+                    insert()
+                        ->into($this->tableName)
+                        ->columns('id', 'name')
+                        ->values(literal(98), literal('x'))
+                        ->returning(col('id')),
+                )->withSchema(schema(int_schema('id', nullable: true))))
+                ->fetch();
+            static::fail('an INSERT must not be read');
+        } catch (InvalidArgumentException $e) {
+            static::assertStringContainsString(
+                'reads exactly one read-only SELECT or VALUES statement',
+                $e->getMessage(),
+            );
+        }
+
+        static::assertCount(
+            25,
+            df()->read(from_pgsql_cursor($this->client, select(col('id'))->from(table($this->tableName))))->fetch(),
+        );
+    }
+
+    public function test_a_runtime_error_throws_itself_and_leaves_the_client_usable(): void
+    {
+        // the zero-row probe never evaluates the division, so the failure comes from the FETCH
+        try {
+            df()
+                ->read(from_pgsql_cursor(
+                    $this->autoCommitClient,
+                    select(binary_expr(col('generate_series'), '/', literal(0))->as('id'))
+                        ->from(table_func(func('generate_series', [literal(1), literal(3)]))),
+                ))
+                ->fetch();
+            static::fail('a division by zero must fail the read');
+        } catch (QueryException $e) {
+            static::assertSame('22012', $e->error()->sqlState);
+        }
+
+        static::assertSame(0, $this->autoCommitClient->getTransactionNestingLevel());
+        static::assertSame(1, $this->autoCommitClient->fetchScalarInt(select(literal(1))));
     }
 
     public function test_a_table_with_a_geometric_column_refuses_the_read(): void

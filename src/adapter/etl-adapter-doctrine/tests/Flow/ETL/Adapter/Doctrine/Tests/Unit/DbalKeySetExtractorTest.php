@@ -8,7 +8,10 @@ use Doctrine\DBAL\Logging\Middleware;
 use Flow\ETL\Adapter\Doctrine\DbalKeySetExtractor;
 use Flow\ETL\Adapter\Doctrine\Tests\Context\InMemorySqlite;
 use Flow\ETL\Adapter\Doctrine\Tests\Context\SelectQueryCounter;
+use Flow\ETL\Adapter\Doctrine\Tests\Double\NativeHandleStub;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Tests\FlowTestCase;
+use stdClass;
 
 use function Flow\ETL\Adapter\Doctrine\pagination_key_asc;
 use function Flow\ETL\Adapter\Doctrine\pagination_key_set;
@@ -19,6 +22,31 @@ use function Flow\ETL\DSL\str_schema;
 
 final class DbalKeySetExtractorTest extends FlowTestCase
 {
+    public function test_a_refused_probe_is_memoised(): void
+    {
+        // The native handle has no arm, so every derivation refuses.
+        $connection = InMemorySqlite::withUsers(InMemorySqlite::connection(new NativeHandleStub(new stdClass())), 1);
+        $extractor = new DbalKeySetExtractor(
+            $connection,
+            $connection->createQueryBuilder()->select('*')->from('users'),
+            pagination_key_set(pagination_key_asc('id')),
+        );
+
+        try {
+            $extractor->schema();
+            static::fail('an undescribable read must refuse');
+        } catch (SchemaNotDerivableException $first) {
+        }
+
+        try {
+            $extractor->schema();
+            static::fail('an undescribable read must refuse');
+        } catch (SchemaNotDerivableException $second) {
+        }
+
+        static::assertSame($first, $second);
+    }
+
     public function test_schema_describes_the_base_builder_not_the_paged_sql(): void
     {
         $connection = InMemorySqlite::withUsers(InMemorySqlite::connection(), 3);

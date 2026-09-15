@@ -17,6 +17,7 @@ final readonly class MysqliResultColumns
     /**
      * @param class-string $extractor
      *
+     * @throws ProbeRefusal
      * @throws SchemaNotDerivableException
      *
      * @return list<ResultColumn>
@@ -25,12 +26,18 @@ final readonly class MysqliResultColumns
     {
         try {
             $statement = $connection->prepare((new NativePlaceholders())->toMysqli($sql)->sql)
-            ?: throw new mysqli_sql_exception($connection->error);
+            ?: throw new ProbeRefusal(
+                sprintf('MySQL refused to prepare this query (%s)', $connection->error),
+                $connection->errno,
+                $connection->sqlstate,
+            );
         } catch (mysqli_sql_exception $e) {
-            throw SchemaNotDerivableException::extractor($extractor, sprintf(
-                'MySQL refused to prepare this query (%s)',
-                $e->getMessage(),
-            ));
+            throw new ProbeRefusal(
+                sprintf('MySQL refused to prepare this query (%s)', $e->getMessage()),
+                (int) $e->getCode(),
+                $e->getSqlState(),
+                $e,
+            );
         }
 
         try {

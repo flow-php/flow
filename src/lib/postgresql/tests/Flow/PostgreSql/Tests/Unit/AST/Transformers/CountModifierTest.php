@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\AST\Transformers;
 
+use Flow\PostgreSql\AST\Nodes\Exception\InvalidStatementException;
 use Flow\PostgreSql\AST\Transformers\CountModifier;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 use function extension_loaded;
@@ -12,6 +15,17 @@ use function Flow\PostgreSql\DSL\sql_parse;
 
 final class CountModifierTest extends TestCase
 {
+    /**
+     * @return Generator<string, array{string}>
+     */
+    public static function notOneReadOnlySelectProvider(): Generator
+    {
+        yield 'update returning' => ['UPDATE users SET active = true RETURNING id'];
+        yield 'two statements' => ['SELECT id FROM users; SELECT id FROM admins'];
+        yield 'data-modifying with' => ['WITH x AS (DELETE FROM users RETURNING id) SELECT id FROM x'];
+        yield 'select into' => ['SELECT id INTO copy FROM users'];
+    }
+
     protected function setUp(): void
     {
         if (!extension_loaded('pg_query')) {
@@ -19,6 +33,15 @@ final class CountModifierTest extends TestCase
                 'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
             );
         }
+    }
+
+    #[DataProvider('notOneReadOnlySelectProvider')]
+    public function test_a_query_that_is_not_one_read_only_select_is_refused(string $sql): void
+    {
+        $this->expectException(InvalidStatementException::class);
+        $this->expectExceptionMessageMatches('/^Expected (exactly one SELECT or VALUES statement|a read-only SELECT)/');
+
+        sql_parse($sql)->traverse(new CountModifier());
     }
 
     public function test_count_cte_query(): void

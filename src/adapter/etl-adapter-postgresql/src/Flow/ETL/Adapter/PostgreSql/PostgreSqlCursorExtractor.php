@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\PostgreSql;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
@@ -18,10 +19,10 @@ use Flow\ETL\Schema;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use Generator;
+use Throwable;
 
 use function bin2hex;
 use function Flow\PostgreSql\DSL\close_cursor;
-use function Flow\PostgreSql\DSL\declare_cursor;
 use function Flow\PostgreSql\DSL\fetch;
 use function min;
 use function random_bytes;
@@ -46,6 +47,10 @@ final class PostgreSqlCursorExtractor implements BatchableExtractor, Extractor, 
 
     private ?Schema $derivedSchema = null;
 
+    private ?ReadQuery $read = null;
+
+    private ?SchemaNotDerivableException $refusal = null;
+
     private ?Schema $schema = null;
 
     /**
@@ -65,6 +70,8 @@ final class PostgreSqlCursorExtractor implements BatchableExtractor, Extractor, 
      */
     public function extract(FlowContext $context): Generator
     {
+        $read = $this->read ??= ReadQuery::of($this->query, self::class);
+
         $encoder = new PostgreSqlEncoder();
         $cursorName = $this->cursorName ?? 'flow_cursor_' . bin2hex(random_bytes(8));
 
@@ -76,8 +83,12 @@ final class PostgreSqlCursorExtractor implements BatchableExtractor, Extractor, 
             $this->client->beginTransaction();
         }
 
+        $declared = false;
+        $failed = false;
+
         try {
-            $this->client->execute(declare_cursor($cursorName, $this->query), $this->parameters);
+            $this->client->execute($read->declareCursor($cursorName), $this->parameters);
+            $declared = true;
 
             $pushed = $this->pushedLimit();
             $maximum = match (true) {
@@ -125,11 +136,28 @@ final class PostgreSqlCursorExtractor implements BatchableExtractor, Extractor, 
                     break;
                 }
             }
-        } finally {
-            $this->client->execute(close_cursor($cursorName));
+        } catch (Throwable $e) {
+            $failed = true;
 
-            if ($ownTransaction) {
-                $this->client->commit();
+            try {
+                if ($ownTransaction) {
+                    $this->client->rollBack();
+                } elseif ($declared) {
+                    $this->client->execute(close_cursor($cursorName));
+                }
+            } catch (Throwable) {
+                // the read failure is the actionable error - an aborted transaction refuses CLOSE, a dead connection
+                // refuses ROLLBACK, and neither may mask it
+            }
+
+            throw $e;
+        } finally {
+            if (!$failed) {
+                $this->client->execute(close_cursor($cursorName));
+
+                if ($ownTransaction) {
+                    $this->client->commit();
+                }
             }
         }
     }
@@ -141,14 +169,26 @@ final class PostgreSqlCursorExtractor implements BatchableExtractor, Extractor, 
 
     public function schema(): Schema
     {
-        return (
-            $this->schema ?? ($this->derivedSchema ??= (new ResultSchema())->of(
+        if ($this->schema !== null) {
+            return $this->schema;
+        }
+
+        if ($this->refusal !== null) {
+            throw $this->refusal;
+        }
+
+        try {
+            return $this->derivedSchema ??= (new ResultSchema())->of(
                 $this->client,
-                $this->query,
+                $this->read ??= ReadQuery::of($this->query, self::class),
                 $this->parameters,
                 self::class,
-            ))
-        );
+            );
+        } catch (SchemaNotDerivableException $refusal) {
+            $this->refusal = $refusal;
+
+            throw $refusal;
+        }
     }
 
     public function withCursorName(string $cursorName): self

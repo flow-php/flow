@@ -4,23 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
-use Flow\ETL\Exception\SchemaNotDerivableException;
 use PDO;
 use PDOException;
 
+use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function sprintf;
 
 final readonly class PdoSqliteColumnNames
 {
     /**
-     * @param class-string $extractor
-     *
-     * @throws SchemaNotDerivableException
+     * @throws ProbeRefusal
      *
      * @return list<string>
      */
-    public function of(PDO $connection, string $probe, string $extractor): array
+    public function of(PDO $connection, string $probe): array
     {
         try {
             $statement = $connection->prepare($probe) ?: throw new PDOException('prepare() returned false');
@@ -38,10 +36,12 @@ final readonly class PdoSqliteColumnNames
 
             return $names;
         } catch (PDOException $e) {
-            throw SchemaNotDerivableException::extractor($extractor, sprintf(
-                'SQLite refused the zero-row probe of this query (%s)',
-                $e->getMessage(),
-            ));
+            throw new ProbeRefusal(
+                sprintf('SQLite refused the zero-row probe of this query (%s)', $e->getMessage()),
+                (int) ($e->errorInfo[1] ?? 0),
+                type_optional(type_string())->assert($e->errorInfo[0] ?? null),
+                $e,
+            );
         }
     }
 }

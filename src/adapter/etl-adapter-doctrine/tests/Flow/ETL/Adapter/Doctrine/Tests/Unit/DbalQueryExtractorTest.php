@@ -9,8 +9,11 @@ use Flow\ETL\Adapter\Doctrine\DbalQueryExtractor;
 use Flow\ETL\Adapter\Doctrine\ParametersSet;
 use Flow\ETL\Adapter\Doctrine\Tests\Context\InMemorySqlite;
 use Flow\ETL\Adapter\Doctrine\Tests\Context\SelectQueryCounter;
+use Flow\ETL\Adapter\Doctrine\Tests\Double\NativeHandleStub;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\TestWith;
+use stdClass;
 
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
@@ -20,6 +23,29 @@ use function Flow\Types\DSL\type_string;
 
 final class DbalQueryExtractorTest extends FlowTestCase
 {
+    public function test_a_refused_probe_is_memoised(): void
+    {
+        // The native handle has no arm, so every derivation refuses.
+        $extractor = new DbalQueryExtractor(
+            InMemorySqlite::withUsers(InMemorySqlite::connection(new NativeHandleStub(new stdClass())), 1),
+            'SELECT * FROM users',
+        );
+
+        try {
+            $extractor->schema();
+            static::fail('an undescribable read must refuse');
+        } catch (SchemaNotDerivableException $first) {
+        }
+
+        try {
+            $extractor->schema();
+            static::fail('an undescribable read must refuse');
+        } catch (SchemaNotDerivableException $second) {
+        }
+
+        static::assertSame($first, $second);
+    }
+
     public function test_a_parameter_set_still_describes(): void
     {
         $extractor = (new DbalQueryExtractor(

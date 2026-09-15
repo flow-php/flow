@@ -138,6 +138,107 @@ final class TraverserTest extends TestCase
         static::assertSame(1, $visitor->nodeCount);
     }
 
+    public function test_dont_traverse_children_at_the_root_skips_the_statements(): void
+    {
+        $visitor = new class implements NodeVisitor {
+            /** @var list<string> */
+            public array $visits = [];
+
+            public static function nodeClasses(): array
+            {
+                return [ParseResult::class, SelectStmt::class];
+            }
+
+            public function enter(object $node): ?int
+            {
+                $this->visits[] = 'enter ' . $node::class;
+
+                return $node instanceof ParseResult ? NodeVisitor::DONT_TRAVERSE_CHILDREN : null;
+            }
+
+            public function leave(object $node): ?int
+            {
+                $this->visits[] = 'leave ' . $node::class;
+
+                return null;
+            }
+        };
+
+        (new Traverser($visitor))->traverse($this->parseQuery('SELECT id FROM users'));
+
+        static::assertSame(['enter ' . ParseResult::class, 'leave ' . ParseResult::class], $visitor->visits);
+    }
+
+    public function test_enter_and_leave_at_the_root_wrap_the_statements(): void
+    {
+        $visitor = new class implements NodeVisitor {
+            /** @var list<string> */
+            public array $visits = [];
+
+            public static function nodeClasses(): array
+            {
+                return [ParseResult::class, SelectStmt::class];
+            }
+
+            public function enter(object $node): ?int
+            {
+                $this->visits[] = 'enter ' . $node::class;
+
+                return null;
+            }
+
+            public function leave(object $node): ?int
+            {
+                $this->visits[] = 'leave ' . $node::class;
+
+                return null;
+            }
+        };
+
+        (new Traverser($visitor))->traverse($this->parseQuery('SELECT id FROM users'));
+
+        static::assertSame(
+            [
+                'enter ' . ParseResult::class,
+                'enter ' . SelectStmt::class,
+                'leave ' . SelectStmt::class,
+                'leave ' . ParseResult::class,
+            ],
+            $visitor->visits,
+        );
+    }
+
+    public function test_enter_at_the_root_can_stop_traversal(): void
+    {
+        $visitor = new class implements NodeVisitor {
+            /** @var list<string> */
+            public array $visits = [];
+
+            public static function nodeClasses(): array
+            {
+                return [ParseResult::class, SelectStmt::class];
+            }
+
+            public function enter(object $node): ?int
+            {
+                $this->visits[] = 'enter ' . $node::class;
+
+                return NodeVisitor::STOP_TRAVERSAL;
+            }
+
+            public function leave(object $node): ?int
+            {
+                $this->visits[] = 'leave ' . $node::class;
+
+                return null;
+            }
+        };
+
+        (new Traverser($visitor))->traverse($this->parseQuery('SELECT id FROM users'));
+
+        static::assertSame(['enter ' . ParseResult::class], $visitor->visits);
+    }
+
     public function test_func_call_collector(): void
     {
         $collector = new FuncCallCollector();
@@ -212,6 +313,87 @@ final class TraverserTest extends TestCase
         $deparsed = pg_query_deparse($result->serializeToString());
 
         static::assertStringContainsString('LIMIT 10', $deparsed);
+    }
+
+    public function test_modifier_can_receive_the_whole_query_before_its_statements(): void
+    {
+        $modifier = new class implements NodeModifier {
+            /** @var list<string> */
+            public array $received = [];
+
+            public static function nodeClasses(): array
+            {
+                return [ParseResult::class, SelectStmt::class];
+            }
+
+            public function modify(object $node, ModificationContext $context): null
+            {
+                $this->received[] = $node::class . '@' . $context->depth();
+
+                return null;
+            }
+        };
+
+        (new Traverser($modifier))->traverse($this->parseQuery('SELECT id FROM users; SELECT id FROM admins'));
+
+        static::assertSame(
+            [ParseResult::class . '@0', SelectStmt::class . '@1', SelectStmt::class . '@1'],
+            $modifier->received,
+        );
+    }
+
+    public function test_modifier_can_return_dont_traverse_children_at_the_root(): void
+    {
+        $modifier = new class implements NodeModifier {
+            public int $statements = 0;
+
+            public static function nodeClasses(): array
+            {
+                return [ParseResult::class, SelectStmt::class];
+            }
+
+            public function modify(object $node, ModificationContext $context): ?int
+            {
+                if ($node instanceof ParseResult) {
+                    return NodeModifier::DONT_TRAVERSE_CHILDREN;
+                }
+
+                $this->statements++;
+
+                return null;
+            }
+        };
+
+        (new Traverser($modifier))->traverse($this->parseQuery('SELECT id FROM users'));
+
+        static::assertSame(0, $modifier->statements);
+    }
+
+    public function test_modifier_can_return_stop_traversal_at_the_root(): void
+    {
+        $modifier = new class implements NodeModifier {
+            public int $statements = 0;
+
+            public static function nodeClasses(): array
+            {
+                return [ParseResult::class, SelectStmt::class];
+            }
+
+            public function modify(object $node, ModificationContext $context): ?int
+            {
+                if ($node instanceof ParseResult) {
+                    return NodeModifier::STOP_TRAVERSAL;
+                }
+
+                $this->statements++;
+
+                return null;
+            }
+        };
+
+        (new Traverser($modifier))->traverse($this->parseQuery('SELECT id FROM users'));
+
+        static::assertSame(0, $modifier->statements);
     }
 
     public function test_modifier_can_skip_children(): void

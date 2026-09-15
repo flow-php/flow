@@ -35,9 +35,28 @@ final readonly class SelectStatement implements Statement
         return type_boolean()->assert($this->stmt->hasWithClause());
     }
 
+    public function hasDataModifyingCte(): bool
+    {
+        foreach ($this->stmt->getWithClause()?->getCtes() ?? [] as $cte) {
+            if ($cte->getCommonTableExpr()?->getCtequery()?->getSelectStmt() === null) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function hasIntoClause(): bool
     {
-        return type_boolean()->assert($this->stmt->hasIntoClause());
+        // PostgreSQL attaches SELECT ... INTO to the first SELECT of a UNION / INTERSECT / EXCEPT and applies it to the
+        // whole statement, so the INTO sits down the leftmost arm, one level per set operation
+        for ($select = $this->stmt; $select !== null; $select = $select->getLarg()) {
+            if (type_boolean()->assert($select->hasIntoClause())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function hasLimit(): bool
@@ -53,6 +72,11 @@ final readonly class SelectStatement implements Statement
     public function hasOffset(): bool
     {
         return type_boolean()->assert($this->stmt->hasLimitOffset());
+    }
+
+    public function hasOrderBy(): bool
+    {
+        return count($this->stmt->getSortClause()) > 0;
     }
 
     public function hasSetOperation(): bool

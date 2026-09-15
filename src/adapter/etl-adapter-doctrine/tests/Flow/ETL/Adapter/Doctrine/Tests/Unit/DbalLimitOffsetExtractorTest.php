@@ -23,6 +23,30 @@ use function implode;
 
 final class DbalLimitOffsetExtractorTest extends FlowTestCase
 {
+    public function test_a_refused_probe_is_memoised(): void
+    {
+        // The native handle has no arm, so every derivation refuses.
+        $connection = InMemorySqlite::withUsers(InMemorySqlite::connection(new NativeHandleStub(new stdClass())), 1);
+        $extractor = new DbalLimitOffsetExtractor(
+            $connection,
+            $connection->createQueryBuilder()->select('*')->from('users'),
+        );
+
+        try {
+            $extractor->schema();
+            static::fail('an undescribable read must refuse');
+        } catch (SchemaNotDerivableException $first) {
+        }
+
+        try {
+            $extractor->schema();
+            static::fail('an undescribable read must refuse');
+        } catch (SchemaNotDerivableException $second) {
+        }
+
+        static::assertSame($first, $second);
+    }
+
     public function test_an_empty_page_is_not_yielded(): void
     {
         $connection = InMemorySqlite::withUsers(InMemorySqlite::connection(), 5);

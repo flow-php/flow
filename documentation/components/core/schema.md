@@ -78,7 +78,8 @@ carries its own schema.
 **`DataFrame::schema()` describes the plan, not the data.** It walks the pipeline's steps once, threading each
 step's output schema into the next, starting from the source's own `schema()` - so it may do the I/O that source
 needs to describe itself (a CSV sniff, a Parquet footer), but it never reads a row. A column a step cannot name
-before rows flow is a build error, raised there rather than mid-run: `select('nope')` and `ref('a')->greaterThan(ref('b'))`
+before rows flow is a build error, raised there rather than mid-run: `select('nope')` and
+`ref('a')->greaterThan(ref('b'))`
 over incomparable types both refuse at the first trigger. `printSchema()` formats that same answer and runs
 nothing. A plan containing `joinEach()` cannot be described this way and refuses.
 
@@ -119,10 +120,10 @@ below).
 A column holds exactly one type. When two rows disagree, the schema merge widens them to the narrowest type that can
 hold both, and the result is fixed:
 
-| both sides are | result |
-|---|---|
-| containers (`json`, `list`, `map`, `structure`) | `json` |
-| anything else | `string` |
+| both sides are                                  | result   |
+|-------------------------------------------------|----------|
+| containers (`json`, `list`, `map`, `structure`) | `json`   |
+| anything else                                   | `string` |
 
 ```php
 data_frame()
@@ -245,15 +246,17 @@ How the derivation behaves:
   expression column can always produce `null`.
 - The schema is derived **once per read**, before the first row, and every batch conforms to it.
 
-A query that cannot be described **does not read at all**; it throws `SchemaNotDerivableException` with the reason.
-That happens for exactly two things:
+A query that cannot be read or described **does not read at all**:
 
-1. a query shape that cannot be wrapped in a zero-row `SELECT` - multi-statement, a data-modifying CTE, or
-   `INSERT ... RETURNING`;
-2. a column whose PostgreSQL type Flow has no type for - after type mapping that is only `record` and the geometric
-   types (`point`, `line`, `lseg`, `box`, `path`, `polygon`, `circle`).
+| What is wrong                                                                                              | What you get                                                                     |
+|------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
+| the SQL does not parse                                                                                     | `ParserException`, before any query runs                                         |
+| not exactly one read-only `SELECT` or `VALUES` (`INSERT ... RETURNING`, two statements, a data-modifying `WITH`, `SELECT ... INTO`) | `InvalidArgumentException`, before any query runs |
+| a table, column, function, type or privilege the query names is missing                                    | PostgreSQL's own `QueryException`, positioned in your SQL - what the read throws |
+| any other refusal of the zero-row probe                                                                    | `SchemaNotDerivableException`, `getPrevious()` is PostgreSQL's error             |
+| a column type Flow has no type for (`record`, `point`, `line`, `lseg`, `box`, `path`, `polygon`, `circle`) | `SchemaNotDerivableException`                                                    |
 
-In both cases `->withSchema(...)` is the escape hatch, and it skips the probe.
+`->withSchema(...)` skips the probe; it helps the last row, and the one before it when the query runs as written.
 
 ### Doctrine DBAL sources describe themselves, and keep `withSchema()`
 
@@ -304,17 +307,16 @@ What each driver answers:
   makes the driver rename the second to `id:1`, so the schema carries a column the rows do not; alias the columns
   apart, or declare the schema, when a SQLite query selects a name twice.
 
-A query that cannot be described **does not read at all**; it throws `SchemaNotDerivableException` with the reason.
-That happens for exactly three things:
+A query that cannot be described **does not read at all**:
 
-1. a query shape that cannot be wrapped in a zero-row `SELECT` - multi-statement, a data-modifying CTE, or
-   `INSERT ... RETURNING`;
-2. a driver this adapter has no result-type probe for - `pdo_pgsql` and `pdo_mysql` hand out a plain `PDO`, which
-   has no arm yet, so they are refused by name; use the native `pgsql://` or `mysqli://` DSN, or `withSchema()`;
-3. a column whose driver type Flow has no type for - on PostgreSQL that includes arrays, `money`, `inet`, ranges and
-   `interval` on this route (the PostgreSQL adapter above maps more of them); on MySQL `BIT` and `GEOMETRY`.
+| What is wrong                                                                                                                                                                                                | What you get                                                                                                     |
+|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
+| a table or column the query names is missing                                                                                                                                                                 | DBAL's `TableNotFoundException` / `InvalidFieldNameException` (SQLite: `DriverException`) - what the read throws |
+| any other refusal (a syntax error, a multi-statement query on SQLite or PostgreSQL)                                                                                                                          | `SchemaNotDerivableException`, `getPrevious()` is the DBAL exception                                             |
+| a driver without a result-type probe - `pdo_pgsql` and `pdo_mysql` hand out a plain `PDO`                                                                                                                    | `SchemaNotDerivableException` - use the native `pgsql://` or `mysqli://` DSN                                     |
+| a column whose driver type Flow has no type for - on PostgreSQL arrays, `money`, `inet`, ranges and `interval` on this route (the PostgreSQL adapter above maps more of them); on MySQL `BIT` and `GEOMETRY` | `SchemaNotDerivableException`                                                                                    |
 
-In all three cases `->withSchema(...)` is the escape hatch, and it skips the probe.
+`->withSchema(...)` skips the probe; it helps the last two rows, and the second one when the query runs as written.
 
 ## Inferring Types from an Array
 

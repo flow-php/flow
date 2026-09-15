@@ -9,14 +9,20 @@ use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Schema;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\Exception\QueryException;
-use Flow\PostgreSql\QueryBuilder\Sql;
 
 use function array_values;
 use function Flow\ETL\DSL\definition_from_type;
+use function in_array;
 use function sprintf;
 
 final readonly class ResultSchema
 {
+    /**
+     * The zero-row wrapper names no table, column, function, type or privilege of its own: these states can only come
+     * from the query, and the read itself fails with the same one.
+     */
+    private const array QUERY_OWN_STATES = ['42P01', '42703', '42883', '42704', '42501'];
+
     public function __construct(
         private EntryTypesMap $typesMap = new EntryTypesMap(),
     ) {}
@@ -25,9 +31,10 @@ final readonly class ResultSchema
      * @param list<mixed> $parameters
      * @param class-string $extractor
      *
+     * @throws QueryException
      * @throws SchemaNotDerivableException
      */
-    public function of(Client $client, Sql|string $query, array $parameters, string $extractor): Schema
+    public function of(Client $client, ReadQuery $query, array $parameters, string $extractor): Schema
     {
         $nested = $client->getTransactionNestingLevel() > 0;
 
@@ -36,12 +43,17 @@ final readonly class ResultSchema
         }
 
         try {
-            $columns = $client->describe($query, $parameters);
+            $columns = $client->describe($query->sql(), $parameters);
         } catch (QueryException $e) {
-            throw SchemaNotDerivableException::extractor($extractor, sprintf(
-                'PostgreSQL refused the zero-row probe of this query (%s)',
-                $e->getMessage(),
-            ));
+            if (in_array($e->error()->sqlState, self::QUERY_OWN_STATES, true)) {
+                throw $e;
+            }
+
+            throw SchemaNotDerivableException::probeRefused(
+                $extractor,
+                sprintf('PostgreSQL refused the zero-row probe of this query (%s)', $e->getMessage()),
+                $e,
+            );
         } finally {
             if ($nested) {
                 $client->rollBack();

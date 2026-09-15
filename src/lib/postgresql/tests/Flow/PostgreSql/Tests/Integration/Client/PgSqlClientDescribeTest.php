@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\Client;
 
+use Flow\PostgreSql\Client\Exception\QueryException;
 use Flow\PostgreSql\Tests\Integration\Context\DescribeProbeContext;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
@@ -20,6 +21,20 @@ final class PgSqlClientDescribeTest extends PostgreSqlTestCase
         parent::setUp();
 
         DescribeProbeContext::createTable($this->pgsqlContext()->client(), 'describe_probe');
+    }
+
+    public function test_a_refused_describe_reports_against_the_callers_sql(): void
+    {
+        $sql = 'SELECT id FROM flow_describe_missing ORDER BY id';
+
+        try {
+            $this->pgsqlContext()->client()->describe($sql);
+            static::fail('describe() of a missing table must refuse');
+        } catch (QueryException $e) {
+            static::assertSame($sql, $e->sql());
+            static::assertSame('42P01', $e->error()->sqlState);
+            static::assertSame(16, $e->error()->position);
+        }
     }
 
     public function test_describe_binds_null_at_every_parameter_position(): void

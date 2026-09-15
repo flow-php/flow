@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\AST\Transformers;
 
+use Flow\PostgreSql\AST\Nodes\Exception\InvalidStatementException;
 use Flow\PostgreSql\AST\Transformers\KeysetPaginationConfig;
 use Flow\PostgreSql\AST\Transformers\KeysetPaginationModifier;
 use Flow\PostgreSql\AST\Transformers\SortOrder;
@@ -13,6 +14,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 use function extension_loaded;
+use function Flow\PostgreSql\DSL\param;
 use function Flow\PostgreSql\DSL\sql_keyset_column;
 use function Flow\PostgreSql\DSL\sql_parse;
 
@@ -174,6 +176,39 @@ final class KeysetPaginationModifierTest extends TestCase
             new KeysetPaginationConfig(10, [sql_keyset_column('id', SortOrder::ASC)], [42]),
             'SELECT * FROM users WHERE (id > $10 OR status = $1) AND id > $11 ORDER BY id LIMIT 10',
         ];
+
+        yield 'limit as a parameter - first page no cursor' => [
+            'SELECT * FROM users WHERE status = $1 ORDER BY id',
+            new KeysetPaginationConfig(param(2), [sql_keyset_column('id', SortOrder::ASC)]),
+            'SELECT * FROM users WHERE status = $1 ORDER BY id LIMIT $2',
+        ];
+
+        yield 'limit and cursor as parameters' => [
+            'SELECT * FROM users WHERE status = $1 ORDER BY created_at, id',
+            new KeysetPaginationConfig(
+                param(2),
+                [sql_keyset_column('created_at', SortOrder::ASC), sql_keyset_column('id', SortOrder::ASC)],
+                param(3),
+            ),
+            'SELECT * FROM users WHERE status = $1 AND (created_at > $3 OR (created_at = $3 AND id > $4)) ORDER BY created_at, id LIMIT $2',
+        ];
+
+        yield 'limit as a parameter with cursor values - keyset numbered after the limit' => [
+            'SELECT * FROM users WHERE status = $1 ORDER BY id',
+            new KeysetPaginationConfig(param(2), [sql_keyset_column('id', SortOrder::ASC)], [42]),
+            'SELECT * FROM users WHERE status = $1 AND id > $3 ORDER BY id LIMIT $2',
+        ];
+    }
+
+    /**
+     * @return Generator<string, array{string}>
+     */
+    public static function notOneReadOnlySelectProvider(): Generator
+    {
+        yield 'update returning' => ['UPDATE users SET active = true RETURNING id'];
+        yield 'two statements' => ['SELECT id FROM users ORDER BY id; SELECT id FROM admins ORDER BY id'];
+        yield 'data-modifying with' => ['WITH x AS (DELETE FROM users RETURNING id) SELECT id FROM x ORDER BY id'];
+        yield 'select into' => ['SELECT id INTO copy FROM users ORDER BY id'];
     }
 
     protected function setUp(): void
@@ -183,6 +218,18 @@ final class KeysetPaginationModifierTest extends TestCase
                 'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
             );
         }
+    }
+
+    #[DataProvider('notOneReadOnlySelectProvider')]
+    public function test_a_query_that_is_not_one_read_only_select_is_refused(string $sql): void
+    {
+        $this->expectException(InvalidStatementException::class);
+        $this->expectExceptionMessageMatches('/^Expected (exactly one SELECT or VALUES statement|a read-only SELECT)/');
+
+        sql_parse($sql)->traverse(new KeysetPaginationModifier(new KeysetPaginationConfig(10, [sql_keyset_column(
+            'id',
+            SortOrder::ASC,
+        )])));
     }
 
     #[DataProvider('keysetPaginationProvider')]

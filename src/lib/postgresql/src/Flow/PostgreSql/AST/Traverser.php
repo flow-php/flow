@@ -16,6 +16,7 @@ use function array_pop;
  * Traverses the AST and calls registered visitors and modifiers for specific node types.
  * Visitors receive nodes for read-only operations (collection, analysis).
  * Modifiers receive nodes with context for mutation operations.
+ * Handlers registered for ParseResult receive the whole query once, before its statements.
  */
 final class Traverser
 {
@@ -69,21 +70,53 @@ final class Traverser
         $this->currentDepth = 0;
         $this->parseResult = $parseResult;
 
-        foreach ($parseResult->getStmts() as $rawStmt) {
-            $this->currentDepth = 1;
-            $stmt = $rawStmt->getStmt();
+        $traverseStatements = true;
 
-            if ($stmt !== null) {
-                $replacement = $this->traverseNode($stmt);
+        foreach ($this->modifiers[ParseResult::class] ?? [] as $modifier) {
+            $result = $modifier->modify($parseResult, new ModificationContext([], 0, $parseResult));
 
-                if ($replacement instanceof Node) {
-                    $rawStmt->setStmt($replacement);
-                }
+            if ($result === NodeModifier::STOP_TRAVERSAL) {
+                return;
+            }
 
-                if ($this->stopTraversal) {
-                    return;
+            if ($result === NodeModifier::DONT_TRAVERSE_CHILDREN) {
+                $traverseStatements = false;
+            }
+        }
+
+        foreach ($this->visitors[ParseResult::class] ?? [] as $visitor) {
+            $result = $visitor->enter($parseResult);
+
+            if ($result === NodeVisitor::STOP_TRAVERSAL) {
+                return;
+            }
+
+            if ($result === NodeVisitor::DONT_TRAVERSE_CHILDREN) {
+                $traverseStatements = false;
+            }
+        }
+
+        if ($traverseStatements) {
+            foreach ($parseResult->getStmts() as $rawStmt) {
+                $this->currentDepth = 1;
+                $stmt = $rawStmt->getStmt();
+
+                if ($stmt !== null) {
+                    $replacement = $this->traverseNode($stmt);
+
+                    if ($replacement instanceof Node) {
+                        $rawStmt->setStmt($replacement);
+                    }
+
+                    if ($this->stopTraversal) {
+                        return;
+                    }
                 }
             }
+        }
+
+        foreach ($this->visitors[ParseResult::class] ?? [] as $visitor) {
+            $visitor->leave($parseResult);
         }
     }
 

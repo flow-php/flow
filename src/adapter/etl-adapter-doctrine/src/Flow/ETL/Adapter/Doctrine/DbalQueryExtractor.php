@@ -8,6 +8,7 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Types\Type;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
@@ -40,6 +41,8 @@ final class DbalQueryExtractor implements BatchableExtractor, Extractor, LimitPu
     private ?Schema $schema = null;
 
     private ?Schema $derived = null;
+
+    private ?SchemaNotDerivableException $refusal = null;
 
     /**
      * @var array<int<0, max>|string, ArrayParameterType|ParameterType|string|Type>
@@ -137,15 +140,22 @@ final class DbalQueryExtractor implements BatchableExtractor, Extractor, LimitPu
 
     public function schema(): Schema
     {
-        // The SQL - and so the result shape - is identical for every parameter set, so the first
-        // one is a representative binding; its values are nulled by the probe anyway.
-        return (
-            $this->schema ?? ($this->derived ??= (new DbalResultSchema())->of(
-                $this->connection,
-                $this->query,
-                self::class,
-            ))
-        );
+        if ($this->schema !== null) {
+            return $this->schema;
+        }
+
+        if ($this->refusal !== null) {
+            throw $this->refusal;
+        }
+
+        try {
+            // The SQL - and so the result shape - is identical for every parameter set, so the probe binds none of them.
+            return $this->derived ??= (new DbalResultSchema())->of($this->connection, $this->query, self::class);
+        } catch (SchemaNotDerivableException $refusal) {
+            $this->refusal = $refusal;
+
+            throw $refusal;
+        }
     }
 
     public function withParameters(ParametersSet $parametersSet): self
