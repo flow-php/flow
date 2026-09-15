@@ -23,9 +23,6 @@ interface FunctionTree
      * A copy of this node with $children in place of children(): same count, same order, same
      * per-element narrowing. Never mutates $this.
      *
-     * @internal count($children) MUST equal count($this->children()). ReferenceResolver preserves this
-     *           by construction; AllFunctionsDeclareTheirTypeTest is the enforcement.
-     *
      * @param list<FunctionTree> $children
      */
     public function withChildren(array $children): static;
