@@ -9,7 +9,7 @@ use Flow\Filesystem\Bridge\SFTP\SFTPDestinationStream\SFTPBlockLifecycle;
 use Flow\Filesystem\Bridge\SFTP\SFTPDestinationStream\WriteOffset;
 use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\Stream\Block;
-use phpseclib3\Net\SFTP;
+use phpseclib4\Net\SFTP;
 
 use function Flow\Filesystem\DSL\path;
 use function sys_get_temp_dir;

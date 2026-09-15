@@ -8,7 +8,9 @@ use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\Block;
 use Flow\Filesystem\Stream\BlockLifecycle;
-use phpseclib3\Net\SFTP;
+use phpseclib4\Exception\BaseException;
+use phpseclib4\Exception\FileSystemException;
+use phpseclib4\Net\SFTP;
 
 use function unlink;
 
@@ -31,19 +33,13 @@ final class SFTPBlockLifecycle implements BlockLifecycle
 
     public function filled(Block $block): void
     {
-        $uploaded = $this->sftp->put(
-            $this->remotePath,
-            $block->path()->path(),
-            SFTP::SOURCE_LOCAL_FILE,
-            $this->startOffset(),
-        );
-
-        if ($uploaded === false) {
-            $this->sftp->isConnected() && $this->sftp->isAuthenticated()
-                || throw new RuntimeException('SFTP session is no longer usable, cannot upload a block of '
-                . $this->remotePath);
-
-            throw new RuntimeException('Could not upload block to ' . $this->remotePath);
+        try {
+            $this->sftp->put($this->remotePath, $block->path()->path(), SFTP::SOURCE_LOCAL_FILE, $this->startOffset());
+        } catch (FileSystemException $e) {
+            throw new RuntimeException('Could not upload block to ' . $this->remotePath, previous: $e);
+        } catch (BaseException) {
+            throw new RuntimeException('SFTP session is no longer usable, cannot upload a block of '
+            . $this->remotePath);
         }
 
         unlink($block->path()->path());

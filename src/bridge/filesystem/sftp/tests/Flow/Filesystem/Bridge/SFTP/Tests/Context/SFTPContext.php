@@ -7,7 +7,7 @@ namespace Flow\Filesystem\Bridge\SFTP\Tests\Context;
 use Flow\Filesystem\Bridge\SFTP\Options;
 use Flow\Filesystem\Bridge\SFTP\SFTPFilesystem;
 use Flow\Filesystem\Path;
-use phpseclib3\Net\SFTP;
+use phpseclib4\Net\SFTP;
 
 use function Flow\Filesystem\Bridge\SFTP\DSL\sftp_client;
 use function Flow\Filesystem\Bridge\SFTP\DSL\sftp_filesystem;

@@ -6,7 +6,7 @@ namespace Flow\Filesystem\Bridge\SFTP\Tests\Integration;
 
 use Flow\Filesystem\Bridge\SFTP\Tests\Context\SFTPContext;
 use Flow\Filesystem\Exception\RuntimeException;
-use phpseclib3\Crypt\EC;
+use phpseclib4\Crypt\EC;
 
 use function Flow\Filesystem\Bridge\SFTP\DSL\sftp_client;
 use function Flow\Types\DSL\type_integer;

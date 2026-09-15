@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\SFTP;
 
-use DateTimeImmutable;
 use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\Exception\InvalidSchemeException;
 use Flow\Filesystem\Exception\RuntimeException;
@@ -16,9 +15,12 @@ use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\SourceStream;
 use Generator;
-use phpseclib3\Net\SFTP;
+use phpseclib4\Exception\BaseException;
+use phpseclib4\Exception\FileSystemException;
+use phpseclib4\Net\SFTP;
 
 use function Flow\Filesystem\DSL\path;
+use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_integer;
 use function rtrim;
 
@@ -58,18 +60,23 @@ final readonly class SFTPFilesystem implements Filesystem
         if (!$path->isPattern()) {
             $remotePath = $path->path();
 
-            if ($this->sftp->is_file($remotePath)) {
-                $fileStatus = new FileStatus(
-                    $path,
-                    true,
-                    type_integer()->assert($this->sftp->filesize($remotePath)),
-                    new DateTimeImmutable('@' . type_integer()->assert($this->sftp->filemtime($remotePath))),
-                );
+            try {
+                if ($this->sftp->is_file($remotePath)) {
+                    $fileStatus = new FileStatus(
+                        $path,
+                        true,
+                        type_integer()->assert($this->sftp->filesize($remotePath)),
+                        // @mago-expect analysis:less-specific-argument
+                        type_datetime()->cast($this->sftp->filemtime($remotePath)),
+                    );
 
-                if ($pathFilter->accept($fileStatus)) {
-                    yield $fileStatus;
+                    if ($pathFilter->accept($fileStatus)) {
+                        yield $fileStatus;
+                    }
+
+                    return;
                 }
-
+            } catch (FileSystemException) {
                 return;
             }
         }
@@ -102,20 +109,24 @@ final readonly class SFTPFilesystem implements Filesystem
         $this->guardScheme($to);
 
         $remoteFrom = $from->path();
+        $remoteTo = $to->path();
 
-        if (!$this->sftp->is_file($remoteFrom) && !$this->sftp->is_dir($remoteFrom)) {
-            $this->sftp->isConnected() && $this->sftp->isAuthenticated()
-                || throw new RuntimeException('SFTP session is no longer usable, cannot move ' . $remoteFrom);
+        try {
+            if (!$this->sftp->file_exists($remoteFrom)) {
+                return false;
+            }
 
+            $this->createParentDirectory($to);
+
+            $this->sftp->delete($remoteTo, true);
+            $this->sftp->rename($remoteFrom, $remoteTo);
+        } catch (FileSystemException) {
             return false;
+        } catch (BaseException) {
+            throw new RuntimeException('SFTP session is no longer usable, cannot move ' . $remoteFrom);
         }
 
-        $this->createParentDirectory($to);
-
-        $remoteTo = $to->path();
-        $this->sftp->delete($remoteTo, true);
-
-        return $this->sftp->rename($remoteFrom, $remoteTo);
+        return true;
     }
 
     public function readFrom(Path $path): SourceStream
@@ -133,33 +144,34 @@ final readonly class SFTPFilesystem implements Filesystem
 
         $this->guardScheme($path);
 
-        if ($path->isPattern()) {
-            $remotePaths = [];
+        $remotePaths = [];
 
+        if ($path->isPattern()) {
             foreach ($this->list($path) as $fileStatus) {
                 $remotePaths[] = $fileStatus->path->path();
             }
+        } else {
+            $remotePaths[] = $path->path();
+        }
 
-            $removed = 0;
+        $removed = 0;
 
-            foreach ($remotePaths as $remotePath) {
-                if ($this->sftp->delete($remotePath, true)) {
-                    $removed++;
+        foreach ($remotePaths as $remotePath) {
+            try {
+                if (!$this->sftp->file_exists($remotePath)) {
+                    continue;
                 }
+
+                $this->sftp->delete($remotePath, true);
+                $removed++;
+            } catch (FileSystemException) {
+                continue;
+            } catch (BaseException) {
+                throw new RuntimeException('SFTP session is no longer usable, cannot remove ' . $path->path());
             }
-
-            return $removed > 0;
         }
 
-        $remotePath = $path->path();
-        $removed = $this->sftp->delete($remotePath, true);
-
-        if (!$removed) {
-            $this->sftp->isConnected() && $this->sftp->isAuthenticated()
-                || throw new RuntimeException('SFTP session is no longer usable, cannot remove ' . $remotePath);
-        }
-
-        return $removed;
+        return $removed > 0;
     }
 
     public function status(Path $path): ?FileStatus
@@ -170,8 +182,10 @@ final readonly class SFTPFilesystem implements Filesystem
 
         $this->guardScheme($path);
 
-        if (!$path->isPattern() && $this->sftp->is_dir($path->path())) {
-            return new FileStatus($path, false);
+        if (!$path->isPattern()) {
+            if ($this->sftp->is_dir($path->path())) {
+                return new FileStatus($path, false);
+            }
         }
 
         foreach ($this->list($path) as $fileStatus) {
@@ -203,15 +217,14 @@ final readonly class SFTPFilesystem implements Filesystem
     {
         $parent = $path->parentDirectory()->path();
 
-        if ($this->sftp->is_dir($parent)) {
-            return;
-        }
+        try {
+            if ($this->sftp->is_dir($parent)) {
+                return;
+            }
 
-        if (!$this->sftp->mkdir($parent, -1, true) && !$this->sftp->is_dir($parent)) {
-            $this->sftp->isConnected() && $this->sftp->isAuthenticated()
-                || throw new RuntimeException('SFTP session is no longer usable, cannot create directory ' . $parent);
-
-            throw new RuntimeException('Could not create directory: ' . $parent);
+            $this->sftp->mkdir($parent, recursive: true);
+        } catch (FileSystemException $e) {
+            throw new RuntimeException('Could not create directory: ' . $parent, previous: $e);
         }
     }
 

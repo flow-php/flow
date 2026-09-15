@@ -8,7 +8,9 @@ use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\SourceStream;
 use Generator;
-use phpseclib3\Net\SFTP;
+use phpseclib4\Exception\BaseException;
+use phpseclib4\Exception\FileSystemException;
+use phpseclib4\Net\SFTP;
 
 use function array_pop;
 use function explode;
@@ -36,11 +38,12 @@ final class SFTPSourceStream implements SourceStream
 
     public function content(): string
     {
-        $content = $this->sftp->get($this->remotePath);
-
-        if ($content === false) {
-            $this->sftp->isConnected() && $this->sftp->isAuthenticated()
-                || throw new RuntimeException('SFTP session is no longer usable, cannot read ' . $this->remotePath);
+        try {
+            $content = $this->sftp->get($this->remotePath);
+        } catch (FileSystemException $e) {
+            throw new RuntimeException('Could not read ' . $this->remotePath, previous: $e);
+        } catch (BaseException) {
+            throw new RuntimeException('SFTP session is no longer usable, cannot read ' . $this->remotePath);
         }
 
         return type_string()->assert($content);
@@ -75,11 +78,12 @@ final class SFTPSourceStream implements SourceStream
             $offset = max(0, ($this->size() ?? 0) + $offset);
         }
 
-        $content = $this->sftp->get($this->remotePath, false, $offset, $length);
-
-        if ($content === false) {
-            $this->sftp->isConnected() && $this->sftp->isAuthenticated()
-                || throw new RuntimeException('SFTP session is no longer usable, cannot read ' . $this->remotePath);
+        try {
+            $content = $this->sftp->get($this->remotePath, null, $offset, $length);
+        } catch (FileSystemException $e) {
+            throw new RuntimeException('Could not read ' . $this->remotePath, previous: $e);
+        } catch (BaseException) {
+            throw new RuntimeException('SFTP session is no longer usable, cannot read ' . $this->remotePath);
         }
 
         return type_string()->assert($content);
@@ -126,14 +130,9 @@ final class SFTPSourceStream implements SourceStream
     public function size(): ?int
     {
         if ($this->size === null) {
-            // @mago-ignore analysis:mixed-assignment
-            $filesize = $this->sftp->filesize($this->remotePath);
-
-            if ($filesize === false) {
-                $this->sftp->isConnected() && $this->sftp->isAuthenticated()
-                    || throw new RuntimeException('SFTP session is no longer usable, cannot read the size of '
-                    . $this->remotePath);
-
+            try {
+                $filesize = $this->sftp->filesize($this->remotePath);
+            } catch (FileSystemException) {
                 return null;
             }
 

@@ -16,7 +16,7 @@
         "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
         "flow-php/filesystem": "self.version",
         "flow-php/types": "self.version",
-        "phpseclib/phpseclib": "^3.0"
+        "phpseclib/phpseclib": "^4.0"
     },
     "config": {
         "optimize-autoloader": true,
