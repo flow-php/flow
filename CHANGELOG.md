@@ -8,6 +8,7 @@
 - [#2634](https://github.com/flow-php/flow/pull/2634) - **flow-php/etl - SchemaNotDerivableException::probeRefused() keeps the database error as its cause** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [87d973](https://github.com/flow-php/flow/commit/87d973bcc6ac6e89b81a831ba0cb9f653acff758) - **fix(flow-php/etl): drop @internal from FunctionTree::withChildren() to stop Symfony deprecation warnings** - [@norberttech](https://github.com/norberttech)
 - [#2634](https://github.com/flow-php/flow/pull/2634) - **flow-php/etl-adapter-postgresql - extractors parse the query once per read and page with one SQL string** - [@norberttech](https://github.com/norberttech)
 - [#2633](https://github.com/flow-php/flow/pull/2633) - **SFTP filesystem bridge now requires phpseclib/phpseclib ^4.0; sftp_client() returns and sftp_filesystem() accepts
 phpseclib4\Net\SFTP, and key based authentication takes a phpseclib4\Crypt\Common\PrivateKey** - [@MrHDOLEK](https://github.com/MrHDOLEK)
