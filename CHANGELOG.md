@@ -1,6 +1,11 @@
-## [Unreleased] - 2026-09-14
+## [Unreleased] - 2026-09-15
 
 ### Changed
+- [#2633](https://github.com/flow-php/flow/pull/2633) - **SFTP filesystem bridge now requires phpseclib/phpseclib ^4.0; sftp_client() returns and sftp_filesystem() accepts
+phpseclib4\Net\SFTP, and key based authentication takes a phpseclib4\Crypt\Common\PrivateKey** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#2633](https://github.com/flow-php/flow/pull/2633) - **A lost SFTP session raises phpseclib4\Exception\InvalidStateException from list(), status(), SourceStream::size() and remote
+directory creation, while mv(), rm(), SourceStream::content(), SourceStream::read() and block uploads keep raising
+Flow\Filesystem\Exception\RuntimeException** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2632](https://github.com/flow-php/flow/pull/2632) - **flow-php/arrow-ext - build fails when no version source is available** - [@norberttech](https://github.com/norberttech)
 - [#2632](https://github.com/flow-php/flow/pull/2632) - **flow-php/flow-php-ext - build fails when no version source is available** - [@norberttech](https://github.com/norberttech)
 - [#2632](https://github.com/flow-php/flow/pull/2632) - **flow-php/pg-query-ext - build fails when no version source is available** - [@norberttech](https://github.com/norberttech)
