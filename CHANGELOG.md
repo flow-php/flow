@@ -1,6 +1,14 @@
 ## [Unreleased] - 2026-09-15
 
+### Added
+- [#2634](https://github.com/flow-php/flow/pull/2634) - **flow-php/postgresql - Traverser hands the whole query to handlers registered for ParseResult** - [@norberttech](https://github.com/norberttech)
+- [#2634](https://github.com/flow-php/flow/pull/2634) - **flow-php/postgresql - Statements::assertReadOnlySelect() and SelectStatement::hasDataModifyingCte() / hasOrderBy()** - [@norberttech](https://github.com/norberttech)
+- [#2634](https://github.com/flow-php/flow/pull/2634) - **flow-php/postgresql - pagination configs accept param() placeholders** - [@norberttech](https://github.com/norberttech)
+- [#2634](https://github.com/flow-php/flow/pull/2634) - **flow-php/postgresql - declare_cursor() accepts a parsed query** - [@norberttech](https://github.com/norberttech)
+- [#2634](https://github.com/flow-php/flow/pull/2634) - **flow-php/etl - SchemaNotDerivableException::probeRefused() keeps the database error as its cause** - [@norberttech](https://github.com/norberttech)
+
 ### Changed
+- [#2634](https://github.com/flow-php/flow/pull/2634) - **flow-php/etl-adapter-postgresql - extractors parse the query once per read and page with one SQL string** - [@norberttech](https://github.com/norberttech)
 - [#2633](https://github.com/flow-php/flow/pull/2633) - **SFTP filesystem bridge now requires phpseclib/phpseclib ^4.0; sftp_client() returns and sftp_filesystem() accepts
 phpseclib4\Net\SFTP, and key based authentication takes a phpseclib4\Crypt\Common\PrivateKey** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2633](https://github.com/flow-php/flow/pull/2633) - **A lost SFTP session raises phpseclib4\Exception\InvalidStateException from list(), status(), SourceStream::size() and remote
@@ -11,6 +19,15 @@ Flow\Filesystem\Exception\RuntimeException** - [@MrHDOLEK](https://github.com/Mr
 - [#2632](https://github.com/flow-php/flow/pull/2632) - **flow-php/pg-query-ext - build fails when no version source is available** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2634](https://github.com/flow-php/flow/pull/2634) - **flow-php/etl-adapter-postgresql - a failed read throws the database's own error** - [@norberttech](https://github.com/norberttech)
+- [#2634](https://github.com/flow-php/flow/pull/2634) - **flow-php/etl-adapter-postgresql - from_pgsql_*() refuse a query that writes before any round trip** - [@norberttech](https://github.com/norberttech)
+- [#2634](https://github.com/flow-php/flow/pull/2634) - **flow-php/etl-adapter-postgresql - a failed from_pgsql_cursor() read rolls back its own transaction** - [@norberttech](https://github.com/norberttech)
+- [#2634](https://github.com/flow-php/flow/pull/2634) - **flow-php/etl-adapter-postgresql - from_pgsql_limit_offset() requires the query's own ORDER BY** - [@norberttech](https://github.com/norberttech)
+- [#2634](https://github.com/flow-php/flow/pull/2634) - **flow-php/etl-adapter-doctrine - a refused schema probe keeps the driver error as its cause** - [@norberttech](https://github.com/norberttech)
+- [#2634](https://github.com/flow-php/flow/pull/2634) - **flow-php/postgresql - sql_to_*_query() helpers and pagination modifiers refuse a query that writes** - [@norberttech](https://github.com/norberttech)
+- [#2634](https://github.com/flow-php/flow/pull/2634) - **flow-php/postgresql - declare_cursor() over a non-SELECT no longer crashes the process** - [@norberttech](https://github.com/norberttech)
+- [#2634](https://github.com/flow-php/flow/pull/2634) - **flow-php/postgresql - SelectStatement::hasIntoClause() sees SELECT ... INTO in a set operation** - [@norberttech](https://github.com/norberttech)
+- [#2634](https://github.com/flow-php/flow/pull/2634) - **flow-php/postgresql - describe() errors point at the caller's SQL** - [@norberttech](https://github.com/norberttech)
 - [#2632](https://github.com/flow-php/flow/pull/2632) - **flow-php/arrow-ext - extension reports release tag or commit instead of hardcoded 0.1.0** - [@norberttech](https://github.com/norberttech)
 - [#2632](https://github.com/flow-php/flow/pull/2632) - **flow-php/flow-php-ext - extension reports release tag or commit instead of hardcoded 0.3.0** - [@norberttech](https://github.com/norberttech)
 - [#2632](https://github.com/flow-php/flow/pull/2632) - **flow-php/pg-query-ext - extension reports release tag or commit instead of hardcoded 0.1.0** - [@norberttech](https://github.com/norberttech)
