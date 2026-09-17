@@ -18,6 +18,8 @@ use Flow\ETL\Loader;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Optimizer;
 use Flow\ETL\Plan\Format;
+use Flow\ETL\Plan\Node\CrossJoin;
+use Flow\ETL\Plan\Node\Read;
 use Flow\ETL\Plan\Stage;
 use Flow\ETL\Row\RowRenaming;
 use Flow\ETL\Rows;
@@ -1051,7 +1053,7 @@ final class DataFrameTest extends FlowTestCase
         static::assertCount(2, $log);
     }
 
-    public function test_a_limit_inside_an_inlined_nested_frame_is_pushed_into_its_source(): void
+    public function test_a_limit_inside_a_read_frame_is_pushed_into_its_source(): void
     {
         $extractor = new RecordingFileExtractor(
             schema(int_schema('id')),
@@ -1069,7 +1071,7 @@ final class DataFrameTest extends FlowTestCase
 
         static::assertSame(<<<'PLAN'
             #3 Result  preserving · transparent · streaming
-            │  Rows fetch() returns and run() streams
+            │  Rows this plan hands out: to the trigger, or to the node reading it
             └─ #2 Select  preserving · transparent · streaming
                └─ #1 Read  source · transparent · streaming
                      Extractor: ArrayExtractor
@@ -1086,7 +1088,7 @@ final class DataFrameTest extends FlowTestCase
         static::assertSame(<<<'PLAN'
             Outputs  preserving · opaque · streaming
             ├─ #3 Result  preserving · transparent · streaming
-            │  │  Rows fetch() returns and run() streams
+            │  │  Rows this plan hands out: to the trigger, or to the node reading it
             │  └─ #2 Select  preserving · transparent · streaming
             │     └─ #1 Read  source · transparent · streaming
             │           Extractor: ArrayExtractor
@@ -1104,7 +1106,7 @@ final class DataFrameTest extends FlowTestCase
         static::assertSame(<<<'PLAN'
             Outputs  preserving · opaque · streaming
             ├─ #3 Result  preserving · transparent · streaming
-            │  │  Rows fetch() returns and run() streams
+            │  │  Rows this plan hands out: to the trigger, or to the node reading it
             │  └─ #2 Filter  reducing · transparent · streaming
             │     │  Condition: IsNotNull
             │     └─ #1 Read  source · transparent · streaming
@@ -1264,7 +1266,7 @@ final class DataFrameTest extends FlowTestCase
         static::assertSame(<<<'PLAN'
             Outputs  preserving · opaque · streaming
             ├─ #2 Result  preserving · transparent · streaming
-            │  │  Rows fetch() returns and run() streams
+            │  │  Rows this plan hands out: to the trigger, or to the node reading it
             │  └─ #1 Read  source · transparent · streaming
             │        Extractor: ArrayExtractor
             ├─ #4 Write  preserving · opaque · streaming
@@ -1299,5 +1301,39 @@ final class DataFrameTest extends FlowTestCase
             ->run();
 
         static::assertSame(['inner:2', 'outer:2', 'inner:2', 'outer:2'], $log->getArrayCopy());
+    }
+
+    public function test_a_joined_frame_is_part_of_the_outer_plan(): void
+    {
+        $right = df()->read(from_array([['id' => 1]]));
+
+        $cursor = df()
+            ->read(from_array([['id' => 1]]))
+            ->crossJoin($right, 'r_')
+            ->explain()
+            ->logical->cursor();
+
+        static::assertInstanceOf(CrossJoin::class, $cursor);
+        static::assertSame($right->explain()->logical->root, $cursor->children()[1]);
+    }
+
+    public function test_a_read_frame_is_a_source_of_the_outer_plan(): void
+    {
+        $extractor = from_data_frame(df()->read(from_array([['id' => 1]]))->select('id'));
+
+        $cursor = df()->read($extractor)->explain()->logical->cursor();
+
+        static::assertInstanceOf(Read::class, $cursor);
+        static::assertSame($extractor, $cursor->extractor());
+    }
+
+    public function test_a_verb_on_the_joined_frame_after_the_join_does_not_reach_the_outer_plan(): void
+    {
+        $right = df()->read(from_array([['id' => 1, 'n' => 'a']]));
+        $outer = df()->read(from_array([['id' => 1]]))->join($right, join_on(['id' => 'id'], 'r_'));
+
+        $right->filter(ref('id')->equals(lit(2)));
+
+        static::assertSame([['id' => 1, 'r_id' => 1, 'r_n' => 'a']], $outer->fetch()->toArray());
     }
 }

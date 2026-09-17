@@ -201,7 +201,7 @@ final class NodeTranslatorTest extends FlowTestCase
 
     public function test_cross_join_steps_are_the_exact_list_in_order(): void
     {
-        $frame = NodeMother::frame(NodeMother::plan(NodeMother::read()));
+        $frame = NodeMother::joinRight(NodeMother::plan(NodeMother::read()));
         $right = PhysicalPlanMother::reading(from_array([['id' => 1]], schema(int_schema('id'))));
         $context = NodeMother::context();
 
@@ -295,7 +295,7 @@ final class NodeTranslatorTest extends FlowTestCase
 
     public function test_join_steps_are_the_exact_list_in_order(): void
     {
-        $frame = NodeMother::frame(NodeMother::plan(NodeMother::read()));
+        $frame = NodeMother::joinRight(NodeMother::plan(NodeMother::read()));
 
         static::assertSame(
             [HashJoinProcessor::class],

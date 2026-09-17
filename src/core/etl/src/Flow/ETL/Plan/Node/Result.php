@@ -11,8 +11,8 @@ use Flow\ETL\Plan\RowCount;
 use Flow\ETL\Plan\Transparency;
 
 /**
- * The caller's stream - what fetch(), get() and run() pull. Always the ROOT of a plan, or the first child of the
- * Outputs root; never a row input of anything.
+ * A plan's stream - what fetch(), get() and run() pull, or what the node reading the plan takes: the root of a plan,
+ * or the first child of its Outputs root. It passes its rows through and adds no steps.
  */
 final readonly class Result implements Node
 {

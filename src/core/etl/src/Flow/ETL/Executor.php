@@ -14,14 +14,13 @@ use Throwable;
 use WeakMap;
 
 use function array_reverse;
-use function in_array;
 use function sprintf;
 
 final readonly class Executor
 {
     /**
-     * The contexts of the plans this executor is advancing right now. Every DataFrame has its own context and every
-     * embedded plan runs on its own copy, so a context advanced twice at once is a plan reading back from itself.
+     * The contexts of the plans this executor is advancing right now. Every DataFrame has its own context, so a
+     * context advanced twice at once is a plan reading back from itself.
      *
      * @var WeakMap<FlowContext, true>
      */
@@ -77,16 +76,26 @@ final readonly class Executor
     }
 
     /**
-     * Executes $plan and merges every batch into one Rows. An empty result still carries the plan's schema, or an
-     * empty one when the plan cannot describe its rows.
+     * Executes $plan and merges every batch into one Rows.
      *
      * @throws InvalidLogicException when the plan's context is already being advanced
      */
     public function fetch(PhysicalPlan $plan): Rows
     {
+        return $this->merge($this->execute($plan), $plan);
+    }
+
+    /**
+     * Merges every batch into one Rows. An empty result still carries the plan's schema, or an empty one when the
+     * plan cannot describe its rows.
+     *
+     * @param Generator<int, Rows> $batches $plan's rows
+     */
+    public function merge(Generator $batches, PhysicalPlan $plan): Rows
+    {
         $rows = null;
 
-        foreach ($this->execute($plan) as $nextRows) {
+        foreach ($batches as $nextRows) {
             $rows = $rows === null ? $nextRows : $rows->merge($nextRows);
         }
 
@@ -102,8 +111,8 @@ final readonly class Executor
     }
 
     /**
-     * Drives one pipeline and the pipelines it reads. Only the frames inlined into it get a DataFrame span here -
-     * the pipeline's own context belongs to whoever runs it.
+     * Drives one pipeline and the pipelines it reads, with no DataFrame span - the pipeline's context belongs to
+     * whoever runs it.
      *
      * @return Generator<int, Rows>
      */
@@ -125,46 +134,20 @@ final readonly class Executor
             ? $source->extract($leaf->context(), $leaf->limit(), $leaf->pathFilter())
             : $source->extract($leaf->context(), $leaf->limit());
 
-        $embedded = [];
-
         foreach ($chain as $stage) {
-            $context = $stage->context();
-
-            if ($context !== $pipeline->context() && !in_array($context, $embedded, true)) {
-                $embedded[] = $context;
-            }
-
             foreach ($stage->segments()->all() as $segment) {
-                $generator = $segment->execute($generator, $context);
+                $generator = $segment->execute($generator, $stage->context());
                 $processor = $segment->processor();
 
                 if ($processor !== null) {
-                    $generator = $processor->process($generator, $context);
+                    $generator = $processor->process($generator, $stage->context());
                 }
             }
         }
 
-        foreach ($embedded as $context) {
-            $context->telemetry()->dataFrameStarted($context);
-        }
-
-        try {
-            // a foreach, never `yield from`: the re-yield must not forward the consumer's sent signal
-            foreach ($generator as $rows) {
-                yield $rows;
-            }
-        } catch (Throwable $e) {
-            foreach ($embedded as $context) {
-                $context->telemetry()->dataFrameFailed($context, $e);
-            }
-
-            throw $e;
-        } finally {
-            // drained, abandoned, or destroyed because the consumer's body threw - the same shape as
-            // execute(), and a no-op once dataFrameFailed() closed the span
-            foreach ($embedded as $context) {
-                $context->telemetry()->dataFrameCompleted($context);
-            }
+        // a foreach, never `yield from`: the re-yield must not forward the consumer's sent signal
+        foreach ($generator as $rows) {
+            yield $rows;
         }
     }
 }

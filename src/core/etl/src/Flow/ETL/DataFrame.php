@@ -221,7 +221,7 @@ final class DataFrame
     public function crossJoin(self $dataFrame, string $prefix = ''): self
     {
         $this->plan = $this->plan->withCursor(
-            new Node\CrossJoin($this->plan->cursor(), new Node\SideInput($dataFrame->explain()), $prefix),
+            new Node\CrossJoin($this->plan->cursor(), $dataFrame->explain()->logical->root, $prefix),
         );
 
         return $this;
@@ -442,7 +442,7 @@ final class DataFrame
         }
 
         $this->plan = $this->plan->withCursor(
-            new Node\Join($this->plan->cursor(), new Node\SideInput($dataFrame->explain()), $on, $type, $algorithm),
+            new Node\Join($this->plan->cursor(), $dataFrame->explain()->logical->root, $on, $type, $algorithm),
         );
 
         return $this;

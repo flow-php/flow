@@ -58,7 +58,7 @@ echo data_frame()
 ```text
 Outputs
 ├─ #3 Result
-│  │  Rows fetch() returns and run() streams
+│  │  Rows this plan hands out: to the trigger, or to the node reading it
 │  └─ #2 Filter
 │     │  Condition: IsNotNull
 │     └─ #1 Read
@@ -71,8 +71,9 @@ Outputs
 `Outputs` lists everything the frame produces: `Result` is what the trigger reads, `Write` is the sink, and both
 read the same rows. A node several consumers read is printed once, and every other consumer points back at it by
 number - `#2 Filter (shared)` is that same filter, not a second one. A node keeps its number in every format.
-The frame read by `join()` / `crossJoin()` appears as a `SideInput` with its own plan printed under it, numbered with
-the rest of the plan.
+A frame joined with `join()` / `crossJoin()` is part of the same tree: its own `Result` sits where its rows enter,
+numbered with the rest of the plan, and it runs with this frame's configuration. A frame read with `from_data_frame()`
+is a `Read` of `DataFrameExtractor` and runs with its own.
 
 `toString()` takes the stage and the format to print:
 
@@ -95,7 +96,7 @@ echo $dataFrame->explain()->toString(format: Format::flow);
 └─ #2 Filter
    │  Condition: IsNotNull
    ├─ #3 Result
-   │     Rows fetch() returns and run() streams
+   │     Rows this plan hands out: to the trigger, or to the node reading it
    └─ #4 Write
          Loader: JsonLoader
 ```
@@ -111,8 +112,9 @@ echo $dataFrame->explain()->toString(format: Format::boxes);
 ┌─────────────┴─────────────┐┌─────────────┴─────────────┐
 │         #3 Result         ││         #4 Write          │
 │   ────────────────────    ││   ────────────────────    │
-│ Rows fetch() returns and  ││    Loader: JsonLoader     │
-│       run() streams       ││                           │
+│ Rows this plan hands out: ││    Loader: JsonLoader     │
+│ to the trigger, or to the ││                           │
+│      node reading it      ││                           │
 └─────────────┬─────────────┘└─────────────┬─────────────┘
 ┌─────────────┴─────────────┐┌─────────────┴─────────────┐
 │         #2 Filter         ││         #2 Filter         │

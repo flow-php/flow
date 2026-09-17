@@ -11,11 +11,10 @@ use Flow\Filesystem\Path\Filter\OnlyFiles;
 final readonly class Pipeline
 {
     /**
-     * @param int $id planner-assigned counter, unique inside the PhysicalPlan it belongs to. An embedded plan's
-     *                pipelines are numbered inside the sub-plan built for it.
+     * @param int $id planner-assigned counter, unique inside the PhysicalPlan it belongs to. A join's right side
+     *                is numbered inside the physical plan built for it.
      * @param Segments $segments bound where the schema was derivable, raw where it was not. The source
-     *                           extractor lives in its first Segment and nowhere else; over an inlined frame
-     *                           that Segment keeps the frame's extractor only to report the frame's failures.
+     *                           extractor lives in its first Segment and nowhere else.
      * @param FlowContext $context the frame this pipeline was planned in
      * @param null|self $input the pipeline whose output is this one's rows; null when this pipeline
      *                         reads the extractor in $segments
@@ -57,8 +56,7 @@ final readonly class Pipeline
     }
 
     /**
-     * The upstream stage. NOT necessarily "completes first": under a blocking node it is, under a
-     * from_data_frame() edge it streams. The Executor flattens either way.
+     * The upstream stage, cut off after a blocking node. The Executor flattens the chain.
      */
     public function input(): ?self
     {

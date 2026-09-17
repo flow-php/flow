@@ -30,10 +30,13 @@ final readonly class Plan
 
     /**
      * A subtree several consumers share is printed once and referenced by its number afterwards. The optimized stage
-     * is the plan the configured optimizer hands to the planner; a joined frame is shown with its own plan under it.
+     * is the plan the configured optimizer hands to the planner; a joined or read frame is part of the tree.
      */
     public function toString(Stage $stage = Stage::optimized, Format $format = Format::tree): string
     {
-        return (new Explain())->of($this, $stage, $format);
+        return (new Explain())->of(match ($stage) {
+            Stage::unoptimized => $this->logical,
+            Stage::optimized => $this->context->config->optimizer()->optimize($this->logical, $this->context),
+        }, $format);
     }
 }

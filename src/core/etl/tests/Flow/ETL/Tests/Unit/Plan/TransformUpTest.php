@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Plan;
 
 use Flow\ETL\Plan\Node;
+use Flow\ETL\Plan\Node\JoinsFrame;
 use Flow\ETL\Plan\Node\Limit;
 use Flow\ETL\Plan\Node\Read;
+use Flow\ETL\Plan\Node\Result;
 use Flow\ETL\Plan\Node\Select;
 use Flow\ETL\Plan\Rewrite;
 use Flow\ETL\Plan\TransformUp;
 use Flow\ETL\Tests\Double\RenameSelectRewrite;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\NodeMother;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 final class TransformUpTest extends FlowTestCase
 {
@@ -76,5 +80,31 @@ final class TransformUpTest extends FlowTestCase
         $select = $rewritten->children()[0];
         static::assertInstanceOf(Select::class, $select);
         static::assertSame(['name'], $select->entries);
+    }
+
+    /**
+     * @return Generator<string, array{JoinsFrame}>
+     */
+    public static function joins_sharing_a_node(): Generator
+    {
+        $select = NodeMother::select(NodeMother::read());
+
+        yield 'join' => [NodeMother::join($select, new Result($select))];
+
+        $select = NodeMother::select(NodeMother::read());
+
+        yield 'cross join' => [NodeMother::crossJoin($select, new Result($select))];
+    }
+
+    #[DataProvider('joins_sharing_a_node')]
+    public function test_a_joins_right_side_is_handed_back_untouched_even_when_it_shares_a_node_with_the_left(JoinsFrame $join): void
+    {
+        $rewritten = (new TransformUp())->of($join, new RenameSelectRewrite());
+
+        static::assertInstanceOf(JoinsFrame::class, $rewritten);
+        $left = $rewritten->children()[0];
+        static::assertInstanceOf(Select::class, $left);
+        static::assertSame(['name'], $left->entries);
+        static::assertSame($join->right(), $rewritten->right());
     }
 }

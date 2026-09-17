@@ -63,14 +63,17 @@ final class PlanTest extends FlowTestCase
         );
     }
 
-    public function test_to_string_prints_the_optimized_tree_by_default(): void
+    public function test_to_string_prints_the_tree_its_optimizer_rewrites_by_default(): void
     {
         $plan = Plan::of(
             NodeMother::plan(new Limit(new Limit(NodeMother::read(), 5), 3)),
             new FlowContext(config_builder()->optimizer(new Optimizer(new CombineLimits()))->build()),
         );
 
-        static::assertSame((new Explain())->of($plan, Stage::optimized, Format::tree), $plan->toString());
+        static::assertSame(
+            (new Explain())->of(NodeMother::plan(new Limit(NodeMother::read(), 3)), Format::tree),
+            $plan->toString(),
+        );
     }
 
     public function test_to_string_prints_the_requested_stage_and_format(): void
@@ -81,7 +84,7 @@ final class PlanTest extends FlowTestCase
         );
 
         static::assertSame(
-            (new Explain())->of($plan, Stage::unoptimized, Format::boxes),
+            (new Explain())->of($plan->logical, Format::boxes),
             $plan->toString(Stage::unoptimized, Format::boxes),
         );
         static::assertNotSame($plan->toString(), $plan->toString(Stage::unoptimized));

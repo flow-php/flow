@@ -34,7 +34,7 @@ final class TransformedTest extends FlowTestCase
         static::assertSame(<<<'PLAN'
             Outputs  preserving · opaque · streaming
             ├─ #2 Result  preserving · transparent · streaming
-            │  │  Rows fetch() returns and run() streams
+            │  │  Rows this plan hands out: to the trigger, or to the node reading it
             │  └─ #1 Read  source · transparent · streaming
             │        Extractor: ArrayExtractor
             └─ #4 Write  preserving · opaque · streaming
@@ -57,7 +57,7 @@ final class TransformedTest extends FlowTestCase
         static::assertSame(<<<'PLAN'
             Outputs  preserving · opaque · streaming
             ├─ #2 Result  preserving · transparent · streaming
-            │  │  Rows fetch() returns and run() streams
+            │  │  Rows this plan hands out: to the trigger, or to the node reading it
             │  └─ #1 Read  source · transparent · streaming
             │        Extractor: ArrayExtractor
             └─ #4 Write  preserving · opaque · streaming
@@ -81,7 +81,7 @@ final class TransformedTest extends FlowTestCase
         static::assertSame(<<<'PLAN'
             Outputs  preserving · opaque · streaming
             ├─ #2 Result  preserving · transparent · streaming
-            │  │  Rows fetch() returns and run() streams
+            │  │  Rows this plan hands out: to the trigger, or to the node reading it
             │  └─ #1 Read  source · transparent · streaming
             │        Extractor: ArrayExtractor
             └─ #5 Write  preserving · opaque · streaming

@@ -53,7 +53,7 @@ final class CrossJoinRowsTransformer implements Transformer
     private function rows(): Rows
     {
         if ($this->rows === null) {
-            $this->rows = $this->executor->fetch($this->right);
+            $this->rows = $this->executor->merge($this->executor->executePipeline($this->right->root()), $this->right);
         }
 
         return $this->rows;

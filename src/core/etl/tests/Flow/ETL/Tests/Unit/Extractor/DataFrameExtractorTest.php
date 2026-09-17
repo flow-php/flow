@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
-use Flow\ETL\DataFrame;
 use Flow\ETL\ErrorHandler\ExtractionError;
 use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -12,11 +11,11 @@ use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor\DataFrameExtractor;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\Plan\Node\Limit;
 use Flow\ETL\Tests\Context\MemoryTelemetryContext;
 use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\Double\RecordingErrorHandler;
 use Flow\ETL\Tests\Double\RecordingFileExtractor;
+use Flow\ETL\Tests\Double\RepeatableExtractor;
 use Flow\ETL\Tests\Double\ThrowingTransformer;
 use Flow\ETL\Tests\Double\UndescribableRowLessExtractor;
 use Flow\ETL\Tests\FlowTestCase;
@@ -76,17 +75,27 @@ final class DataFrameExtractorTest extends FlowTestCase
         static::assertSame([['id' => '1'], ['id' => '2']], $batches[0]->toArray());
     }
 
+    public function test_a_declared_schema_describes_a_frame_that_cannot_describe_itself(): void
+    {
+        $declared = schema(int_schema('id'));
+
+        static::assertEquals(
+            $declared,
+            from_data_frame(df()->read(new UndescribableRowLessExtractor()))->withSchema($declared)->schema(),
+        );
+    }
+
     /**
      * @return Generator<string, array{bool}>
      */
-    public static function reading_paths(): Generator
+    public static function declared_schemas(): Generator
     {
-        yield 'inlined' => [false];
-        yield 'read through the extractor' => [true];
+        yield 'derived schema' => [false];
+        yield 'declared schema' => [true];
     }
 
-    #[DataProvider('reading_paths')]
-    public function test_a_failure_the_wrapped_frame_propagates_is_offered_to_the_outer_handler(bool $declared): void
+    #[DataProvider('declared_schemas')]
+    public function test_a_failure_inside_the_frame_is_offered_to_the_outer_handler_as_an_extraction_error(bool $declared): void
     {
         $failure = new RuntimeException('boom');
         $extractor = from_data_frame(
@@ -109,27 +118,31 @@ final class DataFrameExtractorTest extends FlowTestCase
         static::assertSame($extractor, $error->extractor);
     }
 
-    public function test_the_plan_without_a_limit_is_the_frozen_plan(): void
+    public function test_a_failure_inside_a_wrapped_frame_is_offered_to_the_outer_handler_as_an_extraction_error(): void
     {
-        $extractor = from_data_frame(df()->read(from_array([['id' => 1]])));
+        $failure = new RuntimeException('boom');
+        $chain = from_all(from_data_frame(
+            df()->read(from_array([['id' => 1], ['id' => 2]]))->transform(new ThrowingTransformer($failure)),
+        ));
+        $handler = new RecordingErrorHandler(new IgnoreError());
 
-        static::assertSame($extractor->plan(), $extractor->plan(null));
+        $rows = df()->read($chain)->onError($handler)->fetch();
+
+        static::assertSame(0, $rows->count());
+        static::assertCount(1, $handler->errors);
+        $error = $handler->errors[0];
+        static::assertInstanceOf(ExtractionError::class, $error);
+        static::assertSame($failure, $error->cause);
+        static::assertSame($chain, $error->extractor);
     }
 
-    public function test_the_plan_with_a_limit_stops_the_frames_rows_and_keeps_its_config(): void
+    public function test_it_repeats_when_every_source_of_its_frame_repeats(): void
     {
-        $extractor = from_data_frame(df()->read(from_array([['id' => 1]]))->select('id'));
-
-        $limited = $extractor->plan(3);
-        $cursor = $limited->logical->cursor();
-
-        static::assertInstanceOf(Limit::class, $cursor);
-        static::assertSame(3, $cursor->limit);
-        static::assertSame($extractor->plan()->logical->cursor(), $cursor->children()[0]);
-        static::assertSame($extractor->plan()->context->config, $limited->context->config);
+        static::assertTrue(from_data_frame(df()->read(from_array([['id' => 1]])))->isRepeatable());
+        static::assertFalse(from_data_frame(df()->read(new RepeatableExtractor(false)))->isRepeatable());
     }
 
-    public function test_a_limit_given_to_extract_reaches_the_wrapped_frames_source(): void
+    public function test_a_limit_given_to_extract_reaches_the_frames_source(): void
     {
         $source = new RecordingFileExtractor(
             schema(int_schema('id')),
@@ -159,19 +172,14 @@ final class DataFrameExtractorTest extends FlowTestCase
         $extractor->schema();
     }
 
-    public function test_the_plan_is_frozen_at_construction(): void
+    public function test_the_frame_is_frozen_at_construction(): void
     {
-        $context = flow_context(config());
-        $inner = new DataFrame(from_rows(rows(schema(int_schema('id')), row(['id' => 1]))), $context);
-        $before = $inner->explain()->toString();
+        $inner = df()->read(from_rows(rows(schema(int_schema('id')), row(['id' => 1]))));
 
         $extractor = from_data_frame($inner);
         $inner->withEntry('doubled', ref('id')->multiply(lit(2)));
 
-        static::assertSame($before, $extractor->plan()->toString());
-        static::assertNotSame($context, $extractor->plan()->context);
-        static::assertSame($context->config, $extractor->plan()->context->config);
-        static::assertSame($context->errorHandler(), $extractor->plan()->context->errorHandler());
+        static::assertSame([['id' => 1]], iterator_to_array($extractor->extract(flow_context(config())))[0]->toArray());
     }
 
     public function test_it_is_constructed_from_a_frame(): void
@@ -185,7 +193,7 @@ final class DataFrameExtractorTest extends FlowTestCase
         );
     }
 
-    public function test_an_error_handler_set_after_embedding_does_not_reach_the_embedded_plan(): void
+    public function test_an_error_handler_set_after_embedding_does_not_reach_the_frame(): void
     {
         $inner = df()
             ->read(from_array([['id' => 1]]))
@@ -197,15 +205,6 @@ final class DataFrameExtractorTest extends FlowTestCase
         $this->expectExceptionMessage('inner boom');
 
         $outer->fetch();
-    }
-
-    public function test_declared_schema_is_null_until_with_schema_is_called(): void
-    {
-        $extractor = from_data_frame(df()->read(from_rows(rows(schema(int_schema('id'))))));
-        $declared = schema(str_schema('id'));
-
-        static::assertNull($extractor->declaredSchema());
-        static::assertSame($declared, $extractor->withSchema($declared)->declaredSchema());
     }
 
     public function test_extract_runs_the_snapshot_plan_when_reached_through_a_chain_wrapper(): void

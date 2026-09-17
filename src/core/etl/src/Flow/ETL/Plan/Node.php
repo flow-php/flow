@@ -8,14 +8,16 @@ interface Node
 {
     /**
      * Inputs, in the order they are planned. children()[0] is the node's ROW INPUT - the chain a rule walks down and
-     * the chain PipelineSplit turns into segments. Every further child is a SIDE INPUT and is always a
-     * SideInput: another plan this node reads without taking its rows as input. A leaf returns [].
+     * the chain PipelineSplit turns into segments. A join's second child is the joined frame's whole plan: its
+     * Result or Outputs root, read without taking its rows as input and never rewritten by this plan's rewrites.
+     * A leaf returns [].
      *
-     * Three kinds break that shape. A SideInput is a LEAF that owns a whole plan - read it through plan(),
-     * a rule over the outer plan never descends into it. A Transaction is a ROOT-ONLY node whose children
-     * are sibling sink roots it commits together - never a row input, never on a spine. Outputs is the ONE
-     * root of a plan with several consumers: children()[0] is the Result (the caller's stream), every further
-     * child a sink root.
+     * Two kinds break that shape. A Transaction is a sink root whose children are sibling sink roots it commits
+     * together - never a row input, never on a spine. Outputs is the root of a plan with several consumers:
+     * children()[0] is the Result (the plan's stream), every further child a sink root.
+     *
+     * A Result or Outputs is a plan's root, the first node of a frame that read another frame, or the right child
+     * of a join; it passes its rows through and adds no steps.
      *
      * @return list<Node>
      */

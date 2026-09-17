@@ -35,7 +35,7 @@ final class FlowLayoutTest extends FlowTestCase
                └─ #3 Limit
                   │  Limit: 5
                   └─ #4 Result
-                        Rows fetch() returns and run() streams
+                        Rows this plan hands out: to the trigger, or to the node reading it
             PLAN, (new FlowLayout())->render((new Outline())->of($plan)));
     }
 
@@ -50,7 +50,7 @@ final class FlowLayoutTest extends FlowTestCase
             └─ #2 Filter
                │  Condition: IsNotNull
                ├─ #3 Result
-               │     Rows fetch() returns and run() streams
+               │     Rows this plan hands out: to the trigger, or to the node reading it
                └─ #4 Write
                      Loader: MemoryLoader
             PLAN, (new FlowLayout())->render((new Outline())->of($plan)));
@@ -71,7 +71,7 @@ final class FlowLayoutTest extends FlowTestCase
             #1 Read
             │  Extractor: ArrayExtractor
             ├─ #2 Result
-            │     Rows fetch() returns and run() streams
+            │     Rows this plan hands out: to the trigger, or to the node reading it
             ├─ #3 Write
             │     Loader: MemoryLoader
             └─ #4 Select
@@ -82,21 +82,22 @@ final class FlowLayoutTest extends FlowTestCase
 
     public function test_every_source_starts_its_own_tree_and_a_node_reached_again_is_shared(): void
     {
-        $plan = new Result(new CrossJoin(NodeMother::read(), NodeMother::frame(NodeMother::plan(NodeMother::read()))));
+        $plan = new Result(
+            new CrossJoin(NodeMother::read(), NodeMother::joinRight(NodeMother::plan(NodeMother::read()))),
+        );
 
         static::assertSame(<<<'PLAN'
             #1 Read
             │  Extractor: ArrayExtractor
-            └─ #5 CrossJoin
+            └─ #4 CrossJoin
                │  Defines columns known only at run time
-               └─ #6 Result
-                     Rows fetch() returns and run() streams
+               └─ #5 Result
+                     Rows this plan hands out: to the trigger, or to the node reading it
             #2 Read
             │  Extractor: ArrayExtractor
             └─ #3 Result
-               │  Rows fetch() returns and run() streams
-               └─ #4 SideInput
-                  └─ #5 CrossJoin (shared)
+               │  Rows this plan hands out: to the trigger, or to the node reading it
+               └─ #4 CrossJoin (shared)
             PLAN, (new FlowLayout())->render((new Outline())->of($plan)));
     }
 }

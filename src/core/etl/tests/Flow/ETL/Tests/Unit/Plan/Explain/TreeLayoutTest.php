@@ -39,7 +39,7 @@ final class TreeLayoutTest extends FlowTestCase
 
         static::assertSame(<<<'PLAN'
             #4 Result
-            │  Rows fetch() returns and run() streams
+            │  Rows this plan hands out: to the trigger, or to the node reading it
             └─ #3 Limit
                │  Limit: 5
                └─ #2 Collect
@@ -58,7 +58,7 @@ final class TreeLayoutTest extends FlowTestCase
         static::assertSame(<<<'PLAN'
             Outputs
             ├─ #3 Result
-            │  │  Rows fetch() returns and run() streams
+            │  │  Rows this plan hands out: to the trigger, or to the node reading it
             │  └─ #2 Filter
             │     │  Condition: IsNotNull
             │     └─ #1 Read
@@ -83,7 +83,7 @@ final class TreeLayoutTest extends FlowTestCase
         static::assertSame(<<<'PLAN'
             Outputs
             ├─ #2 Result
-            │  │  Rows fetch() returns and run() streams
+            │  │  Rows this plan hands out: to the trigger, or to the node reading it
             │  └─ #1 Read
             │        Extractor: ArrayExtractor
             ├─ #3 Write
@@ -102,7 +102,7 @@ final class TreeLayoutTest extends FlowTestCase
 
         static::assertSame(<<<'PLAN'
             #4 Result  preserving · transparent · streaming
-            │  Rows fetch() returns and run() streams
+            │  Rows this plan hands out: to the trigger, or to the node reading it
             └─ #3 Limit  reducing · transparent · streaming
                │  Limit: 5
                └─ #2 Select  preserving · transparent · streaming
@@ -121,7 +121,7 @@ final class TreeLayoutTest extends FlowTestCase
         static::assertSame(<<<'PLAN'
             Outputs  preserving · opaque · streaming
             ├─ #3 Result  preserving · transparent · streaming
-            │  │  Rows fetch() returns and run() streams
+            │  │  Rows this plan hands out: to the trigger, or to the node reading it
             │  └─ #2 Filter  reducing · transparent · streaming
             │     │  Condition: IsNotNull
             │     └─ #1 Read  source · transparent · streaming
@@ -151,7 +151,7 @@ final class TreeLayoutTest extends FlowTestCase
 
         static::assertSame(<<<'PLAN'
             #7 Result  preserving · transparent · streaming
-            │  Rows fetch() returns and run() streams
+            │  Rows this plan hands out: to the trigger, or to the node reading it
             └─ #6 Until  reducing · transparent · streaming
                │  Until: Literal
                └─ #5 Offset  reducing · transparent · streaming
@@ -166,23 +166,22 @@ final class TreeLayoutTest extends FlowTestCase
             PLAN, (new TreeLayout(declarations: true))->render((new Outline())->of($plan->root)));
     }
 
-    public function test_with_declarations_a_frame_shows_its_own_plan_under_it(): void
+    public function test_with_declarations_a_joined_frame_is_part_of_the_tree(): void
     {
         $plan = new LogicalPlan(new Result(
-            new CrossJoin(NodeMother::read(), NodeMother::frame(NodeMother::plan(NodeMother::read()))),
+            new CrossJoin(NodeMother::read(), NodeMother::joinRight(NodeMother::plan(NodeMother::read()))),
         ));
 
         static::assertSame(<<<'PLAN'
-            #6 Result  preserving · transparent · streaming
-            │  Rows fetch() returns and run() streams
-            └─ #5 CrossJoin  expanding · opaque · streaming · redefines unknown
+            #5 Result  preserving · transparent · streaming
+            │  Rows this plan hands out: to the trigger, or to the node reading it
+            └─ #4 CrossJoin  expanding · opaque · streaming · redefines unknown
                ├─ #1 Read  source · transparent · streaming
                │     Extractor: ArrayExtractor
-               └─ #4 SideInput  preserving · opaque · streaming
-                  └─ #3 Result  preserving · transparent · streaming
-                     │  Rows fetch() returns and run() streams
-                     └─ #2 Read  source · transparent · streaming
-                           Extractor: ArrayExtractor
+               └─ #3 Result  preserving · transparent · streaming
+                  │  Rows this plan hands out: to the trigger, or to the node reading it
+                  └─ #2 Read  source · transparent · streaming
+                        Extractor: ArrayExtractor
             PLAN, (new TreeLayout(declarations: true))->render((new Outline())->of($plan->root)));
     }
 
@@ -215,7 +214,7 @@ final class TreeLayoutTest extends FlowTestCase
         static::assertSame(<<<'PLAN'
             Outputs  preserving · opaque · streaming
             ├─ #2 Result  preserving · transparent · streaming
-            │  │  Rows fetch() returns and run() streams
+            │  │  Rows this plan hands out: to the trigger, or to the node reading it
             │  └─ #1 Read  source · transparent · streaming
             │        Extractor: ArrayExtractor
             └─ #6 Transaction  preserving · opaque · streaming

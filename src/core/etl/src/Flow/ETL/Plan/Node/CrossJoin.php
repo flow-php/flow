@@ -12,41 +12,43 @@ use Flow\ETL\Plan\RowCount;
 use Flow\ETL\Plan\Transparency;
 
 /**
- * Every left row is paired with every right row; the right side is pulled from the SideInput on the first batch.
+ * Every left row is paired with every right row; the right side is pulled on the first batch.
  */
-final readonly class CrossJoin implements Node
+final readonly class CrossJoin implements JoinsFrame
 {
+    private Result|Outputs $right;
+
     public function __construct(
         private Node $input,
-        private SideInput $frame,
+        Node $right,
         public string $prefix = '',
-    ) {}
+    ) {
+        $this->right =
+            $right instanceof Result || $right instanceof Outputs
+                ? $right
+                : throw InvalidLogicException::joinSideIsNotAPlanRoot($right::class);
+    }
 
     /**
      * @return list<Node>
      */
     public function children(): array
     {
-        return [$this->input, $this->frame];
+        return [$this->input, $this->right];
     }
 
     public function withChildren(array $children): self
     {
-        if ($children[0] === $this->input && $children[1] === $this->frame) {
+        if ($children[0] === $this->input && $children[1] === $this->right) {
             return $this;
         }
 
-        $frame = $children[1];
+        return new self($children[0], $children[1], $this->prefix);
+    }
 
-        if (!$frame instanceof SideInput) {
-            throw InvalidLogicException::because(
-                'The side input of %s is always a SideInput, %s given',
-                self::class,
-                $frame::class,
-            );
-        }
-
-        return new self($children[0], $frame, $this->prefix);
+    public function right(): Result|Outputs
+    {
+        return $this->right;
     }
 
     public function rowCount(): RowCount

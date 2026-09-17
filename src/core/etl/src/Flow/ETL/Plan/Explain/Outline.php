@@ -4,36 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Plan\Explain;
 
-use Flow\ETL\Plan;
-use Flow\ETL\Plan\LogicalPlan;
 use Flow\ETL\Plan\Node;
 use Flow\ETL\Plan\Node\Outputs;
-use Flow\ETL\Plan\Node\SideInput;
-use Flow\ETL\Plan\Stage;
 use SplObjectStorage;
 
 use function count;
 
 final readonly class Outline
 {
-    /**
-     * @param Stage $stage which plan of an embedded frame is shown: as built, or after that frame's own optimizer
-     */
-    public function __construct(
-        private Stage $stage = Stage::unoptimized,
-    ) {}
-
-    /**
-     * The plan at this outline's stage: optimized with the frame's own optimizer, the one its planner runs.
-     */
-    public function logical(Plan $plan): LogicalPlan
-    {
-        return match ($this->stage) {
-            Stage::unoptimized => $plan->logical,
-            Stage::optimized => $plan->context->config->optimizer()->optimize($plan->logical, $plan->context),
-        };
-    }
-
     public function of(Node $root): Entry
     {
         /** @var SplObjectStorage<Node, int> $numbers */
@@ -55,8 +33,7 @@ final readonly class Outline
 
         $children = [];
 
-        // an embedded frame is a leaf of this plan; its own plan is shown under it, numbered with this one
-        foreach ($node instanceof SideInput ? [$this->logical($node->plan())->root] : $node->children() as $child) {
+        foreach ($node->children() as $child) {
             $children[] = $this->entry($child, $numbers);
         }
 

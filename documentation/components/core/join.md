@@ -6,7 +6,8 @@
 
 Joining two data frames is a common operation in data processing that combines data from two different sources. Flow PHP
 implements joins using a **hash join algorithm** that creates a hash table from the right DataFrame and probes it with
-rows from the left DataFrame.
+rows from the left DataFrame. The right DataFrame becomes part of the left one's plan when `join()` / `crossJoin()` is
+called, and runs with the left DataFrame's configuration and error handler.
 
 ## Join Methods
 

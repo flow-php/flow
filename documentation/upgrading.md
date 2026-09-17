@@ -104,6 +104,8 @@ Applies to `PaginationModifier`, `CountModifier` and `KeysetPaginationModifier` 
 | `->rows($t)->limit(n)`, `->transform($t)->limit(n)`, `->void()->limit(n)` pushed the limit into the source for seven allow-listed transformers | not pushed - `->withEntry(...)->limit(n)` still pushes; with several sinks the widest limit is pushed, a `limit(3)` inside a sink limits the whole run |
 | -                                                                                                                                              | `schema()` followed by a terminal verb plans twice, `Extractor::schema()` is called once per planning - memoise a sniffing extractor                   |
 | `add_row_index()` on a frame run twice continued counting (`[0,1,2]` then `[3,4,5]`)                                                           | starts again on every run; a `Transformer` keeping state between batches implements `Flow\ETL\Transformer\Stateful` (`fresh()`) to do the same         |
+| a joined frame ran with its own config and `onError()`                                                                                         | runs with the outer frame's config, optimizer and error handler; its own `onError()` is ignored - a `from_data_frame()` frame still runs with its own  |
+| each joined frame opened its own `DataFrame` span                                                                                              | one `DataFrame` span per run; a `from_data_frame()` frame still opens its own                                                                          |
 
 ### 11) `flow-php/etl` - one balanced `DataFrame` telemetry span per run
 
@@ -113,7 +115,7 @@ Applies to `PaginationModifier`, `CountModifier` and `KeysetPaginationModifier` 
 | a planning failure under `schema()` emitted no span                                                     | `dataFrameStarted` + `dataFrameFailed` for every verb                |
 | an abandoned `get*()` generator left its span open                                                      | closes it                                                            |
 | a failure inside a verb's own loop body (a `forEach` callback, the formatter) closed the span as failed | closed as completed                                                  |
-| a non-inlined `from_data_frame()` frame emitted no span                                                 | one balanced span per run                                            |
+| a `from_data_frame()` frame emitted no span                                                             | one balanced span per run                                            |
 | `to_dbal_transaction()` / `to_pgsql_transaction()` emitted their own span                               | no span                                                              |
 
 ### 12) `flow-php/etl` - `to_branch()` / `to_transformation()` return a `Sink`, the wrapper loaders are removed
@@ -182,7 +184,7 @@ Applies to `PaginationModifier`, `CountModifier` and `KeysetPaginationModifier` 
 | `discover_pivot_values()` over `from_data_frame()` of a repeatable frame - refused                                              | allowed                                                                                                                                  |
 | a `Transformation` writing inside a sink - its write ran after the sink's own write                                             | runs before it; a transaction's writes run in `write()` call order                                                                       |
 | a `Transformation` inside a sink returning another frame - failed at `run()` "A sink root shares no node with the plan"         | throws at `write()`                                                                                                                      |
-| `$frame->onError()` after `join($frame)` / `from_data_frame($frame)` - reached the embedded frame                               | ignored - the error handler is snapshotted with the plan                                                                                 |
+| `$frame->onError()` after `join($frame)` / `from_data_frame($frame)` - reached the embedded frame                               | ignored - a joined frame runs with the outer frame's handler, a `from_data_frame()` frame with the one it had when embedded              |
 | an embedded frame sharing the outer `FlowContext` left a `DataFrame` span open                                                  | balanced spans                                                                                                                           |
 | `discover_pivot_values()` over a frame with `write()` before `groupBy()` - the sink received every row twice (discovery ran it) | discovery reads only the rows feeding the pivot, sinks run once                                                                          |
 

@@ -43,8 +43,9 @@ final class BoxLayoutTest extends FlowTestCase
             ┌───────────────────────────┐
             │         #4 Result         │
             │   ────────────────────    │
-            │ Rows fetch() returns and  │
-            │       run() streams       │
+            │ Rows this plan hands out: │
+            │ to the trigger, or to the │
+            │      node reading it      │
             └─────────────┬─────────────┘
             ┌─────────────┴─────────────┐
             │         #3 Limit          │
@@ -78,8 +79,9 @@ final class BoxLayoutTest extends FlowTestCase
             ┌─────────────┴─────────────┐┌─────────────┴─────────────┐
             │         #3 Result         ││         #4 Write          │
             │   ────────────────────    ││   ────────────────────    │
-            │ Rows fetch() returns and  ││   Loader: MemoryLoader    │
-            │       run() streams       ││                           │
+            │ Rows this plan hands out: ││   Loader: MemoryLoader    │
+            │ to the trigger, or to the ││                           │
+            │      node reading it      ││                           │
             └─────────────┬─────────────┘└─────────────┬─────────────┘
             ┌─────────────┴─────────────┐┌─────────────┴─────────────┐
             │         #2 Filter         ││         #2 Filter         │
@@ -112,8 +114,9 @@ final class BoxLayoutTest extends FlowTestCase
             ┌─────────────┴─────────────┐┌─────────────┴─────────────┐┌─────────────┴─────────────┐
             │         #2 Result         ││         #3 Write          ││         #5 Write          │
             │   ────────────────────    ││   ────────────────────    ││   ────────────────────    │
-            │ Rows fetch() returns and  ││   Loader: MemoryLoader    ││   Loader: MemoryLoader    │
-            │       run() streams       ││                           ││                           │
+            │ Rows this plan hands out: ││   Loader: MemoryLoader    ││   Loader: MemoryLoader    │
+            │ to the trigger, or to the ││                           ││                           │
+            │      node reading it      ││                           ││                           │
             └─────────────┬─────────────┘└─────────────┬─────────────┘└─────────────┬─────────────┘
             ┌─────────────┴─────────────┐┌─────────────┴─────────────┐┌─────────────┴─────────────┐
             │          #1 Read          ││          #1 Read          ││         #4 Select         │

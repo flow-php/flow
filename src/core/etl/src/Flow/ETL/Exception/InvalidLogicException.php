@@ -43,6 +43,14 @@ final class InvalidLogicException extends Exception
         return self::because('A sink root rewrite must return a Write or a Transaction, %s given', $given);
     }
 
+    public static function joinSideIsNotAPlanRoot(string $given): self
+    {
+        return self::because(
+            'The right side of a join must be a frame\'s plan root (Result or Outputs), %s given',
+            $given,
+        );
+    }
+
     public static function resultRewritten(string $given): self
     {
         return self::because('The first child of Outputs must stay a Result, %s given', $given);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Optimizer\JoinSides;
 use Flow\ETL\Optimizer\Rule;
 use Flow\ETL\Optimizer\Rule\CombineLimits;
 use Flow\ETL\Optimizer\Rule\CombineSortAndLimit;
@@ -40,10 +41,12 @@ final readonly class Optimizer
     }
 
     /**
-     * Rewrites $plan with every rule, in order.
+     * Rewrites every join's right side as a plan of its own, then $plan with every rule, in order.
      */
     public function optimize(LogicalPlan $plan, FlowContext $context): LogicalPlan
     {
+        $plan = $plan->transformUp(new JoinSides($this, $context));
+
         foreach ($this->rules as $rule) {
             $plan = $rule->apply($plan, $context);
         }

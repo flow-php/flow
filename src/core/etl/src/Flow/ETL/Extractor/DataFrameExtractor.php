@@ -15,7 +15,7 @@ use Generator;
 
 use function Flow\ETL\DSL\array_to_rows;
 
-final class DataFrameExtractor implements NestedPlan
+final class DataFrameExtractor implements RewindableExtractor
 {
     private ?Schema $schema = null;
 
@@ -27,33 +27,23 @@ final class DataFrameExtractor implements NestedPlan
     }
 
     /**
+     * Runs the frame with its own configuration; a limit stops the frame's rows, so its own rules push it into its
+     * source.
+     *
      * @param null|positive-int $limit
-     */
-    public function plan(?int $limit = null): Plan
-    {
-        if ($limit === null) {
-            return $this->plan;
-        }
-
-        $logical = $this->plan->logical;
-
-        return Plan::of($logical->withCursor(new Limit($logical->cursor(), $limit)), $this->plan->context);
-    }
-
-    public function declaredSchema(): ?Schema
-    {
-        return $this->schema;
-    }
-
-    /**
+     *
      * @return Generator<int, Rows, Signal|null, void>
      */
     public function extract(FlowContext $context, ?int $limit = null): Generator
     {
-        $plan = $this->plan($limit);
-        $config = $plan->context->config;
+        $logical = $this->plan->logical;
+        $config = $this->plan->context->config;
 
-        foreach ($config->executor()->execute($config->planner()->plan($plan->logical, $plan->context)) as $rows) {
+        if ($limit !== null) {
+            $logical = $logical->withCursor(new Limit($logical->cursor(), $limit));
+        }
+
+        foreach ($config->executor()->execute($config->planner()->plan($logical, $this->plan->context)) as $rows) {
             if ($this->schema !== null) {
                 $rows = array_to_rows($rows->toArray(), $this->schema, $context->hydrator());
             }
@@ -64,6 +54,11 @@ final class DataFrameExtractor implements NestedPlan
                 return;
             }
         }
+    }
+
+    public function isRepeatable(): bool
+    {
+        return (new Repeatability())->ofPlan($this->plan->logical);
     }
 
     /**

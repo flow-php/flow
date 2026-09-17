@@ -37,8 +37,7 @@ final readonly class Segment
     private SplObjectStorage $steps;
 
     /**
-     * @param null|Extractor $extractor the source this segment reads directly, or the inlined frame whose failures it
-     *                                 reports; null behind a processor
+     * @param null|Extractor $extractor the source this segment reads directly; null behind a processor
      */
     public function __construct(
         private ?Processor $processor = null,

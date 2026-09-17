@@ -66,7 +66,7 @@ final class DetailsTest extends FlowTestCase
     public function test_a_result_says_what_it_returns(): void
     {
         static::assertSame(
-            ['Rows fetch() returns and run() streams'],
+            ['Rows this plan hands out: to the trigger, or to the node reading it'],
             (new Details())->lines(new Result(NodeMother::read())),
         );
     }

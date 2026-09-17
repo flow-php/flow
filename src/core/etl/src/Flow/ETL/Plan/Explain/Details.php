@@ -46,7 +46,7 @@ final readonly class Details
     {
         return match (true) {
             $node instanceof Read => $this->read($node),
-            $node instanceof Result => ['Rows fetch() returns and run() streams'],
+            $node instanceof Result => ['Rows this plan hands out: to the trigger, or to the node reading it'],
             $node instanceof Filter => ['Condition: ' . $this->name($node->function)],
             $node instanceof Until => ['Until: ' . $this->name($node->function)],
             $node instanceof WithColumn => [sprintf('Column: %s = %s', $node->name(), $this->name($node->function))],

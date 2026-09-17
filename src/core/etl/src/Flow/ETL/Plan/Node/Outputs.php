@@ -15,8 +15,9 @@ use Flow\ETL\Plan\Transparency;
 use function array_slice;
 
 /**
- * The one root of a plan with several consumers of one prefix (Polars IR::SinkMultiple). children()[0] is the
+ * The root of a plan with several consumers of one prefix (Polars IR::SinkMultiple). children()[0] is the
  * Result - the spine - and every further child is a sink root that re-enters the spine's nodes by identity.
+ * Inside a larger plan (a frame read by another, a join's right side) it passes the Result's rows through.
  */
 final readonly class Outputs implements Node
 {

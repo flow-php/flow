@@ -48,8 +48,7 @@ final readonly class NodeTranslator
      * state the first left behind. An instance the USER constructed - a Loader, or a Transformer handed to
      * transform()/rows() - is theirs: it is handed back as it is, never reset.
      *
-     * @param list<PhysicalPlan> $frames the physical output of this node's side inputs (children() beyond the
-     *                                  first), in order; [] for a node with no side input
+     * @param list<PhysicalPlan> $frames the physical plan of a join's right side; [] for any other node
      *
      * @throws InvalidLogicException when no translation exists for the node
      *

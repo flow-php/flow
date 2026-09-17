@@ -17,41 +17,43 @@ use Flow\ETL\Plan\Transparency;
 /**
  * Row count depends on the join type and on both sides' data; the hash join buckets the whole input before emitting.
  */
-final readonly class Join implements Node
+final readonly class Join implements JoinsFrame
 {
+    private Result|Outputs $right;
+
     public function __construct(
         private Node $input,
-        private SideInput $frame,
+        Node $right,
         public Expression $on,
         public JoinType $type,
         public ?JoinAlgorithmBuilder $algorithm = null,
-    ) {}
+    ) {
+        $this->right =
+            $right instanceof Result || $right instanceof Outputs
+                ? $right
+                : throw InvalidLogicException::joinSideIsNotAPlanRoot($right::class);
+    }
 
     /**
      * @return list<Node>
      */
     public function children(): array
     {
-        return [$this->input, $this->frame];
+        return [$this->input, $this->right];
     }
 
     public function withChildren(array $children): self
     {
-        if ($children[0] === $this->input && $children[1] === $this->frame) {
+        if ($children[0] === $this->input && $children[1] === $this->right) {
             return $this;
         }
 
-        $frame = $children[1];
+        return new self($children[0], $children[1], $this->on, $this->type, $this->algorithm);
+    }
 
-        if (!$frame instanceof SideInput) {
-            throw InvalidLogicException::because(
-                'The side input of %s is always a SideInput, %s given',
-                self::class,
-                $frame::class,
-            );
-        }
-
-        return new self($children[0], $frame, $this->on, $this->type, $this->algorithm);
+    public function right(): Result|Outputs
+    {
+        return $this->right;
     }
 
     public function rowCount(): RowCount

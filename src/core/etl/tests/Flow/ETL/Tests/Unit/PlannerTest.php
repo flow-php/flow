@@ -5,20 +5,17 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit;
 
 use ArrayObject;
-use Flow\ETL\Adapter\CSV\CSVExtractor;
 use Flow\ETL\Adapter\CSV\CSVLoader;
 use Flow\ETL\Exception\DataDependentSchemaException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Executor\Described;
 use Flow\ETL\Executor\Raw;
 use Flow\ETL\Executor\SinkFeed;
-use Flow\ETL\Extractor\DataFrameExtractor;
 use Flow\ETL\Join\Join as JoinType;
 use Flow\ETL\Loader\MemoryLoader;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Optimizer;
 use Flow\ETL\Optimizer\Rule\CombineSortAndLimit;
-use Flow\ETL\Optimizer\Rule\PushLimitIntoSource;
 use Flow\ETL\Plan\LogicalPlan;
 use Flow\ETL\Plan\Node;
 use Flow\ETL\Plan\Node\CrossJoin;
@@ -37,10 +34,12 @@ use Flow\ETL\Processor\CollectingProcessor;
 use Flow\ETL\Processor\HashJoinProcessor;
 use Flow\ETL\Processor\MemorySortProcessor;
 use Flow\ETL\Tests\Context\MemoryTelemetryContext;
+use Flow\ETL\Tests\Double\ContextRecordingTransformer;
 use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\Double\RecordingRule;
 use Flow\ETL\Tests\Double\SpineCopyingRule;
 use Flow\ETL\Tests\Double\StaticDataFrameFactory;
+use Flow\ETL\Tests\Double\UndescribableRowLessExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\NodeMother;
 use Flow\ETL\Transformer\CrossJoinRowsTransformer;
@@ -67,6 +66,7 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\to_array;
 use function Flow\ETL\DSL\to_memory;
+use function iterator_to_array;
 
 final class PlannerTest extends FlowTestCase
 {
@@ -231,16 +231,18 @@ final class PlannerTest extends FlowTestCase
         static::assertNull($plan->root()->limit());
     }
 
-    public function test_a_join_plans_its_right_side_as_a_side_input(): void
+    public function test_a_join_plans_its_right_side_as_a_physical_plan_of_its_own(): void
     {
-        $right = df()->read($sellers = from_csv(__DIR__ . '/../Fixtures/sellers.csv'));
-        $sideInput = NodeMother::frameOf($right);
         $node = new Read(from_csv(__DIR__ . '/../Fixtures/orders.csv'));
-        $node = new Node\Join($node, $sideInput, join_on(['seller_id' => 'id'], 'r_'), JoinType::inner);
+        $node = new Node\Join(
+            $node,
+            df()->read(from_csv(__DIR__ . '/../Fixtures/sellers.csv'))->explain()->logical->root,
+            join_on(['seller_id' => 'id'], 'r_'),
+            JoinType::inner,
+        );
         $node = new Write($node, to_csv(__DIR__ . '/var/out.csv'));
 
-        $logical = new LogicalPlan(new Result($node));
-        $plan = (new Planner(Optimizer::default()))->plan($logical, NodeMother::context());
+        $plan = (new Planner(Optimizer::default()))->plan(new LogicalPlan(new Result($node)), NodeMother::context());
 
         static::assertSame(1, $plan->root()->id);
         static::assertSame(
@@ -252,77 +254,53 @@ final class PlannerTest extends FlowTestCase
 
         static::assertNotNull($upstream);
         static::assertSame(0, $upstream->id);
+        static::assertNull($upstream->input());
         static::assertSame(
             [HashJoinProcessor::class],
             array_map(static fn($step) => $step::class, $upstream->segments()->steps()),
         );
         static::assertInstanceOf(Described::class, $plan);
         static::assertSame(['id', 'total', 'seller_id', 'r_id', 'r_name'], $plan->schema->references()->names());
-
-        $side = (new Planner())
-            ->node($sideInput, NodeMother::context(), new PlannedNodes())
-            ->nestedOrFail()
-            ->root();
-
-        static::assertSame([], $side->segments()->steps());
-        static::assertSame($sellers, $side->segments()->extractor());
     }
 
-    public function test_a_side_input_subtree_is_planned_with_the_childs_config(): void
+    public function test_a_joins_right_side_runs_with_the_outer_context(): void
     {
-        $rightConfig = config();
-        $right = df($rightConfig)->read(from_csv(__DIR__ . '/../Fixtures/sellers.csv'));
-        $sideInput = NodeMother::frameOf($right);
-        $node = new Read(from_csv(__DIR__ . '/../Fixtures/orders.csv'));
-        $node = new Node\Join($node, $sideInput, join_on(['seller_id' => 'id'], 'r_'), JoinType::inner);
+        $recording = new ContextRecordingTransformer();
+        $right = df(config())->read(from_array([['id' => 1]], schema(int_schema('id'))))->transform($recording);
+        $node = new CrossJoin(
+            NodeMother::read(from_array([['id' => 1]], schema(int_schema('id')))),
+            $right->explain()->logical->root,
+            'r_',
+        );
         $context = NodeMother::context(config());
 
         $plan = (new Planner(Optimizer::default()))->plan(new LogicalPlan(new Result($node)), $context);
-        $side = (new Planner())
-            ->node($sideInput, $context, new PlannedNodes())
-            ->nestedOrFail()
-            ->root();
+        iterator_to_array($context->config->executor()->execute($plan));
 
-        static::assertSame($context, $plan->root()->context());
-        static::assertSame($rightConfig, $side->context()->config);
-        static::assertNotSame($context->config, $side->context()->config);
+        static::assertSame([$context], $recording->contexts);
     }
 
-    public function test_a_nested_plan_read_becomes_this_pipelines_input_edge(): void
+    public function test_a_read_frame_is_a_source_of_this_pipeline(): void
     {
-        $inner = df()->read(from_csv(__DIR__ . '/../Fixtures/orders.csv'))->select('id');
-        $node = new Read($extractor = from_data_frame($inner));
-        $node = new Limit($node, 5);
-        $node = new Write($node, to_csv(__DIR__ . '/var/out.csv'));
+        $extractor = from_data_frame(df()->read(from_csv(__DIR__ . '/../Fixtures/orders.csv'))->select('id'));
+        $node = new Write(new Limit(new Read($extractor), 5), to_csv(__DIR__ . '/var/out.csv'));
 
-        $logical = new LogicalPlan(new Result($node));
-        $plan = (new Planner(Optimizer::default()))->plan($logical, NodeMother::context());
+        $plan = (new Planner(Optimizer::default()))->plan(new LogicalPlan(new Result($node)), NodeMother::context());
 
-        static::assertSame(0, $plan->root()->id);
+        static::assertNull($plan->root()->input());
         static::assertSame(
             [LimitTransformer::class, CSVLoader::class],
             array_map(static fn($step) => $step::class, $plan->root()->segments()->steps()),
         );
         static::assertSame($extractor, $plan->root()->segments()->extractor());
-
-        $input = $plan->root()->input();
-
-        static::assertNotNull($input);
-        static::assertSame(0, $input->id);
-        static::assertSame(
-            [SelectEntriesTransformer::class, LimitTransformer::class],
-            array_map(static fn($step) => $step::class, $input->segments()->steps()),
-        );
-        static::assertInstanceOf(CSVExtractor::class, $input->segments()->extractor());
-        static::assertSame(5, $input->limit());
+        static::assertSame(5, $plan->root()->limit());
     }
 
-    public function test_a_nested_plan_read_takes_its_schema_from_the_nested_pipeline(): void
+    public function test_a_read_frame_describes_the_rows_without_reading_them(): void
     {
         $counting = new CountingExtractor(schema(int_schema('id'), str_schema('name')));
-        $inner = df()->read($counting)->select('id');
         $plan = (new Planner(Optimizer::default()))->plan(
-            new LogicalPlan(new Result(new Read(from_data_frame($inner)))),
+            new LogicalPlan(new Result(new Read(from_data_frame(df()->read($counting)->select('id'))))),
             NodeMother::context(),
         );
 
@@ -331,25 +309,15 @@ final class PlannerTest extends FlowTestCase
         static::assertSame(0, $counting->extractCalls);
     }
 
-    public function test_a_nested_plan_that_declares_a_schema_is_not_inlined(): void
+    public function test_a_read_frame_with_a_declared_schema_describes_that_schema(): void
     {
-        $inner = df()->read(from_array([['id' => 1]]))->select('id');
-        $declaring = from_data_frame($inner)->withSchema(schema(str_schema('id')));
-        $node = new Read($declaring);
-        $node = new Limit($node, 5);
+        $declared = schema(int_schema('id'));
+        $node = new Read(from_data_frame(df()->read(new UndescribableRowLessExtractor()))->withSchema($declared));
 
-        $logical = new LogicalPlan(new Result($node));
-        $plan = (new Planner(Optimizer::default()))->plan($logical, NodeMother::context());
+        $plan = (new Planner())->plan(new LogicalPlan(new Result($node)), NodeMother::context());
 
-        static::assertSame(0, $plan->root()->id);
-        static::assertNull($plan->root()->input());
         static::assertInstanceOf(Described::class, $plan);
-        static::assertEquals(schema(str_schema('id')), $plan->schema);
-
-        $source = $plan->root()->segments()->extractor();
-
-        static::assertInstanceOf(DataFrameExtractor::class, $source);
-        static::assertSame($declaring->plan(), $source->plan());
+        static::assertEquals($declared, $plan->schema);
     }
 
     public function test_a_nodes_schema_is_the_fold_of_its_bound_steps(): void
@@ -414,81 +382,30 @@ final class PlannerTest extends FlowTestCase
         );
     }
 
-    public function test_a_frame_is_planned_with_the_childs_context(): void
-    {
-        $planned = new PlannedNodes();
-        $childContext = NodeMother::context(config());
-        $frame = NodeMother::frame(NodeMother::plan(NodeMother::read()), $childContext);
-
-        $nested = (new Planner())
-            ->node($frame, NodeMother::context(config()), $planned)
-            ->nestedOrFail();
-
-        static::assertSame($childContext->config, $nested->root()->context()->config);
-    }
-
-    public function test_a_frame_is_optimized_with_its_own_rules(): void
-    {
-        $childContext = NodeMother::context(
-            config_builder()->optimizer(Optimizer::default()->without(PushLimitIntoSource::class))->build(),
-        );
-        $frame = NodeMother::frame(NodeMother::plan(NodeMother::limit(NodeMother::read(), 5)), $childContext);
-
-        $nested = (new Planner(Optimizer::default()))
-            ->node($frame, NodeMother::context(), new PlannedNodes())
-            ->nestedOrFail();
-
-        static::assertNull($nested->root()->limit());
-    }
-
-    public function test_an_inlined_frame_is_optimized_with_its_own_rules(): void
-    {
-        $child = df(config_builder()->optimizer(Optimizer::default()->without(PushLimitIntoSource::class)))
-            ->read(from_array([['id' => 1]], schema(int_schema('id'))))
-            ->limit(5);
-        $logical = new LogicalPlan(new Result(new Read(from_data_frame($child))));
-
-        $input = (new Planner(Optimizer::default()))
-            ->plan($logical, NodeMother::context())
-            ->root()
-            ->input();
-
-        static::assertNotNull($input);
-        static::assertNull($input->limit());
-    }
-
-    public function test_a_limit_pushed_into_an_inlined_frame_is_pushed_into_that_frames_source(): void
+    public function test_a_limit_over_a_read_frame_is_pushed_into_its_extractor(): void
     {
         $child = df()->read(from_array([['id' => 1], ['id' => 2]], schema(int_schema('id'))))->select('id');
         $logical = new LogicalPlan(new Result(new Limit(new Read(from_data_frame($child)), 1)));
 
-        $input = (new Planner(Optimizer::default()))
-            ->plan($logical, NodeMother::context())
-            ->root()
-            ->input();
-
-        static::assertNotNull($input);
-        static::assertSame(1, $input->limit());
+        static::assertSame(
+            1,
+            (new Planner(Optimizer::default()))
+                ->plan($logical, NodeMother::context())
+                ->root()
+                ->limit(),
+        );
     }
 
-    public function test_a_frame_carries_its_own_plan_as_the_nested_plan(): void
+    public function test_a_joins_right_side_is_planned_apart_from_this_plan(): void
     {
         $planned = new PlannedNodes();
-        $frame = NodeMother::frame(NodeMother::plan(NodeMother::select(NodeMother::read(from_array([[
-            'id' => 1,
-        ]], schema(int_schema('id')))))));
+        $shared = NodeMother::select(NodeMother::read(from_array([['id' => 1]], schema(int_schema('id')))));
+        $frame = NodeMother::joinRight(NodeMother::plan($shared));
 
-        $nested = (new Planner())
-            ->node($frame, NodeMother::context(), $planned)
-            ->nestedOrFail();
+        (new Planner())->node(NodeMother::crossJoin($shared, $frame), NodeMother::context(), $planned);
 
-        static::assertSame(
-            [SelectEntriesTransformer::class],
-            array_map(static fn($step) => $step::class, $nested->root()->segments()->steps()),
-        );
-        static::assertInstanceOf(Described::class, $nested);
-        static::assertEquals(schema(int_schema('id')), $nested->schema);
-        static::assertEquals(schema(int_schema('id')), $planned->of($frame)->schema);
+        static::assertTrue($planned->has($shared));
+        static::assertFalse($planned->has($frame));
     }
 
     public function test_a_refusal_anywhere_makes_the_whole_plan_raw(): void
@@ -530,7 +447,7 @@ final class PlannerTest extends FlowTestCase
             join_on(['id' => 'id']),
             JoinType::inner,
         );
-        $frame = NodeMother::frame(LogicalPlan::of(
+        $frame = NodeMother::joinRight(LogicalPlan::of(
             $read,
             new Sinks(new Write($joinEach, to_memory(new ArrayMemory()))),
         ));
@@ -602,25 +519,10 @@ final class PlannerTest extends FlowTestCase
         static::assertSame(0, $extractor->extractCalls);
     }
 
-    public function test_every_child_is_planned_including_a_side_input(): void
+    public function test_a_joins_right_side_is_handed_to_the_translation_as_a_physical_plan(): void
     {
         $planned = new PlannedNodes();
-        $read = NodeMother::read();
-        $frameRoot = NodeMother::select(NodeMother::read());
-        $frame = NodeMother::frame(NodeMother::plan($frameRoot));
-
-        (new Planner())->node(new CrossJoin($read, $frame, 'r_'), NodeMother::context(), $planned);
-
-        static::assertTrue($planned->has($read));
-        static::assertTrue($planned->has($frame));
-        static::assertTrue($planned->has($frameRoot));
-        static::assertTrue($planned->has($frameRoot->children()[0]));
-    }
-
-    public function test_a_side_input_is_handed_to_the_translation_as_a_physical_plan(): void
-    {
-        $planned = new PlannedNodes();
-        $frame = NodeMother::frame(NodeMother::plan(NodeMother::read(from_array([[
+        $frame = NodeMother::joinRight(NodeMother::plan(NodeMother::read(from_array([[
             'id' => 1,
         ]], schema(int_schema('id'))))));
         $crossJoin = new CrossJoin(NodeMother::read(from_array([['id' => 1]], schema(int_schema('id')))), $frame, 'r_');

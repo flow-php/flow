@@ -13,7 +13,8 @@ use Flow\ETL\Transformer;
 use SplObjectStorage;
 
 /**
- * What one Planner::plan() call has planned so far: every node by identity, and the first schema refusal.
+ * What one plan - a frame's, or a join's right side - has planned so far: every node by identity, and the first
+ * schema refusal.
  */
 final class PlannedNodes
 {
@@ -54,7 +55,7 @@ final class PlannedNodes
     }
 
     /**
-     * Keeps the first refusal. A nested plan planned after a refusing sibling carries the OUTER refusal, by design.
+     * Keeps the first refusal.
      */
     public function refuse(SchemaNotDerivableException $refusal): void
     {

@@ -399,14 +399,14 @@ final class LimitTest extends FlowIntegrationTestCase
     /**
      * @return Generator<string, array{bool}>
      */
-    public static function nested_frame_paths(): Generator
+    public static function read_frame_schemas(): Generator
     {
-        yield 'inlined' => [false];
-        yield 'read through the extractor' => [true];
+        yield 'derived schema' => [false];
+        yield 'declared schema' => [true];
     }
 
-    #[DataProvider('nested_frame_paths')]
-    public function test_a_limit_over_a_nested_frame_reaches_the_nested_frames_source(bool $declared): void
+    #[DataProvider('read_frame_schemas')]
+    public function test_a_limit_over_a_read_frame_reaches_that_frames_source(bool $declared): void
     {
         $source = new RecordingFileExtractor(
             schema(int_schema('id')),

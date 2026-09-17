@@ -508,7 +508,7 @@ final class TelemetryTest extends FlowTestCase
         static::assertSame(0, $entries[0]->record->attributes->get('limit'));
     }
 
-    public function test_a_joins_right_side_builds_one_balanced_dataframe_span_per_run(): void
+    public function test_a_join_builds_one_balanced_dataframe_span_per_run(): void
     {
         $context = new MemoryTelemetryContext();
         $right = df($context->config)->read(from_array([['id' => 1, 'name' => 'a']]));
@@ -520,11 +520,11 @@ final class TelemetryTest extends FlowTestCase
 
         $isDataFrameSpan = static fn(Span $span): bool => str_starts_with($span->name(), 'DataFrame ');
 
-        static::assertCount(2, array_filter($context->spans->startedSpans(), $isDataFrameSpan));
-        static::assertCount(2, array_filter($context->spans->endedSpans(), $isDataFrameSpan));
+        static::assertCount(1, array_filter($context->spans->startedSpans(), $isDataFrameSpan));
+        static::assertCount(1, array_filter($context->spans->endedSpans(), $isDataFrameSpan));
     }
 
-    public function test_a_join_over_frames_sharing_one_flow_context_builds_balanced_dataframe_spans(): void
+    public function test_a_join_over_frames_sharing_one_flow_context_builds_one_balanced_dataframe_span(): void
     {
         $context = new MemoryTelemetryContext();
         $right = new DataFrame(from_array([['id' => 1, 'x' => 'a']]), $context->flowContext);
@@ -535,11 +535,11 @@ final class TelemetryTest extends FlowTestCase
 
         $isDataFrameSpan = static fn(Span $span): bool => str_starts_with($span->name(), 'DataFrame ');
 
-        static::assertCount(2, array_filter($context->spans->startedSpans(), $isDataFrameSpan));
-        static::assertCount(2, array_filter($context->spans->endedSpans(), $isDataFrameSpan));
+        static::assertCount(1, array_filter($context->spans->startedSpans(), $isDataFrameSpan));
+        static::assertCount(1, array_filter($context->spans->endedSpans(), $isDataFrameSpan));
     }
 
-    public function test_a_cross_joins_right_side_builds_one_balanced_dataframe_span_per_run(): void
+    public function test_a_cross_join_builds_one_balanced_dataframe_span_per_run(): void
     {
         $context = new MemoryTelemetryContext();
         $right = df($context->config)->read(from_array([['name' => 'a']]));
@@ -551,11 +551,11 @@ final class TelemetryTest extends FlowTestCase
 
         $isDataFrameSpan = static fn(Span $span): bool => str_starts_with($span->name(), 'DataFrame ');
 
-        static::assertCount(2, array_filter($context->spans->startedSpans(), $isDataFrameSpan));
-        static::assertCount(2, array_filter($context->spans->endedSpans(), $isDataFrameSpan));
+        static::assertCount(1, array_filter($context->spans->startedSpans(), $isDataFrameSpan));
+        static::assertCount(1, array_filter($context->spans->endedSpans(), $isDataFrameSpan));
     }
 
-    public function test_an_inlined_nested_frame_builds_one_balanced_dataframe_span_per_run(): void
+    public function test_a_read_frame_builds_its_own_balanced_dataframe_span_per_run(): void
     {
         $context = new MemoryTelemetryContext();
         $inner = df($context->config)->read(from_array([['id' => 1]]))->select('id');
@@ -568,7 +568,7 @@ final class TelemetryTest extends FlowTestCase
         static::assertCount(2, array_filter($context->spans->endedSpans(), $isDataFrameSpan));
     }
 
-    public function test_an_inlined_nested_frame_sharing_the_outer_flow_context_builds_balanced_dataframe_spans(): void
+    public function test_a_read_frame_sharing_the_outer_flow_context_builds_balanced_dataframe_spans(): void
     {
         $context = new MemoryTelemetryContext();
         $inner = new DataFrame(from_array([['id' => 1]]), $context->flowContext);
@@ -581,7 +581,7 @@ final class TelemetryTest extends FlowTestCase
         static::assertCount(2, array_filter($context->spans->endedSpans(), $isDataFrameSpan));
     }
 
-    public function test_an_abandoned_inlined_nested_frame_closes_both_dataframe_spans(): void
+    public function test_an_abandoned_run_over_a_read_frame_closes_both_dataframe_spans(): void
     {
         $context = new MemoryTelemetryContext();
         $inner = df($context->config)->read(from_array([['id' => 1], ['id' => 2]]))->select('id');

@@ -19,7 +19,9 @@ use Flow\ETL\Tests\Mother\NodeMother;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_data_frame;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\to_memory;
 
 final class RepeatabilityTest extends FlowTestCase
@@ -59,27 +61,27 @@ final class RepeatabilityTest extends FlowTestCase
         static::assertTrue((new Repeatability())->ofPlan(NodeMother::plan(NodeMother::read())));
     }
 
-    public function test_a_plan_is_refused_when_a_join_side_input_cannot_repeat(): void
+    public function test_a_plan_is_refused_when_a_joins_right_side_cannot_repeat(): void
     {
         static::assertFalse((new Repeatability())->ofPlan(NodeMother::plan(NodeMother::join(
             NodeMother::read(),
-            NodeMother::frame(NodeMother::plan(NodeMother::nonRepeatableRead())),
+            NodeMother::joinRight(NodeMother::plan(NodeMother::nonRepeatableRead())),
         ))));
     }
 
-    public function test_a_plan_is_refused_when_a_cross_join_side_input_cannot_repeat(): void
+    public function test_a_plan_is_refused_when_a_cross_joins_right_side_cannot_repeat(): void
     {
         static::assertFalse((new Repeatability())->ofPlan(NodeMother::plan(NodeMother::crossJoin(
             NodeMother::read(),
-            NodeMother::frame(NodeMother::plan(NodeMother::nonRepeatableRead())),
+            NodeMother::joinRight(NodeMother::plan(NodeMother::nonRepeatableRead())),
         ))));
     }
 
-    public function test_a_plan_whose_join_side_input_repeats_repeats(): void
+    public function test_a_plan_whose_joins_right_side_repeats_repeats(): void
     {
         static::assertTrue((new Repeatability())->ofPlan(NodeMother::plan(NodeMother::join(
             NodeMother::read(),
-            NodeMother::frame(NodeMother::plan(NodeMother::read())),
+            NodeMother::joinRight(NodeMother::plan(NodeMother::read())),
         ))));
     }
 
@@ -93,7 +95,7 @@ final class RepeatabilityTest extends FlowTestCase
         )));
     }
 
-    public function test_a_plan_is_refused_when_a_sink_reads_a_non_repeatable_side_input(): void
+    public function test_a_plan_is_refused_when_a_sink_reads_a_join_whose_right_side_cannot_repeat(): void
     {
         static::assertFalse((new Repeatability())->ofPlan(new LogicalPlan(
             new Outputs(
@@ -102,13 +104,20 @@ final class RepeatabilityTest extends FlowTestCase
                     new Write(
                         NodeMother::join(
                             NodeMother::read(),
-                            NodeMother::frame(NodeMother::plan(NodeMother::nonRepeatableRead())),
+                            NodeMother::joinRight(NodeMother::plan(NodeMother::nonRepeatableRead())),
                         ),
                         to_memory(new ArrayMemory()),
                     ),
                 ),
             ),
         )));
+    }
+
+    public function test_a_frame_with_a_declared_schema_answers_for_its_frame(): void
+    {
+        static::assertFalse((new Repeatability())->of(
+            from_data_frame(df()->read(new RepeatableExtractor(false)))->withSchema(schema(int_schema('id'))),
+        ));
     }
 
     public function test_a_frame_repeats_when_every_source_it_reads_repeats(): void

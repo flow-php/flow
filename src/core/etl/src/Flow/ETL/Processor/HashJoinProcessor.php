@@ -125,7 +125,7 @@ final class HashJoinProcessor implements Processor
 
         try {
             $rightRows = $this->tap(
-                $this->executor->execute($this->right),
+                $this->executor->executePipeline($this->right->root()),
                 $rightSchema,
                 // right rows with a null join key can never match, they only surface in right join output
                 $equalityKeys !== null && $this->type !== Join::right ? $equalityKeys->rightRefs() : null,

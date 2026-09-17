@@ -6,7 +6,6 @@ namespace Flow\ETL;
 
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Executor\PhysicalPlan;
-use Flow\ETL\Extractor\NestedPlan;
 use Flow\ETL\Plan\LogicalPlan;
 use Flow\ETL\Plan\Node;
 use Flow\ETL\Planner\NodeTranslator;
@@ -22,17 +21,14 @@ final readonly class Planner
     ) {}
 
     /**
-     * The optimizer rewrites the plan first, so the one walk that translates and binds sees the final tree. An embedded
-     * plan - a SideInput's subtree, a NestedPlan a Read inlines - is planned by its own frame's planner into the same
-     * $planned: its own rules apply, its pipelines are numbered inside the sub-plan built for it, and a schema
-     * refusal is plan-wide.
+     * The optimizer rewrites the plan first, so the one walk that translates and binds sees the final tree. A frame
+     * this one joined is part of the plan: nothing is planned with another frame's planner.
      * A failure is reported as a started and failed DataFrame span of $context, then rethrown.
      */
-    public function plan(
-        LogicalPlan $logical,
-        FlowContext $context,
-        PlannedNodes $planned = new PlannedNodes(),
-    ): PhysicalPlan {
+    public function plan(LogicalPlan $logical, FlowContext $context): PhysicalPlan
+    {
+        $planned = new PlannedNodes();
+
         try {
             $logical = $this->optimizer->optimize($logical, $context);
 
@@ -50,7 +46,7 @@ final readonly class Planner
 
     /**
      * Plans $node and everything under it, each node once by identity: translated to steps, then bound to the
-     * schema of its input. A prefix several consumers share is planned once.
+     * schema of its input. A prefix several consumers share is planned once; a joined frame is planned apart.
      */
     public function node(Node $node, FlowContext $context, PlannedNodes $planned): PlannedNode
     {
@@ -58,42 +54,19 @@ final readonly class Planner
             return $planned->of($node);
         }
 
-        if ($node instanceof Node\SideInput) {
-            $embedded = $node->plan();
-            $nested = $embedded->context->config->planner()->plan($embedded->logical, $embedded->context, $planned);
-
-            try {
-                $schema = $nested->schema();
-            } catch (SchemaNotDerivableException) {
-                $schema = null;
-            }
-
-            return $planned->add($node, new PlannedNode([], [], $schema, $nested));
-        }
-
         $inputs = [];
 
-        foreach ($node->children() as $child) {
+        foreach ($node instanceof Node\JoinsFrame ? [$node->children()[0]] : $node->children() as $child) {
             $inputs[] = $this->node($child, $context, $planned);
-        }
-
-        $nested = null;
-
-        if ($node instanceof Node\Read) {
-            $extractor = $node->extractor();
-
-            if ($extractor instanceof NestedPlan && $extractor->declaredSchema() === null) {
-                $embedded = $extractor->plan($node->limit());
-                $nested = $embedded->context->config->planner()->plan($embedded->logical, $embedded->context, $planned);
-            }
         }
 
         $frames = [];
 
-        foreach ($node->children() as $child) {
-            if ($child instanceof Node\SideInput) {
-                $frames[] = $planned->of($child)->nestedOrFail();
-            }
+        if ($node instanceof Node\JoinsFrame) {
+            // the joined frame runs as a pipeline of its own, so a node it shares with this plan needs its own steps
+            $right = new PlannedNodes();
+            $this->node($node->right(), $context, $right);
+            $frames[] = (new PipelineSplit())->of(new LogicalPlan($node->right()), $right, $context);
         }
 
         $steps = NodeTranslator::toSteps($node, $context, $frames);
@@ -102,10 +75,8 @@ final readonly class Planner
 
         try {
             $schema = match (true) {
-                $nested !== null && $node instanceof Node\Read => $nested->schema(),
                 $node instanceof Node\Read => $node->schema(),
-                $inputs === [] => null,
-                default => $inputs[0]->schema,
+                default => $inputs[0]->schema ?? null,
             };
 
             if ($schema !== null) {
@@ -127,6 +98,6 @@ final readonly class Planner
             $bound = $steps;
         }
 
-        return $planned->add($node, new PlannedNode($steps, $bound, $schema, $nested));
+        return $planned->add($node, new PlannedNode($steps, $bound, $schema));
     }
 }

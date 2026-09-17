@@ -6,6 +6,8 @@ namespace Flow\ETL\Plan;
 
 use SplObjectStorage;
 
+use function array_keys;
+
 /**
  * The bottom-up rebuild; extracted so LogicalPlan needs no private recursion.
  */
@@ -32,10 +34,11 @@ final readonly class TransformUp
             return $this->memo[$node];
         }
 
-        $children = [];
+        $children = $node->children();
 
-        foreach ($node->children() as $child) {
-            $children[] = $this->of($child, $rewrite);
+        // a joined frame may share nodes with this plan, and a rewrite of this plan must not change what that frame reads
+        foreach ($node instanceof Node\JoinsFrame ? [0] : array_keys($children) as $i) {
+            $children[$i] = $this->of($children[$i], $rewrite);
         }
 
         return $this->memo[$node] = $rewrite->of($node->withChildren($children));

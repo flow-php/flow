@@ -34,6 +34,20 @@ final class OptimizerTest extends FlowTestCase
         static::assertSame($plan, $optimized);
     }
 
+    public function test_optimize_applies_the_rules_to_a_joins_right_side_first(): void
+    {
+        /** @var ArrayObject<int, string> $log */
+        $log = new ArrayObject();
+        $plan = NodeMother::plan(NodeMother::crossJoin(NodeMother::read(), NodeMother::plan(NodeMother::read())->root));
+
+        (new Optimizer(new RecordingRule('first', $log), new RecordingRule('second', $log)))->optimize(
+            $plan,
+            NodeMother::context(),
+        );
+
+        static::assertSame(['first', 'second', 'first', 'second'], $log->getArrayCopy());
+    }
+
     public function test_an_optimizer_without_rules_returns_the_plan_it_was_given(): void
     {
         $plan = NodeMother::plan(NodeMother::read());

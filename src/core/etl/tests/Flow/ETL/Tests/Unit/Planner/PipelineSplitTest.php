@@ -34,6 +34,7 @@ use Flow\ETL\Tests\Double\SpyTransformer;
 use Flow\ETL\Tests\Double\StaticDataFrameFactory;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\NodeMother;
+use Flow\ETL\Transformer\CrossJoinRowsTransformer;
 use Flow\ETL\Transformer\JoinEachRowsTransformer;
 use Flow\ETL\Transformer\LimitTransformer;
 use Flow\ETL\Transformer\SelectEntriesTransformer;
@@ -41,7 +42,6 @@ use Flow\ETL\Transformer\SelectEntriesTransformer;
 use function array_map;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\from_data_frame;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\memory_sort;
@@ -222,42 +222,45 @@ final class PipelineSplitTest extends FlowTestCase
         (new PipelineSplit())->of(new LogicalPlan(new Result($leaf)), $planned, NodeMother::context());
     }
 
-    public function test_a_side_input_child_is_planned_as_its_own_plan(): void
+    public function test_a_joins_right_side_stays_off_the_spine(): void
     {
-        $frame = NodeMother::frame(NodeMother::plan(NodeMother::read(from_array([[
-            'id' => 1,
-        ]], schema(int_schema('id'))))));
-        $root = new Node\CrossJoin(NodeMother::read(from_array([['id' => 1]], schema(int_schema('id')))), $frame, 'r_');
+        $left = NodeMother::read(from_array([['id' => 1]], schema(int_schema('id'))));
+        $root = new Node\CrossJoin(
+            $left,
+            NodeMother::joinRight(NodeMother::plan(NodeMother::read(from_array([[
+                'id' => 1,
+            ]], schema(int_schema('id')))))),
+            'r_',
+        );
         $planned = new PlannedNodes();
         $logical = new LogicalPlan(new Result($root));
         (new Planner())->node($logical->root, NodeMother::context(), $planned);
 
         $plan = (new PipelineSplit())->of($logical, $planned, NodeMother::context());
 
-        static::assertNotNull($planned->of($frame)->nested);
         static::assertNull($plan->root()->input());
-    }
-
-    public function test_a_nested_plan_leaf_keeps_its_extractor_over_the_inlined_pipelines(): void
-    {
-        $inner = df()->read(from_array([['id' => 1]], schema(int_schema('id'))))->select('id');
-        $root = NodeMother::limit(NodeMother::read($extractor = from_data_frame($inner)), 5);
-        $planned = new PlannedNodes();
-        $logical = new LogicalPlan(new Result($root));
-        (new Planner())->node($logical->root, NodeMother::context(), $planned);
-
-        $plan = (new PipelineSplit())->of($logical, $planned, NodeMother::context());
-
-        static::assertSame($extractor, $plan->root()->segments()->extractor());
+        static::assertSame($left->extractor(), $plan->root()->segments()->extractor());
         static::assertSame(
-            [LimitTransformer::class],
+            [CrossJoinRowsTransformer::class],
             array_map(static fn($step) => $step::class, $plan->root()->segments()->steps()),
         );
-        static::assertSame($planned->of($root->children()[0])->nested?->root(), $plan->root()->input());
-        static::assertSame(
-            [SelectEntriesTransformer::class],
-            array_map(static fn($step) => $step::class, $plan->root()->input()?->segments()->steps() ?? []),
-        );
+    }
+
+    public function test_a_sink_of_an_outputs_below_the_root_is_attached_to_the_spine(): void
+    {
+        $read = NodeMother::read(from_array([['id' => 1]], schema(int_schema('id'))));
+        $loader = to_memory(new ArrayMemory());
+        $logical = NodeMother::plan(NodeMother::limit(
+            new Outputs(new Result($read), new Sinks(new Write($read, $loader))),
+            5,
+        ));
+        $planned = new PlannedNodes();
+        (new Planner())->node($logical->root, NodeMother::context(), $planned);
+
+        $plan = (new PipelineSplit())->of($logical, $planned, NodeMother::context());
+
+        static::assertContains($loader, $plan->root()->segments()->steps());
+        static::assertNull($plan->root()->input());
     }
 
     public function test_a_bare_sink_at_the_spine_root_is_a_step_of_the_spine(): void
@@ -580,7 +583,6 @@ final class PipelineSplitTest extends FlowTestCase
             JoinType::inner,
         );
         $select = NodeMother::select($joinEach);
-        $planned = new PlannedNodes();
 
         $plan = (new Planner())->plan(
             new LogicalPlan(
@@ -596,10 +598,9 @@ final class PipelineSplitTest extends FlowTestCase
                 ),
             ),
             NodeMother::context(),
-            $planned,
         );
 
-        static::assertNotNull($planned->refusal());
+        static::assertInstanceOf(Raw::class, $plan);
         static::assertSame(
             [
                 JoinEachRowsTransformer::class,

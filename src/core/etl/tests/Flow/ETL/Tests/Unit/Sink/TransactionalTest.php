@@ -46,7 +46,7 @@ final class TransactionalTest extends FlowTestCase
         static::assertSame(<<<'PLAN'
             Outputs  preserving · opaque · streaming
             ├─ #2 Result  preserving · transparent · streaming
-            │  │  Rows fetch() returns and run() streams
+            │  │  Rows this plan hands out: to the trigger, or to the node reading it
             │  └─ #1 Read  source · transparent · streaming
             │        Extractor: ArrayExtractor
             └─ #7 Transaction  preserving · opaque · streaming
@@ -91,7 +91,7 @@ final class TransactionalTest extends FlowTestCase
         static::assertSame(<<<'PLAN'
             Outputs  preserving · opaque · streaming
             ├─ #3 Result  preserving · transparent · streaming
-            │  │  Rows fetch() returns and run() streams
+            │  │  Rows this plan hands out: to the trigger, or to the node reading it
             │  └─ #2 Batch  preserving · transparent · streaming
             │     └─ #1 Read  source · transparent · streaming
             │           Extractor: SequenceExtractor
@@ -213,7 +213,7 @@ final class TransactionalTest extends FlowTestCase
         static::assertSame(<<<'PLAN'
             Outputs  preserving · opaque · streaming
             ├─ #2 Result  preserving · transparent · streaming
-            │  │  Rows fetch() returns and run() streams
+            │  │  Rows this plan hands out: to the trigger, or to the node reading it
             │  └─ #1 Read  source · transparent · streaming
             │        Extractor: ArrayExtractor
             └─ #4 Transaction  preserving · opaque · streaming

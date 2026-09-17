@@ -91,6 +91,49 @@ final class LogicalPlanTest extends FlowTestCase
         static::assertSame([$select, $read, $limit, $select], $consumers);
     }
 
+    public function test_sinks_on_spine_are_the_root_sinks_then_the_sinks_of_every_outputs_below(): void
+    {
+        $read = NodeMother::read();
+        $inner = new Write($read, to_memory(new ArrayMemory()));
+        $innerRoot = new Outputs(new Result($read), new Sinks($inner));
+        $select = NodeMother::select($innerRoot);
+        $outer = new Write($select, to_memory(new ArrayMemory()));
+
+        static::assertSame(
+            [$outer, $inner],
+            (new LogicalPlan(new Outputs(new Result($select), new Sinks($outer))))->sinksOnSpine()->all(),
+        );
+    }
+
+    public function test_sinks_on_spine_skip_the_sinks_of_a_joined_frame(): void
+    {
+        $right = NodeMother::read();
+        $joined = new Outputs(new Result($right), new Sinks(new Write($right, to_memory(new ArrayMemory()))));
+
+        static::assertSame(
+            [],
+            NodeMother::plan(NodeMother::crossJoin(NodeMother::read(), $joined))->sinksOnSpine()->all(),
+        );
+    }
+
+    public function test_sinks_stay_the_root_sinks_only(): void
+    {
+        $read = NodeMother::read();
+        $innerRoot = new Outputs(new Result($read), new Sinks(new Write($read, to_memory(new ArrayMemory()))));
+
+        static::assertSame([], NodeMother::plan($innerRoot)->sinks()->all());
+    }
+
+    public function test_consumer_inputs_include_the_inputs_of_sinks_below_the_root(): void
+    {
+        $read = NodeMother::read();
+        $limit = NodeMother::limit($read, 5);
+        $innerRoot = new Outputs(new Result($read), new Sinks(new Write($limit, to_memory(new ArrayMemory()))));
+        $select = NodeMother::select($innerRoot);
+
+        static::assertSame([$select, $limit], NodeMother::plan($select)->consumerInputs());
+    }
+
     public function test_transform_up_with_replace_leaf_rewrites_the_leaf_and_keeps_the_spine(): void
     {
         $replacement = NodeMother::read(from_array([['id' => 2]]));
@@ -149,10 +192,10 @@ final class LogicalPlanTest extends FlowTestCase
         static::assertSame($read, NodeMother::plan(NodeMother::limit(NodeMother::select($read), 5))->source());
     }
 
-    public function test_source_stops_at_this_frames_read_and_does_not_descend_into_a_frame(): void
+    public function test_source_stops_at_this_frames_read_and_does_not_descend_into_a_joined_frame(): void
     {
         $read = NodeMother::read();
-        $frame = NodeMother::frame(NodeMother::plan(NodeMother::read()));
+        $frame = NodeMother::joinRight(NodeMother::plan(NodeMother::read()));
 
         static::assertSame($read, NodeMother::plan(new Node\CrossJoin($read, $frame))->source());
     }
@@ -187,7 +230,7 @@ final class LogicalPlanTest extends FlowTestCase
         static::assertSame($read, $rewritten->source());
     }
 
-    public function test_transform_up_preserves_identity_for_an_untouched_subtree(): void
+    public function test_transform_up_that_changes_nothing_returns_the_same_plan(): void
     {
         $plan = NodeMother::plan(NodeMother::limit(NodeMother::select(NodeMother::read()), 5));
 
@@ -198,7 +241,7 @@ final class LogicalPlanTest extends FlowTestCase
             }
         });
 
-        static::assertSame($plan->root, $rewritten->root);
+        static::assertSame($plan, $rewritten);
     }
 
     public function test_cursor_is_the_chain_under_the_result(): void

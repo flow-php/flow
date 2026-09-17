@@ -166,73 +166,19 @@ final class ExecutorTest extends FlowTestCase
         static::assertSame([7], $extractor->limits);
     }
 
-    public function test_an_inlined_stage_opens_and_closes_its_own_frames_span(): void
+    public function test_a_pipeline_run_opens_no_dataframe_span_for_any_stage(): void
     {
-        $inner = new MemoryTelemetryContext();
-        $upstream = new Segments(from_rows(RowsMother::sequentialIds(1)));
-        $upstream->add(new BatchingProcessor(1));
+        $upstream = new MemoryTelemetryContext();
+        $own = new MemoryTelemetryContext();
+        $segments = new Segments(from_rows(RowsMother::sequentialIds(1)));
+        $segments->add(new BatchingProcessor(1));
 
         iterator_to_array((new Executor())->executePipeline(
-            new Pipeline(
-                1,
-                new Segments(),
-                NodeMother::context(config()),
-                new Pipeline(0, $upstream, $inner->flowContext),
-            ),
+            new Pipeline(1, new Segments(), $own->flowContext, new Pipeline(0, $segments, $upstream->flowContext)),
         ));
 
-        static::assertCount(1, $inner->spans->startedSpans());
-        static::assertCount(1, $inner->spans->endedSpans());
-    }
-
-    public function test_an_abandoned_inlined_stage_closes_its_frames_span(): void
-    {
-        $inner = new MemoryTelemetryContext();
-        $upstream = new Segments(from_rows(RowsMother::sequentialIds(2)));
-        $upstream->add(new BatchingProcessor(1));
-        $generator = (new Executor())->executePipeline(
-            new Pipeline(
-                1,
-                new Segments(),
-                NodeMother::context(config()),
-                new Pipeline(0, $upstream, $inner->flowContext),
-            ),
-        );
-
-        $generator->current();
-        unset($generator);
-
-        static::assertCount(1, $inner->spans->startedSpans());
-        static::assertCount(1, $inner->spans->endedSpans());
-        static::assertNotTrue($inner->spans->endedSpans()[0]->status()?->isError());
-    }
-
-    public function test_a_failure_below_an_inlined_stage_closes_its_frames_span_as_failed(): void
-    {
-        $inner = new MemoryTelemetryContext();
-        $failure = new RuntimeException('stage exploded');
-        $upstream = new Segments(from_rows(RowsMother::sequentialIds(1)));
-        $upstream->add(new BatchingProcessor(1));
-        $downstream = new Segments();
-        $downstream->add(new ThrowingTransformer($failure));
-
-        try {
-            iterator_to_array((new Executor())->executePipeline(
-                new Pipeline(
-                    1,
-                    $downstream,
-                    NodeMother::context(config()),
-                    new Pipeline(0, $upstream, $inner->flowContext),
-                ),
-            ));
-
-            static::fail('Expected the failure to be rethrown.');
-        } catch (RuntimeException $e) {
-            static::assertSame($failure, $e);
-        }
-
-        static::assertCount(1, $inner->spans->endedSpans());
-        static::assertTrue($inner->spans->endedSpans()[0]->status()?->isError());
+        static::assertSame([], $upstream->spans->startedSpans());
+        static::assertSame([], $own->spans->startedSpans());
     }
 
     public function test_execute_runs_the_plans_root_pipeline(): void
@@ -282,6 +228,51 @@ final class ExecutorTest extends FlowTestCase
                 SchemaNotDerivableException::extractor('x'),
             ),
         );
+
+        static::assertSame(0, $rows->count());
+        static::assertEquals(schema(), $rows->schema());
+    }
+
+    public function test_merge_merges_every_batch_into_one_rows(): void
+    {
+        $plan = new Described(
+            new Pipeline(0, new Segments(from_rows(rows(schema(int_schema('id'))))), NodeMother::context()),
+            schema(int_schema('id')),
+        );
+        $batches = (static function () {
+            yield RowsMother::sequentialIds(1);
+            yield rows(schema(int_schema('id')), row(['id' => 2]));
+        })();
+
+        static::assertSame(
+            [['id' => 1], ['id' => 2]],
+            (new Executor())
+                ->merge($batches, $plan)
+                ->toArray(),
+        );
+    }
+
+    public function test_merge_of_no_batches_returns_rows_with_the_plans_schema(): void
+    {
+        $plan = new Described(
+            new Pipeline(0, new Segments(from_rows(rows(schema(int_schema('id'))))), NodeMother::context()),
+            schema(int_schema('id')),
+        );
+
+        $rows = (new Executor())->merge((static fn() => yield from [])(), $plan);
+
+        static::assertSame(0, $rows->count());
+        static::assertEquals(schema(int_schema('id')), $rows->schema());
+    }
+
+    public function test_merge_of_no_batches_from_a_refused_plan_returns_rows_with_an_empty_schema(): void
+    {
+        $plan = new Raw(
+            new Pipeline(0, new Segments(from_rows(rows(schema(int_schema('id'))))), NodeMother::context()),
+            SchemaNotDerivableException::extractor('x'),
+        );
+
+        $rows = (new Executor())->merge((static fn() => yield from [])(), $plan);
 
         static::assertSame(0, $rows->count());
         static::assertEquals(schema(), $rows->schema());
@@ -472,16 +463,16 @@ final class ExecutorTest extends FlowTestCase
         static::assertNotTrue($telemetry->spans->endedSpans()[0]->status()?->isError());
     }
 
-    public function test_a_side_input_run_during_an_armed_outer_run_does_not_trip_the_guard(): void
+    public function test_another_plan_run_during_an_armed_outer_run_does_not_trip_the_guard(): void
     {
-        $side = new PlanDrainingTransformer(NodeMother::plan(NodeMother::read()), NodeMother::context());
+        $other = new PlanDrainingTransformer(NodeMother::plan(NodeMother::read()), NodeMother::context());
 
         iterator_to_array(ExecutedPlan::of(
-            NodeMother::plan(new Transform(NodeMother::read(), $side)),
+            NodeMother::plan(new Transform(NodeMother::read(), $other)),
             NodeMother::context(),
         ));
 
-        static::assertCount(1, $side->drained);
-        static::assertSame([['id' => 1]], $side->drained[0]->toArray());
+        static::assertCount(1, $other->drained);
+        static::assertSame([['id' => 1]], $other->drained[0]->toArray());
     }
 }
