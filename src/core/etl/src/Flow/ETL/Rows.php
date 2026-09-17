@@ -78,7 +78,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      * operation produced the schema and the rows, or when the rows are a subset or a permutation of
      * a batch that already passed.
      *
-     * @internal engine paths only
+     * Engine paths only.
      *
      * @param array<Row> $rows re-indexed here - first(), last(), chunks() and offsetGet() read by position
      */
@@ -96,7 +96,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      * non-null value is not validated against its type, because the caller produced it by casting to, or decoding
      * from, that type. A value is validated once, where it enters the engine.
      *
-     * @internal engine paths only
+     * Engine paths only.
      *
      * @param array<Row> $rows
      *

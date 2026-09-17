@@ -8,9 +8,6 @@ use Flow\ETL\Function\WindowFunction;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
 
-/**
- * @internal
- */
 final readonly class BoundWindow
 {
     /**

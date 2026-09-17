@@ -8,15 +8,22 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Optimizer;
+use Flow\ETL\Planner;
+use Flow\ETL\Processor\TopNProcessor;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\ETL\Tests\Double\RecordingFileExtractor;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 use function array_column;
 use function array_map;
+use function array_slice;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_data_frame;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\integer_schema;
@@ -91,7 +98,7 @@ final class LimitTest extends FlowIntegrationTestCase
              *
              * @return \Generator<int, Rows, Signal|null, void>
              */
-            public function extract(FlowContext $context): Generator
+            public function extract(FlowContext $context, ?int $limit = null): Generator
             {
                 for ($i = 0; $i < 20; $i++) {
                     yield rows(schema(integer_schema('id')), row(['id' => $i]));
@@ -121,7 +128,7 @@ final class LimitTest extends FlowIntegrationTestCase
                  *
                  * @return \Generator<int, Rows, Signal|null, void>
                  */
-                public function extract(FlowContext $context): Generator
+                public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     for ($i = 0; $i < 1000; $i++) {
                         yield rows(schema(integer_schema('id')), row(['id' => $i + 1]), row(['id' => $i + 2]));
@@ -177,7 +184,7 @@ final class LimitTest extends FlowIntegrationTestCase
                  *
                  * @return \Generator<int, Rows, Signal|null, void>
                  */
-                public function extract(FlowContext $context): Generator
+                public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     for ($i = 0; $i < 1000; $i++) {
                         yield rows(
@@ -234,7 +241,7 @@ final class LimitTest extends FlowIntegrationTestCase
                  *
                  * @return \Generator<int, Rows, Signal|null, void>
                  */
-                public function extract(FlowContext $context): Generator
+                public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     for ($i = 0; $i < 1000; $i++) {
                         yield rows(schema(integer_schema('id')), row(['id' => $i + 1]), row(['id' => $i + 2]));
@@ -267,7 +274,7 @@ final class LimitTest extends FlowIntegrationTestCase
                  *
                  * @return \Generator<int, Rows, Signal|null, void>
                  */
-                public function extract(FlowContext $context): Generator
+                public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     for ($i = 0; $i < 100; $i++) {
                         yield rows(schema(integer_schema('id')), row(['id' => $i + 1]), row(['id' => $i + 2]));
@@ -300,7 +307,7 @@ final class LimitTest extends FlowIntegrationTestCase
                  *
                  * @return \Generator<int, Rows, Signal|null, void>
                  */
-                public function extract(FlowContext $context): Generator
+                public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     for ($i = 0; $i < 5; $i++) {
                         yield rows(schema(integer_schema('id')), row(['id' => $i]));
@@ -342,5 +349,78 @@ final class LimitTest extends FlowIntegrationTestCase
                 'id',
             ),
         );
+    }
+
+    public function test_a_limit_over_a_sort_runs_as_a_top_n_with_the_sorts_result(): void
+    {
+        $data = [];
+
+        foreach (range(1, 50) as $i) {
+            $data[] = ['id' => $i, 'group' => $i % 7];
+        }
+
+        $sorted = df()
+            ->read(from_array($data))
+            ->batchSize(4)
+            ->sortBy([ref('group')->desc(), ref('id')])
+            ->fetch()
+            ->toArray();
+        $frame = df()
+            ->read(from_array($data))
+            ->batchSize(4)
+            ->sortBy([ref('group')->desc(), ref('id')])
+            ->limit(5);
+
+        static::assertSame(array_slice($sorted, 0, 5), $frame->fetch()->toArray());
+        $plan = $frame->explain();
+        static::assertContains(TopNProcessor::class, array_map(
+            static fn(object $step): string => $step::class,
+            (new Planner(Optimizer::default()))
+                ->plan($plan->logical, $plan->context)
+                ->root()
+                ->segments()
+                ->steps(),
+        ));
+    }
+
+    public function test_offset_then_limit_returns_the_page(): void
+    {
+        static::assertSame(
+            [['id' => 101], ['id' => 102], ['id' => 103]],
+            df()
+                ->read(from_array(array_map(static fn(int $i): array => ['id' => $i], range(1, 500))))
+                ->offset(100)
+                ->limit(3)
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    /**
+     * @return Generator<string, array{bool}>
+     */
+    public static function nested_frame_paths(): Generator
+    {
+        yield 'inlined' => [false];
+        yield 'read through the extractor' => [true];
+    }
+
+    #[DataProvider('nested_frame_paths')]
+    public function test_a_limit_over_a_nested_frame_reaches_the_nested_frames_source(bool $declared): void
+    {
+        $source = new RecordingFileExtractor(
+            schema(int_schema('id')),
+            rows(schema(int_schema('id')), ...array_map(static fn(int $id) => row(['id' => $id]), range(1, 6))),
+        );
+        $nested = from_data_frame(df()->read($source));
+
+        if ($declared) {
+            $nested->withSchema(schema(int_schema('id')));
+        }
+
+        $rows = df()->read($nested)->offset(1)->limit(2)->fetch();
+
+        static::assertSame([['id' => 2], ['id' => 3]], $rows->toArray());
+        static::assertSame([3], $source->limits);
     }
 }

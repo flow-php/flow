@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Processor;
 
+use Flow\ETL\BoundStep;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
@@ -22,8 +22,6 @@ use function count;
  *
  * Assumes data is pre-sorted by the batching column. When the column value changes,
  * a new batch is started.
- *
- * @internal
  */
 final readonly class BatchingByProcessor implements Processor
 {

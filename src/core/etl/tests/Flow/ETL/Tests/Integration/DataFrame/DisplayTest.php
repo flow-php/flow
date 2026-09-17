@@ -69,7 +69,7 @@ final class DisplayTest extends FlowIntegrationTestCase
             /**
              * @return \Generator<int, Rows, Signal|null, void>
              */
-            public function extract(FlowContext $context): Generator
+            public function extract(FlowContext $context, ?int $limit = null): Generator
             {
                 for ($i = 0; $i < 20; $i++) {
                     yield rows(
@@ -146,7 +146,7 @@ final class DisplayTest extends FlowIntegrationTestCase
                 /**
                  * @return \Generator<int, Rows, Signal|null, void>
                  */
-                public function extract(FlowContext $context): Generator
+                public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     for ($i = 0; $i < 5; $i++) {
                         yield rows(

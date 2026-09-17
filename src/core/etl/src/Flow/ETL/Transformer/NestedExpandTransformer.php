@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
+use Flow\ETL\BoundStep;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;

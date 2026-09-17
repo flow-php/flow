@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Processor;
 
+use Flow\ETL\BoundStep;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
 use Flow\ETL\Row;
 use Flow\ETL\Row\References;
@@ -18,8 +18,6 @@ use function max;
 /**
  * Buffers all rows and sorts them in memory. Registered by SortSteps when the sort algorithm is
  * memory_sort().
- *
- * @internal
  */
 final readonly class MemorySortProcessor implements Processor
 {

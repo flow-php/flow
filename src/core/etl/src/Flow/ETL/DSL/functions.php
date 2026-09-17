@@ -32,7 +32,6 @@ use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\ErrorHandler\SkipRows;
 use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\UnsupportedUnionTypeException;
 use Flow\ETL\Extractor;
@@ -139,26 +138,13 @@ use Flow\ETL\Join\Comparison\Identical;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\ArrayLoader;
-use Flow\ETL\Loader\BranchingLoader;
 use Flow\ETL\Loader\MemoryLoader;
 use Flow\ETL\Loader\Partitioning;
-use Flow\ETL\Loader\RetryLoader;
 use Flow\ETL\Loader\StreamLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
-use Flow\ETL\Loader\TransformerLoader;
 use Flow\ETL\Memory\Memory;
 use Flow\ETL\NativePHPRandomValueGenerator;
 use Flow\ETL\RandomValueGenerator;
-use Flow\ETL\Retry\DelayFactory;
-use Flow\ETL\Retry\DelayFactory\Exponential;
-use Flow\ETL\Retry\DelayFactory\Fixed;
-use Flow\ETL\Retry\DelayFactory\Fixed\FixedMilliseconds;
-use Flow\ETL\Retry\DelayFactory\Jitter;
-use Flow\ETL\Retry\DelayFactory\Linear;
-use Flow\ETL\Retry\RetryStrategy;
-use Flow\ETL\Retry\RetryStrategy\AnyThrowable;
-use Flow\ETL\Retry\RetryStrategy\AnyThrowableExcept;
-use Flow\ETL\Retry\RetryStrategy\OnExceptionTypes;
 use Flow\ETL\Row;
 use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Row\ColumnName;
@@ -209,10 +195,10 @@ use Flow\ETL\Schema\Validator\SelectiveValidator;
 use Flow\ETL\Schema\Validator\StrictValidator;
 use Flow\ETL\Schema\Validator\ValidationContext;
 use Flow\ETL\SchemaValidator;
+use Flow\ETL\Sink;
+use Flow\ETL\Sink\Branched;
+use Flow\ETL\Sink\Transformed;
 use Flow\ETL\String\StringStyles;
-use Flow\ETL\Time\Duration;
-use Flow\ETL\Time\Sleep;
-use Flow\ETL\Time\SystemSleep;
 use Flow\ETL\Transformation;
 use Flow\ETL\Transformation\AddRowIndex;
 use Flow\ETL\Transformation\AddRowIndex\StartFrom;
@@ -263,7 +249,6 @@ use Flow\Types\Type\Native\StringType;
 use Flow\Types\Type\Native\UnionType;
 use Flow\Types\Type\TypeFactory;
 use Psr\Clock\ClockInterface;
-use Throwable;
 use UnitEnum;
 
 use function array_is_list;
@@ -547,15 +532,15 @@ function to_stream(
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
-function to_transformation(Transformer|Transformation $transformer, Loader $loader): TransformerLoader
+function to_transformation(Transformer|Transformation $transformer, Loader|Sink $sink): Transformed
 {
-    return new TransformerLoader($transformer, $loader);
+    return new Transformed($transformer, $sink);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
-function to_branch(ScalarFunction $condition, Loader $loader, ?Transformation $transformation = null): BranchingLoader
+function to_branch(ScalarFunction $condition, Loader|Sink $sink): Branched
 {
-    return new BranchingLoader($condition, $loader, $transformation);
+    return new Branched($condition, $sink);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
@@ -2141,91 +2126,6 @@ function match_cases(array $cases, mixed $default = null): MatchCases
 function match_condition(mixed $condition, mixed $then): MatchCondition
 {
     return new MatchCondition($condition, $then);
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function retry_any_throwable(int $limit): AnyThrowable
-{
-    return new AnyThrowable($limit);
-}
-
-/**
- * @param array<class-string<\Throwable>> $exception_types
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function retry_on_exception_types(array $exception_types, int $limit): OnExceptionTypes
-{
-    return new OnExceptionTypes($exception_types, $limit);
-}
-
-/**
- * @param array<class-string<\Throwable>> $exception_types
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function retry_any_throwable_except(array $exception_types, int $limit): AnyThrowableExcept
-{
-    return new AnyThrowableExcept($exception_types, $limit);
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function delay_linear(Duration $delay, Duration $increment): Linear
-{
-    return new Linear($delay, $increment);
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function delay_exponential(Duration $base, int $multiplier = 2, ?Duration $max_delay = null): Exponential
-{
-    return new Exponential($base, $multiplier, $max_delay);
-}
-
-/**
- * @param float $jitter_factor a value between 0 and 1 representing the maximum percentage of jitter to apply
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function delay_jitter(DelayFactory $delay, float $jitter_factor): Jitter
-{
-    return new Jitter($delay, $jitter_factor);
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function delay_fixed(Duration $delay): Fixed
-{
-    return new Fixed($delay);
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function duration_seconds(int $seconds): Duration
-{
-    return Duration::fromSeconds($seconds);
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function duration_milliseconds(int $milliseconds): Duration
-{
-    return Duration::fromMilliseconds($milliseconds);
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function duration_microseconds(int $microseconds): Duration
-{
-    return Duration::fromMicroseconds($microseconds);
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function duration_minutes(int $minutes): Duration
-{
-    return Duration::fromMinutes($minutes);
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
-function write_with_retries(
-    Loader $loader,
-    RetryStrategy $retry_strategy = new AnyThrowableExcept([InvalidLogicException::class], 3),
-    DelayFactory $delay_factory = new FixedMilliseconds(200),
-    Sleep $sleep = new SystemSleep(),
-): RetryLoader {
-    return new RetryLoader($loader, $retry_strategy, $delay_factory, $sleep);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]

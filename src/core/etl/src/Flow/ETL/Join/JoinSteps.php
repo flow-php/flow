@@ -7,13 +7,10 @@ namespace Flow\ETL\Join;
 use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\Config;
 use Flow\ETL\Config\Join\JoinAlgorithmBuilder;
-use Flow\ETL\DataFrame;
+use Flow\ETL\Executor\PhysicalPlan;
 use Flow\ETL\Processor;
 use Flow\ETL\Processor\HashJoinProcessor;
 
-/**
- * @internal
- */
 final readonly class JoinSteps
 {
     /**
@@ -23,7 +20,7 @@ final readonly class JoinSteps
      * @return list<Processor>
      */
     public static function of(
-        DataFrame $right,
+        PhysicalPlan $right,
         Expression $on,
         Join $type,
         Config $config,
@@ -34,6 +31,7 @@ final readonly class JoinSteps
         return [
             new HashJoinProcessor(
                 $right,
+                $config->executor(),
                 $on,
                 $type,
                 new Buckets($join->bucketing->storage),

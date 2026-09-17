@@ -27,7 +27,7 @@ final class StopIgnoringExtractor implements BatchableExtractor, Extractor, Rewi
         private readonly Rows $rows,
     ) {}
 
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         foreach (array_chunk($this->rows->all(), $this->batchSize()) as $chunk) {
             yield Rows::trusted($this->rows->schema(), $chunk);

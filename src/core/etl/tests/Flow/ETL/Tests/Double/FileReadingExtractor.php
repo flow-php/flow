@@ -10,6 +10,8 @@ use Flow\ETL\Extractor\SourceFile;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
+use Flow\Filesystem\Path\Filter;
+use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Generator;
 
 /**
@@ -30,8 +32,8 @@ final class FileReadingExtractor
     /**
      * @return Generator<int, SourceFile>
      */
-    public function listing(Filesystem $filesystem, Path $path): Generator
+    public function listing(Filesystem $filesystem, Path $path, Filter $pathFilter = new OnlyFiles()): Generator
     {
-        return $this->sourceFiles($filesystem, $path);
+        return $this->sourceFiles($filesystem, $path, $pathFilter);
     }
 }

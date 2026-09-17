@@ -28,7 +28,6 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\to_transformation;
-use function Flow\ETL\DSL\write_with_retries;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function implode;
@@ -106,14 +105,12 @@ final class CSVTest extends FlowTestCase
         }
     }
 
-    public function test_retry_loader_publishes_csv_under_overwrite(): void
+    public function test_a_batched_write_publishes_csv_under_overwrite(): void
     {
         df()
             ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4]]))
             ->batchSize(2)
-            ->write(write_with_retries(
-                to_csv($path = __DIR__ . '/var/test_retry_loader_overwrite.csv')->saveMode(overwrite()),
-            ))
+            ->write(to_csv($path = __DIR__ . '/var/test_batched_write_overwrite.csv')->saveMode(overwrite()))
             ->run();
 
         static::assertFileExists($path);
@@ -124,7 +121,7 @@ final class CSVTest extends FlowTestCase
         }
     }
 
-    public function test_transformation_loader_writes_all_batches_to_csv(): void
+    public function test_a_transformation_sink_writes_all_batches_to_csv(): void
     {
         df()
             ->read(from_sequence_number('id', 1, 12))
@@ -174,7 +171,7 @@ final class CSVTest extends FlowTestCase
 
         $prunedRows = df()
             ->read(from_csv($dir . '/year=*/{name}.csv'))
-            ->filterPartitions(ref('name')->equals(lit('789-DE')))
+            ->filter(ref('name')->equals(lit('789-DE')))
             ->fetch();
 
         static::assertCount(1, $prunedRows);

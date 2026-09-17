@@ -11,9 +11,7 @@ use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\FileReading;
-use Flow\ETL\Extractor\LimitPushDown;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
-use Flow\ETL\Extractor\PushesLimit;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -23,6 +21,8 @@ use Flow\ETL\Schema\Validator\StrictValidator;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
+use Flow\Filesystem\Path\Filter;
+use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
@@ -38,14 +38,12 @@ final class ParquetExtractor implements
     BatchableExtractor,
     Extractor,
     FileExtractor,
-    LimitPushDown,
     MetadataColumnsExtractor,
     RewindableExtractor
 {
     private ?Schema $schema = null;
 
     use Batches;
-    use PushesLimit;
     use FileReading;
 
     private ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN;
@@ -97,7 +95,7 @@ final class ParquetExtractor implements
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
     {
         $hydrator = $context->hydrator();
         $batchSize = $this->batchSize();
@@ -111,7 +109,7 @@ final class ParquetExtractor implements
 
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
 
-        foreach ($this->files() as $file) {
+        foreach ($this->files($pathFilter) as $file) {
             // finally, not a close() per exit: the limit/STOP returns below and an abandoned
             // generator have to release the handle too (b73)
             try {
@@ -144,7 +142,11 @@ final class ParquetExtractor implements
 
                 $rawBatch = [];
 
-                foreach ($file->file->values($this->columns, $this->pushedLimit(), $fileOffset) as $row) {
+                foreach ($file->file->values(
+                    $this->columns,
+                    $limit === null ? null : $limit - $yielded,
+                    $fileOffset,
+                ) as $row) {
                     $rawBatch[] = $constants->fill($row);
 
                     if (count($rawBatch) >= $batchSize) {
@@ -161,8 +163,6 @@ final class ParquetExtractor implements
                         if ($signal === Signal::STOP) {
                             return;
                         }
-
-                        $limit = $this->pushedLimit();
 
                         if ($limit !== null && $yielded >= $limit) {
                             return;
@@ -186,8 +186,6 @@ final class ParquetExtractor implements
                     if ($signal === Signal::STOP) {
                         return;
                     }
-
-                    $limit = $this->pushedLimit();
 
                     if ($limit !== null && $yielded >= $limit) {
                         return;
@@ -217,6 +215,11 @@ final class ParquetExtractor implements
         $this->derivedSchema = null;
 
         return $this;
+    }
+
+    public function partitionSchema(): Schema
+    {
+        return $this->fileColumns($this->filesystem, $this->path)->partitions($this->schema ?? new Schema());
     }
 
     public function source(): Path
@@ -273,9 +276,9 @@ final class ParquetExtractor implements
     /**
      * @return Generator<int, ParquetSourceFile>
      */
-    private function files(): Generator
+    private function files(Filter $pathFilter = new OnlyFiles()): Generator
     {
-        foreach ($this->sourceFiles($this->filesystem, $this->path) as $source) {
+        foreach ($this->sourceFiles($this->filesystem, $this->path, $pathFilter) as $source) {
             $stream = $this->filesystem->readFrom($source->path);
 
             yield new ParquetSourceFile(

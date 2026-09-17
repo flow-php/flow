@@ -6,7 +6,6 @@ namespace Flow\ETL;
 
 use Flow\ETL\Exception\DataDependentSchemaException;
 use Flow\ETL\Exception\LimitReachedException;
-use Flow\ETL\Pipeline\BoundStep;
 
 interface Transformer
 {

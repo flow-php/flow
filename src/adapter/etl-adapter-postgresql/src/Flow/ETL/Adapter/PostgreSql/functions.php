@@ -16,6 +16,8 @@ use Flow\ETL\Adapter\PostgreSql\Pagination\Order;
 use Flow\ETL\Adapter\PostgreSql\Schema\SortingStrategy\TypeStrategy;
 use Flow\ETL\Loader;
 use Flow\ETL\Schema;
+use Flow\ETL\Sink;
+use Flow\ETL\Sink\Transactional;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\Table;
@@ -104,18 +106,12 @@ function to_pgsql_table(Client $client, string $table): PostgreSqlLoader
 }
 
 /**
- * Execute multiple loaders within PostgreSQL transactions.
- *
- * Each batch of rows is loaded in its own transaction; rows a wrapped Transformation delivers when
- * the loader is closed (blocking operations drain there) are committed in one final transaction.
- * If any loader fails, the open transaction is rolled back.
- * All wrapped loaders must use the same Client instance as the wrapper - a loader holding its own
- * Client escapes the transaction.
+ * Write every sink within PostgreSQL transactions.
  */
 #[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::LOADER)]
-function to_pgsql_transaction(Client $client, Loader ...$loaders): TransactionalPostgreSqlLoader
+function to_pgsql_transaction(Client $client, Loader|Sink ...$sinks): Transactional
 {
-    return new TransactionalPostgreSqlLoader($client, ...$loaders);
+    return new Transactional(new PostgreSqlTransaction($client), ...$sinks);
 }
 
 /**

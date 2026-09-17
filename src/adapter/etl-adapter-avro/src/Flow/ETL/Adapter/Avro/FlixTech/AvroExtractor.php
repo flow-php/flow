@@ -15,6 +15,8 @@ use Flow\ETL\Schema;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
+use Flow\Filesystem\Path\Filter;
+use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Generator;
 
 final class AvroExtractor implements Extractor, FileExtractor
@@ -32,7 +34,7 @@ final class AvroExtractor implements Extractor, FileExtractor
         );
     }
 
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
     {
         yield new Rows(new Schema());
     }
@@ -44,6 +46,12 @@ final class AvroExtractor implements Extractor, FileExtractor
         }
 
         throw SchemaNotDerivableException::extractor(self::class);
+    }
+
+    public function partitionSchema(): Schema
+    {
+        // the constructor always throws, so no instance ever lists a partition
+        return new Schema();
     }
 
     public function source(): Path

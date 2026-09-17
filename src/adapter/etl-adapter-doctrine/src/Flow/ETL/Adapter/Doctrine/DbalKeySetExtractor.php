@@ -14,8 +14,6 @@ use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
-use Flow\ETL\Extractor\LimitPushDown;
-use Flow\ETL\Extractor\PushesLimit;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -38,10 +36,9 @@ use function sha1;
  * and sort orders for pagination. The key columns must be non-null and provide a unique
  * ordering to ensure correct pagination.
  */
-final class DbalKeySetExtractor implements BatchableExtractor, Extractor, LimitPushDown, RewindableExtractor
+final class DbalKeySetExtractor implements BatchableExtractor, Extractor, RewindableExtractor
 {
     use Batches;
-    use PushesLimit;
 
     private string $keyAliasSuffix = '_previous';
 
@@ -82,17 +79,16 @@ final class DbalKeySetExtractor implements BatchableExtractor, Extractor, LimitP
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         $schema = $this->schema();
         $yielded = 0;
         $lastRow = null;
         $encoder = new DbalEncoder();
-        $pushed = $this->pushedLimit();
         $maximum = match (true) {
-            $this->maximum !== null && $pushed !== null => min($this->maximum, $pushed),
+            $this->maximum !== null && $limit !== null => min($this->maximum, $limit),
             $this->maximum !== null => $this->maximum,
-            default => $pushed,
+            default => $limit,
         };
         $keyAliases = array_map($this->keyAlias(...), $this->keySet->keys);
 

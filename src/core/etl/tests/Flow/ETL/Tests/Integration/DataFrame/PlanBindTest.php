@@ -9,7 +9,9 @@ use Flow\ETL\DataFrame;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Join\Join;
+use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\Double\CountingExtractor;
+use Flow\ETL\Tests\Double\RepeatableExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Exception\InvalidArgumentException;
 use Generator;
@@ -35,6 +37,7 @@ use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\sum;
+use function Flow\ETL\DSL\to_memory;
 use function Flow\ETL\DSL\window;
 use function Flow\ETL\DSL\with_entry;
 
@@ -271,11 +274,56 @@ final class PlanBindTest extends FlowTestCase
         $this->expectExceptionMessage('cannot read its dataset twice');
 
         df()
-            ->read(from_data_frame(df()->read(from_array([
-                ['product' => 'Banana', 'country' => 'USA', 'amount' => 1000],
-            ]))))
+            ->read(from_data_frame(df()->read(new RepeatableExtractor(false))))
             ->groupBy([ref('product')])
             ->pivot(ref('country'), discover_pivot_values());
+    }
+
+    public function test_a_discovering_pivot_over_a_join_with_a_non_repeatable_side_is_refused(): void
+    {
+        $this->expectException(SchemaNotDerivableException::class);
+        $this->expectExceptionMessage('cannot read its dataset twice');
+
+        df()
+            ->read(from_array([['k' => 'a', 'v' => 1], ['k' => 'b', 'v' => 2]]))
+            ->join(df()->read(new RepeatableExtractor(false)), join_on(['k' => 'k']))
+            ->groupBy('k')
+            ->pivot(ref('p'), discover_pivot_values());
+    }
+
+    public function test_a_discovering_pivot_over_a_nested_repeatable_frame_is_allowed(): void
+    {
+        static::assertSame(
+            [['product' => 'Banana', 'USA' => 1000.0]],
+            df()
+                ->read(from_data_frame(df()->read(from_array([
+                    ['product' => 'Banana', 'country' => 'USA', 'amount' => 1000],
+                ]))))
+                ->groupBy([ref('product')])
+                ->pivot(ref('country'), discover_pivot_values())
+                ->aggregate(sum(ref('amount')))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    public function test_pivot_discovery_does_not_run_the_frames_sinks(): void
+    {
+        $memory = new ArrayMemory();
+
+        $rows = df()
+            ->read(from_array([['k' => 'a', 'p' => 'x', 'v' => 1], ['k' => 'b', 'p' => 'y', 'v' => 2]]))
+            ->write(to_memory($memory))
+            ->groupBy('k')
+            ->pivot(ref('p'), discover_pivot_values())
+            ->aggregate(sum(ref('v')))
+            ->fetch();
+
+        static::assertCount(2, $memory->dump());
+        static::assertSame(
+            [['k' => 'a', 'x' => 1.0, 'y' => null], ['k' => 'b', 'x' => null, 'y' => 2.0]],
+            $rows->toArray(),
+        );
     }
 
     public function test_discovered_pivot_values_scan_the_source_once_at_build(): void

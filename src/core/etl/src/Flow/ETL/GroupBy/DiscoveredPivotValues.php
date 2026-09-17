@@ -31,8 +31,8 @@ final readonly class DiscoveredPivotValues implements PivotValues
 
     public function resolve(DataFrame $source, Reference $pivot): DeclaredPivotValues
     {
-        if (!(new Repeatability())->of($source->extractor())) {
-            throw SchemaNotDerivableException::nonRewindable($source->extractor()::class);
+        if (!(new Repeatability())->ofPlan($source->explain()->logical)) {
+            throw SchemaNotDerivableException::nonRewindable();
         }
 
         $distinct = [];

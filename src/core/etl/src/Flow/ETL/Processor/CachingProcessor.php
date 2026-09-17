@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Processor;
 
+use Flow\ETL\BoundStep;
 use Flow\ETL\Cache;
 use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
@@ -22,8 +22,6 @@ use function random_bytes;
  *
  * If a cache with the given id already exists, data passes through unchanged.
  * Otherwise, each batch is cached before being yielded.
- *
- * @internal
  */
 final readonly class CachingProcessor implements Processor
 {

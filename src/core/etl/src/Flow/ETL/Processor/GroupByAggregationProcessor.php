@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Processor;
 
+use Flow\ETL\BoundStep;
 use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\Bucketing\BucketShape;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -13,7 +14,6 @@ use Flow\ETL\GroupBy;
 use Flow\ETL\GroupBy\BucketAggregation;
 use Flow\ETL\GroupBy\GroupByShape;
 use Flow\ETL\GroupBy\GroupKey;
-use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
@@ -21,8 +21,6 @@ use Generator;
 
 /**
  * Aggregates buckets spilled by BucketingProcessor, one bucket per incoming metadata Row.
- *
- * @internal
  */
 final class GroupByAggregationProcessor implements Processor
 {

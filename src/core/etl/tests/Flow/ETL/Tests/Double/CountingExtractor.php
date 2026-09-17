@@ -30,6 +30,11 @@ final class CountingExtractor implements BatchableExtractor, Extractor, Rewindab
 
     public int $extractCalls = 0;
 
+    /**
+     * @var list<FlowContext>
+     */
+    public array $contexts = [];
+
     private readonly Schema $schema;
 
     /**
@@ -43,9 +48,10 @@ final class CountingExtractor implements BatchableExtractor, Extractor, Rewindab
         $this->batches = array_values($batches);
     }
 
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         $this->extractCalls++;
+        $this->contexts[] = $context;
 
         $buffer = [];
 

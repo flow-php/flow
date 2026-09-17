@@ -18,7 +18,7 @@ final class CollectingExtractor implements Extractor, OverridingExtractor, Rewin
         private Extractor $extractor,
     ) {}
 
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         $schema = $this->schema;
 

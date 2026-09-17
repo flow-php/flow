@@ -7,6 +7,196 @@ specific version to ensure a smooth upgrade process.
 
 ---
 
+## Upgrading from 0.44.x to 0.45.x
+
+### 1) `flow-php/etl-adapter-postgresql` - a failed `from_pgsql_cursor()` read throws its own error and rolls back
+
+| Before                                                                                                          | After                                        |
+|-----------------------------------------------------------------------------------------------------------------|----------------------------------------------|
+| `QueryException` `[25P02] Invalid transaction state. SQL: CLOSE flow_cursor_...`, real error in `getPrevious()` | the failing statement's own `QueryException` |
+| the client left inside an aborted transaction - every later query fails with `25P02`                            | the extractor's own transaction rolled back  |
+| a failure while reading rows (e.g. a row that does not match the schema) committed the transaction              | rolled back                                  |
+
+### 2) `flow-php/etl-adapter-postgresql` - `from_pgsql_*()` read exactly one read-only `SELECT` or `VALUES` statement
+
+| Query                                                                       | Before                                                                   | After                                    |
+|-----------------------------------------------------------------------------|--------------------------------------------------------------------------|------------------------------------------|
+| `INSERT ... RETURNING` through `from_pgsql_cursor()`                        | the PHP process crashes (segfault)                                       | `InvalidArgumentException`, nothing runs |
+| `INSERT ... RETURNING` through `from_pgsql_key_set()`                       | the `INSERT` runs, then `QueryException` `08P01`                         | `InvalidArgumentException`, nothing runs |
+| two statements through `from_pgsql_cursor()`                                | the second statement silently dropped                                    | `InvalidArgumentException`               |
+| two statements through `from_pgsql_limit_offset()` / `from_pgsql_key_set()` | `QueryException` `42601`                                                 | `InvalidArgumentException`               |
+| a data-modifying `WITH` through `from_pgsql_key_set()`                      | the write runs once per page - an `INSERT` twice, an `UPDATE` never ends | `InvalidArgumentException`, nothing runs |
+| `SELECT ... INTO` through `from_pgsql_key_set()`                            | the table is created                                                     | `InvalidArgumentException`, nothing runs |
+| either through `from_pgsql_cursor()` / `from_pgsql_limit_offset()`          | `QueryException` after a round trip                                      | `InvalidArgumentException`, nothing runs |
+
+### 3) `flow-php/postgresql` - `declare_cursor()` over SQL takes exactly one `SELECT` or `VALUES`
+
+| Before                                                                              | After                      |
+|-------------------------------------------------------------------------------------|----------------------------|
+| `declare_cursor('c', 'INSERT INTO t VALUES (1) RETURNING id')->toSql()` - segfault  | `InvalidArgumentException` |
+| `declare_cursor('c', 'SELECT 1; SELECT 2')` - the second statement silently dropped | `InvalidArgumentException` |
+
+### 4) `flow-php/postgresql` - `SelectStatement::hasIntoClause()` sees `SELECT ... INTO` in a `UNION` / `INTERSECT` / `EXCEPT`
+
+| `sql_parse($sql)->statements()->first()->hasIntoClause()`, `$sql` | Before  | After  |
+|-------------------------------------------------------------------|---------|--------|
+| `SELECT id INTO t FROM x UNION SELECT 1`                          | `false` | `true` |
+
+### 5) `flow-php/postgresql` - `sql_to_*_query()` and the pagination modifiers take exactly one read-only `SELECT` or `VALUES`
+
+| Before                                                                               | After                       |
+|--------------------------------------------------------------------------------------|-----------------------------|
+| `sql_to_paginated_query('UPDATE t SET a = 1 RETURNING id', 10)` - returned unchanged | `InvalidStatementException` |
+| `sql_to_limited_query('SELECT 1; SELECT 2', 10)` - every statement paginated         | `InvalidStatementException` |
+| `sql_to_keyset_query()` over a data-modifying `WITH` - the write paginated           | `InvalidStatementException` |
+| `sql_to_count_query('SELECT id INTO t FROM x')` - counted                            | `InvalidStatementException` |
+
+Applies to `PaginationModifier`, `CountModifier` and `KeysetPaginationModifier` passed to `ParsedQuery::traverse()`.
+
+### 6) `flow-php/etl-adapter-postgresql` - `from_pgsql_limit_offset()` requires the query's own `ORDER BY`
+
+| Query                                            | Before                      | After                      |
+|--------------------------------------------------|-----------------------------|----------------------------|
+| `SELECT * FROM (SELECT id FROM t ORDER BY id) s` | pages in no defined order   | `InvalidArgumentException` |
+
+### 7) `flow-php/etl` - `Pipeline\Optimizer` replaced by `Optimizer` + `Planner`, the `Pipeline` class removed
+
+| Before                                                                                                                                                                                            | After                                                                                                                                                                                                                         |
+|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `Config::optimizer()`, `new Config(..., Optimizer $optimizer, ...)`                                                                                                                               | `Config::optimizer(): Flow\ETL\Optimizer`, `new Config(..., Optimizer $optimizer, Executor $executor, ...)`; added `Config::planner()` / `Config::executor()`                                                                 |
+| `config_builder()->optimizer($optimizer)`                                                                                                                                                         | `config_builder()->optimizer(Flow\ETL\Optimizer $optimizer)`, `->executor(Executor $executor)`                                                                                                                                |
+| `Flow\ETL\Pipeline` (class, with `Pipeline::has()`), `Pipeline\Optimizer`, `Pipeline\Optimizer\Optimization`, `Pipeline\Optimizer\LimitOptimization`, `Pipeline\BoundPlan`, `Pipeline\PlanBinder` | removed - an `Optimizer\Rule` rewrites the `Plan\LogicalPlan`: `apply(LogicalPlan $plan, FlowContext $context): LogicalPlan`; drop one with `Optimizer::default()->without(Rule::class)`, add one with `->with(new MyRule())` |
+| `new Pipeline\Optimizer(Optimization ...)`, `->disabled()`, `->optimizations()`                                                                                                                   | `new Optimizer(Rule ...)`, `new Optimizer()` (no rules - nothing is rewritten), `->rules()`; `Optimizer::default()` holds the built-in rules, `->without(Rule::class)` / `->with(new MyRule())` change them                   |
+| -                                                                                                                                                                                                 | `Flow\ETL\Executor\PhysicalPlan` interface (`root(): Executor\Pipeline`, `schema(): Schema`): `Executor\Described` returns its schema, `Executor\Raw` throws its `SchemaNotDerivableException`                                |
+| `Segments::replaceExtractor()` / `has()` / `current()` / `segmentFor()`, `Segment::withExtractor()` / `has()` / `contains()`                                                                      | removed - `Segments::extractor()` / `Segment::extractor()`                                                                                                                                                                    |
+| `new DataFrame(Pipeline $pipeline, $context)`                                                                                                                                                     | `new DataFrame(Extractor $extractor, Config\|FlowContext $context)`                                                                                                                                                           |
+| `new HashJoinProcessor(DataFrame $right, ...)`, `new CrossJoinRowsTransformer(DataFrame $frame, ...)`                                                                                             | take the right side's `Executor\PhysicalPlan` and an `Executor`                                                                                                                                                               |
+| `JoinSteps::of(DataFrame $right, ...)`                                                                                                                                                            | `JoinSteps::of(PhysicalPlan $right, Expression $expression, Join $type, Config $config, ?JoinAlgorithmBuilder $algorithm)`                                                                                                    |
+| `InvalidLogicException::cyclicPlanOnDescribe()`                                                                                                                                                   | removed                                                                                                                                                                                                                       |
+| telemetry debug-log field `optimizers`                                                                                                                                                            | `optimizer_rules`                                                                                                                                                                                                             |
+
+### 8) `flow-php/etl` - `extract()` receives the pushed limit and path filter, `LimitPushDown` and `withPathFilter()` removed
+
+| Before                                                                                 | After                                                                                                                         |
+|----------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| `Extractor::extract(FlowContext $context): Generator`                                  | `extract(FlowContext $context, ?int $limit = null): Generator` - every implementation adds the parameter, and may ignore it   |
+| `Extractor\LimitPushDown` + `PushesLimit` trait, `pushLimit()` / `pushedLimit()`       | removed - read `$limit` in `extract()`                                                                                        |
+| `FileExtractor::withPathFilter($filter)` / `filter()`, `PathFiltering` held the filter | removed - `FileExtractor::extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator` |
+| `interface FileExtractor`                                                              | gains `partitionSchema(): Schema` - every implementor must add it                                                             |
+| `interface Function\FunctionTree`                                                      | gains `deterministic(): bool` - implementors using neither `ScalarFunctionChain` nor `ResolvesFromChildren` must add it       |
+
+### 9) `flow-php/etl` - `filterPartitions()` removed, the optimizer pushes `filter()` into the source
+
+| Before                                                                                    | After                                                                                                                                                                    |
+|-------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `$df->filterPartitions(ref('date')->equals(lit('2024-01-01')))`                           | `$df->filter(ref('date')->equals(lit('2024-01-01')))` - pushed into the source as a path filter, only matching partitions are read                                       |
+| `$df->filterPartitions(new OnlyFiles())` (`Path\Filter` form)                             | removed, no replacement                                                                                                                                                  |
+| `$df->read(files($glob))->filterPartitions(...)`, same over `from_path_partitions($glob)` | `filter()` on the partition column - both sources now emit one string column per `key=value` directory (next to `partitions`), and the filter is pushed into the listing |
+| a partition-predicate error was thrown by the verb                                        | thrown at plan / bind time - an optimizer rule can fail a plan                                                                                                           |
+| `->write($sink)->filter(...)` narrowed the earlier sink                                   | a filter is pushed only when every root reaches the source through it - the sink gets every row                                                                          |
+
+### 10) `flow-php/etl` - frames are snapshotted when embedded, fewer limits are pushed
+
+| Before                                                                                                                                         | After                                                                                                                                                  |
+|------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `$left->join($right, ...); $right->select('id');` - the `select()` was part of the join's right side                                           | ignored - a frame is snapshotted at `join()` / `from_data_frame()` time                                                                                |
+| `$frame->join(df()->read(from_data_frame($frame)), ...)` threw `InvalidLogicException` "Cannot describe this plan:"                            | runs as a self-join against the snapshot; a run-time cycle still throws `cyclicPlanOnRun()`                                                            |
+| `->rows($t)->limit(n)`, `->transform($t)->limit(n)`, `->void()->limit(n)` pushed the limit into the source for seven allow-listed transformers | not pushed - `->withEntry(...)->limit(n)` still pushes; with several sinks the widest limit is pushed, a `limit(3)` inside a sink limits the whole run |
+| -                                                                                                                                              | `schema()` followed by a terminal verb plans twice, `Extractor::schema()` is called once per planning - memoise a sniffing extractor                   |
+| `add_row_index()` on a frame run twice continued counting (`[0,1,2]` then `[3,4,5]`)                                                           | starts again on every run; a `Transformer` keeping state between batches implements `Flow\ETL\Transformer\Stateful` (`fresh()`) to do the same         |
+
+### 11) `flow-php/etl` - one balanced `DataFrame` telemetry span per run
+
+| Before                                                                                                  | After                                                                |
+|---------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
+| the `DataFrame` span started when the frame was built                                                   | starts when the plan executes - `Executor::execute()` owns both ends |
+| a planning failure under `schema()` emitted no span                                                     | `dataFrameStarted` + `dataFrameFailed` for every verb                |
+| an abandoned `get*()` generator left its span open                                                      | closes it                                                            |
+| a failure inside a verb's own loop body (a `forEach` callback, the formatter) closed the span as failed | closed as completed                                                  |
+| a non-inlined `from_data_frame()` frame emitted no span                                                 | one balanced span per run                                            |
+| `to_dbal_transaction()` / `to_pgsql_transaction()` emitted their own span                               | no span                                                              |
+
+### 12) `flow-php/etl` - `to_branch()` / `to_transformation()` return a `Sink`, the wrapper loaders are removed
+
+| Before                                                                                                                                                   | After                                                                                                                                                                                                                                             |
+|----------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `to_branch($condition, $loader, $transformation)` returned `BranchingLoader`                                                                             | `to_branch($condition, $sink)->withTransformation($transformation)` returns `Sink\Branched`                                                                                                                                                       |
+| `to_transformation($transformation, $loader)` returned `TransformerLoader`                                                                               | returns `Sink\Transformed`; both take a `Loader` or another `Sink`, neither is accepted where a `Loader` is required                                                                                                                              |
+| `Loader\OverridingLoader`, `Loader\LoaderTree`, `Loader\TransformerLoader`, `Loader\BranchingLoader`                                                     | removed - `Flow\ETL\Sink` interface (`write(DataFrame $prefix): void`)                                                                                                                                                                            |
+| a `Transformation` calling `$df->fetch()` / `count()` / `schema()` / `run()` inside `to_transformation()` or `to_branch()` threw `InvalidLogicException` | executes the prefix plan, as `from_data_frame()` executes a frame                                                                                                                                                                                 |
+| `onError()` inside a sink's `Transformation`                                                                                                             | throws `InvalidLogicException` at `write()` - set it on the frame                                                                                                                                                                                 |
+| an unresolved column or a non-boolean condition in a sink failed at the first batch                                                                      | fails at plan time; one undescribable sink operation makes the whole plan run raw; `schema()` still describes the frame's own rows                                                                                                                |
+| a transformer failing inside a non-transactional sink was a LOADING error                                                                                | a TRANSFORMATION error offered to `onTransformation()` once: `SkipRows` / `IgnoreError` drop the batch (after a blocking operation, the whole buffered batch); a `limit()` completing the sink mid-load is a LOADING error on `Executor\SinkFeed` |
+| `write_with_retries($loader)` around `to_transformation(...)` or `to_branch(...)` threw at the first `load()`                                            | removed with the retry surface, see 14)                                                                                                                                                                                                           |
+| telemetry `flow.etl.loading.rows` counted the rows offered to the branch                                                                                 | counts the rows the branch's loader writes; an empty batch never reaches the loader                                                                                                                                                               |
+| `SkipRows`: a drain failure of `to_transformation()` / `to_branch()` at `closure()` was rethrown                                                         | offered to `onTransformation()` once - `SkipRows` drops the buffered batch                                                                                                                                                                        |
+| `$df->load(loader: $l)`, `$df->write(loader: $l)`, `to_transformation($t, loader: $l)`, `to_branch($c, loader: $l)`                                      | the named argument is `sink:`                                                                                                                                                                                                                     |
+
+### 13) `flow-php/etl-adapter-doctrine`, `-postgresql` - `to_dbal_transaction()` / `to_pgsql_transaction()` are transaction roots
+
+| Before                                                                                                                      | After                                                                                                                                                                                                                                            |
+|-----------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `to_dbal_transaction($connection, Loader ...$loaders): TransactionalDbalLoader`                                             | `to_dbal_transaction($connection, Loader\|Sink ...$sinks): Transactional` - `Sink\Transactional` over a `DbalTransaction`; `TransactionalDbalLoader` removed                                                                                     |
+| `to_pgsql_transaction($client, Loader ...$loaders): TransactionalPostgreSqlLoader`                                          | `to_pgsql_transaction($client, Loader\|Sink ...$sinks): Transactional` - over a `PostgreSqlTransaction`; `TransactionalPostgreSqlLoader` removed                                                                                                 |
+| `to_dbal_transaction(...)->withIsolationLevel($level)`                                                                      | `new Transactional(DbalTransaction::fromConnection($connection)->withIsolationLevel($level), ...$sinks)` - returns a new instance; the same on `PostgreSqlTransaction`, which runs `SET TRANSACTION` after `BEGIN` and rolls back a failed `SET` |
+| a failure a non-throwing `onError()` handler suppressed still committed the batch                                           | the batch (or the closure drain) rolls back and is never re-delivered; the handler only decides whether the run continues - the failing sink restarts on the next batch, its buffered rows lost                                                  |
+| `LoadingError::$loader` for a `begin()` / `commit()` failure was `TransactionalDbalLoader`                                  | `Executor\TransactionalSinks`; for a sink failure, the sink's own loader when bare, `Executor\SinkFeed` otherwise; the exception is always the cause, never `TransactionRolledBack`                                                              |
+| `withIsolationLevel()` on `to_dbal_transaction()` / `to_pgsql_transaction()` applied to every transaction the wrapper opens | set on `DbalTransaction` / `PostgreSqlTransaction`; applies to every transaction opened                                                                                                                                                          |
+
+### 14) `flow-php/etl` - `write_with_retries()` and the retry surface are removed
+
+| Before                                                                         | After                                           |
+|--------------------------------------------------------------------------------|-------------------------------------------------|
+| `write_with_retries($loader, retry_any_throwable(3))`                          | removed, no replacement                         |
+| `Loader\RetryLoader`, `FailedRetryException`, `ReplayAware`, `Flow\ETL\Time\*` | removed                                         |
+| `retry_*()`, `delay_*()`, `duration_*()` DSL functions                         | removed                                         |
+| `$df->write(write_with_retries(to_csv($p)->saveMode(overwrite())))`            | `$df->write(to_csv($p)->saveMode(overwrite()))` |
+
+### 15) `flow-php/etl-adapter-doctrine` - a DBAL read the driver cannot describe keeps the database error
+
+| Before                                                                                                                               | After                                                                                                                                                                                                                                                                      |
+|--------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| a query the driver cannot describe (multi-statement, data-modifying CTE, `INSERT ... RETURNING`) threw `SchemaNotDerivableException` | a missing table or column throws what the read throws (`TableNotFoundException`, `InvalidFieldNameException`, on SQLite `DriverException`); any other query the driver refuses to describe throws `SchemaNotDerivableException` with the DBAL exception as `getPrevious()` |
+
+### 16) `flow-php/etl-adapter-postgresql` - a PostgreSQL read keeps the database error, reads that write are refused
+
+| Before                                                                                                                                  | After                                                                                                                                                                                                                                 |
+|-----------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| a query that cannot run as a subquery (multi-statement, data-modifying CTE, `INSERT ... RETURNING`) threw `SchemaNotDerivableException` | a missing table, column, function, type or privilege throws PostgreSQL's `QueryException`, as the read does; a query that writes (a data-modifying `WITH`, `SELECT ... INTO`) throws `InvalidArgumentException` before any query runs |
+
+### 17) `flow-php/flow-php-ext` - the `flow_php` extension is versioned with `flow-php/etl`
+
+| Before                                                      | After                                       |
+|-------------------------------------------------------------|---------------------------------------------|
+| `flow_php` extension 0.3.0, required by this `flow-php/etl` | same version as this `flow-php/etl` release |
+
+### 18) `flow-php/etl` - `DataFrame` has no `@internal` methods
+
+| Before                                                                                                                          | After                                                                                                                                    |
+|---------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| `DataFrame::extractor()` (`@internal`)                                                                                          | removed - `(new Repeatability())->ofPlan($dataFrame->explain()->logical)` answers whether every source the frame reads can be read twice |
+| `DataFrame::registerGroupBy($groupBy, $algorithm)` (`@internal`)                                                                | removed - `groupBy($entries, $algorithm)->aggregate(...)`                                                                                |
+| `new GroupedDataFrame($df, $groupBy, $algorithm)`                                                                               | `new GroupedDataFrame($df, $input, $groupBy)` - built by `DataFrame::groupBy()`                                                          |
+| `SchemaNotDerivableException::nonRewindable($extractorClass)`                                                                   | `nonRewindable()`; the message no longer names the extractor                                                                             |
+| `discover_pivot_values()` over a frame joining a source that cannot be read twice - pivot silently null                         | throws `SchemaNotDerivableException`                                                                                                     |
+| `discover_pivot_values()` over `from_data_frame()` of a repeatable frame - refused                                              | allowed                                                                                                                                  |
+| a `Transformation` writing inside a sink - its write ran after the sink's own write                                             | runs before it; a transaction's writes run in `write()` call order                                                                       |
+| a `Transformation` inside a sink returning another frame - failed at `run()` "A sink root shares no node with the plan"         | throws at `write()`                                                                                                                      |
+| `$frame->onError()` after `join($frame)` / `from_data_frame($frame)` - reached the embedded frame                               | ignored - the error handler is snapshotted with the plan                                                                                 |
+| an embedded frame sharing the outer `FlowContext` left a `DataFrame` span open                                                  | balanced spans                                                                                                                           |
+| `discover_pivot_values()` over a frame with `write()` before `groupBy()` - the sink received every row twice (discovery ran it) | discovery reads only the rows feeding the pivot, sinks run once                                                                          |
+
+### 19) `flow-php/etl` - `Pipeline\` and `Execution\` merged into `Executor\`, `BoundStep` moved to the root
+
+| Before                                   | After                                   |
+|------------------------------------------|-----------------------------------------|
+| `Flow\ETL\Pipeline\BoundStep`            | `Flow\ETL\BoundStep`                    |
+| `Flow\ETL\Pipeline\Segments`             | `Flow\ETL\Executor\Segments`            |
+| `Flow\ETL\Pipeline\Segment`              | `Flow\ETL\Executor\Segment`             |
+| `Flow\ETL\Execution\StatisticsCollector` | `Flow\ETL\Executor\StatisticsCollector` |
+
+---
+
 ## Upgrading from 0.43.x to 0.44.x
 
 ### 1) `flow-php/etl-adapter-json` - `to_json()`/`to_json_lines()` write list/map/structure/array entries as nested JSON
@@ -1258,10 +1448,8 @@ Keep every column a string: `from_csv($path)->inferSchema(infer_schema()->allStr
 | `pdo_pgsql`, `pdo_mysql`, any other | every column                                                                    | driver values | throws `SchemaNotDerivableException` - use the `pgsql` / `mysqli` driver or `->withSchema(...)` |
 
 Applies to `from_dbal_query()`, `from_dbal_queries()`, `from_dbal_limit_offset()`, `from_dbal_limit_offset_qb()` and
-`from_dbal_key_set_qb()` without `->withSchema()`. A missing table or column throws what the read throws
-(`TableNotFoundException`, `InvalidFieldNameException`, on SQLite `DriverException`); any other query the driver
-refuses to describe throws
-`SchemaNotDerivableException` with the DBAL exception as `getPrevious()`. Declare `->withSchema(...)` to pick the types.
+`from_dbal_key_set_qb()` without `->withSchema()`. A query the driver cannot describe (multi-statement, data-modifying
+CTE, `INSERT ... RETURNING`) also throws. Declare `->withSchema(...)` to pick the types.
 
 ### 83) `flow-php/etl-adapter-doctrine`, `-postgresql` - `withPageSize()` / `withFetchSize()` become `withBatchSize()`
 
@@ -1375,9 +1563,8 @@ Applies to `from_json()` and `from_json_lines()` unless the row names one.
 | `record`, `point`, `line`, `lseg`, `box`, `path`, `polygon`, `circle` | `string`                | throws `SchemaNotDerivableException` |
 
 Applies to `from_pgsql_cursor()`, `from_pgsql_limit_offset()` and `from_pgsql_key_set()` without `->withSchema()`. A
-missing table, column, function, type or privilege throws PostgreSQL's `QueryException`, as the read does; a query
-that writes (a data-modifying `WITH`, `SELECT ... INTO`) throws `InvalidArgumentException` before any query runs.
-Declare `->withSchema(...)` to pick the types.
+query that cannot run as a subquery (multi-statement, data-modifying CTE, `INSERT ... RETURNING`) also throws
+`SchemaNotDerivableException`. Declare `->withSchema(...)` to pick the types.
 
 ### 93) `flow-php/etl-adapter-postgresql` - `pgsql_table_to_flow_schema()` maps arrays, text-like types, `oid`, `timetz`
 
@@ -1431,9 +1618,9 @@ Registering the commands in your own console application: drop the `setName()` /
 
 ### 98) `flow-php/flow-php-ext` - the `flow_php` extension must be reinstalled
 
-| Before                     | After                                       |
-|----------------------------|---------------------------------------------|
-| `flow_php` extension 0.1.0 | same version as this `flow-php/etl` release |
+| Before                     | After                                  |
+|----------------------------|----------------------------------------|
+| `flow_php` extension 0.1.0 | 0.3.0, required by this `flow-php/etl` |
 
 Reinstall it with the new release: `pie install flow-php/flow-php-ext`.
 
@@ -1534,56 +1721,6 @@ Recurse with `data/**/*.parquet`, not `data/**.parquet`. `webmozart/glob` is no 
 |-----------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
 | `partitionBy(partition_by('date'))` - file body carries an all-null `date` column | file body without `date`                                                                             |
 | `from_parquet()` types `date` from that body column, e.g. `datetime`              | `string` - declare it: `from_parquet($path)->partitionTypes(partition_types(date: type_datetime()))` |
-
-### 109) `flow-php/etl-adapter-postgresql` - a failed `from_pgsql_cursor()` read throws its own error and rolls back
-
-| Before                                                                                                     | After                                                   |
-|------------------------------------------------------------------------------------------------------------|---------------------------------------------------------|
-| `QueryException` `[25P02] Invalid transaction state. SQL: CLOSE flow_cursor_...`, real error in `getPrevious()` | the failing statement's own `QueryException`       |
-| the client left inside an aborted transaction - every later query fails with `25P02`                        | the extractor's own transaction rolled back             |
-| a failure while reading rows (e.g. a row that does not match the schema) committed the transaction         | rolled back                                             |
-
-### 110) `flow-php/etl-adapter-postgresql` - `from_pgsql_*()` read exactly one read-only `SELECT` or `VALUES` statement
-
-| Query                                                                     | Before                                        | After                                   |
-|---------------------------------------------------------------------------|-----------------------------------------------|-----------------------------------------|
-| `INSERT ... RETURNING` through `from_pgsql_cursor()`                      | the PHP process crashes (segfault)            | `InvalidArgumentException`, nothing runs |
-| `INSERT ... RETURNING` through `from_pgsql_key_set()`                     | the `INSERT` runs, then `QueryException` `08P01` | `InvalidArgumentException`, nothing runs |
-| two statements through `from_pgsql_cursor()`                              | the second statement silently dropped         | `InvalidArgumentException`              |
-| two statements through `from_pgsql_limit_offset()` / `from_pgsql_key_set()` | `QueryException` `42601`                    | `InvalidArgumentException`              |
-| a data-modifying `WITH` through `from_pgsql_key_set()`                    | the write runs once per page - an `INSERT` twice, an `UPDATE` never ends | `InvalidArgumentException`, nothing runs |
-| `SELECT ... INTO` through `from_pgsql_key_set()`                          | the table is created                          | `InvalidArgumentException`, nothing runs |
-| either through `from_pgsql_cursor()` / `from_pgsql_limit_offset()`        | `QueryException` after a round trip           | `InvalidArgumentException`, nothing runs |
-
-### 111) `flow-php/postgresql` - `declare_cursor()` over SQL takes exactly one `SELECT` or `VALUES`
-
-| Before                                                                                 | After                       |
-|----------------------------------------------------------------------------------------|-----------------------------|
-| `declare_cursor('c', 'INSERT INTO t VALUES (1) RETURNING id')->toSql()` - segfault      | `InvalidArgumentException`  |
-| `declare_cursor('c', 'SELECT 1; SELECT 2')` - the second statement silently dropped     | `InvalidArgumentException`  |
-
-### 112) `flow-php/postgresql` - `SelectStatement::hasIntoClause()` sees `SELECT ... INTO` in a `UNION` / `INTERSECT` / `EXCEPT`
-
-| `sql_parse($sql)->statements()->first()->hasIntoClause()`, `$sql` | Before  | After  |
-|-------------------------------------------------------------------|---------|--------|
-| `SELECT id INTO t FROM x UNION SELECT 1`                          | `false` | `true` |
-
-### 113) `flow-php/postgresql` - `sql_to_*_query()` and the pagination modifiers take exactly one read-only `SELECT` or `VALUES`
-
-| Before                                                                              | After                       |
-|-------------------------------------------------------------------------------------|-----------------------------|
-| `sql_to_paginated_query('UPDATE t SET a = 1 RETURNING id', 10)` - returned unchanged | `InvalidStatementException` |
-| `sql_to_limited_query('SELECT 1; SELECT 2', 10)` - every statement paginated         | `InvalidStatementException` |
-| `sql_to_keyset_query()` over a data-modifying `WITH` - the write paginated          | `InvalidStatementException` |
-| `sql_to_count_query('SELECT id INTO t FROM x')` - counted                           | `InvalidStatementException` |
-
-Applies to `PaginationModifier`, `CountModifier` and `KeysetPaginationModifier` passed to `ParsedQuery::traverse()`.
-
-### 114) `flow-php/etl-adapter-postgresql` - `from_pgsql_limit_offset()` requires the query's own `ORDER BY`
-
-| Query                                            | Before                      | After                      |
-|--------------------------------------------------|-----------------------------|----------------------------|
-| `SELECT * FROM (SELECT id FROM t ORDER BY id) s` | pages in no defined order   | `InvalidArgumentException` |
 
 ---
 
@@ -3349,6 +3486,8 @@ This applies to all Definition implementations: `BooleanDefinition`, `DateDefini
 |------------------------------|-----------------------------------|
 | `FileExtractor::addFilter()` | `FileExtractor::withPathFilter()` |
 | `PathFiltering::addFilter()` | `PathFiltering::withPathFilter()` |
+
+`withPathFilter()` is removed in 0.45 - see 8) of that version.
 
 ### 7) Removed deprecated ScalarFunctionChain methods
 

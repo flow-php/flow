@@ -13,6 +13,8 @@ use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Partition;
 use Flow\Filesystem\Path;
+use Flow\Filesystem\Path\Filter;
+use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Generator;
 
 use function array_map;
@@ -27,18 +29,12 @@ use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function sprintf;
 
-final class PathPartitionsExtractor implements
-    BatchableExtractor,
-    Extractor,
-    FileExtractor,
-    LimitPushDown,
-    RewindableExtractor
+final class PathPartitionsExtractor implements BatchableExtractor, Extractor, FileExtractor, RewindableExtractor
 {
     private ?Schema $schema = null;
 
     use Batches;
-    use PathFiltering;
-    use PushesLimit;
+    use ListingPartitions;
 
     private readonly Filesystem $filesystem;
 
@@ -67,20 +63,22 @@ final class PathPartitionsExtractor implements
     /**
      * @return Generator<int, \Flow\ETL\Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
     {
         $batchSize = $this->batchSize();
+        $fileColumns = $this->fileColumns($this->filesystem, $this->path);
         $schema = $this->schema();
         $buffer = [];
         $yielded = 0;
 
-        foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $fileStatus) {
-            $buffer[] = [
+        foreach ((new FileListing($this->filesystem))->list($this->path, $pathFilter) as $fileStatus) {
+            $constants = $fileColumns->forFile(new SourceFile($fileStatus->path), $schema);
+            $buffer[] = $constants->fill([
                 'path' => $fileStatus->path->uri(),
                 'partitions' => array_merge(...array_values(array_map(static fn(Partition $p) => [
                     $p->name => $p->value,
                 ], $fileStatus->path->partitions()->toArray()))),
-            ];
+            ]);
 
             if (count($buffer) < $batchSize) {
                 continue;
@@ -96,8 +94,6 @@ final class PathPartitionsExtractor implements
 
             $buffer = [];
 
-            $limit = $this->pushedLimit();
-
             if ($limit !== null && $yielded >= $limit) {
                 return;
             }
@@ -108,6 +104,11 @@ final class PathPartitionsExtractor implements
         }
     }
 
+    public function partitionSchema(): Schema
+    {
+        return $this->fileColumns($this->filesystem, $this->path)->partitions($this->schema ?? new Schema());
+    }
+
     public function source(): Path
     {
         return $this->path;
@@ -115,11 +116,16 @@ final class PathPartitionsExtractor implements
 
     public function schema(): Schema
     {
+        $fileColumns = $this->fileColumns($this->filesystem, $this->path);
+
         if ($this->schema !== null) {
-            return $this->schema;
+            return $fileColumns->declare($this->schema);
         }
 
-        return schema(str_schema('path'), map_schema('partitions', type_map(type_string(), type_string())));
+        return $fileColumns->declare(schema(
+            str_schema('path'),
+            map_schema('partitions', type_map(type_string(), type_string())),
+        ));
     }
 
     public function withSchema(Schema $schema): static

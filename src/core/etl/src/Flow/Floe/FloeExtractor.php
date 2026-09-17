@@ -11,9 +11,7 @@ use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\FileReading;
-use Flow\ETL\Extractor\LimitPushDown;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
-use Flow\ETL\Extractor\PushesLimit;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -25,6 +23,8 @@ use Flow\ETL\Schema\Validator\StrictValidator;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
+use Flow\Filesystem\Path\Filter;
+use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Flow\Floe\Codec\NoopCodec;
 use Generator;
 
@@ -34,14 +34,12 @@ final class FloeExtractor implements
     BatchableExtractor,
     Extractor,
     FileExtractor,
-    LimitPushDown,
     MetadataColumnsExtractor,
     RewindableExtractor
 {
     private ?Schema $schema = null;
 
     use Batches;
-    use PushesLimit;
     use FileReading;
 
     private ?int $offset = null;
@@ -78,7 +76,7 @@ final class FloeExtractor implements
     /**
      * @return \Generator<int, \Flow\ETL\Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
     {
         $fileOffset = $this->offset ?? 0;
         $yielded = 0;
@@ -89,7 +87,7 @@ final class FloeExtractor implements
 
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
 
-        foreach ($this->files($context->hydrator()) as $file) {
+        foreach ($this->files($context->hydrator(), $pathFilter) as $file) {
             // finally, not a close() per exit: the offset-skip continue, the STOP/limit return
             // below and an abandoned generator all have to release the handle (b73)
             try {
@@ -118,8 +116,6 @@ final class FloeExtractor implements
                 $constants = $fileColumns->forFile($file->source(), $fileSchema);
                 // a declared schema is always matched: the rows below are only trusted against the footer
                 $matchTo = $promisedSchema ?? (!$fileSchema->isSame($target) ? $target : null);
-
-                $limit = $this->pushedLimit();
                 $remaining = $limit === null ? null : $limit - $yielded;
 
                 foreach ($file->reader->rows($this->batchSize(), $fileOffset, $remaining) as $rows) {
@@ -181,6 +177,11 @@ final class FloeExtractor implements
         return $this;
     }
 
+    public function partitionSchema(): Schema
+    {
+        return $this->fileColumns($this->filesystem, $this->path)->partitions($this->schema ?? new Schema());
+    }
+
     public function source(): Path
     {
         return $this->path;
@@ -200,9 +201,9 @@ final class FloeExtractor implements
     /**
      * @return Generator<int, FloeSourceFile>
      */
-    private function files(?Hydrator $hydrator = null): Generator
+    private function files(?Hydrator $hydrator = null, Filter $pathFilter = new OnlyFiles()): Generator
     {
-        foreach ($this->sourceFiles($this->filesystem, $this->path) as $source) {
+        foreach ($this->sourceFiles($this->filesystem, $this->path, $pathFilter) as $source) {
             yield new FloeSourceFile(
                 (new FloeReader(
                     $this->filesystem,

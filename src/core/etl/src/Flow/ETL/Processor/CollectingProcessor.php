@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Processor;
 
+use Flow\ETL\BoundStep;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
@@ -17,8 +17,6 @@ use Generator;
  * This processor consumes the entire input generator and yields
  * all rows as a single Rows batch. Use with caution on large datasets
  * as it loads everything into memory.
- *
- * @internal
  */
 final readonly class CollectingProcessor implements Processor
 {

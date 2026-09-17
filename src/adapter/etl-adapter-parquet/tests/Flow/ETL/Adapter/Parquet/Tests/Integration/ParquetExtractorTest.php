@@ -12,7 +12,7 @@ use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
-use Flow\Filesystem\Path\Filter\OnlyFiles;
+use Flow\Filesystem\Tests\Double\RejectingFilter;
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Options;
@@ -40,11 +40,10 @@ final class ParquetExtractorTest extends FlowTestCase
     public function test_limit(): void
     {
         $extractor = from_parquet(path(__DIR__ . '/Fixtures/orders_1k.parquet'));
-        $extractor->pushLimit(2);
 
         $extractedRows = 0;
 
-        foreach ($extractor->extract(flow_context(config())) as $batch) {
+        foreach ($extractor->extract(flow_context(config()), limit: 2) as $batch) {
             $extractedRows += $batch->count();
         }
 
@@ -317,7 +316,7 @@ final class ParquetExtractorTest extends FlowTestCase
         static::assertSame(2, $filesystem->readFromCalls);
     }
 
-    public function test_schema_forgets_the_fold_when_the_path_filter_narrows(): void
+    public function test_a_path_filter_narrows_the_read_but_not_the_schema(): void
     {
         $filesystem = new CountingFilesystem(new NativeLocalFilesystem());
 
@@ -325,10 +324,13 @@ final class ParquetExtractorTest extends FlowTestCase
             path(__DIR__ . '/Fixtures/Pagination/partitioned/*/*.parquet'),
             filesystem: $filesystem,
         );
-        $extractor->schema();
-        $extractor->withPathFilter(new OnlyFiles())->schema();
+        $schema = $extractor->schema();
 
-        static::assertSame(2, $filesystem->readFromCalls);
+        $batches = iterator_to_array($extractor->extract(flow_context(config()), pathFilter: new RejectingFilter()));
+
+        static::assertSame([], $batches);
+        static::assertSame(1, $filesystem->readFromCalls);
+        static::assertEquals($schema, $extractor->schema());
     }
 
     public function test_signal_stop(): void
@@ -358,17 +360,27 @@ final class ParquetExtractorTest extends FlowTestCase
     public function test_limit_reached_on_the_first_file_tail_batch_skips_the_remaining_files(): void
     {
         $extractor = from_parquet(path(__DIR__ . '/Fixtures/Pagination/*.parquet'))->withBatchSize(1500);
-        $extractor->pushLimit(1000);
 
-        static::assertCount(1000, ExtractedRows::of($extractor));
+        static::assertCount(1000, ExtractedRows::of($extractor, limit: 1000));
+    }
+
+    public function test_the_second_file_is_asked_for_the_remainder_of_the_limit(): void
+    {
+        $extractor = from_parquet(path(__DIR__ . '/Fixtures/Pagination/*.parquet'))->withBatchSize(1000);
+
+        // 01_1000.parquet fills the first batch; 02_500.parquet must be read up to the 200 rows still
+        // wanted, not up to the full limit again
+        $batches = iterator_to_array($extractor->extract(flow_context(config()), limit: 1200), false);
+
+        static::assertCount(2, $batches);
+        static::assertSame(1200, $batches[0]->count() + $batches[1]->count());
     }
 
     public function test_limit_reached_on_a_full_batch_of_the_first_file_skips_the_remaining_files(): void
     {
         $extractor = from_parquet(path(__DIR__ . '/Fixtures/Pagination/*.parquet'))->withBatchSize(500);
-        $extractor->pushLimit(1000);
 
-        static::assertCount(1000, ExtractedRows::of($extractor));
+        static::assertCount(1000, ExtractedRows::of($extractor, limit: 1000));
     }
 
     public function test_is_repeatable(): void

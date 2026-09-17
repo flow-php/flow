@@ -13,7 +13,6 @@ use Flow\ETL\Config\Repartition\HashRepartitionConfig;
 use Flow\ETL\Config\Sort\ExternalSortConfig;
 use Flow\ETL\Config\Sort\MemorySortConfig;
 use Flow\ETL\Config\Telemetry\TelemetryConfig;
-use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Row\Hydrator;
 use Flow\Serializer\Serializer;
 use Psr\Clock\ClockInterface;
@@ -24,6 +23,8 @@ use Psr\Clock\ClockInterface;
  */
 final readonly class Config
 {
+    private Planner $planner;
+
     /**
      * @param Hydrator $hydrator
      */
@@ -34,6 +35,7 @@ final readonly class Config
         private Serializer $serializer,
         private ClockInterface $clock,
         private Optimizer $optimizer,
+        private Executor $executor,
         private Hydrator $hydrator,
         public CacheConfig $cache,
         public MemorySortConfig|ExternalSortConfig $sort,
@@ -44,7 +46,9 @@ final readonly class Config
         public HashRepartitionConfig $repartition,
         private Calculator $calculator = new Calculator(),
         private RandomValueGenerator $randomValueGenerator = new NativePHPRandomValueGenerator(),
-    ) {}
+    ) {
+        $this->planner = new Planner($optimizer);
+    }
 
     public static function builder(): ConfigBuilder
     {
@@ -71,6 +75,11 @@ final readonly class Config
         return $this->clock;
     }
 
+    public function executor(): Executor
+    {
+        return $this->executor;
+    }
+
     /**
      * @return Hydrator
      */
@@ -92,6 +101,11 @@ final readonly class Config
     public function optimizer(): Optimizer
     {
         return $this->optimizer;
+    }
+
+    public function planner(): Planner
+    {
+        return $this->planner;
     }
 
     public function randomValueGenerator(): RandomValueGenerator

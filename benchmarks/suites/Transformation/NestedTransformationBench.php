@@ -24,29 +24,38 @@ final class NestedTransformationBench
 
     #[Bench\ParamProviders('rows')]
     #[Bench\Groups(['transformation'])]
+    public function bench_bare_branch(array $params): void
+    {
+        $sink = to_branch(ref('order_id')->isNotNull(), new NoopLoader());
+
+        (new NestedTransformationScenario((int) $params['rows'], $sink))->run();
+    }
+
+    #[Bench\ParamProviders('rows')]
+    #[Bench\Groups(['transformation'])]
     public function bench_blocking_transformation(array $params): void
     {
-        $loader = to_transformation(new SortByCreatedAt(), new NoopLoader());
+        $sink = to_transformation(new SortByCreatedAt(), new NoopLoader());
 
-        (new NestedTransformationScenario((int) $params['rows'], $loader))->run();
+        (new NestedTransformationScenario((int) $params['rows'], $sink))->run();
     }
 
     #[Bench\ParamProviders('rows')]
     #[Bench\Groups(['transformation'])]
     public function bench_branch_with_transformation(array $params): void
     {
-        $loader = to_branch(ref('order_id')->isNotNull(), new NoopLoader())->withTransformation(new SortByCreatedAt());
+        $sink = to_branch(ref('order_id')->isNotNull(), new NoopLoader())->withTransformation(new SortByCreatedAt());
 
-        (new NestedTransformationScenario((int) $params['rows'], $loader))->run();
+        (new NestedTransformationScenario((int) $params['rows'], $sink))->run();
     }
 
     #[Bench\ParamProviders('rows')]
     #[Bench\Groups(['transformation'])]
     public function bench_streaming_transformation(array $params): void
     {
-        $loader = to_transformation(select('order_id'), new NoopLoader());
+        $sink = to_transformation(select('order_id'), new NoopLoader());
 
-        (new NestedTransformationScenario((int) $params['rows'], $loader))->run();
+        (new NestedTransformationScenario((int) $params['rows'], $sink))->run();
     }
 
     public function rows(): Generator

@@ -49,9 +49,9 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
     public function test_limit(): void
     {
         $extractor = from_xml(path_real(__DIR__ . '/../Fixtures/flow_orders.xml'))->withXMLNodePath('root/row');
-        $extractor->withBatchSize(1)->pushLimit(2);
+        $extractor->withBatchSize(1);
 
-        $rows = df()->extract($extractor)->fetch()->toArray();
+        $rows = df()->read($extractor)->limit(2)->fetch()->toArray();
 
         static::assertCount(2, $rows);
     }
@@ -315,9 +315,8 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
     public function test_limit_reached_on_the_first_file_tail_batch_skips_the_remaining_files(): void
     {
         $extractor = from_xml(__DIR__ . '/../Fixtures/cross_stream/*/file.xml', 'root/item')->withBatchSize(10);
-        $extractor->pushLimit(1);
 
-        static::assertCount(1, ExtractedRows::of($extractor));
+        static::assertCount(1, ExtractedRows::of($extractor, limit: 1));
     }
 
     public function test_is_repeatable(): void
@@ -331,9 +330,8 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
         $extractor = (new XMLParserExtractor(path_real(__DIR__ . '/../Fixtures/simple_items.xml'), $filesystem))
             ->withXMLNodePath('root/items/item')
             ->withBatchSize(1);
-        $extractor->pushLimit(1);
 
-        foreach ($extractor->extract(flow_context(config())) as $_rows) {
+        foreach ($extractor->extract(flow_context(config()), limit: 1) as $_rows) {
         }
 
         static::assertContains('closeSource', $filesystem->calls);

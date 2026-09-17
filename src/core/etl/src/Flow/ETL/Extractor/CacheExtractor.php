@@ -28,7 +28,7 @@ final class CacheExtractor implements Extractor, RewindableExtractor
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         $cache = $this->cache ?? $context->cache();
         // A declared schema describes both arms. Without one, schema() answers from whichever source

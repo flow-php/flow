@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Processor;
 
+use Flow\ETL\BoundStep;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ExpandingFunctions;
@@ -11,7 +12,6 @@ use Flow\ETL\Function\FrameAccumulating;
 use Flow\ETL\Function\PartitionRanking;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Function\WindowFunction;
-use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -29,8 +29,6 @@ use function Flow\ETL\DSL\rows;
 
 /**
  * Applies window functions over partitioned and ordered data.
- *
- * @internal
  */
 final class WindowProcessor implements Processor
 {

@@ -55,7 +55,7 @@ final class ChainExtractorTest extends FlowTestCase
                 return schema(int_schema('id'));
             }
 
-            public function extract(FlowContext $context): Generator
+            public function extract(FlowContext $context, ?int $limit = null): Generator
             {
                 yield rows(schema(int_schema('id')), row(['id' => 1]));
                 yield rows(schema(int_schema('id')), row(['id' => 2]));
@@ -71,7 +71,7 @@ final class ChainExtractorTest extends FlowTestCase
                 return schema(int_schema('id'));
             }
 
-            public function extract(FlowContext $context): Generator
+            public function extract(FlowContext $context, ?int $limit = null): Generator
             {
                 yield rows(schema(int_schema('id')), row(['id' => 3]));
                 yield rows(schema(int_schema('id')), row(['id' => 4]));

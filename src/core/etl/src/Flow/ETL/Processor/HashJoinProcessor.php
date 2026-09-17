@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Processor;
 
+use Flow\ETL\BoundStep;
 use Flow\ETL\Bucketing\Bucket;
 use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\Bucketing\HashBucketing;
 use Flow\ETL\Bucketing\NativeHasher;
 use Flow\ETL\Bucketing\ResidentBucketsStorage;
 use Flow\ETL\Bucketing\SingleBucketHasher;
-use Flow\ETL\DataFrame;
 use Flow\ETL\Exception\DuplicatedEntriesException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\JoinException;
 use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
+use Flow\ETL\Executor;
+use Flow\ETL\Executor\PhysicalPlan;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Join\Expression;
@@ -24,7 +26,6 @@ use Flow\ETL\Join\HashJoin\JoinSide;
 use Flow\ETL\Join\HashJoin\NullRowBuilder;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Join\JoinShape;
-use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
 use Flow\ETL\RandomValueGenerator;
 use Flow\ETL\Row\Reference;
@@ -35,9 +36,6 @@ use Generator;
 use function array_intersect_key;
 use function array_keys;
 
-/**
- * @internal
- */
 final class HashJoinProcessor implements Processor
 {
     /**
@@ -53,7 +51,8 @@ final class HashJoinProcessor implements Processor
      * @param int<1, max> $batchSize
      */
     public function __construct(
-        private readonly DataFrame $right,
+        private readonly PhysicalPlan $right,
+        private readonly Executor $executor,
         private readonly Expression $expression,
         private readonly Join $type,
         private readonly Buckets $leftBuckets,
@@ -81,6 +80,7 @@ final class HashJoinProcessor implements Processor
 
         $bound = new self(
             $this->right,
+            $this->executor,
             $this->expression,
             $this->type,
             $this->leftBuckets,
@@ -125,7 +125,7 @@ final class HashJoinProcessor implements Processor
 
         try {
             $rightRows = $this->tap(
-                $this->right->get(),
+                $this->executor->execute($this->right),
                 $rightSchema,
                 // right rows with a null join key can never match, they only surface in right join output
                 $equalityKeys !== null && $this->type !== Join::right ? $equalityKeys->rightRefs() : null,

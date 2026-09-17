@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Processor;
 
+use Flow\ETL\BoundStep;
 use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\Bucketing\BucketShape;
 use Flow\ETL\Bucketing\Hasher;
@@ -11,7 +12,6 @@ use Flow\ETL\Bucketing\KeyGrouping;
 use Flow\ETL\Bucketing\KeyValues;
 use Flow\ETL\Bucketing\NativeHasher;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
 use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
@@ -22,8 +22,6 @@ use function Flow\Types\DSL\type_string;
 
 /**
  * Regroups buckets spilled by BucketingProcessor so every row sharing a key arrives in one batch.
- *
- * @internal
  */
 final readonly class RepartitionProcessor implements Processor
 {

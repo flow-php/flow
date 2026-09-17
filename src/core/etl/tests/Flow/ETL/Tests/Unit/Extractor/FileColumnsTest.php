@@ -139,6 +139,33 @@ final class FileColumnsTest extends FlowTestCase
         );
     }
 
+    public function test_partitions_is_empty_without_partition_names(): void
+    {
+        static::assertEquals(
+            schema(),
+            FileColumnsContext::discovering(names: [], metadataColumns: true)->partitions(schema(str_schema('name'))),
+        );
+    }
+
+    public function test_partitions_is_only_the_partition_block_typed_as_declared(): void
+    {
+        static::assertEquals(
+            schema(int_schema('year'), str_schema('month', nullable: true)),
+            FileColumnsContext::discovering(names: [
+                'year' => false,
+                'month' => true,
+            ], metadataColumns: true)->partitions(schema(str_schema('name'), int_schema('year'))),
+        );
+    }
+
+    public function test_partitions_uses_the_declared_partition_type_when_the_schema_has_none(): void
+    {
+        static::assertEquals(
+            schema(int_schema('year')),
+            FileColumnsContext::discovering(types: partition_types(year: type_integer()))->partitions(schema()),
+        );
+    }
+
     public function test_without_tail_ignores_names_the_schema_does_not_carry(): void
     {
         static::assertTrue(schema(int_schema('id'), str_schema('name'))->isSame(FileColumnsContext::discovering(names: [

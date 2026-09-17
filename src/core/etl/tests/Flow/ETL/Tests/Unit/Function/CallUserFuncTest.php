@@ -25,6 +25,11 @@ use function Flow\Types\DSL\type_string;
 
 final class CallUserFuncTest extends FlowTestCase
 {
+    public function test_it_is_never_deterministic(): void
+    {
+        static::assertFalse(call(lit('strtoupper'), type_string(), ['a'])->deterministic());
+    }
+
     public function test_named_parameters_survive_a_rebuild(): void
     {
         $function = new CallUserFunc(lit('explode'), type_list(type_string()), [

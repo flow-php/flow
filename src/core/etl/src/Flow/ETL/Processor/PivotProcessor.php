@@ -4,21 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Processor;
 
+use Flow\ETL\BoundStep;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\GroupBy;
 use Flow\ETL\GroupBy\PivotAggregation;
 use Flow\ETL\GroupBy\PivotShape;
-use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
 
-/**
- * @internal
- */
 final class PivotProcessor implements Processor
 {
     /**

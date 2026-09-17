@@ -47,7 +47,7 @@ final class PsrHttpClientPaginatedExtractor implements Extractor
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         $encoder = new HttpEncoder();
         $hydrator = $context->hydrator();
