@@ -22,7 +22,7 @@ interface ParquetEngine
     /**
      * @param array<string> $columns
      *
-     * @return \Generator<int, array<string, mixed>>
+     * @return \Generator<int, array<array-key, mixed>>
      */
     public function readValues(
         SourceStream $stream,
@@ -33,7 +33,7 @@ interface ParquetEngine
     ): Generator;
 
     /**
-     * @param iterable<array<string, mixed>> $rows
+     * @param iterable<array<array-key, mixed>> $rows
      */
     public function writeRows(
         DestinationStream $stream,

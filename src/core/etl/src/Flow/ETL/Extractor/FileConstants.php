@@ -19,9 +19,9 @@ final readonly class FileConstants
     ) {}
 
     /**
-     * @param array<string, mixed> $row
+     * @param array<array-key, mixed> $row
      *
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
     public function fill(array $row): array
     {

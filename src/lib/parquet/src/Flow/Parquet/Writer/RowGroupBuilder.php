@@ -20,7 +20,7 @@ final class RowGroupBuilder
     private readonly ColumnChunkBuilders $columnChunkBuilders;
 
     /**
-     * @var array<array<string, mixed>>
+     * @var array<array<array-key, mixed>>
      */
     private array $rowBuffer = [];
 
@@ -36,7 +36,7 @@ final class RowGroupBuilder
     }
 
     /**
-     * @param array<string, mixed> $row
+     * @param array<array-key, mixed> $row
      */
     public function addRow(array $row): void
     {
@@ -51,7 +51,7 @@ final class RowGroupBuilder
     }
 
     /**
-     * @param array<array<string, mixed>> $rows
+     * @param array<array<array-key, mixed>> $rows
      */
     public function addRows(array $rows): void
     {

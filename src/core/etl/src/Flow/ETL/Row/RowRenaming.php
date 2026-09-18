@@ -9,14 +9,14 @@ use Flow\ETL\Row;
 final readonly class RowRenaming
 {
     /**
-     * @param array<string, string> $renames current_name => new_name
+     * @param array<array-key, string> $renames current_name => new_name
      */
     private function __construct(
         private array $renames,
     ) {}
 
     /**
-     * @param array<string, string> $renames current_name => new_name
+     * @param array<array-key, string> $renames current_name => new_name
      */
     public static function of(array $renames): self
     {

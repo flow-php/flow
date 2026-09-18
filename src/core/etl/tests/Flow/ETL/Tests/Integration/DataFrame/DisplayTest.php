@@ -91,7 +91,6 @@ final class DisplayTest extends FlowIntegrationTestCase
                             xml_schema('xml'),
                         ),
                         // PHP casts the numeric column name "100" to an int array key
-                        // @mago-ignore analysis:possibly-invalid-argument
                         row([
                             'id' => 1234,
                             'price' => 123.45,
@@ -159,7 +158,6 @@ final class DisplayTest extends FlowIntegrationTestCase
                                 string_schema('group'),
                             ),
                             // PHP casts the numeric column name "100" to an int array key
-                            // @mago-ignore analysis:possibly-invalid-argument
                             row([
                                 'id' => 1234,
                                 'price' => 123.45,
@@ -182,7 +180,6 @@ final class DisplayTest extends FlowIntegrationTestCase
                                 string_schema('group'),
                             ),
                             // PHP casts the numeric column name "100" to an int array key
-                            // @mago-ignore analysis:possibly-invalid-argument
                             row([
                                 'id' => 1234,
                                 'price' => 123.45,

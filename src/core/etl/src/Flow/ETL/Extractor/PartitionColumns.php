@@ -119,11 +119,11 @@ final readonly class PartitionColumns
     }
 
     /**
-     * @param array<string, bool> $names
-     * @param array<string, mixed> $values partition name => value, for the path this row came from
-     * @param array<string, mixed> $row
+     * @param array<array-key, bool> $names
+     * @param array<array-key, mixed> $values partition name => value, for the path this row came from
+     * @param array<array-key, mixed> $row
      *
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
     public function fill(array $row, array $names, array $values): array
     {

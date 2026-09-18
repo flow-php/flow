@@ -179,7 +179,6 @@ final class ColumnTypesTest extends FlowTestCase
         $columns = ColumnTypesMother::fromStrings();
         // PHP re-keys a numeric column name to int; RawRowValues declares array<string, mixed>, which cannot
         // express that, so the fold has to survive an int key arriving through a documented-string array
-        // @mago-ignore analysis:possibly-invalid-argument
         $columns->observe(new RawRowValues(['1' => 'x']));
 
         static::assertSame('1', $columns->schema(ColumnTypesMother::floor())->get('1')->entry()->name());

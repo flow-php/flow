@@ -16,7 +16,6 @@ use Flow\ETL\Transformer\Rename\RenameEntryStrategy;
 use Throwable;
 
 use function array_search;
-use function is_string;
 
 final readonly class RenameEachEntryTransformer implements Transformer
 {
@@ -40,7 +39,7 @@ final readonly class RenameEachEntryTransformer implements Transformer
 
         foreach ($this->strategies as $strategy) {
             foreach ($strategy->renames($output) as $from => $to) {
-                $output = $output->rename($from, $to);
+                $output = $output->rename((string) $from, $to);
             }
         }
 
@@ -57,13 +56,16 @@ final readonly class RenameEachEntryTransformer implements Transformer
 
             foreach ($this->strategies as $strategy) {
                 foreach ($strategy->renames($schema) as $from => $to) {
+                    // a numeric entry name arrives as int - PHP casts numeric-string array keys
+                    $from = (string) $from;
+
                     $schema = $schema->rename($from, $to);
 
                     // strategies chain, so a later one renames what an earlier one produced; the map
                     // has to stay keyed by the row's original name or the projection lands short
                     $original = array_search($from, $renames, true);
 
-                    $renames[is_string($original) ? $original : $from] = $to;
+                    $renames[false === $original ? $from : $original] = $to;
                 }
             }
 

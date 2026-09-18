@@ -28,10 +28,10 @@ final readonly class UnpackedColumns
     }
 
     /**
-     * @param array<string, mixed> $values
+     * @param array<array-key, mixed> $values
      * @param array<array-key, mixed> $payload
      *
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
     public function values(array $values, string $prefix, Schema $declared, array $payload): array
     {

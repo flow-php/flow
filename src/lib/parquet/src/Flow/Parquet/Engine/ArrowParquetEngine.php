@@ -80,7 +80,7 @@ final class ArrowParquetEngine implements ParquetEngine
     /**
      * @param array<string> $columns
      *
-     * @return \Generator<int, array<string, mixed>>
+     * @return \Generator<int, array<array-key, mixed>>
      */
     public function readValues(
         SourceStream $stream,

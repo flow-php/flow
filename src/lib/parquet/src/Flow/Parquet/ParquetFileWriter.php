@@ -13,12 +13,12 @@ interface ParquetFileWriter
     public function close(): void;
 
     /**
-     * @param iterable<array<string, mixed>> $rows
+     * @param iterable<array<array-key, mixed>> $rows
      */
     public function writeBatch(iterable $rows): void;
 
     /**
-     * @param array<string, mixed> $row
+     * @param array<array-key, mixed> $row
      */
     public function writeRow(array $row): void;
 }

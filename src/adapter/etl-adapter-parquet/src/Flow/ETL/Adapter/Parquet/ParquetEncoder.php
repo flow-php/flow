@@ -14,7 +14,7 @@ use Flow\Types\Type;
 use function array_key_exists;
 
 /**
- * @implements Encoder<array<string, mixed>>
+ * @implements Encoder<array<array-key, mixed>>
  */
 final class ParquetEncoder implements Encoder
 {
