@@ -218,7 +218,9 @@ final class ParquetLoader implements Closure, Discardable, FileLoader, Loader, P
 
     private function schema(): Schema
     {
-        return ($this->schema ?? $this->inferredSchema ?? throw new RuntimeException(
+        return ($this->schema
+        ?? $this->inferredSchema
+        ?? throw new RuntimeException(
             'Schema has not been inferred yet. Load at least one batch of rows first.',
         ))->gracefulRemove(...$this->router->droppedNames());
     }
