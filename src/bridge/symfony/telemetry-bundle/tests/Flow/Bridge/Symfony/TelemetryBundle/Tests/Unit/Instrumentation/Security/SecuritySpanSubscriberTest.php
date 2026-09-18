@@ -7,6 +7,8 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Unit\Instrumentation\Securit
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel\HttpKernelSpanSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Security\SecuritySpanSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Security\UserAttributeResolver;
+use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Security\FakeAuthenticator;
+use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Security\SpyTokenStorage;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Security\TestSecurityUser;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Mother\TelemetryMother;
 use Flow\Telemetry\Provider\Memory\MemoryExporter;
@@ -19,6 +21,9 @@ use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
+use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
+use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
+use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
 
 #[CoversClass(SecuritySpanSubscriber::class)]
 final class SecuritySpanSubscriberTest extends TestCase
@@ -48,10 +53,35 @@ final class SecuritySpanSubscriberTest extends TestCase
         static::assertArrayNotHasKey('user.id', $span->attributes());
     }
 
-    public function test_does_nothing_when_request_has_no_span(): void
+    public function test_does_not_decorate_on_login_success_when_request_has_no_span(): void
     {
-        $tokenStorage = new TokenStorage();
-        $tokenStorage->setToken(new UsernamePasswordToken(new TestSecurityUser('alice'), 'main'));
+        $user = new TestSecurityUser('bob');
+        $token = new UsernamePasswordToken($user, 'main');
+
+        $request = Request::create('/test', 'GET');
+
+        $subscriber = new SecuritySpanSubscriber(
+            new TokenStorage(),
+            new UserAttributeResolver([], 'user.id', null, null, 'getEmail'),
+        );
+
+        $subscriber->onLoginSuccess(
+            new LoginSuccessEvent(
+                new FakeAuthenticator(),
+                new SelfValidatingPassport(new UserBadge('bob', static fn(): TestSecurityUser => $user)),
+                $token,
+                $request,
+                null,
+                'main',
+            ),
+        );
+
+        static::assertFalse($request->attributes->has(HttpKernelSpanSubscriber::SPAN_ATTRIBUTE));
+    }
+
+    public function test_does_not_read_the_token_when_request_has_no_span(): void
+    {
+        $tokenStorage = new SpyTokenStorage(new UsernamePasswordToken(new TestSecurityUser('alice'), 'main'));
 
         $request = Request::create('/test', 'GET');
         $request->attributes->set(HttpKernelSpanSubscriber::SPAN_ATTRIBUTE, 'not-a-span');
@@ -70,6 +100,7 @@ final class SecuritySpanSubscriberTest extends TestCase
             ),
         );
 
+        static::assertSame(0, $tokenStorage->reads());
         static::assertSame('not-a-span', $request->attributes->get(HttpKernelSpanSubscriber::SPAN_ATTRIBUTE));
     }
 }

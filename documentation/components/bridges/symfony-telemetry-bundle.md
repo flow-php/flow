@@ -1274,6 +1274,10 @@ already-authenticated requests and mid-request logins are covered. Each field is
 configurable; `email` is taken from the configured getter and skipped when the method is missing or returns a
 non-scalar. Anonymous requests are left untouched.
 
+The token is read from `security.untracked_token_storage` and only when the request carries a span, so instrumentation
+never marks the session as used and never turns a cacheable response into `Cache-Control: private` behind a lazy
+firewall.
+
 To attach application-specific attributes, implement `UserSpanAttributeProvider` and tag the service (the tag is
 autoconfigured). Returned attributes are merged onto the request span and win on key collision:
 
