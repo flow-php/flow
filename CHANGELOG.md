@@ -1,3 +1,18 @@
+## [Unreleased] - 2026-09-18
+
+### Changed
+- [#2635](https://github.com/flow-php/flow/pull/2635) - **flow-php/etl - name-keyed row storage is typed as array-key and names are cast back to string at consuming boundaries.** - [@norberttech](https://github.com/norberttech)
+- [#2635](https://github.com/flow-php/flow/pull/2635) - **flow-php/etl-adapter-csv - inferred column names are cast to string before schema divergence checks.** - [@norberttech](https://github.com/norberttech)
+- [#2635](https://github.com/flow-php/flow/pull/2635) - **flow-php/etl-adapter-parquet - encoder row type widened to array-key.** - [@norberttech](https://github.com/norberttech)
+- [#2635](https://github.com/flow-php/flow/pull/2635) - **flow-php/parquet - reader and writer row types widened to array-key.** - [@norberttech](https://github.com/norberttech)
+
+### Fixed
+- [#2635](https://github.com/flow-php/flow/pull/2635) - **flow-php/etl - renameEach(rename_map(...)) no longer throws a TypeError on numeric entry names.** - [@norberttech](https://github.com/norberttech)
+- [#2635](https://github.com/flow-php/flow/pull/2635) - **flow-php/etl - chained rename strategies no longer desync rows from the schema on numeric entry names.** - [@norberttech](https://github.com/norberttech)
+
+### Removed
+- [#2635](https://github.com/flow-php/flow/pull/2635) - **flow-php/etl - @mago-ignore suppressions that existed only to hide the unrepresentable row value type.** - [@norberttech](https://github.com/norberttech)
+
 ## [0.44.1] - 2026-09-15
 
 ### Added
