@@ -23,7 +23,7 @@ use function implode;
 final readonly class Row
 {
     /**
-     * @param array<string, mixed> $values storage keyed by name; the Schema defines column order (Rows::schema()->references())
+     * @param array<array-key, mixed> $values storage keyed by name; the Schema defines column order (Rows::schema()->references())
      */
     public function __construct(
         private array $values,
@@ -129,7 +129,7 @@ final readonly class Row
      */
     public function names(): array
     {
-        return array_keys($this->values);
+        return array_map(strval(...), array_keys($this->values));
     }
 
     /**
@@ -152,7 +152,7 @@ final readonly class Row
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
     public function values(): array
     {
@@ -195,7 +195,7 @@ final readonly class Row
         if ($taken !== count($this->values)) {
             foreach ($this->values as $name => $_) {
                 if (!array_key_exists($name, $definitions)) {
-                    throw ColumnMismatchException::unexpectedColumn($name);
+                    throw ColumnMismatchException::unexpectedColumn((string) $name);
                 }
             }
         }

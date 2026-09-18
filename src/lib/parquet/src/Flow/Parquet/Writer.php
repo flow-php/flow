@@ -100,7 +100,7 @@ final class Writer
     }
 
     /**
-     * @param iterable<array<string, mixed>> $rows
+     * @param iterable<array<array-key, mixed>> $rows
      */
     public function write(string $path, Schema $schema, iterable $rows): void
     {
@@ -118,7 +118,7 @@ final class Writer
     }
 
     /**
-     * @param iterable<array<string, mixed>> $rows
+     * @param iterable<array<array-key, mixed>> $rows
      */
     public function writeBatch(iterable $rows): void
     {
@@ -126,7 +126,7 @@ final class Writer
     }
 
     /**
-     * @param array<string, mixed> $row
+     * @param array<array-key, mixed> $row
      */
     public function writeRow(array $row): void
     {
@@ -134,7 +134,7 @@ final class Writer
     }
 
     /**
-     * @param iterable<array<string, mixed>> $rows
+     * @param iterable<array<array-key, mixed>> $rows
      */
     public function writeStream(DestinationStream $stream, Schema $schema, iterable $rows): void
     {

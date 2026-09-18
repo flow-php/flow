@@ -12,7 +12,7 @@ use function array_intersect_key;
 final readonly class RenameMapEntryStrategy implements RenameEntryStrategy
 {
     /**
-     * @param array<string, string> $renames Map of old_name => new_name
+     * @param array<array-key, string> $renames Map of old_name => new_name
      */
     public function __construct(
         private array $renames,

@@ -98,7 +98,7 @@ final class ParquetFile
     /**
      * @param array<string> $columns
      *
-     * @return \Generator<int, array<string, mixed>>
+     * @return \Generator<int, array<array-key, mixed>>
      */
     public function values(array $columns = [], ?int $limit = null, ?int $offset = null): Generator
     {

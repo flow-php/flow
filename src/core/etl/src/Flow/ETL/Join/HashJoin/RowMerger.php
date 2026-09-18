@@ -15,17 +15,17 @@ use function sprintf;
 final class RowMerger
 {
     /**
-     * @var array<string, true>
+     * @var array<array-key, true>
      */
     private readonly array $dropLeft;
 
     /**
-     * @var array<string, true>
+     * @var array<array-key, true>
      */
     private readonly array $dropRight;
 
     /**
-     * @var array<string, array{array<string, true>, array<string, true>, array<string, string>}>
+     * @var array<string, array{array<array-key, true>, array<array-key, true>, array<array-key, string>}>
      */
     private array $plans = [];
 
@@ -89,12 +89,12 @@ final class RowMerger
     }
 
     /**
-     * @param array<string> $leftNames
-     * @param array<string> $rightNames
+     * @param list<array-key> $leftNames
+     * @param list<array-key> $rightNames
      *
      * @throws DuplicatedEntriesException
      *
-     * @return array{array<string, true>, array<string, true>, array<string, string>}
+     * @return array{array<array-key, true>, array<array-key, true>, array<array-key, string>}
      */
     private function plan(array $leftNames, array $rightNames): array
     {
@@ -121,9 +121,11 @@ final class RowMerger
             }
 
             $keepRight[$name] = true;
-            $outputName = $this->prefix === '' ? $name : $this->prefix . $name;
 
-            if ($this->prefix !== '') {
+            if ($this->prefix === '') {
+                $outputName = $name;
+            } else {
+                $outputName = $this->prefix . $name;
                 $renames[$name] = $outputName;
             }
 

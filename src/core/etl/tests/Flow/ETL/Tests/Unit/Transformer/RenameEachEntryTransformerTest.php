@@ -39,6 +39,28 @@ final class RenameEachEntryTransformerTest extends FlowTestCase
         );
     }
 
+    public function test_bind_renames_a_numeric_entry_name(): void
+    {
+        static::assertEquals(
+            schema(str_schema('broker'), int_schema('y_2023')),
+            (new RenameEachEntryTransformer(new RenameMapEntryStrategy(['2023' => 'y_2023'])))->bind(schema(
+                str_schema('broker'),
+                int_schema('2023'),
+            ))->output,
+        );
+    }
+
+    public function test_bind_chains_strategies_through_a_numeric_entry_name(): void
+    {
+        static::assertEquals(
+            schema(int_schema('year')),
+            (new RenameEachEntryTransformer(
+                new RenameMapEntryStrategy(['id' => '2023']),
+                new RenameMapEntryStrategy(['2023' => 'year']),
+            ))->bind(schema(int_schema('id')))->output,
+        );
+    }
+
     public function test_renaming_fails_without_any_strategy(): void
     {
         $this->expectException(InvalidArgumentException::class);

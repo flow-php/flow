@@ -28,7 +28,7 @@ final readonly class DremelShredder
     ) {}
 
     /**
-     * @param array<array<string, mixed>> $rows
+     * @param array<array<array-key, mixed>> $rows
      *
      * @return array<string, WriteFlatColumnValues> keyed by flatPath
      */

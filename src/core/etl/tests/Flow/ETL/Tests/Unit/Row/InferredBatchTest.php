@@ -55,7 +55,6 @@ final class InferredBatchTest extends FlowTestCase
         }
 
         // PHP cannot hold '0' as a string key, which is precisely the shape under test
-        // @mago-ignore analysis:possibly-invalid-argument
         $inferred = (new InferredBatch())->of([new RawRowValues($values)]);
 
         static::assertSame(['0', '7'], $inferred->schema()->references()->names());

@@ -9,7 +9,7 @@ use Flow\ETL\Schema\Metadata;
 final readonly class RawRowValues
 {
     /**
-     * @param array<string, mixed> $values
+     * @param array<array-key, mixed> $values
      * @param array<array-key, Metadata> $metadata
      */
     public function __construct(

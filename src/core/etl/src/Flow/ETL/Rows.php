@@ -118,7 +118,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
     }
 
     /**
-     * @return array{schema: Schema, rows: list<array<string, mixed>>}
+     * @return array{schema: Schema, rows: list<array<array-key, mixed>>}
      */
     public function __serialize(): array
     {
@@ -149,7 +149,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
     }
 
     /**
-     * @param array{schema: Schema, rows: list<array<string, mixed>>} $data
+     * @param array{schema: Schema, rows: list<array<array-key, mixed>>} $data
      */
     public function __unserialize(array $data): void
     {

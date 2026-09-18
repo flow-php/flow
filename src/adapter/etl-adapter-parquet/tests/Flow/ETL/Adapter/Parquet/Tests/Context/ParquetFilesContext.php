@@ -33,7 +33,7 @@ final class ParquetFilesContext
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<array<array-key, mixed>>
      */
     public static function values(Filesystem $filesystem, string $uri): array
     {

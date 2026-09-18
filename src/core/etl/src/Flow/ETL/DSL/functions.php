@@ -575,7 +575,7 @@ function rename_replace(string|array $search, string|array $replace): RenameRepl
 }
 
 /**
- * @param array<string, string> $renames Map of old_name => new_name
+ * @param array<array-key, string> $renames Map of old_name => new_name
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
 function rename_map(array $renames): RenameMapEntryStrategy
@@ -584,7 +584,7 @@ function rename_map(array $renames): RenameMapEntryStrategy
 }
 
 /**
- * @param array<string, mixed> $values
+ * @param array<array-key, mixed> $values
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function row(array $values): Row

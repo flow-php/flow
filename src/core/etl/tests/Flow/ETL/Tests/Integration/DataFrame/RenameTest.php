@@ -50,6 +50,25 @@ final class RenameTest extends FlowIntegrationTestCase
         );
     }
 
+    public function test_rename_each_with_numeric_entry_names(): void
+    {
+        $rows = df()
+            ->read(from_rows(rows(
+                schema(str_schema('broker'), int_schema('2023'), int_schema('2024')),
+                row(['broker' => 'acme', '2023' => 1, '2024' => 2]),
+            )))
+            ->renameEach(rename_map(['2023' => 'y_2023', '2024' => 'y_2024']))
+            ->fetch();
+
+        static::assertEquals(
+            rows(
+                schema(str_schema('broker'), int_schema('y_2023'), int_schema('y_2024')),
+                row(['broker' => 'acme', 'y_2023' => 1, 'y_2024' => 2]),
+            ),
+            $rows,
+        );
+    }
+
     public function test_rename_all(): void
     {
         $rows = rows(

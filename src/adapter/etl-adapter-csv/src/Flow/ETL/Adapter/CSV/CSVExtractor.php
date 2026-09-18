@@ -32,6 +32,7 @@ use Generator;
 
 use function array_diff;
 use function array_keys;
+use function array_map;
 use function array_values;
 use function iterator_to_array;
 use function sprintf;
@@ -121,7 +122,10 @@ final class CSVExtractor implements
 
             foreach ($reader->batches($source, $batchSize) as $rawBatch) {
                 if ($columns === null) {
-                    $columns = array_values(array_diff(array_keys($rawBatch[0]->values), $tail));
+                    $columns = array_map(
+                        strval(...),
+                        array_values(array_diff(array_keys($rawBatch[0]->values), $tail)),
+                    );
 
                     if (
                         $this->schema === null
