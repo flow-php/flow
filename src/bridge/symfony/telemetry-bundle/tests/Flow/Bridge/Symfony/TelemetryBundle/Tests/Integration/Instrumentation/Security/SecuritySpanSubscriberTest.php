@@ -20,6 +20,7 @@ use Flow\Telemetry\Tracer\SpanKind;
 use Override;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
+use Symfony\Bundle\SecurityBundle\SecurityBundle;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\HttpFoundation\Request;
@@ -75,7 +76,7 @@ final class SecuritySpanSubscriberTest extends KernelTestCase
                 ]);
                 $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
                     $container
-                        ->setDefinition('security.token_storage', new Definition(TokenStorage::class))
+                        ->setDefinition('security.untracked_token_storage', new Definition(TokenStorage::class))
                         ->setPublic(true);
                     $container
                         ->setDefinition('test.user_attributes', new Definition(StaticUserAttributeProvider::class))
@@ -94,7 +95,7 @@ final class SecuritySpanSubscriberTest extends KernelTestCase
         ]));
 
         /** @var TokenStorageInterface $tokenStorage */
-        $tokenStorage = $container->get('security.token_storage');
+        $tokenStorage = $container->get('security.untracked_token_storage');
         $user = new TestSecurityUser('alice', 'alice@example.com', ['ROLE_USER', 'ROLE_ADMIN']);
         $tokenStorage->setToken(new UsernamePasswordToken($user, 'main', $user->getRoles()));
 
@@ -115,6 +116,58 @@ final class SecuritySpanSubscriberTest extends KernelTestCase
         static::assertSame('acme', $attributes['app.tenant_id']);
     }
 
+    public function test_does_not_make_a_public_response_private_behind_a_lazy_firewall(): void
+    {
+        $kernel = $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestBundle(FrameworkBundle::class);
+                $kernel->addTestBundle(SecurityBundle::class);
+                $kernel->addTestExtensionConfig('framework', [
+                    'router' => [
+                        'utf8' => true,
+                        'resource' => __DIR__ . '/../../../Fixtures/config/routes.php',
+                    ],
+                    'session' => [
+                        'enabled' => true,
+                        'storage_factory_id' => 'session.storage.factory.mock_file',
+                        'handler_id' => null,
+                        'cookie_secure' => 'auto',
+                        'cookie_samesite' => 'lax',
+                    ],
+                    'http_method_override' => false,
+                    'handle_all_throwables' => true,
+                ]);
+                $kernel->addTestExtensionConfig('security', [
+                    'providers' => ['in_memory' => ['memory' => ['users' => []]]],
+                    'firewalls' => ['main' => ['lazy' => true, 'provider' => 'in_memory']],
+                ]);
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
+                    'tracer_provider' => ['processor' => ['type' => 'memory', 'exporter' => 'memory']],
+                    'instrumentation' => [
+                        'http_kernel' => ['enabled' => true],
+                        'console' => ['enabled' => false],
+                        'messenger' => false,
+                        'security' => ['enabled' => true],
+                    ],
+                ]);
+            },
+        ]);
+
+        /** @var Router $router */
+        $router = $this->getContainer()->get('router');
+        $router->getRouteCollection()->add('test_cacheable', new Route('/cacheable', [
+            '_controller' => TestController::class . '::cacheable',
+        ]));
+
+        $request = Request::create('/cacheable', 'GET');
+        $response = $kernel->handle($request);
+        $kernel->terminate($request, $response);
+
+        static::assertSame('max-age=3600, public', $response->headers->get('Cache-Control'));
+    }
+
     public function test_decorates_request_span_on_login_success(): void
     {
         $this->bootKernel([
@@ -132,7 +185,7 @@ final class SecuritySpanSubscriberTest extends KernelTestCase
                 ]);
                 $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
                     $container
-                        ->setDefinition('security.token_storage', new Definition(TokenStorage::class))
+                        ->setDefinition('security.untracked_token_storage', new Definition(TokenStorage::class))
                         ->setPublic(true);
                 });
             },

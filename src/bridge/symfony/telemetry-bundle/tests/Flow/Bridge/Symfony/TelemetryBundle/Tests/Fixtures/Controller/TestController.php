@@ -11,6 +11,15 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class TestController
 {
+    public function cacheable(): Response
+    {
+        $response = new JsonResponse(['status' => 'ok']);
+        $response->setPublic();
+        $response->setMaxAge(3600);
+
+        return $response;
+    }
+
     public function error(): Response
     {
         return new JsonResponse(['error' => 'not found'], 404);

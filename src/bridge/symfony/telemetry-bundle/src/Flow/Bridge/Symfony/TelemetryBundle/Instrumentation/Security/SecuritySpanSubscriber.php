@@ -8,7 +8,6 @@ use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel\HttpKernelSpa
 use Flow\Telemetry\Tracer\Span;
 use SensitiveParameter;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
@@ -39,27 +38,36 @@ final readonly class SecuritySpanSubscriber implements EventSubscriberInterface
 
     public function onController(ControllerEvent $event): void
     {
+        // @mago-expect analysis:mixed-assignment
+        if (
+            !($span = $event->getRequest()->attributes->get(HttpKernelSpanSubscriber::SPAN_ATTRIBUTE)) instanceof Span
+        ) {
+            return;
+        }
+
         $token = $this->tokenStorage->getToken();
 
         if ($token === null) {
             return;
         }
 
-        $this->decorate($event->getRequest(), $token);
+        $this->decorate($span, $token);
     }
 
     public function onLoginSuccess(LoginSuccessEvent $event): void
     {
-        $this->decorate($event->getRequest(), $event->getAuthenticatedToken());
-    }
-
-    private function decorate(Request $request, #[SensitiveParameter] TokenInterface $token): void
-    {
         // @mago-expect analysis:mixed-assignment
-        if (!($span = $request->attributes->get(HttpKernelSpanSubscriber::SPAN_ATTRIBUTE)) instanceof Span) {
+        if (
+            !($span = $event->getRequest()->attributes->get(HttpKernelSpanSubscriber::SPAN_ATTRIBUTE)) instanceof Span
+        ) {
             return;
         }
 
+        $this->decorate($span, $event->getAuthenticatedToken());
+    }
+
+    private function decorate(Span $span, #[SensitiveParameter] TokenInterface $token): void
+    {
         foreach ($this->resolver->resolve($token) as $key => $value) {
             $span->setAttribute($key, $value);
         }

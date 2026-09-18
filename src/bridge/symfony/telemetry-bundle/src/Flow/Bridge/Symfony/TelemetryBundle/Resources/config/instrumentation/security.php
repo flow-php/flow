@@ -23,7 +23,7 @@ return static function (ContainerConfigurator $container): void {
     $services
         ->set('flow.telemetry.security.span_subscriber', SecuritySpanSubscriber::class)
         ->args([
-            service('security.token_storage'),
+            service('security.untracked_token_storage'),
             service('flow.telemetry.security.user_attribute_resolver'),
         ])
         ->tag('kernel.event_subscriber');
