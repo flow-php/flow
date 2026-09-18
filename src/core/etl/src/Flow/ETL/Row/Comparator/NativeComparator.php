@@ -9,11 +9,13 @@ use Flow\ETL\Row\Comparator;
 use Flow\ETL\Row\TypedValueComparator;
 use Flow\ETL\Schema;
 
+use function array_keys;
+
 final class NativeComparator implements Comparator
 {
     public function equals(Row $row, Row $nextRow, Schema $schema): bool
     {
-        if ($row->names() !== $nextRow->names()) {
+        if (array_keys($row->values()) !== array_keys($nextRow->values())) {
             return false;
         }
 

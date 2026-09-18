@@ -33,6 +33,10 @@ assert_rows_identical(php_decode_frames($frames), $actual);
 
 var_dump(array_map(fn($k) => gettype($k) . ':' . $k, array_keys($actual[0]->get('keys'))));
 var_dump($actual[0]->get('7'));
+// storage cannot hold '7' as a string key, so the decoded row must carry an int key -
+// this is the parity window: the Rust decoder has to coerce exactly as PHP does
+var_dump(array_keys($actual[0]->values()));
+// names() inverts that coercion, because the column name is the entry's identity
 var_dump($actual[0]->names());
 ?>
 --EXPECT--
@@ -53,6 +57,14 @@ array(3) {
   string(2) "id"
   [1]=>
   int(7)
+  [2]=>
+  string(4) "keys"
+}
+array(3) {
+  [0]=>
+  string(2) "id"
+  [1]=>
+  string(1) "7"
   [2]=>
   string(4) "keys"
 }
