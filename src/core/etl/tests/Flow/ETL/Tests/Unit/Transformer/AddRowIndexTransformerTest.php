@@ -8,6 +8,7 @@ use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformation\AddRowIndex\StartFrom;
 use Flow\ETL\Transformer\AddRowIndexTransformer;
+use PHPUnit\Framework\Attributes\TestWith;
 
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
@@ -49,6 +50,23 @@ final class AddRowIndexTransformerTest extends FlowTestCase
         static::assertSame(
             [['id' => 3, 'idx' => 2]],
             $transformer->transform(rows($schema, row(['id' => 3])), $context)->toArray(),
+        );
+    }
+
+    #[TestWith([StartFrom::ZERO, 0])]
+    #[TestWith([StartFrom::ONE, 1])]
+    public function test_a_fresh_instance_starts_counting_again(StartFrom $startFrom, int $first): void
+    {
+        $transformer = new AddRowIndexTransformer('idx', $startFrom);
+        $schema = schema(int_schema('id'));
+        $transformer->transform(rows($schema, row(['id' => 1]), row(['id' => 2])), flow_context());
+
+        $fresh = $transformer->fresh();
+
+        static::assertNotSame($transformer, $fresh);
+        static::assertSame(
+            [['id' => 1, 'idx' => $first]],
+            $fresh->transform(rows($schema, row(['id' => 1])), flow_context())->toArray(),
         );
     }
 

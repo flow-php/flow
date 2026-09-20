@@ -9,8 +9,6 @@ use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
-use Flow\ETL\Extractor\LimitPushDown;
-use Flow\ETL\Extractor\PushesLimit;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -36,10 +34,9 @@ use function random_bytes;
  *
  * Note: Requires a transaction context (auto-started if not in one).
  */
-final class PostgreSqlCursorExtractor implements BatchableExtractor, Extractor, LimitPushDown, RewindableExtractor
+final class PostgreSqlCursorExtractor implements BatchableExtractor, Extractor, RewindableExtractor
 {
     use Batches;
-    use PushesLimit;
 
     private ?string $cursorName = null;
 
@@ -68,7 +65,7 @@ final class PostgreSqlCursorExtractor implements BatchableExtractor, Extractor, 
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         $read = $this->read ??= ReadQuery::of($this->query, self::class);
 
@@ -89,12 +86,10 @@ final class PostgreSqlCursorExtractor implements BatchableExtractor, Extractor, 
         try {
             $this->client->execute($read->declareCursor($cursorName), $this->parameters);
             $declared = true;
-
-            $pushed = $this->pushedLimit();
             $maximum = match (true) {
-                $this->maximum !== null && $pushed !== null => min($this->maximum, $pushed),
+                $this->maximum !== null && $limit !== null => min($this->maximum, $limit),
                 $this->maximum !== null => $this->maximum,
-                default => $pushed,
+                default => $limit,
             };
             $yielded = 0;
 

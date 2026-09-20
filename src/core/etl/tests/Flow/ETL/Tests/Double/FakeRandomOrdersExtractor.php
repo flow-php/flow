@@ -71,7 +71,7 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
         );
     }
 
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         $schema = self::schema();
 

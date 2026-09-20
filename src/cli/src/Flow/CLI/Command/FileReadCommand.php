@@ -161,7 +161,7 @@ final class FileReadCommand extends Command
 
         $formatter = new AsciiTableFormatter();
 
-        $df->run(static function (Rows $rows) use ($style, $formatter, $outputTruncate): void {
+        $df->forEach(static function (Rows $rows) use ($style, $formatter, $outputTruncate): void {
             $style->write($formatter->format($rows, $outputTruncate));
         });
 

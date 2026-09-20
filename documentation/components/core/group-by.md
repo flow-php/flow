@@ -52,8 +52,8 @@ spilled to the local filesystem cache directory (as Floe files), so memory usage
 largest bucket instead of the whole grouped dataset. Other implementations are `MemoryBuckets`
 (buckets kept in memory) and `PSRCacheBuckets` (buckets in any PSR-16 cache).
 
-`groupBy()` and `aggregate()` each take an optional trailing `GroupByAlgorithmBuilder`, so one operation can
-override the configured algorithm:
+`groupBy()` takes an optional trailing `GroupByAlgorithmBuilder`, so one operation can override the configured
+algorithm:
 
 ```php ignore
 ->groupBy([ref('country')], hash_group_by()->storage(new MemoryBuckets()))

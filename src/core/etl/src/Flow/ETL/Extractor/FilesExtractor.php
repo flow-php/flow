@@ -12,6 +12,8 @@ use Flow\Filesystem\FileListing;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
+use Flow\Filesystem\Path\Filter;
+use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Generator;
 
 use function count;
@@ -21,13 +23,12 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function sprintf;
 
-final class FilesExtractor implements BatchableExtractor, Extractor, FileExtractor, LimitPushDown, RewindableExtractor
+final class FilesExtractor implements BatchableExtractor, Extractor, FileExtractor, RewindableExtractor
 {
     private ?Schema $schema = null;
 
     use Batches;
-    use PathFiltering;
-    use PushesLimit;
+    use ListingPartitions;
 
     private readonly Filesystem $filesystem;
 
@@ -56,17 +57,19 @@ final class FilesExtractor implements BatchableExtractor, Extractor, FileExtract
     /**
      * @return Generator<int, \Flow\ETL\Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
     {
         $batchSize = $this->batchSize();
+        $fileColumns = $this->fileColumns($this->filesystem, $this->path);
         $schema = $this->schema();
         $buffer = [];
         $yielded = 0;
 
-        foreach ((new FileListing($this->filesystem))->list($this->path, $this->filter()) as $fileStatus) {
+        foreach ((new FileListing($this->filesystem))->list($this->path, $pathFilter) as $fileStatus) {
+            $constants = $fileColumns->forFile(new SourceFile($fileStatus->path), $schema);
             $extension = $fileStatus->path->extension();
 
-            $buffer[] = [
+            $buffer[] = $constants->fill([
                 'path' => $fileStatus->path->path(),
                 'protocol' => $fileStatus->path->protocol(),
                 'file_name' => $fileStatus->path->filename(),
@@ -76,7 +79,7 @@ final class FilesExtractor implements BatchableExtractor, Extractor, FileExtract
                 // Path::extension() answers false for an extensionless file; the column is one
                 // type, so the absence is spelled null rather than a boolean in a string column.
                 'extension' => $extension === false ? null : $extension,
-            ];
+            ]);
 
             if (count($buffer) < $batchSize) {
                 continue;
@@ -92,8 +95,6 @@ final class FilesExtractor implements BatchableExtractor, Extractor, FileExtract
 
             $buffer = [];
 
-            $limit = $this->pushedLimit();
-
             if ($limit !== null && $yielded >= $limit) {
                 return;
             }
@@ -104,6 +105,11 @@ final class FilesExtractor implements BatchableExtractor, Extractor, FileExtract
         }
     }
 
+    public function partitionSchema(): Schema
+    {
+        return $this->fileColumns($this->filesystem, $this->path)->partitions($this->schema ?? new Schema());
+    }
+
     public function source(): Path
     {
         return $this->path;
@@ -111,11 +117,13 @@ final class FilesExtractor implements BatchableExtractor, Extractor, FileExtract
 
     public function schema(): Schema
     {
+        $fileColumns = $this->fileColumns($this->filesystem, $this->path);
+
         if ($this->schema !== null) {
-            return $this->schema;
+            return $fileColumns->declare($this->schema);
         }
 
-        return schema(
+        return $fileColumns->declare(schema(
             str_schema('path'),
             str_schema('protocol'),
             str_schema('file_name'),
@@ -123,7 +131,7 @@ final class FilesExtractor implements BatchableExtractor, Extractor, FileExtract
             bool_schema('is_file'),
             bool_schema('is_dir'),
             str_schema('extension', nullable: true),
-        );
+        ));
     }
 
     public function withSchema(Schema $schema): static

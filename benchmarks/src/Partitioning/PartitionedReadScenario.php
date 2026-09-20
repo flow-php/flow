@@ -27,12 +27,12 @@ final readonly class PartitionedReadScenario
         $frame = data_frame(BenchmarkConfig::builder())->read(from_csv($tree->glob()));
 
         if ($this->pruned) {
-            $frame = $frame->filterPartitions(ref($this->cardinality->column())->equals(lit($tree->firstValue())));
+            $frame = $frame->filter(ref($this->cardinality->column())->equals(lit($tree->firstValue())));
         }
 
         $rows = 0;
 
-        $frame->run(static function (Rows $batch) use (&$rows): void {
+        $frame->forEach(static function (Rows $batch) use (&$rows): void {
             $rows += $batch->count();
         });
 

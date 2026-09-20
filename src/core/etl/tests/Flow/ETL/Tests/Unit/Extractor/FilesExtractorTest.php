@@ -6,11 +6,14 @@ namespace Flow\ETL\Tests\Unit\Extractor;
 
 use Flow\ETL\Extractor\FilesExtractor;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Schema;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\files;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function iterator_to_array;
 
 final class FilesExtractorTest extends FlowTestCase
@@ -20,6 +23,41 @@ final class FilesExtractorTest extends FlowTestCase
         $batches = iterator_to_array(files(__DIR__ . '/Fixtures/ZeroExtension/*')->extract(flow_context()));
 
         static::assertSame('0', $batches[0]->first()->get('extension'));
+    }
+
+    public function test_partition_directories_become_string_columns(): void
+    {
+        $extractor = files(__DIR__
+        . '/../../Integration/DataFrame/Fixtures/Partitioning/multi_partition_pruning_test/**/*.txt');
+        $partitions = schema(str_schema('day'), str_schema('month'), str_schema('year'));
+
+        $first = iterator_to_array($extractor->extract(flow_context()), false)[0]->first();
+
+        static::assertEquals($partitions, $extractor->partitionSchema());
+        static::assertEquals($partitions, $extractor->schema()->keep('day', 'month', 'year'));
+        static::assertSame(['day' => '30', 'month' => '12', 'year' => '2022'], [
+            'day' => $first->get('day'),
+            'month' => $first->get('month'),
+            'year' => $first->get('year'),
+        ]);
+    }
+
+    public function test_a_listing_without_partition_directories_declares_no_partition_columns(): void
+    {
+        static::assertEquals(new Schema(), files(__DIR__ . '/Fixtures/FileListExtractor/*')->partitionSchema());
+    }
+
+    public function test_a_declared_schema_still_gets_the_partition_columns(): void
+    {
+        $extractor = files(__DIR__
+        . '/../../Integration/DataFrame/Fixtures/Partitioning/multi_partition_pruning_test/**/*.txt')->withSchema(schema(str_schema(
+            'path',
+        )));
+
+        static::assertEquals(
+            schema(str_schema('path'), str_schema('day'), str_schema('month'), str_schema('year')),
+            $extractor->schema(),
+        );
     }
 
     public function test_extracting_files_from_directory(): void
@@ -54,9 +92,8 @@ final class FilesExtractorTest extends FlowTestCase
     public function test_extracting_files_from_directory_with_limit(): void
     {
         $extractor = files(__DIR__ . '/Fixtures/FileListExtractor/**/*')->withBatchSize(1);
-        $extractor->pushLimit(2);
 
-        self::assertExtractedRowsCount(2, $extractor);
+        self::assertExtractedRowsCount(2, $extractor, limit: 2);
     }
 
     public function test_is_repeatable(): void

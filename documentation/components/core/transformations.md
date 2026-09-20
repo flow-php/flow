@@ -141,6 +141,10 @@ df()
     ->run();
 ```
 
+The index starts again on every run of the frame. A custom `Transformer` that keeps state between batches does the
+same by implementing `Flow\ETL\Transformer\Stateful`: its `fresh()` returns a new instance in its constructed state,
+and every run uses that instance.
+
 ### Limit
 
 Restrict the number of rows processed, useful for debugging or sampling data.
@@ -207,40 +211,33 @@ df()
     ->run();
 ```
 
-## Using with to_transformation Loader
+## Transformations as Sinks
 
-The `to_transformation` loader allows you to apply transformations as part of the loading phase, enabling complex ETL
-patterns:
+`to_transformation()` and `to_branch()` are sinks: each becomes its own root of the plan, fed the rows of the node it
+was written at, and planned and bound together with the rest of the frame.
 
 ```php
-use function Flow\ETL\DSL\{df, from_array, to_transformation, to_csv, select};
+use function Flow\ETL\DSL\{df, from_array, lit, ref, select, to_branch, to_csv, to_transformation};
 
-// Apply transformation before loading
 df()
     ->read(from_array([/* ... */]))
-    ->write(
-        to_transformation(
-            select('id', 'name'),      // Transform data
-            to_csv('output.csv')       // Then write to CSV
-        )
-    )
+    ->write(to_transformation(select('id', 'name'), to_csv('names.csv')))
+    ->write(to_branch(ref('active')->equals(lit(true)), to_csv('active.csv')))
     ->run();
 ```
 
-This pattern is particularly useful when you need to:
+A branch filters first; `withTransformation()`, called before `write()`, transforms what passed the condition. Sinks
+nest - wherever a sink takes a loader, it also takes another sink:
 
-- Apply different transformations to the same data for multiple outputs
-- Create transformation pipelines that can be reused
-- Separate transformation logic from extraction and loading
+```php
+to_branch(ref('active')->equals(lit(true)), to_csv('active.csv'))->withTransformation($sortById);
+to_branch(ref('active')->equals(lit(true)), to_transformation($sortById, to_csv('active.csv')));
+```
 
-The `Transformation` is expanded **once per loader instance**, on the first batch, and the nested pipeline is then
-driven a single time over the whole stream. Every operation inside it answers exactly as it does on the outer frame -
-`limit()` and `add_row_index()` apply across the stream, not per batch.
-
-`to_branch($condition, $loader, $transformation)` (or `->withTransformation($transformation)`, which replaces the one
-given to `to_branch()`) drives its `Transformation` the same way: the condition filters each batch first, and one
-nested pipeline then spans the whole filtered stream. The memory cost, chunk
-shape and failure behaviour below apply to it unchanged.
+The `Transformation` runs once per run over the whole stream it is fed, so `limit()` and `add_row_index()` apply across
+the stream, not per batch. A triggering verb (`fetch()`, `count()`, `schema()`, ...) inside it executes the prefix plan,
+as `from_data_frame()` executes a frame. `onError()` inside it throws `InvalidLogicException` at `write()` - set the
+error handler on the outer frame.
 
 ```php
 use Flow\ETL\{DataFrame, Transformation};
@@ -263,7 +260,7 @@ df()
 ### Memory Cost
 
 Correctness is the same everywhere; what differs between operations is how much they hold, and they hold it inside the
-loader. Three groups:
+sink. Three groups:
 
 | Cost                                   | Operations                                                                                                                                                      |
 |----------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -277,7 +274,7 @@ batch as it passes. They need the whole stream to answer correctly, not to accum
 
 ### Chunk Shape and Order
 
-`batch_size()`, `batchBy()` and `repartition()` change only which rows are grouped into the `Rows` handed to the wrapped
+`batch_size()`, `batchBy()` and `repartition()` change only which rows are grouped into the `Rows` handed to the sink's
 loader. No row is lost or mis-assigned.
 
 `repartition()` and `join()` also change the **order** the rows arrive in: both group their output by key rather than
@@ -287,27 +284,28 @@ emitting it in input order. `batchBy()` preserves input order and only cuts the 
 arrives together, so it belongs in the first group above, alongside `sortBy()` and `join()`. Writing one directory per
 key is a separate thing, declared on the loader: `to_csv(...)->partitionBy('region')`.
 
-To re-batch the pipeline itself rather than what reaches the wrapped loader, call `$df->batchSize(...)` on the frame.
+To re-batch the pipeline itself rather than what reaches the sink's loader, call `$df->batchSize(...)` on the frame.
 
 ### Failure Behaviour
 
-A failure inside a `Transformation` propagates out of the loader, and no loader in that segment is closed - exactly as a
-failing loader on an outer frame is never closed.
-
-`->onError(...)` on the outer frame governs that propagation the same way it does for a plain loader. When the handler
-declines to propagate, the run continues, later batches are processed through a fresh nested pipeline, and the wrapped
-loader is closed. A rebuilt pipeline starts empty: anything the previous one had accumulated is gone, and stateful
-operations such as `add_row_index()` restart their counters.
-
-The handler is **not** inherited by the nested pipeline, which always propagates. To make a failure between the
-transformation's own steps recoverable, set the handler inside it:
+A sink runs under the frame's `->onError(...)` handler, and each failure is offered to it exactly once:
 
 ```php
-$dataFrame->onError(ignore_error_handler())->with(/* ... */);
+df()
+    ->read(from_array([/* ... */]))
+    ->onError(skip_rows_handler())                // a failing step inside the sink skips that batch
+    ->write(to_transformation($sortById, to_csv('sorted.csv')))
+    ->run();
 ```
 
+A failing step inside the `Transformation` is a transformation failure - for a blocking operation the skipped batch is
+everything it had buffered. Under the default handler the failure propagates and no loader of the run is closed.
+
+A loader whose `closure()` fails is never offered to the handler: its own exception surfaces from `run()`.
+
 None of this is durability or atomicity: `closure()` both commits and closes, so a destination written up to the point
-of failure can be left behind.
+of failure can be left behind. For all-or-nothing batches wrap the sinks in a transaction -
+`to_dbal_transaction()`, `to_pgsql_transaction()`.
 
 ## Creating Custom Transformations
 

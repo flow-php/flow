@@ -11,6 +11,7 @@ use Flow\ETL\Dataset\Statistics\Columns;
 use Flow\ETL\Dataset\Statistics\HighResolutionTime;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Flow\ETL\Tests\Double\InlineLoader;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\ETL\Tests\Mother\MarketRowsMother;
 
@@ -34,13 +35,14 @@ final class AnalyzeTest extends FlowIntegrationTestCase
         $report = df($config)
             ->read(from_array(MarketRowsMother::fiveDays())->inferSchema(infer_schema()))
             ->collect()
-            ->run(static function (Rows $rows, FlowContext $context): void {
+            ->write(new InlineLoader(static function (Rows $rows, FlowContext $context): void {
                 $clock = $context->config->clock();
 
                 if ($clock instanceof FakeClock) {
                     $clock->modify('+5 minutes');
                 }
-            }, analyze()->withSchema()->withColumnStatistics());
+            }))
+            ->run(analyze: analyze()->withSchema()->withColumnStatistics());
 
         static::assertNotNull($report);
         static::assertSame(5, $report->statistics()->totalRows());
@@ -102,13 +104,14 @@ final class AnalyzeTest extends FlowIntegrationTestCase
         $report = df($config)
             ->read(from_array(MarketRowsMother::fiveDays())->inferSchema(infer_schema()))
             ->collect()
-            ->run(static function (Rows $rows, FlowContext $context): void {
+            ->write(new InlineLoader(static function (Rows $rows, FlowContext $context): void {
                 $clock = $context->config->clock();
 
                 if ($clock instanceof FakeClock) {
                     $clock->modify('+5 minutes');
                 }
-            }, analyze()->withSchema());
+            }))
+            ->run(analyze: analyze()->withSchema());
 
         static::assertNotNull($report);
         static::assertSame(5, $report->statistics()->totalRows());
@@ -136,13 +139,14 @@ final class AnalyzeTest extends FlowIntegrationTestCase
         $report = df($config)
             ->read(from_array(MarketRowsMother::fiveDays()))
             ->collect()
-            ->run(static function (Rows $rows, FlowContext $context): void {
+            ->write(new InlineLoader(static function (Rows $rows, FlowContext $context): void {
                 $clock = $context->config->clock();
 
                 if ($clock instanceof FakeClock) {
                     $clock->modify('+5 minutes');
                 }
-            }, analyze());
+            }))
+            ->run(analyze: analyze());
 
         static::assertNotNull($report);
         static::assertSame(5, $report->statistics()->totalRows());

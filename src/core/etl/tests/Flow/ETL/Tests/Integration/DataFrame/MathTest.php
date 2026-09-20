@@ -7,7 +7,6 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\analyze;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\from_rows;
@@ -38,9 +37,9 @@ final class MathTest extends FlowTestCase
                 row(['id' => 10, 'price' => 45.0, 'quantity' => 5, 'weight' => 3.0]),
             )))
             ->aggregate([sum(ref('price')), sum(ref('weight'))])
-            ->run(static function (Rows $r) use (&$rows): void {
+            ->forEach(static function (Rows $r) use (&$rows): void {
                 $rows = $rows->merge($r);
-            }, analyze: analyze()->withSchema());
+            });
 
         static::assertSame(
             [
@@ -69,9 +68,9 @@ final class MathTest extends FlowTestCase
             )))
             ->withEntry('discount', ref('price')->multiply(-0.1))
             ->withEntry('total_weight', ref('weight')->multiply(ref('quantity')))
-            ->run(static function (Rows $r) use (&$rows): void {
+            ->forEach(static function (Rows $r) use (&$rows): void {
                 $rows = $rows->merge($r);
-            }, analyze: analyze()->withSchema());
+            });
 
         static::assertEquals(
             [

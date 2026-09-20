@@ -19,9 +19,6 @@ use Flow\ETL\Transformer\PruneEntriesTransformer;
 
 use function array_values;
 
-/**
- * @internal
- */
 final readonly class GroupBySteps
 {
     /**

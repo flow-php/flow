@@ -29,7 +29,7 @@ $client->execute(
         ->column(column('customer', column_type_text())->notNull())
 );
 
-// both loaders share one Client, so both tables move in the same transaction - if the audit write
+// both sinks use the transaction's Client, so both tables move in the same transaction - if the audit write
 // fails, the orders rows roll back with it. A loader holding its own Client escapes the transaction.
 data_frame()
     ->read(from_csv(__DIR__ . '/data/orders.csv'))

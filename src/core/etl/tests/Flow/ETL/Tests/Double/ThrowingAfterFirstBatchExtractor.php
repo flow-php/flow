@@ -17,7 +17,7 @@ use function Flow\ETL\DSL\schema;
 
 final class ThrowingAfterFirstBatchExtractor implements Extractor
 {
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         yield rows($this->schema(), row(['id' => 1]));
 

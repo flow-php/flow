@@ -4,27 +4,31 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
+use Flow\ETL\BoundStep;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Transformation\AddRowIndex\StartFrom;
-use Flow\ETL\Transformer;
 use Throwable;
 
 use function Flow\ETL\DSL\int_schema;
 
-final class AddRowIndexTransformer implements Transformer
+final class AddRowIndexTransformer implements Stateful
 {
     private int $index;
 
     public function __construct(
         private readonly string $indexColumn,
-        StartFrom $startFrom,
+        private readonly StartFrom $startFrom,
     ) {
         $this->index = $startFrom === StartFrom::ZERO ? 0 : 1;
+    }
+
+    public function fresh(): self
+    {
+        return new self($this->indexColumn, $this->startFrom);
     }
 
     public function bind(Schema $input): BoundStep

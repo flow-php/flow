@@ -19,4 +19,15 @@ trait ResolvesFromChildren
 
         return true;
     }
+
+    public function deterministic(): bool
+    {
+        foreach ($this->children() as $child) {
+            if (!$child->deterministic()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

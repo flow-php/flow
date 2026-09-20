@@ -19,9 +19,9 @@ use Flow\ETL\Config\Sort\ExternalSortBuilder;
 use Flow\ETL\Config\Sort\SortAlgorithmBuilder;
 use Flow\ETL\Config\Telemetry\TelemetryConfig;
 use Flow\ETL\Config\Telemetry\TelemetryOptions;
+use Flow\ETL\Executor;
 use Flow\ETL\NativePHPRandomValueGenerator;
-use Flow\ETL\Pipeline\Optimizer;
-use Flow\ETL\Pipeline\Optimizer\LimitOptimization;
+use Flow\ETL\Optimizer;
 use Flow\ETL\RandomValueGenerator;
 use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Row\Hydrator;
@@ -57,6 +57,8 @@ final class ConfigBuilder
 
     private ?Optimizer $optimizer;
 
+    private ?Executor $executor;
+
     private readonly RandomValueGenerator $randomValueGenerator;
 
     private ?Serializer $serializer;
@@ -74,6 +76,7 @@ final class ConfigBuilder
         $this->serializer = null;
         $this->hydrator = null;
         $this->optimizer = null;
+        $this->executor = null;
         $this->clock = null;
         $this->cache = new CacheConfigBuilder();
         $this->groupBy = null;
@@ -98,13 +101,15 @@ final class ConfigBuilder
     public function build(): Config
     {
         $id = $this->id ??= 'flow-php-' . $this->randomValueGenerator->string(32);
-        $this->optimizer ??= new Optimizer(new LimitOptimization());
+        $this->optimizer ??= Optimizer::default();
+        $this->executor ??= new Executor();
         $this->hydrator ??= new AdaptiveRowHydrator();
         // the default serializer shares the context hydrator - one source of Row objects
         $this->serializer ??= new FloeSerializer(hydrator: $this->hydrator);
 
         $serializer = $this->serializer;
         $optimizer = $this->optimizer;
+        $executor = $this->executor;
         $hydrator = $this->hydrator;
         $dataframeName = $this->name ?? 'flow_dataframe';
 
@@ -117,6 +122,7 @@ final class ConfigBuilder
             $serializer,
             $this->getClock(),
             $optimizer,
+            $executor,
             $hydrator,
             $cacheConfig,
             ($this->sort ?? new ExternalSortBuilder())->build($cacheConfig->localFilesystemCacheDir),
@@ -191,6 +197,13 @@ final class ConfigBuilder
     public function optimizer(Optimizer $optimizer): self
     {
         $this->optimizer = $optimizer;
+
+        return $this;
+    }
+
+    public function executor(Executor $executor): self
+    {
+        $this->executor = $executor;
 
         return $this;
     }

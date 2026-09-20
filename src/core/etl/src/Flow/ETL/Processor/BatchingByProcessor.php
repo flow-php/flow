@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Processor;
 
+use Flow\ETL\BoundStep;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
@@ -22,8 +22,6 @@ use function count;
  *
  * Assumes data is pre-sorted by the batching column. When the column value changes,
  * a new batch is started.
- *
- * @internal
  */
 final readonly class BatchingByProcessor implements Processor
 {
@@ -33,8 +31,8 @@ final readonly class BatchingByProcessor implements Processor
      * @throws InvalidArgumentException
      */
     public function __construct(
-        private Reference $column,
-        private ?int $minSize = null,
+        public Reference $column,
+        public ?int $minSize = null,
     ) {
         // @mago-ignore analysis:invalid-operand,impossible-condition,redundant-comparison,redundant-logical-operation
         if ($this->minSize !== null && $this->minSize <= 0) {

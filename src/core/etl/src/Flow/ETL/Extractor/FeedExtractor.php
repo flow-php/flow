@@ -18,8 +18,6 @@ use Generator;
  * same resume that fed it and a late Signal::STOP still lands on a live yield.
  *
  * Must be driven from inside a Fiber - extract() calls Fiber::suspend().
- *
- * @internal
  */
 final class FeedExtractor implements Extractor
 {
@@ -34,7 +32,7 @@ final class FeedExtractor implements Extractor
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         while (true) {
             if ($this->batch === null) {

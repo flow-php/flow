@@ -11,6 +11,7 @@ use Flow\Filesystem\Partition;
 use Throwable;
 
 use function array_key_exists;
+use function array_keys;
 use function array_values;
 use function Flow\ETL\DSL\str_schema;
 use function sprintf;
@@ -42,6 +43,20 @@ final readonly class FileColumns
             $this->partitionNames,
             $this->partitionTypes,
         );
+    }
+
+    /**
+     * $declared carries a withSchema()d partition column's type; keep() drops the body columns it brings.
+     */
+    public function partitions(Schema $declared): Schema
+    {
+        if ($this->partitionNames === []) {
+            return new Schema();
+        }
+
+        return $this->partitionColumns
+            ->declare($declared, $this->partitionNames, $this->partitionTypes)
+            ->keep(...array_keys($this->partitionNames));
     }
 
     /**

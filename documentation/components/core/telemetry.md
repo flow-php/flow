@@ -199,12 +199,12 @@ $transport = otlp_grpc_transport(endpoint: 'localhost:4317');
 
 Every DataFrame execution creates a root span with the following attributes:
 
-| Attribute                             | Description                                   |
-|---------------------------------------|-----------------------------------------------|
-| `flow.etl.dataframe.id`               | Unique identifier for the DataFrame execution |
-| `flow.etl.dataframe.name`             | Configured DataFrame name                     |
-| `flow.etl.rows.total`                 | Total number of rows processed                |
-| `flow.etl.rows.throughput.per_second` | Processing throughput                         |
+| Attribute                             | Description                                      |
+|---------------------------------------|--------------------------------------------------|
+| `flow.etl.dataframe.id`               | Unique identifier for the DataFrame execution    |
+| `flow.etl.dataframe.name`             | Configured DataFrame name                        |
+| `flow.etl.rows.total`                 | Total number of rows processed                   |
+| `flow.etl.rows.throughput.per_second` | Processing throughput                            |
 | `flow.etl.memory.min`                 | Minimum memory consumption during execution (MB) |
 | `flow.etl.memory.max`                 | Maximum memory consumption during execution (MB) |
 
@@ -233,7 +233,7 @@ When `collect_metrics` is enabled:
 
 Structured logs are emitted at DEBUG level for pipeline events:
 
-- **Pipeline start** - Logged with configuration details (cache type, serializer, optimizers, spill storages)
+- **Pipeline start** - Logged with configuration details (cache type, serializer, optimizer rules, spill storages)
 - **Pipeline completion** - Logged with summary statistics (total rows, memory usage)
 - **Errors** - Logged at ERROR level with exception details
 
