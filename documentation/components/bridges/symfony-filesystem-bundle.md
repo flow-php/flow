@@ -252,7 +252,7 @@ flow_filesystem:
             region: '%env(AWS_REGION)%'
             access_key_id: '%env(AWS_ACCESS_KEY_ID)%'
             access_key_secret: '%env(AWS_SECRET_ACCESS_KEY)%'
-            endpoint: ~                # optional, MinIO/R2/Scaleway/LocalStack
+            endpoint: ~                # optional, RustFS/R2/Scaleway/LocalStack
             path_style_endpoint: false
             profile: ~
             debug: false

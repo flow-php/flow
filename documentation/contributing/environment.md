@@ -23,6 +23,19 @@ copy `.env.dist` to `.env` (gitignored) and set the shifted values there - `.env
 cp .env.dist .env
 ```
 
+> **Upgrading from an older checkout** - the local S3 service moved from MinIO to
+> [RustFS](https://rustfs.com/) (MinIO deleted its community images from Docker Hub) and the S3 credentials changed from
+> `minioadmin` to `flowphpaccess01` / `flowphpsecret01`. Refresh **both** files, otherwise every S3 request fails with
+> `SignatureDoesNotMatch`:
+>
+> ```shell
+> docker compose down -v
+> rm -rf var/minio
+> cp compose.yml.dist compose.yml
+> cp .env.dist .env          # or update S3_ACCESS_KEY_ID / S3_SECRET_ACCESS_KEY in your existing .env
+> docker compose up -d
+> ```
+
 > If you keep a personal gitignored `phpunit.xml`, regenerate it from `phpunit.xml.dist` after pulling this change: the
 > new `.dist` uses `bootstrap="bootstrap.php"` and no longer carries the `<php><env>` block (env now comes from `.env.dist`
 > / `.env`). A stale `phpunit.xml` keeps the old bootstrap and env, bypassing the shared config.

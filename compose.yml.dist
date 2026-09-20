@@ -60,31 +60,26 @@ services:
             - "6379:6379"
         networks:
             - flow-php
-    minio:
-        image: minio/minio:latest
-        container_name: flow-php-minio
-        command: server /data --console-address ":9001"
+    rustfs:
+        image: rustfs/rustfs:1.0.0
+        container_name: flow-php-rustfs
         ports:
             - "9000:9000"
             - "9001:9001"
         environment:
-            - MINIO_ROOT_USER=minioadmin
-            - MINIO_ROOT_PASSWORD=minioadmin
-        volumes:
-            - "./var/minio:/data"
-        networks:
-            - flow-php
-    minio-init:
-        image: minio/mc
-        container_name: flow-php-minio-init
-        depends_on:
-            - minio
-        entrypoint: >
-            /bin/sh -c "
-            until mc alias set flow http://minio:9000 minioadmin minioadmin; do sleep 1; done;
-            mc mb flow/flowphpbucket01 --ignore-existing;
-            exit 0;
-            "
+            - RUSTFS_ACCESS_KEY=flowphpaccess01
+            - RUSTFS_SECRET_KEY=flowphpsecret01
+            - RUSTFS_ADDRESS=:9000
+            - RUSTFS_CONSOLE_ENABLE=true
+            - RUSTFS_CONSOLE_ADDRESS=:9001
+            - RUSTFS_REGION=us-east-1
+            - RUSTFS_VOLUMES=/data
+        healthcheck:
+            test: ["CMD-SHELL", "curl -fs http://127.0.0.1:9000/health/ready || exit 1"]
+            interval: 5s
+            timeout: 3s
+            retries: 12
+            start_period: 20s
         networks:
             - flow-php
     sftp:
