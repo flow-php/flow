@@ -51,6 +51,14 @@ final class CallUserFunc implements ScalarFunction
     }
 
     /**
+     * A user callable may keep state or read the outside world, so it is never assumed to answer the same twice.
+     */
+    public function deterministic(): bool
+    {
+        return false;
+    }
+
+    /**
      * The callable leads the child list; string keys in the parameter bag become PHP named
      * arguments at call time, so the key list is carried as a field and restored here
      *

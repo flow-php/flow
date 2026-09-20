@@ -35,6 +35,11 @@ final class RandomString implements ScalarFunction
         return [$this->length];
     }
 
+    public function deterministic(): bool
+    {
+        return false;
+    }
+
     /**
      * @param list<FunctionTree> $children
      */

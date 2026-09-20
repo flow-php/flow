@@ -8,7 +8,6 @@ use Flow\Benchmarks\Datasets\Datasets;
 
 use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
 use function Flow\ETL\DSL\data_frame;
-use function Flow\ETL\DSL\write_with_retries;
 use function Flow\Floe\DSL\from_floe;
 
 final readonly class DoctrineWrappedWriteScenario
@@ -39,7 +38,7 @@ final readonly class DoctrineWrappedWriteScenario
         data_frame()
             ->read(from_floe(Datasets::orders($this->rows)->floe()))
             ->batchSize(1000)
-            ->write(write_with_retries(to_dbal_table_insert($connection, $this->table())))
+            ->write(to_dbal_table_insert($connection, $this->table()))
             ->run();
 
         $connection->close();

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Processor;
 
+use Flow\ETL\BoundStep;
 use Flow\ETL\Bucketing\Bucket;
 use Flow\ETL\Bucketing\BucketRun;
 use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\Bucketing\BucketShape;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
 use Flow\ETL\RandomValueGenerator;
 use Flow\ETL\Row\References;
@@ -29,12 +29,12 @@ final class MergeSortProcessor implements Processor
      * @param int<1, max> $batchSize
      */
     public function __construct(
-        private readonly References $refs,
-        private readonly Buckets $spill,
-        private readonly Buckets $merge,
+        public readonly References $refs,
+        public readonly Buckets $spill,
+        public readonly Buckets $merge,
         private readonly RandomValueGenerator $random,
-        private readonly int $mergeFanIn = 10,
-        private readonly int $batchSize = 1000,
+        public readonly int $mergeFanIn = 10,
+        public readonly int $batchSize = 1000,
     ) {
         // @mago-ignore analysis:invalid-operand
         // @mago-ignore analysis:impossible-condition,redundant-comparison

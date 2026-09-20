@@ -28,7 +28,7 @@ final class BatchExtractor implements BatchableExtractor, Extractor, OverridingE
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         // pinned from the declaration or the first child batch, then every later batch is matched to
         // it - a buffer spans child batches, so its rows must all answer to one schema before trusted()

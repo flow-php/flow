@@ -9,8 +9,6 @@ use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
-use Flow\ETL\Extractor\LimitPushDown;
-use Flow\ETL\Extractor\PushesLimit;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -24,10 +22,9 @@ use function ceil;
 use function count;
 use function min;
 
-final class PostgreSqlLimitOffsetExtractor implements BatchableExtractor, Extractor, LimitPushDown, RewindableExtractor
+final class PostgreSqlLimitOffsetExtractor implements BatchableExtractor, Extractor, RewindableExtractor
 {
     use Batches;
-    use PushesLimit;
 
     private ?int $maximum = null;
 
@@ -54,7 +51,7 @@ final class PostgreSqlLimitOffsetExtractor implements BatchableExtractor, Extrac
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         $read = $this->read ??= ReadQuery::of($this->query, self::class);
 
@@ -65,12 +62,10 @@ final class PostgreSqlLimitOffsetExtractor implements BatchableExtractor, Extrac
         }
 
         $schema = $this->schema();
-
-        $pushed = $this->pushedLimit();
         $maximum = match (true) {
-            $this->maximum !== null && $pushed !== null => min($this->maximum, $pushed),
+            $this->maximum !== null && $limit !== null => min($this->maximum, $limit),
             $this->maximum !== null => $this->maximum,
-            default => $pushed,
+            default => $limit,
         };
 
         $total = $maximum ?? $this->client->fetchScalarInt($read->count(), $this->parameters);

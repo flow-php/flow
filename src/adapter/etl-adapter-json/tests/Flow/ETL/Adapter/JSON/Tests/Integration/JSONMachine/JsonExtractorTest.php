@@ -184,9 +184,9 @@ final class JsonExtractorTest extends FlowTestCase
     public function test_limit(): void
     {
         $extractor = from_json(path(__DIR__ . '/../../Fixtures/timezones.json'));
-        $extractor->withBatchSize(1)->pushLimit(2);
+        $extractor->withBatchSize(1);
 
-        self::assertExtractedRowsCount(2, $extractor, flow_context(config()));
+        self::assertExtractedRowsCount(2, $extractor, flow_context(config()), limit: 2);
     }
 
     public function test_schema_appends_the_metadata_column(): void
@@ -516,8 +516,7 @@ final class JsonExtractorTest extends FlowTestCase
         }
 
         if ($mode === 'limit') {
-            $extractor->pushLimit(2);
-            iterator_to_array($extractor->extract(flow_context(config())));
+            iterator_to_array($extractor->extract(flow_context(config()), limit: 2));
         }
 
         if ($mode === 'stop') {

@@ -10,7 +10,7 @@ use Doctrine\DBAL\SQL\Parser\Visitor;
 use function implode;
 
 /**
- * @internal implements a DBAL-internal Visitor; use NativePlaceholders instead
+ * Implements a DBAL-internal Visitor; use NativePlaceholders instead.
  */
 final class PlaceholderRewriter implements Visitor
 {

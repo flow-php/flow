@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Processor;
 
+use Flow\ETL\BoundStep;
 use Flow\ETL\Constraint;
 use Flow\ETL\Exception\ConstraintViolationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
@@ -17,8 +17,6 @@ use Generator;
 
 /**
  * Validates constraints on each row.
- *
- * @internal
  */
 final class ConstrainedProcessor implements Processor
 {
@@ -30,7 +28,7 @@ final class ConstrainedProcessor implements Processor
      * @throws InvalidArgumentException
      */
     public function __construct(
-        private readonly array $constraints = [],
+        public readonly array $constraints = [],
     ) {
         foreach ($constraints as $constraint) {
             // @mago-ignore analysis:impossible-condition

@@ -5,12 +5,17 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use DateTimeImmutable;
-use Flow\ETL\Function\ScalarFunction;
+use Flow\ETL\Extractor;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Types\Exception\InvalidArgumentException;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 
+use function array_column;
 use function array_map;
+use function array_unique;
+use function array_values;
 use function file_exists;
 use function Flow\ETL\Adapter\Text\from_text;
 use function Flow\ETL\Adapter\Text\to_text;
@@ -51,14 +56,14 @@ final class PartitioningTest extends FlowIntegrationTestCase
             7,
             df()
                 ->read(from_text($glob))
-                ->filterPartitions(ref('year')->between(lit(2020), lit(2025)))
+                ->filter(ref('year')->between(lit(2020), lit(2025)))
                 ->fetch(),
         );
         static::assertCount(
             5,
             df()
                 ->read(from_text($glob))
-                ->filterPartitions(ref('year')->between(lit(2023), lit(2025)))
+                ->filter(ref('year')->between(lit(2023), lit(2025)))
                 ->fetch(),
         );
     }
@@ -70,20 +75,30 @@ final class PartitioningTest extends FlowIntegrationTestCase
             . '/Fixtures/Partitioning/multi_partition_pruning_test/year=*/month=*/day=*/*.txt')->partitionTypes(
                 partition_types(year: type_integer()),
             ))
-            ->filterPartitions(ref('year')->equals(lit(2023)))
+            ->filter(ref('year')->equals(lit(2023)))
             ->fetch();
 
         static::assertCount(5, $rows);
     }
 
-    public function test_a_partition_filter_on_an_extractor_without_partition_columns_is_not_gated(): void
+    #[DataProvider('file_listings')]
+    public function test_a_partition_filter_on_a_file_listing_prunes_it(Extractor $extractor): void
     {
-        // The same literal throws at bind on from_text(), which declares its partition columns
-        $glob = __DIR__ . '/Fixtures/Partitioning/multi_partition_pruning_test/**/*.txt';
-        $incomparable = static fn(): ScalarFunction => ref('year')->equals(lit(new DateTimeImmutable('2024-01-01')));
+        $rows = df()
+            ->read($extractor)
+            ->filter(ref('year')->equals(lit('2023')))
+            ->fetch();
 
-        static::assertCount(0, df()->read(from_path_partitions($glob))->filterPartitions($incomparable())->fetch());
-        static::assertCount(0, df()->read(files($glob))->filterPartitions($incomparable())->fetch());
+        static::assertCount(5, $rows);
+        static::assertSame(['2023'], array_values(array_unique(array_column($rows->toArray(), 'year'))));
+    }
+
+    public static function file_listings(): Generator
+    {
+        $glob = __DIR__ . '/Fixtures/Partitioning/multi_partition_pruning_test/**/*.txt';
+
+        yield 'from_path_partitions' => [from_path_partitions($glob)];
+        yield 'files' => [files($glob)];
     }
 
     public function test_a_partition_filter_with_an_incomparable_literal_is_refused_at_bind(): void
@@ -96,20 +111,21 @@ final class PartitioningTest extends FlowIntegrationTestCase
         df()
             ->read(from_text(__DIR__
             . '/Fixtures/Partitioning/multi_partition_pruning_test/year=*/month=*/day=*/*.txt'))
-            ->filterPartitions(ref('year')->equals(lit(new DateTimeImmutable('2024-01-01'))));
+            ->filter(ref('year')->equals(lit(new DateTimeImmutable('2024-01-01'))))
+            ->fetch();
     }
 
-    public function test_filter_partitions_rebinds(): void
+    public function test_pruning_keeps_the_source_schema(): void
     {
-        // "tier" is nullable while both paths are listed - only one of them carries it - and becomes
-        // NOT NULL once the filter leaves only the path that does
+        // "tier" is nullable because only one of the two listed paths carries it; pruning the read to
+        // that path does not change the schema - it is a property of the source, not of the read
         $df = df()->read(from_text(__DIR__ . '/Fixtures/Partitioning/rebind/**/*.txt'));
 
         static::assertTrue($df->schema()->get('tier')->isNullable());
 
-        $df->filterPartitions(ref('region')->equals(lit('eu')));
+        $df->filter(ref('region')->equals(lit('eu')));
 
-        static::assertFalse($df->schema()->get('tier')->isNullable());
+        static::assertTrue($df->schema()->get('tier')->isNullable());
         static::assertEquals($df->schema(), $df->fetch()->schema());
     }
 
@@ -151,6 +167,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
                             . ltrim(str_replace('\\', '/', __DIR__), '/')
                             . '/Fixtures/Partitioning/overwrite/date=2024-04-01/file.txt',
                     'partitions' => ['date' => '2024-04-01'],
+                    'date' => '2024-04-01',
                 ],
                 [
                     'path' =>
@@ -158,6 +175,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
                             . ltrim(str_replace('\\', '/', __DIR__), '/')
                             . '/Fixtures/Partitioning/overwrite/date=2024-04-02/file.txt',
                     'partitions' => ['date' => '2024-04-02'],
+                    'date' => '2024-04-02',
                 ],
                 [
                     'path' =>
@@ -165,6 +183,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
                             . ltrim(str_replace('\\', '/', __DIR__), '/')
                             . '/Fixtures/Partitioning/overwrite/date=2024-04-03/file.txt',
                     'partitions' => ['date' => '2024-04-03'],
+                    'date' => '2024-04-03',
                 ],
                 [
                     'path' =>
@@ -172,6 +191,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
                             . ltrim(str_replace('\\', '/', __DIR__), '/')
                             . '/Fixtures/Partitioning/overwrite/date=2024-04-04/file.txt',
                     'partitions' => ['date' => '2024-04-04'],
+                    'date' => '2024-04-04',
                 ],
             ],
             $actualData,
@@ -256,22 +276,25 @@ final class PartitioningTest extends FlowIntegrationTestCase
         static::assertFileExists($output . '/2024/03/789-DE.txt');
         static::assertFileExists($output . '/2025/01/555-FR.txt');
 
-        df()->read(from_text($output
-        . '/{order-year}/{order-month}/{order-name}.txt'))->run(function (Rows $rows): void {
-            // the placeholders put the values in the path, and the read takes them back from it
-            $this->assertSame(
-                ['text', 'order-month', 'order-name', 'order-year'],
-                $rows->schema()->references()->names(),
-            );
-        });
+        df()
+            ->read(from_text($output . '/{order-year}/{order-month}/{order-name}.txt'))
+            ->forEach(function (Rows $rows): void {
+                // the placeholders put the values in the path, and the read takes them back from it
+                $this->assertSame(
+                    ['text', 'order-month', 'order-name', 'order-year'],
+                    $rows->schema()->references()->names(),
+                );
+            });
 
-        df()->read(from_text($output . '/**/*.txt'))->run(function (Rows $rows): void {
-            $this->assertSame(['text'], $rows->schema()->references()->names());
-        });
+        df()
+            ->read(from_text($output . '/**/*.txt'))
+            ->forEach(function (Rows $rows): void {
+                $this->assertSame(['text'], $rows->schema()->references()->names());
+            });
 
         $prunedRows = df()
             ->read(from_text($output . '/{order-year}/{order-month}/{order-name}.txt'))
-            ->filterPartitions(ref('order-month')->equals(lit('01')))
+            ->filter(ref('order-month')->equals(lit('01')))
             ->fetch();
 
         static::assertCount(1, $prunedRows);
@@ -283,9 +306,9 @@ final class PartitioningTest extends FlowIntegrationTestCase
         $rows = df()
             ->read(from_text(__DIR__
             . '/Fixtures/Partitioning/multi_partition_pruning_test/year=*/month=*/day=*/*.txt'))
-            ->filterPartitions(ref('year')->cast('int')->greaterThanEqual(lit(2023)))
-            ->filterPartitions(ref('month')->cast('int')->greaterThanEqual(lit(1)))
-            ->filterPartitions(ref('day')->cast('int')->lessThan(lit(3)))
+            ->filter(ref('year')->cast('int')->greaterThanEqual(lit(2023)))
+            ->filter(ref('month')->cast('int')->greaterThanEqual(lit(1)))
+            ->filter(ref('day')->cast('int')->lessThan(lit(3)))
             ->filter(ref('text')->notEquals(lit('something')))
             ->withEntry('day', ref('day')->cast('int'))
             ->collect()
@@ -297,12 +320,36 @@ final class PartitioningTest extends FlowIntegrationTestCase
         static::assertSame([1, 2], $days);
     }
 
+    public function test_a_mixed_predicate_prunes_on_its_partition_conjunct_and_still_filters_rows(): void
+    {
+        $glob = __DIR__ . '/Fixtures/Partitioning/multi_partition_pruning_test/year=*/month=*/day=*/*.txt';
+
+        static::assertSame(
+            df()
+                ->read(from_text($glob))
+                ->filter(ref('year')->cast('int')->greaterThanEqual(lit(2023)))
+                ->filter(ref('text')->notEquals(lit('something')))
+                ->fetch()
+                ->toArray(),
+            df()
+                ->read(from_text($glob))
+                ->filter(
+                    ref('year')
+                        ->cast('int')
+                        ->greaterThanEqual(lit(2023))
+                        ->and(ref('text')->notEquals(lit('something'))),
+                )
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
     public function test_pruning_single_partition(): void
     {
         $rows = df()
             ->read(from_text(__DIR__
             . '/Fixtures/Partitioning/multi_partition_pruning_test/year=*/month=*/day=*/*.txt'))
-            ->filterPartitions(
+            ->filter(
                 ref('year')
                     ->cast('string')
                     ->concat(

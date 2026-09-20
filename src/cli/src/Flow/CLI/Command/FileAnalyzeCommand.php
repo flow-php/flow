@@ -15,12 +15,12 @@ use Flow\CLI\Command\Traits\StatisticsOptions;
 use Flow\CLI\Command\Traits\XMLOptions;
 use Flow\CLI\Factory\ExtractorFactory;
 use Flow\CLI\Formatter\PipelineReportFormatter;
+use Flow\CLI\Loader\ProgressBarLoader;
 use Flow\CLI\Options\ConfigOption;
 use Flow\CLI\Options\FileFormat;
 use Flow\CLI\Options\FileFormatOption;
 use Flow\CLI\Style\FlowStyle;
 use Flow\ETL\Config;
-use Flow\ETL\Rows;
 use Flow\Filesystem\Path;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -157,9 +157,7 @@ final class FileAnalyzeCommand extends Command
             $analyze->withSchema()->withColumnStatistics();
         }
 
-        $report = $df->run(static function (Rows $rows) use ($progress): void {
-            $progress->advance($rows->count());
-        }, analyze: $analyze);
+        $report = $df->write(new ProgressBarLoader($progress))->run(analyze: $analyze);
 
         $progress->finish();
 

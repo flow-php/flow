@@ -11,9 +11,7 @@ use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\FileReading;
 use Flow\ETL\Extractor\InfersSchema;
-use Flow\ETL\Extractor\LimitPushDown;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
-use Flow\ETL\Extractor\PushesLimit;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -26,6 +24,8 @@ use Flow\ETL\Schema\Inference\SchemaInferrer;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
+use Flow\Filesystem\Path\Filter;
+use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Flow\Types\Type\Logical\InstanceOfTypeNarrower;
 use Generator;
 
@@ -37,12 +37,10 @@ final class JsonLinesExtractor implements
     Extractor,
     FileExtractor,
     InfersSchema,
-    LimitPushDown,
     MetadataColumnsExtractor,
     RewindableExtractor
 {
     use Batches;
-    use PushesLimit;
     use FileReading;
 
     private SchemaInference $inference;
@@ -81,13 +79,13 @@ final class JsonLinesExtractor implements
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
     {
         $hydrator = $context->hydrator();
         $batchSize = $this->batchSize();
         $yielded = 0;
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
-        $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path), false);
+        $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $pathFilter), false);
         $reader = new JsonFileReader(
             $this->filesystem,
             JsonFormat::Lines,
@@ -136,8 +134,6 @@ final class JsonLinesExtractor implements
                     return;
                 }
 
-                $limit = $this->pushedLimit();
-
                 if ($limit !== null && $yielded >= $limit) {
                     return;
                 }
@@ -181,6 +177,11 @@ final class JsonLinesExtractor implements
         }
 
         return $fileColumns->declare($fileColumns->withoutTail($derived));
+    }
+
+    public function partitionSchema(): Schema
+    {
+        return $this->fileColumns($this->filesystem, $this->path)->partitions($this->schema ?? new Schema());
     }
 
     public function source(): Path

@@ -8,6 +8,7 @@ use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Logging\Middleware;
 use Doctrine\DBAL\Tools\DsnParser;
+use Flow\ETL\Adapter\Doctrine\Tests\Context\CommitCounter;
 use Flow\ETL\Adapter\Doctrine\Tests\Context\DatabaseContext;
 use Flow\ETL\Adapter\Doctrine\Tests\Context\InsertQueryCounter;
 use Flow\ETL\Adapter\Doctrine\Tests\Context\SelectQueryCounter;
@@ -32,15 +33,18 @@ abstract class IntegrationTestCase extends FlowTestCase
     {
         $insertQueryCounter = new InsertQueryCounter();
         $selectQueryCounter = new SelectQueryCounter();
+        $commitCounter = new CommitCounter();
 
         $pgsqlParams = $this->postgresqlConnectionParams();
         $this->pgsqlDatabaseContext = new DatabaseContext(
             DriverManager::getConnection($pgsqlParams, (new Configuration())->setMiddlewares([
                 new Middleware($insertQueryCounter),
                 new Middleware($selectQueryCounter),
+                new Middleware($commitCounter),
             ])),
             $insertQueryCounter,
             $selectQueryCounter,
+            $commitCounter,
         );
 
         $mysqlParams = $this->mysqlConnectionParams();
@@ -48,9 +52,11 @@ abstract class IntegrationTestCase extends FlowTestCase
             DriverManager::getConnection($mysqlParams, (new Configuration())->setMiddlewares([
                 new Middleware($insertQueryCounter),
                 new Middleware($selectQueryCounter),
+                new Middleware($commitCounter),
             ])),
             $insertQueryCounter,
             $selectQueryCounter,
+            $commitCounter,
         );
 
         $sqliteParams = $this->sqliteConnectionParams();
@@ -58,9 +64,11 @@ abstract class IntegrationTestCase extends FlowTestCase
             DriverManager::getConnection($sqliteParams, (new Configuration())->setMiddlewares([
                 new Middleware($insertQueryCounter),
                 new Middleware($selectQueryCounter),
+                new Middleware($commitCounter),
             ])),
             $insertQueryCounter,
             $selectQueryCounter,
+            $commitCounter,
         );
     }
 

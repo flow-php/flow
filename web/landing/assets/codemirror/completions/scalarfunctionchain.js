@@ -1,8 +1,8 @@
 /**
  * CodeMirror Completer for Flow PHP ScalarFunctionChain Methods
  *
- * ScalarFunctionChain methods: 127
- * ScalarFunctionChain-returning functions: 55
+ * ScalarFunctionChain methods: 128
+ * ScalarFunctionChain-returning functions: 59
  *
  * This completer triggers after ScalarFunctionChain-returning DSL functions
  */
@@ -11,7 +11,7 @@ import { CompletionContext, snippet } from "@codemirror/autocomplete"
 
 // DSL functions that return ScalarFunctionChain (have scalar_function_chain: true)
 const scalarFunctionChainFunctions = [
-    "col", "entry", "ref", "optional", "lit", "exists", "when", "array_get", "array_get_collection", "array_get_collection_first", "array_exists", "array_merge", "array_merge_collection", "array_key_rename", "array_keys_style_convert", "array_sort", "array_reverse", "now", "between", "to_date_time", "to_date", "date_time_format", "split", "combine", "concat", "concat_ws", "hash", "cast", "coalesce", "enum_name", "enum_value", "call", "array_unpack", "array_expand", "size", "uuid_v4", "uuid_v7", "ulid", "lower", "capitalize", "upper", "not", "to_timezone", "regex_replace", "regex_match_all", "regex_match", "regex", "regex_all", "sprintf", "sanitize", "round", "number_format", "greatest", "least", "match_cases"]
+    "col", "entry", "ref", "structure", "optional", "lit", "exists", "when", "structure_get", "array_get", "structure_get_collection", "array_get_collection", "structure_get_collection_first", "array_get_collection_first", "array_exists", "array_merge", "array_merge_collection", "array_key_rename", "array_keys_style_convert", "array_sort", "array_reverse", "now", "between", "to_date_time", "to_date", "date_time_format", "split", "combine", "concat", "concat_ws", "hash", "cast", "coalesce", "enum_name", "enum_value", "call", "array_unpack", "array_expand", "size", "uuid_v4", "uuid_v7", "ulid", "lower", "capitalize", "upper", "not", "to_timezone", "regex_replace", "regex_match_all", "regex_match", "regex", "regex_all", "sprintf", "sanitize", "round", "number_format", "greatest", "least", "match_cases"]
 
 // ScalarFunctionChain methods
 const scalarFunctionChainMethods = [
@@ -728,7 +728,7 @@ const scalarFunctionChainMethods = [
                     <span class=\"fn-name\">expand</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ArrayExpand</span> <span class=\"fn-param\">$expand</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Function\\ArrayExpand\\ArrayExpand::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayExpand</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Expands each value into entry, if there are more than one value, multiple rows will be created.<br>Array keys are ignored, only values are used to create new rows.<br>Before:<br>  +--+-------------------+<br>  |id|              array|<br>  +--+-------------------+<br>  | 1|{\"a\":1,\"b\":2,\"c\":3}|<br>  +--+-------------------+<br>After:<br>  +--+--------+<br>  |id|expanded|<br>  +--+--------+<br>  | 1|       1|<br>  | 1|       2|<br>  | 1|       3|<br>  +--+--------+
+                    Expands each value into entry, if there are more than one value, multiple rows will be created.<br>Array keys are ignored, only values are used to create new rows.<br>Nested in another function (structure(), concat(), ...) it still gives one row per element. Several<br>expands in one expression are zipped to the longest list; a shorter one gives null, so its element<br>type becomes nullable. It is refused inside another array_expand() and in filter(), until(),<br>duplicateRow(), aggregate(), over() and onEach().<br>Before:<br>  +--+-------------------+<br>  |id|              array|<br>  +--+-------------------+<br>  | 1|{\"a\":1,\"b\":2,\"c\":3}|<br>  +--+-------------------+<br>After:<br>  +--+--------+<br>  |id|expanded|<br>  +--+--------+<br>  | 1|       1|<br>  | 1|       2|<br>  | 1|       3|<br>  +--+--------+
                 </div>
                             `
             return div
@@ -2006,6 +2006,21 @@ const scalarFunctionChainMethods = [
             return div
         },
         apply: snippet("resolved()"),
+        boost: 10
+    },                {
+        label: "deterministic",
+        type: "method",
+        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">deterministic</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">bool</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("deterministic()"),
         boost: 10
     }    ]
 

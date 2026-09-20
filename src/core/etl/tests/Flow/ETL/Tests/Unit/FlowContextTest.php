@@ -6,6 +6,8 @@ namespace Flow\ETL\Tests\Unit;
 
 use Flow\Calculator\Calculator;
 use Flow\ETL\Config;
+use Flow\ETL\ErrorHandler\IgnoreError;
+use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\FilesystemTable;
@@ -20,12 +22,43 @@ use function Flow\ETL\DSL\flow_context;
 
 final class FlowContextTest extends FlowTestCase
 {
+    public function test_with_error_handler_shares_the_telemetry_built_before(): void
+    {
+        $outer = flow_context(config());
+        $telemetry = $outer->telemetry();
+
+        static::assertSame($telemetry, $outer->withErrorHandler(new ThrowError())->telemetry());
+    }
+
+    public function test_with_error_handler_builds_the_telemetry_it_shares(): void
+    {
+        $outer = flow_context(config());
+
+        $derived = $outer->withErrorHandler(new ThrowError());
+
+        static::assertSame($outer->telemetry(), $derived->telemetry());
+    }
+
+    public function test_with_error_handler_returns_a_new_context_and_leaves_this_one_alone(): void
+    {
+        $outer = flow_context(config());
+        $original = $outer->errorHandler();
+        $handler = new IgnoreError();
+
+        $derived = $outer->withErrorHandler($handler);
+
+        static::assertNotSame($outer, $derived);
+        static::assertSame($handler, $derived->errorHandler());
+        static::assertSame($outer->config, $derived->config);
+        static::assertSame($original, $outer->errorHandler());
+    }
+
     public function test_config_constructor_takes_no_filesystem_table(): void
     {
         $constructor = (new ReflectionClass(Config::class))->getConstructor();
 
         static::assertNotNull($constructor);
-        static::assertCount(16, $constructor->getParameters());
+        static::assertCount(17, $constructor->getParameters());
         static::assertSame(
             [],
             array_filter(
@@ -46,6 +79,7 @@ final class FlowContextTest extends FlowTestCase
                 'errorHandler',
                 'hydrator',
                 'setErrorHandler',
+                'withErrorHandler',
                 'telemetry',
             ],
             array_map(

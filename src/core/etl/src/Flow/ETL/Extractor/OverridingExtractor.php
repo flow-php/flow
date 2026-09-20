@@ -7,10 +7,10 @@ namespace Flow\ETL\Extractor;
 use Flow\ETL\Extractor;
 
 /**
- * Extractors implementing OverridingExtractor interface overrides one or more extractors.
- * This interface is required by Execution Plan / Optimizer to fully understand execution plan.
+ * A wrapper exposes the extractors it reads so Repeatability can answer for it. The planner does not
+ * descend through a wrapper: a wrapped source receives no pushed limit and no path filter.
  *
- * Examples: ChainLoader
+ * Examples: ChainExtractor, BatchExtractor
  */
 interface OverridingExtractor
 {

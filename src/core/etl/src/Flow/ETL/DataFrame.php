@@ -10,30 +10,19 @@ use Flow\ETL\Config\Sort\SortAlgorithmBuilder;
 use Flow\ETL\DataFrame\GroupedDataFrame;
 use Flow\ETL\Dataset\Report;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
-use Flow\ETL\Execution\StatisticsCollector;
-use Flow\ETL\Extractor\FileExtractor;
-use Flow\ETL\Filesystem\ScalarFunctionFilter;
+use Flow\ETL\Executor\StatisticsCollector;
 use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Function\AggregatingFunction;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Function\WindowFunction;
-use Flow\ETL\GroupBy\GroupBySteps;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
-use Flow\ETL\Join\JoinSteps;
-use Flow\ETL\Loader\SchemaValidationLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
-use Flow\ETL\Processor\BatchingByProcessor;
-use Flow\ETL\Processor\BatchingProcessor;
-use Flow\ETL\Processor\CachingProcessor;
-use Flow\ETL\Processor\CollectingProcessor;
-use Flow\ETL\Processor\ConstrainedProcessor;
-use Flow\ETL\Processor\OffsetProcessor;
-use Flow\ETL\Processor\VoidProcessor;
-use Flow\ETL\Processor\WindowProcessor;
-use Flow\ETL\Repartition\RepartitionSteps;
+use Flow\ETL\Plan\Node;
+use Flow\ETL\Plan\Sinks;
+use Flow\ETL\Plan\Trigger;
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
@@ -41,27 +30,11 @@ use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\SchemaFormatter;
 use Flow\ETL\Schema\Validator\StrictValidator;
-use Flow\ETL\Sort\SortSteps;
-use Flow\ETL\Transformer\CollectReferencesTransformer;
-use Flow\ETL\Transformer\CrossJoinRowsTransformer;
-use Flow\ETL\Transformer\DropDuplicatesTransformer;
-use Flow\ETL\Transformer\DropEntriesTransformer;
-use Flow\ETL\Transformer\DuplicateRowTransformer;
-use Flow\ETL\Transformer\JoinEachRowsTransformer;
-use Flow\ETL\Transformer\LimitTransformer;
 use Flow\ETL\Transformer\Rename\RenameEntryStrategy;
-use Flow\ETL\Transformer\RenameEachEntryTransformer;
-use Flow\ETL\Transformer\RenameEntryTransformer;
-use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
-use Flow\ETL\Transformer\ScalarFunctionTransformer;
-use Flow\ETL\Transformer\SelectEntriesTransformer;
-use Flow\ETL\Transformer\UntilTransformer;
-use Flow\Filesystem\Path\Filter;
 use Generator;
-use Throwable;
 
-use function array_merge;
 use function array_unshift;
+use function array_values;
 use function count;
 use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\to_output;
@@ -76,12 +49,18 @@ final class DataFrame
 {
     private readonly FlowContext $context;
 
-    public function __construct(
-        private Pipeline $pipeline,
-        Config|FlowContext $context,
-    ) {
+    private readonly Extractor $extractor;
+
+    private Node $root;
+
+    private Sinks $sinks;
+
+    public function __construct(Extractor $extractor, Config|FlowContext $context)
+    {
         $this->context = $context instanceof FlowContext ? $context : new FlowContext($context);
-        $this->context->telemetry()->dataFrameStarted($this->context);
+        $this->extractor = $extractor;
+        $this->root = new Node\Read($extractor);
+        $this->sinks = new Sinks();
     }
 
     /**
@@ -95,8 +74,7 @@ final class DataFrame
     {
         $groupBy = new GroupBy();
         $groupBy->aggregate(...$aggregations);
-
-        $this->registerGroupBy($groupBy, $algorithm);
+        $this->root = new Node\Aggregate($this->root, $groupBy, $algorithm);
 
         return $this;
     }
@@ -118,7 +96,7 @@ final class DataFrame
      */
     public function batchBy(string|Reference $column, ?int $minSize = null): self
     {
-        $this->pipeline->add(new BatchingByProcessor(UnresolvedReference::init($column), $minSize));
+        $this->root = new Node\BatchBy($this->root, UnresolvedReference::init($column), $minSize);
 
         return $this;
     }
@@ -146,7 +124,7 @@ final class DataFrame
             return $this->collect();
         }
 
-        $this->pipeline->add(new BatchingProcessor($size));
+        $this->root = new Node\Batch($this->root, $size);
 
         return $this;
     }
@@ -174,11 +152,7 @@ final class DataFrame
             throw new InvalidArgumentException('Cache batch size must be greater than 0');
         }
 
-        if ($cacheBatchSize) {
-            $this->pipeline->add(new BatchingProcessor($cacheBatchSize));
-        }
-
-        $this->pipeline->add(new CachingProcessor($id, $cache));
+        $this->root = new Node\Cache($this->root, $id, $cacheBatchSize, $cache);
 
         return $this;
     }
@@ -191,7 +165,7 @@ final class DataFrame
      */
     public function collect(): self
     {
-        $this->pipeline->add(new CollectingProcessor());
+        $this->root = new Node\Collect($this->root);
 
         return $this;
     }
@@ -210,16 +184,14 @@ final class DataFrame
      */
     public function collectRefs(References $references): self
     {
-        $this->with(new CollectReferencesTransformer($references));
+        $this->root = new Node\CollectRefs($this->root, $references);
 
         return $this;
     }
 
     public function constrain(Constraint $constraint, Constraint ...$constraints): self
     {
-        $constraints = array_merge([$constraint], $constraints);
-
-        $this->pipeline->add(new ConstrainedProcessor($constraints));
+        $this->root = new Node\Constrain($this->root, [$constraint, ...$constraints]);
 
         return $this;
     }
@@ -232,15 +204,13 @@ final class DataFrame
     {
         $total = 0;
 
-        try {
-            foreach ($this->pipeline->process($this->context) as $rows) {
-                $total += $rows->count();
-            }
-            $this->context->telemetry()->dataFrameCompleted($this->context);
-        } catch (Throwable $e) {
-            $this->context->telemetry()->dataFrameFailed($this->context, $e);
-
-            throw $e;
+        foreach ($this->context
+            ->config
+            ->executor()
+            ->execute(
+                $this->context->config->planner()->plan(Trigger::rows->plan($this->root, $this->sinks), $this->context),
+            ) as $rows) {
+            $total += $rows->count();
         }
 
         return $total;
@@ -251,7 +221,7 @@ final class DataFrame
      */
     public function crossJoin(self $dataFrame, string $prefix = ''): self
     {
-        $this->pipeline->add(new CrossJoinRowsTransformer($dataFrame, $prefix));
+        $this->root = new Node\CrossJoin($this->root, $dataFrame->explain(Trigger::rows)->logical->root, $prefix);
 
         return $this;
     }
@@ -276,15 +246,13 @@ final class DataFrame
 
         $output = '';
 
-        try {
-            foreach ($this->pipeline->process($this->context) as $rows) {
-                $output .= $formatter->format($rows, $truncate);
-            }
-            $this->context->telemetry()->dataFrameCompleted($this->context);
-        } catch (Throwable $e) {
-            $this->context->telemetry()->dataFrameFailed($this->context, $e);
-
-            throw $e;
+        foreach ($this->context
+            ->config
+            ->executor()
+            ->execute(
+                $this->context->config->planner()->plan(Trigger::rows->plan($this->root, $this->sinks), $this->context),
+            ) as $rows) {
+            $output .= $formatter->format($rows, $truncate);
         }
 
         return $output;
@@ -297,7 +265,7 @@ final class DataFrame
      */
     public function drop(string|Reference ...$entries): self
     {
-        $this->pipeline->add(new DropEntriesTransformer(...$entries));
+        $this->root = new Node\Drop($this->root, array_values($entries));
 
         return $this;
     }
@@ -311,14 +279,14 @@ final class DataFrame
      */
     public function dropDuplicates(string|Reference ...$entries): self
     {
-        $this->pipeline->add(new DropDuplicatesTransformer(...$entries));
+        $this->root = new Node\Distinct($this->root, array_values($entries));
 
         return $this;
     }
 
     public function duplicateRow(mixed $condition, WithEntry ...$entries): self
     {
-        $this->pipeline->add(new DuplicateRowTransformer($condition, ...$entries));
+        $this->root = new Node\DuplicateRow($this->root, $condition, array_values($entries));
 
         return $this;
     }
@@ -342,26 +310,12 @@ final class DataFrame
             $this->limit($limit);
         }
 
-        $rows = null;
-
-        try {
-            foreach ($this->pipeline->process($this->context) as $nextRows) {
-                $rows = $rows === null ? $nextRows : $rows->merge($nextRows);
-            }
-            $this->context->telemetry()->dataFrameCompleted($this->context);
-        } catch (Throwable $e) {
-            $this->context->telemetry()->dataFrameFailed($this->context, $e);
-
-            throw $e;
-        }
-
-        if ($rows !== null) {
-            return $rows;
-        }
-
-        // the plan already describes what it would have produced; only a plan the bind refused has
-        // nothing to answer with
-        return new Rows($this->pipeline->boundOrNull()->schema ?? new Schema());
+        return $this->context
+            ->config
+            ->executor()
+            ->fetch(
+                $this->context->config->planner()->plan(Trigger::rows->plan($this->root, $this->sinks), $this->context),
+            );
     }
 
     /**
@@ -369,43 +323,7 @@ final class DataFrame
      */
     public function filter(ScalarFunction $function): self
     {
-        $this->pipeline->add(new ScalarFunctionFilterTransformer($function));
-
-        return $this;
-    }
-
-    /**
-     * @internal engine paths only - a build-time scan has to know whether the source can be read twice
-     */
-    public function extractor(): Extractor
-    {
-        return $this->pipeline->extractor();
-    }
-
-    /**
-     * @lazy
-     *
-     * @throws RuntimeException
-     */
-    public function filterPartitions(Filter|ScalarFunction $filter): self
-    {
-        $extractor = $this->pipeline->extractor();
-
-        if (!$extractor instanceof FileExtractor) {
-            throw new RuntimeException(
-                'filterPartitions can be used only with extractors that implement FileExtractor interface',
-            );
-        }
-
-        if ($filter instanceof Filter) {
-            $extractor->withPathFilter($filter);
-            $this->pipeline->invalidateBind();
-
-            return $this;
-        }
-
-        $extractor->withPathFilter(new ScalarFunctionFilter($filter, $extractor->schema(), $this->context));
-        $this->pipeline->invalidateBind();
+        $this->root = new Node\Filter($this->root, $function);
 
         return $this;
     }
@@ -427,11 +345,20 @@ final class DataFrame
     /**
      * @trigger
      *
-     * @param null|callable(Rows $rows) : void $callback
+     * @param null|callable(Rows $rows, FlowContext $context) : void $callback
      */
     public function forEach(?callable $callback = null): void
     {
-        $this->run($callback);
+        foreach ($this->context
+            ->config
+            ->executor()
+            ->execute(
+                $this->context->config->planner()->plan(Trigger::rows->plan($this->root, $this->sinks), $this->context),
+            ) as $rows) {
+            if ($callback !== null) {
+                $callback($rows, $this->context);
+            }
+        }
     }
 
     /**
@@ -443,15 +370,13 @@ final class DataFrame
      */
     public function get(): Generator
     {
-        try {
-            foreach ($this->pipeline->process($this->context) as $rows) {
-                yield $rows;
-            }
-            $this->context->telemetry()->dataFrameCompleted($this->context);
-        } catch (Throwable $e) {
-            $this->context->telemetry()->dataFrameFailed($this->context, $e);
-
-            throw $e;
+        foreach ($this->context
+            ->config
+            ->executor()
+            ->execute(
+                $this->context->config->planner()->plan(Trigger::rows->plan($this->root, $this->sinks), $this->context),
+            ) as $rows) {
+            yield $rows;
         }
     }
 
@@ -464,15 +389,13 @@ final class DataFrame
      */
     public function getAsArray(): Generator
     {
-        try {
-            foreach ($this->pipeline->process($this->context) as $rows) {
-                yield $rows->toArray();
-            }
-            $this->context->telemetry()->dataFrameCompleted($this->context);
-        } catch (Throwable $e) {
-            $this->context->telemetry()->dataFrameFailed($this->context, $e);
-
-            throw $e;
+        foreach ($this->context
+            ->config
+            ->executor()
+            ->execute(
+                $this->context->config->planner()->plan(Trigger::rows->plan($this->root, $this->sinks), $this->context),
+            ) as $rows) {
+            yield $rows->toArray();
         }
     }
 
@@ -485,17 +408,15 @@ final class DataFrame
      */
     public function getEach(): Generator
     {
-        try {
-            foreach ($this->pipeline->process($this->context) as $rows) {
-                foreach ($rows as $row) {
-                    yield $row;
-                }
+        foreach ($this->context
+            ->config
+            ->executor()
+            ->execute(
+                $this->context->config->planner()->plan(Trigger::rows->plan($this->root, $this->sinks), $this->context),
+            ) as $rows) {
+            foreach ($rows as $row) {
+                yield $row;
             }
-            $this->context->telemetry()->dataFrameCompleted($this->context);
-        } catch (Throwable $e) {
-            $this->context->telemetry()->dataFrameFailed($this->context, $e);
-
-            throw $e;
         }
     }
 
@@ -508,17 +429,15 @@ final class DataFrame
      */
     public function getEachAsArray(): Generator
     {
-        try {
-            foreach ($this->pipeline->process($this->context) as $rows) {
-                foreach ($rows as $row) {
-                    yield $row->toArray();
-                }
+        foreach ($this->context
+            ->config
+            ->executor()
+            ->execute(
+                $this->context->config->planner()->plan(Trigger::rows->plan($this->root, $this->sinks), $this->context),
+            ) as $rows) {
+            foreach ($rows as $row) {
+                yield $row->toArray();
             }
-            $this->context->telemetry()->dataFrameCompleted($this->context);
-        } catch (Throwable $e) {
-            $this->context->telemetry()->dataFrameFailed($this->context, $e);
-
-            throw $e;
         }
     }
 
@@ -533,9 +452,13 @@ final class DataFrame
         array|Reference|string $entries,
         ?GroupByAlgorithmBuilder $algorithm = null,
     ): GroupedDataFrame {
-        $references = is_array($entries) ? $entries : [$entries];
+        $groupBy = new GroupBy(...is_array($entries) ? $entries : [$entries]);
+        // the rows feeding the aggregate, without the frame's writes - what pivot discovery scans
+        $input = new self($this->extractor, $this->context);
+        $input->root = $this->root;
+        $this->root = new Node\Aggregate($this->root, $groupBy, $algorithm);
 
-        return new GroupedDataFrame($this, new GroupBy(...$references), $algorithm);
+        return new GroupedDataFrame($this, $input, $groupBy);
     }
 
     /**
@@ -554,9 +477,13 @@ final class DataFrame
             $type = Join::from($type);
         }
 
-        foreach (JoinSteps::of($dataFrame, $on, $type, $this->context->config, $algorithm) as $step) {
-            $this->pipeline->add($step);
-        }
+        $this->root = new Node\Join(
+            $this->root,
+            $dataFrame->explain(Trigger::rows)->logical->root,
+            $on,
+            $type,
+            $algorithm,
+        );
 
         return $this;
     }
@@ -570,18 +497,11 @@ final class DataFrame
      */
     public function joinEach(DataFrameFactory $factory, Expression $on, string|Join $type = Join::left): self
     {
-        if ($type instanceof Join) {
-            $type = $type->name;
+        if (is_string($type)) {
+            $type = Join::tryFrom($type) ?? throw new InvalidArgumentException('Unsupported join type');
         }
 
-        $transformer = match ($type) {
-            Join::left->value => JoinEachRowsTransformer::left($factory, $on),
-            Join::left_anti->value => JoinEachRowsTransformer::leftAnti($factory, $on),
-            Join::right->value => JoinEachRowsTransformer::right($factory, $on),
-            Join::inner->value => JoinEachRowsTransformer::inner($factory, $on),
-            default => throw new InvalidArgumentException('Unsupported join type'),
-        };
-        $this->pipeline->add($transformer);
+        $this->root = new Node\JoinEach($this->root, $factory, $on, $type);
 
         return $this;
     }
@@ -597,7 +517,7 @@ final class DataFrame
             return $this;
         }
 
-        $this->pipeline = $this->context->config->optimizer()->optimize(new LimitTransformer($limit), $this->pipeline);
+        $this->root = new Node\Limit($this->root, $limit);
 
         return $this;
     }
@@ -605,9 +525,43 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function load(Loader $loader): self
+    public function load(Loader|Sink $sink): self
     {
-        $this->pipeline = $this->context->config->optimizer()->optimize($loader, $this->pipeline);
+        if ($sink instanceof Loader) {
+            $this->sinks = $this->sinks->merge(new Sinks(new Node\Write($this->root, $sink)));
+
+            return $this;
+        }
+
+        $prefix = new self($this->extractor, $this->context->withErrorHandler($this->context->errorHandler()));
+        $prefix->root = $this->root;
+
+        if ($sink instanceof Sink\Transactional) {
+            foreach ($sink->sinks() as $child) {
+                $prefix->load($child);
+            }
+
+            $writes = [];
+
+            foreach ($prefix->sinks as $sinkRoot) {
+                // checked BEFORE the splat below, or PHP raises a TypeError first
+                $writes[] = $sinkRoot instanceof Node\Transaction
+                    ? throw InvalidLogicException::nestedTransaction()
+                    : $sinkRoot;
+            }
+
+            $this->sinks = $this->sinks->merge(new Sinks(new Node\Transaction($sink->transaction(), ...$writes)));
+
+            return $this;
+        }
+
+        $sink->write($prefix);
+
+        if ($prefix->context->errorHandler() !== $this->context->errorHandler()) {
+            throw InvalidLogicException::errorHandlerInsideSink($sink::class);
+        }
+
+        $this->sinks = $this->sinks->merge($prefix->sinks);
 
         return $this;
     }
@@ -619,7 +573,7 @@ final class DataFrame
      */
     public function match(Schema $schema, ?SchemaValidator $validator = null): self
     {
-        $this->pipeline->add(new SchemaValidationLoader($schema, $validator ?? new StrictValidator()));
+        $this->root = new Node\Validate($this->root, $schema, $validator ?? new StrictValidator());
 
         return $this;
     }
@@ -644,7 +598,7 @@ final class DataFrame
             return $this;
         }
 
-        $this->pipeline->add(new OffsetProcessor($offset));
+        $this->root = new Node\Offset($this->root, $offset);
 
         return $this;
     }
@@ -668,9 +622,7 @@ final class DataFrame
     {
         array_unshift($entries, $entry);
 
-        foreach (RepartitionSteps::of(References::init(...$entries), $this->context->config) as $step) {
-            $this->pipeline->add($step);
-        }
+        $this->root = new Node\Repartition($this->root, References::init(...$entries));
 
         return $this;
     }
@@ -694,6 +646,16 @@ final class DataFrame
     }
 
     /**
+     * The plan $trigger would run over this frame, frozen: later verbs on this frame do not reach it. The default
+     * adds no consumer of its own - it draws the frame as built, its chain and its sinks. toString() prints it as a
+     * tree. Answers from the plan without reading a row.
+     */
+    public function explain(Trigger $trigger = Trigger::run): Plan
+    {
+        return Plan::of($trigger->plan($this->root, $this->sinks), $this->context);
+    }
+
+    /**
      * @lazy
      *
      * @throws SchemaNotDerivableException
@@ -704,28 +666,18 @@ final class DataFrame
     }
 
     /**
-     * @internal engine paths only - GroupedDataFrame builds its steps against this frame's plan
-     */
-    public function registerGroupBy(GroupBy $groupBy, ?GroupByAlgorithmBuilder $algorithm = null): void
-    {
-        foreach (GroupBySteps::of($groupBy, $this->context->config, $algorithm) as $step) {
-            $this->pipeline->add($step);
-        }
-    }
-
-    /**
      * @lazy
      */
     public function rename(string $from, string $to): self
     {
-        $this->pipeline->add(new RenameEntryTransformer($from, $to));
+        $this->root = new Node\Rename($this->root, $from, $to);
 
         return $this;
     }
 
     public function renameEach(RenameEntryStrategy ...$strategies): self
     {
-        $this->pipeline->add(new RenameEachEntryTransformer(...$strategies));
+        $this->root = new Node\RenameEach($this->root, array_values($strategies));
 
         return $this;
     }
@@ -747,12 +699,11 @@ final class DataFrame
      * - column statistics - analyze()->withColumnStatistics()
      * - schema - analyze()->withSchema()
      *
-     * @param null|callable(Rows $rows, FlowContext $context): void $callback
      * @param Analyze|bool $analyze - when set run will return Report
      *
      * @return ($analyze is Analyze|true ? Report : null)
      */
-    public function run(?callable $callback = null, bool|Analyze $analyze = false): ?Report
+    public function run(bool|Analyze $analyze = false): ?Report
     {
         if ($analyze === false) {
             $analyze = $this->context->config->analyze();
@@ -760,20 +711,13 @@ final class DataFrame
 
         $collector = new StatisticsCollector($analyze, $this->context);
 
-        try {
-            foreach ($this->pipeline->process($this->context) as $rows) {
-                if ($callback !== null) {
-                    $callback($rows, $this->context);
-                }
-
-                $collector->capture($rows);
-            }
-
-            $collector->end();
-        } catch (Throwable $e) {
-            $collector->end($e);
-
-            throw $e;
+        foreach ($this->context
+            ->config
+            ->executor()
+            ->execute(
+                $this->context->config->planner()->plan(Trigger::run->plan($this->root, $this->sinks), $this->context),
+            ) as $rows) {
+            $collector->capture($rows);
         }
 
         return $collector->report();
@@ -786,7 +730,11 @@ final class DataFrame
      */
     public function schema(): Schema
     {
-        return $this->pipeline->bind()->schema;
+        return $this->context
+            ->config
+            ->planner()
+            ->plan(Trigger::rows->plan($this->root, $this->sinks), $this->context)
+            ->schema();
     }
 
     /**
@@ -795,7 +743,7 @@ final class DataFrame
      */
     public function select(string|Reference ...$entries): self
     {
-        $this->pipeline->add(new SelectEntriesTransformer(...$entries));
+        $this->root = new Node\Select($this->root, array_values($entries));
 
         return $this;
     }
@@ -811,9 +759,7 @@ final class DataFrame
     {
         $references = is_array($entries) ? $entries : [$entries];
 
-        foreach (SortSteps::of(refs(...$references), $this->context->config, $algorithm) as $step) {
-            $this->pipeline->add($step);
-        }
+        $this->root = new Node\Sort($this->root, refs(...$references), $algorithm);
 
         return $this;
     }
@@ -836,7 +782,7 @@ final class DataFrame
      */
     public function until(ScalarFunction $function): self
     {
-        $this->pipeline->add(new UntilTransformer($function));
+        $this->root = new Node\Until($this->root, $function);
 
         return $this;
     }
@@ -850,7 +796,7 @@ final class DataFrame
      */
     public function void(): self
     {
-        $this->pipeline->add(new VoidProcessor());
+        $this->root = new Node\Discard($this->root);
 
         return $this;
     }
@@ -861,7 +807,7 @@ final class DataFrame
     public function with(Transformer|Transformation|Transformations|WithEntry $transformer): self
     {
         if ($transformer instanceof Transformer) {
-            $this->pipeline->add($transformer);
+            $this->root = new Node\Transform($this->root, $transformer);
 
             return $this;
         }
@@ -906,19 +852,9 @@ final class DataFrame
      */
     public function withEntry(string|Definition $entry, ScalarFunction|WindowFunction $reference): self
     {
-        if ($reference instanceof WindowFunction) {
-            if ($reference->window()->partitions()->count()) {
-                foreach (RepartitionSteps::of($reference->window()->partitions(), $this->context->config) as $step) {
-                    $this->pipeline->add($step);
-                }
-            } else {
-                $this->pipeline->add(new CollectingProcessor());
-            }
-
-            $this->pipeline->add(new WindowProcessor($entry, $reference));
-        } else {
-            $this->with(new ScalarFunctionTransformer($entry, $reference));
-        }
+        $this->root = $reference instanceof WindowFunction
+            ? new Node\WindowColumn($this->root, $entry, $reference)
+            : new Node\WithColumn($this->root, $entry, $reference);
 
         return $this;
     }
@@ -927,8 +863,8 @@ final class DataFrame
      * @lazy
      * Alias for ETL::load function.
      */
-    public function write(Loader $loader): self
+    public function write(Loader|Sink $sink): self
     {
-        return $this->load($loader);
+        return $this->load($sink);
     }
 }

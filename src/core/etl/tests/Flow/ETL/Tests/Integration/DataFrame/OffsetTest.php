@@ -135,7 +135,7 @@ final class OffsetTest extends FlowIntegrationTestCase
                  *
                  * @return \Generator<int, Rows, Signal|null, void>
                  */
-                public function extract(FlowContext $context): Generator
+                public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     for ($i = 0; $i < 10; $i++) {
                         yield rows(schema(integer_schema('id')), row(['id' => $i + 1]));
@@ -178,7 +178,7 @@ final class OffsetTest extends FlowIntegrationTestCase
                  *
                  * @return \Generator<int, Rows, Signal|null, void>
                  */
-                public function extract(FlowContext $context): Generator
+                public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     for ($i = 0; $i < 5; $i++) {
                         yield rows(schema(integer_schema('id')), row(['id' => $i + 1]));
@@ -223,7 +223,7 @@ final class OffsetTest extends FlowIntegrationTestCase
                  *
                  * @return \Generator<int, Rows, Signal|null, void>
                  */
-                public function extract(FlowContext $context): Generator
+                public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     for ($i = 0; $i < 100; $i++) {
                         yield rows(
@@ -300,7 +300,7 @@ final class OffsetTest extends FlowIntegrationTestCase
                  *
                  * @return \Generator<int, Rows, Signal|null, void>
                  */
-                public function extract(FlowContext $context): Generator
+                public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     for ($i = 0; $i < 10; $i++) {
                         yield rows(schema(integer_schema('id')), row(['id' => $i + 1]));

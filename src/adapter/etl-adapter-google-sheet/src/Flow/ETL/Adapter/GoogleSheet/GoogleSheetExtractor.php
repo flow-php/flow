@@ -10,10 +10,8 @@ use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\InfersSchema;
-use Flow\ETL\Extractor\LimitPushDown;
 use Flow\ETL\Extractor\MetadataColumns;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
-use Flow\ETL\Extractor\PushesLimit;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -39,19 +37,16 @@ final class GoogleSheetExtractor implements
     BatchableExtractor,
     Extractor,
     InfersSchema,
-    LimitPushDown,
     MetadataColumnsExtractor,
     RewindableExtractor
 {
     use Batches;
-    use PushesLimit;
     use MetadataColumns;
 
     /**
      * Core defaults to 20 480. A sheet range is an HTTP
      * request and the range clamps to the grid, so that default samples the WHOLE sheet for anything under
-     * ~20 000 rows - and the read then fetches it again. Polars' 100 keeps the sample proportionally small.
-     * Widen it per read with ->inferSchema(infer_schema()->sampleSize(...)), or -1 for the whole sheet.
+     * ~20 000 rows - and the read then fetches it again.
      */
     private const int SAMPLE_ROWS = 100;
 
@@ -82,7 +77,7 @@ final class GoogleSheetExtractor implements
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         $reader = new GoogleSheetReader($this->service, $this->spreadsheetId, $this->columnRange, $this->readOptions);
         $sampler = new GoogleSheetSampler($reader, $this->inference->sampleSize);
@@ -157,8 +152,6 @@ final class GoogleSheetExtractor implements
             if ($signal === Signal::STOP) {
                 return;
             }
-
-            $limit = $this->pushedLimit();
 
             if ($limit !== null && $yielded >= $limit) {
                 return;

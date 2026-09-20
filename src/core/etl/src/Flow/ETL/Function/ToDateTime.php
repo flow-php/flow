@@ -9,6 +9,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Function\ToDateTime\PatternCoverage;
 use Flow\ETL\Row;
 use Flow\Types\Type;
 
@@ -28,6 +29,11 @@ final class ToDateTime implements ScalarFunction
     private readonly ScalarFunction $format;
     private readonly ScalarFunction $timeZone;
 
+    /**
+     * The format as given when it was a plain string; kept across a rebuild that leaves the format child as it is.
+     */
+    private ?string $pattern;
+
     public function __construct(
         mixed $value,
         ScalarFunction|string $format,
@@ -36,6 +42,7 @@ final class ToDateTime implements ScalarFunction
         $this->value = $value instanceof ScalarFunction ? $value : lit($value);
         $this->format = $format instanceof ScalarFunction ? $format : lit($format);
         $this->timeZone = $timeZone instanceof ScalarFunction ? $timeZone : lit($timeZone);
+        $this->pattern = is_string($format) ? $format : null;
     }
 
     /**
@@ -52,7 +59,31 @@ final class ToDateTime implements ScalarFunction
     public function withChildren(array $children): static
     {
         /** @var list<ScalarFunction> $children */
-        return new self($children[0], $children[1], $children[2]);
+        $rebuilt = new self($children[0], $children[1], $children[2]);
+
+        if ($children[1] === $this->format) {
+            $rebuilt->pattern = $this->pattern;
+        }
+
+        return $rebuilt;
+    }
+
+    /**
+     * createFromFormat() fills what the format does not parse from the clock; a format only known at run time may.
+     */
+    public function deterministic(): bool
+    {
+        if ($this->pattern === null || (new PatternCoverage($this->pattern))->fillsFromClock()) {
+            return false;
+        }
+
+        foreach ($this->children() as $child) {
+            if (!$child->deterministic()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

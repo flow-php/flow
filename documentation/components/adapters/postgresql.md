@@ -390,12 +390,10 @@ df()
 
 ### Transactional Loading
 
-`to_pgsql_transaction()` wraps one or more loaders so every delivery happens inside a transaction: each batch of rows
-is loaded in its own transaction, and if any loader throws, the open transaction is rolled back:
+`to_pgsql_transaction()` writes one or more sinks inside transactions: each batch of rows is written in its own
+transaction, and if any sink throws, the open transaction is rolled back:
 
 ```php
-use Flow\PostgreSql\QueryBuilder\Transaction\IsolationLevel;
-
 use function Flow\ETL\Adapter\PostgreSql\{to_pgsql_table, to_pgsql_transaction};
 
 df()
@@ -408,24 +406,29 @@ df()
     ->run();
 ```
 
-Wrapped `to_transformation()` / `to_branch(...)->withTransformation(...)` steps with blocking operations (`sortBy()`,
+Sinks with blocking operations (`to_transformation()` / `to_branch(...)->withTransformation(...)` with `sortBy()`,
 `aggregate()`, `groupBy()->aggregate()`, `pivot()`, window functions, `collect()`, `join()` - see
-[transformations](../core/transformations.md)) buffer the stream and deliver it when the pipeline closes the loader;
+[transformations](../core/transformations.md)) buffer the stream and deliver it when the run ends;
 `to_pgsql_transaction()` opens one final transaction around that delivery - the whole drained stream commits
-atomically, a failure during it rolls back. Every wrapped loader must use the same `Client` instance as the wrapper -
-a loader holding its own `Client` escapes the transaction.
+atomically, a failure during it rolls back and surfaces from `run()`. A plain loader child is a bare sink root; a
+`to_transformation(...)` child delivers inside the same transaction. Every sink's loader must use the same `Client`
+instance as the transaction - a loader holding its own `Client` escapes it.
 
-Do not place `write_with_retries()` inside the wrapper: after a failed statement PostgreSQL aborts the whole
-transaction, so every retry attempt fails too. Wrap the transaction instead -
-`write_with_retries(to_pgsql_transaction(...))` gives each attempt a fresh transaction (see
-[retry](../core/retry.md)).
+Inside the transaction every sink runs throw-only: a failure rolls the batch back first, and only then the frame's
+`onError()` handler decides whether the run continues.
 
-Use `withIsolationLevel()` to set the transaction isolation level; it applies to every transaction the wrapper opens,
-including the final one:
+To set the isolation level, build the transaction yourself; it applies to every transaction opened, including the
+final one:
 
 ```php
-to_pgsql_transaction($client, to_pgsql_table($client, 'users'))
-    ->withIsolationLevel(IsolationLevel::SERIALIZABLE);
+use Flow\ETL\Adapter\PostgreSql\PostgreSqlTransaction;
+use Flow\ETL\Sink\Transactional;
+use Flow\PostgreSql\QueryBuilder\Transaction\IsolationLevel;
+
+new Transactional(
+    (new PostgreSqlTransaction($client))->withIsolationLevel(IsolationLevel::SERIALIZABLE),
+    to_pgsql_table($client, 'users'),
+);
 ```
 
 ## Loader DSL Functions Reference
@@ -433,7 +436,7 @@ to_pgsql_transaction($client, to_pgsql_table($client, 'users'))
 | Function                                       | Description                                               |
 |------------------------------------------------|-----------------------------------------------------------|
 | `to_pgsql_table($client, $table)`              | Create a PostgreSQL loader for a table                    |
-| `to_pgsql_transaction($client, ...$loaders)`   | Run multiple loaders, every delivery inside a transaction |
+| `to_pgsql_transaction($client, ...$sinks)`     | Write sinks, every delivery inside a transaction          |
 | `pgsql_insert_options(...)`                    | Configure insert behavior (conflicts, upsert)             |
 | `pgsql_update_options($primaryKeys)`           | Configure update behavior (primary key columns)           |
 | `pgsql_delete_options($primaryKeys)`           | Configure delete behavior (primary key columns)           |
@@ -502,16 +505,16 @@ $schema = schema(
 );
 ```
 
-| Metadata                          | Effect on the generated column                             |
-|-----------------------------------|------------------------------------------------------------|
-| `PostgreSqlMetadata::type($name)` | Force a specific PostgreSQL type, bypassing the type map   |
-| `PostgreSqlMetadata::length($n)`  | Emit `varchar($n)`                                         |
-| `PostgreSqlMetadata::precision($p)` / `::scale($s)` | Emit `numeric($p, $s)`                   |
-| `PostgreSqlMetadata::default($v)` | Set a column `DEFAULT`                                      |
-| `PostgreSqlMetadata::primaryKey($name)` | Include the column in the table primary key          |
+| Metadata                                            | Effect on the generated column                                                        |
+|-----------------------------------------------------|---------------------------------------------------------------------------------------|
+| `PostgreSqlMetadata::type($name)`                   | Force a specific PostgreSQL type, bypassing the type map                              |
+| `PostgreSqlMetadata::length($n)`                    | Emit `varchar($n)`                                                                    |
+| `PostgreSqlMetadata::precision($p)` / `::scale($s)` | Emit `numeric($p, $s)`                                                                |
+| `PostgreSqlMetadata::default($v)`                   | Set a column `DEFAULT`                                                                |
+| `PostgreSqlMetadata::primaryKey($name)`             | Include the column in the table primary key                                           |
 | `PostgreSqlMetadata::indexUnique($name, $position)` | Include the column in a named `UNIQUE` constraint, optionally at an explicit position |
-| `PostgreSqlMetadata::index($name, $position)` | Include the column in a named index, optionally at an explicit position |
-| `PostgreSqlMetadata::identity($generation)` | Make the column an identity column               |
+| `PostgreSqlMetadata::index($name, $position)`       | Include the column in a named index, optionally at an explicit position               |
+| `PostgreSqlMetadata::identity($generation)`         | Make the column an identity column                                                    |
 | `PostgreSqlMetadata::generated($expr)` | Make the column a generated column                    |
 
 Columns sharing the same primary key, unique constraint, or index name are grouped together, so composite keys are

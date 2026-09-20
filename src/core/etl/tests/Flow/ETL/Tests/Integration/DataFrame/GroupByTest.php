@@ -704,7 +704,7 @@ final class GroupByTest extends FlowIntegrationTestCase
                 row(['id' => 9, 'country' => 'US', 'age' => 50]),
             )))
             ->aggregate([average(ref('age')), max(ref('age'))])
-            ->run(function (Rows $rows): void {
+            ->forEach(function (Rows $rows): void {
                 $this->assertSame([['age_avg' => 33.75, 'age_max' => 50]], $rows->toArray());
                 $this->assertEquals(
                     schema(float_schema('age_avg', true), int_schema('age_max', true)),

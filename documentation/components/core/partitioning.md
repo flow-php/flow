@@ -112,7 +112,7 @@ use function Flow\ETL\DSL\{data_frame, lit, ref, to_output};
 
 data_frame()
     ->read(from_csv(__DIR__ . '/output/date=*/{department}.csv'))
-    ->filterPartitions(ref('department')->equals(lit('sales')))
+    ->filter(ref('department')->equals(lit('sales')))
     ->write(to_output())
     ->run();
 ```
@@ -227,8 +227,11 @@ it as another type.
 
 ### Partition Pruning
 
-`filterPartitions()` evaluates partition metadata and skips whole directories; `filter()` reads
-everything and then discards.
+The optimizer pushes a `filter()` that reads only partition columns into the source, so whole directories
+are skipped; a filter on a body column still reads everything and then discards. A partition column renamed
+with `rename()` or copied with `withEntry('day', ref('date'))` is still pruned; any other redefinition of it
+stops the push. A filter whose answer can change between two evaluations - `call()`, `now()`, `uuid()`,
+`to_date_time()` with a format that leaves fields out (`'Y-m-d'`) - still filters rows but prunes nothing.
 
 ```php
 <?php
@@ -238,7 +241,7 @@ use function Flow\ETL\DSL\{data_frame, lit, ref, to_output};
 
 data_frame()
     ->read(from_csv(__DIR__ . '/output/date=*/department=*/*.csv'))
-    ->filterPartitions(ref('date')->greaterThanEqual(lit('2024-01-01')))
+    ->filter(ref('date')->greaterThanEqual(lit('2024-01-01')))
     ->write(to_output())
     ->run();
 ```
@@ -258,7 +261,8 @@ data_frame()
     ->run();
 ```
 
-Output carries `path` and `partitions` columns.
+Output carries `path`, a `partitions` map, and one string column per partition (`date`, `department`), so a
+`filter()` on a partition column prunes the listing like any other file source.
 
 ## Repartitioning
 

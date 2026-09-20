@@ -4,41 +4,73 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
+use ArrayObject;
 use DateTimeImmutable;
+use Flow\ETL\BoundStep;
 use Flow\ETL\DataFrame;
 use Flow\ETL\ErrorHandler\IgnoreError;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
-use Flow\ETL\Pipeline\BoundStep;
+use Flow\ETL\Memory\ArrayMemory;
+use Flow\ETL\Optimizer;
+use Flow\ETL\Plan\Format;
+use Flow\ETL\Plan\Node\CrossJoin;
+use Flow\ETL\Plan\Node\Read;
+use Flow\ETL\Plan\Stage;
+use Flow\ETL\Plan\Trigger;
 use Flow\ETL\Row\RowRenaming;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Validator\SelectiveValidator;
+use Flow\ETL\Sink\Branched;
+use Flow\ETL\Sink\Transformed;
 use Flow\ETL\Tests\Double\AddStampToStringEntryTransformer;
+use Flow\ETL\Tests\Double\CallbackTransformation;
+use Flow\ETL\Tests\Double\CallOrderLoader;
+use Flow\ETL\Tests\Double\RecordingErrorHandler;
+use Flow\ETL\Tests\Double\RecordingFileExtractor;
+use Flow\ETL\Tests\Double\RecordingRule;
 use Flow\ETL\Tests\Double\RowLessExtractor;
 use Flow\ETL\Tests\Double\SpyLoader;
+use Flow\ETL\Tests\Double\SpySink;
+use Flow\ETL\Tests\Double\StaticDataFrameFactory;
+use Flow\ETL\Tests\Double\ThrowingLoader;
+use Flow\ETL\Tests\Double\ThrowingTransformer;
 use Flow\ETL\Tests\Double\UndescribableRowLessExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformation;
+use Flow\ETL\Transformation\AddRowIndex\StartFrom;
+use Flow\ETL\Transformations;
 use Flow\ETL\Transformer;
+use Flow\ETL\Transformer\AddRowIndexTransformer;
 use Generator;
 use PHPUnit\Framework\Assert;
+use PHPUnit\Framework\Attributes\TestWith;
 use RuntimeException;
 
+use function array_column;
 use function array_merge;
+use function Flow\ETL\DSL\add_row_index;
 use function Flow\ETL\DSL\average;
 use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_all;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_data_frame;
 use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\integer_schema;
+use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
@@ -46,8 +78,11 @@ use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_schema;
+use function Flow\ETL\DSL\to_memory;
+use function Flow\ETL\DSL\to_transformation;
 use function Flow\Types\DSL\type_json;
 use function iterator_to_array;
 
@@ -69,7 +104,7 @@ final class DataFrameTest extends FlowTestCase
             ->load($spy)
             ->withEntry('element', ref('elements')->expand())
             ->batchSize(3)
-            ->run(function (Rows $rows): void {
+            ->forEach(function (Rows $rows): void {
                 $this->assertLessThanOrEqual(3, $rows->count());
             });
 
@@ -222,7 +257,7 @@ final class DataFrameTest extends FlowTestCase
                  *
                  * @return \Generator<int, Rows, Signal|null, void>
                  */
-                public function extract(FlowContext $context): Generator
+                public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     for ($i = 1; $i <= 10; $i++) {
                         yield rows(schema(integer_schema('id')), row(['id' => $i]));
@@ -372,7 +407,7 @@ final class DataFrameTest extends FlowTestCase
                  *
                  * @return \Generator<int, Rows, Signal|null, void>
                  */
-                public function extract(FlowContext $context): Generator
+                public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     for ($i = 1; $i <= 10; $i++) {
                         yield rows(schema(integer_schema('id')), row(['id' => $i]));
@@ -423,7 +458,7 @@ final class DataFrameTest extends FlowTestCase
              *
              * @return \Generator<int, Rows, Signal|null, void>
              */
-            public function extract(FlowContext $context): Generator
+            public function extract(FlowContext $context, ?int $limit = null): Generator
             {
                 yield rows(
                     schema(
@@ -721,7 +756,7 @@ final class DataFrameTest extends FlowTestCase
                  *
                  * @return \Generator<int, Rows, Signal|null, void>
                  */
-                public function extract(FlowContext $context): Generator
+                public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     yield rows(
                         schema(integer_schema('id')),
@@ -784,7 +819,7 @@ final class DataFrameTest extends FlowTestCase
                  *
                  * @return \Generator<int, Rows, Signal|null, void>
                  */
-                public function extract(FlowContext $context): Generator
+                public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     yield rows(schema(integer_schema('id')), row(['id' => 1]));
                     yield rows(schema(integer_schema('id')), row(['id' => 2]));
@@ -858,5 +893,520 @@ final class DataFrameTest extends FlowTestCase
 
         static::assertCount(0, $rows);
         static::assertCount(0, $rows->schema()->definitions());
+    }
+
+    public function test_a_pushed_limit_reaches_extract_and_leaves_the_users_extractor_alone(): void
+    {
+        $extractor = new RecordingFileExtractor(
+            schema(int_schema('id')),
+            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])),
+        );
+        $frame = df()
+            ->read($extractor)
+            ->withEntry('doubled', ref('id')->multiply(lit(2)))
+            ->limit(1);
+
+        $frame->schema();
+
+        static::assertSame([['id' => 1, 'doubled' => 2]], $frame->fetch()->toArray());
+        static::assertSame([['id' => 1, 'doubled' => 2]], $frame->fetch()->toArray());
+        static::assertCount(2, $extractor->limits);
+        static::assertSame(1, $extractor->limits[0]);
+        static::assertSame(1, $extractor->limits[1]);
+        static::assertStringEndsWith(
+            "#1 Read\n            Extractor: RecordingFileExtractor\n            Source: file://dev/null",
+            $frame->explain()->toString(Stage::unoptimized),
+        );
+        static::assertStringEndsWith(
+            "#1 Read\n            Extractor: RecordingFileExtractor\n            Source: file://dev/null"
+            . "\n            Limit: 1",
+            $frame->explain()->toString(),
+        );
+    }
+
+    public function test_a_limit_inside_a_joins_right_side_is_pushed_into_that_source(): void
+    {
+        $extractor = new RecordingFileExtractor(
+            schema(int_schema('id')),
+            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])),
+        );
+        $right = df()->read($extractor)->limit(1);
+
+        df()
+            ->read(from_array([['id' => 1]]))
+            ->join($right, join_on(['id' => 'id'], 'r_'))
+            ->fetch();
+
+        static::assertSame(1, $extractor->limits[0]);
+    }
+
+    public function test_an_empty_fetch_plans_once(): void
+    {
+        /** @var ArrayObject<int, string> $log */
+        $log = new ArrayObject();
+
+        $rows = df(config_builder()->optimizer(new Optimizer(new RecordingRule('plan', $log))))
+            ->read(from_array([['id' => 1]]))
+            ->filter(ref('id')->equals(lit(2)))
+            ->fetch();
+
+        static::assertCount(0, $rows);
+        static::assertCount(1, $log);
+    }
+
+    public function test_an_abandoned_get_each_leaves_no_consumed_step_for_the_next_run(): void
+    {
+        $dataFrame = df()
+            ->read(from_rows(
+                rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])),
+                rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 4])),
+            ))
+            ->limit(3);
+
+        // the reference keeps the generator parked, so its steps stay consumed
+        $parked = $dataFrame->getEach();
+        $parked->current();
+
+        static::assertCount(3, $dataFrame->fetch());
+    }
+
+    public function test_an_error_handler_set_after_schema_reaches_a_sink_root(): void
+    {
+        $handler = new RecordingErrorHandler(new IgnoreError());
+        $dataFrame = df()
+            ->read(from_array([['id' => 1]]))
+            ->write(new Branched(ref('id')->equals(lit(1)), new ThrowingLoader(new RuntimeException('boom'))));
+
+        $dataFrame->schema();
+        $dataFrame->onError($handler);
+        $dataFrame->run();
+
+        static::assertCount(1, $handler->errors);
+    }
+
+    public function test_on_error_sets_the_handler(): void
+    {
+        $context = flow_context();
+        $handler = new IgnoreError();
+
+        (new DataFrame(from_array([['id' => 1]]), $context))->onError($handler);
+
+        static::assertSame($handler, $context->errorHandler());
+    }
+
+    public function test_on_error_inside_a_sinks_transformation_is_refused(): void
+    {
+        $this->expectException(InvalidLogicException::class);
+        $this->expectExceptionMessage(
+            'onError() inside a sink cannot apply, because a plan runs under one error handler: call onError() on '
+            . 'the frame, not inside '
+            . Transformed::class,
+        );
+
+        df()->read(from_array([['id' => 1]]))->write(new Transformed(
+            new CallbackTransformation(static fn(DataFrame $prefix): DataFrame => $prefix->onError(new IgnoreError())),
+            to_memory(new ArrayMemory()),
+        ));
+    }
+
+    public function test_a_sink_without_on_error_is_not_refused(): void
+    {
+        $memory = new ArrayMemory();
+
+        df()
+            ->read(from_array([['id' => 1]]))
+            ->write(new Transformed(select('id'), to_memory($memory)))
+            ->run();
+
+        static::assertSame([['id' => 1]], $memory->dump());
+    }
+
+    public function test_a_sink_that_cannot_describe_its_rows_does_not_hide_the_frames_schema(): void
+    {
+        $frame = df()
+            ->read(from_array([['id' => 1], ['id' => 2]], schema(int_schema('id'))))
+            ->withEntry('double', ref('id')->multiply(lit(2)))
+            ->write(to_transformation(new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->joinEach(
+                new StaticDataFrameFactory(df()->read(from_array([['id' => 1, 'name' => 'a']]))),
+                join_on(['id' => 'id'], 'joined_'),
+            )), to_memory(new ArrayMemory())));
+
+        static::assertEquals(schema(int_schema('id'), int_schema('double')), $frame->schema());
+    }
+
+    public function test_a_row_index_starts_again_on_every_run(): void
+    {
+        $frame = df()->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]))->with(add_row_index('idx'));
+
+        static::assertSame([0, 1, 2], array_column($frame->fetch()->toArray(), 'idx'));
+        static::assertSame([0, 1, 2], array_column($frame->fetch()->toArray(), 'idx'));
+    }
+
+    public function test_schema_then_a_run_plans_twice(): void
+    {
+        /** @var ArrayObject<int, string> $log */
+        $log = new ArrayObject();
+        $dataFrame = df(config_builder()->optimizer(new Optimizer(new RecordingRule('plan', $log))))
+            ->read(from_array([['id' => 1]]));
+
+        $dataFrame->schema();
+        $dataFrame->run();
+
+        static::assertCount(2, $log);
+    }
+
+    public function test_a_limit_inside_a_read_frame_is_pushed_into_its_source(): void
+    {
+        $extractor = new RecordingFileExtractor(
+            schema(int_schema('id')),
+            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])),
+        );
+        $inner = df()->read($extractor)->limit(1);
+
+        static::assertSame([['id' => 1]], df()->read(from_data_frame($inner))->fetch()->toArray());
+        static::assertSame(1, $extractor->limits[0]);
+    }
+
+    public function test_explain_without_sinks_prints_one_result_over_the_chain(): void
+    {
+        $dataFrame = df()->read(from_array([['id' => 1]]))->select('id');
+
+        static::assertSame(<<<'PLAN'
+            #3 Result  preserving · transparent · streaming
+            │  Rows this plan hands out: to the trigger, or to the node reading it
+            └─ #2 Select  preserving · transparent · streaming
+               │  Columns: id
+               └─ #1 Read  source · transparent · streaming
+                     Extractor: ArrayExtractor
+            PLAN, $dataFrame->explain()->toString(format: Format::declarations));
+    }
+
+    public function test_explain_with_a_sink_prints_the_outputs_sharing_the_chain(): void
+    {
+        $dataFrame = df()
+            ->read(from_array([['id' => 1]]))
+            ->write(to_memory(new ArrayMemory()))
+            ->select('id');
+
+        static::assertSame(<<<'PLAN'
+            Outputs  preserving · opaque · streaming
+            ├─ #3 Result  preserving · transparent · streaming
+            │  │  Rows this plan hands out: to the trigger, or to the node reading it
+            │  └─ #2 Select  preserving · transparent · streaming
+            │     │  Columns: id
+            │     └─ #1 Read  source · transparent · streaming
+            │           Extractor: ArrayExtractor
+            └─ #4 Write  preserving · opaque · streaming
+               │  Loader: MemoryLoader
+               └─ #1 Read (shared)
+            PLAN, $dataFrame->explain()->toString(format: Format::declarations));
+    }
+
+    public function test_explain_of_the_run_trigger_makes_the_write_the_root(): void
+    {
+        $dataFrame = df()->read(from_array([['id' => 1]]))->write(to_memory(new ArrayMemory()));
+
+        static::assertSame(<<<'PLAN'
+            #2 Write  preserving · opaque · streaming
+            │  Loader: MemoryLoader
+            └─ #1 Read  source · transparent · streaming
+                  Extractor: ArrayExtractor
+            PLAN, $dataFrame->explain(Trigger::run)->toString(format: Format::declarations));
+    }
+
+    public function test_explain_of_the_run_trigger_keeps_a_result_over_a_chain_end_no_sink_reads(): void
+    {
+        $dataFrame = df()
+            ->read(from_array([['id' => 1]]))
+            ->write(to_memory(new ArrayMemory()))
+            ->select('id');
+
+        static::assertSame(<<<'PLAN'
+            Outputs  preserving · opaque · streaming
+            ├─ #3 Result  preserving · transparent · streaming
+            │  │  Rows this plan hands out: to the trigger, or to the node reading it
+            │  └─ #2 Select  preserving · transparent · streaming
+            │     │  Columns: id
+            │     └─ #1 Read  source · transparent · streaming
+            │           Extractor: ArrayExtractor
+            └─ #4 Write  preserving · opaque · streaming
+               │  Loader: MemoryLoader
+               └─ #1 Read (shared)
+            PLAN, $dataFrame->explain(Trigger::run)->toString(format: Format::declarations));
+    }
+
+    public function test_for_each_receives_every_batch(): void
+    {
+        $batches = [];
+
+        df()
+            ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]))
+            ->batchSize(2)
+            ->forEach(static function (Rows $rows) use (&$batches): void {
+                $batches[] = $rows->count();
+            });
+
+        static::assertSame([2, 1], $batches);
+    }
+
+    public function test_explain_prints_the_logical_plan_without_reading_a_row(): void
+    {
+        $extractor = new RecordingFileExtractor(schema(int_schema('id')));
+        $dataFrame = df()->read($extractor)->filter(ref('id')->isNotNull())->write(to_memory(new ArrayMemory()));
+
+        static::assertSame(<<<'PLAN'
+            #3 Write  preserving · opaque · streaming
+            │  Loader: MemoryLoader
+            └─ #2 Filter  reducing · transparent · streaming
+               │  Condition: IsNotNull
+               └─ #1 Read  source · transparent · streaming
+                     Extractor: RecordingFileExtractor
+                     Source: file://dev/null
+            PLAN, $dataFrame->explain()->toString(format: Format::declarations));
+        static::assertSame([], $extractor->limits);
+    }
+
+    public function test_from_data_frame_reads_the_frame_as_a_source(): void
+    {
+        $frame = df()->read(from_array([['id' => 1], ['id' => 2]]))->filter(ref('id')->greaterThan(lit(1)));
+
+        static::assertSame([['id' => 2]], df()->read(from_data_frame($frame))->fetch()->toArray());
+    }
+
+    public function test_from_data_frame_freezes_the_frame(): void
+    {
+        $frame = df()->read(from_array([['id' => 1, 'name' => 'a']]));
+        $extractor = from_data_frame($frame);
+
+        $frame->select('id');
+
+        static::assertSame([['id' => 1, 'name' => 'a']], df()->read($extractor)->fetch()->toArray());
+    }
+
+    /**
+     * @param int<-1, 0> $size
+     */
+    #[TestWith([-1])]
+    #[TestWith([0])]
+    public function test_batch_size_below_one_collects_every_row_into_one_batch(int $size): void
+    {
+        $batches = iterator_to_array(
+            df()
+                ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]))
+                ->batchSize(1)
+                ->batchSize($size)
+                ->get(),
+            false,
+        );
+
+        static::assertCount(1, $batches);
+        static::assertSame(3, $batches[0]->count());
+    }
+
+    public function test_cache_refuses_a_batch_size_below_one(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cache batch size must be greater than 0');
+
+        df()->read(from_array([['id' => 1]]))->cache(cacheBatchSize: 0);
+    }
+
+    public function test_join_takes_the_join_type_as_a_string(): void
+    {
+        static::assertSame(
+            [['id' => 1, 'r_id' => 1, 'r_x' => 'a']],
+            df()
+                ->read(from_array([['id' => 1], ['id' => 2]]))
+                ->join(df()->read(from_array([['id' => 1, 'x' => 'a']])), join_on(['id' => 'id'], 'r_'), 'inner')
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    public function test_join_each_refuses_an_unsupported_join_type(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Unsupported join type');
+
+        df()
+            ->read(from_array([['id' => 1]]))
+            ->joinEach(
+                new StaticDataFrameFactory(df()->read(from_array([['id' => 1]]))),
+                join_on(['id' => 'id']),
+                'nope',
+            );
+    }
+
+    public function test_with_applies_every_transformation_of_a_transformations_group(): void
+    {
+        static::assertSame(
+            [['id' => 1]],
+            df()
+                ->read(from_array([['id' => 1, 'name' => 'a']]))
+                ->with(new Transformations(select('id')))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    public function test_an_error_handler_set_after_join_does_not_reach_the_joined_frame(): void
+    {
+        $left = df()->read(from_array([['id' => 1], ['id' => 2]]));
+        $right = df()
+            ->read(from_array([['id' => 1, 'x' => 'a']]))
+            ->with(new ThrowingTransformer(new RuntimeException('right boom')));
+        $left->join($right, join_on(['id' => 'id'], 'r_'));
+        $right->onError(new IgnoreError());
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('right boom');
+
+        $left->fetch();
+    }
+
+    public function test_an_error_handler_set_after_cross_join_does_not_reach_the_joined_frame(): void
+    {
+        $left = df()->read(from_array([['id' => 1], ['id' => 2]]));
+        $right = df()
+            ->read(from_array([['x' => 'a']]))
+            ->with(new ThrowingTransformer(new RuntimeException('right boom')));
+        $left->crossJoin($right, 'r_');
+        $right->onError(new IgnoreError());
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('right boom');
+
+        $left->fetch();
+    }
+
+    public function test_a_sink_is_handed_a_frame_without_the_callers_sinks(): void
+    {
+        $spy = new SpySink();
+
+        df()
+            ->read(from_array([['id' => 1]]))
+            ->write(to_memory(new ArrayMemory()))
+            ->write(to_memory(new ArrayMemory()))
+            ->write($spy);
+
+        static::assertInstanceOf(DataFrame::class, $spy->prefix);
+        static::assertStringStartsWith('#2 Result', $spy->prefix->explain()->toString());
+    }
+
+    public function test_a_sink_is_handed_a_frame_other_than_the_caller(): void
+    {
+        $frame = df()->read(from_array([['id' => 1]]));
+        $spy = new SpySink();
+
+        $frame->write($spy);
+
+        static::assertInstanceOf(DataFrame::class, $spy->prefix);
+        static::assertNotSame($frame, $spy->prefix);
+    }
+
+    public function test_two_sinks_share_the_chain_and_do_not_alias(): void
+    {
+        $dataFrame = df()
+            ->read(from_array([['id' => 1]]))
+            ->write(new Transformed(new AddRowIndexTransformer('idx', StartFrom::ZERO), to_memory(new ArrayMemory())))
+            ->write(new Branched(ref('id')->equals(lit(1)), to_memory(new ArrayMemory())));
+
+        static::assertSame(<<<'PLAN'
+            Outputs  preserving · opaque · streaming
+            ├─ #2 Result  preserving · transparent · streaming
+            │  │  Rows this plan hands out: to the trigger, or to the node reading it
+            │  └─ #1 Read  source · transparent · streaming
+            │        Extractor: ArrayExtractor
+            ├─ #4 Write  preserving · opaque · streaming
+            │  │  Loader: MemoryLoader
+            │  └─ #3 Transform  unknown · opaque · streaming · redefines unknown
+            │     └─ #1 Read (shared)
+            └─ #6 Write  preserving · opaque · streaming
+               │  Loader: MemoryLoader
+               └─ #5 Filter  reducing · transparent · streaming
+                  │  Condition: Equals
+                  └─ #1 Read (shared)
+            PLAN, $dataFrame->explain()->toString(format: Format::declarations));
+    }
+
+    public function test_a_write_inside_a_sinks_transformation_runs_before_the_sinks_own_write(): void
+    {
+        /** @var ArrayObject<int, string> $log */
+        $log = new ArrayObject();
+
+        df()
+            ->read(from_sequence_number('id', 0, 3))
+            ->batchSize(2)
+            ->write(
+                new Transformed(
+                    new CallbackTransformation(static fn(DataFrame $prefix): DataFrame => $prefix->write(new CallOrderLoader(
+                        'inner',
+                        $log,
+                    ))),
+                    new CallOrderLoader('outer', $log),
+                ),
+            )
+            ->run();
+
+        static::assertSame(['inner:2', 'outer:2', 'inner:2', 'outer:2'], $log->getArrayCopy());
+    }
+
+    public function test_a_joined_frame_is_part_of_the_outer_plan(): void
+    {
+        $right = df()->read(from_array([['id' => 1]]));
+
+        $spine = df()
+            ->read(from_array([['id' => 1]]))
+            ->crossJoin($right, 'r_')
+            ->explain()
+            ->logical->spine();
+
+        static::assertInstanceOf(CrossJoin::class, $spine);
+        static::assertEquals($right->explain()->logical->root, $spine->children()[1]);
+    }
+
+    public function test_the_same_frame_cross_joined_twice_is_read_by_both_joins(): void
+    {
+        $right = df()->read(from_array([['n' => 1]]));
+
+        $frame = df()
+            ->read(from_array([['id' => 1]]))
+            ->crossJoin($right, 'a_')
+            ->crossJoin($right, 'b_');
+
+        static::assertSame([['id' => 1, 'a_n' => 1, 'b_n' => 1]], $frame->fetch()->toArray());
+    }
+
+    public function test_for_each_without_a_callback_still_executes_the_plan(): void
+    {
+        $sink = new SpyLoader();
+
+        df()
+            ->read(from_array([['id' => 1], ['id' => 2]]))
+            ->batchSize(1)
+            ->write($sink)
+            ->forEach();
+
+        static::assertSame([1, 1], $sink->loadedRowCounts());
+    }
+
+    public function test_a_read_frame_is_a_source_of_the_outer_plan(): void
+    {
+        $extractor = from_data_frame(df()->read(from_array([['id' => 1]]))->select('id'));
+
+        $spine = df()->read($extractor)->explain()->logical->spine();
+
+        static::assertInstanceOf(Read::class, $spine);
+        static::assertSame($extractor, $spine->extractor());
+    }
+
+    public function test_a_verb_on_the_joined_frame_after_the_join_does_not_reach_the_outer_plan(): void
+    {
+        $right = df()->read(from_array([['id' => 1, 'n' => 'a']]));
+        $outer = df()->read(from_array([['id' => 1]]))->join($right, join_on(['id' => 'id'], 'r_'));
+
+        $right->filter(ref('id')->equals(lit(2)));
+
+        static::assertSame([['id' => 1, 'r_id' => 1, 'r_n' => 'a']], $outer->fetch()->toArray());
     }
 }

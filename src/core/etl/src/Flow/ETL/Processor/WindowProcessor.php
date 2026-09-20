@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Processor;
 
+use Flow\ETL\BoundStep;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ExpandingFunctions;
@@ -11,7 +12,6 @@ use Flow\ETL\Function\FrameAccumulating;
 use Flow\ETL\Function\PartitionRanking;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Function\WindowFunction;
-use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -29,8 +29,6 @@ use function Flow\ETL\DSL\rows;
 
 /**
  * Applies window functions over partitioned and ordered data.
- *
- * @internal
  */
 final class WindowProcessor implements Processor
 {
@@ -38,9 +36,9 @@ final class WindowProcessor implements Processor
      * @param Definition<mixed>|string $entry
      */
     public function __construct(
-        private readonly string|Definition $entry,
-        private readonly WindowFunction $function,
-        private readonly ?BoundWindow $bound = null,
+        public readonly string|Definition $entry,
+        public readonly WindowFunction $function,
+        public readonly ?BoundWindow $bound = null,
     ) {}
 
     public function bind(Schema $input): BoundStep

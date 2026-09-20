@@ -15,9 +15,6 @@ use Flow\ETL\Processor\MemorySortProcessor;
 use Flow\ETL\Processor\MergeSortProcessor;
 use Flow\ETL\Row\References;
 
-/**
- * @internal
- */
 final readonly class SortSteps
 {
     /**

@@ -55,6 +55,14 @@ final class FlowContext
         return $this;
     }
 
+    public function withErrorHandler(ErrorHandler $handler): self
+    {
+        $new = new self($this->config);
+        $new->telemetryContext = $this->telemetry();
+
+        return $new->setErrorHandler($handler);
+    }
+
     public function telemetry(): TelemetryContext
     {
         return $this->telemetryContext ??= new TelemetryContext(

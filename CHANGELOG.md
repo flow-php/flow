@@ -1,6 +1,22 @@
-## [Unreleased] - 2026-09-18
+## [Unreleased] - 2026-09-20
+
+### Added
+- [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - logical plan of Plan\Node operators, lowered by Planner and run by Executor** - [@norberttech](https://github.com/norberttech)
+- [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - each node declares its row count, transparency, materialization and redefined columns** - [@norberttech](https://github.com/norberttech)
+- [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - Optimizer rules: combine limits, top N, push limit and partition filter into the source** - [@norberttech](https://github.com/norberttech)
+- [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - Sink and Transaction contracts, so a write can fan out or commit per batch** - [@norberttech](https://github.com/norberttech)
+- [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - DataFrame::explain() prints any stage in tree, flow, boxes or declarations format** - [@norberttech](https://github.com/norberttech)
+- [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - DataFrame::forEach(), addRowIndex(), aggregateBy(), asExtractor(), isRepeatable()** - [@norberttech](https://github.com/norberttech)
+- [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl-adapter-doctrine - DbalTransaction with configurable isolation level** - [@norberttech](https://github.com/norberttech)
+- [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl-adapter-postgresql - PostgreSqlTransaction with configurable isolation level** - [@norberttech](https://github.com/norberttech)
+- [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/cli - ProgressBarLoader advancing a progress bar per batch** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - Extractor::extract() takes the pushed row limit; FileExtractor also takes a path filter** - [@norberttech](https://github.com/norberttech)
+- [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - Config::optimizer() replaced by planner() and executor()** - [@norberttech](https://github.com/norberttech)
+- [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - DataFrame::run() no longer takes a callback, use forEach()** - [@norberttech](https://github.com/norberttech)
+- [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl-adapter-doctrine - to_dbal_transaction() takes loaders or sinks and returns Sink\Transactional** - [@norberttech](https://github.com/norberttech)
+- [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl-adapter-postgresql - to_pgsql_transaction() takes loaders or sinks and returns Sink\Transactional** - [@norberttech](https://github.com/norberttech)
 - [#2637](https://github.com/flow-php/flow/pull/2637) - **flow-php/symfony-telemetry-bundle - the security token is read from security.untracked_token_storage, and only when the request carries a span** - [@norberttech](https://github.com/norberttech)
 - [#2635](https://github.com/flow-php/flow/pull/2635) - **flow-php/etl - name-keyed row storage is typed as array-key and names are cast back to string at consuming boundaries.** - [@norberttech](https://github.com/norberttech)
 - [#2635](https://github.com/flow-php/flow/pull/2635) - **flow-php/etl-adapter-csv - inferred column names are cast to string before schema divergence checks.** - [@norberttech](https://github.com/norberttech)
@@ -8,11 +24,23 @@
 - [#2635](https://github.com/flow-php/flow/pull/2635) - **flow-php/parquet - reader and writer row types widened to array-key.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - a failure under a node shared by two sinks is offered to the error handler once** - [@norberttech](https://github.com/norberttech)
+- [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - an inlined from_data_frame() failure reaches the outer error handler** - [@norberttech](https://github.com/norberttech)
+- [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - an embedded frame is optimized with its own rules, not the parent's** - [@norberttech](https://github.com/norberttech)
+- [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - one refusing node no longer makes the whole frame's schema() throw** - [@norberttech](https://github.com/norberttech)
+- [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - add_row_index() restarts its counter on every run** - [@norberttech](https://github.com/norberttech)
+- [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - non-deterministic functions no longer let partition pruning drop every row** - [@norberttech](https://github.com/norberttech)
 - [#2637](https://github.com/flow-php/flow/pull/2637) - **flow-php/symfony-telemetry-bundle - security instrumentation no longer marks the session as used, which made every response private behind a lazy firewall** - [@norberttech](https://github.com/norberttech)
 - [#2635](https://github.com/flow-php/flow/pull/2635) - **flow-php/etl - renameEach(rename_map(...)) no longer throws a TypeError on numeric entry names.** - [@norberttech](https://github.com/norberttech)
 - [#2635](https://github.com/flow-php/flow/pull/2635) - **flow-php/etl - chained rename strategies no longer desync rows from the schema on numeric entry names.** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - Pipeline, Pipeline\Optimizer and both its optimizations** - [@norberttech](https://github.com/norberttech)
+- [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - retry: RetryLoader, RetryStrategy, DelayFactory, Sleep and Duration** - [@norberttech](https://github.com/norberttech)
+- [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - loader decorators BranchingLoader, OverridingLoader, TransformerLoader and LoaderTree** - [@norberttech](https://github.com/norberttech)
+- [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - DataFrame::filterPartitions(), replaced by filter() pushed into the source** - [@norberttech](https://github.com/norberttech)
+- [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl-adapter-doctrine - TransactionalDbalLoader, replaced by DbalTransaction** - [@norberttech](https://github.com/norberttech)
+- [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl-adapter-postgresql - TransactionalPostgreSqlLoader, replaced by PostgreSqlTransaction** - [@norberttech](https://github.com/norberttech)
 - [#2635](https://github.com/flow-php/flow/pull/2635) - **flow-php/etl - @mago-ignore suppressions that existed only to hide the unrepresentable row value type.** - [@norberttech](https://github.com/norberttech)
 
 ## [0.44.1] - 2026-09-15

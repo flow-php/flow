@@ -32,7 +32,7 @@ final class RowsExtractor implements Extractor, RewindableExtractor
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         $schema = $this->schema();
 

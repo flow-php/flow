@@ -32,7 +32,7 @@ final class RepeatableExtractor implements Extractor, OverridingExtractor, Rewin
         $this->wrapped = array_values($wrapped);
     }
 
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         yield new Rows($this->schema());
     }

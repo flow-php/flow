@@ -72,7 +72,7 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
         );
     }
 
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         $schema = self::schema();
 

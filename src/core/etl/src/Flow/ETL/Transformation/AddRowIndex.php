@@ -18,6 +18,6 @@ final readonly class AddRowIndex implements Transformation
 
     public function transform(DataFrame $dataFrame): DataFrame
     {
-        return $dataFrame->rows(new AddRowIndexTransformer($this->indexColumn, $this->startFrom));
+        return $dataFrame->transform(new AddRowIndexTransformer($this->indexColumn, $this->startFrom));
     }
 }

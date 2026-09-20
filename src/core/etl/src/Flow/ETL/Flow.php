@@ -27,7 +27,7 @@ final readonly class Flow
 
     public function extract(Extractor $extractor): DataFrame
     {
-        return new DataFrame(new Pipeline($extractor), $this->config);
+        return new DataFrame($extractor, $this->config);
     }
 
     public function from(Extractor $extractor): DataFrame
@@ -37,7 +37,7 @@ final readonly class Flow
 
     public function process(Rows ...$rows): DataFrame
     {
-        return new DataFrame(new Pipeline(new RowsExtractor(...$rows)), $this->config);
+        return new DataFrame(new RowsExtractor(...$rows), $this->config);
     }
 
     /**

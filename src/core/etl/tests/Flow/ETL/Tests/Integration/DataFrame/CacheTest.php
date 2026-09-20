@@ -61,7 +61,7 @@ final class CacheTest extends FlowIntegrationTestCase
                 $this->extractor = new FakeExtractor($rowsets);
             }
 
-            public function extract(FlowContext $context): Generator
+            public function extract(FlowContext $context, ?int $limit = null): Generator
             {
                 $this->extractions++;
 

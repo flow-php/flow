@@ -545,9 +545,7 @@ final class CSVExtractorTest extends FlowTestCase
             $extractor = from_csv(CSVFixtureContext::path('orders_flow.csv'), filesystem: $counting);
 
             if ($mode === 'limit') {
-                $extractor->pushLimit(2);
-
-                iterator_to_array($extractor->extract(flow_context(config())));
+                iterator_to_array($extractor->extract(flow_context(config()), limit: 2));
             } else {
                 $rows = $extractor->extract(flow_context(config()));
                 $rows->current();
@@ -981,9 +979,9 @@ final class CSVExtractorTest extends FlowTestCase
     public function test_limit(): void
     {
         $extractor = from_csv(path_real(__DIR__ . '/../Fixtures/orders_flow.csv'));
-        $extractor->withBatchSize(1)->pushLimit(2);
+        $extractor->withBatchSize(1);
 
-        self::assertExtractedRowsCount(2, $extractor, flow_context(config()));
+        self::assertExtractedRowsCount(2, $extractor, flow_context(config()), limit: 2);
     }
 
     /**

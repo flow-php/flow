@@ -207,10 +207,9 @@ final class DbalLimitOffsetExtractorTest extends FlowTestCase
             $connection,
             $connection->createQueryBuilder()->select('*')->from('users')->orderBy('id'),
         ))->withBatchSize(2);
-        $extractor->pushLimit(5);
         $counter->reset();
 
-        self::assertExtractedRowsCount(5, $extractor);
+        self::assertExtractedRowsCount(5, $extractor, limit: 5);
         // the three pages of the unlimited read, without the COUNT(*) in front of them
         static::assertSame(3, $counter->count);
         static::assertStringNotContainsString('COUNT(*)', implode(' ', $counter->queries));

@@ -23,7 +23,7 @@ final class RowLessExtractor implements Extractor
         private Schema $schema,
     ) {}
 
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         $this->extractCalls++;
 

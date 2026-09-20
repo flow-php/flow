@@ -16,7 +16,7 @@ $apiExtractor = new class($apiSchema) implements Extractor {
     {
     }
 
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         yield rows($this->schema, row(['id' => 1, 'sku' => 'PRODUCT01']), row(['id' => 2, 'sku' => 'PRODUCT02']));
 
