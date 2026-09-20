@@ -67,6 +67,14 @@ final class GroupBy
         return new Row($values);
     }
 
+    /**
+     * The columns rows are grouped by.
+     */
+    public function refs(): References
+    {
+        return $this->refs;
+    }
+
     public function aggregations(): Aggregators
     {
         return $this->aggregations;

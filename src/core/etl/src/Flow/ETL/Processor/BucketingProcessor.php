@@ -4,24 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Processor;
 
+use Flow\ETL\BoundStep;
 use Flow\ETL\Bucketing\Bucket;
 use Flow\ETL\Bucketing\BucketingStrategy;
 use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Processor;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
 
-/**
- * @internal
- */
 final class BucketingProcessor implements Processor
 {
     public function __construct(
-        private readonly BucketingStrategy $strategy,
-        private readonly Buckets $buckets,
+        public readonly BucketingStrategy $strategy,
+        public readonly Buckets $buckets,
     ) {}
 
     /**

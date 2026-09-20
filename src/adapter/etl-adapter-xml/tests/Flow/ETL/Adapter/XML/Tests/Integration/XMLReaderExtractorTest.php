@@ -27,9 +27,9 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
     {
         // @mago-ignore analysis:deprecated-class
         $extractor = new XMLReaderExtractor(path_real(__DIR__ . '/../Fixtures/flow_orders.xml'), 'root/row');
-        $extractor->withBatchSize(1)->pushLimit(2);
+        $extractor->withBatchSize(1);
 
-        self::assertExtractedRowsCount(2, $extractor, flow_context(config()));
+        self::assertExtractedRowsCount(2, $extractor, flow_context(config()), limit: 2);
     }
 
     public function test_partition_columns_are_not_leaking_between_streams(): void
@@ -182,9 +182,8 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
             path(__DIR__ . '/../Fixtures/cross_stream/*/file.xml'),
             'root/item',
         ))->withBatchSize(10);
-        $extractor->pushLimit(1);
 
-        static::assertCount(1, ExtractedRows::of($extractor));
+        static::assertCount(1, ExtractedRows::of($extractor, limit: 1));
     }
 
     public function test_is_repeatable(): void

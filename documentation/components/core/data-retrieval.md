@@ -112,6 +112,16 @@ echo "Total rows: $totalCount\n";
 
 $dataFrame->forEach(function (Rows $rows) {
     echo "Processing batch of " . $rows->count() . " rows\n";
-    // Custom processing logic
 });
+```
+
+`forEach()` owns the streaming loop. `run(bool|Analyze $analyze = false)` takes no callback: it executes the frame's
+sinks and returns a `Report` when asked to analyze.
+
+```php
+<?php
+
+$dataFrame->write(to_json('out.json'))->run();
+
+$report = $dataFrame->write(to_json('out.json'))->run(analyze: analyze()->withSchema());
 ```

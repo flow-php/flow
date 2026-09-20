@@ -32,7 +32,7 @@ final class ChainExtractor implements Extractor, OverridingExtractor, Rewindable
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         // Every child's batches are projected onto the folded shape, so each yields the union
         // rather than only the columns its own source happens to carry. A child that cannot

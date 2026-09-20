@@ -18,7 +18,7 @@ use function Flow\ETL\DSL\from_rows;
  */
 final class UndescribableRowLessExtractor implements Extractor
 {
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         return from_rows()->extract($context);
     }

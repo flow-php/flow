@@ -53,6 +53,12 @@ final class Uuid implements ScalarFunction
         return $this->value === null ? [] : [$this->value];
     }
 
+    public function deterministic(): bool
+    {
+        // both generate: uuid7 over the same timestamp still draws a new random tail
+        return false;
+    }
+
     /**
      * @param list<FunctionTree> $children
      */

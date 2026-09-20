@@ -26,6 +26,8 @@ use Flow\ETL\Adapter\Doctrine\Pagination\Order;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Loader;
 use Flow\ETL\Schema;
+use Flow\ETL\Sink;
+use Flow\ETL\Sink\Transactional;
 
 use function is_array;
 use function is_string;
@@ -318,25 +320,27 @@ function postgresql_update_options(array $primary_key_columns = [], array $updat
 }
 
 /**
- * Execute multiple loaders within database transactions.
- * Each batch of rows is loaded in its own transaction; rows a wrapped Transformation delivers when
- * the loader is closed (blocking operations drain there) are committed in one final transaction.
- * If any loader fails, the open transaction is rolled back.
- * Atomicity requires every wrapped loader to use the same connection as the wrapper: pass one live
- * Connection to both - a wrapped loader built from array params opens its own connection and
- * escapes the transaction.
+ * Write every sink within database transactions.
+ * Each batch of rows is written in its own transaction; rows a sink's Transformation delivers when
+ * the run ends (blocking operations drain there) are committed in one final transaction.
+ * If any sink fails, the open transaction is rolled back.
+ * A plain Loader child is a bare sink root; a to_transformation(...) child delivers inside the same
+ * transaction. Every child's loader must use the same connection as the transaction: pass one live
+ * Connection to both - a loader built from array params opens its own connection and escapes the
+ * transaction.
  *
  * @param array<string, mixed>|Connection $connection
- * @param Loader ...$loaders - Loaders to execute within the transaction
+ * @param Loader|Sink ...$sinks - sinks written within the transaction
  *
  * @throws InvalidArgumentException
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::LOADER)]
-function to_dbal_transaction(array|Connection $connection, Loader ...$loaders): TransactionalDbalLoader
+function to_dbal_transaction(array|Connection $connection, Loader|Sink ...$sinks): Transactional
 {
-    return is_array($connection)
-        ? new TransactionalDbalLoader($connection, ...$loaders)
-        : TransactionalDbalLoader::fromConnection($connection, ...$loaders);
+    return new Transactional(
+        is_array($connection) ? new DbalTransaction($connection) : DbalTransaction::fromConnection($connection),
+        ...$sinks,
+    );
 }
 
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]

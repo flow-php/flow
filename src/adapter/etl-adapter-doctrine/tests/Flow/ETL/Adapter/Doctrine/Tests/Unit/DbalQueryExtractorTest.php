@@ -120,11 +120,10 @@ final class DbalQueryExtractorTest extends FlowTestCase
                 new ParametersSet(['min' => 0, 'max' => 10], ['min' => 10, 'max' => 20], ['min' => 20, 'max' => 30]),
             )
             ->withBatchSize($batchSize);
-        $extractor->pushLimit(5);
         $counter->reset();
 
         // at 100 the first set is one batch that overshoots the limit - trimming it is the limit operator's job
-        self::assertExtractedRowsCount($extractedRows, $extractor);
+        self::assertExtractedRowsCount($extractedRows, $extractor, limit: 5);
         static::assertSame(1, $counter->count);
     }
 

@@ -321,9 +321,8 @@ final class PostgreSqlKeySetExtractorTest extends FlowTestCase
             'SELECT id FROM t',
             pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
         );
-        $extractor->pushLimit(1500);
 
-        self::assertExtractedRowsCount(1500, $extractor);
+        self::assertExtractedRowsCount(1500, $extractor, limit: 1500);
         // 1000, then a page narrowed to the 500 still wanted - and no third query for row 1501
         static::assertSame(2, $client->callsTo('cursor'));
     }

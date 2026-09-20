@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit;
 
 use DateTimeImmutable;
+use Flow\ETL\BoundStep;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
-use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Tests\Double\ThrowingAfterFirstBatchExtractor;
@@ -65,7 +65,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
              *
              * @return \Generator<int, Rows, Signal|null, void>
              */
-            public function extract(FlowContext $context): Generator
+            public function extract(FlowContext $context, ?int $limit = null): Generator
             {
                 $schema = schema(
                     int_schema('id'),
@@ -141,7 +141,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
              *
              * @return \Generator<int, Rows, Signal|null, void>
              */
-            public function extract(FlowContext $context): Generator
+            public function extract(FlowContext $context, ?int $limit = null): Generator
             {
                 $schema = schema(
                     int_schema('id'),
@@ -239,7 +239,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
              *
              * @return \Generator<int, Rows, Signal|null, void>
              */
-            public function extract(FlowContext $context): Generator
+            public function extract(FlowContext $context, ?int $limit = null): Generator
             {
                 $schema = schema(
                     int_schema('id'),

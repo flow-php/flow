@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
+use Flow\ETL\BoundStep;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Pipeline\BoundStep;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Transformer;

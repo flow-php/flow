@@ -14,9 +14,6 @@ use Flow\ETL\Processor\BucketingProcessor;
 use Flow\ETL\Processor\RepartitionProcessor;
 use Flow\ETL\Row\References;
 
-/**
- * @internal
- */
 final readonly class RepartitionSteps
 {
     /**

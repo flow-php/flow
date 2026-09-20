@@ -47,12 +47,11 @@ class SchemaNotDerivableException extends InvalidArgumentException
         );
     }
 
-    public static function nonRewindable(string $extractor): self
+    public static function nonRewindable(): self
     {
-        return new self(sprintf(
-            '%s cannot read its dataset twice, so discover_pivot_values() cannot scan it before the pivot '
-            . 'runs. Declare the values with pivot_values(...).',
-            $extractor,
-        ));
+        return new self(
+            'The frame reads a source that cannot read its dataset twice, so discover_pivot_values() cannot scan it '
+            . 'before the pivot runs. Declare the values with pivot_values(...).',
+        );
     }
 }

@@ -7,6 +7,8 @@ namespace Flow\ETL\Extractor;
 use Flow\Filesystem\FileListing;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
+use Flow\Filesystem\Path\Filter;
+use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Generator;
 
 trait FileReading
@@ -30,9 +32,9 @@ trait FileReading
     /**
      * @return Generator<int, SourceFile>
      */
-    private function sourceFiles(Filesystem $filesystem, Path $path): Generator
+    private function sourceFiles(Filesystem $filesystem, Path $path, Filter $pathFilter = new OnlyFiles()): Generator
     {
-        foreach ((new FileListing($filesystem))->list($path, $this->filter()) as $status) {
+        foreach ((new FileListing($filesystem))->list($path, $pathFilter) as $status) {
             yield new SourceFile($status->path);
         }
     }

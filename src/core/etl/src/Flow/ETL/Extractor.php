@@ -18,14 +18,21 @@ interface Extractor
      * yield from is forbidden here: it routes send() into the delegate, so Signal::STOP is never
      * observed by this generator.
      *
+     * @param null|int<1, max> $limit rows in total the plan needs from this read. A hint: the Limit step above the
+     *                                source enforces the exact count, so a source that reads more, or ignores it,
+     *                                is still correct.
+     *
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator;
+    public function extract(FlowContext $context, ?int $limit = null): Generator;
 
     /**
      * Answers before extract() runs, so every batch it yields carries this shape. Takes no
      * FlowContext: a source that needs the pipeline's context to describe itself has not moved
      * the answer to bind time.
+     *
+     * Called once per RUN - every run plans afresh - so it MUST be idempotent and cheap on repeat: memoise
+     * what it sniffs, as CSVExtractor and ArrayExtractor do.
      *
      * @throws SchemaNotDerivableException when the source cannot describe what it will produce
      */

@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DataFrame Methods
  *
- * DataFrame methods: 49
+ * DataFrame methods: 47
  * DataFrame-returning methods from classes: 3
  *
  * This completer triggers after DataFrame-returning methods
@@ -10,7 +10,7 @@
 import { CompletionContext, snippet } from "@codemirror/autocomplete"
 
 // Map of DataFrame-returning methods grouped by class
-const dataframeReturningMethods = {"flow":["extract","from","process","read"],"groupeddataframe":["aggregate"],"dataframe":["aggregate","batchBy","batchSize","cache","collect","collectRefs","constrain","crossJoin","drop","dropDuplicates","duplicateRow","filter","filterPartitions","filters","join","joinEach","limit","load","match","offset","onError","repartition","rename","renameEach","rows","select","sortBy","transform","until","void","with","withEntries","withEntry","write"]};
+const dataframeReturningMethods = {"flow":["extract","from","process","read"],"groupeddataframe":["aggregate"],"dataframe":["aggregate","batchBy","batchSize","cache","collect","collectRefs","constrain","crossJoin","drop","dropDuplicates","duplicateRow","filter","filters","join","joinEach","limit","load","match","offset","onError","repartition","rename","renameEach","rows","select","sortBy","transform","until","void","with","withEntries","withEntry","write"]};
 
 // DataFrame methods
 const dataframeMethods = [
@@ -279,42 +279,6 @@ const dataframeMethods = [
         apply: snippet("filter(" + "$" + "{" + "1:function" + "}" + ")"),
         boost: 10
     },        {
-        label: "extractor",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">extractor</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Extractor</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @internal engine paths only - a build-time scan has to know whether the source can be read twice
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("extractor()"),
-        boost: 10
-    },        {
-        label: "filterPartitions",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">filterPartitions</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Filter|ScalarFunction</span> <span class=\"fn-param\">$filter</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @lazy<br>@throws RuntimeException
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("filterPartitions(" + "$" + "{" + "1:filter" + "}" + ")"),
-        boost: 10
-    },        {
         label: "filters",
         type: "method",
         detail: "Flow\\\\ETL\\\\DataFrame",
@@ -502,7 +466,7 @@ const dataframeMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">load</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Loader</span> <span class=\"fn-param\">$loader</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                    <span class=\"fn-name\">load</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Loader|Sink</span> <span class=\"fn-param\">$sink</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @lazy
@@ -510,7 +474,7 @@ const dataframeMethods = [
                             `
             return div
         },
-        apply: snippet("load(" + "$" + "{" + "1:loader" + "}" + ")"),
+        apply: snippet("load(" + "$" + "{" + "1:sink" + "}" + ")"),
         boost: 10
     },        {
         label: "match",
@@ -603,6 +567,24 @@ const dataframeMethods = [
         apply: snippet("printRows(" + "$" + "{" + "1:limit" + "}" + ", " + "$" + "{" + "2:truncate" + "}" + ", " + "$" + "{" + "3:formatter" + "}" + ")"),
         boost: 10
     },        {
+        label: "explain",
+        type: "method",
+        detail: "Flow\\\\ETL\\\\DataFrame",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">explain</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Plan</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    This frame\'s plan, frozen: later verbs on this frame do not reach it. toString() prints it as a tree.<br>Answers from the plan without reading a row.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("explain()"),
+        boost: 10
+    },        {
         label: "printSchema",
         type: "method",
         detail: "Flow\\\\ETL\\\\DataFrame",
@@ -619,24 +601,6 @@ const dataframeMethods = [
             return div
         },
         apply: snippet("printSchema(" + "$" + "{" + "1:formatter" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "registerGroupBy",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">registerGroupBy</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">GroupBy</span> <span class=\"fn-param\">$groupBy</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">GroupByAlgorithmBuilder</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">void</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @internal engine paths only - GroupedDataFrame builds its steps against this frame\'s plan
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("registerGroupBy(" + "$" + "{" + "1:groupBy" + "}" + ", " + "$" + "{" + "2:algorithm" + "}" + ")"),
         boost: 10
     },        {
         label: "rename",
@@ -877,7 +841,7 @@ const dataframeMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">write</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Loader</span> <span class=\"fn-param\">$loader</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                    <span class=\"fn-name\">write</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Loader|Sink</span> <span class=\"fn-param\">$sink</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @lazy<br>Alias for ETL::load function.
@@ -885,7 +849,7 @@ const dataframeMethods = [
                             `
             return div
         },
-        apply: snippet("write(" + "$" + "{" + "1:loader" + "}" + ")"),
+        apply: snippet("write(" + "$" + "{" + "1:sink" + "}" + ")"),
         boost: 10
     }        ]
 

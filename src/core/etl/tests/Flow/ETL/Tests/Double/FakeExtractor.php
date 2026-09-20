@@ -85,7 +85,7 @@ final readonly class FakeExtractor implements Extractor
      *
      * @return \Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         for ($i = 0; $i < $this->total; $i++) {
             $id = $i;

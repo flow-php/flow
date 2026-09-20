@@ -9,9 +9,6 @@ use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\SourceStream;
 use Flow\Serializer\Exception\SerializationException;
 
-/**
- * @internal
- */
 interface Serializer
 {
     /**

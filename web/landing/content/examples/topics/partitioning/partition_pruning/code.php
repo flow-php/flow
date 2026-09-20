@@ -9,7 +9,7 @@ require __DIR__ . '/vendor/autoload.php';
 
 data_frame()
     ->read(from_csv(__DIR__ . '/data/partitioned/color=*/sku=*/*.csv'))
-    ->filterPartitions(ref('color')->notEquals(lit('green')))
+    ->filter(ref('color')->notEquals(lit('green')))
     ->collect()
     ->write(to_output(truncate: false))
     ->run();

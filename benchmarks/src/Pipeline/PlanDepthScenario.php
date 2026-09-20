@@ -12,10 +12,10 @@ use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 
 /**
- * schema() answers from the plan without executing it, so this prices PlanBinder::bind() alone rather
- * than $depth withEntry calls per row.
+ * schema() answers from the plan without executing it, so this prices Planner::plan() alone (optimize, translate,
+ * bind, split) rather than $depth withEntry calls per row.
  *
- * One call binds PLANS identical plans, because a single bind is far below timer resolution.
+ * One call plans PLANS identical plans, because a single plan is far below timer resolution.
  */
 final readonly class PlanDepthScenario
 {

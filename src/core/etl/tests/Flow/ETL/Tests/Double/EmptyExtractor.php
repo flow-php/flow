@@ -14,7 +14,7 @@ use function Flow\ETL\DSL\schema;
 
 final class EmptyExtractor implements Extractor
 {
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         yield rows(schema());
     }

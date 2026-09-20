@@ -369,11 +369,11 @@ interface RowMapper
 The library ships two default mappers, both available via DSL functions, plus an optional bridge for
 [cuyz/valinor](https://valinor.cuyz.io).
 
-| Mapper | Use for |
-| --- | --- |
-| [ConstructorMapper](/documentation/components/libs/postgresql/client-constructor-mapper.md) | Map row columns directly to constructor parameters by name (1:1). No type coercion. |
+| Mapper                                                                                           | Use for                                                                                                                                                                                                 |
+|--------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [ConstructorMapper](/documentation/components/libs/postgresql/client-constructor-mapper.md)      | Map row columns directly to constructor parameters by name (1:1). No type coercion.                                                                                                                     |
 | [StaticFactoryMapper](/documentation/components/libs/postgresql/client-static-factory-mapper.md) | Delegate row → object construction to a public static factory method (`self::fromRow(array $row)`). Useful when the target class has a private constructor or needs custom coercion inside the factory. |
-| [TypeMapper](/documentation/components/libs/postgresql/client-type-mapper.md) | Validate and coerce the row via [flow-php/types](/documentation/components/libs/types.md) (JSONB → structure, date string → `\DateTimeImmutable`, ...). Optionally chains into another `RowMapper`. |
+| [TypeMapper](/documentation/components/libs/postgresql/client-type-mapper.md)                    | Validate and coerce the row via [flow-php/types](/documentation/components/libs/types.md) (JSONB → structure, date string → `\DateTimeImmutable`, ...). Optionally chains into another `RowMapper`.     |
 | [PostgreSQL Valinor Bridge](/documentation/components/bridges/postgresql-valinor-bridge.md) | Strict object hydration of complex graphs via cuyz/valinor. **Requires the separate `flow-php/postgresql-valinor-bridge` package.** |
 
 ### Detailed Documentation

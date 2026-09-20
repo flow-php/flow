@@ -7,7 +7,8 @@ namespace Flow\ETL\Tests\Mother;
 use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\Bucketing\BucketsStorage;
 use Flow\ETL\Bucketing\Storage\MemoryBuckets;
-use Flow\ETL\DataFrame;
+use Flow\ETL\Executor;
+use Flow\ETL\Executor\PhysicalPlan;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
 use Flow\ETL\NativePHPRandomValueGenerator;
@@ -23,7 +24,7 @@ final class HashJoinProcessorMother
      * @param int<1, max> $batchSize
      */
     public static function grace(
-        DataFrame $right,
+        PhysicalPlan $right,
         Expression $on,
         Join $type,
         ?SpyBucketsStorage $storage = null,
@@ -46,7 +47,7 @@ final class HashJoinProcessorMother
      * @param int<1, max> $batchSize
      */
     public static function resident(
-        DataFrame $right,
+        PhysicalPlan $right,
         Expression $on,
         Join $type,
         int $batchSize = 1000,
@@ -59,7 +60,7 @@ final class HashJoinProcessorMother
      * @param int<1, max> $batchSize
      */
     public static function with(
-        DataFrame $right,
+        PhysicalPlan $right,
         Expression $on,
         Join $type,
         BucketsStorage $storage,
@@ -68,6 +69,7 @@ final class HashJoinProcessorMother
     ): HashJoinProcessor {
         return new HashJoinProcessor(
             $right,
+            new Executor(),
             $on,
             $type,
             new Buckets($storage),

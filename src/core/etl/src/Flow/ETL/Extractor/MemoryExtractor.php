@@ -40,7 +40,7 @@ final class MemoryExtractor implements BatchableExtractor, Extractor, InfersSche
     /**
      * @return Generator<int, \Flow\ETL\Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         $batchSize = $this->batchSize();
         $schema = $this->schema();

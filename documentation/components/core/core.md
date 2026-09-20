@@ -42,7 +42,149 @@ These methods execute the entire pipeline and return results:
 - **Output operations**: `run()`, `forEach()`, `printRows()`
 - **Schema inspection**: `display()`
 
-`schema()` and `printSchema()` are **not** triggers - they answer from the plan without reading a row.
+`schema()`, `printSchema()` and `explain()` are **not** triggers - they answer from the plan without reading a row.
+`explain()` returns the frame's `Plan`. Its `toString()` prints the plan after the configured optimizer ran, as a
+tree read from the bottom up: a node's children are where its rows come from, and nodes are numbered in the order
+rows reach them - the source is `#1`. What a node does is listed under it.
+
+The verbs build a plan with no consumer on top; **the trigger adds the one it needs**, so `explain()` takes the
+trigger it should print - `Trigger::rows` by default, `Trigger::run` for the plan `run()` executes.
+
+```php
+echo data_frame()
+    ->read(from_csv('orders.csv'))
+    ->filter(ref('email')->isNotNull())
+    ->write(to_json('out.json'))
+    ->explain()->toString();
+```
+
+```text
+Outputs
+├─ #3 Result
+│  │  Rows this plan hands out: to the trigger, or to the node reading it
+│  └─ #2 Filter
+│     │  Condition: IsNotNull
+│     └─ #1 Read
+│           Extractor: CSVExtractor
+└─ #4 Write
+   │  Loader: JsonLoader
+   └─ #2 Filter (shared)
+```
+
+```php
+echo $dataFrame->explain(Trigger::run)->toString();
+```
+
+```text
+#3 Write
+│  Loader: JsonLoader
+└─ #2 Filter
+   │  Condition: IsNotNull
+   └─ #1 Read
+         Extractor: CSVExtractor
+```
+
+`run()` takes no rows, so its plan carries only the sinks - the `Write` is the root and there is no `Result`. A
+`Result` comes back only when a verb follows the last `write()`: nothing would read that chain end, so one is put on
+it to pull the rows, and `run(analyze: ...)` still counts them.
+
+`Outputs` lists everything the frame produces: `Result` is what a rows-returning trigger reads, `Write` is the sink,
+and both read the same rows. A node several consumers read is printed once, and every other consumer points back at it by
+number - `#2 Filter (shared)` is that same filter, not a second one. A node keeps its number in every format.
+A frame joined with `join()` / `crossJoin()` is part of the same tree: the join reads it the way it reads any other
+input, numbered with the rest of the plan, and it runs with this frame's configuration. A frame read with
+`from_data_frame()` is a `Read` of `DataFrameExtractor` and runs with its own.
+
+`toString()` takes the stage and the format to print:
+
+| Argument                     | Prints                                                                              |
+|------------------------------|-------------------------------------------------------------------------------------|
+| `Stage::optimized` (default) | the plan the optimizer hands to the planner                                         |
+| `Stage::unoptimized`         | the plan as the frame built it                                                      |
+| `Stage::physical`            | the plan the executor runs: pipelines, their steps, and every setting each was given |
+| `Format::tree` (default)     | the tree above: every node above the nodes it reads                                 |
+| `Format::flow`               | the same tree turned around: sources first, every node above the nodes that read it |
+| `Format::boxes`              | a box per node, children side by side                                               |
+| `Format::declarations`       | the tree with the declarations optimizer rules read on every node's line            |
+
+```php
+echo $dataFrame->explain()->toString(format: Format::flow);
+```
+
+```text
+#1 Read
+│  Extractor: CSVExtractor
+└─ #2 Filter
+   │  Condition: IsNotNull
+   ├─ #3 Result
+   │     Rows this plan hands out: to the trigger, or to the node reading it
+   └─ #4 Write
+         Loader: JsonLoader
+```
+
+```php
+echo $dataFrame->explain()->toString(format: Format::boxes);
+```
+
+```text
+┌───────────────────────────┐
+│          Outputs          ├──────────────┐
+└─────────────┬─────────────┘              │
+┌─────────────┴─────────────┐┌─────────────┴─────────────┐
+│         #3 Result         ││         #4 Write          │
+│   ────────────────────    ││   ────────────────────    │
+│ Rows this plan hands out: ││    Loader: JsonLoader     │
+│ to the trigger, or to the ││                           │
+│      node reading it      ││                           │
+└─────────────┬─────────────┘└─────────────┬─────────────┘
+┌─────────────┴─────────────┐┌─────────────┴─────────────┐
+│         #2 Filter         ││         #2 Filter         │
+│   ────────────────────    ││         (shared)          │
+│   Condition: IsNotNull    ││                           │
+└─────────────┬─────────────┘└───────────────────────────┘
+┌─────────────┴─────────────┐
+│          #1 Read          │
+│   ────────────────────    │
+│  Extractor: CSVExtractor  │
+└───────────────────────────┘
+```
+
+`Stage::physical` prints what the executor runs. A pipeline ends where a blocking step cuts it, so the pipeline a
+step sits in is where rows stop flowing through, and every step lists the settings it was given - the algorithm's
+storage among them, which the logical stages cannot know because the planner picks it.
+
+```php
+echo data_frame()
+    ->read(from_array($users))
+    ->join(data_frame()->read(from_array($emails)), join_on(['id' => 'id'], join_prefix: 'joined_'), Join::left)
+    ->collect()
+    ->write(to_output(truncate: false))
+    ->explain()->toString(Stage::physical);
+```
+
+```text
+Physical plan
+│  Schema: derived
+└─ Pipeline #1
+   │  Processor: CollectingProcessor
+   │     Schema: declared
+   │  Loader: StreamLoader
+   └─ Pipeline #0
+      │  Extractor: ArrayExtractor
+      │  Processor: HashJoinProcessor
+      │     Join: left
+      │     On: id = id
+      │     Prefix: joined_
+      │     Storage: FilesystemBuckets
+      │     Buckets: 64
+      │     Batch: 1000
+      └─ Right side: Pipeline #0
+            Extractor: ArrayExtractor
+```
+
+A joined frame is planned apart, so its pipelines are numbered apart - `Right side:` says which plan they belong to.
+Reaching this stage plans the frame, so a source that infers its schema by reading is read here; the logical stages
+never read a row.
 
 > **Important**: Build your complete pipeline with lazy operations, then execute once with a trigger operation for optimal performance.
 
@@ -83,6 +225,40 @@ $dataFrame = data_frame()
 - **Cache Strategically**: Only cache expensive operations that will be reused multiple times
 - **Avoid Large Offsets**: Use data source pagination instead of DataFrame `offset()` for large skips
 
+### Optimizer
+
+Before a frame runs, the optimizer rewrites its plan. `Optimizer::default()` runs these rules, in order:
+
+| Rule                   | Rewrite                                                                          |
+|------------------------|----------------------------------------------------------------------------------|
+| `CombineLimits`        | two stacked `limit()` calls become one, with the smaller limit                   |
+| `CombineSortAndLimit`  | `sortBy()` followed by `limit()` keeps only the top rows instead of sorting all  |
+| `PushLimitIntoSource`  | the extractor stops reading once the limit (plus any `offset()`) is reached      |
+| `PushFilterIntoSource` | a `filter()` on partition columns skips whole partition directories              |
+
+Rules live in `Flow\ETL\Optimizer\Rule` and are configured through `config_builder()->optimizer()`:
+
+```php
+<?php
+
+use Flow\ETL\Optimizer;
+use Flow\ETL\Optimizer\Rule\CombineSortAndLimit;
+
+use function Flow\ETL\DSL\{config_builder, data_frame};
+
+// no rewrites at all
+data_frame(config_builder()->optimizer(new Optimizer()));
+
+// the defaults without one rule
+data_frame(config_builder()->optimizer(Optimizer::default()->without(CombineSortAndLimit::class)));
+
+// the defaults followed by your own Optimizer\Rule implementation
+data_frame(config_builder()->optimizer(Optimizer::default()->with(new MyRule())));
+```
+
+`without()` throws on a rule that is not registered, `with()` on a rule class that already is.
+`explain()->toString()` prints the plan after the configured optimizer ran.
+
 ## Component Documentation
 
 For detailed information about specific DataFrame operations, see the following component documentation:
@@ -116,9 +292,6 @@ For detailed information about specific DataFrame operations, see the following 
 - **[Schema](/documentation/components/core/schema.md)** - Schema management and validation
 - **[Constraints](/documentation/components/core/constraints.md)** - Data integrity constraints and business rules
 - **[Error Handling](/documentation/components/core/error-handling.md)** - Error management strategies
-
-### Reliability & Recovery
-- **[Retry Mechanisms](/documentation/components/core/retry.md)** - Automatic retry for transient failures
 
 ### Observability
 - **[Telemetry](/documentation/components/core/telemetry.md)** - Distributed tracing, metrics, and logging integration

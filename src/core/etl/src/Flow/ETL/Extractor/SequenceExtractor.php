@@ -42,7 +42,7 @@ final class SequenceExtractor implements BatchableExtractor, Extractor, InfersSc
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         $batchSize = $this->batchSize();
         $schema = $this->schema();

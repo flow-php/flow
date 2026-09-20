@@ -26,7 +26,7 @@ final readonly class ScalarFunctionFilter implements Filter
         private FlowContext $context,
     ) {
         // The comparability gate belongs here, where the function and the schema it binds against
-        // are both in hand - a filter reaching withPathFilter() any other way is gated too.
+        // are both in hand - a filter reaching a Read any other way is gated too.
         // resolved() guards it: files() and from_path_partitions() declare no partition columns, so
         // their reference never resolves and returns() would throw instead of answering.
         $this->resolved = (new ReferenceResolver())->resolve($function, $partitions);
@@ -41,8 +41,8 @@ final readonly class ScalarFunctionFilter implements Filter
         $values = [];
 
         foreach ($status->path->partitions()->toArray() as $partition) {
-            // findDefinition(), not get(): files() and from_path_partitions() declare no partition
-            // columns and filterPartitions() works on both, while Schema::get() would throw.
+            // findDefinition(), not get(): a source that declares no partition columns hands an empty schema
+            // here, and Schema::get() would throw.
             $definition = $this->partitions->findDefinition($partition->name);
 
             if ($definition === null || $definition->matches($partition->value)) {

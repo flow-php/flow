@@ -12,9 +12,7 @@ use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\FileReading;
 use Flow\ETL\Extractor\InfersSchema;
-use Flow\ETL\Extractor\LimitPushDown;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
-use Flow\ETL\Extractor\PushesLimit;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -27,6 +25,8 @@ use Flow\ETL\Schema\Inference\SchemaInferrer;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
+use Flow\Filesystem\Path\Filter;
+use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Generator;
 use Throwable;
 
@@ -41,12 +41,10 @@ final class ExcelExtractor implements
     Extractor,
     FileExtractor,
     InfersSchema,
-    LimitPushDown,
     MetadataColumnsExtractor,
     RewindableExtractor
 {
     use Batches;
-    use PushesLimit;
     use FileReading;
 
     private SchemaInference $inference;
@@ -55,7 +53,7 @@ final class ExcelExtractor implements
 
     /**
      * The sheets the last inference sampled, still open: the next extract() reads on from where the sample stopped
-     * instead of parsing the sample again. DuckDB keeps its CSV sniffer's buffers for the scan the same way.
+     * instead of parsing the sample again.
      */
     private ?WorkbookSampler $sampled = null;
 
@@ -110,13 +108,13 @@ final class ExcelExtractor implements
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context): Generator
+    public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
     {
         $hydrator = $context->hydrator();
         $batchSize = $this->batchSize();
         $yielded = 0;
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
-        $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path), false);
+        $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $pathFilter), false);
         $workbook = new WorkbookReader($this->readOptions, new ExcelFormatDetector($this->filesystem));
         // only the first extract() after an inference reads on from its sample; every later one parses afresh
         $sampled = $this->sampled;
@@ -202,8 +200,6 @@ final class ExcelExtractor implements
                             return;
                         }
 
-                        $limit = $this->pushedLimit();
-
                         if ($limit !== null && $yielded >= $limit) {
                             return;
                         }
@@ -222,8 +218,6 @@ final class ExcelExtractor implements
                     if ($signal === Signal::STOP) {
                         return;
                     }
-
-                    $limit = $this->pushedLimit();
 
                     if ($limit !== null && $yielded >= $limit) {
                         return;
@@ -283,6 +277,11 @@ final class ExcelExtractor implements
         }
 
         return $fileColumns->declare($fileColumns->withoutTail($derived));
+    }
+
+    public function partitionSchema(): Schema
+    {
+        return $this->fileColumns($this->filesystem, $this->path)->partitions($this->schema ?? new Schema());
     }
 
     public function source(): Path
