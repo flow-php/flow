@@ -5,6 +5,7 @@ mod encode;
 mod exception;
 mod format;
 mod hydrate;
+mod json_check;
 mod plan;
 mod values;
 

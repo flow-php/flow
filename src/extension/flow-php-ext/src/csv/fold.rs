@@ -1,7 +1,8 @@
 //! Schema inference over CSV cells, exactly as `ColumnTypes::observe()` + `StringTypeNarrower::narrow()` +
-//! `TypeWidener::widen()` fold them, for the closed set of types a CSV cell can narrow to. `json_validate()`,
-//! `date_parse()` and `new DateTimeZone('+HH:MM')` are called back into PHP, each behind a Rust pre-filter that is a
-//! necessary condition of the PHP predicate, so parity on those rungs holds by construction.
+//! `TypeWidener::widen()` fold them, for the closed set of types a CSV cell can narrow to. `date_parse()` and
+//! `new DateTimeZone('+HH:MM')` are called back into PHP, each behind a Rust pre-filter that is a necessary condition
+//! of the PHP predicate, so parity on those rungs holds by construction. A JSON cell is accepted natively and only a
+//! native reject is re-asked through `json_validate()`.
 
 use std::collections::HashMap;
 
@@ -12,6 +13,7 @@ use crate::ctx::{call_handle, zval_str, Ctx};
 use crate::csv::php_trim;
 use crate::csv::tokenizer::is_space;
 use crate::exception::ext_exception;
+use crate::json_check::json_valid;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Leaf {
@@ -183,6 +185,11 @@ impl Narrower {
     }
 
     fn is_json(&mut self, value: &[u8]) -> Result<bool, PhpException> {
+        if json_valid(value) {
+            return Ok(true);
+        }
+
+        // same one-sided rule as the cast: only PHP may say "not JSON"
         let valid = call_handle(self.ctx.json_validate()?, None, &mut [zval_str(value)], "validate a JSON cell")?;
 
         Ok(valid.bool().unwrap_or(false))

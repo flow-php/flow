@@ -24,6 +24,10 @@ $cycle = static function () use ($candidates, $raw): void {
     $fold->narrowOne('+99:60');
     $fold->narrowOne('{"a":[1,2]}');
     $fold->narrowOne('2024-01-01');
+
+    foreach (json_leak_cells() as $cell) {
+        $fold->narrowOne($cell);
+    }
 };
 
 for ($i = 0; $i < 10; $i++) {

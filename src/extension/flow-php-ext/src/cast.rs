@@ -9,11 +9,12 @@ use ext_php_rs::zend::Function;
 use crate::ctx::{
     array_key_index, call_handle, call_handle_catching, call_handle_on, call_handle_transparent,
     ce_method_ref, construct_with_zvals, ht_find_key, ht_insert, ht_insert_key, null_zval,
-    schema_mismatch, transparent_exception, write_slot, zval_long, zval_str, Ctx, HtKey,
+    schema_mismatch, transparent_exception, write_slot, zval_long, Ctx, HtKey,
 };
 use crate::encode::{expect_object, ht_for_each, read_slot};
 use crate::exception::ext_exception;
 use crate::hydrate::{build_hydrate_plan, fold_metadata_into_schema, AssemblyClasses, HydratePlan, RowValuesClass};
+use crate::json_check::json_valid;
 use crate::plan::{parse_schema_json, TypeJson};
 use crate::values::date_from_free_form;
 
@@ -326,13 +327,92 @@ fn json_gate(bytes: &[u8]) -> bool {
             || (bytes[0] == b'[' && bytes[bytes.len() - 1] == b']'))
 }
 
-fn json_object_from(bytes: &[u8], ctx: &mut Ctx) -> Result<Zval, PhpException> {
+/// `DateTimeType::ISO_DATE_TIME` followed by `checkdate()`: true only when PHP takes its
+/// `new DateTimeImmutable($value)` branch without consulting StringTemporalParts.
+fn iso_date_time_gate(bytes: &[u8]) -> bool {
+    // PCRE `$` without the D modifier also matches before one final "\n"
+    let bytes = bytes.strip_suffix(b"\n").unwrap_or(bytes);
+    let byte_at = |at: usize| bytes.get(at).copied();
+    let digits_at = |at: usize, count: usize| {
+        bytes
+            .get(at..at + count)
+            .is_some_and(|run| run.iter().all(u8::is_ascii_digit))
+    };
+
+    if !(digits_at(0, 4)
+        && byte_at(4) == Some(b'-')
+        && digits_at(5, 2)
+        && byte_at(7) == Some(b'-')
+        && digits_at(8, 2)
+        && matches!(byte_at(10), Some(b'T' | b' '))
+        && digits_at(11, 2)
+        && byte_at(13) == Some(b':')
+        && digits_at(14, 2))
+    {
+        return false;
+    }
+
+    let mut at = 16;
+
+    if byte_at(at) == Some(b':') && digits_at(at + 1, 2) {
+        at += 3;
+
+        if byte_at(at) == Some(b'.') {
+            let fraction = bytes[at + 1..].iter().take_while(|byte| byte.is_ascii_digit()).count();
+
+            if !(1..=9).contains(&fraction) {
+                return false;
+            }
+
+            at += 1 + fraction;
+        }
+    }
+
+    match byte_at(at) {
+        Some(b'Z') => at += 1,
+        Some(b'+' | b'-') if digits_at(at + 1, 2) => {
+            at += 3;
+
+            if byte_at(at) == Some(b':') && digits_at(at + 1, 2) {
+                at += 3;
+            } else if digits_at(at, 2) {
+                at += 2;
+            }
+        }
+        _ => {}
+    }
+
+    let number = |range: std::ops::Range<usize>| {
+        bytes[range]
+            .iter()
+            .fold(0u32, |value, digit| value * 10 + u32::from(digit - b'0'))
+    };
+    let (year, month, day) = (number(0..4), number(5..7), number(8..10));
+    let leap = year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
+    let days_in_month = match month {
+        2 if leap => 29,
+        2 => 28,
+        4 | 6 | 9 | 11 => 30,
+        _ => 31,
+    };
+
+    at == bytes.len() && year >= 1 && (1..=12).contains(&month) && (1..=days_in_month).contains(&day)
+}
+
+/// `source` is a gated JSON string; the Json shares its zend_string instead of copying the bytes.
+fn json_object_from(source: &Zval, ctx: &mut Ctx) -> Result<Zval, PhpException> {
+    let bytes = source
+        .zend_str()
+        .ok_or_else(|| ext_exception("flow_php expected a JSON string"))?
+        .as_bytes();
+    let is_object = bytes[0] == b'{' && bytes[bytes.len() - 1] == b'}';
+
     let (json_ce, value_slot, is_object_slot) = ctx.json()?;
     let mut json = ZendObject::new(json_ce);
-    write_slot(&mut json, value_slot, zval_str(bytes));
+    write_slot(&mut json, value_slot, source.shallow_clone());
 
     let mut is_object_zv = Zval::new();
-    is_object_zv.set_bool(bytes[0] == b'{' && bytes[bytes.len() - 1] == b'}');
+    is_object_zv.set_bool(is_object);
     write_slot(&mut json, is_object_slot, is_object_zv);
 
     let mut zv = Zval::new();
@@ -411,6 +491,10 @@ fn numeric_scalar(value: &Zval) -> bool {
 /// PHP calls made inside a branch discard their own thrown exceptions and bail
 /// instead - mirroring the `catch (Throwable)` wrappers in the PHP casts.
 fn cast_value(kind: &CastKind, value: &Zval, ctx: &mut Ctx) -> Result<Option<Zval>, PhpException> {
+    // Type::cast receives its argument by value; a branch that returns `value` itself must not hand
+    // back the caller's reference
+    let value = value.dereference();
+
     Ok(match kind {
         CastKind::Integer => {
             if value.is_long() {
@@ -507,10 +591,16 @@ fn cast_value(kind: &CastKind, value: &Zval, ctx: &mut Ctx) -> Result<Option<Zva
                 } else {
                     None
                 }
-            } else if value.is_string() {
-                // DateTimeType::cast gates a string on StringTemporalParts, whose recogniser is a PHP
-                // class; a format whitelist here would be a second grammar, so the string bails whole
-                None
+            } else if let Some(string) = value.zend_str() {
+                // Only DateTimeType::cast's ISO branch is mirrored: its regex and checkdate() are exact, and
+                // what passes them goes straight to the constructor. Every other string is gated on
+                // StringTemporalParts, whose recogniser is a PHP class, so it bails whole
+                if iso_date_time_gate(string.as_bytes()) {
+                    // None (e.g. "25:99:99") bails, and PHP throws the same exception
+                    date_from_free_form(string.as_bytes(), ctx)?
+                } else {
+                    None
+                }
             } else if value.is_long() || value.is_double() {
                 date_from_free_form(&timestamp_string(value)?, ctx)?
             } else {
@@ -531,7 +621,7 @@ fn cast_value(kind: &CastKind, value: &Zval, ctx: &mut Ctx) -> Result<Option<Zva
                 if is_uuid(string.as_bytes()) {
                     let (uuid_ce, value_slot) = ctx.uuid()?;
                     let mut uuid = ZendObject::new(uuid_ce);
-                    write_slot(&mut uuid, value_slot, zval_str(string.as_bytes()));
+                    write_slot(&mut uuid, value_slot, value.shallow_clone());
 
                     let mut zv = Zval::new();
                     zv.set_object(&mut uuid);
@@ -682,7 +772,7 @@ fn cast_date(value: &Zval, ctx: &mut Ctx) -> Result<Option<Zval>, PhpException> 
     }
 
     if value.is_string() {
-        // see CastKind::DateTime above - the string gate lives in PHP
+        // DateType::cast has no ISO branch: every string is gated on StringTemporalParts, a PHP class
         return Ok(None);
     }
 
@@ -736,18 +826,12 @@ fn cast_json(value: &Zval, ctx: &mut Ctx) -> Result<Option<Zval>, PhpException> 
             return Ok(None);
         }
 
-        let json_validate = ctx.json_validate()?;
-        let Ok(valid) =
-            call_handle_transparent(json_validate, None, &mut [value.shallow_clone()])
-        else {
-            return Ok(None);
-        };
-
-        if !valid.bool().unwrap_or(false) {
+        if !json_valid(string.as_bytes()) {
+            // a reject is never authoritative: the retained PHP Type::cast re-asks json_validate()
             return Ok(None);
         }
 
-        return Ok(Some(json_object_from(string.as_bytes(), ctx)?));
+        return Ok(Some(json_object_from(value, ctx)?));
     }
 
     if value.is_array() {
@@ -767,7 +851,7 @@ fn cast_json(value: &Zval, ctx: &mut Ctx) -> Result<Option<Zval>, PhpException> 
             return Ok(None);
         }
 
-        return Ok(Some(json_object_from(string.as_bytes(), ctx)?));
+        return Ok(Some(json_object_from(&encoded, ctx)?));
     }
 
     Ok(None)
@@ -795,6 +879,7 @@ pub fn cast_rows(
 
     let schema_zv = fold_metadata_into_schema(schema, batch_ht, raw_class, ctx)?;
     let mut rows_ht = ZendHashTable::with_capacity(batch_ht.len() as u32);
+    let mut every_column_present = true;
 
     ht_for_each(batch_ht, |_, row_index, rv_zv| {
         let rv = expect_object(rv_zv, "a RawRowValues")?;
@@ -813,7 +898,8 @@ pub fn cast_rows(
             // refuse the absence mid-row, so a later cast refusal in the same batch would be
             // reported by PHP and pre-empted by native - the two paths would name different
             // columns and different rows for the same input.
-            let Some(value) = ht_find_key(values_ht, &key) else {
+            let Some(value) = ht_find_key(values_ht, &key).map(Zval::dereference) else {
+                every_column_present = false;
                 continue;
             };
 
@@ -885,6 +971,12 @@ pub fn cast_rows(
     rows_zv.set_hashtable(rows_ht);
 
     // every non-null value was just cast to its column's type, so the batch takes
-    // the shape-only door - the one HydratedBatch returns through
-    call_handle(assembly.rows_conformed, None, &mut [schema_zv, rows_zv], "conform Rows")
+    // the shape-only door - the one HydratedBatch returns through. Row::conform() returns
+    // $this for a row holding exactly the Schema's keys, in order, with no null under
+    // NOT NULL - which every row built above is once no column was absent. An absence
+    // keeps the PHP door: padding, missingColumn and the failing row's index are
+    // conform()'s to decide.
+    let door = if every_column_present { assembly.rows_trusted } else { assembly.rows_conformed };
+
+    call_handle(door, None, &mut [schema_zv, rows_zv], "assemble Rows")
 }

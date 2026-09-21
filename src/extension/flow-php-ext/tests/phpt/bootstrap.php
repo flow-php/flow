@@ -469,3 +469,98 @@ function assert_narrow_parity(string $label, array $candidates, array $corpus): 
 
     echo $label, ': ', $mismatches === 0 ? 'identical' : "{$mismatches} mismatches", "\n";
 }
+
+/**
+ * JSON-shaped cells where a native JSON check could disagree with json_validate(): nesting depth, surrogate escapes,
+ * UTF-8, control bytes, number grammar, whitespace and trailing input.
+ *
+ * @return array<string, string>
+ */
+function json_parity_cases(): array
+{
+    $nested = /** @param non-negative-int $depth */ static fn(int $depth): string => (
+        str_repeat('[', $depth) . str_repeat(']', $depth)
+    );
+    $backslash = chr(92);
+
+    return [
+        'depth128' => $nested(128),
+        'depth129' => $nested(129),
+        // serde_json accepts the next nine and json_validate() rejects them; only the pre-filters make the two agree
+        'depth512' => $nested(512),
+        'depth513' => $nested(513),
+        'depth100k' => $nested(100000),
+        'obj_depth512' => str_repeat('{"a":', 511) . '{}' . str_repeat('}', 511),
+        'obj_depth513' => str_repeat('{"a":', 512) . '{}' . str_repeat('}', 512),
+        'lone_hi' => '["\ud800"]',
+        'lone_lo' => '["\udc00"]',
+        'hi_hi' => '["\ud800\ud800"]',
+        'lone_hi_key' => '{"\ud800":1}',
+        // a valid escaped pair also trips the surrogate pre-filter - PHP must still yield the same Json
+        'pair_escaped' => '["' . $backslash . 'ud83d' . $backslash . 'ude00"]',
+        'pair_escaped_upper' => '["' . $backslash . 'uD83D' . $backslash . 'uDE00"]',
+        'pair_raw_utf8' => '["😀"]',
+        'bad_utf8' => "[\"\xff\"]",
+        'overlong' => "[\"\xc0\xaf\"]",
+        'utf8_surrogate_cesu' => "[\"\xed\xa0\x80\"]",
+        'bad_utf8_outside' => "[1]\xff]",
+        'nul_in_str' => "[\"a\x00b\"]",
+        'nul_outside' => "[1\x00]",
+        'ctrl_1f' => "[\"\x1f\"]",
+        'del' => "[\"\x7f\"]",
+        'huge_exp' => '[1e999999999999]',
+        'neg_exp' => '[1e-999999]',
+        'bigint' => '[' . str_repeat('9', 5000) . ']',
+        'neg_zero' => '[-0]',
+        'leading_zero' => '[01]',
+        'plus' => '[+1]',
+        'dot' => '[1.]',
+        'dot_lead' => '[.1]',
+        'exp_empty' => '[1e]',
+        'hex' => '[0x1]',
+        'trailing_comma_arr' => '[1,]',
+        'trailing_comma_obj' => '{"a":1,}',
+        'two_values' => '[][]',
+        'garbage' => '[1] x ]',
+        'dup_keys' => '{"a":1,"a":2}',
+        'ws_inside' => "[ \t\n\r1 ]",
+        'vtab' => "[\x0b1]",
+        'nbsp' => "[\xc2\xa01]",
+        'single_quote' => "['a']",
+        'nan' => '[NaN]',
+        'inf' => '[Infinity]',
+        'true' => '[true,false,null]',
+        'True' => '[True]',
+        'escape_bad' => '["\x"]',
+        'escape_slash' => '["\/"]',
+        'u_short' => '["\u12"]',
+        'u_upper' => '["é"]',
+        'u0000' => '["\u0000"]',
+        'key_nonstr' => '{1:2}',
+        'empty_obj' => '{}',
+        'empty_arr' => '[]',
+        'nested_mix' => '{"a":[{"b":{}}]}',
+    ];
+}
+
+/**
+ * JSON-shaped cells for the leak checks: valid ones are accepted natively, while a native reject, the deep one and
+ * both surrogate escapes go to PHP.
+ *
+ * @return list<string>
+ */
+function json_leak_cells(): array
+{
+    return [
+        '{"a":1}',
+        '[1,2]',
+        '{"a":[{"b":{}}]}',
+        '[]',
+        str_repeat('[', 600) . str_repeat(']', 600),
+        '["\ud800"]',
+        '["\ud83d\ude00"]',
+        '[1,]',
+        "[\"\xff\"]",
+        '{"a":}',
+    ];
+}
