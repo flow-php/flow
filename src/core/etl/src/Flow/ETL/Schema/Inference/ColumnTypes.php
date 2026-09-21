@@ -47,6 +47,24 @@ final class ColumnTypes
     }
 
     /**
+     * A fold computed elsewhere (a native reader, a subprocess) - equal to the observe() fold over the same rows.
+     *
+     * @param array<array-key, Type<mixed>> $types - first-seen order, header names first
+     */
+    public static function fromColumnTypes(
+        array $types,
+        int $rows,
+        TypeNarrower $typer,
+        TypeWidener $widener = new TypeWidener(),
+    ): self {
+        $columns = new self([], $typer, $widener);
+        $columns->types = $types;
+        $columns->rows = $rows;
+
+        return $columns;
+    }
+
+    /**
      * Merge left-to-right in listing order: name order follows first-seen, so a different bracketing of the name
      * sequence changes the definition order (never the types).
      */

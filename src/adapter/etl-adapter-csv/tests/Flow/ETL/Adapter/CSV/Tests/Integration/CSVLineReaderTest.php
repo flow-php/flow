@@ -20,7 +20,7 @@ final class CSVLineReaderTest extends FlowTestCase
         $path = __DIR__ . '/../Fixtures/more_than_1000_characters_per_line.csv';
         $stream = NativeLocalSourceStream::open(path_real($path));
 
-        $reader = new CSVLineReader('"', 2000);
+        $reader = new CSVLineReader('"', charactersReadInLine: 2000);
         $lines = iterator_to_array($reader->readLines($stream));
 
         static::assertCount(2, $lines);

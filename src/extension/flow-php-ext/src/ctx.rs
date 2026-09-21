@@ -1,7 +1,7 @@
 //! PHP-engine plumbing: class-entry/slot lookups, hashtable helpers, calls and
 //! per-instance caches (timezones, enums, callables).
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::convert::IntoZvalDyn;
@@ -487,6 +487,9 @@ pub struct Ctx {
     fn_json_encode: Option<Function>,
     fn_json_decode: Option<Function>,
     fn_json_validate: Option<Function>,
+    fn_date_parse: Option<Function>,
+    timezone_identifiers: Option<HashSet<Vec<u8>>>,
+    timezone_construct: Option<&'static Function>,
     metadata_from_array: Option<&'static Function>,
     metadata_map_slot: Option<u32>,
     typed_row_values_slots: Option<(u32, u32)>,
@@ -531,6 +534,9 @@ impl Ctx {
             fn_json_encode: None,
             fn_json_decode: None,
             fn_json_validate: None,
+            fn_date_parse: None,
+            timezone_identifiers: None,
+            timezone_construct: None,
             metadata_from_array: None,
             metadata_map_slot: None,
             typed_row_values_slots: None,
@@ -898,6 +904,58 @@ impl Ctx {
         }
 
         Ok(self.fn_json_validate.as_ref().expect("just initialized"))
+    }
+
+    pub fn date_parse(&mut self) -> Result<&Function, PhpException> {
+        if self.fn_date_parse.is_none() {
+            self.fn_date_parse = Some(function_handle("date_parse")?);
+        }
+
+        Ok(self.fn_date_parse.as_ref().expect("just initialized"))
+    }
+
+    /// `DateTimeZone::listIdentifiers()`, fetched once per `Ctx`.
+    pub fn timezone_identifiers(&mut self) -> Result<&HashSet<Vec<u8>>, PhpException> {
+        if self.timezone_identifiers.is_none() {
+            let list = call_handle(
+                method_handle_ref("DateTimeZone", "listIdentifiers")?,
+                None,
+                &mut [],
+                "list timezone identifiers",
+            )?;
+            let identifiers = list
+                .array()
+                .ok_or_else(|| ext_exception("flow_php expected DateTimeZone::listIdentifiers() to return an array"))?
+                .values()
+                .filter_map(|zv| zv.zend_str().map(|name| name.as_bytes().to_vec()))
+                .collect();
+
+            self.timezone_identifiers = Some(identifiers);
+        }
+
+        Ok(self.timezone_identifiers.as_ref().expect("just initialized"))
+    }
+
+    /// Whether `new DateTimeZone($name)` succeeds; the exception it throws otherwise is discarded.
+    pub fn timezone_accepts(&mut self, name: &[u8]) -> Result<bool, PhpException> {
+        if self.timezone_ce.is_none() {
+            self.timezone_ce = Some(find_class("DateTimeZone")?);
+        }
+
+        let ce = self.timezone_ce.expect("just initialized");
+
+        if self.timezone_construct.is_none() {
+            self.timezone_construct = Some(ce_method_ref(ce, "__construct")?);
+        }
+
+        let timezone = ZendObject::new(ce);
+
+        Ok(call_handle_catching(
+            self.timezone_construct.expect("just initialized"),
+            Some(&timezone),
+            &mut [zval_str(name)],
+        )
+        .is_ok())
     }
 
     /// Static `Flow\ETL\Schema\Metadata::fromArray` handle - builds a Metadata

@@ -1,0 +1,4 @@
+id,pad,n,dup,dup
+1,  5  ,NULL,1,x
+2,7,nil,2,y
+3,8,5,3,z

@@ -19,6 +19,11 @@ final class LengthCapturingSourceStream implements SourceStream
      */
     public array $capturedLengths = [];
 
+    /**
+     * @var list<int> the length argument captured on each iterate() call
+     */
+    public array $capturedIterateLengths = [];
+
     public function __construct(
         private readonly string $contents,
         private readonly Path $path,
@@ -38,6 +43,8 @@ final class LengthCapturingSourceStream implements SourceStream
 
     public function iterate(int $length = 1): Generator
     {
+        $this->capturedIterateLengths[] = $length;
+
         for ($i = 0; $i < strlen($this->contents); $i += $length) {
             yield substr($this->contents, $i, $length);
         }

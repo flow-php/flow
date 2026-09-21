@@ -11,18 +11,23 @@ use function rtrim;
 use function str_contains;
 use function str_starts_with;
 use function substr;
-use function substr_count;
 
 final readonly class CSVLineReader
 {
+    private CSVRecordBoundary $boundary;
+
     /**
      * @param null|int<1, max> $charactersReadInLine
      */
     public function __construct(
         private string $enclosure,
+        string $separator = ',',
+        string $escape = '\\',
         private ?int $charactersReadInLine = null,
         private bool $removeBOM = true,
-    ) {}
+    ) {
+        $this->boundary = new CSVRecordBoundary($enclosure, $separator, $escape);
+    }
 
     /**
      * @return \Generator<int, string>
@@ -42,7 +47,7 @@ final readonly class CSVLineReader
                 $lineNumber++;
                 $buffer = '';
             } else {
-                if ($this->isCompleteCSVRecord($buffer)) {
+                if ($this->boundary->isComplete($buffer)) {
                     yield $this->removeBOM && $lineNumber === 0
                         ? $this->removeBOMFromLine(rtrim($buffer, "\r\n"))
                         : rtrim($buffer, "\r\n");
@@ -59,19 +64,6 @@ final readonly class CSVLineReader
                 ? $this->removeBOMFromLine(rtrim($buffer, "\r\n"))
                 : rtrim($buffer, "\r\n");
         }
-    }
-
-    /**
-     * Check if the current buffer contains a complete CSV record
-     * by counting enclosures and ensuring they are properly paired.
-     */
-    private function isCompleteCSVRecord(string $buffer): bool
-    {
-        if (!str_contains($buffer, $this->enclosure)) {
-            return true;
-        }
-
-        return (substr_count($buffer, $this->enclosure) % 2) === 0;
     }
 
     /**

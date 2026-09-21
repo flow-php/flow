@@ -23,7 +23,6 @@ final class CSVSourceOpenerTest extends FlowTestCase
         ))->open(CSVFixtureContext::source('semicolon.csv'));
 
         try {
-            static::assertSame(',', $open->dialect->separator);
             static::assertSame(['id;name'], $open->columns());
         } finally {
             $open->close();
@@ -69,7 +68,7 @@ final class CSVSourceOpenerTest extends FlowTestCase
         ))->open(CSVFixtureContext::source('semicolon.csv'));
 
         try {
-            static::assertSame(';', $open->dialect->separator);
+            static::assertSame(['id', 'name'], $open->columns());
         } finally {
             $open->close();
         }

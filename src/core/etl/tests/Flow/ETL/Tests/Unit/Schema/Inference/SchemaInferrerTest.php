@@ -11,6 +11,7 @@ use Flow\ETL\Schema\Inference\SchemaInference;
 use Flow\ETL\Schema\Inference\SchemaInferrer;
 use Flow\ETL\Tests\Double\FakeSchemaSampler;
 use Flow\ETL\Tests\Double\RecordingSources;
+use Flow\ETL\Tests\Double\SpySniffingSample;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\ColumnTypesMother;
 use Flow\Types\Type\Native\String\StringTypeNarrower;
@@ -20,6 +21,7 @@ use function array_keys;
 use function array_slice;
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\Types\DSL\type_date;
+use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 
@@ -76,6 +78,43 @@ final class SchemaInferrerTest extends FlowTestCase
         }
 
         return $sources;
+    }
+
+    public function test_a_sample_that_sniffs_itself_is_folded_with_the_budget_left(): void
+    {
+        $first = new SpySniffingSample(ColumnTypesMother::fromColumnTypes(['a' => type_integer()], 4));
+        $second = new SpySniffingSample(ColumnTypesMother::fromColumnTypes([
+            'a' => type_float(),
+            'b' => type_string(),
+        ], 3));
+
+        $schema = (new SchemaInferrer(
+            new SchemaInference(sampleSize: 10, unionByName: true),
+            new StringTypeNarrower(),
+        ))->infer(['a'], [$first, $second]);
+
+        static::assertSame([[['a'], 10]], $first->sniffed);
+        static::assertSame([[['a'], 6]], $second->sniffed);
+        static::assertEquals(
+            new Schema(
+                definition_from_type('a', type_float(), nullable: true),
+                definition_from_type('b', type_string(), nullable: true),
+            ),
+            $schema,
+        );
+    }
+
+    public function test_a_sample_that_sniffs_itself_is_not_asked_once_the_budget_is_spent(): void
+    {
+        $first = new SpySniffingSample(ColumnTypesMother::fromColumnTypes(['a' => type_integer()], 10));
+        $second = new SpySniffingSample(ColumnTypesMother::fromColumnTypes(['a' => type_integer()], 10));
+
+        (new SchemaInferrer(new SchemaInference(sampleSize: 10), new StringTypeNarrower()))->infer(['a'], [
+            $first,
+            $second,
+        ]);
+
+        static::assertSame([], $second->sniffed);
     }
 
     public function test_a_column_that_is_free_text_in_the_first_source_and_numeric_in_the_second_widens_to_string(): void

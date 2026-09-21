@@ -274,6 +274,51 @@ final class ColumnTypesTest extends FlowTestCase
         );
     }
 
+    public function test_from_column_types_reproduces_an_observed_fold(): void
+    {
+        $observed = ColumnTypesMother::fromStrings(['id', 'name']);
+        $observed->observe(new RawRowValues(['id' => '1', 'name' => 'a']));
+        $observed->observe(new RawRowValues(['id' => '2', 'name' => null]));
+
+        $computed = ColumnTypesMother::fromColumnTypes([
+            'id' => type_optional(type_integer()),
+            'name' => type_optional(type_string()),
+        ], 2);
+
+        static::assertEquals(
+            $observed->schema(ColumnTypesMother::floor()),
+            $computed->schema(ColumnTypesMother::floor()),
+        );
+        static::assertSame($observed->rows(), $computed->rows());
+    }
+
+    public function test_from_column_types_merges_with_an_observed_fold(): void
+    {
+        $left = ColumnTypesMother::fromStrings(['a']);
+        $left->observe(new RawRowValues(['a' => '1']));
+        $right = ColumnTypesMother::fromStrings(['a']);
+        $right->observe(new RawRowValues(['a' => '1.5', 'b' => 'x']));
+
+        static::assertEquals(
+            $left->merge($right, true)->schema(ColumnTypesMother::floor()),
+            $left->merge(ColumnTypesMother::fromColumnTypes([
+                'a' => type_optional(type_float()),
+                'b' => type_string(),
+            ], 1), true)->schema(ColumnTypesMother::floor()),
+        );
+    }
+
+    public function test_from_column_types_carries_the_row_count_into_merge(): void
+    {
+        $observed = ColumnTypesMother::fromStrings();
+        $observed->observe(new RawRowValues(['a' => '1']));
+
+        static::assertSame(
+            8,
+            $observed->merge(ColumnTypesMother::fromColumnTypes(['a' => type_integer()], 7), true)->rows(),
+        );
+    }
+
     public function test_merge_is_associative_over_three_partials(): void
     {
         $left = ColumnTypesMother::fromStrings(['a']);

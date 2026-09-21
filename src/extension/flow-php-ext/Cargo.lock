@@ -446,6 +446,7 @@ name = "flow_php"
 version = "0.0.0"
 dependencies = [
  "ext-php-rs",
+ "memchr",
  "serde",
  "serde_json",
 ]
