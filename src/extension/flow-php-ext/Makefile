@@ -51,15 +51,15 @@ test: build
 		sed -n '/^--FILE--$$/,/^--EXPECT/p' "$$f" | sed '1d;$$d' > "$$tmp"; \
 		expected=$$(sed -n '/^--EXPECT\(F\)\{0,1\}--$$/,$$p' "$$f" | sed '1d' | tr -d '\r'); \
 		actual=$$($(PHP) -d extension=$$(realpath $(EXTENSION_SO)) "$$tmp" 2>&1) || true; \
-		actual=$$(echo "$$actual" | tr -d '\r'); \
+		actual=$$(printf '%s' "$$actual" | tr -d '\r'); \
 		rm -f "$$tmp"; \
 		if [ "$$actual" = "$$expected" ]; then \
 			echo "PASS: $$test_name"; \
 			passed=$$((passed + 1)); \
 		else \
 			echo "FAIL: $$test_name"; \
-			echo "  Expected: $$expected"; \
-			echo "  Actual:   $$actual"; \
+			printf '  Expected: %s\n' "$$expected"; \
+			printf '  Actual:   %s\n' "$$actual"; \
 			failed=1; \
 		fi; \
 	done; \
