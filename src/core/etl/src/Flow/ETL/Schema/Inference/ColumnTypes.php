@@ -7,7 +7,9 @@ namespace Flow\ETL\Schema\Inference;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Schema;
 use Flow\Types\Type;
+use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Native\NullType;
+use Flow\Types\Type\Native\StringType;
 use Flow\Types\Type\TypeNarrower;
 use Flow\Types\Type\TypeWidener;
 
@@ -45,6 +47,24 @@ final class ColumnTypes
     }
 
     /**
+     * A fold computed elsewhere (a native reader, a subprocess) - equal to the observe() fold over the same rows.
+     *
+     * @param array<array-key, Type<mixed>> $types - first-seen order, header names first
+     */
+    public static function fromColumnTypes(
+        array $types,
+        int $rows,
+        TypeNarrower $typer,
+        TypeWidener $widener = new TypeWidener(),
+    ): self {
+        $columns = new self([], $typer, $widener);
+        $columns->types = $types;
+        $columns->rows = $rows;
+
+        return $columns;
+    }
+
+    /**
      * Merge left-to-right in listing order: name order follows first-seen, so a different bracketing of the name
      * sequence changes the definition order (never the types).
      */
@@ -78,6 +98,19 @@ final class ColumnTypes
     {
         /** @var mixed $value */
         foreach ($row->values as $name => $value) {
+            $current = array_key_exists($name, $this->types) ? $this->types[$name] : null;
+
+            if (
+                $value !== null
+                && (
+                    $current instanceof StringType
+                    || $current instanceof OptionalType
+                    && $current->base() instanceof StringType
+                )
+            ) {
+                continue;
+            }
+
             $observed = match (true) {
                 $value === null => type_null(),
                 is_string($value) && trim($value) !== $value => type_string(),
@@ -88,9 +121,7 @@ final class ColumnTypes
                 $observed = type_string();
             }
 
-            $this->types[$name] = array_key_exists($name, $this->types)
-                ? $this->widener->widen($this->types[$name], $observed)
-                : $observed;
+            $this->types[$name] = $current === null ? $observed : $this->widener->widen($current, $observed);
         }
 
         $this->rows++;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type;
 
+use Flow\Types\Tests\Unit\Type\Fixtures\SomeEnum;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\TypeWidener;
@@ -12,22 +13,41 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
+use stdClass;
 
 use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_callable;
+use function Flow\Types\DSL\type_class_string;
 use function Flow\Types\DSL\type_date;
 use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_empty_array;
+use function Flow\Types\DSL\type_enum;
 use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_html;
+use function Flow\Types\DSL\type_html_element;
+use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_literal;
 use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_non_empty_string;
 use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_numeric_string;
+use function Flow\Types\DSL\type_object;
 use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_positive_integer;
+use function Flow\Types\DSL\type_resource;
+use function Flow\Types\DSL\type_scalar;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function Flow\Types\DSL\type_time;
+use function Flow\Types\DSL\type_time_zone;
+use function Flow\Types\DSL\type_uuid;
+use function Flow\Types\DSL\type_xml;
+use function Flow\Types\DSL\type_xml_element;
 
 final class TypeWidenerTest extends TestCase
 {
@@ -212,6 +232,45 @@ final class TypeWidenerTest extends TestCase
         ];
     }
 
+    /**
+     * Every concrete non-null, non-optional type the DSL builds - a superset of any inference candidate set.
+     *
+     * @return Generator<string, array{Type<mixed>}>
+     */
+    public static function provideNonNullTypes(): Generator
+    {
+        yield 'array' => [type_array()];
+        yield 'boolean' => [type_boolean()];
+        yield 'callable' => [type_callable()];
+        yield 'class string' => [type_class_string()];
+        yield 'date' => [type_date()];
+        yield 'datetime' => [type_datetime()];
+        yield 'empty array' => [type_empty_array()];
+        yield 'enum' => [type_enum(SomeEnum::class)];
+        yield 'float' => [type_float()];
+        yield 'html' => [type_html()];
+        yield 'html element' => [type_html_element()];
+        yield 'instance of' => [type_instance_of(stdClass::class)];
+        yield 'integer' => [type_integer()];
+        yield 'json' => [type_json()];
+        yield 'list' => [type_list(type_integer())];
+        yield 'literal' => [type_literal('x')];
+        yield 'map' => [type_map(type_string(), type_integer())];
+        yield 'non empty string' => [type_non_empty_string()];
+        yield 'numeric string' => [type_numeric_string()];
+        yield 'object' => [type_object()];
+        yield 'positive integer' => [type_positive_integer()];
+        yield 'resource' => [type_resource()];
+        yield 'scalar' => [type_scalar()];
+        yield 'string' => [type_string()];
+        yield 'structure' => [type_structure(['a' => type_integer()])];
+        yield 'time' => [type_time()];
+        yield 'time zone' => [type_time_zone()];
+        yield 'uuid' => [type_uuid()];
+        yield 'xml' => [type_xml()];
+        yield 'xml element' => [type_xml_element()];
+    }
+
     public static function provideStructureCases(): Generator
     {
         yield 'identical structures are unchanged' => [
@@ -339,6 +398,32 @@ final class TypeWidenerTest extends TestCase
                 'age' => structure_element('age', type_integer(), optional: true),
             ]),
         ];
+    }
+
+    /**
+     * @param Type<mixed> $candidate
+     */
+    #[DataProvider('provideNonNullTypes')]
+    public function test_widening_optional_string_with_any_non_null_candidate_type_yields_optional_string(Type $candidate): void
+    {
+        static::assertEquals(
+            type_optional(type_string()),
+            (new TypeWidener())->widen(type_optional(type_string()), $candidate),
+        );
+    }
+
+    /**
+     * @param Type<mixed> $candidate
+     */
+    #[DataProvider('provideNonNullTypes')]
+    public function test_widening_string_with_any_non_null_candidate_type_yields_string(Type $candidate): void
+    {
+        static::assertEquals(type_string(), (new TypeWidener())->widen(type_string(), $candidate));
+    }
+
+    public function test_widening_string_with_null_yields_optional_string(): void
+    {
+        static::assertEquals(type_optional(type_string()), (new TypeWidener())->widen(type_string(), type_null()));
     }
 
     /**

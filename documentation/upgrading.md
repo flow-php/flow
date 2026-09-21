@@ -221,6 +221,23 @@ after it shift by one. `Stage::physical` is new - see the core documentation.
 | `new Explain\TreeLayout($details, declarations: true)`  | `new Explain\Outline(declarations: true)`, the layout takes no arguments          |
 | `new Explain\BoxLayout($details)`                       | `new Explain\BoxLayout()`                                                         |
 
+### 22) `flow-php/etl-adapter-csv` - an escaped or bare enclosure no longer merges a record with the next line
+
+| Input (3 lines)              | Before                                 | After                                             |
+|------------------------------|----------------------------------------|---------------------------------------------------|
+| `a,b` / `"x\"y",1` / `"p",2` | 1 row: `{"a":"x\\\"y","b":"1\n\"p\""}` | 2 rows: `{"a":"x\\\"y","b":1}`, `{"a":"p","b":2}` |
+| `a,b` / `x"y,1` / `"p",2`    | 1 row: `{"a":"x\"y","b":"1\n\"p\""}`   | 2 rows: `{"a":"x\"y","b":1}`, `{"a":"p","b":2}`   |
+
+### 23) `flow-php/etl-adapter-csv` - `CSVOpenSource` is an interface, `CSVLineReader` takes the separator and escape
+
+| Before                                                                     | After                                                                                          |
+|----------------------------------------------------------------------------|------------------------------------------------------------------------------------------------|
+| `new CSVLineReader($enclosure, $charactersReadInLine, $removeBOM)`         | `new CSVLineReader($enclosure, $separator, $escape, $charactersReadInLine, $removeBOM)`        |
+| `new CSVOpenSource($stream, $dialect, $encoder, $lineReader)`              | `new PhpCSVOpenSource($stream, $encoder, $lineReader)`; `CSVOpenSource` is its interface       |
+| `$open->stream`, `$open->dialect`, `$open->encoder`, `$open->lineReader`   | removed                                                                                        |
+| `CSVFileReader::samples()` yields `Generator`s                             | yields `CSVFileSample` (`IteratorAggregate`); `$unit->getIterator()` for the generator         |
+| `CSVFileReader::sample($source)`                                           | `new CSVFileSample($opener, $source)`                                                          |
+
 ---
 
 ## Upgrading from 0.43.x to 0.44.x

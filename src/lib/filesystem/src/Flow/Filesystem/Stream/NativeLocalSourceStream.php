@@ -103,16 +103,23 @@ final class NativeLocalSourceStream implements SourceStream
             throw new RuntimeException('Cannot read from closed stream');
         }
 
-        fseek($this->handle(), 0);
+        $handle = $this->handle();
 
-        while (!feof($this->handle())) {
-            $string = fread($this->handle(), $length);
+        fseek($handle, 0);
+
+        while (!feof($handle)) {
+            $string = fread($handle, $length);
 
             if ($string === false) {
                 break;
             }
 
             yield $string;
+
+            // close() can run while the consumer holds the generator, and feof() on the dead handle is a TypeError
+            if (!$this->isOpen()) {
+                throw new RuntimeException('Cannot read from closed stream');
+            }
         }
     }
 
@@ -145,16 +152,23 @@ final class NativeLocalSourceStream implements SourceStream
             throw new RuntimeException('Cannot read from closed stream');
         }
 
-        fseek($this->handle(), 0);
+        $handle = $this->handle();
 
-        while (!feof($this->handle())) {
-            $line = stream_get_line($this->handle(), PHP_INT_MAX, $separator);
+        fseek($handle, 0);
+
+        while (!feof($handle)) {
+            $line = stream_get_line($handle, PHP_INT_MAX, $separator);
 
             if ($line === false) {
                 break;
             }
 
             yield $line;
+
+            // close() can run while the consumer holds the generator, and feof() on the dead handle is a TypeError
+            if (!$this->isOpen()) {
+                throw new RuntimeException('Cannot read from closed stream');
+            }
         }
     }
 

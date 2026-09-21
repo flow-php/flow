@@ -8,5 +8,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 ext-php-rs = "0.15"
+memchr = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["raw_value"] }

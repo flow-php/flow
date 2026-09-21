@@ -79,28 +79,14 @@ final readonly class CSVFileReader implements SchemaSampler
     }
 
     /**
-     * @return Generator<int, RawRowValues>
-     */
-    public function sample(SourceFile $source): Generator
-    {
-        $open = $this->opener->open($source);
-
-        try {
-            yield from $open->records();
-        } finally {
-            $open->close();
-        }
-    }
-
-    /**
-     * $rowBudget is deliberately unused: sample() is lazy and SchemaInferrer stops advancing it.
+     * $rowBudget is unused: SchemaInferrer hands each unit its remaining budget through sniffColumnTypes().
      *
-     * @return Generator<int, Generator<int, RawRowValues>>
+     * @return Generator<int, CSVFileSample>
      */
     public function samples(int $rowBudget): iterable
     {
         foreach ($this->sources as $source) {
-            yield $this->sample($source);
+            yield new CSVFileSample($this->opener, $source);
         }
     }
 }

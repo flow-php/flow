@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Integration;
 
+use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Tests\Context\ReadLinesContext;
 use Generator;
@@ -30,6 +31,40 @@ final class NativeLocalSourceStreamTest extends NativeLocalFilesystemTestCase
         yield [30];
         yield [40];
         yield [1024];
+    }
+
+    public function test_closing_a_stream_while_its_lines_are_being_iterated(): void
+    {
+        $this->givenFileExists(__DIR__ . '/var/file.txt', "x\ny\nz");
+
+        $stream = native_local_filesystem()->readFrom(path(__DIR__ . '/var/file.txt'));
+        $lines = $stream->readLines();
+
+        static::assertSame('x', $lines->current());
+
+        $stream->close();
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Cannot read from closed stream');
+
+        $lines->next();
+    }
+
+    public function test_closing_a_stream_while_it_is_being_iterated(): void
+    {
+        $this->givenFileExists(__DIR__ . '/var/file.txt', 'xyz');
+
+        $stream = native_local_filesystem()->readFrom(path(__DIR__ . '/var/file.txt'));
+        $chunks = $stream->iterate();
+
+        static::assertSame('x', $chunks->current());
+
+        $stream->close();
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Cannot read from closed stream');
+
+        $chunks->next();
     }
 
     public function test_iterating_through_blob(): void
@@ -98,6 +133,19 @@ final class NativeLocalSourceStreamTest extends NativeLocalFilesystemTestCase
         static::assertNull($lines->current());
 
         $stream->close();
+    }
+
+    public function test_read_lines_from_a_closed_stream_throws(): void
+    {
+        $this->givenFileExists(__DIR__ . '/var/file.txt', "x\ny");
+
+        $stream = native_local_filesystem()->readFrom(path(__DIR__ . '/var/file.txt'));
+        $stream->close();
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Cannot read from closed stream');
+
+        $stream->readLines()->current();
     }
 
     /**

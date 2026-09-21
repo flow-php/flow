@@ -28,9 +28,23 @@ final readonly class CSVSourceOpener
                 $this->options->escape ?? $detected->escape,
             );
 
-            return new CSVOpenSource(
+            if (NativeCSVOpenSource::isSupported()) {
+                return new NativeCSVOpenSource(
+                    $stream,
+                    new RustCSVReaderNative(
+                        $dialect->separator,
+                        $dialect->enclosure,
+                        $dialect->escape,
+                        $this->options->withHeader,
+                        $this->options->emptyToNull,
+                        $this->options->removeBOM,
+                    ),
+                    $this->options->charactersReadInLine,
+                );
+            }
+
+            return new PhpCSVOpenSource(
                 $stream,
-                $dialect,
                 new CSVEncoder(
                     withHeader: $this->options->withHeader,
                     separator: $dialect->separator,
@@ -38,7 +52,13 @@ final readonly class CSVSourceOpener
                     escape: $dialect->escape,
                     emptyToNull: $this->options->emptyToNull,
                 ),
-                new CSVLineReader($dialect->enclosure, $this->options->charactersReadInLine, $this->options->removeBOM),
+                new CSVLineReader(
+                    $dialect->enclosure,
+                    $dialect->separator,
+                    $dialect->escape,
+                    $this->options->charactersReadInLine,
+                    $this->options->removeBOM,
+                ),
             );
         } catch (Throwable $e) {
             $stream->close();

@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Mother;
 use Flow\ETL\Schema\Inference\ColumnTypes;
 use Flow\ETL\Schema\Inference\InferredTypes;
 use Flow\ETL\Schema\Inference\TypeFloor;
+use Flow\Types\Type;
 use Flow\Types\Type\Logical\InstanceOfTypeNarrower;
 use Flow\Types\Type\Native\String\StringTypeNarrower;
 
@@ -22,6 +23,16 @@ final class ColumnTypesMother
     public static function floor(): TypeFloor
     {
         return new TypeFloor(InferredTypes::default());
+    }
+
+    /**
+     * A fold computed elsewhere - a native reader, a subprocess.
+     *
+     * @param array<array-key, Type<mixed>> $types
+     */
+    public static function fromColumnTypes(array $types, int $rows): ColumnTypes
+    {
+        return ColumnTypes::fromColumnTypes($types, $rows, new StringTypeNarrower(InferredTypes::default()->toArray()));
     }
 
     /**

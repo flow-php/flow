@@ -5,51 +5,34 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV;
 
 use Flow\ETL\Row\RawRowValues;
-use Flow\Filesystem\SourceStream;
+use Flow\ETL\Schema\Inference\ColumnTypes;
+use Flow\ETL\Schema\Inference\SchemaInference;
+use Flow\Types\Type\TypeNarrower;
 use Generator;
 
-final readonly class CSVOpenSource
+interface CSVOpenSource
 {
-    public function __construct(
-        public SourceStream $stream,
-        public CSVDialect $dialect,
-        public CSVEncoder $encoder,
-        public CSVLineReader $lineReader,
-    ) {}
-
-    public function close(): void
-    {
-        $this->stream->close();
-    }
+    public function close(): void;
 
     /**
      * This instance is consumed afterwards.
      *
      * @return list<string>
      */
-    public function columns(): array
-    {
-        foreach ($this->lineReader->readLines($this->stream) as $line) {
-            $this->encoder->decode([$line]);
-
-            break;
-        }
-
-        return $this->encoder->headers() ?? [];
-    }
+    public function columns(): array;
 
     /**
-     * CSVLineReader::readLines() already joins a quoted multi-line record, so never re-split or re-join here.
      * This instance is consumed afterwards.
      *
      * @return Generator<int, RawRowValues>
      */
-    public function records(): Generator
-    {
-        foreach ($this->lineReader->readLines($this->stream) as $line) {
-            foreach ($this->encoder->decode([$line]) as $values) {
-                yield $values;
-            }
-        }
-    }
+    public function records(): Generator;
+
+    /**
+     * SchemaInferrer::sniff() over records(). This instance is consumed afterwards.
+     *
+     * @param list<string> $names
+     * @param int<0, max>|-1 $rowBudget
+     */
+    public function sniff(array $names, int $rowBudget, SchemaInference $inference, TypeNarrower $typer): ColumnTypes;
 }

@@ -347,6 +347,8 @@ pub struct AssemblyClasses {
     /// `Rows::conformed()` - the shape-only door `HydratedBatch` returns through,
     /// so both hydrators assemble the batch by the same rule
     pub rows_conformed: &'static Function,
+    /// `Rows::trusted()` - taken instead of `rows_conformed` when conform() would return every row unchanged
+    pub rows_trusted: &'static Function,
     pub schema_mismatch_ce: &'static ClassEntry,
     /// the base `PhpRowHydrator`'s guard catches, so a refusal is recognised on
     /// both paths by the same rule and anything else stays the caller's exception
@@ -359,6 +361,7 @@ impl AssemblyClasses {
         Ok(Self {
             row_ce: find_class("Flow\\ETL\\Row")?,
             rows_conformed: ce_method_ref(find_class("Flow\\ETL\\Rows")?, "conformed")?,
+            rows_trusted: ce_method_ref(find_class("Flow\\ETL\\Rows")?, "trusted")?,
             schema_mismatch_ce: find_class("Flow\\ETL\\Exception\\SchemaMismatchException")?,
             types_exception_ce: find_class("Flow\\Types\\Exception\\Exception")?,
             value_does_not_match: ce_method_ref(

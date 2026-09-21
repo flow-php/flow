@@ -40,11 +40,15 @@ final readonly class SchemaInferrer
                 break;
             }
 
-            $partial = $this->sniff(
-                $names,
-                $source,
-                $this->inference->sampleSize === -1 ? -1 : max(0, $this->inference->sampleSize - $columns->rows()),
-            );
+            $rowBudget = $this->inference->sampleSize === -1
+                ? -1
+                : max(0, $this->inference->sampleSize - $columns->rows());
+
+            if ($source instanceof SniffsColumnTypes) {
+                $partial = $source->sniffColumnTypes($names, $rowBudget, $this->inference, $this->typer);
+            } else {
+                $partial = $this->sniff($names, $source, $rowBudget);
+            }
 
             if ($partial->rows() > 0) {
                 $sniffed++;

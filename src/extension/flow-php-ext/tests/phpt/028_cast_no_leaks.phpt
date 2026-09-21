@@ -85,9 +85,19 @@ $throwingBatch = [
 // an absent NOT-NULL column aborts before any row_values insertion - a different leak path
 $missingBatch = [new RawRowValues(['name' => 'no id here'])];
 
-$cycle = static function () use ($batch, $throwingBatch, $missingBatch, $schema): void {
+$jsonSchema = schema(json_schema('json'));
+
+$cycle = static function () use ($batch, $throwingBatch, $missingBatch, $schema, $jsonSchema): void {
     $native = new RustRowHydratorNative();
     $native->hydrate($batch, $schema);
+
+    foreach (json_leak_cells() as $cell) {
+        try {
+            $native->hydrate([new RawRowValues(['json' => $cell])], $jsonSchema);
+        } catch (Throwable) {
+            // a refused cell aborts its batch; nothing it touched may leak
+        }
+    }
 
     try {
         $native->hydrate($throwingBatch, $schema);

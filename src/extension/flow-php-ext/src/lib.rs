@@ -1,9 +1,11 @@
 mod cast;
+mod csv;
 mod ctx;
 mod encode;
 mod exception;
 mod format;
 mod hydrate;
+mod json_check;
 mod plan;
 mod values;
 
@@ -15,7 +17,7 @@ use ext_php_rs::types::{ZendHashTable, Zval};
 use ext_php_rs::zend::ModuleEntry;
 use ext_php_rs::{info_table_end, info_table_row, info_table_start};
 
-use crate::ctx::{zval_str, Ctx};
+use crate::ctx::{ht_insert, zval_str, Ctx};
 use crate::encode::{build_encode_plan, encode_typed_row, expect_object, ht_for_each, read_slot, EncodePlan};
 use crate::exception::ext_exception;
 use crate::format::Reader;
@@ -247,6 +249,120 @@ impl RustRowHydratorNative {
     }
 }
 
+/// Native counterpart of `CSVLineReader` + `CSVEncoder::decode()`: bytes in, `RawRowValues` out,
+/// byte-identical to the PHP path. Resumable - `feed` any chunk size, `finish` at EOF.
+#[php_class]
+#[php(name = "Flow\\ETL\\Adapter\\CSV\\RustCSVReaderNative")]
+pub struct RustCSVReaderNative {
+    reader: csv::CsvReader,
+    row_values_class: hydrate::RowValuesClass,
+}
+
+#[php_impl]
+impl RustCSVReaderNative {
+    pub fn __construct(
+        separator: BinarySlice<u8>,
+        enclosure: BinarySlice<u8>,
+        escape: BinarySlice<u8>,
+        with_header: bool,
+        empty_to_null: bool,
+        remove_bom: bool,
+    ) -> PhpResult<Self> {
+        Ok(Self {
+            reader: csv::CsvReader::new(&separator, &enclosure, &escape, with_header, empty_to_null, remove_bom)?,
+            row_values_class: hydrate::RowValuesClass::resolve()?,
+        })
+    }
+
+    pub fn feed(&mut self, chunk: BinarySlice<u8>) {
+        self.reader.feed(&chunk);
+    }
+
+    pub fn finish(&mut self) {
+        self.reader.finish();
+    }
+
+    pub fn headers(&mut self) -> PhpResult<Zval> {
+        let headers = self.reader.headers();
+        let mut list = ZendHashTable::with_capacity(headers.len() as u32);
+
+        for header in headers {
+            list.push(zval_str(header))
+                .map_err(|e| ext_exception(format!("flow_php failed to collect a CSV header: {e:?}")))?;
+        }
+
+        let mut zv = Zval::new();
+        zv.set_hashtable(list);
+
+        Ok(zv)
+    }
+
+    /// Folds up to `limit` buffered rows (-1: all) into `fold`; returns how many it folded.
+    pub fn fold(&mut self, fold: &mut RustColumnFoldNative, limit: i64) -> PhpResult<i64> {
+        let limit = match limit {
+            -1 => None,
+            limit => Some(
+                u64::try_from(limit).map_err(|_| ext_exception("flow_php CSV fold limit must be -1 or at least 0"))?,
+            ),
+        };
+
+        Ok(self.reader.fold(&mut fold.fold, limit)? as i64)
+    }
+
+    pub fn next(&mut self, batch_size: i64) -> PhpResult<Zval> {
+        let batch_size = usize::try_from(batch_size)
+            .ok()
+            .filter(|size| *size > 0)
+            .ok_or_else(|| ext_exception("flow_php CSV batch size must be greater than 0"))?;
+
+        let mut zv = Zval::new();
+        zv.set_hashtable(self.reader.next(batch_size, &self.row_values_class)?);
+
+        Ok(zv)
+    }
+}
+
+/// `ColumnTypes::observe()` over native CSV rows: a column fold seeded with the header names and gated by the
+/// candidate types' `toString()` codes. HTML and XML candidates are never passed - the PHP side folds those itself.
+#[php_class]
+#[php(name = "Flow\\ETL\\Adapter\\CSV\\RustColumnFoldNative")]
+pub struct RustColumnFoldNative {
+    fold: csv::fold::Fold,
+}
+
+#[php_impl]
+impl RustColumnFoldNative {
+    pub fn __construct(names: &ZendHashTable, candidates: &ZendHashTable) -> PhpResult<Self> {
+        Ok(Self {
+            fold: csv::fold::Fold::new(csv::fold::string_values(names), &csv::fold::string_values(candidates))?,
+        })
+    }
+
+    /// `StringTypeNarrower::narrow($value)->toString()` for the fold's candidates.
+    #[php(name = "narrowOne")]
+    pub fn narrow_one(&mut self, value: BinarySlice<u8>) -> PhpResult<String> {
+        Ok(self.fold.narrower.narrow(&value)?.code().to_string())
+    }
+
+    /// Column name => type `toString()`, first-seen order.
+    pub fn types(&self) -> Zval {
+        let mut types = ZendHashTable::new();
+
+        for (name, code) in self.fold.types() {
+            ht_insert(&mut types, name, zval_str(code.as_bytes()));
+        }
+
+        let mut zv = Zval::new();
+        zv.set_hashtable(types);
+
+        zv
+    }
+
+    pub fn rows(&self) -> i64 {
+        self.fold.rows() as i64
+    }
+}
+
 #[php_module]
 #[php(startup = "module_startup")]
 pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
@@ -255,4 +371,6 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .info_function(php_module_info)
         .class::<RustFloeEncoderNative>()
         .class::<RustRowHydratorNative>()
+        .class::<RustCSVReaderNative>()
+        .class::<RustColumnFoldNative>()
 }

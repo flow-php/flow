@@ -62,6 +62,8 @@ src/extension/flow-php-ext/
 │   ├── format.rs           # Floe binary format primitives
 │   ├── hydrate.rs          # Row hydration against a schema
 │   ├── cast.rs             # Value casting
+│   ├── json_check.rs       # JSON validation shared by casting and CSV inference
+│   ├── csv/                # CSV tokenizer, reader and schema-inference fold
 │   ├── plan.rs             # Per-column plan resolved once per schema
 │   ├── ctx.rs              # Shared module context
 │   ├── values.rs           # Zval <-> PHP value helpers

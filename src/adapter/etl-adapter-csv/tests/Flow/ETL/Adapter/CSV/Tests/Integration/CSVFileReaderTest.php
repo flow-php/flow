@@ -10,7 +10,6 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use PHPUnit\Framework\Attributes\TestWith;
 
-use function array_keys;
 use function count;
 use function iterator_to_array;
 
@@ -110,31 +109,6 @@ final class CSVFileReaderTest extends FlowTestCase
         static::assertStringEndsWith('a.csv', $header->source);
     }
 
-    public function test_sample_closes_its_stream_when_abandoned(): void
-    {
-        $counting = new CountingFilesystem(new NativeLocalFilesystem());
-        $sample = CSVFixtureContext::reader($counting)->sample(CSVFixtureContext::source('five_rows.csv'));
-
-        $sample->current();
-        unset($sample);
-
-        static::assertSame(1, $counting->closedStreams());
-    }
-
-    public function test_sample_yields_every_row_of_a_source(): void
-    {
-        $records = iterator_to_array(
-            CSVFixtureContext::reader()->sample(CSVFixtureContext::source('ragged.csv')),
-            false,
-        );
-
-        static::assertCount(3, $records);
-
-        foreach ($records as $record) {
-            static::assertSame(['id', 'name', 'v'], array_keys($record->values));
-        }
-    }
-
     public function test_samples_does_not_ration_the_row_budget(): void
     {
         $units = iterator_to_array(
@@ -160,7 +134,7 @@ final class CSVFileReaderTest extends FlowTestCase
         static::assertSame([['id' => '1', 'name' => 'a'], ['id' => '3', 'label' => 'c']], $first);
     }
 
-    public function test_samples_yields_one_unstarted_generator_per_source(): void
+    public function test_samples_yields_one_unstarted_unit_per_source(): void
     {
         $counting = new CountingFilesystem(new NativeLocalFilesystem());
         $units = iterator_to_array(
@@ -170,12 +144,12 @@ final class CSVFileReaderTest extends FlowTestCase
 
         $beforeAdvancing = $counting->readFromCalls;
 
-        $units[0]->current();
+        $units[0]->getIterator()->current();
 
         $afterAdvancingOne = $counting->readFromCalls;
 
         static::assertCount(2, $units);
-        static::assertSame(0, $beforeAdvancing, 'samples() yields UNSTARTED generators');
+        static::assertSame(0, $beforeAdvancing, 'samples() yields UNSTARTED units');
         static::assertSame(1, $afterAdvancingOne, 'advancing the first unit opens exactly one source');
     }
 }

@@ -22,6 +22,7 @@ use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Tests\OperatingSystem;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\Attributes\TestWith;
 use RuntimeException;
 
@@ -30,6 +31,8 @@ use function array_keys;
 use function array_map;
 use function array_sum;
 use function count;
+use function fclose;
+use function fgetcsv;
 use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\Adapter\CSV\to_csv;
 use function Flow\ETL\DSL\config;
@@ -46,9 +49,14 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\schema_metadata;
 use function Flow\ETL\DSL\schema_to_ascii;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path_real;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_html;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_xml;
+use function fopen;
 use function iterator_to_array;
 use function max;
 use function sort;
@@ -1125,5 +1133,140 @@ final class CSVExtractorTest extends FlowTestCase
         fclose($handle);
 
         return $contents === $BOM;
+    }
+
+    public function test_an_escaped_quote_does_not_glue_the_following_record(): void
+    {
+        static::assertSame(
+            [['a' => 'x\"y', 'b' => 1], ['a' => 'p', 'b' => 2]],
+            df()
+                ->read(from_csv(CSVFixtureContext::path('escaped_quote_then_row.csv')))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    public function test_a_bare_quote_in_an_unenclosed_field_does_not_glue_the_following_record(): void
+    {
+        static::assertSame(
+            [['a' => 'x"y', 'b' => 1], ['a' => 'p', 'b' => 2]],
+            df()
+                ->read(from_csv(CSVFixtureContext::path('bare_quote_then_row.csv')))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    public function test_an_escaped_quote_next_to_an_embedded_newline_keeps_one_record(): void
+    {
+        static::assertSame(
+            [['a' => "x\\\"y\nz", 'b' => 1], ['a' => 'p', 'b' => 2]],
+            df()
+                ->read(from_csv(CSVFixtureContext::path('escaped_quote_with_newline.csv')))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    public function test_an_escaped_quote_next_to_an_embedded_separator_keeps_one_record(): void
+    {
+        static::assertSame(
+            [['a' => 'x\"y,z', 'b' => 1], ['a' => 'p', 'b' => 2]],
+            df()
+                ->read(from_csv(CSVFixtureContext::path('escaped_quote_with_separator.csv')))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    public function test_an_escaped_quote_read_without_an_escape_character_closes_the_field(): void
+    {
+        static::assertSame(
+            [['a' => 'x\y"', 'b' => 1], ['a' => 'p', 'b' => 2]],
+            df()
+                ->read(from_csv(CSVFixtureContext::path('escaped_quote_no_escape_char.csv'))->withEscape(''))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    #[DataProviderExternal(CSVFixtureContext::class, 'fixtures')]
+    public function test_record_counts_match_fgetcsv_for_every_fixture(string $fixture): void
+    {
+        $path = CSVFixtureContext::path($fixture);
+        $stream = native_local_filesystem()->readFrom(path_real($path));
+        $dialect = CSVFixtureContext::dialect($stream);
+        $stream->close();
+
+        $handle = fopen($path, 'rb');
+        $records = 0;
+
+        while (fgetcsv($handle, 0, $dialect->separator, $dialect->enclosure, $dialect->escape) !== false) {
+            $records++;
+        }
+
+        fclose($handle);
+
+        static::assertSame(
+            max(0, $records - 1),
+            df()
+                ->read(
+                    from_csv($path)
+                        ->withSeparator($dialect->separator)
+                        ->withEnclosure($dialect->enclosure)
+                        ->withEscape($dialect->escape),
+                )
+                ->fetch()
+                ->count(),
+        );
+    }
+
+    #[DataProviderExternal(CSVFixtureContext::class, 'fixtures')]
+    public function test_native_and_php_inference_agree_on_every_fixture(string $fixture): void
+    {
+        static::assertEquals(
+            CSVFixtureContext::inferPhp(infer_schema()->build(), $fixture),
+            CSVFixtureContext::infer(infer_schema()->build(), $fixture),
+        );
+    }
+
+    public function test_sample_size_minus_one_agrees_on_both_paths(): void
+    {
+        $inference = infer_schema()->sampleSize(-1)->build();
+
+        static::assertEquals(
+            CSVFixtureContext::inferPhp($inference, 'orders_flow.csv'),
+            CSVFixtureContext::infer($inference, 'orders_flow.csv'),
+        );
+    }
+
+    public function test_union_by_name_over_a_glob_agrees_on_both_paths(): void
+    {
+        $inference = infer_schema()->unionByName()->build();
+
+        static::assertEquals(
+            CSVFixtureContext::inferPhp($inference, 'columns_diverge/a.csv', 'columns_diverge/b.csv'),
+            CSVFixtureContext::infer($inference, 'columns_diverge/a.csv', 'columns_diverge/b.csv'),
+        );
+    }
+
+    public function test_a_restricted_candidate_set_agrees_on_both_paths(): void
+    {
+        $inference = infer_schema()->types(type_integer(), type_boolean())->build();
+
+        static::assertEquals(
+            CSVFixtureContext::inferPhp($inference, 'orders_flow.csv'),
+            CSVFixtureContext::infer($inference, 'orders_flow.csv'),
+        );
+    }
+
+    public function test_html_or_xml_candidates_fall_back_to_the_php_path(): void
+    {
+        $inference = infer_schema()->types(type_html(), type_xml(), type_integer())->build();
+
+        static::assertEquals(
+            CSVFixtureContext::inferPhp($inference, 'orders_flow.csv'),
+            CSVFixtureContext::infer($inference, 'orders_flow.csv'),
+        );
     }
 }

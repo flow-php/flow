@@ -7,17 +7,167 @@ namespace Flow\ETL\Adapter\CSV\Tests\Unit;
 use Flow\ETL\Adapter\CSV\CSVLineReader;
 use Flow\ETL\Adapter\CSV\Tests\Double\LengthCapturingSourceStream;
 use Flow\Filesystem\Stream\MemorySourceStream;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\Filesystem\DSL\path;
+use function iterator_to_array;
+use function preg_last_error;
+use function str_repeat;
+
+use const PREG_NO_ERROR;
 
 final class CSVLineReaderTest extends TestCase
 {
+    /**
+     * @return Generator<string, array{string, string, string, non-empty-string, list<string>}>
+     */
+    public static function record_boundaries(): Generator
+    {
+        yield 'ends outside an enclosure' => [',', '"', '\\', "\"a\",b\nc,d", ['"a",b', 'c,d']];
+        yield 'ends inside an enclosure' => [',', '"', '\\', "\"a\nb\",c\nd", ["\"a\nb\",c", 'd']];
+        yield 'escaped enclosure' => [',', '"', '\\', "\"x\\\"y\nz\",1\n\"p\",2", ["\"x\\\"y\nz\",1", '"p",2']];
+        yield 'escape before the line end' => [',', '"', '\\', "\"x\\\n\",1\n\"p\",2", ["\"x\\\n\",1", '"p",2']];
+        yield 'doubled enclosure' => [',', '"', '\\', "\"a\"\"\nb\",1\n\"c\",2", ["\"a\"\"\nb\",1", '"c",2']];
+        yield 'doubled enclosure at the buffer end' => [',', '"', '\\', "\"a\"\"\n\",1", ["\"a\"\"\n\",1"]];
+        yield 'enclosure inside an unenclosed field' => [',', '"', '\\', "x\"y,1\n\"p\",2", ['x"y,1', '"p",2']];
+        yield 'blanks before an opening enclosure' => [',', '"', '\\', "a, \t\"b\nc\"\nd", ["a, \t\"b\nc\"", 'd']];
+        yield 'junk after a closing enclosure' => [',', '"', '\\', "\"a\"x\"y,1\nb", ['"a"x"y,1', 'b']];
+        yield 'empty escape' => [',', '"', '', "\"x\\\",1\n\"p\",2", ['"x\\",1', '"p",2']];
+        yield 'escape equal to the enclosure' => [',', '"', '"', "\"a\"\"\nb\",1\nc", ["\"a\"\"\nb\",1", 'c']];
+        yield 'custom separator and enclosure' => [
+            ';',
+            "'",
+            '\\',
+            "x,'y;1\na;'b\nc';d\ne;f",
+            ["x,'y;1", "a;'b\nc';d", 'e;f'],
+        ];
+    }
+
+    public function test_a_record_ending_outside_an_enclosure_is_complete(): void
+    {
+        static::assertSame(
+            ['"a",b', 'c,d'],
+            iterator_to_array((new CSVLineReader('"'))->readLines(new MemorySourceStream("\"a\",b\nc,d"))),
+        );
+    }
+
+    public function test_a_record_ending_inside_an_enclosure_is_incomplete(): void
+    {
+        static::assertSame(
+            ["\"a\nb\",c", 'd'],
+            iterator_to_array((new CSVLineReader('"'))->readLines(new MemorySourceStream("\"a\nb\",c\nd"))),
+        );
+    }
+
+    public function test_an_escaped_enclosure_does_not_close_the_record(): void
+    {
+        static::assertSame(
+            ["\"x\\\"y\nz\",1", '"p",2'],
+            iterator_to_array((new CSVLineReader('"'))->readLines(new MemorySourceStream("\"x\\\"y\nz\",1\n\"p\",2"))),
+        );
+    }
+
+    public function test_a_doubled_enclosure_does_not_close_the_record(): void
+    {
+        static::assertSame(
+            ["\"a\"\"\nb\",1", '"c",2'],
+            iterator_to_array((new CSVLineReader('"'))->readLines(new MemorySourceStream("\"a\"\"\nb\",1\n\"c\",2"))),
+        );
+    }
+
+    public function test_an_enclosure_inside_an_unenclosed_field_is_a_literal_byte(): void
+    {
+        static::assertSame(
+            ['x"y,1', '"p",2'],
+            iterator_to_array((new CSVLineReader('"'))->readLines(new MemorySourceStream("x\"y,1\n\"p\",2"))),
+        );
+    }
+
+    public function test_an_empty_escape_makes_the_escape_character_ordinary(): void
+    {
+        $content = "\"x\\\",1\n\"p\",2";
+
+        static::assertSame(
+            ["\"x\\\",1\n\"p\",2"],
+            iterator_to_array((new CSVLineReader('"', escape: '\\'))->readLines(new MemorySourceStream($content))),
+        );
+        static::assertSame(
+            ['"x\\",1', '"p",2'],
+            iterator_to_array((new CSVLineReader('"', escape: ''))->readLines(new MemorySourceStream($content))),
+        );
+    }
+
+    public function test_a_buffer_without_any_enclosure_is_complete(): void
+    {
+        static::assertSame(
+            ['a,b', 'c,d'],
+            iterator_to_array((new CSVLineReader('"'))->readLines(new MemorySourceStream("a,b\nc,d"))),
+        );
+    }
+
+    public function test_a_custom_separator_and_enclosure_are_honoured(): void
+    {
+        static::assertSame(
+            ["x,'y;1", "a;'b\nc';d", 'e;f'],
+            iterator_to_array((new CSVLineReader("'", ';'))->readLines(
+                new MemorySourceStream("x,'y;1\na;'b\nc';d\ne;f"),
+            )),
+        );
+    }
+
+    public function test_a_buffer_of_one_megabyte_without_a_closing_enclosure_does_not_blow_the_pcre_backtrack_limit(): void
+    {
+        $open = '"' . str_repeat('ab,\\"""c', 1 << 17);
+
+        static::assertSame(
+            [$open . "\nd"],
+            iterator_to_array((new CSVLineReader('"'))->readLines(new MemorySourceStream($open . "\nd"))),
+        );
+        static::assertSame(PREG_NO_ERROR, preg_last_error());
+    }
+
+    public function test_a_record_with_more_fields_than_pcre_can_match_is_still_split_at_its_end(): void
+    {
+        $closed = str_repeat('"a",', 200_000) . '"b"';
+        $open = str_repeat('"a",', 200_000) . '"b';
+
+        static::assertSame(
+            [$closed, 'c'],
+            iterator_to_array((new CSVLineReader('"'))->readLines(new MemorySourceStream($closed . "\nc"))),
+        );
+        static::assertSame(
+            [$open . "\nc\""],
+            iterator_to_array((new CSVLineReader('"'))->readLines(new MemorySourceStream($open . "\nc\""))),
+        );
+    }
+
+    /**
+     * @param non-empty-string $content
+     * @param list<string> $expected
+     */
+    #[DataProvider('record_boundaries')]
+    public function test_the_pattern_splits_records_at_their_end(
+        string $separator,
+        string $enclosure,
+        string $escape,
+        string $content,
+        array $expected,
+    ): void {
+        static::assertSame(
+            $expected,
+            iterator_to_array((new CSVLineReader($enclosure, $separator, $escape))->readLines(
+                new MemorySourceStream($content),
+            )),
+        );
+    }
+
     public function test_characters_read_in_line_is_passed_through_to_the_stream(): void
     {
         $stream = new LengthCapturingSourceStream("id,name\n1,foo", path('s3://bucket/users.csv'));
 
-        iterator_to_array((new CSVLineReader('"', 4096))->readLines($stream));
+        iterator_to_array((new CSVLineReader('"', charactersReadInLine: 4096))->readLines($stream));
 
         static::assertSame([4096], $stream->capturedLengths);
     }
