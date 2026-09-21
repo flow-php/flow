@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-09-20
+## [Unreleased] - 2026-09-21
 
 ### Added
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - logical plan of Plan\Node operators, lowered by Planner and run by Executor** - [@norberttech](https://github.com/norberttech)
@@ -12,6 +12,9 @@
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/cli - ProgressBarLoader advancing a progress bar per batch** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2641](https://github.com/flow-php/flow/pull/2641) - **Local and CI S3 service replaced with RustFS - MinIO deleted its community images from Docker Hub** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#2641](https://github.com/flow-php/flow/pull/2641) - **S3 development credentials changed from minioadmin to flowphpaccess01 / flowphpsecret01 - refresh your compose.yml and
+.env** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - Extractor::extract() takes the pushed row limit; FileExtractor also takes a path filter** - [@norberttech](https://github.com/norberttech)
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - Config::optimizer() replaced by planner() and executor()** - [@norberttech](https://github.com/norberttech)
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - DataFrame::run() no longer takes a callback, use forEach()** - [@norberttech](https://github.com/norberttech)
