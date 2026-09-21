@@ -83,17 +83,18 @@ jobs:
             sleep 2
           done
 
-      - name: "Start MinIO and create bucket"
+      - name: "Start RustFS"
         run: |
-          docker run -d --name minio -p 9000:9000 \
-            -e MINIO_ROOT_USER=minioadmin \
-            -e MINIO_ROOT_PASSWORD=minioadmin \
-            quay.io/minio/minio:latest server /data
-          timeout 30 sh -c 'until curl -fs http://localhost:9000/minio/health/live > /dev/null; do sleep 1; done'
-          docker run --rm --network=host --entrypoint sh quay.io/minio/mc:latest -c "
-            mc alias set local http://localhost:9000 minioadmin minioadmin &&
-            mc mb local/flowphpbucket01 --ignore-existing
-          "
+          docker run -d --name rustfs -p 9000:9000 \
+            -e RUSTFS_ACCESS_KEY=flowphpaccess01 \
+            -e RUSTFS_SECRET_KEY=flowphpsecret01 \
+            -e RUSTFS_ADDRESS=:9000 \
+            -e RUSTFS_CONSOLE_ENABLE=false \
+            -e RUSTFS_REGION=us-east-1 \
+            -e RUSTFS_VOLUMES=/data \
+            rustfs/rustfs:1.0.0
+          timeout 90 sh -c 'until curl -fs http://localhost:9000/health/ready > /dev/null; do sleep 1; done' \
+            || { echo "RustFS did not become ready"; docker logs rustfs; exit 1; }
 
       - name: "Start SFTP server"
         run: |
@@ -154,8 +155,8 @@ jobs:
           AZURITE_ACCOUNT_KEY: "flowphpkey01"
           S3_ENDPOINT: "http://localhost:9000"
           S3_REGION: "us-east-1"
-          S3_ACCESS_KEY_ID: "minioadmin"
-          S3_SECRET_ACCESS_KEY: "minioadmin"
+          S3_ACCESS_KEY_ID: "flowphpaccess01"
+          S3_SECRET_ACCESS_KEY: "flowphpsecret01"
           SFTP_HOST: "localhost"
           SFTP_PORT: "2222"
           SFTP_USER: "flow"
@@ -183,8 +184,8 @@ jobs:
           AZURITE_ACCOUNT_KEY: "flowphpkey01"
           S3_ENDPOINT: "http://localhost:9000"
           S3_REGION: "us-east-1"
-          S3_ACCESS_KEY_ID: "minioadmin"
-          S3_SECRET_ACCESS_KEY: "minioadmin"
+          S3_ACCESS_KEY_ID: "flowphpaccess01"
+          S3_SECRET_ACCESS_KEY: "flowphpsecret01"
           OTEL_RECEIVER_HTTP_ENDPOINT: "http://localhost:4318"
           OTEL_RECEIVER_GRPC_ENDPOINT: "localhost:4317"
           OTEL_COLLECTOR_METRICS_ENDPOINT: "http://localhost:8888/metrics"
