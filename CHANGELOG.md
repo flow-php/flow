@@ -1,6 +1,10 @@
 ## [Unreleased] - 2026-09-21
 
 ### Added
+- [#2645](https://github.com/flow-php/flow/pull/2645) - **flow-php/flow-php-ext - native CSV tokenizer, reader and schema inference** - [@norberttech](https://github.com/norberttech)
+- [#2645](https://github.com/flow-php/flow/pull/2645) - **flow-php/flow-php-ext - native JSON validation and ISO datetime casting in the hydrator** - [@norberttech](https://github.com/norberttech)
+- [#2645](https://github.com/flow-php/flow/pull/2645) - **flow-php/etl-adapter-csv - NativeCSVOpenSource used when the extension is loaded** - [@norberttech](https://github.com/norberttech)
+- [#2645](https://github.com/flow-php/flow/pull/2645) - **flow-php/etl - SniffsColumnTypes lets a sample infer its own column types** - [@norberttech](https://github.com/norberttech)
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - logical plan of Plan\Node operators, lowered by Planner and run by Executor** - [@norberttech](https://github.com/norberttech)
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - each node declares its row count, transparency, materialization and redefined columns** - [@norberttech](https://github.com/norberttech)
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - Optimizer rules: combine limits, top N, push limit and partition filter into the source** - [@norberttech](https://github.com/norberttech)
@@ -12,6 +16,11 @@
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/cli - ProgressBarLoader advancing a progress bar per batch** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2645](https://github.com/flow-php/flow/pull/2645) - **flow-php/etl-adapter-csv - CSVOpenSource is now an interface implemented by PhpCSVOpenSource** - [@norberttech](https://github.com/norberttech)
+- [#2645](https://github.com/flow-php/flow/pull/2645) - **flow-php/etl-adapter-csv - CSVLineReader takes the separator and escape** - [@norberttech](https://github.com/norberttech)
+- [#2645](https://github.com/flow-php/flow/pull/2645) - **flow-php/etl-adapter-csv - CSVFileReader::samples() yields CSVFileSample** - [@norberttech](https://github.com/norberttech)
+- [#2645](https://github.com/flow-php/flow/pull/2645) - **flow-php/etl - schema inference and row conforming skip redundant work** - [@norberttech](https://github.com/norberttech)
+- [#2645](https://github.com/flow-php/flow/pull/2645) - **flow-php/flow-php-ext - hydrated rows skip the conform pass when no column is absent** - [@norberttech](https://github.com/norberttech)
 - [#2641](https://github.com/flow-php/flow/pull/2641) - **Local and CI S3 service replaced with RustFS - MinIO deleted its community images from Docker Hub** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2641](https://github.com/flow-php/flow/pull/2641) - **S3 development credentials changed from minioadmin to flowphpaccess01 / flowphpsecret01 - refresh your compose.yml and
 .env** - [@MrHDOLEK](https://github.com/MrHDOLEK)
@@ -27,6 +36,10 @@
 - [#2635](https://github.com/flow-php/flow/pull/2635) - **flow-php/parquet - reader and writer row types widened to array-key.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2645](https://github.com/flow-php/flow/pull/2645) - **flow-php/etl-adapter-csv - escaped or bare enclosure no longer merges a record with the next line** - [@norberttech](https://github.com/norberttech)
+- [#2645](https://github.com/flow-php/flow/pull/2645) - **flow-php/etl-adapter-csv - record boundaries on huge records survive the PCRE backtrack limit** - [@norberttech](https://github.com/norberttech)
+- [#2645](https://github.com/flow-php/flow/pull/2645) - **flow-php/flow-php-ext - reference values no longer leak into natively hydrated rows** - [@norberttech](https://github.com/norberttech)
+- [#2645](https://github.com/flow-php/flow/pull/2645) - **flow-php/filesystem - closing a stream while it is being read no longer throws a TypeError** - [@norberttech](https://github.com/norberttech)
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - a failure under a node shared by two sinks is offered to the error handler once** - [@norberttech](https://github.com/norberttech)
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - an inlined from_data_frame() failure reaches the outer error handler** - [@norberttech](https://github.com/norberttech)
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - an embedded frame is optimized with its own rules, not the parent's** - [@norberttech](https://github.com/norberttech)
