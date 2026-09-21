@@ -89,10 +89,8 @@ final class CSVEncoder implements Encoder
         $maps = [];
 
         foreach ($batch as $line) {
-            $fields = array_values(array_map(
-                static fn(mixed $field): ?string => is_string($field) ? $field : null,
-                str_getcsv($line, $this->separator, $this->enclosure, $this->escape),
-            ));
+            /** @var list<null|string> $fields */
+            $fields = str_getcsv($line, $this->separator, $this->enclosure, $this->escape);
 
             if ($this->headers === null) {
                 if ($this->withHeader) {

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Flow\Types\Tests\Unit\Type\Native\String;
 
 use DateTimeInterface;
+use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Native\String\StringTypeNarrower;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
 
@@ -24,6 +26,98 @@ use function Flow\Types\DSL\type_xml;
 
 final class StringTypeNarrowerTest extends TestCase
 {
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function fixtureValues(): array
+    {
+        return [
+            'value true' => ['true'],
+            'value false' => ['false'],
+            'value yes' => ['yes'],
+            'value no' => ['no'],
+            'value on' => ['on'],
+            'value off' => ['off'],
+            'value 0' => ['0'],
+            'value not bool' => ['not bool'],
+            'value not date time' => ['not date time'],
+            'value 2021-13-01' => ['2021-13-01'],
+            'value now' => ['now'],
+            'value midnight' => ['midnight'],
+            'value today' => ['today'],
+            'value yesterday' => ['yesterday'],
+            'value tomorrow' => ['tomorrow'],
+            'value +24h' => ['+24h'],
+            'value 00:00:00' => ['00:00:00'],
+            'value 2023-01-01 +10 hours' => ['2023-01-01 +10 hours'],
+            'value Thursday, 02-Jun-2022 16:58:35 UTC' => ['Thursday, 02-Jun-2022 16:58:35 UTC'],
+            'value 2022-06-02T16:58:35+0000' => ['2022-06-02T16:58:35+0000'],
+            'value 2022-06-02T16:58:35+00:00' => ['2022-06-02T16:58:35+00:00'],
+            'value Thu, 02 Jun 22 16:58:35 +0000' => ['Thu, 02 Jun 22 16:58:35 +0000'],
+            'value Thursday, 02-Jun-22 16:58:35 UTC' => ['Thursday, 02-Jun-22 16:58:35 UTC'],
+            'value Thu, 02 Jun 2022 16:58:35 +0000' => ['Thu, 02 Jun 2022 16:58:35 +0000'],
+            'value 2024-01' => ['2024-01'],
+            'value 12/31/2024' => ['12/31/2024'],
+            'value 2024-01-01' => ['2024-01-01'],
+            'value 2024-01-01 10:00' => ['2024-01-01 10:00'],
+            'value 1.0' => ['1.0'],
+            'value 2.1E-5' => ['2.1E-5'],
+            'value 2.1e-5' => ['2.1e-5'],
+            'value 0.0' => ['0.0'],
+            'value not float' => ['not float'],
+            'value 1' => ['1'],
+            'value 1.0.0' => ['1.0.0'],
+            'value 20240305' => ['20240305'],
+            'value <!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>' => [
+                '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>',
+            ],
+            'value not html' => ['not html'],
+            'value not integer' => ['not integer'],
+            'value 112312312' => ['112312312'],
+            'value 11_2312_312' => ['11_2312_312'],
+            'value 20240101' => ['20240101'],
+            'value 19991231' => ['19991231'],
+            'value 1012024' => ['1012024'],
+            'value {"foo":"bar"}' => ['{"foo":"bar"}'],
+            'value [{"foo":"bar"}]' => ['[{"foo":"bar"}]'],
+            'value not json' => ['not json'],
+            'value null' => ['null'],
+            'value NULL' => ['NULL'],
+            'value Nil' => ['Nil'],
+            'value nil' => ['nil'],
+            'value not null' => ['not null'],
+            'the empty string' => [''],
+            'value UTC' => ['UTC'],
+            'value America/New_York' => ['America/New_York'],
+            'value Europe/London' => ['Europe/London'],
+            'value Europe/Warsaw' => ['Europe/Warsaw'],
+            'value Asia/Tokyo' => ['Asia/Tokyo'],
+            'value Australia/Sydney' => ['Australia/Sydney'],
+            'value +00:00' => ['+00:00'],
+            'value +05:30' => ['+05:30'],
+            'value -08:00' => ['-08:00'],
+            'value A' => ['A'],
+            'value B' => ['B'],
+            'value Z' => ['Z'],
+            'value PST' => ['PST'],
+            'value EST' => ['EST'],
+            'value CET' => ['CET'],
+            'value not a timezone' => ['not a timezone'],
+            'value Invalid/Timezone' => ['Invalid/Timezone'],
+            'value 2023-01-01' => ['2023-01-01'],
+            'value 123' => ['123'],
+            'value f47ac10b-58cc-4372-a567-0e02b2c3d479' => ['f47ac10b-58cc-4372-a567-0e02b2c3d479'],
+            'value not uuid' => ['not uuid'],
+            'value <foo>bar</foo>' => ['<foo>bar</foo>'],
+            'value not xml' => ['not xml'],
+            'value <unclosed' => ['<unclosed'],
+            'value <a><b>1</b></a>' => ['<a><b>1</b></a>'],
+            'value <div>x</div>' => ['<div>x</div>'],
+            'value +02:00' => ['+02:00'],
+            'value Europe/Nowhere' => ['Europe/Nowhere'],
+        ];
+    }
+
     public function test_detecting_boolean(): void
     {
         $narrower = new StringTypeNarrower();
@@ -229,6 +323,12 @@ final class StringTypeNarrowerTest extends TestCase
             ),
         );
         static::assertEquals(type_xml(), (new StringTypeNarrower())->narrow('<a><b>1</b></a>'));
+    }
+
+    #[DataProvider('fixtureValues')]
+    public function test_narrowing_never_returns_an_optional_type(string $value): void
+    {
+        static::assertNotInstanceOf(OptionalType::class, (new StringTypeNarrower())->narrow($value));
     }
 
     public function test_time_zone_identifiers_are_matched_after_the_cache_is_warm(): void

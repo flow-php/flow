@@ -7,7 +7,9 @@ namespace Flow\ETL\Schema\Inference;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Schema;
 use Flow\Types\Type;
+use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Native\NullType;
+use Flow\Types\Type\Native\StringType;
 use Flow\Types\Type\TypeNarrower;
 use Flow\Types\Type\TypeWidener;
 
@@ -78,6 +80,19 @@ final class ColumnTypes
     {
         /** @var mixed $value */
         foreach ($row->values as $name => $value) {
+            $current = array_key_exists($name, $this->types) ? $this->types[$name] : null;
+
+            if (
+                $value !== null
+                && (
+                    $current instanceof StringType
+                    || $current instanceof OptionalType
+                    && $current->base() instanceof StringType
+                )
+            ) {
+                continue;
+            }
+
             $observed = match (true) {
                 $value === null => type_null(),
                 is_string($value) && trim($value) !== $value => type_string(),
@@ -88,9 +103,7 @@ final class ColumnTypes
                 $observed = type_string();
             }
 
-            $this->types[$name] = array_key_exists($name, $this->types)
-                ? $this->widener->widen($this->types[$name], $observed)
-                : $observed;
+            $this->types[$name] = $current === null ? $observed : $this->widener->widen($current, $observed);
         }
 
         $this->rows++;

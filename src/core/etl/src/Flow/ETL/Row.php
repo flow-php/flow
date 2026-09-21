@@ -165,6 +165,21 @@ final readonly class Row
     private function conform(Schema $schema, bool $checkValues): self
     {
         $definitions = $schema->definitions();
+
+        if (count($this->values) === count($definitions) && array_keys($this->values) === array_keys($definitions)) {
+            foreach ($definitions as $name => $definition) {
+                if (
+                    $checkValues
+                        ? !$definition->matches($this->values[$name])
+                        : $this->values[$name] === null && !$definition->isNullable()
+                ) {
+                    throw ColumnMismatchException::valueDoesNotMatch($definition, $this->values[$name]);
+                }
+            }
+
+            return $this;
+        }
+
         $matched = [];
         $taken = 0;
 

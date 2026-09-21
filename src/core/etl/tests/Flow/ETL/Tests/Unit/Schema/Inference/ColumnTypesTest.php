@@ -150,6 +150,10 @@ final class ColumnTypesTest extends FlowTestCase
             'integer then text' => [['1', 'x'], type_string()],
             'date then datetime' => [['2024-01-01', '2024-01-01 10:00'], type_datetime()],
             'both booleans' => [['true', 'false'], type_boolean()],
+            'free text then datetime' => [['free text', '2024-01-01 10:00:00'], type_string()],
+            'free text then integer' => [['free text', '42'], type_string()],
+            'free text then json' => [['free text', '{"a":1}'], type_string()],
+            'free text then uuid' => [['free text', 'f47ac10b-58cc-4372-a567-0e02b2c3d479'], type_string()],
         ];
     }
 
@@ -174,6 +178,19 @@ final class ColumnTypesTest extends FlowTestCase
         static::assertSame(['a', 'b', 'c'], array_keys($columns->schema(ColumnTypesMother::floor())->definitions()));
     }
 
+    public function test_a_null_first_row_then_free_text_yields_optional_string(): void
+    {
+        $columns = ColumnTypesMother::fromStrings();
+        $columns->observe(new RawRowValues(['c' => null]));
+        $columns->observe(new RawRowValues(['c' => 'free text']));
+        $columns->observe(new RawRowValues(['c' => '42']));
+
+        static::assertEquals(
+            new Schema(definition_from_type('c', type_optional(type_string()), nullable: true)),
+            $columns->schema(ColumnTypesMother::floor()),
+        );
+    }
+
     public function test_a_numeric_key_becomes_a_string_column_name(): void
     {
         $columns = ColumnTypesMother::fromStrings();
@@ -182,6 +199,19 @@ final class ColumnTypesTest extends FlowTestCase
         $columns->observe(new RawRowValues(['1' => 'x']));
 
         static::assertSame('1', $columns->schema(ColumnTypesMother::floor())->get('1')->entry()->name());
+    }
+
+    public function test_a_saturated_string_column_widens_to_optional_string_on_a_later_null(): void
+    {
+        $columns = ColumnTypesMother::fromStrings();
+        $columns->observe(new RawRowValues(['c' => 'free text']));
+        $columns->observe(new RawRowValues(['c' => null]));
+        $columns->observe(new RawRowValues(['c' => 'more text']));
+
+        static::assertEquals(
+            new Schema(definition_from_type('c', type_optional(type_string()), nullable: true)),
+            $columns->schema(ColumnTypesMother::floor()),
+        );
     }
 
     public function test_a_source_with_no_names_and_no_rows_yields_an_empty_schema(): void
@@ -229,6 +259,19 @@ final class ColumnTypesTest extends FlowTestCase
 
         static::assertInstanceOf(Schema\Definition\IntegerDefinition::class, $definition);
         static::assertTrue($definition->isNullable());
+    }
+
+    public function test_an_optional_non_string_column_is_not_saturated(): void
+    {
+        $columns = ColumnTypesMother::fromStrings();
+        $columns->observe(new RawRowValues(['c' => '1']));
+        $columns->observe(new RawRowValues(['c' => null]));
+        $columns->observe(new RawRowValues(['c' => '1.5']));
+
+        static::assertEquals(
+            new Schema(definition_from_type('c', type_optional(type_float()), nullable: true)),
+            $columns->schema(ColumnTypesMother::floor()),
+        );
     }
 
     public function test_merge_is_associative_over_three_partials(): void
@@ -379,6 +422,21 @@ final class ColumnTypesTest extends FlowTestCase
 
         static::assertEquals(
             new Schema(definition_from_type('c', type_optional(type_integer()), nullable: true)),
+            $columns->schema(ColumnTypesMother::floor()),
+        );
+    }
+
+    public function test_observing_a_column_name_absent_from_the_header_still_records_its_type(): void
+    {
+        $columns = ColumnTypesMother::fromStrings(['a']);
+        $columns->observe(new RawRowValues(['a' => 'free text', 'b' => '1']));
+        $columns->observe(new RawRowValues(['a' => 'more text', 'b' => '2']));
+
+        static::assertEquals(
+            new Schema(
+                definition_from_type('a', type_string(), nullable: true),
+                definition_from_type('b', type_integer(), nullable: true),
+            ),
             $columns->schema(ColumnTypesMother::floor()),
         );
     }

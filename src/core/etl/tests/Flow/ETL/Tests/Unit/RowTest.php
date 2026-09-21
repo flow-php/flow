@@ -26,6 +26,31 @@ use function Flow\Types\DSL\type_structure;
 
 final class RowTest extends FlowTestCase
 {
+    public function test_conform_to_a_schema_in_a_different_order_reorders_the_values(): void
+    {
+        static::assertSame(
+            ['b' => 2, 'a' => 1],
+            row(['a' => 1, 'b' => 2])->conformTo(schema(int_schema('b'), int_schema('a')))->values(),
+        );
+    }
+
+    public function test_conform_to_a_schema_the_row_already_matches_returns_an_equal_row(): void
+    {
+        $row = row(['a' => 1, 'b' => 'x']);
+
+        static::assertEquals($row, $row->conformTo(schema(int_schema('a'), str_schema('b'))));
+    }
+
+    public function test_conform_to_a_schema_with_as_many_but_other_columns_refuses_the_row(): void
+    {
+        $this->expectException(ColumnMismatchException::class);
+        $this->expectExceptionMessage(
+            'Row does not match its schema: column "b" declared by the schema is missing from the row',
+        );
+
+        row(['a' => 1, 'z' => 2])->conformTo(schema(int_schema('a'), int_schema('b')));
+    }
+
     public function test_conform_to_does_not_validate_a_non_null_value(): void
     {
         // the caller produced the value by casting to the column's type - conformTo() checks the shape only
@@ -152,6 +177,16 @@ final class RowTest extends FlowTestCase
         $this->expectExceptionMessage('Row does not match its schema: column "a" is not declared by the schema');
 
         row(['a' => 1])->matchTo(schema());
+    }
+
+    public function test_match_to_with_the_same_keys_still_validates_every_value(): void
+    {
+        $this->expectException(ColumnMismatchException::class);
+        $this->expectExceptionMessage(
+            'Row does not match its schema: column "c": could not convert 3 (integer) to string',
+        );
+
+        row(['a' => 1, 'b' => 'x', 'c' => 3])->matchTo(schema(int_schema('a'), str_schema('b'), str_schema('c')));
     }
 
     public function test_get_throws_when_the_column_is_absent(): void

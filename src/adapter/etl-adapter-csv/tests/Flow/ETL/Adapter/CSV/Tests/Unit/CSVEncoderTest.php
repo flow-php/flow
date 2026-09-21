@@ -74,6 +74,30 @@ final class CSVEncoderTest extends FlowTestCase
         static::assertSame(['id' => '1', 'name' => null], (new CSVEncoder())->decode(['id,name', '1,'])[0]->values);
     }
 
+    public function test_decoding_a_blank_line_yields_a_single_null_field(): void
+    {
+        static::assertSame(
+            ['e00' => null],
+            (new CSVEncoder(withHeader: false, emptyToNull: false))->decode([''])[0]->values,
+        );
+    }
+
+    public function test_decoding_a_line_with_a_custom_separator_enclosure_and_escape_yields_strings(): void
+    {
+        static::assertSame(
+            ['id' => '1', 'name' => 'a;b'],
+            (new CSVEncoder(separator: ';', enclosure: "'", escape: '|'))->decode(['id;name', "1;'a;b'"])[0]->values,
+        );
+    }
+
+    public function test_decoding_a_line_with_empty_quoted_fields_yields_empty_strings(): void
+    {
+        static::assertSame(
+            ['id' => '', 'name' => ''],
+            (new CSVEncoder(emptyToNull: false))->decode(['id,name', '"",""'])[0]->values,
+        );
+    }
+
     public function test_encode_renders_array_values_as_json(): void
     {
         static::assertSame(
