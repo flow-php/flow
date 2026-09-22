@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 814
+ * Total functions: 815
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -1645,6 +1645,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\PostgreSql\\DSL\\col(" + "$" + "{" + "1:column" + "}" + ", " + "$" + "{" + "2:table" + "}" + ", " + "$" + "{" + "3:schema" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "collate",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">collate</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Expression|string</span> <span class=\"fn-param\">$expr</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$collation</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Collate</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a COLLATE expression.<br>@param Expression|string $expr Expression to collate<br>@param string $collation Collation name as written in SQL: \'C\', \'\"de_DE\"\', \'pg_catalog.\"C\"\'
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\collate(" + "$" + "{" + "1:expr" + "}" + ", " + "$" + "{" + "2:collation" + "}" + ")"),
         boost: 10
     },                {
         label: "collect",
@@ -8278,7 +8296,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">rename_map</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$renames</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RenameMapEntryStrategy</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param array<string, string> $renames Map of old_name => new_name
+                    @param array<array-key, string> $renames Map of old_name => new_name
                 </div>
                             `
             return div
@@ -8506,7 +8524,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">row</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$values</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Row</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param array<string, mixed> $values
+                    @param array<array-key, mixed> $values
                 </div>
                             `
             return div
@@ -11377,7 +11395,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">to_pgsql_transaction</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Client</span> <span class=\"fn-param\">$client</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Loader|Sink</span> <span class=\"fn-param\">$sinks</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Transactional</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Write every sink within PostgreSQL transactions.<br>Each batch of rows is written in its own transaction; rows a sink\'s Transformation delivers when<br>the run ends (blocking operations drain there) are committed in one final transaction.<br>If any sink fails, the open transaction is rolled back.<br>Every sink\'s loader must use the same Client instance as the transaction - a loader holding its own<br>Client escapes it.
+                    Write every sink within PostgreSQL transactions.
                 </div>
                             `
             return div
