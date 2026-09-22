@@ -10,6 +10,8 @@ final class Analyze
 
     private bool $collectSchema = false;
 
+    private bool $collectSourceStatistics = false;
+
     public function __construct() {}
 
     public function collectColumnStatistics(): bool
@@ -22,6 +24,11 @@ final class Analyze
         return $this->collectSchema;
     }
 
+    public function collectSourceStatistics(): bool
+    {
+        return $this->collectSourceStatistics;
+    }
+
     public function withColumnStatistics(): self
     {
         $this->collectColumnStatistics = true;
@@ -32,6 +39,13 @@ final class Analyze
     public function withSchema(): self
     {
         $this->collectSchema = true;
+
+        return $this;
+    }
+
+    public function withSourceStatistics(): self
+    {
+        $this->collectSourceStatistics = true;
 
         return $this;
     }

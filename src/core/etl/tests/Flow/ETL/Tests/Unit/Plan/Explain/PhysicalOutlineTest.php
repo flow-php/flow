@@ -25,7 +25,10 @@ final class PhysicalOutlineTest extends FlowTestCase
         static::assertSame(['Columns: id'], $root->lines);
         static::assertCount(1, $root->children);
         static::assertSame('Pipeline #0', $root->children[0]->name);
-        static::assertSame(['Extractor: ArrayExtractor'], $root->children[0]->lines);
+        static::assertSame(
+            ['Extractor: ArrayExtractor', '   Statistics: rows exact 1 · size unknown'],
+            $root->children[0]->lines,
+        );
         static::assertSame([], $root->children[0]->children);
     }
 
@@ -37,6 +40,7 @@ final class PhysicalOutlineTest extends FlowTestCase
                 │  Columns: id
                 └─ Pipeline #0
                       Extractor: ArrayExtractor
+                         Statistics: rows exact 1 · size unknown
                       Processor: CollectingProcessor
                          Schema: declared
                       Loader: StreamLoader
@@ -62,6 +66,7 @@ final class PhysicalOutlineTest extends FlowTestCase
                    │  Loader: StreamLoader
                    └─ Pipeline #0
                       │  Extractor: ArrayExtractor
+                      │     Statistics: rows exact 1 · size unknown
                       │  Processor: HashJoinProcessor
                       │     Join: left
                       │     On: id = id
@@ -71,6 +76,7 @@ final class PhysicalOutlineTest extends FlowTestCase
                       │     Batch: 1000
                       └─ Right side: Pipeline #0
                             Extractor: ArrayExtractor
+                               Statistics: rows exact 1 · size unknown
                 PLAN,
             (new TreeLayout())->render((new PhysicalOutline())->of(PhysicalPlanMother::of(
                 data_frame()
@@ -92,7 +98,12 @@ final class PhysicalOutlineTest extends FlowTestCase
         ));
 
         static::assertSame(
-            ['Extractor: ArrayExtractor', '   Limit: 1', 'Transformer: LimitTransformer'],
+            [
+                'Extractor: ArrayExtractor',
+                '   Statistics: rows exact 2 · size unknown',
+                '   Limit: 1',
+                'Transformer: LimitTransformer',
+            ],
             $root->children[0]->lines,
         );
     }

@@ -22,6 +22,8 @@ final readonly class Pipeline
      *                                behind an input edge
      * @param Filter $pathFilter handed to a FileExtractor source when this pipeline reads it; meaningless
      *                           behind an input edge
+     * @param null|SourceRows $sources counts the rows of the source when this pipeline reads it and the run is
+     *                                 analyzed with source statistics; null otherwise
      */
     public function __construct(
         public int $id,
@@ -30,6 +32,7 @@ final readonly class Pipeline
         private ?self $input = null,
         private ?int $limit = null,
         private Filter $pathFilter = new OnlyFiles(),
+        private ?SourceRows $sources = null,
     ) {}
 
     public function segments(): Segments
@@ -53,6 +56,11 @@ final readonly class Pipeline
     public function pathFilter(): Filter
     {
         return $this->pathFilter;
+    }
+
+    public function sources(): ?SourceRows
+    {
+        return $this->sources;
     }
 
     /**

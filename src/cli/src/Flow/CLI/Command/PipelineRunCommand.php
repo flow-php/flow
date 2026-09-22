@@ -82,6 +82,10 @@ final class PipelineRunCommand extends Command
             $analyze->withColumnStatistics();
         }
 
+        if ($analyze && option_bool('stats-sources', $input)) {
+            $analyze->withSourceStatistics();
+        }
+
         try {
             ob_start();
             $extension = $this->pipelinePath->extension();

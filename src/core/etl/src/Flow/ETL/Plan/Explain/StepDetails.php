@@ -39,6 +39,7 @@ final readonly class StepDetails
     public function __construct(
         private Details $details = new Details(),
         private Condition $condition = new Condition(),
+        private StatisticsLine $statistics = new StatisticsLine(),
     ) {}
 
     /**
@@ -105,8 +106,19 @@ final readonly class StepDetails
                 : ['Constraints: ' . implode(', ', array_map($this->details->name(...), $step->constraints))],
             $step instanceof CollectingProcessor => $step->declared === null ? [] : ['Schema: declared'],
             $step instanceof OffsetProcessor => ['Skip: ' . $step->offset],
+            $step instanceof Extractor => $this->extractor($step),
             default => [],
         };
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function extractor(Extractor $extractor): array
+    {
+        $statistics = $this->statistics->of($extractor->statistics());
+
+        return $statistics === null ? [] : ['Statistics: ' . $statistics];
     }
 
     /**

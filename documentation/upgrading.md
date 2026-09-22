@@ -272,6 +272,12 @@ final class MyExtractor implements Extractor
 }
 ```
 
+### 26) `flow-php/etl` - `Report` takes the source statistics of the run
+
+| Before                                           | After                                                                                                |
+|--------------------------------------------------|------------------------------------------------------------------------------------------------------|
+| `new Report(?Schema $schema, Statistics $stats)` | `new Report(?Schema $schema, Statistics $stats, ?array $sources)` - `null` unless analyzed with them |
+
 ---
 
 ## Upgrading from 0.43.x to 0.44.x

@@ -157,6 +157,10 @@ final class FileAnalyzeCommand extends Command
             $analyze->withSchema()->withColumnStatistics();
         }
 
+        if (option_bool('stats-sources', $input)) {
+            $analyze->withSourceStatistics();
+        }
+
         $report = $df->write(new ProgressBarLoader($progress))->run(analyze: $analyze);
 
         $progress->finish();

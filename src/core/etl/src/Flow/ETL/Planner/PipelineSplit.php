@@ -10,6 +10,7 @@ use Flow\ETL\Executor\PhysicalPlan;
 use Flow\ETL\Executor\Pipeline;
 use Flow\ETL\Executor\Raw;
 use Flow\ETL\Executor\Segments;
+use Flow\ETL\Executor\SourceRows;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Plan\LogicalPlan;
 use Flow\ETL\Plan\Materialization;
@@ -25,11 +26,16 @@ final readonly class PipelineSplit
      * @param LogicalPlan $logical a whole frame's plan, or a join's right side
      * @param PlannedNodes $planned every node of the plan already planned
      * @param FlowContext $context the frame this plan belongs to
+     * @param null|SourceRows $sources handed to the pipeline that reads the source, when the run counts its rows
      *
      * @throws InvalidLogicException when the spine's leaf is not a Read, or a sink shares no node with the spine
      */
-    public function of(LogicalPlan $logical, PlannedNodes $planned, FlowContext $context): PhysicalPlan
-    {
+    public function of(
+        LogicalPlan $logical,
+        PlannedNodes $planned,
+        FlowContext $context,
+        ?SourceRows $sources = null,
+    ): PhysicalPlan {
         $root = $logical->root;
         $top = $logical->spine();
         $spine = [];
@@ -70,14 +76,15 @@ final readonly class PipelineSplit
             }
 
             if ($node->materialization() === Materialization::blocking && $node !== $top) {
-                $input = new Pipeline($id++, $segments, $context, $input, $limit, $pathFilter);
+                $input = new Pipeline($id++, $segments, $context, $input, $limit, $pathFilter, $sources);
                 $segments = new Segments();
                 $limit = null;
                 $pathFilter = new OnlyFiles();
+                $sources = null;
             }
         }
 
-        $pipeline = new Pipeline($id, $segments, $context, $input, $limit, $pathFilter);
+        $pipeline = new Pipeline($id, $segments, $context, $input, $limit, $pathFilter, $sources);
         $refusal = $planned->refusal();
 
         return $refusal === null

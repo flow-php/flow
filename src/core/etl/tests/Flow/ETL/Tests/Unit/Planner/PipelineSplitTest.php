@@ -8,6 +8,7 @@ use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Executor;
 use Flow\ETL\Executor\Raw;
 use Flow\ETL\Executor\SinkFeed;
+use Flow\ETL\Executor\SourceRows;
 use Flow\ETL\Executor\TransactionalSinks;
 use Flow\ETL\Join\Join as JoinType;
 use Flow\ETL\Loader\ArrayLoader;
@@ -666,5 +667,35 @@ final class PipelineSplitTest extends FlowTestCase
 
         static::assertSame(5, $plan->root()->input()?->limit());
         static::assertNull($plan->root()->limit());
+    }
+
+    public function test_only_the_pipeline_that_reads_the_source_counts_its_rows(): void
+    {
+        $logical = new LogicalPlan(new Result(NodeMother::limit(
+            NodeMother::sort(NodeMother::read(from_array([['id' => 1]], schema(int_schema('id'))))),
+            5,
+        )));
+        $planned = new PlannedNodes();
+        $sources = new SourceRows();
+        (new Planner())->node($logical->root, NodeMother::context(), $planned);
+
+        $plan = (new PipelineSplit())->of($logical, $planned, NodeMother::context(), $sources);
+
+        static::assertSame($sources, $plan->root()->input()?->sources());
+        static::assertNull($plan->root()->sources());
+    }
+
+    public function test_a_pipeline_counts_no_rows_unless_asked(): void
+    {
+        $logical = new LogicalPlan(new Result(NodeMother::read(from_array([['id' => 1]], schema(int_schema('id'))))));
+        $planned = new PlannedNodes();
+        (new Planner())->node($logical->root, NodeMother::context(), $planned);
+
+        static::assertNull(
+            (new PipelineSplit())
+                ->of($logical, $planned, NodeMother::context())
+                ->root()
+                ->sources(),
+        );
     }
 }

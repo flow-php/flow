@@ -31,6 +31,8 @@ final class StatisticsCollector
 
     private ?Schema $schema = null;
 
+    private ?SourceRows $sources = null;
+
     private readonly DateTimeImmutable $startedAt;
 
     private readonly HighResolutionTime $startTime;
@@ -55,6 +57,7 @@ final class StatisticsCollector
         if ($this->analyze !== null) {
             $this->columnStatistics = $this->analyze->collectColumnStatistics() ? new Columns() : null;
             $this->schema = $this->analyze->collectSchema() ? new Schema() : null;
+            $this->sources = $this->analyze->collectSourceStatistics() ? new SourceRows() : null;
         }
 
         gc_collect_cycles();
@@ -93,6 +96,14 @@ final class StatisticsCollector
     }
 
     /**
+     * Handed to the planner, so the pipelines that read a source count its rows.
+     */
+    public function sources(): ?SourceRows
+    {
+        return $this->sources;
+    }
+
+    /**
      * @return (T is Analyze|true ? Report : null)
      */
     public function report(): ?Report
@@ -112,6 +123,7 @@ final class StatisticsCollector
                 $this->memory,
                 $this->columnStatistics,
             ),
+            $this->sources?->statistics(),
         );
     }
 }

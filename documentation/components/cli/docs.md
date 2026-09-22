@@ -262,6 +262,7 @@ Options:
       --schema-union-by-name                               Union the column sets of every sniffed source instead of taking the first one.
       --stats-schema[=STATS-SCHEMA]                        Prints schema of executed data transformation pipeline. [default: false]
       --stats-columns[=STATS-COLUMNS]                      Prints number of rows in dataset. [default: false]
+      --stats-sources[=STATS-SOURCES]                      Prints the rows every source declared next to the rows it yielded. [default: false]
   -h, --help                                               Display help for the given command. When no command is given display help for the list command
       --silent                                             Do not output any message
   -q, --quiet                                              Only errors are displayed. All other output is suppressed
@@ -406,6 +407,7 @@ Options:
       --config=CONFIG                  Path to a local php file that MUST return instance of: Flow\ETL\Config
       --stats-schema[=STATS-SCHEMA]    Prints schema of executed data transformation pipeline. [default: false]
       --stats-columns[=STATS-COLUMNS]  Prints number of rows in dataset. [default: false]
+      --stats-sources[=STATS-SOURCES]  Prints the rows every source declared next to the rows it yielded. [default: false]
   -h, --help                           Display help for the given command. When no command is given display help for the list command
       --silent                         Do not output any message
   -q, --quiet                          Only errors are displayed. All other output is suppressed

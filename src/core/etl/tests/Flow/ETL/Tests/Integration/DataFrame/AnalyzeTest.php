@@ -6,10 +6,14 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use DateTimeImmutable;
 use Flow\Clock\FakeClock;
+use Flow\ETL\Cardinality;
 use Flow\ETL\Dataset\Report;
+use Flow\ETL\Dataset\SourceStatistics;
 use Flow\ETL\Dataset\Statistics\Columns;
 use Flow\ETL\Dataset\Statistics\HighResolutionTime;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Join\Join;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\InlineLoader;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
@@ -22,6 +26,9 @@ use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\infer_schema;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\join_on;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
@@ -166,6 +173,29 @@ final class AnalyzeTest extends FlowIntegrationTestCase
         static::assertEquals(
             schema(str_schema('year'), str_schema('month'), str_schema('day'), str_schema('text')),
             $report->schema(),
+        );
+    }
+
+    public function test_analyzing_source_statistics_counts_every_source_apart_from_the_output(): void
+    {
+        $report = df()
+            ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4]]))
+            ->filter(ref('id')->greaterThan(lit(2)))
+            ->join(
+                df()->read(from_array([['id' => 3], ['id' => 4], ['id' => 5]])),
+                join_on(['id' => 'id']),
+                Join::inner,
+            )
+            ->run(analyze: analyze()->withSourceStatistics());
+
+        static::assertNotNull($report);
+        static::assertSame(2, $report->statistics()->totalRows());
+        static::assertEquals(
+            [
+                new SourceStatistics('ArrayExtractor', new Statistics(Cardinality::exact(3)), 3),
+                new SourceStatistics('ArrayExtractor', new Statistics(Cardinality::exact(4)), 4),
+            ],
+            $report->sources(),
         );
     }
 

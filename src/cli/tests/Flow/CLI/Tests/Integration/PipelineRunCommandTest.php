@@ -64,6 +64,30 @@ final class PipelineRunCommandTest extends TestCase
             OUTPUT, $tester->getDisplay());
     }
 
+    public function test_run_and_analyze_command_lists_declared_and_measured_source_rows(): void
+    {
+        $tester = new CommandTester(new PipelineRunCommand('run'));
+
+        $tester->execute([
+            'pipeline-file' => __DIR__ . '/Fixtures/pipeline.php',
+            '--analyze' => true,
+            '--stats-sources' => true,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        self::assertCommandOutputContains(<<<'OUTPUT'
+            Sources
+            -------
+
+            ┌────────────────┬───────────────┬───────────────┬────────────┐
+            │ Extractor      │ Declared Rows │ Measured Rows │ Rows Error │
+            ├────────────────┼───────────────┼───────────────┼────────────┤
+            │ ArrayExtractor │ exact 3       │ 3             │ 0%         │
+            └────────────────┴───────────────┴───────────────┴────────────┘
+            OUTPUT, $tester->getDisplay());
+    }
+
     public function test_run_command(): void
     {
         $tester = new CommandTester(new PipelineRunCommand('run'));

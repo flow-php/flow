@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Plan;
 
 use Flow\ETL\Memory\ArrayMemory;
+use Flow\ETL\Plan\Node\Count;
 use Flow\ETL\Plan\Node\Outputs;
 use Flow\ETL\Plan\Node\Result;
 use Flow\ETL\Plan\Node\Transaction;
@@ -40,6 +41,26 @@ final class TriggerTest extends FlowTestCase
         static::assertInstanceOf(Outputs::class, $root);
         static::assertInstanceOf(Result::class, $root->children()[0]);
         static::assertSame([$first, $second], [$root->children()[1], $root->children()[2]]);
+    }
+
+    public function test_count_without_sinks_is_a_result_over_a_count_of_the_root(): void
+    {
+        $read = NodeMother::read();
+
+        $root = Trigger::count->plan($read)->root;
+
+        static::assertEquals(new Result(new Count($read)), $root);
+    }
+
+    public function test_count_with_sinks_keeps_every_sink_after_the_count(): void
+    {
+        $read = NodeMother::read();
+        $write = new Write($read, to_memory(new ArrayMemory()));
+
+        static::assertEquals(
+            new Outputs(new Result(new Count($read)), $write),
+            Trigger::count->plan($read, new Sinks($write))->root,
+        );
     }
 
     public function test_run_with_one_write_over_the_root_makes_that_write_the_root(): void

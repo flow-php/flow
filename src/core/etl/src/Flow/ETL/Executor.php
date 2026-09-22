@@ -133,6 +133,11 @@ final readonly class Executor
         $generator = $source instanceof FileExtractor
             ? $source->extract($leaf->context(), $leaf->limit(), $leaf->pathFilter())
             : $source->extract($leaf->context(), $leaf->limit());
+        $sources = $leaf->sources();
+
+        if ($sources !== null) {
+            $generator = $sources->count($source, $generator);
+        }
 
         foreach ($chain as $stage) {
             foreach ($stage->segments()->all() as $segment) {

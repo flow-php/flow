@@ -6,11 +6,13 @@ namespace Flow\ETL\Tests\Unit;
 
 use ArrayObject;
 use Flow\ETL\Adapter\CSV\CSVLoader;
+use Flow\ETL\Dataset\SourceStatistics;
 use Flow\ETL\Exception\DataDependentSchemaException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Executor\Described;
 use Flow\ETL\Executor\Raw;
 use Flow\ETL\Executor\SinkFeed;
+use Flow\ETL\Executor\SourceRows;
 use Flow\ETL\Join\Join as JoinType;
 use Flow\ETL\Loader\MemoryLoader;
 use Flow\ETL\Memory\ArrayMemory;
@@ -277,6 +279,29 @@ final class PlannerTest extends FlowTestCase
         iterator_to_array($context->config->executor()->execute($plan));
 
         static::assertSame([$context], $recording->contexts);
+    }
+
+    public function test_a_joins_right_side_counts_its_source_rows_too(): void
+    {
+        $node = new CrossJoin(
+            NodeMother::read(from_array([['id' => 1], ['id' => 2]], schema(int_schema('id')))),
+            df()
+                ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]], schema(int_schema('id'))))
+                ->explain()
+                ->logical
+                ->root,
+            'r_',
+        );
+        $context = NodeMother::context(config());
+        $sources = new SourceRows();
+
+        $plan = (new Planner(Optimizer::default()))->plan(new LogicalPlan(new Result($node)), $context, $sources);
+        iterator_to_array($context->config->executor()->execute($plan));
+
+        static::assertSame(
+            [2, 3],
+            array_map(static fn(SourceStatistics $source): int => $source->rows, $sources->statistics()),
+        );
     }
 
     public function test_a_read_frame_is_a_source_of_this_pipeline(): void

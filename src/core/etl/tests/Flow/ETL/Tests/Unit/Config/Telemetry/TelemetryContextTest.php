@@ -10,6 +10,7 @@ use Flow\ETL\Config\Telemetry\TelemetryOptions;
 use Flow\ETL\Loader\StreamLoader;
 use Flow\ETL\Optimizer\Rule\CombineLimits;
 use Flow\ETL\Optimizer\Rule\CombineSortAndLimit;
+use Flow\ETL\Optimizer\Rule\CountFromStatistics;
 use Flow\ETL\Optimizer\Rule\PushFilterIntoSource;
 use Flow\ETL\Optimizer\Rule\PushLimitIntoSource;
 use Flow\ETL\Tests\Context\MemoryTelemetryContext;
@@ -970,7 +971,13 @@ final class TelemetryContextTest extends FlowTestCase
 
         static::assertCount(1, $debugLogs);
         static::assertSame(
-            [CombineLimits::class, CombineSortAndLimit::class, PushLimitIntoSource::class, PushFilterIntoSource::class],
+            [
+                CombineLimits::class,
+                CombineSortAndLimit::class,
+                PushLimitIntoSource::class,
+                PushFilterIntoSource::class,
+                CountFromStatistics::class,
+            ],
             $debugLogs[0]->record->attributes->get('optimizer_rules'),
         );
     }

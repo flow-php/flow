@@ -6,20 +6,25 @@ namespace Flow\ETL\Tests\Unit\Executor;
 
 use DateTimeImmutable;
 use Flow\Clock\FakeClock;
+use Flow\ETL\Cardinality;
 use Flow\ETL\Config\ConfigBuilder;
 use Flow\ETL\Dataset\Report;
+use Flow\ETL\Dataset\SourceStatistics;
 use Flow\ETL\Dataset\Statistics\Columns;
 use Flow\ETL\Dataset\Statistics\HighResolutionTime;
 use Flow\ETL\Executor\StatisticsCollector;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\analyze;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function iterator_to_array;
 
 final class StatisticsCollectorTest extends FlowTestCase
 {
@@ -169,6 +174,34 @@ final class StatisticsCollectorTest extends FlowTestCase
 
         static::assertNotNull($report);
         static::assertGreaterThanOrEqual(0, $report->statistics()->memory->initial()->inBytes());
+    }
+
+    public function test_sources_are_counted_and_reported_when_enabled(): void
+    {
+        $collector = new StatisticsCollector(analyze()->withSourceStatistics(), flow_context());
+        $extractor = from_array([['id' => 1], ['id' => 2]]);
+        $sources = $collector->sources();
+        static::assertNotNull($sources);
+
+        iterator_to_array($sources->count($extractor, $extractor->extract(flow_context())));
+
+        static::assertEquals(
+            [new SourceStatistics('ArrayExtractor', new Statistics(Cardinality::exact(2)), 2)],
+            $collector->report()?->sources(),
+        );
+    }
+
+    public function test_sources_are_not_counted_when_not_enabled(): void
+    {
+        $collector = new StatisticsCollector(analyze(), flow_context());
+
+        static::assertNull($collector->sources());
+        static::assertNull($collector->report()?->sources());
+    }
+
+    public function test_sources_are_not_counted_when_analyze_is_false(): void
+    {
+        static::assertNull((new StatisticsCollector(false, flow_context()))->sources());
     }
 
     public function test_schema_is_null_when_not_enabled(): void

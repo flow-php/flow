@@ -148,6 +148,41 @@ final class DataFrameTest extends FlowTestCase
         static::assertSame(5, $count);
     }
 
+    public function test_count_of_a_frame_that_yields_no_rows_is_zero(): void
+    {
+        static::assertSame(
+            0,
+            df()
+                ->read(from_array([['id' => 1], ['id' => 2]]))
+                ->filter(lit(false))
+                ->count(),
+        );
+    }
+
+    public function test_count_counts_the_rows_left_after_a_filter(): void
+    {
+        static::assertSame(
+            2,
+            df()
+                ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]))
+                ->filter(ref('id')->greaterThan(lit(1)))
+                ->count(),
+        );
+    }
+
+    public function test_count_still_writes_the_frames_sinks(): void
+    {
+        $memory = new ArrayMemory();
+
+        $count = df()
+            ->read(from_array([['id' => 1], ['id' => 2]]))
+            ->write(to_memory($memory))
+            ->count();
+
+        static::assertSame(2, $count);
+        static::assertSame([['id' => 1], ['id' => 2]], $memory->dump());
+    }
+
     public function test_drop(): void
     {
         $rows = df()
