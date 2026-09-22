@@ -27,6 +27,8 @@ final class SequenceExtractor implements BatchableExtractor, Extractor, InfersSc
 
     private ?Schema $schema = null;
 
+    private ?Statistics $statistics = null;
+
     public function __construct(
         private readonly SequenceGenerator $generator,
         private readonly string $entryName = 'entry',
@@ -106,6 +108,11 @@ final class SequenceExtractor implements BatchableExtractor, Extractor, InfersSc
             [],
             (new InMemoryRows($items()))->samples($this->inference->sampleSize),
         );
+    }
+
+    public function statistics(): Statistics
+    {
+        return $this->statistics ??= new Statistics(rows: $this->generator->rows());
     }
 
     public function withSchema(Schema $schema): static

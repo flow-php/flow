@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Extractor\SequenceGenerator;
 
 use DatePeriod;
+use Flow\ETL\Cardinality;
 use Generator;
+
+use function iterator_count;
 
 final readonly class DatePeriodSequenceGenerator implements SequenceGenerator
 {
@@ -22,5 +25,10 @@ final readonly class DatePeriodSequenceGenerator implements SequenceGenerator
         foreach ($this->period->getIterator() as $item) {
             yield $item;
         }
+    }
+
+    public function rows(): Cardinality
+    {
+        return Cardinality::exact(iterator_count($this->period));
     }
 }

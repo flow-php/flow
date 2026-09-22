@@ -12,12 +12,22 @@ use Flow\Filesystem\SourceStream;
 use Flow\Types\Type\TypeNarrower;
 use Generator;
 
-final readonly class PhpCSVOpenSource implements CSVOpenSource
+final class PhpCSVOpenSource implements CSVOpenSource
 {
+    /**
+     * @var int<0, max>
+     */
+    private int $producedBytes = 0;
+
+    /**
+     * @var int<0, max>
+     */
+    private int $producedRows = 0;
+
     public function __construct(
-        private SourceStream $stream,
-        private CSVEncoder $encoder,
-        private CSVLineReader $lineReader,
+        private readonly SourceStream $stream,
+        private readonly CSVEncoder $encoder,
+        private readonly CSVLineReader $lineReader,
     ) {}
 
     public function close(): void
@@ -51,9 +61,22 @@ final readonly class PhpCSVOpenSource implements CSVOpenSource
     {
         foreach ($this->lineReader->readLines($this->stream) as $line) {
             foreach ($this->encoder->decode([$line]) as $values) {
+                $this->producedBytes += $this->lineReader->lastRecordBytes();
+                $this->producedRows++;
+
                 yield $values;
             }
         }
+    }
+
+    public function producedBytes(): int
+    {
+        return $this->producedBytes;
+    }
+
+    public function producedRows(): int
+    {
+        return $this->producedRows;
     }
 
     public function sniff(array $names, int $rowBudget, SchemaInference $inference, TypeNarrower $typer): ColumnTypes

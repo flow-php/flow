@@ -18,6 +18,7 @@ use function count;
 use function is_array;
 use function iterator_to_array;
 use function json_decode;
+use function strlen;
 use function trim;
 
 /**
@@ -127,9 +128,12 @@ final readonly class JsonFileReader implements SchemaSampler
      *
      * @return Generator<mixed, mixed>
      */
-    public function lineItems(SourceStream $stream): Generator
+    public function lineItems(SourceStream $stream, JsonReadBytes $read = new JsonReadBytes()): Generator
     {
         foreach ($stream->readLines() as $line) {
+            // readLines() strips the "\n" and hides whether the last line had one, so that line counts 1 byte more
+            $read->add(strlen($line) + 1);
+
             if (trim($line, self::C_ISSPACE) === '') {
                 continue;
             }
@@ -155,14 +159,14 @@ final readonly class JsonFileReader implements SchemaSampler
      *
      * @return Generator<int, RawRowValues>
      */
-    public function sample(SourceFile $source): Generator
+    public function sample(SourceFile $source, JsonReadBytes $read = new JsonReadBytes()): Generator
     {
         $stream = $this->filesystem->readFrom($source->path);
 
         try {
             $items = match ($this->format) {
                 JsonFormat::Document => $this->documentItems($stream),
-                JsonFormat::Lines => $this->lineItems($stream),
+                JsonFormat::Lines => $this->lineItems($stream, $read),
             };
 
             /** @var array<string, mixed> $row */
@@ -186,12 +190,12 @@ final readonly class JsonFileReader implements SchemaSampler
     /**
      * $rowBudget is deliberately unused: sample() is lazy and SchemaInferrer stops advancing it.
      *
-     * @return Generator<int, Generator<int, RawRowValues>>
+     * @return Generator<int, JsonFileSample>
      */
     public function samples(int $rowBudget): iterable
     {
         foreach ($this->sources as $source) {
-            yield $this->sample($source);
+            yield new JsonFileSample($this, $source);
         }
     }
 }

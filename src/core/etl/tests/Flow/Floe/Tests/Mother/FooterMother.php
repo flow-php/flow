@@ -6,6 +6,7 @@ namespace Flow\Floe\Tests\Mother;
 
 use Flow\ETL\Schema\Metadata;
 use Flow\Floe\Footer;
+use Flow\Floe\Statistics;
 
 final class FooterMother
 {
@@ -17,10 +18,18 @@ final class FooterMother
     public static function footer(
         array $schema = [],
         array $sections = [],
-        int $totalRows = 0,
+        int $rows = 0,
+        int $byteSize = 0,
         array $metadata = [],
     ): Footer {
         /** @var array<int, array<string, mixed>> $schema */
-        return new Footer(1, 'test-writer', $schema, $sections, $totalRows, Metadata::fromArray($metadata));
+        return new Footer(
+            1,
+            'test-writer',
+            $schema,
+            $sections,
+            new Statistics($rows, $byteSize),
+            Metadata::fromArray($metadata),
+        );
     }
 }

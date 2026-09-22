@@ -6,9 +6,10 @@ namespace Flow\ETL\Adapter\Excel\Tests\Integration;
 
 use Flow\ETL\Adapter\Excel\ExcelReadOptions;
 use Flow\ETL\Adapter\Excel\Tests\Context\ExcelFixtureContext;
+use Flow\ETL\Adapter\Excel\WorkbookSheetSample;
+use Flow\ETL\Cardinality;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
-use Generator;
 
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\date_schema;
@@ -233,7 +234,7 @@ final class WorkbookSamplerTest extends FlowTestCase
         }
     }
 
-    public function test_samples_yields_one_unstarted_generator_per_sheet(): void
+    public function test_samples_yields_one_unopened_sample_per_sheet(): void
     {
         $filesystem = new CountingFilesystem(native_local_filesystem());
         $sampler = ExcelFixtureContext::globSampler('sniff/*', $filesystem);
@@ -243,11 +244,11 @@ final class WorkbookSamplerTest extends FlowTestCase
         $names = $sampler->header()->names;
         $afterHeader = $filesystem->readFromCalls;
 
-        // the first inner generator is the sheet header() read from, so its header row is already spent
+        // the first sample is the sheet header() read from, so its header row is already spent
         $firstSheet = iterator_to_array($samples[0], false);
 
         static::assertCount(2, $samples);
-        static::assertContainsOnlyInstancesOf(Generator::class, $samples);
+        static::assertContainsOnlyInstancesOf(WorkbookSheetSample::class, $samples);
         static::assertSame(0, $beforeAnyAdvance);
         static::assertSame(['id', 'name', 'email'], $names);
         static::assertSame(1, $afterHeader);
@@ -340,5 +341,48 @@ final class WorkbookSamplerTest extends FlowTestCase
             ),
             ExcelFixtureContext::infer(ExcelFixtureContext::sampler('int_float_bool.xlsx')),
         );
+    }
+
+    public function test_nothing_sampled_declares_unknown_rows(): void
+    {
+        static::assertEquals(Cardinality::unknown(), ExcelFixtureContext::sampler('sniff/a')->sampledRows());
+    }
+
+    public function test_a_file_the_samples_never_reached_declares_unknown_rows(): void
+    {
+        $sampler = ExcelFixtureContext::globSampler('sniff/*');
+        $sampler->header();
+
+        foreach ($sampler->samples(20_480) as $sample) {
+            iterator_to_array($sample, false);
+
+            break;
+        }
+
+        static::assertEquals(Cardinality::unknown(), $sampler->sampledRows());
+    }
+
+    public function test_samples_that_read_every_sheet_declare_exact_rows(): void
+    {
+        $sampler = ExcelFixtureContext::globSampler('sniff/*');
+        $sampler->header();
+
+        foreach ($sampler->samples(20_480) as $sample) {
+            iterator_to_array($sample, false);
+        }
+
+        static::assertEquals(Cardinality::exact(20), $sampler->sampledRows());
+    }
+
+    public function test_an_unbounded_sample_counts_the_rows_it_streamed(): void
+    {
+        $sampler = ExcelFixtureContext::sampler('sniff/a');
+        $sampler->header();
+
+        foreach ($sampler->samples(-1) as $sample) {
+            iterator_to_array($sample, false);
+        }
+
+        static::assertEquals(Cardinality::exact(10), $sampler->sampledRows());
     }
 }

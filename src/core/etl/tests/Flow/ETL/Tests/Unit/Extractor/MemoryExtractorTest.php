@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Extractor;
 
 use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Extractor\MemoryExtractor;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\Double\CountingMemory;
 use Flow\ETL\Tests\FlowTestCase;
@@ -183,5 +184,10 @@ final class MemoryExtractorTest extends FlowTestCase
             ))),
             RowsMother::sequentialIds(5),
         );
+    }
+
+    public function test_it_declares_nothing_because_memory_can_grow_mid_run(): void
+    {
+        static::assertEquals(new Statistics(), from_memory(new ArrayMemory())->statistics());
     }
 }

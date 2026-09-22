@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Double;
 use DateTimeImmutable;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
@@ -143,5 +144,10 @@ final readonly class FakeExtractor implements Extractor
     public function withSchema(Schema $schema): static
     {
         return $this;
+    }
+
+    public function statistics(): Statistics
+    {
+        return new Statistics();
     }
 }

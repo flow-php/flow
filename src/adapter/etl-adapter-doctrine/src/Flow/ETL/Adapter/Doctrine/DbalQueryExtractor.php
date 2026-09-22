@@ -8,18 +8,23 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Types\Type;
+use Flow\ETL\Adapter\Doctrine\Explain\ExplainedRows;
+use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
 
+use function array_slice;
 use function count;
+use function round;
 
 /**
  * batchSize() is a yield cap, not a fetch size: fetchAllAssociative() materialises the whole result set per
@@ -31,6 +36,8 @@ use function count;
  */
 final class DbalQueryExtractor implements BatchableExtractor, Extractor, RewindableExtractor
 {
+    private const int EXPLAINED_PARAMETER_SETS = 10;
+
     use Batches;
 
     private ParametersSet $parametersSet;
@@ -40,6 +47,8 @@ final class DbalQueryExtractor implements BatchableExtractor, Extractor, Rewinda
     private ?Schema $derived = null;
 
     private ?SchemaNotDerivableException $refusal = null;
+
+    private ?Statistics $statistics = null;
 
     /**
      * @var array<int<0, max>|string, ArrayParameterType|ParameterType|string|Type>
@@ -154,9 +163,45 @@ final class DbalQueryExtractor implements BatchableExtractor, Extractor, Rewinda
         }
     }
 
+    /**
+     * One plan per parameter set, summed; past EXPLAINED_PARAMETER_SETS the explained sets are scaled to all of them,
+     * so planning never pays a round trip per set.
+     */
+    public function statistics(): Statistics
+    {
+        if ($this->statistics === null) {
+            $sets = $this->parametersSet->all();
+            $explained = array_slice($sets, 0, self::EXPLAINED_PARAMETER_SETS);
+            $rows = Cardinality::exact(0);
+
+            foreach ($explained as $parameters) {
+                $rows = $rows->merge((new ExplainedRows())->of(
+                    $this->connection,
+                    $this->query,
+                    $parameters,
+                    $this->types,
+                ));
+            }
+
+            $this->statistics = new Statistics(
+                rows: count($sets) === count($explained)
+                    ? $rows
+                    : new Cardinality(
+                        estimate: $rows->estimate === null
+                            ? null
+                            : (int) round(($rows->estimate * count($sets)) / count($explained)),
+                        relativeError: Cardinality::DEFAULT_RELATIVE_ERROR,
+                    ),
+            );
+        }
+
+        return $this->statistics;
+    }
+
     public function withParameters(ParametersSet $parametersSet): self
     {
         $this->parametersSet = $parametersSet;
+        $this->statistics = null;
 
         return $this;
     }
@@ -174,6 +219,7 @@ final class DbalQueryExtractor implements BatchableExtractor, Extractor, Rewinda
     public function withTypes(array $types): self
     {
         $this->types = $types;
+        $this->statistics = null;
 
         return $this;
     }

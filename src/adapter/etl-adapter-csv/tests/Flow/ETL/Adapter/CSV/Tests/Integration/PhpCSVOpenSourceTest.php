@@ -101,4 +101,18 @@ final class PhpCSVOpenSourceTest extends FlowTestCase
             $open->close();
         }
     }
+
+    public function test_produced_rows_and_bytes_exclude_the_header(): void
+    {
+        $open = CSVFixtureContext::openPhp('five_rows.csv');
+
+        try {
+            iterator_to_array($open->records(), false);
+
+            static::assertSame(5, $open->producedRows());
+            static::assertSame(20, $open->producedBytes());
+        } finally {
+            $open->close();
+        }
+    }
 }

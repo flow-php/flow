@@ -18,6 +18,7 @@ final readonly class SourceFile
 
     public function __construct(
         public Path $path,
+        public ?int $size = null,
     ) {
         $values = [];
 

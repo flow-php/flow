@@ -68,4 +68,14 @@ final class GoogleSheetSamplerTest extends FlowTestCase
 
         static::assertCount(1, $values->getCalls);
     }
+
+    public function test_grid_row_count_comes_from_the_sample_request(): void
+    {
+        $values = GoogleSheetFixtureContext::values(SheetValuesMother::range([['id'], ['1']]));
+        $sampler = GoogleSheetFixtureContext::sampler($values, 2, rowCount: 500);
+
+        static::assertSame(500, $sampler->gridRowCount());
+        $sampler->header();
+        static::assertCount(1, $values->getCalls);
+    }
 }

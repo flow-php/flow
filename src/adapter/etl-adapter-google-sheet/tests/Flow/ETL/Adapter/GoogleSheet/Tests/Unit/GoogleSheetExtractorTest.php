@@ -9,9 +9,11 @@ use Flow\ETL\Adapter\GoogleSheet\GoogleSheetExtractor;
 use Flow\ETL\Adapter\GoogleSheet\Tests\Context\GoogleSheetFixtureContext;
 use Flow\ETL\Adapter\GoogleSheet\Tests\Double\StubSpreadsheetsResource;
 use Flow\ETL\Adapter\GoogleSheet\Tests\Mother\SheetValuesMother;
+use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\FlowTestCase;
@@ -543,5 +545,76 @@ final class GoogleSheetExtractorTest extends FlowTestCase
     public function test_is_repeatable(): void
     {
         static::assertTrue(GoogleSheetFixtureContext::extractor(new Sheets())->isRepeatable());
+    }
+
+    public function test_it_declares_the_grid_row_count_as_an_upper_bound(): void
+    {
+        $values = GoogleSheetFixtureContext::values(SheetValuesMother::range([['id'], ['1']]));
+        $extractor = GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(100, $values));
+        $extractor->schema();
+
+        static::assertEquals(Cardinality::atMost(100), $extractor->statistics()->rows);
+    }
+
+    public function test_it_declares_no_byte_size(): void
+    {
+        $values = GoogleSheetFixtureContext::values(SheetValuesMother::range([['id'], ['1']]));
+        $extractor = GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(100, $values));
+        $extractor->schema();
+
+        static::assertEquals(Cardinality::unknown(), $extractor->statistics()->size);
+    }
+
+    public function test_the_grid_row_count_costs_no_extra_request(): void
+    {
+        $values = GoogleSheetFixtureContext::values(SheetValuesMother::range([['id'], ['1']]));
+        $service = GoogleSheetFixtureContext::service(100, $values);
+        $extractor = GoogleSheetFixtureContext::extractor($service);
+
+        $extractor->schema();
+        $statistics = $extractor->statistics();
+
+        static::assertSame($statistics, $extractor->statistics());
+        static::assertCount(1, $values->getCalls);
+
+        /** @var StubSpreadsheetsResource $spreadsheets */
+        $spreadsheets = $service->spreadsheets;
+        static::assertSame(1, $spreadsheets->calls);
+    }
+
+    public function test_statistics_without_a_sample_declare_nothing_and_request_nothing(): void
+    {
+        $values = GoogleSheetFixtureContext::values();
+        $service = GoogleSheetFixtureContext::service(100, $values);
+
+        static::assertEquals(new Statistics(), GoogleSheetFixtureContext::extractor($service)->statistics());
+        static::assertSame([], $values->getCalls);
+
+        /** @var StubSpreadsheetsResource $spreadsheets */
+        $spreadsheets = $service->spreadsheets;
+        static::assertSame(0, $spreadsheets->calls);
+    }
+
+    public function test_a_read_samples_the_grid_row_count_too(): void
+    {
+        $values = GoogleSheetFixtureContext::valuesAndBatches([SheetValuesMother::range([['id'], ['1'], ['2']])], []);
+        $extractor = GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(3, $values));
+
+        iterator_to_array($extractor->extract(flow_context()), false);
+
+        static::assertEquals(Cardinality::atMost(3), $extractor->statistics()->rows);
+    }
+
+    #[DataProvider('memo_resetting_setters')]
+    public function test_shape_changing_setters_drop_the_sampled_statistics(Closure $setter): void
+    {
+        $values = GoogleSheetFixtureContext::values(SheetValuesMother::range([['id'], ['1']]));
+        $extractor = GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(100, $values));
+
+        $extractor->schema();
+        $extractor->statistics();
+        $setter($extractor);
+
+        static::assertEquals(new Statistics(), $extractor->statistics());
     }
 }

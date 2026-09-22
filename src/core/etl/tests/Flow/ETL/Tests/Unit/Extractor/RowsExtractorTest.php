@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
+use Flow\ETL\Cardinality;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -56,5 +58,16 @@ final class RowsExtractorTest extends FlowTestCase
     public function test_is_repeatable(): void
     {
         static::assertTrue(from_rows(rows(schema(int_schema('number')), row(['number' => 1])))->isRepeatable());
+    }
+
+    public function test_it_declares_an_exact_row_count(): void
+    {
+        $extractor = from_rows(
+            rows(schema(int_schema('number')), row(['number' => 1]), row(['number' => 2])),
+            rows(schema(int_schema('number')), row(['number' => 3])),
+        );
+
+        static::assertEquals(new Statistics(rows: Cardinality::exact(3)), $extractor->statistics());
+        static::assertSame($extractor->statistics(), $extractor->statistics());
     }
 }

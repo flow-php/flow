@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel;
 
+use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
@@ -12,9 +13,11 @@ use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\FileReading;
 use Flow\ETL\Extractor\InfersSchema;
+use Flow\ETL\Extractor\ListedFiles;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
@@ -57,11 +60,22 @@ final class ExcelExtractor implements
      */
     private ?WorkbookSampler $sampled = null;
 
+    private int $sampledFiles = 0;
+
+    /**
+     * What the last inference's samples read; null until one ran. Kept apart from $sampled, which extract() takes.
+     */
+    private ?Cardinality $sampledRows = null;
+
     private ?Schema $schema = null;
+
+    private ?Statistics $statistics = null;
 
     private string $inferredFrom = '';
 
     private readonly Filesystem $filesystem;
+
+    private ?ListedFiles $listed = null;
 
     public function __construct(
         private readonly Path $path,
@@ -140,6 +154,8 @@ final class ExcelExtractor implements
                                 $this->inference,
                                 new CellTypeNarrower($this->inference->candidates()),
                             ))->infer($header->names, $sampler->samples($this->inference->sampleSize));
+                        $this->sampledRows = $sampler->sampledRows();
+                        $this->sampledFiles = count($sources);
                     } catch (Throwable $failure) {
                         $sampler->close();
 
@@ -251,9 +267,10 @@ final class ExcelExtractor implements
         $derived = $this->derivedSchema;
 
         if ($derived === null) {
+            $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path), false);
             $sampler = new WorkbookSampler(
                 new WorkbookReader($this->readOptions, new ExcelFormatDetector($this->filesystem)),
-                iterator_to_array($this->sourceFiles($this->filesystem, $this->path), false),
+                $sources,
             );
 
             try {
@@ -266,6 +283,8 @@ final class ExcelExtractor implements
                         $this->inference,
                         new CellTypeNarrower($this->inference->candidates()),
                     ))->infer($header->names, $sampler->samples($this->inference->sampleSize));
+                $this->sampledRows = $sampler->sampledRows();
+                $this->sampledFiles = count($sources);
             } catch (Throwable $failure) {
                 $sampler->close();
 
@@ -287,6 +306,30 @@ final class ExcelExtractor implements
     public function source(): Path
     {
         return $this->path;
+    }
+
+    /**
+     * The size is the listed, compressed byte count. Rows are known only when the sample schema inference already
+     * read every row of every file: OpenSpout discards the row bound of a sheet's <dimension>.
+     */
+    public function statistics(): Statistics
+    {
+        if ($this->statistics !== null) {
+            return $this->statistics;
+        }
+
+        $this->listed ??= ListedFiles::of($this->sourceFiles($this->filesystem, $this->path));
+        $size = $this->listed->bytes;
+
+        if ($this->sampledRows === null) {
+            return new Statistics(rows: Cardinality::unknown(), size: $size);
+        }
+
+        // an extract() under a pushed path filter sampled only the files the filter kept
+        return $this->statistics = new Statistics(
+            rows: $this->sampledFiles === $this->listed->count ? $this->sampledRows : Cardinality::unknown(),
+            size: $size,
+        );
     }
 
     public function withConvertEmptyToNull(bool $convertEmptyToNull): self
@@ -345,5 +388,8 @@ final class ExcelExtractor implements
         $this->inferredFrom = '';
         $this->sampled?->close();
         $this->sampled = null;
+        $this->sampledRows = null;
+        $this->sampledFiles = 0;
+        $this->statistics = null;
     }
 }

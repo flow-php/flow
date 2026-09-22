@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
+use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
@@ -38,6 +39,8 @@ final class ArrayExtractor implements BatchableExtractor, Extractor, InfersSchem
     private ?SpilledRows $source = null;
 
     private readonly ?Path $spillRoot;
+
+    private ?Statistics $statistics = null;
 
     /**
      * @param iterable<array<mixed>> $dataset an array is described in place; anything else is read
@@ -155,6 +158,14 @@ final class ArrayExtractor implements BatchableExtractor, Extractor, InfersSchem
             ),
             new InstanceOfTypeNarrower(),
         ))->infer([], $this->source->samples(-1));
+    }
+
+    public function statistics(): Statistics
+    {
+        // a generator is one-shot and spilled, so its length is unknown until it has been read
+        return $this->statistics ??= new Statistics(
+            rows: is_array($this->dataset) ? Cardinality::exact(count($this->dataset)) : Cardinality::unknown(),
+        );
     }
 
     public function withSchema(Schema $schema): static

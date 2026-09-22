@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\PostgreSql\Tests\Integration;
 
 use Flow\ETL\Adapter\PostgreSql\Tests\IntegrationTestCase;
+use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\PostgreSql\Client\Exception\QueryException;
@@ -16,6 +17,7 @@ use function Flow\ETL\DSL\from_all;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
+use function Flow\PostgreSql\DSL\analyze;
 use function Flow\PostgreSql\DSL\asc;
 use function Flow\PostgreSql\DSL\binary_expr;
 use function Flow\PostgreSql\DSL\col;
@@ -27,8 +29,10 @@ use function Flow\PostgreSql\DSL\column_type_text;
 use function Flow\PostgreSql\DSL\create;
 use function Flow\PostgreSql\DSL\delete;
 use function Flow\PostgreSql\DSL\func;
+use function Flow\PostgreSql\DSL\gt;
 use function Flow\PostgreSql\DSL\insert;
 use function Flow\PostgreSql\DSL\literal;
+use function Flow\PostgreSql\DSL\param;
 use function Flow\PostgreSql\DSL\select;
 use function Flow\PostgreSql\DSL\star;
 use function Flow\PostgreSql\DSL\table;
@@ -380,5 +384,19 @@ final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
         }
 
         $this->client->execute($insert);
+    }
+
+    public function test_statistics_are_planned_without_reading_a_row(): void
+    {
+        $this->client->execute(analyze()->table($this->tableName));
+
+        static::assertEquals(
+            Cardinality::approximately(5),
+            from_pgsql_cursor(
+                $this->client,
+                select(star())->from(table($this->tableName))->where(gt(col('id'), param(1))),
+                [20],
+            )->statistics()->rows,
+        );
     }
 }

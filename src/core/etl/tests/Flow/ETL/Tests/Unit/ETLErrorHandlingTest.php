@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Flow\ETL\BoundStep;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Rows;
@@ -88,6 +89,11 @@ final class ETLErrorHandlingTest extends FlowTestCase
                     'phase' => null,
                 ]));
             }
+
+            public function statistics(): Statistics
+            {
+                return new Statistics();
+            }
         };
 
         $brokenTransformer = new class implements Transformer {
@@ -163,6 +169,11 @@ final class ETLErrorHandlingTest extends FlowTestCase
                     'expiration-date' => new DateTimeImmutable('2020-08-25'),
                     'phase' => null,
                 ]));
+            }
+
+            public function statistics(): Statistics
+            {
+                return new Statistics();
             }
         };
 
@@ -261,6 +272,11 @@ final class ETLErrorHandlingTest extends FlowTestCase
                     'expiration-date' => new DateTimeImmutable('2020-08-25'),
                     'phase' => null,
                 ]));
+            }
+
+            public function statistics(): Statistics
+            {
+                return new Statistics();
             }
         };
 

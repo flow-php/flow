@@ -7,9 +7,11 @@ namespace Flow\ETL\Adapter\PostgreSql\Tests\Unit;
 use Flow\ETL\Adapter\PostgreSql\Tests\Double\SpyClient;
 use Flow\ETL\Adapter\PostgreSql\Tests\Double\StubCursor;
 use Flow\ETL\Adapter\PostgreSql\Tests\Mother\ColumnMother;
+use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\PostgreSql\AST\Transformers\ExplainConfig;
 use Flow\PostgreSql\Client\Exception\PostgreSqlError;
 use Flow\PostgreSql\Client\Exception\QueryException;
 
@@ -335,6 +337,62 @@ final class PostgreSqlKeySetExtractorTest extends FlowTestCase
                 'SELECT id FROM t',
                 pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
             )->isRepeatable(),
+        );
+    }
+
+    public function test_statistics_are_the_planner_estimate_without_analyze(): void
+    {
+        $client = (new SpyClient())->willExplain(42);
+
+        static::assertEquals(
+            Cardinality::approximately(42),
+            from_pgsql_key_set(
+                $client,
+                'SELECT * FROM t WHERE id > $1',
+                pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+                [1],
+            )->statistics()->rows,
+        );
+        static::assertEquals(
+            [['sql' => 'SELECT * FROM t WHERE id > $1', 'parameters' => [1], 'config' => ExplainConfig::forEstimate()]],
+            $client->explained,
+        );
+    }
+
+    public function test_statistics_are_explained_once(): void
+    {
+        $client = (new SpyClient())->willExplain(42);
+        $extractor = from_pgsql_key_set(
+            $client,
+            'SELECT * FROM t WHERE id > $1',
+            pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+            [1],
+        );
+
+        static::assertSame($extractor->statistics(), $extractor->statistics());
+        static::assertSame(1, $client->callsTo('explain'));
+    }
+
+    public function test_a_maximum_bounds_and_caps_the_estimate_and_a_new_one_drops_the_statistics(): void
+    {
+        $client = (new SpyClient())->willExplain(42);
+        $extractor = from_pgsql_key_set(
+            $client,
+            'SELECT * FROM t WHERE id > $1',
+            pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+            [1],
+        )->withMaximum(10);
+
+        static::assertEquals(
+            new Cardinality(atMost: 10, estimate: 10, relativeError: Cardinality::DEFAULT_RELATIVE_ERROR),
+            $extractor->statistics()->rows,
+        );
+
+        $extractor->withMaximum(100);
+
+        static::assertEquals(
+            new Cardinality(atMost: 100, estimate: 42, relativeError: Cardinality::DEFAULT_RELATIVE_ERROR),
+            $extractor->statistics()->rows,
         );
     }
 }

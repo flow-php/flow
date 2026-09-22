@@ -9,6 +9,7 @@ use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\PathFiltering;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
@@ -64,5 +65,10 @@ final class AvroExtractor implements Extractor, FileExtractor
         $this->schema = $schema;
 
         return $this;
+    }
+
+    public function statistics(): Statistics
+    {
+        return new Statistics();
     }
 }

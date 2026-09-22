@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use function Flow\ETL\DSL\{data_frame, df, equal, from_array, int_schema, join_on, row, rows, schema, str_schema, to_output};
 use Flow\ETL\{DataFrame, DataFrameFactory, Extractor, FlowContext, Rows};
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Schema;
 
@@ -26,6 +27,11 @@ $apiExtractor = new class($apiSchema) implements Extractor {
     public function schema(): Schema
     {
         return $this->schema;
+    }
+
+    public function statistics(): Statistics
+    {
+        return new Statistics();
     }
 
     public function withSchema(Schema $schema): static

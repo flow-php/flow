@@ -10,6 +10,7 @@ use Flow\ETL\Adapter\Doctrine\ParametersSet;
 use Flow\ETL\Adapter\Doctrine\Tests\Context\InMemorySqlite;
 use Flow\ETL\Adapter\Doctrine\Tests\Context\SelectQueryCounter;
 use Flow\ETL\Adapter\Doctrine\Tests\Double\NativeHandleStub;
+use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\TestWith;
@@ -132,5 +133,33 @@ final class DbalQueryExtractorTest extends FlowTestCase
         static::assertTrue(
             (new DbalQueryExtractor(InMemorySqlite::connection(), 'SELECT * FROM users'))->isRepeatable(),
         );
+    }
+
+    public function test_new_parameters_drop_the_statistics(): void
+    {
+        $extractor = new DbalQueryExtractor(
+            InMemorySqlite::withUsers(InMemorySqlite::connection(), 3),
+            'SELECT * FROM users',
+        );
+
+        static::assertSame($extractor->statistics(), $extractor->statistics());
+        static::assertEquals(Cardinality::unknown(), $extractor->statistics()->rows);
+
+        $extractor->withParameters(new ParametersSet());
+
+        static::assertEquals(Cardinality::exact(0), $extractor->statistics()->rows);
+    }
+
+    public function test_new_types_drop_the_statistics(): void
+    {
+        $extractor = new DbalQueryExtractor(
+            InMemorySqlite::withUsers(InMemorySqlite::connection(), 3),
+            'SELECT * FROM users',
+        );
+        $before = $extractor->statistics();
+
+        $extractor->withTypes([]);
+
+        static::assertNotSame($before, $extractor->statistics());
     }
 }

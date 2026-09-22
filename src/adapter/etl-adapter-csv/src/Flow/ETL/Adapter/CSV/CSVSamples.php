@@ -1,0 +1,63 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Adapter\CSV;
+
+use Generator;
+use IteratorAggregate;
+
+/**
+ * @implements IteratorAggregate<int, CSVFileSample>
+ */
+final class CSVSamples implements IteratorAggregate
+{
+    /**
+     * @var list<CSVFileSample>
+     */
+    private array $pulled = [];
+
+    /**
+     * @param iterable<CSVFileSample> $samples
+     */
+    public function __construct(
+        private readonly iterable $samples,
+    ) {}
+
+    /**
+     * Keeps only the samples the consumer pulled: a listing the inference stopped short of costs nothing.
+     *
+     * @return Generator<int, CSVFileSample>
+     */
+    public function getIterator(): Generator
+    {
+        foreach ($this->samples as $sample) {
+            $this->pulled[] = $sample;
+
+            yield $sample;
+        }
+    }
+
+    public function sampledFiles(): CSVSampledFiles
+    {
+        $files = 0;
+        $rows = 0;
+        $bytes = 0;
+        $whole = true;
+
+        foreach ($this->pulled as $sample) {
+            $sampled = $sample->sampled();
+
+            if ($sampled === null) {
+                continue;
+            }
+
+            $files++;
+            $rows += $sampled->rows;
+            $bytes += $sampled->bytes;
+            $whole = $whole && $sampled->wholeFile;
+        }
+
+        return new CSVSampledFiles($files, $rows, $bytes, $whole);
+    }
+}

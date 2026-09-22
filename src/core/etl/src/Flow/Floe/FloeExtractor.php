@@ -14,6 +14,7 @@ use Flow\ETL\Extractor\FileReading;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Hydrator;
@@ -28,6 +29,7 @@ use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Flow\Floe\Codec\NoopCodec;
 use Generator;
 
+use function iterator_count;
 use function sprintf;
 
 final class FloeExtractor implements
@@ -43,6 +45,8 @@ final class FloeExtractor implements
     use FileReading;
 
     private ?int $offset = null;
+
+    private ?Statistics $statistics = null;
 
     private bool $unionByName = false;
 
@@ -166,6 +170,11 @@ final class FloeExtractor implements
         );
     }
 
+    public function statistics(): Statistics
+    {
+        return $this->statistics ??= $this->declare();
+    }
+
     /**
      * Reconcile every listed file's footer instead of trusting the first one.
      */
@@ -173,6 +182,7 @@ final class FloeExtractor implements
     {
         $this->unionByName = $union;
         $this->derivedSchema = null;
+        $this->statistics = null;
 
         return $this;
     }
@@ -194,8 +204,22 @@ final class FloeExtractor implements
         }
 
         $this->offset = $offset;
+        $this->statistics = null;
 
         return $this;
+    }
+
+    /**
+     * The footers schema() reads - the first file's, or every file's under unionByName - read once whichever of the
+     * two asks first, and scaled to the listing when only the first was read.
+     */
+    private function declare(): Statistics
+    {
+        $footers = $this->schema === null
+            ? $this->derivedFooters($this->files(), $this->unionByName)
+            : $this->footers($this->files(), $this->unionByName);
+
+        return $footers->of(iterator_count($this->sourceFiles($this->filesystem, $this->path)), $this->offset ?? 0);
     }
 
     /**

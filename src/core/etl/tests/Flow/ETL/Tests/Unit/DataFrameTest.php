@@ -13,6 +13,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Memory\ArrayMemory;
@@ -263,6 +264,11 @@ final class DataFrameTest extends FlowTestCase
                         yield rows(schema(integer_schema('id')), row(['id' => $i]));
                     }
                 }
+
+                public function statistics(): Statistics
+                {
+                    return new Statistics();
+                }
             })
             ->filter(ref('id')->mod(lit(2))->same(lit(0)))
             ->fetch();
@@ -413,6 +419,11 @@ final class DataFrameTest extends FlowTestCase
                         yield rows(schema(integer_schema('id')), row(['id' => $i]));
                     }
                 }
+
+                public function statistics(): Statistics
+                {
+                    return new Statistics();
+                }
             })
             ->withEntry('odd', ref('id')->mod(lit(2))->equals(lit(0)))
             ->fetch();
@@ -489,6 +500,11 @@ final class DataFrameTest extends FlowTestCase
                         'phase' => null,
                     ]),
                 );
+            }
+
+            public function statistics(): Statistics
+            {
+                return new Statistics();
             }
         };
 
@@ -772,6 +788,11 @@ final class DataFrameTest extends FlowTestCase
                         row(['id' => 10]),
                     );
                 }
+
+                public function statistics(): Statistics
+                {
+                    return new Statistics();
+                }
             })
             ->with(new class implements Transformer {
                 public function bind(Schema $input): BoundStep
@@ -824,6 +845,11 @@ final class DataFrameTest extends FlowTestCase
                     yield rows(schema(integer_schema('id')), row(['id' => 1]));
                     yield rows(schema(integer_schema('id')), row(['id' => 2]));
                     yield rows(schema(integer_schema('id')), row(['id' => 3]));
+                }
+
+                public function statistics(): Statistics
+                {
+                    return new Statistics();
                 }
             })
             ->with(new class implements Transformer {

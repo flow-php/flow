@@ -15,6 +15,20 @@ interface CSVOpenSource
     public function close(): void;
 
     /**
+     * The bytes, as read, of the rows producedRows() counts: line endings included, the header record excluded.
+     *
+     * @return int<0, max>
+     */
+    public function producedBytes(): int;
+
+    /**
+     * Rows read from the source so far by records() or sniff() - it may be more than a consumer took.
+     *
+     * @return int<0, max>
+     */
+    public function producedRows(): int;
+
+    /**
      * This instance is consumed afterwards.
      *
      * @return list<string>

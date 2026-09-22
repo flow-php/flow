@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Optimizer;
 use Flow\ETL\Planner;
@@ -105,6 +106,11 @@ final class LimitTest extends FlowIntegrationTestCase
                     yield rows(schema(integer_schema('id')), row(['id' => $i]));
                 }
             }
+
+            public function statistics(): Statistics
+            {
+                return new Statistics();
+            }
         })->fetch();
 
         static::assertCount(20, $rows);
@@ -134,6 +140,11 @@ final class LimitTest extends FlowIntegrationTestCase
                     for ($i = 0; $i < 1000; $i++) {
                         yield rows(schema(integer_schema('id')), row(['id' => $i + 1]), row(['id' => $i + 2]));
                     }
+                }
+
+                public function statistics(): Statistics
+                {
+                    return new Statistics();
                 }
             })
             ->limit(10)
@@ -206,6 +217,11 @@ final class LimitTest extends FlowIntegrationTestCase
                         );
                     }
                 }
+
+                public function statistics(): Statistics
+                {
+                    return new Statistics();
+                }
             })
             ->withEntries([
                 'expanded' => ref('ids')->expand(),
@@ -248,6 +264,11 @@ final class LimitTest extends FlowIntegrationTestCase
                         yield rows(schema(integer_schema('id')), row(['id' => $i + 1]), row(['id' => $i + 2]));
                     }
                 }
+
+                public function statistics(): Statistics
+                {
+                    return new Statistics();
+                }
             })
             ->batchSize(50)
             ->limit(10)
@@ -281,6 +302,11 @@ final class LimitTest extends FlowIntegrationTestCase
                         yield rows(schema(integer_schema('id')), row(['id' => $i + 1]), row(['id' => $i + 2]));
                     }
                 }
+
+                public function statistics(): Statistics
+                {
+                    return new Statistics();
+                }
             })
             ->limit(10)
             ->collect()
@@ -313,6 +339,11 @@ final class LimitTest extends FlowIntegrationTestCase
                     for ($i = 0; $i < 5; $i++) {
                         yield rows(schema(integer_schema('id')), row(['id' => $i]));
                     }
+                }
+
+                public function statistics(): Statistics
+                {
+                    return new Statistics();
                 }
             })
             ->limit(10)

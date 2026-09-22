@@ -97,6 +97,11 @@ final class BatchByExtractor implements Extractor, OverridingExtractor, Rewindab
         return $this->extractor->schema();
     }
 
+    public function statistics(): Statistics
+    {
+        return $this->extractor->statistics();
+    }
+
     public function withSchema(Schema $schema): static
     {
         $this->schema = $schema;

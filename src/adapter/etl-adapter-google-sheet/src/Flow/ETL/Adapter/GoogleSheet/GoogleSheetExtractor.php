@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\GoogleSheet;
 
+use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
@@ -14,6 +15,7 @@ use Flow\ETL\Extractor\MetadataColumns;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
@@ -58,7 +60,14 @@ final class GoogleSheetExtractor implements
 
     private int $rowsPerPage = 1000;
 
+    /**
+     * The grid row count the last schema inference fetched; null until one ran.
+     */
+    private ?int $gridRowCount = null;
+
     private ?Schema $schema = null;
+
+    private ?Statistics $statistics = null;
 
     public function __construct(
         private readonly Sheets $service,
@@ -87,6 +96,11 @@ final class GoogleSheetExtractor implements
             $this->inference,
             $this->readOptions->typer($this->inference->candidates()),
         ))->infer($sampler->header(), $sampler->samples($this->inference->sampleSize)));
+
+        if ($sampledNow) {
+            $this->gridRowCount = $sampler->gridRowCount();
+        }
+
         $schema = $this->addMetadataColumns
             ? $base->add(str_schema('_spread_sheet_id'), str_schema('_sheet_name'))
             : $base;
@@ -163,6 +177,8 @@ final class GoogleSheetExtractor implements
     {
         $this->inference = $builder->build();
         $this->derivedSchema = null;
+        $this->gridRowCount = null;
+        $this->statistics = null;
 
         return $this;
     }
@@ -173,20 +189,41 @@ final class GoogleSheetExtractor implements
             new GoogleSheetReader($this->service, $this->spreadsheetId, $this->columnRange, $this->readOptions),
             $this->inference->sampleSize,
         );
+        $sampledNow = $this->schema === null && $this->derivedSchema === null;
         $base = $this->schema ?? ($this->derivedSchema ??= (new SchemaInferrer(
             $this->inference,
             $this->readOptions->typer($this->inference->candidates()),
         ))->infer($sampler->header(), $sampler->samples($this->inference->sampleSize)));
+
+        if ($sampledNow) {
+            $this->gridRowCount = $sampler->gridRowCount();
+        }
 
         return $this->addMetadataColumns
             ? $base->add(str_schema('_spread_sheet_id'), str_schema('_sheet_name'))
             : $base;
     }
 
+    /**
+     * The grid's allocated rows bound the populated ones; they come from the sample schema inference already
+     * fetched, and without one nothing is declared - no request is made just for them. The Sheets API reports no
+     * byte size.
+     */
+    public function statistics(): Statistics
+    {
+        if ($this->gridRowCount === null) {
+            return new Statistics();
+        }
+
+        return $this->statistics ??= new Statistics(rows: Cardinality::atMost($this->gridRowCount));
+    }
+
     public function withDropExtraColumns(bool $dropExtraColumns): self
     {
         $this->readOptions = $this->readOptions->withDropExtraColumns($dropExtraColumns);
         $this->derivedSchema = null;
+        $this->gridRowCount = null;
+        $this->statistics = null;
 
         return $this;
     }
@@ -195,6 +232,8 @@ final class GoogleSheetExtractor implements
     {
         $this->readOptions = $this->readOptions->withEmptyToNull($emptyToNull);
         $this->derivedSchema = null;
+        $this->gridRowCount = null;
+        $this->statistics = null;
 
         return $this;
     }
@@ -203,6 +242,8 @@ final class GoogleSheetExtractor implements
     {
         $this->readOptions = $this->readOptions->withHeader($withHeader);
         $this->derivedSchema = null;
+        $this->gridRowCount = null;
+        $this->statistics = null;
 
         return $this;
     }
@@ -214,6 +255,8 @@ final class GoogleSheetExtractor implements
     {
         $this->readOptions = $this->readOptions->withOptions($options);
         $this->derivedSchema = null;
+        $this->gridRowCount = null;
+        $this->statistics = null;
 
         return $this;
     }

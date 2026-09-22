@@ -85,4 +85,9 @@ final class DataFrameExtractor implements RewindableExtractor
 
         return $this;
     }
+
+    public function statistics(): Statistics
+    {
+        return new Statistics();
+    }
 }

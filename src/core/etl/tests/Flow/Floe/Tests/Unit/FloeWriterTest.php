@@ -88,7 +88,7 @@ final class FloeWriterTest extends TestCase
         $writer->write(rows(schema(int_schema('id')), row(['id' => 1])));
         $writer->close();
 
-        static::assertSame(1, FloeStreamReaderContext::footer($filesystem, $path)->totalRows);
+        static::assertSame(1, FloeStreamReaderContext::footer($filesystem, $path)->statistics->rows);
     }
 
     public function test_append_on_empty_file_behaves_like_create(): void
@@ -102,7 +102,7 @@ final class FloeWriterTest extends TestCase
         $writer->write(rows(schema(int_schema('id')), row(['id' => 1])));
         $writer->close();
 
-        static::assertSame(1, FloeStreamReaderContext::footer($filesystem, $path)->totalRows);
+        static::assertSame(1, FloeStreamReaderContext::footer($filesystem, $path)->statistics->rows);
     }
 
     public function test_append_to_a_closed_zero_row_file_derives_the_schema_from_the_first_batch(): void
@@ -151,7 +151,7 @@ final class FloeWriterTest extends TestCase
 
         $footer = FloeStreamReaderContext::footer($filesystem, $path);
 
-        static::assertSame(0, $footer->totalRows);
+        static::assertSame(0, $footer->statistics->rows);
         static::assertTrue($footer->schema()->isSame(schema(int_schema('id'))));
     }
 
@@ -267,7 +267,7 @@ final class FloeWriterTest extends TestCase
 
         $footer = FloeStreamReaderContext::footer($filesystem, $path);
 
-        static::assertSame(1, $footer->totalRows);
+        static::assertSame(1, $footer->statistics->rows);
         static::assertCount(1, $footer->sections);
     }
 
@@ -333,7 +333,7 @@ final class FloeWriterTest extends TestCase
 
         $footer = FloeStreamReaderContext::footer($filesystem, $path);
 
-        static::assertSame(2, $footer->totalRows);
+        static::assertSame(2, $footer->statistics->rows);
         static::assertNotSame([], $footer->schema);
         static::assertCount(2, $footer->sections);
     }
@@ -374,7 +374,7 @@ final class FloeWriterTest extends TestCase
 
         $footer = FloeStreamReaderContext::footer($filesystem, $path);
 
-        static::assertSame(0, $footer->totalRows);
+        static::assertSame(0, $footer->statistics->rows);
         static::assertSame([], $footer->sections);
         static::assertSame([], $footer->schema);
     }
@@ -402,7 +402,7 @@ final class FloeWriterTest extends TestCase
 
         $footer = FloeStreamReaderContext::footer($filesystem, $path);
 
-        static::assertSame(2, $footer->totalRows);
+        static::assertSame(2, $footer->statistics->rows);
         static::assertCount(1, $footer->sections);
         static::assertSame(
             [Format::FRAME_ROW, Format::FRAME_ROW, Format::FRAME_FOOTER],
@@ -447,7 +447,7 @@ final class FloeWriterTest extends TestCase
 
         static::assertNotSame([], $footer->schema);
         static::assertCount(1, $footer->sections);
-        static::assertSame(3, $footer->totalRows);
+        static::assertSame(3, $footer->statistics->rows);
         static::assertSame(3, $footer->sections[0]->rowCount);
 
         $fileSchema = $footer->schema();

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\JSONMachine;
 
+use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
@@ -11,9 +12,11 @@ use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\FileReading;
 use Flow\ETL\Extractor\InfersSchema;
+use Flow\ETL\Extractor\ListedFiles;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
@@ -49,9 +52,18 @@ final class JsonExtractor implements
 
     private bool $pointerToEntryName = false;
 
+    /**
+     * What the last schema inference sampled; null until one ran.
+     */
+    private ?JsonSampledFiles $sampled = null;
+
     private ?Schema $schema = null;
 
+    private ?Statistics $statistics = null;
+
     private readonly Filesystem $filesystem;
+
+    private ?ListedFiles $listed = null;
 
     public function __construct(
         private readonly Path $path,
@@ -101,11 +113,13 @@ final class JsonExtractor implements
             $derived = $this->derivedSchema;
 
             if ($derived === null) {
+                $samples = new JsonSamples($reader->samples($this->inference->sampleSize));
                 $derived =
                     $this->derivedSchema = (new SchemaInferrer($this->inference, new InstanceOfTypeNarrower()))->infer(
                         [],
-                        $reader->samples($this->inference->sampleSize),
+                        $samples,
                     );
+                $this->sampled = $samples->sampledFiles();
             }
 
             $base = $fileColumns->withoutTail($derived);
@@ -145,6 +159,8 @@ final class JsonExtractor implements
     {
         $this->inference = $builder->build();
         $this->derivedSchema = null;
+        $this->sampled = null;
+        $this->statistics = null;
 
         return $this;
     }
@@ -169,11 +185,13 @@ final class JsonExtractor implements
                 iterator_to_array($this->sourceFiles($this->filesystem, $this->path), false),
             );
 
+            $samples = new JsonSamples($reader->samples($this->inference->sampleSize));
             $derived =
                 $this->derivedSchema = (new SchemaInferrer($this->inference, new InstanceOfTypeNarrower()))->infer(
                     [],
-                    $reader->samples($this->inference->sampleSize),
+                    $samples,
                 );
+            $this->sampled = $samples->sampledFiles();
         }
 
         return $fileColumns->declare($fileColumns->withoutTail($derived));
@@ -190,12 +208,34 @@ final class JsonExtractor implements
     }
 
     /**
+     * A document has no bytes-per-row unit, so rows are known only when the sample schema inference already read
+     * every element of every file.
+     */
+    public function statistics(): Statistics
+    {
+        if ($this->statistics !== null) {
+            return $this->statistics;
+        }
+
+        $this->listed ??= ListedFiles::of($this->sourceFiles($this->filesystem, $this->path));
+        $size = $this->listed->bytes;
+
+        if ($this->sampled === null) {
+            return new Statistics(rows: Cardinality::unknown(), size: $size);
+        }
+
+        return $this->statistics = new Statistics(rows: $this->sampled->exactRows($this->listed->count), size: $size);
+    }
+
+    /**
      * @param string $pointer
      * @param bool $pointerToEntryName - when true pointer will be used as entry name for extracted data
      */
     public function withPointer(string $pointer, bool $pointerToEntryName = false): self
     {
         $this->derivedSchema = null;
+        $this->sampled = null;
+        $this->statistics = null;
         $this->pointer = $pointer;
         $this->pointerToEntryName = $pointerToEntryName;
 

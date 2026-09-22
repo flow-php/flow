@@ -33,7 +33,7 @@ final readonly class Footer
         public string $writer,
         public array $schema,
         public array $sections,
-        public int $totalRows,
+        public Statistics $statistics,
         public Metadata $metadata,
     ) {}
 
@@ -69,9 +69,9 @@ final readonly class Footer
                 'writer' => type_string(),
                 'schema' => type_array(),
                 'sections' => type_list(type_array()),
-                'totalRows' => type_integer(),
+                'statistics' => type_array(),
                 'metadata' => type_array(),
-            ])->assert($data);
+            ], allow_extra: true)->assert($data);
         } catch (InvalidTypeException $e) {
             throw new FloeException('Floe footer is malformed: ' . $e->getMessage(), 0, $e);
         }
@@ -95,7 +95,14 @@ final readonly class Footer
             throw new FloeException('Floe footer metadata is malformed: ' . $e->getMessage(), 0, $e);
         }
 
-        return new self($data['version'], $data['writer'], $schema, $sections, $data['totalRows'], $metadata);
+        return new self(
+            $data['version'],
+            $data['writer'],
+            $schema,
+            $sections,
+            Statistics::fromArray($data['statistics']),
+            $metadata,
+        );
     }
 
     public function schema(): Schema
@@ -114,7 +121,7 @@ final readonly class Footer
      *     writer: string,
      *     schema: array<int, array<string, mixed>>,
      *     sections: array<int, array{offset: int, rowCount: int}>,
-     *     totalRows: int,
+     *     statistics: array{rows: int, byteSize: int},
      *     metadata: array<string, mixed>,
      * }
      */
@@ -131,7 +138,7 @@ final readonly class Footer
             'writer' => $this->writer,
             'schema' => $this->schema,
             'sections' => $sections,
-            'totalRows' => $this->totalRows,
+            'statistics' => $this->statistics->normalize(),
             'metadata' => $this->metadata->normalize(),
         ];
     }

@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\Doctrine;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
+use Flow\ETL\Adapter\Doctrine\Explain\ExplainedRows;
 use Flow\ETL\Adapter\Doctrine\Pagination\Key;
 use Flow\ETL\Adapter\Doctrine\Pagination\KeySet;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -16,6 +17,7 @@ use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
@@ -49,6 +51,8 @@ final class DbalKeySetExtractor implements BatchableExtractor, Extractor, Rewind
     private ?Schema $derived = null;
 
     private ?SchemaNotDerivableException $refusal = null;
+
+    private ?Statistics $statistics = null;
 
     public function __construct(
         private readonly Connection $connection,
@@ -212,6 +216,17 @@ final class DbalKeySetExtractor implements BatchableExtractor, Extractor, Rewind
         }
     }
 
+    public function statistics(): Statistics
+    {
+        return $this->statistics ??= new Statistics(rows: (new ExplainedRows())->of(
+            $this->connection,
+            $this->queryBuilder->getSQL(),
+            $this->queryBuilder->getParameters(),
+            $this->queryBuilder->getParameterTypes(),
+            $this->maximum,
+        ));
+    }
+
     public function withKeyAliasSuffix(string $keyAliasSuffix): self
     {
         $this->keyAliasSuffix = $keyAliasSuffix;
@@ -235,6 +250,7 @@ final class DbalKeySetExtractor implements BatchableExtractor, Extractor, Rewind
         }
 
         $this->maximum = $maximum;
+        $this->statistics = null;
 
         return $this;
     }

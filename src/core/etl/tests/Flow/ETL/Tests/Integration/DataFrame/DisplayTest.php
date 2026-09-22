@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 use DateTimeImmutable;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
@@ -111,6 +112,11 @@ final class DisplayTest extends FlowIntegrationTestCase
                     );
                 }
             }
+
+            public function statistics(): Statistics
+            {
+                return new Statistics();
+            }
         })->collect();
 
         self::assertCommandOutputIdentical(<<<'ASCIITABLE'
@@ -190,6 +196,11 @@ final class DisplayTest extends FlowIntegrationTestCase
                             ]),
                         );
                     }
+                }
+
+                public function statistics(): Statistics
+                {
+                    return new Statistics();
                 }
             })
             ->collect()

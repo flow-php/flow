@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
+use Flow\ETL\Cardinality;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
@@ -13,6 +14,8 @@ use Generator;
 final class RowsExtractor implements Extractor, RewindableExtractor
 {
     private ?Schema $schema = null;
+
+    private ?Statistics $statistics = null;
 
     /**
      * @var array<Rows>
@@ -58,6 +61,21 @@ final class RowsExtractor implements Extractor, RewindableExtractor
         }
 
         return $schema;
+    }
+
+    public function statistics(): Statistics
+    {
+        if ($this->statistics === null) {
+            $count = 0;
+
+            foreach ($this->rows as $rows) {
+                $count += $rows->count();
+            }
+
+            $this->statistics = new Statistics(rows: Cardinality::exact($count));
+        }
+
+        return $this->statistics;
     }
 
     public function withSchema(Schema $schema): static

@@ -91,7 +91,7 @@ final class FloeStreamWriterTest extends TestCase
 
         $footer = FloeStreamReaderContext::footer($filesystem, $path);
 
-        static::assertSame(3, $footer->totalRows);
+        static::assertSame(3, $footer->statistics->rows);
         static::assertSame(['source' => 'stream'], $footer->metadata->normalize());
         static::assertSame(
             [Format::FRAME_ROW, Format::FRAME_ROW, Format::FRAME_ROW, Format::FRAME_FOOTER],
@@ -173,7 +173,7 @@ final class FloeStreamWriterTest extends TestCase
         $writer->close();
 
         $footer = FloeStreamReaderContext::footer($filesystem, $path);
-        static::assertSame(2, $footer->totalRows);
+        static::assertSame(2, $footer->statistics->rows);
         static::assertNotSame([], $footer->schema);
         static::assertCount(2, FloeStreamReaderContext::readAll($filesystem, $path)->all());
     }
@@ -262,7 +262,7 @@ final class FloeStreamWriterTest extends TestCase
         static::assertSame([Format::FRAME_FOOTER], FloeStreamReaderContext::frameTypes($filesystem, $path));
 
         $footer = FloeStreamReaderContext::footer($filesystem, $path);
-        static::assertSame(0, $footer->totalRows);
+        static::assertSame(0, $footer->statistics->rows);
         static::assertSame([], $footer->schema);
         static::assertCount(0, $footer->sections);
     }

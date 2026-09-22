@@ -54,6 +54,11 @@ final class GoogleSheetSampler implements SchemaSampler
         })();
     }
 
+    public function gridRowCount(): int
+    {
+        return $this->sample()->gridRowCount;
+    }
+
     /**
      * @return list<string>
      */

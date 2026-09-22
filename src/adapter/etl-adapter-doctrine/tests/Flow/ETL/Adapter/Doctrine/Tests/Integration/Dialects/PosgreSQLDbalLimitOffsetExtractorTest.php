@@ -12,7 +12,9 @@ use Doctrine\DBAL\Types\Types;
 use Flow\ETL\Adapter\Doctrine\Order;
 use Flow\ETL\Adapter\Doctrine\OrderBy;
 use Flow\ETL\Adapter\Doctrine\Table as ETLTable;
+use Flow\ETL\Adapter\Doctrine\Tests\Context\PlannedTable;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
+use Flow\ETL\Cardinality;
 
 use function Flow\ETL\Adapter\Doctrine\from_dbal_limit_offset;
 use function Flow\ETL\Adapter\Doctrine\from_dbal_limit_offset_qb;
@@ -434,6 +436,27 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
                 ['name' => 'name_7'],
             ],
             $data->toArray(),
+        );
+    }
+
+    public function test_statistics_apply_the_offset_and_the_query_builder_limit(): void
+    {
+        PlannedTable::create($this->pgsqlDatabaseContext, 'flow_doctrine_statistics_test', 100);
+        $queryBuilder = $this->pgsqlDatabaseContext
+            ->connection()
+            ->createQueryBuilder()
+            ->select('*')
+            ->from('flow_doctrine_statistics_test')
+            ->orderBy('id')
+            ->setMaxResults(20);
+
+        static::assertEquals(
+            new Cardinality(atMost: 20, estimate: 10, relativeError: Cardinality::DEFAULT_RELATIVE_ERROR),
+            from_dbal_limit_offset_qb(
+                $this->pgsqlDatabaseContext->connection(),
+                $queryBuilder,
+                offset: 10,
+            )->statistics()->rows,
         );
     }
 }

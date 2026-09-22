@@ -89,4 +89,9 @@ final class FeedExtractor implements Extractor
 
         return $this;
     }
+
+    public function statistics(): Statistics
+    {
+        return new Statistics();
+    }
 }

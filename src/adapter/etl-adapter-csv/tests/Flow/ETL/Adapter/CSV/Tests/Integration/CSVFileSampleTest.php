@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
+use Flow\ETL\Adapter\CSV\CSVSampledRows;
 use Flow\ETL\Adapter\CSV\Tests\Context\CSVFixtureContext;
+use Flow\ETL\Schema\Inference\SchemaInference;
 use Flow\ETL\Schema\Inference\TypeFloor;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
@@ -89,5 +91,37 @@ final class CSVFileSampleTest extends FlowTestCase
             $observed->schema(new TypeFloor($inference->candidates())),
             $sniffed->schema(new TypeFloor($inference->candidates())),
         );
+    }
+
+    public function test_nothing_is_sampled_until_a_sniff_ran(): void
+    {
+        static::assertNull(CSVFixtureContext::sample('five_rows.csv')->sampled());
+    }
+
+    public function test_a_sniff_that_reached_the_end_sampled_the_whole_file(): void
+    {
+        $sample = CSVFixtureContext::sample('five_rows.csv');
+
+        $sample->sniffColumnTypes(['id', 'name'], 10, new SchemaInference(), new StringTypeNarrower());
+
+        static::assertEquals(new CSVSampledRows(5, 20, true), $sample->sampled());
+    }
+
+    public function test_a_sniff_without_a_budget_sampled_the_whole_file(): void
+    {
+        $sample = CSVFixtureContext::sample('five_rows.csv');
+
+        $sample->sniffColumnTypes(['id', 'name'], -1, new SchemaInference(), new StringTypeNarrower());
+
+        static::assertEquals(new CSVSampledRows(5, 20, true), $sample->sampled());
+    }
+
+    public function test_a_sniff_stopped_by_its_budget_did_not_sample_the_whole_file(): void
+    {
+        $sample = CSVFixtureContext::sample('five_rows.csv');
+
+        $sample->sniffColumnTypes(['id', 'name'], 5, new SchemaInference(), new StringTypeNarrower());
+
+        static::assertEquals(new CSVSampledRows(5, 20, false), $sample->sampled());
     }
 }

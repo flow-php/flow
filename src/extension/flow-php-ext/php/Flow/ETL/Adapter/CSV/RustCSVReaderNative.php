@@ -26,6 +26,17 @@ final class RustCSVReaderNative
         throw new RuntimeException('flow_php extension is not loaded');
     }
 
+    /**
+     * The bytes, as read, of every row next() and fold() produced so far - line endings included, the header
+     * record excluded.
+     *
+     * @return int<0, max>
+     */
+    public function consumedBytes(): int
+    {
+        throw new RuntimeException('flow_php extension is not loaded');
+    }
+
     public function feed(string $chunk): void
     {
         throw new RuntimeException('flow_php extension is not loaded');

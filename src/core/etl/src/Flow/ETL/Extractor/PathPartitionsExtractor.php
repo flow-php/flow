@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
+use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
@@ -27,11 +28,14 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
+use function iterator_count;
 use function sprintf;
 
 final class PathPartitionsExtractor implements BatchableExtractor, Extractor, FileExtractor, RewindableExtractor
 {
     private ?Schema $schema = null;
+
+    private ?Statistics $statistics = null;
 
     use Batches;
     use ListingPartitions;
@@ -72,7 +76,7 @@ final class PathPartitionsExtractor implements BatchableExtractor, Extractor, Fi
         $yielded = 0;
 
         foreach ((new FileListing($this->filesystem))->list($this->path, $pathFilter) as $fileStatus) {
-            $constants = $fileColumns->forFile(new SourceFile($fileStatus->path), $schema);
+            $constants = $fileColumns->forFile(new SourceFile($fileStatus->path, $fileStatus->size), $schema);
             $buffer[] = $constants->fill([
                 'path' => $fileStatus->path->uri(),
                 'partitions' => array_merge(...array_values(array_map(static fn(Partition $p) => [
@@ -126,6 +130,15 @@ final class PathPartitionsExtractor implements BatchableExtractor, Extractor, Fi
             str_schema('path'),
             map_schema('partitions', type_map(type_string(), type_string())),
         ));
+    }
+
+    public function statistics(): Statistics
+    {
+        return $this->statistics ??=
+            new Statistics(rows: Cardinality::exact(iterator_count((new FileListing($this->filesystem))->list(
+                $this->path,
+                new OnlyFiles(),
+            ))));
     }
 
     public function withSchema(Schema $schema): static

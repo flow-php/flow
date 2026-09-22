@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Executor;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Executor\Segments;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Processor\OffsetProcessor;
 use Flow\ETL\Schema;
@@ -100,6 +101,11 @@ final class OffsetPipelineTest extends FlowTestCase
                 yield rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 4]));
                 yield rows(schema(int_schema('id')), row(['id' => 5]), row(['id' => 6]));
             }
+
+            public function statistics(): Statistics
+            {
+                return new Statistics();
+            }
         });
         $segments->add(new OffsetProcessor(4));
         $result = iterator_to_array(ExecutedSegments::of($segments, flow_context(config())));
@@ -126,6 +132,11 @@ final class OffsetPipelineTest extends FlowTestCase
                 yield rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 4]), row(['id' => 5]));
                 yield rows(schema(int_schema('id')), row(['id' => 6]));
             }
+
+            public function statistics(): Statistics
+            {
+                return new Statistics();
+            }
         });
         $segments->add(new OffsetProcessor(3));
         $result = iterator_to_array(ExecutedSegments::of($segments, flow_context(config())));
@@ -151,6 +162,11 @@ final class OffsetPipelineTest extends FlowTestCase
             {
                 yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3]));
                 yield rows(schema(int_schema('id')), row(['id' => 4]), row(['id' => 5]));
+            }
+
+            public function statistics(): Statistics
+            {
+                return new Statistics();
             }
         });
         $segments->add(new OffsetProcessor(1));
@@ -199,6 +215,11 @@ final class OffsetPipelineTest extends FlowTestCase
                 yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
                 yield rows(schema());
                 yield rows(schema(int_schema('id')), row(['id' => 3]));
+            }
+
+            public function statistics(): Statistics
+            {
+                return new Statistics();
             }
         });
         $segments->add(new OffsetProcessor(2));

@@ -57,6 +57,7 @@ pub struct CsvReader {
     cells: Vec<Cell>,
     record: Record,
     first_row_pending: bool,
+    consumed_bytes: u64,
 }
 
 impl CsvReader {
@@ -95,6 +96,7 @@ impl CsvReader {
             cells: Vec::new(),
             record: Record::default(),
             first_row_pending: false,
+            consumed_bytes: 0,
         })
     }
 
@@ -104,6 +106,12 @@ impl CsvReader {
 
     pub fn finish(&mut self) {
         self.tokenizer.finish();
+    }
+
+    /// The bytes, as read, of every row `next` and `fold` produced so far: line endings included, the header
+    /// record excluded.
+    pub fn consumed_bytes(&self) -> u64 {
+        self.consumed_bytes
     }
 
     /// The resolved header, `[]` until the first record is available.
@@ -127,7 +135,7 @@ impl CsvReader {
         };
 
         while batch.len() < batch_size {
-            if !next_row(&mut self.first_row_pending, &mut self.tokenizer, &mut self.record) {
+            if !next_row(&mut self.first_row_pending, &mut self.tokenizer, &mut self.record, &mut self.consumed_bytes) {
                 break;
             }
 
@@ -152,7 +160,7 @@ impl CsvReader {
         let mut positions = vec![None; self.cells.len()];
 
         while limit.is_none_or(|limit| folded < limit) {
-            if !next_row(&mut self.first_row_pending, &mut self.tokenizer, &mut self.record) {
+            if !next_row(&mut self.first_row_pending, &mut self.tokenizer, &mut self.record, &mut self.consumed_bytes) {
                 break;
             }
 
@@ -215,9 +223,21 @@ impl CsvReader {
     }
 }
 
-/// The first row is pending when auto headers were sized by it; otherwise the next complete record.
-fn next_row(first_row_pending: &mut bool, tokenizer: &mut Tokenizer, record: &mut Record) -> bool {
-    std::mem::take(first_row_pending) || tokenizer.next(record)
+/// The first row is pending when auto headers were sized by it; otherwise the next complete record. Either way it is
+/// the tokenizer's last record, so its bytes are added to `consumed_bytes`.
+fn next_row(
+    first_row_pending: &mut bool,
+    tokenizer: &mut Tokenizer,
+    record: &mut Record,
+    consumed_bytes: &mut u64,
+) -> bool {
+    if !(std::mem::take(first_row_pending) || tokenizer.next(record)) {
+        return false;
+    }
+
+    *consumed_bytes += tokenizer.last_record_bytes() as u64;
+
+    true
 }
 
 /// `CSVRowNormalizer::normalize()` for one cell: padding past the record's end, `emptyToNull`; `None` is null.

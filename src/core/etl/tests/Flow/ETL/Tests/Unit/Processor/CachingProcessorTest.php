@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Processor;
 
 use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Cache\Implementation\InMemoryCache;
+use Flow\ETL\Cardinality;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Processor\CachingProcessor;
 use Flow\ETL\Rows;
@@ -43,6 +44,7 @@ final class CachingProcessorTest extends FlowTestCase
 
         static::assertInstanceOf(Rows::class, $indexRows);
         static::assertCount(5, CacheIndex::fromRows('stop-cache', $indexRows)->values());
+        static::assertEquals(Cardinality::exact(5), CacheIndex::fromRows('stop-cache', $indexRows)->rows());
     }
 
     public function test_bind_returns_the_input_schema(): void

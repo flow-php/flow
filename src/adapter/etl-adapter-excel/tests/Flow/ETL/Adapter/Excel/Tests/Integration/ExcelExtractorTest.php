@@ -9,6 +9,7 @@ use DateTimeImmutable;
 use Flow\ETL\Adapter\Excel\ExcelExtractor;
 use Flow\ETL\Adapter\Excel\ExcelReader;
 use Flow\ETL\Adapter\Excel\Tests\Context\ExcelFixtureContext;
+use Flow\ETL\Cardinality;
 use Flow\ETL\Config;
 use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -18,6 +19,8 @@ use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Double\CountingFilesystem;
+use Flow\ETL\Tests\Double\KeepPaths;
+use Flow\ETL\Tests\Double\UnsizedFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -775,5 +778,126 @@ final class ExcelExtractorTest extends FlowTestCase
         $extractor = from_excel(ExcelFixtureContext::file('cross_stream/*/*.xlsx'))->withBatchSize(10);
 
         static::assertCount(2, ExtractedRows::of($extractor, limit: 2));
+    }
+
+    /**
+     * @return Generator<string, array{Closure(ExcelExtractor): mixed}>
+     */
+    public static function sample_dropping_setters(): Generator
+    {
+        yield 'inferSchema' => [static fn(ExcelExtractor $e): mixed => $e->inferSchema(infer_schema())];
+        yield 'withConvertEmptyToNull' => [static fn(ExcelExtractor $e): mixed => $e->withConvertEmptyToNull(false)];
+        yield 'withHeader' => [static fn(ExcelExtractor $e): mixed => $e->withHeader(true)];
+        yield 'withOffset' => [static fn(ExcelExtractor $e): mixed => $e->withOffset(1)];
+        yield 'withReader' => [static fn(ExcelExtractor $e): mixed => $e->withReader(ExcelReader::XLSX)];
+        yield 'withSheetName' => [static fn(ExcelExtractor $e): mixed => $e->withSheetName('Sheet1')];
+    }
+
+    #[DataProvider('sample_dropping_setters')]
+    public function test_a_changed_read_option_drops_the_sampled_rows(Closure $setter): void
+    {
+        $extractor = from_excel(ExcelFixtureContext::path('sniff/a'));
+        $extractor->schema();
+
+        static::assertEquals(Cardinality::exact(10), $extractor->statistics()->rows);
+
+        $setter($extractor);
+
+        static::assertEquals(Cardinality::unknown(), $extractor->statistics()->rows);
+    }
+
+    public function test_a_declared_schema_declares_unknown_rows(): void
+    {
+        $extractor = from_excel(ExcelFixtureContext::path('sniff/a'))->withSchema(schema(int_schema('id')));
+        $extractor->schema();
+
+        static::assertEquals(Cardinality::unknown(), $extractor->statistics()->rows);
+    }
+
+    public function test_a_member_without_a_size_makes_the_size_unknown(): void
+    {
+        $extractor = from_excel(
+            ExcelFixtureContext::path('sniff/*'),
+            new UnsizedFilesystem(native_local_filesystem(), [ExcelFixtureContext::path('sniff/b')->uri()]),
+        );
+
+        static::assertEquals(Cardinality::unknown(), $extractor->statistics()->size);
+    }
+
+    public function test_a_sample_that_read_every_sheet_declares_exact_rows(): void
+    {
+        $extractor = from_excel(ExcelFixtureContext::path('sniff/*'));
+        $extractor->schema();
+
+        static::assertEquals(Cardinality::exact(20), $extractor->statistics()->rows);
+    }
+
+    public function test_a_sample_that_stopped_early_declares_unknown_rows(): void
+    {
+        $extractor = from_excel(ExcelFixtureContext::path('sniff/*'))->inferSchema(infer_schema()->sampleSize(3));
+        $extractor->schema();
+
+        static::assertEquals(Cardinality::unknown(), $extractor->statistics()->rows);
+    }
+
+    public function test_extract_samples_like_schema_does(): void
+    {
+        $extractor = from_excel(ExcelFixtureContext::path('sniff/a'));
+
+        iterator_to_array($extractor->extract(flow_context()), false);
+
+        static::assertEquals(Cardinality::exact(10), $extractor->statistics()->rows);
+    }
+
+    public function test_it_declares_the_listed_byte_total_exactly(): void
+    {
+        static::assertEquals(
+            Cardinality::exact(17_504),
+            from_excel(ExcelFixtureContext::path('sniff/*'))->statistics()->size,
+        );
+    }
+
+    public function test_statistics_before_schema_declares_unknown_rows(): void
+    {
+        $extractor = from_excel(ExcelFixtureContext::path('sniff/a'));
+
+        static::assertEquals(Cardinality::unknown(), $extractor->statistics()->rows);
+
+        $extractor->schema();
+
+        static::assertEquals(Cardinality::exact(10), $extractor->statistics()->rows);
+    }
+
+    public function test_statistics_are_computed_at_most_once(): void
+    {
+        $filesystem = new CountingFilesystem(native_local_filesystem());
+        $extractor = from_excel(ExcelFixtureContext::path('sniff/a'), $filesystem);
+        $extractor->schema();
+        $listCalls = $filesystem->listCalls;
+
+        static::assertSame($extractor->statistics(), $extractor->statistics());
+        static::assertSame($listCalls + 1, $filesystem->listCalls);
+    }
+
+    public function test_the_listing_is_read_once(): void
+    {
+        $filesystem = new CountingFilesystem(native_local_filesystem());
+        $extractor = from_excel(ExcelFixtureContext::path('sniff/a'), $filesystem);
+
+        $extractor->statistics();
+        $extractor->statistics();
+
+        static::assertSame(1, $filesystem->listCalls);
+    }
+
+    public function test_a_filtered_extract_declares_unknown_rows(): void
+    {
+        $extractor = from_excel(ExcelFixtureContext::path('sniff/*'));
+
+        iterator_to_array($extractor->extract(flow_context(), null, new KeepPaths([ExcelFixtureContext::path(
+            'sniff/a',
+        )])), false);
+
+        static::assertEquals(Cardinality::unknown(), $extractor->statistics()->rows);
     }
 }

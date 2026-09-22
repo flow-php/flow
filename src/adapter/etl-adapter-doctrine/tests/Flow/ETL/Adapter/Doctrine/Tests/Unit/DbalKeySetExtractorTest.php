@@ -9,6 +9,7 @@ use Flow\ETL\Adapter\Doctrine\DbalKeySetExtractor;
 use Flow\ETL\Adapter\Doctrine\Tests\Context\InMemorySqlite;
 use Flow\ETL\Adapter\Doctrine\Tests\Context\SelectQueryCounter;
 use Flow\ETL\Adapter\Doctrine\Tests\Double\NativeHandleStub;
+use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Tests\FlowTestCase;
 use stdClass;
@@ -121,5 +122,22 @@ final class DbalKeySetExtractorTest extends FlowTestCase
                 pagination_key_set(pagination_key_asc('id')),
             ))->isRepeatable(),
         );
+    }
+
+    public function test_a_new_maximum_drops_the_statistics(): void
+    {
+        $connection = InMemorySqlite::withUsers(InMemorySqlite::connection(), 3);
+        $extractor = (new DbalKeySetExtractor(
+            $connection,
+            $connection->createQueryBuilder()->select('*')->from('users'),
+            pagination_key_set(pagination_key_asc('id')),
+        ))->withMaximum(2);
+
+        static::assertSame($extractor->statistics(), $extractor->statistics());
+        static::assertEquals(Cardinality::atMost(2), $extractor->statistics()->rows);
+
+        $extractor->withMaximum(5);
+
+        static::assertEquals(Cardinality::atMost(5), $extractor->statistics()->rows);
     }
 }

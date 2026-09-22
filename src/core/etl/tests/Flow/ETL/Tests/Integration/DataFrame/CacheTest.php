@@ -8,6 +8,7 @@ use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Cache\Implementation\FilesystemCache;
 use Flow\ETL\Cache\Implementation\InMemoryCache;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
@@ -66,6 +67,11 @@ final class CacheTest extends FlowIntegrationTestCase
                 $this->extractions++;
 
                 return $this->extractor->extract($context);
+            }
+
+            public function statistics(): Statistics
+            {
+                return new Statistics();
             }
         };
 

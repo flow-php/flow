@@ -6,6 +6,7 @@ namespace Flow\ETL\Extractor;
 
 use Flow\ETL\Cache;
 use Flow\ETL\Cache\CacheIndex;
+use Flow\ETL\Cardinality;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
@@ -19,6 +20,13 @@ final class CacheExtractor implements Extractor, RewindableExtractor
     private bool $clear = false;
 
     private ?Extractor $fallbackExtractor = null;
+
+    /**
+     * The index schema() and statistics() read from the constructor's cache, parsed once.
+     */
+    private ?CacheIndex $index = null;
+
+    private ?Statistics $statistics = null;
 
     public function __construct(
         private readonly string $id,
@@ -99,7 +107,9 @@ final class CacheExtractor implements Extractor, RewindableExtractor
         if ($this->cache !== null && $this->cache->has($this->id)) {
             $schema = new Schema();
 
-            foreach (CacheIndex::fromRows($this->id, $this->cache->get($this->id))->values() as $cacheKey) {
+            $this->index ??= CacheIndex::fromRows($this->id, $this->cache->get($this->id));
+
+            foreach ($this->index->values() as $cacheKey) {
                 $schema = $schema->merge($this->cache->schema($cacheKey));
             }
 
@@ -114,6 +124,33 @@ final class CacheExtractor implements Extractor, RewindableExtractor
         // unanswerable question, and threading a cache in from the FlowContext to look harder
         // would break the rule the comment above states.
         return new Schema();
+    }
+
+    /**
+     * Answers from the arm extract() will take, and only when a cache was handed to the constructor: one taken from
+     * the FlowContext may hold the entry this cache lacks.
+     */
+    public function statistics(): Statistics
+    {
+        if ($this->statistics !== null) {
+            return $this->statistics;
+        }
+
+        if ($this->cache === null) {
+            return new Statistics();
+        }
+
+        if ($this->cache->has($this->id)) {
+            return $this->statistics = new Statistics(
+                rows: ($this->index ??= CacheIndex::fromRows($this->id, $this->cache->get($this->id)))->rows(),
+            );
+        }
+
+        if ($this->fallbackExtractor === null) {
+            return new Statistics(rows: Cardinality::exact(0));
+        }
+
+        return $this->fallbackExtractor->statistics();
     }
 
     public function withSchema(Schema $schema): static

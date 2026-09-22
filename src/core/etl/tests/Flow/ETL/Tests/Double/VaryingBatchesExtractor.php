@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Double;
 
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
@@ -41,5 +42,10 @@ final class VaryingBatchesExtractor implements Extractor
     public function withSchema(Schema $schema): static
     {
         return $this;
+    }
+
+    public function statistics(): Statistics
+    {
+        return new Statistics();
     }
 }

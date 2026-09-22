@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\Doctrine;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
+use Flow\ETL\Adapter\Doctrine\Explain\ExplainedRows;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
@@ -13,6 +14,7 @@ use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
@@ -20,6 +22,7 @@ use Generator;
 
 use function count;
 use function is_numeric;
+use function max;
 use function min;
 
 final class DbalLimitOffsetExtractor implements BatchableExtractor, Extractor, RewindableExtractor
@@ -35,6 +38,8 @@ final class DbalLimitOffsetExtractor implements BatchableExtractor, Extractor, R
     private ?Schema $derived = null;
 
     private ?SchemaNotDerivableException $refusal = null;
+
+    private ?Statistics $statistics = null;
 
     public function __construct(
         private readonly Connection $connection,
@@ -183,6 +188,21 @@ final class DbalLimitOffsetExtractor implements BatchableExtractor, Extractor, R
         }
     }
 
+    /**
+     * The plan already applies the query builder's own limit and offset; withOffset() replaces that offset.
+     */
+    public function statistics(): Statistics
+    {
+        return $this->statistics ??= new Statistics(rows: (new ExplainedRows())->of(
+            $this->connection,
+            $this->queryBuilder->getSQL(),
+            $this->queryBuilder->getParameters(),
+            $this->queryBuilder->getParameterTypes(),
+            $this->maximum ?? $this->queryBuilder->getMaxResults(),
+            $this->offset === 0 ? 0 : max(0, $this->offset - $this->queryBuilder->getFirstResult()),
+        ));
+    }
+
     public function withMaximum(int $maximum): self
     {
         if ($maximum <= 0) {
@@ -190,6 +210,7 @@ final class DbalLimitOffsetExtractor implements BatchableExtractor, Extractor, R
         }
 
         $this->maximum = $maximum;
+        $this->statistics = null;
 
         return $this;
     }
@@ -201,6 +222,7 @@ final class DbalLimitOffsetExtractor implements BatchableExtractor, Extractor, R
         }
 
         $this->offset = $offset;
+        $this->statistics = null;
 
         return $this;
     }

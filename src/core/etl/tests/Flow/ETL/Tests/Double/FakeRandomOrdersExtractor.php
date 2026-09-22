@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Faker\Factory;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Schema;
 use Generator;
@@ -157,5 +158,10 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
     public function withSchema(Schema $schema): static
     {
         return $this;
+    }
+
+    public function statistics(): Statistics
+    {
+        return new Statistics();
     }
 }

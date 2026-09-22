@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet;
 
+use Flow\ETL\Cardinality;
 use Flow\ETL\Extractor\SelfDescribingFile;
 use Flow\ETL\Extractor\SourceFile;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\Schema;
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\ParquetFile;
@@ -43,5 +45,20 @@ final readonly class ParquetSourceFile implements SelfDescribingFile
     public function source(): SourceFile
     {
         return $this->source;
+    }
+
+    /**
+     * Uncompressed row-group bytes, as the format reports them.
+     */
+    public function statistics(): Statistics
+    {
+        $metadata = $this->file->metadata();
+        $bytes = 0;
+
+        foreach ($metadata->rowGroups()->all() as $rowGroup) {
+            $bytes += $rowGroup->totalByteSize();
+        }
+
+        return new Statistics(rows: Cardinality::exact($metadata->rowsNumber()), size: Cardinality::exact($bytes));
     }
 }

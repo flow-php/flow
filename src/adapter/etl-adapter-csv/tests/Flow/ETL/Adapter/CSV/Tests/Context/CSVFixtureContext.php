@@ -38,7 +38,10 @@ use function Flow\ETL\Adapter\CSV\csv_detect_separator;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
+use function range;
+use function sprintf;
 use function str_ends_with;
+use function str_repeat;
 use function strlen;
 use function substr;
 
@@ -241,6 +244,36 @@ final class CSVFixtureContext
         } finally {
             $open->close();
         }
+    }
+
+    /**
+     * A 1000-row file whose first data row is 4 bytes and every other one 101 - 100 914 bytes in total.
+     */
+    public static function narrowFirstRow(): string
+    {
+        $content = "id,payload\n1,a\n";
+
+        foreach (range(2, 1000) as $id) {
+            $content .= sprintf("%04d,%s\n", $id, str_repeat('x', 95));
+        }
+
+        return $content;
+    }
+
+    /**
+     * An 8-byte header and $rows rows of exactly 10 bytes each.
+     *
+     * @param int<1, 999> $rows
+     */
+    public static function tenByteRows(int $rows): string
+    {
+        $content = "id,name\n";
+
+        foreach (range(1, $rows) as $id) {
+            $content .= sprintf("%03d,abcde\n", $id);
+        }
+
+        return $content;
     }
 
     public static function memory(string $content): MemoryFilesystem

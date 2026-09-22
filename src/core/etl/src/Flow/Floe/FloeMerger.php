@@ -215,7 +215,7 @@ final readonly class FloeMerger
                 $sections[] = new Section($section->offset - $copyStart + $outputStart, $section->rowCount);
             }
 
-            $totalRows += $footer->totalRows;
+            $totalRows += $footer->statistics->rows;
             $mergedMetadata = $mergedMetadata->merge($footer->metadata);
         }
 
@@ -227,7 +227,7 @@ final readonly class FloeMerger
             FloeStreamWriter::writerVersion(),
             $schema,
             $sections,
-            $totalRows,
+            new Statistics($totalRows, $frameWriter->position() - Format::HEADER_LENGTH),
             $mergedMetadata->merge($metadata),
         ))->toJson();
 

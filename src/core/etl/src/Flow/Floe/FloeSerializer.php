@@ -63,11 +63,11 @@ final class FloeSerializer implements Serializer
                 }
             }
 
-            if (count($rows) !== $footer->totalRows) {
+            if (count($rows) !== $footer->statistics->rows) {
                 throw new FloeException(sprintf(
                     'Floe payload is corrupted, decoded %d of %d rows',
                     count($rows),
-                    $footer->totalRows,
+                    $footer->statistics->rows,
                 ));
             }
 

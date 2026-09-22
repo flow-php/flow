@@ -9,6 +9,7 @@ use Flow\ETL\Adapter\Doctrine\DbalLimitOffsetExtractor;
 use Flow\ETL\Adapter\Doctrine\Tests\Context\InMemorySqlite;
 use Flow\ETL\Adapter\Doctrine\Tests\Context\SelectQueryCounter;
 use Flow\ETL\Adapter\Doctrine\Tests\Double\NativeHandleStub;
+use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
@@ -241,6 +242,49 @@ final class DbalLimitOffsetExtractorTest extends FlowTestCase
                 $connection,
                 $connection->createQueryBuilder()->select('*')->from('users'),
             ))->isRepeatable(),
+        );
+    }
+
+    public function test_a_new_maximum_drops_the_statistics(): void
+    {
+        $connection = InMemorySqlite::withUsers(InMemorySqlite::connection(), 3);
+        $extractor = (new DbalLimitOffsetExtractor(
+            $connection,
+            $connection->createQueryBuilder()->select('*')->from('users')->orderBy('id'),
+        ))->withMaximum(2);
+
+        static::assertSame($extractor->statistics(), $extractor->statistics());
+        static::assertEquals(Cardinality::atMost(2), $extractor->statistics()->rows);
+
+        $extractor->withMaximum(5);
+
+        static::assertEquals(Cardinality::atMost(5), $extractor->statistics()->rows);
+    }
+
+    public function test_a_new_offset_drops_the_statistics(): void
+    {
+        $connection = InMemorySqlite::withUsers(InMemorySqlite::connection(), 3);
+        $extractor = new DbalLimitOffsetExtractor(
+            $connection,
+            $connection->createQueryBuilder()->select('*')->from('users')->orderBy('id'),
+        );
+        $before = $extractor->statistics();
+
+        $extractor->withOffset(1);
+
+        static::assertNotSame($before, $extractor->statistics());
+    }
+
+    public function test_the_query_builder_limit_bounds_the_rows(): void
+    {
+        $connection = InMemorySqlite::withUsers(InMemorySqlite::connection(), 3);
+
+        static::assertEquals(
+            Cardinality::atMost(2),
+            (new DbalLimitOffsetExtractor(
+                $connection,
+                $connection->createQueryBuilder()->select('*')->from('users')->orderBy('id')->setMaxResults(2),
+            ))->statistics()->rows,
         );
     }
 }

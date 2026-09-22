@@ -355,10 +355,14 @@ scanning rows**:
   "schema":     { /* the file's single schema */ },
   "sections":   [ { "offset": 6, "partitionsId": 0, "rowCount": 2 } ],
   "partitions": [ { "country": "PL" } ],
-  "totalRows":  2,
+  "statistics": { "rows": 2, "byteSize": 118 },
   "metadata":   { /* typed key/value, Schema\Metadata */ }
 }
 ```
+
+- **`statistics`** holds the file's row count and the uncompressed bytes of its data frames (header and
+  footer excluded), so a reader can size the file before reading a row. The footer and its sections
+  ignore keys they do not know, so a field added later does not break an older reader.
 
 - **`sections`** map a byte `offset` → `partitionsId` + `rowCount`, so a reader can skip whole sections
   (offset/limit pushdown) and know each section's partition combination up front. Sections bound
