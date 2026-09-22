@@ -1,6 +1,22 @@
-## [Unreleased] - 2026-09-21
+## [Unreleased] - 2026-09-22
 
 ### Added
+- [#2647](https://github.com/flow-php/flow/pull/2647) - **flow-php/etl - Extractor::statistics(): every source declares its rows and bytes as a Cardinality** - [@norberttech](https://github.com/norberttech)
+- [#2647](https://github.com/flow-php/flow/pull/2647) - **flow-php/etl - physical explain() prints the statistics of every source** - [@norberttech](https://github.com/norberttech)
+- [#2647](https://github.com/flow-php/flow/pull/2647) - **flow-php/etl - analyze()->withSourceStatistics() reports declared vs. read rows per source** - [@norberttech](https://github.com/norberttech)
+- [#2647](https://github.com/flow-php/flow/pull/2647) - **flow-php/etl - count() answers from exact source statistics without reading rows** - [@norberttech](https://github.com/norberttech)
+- [#2647](https://github.com/flow-php/flow/pull/2647) - **flow-php/etl - Floe footer carries a statistics block** - [@norberttech](https://github.com/norberttech)
+- [#2647](https://github.com/flow-php/flow/pull/2647) - **flow-php/etl-adapter-parquet - exact rows and bytes from file footers** - [@norberttech](https://github.com/norberttech)
+- [#2647](https://github.com/flow-php/flow/pull/2647) - **flow-php/etl-adapter-csv - row estimate from the sampled row size, listed byte size** - [@norberttech](https://github.com/norberttech)
+- [#2647](https://github.com/flow-php/flow/pull/2647) - **flow-php/etl-adapter-json - JSON Lines row estimate, JSON exact rows on a whole-file sample, listed byte size** - [@norberttech](https://github.com/norberttech)
+- [#2647](https://github.com/flow-php/flow/pull/2647) - **flow-php/etl-adapter-excel - exact rows on a whole-workbook sample, listed byte size** - [@norberttech](https://github.com/norberttech)
+- [#2647](https://github.com/flow-php/flow/pull/2647) - **flow-php/etl-adapter-xml - listed byte size** - [@norberttech](https://github.com/norberttech)
+- [#2647](https://github.com/flow-php/flow/pull/2647) - **flow-php/etl-adapter-text - listed byte size** - [@norberttech](https://github.com/norberttech)
+- [#2647](https://github.com/flow-php/flow/pull/2647) - **flow-php/etl-adapter-doctrine - row estimate from EXPLAIN on PostgreSQL and MySQL** - [@norberttech](https://github.com/norberttech)
+- [#2647](https://github.com/flow-php/flow/pull/2647) - **flow-php/etl-adapter-postgresql - row estimate from EXPLAIN** - [@norberttech](https://github.com/norberttech)
+- [#2647](https://github.com/flow-php/flow/pull/2647) - **flow-php/etl-adapter-google-sheet - row bound from the sheet grid size** - [@norberttech](https://github.com/norberttech)
+- [#2647](https://github.com/flow-php/flow/pull/2647) - **flow-php/cli - --stats-sources option for pipeline:run and file:analyze** - [@norberttech](https://github.com/norberttech)
+- [#2647](https://github.com/flow-php/flow/pull/2647) - **flow-php/flow-php-ext - native CSV reader reports the bytes it consumed** - [@norberttech](https://github.com/norberttech)
 - [#2645](https://github.com/flow-php/flow/pull/2645) - **flow-php/flow-php-ext - native CSV tokenizer, reader and schema inference** - [@norberttech](https://github.com/norberttech)
 - [#2645](https://github.com/flow-php/flow/pull/2645) - **flow-php/flow-php-ext - native JSON validation and ISO datetime casting in the hydrator** - [@norberttech](https://github.com/norberttech)
 - [#2645](https://github.com/flow-php/flow/pull/2645) - **flow-php/etl-adapter-csv - NativeCSVOpenSource used when the extension is loaded** - [@norberttech](https://github.com/norberttech)
@@ -16,6 +32,9 @@
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/cli - ProgressBarLoader advancing a progress bar per batch** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2647](https://github.com/flow-php/flow/pull/2647) - **flow-php/etl - existing .floe files must be rewritten for the new footer** - [@norberttech](https://github.com/norberttech)
+- [#2647](https://github.com/flow-php/flow/pull/2647) - **flow-php/etl - Report constructor takes the source statistics of the run** - [@norberttech](https://github.com/norberttech)
+- [#2647](https://github.com/flow-php/flow/pull/2647) - **flow-php/etl - cache index stores the row count of every entry** - [@norberttech](https://github.com/norberttech)
 - [#2645](https://github.com/flow-php/flow/pull/2645) - **flow-php/etl-adapter-csv - CSVOpenSource is now an interface implemented by PhpCSVOpenSource** - [@norberttech](https://github.com/norberttech)
 - [#2645](https://github.com/flow-php/flow/pull/2645) - **flow-php/etl-adapter-csv - CSVLineReader takes the separator and escape** - [@norberttech](https://github.com/norberttech)
 - [#2645](https://github.com/flow-php/flow/pull/2645) - **flow-php/etl-adapter-csv - CSVFileReader::samples() yields CSVFileSample** - [@norberttech](https://github.com/norberttech)
