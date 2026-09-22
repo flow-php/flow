@@ -307,7 +307,7 @@ const dataframeMethods = [
                     <span class=\"fn-name\">forEach</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">callable</span> <span class=\"fn-param\">$callback</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">void</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @trigger<br>@param null|callable(Rows $rows) : void $callback
+                    @trigger<br>@param null|callable(Rows $rows, FlowContext $context) : void $callback
                 </div>
                             `
             return div
@@ -574,15 +574,15 @@ const dataframeMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">explain</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Plan</span>
+                    <span class=\"fn-name\">explain</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Trigger</span> <span class=\"fn-param\">$trigger</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Plan\\Trigger::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Plan</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    This frame\'s plan, frozen: later verbs on this frame do not reach it. toString() prints it as a tree.<br>Answers from the plan without reading a row.
+                    The plan $trigger would run over this frame, frozen: later verbs on this frame do not reach it. The default<br>adds no consumer of its own - it draws the frame as built, its chain and its sinks. toString() prints it as a<br>tree. Answers from the plan without reading a row.
                 </div>
                             `
             return div
         },
-        apply: snippet("explain()"),
+        apply: snippet("explain(" + "$" + "{" + "1:trigger" + "}" + ")"),
         boost: 10
     },        {
         label: "printSchema",
@@ -661,15 +661,15 @@ const dataframeMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">run</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">callable</span> <span class=\"fn-param\">$callback</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Analyze|bool</span> <span class=\"fn-param\">$analyze</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Report</span>
+                    <span class=\"fn-name\">run</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Analyze|bool</span> <span class=\"fn-param\">$analyze</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Report</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @trigger<br>When analyzing pipeline execution we can chose to collect various metrics through analyze()->with*() method<br>- column statistics - analyze()->withColumnStatistics()<br>- schema - analyze()->withSchema()<br>@param null|callable(Rows $rows, FlowContext $context): void $callback<br>@param Analyze|bool $analyze - when set run will return Report<br>@return ($analyze is Analyze|true ? Report : null)
+                    @trigger<br>When analyzing pipeline execution we can chose to collect various metrics through analyze()->with*() method<br>- column statistics - analyze()->withColumnStatistics()<br>- schema - analyze()->withSchema()<br>@param Analyze|bool $analyze - when set run will return Report<br>@return ($analyze is Analyze|true ? Report : null)
                 </div>
                             `
             return div
         },
-        apply: snippet("run(" + "$" + "{" + "1:callback" + "}" + ", " + "$" + "{" + "2:analyze" + "}" + ")"),
+        apply: snippet("run(" + "$" + "{" + "1:analyze" + "}" + ")"),
         boost: 10
     },        {
         label: "schema",
