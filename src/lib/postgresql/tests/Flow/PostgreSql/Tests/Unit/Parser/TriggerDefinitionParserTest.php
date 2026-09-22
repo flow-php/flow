@@ -44,10 +44,10 @@ final class TriggerDefinitionParserTest extends TestCase
         );
     }
 
-    public function test_normalizes_implicit_casts(): void
+    public function test_keeps_catalog_text(): void
     {
         static::assertSame(
-            "new.status = 'active'",
+            "new.status::text = 'active'::text",
             $this->parser->parseWhenClause(
                 "CREATE TRIGGER t BEFORE UPDATE ON s.tbl FOR EACH ROW WHEN (((new.status)::text = 'active'::text)) EXECUTE FUNCTION s.fn()",
             ),

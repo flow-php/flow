@@ -20,11 +20,6 @@ interface NodeVisitor
     public const DONT_TRAVERSE_CHILDREN = 1;
 
     /**
-     * Remove the node from its parent array.
-     */
-    public const REMOVE_NODE = 3;
-
-    /**
      * Stop the entire traversal.
      */
     public const STOP_TRAVERSAL = 2;
@@ -58,7 +53,6 @@ interface NodeVisitor
      *
      * @return null|int Return value determines traversal behavior:
      *                  - null: Continue traversal
-     *                  - REMOVE_NODE: Remove node from parent
      *                  - STOP_TRAVERSAL: Stop entire traversal
      */
     public function leave(object $node): ?int;

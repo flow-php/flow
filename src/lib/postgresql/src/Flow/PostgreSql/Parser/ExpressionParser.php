@@ -53,20 +53,9 @@ final readonly class ExpressionParser
         return $this->stripSelectWrapper($parsed->deparse());
     }
 
-    /**
-     * Normalize an expression Node by stripping implicit type casts.
-     *
-     * Same canonicalization as normalize(), but starts from a Node already extracted
-     * from another AST (e.g. a WHERE clause pulled from a CreateTrigStmt). Avoids the
-     * deparse/re-parse round-trip that would otherwise be needed to go through the
-     * string-based normalize() entry point.
-     */
-    public function normalizeNode(Node $node): string
+    public function deparseNode(Node $node): string
     {
-        $parsed = new ParsedQuery($this->wrapInSelect($node));
-        $parsed->traverse($this->stripper);
-
-        return $this->stripSelectWrapper($parsed->deparse());
+        return $this->stripSelectWrapper((new ParsedQuery($this->wrapInSelect($node)))->deparse());
     }
 
     public function parse(string $expression): Node

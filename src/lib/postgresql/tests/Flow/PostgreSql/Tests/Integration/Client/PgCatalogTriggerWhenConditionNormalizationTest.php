@@ -108,7 +108,7 @@ final class PgCatalogTriggerWhenConditionNormalizationTest extends PostgreSqlTes
         static::assertSame('trg_orders_when', $dbTrigger->name);
         static::assertNotNull($dbTrigger->whenCondition, 'whenCondition must be populated from pg_trigger.tgqual');
         static::assertTrue(
-            $expected->isEqualStructure($dbTrigger),
+            $expected->withFunctionSchema($s)->isEqualStructure($dbTrigger),
             sprintf(
                 'Expected trigger whenCondition to be structurally equal.%sExpected: %s%sActual:   %s',
                 PHP_EOL,

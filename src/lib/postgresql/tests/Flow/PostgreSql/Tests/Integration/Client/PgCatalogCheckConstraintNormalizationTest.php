@@ -65,7 +65,7 @@ final class PgCatalogCheckConstraintNormalizationTest extends PostgreSqlTestCase
         $dbConstraint = $table->checkConstraints[0];
 
         static::assertSame('chk_status_active', $dbConstraint->name);
-        static::assertSame($expected->expression, $dbConstraint->expression);
+        static::assertSame($expected->expressionKey(), $dbConstraint->expressionKey());
         static::assertTrue($expected->isEqualStructure($dbConstraint));
     }
 }

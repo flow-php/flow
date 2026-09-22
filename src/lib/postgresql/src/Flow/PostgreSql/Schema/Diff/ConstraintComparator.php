@@ -25,7 +25,7 @@ final readonly class ConstraintComparator
         return $this->diffConstraints(
             $sourceCcs,
             $targetCcs,
-            static fn(CheckConstraint $cc): string => $cc->name ?? $cc->expression,
+            static fn(CheckConstraint $cc): string => $cc->name ?? $cc->expressionKey(),
             static fn(CheckConstraint $a, CheckConstraint $b): bool => $a->isEqualStructure($b),
         );
     }

@@ -33,6 +33,6 @@ final readonly class TriggerDefinitionParser
             return null;
         }
 
-        return $this->expressionParser->normalizeNode($whenClause);
+        return $this->expressionParser->deparseNode($whenClause);
     }
 }

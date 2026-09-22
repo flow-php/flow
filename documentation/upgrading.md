@@ -278,6 +278,77 @@ final class MyExtractor implements Extractor
 |--------------------------------------------------|------------------------------------------------------------------------------------------------------|
 | `new Report(?Schema $schema, Statistics $stats)` | `new Report(?Schema $schema, Statistics $stats, ?array $sources)` - `null` unless analyzed with them |
 
+### 27) `flow-php/postgresql` - `Traverser` visits every node
+
+| Before                                                                                        | After                                                     |
+|-----------------------------------------------------------------------------------------------|-----------------------------------------------------------|
+| `sql_query_tables('CREATE TABLE x AS SELECT * FROM t')` - `[]`                                | `[t, x]`                                                  |
+| `sql_query_tables('SELECT * FROM t JOIN u ON true FOR UPDATE OF t')` - `[t, u]`               | `[t, u, t]` - every reference, filter duplicates yourself |
+| `sql_query_tables('CREATE VIEW v AS SELECT a FROM src')` - `[]`                               | `[v, src]`                                                |
+| `sql_query_tables('SELECT a INTO new_t FROM src')` - `[src]`                                  | `[new_t, src]`                                            |
+| `sql_query_columns('… ON CONFLICT (name) DO UPDATE SET name = excluded.name')` - `[]`         | `[excluded.name]`                                         |
+| `OrderBy` of `SELECT a, row_number() OVER (ORDER BY b) FROM t ORDER BY a` - 1 clause          | 2 clauses - window `ORDER BY` included                    |
+| `sql_query_tables('SELECT (SELECT x FROM a) FROM b')` - `[b, a]`                              | `[a, b]` - descriptor (PostgreSQL walker) order           |
+| `sql_query_depth()`: `EXPLAIN SELECT 1` 0, `CREATE VIEW v AS SELECT 1` 0, window subquery 1   | 1, 1, 2                                                   |
+| `sql_to_keyset_query()` cursor on `… WHERE $1 IN (SELECT …)` - `$1`, clashing with the user's | `$2`                                                      |
+| `TypeCastStripper` left casts under a `SubLink` test, a window and `COLLATE`                  | stripped                                                  |
+
+### 28) `flow-php/postgresql` - traversal contract: messages, depth, replacement, `REMOVE_NODE`
+
+| Before                                                            | After                                                                                    |
+|-------------------------------------------------------------------|------------------------------------------------------------------------------------------|
+| `ModificationContext::ancestors()` / `parent()` - `Node` wrappers | the real messages (`SelectStmt`, `RangeSubselect`, …), no `Node` wrappers                |
+| depth of a CTE body - 3                                           | 4 - `WithClause`, `WindowDef`, `IntoClause`, `OnConflictClause` are levels too           |
+| a replacement returned below the top-level statement - ignored    | written into its slot                                                                    |
+| a replacement of the wrong class - ignored                        | `ParserException`                                                                        |
+| `NodeVisitor::REMOVE_NODE` - declared, never honoured             | removed; `NodeModifier::REMOVE_NODE` removes a node from a list, throws on a single slot |
+
+### 29) `flow-php/postgresql` - `EXPLAIN` wraps every explainable statement, ANALYZE is rolled back
+
+| Before                                                                                                | After                                                                                                            |
+|-------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
+| `ExplainModifier::nodeClasses()` - `[SelectStmt::class]`                                              | `[ParseResult::class]`                                                                                           |
+| INSERT/UPDATE/DELETE/MERGE/CTAS/EXECUTE/DECLARE - returned unwrapped                                  | wrapped in `EXPLAIN`                                                                                             |
+| `sql_to_explain('CREATE TABLE x (a int)')`, `sql_to_explain('EXPLAIN SELECT 1')` - returned unwrapped | `InvalidStatementException`                                                                                      |
+| `$client->explain('INSERT …')` - the `INSERT` ran and committed                                       | EXPLAIN; with ANALYZE inside a transaction (savepoint when one is open) that is always rolled back               |
+| `traverse(new PaginationModifier(…), new ExplainModifier(…))` - both applied                          | the pagination is dropped (or the traversal throws) - call `traverse()` again with `ExplainModifier` alone, last |
+
+### 30) `flow-php/postgresql` - keyset pagination wraps `UNION` / `INTERSECT` / `EXCEPT`
+
+| Before                                                                                                                      | After                                                              |
+|-----------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------|
+| `sql_to_keyset_query('SELECT id FROM t UNION SELECT id FROM u ORDER BY id', …)` - cursor dropped, page 2 fails with `08P01` | `SELECT * FROM (…) _keyset_subq WHERE id > $1 ORDER BY id LIMIT …` |
+| qualified keyset column (`t.id`) on a set operation - `42P01` at run time                                                   | `PaginationException`                                              |
+
+### 31) `flow-php/postgresql` - schema keeps the declared expression text, compares normalised keys
+
+| Before                                                           | After                                                                              |
+|------------------------------------------------------------------|------------------------------------------------------------------------------------|
+| `Column::$generationExpression` - normalised (`lower(i)`)        | declared/catalog text (`lower(i::text)`); compare with `generationExpressionKey()` |
+| `CheckConstraint::$expression` - normalised                      | declared/catalog text; `expressionKey()`                                           |
+| `Index::$predicate` - normalised                                 | declared/catalog text; `predicateKey()`                                            |
+| `Trigger::$whenCondition` - compared verbatim                    | declared/catalog text; compared by `whenConditionKey()`                            |
+| `ColumnDefault` EXPRESSION `literal` - normalised                | declared/catalog text; `equals()` normalises                                       |
+| `CheckDefinitionParser::parse()` - normalised expression         | the catalog text, still validated                                                  |
+| `ExpressionParser::normalizeNode(Node)`                          | removed - `deparseNode(Node)` keeps the text, `normalize(string)` strips casts     |
+| DDL emitted the normalised text - `lower(i)` failed with `42883` | DDL emits the declared expression                                                  |
+
+### 32) `flow-php/postgresql` - schema DDL emits index `WHERE` and trigger `WHEN`
+
+| Before                                                         | After                                                                         |
+|----------------------------------------------------------------|-------------------------------------------------------------------------------|
+| `CREATE UNIQUE INDEX t_email_live ON s.t (email)`              | `CREATE UNIQUE INDEX t_email_live ON s.t (email) WHERE deleted_at IS NULL`    |
+| `CREATE TRIGGER t_trg … FOR EACH ROW EXECUTE FUNCTION f()`     | `CREATE TRIGGER t_trg … FOR EACH ROW WHEN (new.i > 0) EXECUTE FUNCTION s.f()` |
+| an unqualified trigger function resolved through `search_path` | resolved to the table's schema                                                |
+| introspected `Trigger::$functionName` - `name`                 | `schema.name`; new `Trigger::withFunctionSchema()`                            |
+| a declared `'s.f'` always drifted against the catalog          | no drift                                                                      |
+
+### 33) `flow-php/postgresql` - a failed `SAVEPOINT` leaves the outer transaction open
+
+| Before                                                                                      | After                                                                    |
+|---------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
+| nesting level reset to 0, the caller's `rollBack()` throws, the connection stays in `25P02` | nesting level kept; the caller's `rollBack()` ends the outer transaction |
+
 ---
 
 ## Upgrading from 0.43.x to 0.44.x

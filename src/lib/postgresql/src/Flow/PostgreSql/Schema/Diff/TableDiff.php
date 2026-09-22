@@ -13,8 +13,6 @@ use Flow\PostgreSql\QueryBuilder\Schema\Constraint\ExcludeConstraint as ExcludeC
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\ForeignKeyConstraint;
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\PrimaryKeyConstraint;
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\UniqueConstraint as UniqueConstraintBuilder;
-use Flow\PostgreSql\QueryBuilder\Schema\Index\IndexMethod as QbIndexMethod;
-use Flow\PostgreSql\QueryBuilder\Schema\Trigger\TriggerEvent as QbTriggerEvent;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\Column;
 use Flow\PostgreSql\Schema\Constraint\CheckConstraint;
@@ -24,17 +22,12 @@ use Flow\PostgreSql\Schema\Constraint\PrimaryKey;
 use Flow\PostgreSql\Schema\Constraint\UniqueConstraint;
 use Flow\PostgreSql\Schema\IdentityGeneration;
 use Flow\PostgreSql\Schema\Index;
-use Flow\PostgreSql\Schema\IndexMethod;
 use Flow\PostgreSql\Schema\Table;
 use Flow\PostgreSql\Schema\Trigger;
-use Flow\PostgreSql\Schema\TriggerEvent;
-use Flow\PostgreSql\Schema\TriggerTiming;
 use RuntimeException;
 
-use function array_map;
 use function Flow\PostgreSql\DSL\alter;
 use function Flow\PostgreSql\DSL\column;
-use function Flow\PostgreSql\DSL\create;
 use function Flow\PostgreSql\DSL\drop;
 use function sprintf;
 
@@ -213,19 +206,7 @@ final readonly class TableDiff implements Diff
         }
 
         foreach ($this->addedIndexes as $idx) {
-            $builder = create()->index($idx->name);
-
-            if ($idx->unique) {
-                $builder = $builder->unique();
-            }
-
-            $onBuilder = $builder->on($this->target->name, $this->target->schema);
-
-            if ($idx->method !== IndexMethod::BTREE) {
-                $onBuilder = $onBuilder->using(QbIndexMethod::from($idx->method->value));
-            }
-
-            $sqls[] = $onBuilder->columns(...$idx->columns);
+            $sqls[] = $idx->toSql($this->target->name, $this->target->schema);
         }
 
         foreach ($this->renamedIndexes as $oldName => $newIndex) {
@@ -308,26 +289,7 @@ final readonly class TableDiff implements Diff
         }
 
         foreach ($this->addedTriggers as $trigger) {
-            $qbEvents = array_map(
-                static fn(TriggerEvent $e): QbTriggerEvent => QbTriggerEvent::{$e->name},
-                $trigger->events,
-            );
-
-            $triggerBuilder = create()->trigger($trigger->name);
-
-            $onStep = match ($trigger->timing) {
-                TriggerTiming::BEFORE => $triggerBuilder->before(...$qbEvents),
-                TriggerTiming::AFTER => $triggerBuilder->after(...$qbEvents),
-                TriggerTiming::INSTEAD_OF => $triggerBuilder->insteadOf(...$qbEvents),
-            };
-
-            $optionsStep = $onStep->on($this->target->name, $this->target->schema);
-
-            if ($trigger->forEachRow) {
-                $optionsStep = $optionsStep->forEachRow();
-            }
-
-            $sqls[] = $optionsStep->execute($trigger->functionName);
+            $sqls[] = $trigger->toSql($this->target->name, $this->target->schema);
         }
 
         foreach ($this->addedInherits as $parent) {

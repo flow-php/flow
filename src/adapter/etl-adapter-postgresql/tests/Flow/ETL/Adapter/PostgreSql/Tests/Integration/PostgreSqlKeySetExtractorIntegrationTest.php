@@ -17,6 +17,7 @@ use function Flow\ETL\DSL\from_all;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
+use function Flow\PostgreSql\DSL\asc;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\column;
 use function Flow\PostgreSql\DSL\column_type_integer;
@@ -132,6 +133,49 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
         static::assertSame(1, $rows[0]['id']);
         static::assertSame(25, $rows[24]['id']);
         static::assertSame(range(1, 25), array_column($rows, 'id'));
+    }
+
+    public function test_extracts_all_rows_of_a_union(): void
+    {
+        $odd = $this->tableName . '_odd';
+        $even = $this->tableName . '_even';
+
+        $this->client->execute(create()->table($odd)->column(column('id', column_type_integer())->primaryKey()));
+        $this->client->execute(create()->table($even)->column(column('id', column_type_integer())->primaryKey()));
+        $this->client->execute(
+            insert()
+                ->into($odd)
+                ->columns('id')
+                ->values(literal(1))
+                ->values(literal(3))
+                ->values(literal(5))
+                ->values(literal(7))
+                ->values(literal(9)),
+        );
+        $this->client->execute(
+            insert()
+                ->into($even)
+                ->columns('id')
+                ->values(literal(2))
+                ->values(literal(4))
+                ->values(literal(6))
+                ->values(literal(8))
+                ->values(literal(10)),
+        );
+
+        $rows = df()
+            ->read(from_pgsql_key_set(
+                $this->client,
+                select(col('id'))
+                    ->from(table($odd))
+                    ->union(select(col('id'))->from(table($even)))
+                    ->orderBy(asc(col('id'))),
+                pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+            )->withBatchSize(3))
+            ->fetch()
+            ->toArray();
+
+        static::assertSame(range(1, 10), array_column($rows, 'id'));
     }
 
     public function test_extracts_limited_rows_with_maximum(): void

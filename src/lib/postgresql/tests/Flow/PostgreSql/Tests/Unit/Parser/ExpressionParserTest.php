@@ -18,6 +18,16 @@ final class ExpressionParserTest extends TestCase
         }
     }
 
+    public function test_deparse_node_keeps_casts(): void
+    {
+        $parser = new ExpressionParser();
+
+        static::assertSame(
+            "status::text = 'active'::text",
+            $parser->deparseNode($parser->parse("((status)::text = 'active'::text)")),
+        );
+    }
+
     public function test_normalize_generation_expression_preserves_expression_without_casts(): void
     {
         $parser = new ExpressionParser();

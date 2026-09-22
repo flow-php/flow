@@ -22,6 +22,24 @@ final class QueryDepthTest extends TestCase
         }
     }
 
+    public function test_depth_for_create_view(): void
+    {
+        static::assertSame(1, (new QueryDepth(sql_parse('CREATE VIEW v AS SELECT 1')))->depth());
+    }
+
+    public function test_depth_for_explain(): void
+    {
+        static::assertSame(1, (new QueryDepth(sql_parse('EXPLAIN SELECT 1')))->depth());
+    }
+
+    public function test_depth_for_window_subquery(): void
+    {
+        static::assertSame(
+            2,
+            (new QueryDepth(sql_parse('SELECT sum(a) OVER (PARTITION BY (SELECT 1)) FROM t')))->depth(),
+        );
+    }
+
     public function test_depth_for_cte_query(): void
     {
         $depth = new QueryDepth(sql_parse('WITH cte AS (SELECT * FROM t) SELECT * FROM cte'));

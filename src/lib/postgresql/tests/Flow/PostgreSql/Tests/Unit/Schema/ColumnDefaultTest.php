@@ -45,12 +45,12 @@ final class ColumnDefaultTest extends TestCase
         )->equals(ColumnDefault::fromExpression('now()', ColumnType::timestamptz())));
     }
 
-    public function test_expression_default_strips_implicit_casts_like_generation_expressions(): void
+    public function test_expression_default_keeps_declared_text_and_compares_normalised(): void
     {
         $default = ColumnDefault::fromExpression('upper(name::text)', ColumnType::text());
 
         static::assertSame(DefaultKind::EXPRESSION, $default->kind);
-        static::assertSame('upper(name)', $default->literal);
+        static::assertSame('upper(name::text)', $default->literal);
         static::assertTrue($default->equals(ColumnDefault::fromExpression('upper(name)', ColumnType::text())));
     }
 

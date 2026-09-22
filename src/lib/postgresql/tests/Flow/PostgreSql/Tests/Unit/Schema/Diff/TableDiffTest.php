@@ -266,6 +266,43 @@ final class TableDiffTest extends TestCase
         static::assertSame('ALTER TABLE public.users ADD CONSTRAINT pk_users PRIMARY KEY (id)', $sqls[0]->toSql());
     }
 
+    public function test_added_partial_index_emits_predicate(): void
+    {
+        $table = schema_table('t', [schema_column_text('email'), schema_column_text('deleted_at')]);
+
+        $diff = new TableDiff($table, $table, addedIndexes: [schema_index(
+            't_email_live',
+            ['email'],
+            unique: true,
+            predicate: 'deleted_at IS NULL',
+        )]);
+
+        static::assertSame(
+            'CREATE UNIQUE INDEX t_email_live ON public.t (email) WHERE deleted_at IS NULL',
+            $diff->generate()[0]->toSql(),
+        );
+    }
+
+    public function test_added_trigger_emits_when_condition(): void
+    {
+        $table = schema_table('t', [schema_column_integer('i')]);
+
+        $diff = new TableDiff($table, $table, addedTriggers: [schema_trigger(
+            't_trg',
+            't',
+            TriggerTiming::BEFORE,
+            [TriggerEvent::UPDATE],
+            'public.trg_noop_fn',
+            true,
+            'NEW.i > 0',
+        )]);
+
+        static::assertSame(
+            'CREATE TRIGGER t_trg BEFORE UPDATE ON public.t FOR EACH ROW WHEN (new.i > 0) EXECUTE FUNCTION public.trg_noop_fn()',
+            $diff->generate()[0]->toSql(),
+        );
+    }
+
     public function test_adds_trigger(): void
     {
         $table = schema_table('users', [schema_column_integer('id', false)]);

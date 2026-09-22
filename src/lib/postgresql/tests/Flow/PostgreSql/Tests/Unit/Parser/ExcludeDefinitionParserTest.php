@@ -74,7 +74,9 @@ final class ExcludeDefinitionParserTest extends TestCase
         $canonicalized = $this->parser->parse("USING btree (room_id WITH =) WHERE (((status)::text = 'active'::text))");
 
         static::assertSame("status = 'active'", $normalized->predicate);
-        static::assertTrue($normalized->equals($canonicalized));
+        static::assertTrue(
+            $normalized->normalized(new ExpressionParser())->equals($canonicalized->normalized(new ExpressionParser())),
+        );
     }
 
     public function test_preserves_operator_case_for_case_sensitive_operators(): void

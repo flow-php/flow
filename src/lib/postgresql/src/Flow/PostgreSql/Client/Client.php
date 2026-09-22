@@ -81,8 +81,8 @@ interface Client
     public function execute(Sql|string $sql, array|ConvertedParameters $parameters = []): int;
 
     /**
-     * Execute EXPLAIN ANALYZE on a query and return the execution plan.
-     * Useful for analyzing query performance.
+     * Runs EXPLAIN. With `analyze`, the statement runs inside a transaction (a savepoint when one is open) that is
+     * always rolled back; sequences still advance.
      *
      * @param Sql|string $sql SQL query to explain
      * @param list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap with {@see \Flow\PostgreSql\DSL\typed()} to force a specific PostgreSQL type

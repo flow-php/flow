@@ -33,7 +33,21 @@ final class ColumnTest extends TestCase
         );
 
         static::assertTrue($column->isGenerated);
-        static::assertSame("(first_name || ' ') || last_name", $column->generationExpression);
+        static::assertSame("first_name || ' ' || last_name", $column->generationExpression);
+        static::assertSame("(first_name || ' ') || last_name", $column->generationExpressionKey());
+    }
+
+    public function test_generation_expressions_differing_by_implicit_casts_are_equal(): void
+    {
+        $declared = schema_column('g', column_type_text(), isGenerated: true, generationExpression: 'lower(i::text)');
+        $introspected = schema_column(
+            'g',
+            column_type_text(),
+            isGenerated: true,
+            generationExpression: 'lower((i)::text)',
+        );
+
+        static::assertTrue($declared->isEqualStructure($introspected));
     }
 
     public function test_column_identity(): void

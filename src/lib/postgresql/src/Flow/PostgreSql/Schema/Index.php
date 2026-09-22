@@ -5,6 +5,12 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Schema;
 
 use Flow\PostgreSql\Parser\ExpressionParser;
+use Flow\PostgreSql\QueryBuilder\Condition\ConditionFactory;
+use Flow\PostgreSql\QueryBuilder\Schema\Index\CreateIndex\CreateIndexFinalStep;
+use Flow\PostgreSql\QueryBuilder\Schema\Index\IndexMethod as QbIndexMethod;
+
+use function array_key_exists;
+use function Flow\PostgreSql\DSL\create;
 
 /**
  * @type IndexShape = array{name: string, columns: non-empty-list<string>, unique: bool, method: string, primary: bool, predicate: ?string}
@@ -12,6 +18,8 @@ use Flow\PostgreSql\Parser\ExpressionParser;
 final readonly class Index
 {
     public ?string $predicate;
+
+    private ?string $predicateKey;
 
     /**
      * @param non-empty-list<string> $columns
@@ -24,7 +32,8 @@ final readonly class Index
         public bool $primary = false,
         ?string $predicate = null,
     ) {
-        $this->predicate = $predicate !== null ? (new ExpressionParser())->normalize($predicate) : null;
+        $this->predicate = $predicate;
+        $this->predicateKey = $predicate !== null ? (new ExpressionParser())->normalize($predicate) : null;
     }
 
     /**
@@ -42,6 +51,34 @@ final readonly class Index
         );
     }
 
+    public function toSql(string $tableName, ?string $schema = null): CreateIndexFinalStep
+    {
+        $builder = create()->index($this->name);
+
+        if ($this->unique) {
+            $builder = $builder->unique();
+        }
+
+        $onBuilder = $builder->on($tableName, $schema);
+
+        if ($this->method !== IndexMethod::BTREE) {
+            $onBuilder = $onBuilder->using(QbIndexMethod::from($this->method->value));
+        }
+
+        $sql = $onBuilder->columns(...$this->columns);
+
+        if ($this->predicate === null) {
+            return $sql;
+        }
+
+        return $sql->where(ConditionFactory::fromAst((new ExpressionParser())->parse($this->predicate)));
+    }
+
+    public function predicateKey(): ?string
+    {
+        return $this->predicateKey;
+    }
+
     public function isEqual(self $other): bool
     {
         return $this->name === $other->name && $this->isEqualStructure($other);
@@ -54,7 +91,7 @@ final readonly class Index
             && $this->unique === $other->unique
             && $this->method === $other->method
             && $this->primary === $other->primary
-            && $this->predicate === $other->predicate
+            && $this->predicateKey === $other->predicateKey
         );
     }
 

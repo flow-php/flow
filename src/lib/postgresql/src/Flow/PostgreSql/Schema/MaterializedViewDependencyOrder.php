@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema;
 
+use Flow\PostgreSql\AST\Nodes\Table;
 use Flow\PostgreSql\Extractors\Tables;
 use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Schema\Exception\SchemaException;
@@ -13,6 +14,7 @@ use function array_filter;
 use function array_keys;
 use function array_map;
 use function array_shift;
+use function array_unique;
 use function array_values;
 use function count;
 use function implode;
@@ -120,13 +122,9 @@ final readonly class MaterializedViewDependencyOrder implements ExecutionOrderSt
      */
     private function extractReferencedNames(string $definition): array
     {
-        $tables = (new Tables($this->parser->parse($definition)))->all();
-        $names = [];
-
-        foreach ($tables as $table) {
-            $names[] = $table->name();
-        }
-
-        return $names;
+        return array_values(array_unique(array_map(
+            static fn(Table $table): string => $table->name(),
+            (new Tables($this->parser->parse($definition)))->all(),
+        )));
     }
 }

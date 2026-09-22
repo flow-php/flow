@@ -16,7 +16,10 @@ final readonly class CheckDefinitionParser
 
     public function parse(string $definition): string
     {
-        return $this->expressionParser->normalize($this->stripWrapper($definition));
+        $expression = $this->stripWrapper($definition);
+        $this->expressionParser->parse($expression);
+
+        return $expression;
     }
 
     private function stripWrapper(string $definition): string

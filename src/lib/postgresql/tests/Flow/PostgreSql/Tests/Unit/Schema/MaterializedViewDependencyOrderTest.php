@@ -30,6 +30,17 @@ final class MaterializedViewDependencyOrderTest extends TestCase
         static::assertSame([], (new MaterializedViewDependencyOrder(new Parser()))->order([]));
     }
 
+    public function test_repeated_reference_is_not_a_cycle(): void
+    {
+        $base = new MaterializedView('v1', 'SELECT 1 AS a');
+        $subquery = new MaterializedView('v2', 'SELECT a FROM v1 WHERE a IN (SELECT a FROM v1)');
+        $locked = new MaterializedView('v3', 'SELECT a FROM v1 FOR UPDATE OF v1');
+
+        $result = (new MaterializedViewDependencyOrder(new Parser()))->order([$subquery, $locked, $base]);
+
+        static::assertSame(['v1', 'v2', 'v3'], array_map(static fn(MaterializedView $v) => $v->name, $result));
+    }
+
     public function test_linear_chain(): void
     {
         $base = new MaterializedView('base_mv', 'SELECT id, name FROM users');

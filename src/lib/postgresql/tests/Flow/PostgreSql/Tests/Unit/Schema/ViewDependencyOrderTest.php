@@ -43,6 +43,17 @@ final class ViewDependencyOrderTest extends TestCase
         static::assertSame(['base_view', 'middle_view', 'top_view'], $names);
     }
 
+    public function test_repeated_reference_is_not_a_cycle(): void
+    {
+        $base = new View('v1', 'SELECT 1 AS a');
+        $subquery = new View('v2', 'SELECT a FROM v1 WHERE a IN (SELECT a FROM v1)');
+        $locked = new View('v3', 'SELECT a FROM v1 FOR UPDATE OF v1');
+
+        $result = (new ViewDependencyOrder(new Parser()))->order([$subquery, $locked, $base]);
+
+        static::assertSame(['v1', 'v2', 'v3'], array_map(static fn(View $v) => $v->name, $result));
+    }
+
     public function test_self_referencing_view(): void
     {
         $recursive = new View('recursive_view', 'SELECT * FROM recursive_view');

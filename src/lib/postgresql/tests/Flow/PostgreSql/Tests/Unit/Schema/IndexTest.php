@@ -11,6 +11,15 @@ use function Flow\PostgreSql\DSL\schema_index;
 
 final class IndexTest extends TestCase
 {
+    public function test_predicates_differing_by_implicit_casts_are_equal(): void
+    {
+        $declared = schema_index('idx_active', ['status'], predicate: "status = 'active'");
+        $introspected = schema_index('idx_active', ['status'], predicate: "((status)::text = 'active'::text)");
+
+        static::assertTrue($declared->isEqualStructure($introspected));
+        static::assertSame("status = 'active'", $introspected->predicateKey());
+    }
+
     public function test_index_construction(): void
     {
         $index = schema_index('idx_users_name', ['name']);
@@ -127,6 +136,30 @@ final class IndexTest extends TestCase
         );
 
         static::assertTrue($a->isEqualStructure($b));
+    }
+
+    public function test_to_sql_emits_unique_method_and_predicate(): void
+    {
+        static::assertSame(
+            'CREATE UNIQUE INDEX idx_live ON s.t USING hash (email) WHERE deleted_at IS NULL',
+            schema_index(
+                'idx_live',
+                ['email'],
+                unique: true,
+                method: IndexMethod::HASH,
+                predicate: 'deleted_at IS NULL',
+            )
+                ->toSql('t', 's')
+                ->toSql(),
+        );
+    }
+
+    public function test_to_sql_without_schema_or_predicate(): void
+    {
+        static::assertSame(
+            'CREATE INDEX idx_email ON t (email)',
+            schema_index('idx_email', ['email'])->toSql('t')->toSql(),
+        );
     }
 
     public function test_unique_index(): void

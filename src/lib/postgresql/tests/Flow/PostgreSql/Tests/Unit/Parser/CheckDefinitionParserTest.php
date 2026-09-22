@@ -36,9 +36,12 @@ final class CheckDefinitionParserTest extends TestCase
         static::assertSame('a > 0', $this->parser->parse('  CHECK (a > 0)'));
     }
 
-    public function test_normalizes_implicit_casts(): void
+    public function test_keeps_catalog_text(): void
     {
-        static::assertSame("status = 'active'", $this->parser->parse("CHECK (((status)::text = 'active'::text))"));
+        static::assertSame(
+            "((status)::text = 'active'::text)",
+            $this->parser->parse("CHECK (((status)::text = 'active'::text))"),
+        );
     }
 
     public function test_passes_through_unwrapped_expression(): void

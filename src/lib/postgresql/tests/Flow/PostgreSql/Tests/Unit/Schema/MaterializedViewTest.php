@@ -38,6 +38,21 @@ final class MaterializedViewTest extends TestCase
         static::assertSame('idx_user_stats_id', $matview->indexes[0]->name);
     }
 
+    public function test_to_sql_emits_partial_index_predicate(): void
+    {
+        $sqls = schema_materialized_view(
+            'mv_t',
+            select(col('email'), col('deleted_at'))->from(table('t'))->toSql(),
+            indexes: [schema_index('mv_t_email_live', ['email'], unique: true, predicate: 'deleted_at IS NULL')],
+        )->toSql();
+
+        static::assertCount(2, $sqls);
+        static::assertSame(
+            'CREATE UNIQUE INDEX mv_t_email_live ON mv_t (email) WHERE deleted_at IS NULL',
+            $sqls[1]->toSql(),
+        );
+    }
+
     public function test_to_sql_generates_create_materialized_view(): void
     {
         $sqls = schema_materialized_view(

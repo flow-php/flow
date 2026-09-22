@@ -99,7 +99,8 @@ final class CatalogTest extends TestCase
         ]);
 
         static::assertTrue($column->isGenerated);
-        static::assertSame("(first_name || ' ') || last_name", $column->generationExpression);
+        static::assertSame("first_name || ' ' || last_name", $column->generationExpression);
+        static::assertSame("(first_name || ' ') || last_name", $column->generationExpressionKey());
     }
 
     public function test_from_array_column_with_identity_always(): void
@@ -786,7 +787,8 @@ final class CatalogTest extends TestCase
         static::assertFalse($restoredDomain->nullable);
         static::assertSame('0', $restoredDomain->default?->literal);
         static::assertCount(2, $restoredDomain->checkConstraints);
-        static::assertSame('value > 0', $restoredDomain->checkConstraints[0]->expression);
+        static::assertSame('VALUE > 0', $restoredDomain->checkConstraints[0]->expression);
+        static::assertSame('value > 0', $restoredDomain->checkConstraints[0]->expressionKey());
         static::assertSame('chk_positive', $restoredDomain->checkConstraints[0]->name);
     }
 

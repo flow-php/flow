@@ -4,11 +4,34 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Parser;
 
+use Flow\PostgreSql\Parser\ExpressionParser;
 use Flow\PostgreSql\Tests\Mother\ParsedExcludeDefinitionMother;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
+
 final class ParsedExcludeDefinitionTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        if (!extension_loaded('pg_query')) {
+            self::markTestSkipped(
+                'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
+            );
+        }
+    }
+
+    public function test_normalized_strips_casts_from_elements_and_predicate(): void
+    {
+        $normalized = ParsedExcludeDefinitionMother::with(elements: [[
+            'expression' => 'lower((name)::text)',
+            'operator' => '=',
+        ]], predicate: "((status)::text = 'active'::text)")->normalized(new ExpressionParser());
+
+        static::assertSame([['expression' => 'lower(name)', 'operator' => '=']], $normalized->elements);
+        static::assertSame("status = 'active'", $normalized->predicate);
+    }
+
     public function test_equal_when_all_fields_match(): void
     {
         static::assertTrue(ParsedExcludeDefinitionMother::with()->equals(ParsedExcludeDefinitionMother::with()));

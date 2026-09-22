@@ -25,6 +25,11 @@ interface NodeModifier
     public const STOP_TRAVERSAL = 2;
 
     /**
+     * Remove the current node from its list slot.
+     */
+    public const REMOVE_NODE = 3;
+
+    /**
      * Returns the fully qualified class names of the node types this modifier handles.
      *
      * A modifier may handle more than one node type; the traverser will dispatch it
@@ -41,14 +46,15 @@ interface NodeModifier
      * - Mutate the node in-place and return null to continue traversal
      * - Return DONT_TRAVERSE_CHILDREN to skip child nodes
      * - Return STOP_TRAVERSAL to stop the entire traversal
-     * - Return a new node to replace the current node (used for wrapping operations)
+     * - Return REMOVE_NODE to remove the node from a list slot; on a single-node slot the traverser throws
+     * - Return a new node to replace the current node; it is written into the slot and not descended into
      *
      * @param object $node The node instance to modify (one of the types listed in nodeClasses())
      * @param ModificationContext $context Context providing parent information
      *
      * @return null|int|object
      *                         - null: Continue traversal (node unchanged or modified in-place)
-     *                         - int (DONT_TRAVERSE_CHILDREN, STOP_TRAVERSAL): Control flow
+     *                         - int (DONT_TRAVERSE_CHILDREN, STOP_TRAVERSAL, REMOVE_NODE): Control flow
      *                         - object: Replace current node with returned node
      */
     public function modify(object $node, ModificationContext $context): int|object|null;

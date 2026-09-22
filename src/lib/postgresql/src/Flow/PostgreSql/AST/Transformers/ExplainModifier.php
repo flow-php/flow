@@ -6,35 +6,62 @@ namespace Flow\PostgreSql\AST\Transformers;
 
 use Flow\PostgreSql\AST\ModificationContext;
 use Flow\PostgreSql\AST\NodeModifier;
+use Flow\PostgreSql\AST\Nodes\Exception\InvalidStatementException;
 use Flow\PostgreSql\Protobuf\AST\DefElem;
 use Flow\PostgreSql\Protobuf\AST\ExplainStmt;
 use Flow\PostgreSql\Protobuf\AST\Integer;
 use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ParseResult;
 use Flow\PostgreSql\Protobuf\AST\PBString;
-use Flow\PostgreSql\Protobuf\AST\SelectStmt;
+
+use function Flow\Types\DSL\type_instance_of;
+use function in_array;
+use function sprintf;
 
 final readonly class ExplainModifier implements NodeModifier
 {
+    private const array EXPLAINABLE = [
+        'select_stmt',
+        'insert_stmt',
+        'update_stmt',
+        'delete_stmt',
+        'merge_stmt',
+        'create_table_as_stmt',
+        'execute_stmt',
+        'declare_cursor_stmt',
+    ];
+
     public function __construct(
         private ExplainConfig $config,
     ) {}
 
     public static function nodeClasses(): array
     {
-        return [SelectStmt::class];
+        return [ParseResult::class];
     }
 
-    public function modify(object $node, ModificationContext $context): ?object
+    public function modify(object $node, ModificationContext $context): int
     {
-        if (!$context->isTopLevel()) {
-            return null;
+        $parseResult = type_instance_of(ParseResult::class)->assert($node);
+
+        foreach ($parseResult->getStmts() as $rawStmt) {
+            $which = $rawStmt->getStmt()?->getNode() ?? '';
+
+            if (!in_array($which, self::EXPLAINABLE, true)) {
+                throw new InvalidStatementException(sprintf('EXPLAIN cannot explain a "%s" statement', $which));
+            }
         }
 
-        if (!$node instanceof SelectStmt) {
-            return null;
+        // validated above before any statement is wrapped, so a rejected query is left untouched
+        foreach ($parseResult->getStmts() as $rawStmt) {
+            $statement = $rawStmt->getStmt();
+
+            if ($statement !== null) {
+                $rawStmt->setStmt($this->wrapWithExplain($statement));
+            }
         }
 
-        return $this->wrapWithExplain($node);
+        return NodeModifier::DONT_TRAVERSE_CHILDREN;
     }
 
     private function createDefElemBool(string $name): Node
@@ -83,13 +110,10 @@ final readonly class ExplainModifier implements NodeModifier
         return $node;
     }
 
-    private function wrapWithExplain(SelectStmt $stmt): Node
+    private function wrapWithExplain(Node $statement): Node
     {
         $explainStmt = new ExplainStmt();
-
-        $queryNode = new Node();
-        $queryNode->setSelectStmt($stmt);
-        $explainStmt->setQuery($queryNode);
+        $explainStmt->setQuery($statement);
 
         $options = [];
 

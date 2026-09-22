@@ -87,6 +87,10 @@ foreach (sql_query_functions($query)->all() as $func) {
 }
 ```
 
+Extractors report every node of their kind anywhere in the statement — DDL targets (`CREATE TABLE x AS …`,
+`CREATE VIEW v …`, `SELECT … INTO t`), `FOR UPDATE OF t`, `excluded.*`, window `ORDER BY` — so filter the result
+when you need only some of them.
+
 ### Parsing Utilities
 
 ```php
@@ -621,17 +625,24 @@ interface NodeModifier
 
 The `ModificationContext` provides:
 
-- `$context->depth` - current traversal depth
-- `$context->ancestors` - array of parent nodes
-- `$context->getParent()` - immediate parent node
+- `$context->depth()` - traversal depth: 1 for a top-level statement, +1 per message edge
+- `$context->ancestors()` - parent messages from the root statement down, without `Node` wrappers
+- `$context->parent()` - immediate parent message
 - `$context->isTopLevel()` - whether this is the top-level statement
 
 Return values:
 
 - `null` - continue traversal
-- `Traverser::DONT_TRAVERSE_CHILDREN` - skip children
-- `Traverser::STOP_TRAVERSAL` - stop entire traversal
-- `object` - replace current node with returned object
+- `NodeModifier::DONT_TRAVERSE_CHILDREN` - skip children
+- `NodeModifier::STOP_TRAVERSAL` - stop entire traversal
+- `NodeModifier::REMOVE_NODE` - remove the node from its list (throws for a single-node slot)
+- `object` - replace the current node
+
+Replacement rules:
+
+- a slot holding a `Node` takes a `Node`; any other slot takes the same class; anything else throws
+- a replacement is not traversed (unlike PHP-Parser) - run a second traversal if needed
+- to clear a single slot, mutate the parent
 
 ### Using Modifiers Directly
 
@@ -666,6 +677,22 @@ $query->traverse(new KeysetPaginationModifier(new KeysetPaginationConfig(
 )));
 echo $query->deparse();
 // SELECT * FROM users WHERE created_at > $1 OR (created_at = $1 AND id > $2) ORDER BY created_at, id LIMIT 10
+```
+
+`ExplainModifier` wraps every statement before any of them is visited, so run it in its own `traverse()` after the
+other modifiers:
+
+```php
+<?php
+
+use Flow\PostgreSql\AST\Transformers\{ExplainConfig, ExplainModifier, PaginationConfig, PaginationModifier};
+
+use function Flow\PostgreSql\DSL\sql_parse;
+
+$query = sql_parse('SELECT * FROM users ORDER BY id');
+$query->traverse(new PaginationModifier(new PaginationConfig(limit: 10)));
+$query->traverse(new ExplainModifier(ExplainConfig::forEstimate()));
+echo $query->deparse(); // EXPLAIN (COSTS 1, FORMAT "json") SELECT * FROM users ORDER BY id LIMIT 10
 ```
 
 Pass `param()` instead of a number to leave the value to the query's parameters - every page then sends the same SQL:
