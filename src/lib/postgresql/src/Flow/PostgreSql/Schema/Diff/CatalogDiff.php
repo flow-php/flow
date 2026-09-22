@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Schema\Diff;
 
 use Flow\PostgreSql\Parser;
-use Flow\PostgreSql\QueryBuilder\Schema\Index\IndexMethod as QbIndexMethod;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\Catalog;
 use Flow\PostgreSql\Schema\ExecutionOrderStrategy;
 use Flow\PostgreSql\Schema\ForeignKeyDependencyOrder;
-use Flow\PostgreSql\Schema\IndexMethod;
 use Flow\PostgreSql\Schema\MaterializedView;
 use Flow\PostgreSql\Schema\MaterializedViewDependencyOrder;
 use Flow\PostgreSql\Schema\Schema;
@@ -91,19 +89,7 @@ final readonly class CatalogDiff implements Diff
                 )->as(parsed_select($dv->view->definition));
 
                 foreach ($dv->view->indexes as $idx) {
-                    $builder = create()->index($idx->name);
-
-                    if ($idx->unique) {
-                        $builder = $builder->unique();
-                    }
-
-                    $onBuilder = $builder->on($dv->view->name, $dv->schema);
-
-                    if ($idx->method !== IndexMethod::BTREE) {
-                        $onBuilder = $onBuilder->using(QbIndexMethod::from($idx->method->value));
-                    }
-
-                    $sqls[] = $onBuilder->columns(...$idx->columns);
+                    $sqls[] = $idx->toSql($dv->view->name, $dv->schema);
                 }
             } else {
                 $sqls[] = create()->view($dv->view->name, $dv->schema)->as(parsed_select($dv->view->definition));

@@ -18,6 +18,8 @@ final readonly class Column
 {
     public ?string $generationExpression;
 
+    private ?string $generationExpressionKey;
+
     public function __construct(
         public string $name,
         public ColumnType $type,
@@ -29,7 +31,8 @@ final readonly class Column
         ?string $generationExpression = null,
         public ?int $ordinalPosition = null,
     ) {
-        $this->generationExpression = $generationExpression !== null
+        $this->generationExpression = $generationExpression;
+        $this->generationExpressionKey = $generationExpression !== null
             ? (new ExpressionParser())->normalize($generationExpression)
             : null;
     }
@@ -82,6 +85,11 @@ final readonly class Column
         );
     }
 
+    public function generationExpressionKey(): ?string
+    {
+        return $this->generationExpressionKey;
+    }
+
     public function isEqual(self $other): bool
     {
         return $this->name === $other->name && $this->isEqualStructure($other);
@@ -96,7 +104,7 @@ final readonly class Column
             && $this->isIdentity === $other->isIdentity
             && $this->identityGeneration === $other->identityGeneration
             && $this->isGenerated === $other->isGenerated
-            && $this->generationExpression === $other->generationExpression
+            && $this->generationExpressionKey === $other->generationExpressionKey
         );
     }
 

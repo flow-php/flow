@@ -152,6 +152,72 @@ final class TriggerTest extends TestCase
         static::assertTrue($a->isEqualStructure($b));
     }
 
+    public function test_with_function_schema_keeps_qualified_name(): void
+    {
+        $trigger = schema_trigger('trg', 't', TriggerTiming::BEFORE, [TriggerEvent::UPDATE], 'a.fn');
+
+        static::assertSame($trigger, $trigger->withFunctionSchema('s'));
+    }
+
+    public function test_with_function_schema_qualifies_unqualified_name(): void
+    {
+        $trigger = schema_trigger('trg', 't', TriggerTiming::BEFORE, [TriggerEvent::UPDATE], 'fn', true, 'NEW.i > 0');
+
+        $qualified = $trigger->withFunctionSchema('s');
+
+        static::assertSame('s.fn', $qualified->functionName);
+        static::assertSame('trg', $qualified->name);
+        static::assertSame('t', $qualified->tableName);
+        static::assertSame(TriggerTiming::BEFORE, $qualified->timing);
+        static::assertSame([TriggerEvent::UPDATE], $qualified->events);
+        static::assertTrue($qualified->forEachRow);
+        static::assertSame('NEW.i > 0', $qualified->whenCondition);
+    }
+
+    public function test_when_conditions_differing_by_case_are_equal(): void
+    {
+        $declared = schema_trigger('trg', 't', TriggerTiming::BEFORE, [TriggerEvent::UPDATE], 'fn', true, 'NEW.i > 0');
+        $introspected = schema_trigger(
+            'trg',
+            't',
+            TriggerTiming::BEFORE,
+            [TriggerEvent::UPDATE],
+            'fn',
+            true,
+            'new.i > 0',
+        );
+
+        static::assertTrue($declared->isEqualStructure($introspected));
+        static::assertSame('NEW.i > 0', $declared->whenCondition);
+        static::assertSame('new.i > 0', $declared->whenConditionKey());
+    }
+
+    public function test_to_sql_emits_timing_events_row_level_and_when_condition(): void
+    {
+        static::assertSame(
+            'CREATE TRIGGER trg INSTEAD OF INSERT OR UPDATE ON s.v FOR EACH ROW WHEN (new.i > 0) EXECUTE FUNCTION s.fn()',
+            schema_trigger(
+                'trg',
+                'v',
+                TriggerTiming::INSTEAD_OF,
+                [TriggerEvent::INSERT, TriggerEvent::UPDATE],
+                's.fn',
+                true,
+                'NEW.i > 0',
+            )
+                ->toSql('v', 's')
+                ->toSql(),
+        );
+    }
+
+    public function test_to_sql_emits_statement_level_trigger(): void
+    {
+        static::assertSame(
+            'CREATE TRIGGER trg AFTER DELETE ON s.t EXECUTE FUNCTION fn()',
+            schema_trigger('trg', 't', TriggerTiming::AFTER, [TriggerEvent::DELETE], 'fn')->toSql('t', 's')->toSql(),
+        );
+    }
+
     public function test_trigger_construction(): void
     {
         $trigger = schema_trigger(

@@ -19,6 +19,22 @@ use function Flow\PostgreSql\DSL\table;
 
 final class MaterializedViewDiffTest extends TestCase
 {
+    public function test_added_partial_index_emits_predicate(): void
+    {
+        $definition = select(star())->from(table('t'))->toSql();
+
+        $diff = new MaterializedViewDiff(
+            schema_materialized_view('mv_t', $definition),
+            schema_materialized_view('mv_t', $definition),
+            addedIndexes: [schema_index('mv_t_email_live', ['email'], unique: true, predicate: 'deleted_at IS NULL')],
+        );
+
+        static::assertSame(
+            'CREATE UNIQUE INDEX mv_t_email_live ON mv_t (email) WHERE deleted_at IS NULL',
+            $diff->generate()[0]->toSql(),
+        );
+    }
+
     public function test_adds_and_drops_indexes_without_definition_change(): void
     {
         $definition = select(star())->from(table('users'))->toSql();

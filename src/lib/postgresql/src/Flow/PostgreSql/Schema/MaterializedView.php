@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema;
 
-use Flow\PostgreSql\QueryBuilder\Schema\Index\IndexMethod as QbIndexMethod;
 use Flow\PostgreSql\QueryBuilder\Sql;
 
 use function array_map;
@@ -60,19 +59,7 @@ final readonly class MaterializedView
         $sqls[] = create()->materializedView($this->name)->as(parsed_select($this->definition));
 
         foreach ($this->indexes as $idx) {
-            $builder = create()->index($idx->name);
-
-            if ($idx->unique) {
-                $builder = $builder->unique();
-            }
-
-            $onBuilder = $builder->on($this->name);
-
-            if ($idx->method !== IndexMethod::BTREE) {
-                $onBuilder = $onBuilder->using(QbIndexMethod::from($idx->method->value));
-            }
-
-            $sqls[] = $onBuilder->columns(...$idx->columns);
+            $sqls[] = $idx->toSql($this->name);
         }
 
         return $sqls;

@@ -33,6 +33,15 @@ final class CheckConstraintTest extends TestCase
         static::assertSame('chk_positive_age', $check->name);
     }
 
+    public function test_expressions_differing_by_implicit_casts_are_equal(): void
+    {
+        $declared = schema_check("status = 'active'");
+        $introspected = schema_check("((status)::text = 'active'::text)");
+
+        static::assertTrue($declared->isEqualStructure($introspected));
+        static::assertSame("((status)::text = 'active'::text)", $introspected->expression);
+    }
+
     public function test_is_equal_for_identical_constraints(): void
     {
         $a = schema_check('age > 0', 'chk_age', noInherit: true);

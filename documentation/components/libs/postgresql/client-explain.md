@@ -29,6 +29,11 @@ echo "Planning time: {$plan->planningTime()}ms\n";
 echo "Total cost: {$plan->rootNode()->cost()->totalCost()}\n";
 ```
 
+With `analyze` (the default), the statement runs inside a transaction - a savepoint when one is already open - that
+is always rolled back, so `INSERT`, `UPDATE`, `DELETE`, `MERGE` and `CREATE TABLE … AS` leave no rows behind (sequences
+still advance). SELECT, INSERT, UPDATE, DELETE, MERGE, CREATE TABLE AS, EXECUTE and DECLARE CURSOR can be explained;
+any other statement, including an `EXPLAIN …` query, throws `InvalidStatementException`.
+
 You can also pass raw SQL strings with parameters:
 
 ```php

@@ -10,6 +10,20 @@ use function Flow\PostgreSql\DSL\schema_exclude;
 
 final class ExcludeConstraintTest extends TestCase
 {
+    public function test_definitions_differing_by_implicit_casts_are_equal(): void
+    {
+        $declared = schema_exclude("USING btree (lower(name) WITH =) WHERE (status = 'active')");
+        $introspected = schema_exclude(
+            "USING btree (lower((name)::text) WITH =) WHERE (((status)::text = 'active'::text))",
+        );
+
+        static::assertTrue($declared->isEqualStructure($introspected));
+        static::assertSame(
+            "USING btree (lower((name)::text) WITH =) WHERE (((status)::text = 'active'::text))",
+            $introspected->definition,
+        );
+    }
+
     public function test_exclude_constraint_construction(): void
     {
         $exclude = schema_exclude('USING gist (tsrange WITH &&)');

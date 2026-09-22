@@ -22,6 +22,27 @@ final class OrderByTest extends TestCase
         }
     }
 
+    public function test_order_by_collate_is_supported(): void
+    {
+        static::assertCount(1, (new OrderBy(sql_parse('SELECT name FROM t ORDER BY name COLLATE "C"')))->all());
+    }
+
+    public function test_window_order_by_items_are_reported(): void
+    {
+        static::assertCount(
+            2,
+            (new OrderBy(sql_parse('SELECT a, row_number() OVER (ORDER BY b) FROM t ORDER BY a')))->all(),
+        );
+    }
+
+    public function test_aggregate_order_by_collate_is_supported(): void
+    {
+        static::assertCount(
+            1,
+            (new OrderBy(sql_parse('SELECT string_agg(x, \',\' ORDER BY y COLLATE "C") FROM t')))->all(),
+        );
+    }
+
     public function test_all_returns_empty_for_query_without_order_by(): void
     {
         $orderBy = new OrderBy(sql_parse('SELECT * FROM users'));

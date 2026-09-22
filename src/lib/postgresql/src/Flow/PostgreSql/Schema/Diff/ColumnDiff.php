@@ -38,7 +38,7 @@ final readonly class ColumnDiff implements Diff
         // PostgreSQL cannot ALTER generated columns or identity — must drop and re-add
         if (
             $this->target->isGenerated !== $this->source->isGenerated
-            || $this->target->generationExpression !== $this->source->generationExpression
+            || $this->target->generationExpressionKey() !== $this->source->generationExpressionKey()
             || $this->target->isIdentity !== $this->source->isIdentity
             || $this->target->identityGeneration !== $this->source->identityGeneration
         ) {
@@ -115,7 +115,7 @@ final readonly class ColumnDiff implements Diff
     {
         return (
             $this->source->isGenerated !== $this->target->isGenerated
-            || $this->source->generationExpression !== $this->target->generationExpression
+            || $this->source->generationExpressionKey() !== $this->target->generationExpressionKey()
         );
     }
 

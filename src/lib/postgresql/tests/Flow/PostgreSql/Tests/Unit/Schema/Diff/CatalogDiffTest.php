@@ -6,13 +6,20 @@ namespace Flow\PostgreSql\Tests\Unit\Schema\Diff;
 
 use Flow\PostgreSql\Schema\Catalog;
 use Flow\PostgreSql\Schema\Diff\CatalogDiff;
+use Flow\PostgreSql\Schema\Diff\ColumnDiff;
 use Flow\PostgreSql\Schema\Diff\SchemaDiff;
+use Flow\PostgreSql\Schema\Diff\TableDiff;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
 use function count;
+use function Flow\PostgreSql\DSL\ast_view_dependency_resolver;
 use function Flow\PostgreSql\DSL\schema;
+use function Flow\PostgreSql\DSL\schema_column_bigint;
 use function Flow\PostgreSql\DSL\schema_column_integer;
 use function Flow\PostgreSql\DSL\schema_column_text;
+use function Flow\PostgreSql\DSL\schema_index;
+use function Flow\PostgreSql\DSL\schema_materialized_view;
 use function Flow\PostgreSql\DSL\schema_sequence;
 use function Flow\PostgreSql\DSL\schema_table;
 use function str_contains;
@@ -58,6 +65,43 @@ final class CatalogDiffTest extends TestCase
         static::assertStringContainsString('events_id_seq', $sqls[1]->toSql());
         static::assertStringContainsString('CREATE TABLE', $sqls[2]->toSql());
         static::assertStringContainsString('events', $sqls[2]->toSql());
+    }
+
+    public function test_dependent_materialized_view_index_emits_predicate(): void
+    {
+        $sourceTable = schema_table('orders', [schema_column_integer('id', false), schema_column_integer('total')]);
+        $targetTable = schema_table('orders', [schema_column_integer('id', false), schema_column_bigint('total')]);
+        $view = schema_materialized_view('mv_order_stats', 'SELECT * FROM orders', indexes: [schema_index(
+            'mv_order_stats_live',
+            ['id'],
+            unique: true,
+            predicate: 'total > 0',
+        )]);
+
+        $source = new Catalog([schema('public', tables: [$sourceTable], materializedViews: [$view])]);
+        $target = new Catalog([schema('public', tables: [$targetTable], materializedViews: [$view])]);
+
+        $diff = new CatalogDiff(
+            $source,
+            $target,
+            modifiedSchemas: [
+                new SchemaDiff($source->get('public'), $target->get('public'), modifiedTables: [
+                    new TableDiff($sourceTable, $targetTable, modifiedColumns: [new ColumnDiff(
+                        'public.orders',
+                        schema_column_integer('total'),
+                        schema_column_bigint('total'),
+                    )]),
+                ]),
+            ],
+            viewDependencyResolver: ast_view_dependency_resolver(),
+        );
+
+        $sqls = array_map(static fn($q) => $q->toSql(), $diff->generate());
+
+        static::assertSame(
+            'CREATE UNIQUE INDEX mv_order_stats_live ON public.mv_order_stats (id) WHERE total > 0',
+            $sqls[3],
+        );
     }
 
     public function test_delegates_to_schema_diff(): void

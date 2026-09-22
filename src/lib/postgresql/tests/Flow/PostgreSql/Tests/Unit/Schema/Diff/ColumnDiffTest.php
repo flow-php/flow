@@ -37,6 +37,20 @@ final class ColumnDiffTest extends TestCase
         );
     }
 
+    public function test_generated_column_emits_declared_expression(): void
+    {
+        $diff = new ColumnDiff(
+            'public.t',
+            new Column('g', ColumnType::text(), true),
+            new Column('g', ColumnType::text(), true, isGenerated: true, generationExpression: 'lower(i::text)'),
+        );
+
+        static::assertSame(
+            'ALTER TABLE public.t ADD COLUMN g pg_catalog.text GENERATED ALWAYS AS (lower(i::text)) STORED',
+            $diff->generate()[1]->toSql(),
+        );
+    }
+
     public function test_adds_identity_column(): void
     {
         $diff = new ColumnDiff(

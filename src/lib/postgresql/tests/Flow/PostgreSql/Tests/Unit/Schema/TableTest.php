@@ -331,6 +331,44 @@ final class TableTest extends TestCase
         );
     }
 
+    public function test_to_sql_emits_partial_index_predicate(): void
+    {
+        $sqls = schema_table(
+            't',
+            [schema_column('email', column_type_text()), schema_column('deleted_at', column_type_timestamptz())],
+            indexes: [schema_index('t_email_live', ['email'], unique: true, predicate: 'deleted_at IS NULL')],
+        )->toSql();
+
+        static::assertCount(2, $sqls);
+        static::assertSame(
+            'CREATE UNIQUE INDEX t_email_live ON public.t (email) WHERE deleted_at IS NULL',
+            $sqls[1]->toSql(),
+        );
+    }
+
+    public function test_to_sql_emits_trigger_when_condition(): void
+    {
+        $sqls = schema_table(
+            't',
+            [schema_column('i', column_type_integer())],
+            triggers: [schema_trigger(
+                't_trg',
+                't',
+                TriggerTiming::BEFORE,
+                [TriggerEvent::UPDATE],
+                'trg_noop_fn',
+                true,
+                'NEW.i > 0',
+            )],
+        )->toSql();
+
+        static::assertCount(2, $sqls);
+        static::assertSame(
+            'CREATE TRIGGER t_trg BEFORE UPDATE ON public.t FOR EACH ROW WHEN (new.i > 0) EXECUTE FUNCTION public.trg_noop_fn()',
+            $sqls[1]->toSql(),
+        );
+    }
+
     public function test_to_sql_with_all_constraint_types(): void
     {
         $sqls = schema_table(
@@ -366,7 +404,7 @@ final class TableTest extends TestCase
         );
         static::assertSame('CREATE INDEX idx_orders_user_id ON public.orders (user_id)', $sqls[1]->toSql());
         static::assertSame(
-            'CREATE TRIGGER trg_audit AFTER INSERT ON public.orders EXECUTE FUNCTION audit_function()',
+            'CREATE TRIGGER trg_audit AFTER INSERT ON public.orders EXECUTE FUNCTION public.audit_function()',
             $sqls[2]->toSql(),
         );
     }
@@ -712,11 +750,11 @@ final class TableTest extends TestCase
 
         static::assertCount(3, $sqls);
         static::assertSame(
-            'CREATE TRIGGER trg_before BEFORE INSERT ON public.users FOR EACH ROW EXECUTE FUNCTION before_func()',
+            'CREATE TRIGGER trg_before BEFORE INSERT ON public.users FOR EACH ROW EXECUTE FUNCTION public.before_func()',
             $sqls[1]->toSql(),
         );
         static::assertSame(
-            'CREATE TRIGGER trg_after AFTER UPDATE ON public.users EXECUTE FUNCTION after_func()',
+            'CREATE TRIGGER trg_after AFTER UPDATE ON public.users EXECUTE FUNCTION public.after_func()',
             $sqls[2]->toSql(),
         );
     }
@@ -829,7 +867,7 @@ final class TableTest extends TestCase
 
         static::assertCount(2, $sqls);
         static::assertSame(
-            'CREATE TRIGGER trg_audit AFTER INSERT ON public.users EXECUTE FUNCTION audit_function()',
+            'CREATE TRIGGER trg_audit AFTER INSERT ON public.users EXECUTE FUNCTION public.audit_function()',
             $sqls[1]->toSql(),
         );
     }
@@ -855,7 +893,7 @@ final class TableTest extends TestCase
 
         static::assertCount(2, $sqls);
         static::assertSame(
-            'CREATE TRIGGER trg_prevent_delete BEFORE DELETE ON public.users FOR EACH ROW EXECUTE FUNCTION prevent_delete_func()',
+            'CREATE TRIGGER trg_prevent_delete BEFORE DELETE ON public.users FOR EACH ROW EXECUTE FUNCTION public.prevent_delete_func()',
             $sqls[1]->toSql(),
         );
     }
@@ -882,7 +920,7 @@ final class TableTest extends TestCase
 
         static::assertCount(2, $sqls);
         static::assertSame(
-            'CREATE TRIGGER trg_update_timestamp BEFORE UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION update_timestamp()',
+            'CREATE TRIGGER trg_update_timestamp BEFORE UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION public.update_timestamp()',
             $sqls[1]->toSql(),
         );
     }
@@ -908,7 +946,7 @@ final class TableTest extends TestCase
 
         static::assertCount(2, $sqls);
         static::assertSame(
-            'CREATE TRIGGER trg_view_insert INSTEAD OF INSERT ON public.users_view FOR EACH ROW EXECUTE FUNCTION insert_to_users()',
+            'CREATE TRIGGER trg_view_insert INSTEAD OF INSERT ON public.users_view FOR EACH ROW EXECUTE FUNCTION public.insert_to_users()',
             $sqls[1]->toSql(),
         );
     }
@@ -934,7 +972,7 @@ final class TableTest extends TestCase
 
         static::assertCount(2, $sqls);
         static::assertSame(
-            'CREATE TRIGGER trg_audit AFTER INSERT OR UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION audit_function()',
+            'CREATE TRIGGER trg_audit AFTER INSERT OR UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION public.audit_function()',
             $sqls[1]->toSql(),
         );
     }
@@ -953,7 +991,7 @@ final class TableTest extends TestCase
 
         static::assertCount(2, $sqls);
         static::assertSame(
-            'CREATE TRIGGER trg_statement AFTER INSERT ON public.users EXECUTE FUNCTION process_batch()',
+            'CREATE TRIGGER trg_statement AFTER INSERT ON public.users EXECUTE FUNCTION public.process_batch()',
             $sqls[1]->toSql(),
         );
     }

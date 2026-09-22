@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\Client;
 
+use Flow\PostgreSql\Client\Exception\QueryException;
 use Flow\PostgreSql\Client\Exception\TransactionException;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 use RuntimeException;
@@ -153,6 +154,31 @@ final class TransactionTest extends PostgreSqlTestCase
             ->client()
             ->fetchScalarInt(select(agg_count())->from(table('test_transaction')));
         static::assertSame(0, $count);
+    }
+
+    public function test_failed_savepoint_keeps_outer_transaction(): void
+    {
+        $client = $this->pgsqlContext()->client();
+        $client->beginTransaction();
+
+        try {
+            $client->execute('SELECT 1/0');
+            static::fail('division by zero must fail');
+        } catch (QueryException) {
+        }
+
+        try {
+            $client->beginTransaction();
+            static::fail('SAVEPOINT in an aborted transaction must fail');
+        } catch (TransactionException) {
+        }
+
+        static::assertSame(1, $client->getTransactionNestingLevel());
+
+        $client->rollBack();
+
+        static::assertSame(0, $client->getTransactionNestingLevel());
+        static::assertSame(1, $client->fetchScalarInt('SELECT 1'));
     }
 
     public function test_multiple_operations_in_transaction(): void

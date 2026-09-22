@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Parser;
 
+use function array_map;
+
 final readonly class ParsedExcludeDefinition
 {
     /**
@@ -16,6 +18,20 @@ final readonly class ParsedExcludeDefinition
         public bool $deferrable,
         public bool $initiallyDeferred,
     ) {}
+
+    public function normalized(ExpressionParser $parser): self
+    {
+        return new self(
+            $this->accessMethod,
+            array_map(static fn(array $element): array => [
+                'expression' => $parser->normalize($element['expression']),
+                'operator' => $element['operator'],
+            ], $this->elements),
+            $this->predicate !== null ? $parser->normalize($this->predicate) : null,
+            $this->deferrable,
+            $this->initiallyDeferred,
+        );
+    }
 
     public function equals(self $other): bool
     {

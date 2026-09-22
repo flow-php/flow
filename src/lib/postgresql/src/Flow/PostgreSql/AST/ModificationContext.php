@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\AST;
 
 use Flow\PostgreSql\Protobuf\AST\ParseResult;
+use Google\Protobuf\Internal\Message;
 
 use function count;
 
@@ -17,8 +18,8 @@ use function count;
 final readonly class ModificationContext
 {
     /**
-     * @param array<object> $ancestors Stack of parent nodes (from root to immediate parent)
-     * @param int $depth Current depth in the AST (1-based, root statements are at depth 1)
+     * @param list<Message> $ancestors Messages from the root statement down to the parent, excluding Node wrappers
+     * @param int $depth Current depth in the AST: root statements are at 1, +1 per message edge
      * @param ParseResult $parseResult The full parsed AST for context-aware operations
      */
     public function __construct(
@@ -28,7 +29,7 @@ final readonly class ModificationContext
     ) {}
 
     /**
-     * @return array<object>
+     * @return list<Message>
      */
     public function ancestors(): array
     {
@@ -45,7 +46,7 @@ final readonly class ModificationContext
         return $this->depth === 1;
     }
 
-    public function parent(): ?object
+    public function parent(): ?Message
     {
         return $this->ancestors[count($this->ancestors) - 1] ?? null;
     }

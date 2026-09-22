@@ -39,6 +39,7 @@ use Flow\PostgreSql\QueryBuilder\Expression\ArrayExpression;
 use Flow\PostgreSql\QueryBuilder\Expression\BinaryExpression;
 use Flow\PostgreSql\QueryBuilder\Expression\CaseExpression;
 use Flow\PostgreSql\QueryBuilder\Expression\Coalesce;
+use Flow\PostgreSql\QueryBuilder\Expression\Collate;
 use Flow\PostgreSql\QueryBuilder\Expression\Column;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 use Flow\PostgreSql\QueryBuilder\Expression\FunctionCall;
@@ -529,6 +530,18 @@ function least(string|Expression ...$expressions): Least
 function cast(string|Expression $expr, ColumnType $dataType): TypeCast
 {
     return new TypeCast($expr instanceof Expression ? $expr : col($expr), $dataType);
+}
+
+/**
+ * Create a COLLATE expression.
+ *
+ * @param Expression|string $expr Expression to collate
+ * @param string $collation Collation name as written in SQL: 'C', '"de_DE"', 'pg_catalog."C"'
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function collate(string|Expression $expr, string $collation): Collate
+{
+    return new Collate($expr instanceof Expression ? $expr : col($expr), $collation);
 }
 
 /**

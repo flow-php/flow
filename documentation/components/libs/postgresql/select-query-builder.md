@@ -177,7 +177,7 @@ echo $query->toSql();
 <?php
 
 use function Flow\PostgreSql\DSL\{
-    select, star, table, col, asc, desc, order_by
+    select, star, table, col, asc, desc, order_by, collate
 };
 
 use Flow\PostgreSql\QueryBuilder\Clause\{SortDirection, NullsPosition};
@@ -211,6 +211,14 @@ $query = select(star())
 
 echo $query->toSql();
 // SELECT * FROM products ORDER BY price ASC NULLS FIRST, name DESC NULLS LAST
+
+// COLLATE - the collation is written as in SQL: 'C', '"de_DE"', 'pg_catalog."C"'
+$query = select(star())
+    ->from(table('users'))
+    ->orderBy(asc(collate(col('name'), 'C')));
+
+echo $query->toSql();
+// SELECT * FROM users ORDER BY name COLLATE "C" ASC
 ```
 
 ## LIMIT and OFFSET

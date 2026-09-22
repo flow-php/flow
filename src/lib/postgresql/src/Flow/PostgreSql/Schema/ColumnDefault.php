@@ -72,7 +72,7 @@ final readonly class ColumnDefault
             }
         }
 
-        return new self((new ExpressionParser())->normalize($expression), null, DefaultKind::EXPRESSION);
+        return new self($expression, null, DefaultKind::EXPRESSION);
     }
 
     /**
@@ -114,7 +114,9 @@ final readonly class ColumnDefault
         }
 
         if ($this->kind === DefaultKind::EXPRESSION) {
-            return $this->literal === $other->literal;
+            $parser = new ExpressionParser();
+
+            return $parser->normalize($this->literal) === $parser->normalize($other->literal);
         }
 
         return (

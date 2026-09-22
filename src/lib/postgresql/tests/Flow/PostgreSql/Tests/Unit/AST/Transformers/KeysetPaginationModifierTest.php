@@ -241,6 +241,19 @@ final class KeysetPaginationModifierTest extends TestCase
         static::assertSame($expectedSql, $parsed->deparse());
     }
 
+    public function test_cursor_parameter_skips_user_parameters_in_hidden_positions(): void
+    {
+        $parsed = sql_parse('SELECT id FROM t WHERE $1 IN (SELECT x FROM u) ORDER BY id');
+        $parsed->traverse(new KeysetPaginationModifier(
+            new KeysetPaginationConfig(10, [sql_keyset_column('id', SortOrder::ASC)], [5]),
+        ));
+
+        static::assertSame(
+            'SELECT id FROM t WHERE $1 IN (SELECT x FROM u) AND id > $2 ORDER BY id LIMIT 10',
+            $parsed->deparse(),
+        );
+    }
+
     public function test_keyset_pagination_config_default_cursor(): void
     {
         $columns = [sql_keyset_column('id', SortOrder::ASC)];
@@ -265,6 +278,71 @@ final class KeysetPaginationModifierTest extends TestCase
         static::assertSame(10, $config->limit);
         static::assertSame($columns, $config->columns);
         static::assertSame($cursor, $config->cursor);
+    }
+
+    public function test_set_operation_cursor_skips_limit_parameter(): void
+    {
+        $parsed = sql_parse('SELECT id FROM t WHERE a = $1 UNION SELECT id FROM u');
+        $parsed->traverse(new KeysetPaginationModifier(
+            new KeysetPaginationConfig(param(2), [sql_keyset_column('id', SortOrder::ASC)], [5]),
+        ));
+
+        static::assertSame(
+            'SELECT * FROM (SELECT id FROM t WHERE a = $1 UNION SELECT id FROM u) _keyset_subq WHERE id > $3 ORDER BY id ASC LIMIT $2',
+            $parsed->deparse(),
+        );
+    }
+
+    public function test_set_operation_first_page_is_wrapped(): void
+    {
+        $parsed = sql_parse('SELECT id FROM t UNION SELECT id FROM u ORDER BY id');
+        $parsed->traverse(new KeysetPaginationModifier(new KeysetPaginationConfig(10, [sql_keyset_column(
+            'id',
+            SortOrder::ASC,
+        )])));
+
+        static::assertSame(
+            'SELECT * FROM (SELECT id FROM t UNION SELECT id FROM u ORDER BY id) _keyset_subq ORDER BY id LIMIT 10',
+            $parsed->deparse(),
+        );
+    }
+
+    public function test_set_operation_is_wrapped_with_cursor(): void
+    {
+        $parsed = sql_parse('SELECT id FROM t UNION SELECT id FROM u ORDER BY id');
+        $parsed->traverse(new KeysetPaginationModifier(
+            new KeysetPaginationConfig(10, [sql_keyset_column('id', SortOrder::ASC)], [5]),
+        ));
+
+        static::assertSame(
+            'SELECT * FROM (SELECT id FROM t UNION SELECT id FROM u ORDER BY id) _keyset_subq WHERE id > $1 ORDER BY id LIMIT 10',
+            $parsed->deparse(),
+        );
+    }
+
+    public function test_set_operation_rejects_qualified_keyset_column(): void
+    {
+        $this->expectException(PaginationException::class);
+        $this->expectExceptionMessage(
+            'Keyset column "t.id" is qualified; a UNION/INTERSECT/EXCEPT result exposes only unqualified column names',
+        );
+
+        sql_parse('SELECT id FROM t UNION SELECT id FROM u')->traverse(new KeysetPaginationModifier(
+            new KeysetPaginationConfig(10, [sql_keyset_column('t.id', SortOrder::ASC)], [5]),
+        ));
+    }
+
+    public function test_set_operation_without_order_by_orders_by_keyset(): void
+    {
+        $parsed = sql_parse('SELECT id FROM t UNION SELECT id FROM u');
+        $parsed->traverse(new KeysetPaginationModifier(
+            new KeysetPaginationConfig(10, [sql_keyset_column('id', SortOrder::DESC)], [5]),
+        ));
+
+        static::assertSame(
+            'SELECT * FROM (SELECT id FROM t UNION SELECT id FROM u) _keyset_subq WHERE id < $1 ORDER BY id DESC LIMIT 10',
+            $parsed->deparse(),
+        );
     }
 
     public function test_throws_when_cursor_count_mismatch(): void

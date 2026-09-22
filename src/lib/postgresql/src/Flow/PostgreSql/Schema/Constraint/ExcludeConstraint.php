@@ -13,6 +13,8 @@ use Flow\PostgreSql\Parser\ParsedExcludeDefinition;
  */
 final readonly class ExcludeConstraint
 {
+    private ParsedExcludeDefinition $comparisonKey;
+
     private ParsedExcludeDefinition $parsed;
 
     public function __construct(
@@ -20,6 +22,7 @@ final readonly class ExcludeConstraint
         public ?string $name = null,
     ) {
         $this->parsed = (new ExcludeDefinitionParser(new ExpressionParser()))->parse($definition);
+        $this->comparisonKey = $this->parsed->normalized(new ExpressionParser());
     }
 
     /**
@@ -37,7 +40,7 @@ final readonly class ExcludeConstraint
 
     public function isEqualStructure(self $other): bool
     {
-        return $this->parsed->equals($other->parsed);
+        return $this->comparisonKey->equals($other->comparisonKey);
     }
 
     /**

@@ -37,6 +37,17 @@ final class ParsedQueryTest extends TestCase
         }
     }
 
+    public function test_columns_include_excluded_pseudo_table(): void
+    {
+        $columns = sql_query_columns(sql_parse(
+            'INSERT INTO t (name) VALUES (1) ON CONFLICT (name) DO UPDATE SET name = excluded.name',
+        ))->all();
+
+        static::assertCount(1, $columns);
+        static::assertSame('excluded', $columns[0]->table());
+        static::assertSame('name', $columns[0]->name());
+    }
+
     public function test_columns_filtered_by_table(): void
     {
         $result = sql_parse('SELECT u.id, o.order_date FROM users u JOIN orders o ON u.id = o.user_id');
@@ -301,6 +312,46 @@ final class ParsedQueryTest extends TestCase
 
         static::assertCount(2, $result->statements());
         static::assertFalse($result->statements()->isSingle());
+    }
+
+    public function test_tables_include_ctas_target(): void
+    {
+        static::assertSame(
+            ['t', 'x'],
+            array_map(
+                static fn(Table $t) => $t->name(),
+                sql_query_tables(sql_parse('CREATE TABLE x AS SELECT * FROM t'))->all(),
+            ),
+        );
+    }
+
+    public function test_tables_include_view_name_and_select_into_target(): void
+    {
+        static::assertSame(
+            ['v', 'src'],
+            array_map(
+                static fn(Table $t) => $t->name(),
+                sql_query_tables(sql_parse('CREATE VIEW v AS SELECT a FROM src'))->all(),
+            ),
+        );
+        static::assertSame(
+            ['new_t', 'src'],
+            array_map(
+                static fn(Table $t) => $t->name(),
+                sql_query_tables(sql_parse('SELECT a INTO new_t FROM src'))->all(),
+            ),
+        );
+    }
+
+    public function test_tables_repeat_locked_relation(): void
+    {
+        static::assertSame(
+            ['t', 'u', 't'],
+            array_map(
+                static fn(Table $t) => $t->name(),
+                sql_query_tables(sql_parse('SELECT * FROM t JOIN u ON true FOR UPDATE OF t'))->all(),
+            ),
+        );
     }
 
     public function test_tables_from_cte(): void

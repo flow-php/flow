@@ -12,6 +12,7 @@ use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\PostgreSql\DSL\agg_count;
 use function Flow\PostgreSql\DSL\binary_expr;
 use function Flow\PostgreSql\DSL\cast;
 use function Flow\PostgreSql\DSL\col;
@@ -117,6 +118,58 @@ final class PgSqlExplainTest extends PostgreSqlTestCase
                 'hasBuffers' => true,
             ],
         ];
+    }
+
+    public function test_explain_analyze_inside_open_transaction_keeps_it_usable(): void
+    {
+        $client = $this->pgsqlContext()->client();
+        $client->execute(
+            create()->temporaryTable('test_explain_open_txn')->column(column('id', column_type_integer())),
+        );
+
+        $client->beginTransaction();
+        $client->execute(insert()->into('test_explain_open_txn')->columns('id')->values(literal(1)));
+        $client->explain(insert()->into('test_explain_open_txn')->columns('id')->values(literal(2)));
+
+        static::assertSame(1, $client->getTransactionNestingLevel());
+
+        $client->commit();
+
+        static::assertSame(0, $client->getTransactionNestingLevel());
+        static::assertSame(1, $client->fetchScalarInt(select(agg_count())->from(table('test_explain_open_txn'))));
+    }
+
+    public function test_explain_analyze_of_insert_writes_no_row(): void
+    {
+        $client = $this->pgsqlContext()->client();
+        $client->execute(
+            create()->temporaryTable('test_explain_analyze_insert')->column(column('id', column_type_integer())),
+        );
+
+        $plan = $client->explain(insert()->into('test_explain_analyze_insert')->columns('id')->values(literal(1)));
+
+        static::assertNotNull($plan->executionTime());
+        static::assertSame(0, $client->getTransactionNestingLevel());
+        static::assertSame(0, $client->fetchScalarInt(select(agg_count())->from(table('test_explain_analyze_insert'))));
+    }
+
+    public function test_explain_estimate_of_insert_writes_no_row(): void
+    {
+        $client = $this->pgsqlContext()->client();
+        $client->execute(
+            create()->temporaryTable('test_explain_estimate_insert')->column(column('id', column_type_integer())),
+        );
+
+        $plan = $client->explain(
+            insert()->into('test_explain_estimate_insert')->columns('id')->values(literal(1)),
+            config: ExplainConfig::forEstimate(),
+        );
+
+        static::assertNull($plan->executionTime());
+        static::assertSame(
+            0,
+            $client->fetchScalarInt(select(agg_count())->from(table('test_explain_estimate_insert'))),
+        );
     }
 
     public function test_explain_for_estimate(): void

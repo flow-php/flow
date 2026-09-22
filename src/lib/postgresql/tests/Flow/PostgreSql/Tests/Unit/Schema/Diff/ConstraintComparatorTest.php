@@ -284,6 +284,16 @@ final class ConstraintComparatorTest extends TestCase
         static::assertSame('fk_user', $result->removed[0]->name);
     }
 
+    public function test_unnamed_checks_are_keyed_by_normalised_expression(): void
+    {
+        $result = (new ConstraintComparator())->diffCheckConstraints([new CheckConstraint(
+            "((status)::text = 'active'::text)",
+        )], [new CheckConstraint("status = 'active'")]);
+
+        static::assertSame([], $result->added);
+        static::assertSame([], $result->removed);
+    }
+
     public function test_unique_constraint_added(): void
     {
         $comparator = new ConstraintComparator();

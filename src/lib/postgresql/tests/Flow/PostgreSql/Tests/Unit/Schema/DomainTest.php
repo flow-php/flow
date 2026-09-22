@@ -36,7 +36,8 @@ final class DomainTest extends TestCase
         static::assertFalse($domain->nullable);
         static::assertSame('0', $domain->default?->literal);
         static::assertCount(1, $domain->checkConstraints);
-        static::assertSame('value > 0', $domain->checkConstraints[0]->expression);
+        static::assertSame('VALUE > 0', $domain->checkConstraints[0]->expression);
+        static::assertSame('value > 0', $domain->checkConstraints[0]->expressionKey());
     }
 
     public function test_to_sql_generates_create_domain(): void

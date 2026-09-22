@@ -11,8 +11,6 @@ use Flow\PostgreSql\QueryBuilder\Schema\Constraint\CheckConstraint as CheckConst
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\ForeignKeyConstraint;
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\PrimaryKeyConstraint;
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\UniqueConstraint as UniqueConstraintBuilder;
-use Flow\PostgreSql\QueryBuilder\Schema\Index\IndexMethod as QbIndexMethod;
-use Flow\PostgreSql\QueryBuilder\Schema\Trigger\TriggerEvent as QbTriggerEvent;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\Constraint\CheckConstraint;
 use Flow\PostgreSql\Schema\Constraint\ExcludeConstraint;
@@ -469,42 +467,11 @@ final readonly class Table
         $sqls[] = $tableBuilder;
 
         foreach ($this->indexes as $idx) {
-            $builder = create()->index($idx->name);
-
-            if ($idx->unique) {
-                $builder = $builder->unique();
-            }
-
-            $onBuilder = $builder->on($this->name, $this->schema);
-
-            if ($idx->method !== IndexMethod::BTREE) {
-                $onBuilder = $onBuilder->using(QbIndexMethod::from($idx->method->value));
-            }
-
-            $sqls[] = $onBuilder->columns(...$idx->columns);
+            $sqls[] = $idx->toSql($this->name, $this->schema);
         }
 
         foreach ($this->triggers as $trigger) {
-            $qbEvents = array_map(
-                static fn(TriggerEvent $e): QbTriggerEvent => QbTriggerEvent::{$e->name},
-                $trigger->events,
-            );
-
-            $triggerBuilder = create()->trigger($trigger->name);
-
-            $onStep = match ($trigger->timing) {
-                TriggerTiming::BEFORE => $triggerBuilder->before(...$qbEvents),
-                TriggerTiming::AFTER => $triggerBuilder->after(...$qbEvents),
-                TriggerTiming::INSTEAD_OF => $triggerBuilder->insteadOf(...$qbEvents),
-            };
-
-            $optionsStep = $onStep->on($this->name, $this->schema);
-
-            if ($trigger->forEachRow) {
-                $optionsStep = $optionsStep->forEachRow();
-            }
-
-            $sqls[] = $optionsStep->execute($trigger->functionName);
+            $sqls[] = $trigger->withFunctionSchema($this->schema)->toSql($this->name, $this->schema);
         }
 
         return $sqls;

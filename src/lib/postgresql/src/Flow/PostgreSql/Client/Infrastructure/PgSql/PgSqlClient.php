@@ -163,12 +163,19 @@ final class PgSqlClient implements Client
         $savepointName = $this->transactionContext->begin();
 
         if ($savepointName === null) {
-            $this->executeTransactionCommand(begin(), TransactionException::beginFailed(...));
+            $this->executeTransactionCommandOrReset(begin(), TransactionException::beginFailed(...));
         } else {
-            $this->executeTransactionCommand(
-                savepoint($savepointName),
-                static fn(string $error) => TransactionException::savepointFailed($savepointName, $error),
-            );
+            try {
+                $this->executeTransactionCommand(
+                    savepoint($savepointName),
+                    static fn(string $error) => TransactionException::savepointFailed($savepointName, $error),
+                );
+            } catch (TransactionException $e) {
+                // only this level failed; the outer transaction stays open for the caller to roll back
+                $this->transactionContext->rollBack();
+
+                throw $e;
+            }
         }
     }
 
@@ -187,9 +194,9 @@ final class PgSqlClient implements Client
         $savepointName = $this->transactionContext->commit();
 
         if ($savepointName === null) {
-            $this->executeTransactionCommand(commit(), TransactionException::commitFailed(...));
+            $this->executeTransactionCommandOrReset(commit(), TransactionException::commitFailed(...));
         } else {
-            $this->executeTransactionCommand(
+            $this->executeTransactionCommandOrReset(
                 release_savepoint($savepointName),
                 static fn(string $error) => TransactionException::releaseSavepointFailed($savepointName, $error),
             );
@@ -259,9 +266,17 @@ final class PgSqlClient implements Client
         $parsed->traverse(new ExplainModifier($config));
         $explainQuery = $parsed->deparse();
 
-        $jsonOutput = $this->fetchScalarString($explainQuery, $parameters);
+        if (!$config->analyze) {
+            return (new ExplainParser())->parse($this->fetchScalarString($explainQuery, $parameters));
+        }
 
-        return (new ExplainParser())->parse($jsonOutput);
+        $this->beginTransaction();
+
+        try {
+            return (new ExplainParser())->parse($this->fetchScalarString($explainQuery, $parameters));
+        } finally {
+            $this->rollBack();
+        }
     }
 
     public function fetch(Sql|string $sql, array $parameters = []): ?array
@@ -482,9 +497,9 @@ final class PgSqlClient implements Client
         $savepointName = $this->transactionContext->rollBack();
 
         if ($savepointName === null) {
-            $this->executeTransactionCommand(rollback(), TransactionException::rollbackFailed(...));
+            $this->executeTransactionCommandOrReset(rollback(), TransactionException::rollbackFailed(...));
         } else {
-            $this->executeTransactionCommand(
+            $this->executeTransactionCommandOrReset(
                 rollback()->toSavepoint($savepointName),
                 static fn(string $error) => TransactionException::rollbackToSavepointFailed($savepointName, $error),
             );
@@ -689,7 +704,7 @@ final class PgSqlClient implements Client
     }
 
     /**
-     * @param callable(string): \Throwable $exceptionFactory
+     * @param callable(string): TransactionException $exceptionFactory
      */
     private function executeTransactionCommand(Sql $query, callable $exceptionFactory): void
     {
@@ -699,12 +714,24 @@ final class PgSqlClient implements Client
         $result = @pg_query($connection, $query->toSql());
 
         if ($result === false) {
-            $this->transactionContext->reset();
-
             throw $exceptionFactory(pg_last_error($connection) ?: 'Unknown error');
         }
 
         pg_free_result($result);
+    }
+
+    /**
+     * @param callable(string): TransactionException $exceptionFactory
+     */
+    private function executeTransactionCommandOrReset(Sql $query, callable $exceptionFactory): void
+    {
+        try {
+            $this->executeTransactionCommand($query, $exceptionFactory);
+        } catch (TransactionException $e) {
+            $this->transactionContext->reset();
+
+            throw $e;
+        }
     }
 
     private function extractError(Connection $connection, ?Result $result): PostgreSqlError

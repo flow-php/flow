@@ -423,6 +423,37 @@ final class TableComparatorTest extends TestCase
         static::assertCount(1, $diff->removedTriggers);
     }
 
+    public function test_trigger_function_in_other_schema_is_a_change(): void
+    {
+        $comparator = new TableComparator(
+            new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new ConstraintComparator(),
+            new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+        );
+        $source = schema_table(
+            't',
+            [schema_column_integer('id', false)],
+            triggers: [
+                schema_trigger('trg', 't', TriggerTiming::AFTER, [TriggerEvent::INSERT], 's.fn'),
+            ],
+            schema: 's',
+        );
+        $target = schema_table(
+            't',
+            [schema_column_integer('id', false)],
+            triggers: [
+                schema_trigger('trg', 't', TriggerTiming::AFTER, [TriggerEvent::INSERT], 'other.fn'),
+            ],
+            schema: 's',
+        );
+
+        $diff = $comparator->compare($source, $target);
+
+        static::assertCount(1, $diff->addedTriggers);
+        static::assertSame('other.fn', $diff->addedTriggers[0]->functionName);
+        static::assertCount(1, $diff->removedTriggers);
+    }
+
     public function test_trigger_changed_timing(): void
     {
         $comparator = new TableComparator(
@@ -449,6 +480,36 @@ final class TableComparatorTest extends TestCase
 
         static::assertCount(1, $diff->addedTriggers);
         static::assertCount(1, $diff->removedTriggers);
+    }
+
+    public function test_unqualified_trigger_function_matches_catalog_qualified_name(): void
+    {
+        $comparator = new TableComparator(
+            new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            new ConstraintComparator(),
+            new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+        );
+        $source = schema_table(
+            't',
+            [schema_column_integer('id', false)],
+            triggers: [
+                schema_trigger('trg', 't', TriggerTiming::AFTER, [TriggerEvent::INSERT], 's.fn'),
+            ],
+            schema: 's',
+        );
+        $target = schema_table(
+            't',
+            [schema_column_integer('id', false)],
+            triggers: [
+                schema_trigger('trg', 't', TriggerTiming::AFTER, [TriggerEvent::INSERT], 'fn'),
+            ],
+            schema: 's',
+        );
+
+        $diff = $comparator->compare($source, $target);
+
+        static::assertSame([], $diff->addedTriggers);
+        static::assertSame([], $diff->removedTriggers);
     }
 
     public function test_trigger_changed_when_condition(): void

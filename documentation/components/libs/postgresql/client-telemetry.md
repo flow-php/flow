@@ -111,7 +111,7 @@ All query methods are traced with individual spans:
 - `fetchScalar()`, `fetchScalarInt()`, `fetchScalarString()`, etc.
 - `fetchInto()`, `fetchOneInto()`, `fetchAllInto()` - Object mapping queries
 - `execute()` - INSERT, UPDATE, DELETE operations
-- `explain()` - Query plan analysis
+- `explain()` - Query plan analysis; the BEGIN/SAVEPOINT/ROLLBACK it runs internally for ANALYZE get no span
 
 Span names follow the pattern: `{OPERATION} {table}` (e.g., `SELECT users`)
 

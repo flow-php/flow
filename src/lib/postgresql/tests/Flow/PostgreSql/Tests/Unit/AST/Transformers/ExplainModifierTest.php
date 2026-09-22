@@ -4,16 +4,40 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\AST\Transformers;
 
+use Flow\PostgreSql\AST\Nodes\Exception\InvalidStatementException;
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
 use Flow\PostgreSql\QueryBuilder\Utility\ExplainFormat;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 use function extension_loaded;
 use function Flow\PostgreSql\DSL\sql_explain_config;
+use function Flow\PostgreSql\DSL\sql_explain_modifier;
+use function Flow\PostgreSql\DSL\sql_parse;
 use function Flow\PostgreSql\DSL\sql_to_explain;
+use function sprintf;
 
 final class ExplainModifierTest extends TestCase
 {
+    public static function explainableStatements(): Generator
+    {
+        yield 'INSERT' => ['INSERT INTO t (a) VALUES (1)'];
+        yield 'UPDATE' => ['UPDATE t SET a = 1'];
+        yield 'DELETE' => ['DELETE FROM t'];
+        yield 'MERGE' => ['MERGE INTO t USING u ON t.id = u.id WHEN MATCHED THEN DELETE'];
+        yield 'CREATE TABLE AS' => ['CREATE TABLE x AS SELECT 1'];
+        yield 'EXECUTE' => ['EXECUTE p(1)'];
+        yield 'DECLARE' => ['DECLARE c CURSOR FOR SELECT 1'];
+    }
+
+    public static function nonExplainableStatements(): Generator
+    {
+        yield 'CREATE TABLE' => ['CREATE TABLE x (a int)', 'create_stmt'];
+        yield 'REFRESH MATERIALIZED VIEW' => ['REFRESH MATERIALIZED VIEW mv', 'refresh_mat_view_stmt'];
+        yield 'EXPLAIN' => ['EXPLAIN SELECT 1', 'explain_stmt'];
+    }
+
     protected function setUp(): void
     {
         if (!extension_loaded('pg_query')) {
@@ -78,6 +102,28 @@ final class ExplainModifierTest extends TestCase
         static::assertTrue($config->buffers);
         static::assertTrue($config->timing);
         static::assertSame(ExplainFormat::TEXT, $config->format);
+    }
+
+    #[DataProvider('nonExplainableStatements')]
+    public function test_rejects_non_explainable_statement(string $sql, string $statement): void
+    {
+        $this->expectException(InvalidStatementException::class);
+        $this->expectExceptionMessage(sprintf('EXPLAIN cannot explain a "%s" statement', $statement));
+
+        sql_to_explain($sql);
+    }
+
+    public function test_rejects_before_mutating_any_statement(): void
+    {
+        $query = sql_parse('SELECT 1; TRUNCATE t');
+
+        try {
+            $query->traverse(sql_explain_modifier(ExplainConfig::forAnalysis()));
+            static::fail('TRUNCATE must not be explained');
+        } catch (InvalidStatementException) {
+        }
+
+        static::assertSame('SELECT 1; TRUNCATE t', $query->deparse());
     }
 
     public function test_estimate_config(): void
@@ -170,6 +216,20 @@ final class ExplainModifierTest extends TestCase
             'EXPLAIN (ANALYZE, COSTS 1, BUFFERS 1, TIMING 1, SUMMARY 1, FORMAT "json") SELECT * FROM users WHERE id IN (SELECT user_id FROM orders)',
             $result,
         );
+    }
+
+    #[DataProvider('explainableStatements')]
+    public function test_wraps_every_explainable_statement(string $sql): void
+    {
+        static::assertStringStartsWith('EXPLAIN (', sql_to_explain($sql));
+    }
+
+    public function test_wraps_each_statement(): void
+    {
+        static::assertSame('EXPLAIN (COSTS 1, FORMAT "json") SELECT 1; EXPLAIN (COSTS 1, FORMAT "json") SELECT 2', sql_to_explain(
+            'SELECT 1; SELECT 2',
+            ExplainConfig::forEstimate(),
+        ));
     }
 
     public function test_wraps_select_with_explain_analyze(): void

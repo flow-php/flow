@@ -125,6 +125,10 @@ final class ExpressionFactory
             return SQLValueFunctionExpression::fromAst($node);
         }
 
+        if ($node->getCollateClause() !== null) {
+            return Collate::fromAst($node);
+        }
+
         throw UnsupportedNodeException::forNodeType('Unknown expression node type');
     }
 

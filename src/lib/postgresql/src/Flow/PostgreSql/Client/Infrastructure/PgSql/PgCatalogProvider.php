@@ -285,7 +285,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 $isIdentity,
                 $isIdentity ? IdentityGeneration::from($identity) : null,
                 $isGenerated,
-                $isGenerated && $defaultValue !== null ? $this->expressionParser->normalize($defaultValue) : null,
+                $isGenerated ? $defaultValue : null,
                 type_integer()->assert($row['ordinal_position']),
             );
         }
@@ -1115,12 +1115,14 @@ final readonly class PgCatalogProvider implements CatalogProvider
             type_mapper(type_structure([
                 'name' => type_string(),
                 'function_name' => type_string(),
+                'function_schema' => type_string(),
                 'type' => type_integer(),
                 'trigger_def' => type_string(),
             ])),
             select(
                 col('tgname', 't')->as('name'),
                 col('proname', 'p')->as('function_name'),
+                col('nspname', 'fn')->as('function_schema'),
                 col('tgtype', 't')->as('type'),
                 func('pg_catalog.pg_get_triggerdef', [col('oid', 't')])->as('trigger_def'),
             )
@@ -1128,6 +1130,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 ->join(table('pg_class', 'pg_catalog')->as('c'), eq(col('oid', 'c'), col('tgrelid', 't')))
                 ->join(table('pg_namespace', 'pg_catalog')->as('n'), eq(col('oid', 'n'), col('relnamespace', 'c')))
                 ->join(table('pg_proc', 'pg_catalog')->as('p'), eq(col('oid', 'p'), col('tgfoid', 't')))
+                ->join(table('pg_namespace', 'pg_catalog')->as('fn'), eq(col('oid', 'fn'), col('pronamespace', 'p')))
                 ->where(and_(
                     eq(col('relname', 'c'), param(1)),
                     eq(col('nspname', 'n'), param(2)),
@@ -1178,7 +1181,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 $tableName,
                 $timing,
                 $events,
-                type_string()->assert($row['function_name']),
+                type_string()->assert($row['function_schema']) . '.' . type_string()->assert($row['function_name']),
                 ($tgtype & 1) !== 0,
                 whenCondition: $this->triggerDefinitionParser->parseWhenClause(type_string()->assert(
                     $row['trigger_def'],

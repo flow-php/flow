@@ -14,6 +14,7 @@ use function Flow\PostgreSql\DSL\between;
 use function Flow\PostgreSql\DSL\cast;
 use function Flow\PostgreSql\DSL\coalesce;
 use function Flow\PostgreSql\DSL\col;
+use function Flow\PostgreSql\DSL\collate;
 use function Flow\PostgreSql\DSL\delete;
 use function Flow\PostgreSql\DSL\eq;
 use function Flow\PostgreSql\DSL\is_null;
@@ -73,6 +74,11 @@ final class StringCoercionTest extends TestCase
             select(cast(col('id'), ColumnType::integer()))->from(table('users'))->toSql(),
             select(cast('id', ColumnType::integer()))->from('users')->toSql(),
         );
+    }
+
+    public function test_collate_accepts_string_column(): void
+    {
+        static::assertSame('SELECT name COLLATE "C" FROM t', select(collate('name', 'C'))->from('t')->toSql());
     }
 
     public function test_coalesce_with_mixed_strings_in_select(): void

@@ -4,13 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema\Diff;
 
-use Flow\PostgreSql\QueryBuilder\Schema\Index\IndexMethod as QbIndexMethod;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\Index;
-use Flow\PostgreSql\Schema\IndexMethod;
 use Flow\PostgreSql\Schema\MaterializedView;
 
-use function Flow\PostgreSql\DSL\create;
 use function Flow\PostgreSql\DSL\drop;
 
 final readonly class MaterializedViewDiff implements Diff
@@ -47,19 +44,7 @@ final readonly class MaterializedViewDiff implements Diff
         }
 
         foreach ($this->addedIndexes as $idx) {
-            $builder = create()->index($idx->name);
-
-            if ($idx->unique) {
-                $builder = $builder->unique();
-            }
-
-            $onBuilder = $builder->on($this->target->name);
-
-            if ($idx->method !== IndexMethod::BTREE) {
-                $onBuilder = $onBuilder->using(QbIndexMethod::from($idx->method->value));
-            }
-
-            $sqls[] = $onBuilder->columns(...$idx->columns);
+            $sqls[] = $idx->toSql($this->target->name);
         }
 
         return $sqls;

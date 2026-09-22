@@ -12,17 +12,34 @@ use Flow\PostgreSql\AST\Visitors\ColumnRefCollector;
 use Flow\PostgreSql\AST\Visitors\FuncCallCollector;
 use Flow\PostgreSql\AST\Visitors\ParamRefCollector;
 use Flow\PostgreSql\AST\Visitors\RangeVarCollector;
+use Flow\PostgreSql\Exception\ParserException;
 use Flow\PostgreSql\Protobuf\AST\A_Const;
+use Flow\PostgreSql\Protobuf\AST\A_Expr;
 use Flow\PostgreSql\Protobuf\AST\ColumnRef;
+use Flow\PostgreSql\Protobuf\AST\InsertStmt;
 use Flow\PostgreSql\Protobuf\AST\Integer as PostgreSqlInteger;
+use Flow\PostgreSql\Protobuf\AST\IntoClause;
 use Flow\PostgreSql\Protobuf\AST\LimitOption;
 use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\OnConflictClause;
+use Flow\PostgreSql\Protobuf\AST\ParamRef;
 use Flow\PostgreSql\Protobuf\AST\ParseResult;
+use Flow\PostgreSql\Protobuf\AST\RangeSubselect;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
+use Flow\PostgreSql\Protobuf\AST\RawStmt;
+use Flow\PostgreSql\Protobuf\AST\ResTarget;
 use Flow\PostgreSql\Protobuf\AST\SelectStmt;
+use Flow\PostgreSql\Protobuf\AST\WindowDef;
+use Flow\PostgreSql\Protobuf\AST\WithClause;
+use Flow\PostgreSql\Tests\Mother\RemoveResTargetModifier;
+use Flow\PostgreSql\Tests\Mother\ReplaceColumnRefModifier;
+use Flow\PostgreSql\Tests\Mother\SelectStmtContextSpy;
 use PHPUnit\Framework\TestCase;
 
 use function array_map;
 use function extension_loaded;
+use function Flow\PostgreSql\DSL\sql_parse;
+use function iterator_to_array;
 use function pg_query_deparse;
 use function pg_query_parse;
 
@@ -35,6 +52,354 @@ final class TraverserTest extends TestCase
                 'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
             );
         }
+    }
+
+    public function test_ancestors_are_messages(): void
+    {
+        $spy = new SelectStmtContextSpy();
+
+        sql_parse('SELECT * FROM (SELECT 1) s')->traverse($spy);
+
+        static::assertSame([[], [SelectStmt::class, RangeSubselect::class]], $spy->ancestors);
+        static::assertSame([null, RangeSubselect::class], $spy->parents);
+    }
+
+    public function test_depth_counts_every_message_edge_in_cte(): void
+    {
+        $spy = new SelectStmtContextSpy();
+
+        sql_parse('WITH c AS (SELECT 1) SELECT * FROM c')->traverse($spy);
+
+        static::assertSame([1, 4], $spy->depths);
+    }
+
+    public function test_depth_counts_every_message_edge_in_set_operation(): void
+    {
+        $spy = new SelectStmtContextSpy();
+
+        sql_parse('SELECT 1 UNION SELECT 2')->traverse($spy);
+
+        static::assertSame([1, 2, 2], $spy->depths);
+    }
+
+    public function test_first_deciding_modifier_wins(): void
+    {
+        $replacing = new class implements NodeModifier {
+            public static function nodeClasses(): array
+            {
+                return [ResTarget::class];
+            }
+
+            public function modify(object $node, ModificationContext $context): Node
+            {
+                return (new Node())->setResTarget(new ResTarget());
+            }
+        };
+        $spy = new class implements NodeModifier {
+            public int $calls = 0;
+
+            public static function nodeClasses(): array
+            {
+                return [ResTarget::class];
+            }
+
+            public function modify(object $node, ModificationContext $context): null
+            {
+                $this->calls++;
+
+                return null;
+            }
+        };
+
+        sql_parse('SELECT a, b FROM t')->traverse($replacing, $spy);
+
+        static::assertSame(0, $spy->calls);
+    }
+
+    public function test_handlers_fire_for_messages_outside_node_wrappers(): void
+    {
+        $counter = new class implements NodeVisitor {
+            /**
+             * @var array<class-string, int>
+             */
+            public array $entered = [];
+
+            public static function nodeClasses(): array
+            {
+                return [WithClause::class, WindowDef::class, OnConflictClause::class, IntoClause::class];
+            }
+
+            public function enter(object $node): ?int
+            {
+                $this->entered[$node::class] = ($this->entered[$node::class] ?? 0) + 1;
+
+                return null;
+            }
+
+            public function leave(object $node): ?int
+            {
+                return null;
+            }
+        };
+
+        sql_parse('WITH c AS (SELECT 1 AS a) SELECT count(*) OVER (PARTITION BY a) INTO x FROM c')->traverse($counter);
+        sql_parse('INSERT INTO t (a) VALUES (1) ON CONFLICT (a) DO NOTHING')->traverse($counter);
+
+        static::assertSame(
+            [IntoClause::class => 1, WindowDef::class => 1, WithClause::class => 1, OnConflictClause::class => 1],
+            $counter->entered,
+        );
+    }
+
+    public function test_modifier_replaces_node_in_nested_positions(): void
+    {
+        static::assertSame(
+            'SELECT $99 FROM t WHERE $99 = 1',
+            sql_parse('SELECT a FROM t WHERE b = 1')->traverse(new ReplaceColumnRefModifier())->deparse(),
+        );
+    }
+
+    public function test_modifier_replaces_node_inside_set_operation_arms(): void
+    {
+        static::assertSame(
+            'SELECT $99 FROM t UNION SELECT $99 FROM u',
+            sql_parse('SELECT a FROM t UNION SELECT b FROM u')->traverse(new ReplaceColumnRefModifier())->deparse(),
+        );
+    }
+
+    public function test_modifier_replaces_node_inside_window_definition(): void
+    {
+        static::assertSame(
+            'SELECT count(*) OVER (PARTITION BY $99) FROM t',
+            sql_parse('SELECT count(*) OVER (PARTITION BY c) FROM t')
+                ->traverse(new ReplaceColumnRefModifier())
+                ->deparse(),
+        );
+    }
+
+    public function test_modifier_replaces_non_node_slot_with_same_class(): void
+    {
+        $modifier = new class implements NodeModifier {
+            public static function nodeClasses(): array
+            {
+                return [SelectStmt::class];
+            }
+
+            public function modify(object $node, ModificationContext $context): ?SelectStmt
+            {
+                $parent = $context->parent();
+
+                if (!$parent instanceof SelectStmt || $parent->getLarg() !== $node) {
+                    return null;
+                }
+
+                return sql_parse('SELECT 42')->raw()->getStmts()[0]->getStmt()?->getSelectStmt();
+            }
+        };
+
+        static::assertSame(
+            'SELECT 42 UNION SELECT 2',
+            sql_parse('SELECT 1 UNION SELECT 2')->traverse($modifier)->deparse(),
+        );
+    }
+
+    public function test_non_node_replacement_at_node_slot_throws(): void
+    {
+        $modifier = new class implements NodeModifier {
+            public static function nodeClasses(): array
+            {
+                return [ColumnRef::class];
+            }
+
+            public function modify(object $node, ModificationContext $context): ParamRef
+            {
+                return (new ParamRef())->setNumber(99);
+            }
+        };
+
+        $this->expectException(ParserException::class);
+
+        sql_parse('SELECT a FROM t')->traverse($modifier);
+    }
+
+    public function test_removal_survives_a_later_stop(): void
+    {
+        $stop = new class implements NodeVisitor {
+            public static function nodeClasses(): array
+            {
+                return [ResTarget::class];
+            }
+
+            public function enter(object $node): ?int
+            {
+                /** @var ResTarget $node */
+                return $node->getName() === 'c' ? NodeVisitor::STOP_TRAVERSAL : null;
+            }
+
+            public function leave(object $node): ?int
+            {
+                return null;
+            }
+        };
+
+        static::assertSame(
+            'SELECT 1 AS a, 3 AS c',
+            sql_parse('SELECT 1 AS a, 2 AS b, 3 AS c')->traverse(new RemoveResTargetModifier('b'), $stop)->deparse(),
+        );
+    }
+
+    public function test_remove_node_drops_element_from_list(): void
+    {
+        static::assertSame(
+            'SELECT 1 AS a, 3 AS c',
+            sql_parse('SELECT 1 AS a, 2 AS b, 3 AS c')->traverse(new RemoveResTargetModifier('b'))->deparse(),
+        );
+    }
+
+    public function test_remove_node_on_single_slot_throws_before_visitors(): void
+    {
+        $remove = new class implements NodeModifier {
+            public static function nodeClasses(): array
+            {
+                return [RangeVar::class];
+            }
+
+            public function modify(object $node, ModificationContext $context): int
+            {
+                return NodeModifier::REMOVE_NODE;
+            }
+        };
+        $spy = new class implements NodeVisitor {
+            public int $entered = 0;
+
+            public static function nodeClasses(): array
+            {
+                return [RangeVar::class];
+            }
+
+            public function enter(object $node): ?int
+            {
+                $this->entered++;
+
+                return null;
+            }
+
+            public function leave(object $node): ?int
+            {
+                return null;
+            }
+        };
+
+        try {
+            sql_parse('INSERT INTO t VALUES (1)')->traverse($remove, $spy);
+            static::fail('REMOVE_NODE on a single slot must throw');
+        } catch (ParserException $exception) {
+            static::assertSame(
+                'REMOVE_NODE is allowed only in a list, ' . InsertStmt::class . '::Relation is a single node',
+                $exception->getMessage(),
+            );
+        }
+
+        static::assertSame(0, $spy->entered);
+    }
+
+    public function test_replaced_node_is_not_seen_by_later_handlers(): void
+    {
+        $collector = new ColumnRefCollector();
+
+        sql_parse('SELECT a FROM t WHERE b = 1')->traverse(new ReplaceColumnRefModifier(), $collector);
+
+        static::assertCount(0, $collector->getColumnRefs());
+    }
+
+    public function test_replacement_of_wrong_class_throws(): void
+    {
+        $modifier = new class implements NodeModifier {
+            public static function nodeClasses(): array
+            {
+                return [SelectStmt::class];
+            }
+
+            public function modify(object $node, ModificationContext $context): ?Node
+            {
+                return $context->depth() === 2 ? new Node() : null;
+            }
+        };
+
+        $this->expectException(ParserException::class);
+        $this->expectExceptionMessage(Node::class . ' cannot replace a node in ' . SelectStmt::class . '::Larg');
+
+        sql_parse('SELECT 1 UNION SELECT 2')->traverse($modifier);
+    }
+
+    public function test_replacement_survives_a_later_stop(): void
+    {
+        $stop = new class implements NodeVisitor {
+            public static function nodeClasses(): array
+            {
+                return [A_Const::class];
+            }
+
+            public function enter(object $node): int
+            {
+                return NodeVisitor::STOP_TRAVERSAL;
+            }
+
+            public function leave(object $node): ?int
+            {
+                return null;
+            }
+        };
+
+        static::assertSame(
+            'SELECT $99 FROM t WHERE b = 1',
+            sql_parse('SELECT a FROM t WHERE b = 1')->traverse(new ReplaceColumnRefModifier('a'), $stop)->deparse(),
+        );
+    }
+
+    public function test_skips_raw_statement_without_statement(): void
+    {
+        $collector = new RangeVarCollector();
+        $parseResult = sql_parse('SELECT a FROM t')->raw();
+        $parseResult->setStmts([new RawStmt(), ...iterator_to_array($parseResult->getStmts())]);
+
+        (new Traverser($collector))->traverse($parseResult);
+
+        static::assertSame(
+            ['t'],
+            array_map(static fn(RangeVar $rangeVar): string => $rangeVar->getRelname(), $collector->getRangeVars()),
+        );
+    }
+
+    public function test_visit_order_follows_descriptor_order(): void
+    {
+        $collector = new RangeVarCollector();
+
+        sql_parse('SELECT (SELECT x FROM a) FROM b')->traverse($collector);
+
+        static::assertSame(
+            ['a', 'b'],
+            array_map(static fn(RangeVar $rangeVar): string => $rangeVar->getRelname(), $collector->getRangeVars()),
+        );
+    }
+
+    public function test_walks_a_hand_built_five_thousand_deep_expression(): void
+    {
+        $expression = (new Node())->setParamRef((new ParamRef())->setNumber(1));
+
+        for ($i = 0; $i < 5000; $i++) {
+            $expression = (new Node())->setAExpr((new A_Expr())->setLexpr($expression));
+        }
+
+        $collector = new ParamRefCollector();
+
+        (new Traverser(
+            $collector,
+        ))->traverse((new ParseResult())->setStmts([(new RawStmt())->setStmt((new Node())->setSelectStmt((new SelectStmt())->setTargetList([
+            (new Node())->setResTarget((new ResTarget())->setVal($expression)),
+        ])))]));
+
+        static::assertCount(1, $collector->getParamRefs());
     }
 
     public function test_column_ref_collector(): void
@@ -273,6 +638,34 @@ final class TraverserTest extends TestCase
 
         $funcname = $collector->getFuncCalls()[0]->getFuncname();
         static::assertCount(2, $funcname);
+    }
+
+    public function test_leave_can_stop_traversal(): void
+    {
+        $visitor = new class implements NodeVisitor {
+            public int $entered = 0;
+
+            public static function nodeClasses(): array
+            {
+                return [ColumnRef::class];
+            }
+
+            public function enter(object $node): ?int
+            {
+                $this->entered++;
+
+                return null;
+            }
+
+            public function leave(object $node): int
+            {
+                return NodeVisitor::STOP_TRAVERSAL;
+            }
+        };
+
+        sql_parse('SELECT a, b FROM t')->traverse($visitor);
+
+        static::assertSame(1, $visitor->entered);
     }
 
     public function test_modifier_can_mutate_node_in_place(): void

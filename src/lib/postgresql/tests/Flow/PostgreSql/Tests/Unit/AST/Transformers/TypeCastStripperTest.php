@@ -21,6 +21,16 @@ final class TypeCastStripperTest extends TestCase
         }
     }
 
+    public function test_strips_casts_in_sublink_test_window_and_collate(): void
+    {
+        static::assertSame('a + 1 IN (SELECT y FROM t)', $this->normalize('(a::int + 1) IN (SELECT y FROM t)'));
+        static::assertSame(
+            'sum(x) OVER (PARTITION BY lower(y))',
+            $this->normalize('sum(x::int) OVER (PARTITION BY lower(y::text))'),
+        );
+        static::assertSame('lower(x) COLLATE "C"', $this->normalize('lower(x::text) COLLATE "C"'));
+    }
+
     public function test_strip_array_expression(): void
     {
         static::assertSame("ARRAY['a', 'b']", $this->normalize("ARRAY['a'::text, 'b'::text]"));

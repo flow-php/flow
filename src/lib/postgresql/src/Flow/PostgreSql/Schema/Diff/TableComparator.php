@@ -10,6 +10,7 @@ use Flow\PostgreSql\Schema\Table;
 use Flow\PostgreSql\Schema\Trigger;
 
 use function array_diff;
+use function array_map;
 use function array_values;
 use function sort;
 
@@ -77,7 +78,10 @@ final readonly class TableComparator
             $source->excludeConstraints,
             $target->excludeConstraints,
         );
-        $triggers = $this->diffTriggers($source->triggers, $target->triggers);
+        $triggers = $this->diffTriggers(
+            array_map(static fn(Trigger $t): Trigger => $t->withFunctionSchema($source->schema), $source->triggers),
+            array_map(static fn(Trigger $t): Trigger => $t->withFunctionSchema($target->schema), $target->triggers),
+        );
 
         $partitionChanged =
             $source->partitionStrategy !== $target->partitionStrategy

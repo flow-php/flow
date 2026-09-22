@@ -109,7 +109,7 @@ final readonly class ExcludeDefinitionParser
             return null;
         }
 
-        return $this->expressionParser->normalizeNode($where);
+        return $this->expressionParser->deparseNode($where);
     }
 
     private function resolveElementExpression(Node $elementNode): string
@@ -136,7 +136,7 @@ final readonly class ExcludeDefinitionParser
             );
         }
 
-        return $this->expressionParser->normalizeNode($expr);
+        return $this->expressionParser->deparseNode($expr);
     }
 
     private function resolveOperator(Node $operatorNode): string
