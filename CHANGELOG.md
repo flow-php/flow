@@ -1,6 +1,9 @@
 ## [Unreleased] - 2026-09-22
 
 ### Added
+- [#2648](https://github.com/flow-php/flow/pull/2648) - **flow-php/postgresql - collate() expression and COLLATE support in the query builder** - [@norberttech](https://github.com/norberttech)
+- [#2648](https://github.com/flow-php/flow/pull/2648) - **flow-php/postgresql - NodeModifier::REMOVE_NODE removes nodes from lists** - [@norberttech](https://github.com/norberttech)
+- [#2648](https://github.com/flow-php/flow/pull/2648) - **flow-php/postgresql - Index::toSql() and Trigger::toSql()** - [@norberttech](https://github.com/norberttech)
 - [#2647](https://github.com/flow-php/flow/pull/2647) - **flow-php/etl - Extractor::statistics(): every source declares its rows and bytes as a Cardinality** - [@norberttech](https://github.com/norberttech)
 - [#2647](https://github.com/flow-php/flow/pull/2647) - **flow-php/etl - physical explain() prints the statistics of every source** - [@norberttech](https://github.com/norberttech)
 - [#2647](https://github.com/flow-php/flow/pull/2647) - **flow-php/etl - analyze()->withSourceStatistics() reports declared vs. read rows per source** - [@norberttech](https://github.com/norberttech)
@@ -32,6 +35,10 @@
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/cli - ProgressBarLoader advancing a progress bar per batch** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2648](https://github.com/flow-php/flow/pull/2648) - **flow-php/postgresql - ModificationContext ancestors are messages and depth counts every message edge** - [@norberttech](https://github.com/norberttech)
+- [#2648](https://github.com/flow-php/flow/pull/2648) - **flow-php/postgresql - extractors report nodes from every clause, in PostgreSQL walker order** - [@norberttech](https://github.com/norberttech)
+- [#2648](https://github.com/flow-php/flow/pull/2648) - **flow-php/postgresql - ExplainModifier handles ParseResult and rejects non-explainable statements** - [@norberttech](https://github.com/norberttech)
+- [#2648](https://github.com/flow-php/flow/pull/2648) - **flow-php/postgresql - schema objects keep the declared text and compare through normalised keys** - [@norberttech](https://github.com/norberttech)
 - [#2647](https://github.com/flow-php/flow/pull/2647) - **flow-php/etl - existing .floe files must be rewritten for the new footer** - [@norberttech](https://github.com/norberttech)
 - [#2647](https://github.com/flow-php/flow/pull/2647) - **flow-php/etl - Report constructor takes the source statistics of the run** - [@norberttech](https://github.com/norberttech)
 - [#2647](https://github.com/flow-php/flow/pull/2647) - **flow-php/etl - cache index stores the row count of every entry** - [@norberttech](https://github.com/norberttech)
@@ -55,6 +62,12 @@
 - [#2635](https://github.com/flow-php/flow/pull/2635) - **flow-php/parquet - reader and writer row types widened to array-key.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2648](https://github.com/flow-php/flow/pull/2648) - **flow-php/postgresql - AST traversal visits every node and applies nested replacements** - [@norberttech](https://github.com/norberttech)
+- [#2648](https://github.com/flow-php/flow/pull/2648) - **flow-php/postgresql - keyset pagination over UNION/INTERSECT/EXCEPT keeps the cursor condition** - [@norberttech](https://github.com/norberttech)
+- [#2648](https://github.com/flow-php/flow/pull/2648) - **flow-php/postgresql - explain() never executes writes, ANALYZE is always rolled back** - [@norberttech](https://github.com/norberttech)
+- [#2648](https://github.com/flow-php/flow/pull/2648) - **flow-php/postgresql - schema DDL emits declared expressions, index predicates and trigger WHEN conditions** - [@norberttech](https://github.com/norberttech)
+- [#2648](https://github.com/flow-php/flow/pull/2648) - **flow-php/postgresql - schema-qualified trigger functions no longer drift against the catalog** - [@norberttech](https://github.com/norberttech)
+- [#2648](https://github.com/flow-php/flow/pull/2648) - **flow-php/postgresql - a failed SAVEPOINT keeps the outer transaction usable** - [@norberttech](https://github.com/norberttech)
 - [#2645](https://github.com/flow-php/flow/pull/2645) - **flow-php/etl-adapter-csv - escaped or bare enclosure no longer merges a record with the next line** - [@norberttech](https://github.com/norberttech)
 - [#2645](https://github.com/flow-php/flow/pull/2645) - **flow-php/etl-adapter-csv - record boundaries on huge records survive the PCRE backtrack limit** - [@norberttech](https://github.com/norberttech)
 - [#2645](https://github.com/flow-php/flow/pull/2645) - **flow-php/flow-php-ext - reference values no longer leak into natively hydrated rows** - [@norberttech](https://github.com/norberttech)
@@ -70,6 +83,8 @@
 - [#2635](https://github.com/flow-php/flow/pull/2635) - **flow-php/etl - chained rename strategies no longer desync rows from the schema on numeric entry names.** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2648](https://github.com/flow-php/flow/pull/2648) - **flow-php/postgresql - NodeVisitor::REMOVE_NODE** - [@norberttech](https://github.com/norberttech)
+- [#2648](https://github.com/flow-php/flow/pull/2648) - **flow-php/postgresql - ExpressionParser::normalizeNode()** - [@norberttech](https://github.com/norberttech)
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - Pipeline, Pipeline\Optimizer and both its optimizations** - [@norberttech](https://github.com/norberttech)
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - retry: RetryLoader, RetryStrategy, DelayFactory, Sleep and Duration** - [@norberttech](https://github.com/norberttech)
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - loader decorators BranchingLoader, OverridingLoader, TransformerLoader and LoaderTree** - [@norberttech](https://github.com/norberttech)
