@@ -295,6 +295,7 @@ For detailed information about specific DataFrame operations, see the following 
 - **[Partitioning](/documentation/components/core/partitioning.md)** - Data partitioning for efficient processing
 - **[Caching](/documentation/components/core/caching.md)** - Performance optimization through caching
 - **[Floe File Format](/documentation/components/core/floe.md)** - Flow's native self-describing binary row format
+- **[Source Statistics](/documentation/components/core/statistics.md)** - What a source declares about its rows and bytes before it is read
 - **[Data Retrieval](/documentation/components/core/data-retrieval.md)** - Methods for getting processed data
 
 ### Data Quality & Validation

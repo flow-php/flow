@@ -183,10 +183,10 @@ final class StatisticsCollectorTest extends FlowTestCase
         $sources = $collector->sources();
         static::assertNotNull($sources);
 
-        iterator_to_array($sources->count($extractor, $extractor->extract(flow_context())));
+        iterator_to_array($sources->count($extractor, $extractor->extract(flow_context()), false));
 
         static::assertEquals(
-            [new SourceStatistics('ArrayExtractor', new Statistics(Cardinality::exact(2)), 2)],
+            [new SourceStatistics('ArrayExtractor', new Statistics(Cardinality::exact(2)), 2, true)],
             $collector->report()?->sources(),
         );
     }

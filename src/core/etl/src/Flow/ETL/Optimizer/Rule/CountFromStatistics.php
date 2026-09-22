@@ -31,12 +31,10 @@ final readonly class CountFromStatistics implements Rule
             return $plan;
         }
 
-        $rows = $read->extractor()->statistics()->rows;
+        $rows = $read->extractor()->statistics()->rows->exactly();
 
-        if ($rows->atMost === null || $rows->atMost !== $rows->estimate || $rows->relativeError !== 0.0) {
-            return $plan;
-        }
-
-        return new LogicalPlan(new Result(new Read(from_rows((new CountingProcessor())->rows($rows->atMost)))));
+        return $rows === null
+            ? $plan
+            : new LogicalPlan(new Result(new Read(from_rows((new CountingProcessor())->rows($rows)))));
     }
 }

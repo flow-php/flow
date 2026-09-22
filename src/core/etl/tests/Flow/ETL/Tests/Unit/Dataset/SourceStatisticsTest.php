@@ -28,6 +28,7 @@ final class SourceStatisticsTest extends FlowTestCase
                 'Source',
                 new Statistics(Cardinality::approximately($estimate)),
                 $measured,
+                true,
             ))->rowsError(),
             0.000_001,
         );
@@ -37,25 +38,34 @@ final class SourceStatisticsTest extends FlowTestCase
     {
         static::assertSame(
             0.0,
-            (new SourceStatistics('Source', new Statistics(Cardinality::exact(5)), 5))->rowsError(),
+            (new SourceStatistics('Source', new Statistics(Cardinality::exact(5)), 5, true))->rowsError(),
+        );
+    }
+
+    public function test_an_incomplete_read_has_no_error(): void
+    {
+        static::assertNull(
+            (new SourceStatistics('Source', new Statistics(Cardinality::exact(100)), 10, false))->rowsError(),
         );
     }
 
     public function test_there_is_no_error_without_declared_rows(): void
     {
-        static::assertNull((new SourceStatistics('Source', new Statistics(), 5))->rowsError());
+        static::assertNull((new SourceStatistics('Source', new Statistics(), 5, true))->rowsError());
     }
 
     public function test_an_upper_bound_alone_has_no_error(): void
     {
-        static::assertNull((new SourceStatistics('Source', new Statistics(Cardinality::atMost(10)), 5))->rowsError());
+        static::assertNull(
+            (new SourceStatistics('Source', new Statistics(Cardinality::atMost(10)), 5, true))->rowsError(),
+        );
     }
 
     public function test_an_estimate_of_zero_against_zero_rows_has_no_error(): void
     {
         static::assertSame(
             0.0,
-            (new SourceStatistics('Source', new Statistics(Cardinality::approximately(0)), 0))->rowsError(),
+            (new SourceStatistics('Source', new Statistics(Cardinality::approximately(0)), 0, true))->rowsError(),
         );
     }
 
@@ -63,7 +73,7 @@ final class SourceStatisticsTest extends FlowTestCase
     {
         static::assertSame(
             INF,
-            (new SourceStatistics('Source', new Statistics(Cardinality::approximately(500)), 0))->rowsError(),
+            (new SourceStatistics('Source', new Statistics(Cardinality::approximately(500)), 0, true))->rowsError(),
         );
     }
 }

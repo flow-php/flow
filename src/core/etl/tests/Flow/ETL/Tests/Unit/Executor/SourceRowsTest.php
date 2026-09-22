@@ -27,11 +27,11 @@ final class SourceRowsTest extends FlowTestCase
         $extractor = from_array([['id' => 1], ['id' => 2], ['id' => 3]])->withBatchSize(2);
         $sources = new SourceRows();
 
-        $batches = iterator_to_array($sources->count($extractor, $extractor->extract(flow_context())), false);
+        $batches = iterator_to_array($sources->count($extractor, $extractor->extract(flow_context()), false), false);
 
         static::assertEquals(iterator_to_array($extractor->extract(flow_context()), false), $batches);
         static::assertEquals(
-            [new SourceStatistics('ArrayExtractor', new Statistics(Cardinality::exact(3)), 3)],
+            [new SourceStatistics('ArrayExtractor', new Statistics(Cardinality::exact(3)), 3, true)],
             $sources->statistics(),
         );
     }
@@ -44,7 +44,7 @@ final class SourceRowsTest extends FlowTestCase
         );
         $extractor->withBatchSize(1);
         $sources = new SourceRows();
-        $counted = $sources->count($extractor, $extractor->extract(flow_context()));
+        $counted = $sources->count($extractor, $extractor->extract(flow_context()), false);
 
         static::assertCount(1, $counted->current());
         $counted->send(Signal::STOP);
@@ -52,6 +52,47 @@ final class SourceRowsTest extends FlowTestCase
         static::assertFalse($counted->valid());
         static::assertSame(1, $extractor->batchesYielded);
         static::assertSame(1, $sources->statistics()[0]->rows);
+        static::assertFalse($sources->statistics()[0]->complete);
+    }
+
+    public function test_a_narrowed_read_is_not_complete(): void
+    {
+        $extractor = from_array([['id' => 1], ['id' => 2]]);
+        $sources = new SourceRows();
+
+        iterator_to_array($sources->count($extractor, $extractor->extract(flow_context()), true));
+
+        static::assertSame(2, $sources->statistics()[0]->rows);
+        static::assertFalse($sources->statistics()[0]->complete);
+    }
+
+    public function test_one_narrowed_read_makes_the_source_incomplete(): void
+    {
+        $extractor = from_array([['id' => 1]]);
+        $sources = new SourceRows();
+
+        iterator_to_array($sources->count($extractor, $extractor->extract(flow_context()), false));
+        iterator_to_array($sources->count($extractor, $extractor->extract(flow_context()), true));
+
+        static::assertFalse($sources->statistics()[0]->complete);
+    }
+
+    public function test_interleaved_reads_of_one_source_add_up(): void
+    {
+        $extractor = from_array([['id' => 1], ['id' => 2]])->withBatchSize(1);
+        $sources = new SourceRows();
+        $first = $sources->count($extractor, $extractor->extract(flow_context()), false);
+        $second = $sources->count($extractor, $extractor->extract(flow_context()), false);
+
+        $first->current();
+        iterator_to_array($second);
+        static::assertFalse($sources->statistics()[0]->complete);
+
+        $first->next();
+        $first->next();
+
+        static::assertSame(4, $sources->statistics()[0]->rows);
+        static::assertTrue($sources->statistics()[0]->complete);
     }
 
     public function test_a_source_read_twice_is_listed_once_with_both_counts(): void
@@ -59,8 +100,8 @@ final class SourceRowsTest extends FlowTestCase
         $extractor = from_array([['id' => 1], ['id' => 2]]);
         $sources = new SourceRows();
 
-        iterator_to_array($sources->count($extractor, $extractor->extract(flow_context())));
-        iterator_to_array($sources->count($extractor, $extractor->extract(flow_context())));
+        iterator_to_array($sources->count($extractor, $extractor->extract(flow_context()), false));
+        iterator_to_array($sources->count($extractor, $extractor->extract(flow_context()), false));
 
         static::assertCount(1, $sources->statistics());
         static::assertSame(4, $sources->statistics()[0]->rows);
@@ -72,8 +113,8 @@ final class SourceRowsTest extends FlowTestCase
         $second = from_array([['id' => 1], ['id' => 2]]);
         $sources = new SourceRows();
 
-        iterator_to_array($sources->count($second, $second->extract(flow_context())));
-        iterator_to_array($sources->count($first, $first->extract(flow_context())));
+        iterator_to_array($sources->count($second, $second->extract(flow_context()), false));
+        iterator_to_array($sources->count($first, $first->extract(flow_context()), false));
 
         static::assertSame([2, 1], [$sources->statistics()[0]->rows, $sources->statistics()[1]->rows]);
     }
@@ -83,7 +124,7 @@ final class SourceRowsTest extends FlowTestCase
         $extractor = from_array([]);
         $sources = new SourceRows();
 
-        iterator_to_array($sources->count($extractor, $extractor->extract(flow_context())));
+        iterator_to_array($sources->count($extractor, $extractor->extract(flow_context()), false));
 
         static::assertSame(0, $sources->statistics()[0]->rows);
     }
@@ -93,7 +134,7 @@ final class SourceRowsTest extends FlowTestCase
         $extractor = from_array([['id' => 1]]);
         $sources = new SourceRows();
 
-        $sources->count($extractor, $extractor->extract(flow_context()));
+        $sources->count($extractor, $extractor->extract(flow_context()), false);
 
         static::assertSame([], $sources->statistics());
     }

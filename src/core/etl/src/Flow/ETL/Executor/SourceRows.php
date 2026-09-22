@@ -15,35 +15,39 @@ use SplObjectStorage;
 final class SourceRows
 {
     /**
-     * @var SplObjectStorage<Extractor, int>
+     * @var SplObjectStorage<Extractor, SourceRead>
      */
-    private SplObjectStorage $rows;
+    private SplObjectStorage $reads;
 
     public function __construct()
     {
-        /** @var SplObjectStorage<Extractor, int> $rows */
-        $rows = new SplObjectStorage();
-        $this->rows = $rows;
+        /** @var SplObjectStorage<Extractor, SourceRead> $reads */
+        $reads = new SplObjectStorage();
+        $this->reads = $reads;
     }
 
     /**
      * Passes $batches through unchanged. A stop is forwarded and ends the count: the consumer that sent it reads no
-     * further batch.
+     * further batch, so that read never closes.
      *
      * @param Generator<int, Rows, null|Signal, void> $batches what $extractor yields
+     * @param bool $narrowed a limit or a partition filter was pushed into this read
      *
      * @return Generator<int, Rows, null|Signal, void>
      */
-    public function count(Extractor $extractor, Generator $batches): Generator
+    public function count(Extractor $extractor, Generator $batches, bool $narrowed): Generator
     {
-        if (!$this->rows->offsetExists($extractor)) {
-            $this->rows[$extractor] = 0;
+        if (!$this->reads->offsetExists($extractor)) {
+            $this->reads[$extractor] = new SourceRead();
         }
 
-        foreach ($batches as $rows) {
-            $this->rows[$extractor] += $rows->count();
+        $read = $this->reads[$extractor];
+        $read->opened($narrowed);
 
-            $signal = yield $rows;
+        foreach ($batches as $batch) {
+            $read->counted($batch->count());
+
+            $signal = yield $batch;
 
             if ($signal === Signal::STOP) {
                 $batches->send(Signal::STOP);
@@ -51,6 +55,8 @@ final class SourceRows
                 return;
             }
         }
+
+        $read->closed();
     }
 
     /**
@@ -60,11 +66,12 @@ final class SourceRows
     {
         $statistics = [];
 
-        foreach ($this->rows as $extractor) {
+        foreach ($this->reads as $extractor) {
             $statistics[] = new SourceStatistics(
                 (new ReflectionClass($extractor))->getShortName(),
                 $extractor->statistics(),
-                $this->rows[$extractor],
+                $this->reads[$extractor]->rows(),
+                $this->reads[$extractor]->isComplete(),
             );
         }
 

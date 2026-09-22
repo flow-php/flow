@@ -192,11 +192,28 @@ final class AnalyzeTest extends FlowIntegrationTestCase
         static::assertSame(2, $report->statistics()->totalRows());
         static::assertEquals(
             [
-                new SourceStatistics('ArrayExtractor', new Statistics(Cardinality::exact(3)), 3),
-                new SourceStatistics('ArrayExtractor', new Statistics(Cardinality::exact(4)), 4),
+                new SourceStatistics('ArrayExtractor', new Statistics(Cardinality::exact(3)), 3, true),
+                new SourceStatistics('ArrayExtractor', new Statistics(Cardinality::exact(4)), 4, true),
             ],
             $report->sources(),
         );
+    }
+
+    public function test_a_source_read_under_a_pushed_limit_reports_no_rows_error(): void
+    {
+        $report = df()
+            ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4]]))
+            ->limit(2)
+            ->run(analyze: analyze()->withSourceStatistics());
+
+        static::assertNotNull($report);
+        $sources = $report->sources();
+        static::assertNotNull($sources);
+        static::assertEquals(
+            [new SourceStatistics('ArrayExtractor', new Statistics(Cardinality::exact(4)), 4, false)],
+            $sources,
+        );
+        static::assertNull($sources[0]->rowsError());
     }
 
     public function test_run_explicit_analyze_overrides_config(): void

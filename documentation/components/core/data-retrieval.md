@@ -149,6 +149,17 @@ foreach ($report->sources() as $source) {
     echo $source->extractor;                // ParquetExtractor
     echo $source->declared->rows->estimate; // 20000 - extrapolated from the first footer
     echo $source->rows;                     // 29000 - read
-    echo $source->rowsError();              // 0.31 - |declared - read| / read, null without an estimate
+    echo $source->rowsError();              // 0.31 - |declared - read| / read
+}
+```
+
+`rowsError()` is null without an estimate, and for a read that did not cover the whole source - a pushed `limit()` or
+partition filter, or a read stopped early - since the declaration describes the whole source:
+
+```php
+<?php
+
+foreach ($report->sources() as $source) {
+    $source->complete;                      // false after a pushed limit() or a stopped read
 }
 ```

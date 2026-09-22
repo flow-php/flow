@@ -7,6 +7,8 @@ namespace Flow\ETL\Tests\Unit;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 use function str_repeat;
 use function strlen;
@@ -110,6 +112,36 @@ final class CardinalityTest extends FlowTestCase
     public function test_two_exact_counts_add_up_to_an_exact_count(): void
     {
         static::assertEquals(Cardinality::exact(30), Cardinality::exact(10)->merge(Cardinality::exact(20)));
+    }
+
+    public function test_an_exact_count_reads_back_exactly(): void
+    {
+        static::assertSame(10, Cardinality::exact(10)->exactly());
+        static::assertSame(0, Cardinality::exact(0)->exactly());
+    }
+
+    public static function inexact_counts(): Generator
+    {
+        yield 'approximate' => [Cardinality::approximately(10)];
+        yield 'approximate with no error, no bound' => [Cardinality::approximately(10, 0.0)];
+        yield 'estimate equal to its bound, with an error' => [new Cardinality(10, 10)];
+        yield 'estimate under its bound, no error' => [new Cardinality(10, 8, 0.0)];
+        yield 'upper bound alone' => [Cardinality::atMost(10)];
+        yield 'unknown' => [Cardinality::unknown()];
+    }
+
+    #[DataProvider('inexact_counts')]
+    public function test_a_count_that_is_not_exact_reads_back_as_null(Cardinality $cardinality): void
+    {
+        static::assertNull($cardinality->exactly());
+    }
+
+    public function test_only_a_count_with_neither_bound_nor_estimate_is_unknown(): void
+    {
+        static::assertTrue(Cardinality::unknown()->isUnknown());
+        static::assertFalse(Cardinality::atMost(10)->isUnknown());
+        static::assertFalse(Cardinality::approximately(10)->isUnknown());
+        static::assertFalse(Cardinality::exact(0)->isUnknown());
     }
 
     public function test_unknown_knows_nothing(): void

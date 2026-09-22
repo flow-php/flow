@@ -80,6 +80,23 @@ final readonly class Cardinality
         return $this->estimate !== null && $this->relativeError <= $maxRelativeError ? $this->estimate : null;
     }
 
+    /**
+     * The count when it is guaranteed and known exactly, null otherwise.
+     *
+     * @return null|int<0, max>
+     */
+    public function exactly(): ?int
+    {
+        return $this->atMost !== null && $this->atMost === $this->estimate && $this->relativeError === 0.0
+            ? $this->atMost
+            : null;
+    }
+
+    public function isUnknown(): bool
+    {
+        return $this->atMost === null && $this->estimate === null;
+    }
+
     public function merge(self $other): self
     {
         return new self(

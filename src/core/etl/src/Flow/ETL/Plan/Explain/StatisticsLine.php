@@ -18,7 +18,7 @@ final readonly class StatisticsLine
      */
     public function of(Statistics $statistics): ?string
     {
-        if ($this->isUnknown($statistics->rows) && $this->isUnknown($statistics->size)) {
+        if ($statistics->rows->isUnknown() && $statistics->size->isUnknown()) {
             return null;
         }
 
@@ -31,13 +31,14 @@ final readonly class StatisticsLine
     {
         $atMost = $cardinality->atMost;
         $estimate = $cardinality->estimate;
+        $exactly = $cardinality->exactly();
+
+        if ($exactly !== null) {
+            return 'exact ' . $this->number($exactly) . $unit;
+        }
 
         if ($estimate === null) {
             return $atMost === null ? 'unknown' : '≤ ' . $this->number($atMost) . $unit;
-        }
-
-        if ($atMost === $estimate && $cardinality->relativeError === 0.0) {
-            return 'exact ' . $this->number($estimate) . $unit;
         }
 
         $approximately = '~' . $this->number($estimate) . $unit . ' ±' . $this->percent($cardinality->relativeError);
@@ -57,10 +58,5 @@ final readonly class StatisticsLine
     public function number(int $number): string
     {
         return number_format($number, 0, '', ' ');
-    }
-
-    public function isUnknown(Cardinality $cardinality): bool
-    {
-        return $cardinality->atMost === null && $cardinality->estimate === null;
     }
 }
