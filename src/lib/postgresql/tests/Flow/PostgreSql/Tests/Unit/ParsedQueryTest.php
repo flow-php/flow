@@ -325,6 +325,14 @@ final class ParsedQueryTest extends TestCase
         );
     }
 
+    public function test_tables_include_dropped_relations(): void
+    {
+        $tables = sql_query_tables(sql_parse('DROP TABLE a, s.b'))->all();
+
+        static::assertSame(['a', 'b'], array_map(static fn(Table $t) => $t->name(), $tables));
+        static::assertSame([null, 's'], array_map(static fn(Table $t) => $t->schema(), $tables));
+    }
+
     public function test_tables_include_view_name_and_select_into_target(): void
     {
         static::assertSame(
@@ -343,30 +351,35 @@ final class ParsedQueryTest extends TestCase
         );
     }
 
-    public function test_tables_repeat_locked_relation(): void
+    public function test_tables_skip_locked_relation_names(): void
     {
         static::assertSame(
-            ['t', 'u', 't'],
+            ['t', 'u'],
             array_map(
                 static fn(Table $t) => $t->name(),
                 sql_query_tables(sql_parse('SELECT * FROM t JOIN u ON true FOR UPDATE OF t'))->all(),
             ),
         );
+        static::assertSame(
+            ['production'],
+            array_map(
+                static fn(Table $t) => $t->name(),
+                sql_query_tables(sql_parse('SELECT * FROM enriched.production p FOR UPDATE OF p'))->all(),
+            ),
+        );
     }
 
-    public function test_tables_from_cte(): void
+    public function test_tables_skip_cte_references(): void
     {
-        $result = sql_parse(
-            'WITH active_users AS (SELECT * FROM users WHERE active = true) SELECT * FROM active_users',
+        static::assertSame(
+            ['users'],
+            array_map(
+                static fn(Table $t) => $t->name(),
+                sql_query_tables(sql_parse(
+                    'WITH active_users AS (SELECT * FROM users WHERE active = true) SELECT * FROM active_users',
+                ))->all(),
+            ),
         );
-
-        $tables = sql_query_tables($result)->all();
-
-        static::assertCount(2, $tables);
-
-        $tableNames = array_map(static fn(Table $t) => $t->name(), $tables);
-        static::assertContains('users', $tableNames);
-        static::assertContains('active_users', $tableNames);
     }
 
     public function test_tables_from_delete(): void

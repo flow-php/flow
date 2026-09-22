@@ -25,9 +25,31 @@ final class ViewDependencyOrderTest extends TestCase
         (new ViewDependencyOrder(new Parser()))->order([$viewA, $viewB]);
     }
 
+    public function test_cte_name_is_not_a_dependency(): void
+    {
+        $a = new View('a', 'WITH b AS (SELECT 1 AS id) SELECT id FROM b');
+        $b = new View('b', 'WITH a AS (SELECT 1 AS id) SELECT id FROM a');
+
+        static::assertSame(
+            ['a', 'b'],
+            array_map(static fn(View $v) => $v->name, (new ViewDependencyOrder(new Parser()))->order([$a, $b])),
+        );
+    }
+
     public function test_empty_list(): void
     {
         static::assertSame([], (new ViewDependencyOrder(new Parser()))->order([]));
+    }
+
+    public function test_for_update_of_alias_is_not_a_dependency(): void
+    {
+        $a = new View('a', 'SELECT id FROM t b FOR UPDATE OF b');
+        $b = new View('b', 'SELECT id FROM t a FOR UPDATE OF a');
+
+        static::assertSame(
+            ['a', 'b'],
+            array_map(static fn(View $v) => $v->name, (new ViewDependencyOrder(new Parser()))->order([$a, $b])),
+        );
     }
 
     public function test_linear_chain(): void
