@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Extractors;
 
 use Flow\PostgreSql\AST\Nodes\Table;
-use Flow\PostgreSql\AST\Visitors\RangeVarCollector;
+use Flow\PostgreSql\AST\Visitors\RelationCollector;
 use Flow\PostgreSql\ParsedQuery;
 
 use function array_filter;
@@ -23,7 +23,7 @@ final readonly class Tables
      */
     public function all(): array
     {
-        $collector = new RangeVarCollector();
+        $collector = new RelationCollector();
         $this->query->traverse($collector);
 
         return array_values(array_filter(

@@ -25,9 +25,37 @@ final class MaterializedViewDependencyOrderTest extends TestCase
         (new MaterializedViewDependencyOrder(new Parser()))->order([$viewA, $viewB]);
     }
 
+    public function test_cte_name_is_not_a_dependency(): void
+    {
+        $a = new MaterializedView('a', 'WITH b AS (SELECT 1 AS id) SELECT id FROM b');
+        $b = new MaterializedView('b', 'WITH a AS (SELECT 1 AS id) SELECT id FROM a');
+
+        static::assertSame(
+            ['a', 'b'],
+            array_map(
+                static fn(MaterializedView $v) => $v->name,
+                (new MaterializedViewDependencyOrder(new Parser()))->order([$a, $b]),
+            ),
+        );
+    }
+
     public function test_empty_list(): void
     {
         static::assertSame([], (new MaterializedViewDependencyOrder(new Parser()))->order([]));
+    }
+
+    public function test_for_update_of_alias_is_not_a_dependency(): void
+    {
+        $a = new MaterializedView('a', 'SELECT id FROM t b FOR UPDATE OF b');
+        $b = new MaterializedView('b', 'SELECT id FROM t a FOR UPDATE OF a');
+
+        static::assertSame(
+            ['a', 'b'],
+            array_map(
+                static fn(MaterializedView $v) => $v->name,
+                (new MaterializedViewDependencyOrder(new Parser()))->order([$a, $b]),
+            ),
+        );
     }
 
     public function test_repeated_reference_is_not_a_cycle(): void

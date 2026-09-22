@@ -87,9 +87,10 @@ foreach (sql_query_functions($query)->all() as $func) {
 }
 ```
 
-Extractors report every node of their kind anywhere in the statement — DDL targets (`CREATE TABLE x AS …`,
-`CREATE VIEW v …`, `SELECT … INTO t`), `FOR UPDATE OF t`, `excluded.*`, window `ORDER BY` — so filter the result
-when you need only some of them.
+Extractors report every node of their kind anywhere in the statement - DDL targets (`CREATE TABLE x AS ...`,
+`CREATE VIEW v ...`, `SELECT ... INTO t`), `excluded.*`, window `ORDER BY` - so filter the result when you need only
+some of them. `sql_query_tables()` returns relations only: it skips CTE references and `FOR UPDATE OF` names, and
+includes the targets of `DROP`, `COMMENT ON`, `SECURITY LABEL` and `ALTER EXTENSION`.
 
 ### Parsing Utilities
 
@@ -574,6 +575,7 @@ Visitors declare which node types they handle via `nodeClasses()` (one or many).
 - `ColumnRefCollector` - collects all `ColumnRef` nodes
 - `FuncCallCollector` - collects all `FuncCall` nodes
 - `RangeVarCollector` - collects all `RangeVar` nodes
+- `RelationCollector` - collects a `RangeVar` per relation - skips CTE references and `FOR UPDATE OF` names, builds one for `DROP` / `COMMENT ON` targets
 
 ### Custom Modifiers
 

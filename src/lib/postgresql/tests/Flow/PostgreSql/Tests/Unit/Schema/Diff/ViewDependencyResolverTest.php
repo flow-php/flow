@@ -38,6 +38,38 @@ final class ViewDependencyResolverTest extends TestCase
         static::assertTrue($result->isEmpty());
     }
 
+    public function test_does_not_resolve_view_locking_same_named_table_of_other_schema(): void
+    {
+        $catalog = new Catalog([
+            schema('enriched', tables: [schema_table('production', [schema_column_integer('id', false)])]),
+            schema(
+                'public',
+                tables: [schema_table('production', [schema_column_integer('id', false)])],
+                views: [schema_view('locked', 'SELECT id FROM enriched.production FOR UPDATE OF production')],
+            ),
+        ]);
+
+        static::assertTrue(ast_view_dependency_resolver()->resolve($catalog, ['public.production'])->isEmpty());
+
+        $result = ast_view_dependency_resolver()->resolve($catalog, ['enriched.production']);
+
+        static::assertCount(1, $result->toDrop);
+        static::assertSame('public.locked', $result->toDrop[0]->qualifiedName());
+    }
+
+    public function test_does_not_resolve_view_whose_cte_shadows_modified_table(): void
+    {
+        $catalog = new Catalog([
+            schema(
+                'public',
+                tables: [schema_table('users', [schema_column_integer('id', false)])],
+                views: [schema_view('with_cte', 'WITH users AS (SELECT 1 AS id) SELECT id FROM users')],
+            ),
+        ]);
+
+        static::assertTrue(ast_view_dependency_resolver()->resolve($catalog, ['public.users'])->isEmpty());
+    }
+
     public function test_resolves_cascading_view_dependencies(): void
     {
         $catalog = new Catalog([
