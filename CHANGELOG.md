@@ -1,6 +1,8 @@
 ## [Unreleased] - 2026-09-22
 
 ### Added
+- [#2649](https://github.com/flow-php/flow/pull/2649) - **flow-php/postgresql - RelationCollector visitor collecting only relation references** - [@norberttech](https://github.com/norberttech)
+- [#2649](https://github.com/flow-php/flow/pull/2649) - **flow-php/postgresql - sql_query_tables() reports DROP / COMMENT ON / SECURITY LABEL / ALTER EXTENSION targets** - [@norberttech](https://github.com/norberttech)
 - [#2648](https://github.com/flow-php/flow/pull/2648) - **flow-php/postgresql - collate() expression and COLLATE support in the query builder** - [@norberttech](https://github.com/norberttech)
 - [#2648](https://github.com/flow-php/flow/pull/2648) - **flow-php/postgresql - NodeModifier::REMOVE_NODE removes nodes from lists** - [@norberttech](https://github.com/norberttech)
 - [#2648](https://github.com/flow-php/flow/pull/2648) - **flow-php/postgresql - Index::toSql() and Trigger::toSql()** - [@norberttech](https://github.com/norberttech)
@@ -62,6 +64,8 @@
 - [#2635](https://github.com/flow-php/flow/pull/2635) - **flow-php/parquet - reader and writer row types widened to array-key.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2649](https://github.com/flow-php/flow/pull/2649) - **flow-php/postgresql - sql_query_tables() no longer returns FOR UPDATE OF names and CTE references** - [@norberttech](https://github.com/norberttech)
+- [#2649](https://github.com/flow-php/flow/pull/2649) - **flow-php/postgresql - false circular view dependencies and false view drops in schema diffs** - [@norberttech](https://github.com/norberttech)
 - [#2648](https://github.com/flow-php/flow/pull/2648) - **flow-php/postgresql - AST traversal visits every node and applies nested replacements** - [@norberttech](https://github.com/norberttech)
 - [#2648](https://github.com/flow-php/flow/pull/2648) - **flow-php/postgresql - keyset pagination over UNION/INTERSECT/EXCEPT keeps the cursor condition** - [@norberttech](https://github.com/norberttech)
 - [#2648](https://github.com/flow-php/flow/pull/2648) - **flow-php/postgresql - explain() never executes writes, ANALYZE is always rolled back** - [@norberttech](https://github.com/norberttech)
