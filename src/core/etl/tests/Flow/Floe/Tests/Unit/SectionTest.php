@@ -24,11 +24,12 @@ final class SectionTest extends TestCase
         Section::fromArray(['offset' => '6', 'partitionsId' => 0, 'rowCount' => 1]);
     }
 
-    public function test_from_array_with_non_integer_partitions_id_throws(): void
+    public function test_an_unknown_section_key_is_ignored(): void
     {
-        $this->expectException(FloeException::class);
-
-        Section::fromArray(['offset' => 6, 'partitionsId' => '0', 'rowCount' => 1]);
+        static::assertEquals(
+            new Section(6, 1),
+            Section::fromArray(['offset' => 6, 'partitionsId' => '0', 'rowCount' => 1]),
+        );
     }
 
     public function test_normalize_round_trips(): void

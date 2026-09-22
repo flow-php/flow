@@ -68,6 +68,7 @@ pub struct Tokenizer {
     scan: Scan,
     finished: bool,
     first_record: bool,
+    last_record_bytes: usize,
 }
 
 impl Tokenizer {
@@ -81,6 +82,7 @@ impl Tokenizer {
             scan: Scan::FieldStart,
             finished: false,
             first_record: true,
+            last_record_bytes: 0,
         }
     }
 
@@ -96,6 +98,11 @@ impl Tokenizer {
 
     pub fn finish(&mut self) {
         self.finished = true;
+    }
+
+    /// The bytes the last record `next` returned took in the stream: line ending and BOM included.
+    pub fn last_record_bytes(&self) -> usize {
+        self.last_record_bytes
     }
 
     pub fn next(&mut self, record: &mut Record) -> bool {
@@ -129,6 +136,8 @@ impl Tokenizer {
             }
             None => return None,
         };
+
+        self.last_record_bytes = self.record_start - record.start;
 
         while record.end > record.start && matches!(self.buffer[record.end - 1], b'\r' | b'\n') {
             record.end -= 1;

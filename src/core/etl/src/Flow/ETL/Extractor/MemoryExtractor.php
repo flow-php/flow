@@ -107,4 +107,12 @@ final class MemoryExtractor implements BatchableExtractor, Extractor, InfersSche
 
         return $this;
     }
+
+    /**
+     * Declares nothing: ArrayMemory::save() is array_merge, so the row count can grow mid-run.
+     */
+    public function statistics(): Statistics
+    {
+        return new Statistics();
+    }
 }

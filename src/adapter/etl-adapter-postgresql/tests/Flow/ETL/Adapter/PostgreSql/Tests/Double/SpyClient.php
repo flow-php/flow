@@ -13,7 +13,10 @@ use Flow\PostgreSql\Client\Exception\QueryException;
 use Flow\PostgreSql\Client\Notification;
 use Flow\PostgreSql\Client\RowMapper;
 use Flow\PostgreSql\Client\Types\ValueConverters;
+use Flow\PostgreSql\Explain\Plan\Cost;
 use Flow\PostgreSql\Explain\Plan\Plan;
+use Flow\PostgreSql\Explain\Plan\PlanNode;
+use Flow\PostgreSql\Explain\Plan\PlanNodeType;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use RuntimeException;
@@ -50,6 +53,11 @@ final class SpyClient implements Client
 
     private int $scalarIntAnswer = 0;
 
+    private int $explainAnswer = 0;
+
+    /** @var list<array{sql: string, parameters: list<mixed>, config: null|ExplainConfig}> */
+    public array $explained = [];
+
     /** @var array<int, Throwable> */
     private array $executeFailures = [];
 
@@ -77,6 +85,16 @@ final class SpyClient implements Client
     public function willFailRollBack(Throwable $failure): self
     {
         $this->rollBackFailure = $failure;
+
+        return $this;
+    }
+
+    /**
+     * explain() answers with a root plan node estimating $rows.
+     */
+    public function willExplain(int $rows): self
+    {
+        $this->explainAnswer = $rows;
 
         return $this;
     }
@@ -198,7 +216,14 @@ final class SpyClient implements Client
 
     public function explain(Sql|string $sql, array $parameters = [], ?ExplainConfig $config = null): Plan
     {
-        throw new RuntimeException('SpyClient does not implement ' . __FUNCTION__);
+        $this->calls[] = 'explain';
+        $this->explained[] = [
+            'sql' => $sql instanceof Sql ? $sql->toSql() : $sql,
+            'parameters' => $parameters,
+            'config' => $config,
+        ];
+
+        return new Plan(new PlanNode(PlanNodeType::SEQ_SCAN, new Cost(0.0, 10.0), $this->explainAnswer, 8));
     }
 
     public function fetch(Sql|string $sql, array $parameters = []): ?array

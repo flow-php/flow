@@ -10,6 +10,7 @@ use Flow\ETL\Adapter\CSV\RustCSVReaderNative;
 use Flow\ETL\Adapter\CSV\Tests\Context\CSVFixtureContext;
 use Flow\ETL\Adapter\CSV\Tests\Double\LengthCapturingSourceStream;
 use Flow\ETL\Schema\Inference\InferredTypes;
+use Flow\ETL\Schema\Inference\SchemaInference;
 use Flow\ETL\Schema\Inference\SchemaInferrer;
 use Flow\ETL\Schema\Inference\TypeFloor;
 use Flow\ETL\Tests\Double\CountingFilesystem;
@@ -331,5 +332,57 @@ final class NativeCSVOpenSourceTest extends FlowTestCase
                 new LengthCapturingSourceStream('id,name', path('s3://bucket/a.csv')),
             )->columns(),
         );
+    }
+
+    public function test_produced_rows_and_bytes_exclude_the_header(): void
+    {
+        if (!NativeCSVOpenSource::isSupported()) {
+            static::markTestSkipped('flow_php extension with RustCSVReaderNative is not loaded');
+        }
+
+        $open = CSVFixtureContext::openNative('five_rows.csv');
+
+        try {
+            iterator_to_array($open->records(), false);
+
+            static::assertSame(5, $open->producedRows());
+            static::assertSame(20, $open->producedBytes());
+        } finally {
+            $open->close();
+        }
+    }
+
+    /**
+     * Samples that stop before EOF: SourceStream::readLines() hides whether the last line ended with "\n", so the PHP
+     * path counts a last record without one a byte longer than the native path does (CSVLineReader::lastRecordBytes()).
+     */
+    #[TestWith(['annual-enterprise-survey-2019-financial-year-provisional-csv.csv'])]
+    #[TestWith(['orders_flow.csv'])]
+    #[TestWith(['five_rows.csv'])]
+    #[TestWith(['fold_traps.csv'])]
+    #[TestWith(['ragged.csv'])]
+    public function test_php_and_native_paths_agree_on_bytes_per_row(string $fixture): void
+    {
+        if (!NativeCSVOpenSource::isSupported()) {
+            static::markTestSkipped('flow_php extension with RustCSVReaderNative is not loaded');
+        }
+
+        $header = CSVFixtureContext::openPhp($fixture);
+        $names = $header->columns();
+        $header->close();
+        $php = CSVFixtureContext::openPhp($fixture);
+        $native = CSVFixtureContext::openNative($fixture);
+        $typer = new StringTypeNarrower(infer_schema()->build()->candidates()->toArray());
+
+        try {
+            $php->sniff($names, 2, new SchemaInference(), $typer);
+            $native->sniff($names, 2, new SchemaInference(), $typer);
+
+            static::assertSame($php->producedRows(), $native->producedRows());
+            static::assertSame($php->producedBytes(), $native->producedBytes());
+        } finally {
+            $php->close();
+            $native->close();
+        }
     }
 }

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\Tests\Integration\JSONMachine;
 
+use Flow\ETL\Adapter\JSON\JSONMachine\JsonFileSample;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonFormat;
 use Flow\ETL\Adapter\JSON\Tests\Context\JsonFixtureContext;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
-use Generator;
 use JsonMachine\Exception\SyntaxErrorException;
 use JsonMachine\Items;
 use JsonMachine\JsonDecoder\ExtJsonDecoder;
@@ -268,7 +268,7 @@ final class JsonFileReaderTest extends FlowTestCase
         static::assertSame(2, $counting->closedStreams());
     }
 
-    public function test_samples_yields_one_unstarted_generator_per_source_in_listing_order(): void
+    public function test_samples_yields_one_unopened_sample_per_source_in_listing_order(): void
     {
         $counting = new CountingFilesystem(new NativeLocalFilesystem());
         $reader = JsonFixtureContext::reader(
@@ -280,12 +280,12 @@ final class JsonFileReaderTest extends FlowTestCase
         $samples = iterator_to_array($reader->samples(10), false);
         $beforeAdvance = $counting->readFromCalls;
 
-        $first = $samples[0]->current();
+        $first = $samples[0]->getIterator()->current();
         $afterAdvance = $counting->readFromCalls;
 
         static::assertCount(2, $samples);
-        static::assertContainsOnlyInstancesOf(Generator::class, $samples);
-        static::assertSame(0, $beforeAdvance, 'samples() opens nothing until an inner generator is advanced');
+        static::assertContainsOnlyInstancesOf(JsonFileSample::class, $samples);
+        static::assertSame(0, $beforeAdvance, 'samples() opens nothing until a sample is iterated');
         static::assertSame(1, $afterAdvance, 'advancing the first sample opens exactly the first source');
         static::assertNotNull($first);
         static::assertSame(['id' => 1], $first->values);

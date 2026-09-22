@@ -28,7 +28,7 @@ final readonly class Section
             $data = type_structure([
                 'offset' => type_integer(),
                 'rowCount' => type_integer(),
-            ])->assert($data);
+            ], allow_extra: true)->assert($data);
         } catch (InvalidTypeException $e) {
             throw new FloeException('Floe footer section is malformed: ' . $e->getMessage(), 0, $e);
         }

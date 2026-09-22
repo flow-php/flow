@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
+use Flow\ETL\Cardinality;
 use Flow\ETL\Extractor\CollectingExtractor;
+use Flow\ETL\Extractor\Statistics;
+use Flow\ETL\Memory\ArrayMemory;
+use Flow\ETL\Tests\Double\DeclaringExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\from_memory;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
@@ -54,5 +59,18 @@ final class CollectingExtractorTest extends FlowTestCase
         static::assertTrue(
             (new CollectingExtractor(from_rows(rows(schema(int_schema('id')), row(['id' => 1])))))->isRepeatable(),
         );
+    }
+
+    public function test_it_passes_through_the_child_statistics(): void
+    {
+        $child = new DeclaringExtractor(new Statistics(Cardinality::exact(3), Cardinality::exact(300)));
+        $extractor = new CollectingExtractor($child);
+
+        static::assertEquals(new Statistics(Cardinality::exact(3), Cardinality::exact(300)), $extractor->statistics());
+
+        $child->statistics = new Statistics(Cardinality::exact(1));
+
+        static::assertEquals(new Statistics(Cardinality::exact(1)), $extractor->statistics());
+        static::assertEquals(new Statistics(), (new CollectingExtractor(from_memory(new ArrayMemory())))->statistics());
     }
 }

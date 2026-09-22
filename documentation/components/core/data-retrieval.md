@@ -99,9 +99,17 @@ $totalCount = $dataFrame->count();
 echo "Total rows: $totalCount\n";
 ```
 
-> **Performance Warning**: The `count()` method must process the entire dataset to return the total count, which can
-> be expensive for large datasets. Consider whether you actually need the exact count or if an approximation would
-> suffice.
+A frame that only reads one source is counted from the source's statistics when they are exact - a Parquet or Floe
+file answers from its footer without reading a row (`explain(Trigger::count)` shows it):
+
+```php
+<?php
+
+$totalCount = data_frame()->read(from_parquet('orders.parquet'))->count();
+```
+
+> **Performance Warning**: Any other frame - a filter, a limit, a new column, a join, an estimated source - is executed
+> in full to count its rows, which can be expensive for large datasets.
 
 ## Iteration with Callback
 
@@ -124,4 +132,34 @@ sinks and returns a `Report` when asked to analyze.
 $dataFrame->write(to_json('out.json'))->run();
 
 $report = $dataFrame->write(to_json('out.json'))->run(analyze: analyze()->withSchema());
+```
+
+`withSourceStatistics()` puts the rows every source declared next to the rows it actually yielded - the output row
+count alone cannot tell them apart once a filter or a join sits in between:
+
+```php
+<?php
+
+$report = data_frame()
+    ->read(from_parquet('orders/*.parquet'))
+    ->filter(ref('total')->greaterThan(lit(100)))
+    ->run(analyze: analyze()->withSourceStatistics());
+
+foreach ($report->sources() as $source) {
+    echo $source->extractor;                // ParquetExtractor
+    echo $source->declared->rows->estimate; // 20000 - extrapolated from the first footer
+    echo $source->rows;                     // 29000 - read
+    echo $source->rowsError();              // 0.31 - |declared - read| / read
+}
+```
+
+`rowsError()` is null without an estimate, and for a read that did not cover the whole source - a pushed `limit()` or
+partition filter, or a read stopped early - since the declaration describes the whole source:
+
+```php
+<?php
+
+foreach ($report->sources() as $source) {
+    $source->complete;                      // false after a pushed limit() or a stopped read
+}
 ```

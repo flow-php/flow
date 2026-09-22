@@ -10,23 +10,41 @@ use Generator;
 use function rtrim;
 use function str_contains;
 use function str_starts_with;
+use function strlen;
 use function substr;
 
-final readonly class CSVLineReader
+final class CSVLineReader
 {
-    private CSVRecordBoundary $boundary;
+    private readonly CSVRecordBoundary $boundary;
+
+    /**
+     * @var int<0, max>
+     */
+    private int $lastRecordBytes = 0;
 
     /**
      * @param null|int<1, max> $charactersReadInLine
      */
     public function __construct(
-        private string $enclosure,
+        private readonly string $enclosure,
         string $separator = ',',
         string $escape = '\\',
-        private ?int $charactersReadInLine = null,
-        private bool $removeBOM = true,
+        private readonly ?int $charactersReadInLine = null,
+        private readonly bool $removeBOM = true,
     ) {
         $this->boundary = new CSVRecordBoundary($enclosure, $separator, $escape);
+    }
+
+    /**
+     * The bytes the record readLines() yielded last took in the stream, line endings and BOM included.
+     * SourceStream::readLines() cannot tell whether the last line ended with "\n", so a last record without one is
+     * counted one byte too long.
+     *
+     * @return int<0, max>
+     */
+    public function lastRecordBytes(): int
+    {
+        return $this->lastRecordBytes;
     }
 
     /**
@@ -36,9 +54,12 @@ final readonly class CSVLineReader
     {
         $lineNumber = 0;
         $buffer = '';
+        $bytes = 0;
 
         foreach ($stream->readLines(length: $this->charactersReadInLine) as $rawLine) {
             $buffer .= $rawLine;
+            $bytes += strlen($rawLine) + 1;
+            $this->lastRecordBytes = $bytes;
 
             if (!str_contains($buffer, $this->enclosure)) {
                 yield $this->removeBOM && $lineNumber === 0
@@ -46,6 +67,7 @@ final readonly class CSVLineReader
                     : rtrim($buffer, "\r\n");
                 $lineNumber++;
                 $buffer = '';
+                $bytes = 0;
             } else {
                 if ($this->boundary->isComplete($buffer)) {
                     yield $this->removeBOM && $lineNumber === 0
@@ -53,6 +75,7 @@ final readonly class CSVLineReader
                         : rtrim($buffer, "\r\n");
                     $lineNumber++;
                     $buffer = '';
+                    $bytes = 0;
                 } else {
                     $buffer .= "\n";
                 }

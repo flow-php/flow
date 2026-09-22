@@ -54,7 +54,7 @@ final readonly class CachingProcessor implements Processor
         foreach ($rows as $batch) {
             $cacheKey = bin2hex(random_bytes(16));
             $cache->set($cacheKey, $batch);
-            $index->add($cacheKey);
+            $index->add($cacheKey, $batch->count());
 
             if (!$stopped) {
                 $signal = yield $batch;

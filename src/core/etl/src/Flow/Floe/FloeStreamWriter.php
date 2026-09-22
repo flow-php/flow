@@ -115,7 +115,7 @@ final class FloeStreamWriter
             }
         }
 
-        $this->totalRows = $footer->totalRows;
+        $this->totalRows = $footer->statistics->rows;
         $this->open = true;
     }
 
@@ -136,7 +136,7 @@ final class FloeStreamWriter
             self::writerVersion(),
             $schema,
             $this->sections,
-            $this->totalRows,
+            new Statistics($this->totalRows, $this->frameWriter()->position() - Format::HEADER_LENGTH),
             $this->metadata,
         ))->toJson();
 

@@ -31,4 +31,14 @@ final class SourceFileTest extends FlowTestCase
             (new SourceFile(path('memory://orders/year=2024/data.csv')))->uri(),
         );
     }
+
+    public function test_it_carries_the_listed_size(): void
+    {
+        static::assertSame(1024, (new SourceFile(path('memory://orders/data.csv'), 1024))->size);
+    }
+
+    public function test_a_size_may_be_absent(): void
+    {
+        static::assertNull((new SourceFile(path('memory://orders/data.csv')))->size);
+    }
 }

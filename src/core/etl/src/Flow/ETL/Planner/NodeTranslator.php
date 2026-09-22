@@ -19,6 +19,7 @@ use Flow\ETL\Processor\BatchingProcessor;
 use Flow\ETL\Processor\CachingProcessor;
 use Flow\ETL\Processor\CollectingProcessor;
 use Flow\ETL\Processor\ConstrainedProcessor;
+use Flow\ETL\Processor\CountingProcessor;
 use Flow\ETL\Processor\OffsetProcessor;
 use Flow\ETL\Processor\TopNProcessor;
 use Flow\ETL\Processor\VoidProcessor;
@@ -71,6 +72,7 @@ final readonly class NodeTranslator
             $node instanceof Node\Collect => [new CollectingProcessor()],
             $node instanceof Node\CollectRefs => [new CollectReferencesTransformer($node->references)],
             $node instanceof Node\Constrain => [new ConstrainedProcessor($node->constraints)],
+            $node instanceof Node\Count => [new CountingProcessor()],
             $node instanceof Node\CrossJoin => [new CrossJoinRowsTransformer(
                 $frames[0],
                 $context->config->executor(),

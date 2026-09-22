@@ -35,7 +35,7 @@ trait FileReading
     private function sourceFiles(Filesystem $filesystem, Path $path, Filter $pathFilter = new OnlyFiles()): Generator
     {
         foreach ((new FileListing($filesystem))->list($path, $pathFilter) as $status) {
-            yield new SourceFile($status->path);
+            yield new SourceFile($status->path, $status->size);
         }
     }
 }

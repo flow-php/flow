@@ -11,8 +11,11 @@ use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
 use Flow\ETL\Adapter\Doctrine\DbalLoader;
 use Flow\ETL\Adapter\Doctrine\ParametersSet;
+use Flow\ETL\Adapter\Doctrine\Tests\Context\PlannedTable;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
+use Flow\ETL\Cardinality;
 
+use function array_fill;
 use function Flow\ETL\Adapter\Doctrine\from_dbal_queries;
 use function Flow\ETL\Adapter\Doctrine\from_dbal_query;
 use function Flow\ETL\DSL\data_frame;
@@ -191,6 +194,34 @@ final class PostgreSQLDbalQueryExtractorTest extends IntegrationTestCase
                 ],
             ],
             $schema->normalize(),
+        );
+    }
+
+    public function test_statistics_sum_the_plan_of_every_parameter_set(): void
+    {
+        PlannedTable::create($this->pgsqlDatabaseContext, 'flow_doctrine_statistics_test', 99);
+
+        static::assertEquals(
+            Cardinality::approximately(66),
+            from_dbal_queries(
+                $this->pgsqlDatabaseContext->connection(),
+                'SELECT * FROM flow_doctrine_statistics_test WHERE grp = :grp',
+                new ParametersSet(['grp' => 0], ['grp' => 1]),
+            )->statistics()->rows,
+        );
+    }
+
+    public function test_statistics_scale_the_first_ten_parameter_sets_to_all_of_them(): void
+    {
+        PlannedTable::create($this->pgsqlDatabaseContext, 'flow_doctrine_statistics_test', 99);
+
+        static::assertEquals(
+            Cardinality::approximately(396),
+            from_dbal_queries(
+                $this->pgsqlDatabaseContext->connection(),
+                'SELECT * FROM flow_doctrine_statistics_test WHERE grp = :grp',
+                new ParametersSet(...array_fill(0, 10, ['grp' => 0]), ...array_fill(0, 2, ['grp' => 99])),
+            )->statistics()->rows,
         );
     }
 }

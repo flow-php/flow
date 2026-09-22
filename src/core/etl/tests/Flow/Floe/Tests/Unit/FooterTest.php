@@ -66,11 +66,30 @@ final class FooterTest extends TestCase
         Footer::fromJson('{"version":"1"}');
     }
 
-    public function test_from_json_with_non_integer_total_rows_throws(): void
+    public function test_a_footer_without_a_statistics_block_is_rejected(): void
     {
         $this->expectException(FloeException::class);
+        $this->expectExceptionMessage('Floe footer is malformed');
 
-        Footer::fromJson('{"version":1,"totalRows":"0"}');
+        Footer::fromJson('{"version":2,"writer":"x","schema":[],"sections":[],"totalRows":0,"metadata":{}}');
+    }
+
+    public function test_malformed_statistics_are_rejected(): void
+    {
+        $this->expectException(FloeException::class);
+        $this->expectExceptionMessage('Floe footer statistics are malformed');
+
+        Footer::fromJson(
+            '{"version":2,"writer":"x","schema":[],"sections":[],"statistics":{"rows":"0","byteSize":0},"metadata":{}}',
+        );
+    }
+
+    public function test_the_footer_carries_a_statistics_block(): void
+    {
+        static::assertSame(
+            ['rows' => 5, 'byteSize' => 240],
+            Footer::fromJson(FooterMother::footer(rows: 5, byteSize: 240)->toJson())->normalize()['statistics'],
+        );
     }
 
     public function test_from_json_with_non_object_footer_throws(): void
@@ -95,7 +114,7 @@ final class FooterTest extends TestCase
     {
         $this->expectException(FloeException::class);
 
-        Footer::fromJson('{"version":1,"totalRows":0,"writer":42}');
+        Footer::fromJson('{"version":1,"statistics":{"rows":0,"byteSize":0},"writer":42}');
     }
 
     public function test_from_json_round_trips_typed_metadata(): void
@@ -120,7 +139,9 @@ final class FooterTest extends TestCase
         $this->expectException(FloeException::class);
         $this->expectExceptionMessage('metadata is malformed');
 
-        Footer::fromJson('{"version":1,"writer":"x","schema":[],"sections":[],"totalRows":0,"metadata":{"bad":null}}');
+        Footer::fromJson(
+            '{"version":1,"writer":"x","schema":[],"sections":[],"statistics":{"rows":0,"byteSize":0},"metadata":{"bad":null}}',
+        );
     }
 
     public function test_schema_body_re_encodes_stored_schema(): void
@@ -139,7 +160,8 @@ final class FooterTest extends TestCase
         $footer = FooterMother::footer(
             schema: schema(int_schema('id'))->normalize(),
             sections: [new Section(6, 2), new Section(120, 3)],
-            totalRows: 5,
+            rows: 5,
+            byteSize: 240,
             metadata: ['source' => 'test'],
         );
 
@@ -151,20 +173,20 @@ final class FooterTest extends TestCase
         $footer = FooterMother::footer(
             schema: schema(int_schema('id'))->normalize(),
             sections: [new Section(6, 2), new Section(120, 3)],
-            totalRows: 5,
+            rows: 5,
+            byteSize: 240,
             metadata: ['source' => 'test'],
         );
 
         static::assertEquals($footer, Footer::fromArray($footer->normalize()));
     }
 
-    public function test_a_footer_carrying_a_partitions_key_is_refused(): void
+    public function test_an_unknown_footer_key_is_ignored(): void
     {
-        // partitions come from the path, so a footer has no place to put them
-        $this->expectException(FloeException::class);
-        $this->expectExceptionMessage('Floe footer is malformed');
-
-        Footer::fromArray([...FooterMother::footer()->normalize(), 'partitions' => []]);
+        static::assertEquals(
+            FooterMother::footer(rows: 5),
+            Footer::fromArray([...FooterMother::footer(rows: 5)->normalize(), 'partitions' => []]),
+        );
     }
 
     public function test_reconstruct_rows_round_trips_unpartitioned_rows(): void

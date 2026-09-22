@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
@@ -141,6 +142,11 @@ final class OffsetTest extends FlowIntegrationTestCase
                         yield rows(schema(integer_schema('id')), row(['id' => $i + 1]));
                     }
                 }
+
+                public function statistics(): Statistics
+                {
+                    return new Statistics();
+                }
             })
             ->batchSize(3)
             ->offset(4)
@@ -183,6 +189,11 @@ final class OffsetTest extends FlowIntegrationTestCase
                     for ($i = 0; $i < 5; $i++) {
                         yield rows(schema(integer_schema('id')), row(['id' => $i + 1]));
                     }
+                }
+
+                public function statistics(): Statistics
+                {
+                    return new Statistics();
                 }
             })
             ->offset(2)
@@ -242,6 +253,11 @@ final class OffsetTest extends FlowIntegrationTestCase
                             ]),
                         );
                     }
+                }
+
+                public function statistics(): Statistics
+                {
+                    return new Statistics();
                 }
             })
             ->withEntries([
@@ -305,6 +321,11 @@ final class OffsetTest extends FlowIntegrationTestCase
                     for ($i = 0; $i < 10; $i++) {
                         yield rows(schema(integer_schema('id')), row(['id' => $i + 1]));
                     }
+                }
+
+                public function statistics(): Statistics
+                {
+                    return new Statistics();
                 }
             })
             ->offset(4)

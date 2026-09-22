@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Extractor;
 use DateInterval;
 use DatePeriod;
 use DateTimeImmutable;
+use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Extractor\SequenceExtractor;
 use Flow\ETL\Tests\Double\MixedSequenceGenerator;
@@ -154,6 +155,24 @@ final class SequenceExtractorTest extends FlowTestCase
         $extractor->inferSchema(infer_schema()->sampleSize(1));
 
         static::assertSame('integer', $extractor->schema()->get('code')->type()->toString());
+    }
+
+    public function test_statistics_declare_the_generator_rows_and_no_size(): void
+    {
+        $statistics = from_sequence_number('num', 1, 10, 2)->statistics();
+
+        static::assertEquals(Cardinality::exact(5), $statistics->rows);
+        static::assertEquals(Cardinality::unknown(), $statistics->size);
+    }
+
+    public function test_statistics_ask_the_generator_once(): void
+    {
+        $generator = new RecordingSequenceGenerator(new MixedSequenceGenerator());
+        $extractor = new SequenceExtractor($generator, 'code');
+
+        static::assertSame($extractor->statistics(), $extractor->statistics());
+        static::assertSame(1, $generator->rowsCalls);
+        static::assertSame(0, $generator->generateCalls);
     }
 
     public function test_schema_is_memoised(): void

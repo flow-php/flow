@@ -38,7 +38,7 @@ final class FooterReaderTest extends TestCase
 
         $location = (new FooterReader())->read($fs->readFrom($path), new NoopCodec());
 
-        static::assertSame(2, $location->footer->totalRows);
+        static::assertSame(2, $location->footer->statistics->rows);
         static::assertGreaterThan(Format::HEADER_LENGTH, $location->footerFrameStart);
         static::assertSame(Format::FRAME_FOOTER, ord($fs->readFrom($path)->read(1, $location->footerFrameStart)));
     }

@@ -16,11 +16,13 @@ use IteratorAggregate;
 /**
  * @implements IteratorAggregate<int, RawRowValues>
  */
-final readonly class CSVFileSample implements IteratorAggregate, SniffsColumnTypes
+final class CSVFileSample implements IteratorAggregate, SniffsColumnTypes
 {
+    private ?CSVSampledRows $sampled = null;
+
     public function __construct(
-        private CSVSourceOpener $opener,
-        private SourceFile $source,
+        private readonly CSVSourceOpener $opener,
+        private readonly SourceFile $source,
     ) {}
 
     /**
@@ -48,9 +50,26 @@ final readonly class CSVFileSample implements IteratorAggregate, SniffsColumnTyp
         $open = $this->opener->open($this->source);
 
         try {
-            return $open->sniff($names, $rowBudget, $inference, $typer);
+            $columnTypes = $open->sniff($names, $rowBudget, $inference, $typer);
+
+            // the byte count stays out of ColumnTypes: SniffsColumnTypes is an inference contract, statistics are not
+            $this->sampled = new CSVSampledRows(
+                $open->producedRows(),
+                $open->producedBytes(),
+                $rowBudget === -1 || $columnTypes->rows() < $rowBudget,
+            );
+
+            return $columnTypes;
         } finally {
             $open->close();
         }
+    }
+
+    /**
+     * What the last sniffColumnTypes() read; null until one ran.
+     */
+    public function sampled(): ?CSVSampledRows
+    {
+        return $this->sampled;
     }
 }

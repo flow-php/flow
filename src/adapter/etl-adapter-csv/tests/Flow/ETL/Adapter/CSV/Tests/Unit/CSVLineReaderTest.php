@@ -9,6 +9,7 @@ use Flow\ETL\Adapter\CSV\Tests\Double\LengthCapturingSourceStream;
 use Flow\Filesystem\Stream\MemorySourceStream;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\Filesystem\DSL\path;
@@ -393,5 +394,29 @@ final class CSVLineReaderTest extends TestCase
         static::assertSame('header1,header2,header3', $lines[0]);
         static::assertSame('value1,value2,value3', $lines[1]);
         static::assertSame('value4,value5,value6', $lines[2]);
+    }
+
+    /**
+     * @param non-empty-string $content
+     * @param list<int> $expected
+     */
+    #[TestWith(["a,b\n1,2\n", [4, 4]])]
+    #[TestWith(["a,b\r\n1,2\r\n", [5, 5]])]
+    #[TestWith(["a,b\n\"x\ny\",1\n", [4, 8]])]
+    #[TestWith(["a,b\r\n\"x\r\ny\",1\r\n", [5, 10]])]
+    #[TestWith(["\xEF\xBB\xBFa,b\n1,2\n", [7, 4]])]
+    #[TestWith(["a,b\n1,2", [4, 4]])]
+    public function test_last_record_bytes_count_what_the_record_took_in_the_stream(
+        string $content,
+        array $expected,
+    ): void {
+        $reader = new CSVLineReader('"');
+        $bytes = [];
+
+        foreach ($reader->readLines(new MemorySourceStream($content)) as $_line) {
+            $bytes[] = $reader->lastRecordBytes();
+        }
+
+        static::assertSame($expected, $bytes);
     }
 }

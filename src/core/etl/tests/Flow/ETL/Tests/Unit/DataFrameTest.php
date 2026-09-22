@@ -13,6 +13,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Memory\ArrayMemory;
@@ -147,6 +148,41 @@ final class DataFrameTest extends FlowTestCase
         static::assertSame(5, $count);
     }
 
+    public function test_count_of_a_frame_that_yields_no_rows_is_zero(): void
+    {
+        static::assertSame(
+            0,
+            df()
+                ->read(from_array([['id' => 1], ['id' => 2]]))
+                ->filter(lit(false))
+                ->count(),
+        );
+    }
+
+    public function test_count_counts_the_rows_left_after_a_filter(): void
+    {
+        static::assertSame(
+            2,
+            df()
+                ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]))
+                ->filter(ref('id')->greaterThan(lit(1)))
+                ->count(),
+        );
+    }
+
+    public function test_count_still_writes_the_frames_sinks(): void
+    {
+        $memory = new ArrayMemory();
+
+        $count = df()
+            ->read(from_array([['id' => 1], ['id' => 2]]))
+            ->write(to_memory($memory))
+            ->count();
+
+        static::assertSame(2, $count);
+        static::assertSame([['id' => 1], ['id' => 2]], $memory->dump());
+    }
+
     public function test_drop(): void
     {
         $rows = df()
@@ -262,6 +298,11 @@ final class DataFrameTest extends FlowTestCase
                     for ($i = 1; $i <= 10; $i++) {
                         yield rows(schema(integer_schema('id')), row(['id' => $i]));
                     }
+                }
+
+                public function statistics(): Statistics
+                {
+                    return new Statistics();
                 }
             })
             ->filter(ref('id')->mod(lit(2))->same(lit(0)))
@@ -413,6 +454,11 @@ final class DataFrameTest extends FlowTestCase
                         yield rows(schema(integer_schema('id')), row(['id' => $i]));
                     }
                 }
+
+                public function statistics(): Statistics
+                {
+                    return new Statistics();
+                }
             })
             ->withEntry('odd', ref('id')->mod(lit(2))->equals(lit(0)))
             ->fetch();
@@ -489,6 +535,11 @@ final class DataFrameTest extends FlowTestCase
                         'phase' => null,
                     ]),
                 );
+            }
+
+            public function statistics(): Statistics
+            {
+                return new Statistics();
             }
         };
 
@@ -772,6 +823,11 @@ final class DataFrameTest extends FlowTestCase
                         row(['id' => 10]),
                     );
                 }
+
+                public function statistics(): Statistics
+                {
+                    return new Statistics();
+                }
             })
             ->with(new class implements Transformer {
                 public function bind(Schema $input): BoundStep
@@ -824,6 +880,11 @@ final class DataFrameTest extends FlowTestCase
                     yield rows(schema(integer_schema('id')), row(['id' => 1]));
                     yield rows(schema(integer_schema('id')), row(['id' => 2]));
                     yield rows(schema(integer_schema('id')), row(['id' => 3]));
+                }
+
+                public function statistics(): Statistics
+                {
+                    return new Statistics();
                 }
             })
             ->with(new class implements Transformer {

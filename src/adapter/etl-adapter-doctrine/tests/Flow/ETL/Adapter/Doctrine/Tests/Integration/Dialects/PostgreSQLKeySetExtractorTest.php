@@ -7,7 +7,9 @@ namespace Flow\ETL\Adapter\Doctrine\Tests\Integration\Dialects;
 use DateTimeImmutable;
 use Flow\Clock\FakeClock;
 use Flow\ETL\Adapter\Doctrine\DbalMetadata;
+use Flow\ETL\Adapter\Doctrine\Tests\Context\PlannedTable;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
+use Flow\ETL\Cardinality;
 
 use function Flow\ETL\Adapter\Doctrine\from_dbal_key_set_qb;
 use function Flow\ETL\Adapter\Doctrine\pagination_key_asc;
@@ -402,6 +404,24 @@ final class PostgreSQLKeySetExtractorTest extends IntegrationTestCase
                 ['id' => 21],
             ],
             $rows,
+        );
+    }
+
+    public function test_statistics_are_the_plan_of_the_base_query(): void
+    {
+        PlannedTable::create($this->pgsqlDatabaseContext, 'flow_doctrine_statistics_test', 100);
+
+        static::assertEquals(
+            Cardinality::approximately(100),
+            from_dbal_key_set_qb(
+                $this->pgsqlDatabaseContext->connection(),
+                $this->pgsqlDatabaseContext
+                    ->connection()
+                    ->createQueryBuilder()
+                    ->select('*')
+                    ->from('flow_doctrine_statistics_test'),
+                pagination_key_set(pagination_key_asc('id')),
+            )->statistics()->rows,
         );
     }
 }

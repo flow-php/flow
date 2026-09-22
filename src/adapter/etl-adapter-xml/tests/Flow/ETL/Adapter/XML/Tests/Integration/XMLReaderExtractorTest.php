@@ -6,8 +6,11 @@ namespace Flow\ETL\Adapter\XML\Tests\Integration;
 
 use DOMDocument;
 use Flow\ETL\Adapter\XML\XMLReaderExtractor;
+use Flow\ETL\Cardinality;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Tests\Context\ExtractedRows;
+use Flow\ETL\Tests\Double\CountingFilesystem;
+use Flow\ETL\Tests\Double\UnsizedFilesystem;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 use function array_keys;
@@ -17,6 +20,7 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\xml_schema;
+use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_string;
@@ -192,5 +196,38 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
             // @mago-ignore analysis:deprecated-class
             (new XMLReaderExtractor(path_real(__DIR__ . '/../Fixtures/flow_orders.xml'), 'root/row'))->isRepeatable(),
         );
+    }
+
+    public function test_it_declares_the_listed_byte_total_exactly(): void
+    {
+        // @mago-ignore analysis:deprecated-class
+        $statistics = (new XMLReaderExtractor(path_real(__DIR__ . '/../Fixtures/listed/*.xml')))->statistics();
+
+        static::assertEquals(Cardinality::exact(13), $statistics->size);
+        static::assertEquals(Cardinality::unknown(), $statistics->rows);
+    }
+
+    public function test_a_member_without_a_size_makes_the_size_unknown(): void
+    {
+        $filesystem = new UnsizedFilesystem(native_local_filesystem(), [
+            path_real(__DIR__ . '/../Fixtures/listed/b.xml')->uri(),
+        ]);
+
+        // @mago-ignore analysis:deprecated-class
+        $extractor = new XMLReaderExtractor(path_real(__DIR__ . '/../Fixtures/listed/*.xml'), '', $filesystem);
+
+        static::assertEquals(Cardinality::unknown(), $extractor->statistics()->size);
+    }
+
+    public function test_the_listing_is_read_once(): void
+    {
+        $filesystem = new CountingFilesystem(native_local_filesystem());
+        // @mago-ignore analysis:deprecated-class
+        $extractor = new XMLReaderExtractor(path_real(__DIR__ . '/../Fixtures/listed/*.xml'), '', $filesystem);
+
+        $extractor->statistics();
+        $extractor->statistics();
+
+        static::assertSame(1, $filesystem->listCalls);
     }
 }

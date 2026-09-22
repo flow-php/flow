@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
+use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
@@ -26,6 +27,8 @@ use function sprintf;
 final class FilesExtractor implements BatchableExtractor, Extractor, FileExtractor, RewindableExtractor
 {
     private ?Schema $schema = null;
+
+    private ?Statistics $statistics = null;
 
     use Batches;
     use ListingPartitions;
@@ -66,7 +69,7 @@ final class FilesExtractor implements BatchableExtractor, Extractor, FileExtract
         $yielded = 0;
 
         foreach ((new FileListing($this->filesystem))->list($this->path, $pathFilter) as $fileStatus) {
-            $constants = $fileColumns->forFile(new SourceFile($fileStatus->path), $schema);
+            $constants = $fileColumns->forFile(new SourceFile($fileStatus->path, $fileStatus->size), $schema);
             $extension = $fileStatus->path->extension();
 
             $buffer[] = $constants->fill([
@@ -132,6 +135,16 @@ final class FilesExtractor implements BatchableExtractor, Extractor, FileExtract
             bool_schema('is_dir'),
             str_schema('extension', nullable: true),
         ));
+    }
+
+    public function statistics(): Statistics
+    {
+        if ($this->statistics === null) {
+            $listed = ListedFiles::of((new FileListing($this->filesystem))->list($this->path, new OnlyFiles()));
+            $this->statistics = new Statistics(rows: Cardinality::exact($listed->count), size: $listed->bytes);
+        }
+
+        return $this->statistics;
     }
 
     public function withSchema(Schema $schema): static

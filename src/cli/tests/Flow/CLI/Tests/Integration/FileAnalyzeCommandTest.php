@@ -137,6 +137,26 @@ final class FileAnalyzeCommandTest extends FlowTestCase
         self::assertCommandOutputContains('Execution Time', $tester->getDisplay());
     }
 
+    public function test_read_rows_csv_with_source_statistics(): void
+    {
+        $tester = new CommandTester(new FileAnalyzeCommand('file:analyze'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--stats-sources' => true,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        self::assertCommandOutputContains(<<<'OUTPUT'
+            ┌──────────────┬───────────────┬───────────────┬────────────┐
+            │ Extractor    │ Declared Rows │ Measured Rows │ Rows Error │
+            ├──────────────┼───────────────┼───────────────┼────────────┤
+            │ CSVExtractor │ exact 43      │ 43            │ 0%         │
+            └──────────────┴───────────────┴───────────────┴────────────┘
+            OUTPUT, $tester->getDisplay());
+    }
+
     public function test_file_analyze_command_registers_the_analyze_alias(): void
     {
         $application = new Application();

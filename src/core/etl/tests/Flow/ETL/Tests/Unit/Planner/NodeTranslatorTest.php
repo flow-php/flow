@@ -17,6 +17,7 @@ use Flow\ETL\Plan\Node\Cache;
 use Flow\ETL\Plan\Node\Collect;
 use Flow\ETL\Plan\Node\CollectRefs;
 use Flow\ETL\Plan\Node\Constrain;
+use Flow\ETL\Plan\Node\Count;
 use Flow\ETL\Plan\Node\CrossJoin;
 use Flow\ETL\Plan\Node\Discard;
 use Flow\ETL\Plan\Node\Distinct;
@@ -47,6 +48,7 @@ use Flow\ETL\Processor\BucketingProcessor;
 use Flow\ETL\Processor\CachingProcessor;
 use Flow\ETL\Processor\CollectingProcessor;
 use Flow\ETL\Processor\ConstrainedProcessor;
+use Flow\ETL\Processor\CountingProcessor;
 use Flow\ETL\Processor\GroupByAggregationProcessor;
 use Flow\ETL\Processor\HashJoinProcessor;
 use Flow\ETL\Processor\MemorySortProcessor;
@@ -208,6 +210,17 @@ final class NodeTranslatorTest extends FlowTestCase
         static::assertEquals(
             [new CrossJoinRowsTransformer($right, $context->config->executor(), 'r_')],
             NodeTranslator::toSteps(new CrossJoin(NodeMother::read(), $frame, 'r_'), $context, [$right]),
+        );
+    }
+
+    public function test_count_steps_are_the_exact_list_in_order(): void
+    {
+        static::assertSame(
+            [CountingProcessor::class],
+            array_map(
+                static fn($step) => $step::class,
+                NodeTranslator::toSteps(new Count(NodeMother::read()), NodeMother::context(), []),
+            ),
         );
     }
 

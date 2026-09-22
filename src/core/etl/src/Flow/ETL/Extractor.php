@@ -6,6 +6,7 @@ namespace Flow\ETL;
 
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Extractor\Statistics;
 use Generator;
 
 interface Extractor
@@ -37,6 +38,21 @@ interface Extractor
      * @throws SchemaNotDerivableException when the source cannot describe what it will produce
      */
     public function schema(): Schema;
+
+    /**
+     * What the source knows about the data before a single row is read: how many rows, how many bytes. A source
+     * that knows nothing returns `new Statistics()`. Describes the source with NO pushdown applied - a limit or a
+     * partition filter the plan pushed is the plan's to account for.
+     *
+     * Called AT MOST ONCE per run, and only when something needs the answer - so it must be lazy, never computed in
+     * the constructor - and it MUST be idempotent and cheap on repeat: memoise what it reads, the way schema() does.
+     *
+     * A file source may only spend what the run already spends: it may complete a listing it must produce anyway and
+     * read metadata from the files schema() already opens, and it may extrapolate from those. It must not open an
+     * extra file or make an extra remote call. A database source may ask the planner for an estimate (EXPLAIN without
+     * ANALYZE), never run the query.
+     */
+    public function statistics(): Statistics;
 
     /**
      * Declares the shape every yielded batch must carry. A source that describes itself uses this

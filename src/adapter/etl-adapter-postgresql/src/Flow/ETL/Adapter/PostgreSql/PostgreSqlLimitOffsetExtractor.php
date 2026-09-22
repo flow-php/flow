@@ -11,6 +11,7 @@ use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
@@ -35,6 +36,8 @@ final class PostgreSqlLimitOffsetExtractor implements BatchableExtractor, Extrac
     private ?SchemaNotDerivableException $refusal = null;
 
     private ?Schema $schema = null;
+
+    private ?Statistics $statistics = null;
 
     /**
      * @param list<mixed> $parameters
@@ -143,6 +146,16 @@ final class PostgreSqlLimitOffsetExtractor implements BatchableExtractor, Extrac
         }
     }
 
+    public function statistics(): Statistics
+    {
+        return $this->statistics ??= new Statistics(rows: (new ExplainedRows())->of(
+            $this->client,
+            $this->query,
+            $this->parameters,
+            $this->maximum,
+        ));
+    }
+
     public function withMaximum(int $maximum): self
     {
         if ($maximum <= 0) {
@@ -150,6 +163,7 @@ final class PostgreSqlLimitOffsetExtractor implements BatchableExtractor, Extrac
         }
 
         $this->maximum = $maximum;
+        $this->statistics = null;
 
         return $this;
     }

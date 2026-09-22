@@ -8,8 +8,10 @@ use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\Bucketing\HashBucketing;
 use Flow\ETL\Bucketing\NativeHasher;
 use Flow\ETL\Bucketing\Storage\MemoryBuckets;
+use Flow\ETL\Cardinality;
 use Flow\ETL\Constraint\UniqueConstraint;
 use Flow\ETL\Executor;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\GroupBy;
 use Flow\ETL\GroupBy\DeclaredPivotValues;
 use Flow\ETL\Join\Comparison\Equal;
@@ -32,6 +34,7 @@ use Flow\ETL\Processor\RepartitionProcessor;
 use Flow\ETL\Processor\TopNProcessor;
 use Flow\ETL\Processor\VoidProcessor;
 use Flow\ETL\Processor\WindowProcessor;
+use Flow\ETL\Tests\Double\DeclaringExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\HashJoinProcessorMother;
 use Flow\ETL\Tests\Mother\PhysicalPlanMother;
@@ -52,7 +55,10 @@ final class StepDetailsTest extends FlowTestCase
     {
         $details = new StepDetails();
 
-        static::assertSame(['Extractor: ArrayExtractor'], $details->lines(from_array([['id' => 1]])));
+        static::assertSame(
+            ['Extractor: ArrayExtractor', '   Statistics: rows exact 1 · size unknown'],
+            $details->lines(from_array([['id' => 1]])),
+        );
         static::assertSame(['Processor: VoidProcessor'], $details->lines(new VoidProcessor()));
         static::assertSame(
             ['Processor: BatchingProcessor', '   Batch: 100'],
@@ -212,7 +218,22 @@ final class StepDetailsTest extends FlowTestCase
 
     public function test_a_step_the_explain_does_not_know_lists_nothing(): void
     {
-        static::assertSame([], (new StepDetails())->settings(from_array([['id' => 1]])));
+        static::assertSame([], (new StepDetails())->settings(new VoidProcessor()));
+    }
+
+    public function test_a_source_lists_the_statistics_it_declares(): void
+    {
+        static::assertSame(
+            ['Statistics: rows exact 1 000 · size ~309 188 B ±50%'],
+            (new StepDetails())->settings(new DeclaringExtractor(
+                new Statistics(Cardinality::exact(1_000), Cardinality::approximately(309_188)),
+            )),
+        );
+    }
+
+    public function test_a_source_that_declares_nothing_lists_no_statistics(): void
+    {
+        static::assertSame([], (new StepDetails())->settings(new DeclaringExtractor(new Statistics())));
     }
 
     public function test_bucketing_lists_its_strategy_and_storage(): void

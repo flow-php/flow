@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
+use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Extractor\BatchExtractor;
+use Flow\ETL\Extractor\Statistics;
+use Flow\ETL\Memory\ArrayMemory;
+use Flow\ETL\Tests\Double\DeclaringExtractor;
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\Tests\Double\VaryingBatchesExtractor;
 use Flow\ETL\Tests\FlowTestCase;
@@ -14,6 +18,7 @@ use Flow\ETL\Tests\Mother\RowsMother;
 
 use function Flow\ETL\DSL\batches;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\from_memory;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
@@ -112,5 +117,18 @@ final class BatchExtractorTest extends FlowTestCase
     public function test_is_repeatable(): void
     {
         static::assertTrue(batches(new FakeExtractor(10), 5)->isRepeatable());
+    }
+
+    public function test_it_passes_through_the_child_statistics(): void
+    {
+        $child = new DeclaringExtractor(new Statistics(Cardinality::exact(3), Cardinality::exact(300)));
+        $extractor = batches($child, 10);
+
+        static::assertEquals(new Statistics(Cardinality::exact(3), Cardinality::exact(300)), $extractor->statistics());
+
+        $child->statistics = new Statistics(Cardinality::exact(1));
+
+        static::assertEquals(new Statistics(Cardinality::exact(1)), $extractor->statistics());
+        static::assertEquals(new Statistics(), batches(from_memory(new ArrayMemory()), 10)->statistics());
     }
 }

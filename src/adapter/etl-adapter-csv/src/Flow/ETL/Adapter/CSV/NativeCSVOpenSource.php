@@ -19,6 +19,7 @@ use function array_filter;
 use function array_map;
 use function array_values;
 use function class_exists;
+use function count;
 use function extension_loaded;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_date;
@@ -32,7 +33,7 @@ use function Flow\Types\DSL\type_uuid;
 use function Flow\Types\DSL\type_xml;
 use function max;
 
-final readonly class NativeCSVOpenSource implements CSVOpenSource
+final class NativeCSVOpenSource implements CSVOpenSource
 {
     /**
      * Each chunk is held as a PHP string, so it sets the path's peak memory. 32 KB measured 12.0 MB real peak - the PHP
@@ -46,14 +47,19 @@ final readonly class NativeCSVOpenSource implements CSVOpenSource
     /**
      * @var int<1, max>
      */
-    private int $chunkSize;
+    private readonly int $chunkSize;
+
+    /**
+     * @var int<0, max>
+     */
+    private int $producedRows = 0;
 
     /**
      * @param null|int<1, max> $charactersReadInLine
      */
     public function __construct(
-        private SourceStream $stream,
-        private RustCSVReaderNative $reader,
+        private readonly SourceStream $stream,
+        private readonly RustCSVReaderNative $reader,
         ?int $charactersReadInLine = null,
     ) {
         // a local file ignores the read length, as NativeLocalSourceStream::readLines() already does on the PHP path;
@@ -90,12 +96,24 @@ final readonly class NativeCSVOpenSource implements CSVOpenSource
         return $this->reader->headers();
     }
 
+    public function producedBytes(): int
+    {
+        return $this->reader->consumedBytes();
+    }
+
+    public function producedRows(): int
+    {
+        return $this->producedRows;
+    }
+
     public function records(): Generator
     {
         foreach ($this->stream->iterate($this->chunkSize) as $chunk) {
             $this->reader->feed($chunk);
 
             while (($batch = $this->reader->next(self::BATCH)) !== []) {
+                $this->producedRows += count($batch);
+
                 foreach ($batch as $values) {
                     yield $values;
                 }
@@ -105,6 +123,8 @@ final readonly class NativeCSVOpenSource implements CSVOpenSource
         $this->reader->finish();
 
         while (($batch = $this->reader->next(self::BATCH)) !== []) {
+            $this->producedRows += count($batch);
+
             foreach ($batch as $values) {
                 yield $values;
             }
@@ -137,7 +157,10 @@ final readonly class NativeCSVOpenSource implements CSVOpenSource
 
         foreach ($this->stream->iterate($this->chunkSize) as $chunk) {
             $this->reader->feed($chunk);
-            $this->reader->fold($fold, $rowBudget === -1 ? -1 : max(0, $rowBudget - $fold->rows()));
+            $this->producedRows += $this->reader->fold(
+                $fold,
+                $rowBudget === -1 ? -1 : max(0, $rowBudget - $fold->rows()),
+            );
 
             if ($rowBudget !== -1 && $fold->rows() >= $rowBudget) {
                 break;
@@ -146,7 +169,10 @@ final readonly class NativeCSVOpenSource implements CSVOpenSource
 
         if ($rowBudget === -1 || $fold->rows() < $rowBudget) {
             $this->reader->finish();
-            $this->reader->fold($fold, $rowBudget === -1 ? -1 : max(0, $rowBudget - $fold->rows()));
+            $this->producedRows += $this->reader->fold(
+                $fold,
+                $rowBudget === -1 ? -1 : max(0, $rowBudget - $fold->rows()),
+            );
         }
 
         return ColumnTypes::fromColumnTypes(

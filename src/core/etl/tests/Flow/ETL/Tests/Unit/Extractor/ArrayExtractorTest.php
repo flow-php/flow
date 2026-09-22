@@ -6,9 +6,11 @@ namespace Flow\ETL\Tests\Unit\Extractor;
 
 use ArrayIterator;
 use ArrayObject;
+use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Extractor\ArrayExtractor;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\UnionDefinition;
@@ -399,5 +401,30 @@ final class ArrayExtractorTest extends FlowTestCase
             static fn(): ArrayExtractor => from_array(RowsMother::sequentialIds(5)->toArray()),
             RowsMother::sequentialIds(5),
         );
+    }
+
+    public function test_an_array_dataset_declares_an_exact_row_count(): void
+    {
+        static::assertEquals(
+            new Statistics(rows: Cardinality::exact(3)),
+            from_array([['id' => 1], ['id' => 2], ['id' => 3]])->statistics(),
+        );
+    }
+
+    public function test_a_generator_dataset_declares_nothing(): void
+    {
+        /** @var callable(): Generator<int, array<string, mixed>> $generator */
+        $generator = static function (): Generator {
+            yield ['id' => 1];
+        };
+
+        static::assertEquals(new Statistics(), from_array($generator())->statistics());
+    }
+
+    public function test_statistics_are_computed_at_most_once(): void
+    {
+        $extractor = from_array([['id' => 1]]);
+
+        static::assertSame($extractor->statistics(), $extractor->statistics());
     }
 }

@@ -6,8 +6,10 @@ namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
 use DateTimeImmutable;
 use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetFilesContext;
+use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Plan\Stage;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
@@ -20,9 +22,12 @@ use Flow\Parquet\Reader;
 
 use function array_keys;
 use function Flow\ETL\Adapter\Parquet\from_parquet;
+use function Flow\ETL\Adapter\Parquet\to_parquet;
+use function Flow\ETL\DSL\analyze;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\partition_types;
 use function Flow\ETL\DSL\row;
@@ -231,6 +236,64 @@ final class ParquetExtractorTest extends FlowTestCase
         unset($generator);
 
         static::assertSame($filesystem->readFromCalls, $filesystem->closedStreams());
+    }
+
+    public function test_explain_lists_the_statistics_the_file_declares(): void
+    {
+        static::assertStringContainsString(
+            <<<'PLAN'
+                      Extractor: ParquetExtractor
+                         Statistics: rows exact 1 000 · size exact 327 527 B
+                PLAN,
+            df()
+                ->read(from_parquet(path(__DIR__ . '/Fixtures/orders_1k.parquet')))
+                ->explain()
+                ->toString(Stage::physical),
+        );
+    }
+
+    public function test_analyze_reports_the_extrapolated_rows_next_to_the_rows_read(): void
+    {
+        $memory = memory_filesystem();
+        df()
+            ->read(from_sequence_number('id', 1, 10_000))
+            ->write(to_parquet(path('memory://glob/a.parquet'), filesystem: $memory))
+            ->run();
+        df()
+            ->read(from_sequence_number('id', 1, 19_000))
+            ->write(to_parquet(path('memory://glob/b.parquet'), filesystem: $memory))
+            ->run();
+
+        $report = df()->read(from_parquet(path('memory://glob/*.parquet'), filesystem: $memory))->run(
+            analyze()->withSourceStatistics(),
+        );
+
+        static::assertNotNull($report);
+        $sources = $report->sources();
+        static::assertNotNull($sources);
+        static::assertCount(1, $sources);
+        static::assertSame('ParquetExtractor', $sources[0]->extractor);
+        static::assertEquals(Cardinality::approximately(20_000), $sources[0]->declared->rows);
+        static::assertSame(29_000, $sources[0]->rows);
+        static::assertEqualsWithDelta(9_000 / 29_000, $sources[0]->rowsError(), 0.000_001);
+    }
+
+    public function test_count_answers_from_the_footer_without_reading_the_rows(): void
+    {
+        $filesystem = new CountingFilesystem(new NativeLocalFilesystem());
+
+        $counted = df()
+            ->read(from_parquet(path(__DIR__ . '/Fixtures/orders_1k.parquet'), filesystem: $filesystem))
+            ->count();
+
+        static::assertSame(
+            df()
+                ->read(from_parquet(path(__DIR__ . '/Fixtures/orders_1k.parquet')))
+                ->fetch()
+                ->count(),
+            $counted,
+        );
+        static::assertSame(1, $filesystem->readFromCalls);
     }
 
     public function test_extract_closes_every_reader_it_opens(): void

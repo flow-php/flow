@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Executor;
 
 use Flow\ETL\Executor\Pipeline;
 use Flow\ETL\Executor\Segments;
+use Flow\ETL\Executor\SourceRows;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\NodeMother;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
@@ -22,7 +23,9 @@ final class PipelineTest extends FlowTestCase
         $input = new Pipeline(0, new Segments(from_array([['id' => 1]])), $context);
         $filter = new RejectingFilter();
 
-        $pipeline = new Pipeline(1, $segments, $context, $input, 3, $filter);
+        $sources = new SourceRows();
+
+        $pipeline = new Pipeline(1, $segments, $context, $input, 3, $filter, $sources);
 
         static::assertSame(1, $pipeline->id);
         static::assertSame($segments, $pipeline->segments());
@@ -30,6 +33,7 @@ final class PipelineTest extends FlowTestCase
         static::assertSame($input, $pipeline->input());
         static::assertSame(3, $pipeline->limit());
         static::assertSame($filter, $pipeline->pathFilter());
+        static::assertSame($sources, $pipeline->sources());
     }
 
     public function test_a_leaf_pipeline_defaults_to_no_input_no_limit_and_only_files(): void
@@ -39,5 +43,6 @@ final class PipelineTest extends FlowTestCase
         static::assertNull($pipeline->input());
         static::assertNull($pipeline->limit());
         static::assertInstanceOf(OnlyFiles::class, $pipeline->pathFilter());
+        static::assertNull($pipeline->sources());
     }
 }

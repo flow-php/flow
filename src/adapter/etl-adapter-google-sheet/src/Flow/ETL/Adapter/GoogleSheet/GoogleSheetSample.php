@@ -13,10 +13,12 @@ final readonly class GoogleSheetSample
      * @param list<RawRowValues> $rows
      * @param bool $wholeSheet the range reached the last row of the grid, so $rows IS the sheet and a read can be
      *                         served from it instead of fetching the same rows again
+     * @param int $gridRowCount the rows the grid allocates - an upper bound on the rows it holds
      */
     public function __construct(
         public array $names,
         public array $rows,
         public bool $wholeSheet,
+        public int $gridRowCount,
     ) {}
 }

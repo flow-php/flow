@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\CLI\Formatter;
 
 use Flow\ETL\Dataset\Report;
+use Flow\ETL\Plan\Explain\StatisticsLine;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -87,6 +88,32 @@ final readonly class PipelineReportFormatter
                     'Max Elements Count',
                 ])
                 ->setRows($normalizedColumnStatistics)
+                ->setStyle('box')
+                ->render();
+        }
+
+        $sources = $this->report->sources();
+
+        if (option_bool('stats-sources', $this->input) && $sources !== null) {
+            $statisticsLine = new StatisticsLine();
+            $normalizedSources = [];
+
+            foreach ($sources as $source) {
+                $normalizedSources[] = [
+                    'extractor' => $source->extractor,
+                    'declared' => $statisticsLine->cardinality($source->declared->rows),
+                    'measured' => $statisticsLine->number($source->rows),
+                    'error' => $statisticsLine->percent($source->rowsError()),
+                ];
+            }
+
+            $this->style->newLine();
+            $this->style->section('Sources');
+
+            $this->style
+                ->createTable()
+                ->setHeaders(['Extractor', 'Declared Rows', 'Measured Rows', 'Rows Error'])
+                ->setRows($normalizedSources)
                 ->setStyle('box')
                 ->render();
         }

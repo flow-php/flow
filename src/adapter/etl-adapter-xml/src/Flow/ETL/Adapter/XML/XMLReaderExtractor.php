@@ -11,9 +11,11 @@ use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\FileReading;
+use Flow\ETL\Extractor\ListedFiles;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
@@ -49,6 +51,8 @@ final class XMLReaderExtractor implements
     use FileReading;
 
     private readonly Filesystem $filesystem;
+
+    private ?ListedFiles $listed = null;
 
     /**
      * In order to iterate only over <element> nodes us root/elements/element.
@@ -216,6 +220,13 @@ final class XMLReaderExtractor implements
     public function source(): Path
     {
         return $this->path;
+    }
+
+    public function statistics(): Statistics
+    {
+        $this->listed ??= ListedFiles::of($this->sourceFiles($this->filesystem, $this->path));
+
+        return new Statistics(size: $this->listed->bytes);
     }
 
     public function withSchema(Schema $schema): static

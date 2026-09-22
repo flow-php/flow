@@ -13,4 +13,9 @@ interface SelfDescribingFile
     public function schema(): Schema;
 
     public function source(): SourceFile;
+
+    /**
+     * What this one file's own metadata declares, read from what schema() already opened.
+     */
+    public function statistics(): Statistics;
 }

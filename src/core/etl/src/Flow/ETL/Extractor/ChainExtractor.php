@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
+use Flow\ETL\Cardinality;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
+
+use function array_reduce;
 
 final class ChainExtractor implements Extractor, OverridingExtractor, RewindableExtractor
 {
@@ -69,6 +72,17 @@ final class ChainExtractor implements Extractor, OverridingExtractor, Rewindable
         }
 
         return $schema;
+    }
+
+    public function statistics(): Statistics
+    {
+        return array_reduce(
+            $this->extractors,
+            static fn(Statistics $statistics, Extractor $extractor): Statistics => $statistics->merge(
+                $extractor->statistics(),
+            ),
+            new Statistics(rows: Cardinality::exact(0), size: Cardinality::exact(0)),
+        );
     }
 
     public function withSchema(Schema $schema): static

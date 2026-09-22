@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Extractor;
 
+use Flow\ETL\Cardinality;
 use Flow\ETL\Extractor\PathPartitionsExtractor;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Context\ExtractedRows;
+use Flow\ETL\Tests\Context\MemoryFiles;
+use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Filesystem\Tests\OperatingSystem;
 
@@ -26,6 +29,35 @@ use function usort;
 final class PathPartitionsExtractorTest extends FlowIntegrationTestCase
 {
     use OperatingSystem;
+
+    public function test_it_declares_one_row_per_listed_file(): void
+    {
+        $statistics = from_path_partitions('memory://dir/**/*', MemoryFiles::with([
+            'memory://dir/year=2024/a.txt' => 'a',
+            'memory://dir/year=2024/b.txt' => 'b',
+            'memory://dir/year=2025/c.txt' => 'c',
+        ]))->statistics();
+
+        static::assertEquals(Cardinality::exact(3), $statistics->rows);
+        static::assertEquals(Cardinality::unknown(), $statistics->size);
+    }
+
+    public function test_an_empty_listing_declares_zero_rows(): void
+    {
+        static::assertEquals(
+            Cardinality::exact(0),
+            from_path_partitions('memory://dir/**/*', MemoryFiles::with([]))->statistics()->rows,
+        );
+    }
+
+    public function test_the_listing_is_read_once(): void
+    {
+        $filesystem = new CountingFilesystem(MemoryFiles::with(['memory://dir/year=2024/a.txt' => 'a']));
+        $extractor = from_path_partitions('memory://dir/**/*', $filesystem);
+
+        static::assertSame($extractor->statistics(), $extractor->statistics());
+        static::assertSame(1, $filesystem->listCalls);
+    }
 
     public function test_partition_directories_are_declared_as_string_columns_next_to_the_map(): void
     {

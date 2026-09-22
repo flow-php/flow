@@ -9,6 +9,7 @@ use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Executor\PhysicalPlan;
 use Flow\ETL\Executor\Pipeline;
 use Flow\ETL\Extractor\FileExtractor;
+use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Generator;
 use Throwable;
 use WeakMap;
@@ -133,6 +134,15 @@ final readonly class Executor
         $generator = $source instanceof FileExtractor
             ? $source->extract($leaf->context(), $leaf->limit(), $leaf->pathFilter())
             : $source->extract($leaf->context(), $leaf->limit());
+        $sources = $leaf->sources();
+
+        if ($sources !== null) {
+            $generator = $sources->count(
+                $source,
+                $generator,
+                $leaf->limit() !== null || !$leaf->pathFilter() instanceof OnlyFiles,
+            );
+        }
 
         foreach ($chain as $stage) {
             foreach ($stage->segments()->all() as $segment) {

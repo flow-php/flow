@@ -309,6 +309,11 @@ impl RustCSVReaderNative {
         Ok(self.reader.fold(&mut fold.fold, limit)? as i64)
     }
 
+    #[php(name = "consumedBytes")]
+    pub fn consumed_bytes(&self) -> i64 {
+        self.reader.consumed_bytes() as i64
+    }
+
     pub fn next(&mut self, batch_size: i64) -> PhpResult<Zval> {
         let batch_size = usize::try_from(batch_size)
             .ok()

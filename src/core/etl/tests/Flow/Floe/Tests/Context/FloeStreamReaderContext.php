@@ -8,9 +8,11 @@ use Flow\ETL\Rows;
 use Flow\ETL\Schema\Metadata;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
+use Flow\Floe\Codec\NoopCodec;
 use Flow\Floe\FloeReader;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\Footer;
+use Flow\Floe\FooterReader;
 use Flow\Floe\Format;
 use Flow\Floe\FrameReader;
 
@@ -36,6 +38,17 @@ final class FloeStreamReaderContext
         $footerLength = Format::parseTrailer($source->read(Format::TRAILER_LENGTH, $size - Format::TRAILER_LENGTH));
 
         return Footer::fromJson($source->read($footerLength, $size - Format::TRAILER_LENGTH - $footerLength));
+    }
+
+    /**
+     * The bytes between the header and the FOOTER frame - what the footer's byteSize has to report.
+     */
+    public static function dataBytes(Filesystem $filesystem, Path $path): int
+    {
+        return (
+            (new FooterReader())->read($filesystem->readFrom($path), new NoopCodec())->footerFrameStart
+            - Format::HEADER_LENGTH
+        );
     }
 
     /**

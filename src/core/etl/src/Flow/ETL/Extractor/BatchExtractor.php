@@ -79,6 +79,11 @@ final class BatchExtractor implements BatchableExtractor, Extractor, OverridingE
         return $this->extractor->schema();
     }
 
+    public function statistics(): Statistics
+    {
+        return $this->extractor->statistics();
+    }
+
     public function withSchema(Schema $schema): static
     {
         $this->schema = $schema;

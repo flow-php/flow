@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
+use Flow\ETL\Cardinality;
 use Flow\ETL\Extractor\SelfDescribingFile;
 use Flow\ETL\Extractor\SourceFile;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\Schema;
 
 final readonly class FloeSourceFile implements SelfDescribingFile
@@ -28,5 +30,13 @@ final readonly class FloeSourceFile implements SelfDescribingFile
     public function source(): SourceFile
     {
         return $this->source;
+    }
+
+    public function statistics(): Statistics
+    {
+        return new Statistics(
+            rows: Cardinality::exact($this->reader->totalRows()),
+            size: Cardinality::exact($this->reader->byteSize()),
+        );
     }
 }

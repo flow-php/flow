@@ -1,0 +1,48 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Adapter\CSV\Tests\Unit;
+
+use Flow\ETL\Adapter\CSV\CSVSampledFiles;
+use Flow\ETL\Cardinality;
+use Flow\ETL\Tests\FlowTestCase;
+
+final class CSVSampledFilesTest extends FlowTestCase
+{
+    public function test_a_partial_sample_estimates_from_the_mean_sampled_row(): void
+    {
+        static::assertEquals(
+            Cardinality::approximately(100),
+            (new CSVSampledFiles(1, 10, 100, false))->estimatedRows(1, Cardinality::exact(1000)),
+        );
+    }
+
+    public function test_every_listed_file_read_whole_is_exact(): void
+    {
+        static::assertEquals(
+            Cardinality::exact(10),
+            (new CSVSampledFiles(2, 10, 100, true))->estimatedRows(2, Cardinality::exact(100)),
+        );
+    }
+
+    public function test_a_listed_file_the_samples_never_read_makes_it_an_estimate(): void
+    {
+        static::assertEquals(
+            Cardinality::approximately(20),
+            (new CSVSampledFiles(1, 10, 100, true))->estimatedRows(2, Cardinality::exact(200)),
+        );
+    }
+
+    public function test_no_listed_bytes_or_no_sampled_rows_is_unknown(): void
+    {
+        static::assertEquals(Cardinality::unknown(), (new CSVSampledFiles(1, 10, 100, false))->estimatedRows(
+            1,
+            Cardinality::unknown(),
+        ));
+        static::assertEquals(Cardinality::unknown(), (new CSVSampledFiles(1, 0, 0, false))->estimatedRows(
+            1,
+            Cardinality::exact(100),
+        ));
+    }
+}

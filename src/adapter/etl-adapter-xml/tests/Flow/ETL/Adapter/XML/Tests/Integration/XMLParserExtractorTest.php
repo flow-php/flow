@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\XML\Tests\Integration;
 
 use Flow\ETL\Adapter\XML\XMLParserExtractor;
+use Flow\ETL\Cardinality;
 use Flow\ETL\Config;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Tests\Context\ExtractedRows;
+use Flow\ETL\Tests\Context\MemoryFiles;
+use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\Double\RecordingFilesystem;
+use Flow\ETL\Tests\Double\UnsizedFilesystem;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 use function array_keys;
@@ -399,5 +403,43 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
         $generator->send(Signal::STOP);
 
         static::assertContains('closeSource', $filesystem->calls);
+    }
+
+    public function test_it_declares_the_listed_byte_total_exactly(): void
+    {
+        $statistics = from_xml(
+            path('memory://dir/*.xml'),
+            filesystem: MemoryFiles::with(['memory://dir/a.xml' => 'abcdefghij', 'memory://dir/b.xml' => 'abcde']),
+        )->statistics();
+
+        static::assertEquals(Cardinality::exact(15), $statistics->size);
+        static::assertEquals(Cardinality::unknown(), $statistics->rows);
+    }
+
+    public function test_a_member_without_a_size_makes_the_size_unknown(): void
+    {
+        $statistics = from_xml(
+            path('memory://dir/*.xml'),
+            filesystem: new UnsizedFilesystem(MemoryFiles::with([
+                'memory://dir/a.xml' => 'abcdefghij',
+                'memory://dir/b.xml' => 'abcde',
+            ]), ['memory://dir/b.xml']),
+        )->statistics();
+
+        static::assertEquals(Cardinality::unknown(), $statistics->size);
+    }
+
+    public function test_the_listing_is_read_once(): void
+    {
+        $filesystem = new CountingFilesystem(MemoryFiles::with([
+            'memory://dir/a.xml' => 'abcdefghij',
+            'memory://dir/b.xml' => 'abcde',
+        ]));
+        $extractor = from_xml(path('memory://dir/*.xml'), filesystem: $filesystem);
+
+        $extractor->statistics();
+        $extractor->statistics();
+
+        static::assertSame(1, $filesystem->listCalls);
     }
 }

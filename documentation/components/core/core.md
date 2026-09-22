@@ -48,7 +48,8 @@ tree read from the bottom up: a node's children are where its rows come from, an
 rows reach them - the source is `#1`. What a node does is listed under it.
 
 The verbs build a plan with no consumer on top; **the trigger adds the one it needs**, so `explain()` takes the
-trigger it should print - `Trigger::rows` by default, `Trigger::run` for the plan `run()` executes.
+trigger it should print - `Trigger::rows` by default, `Trigger::run` for the plan `run()` executes, `Trigger::count`
+for the plan `count()` executes.
 
 ```php
 echo data_frame()
@@ -154,6 +155,9 @@ step sits in is where rows stop flowing through, and every step lists the settin
 storage among them, which the logical stages cannot know because the planner picks it.
 
 ```php
+$users = [['id' => 1, 'name' => 'Alice'], ['id' => 2, 'name' => 'Bob']];
+$emails = [['id' => 1, 'email' => 'alice@example.com']];
+
 echo data_frame()
     ->read(from_array($users))
     ->join(data_frame()->read(from_array($emails)), join_on(['id' => 'id'], join_prefix: 'joined_'), Join::left)
@@ -164,13 +168,14 @@ echo data_frame()
 
 ```text
 Physical plan
-│  Schema: derived
+│  Columns: id, name, joined_id, joined_email
 └─ Pipeline #1
    │  Processor: CollectingProcessor
    │     Schema: declared
    │  Loader: StreamLoader
    └─ Pipeline #0
       │  Extractor: ArrayExtractor
+      │     Statistics: rows exact 2 · size unknown
       │  Processor: HashJoinProcessor
       │     Join: left
       │     On: id = id
@@ -180,9 +185,12 @@ Physical plan
       │     Batch: 1000
       └─ Right side: Pipeline #0
             Extractor: ArrayExtractor
+               Statistics: rows exact 1 · size unknown
 ```
 
 A joined frame is planned apart, so its pipelines are numbered apart - `Right side:` says which plan they belong to.
+Every source lists what it declares about itself before a row is read - `exact n`, `≤ n` (a guaranteed bound),
+`~n ±e%` (an estimate) or `unknown`. A source that declares nothing lists no `Statistics:` line.
 Reaching this stage plans the frame, so a source that infers its schema by reading is read here; the logical stages
 never read a row.
 
@@ -235,6 +243,7 @@ Before a frame runs, the optimizer rewrites its plan. `Optimizer::default()` run
 | `CombineSortAndLimit`  | `sortBy()` followed by `limit()` keeps only the top rows instead of sorting all  |
 | `PushLimitIntoSource`  | the extractor stops reading once the limit (plus any `offset()`) is reached      |
 | `PushFilterIntoSource` | a `filter()` on partition columns skips whole partition directories              |
+| `CountFromStatistics`  | `count()` over a source that knows its rows exactly reads that number, no rows   |
 
 Rules live in `Flow\ETL\Optimizer\Rule` and are configured through `config_builder()->optimizer()`:
 
@@ -286,6 +295,7 @@ For detailed information about specific DataFrame operations, see the following 
 - **[Partitioning](/documentation/components/core/partitioning.md)** - Data partitioning for efficient processing
 - **[Caching](/documentation/components/core/caching.md)** - Performance optimization through caching
 - **[Floe File Format](/documentation/components/core/floe.md)** - Flow's native self-describing binary row format
+- **[Source Statistics](/documentation/components/core/statistics.md)** - What a source declares about its rows and bytes before it is read
 - **[Data Retrieval](/documentation/components/core/data-retrieval.md)** - Methods for getting processed data
 
 ### Data Quality & Validation

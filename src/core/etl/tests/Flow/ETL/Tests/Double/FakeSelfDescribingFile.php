@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Double;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Extractor\SelfDescribingFile;
 use Flow\ETL\Extractor\SourceFile;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\Schema;
 
 final class FakeSelfDescribingFile implements SelfDescribingFile
@@ -17,6 +18,7 @@ final class FakeSelfDescribingFile implements SelfDescribingFile
         private readonly Schema $schema,
         private readonly SourceFile $source,
         private readonly bool $describingThrows = false,
+        private readonly Statistics $statistics = new Statistics(),
     ) {}
 
     public function close(): void
@@ -36,5 +38,10 @@ final class FakeSelfDescribingFile implements SelfDescribingFile
     public function source(): SourceFile
     {
         return $this->source;
+    }
+
+    public function statistics(): Statistics
+    {
+        return $this->statistics;
     }
 }

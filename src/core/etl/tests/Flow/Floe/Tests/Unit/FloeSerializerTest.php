@@ -177,10 +177,10 @@ final class FloeSerializerTest extends TestCase
     public function test_unserialize_rejects_row_count_mismatch(): void
     {
         $bytes = serialize_to_string(new FloeSerializer(), rows(schema(int_schema('id')), row(['id' => 1])));
-        // inflate the footer's totalRows while the body still holds a single row; the JSON
+        // inflate the footer's row count while the body still holds a single row; the JSON
         // byte-length is unchanged (1 -> 2) so the trailer stays valid and the read reaches
         // the whole-value row-count guard
-        $corrupted = str_replace('"totalRows":1', '"totalRows":2', $bytes);
+        $corrupted = str_replace('"statistics":{"rows":1', '"statistics":{"rows":2', $bytes);
 
         $this->expectException(SerializationException::class);
         $this->expectExceptionMessage('decoded 1 of 2 rows');

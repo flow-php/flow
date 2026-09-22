@@ -374,11 +374,21 @@ final class FloeStreamReader
     }
 
     /**
+     * Uncompressed bytes of the data frames, as the footer records them.
+     *
+     * @throws FloeException
+     */
+    public function byteSize(): int
+    {
+        return $this->footer()->statistics->byteSize;
+    }
+
+    /**
      * @throws FloeException
      */
     public function totalRows(): int
     {
-        return $this->footer()->totalRows;
+        return $this->footer()->statistics->rows;
     }
 
     /**

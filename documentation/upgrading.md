@@ -238,6 +238,46 @@ after it shift by one. `Stage::physical` is new - see the core documentation.
 | `CSVFileReader::samples()` yields `Generator`s                             | yields `CSVFileSample` (`IteratorAggregate`); `$unit->getIterator()` for the generator         |
 | `CSVFileReader::sample($source)`                                           | `new CSVFileSample($opener, $source)`                                                          |
 
+### 24) `flow-php/etl` - Floe footer carries a statistics block, existing `.floe` files must be rewritten
+
+| Before                                          | After                                                           |
+|-------------------------------------------------|-----------------------------------------------------------------|
+| footer key `totalRows`                          | `statistics.rows`                                               |
+| -                                               | `statistics.byteSize` - uncompressed data bytes                 |
+| footer/section parsers rejected any unknown key | unknown keys ignored, so later additions are not a break        |
+| reading a file written by 0.44.x                | `Floe footer is malformed: ... "statistics"` - rewrite the file |
+
+Header version stays `0x02`: the change is in the footer, not the frame layout. Files written by 0.44.x
+cannot be read. Regenerate them from their source, or export them with 0.44.x to another format before
+upgrading.
+
+### 25) `flow-php/etl` - every `Extractor` declares `statistics()`
+
+| Before                                                  | After                                                                                           |
+|---------------------------------------------------------|-------------------------------------------------------------------------------------------------|
+| `Extractor`: `extract()`, `schema()`, `withSchema()`    | `+ statistics(): Statistics` - a custom extractor that knows nothing returns `new Statistics()` |
+| `SequenceGenerator`: `generate()`                       | `+ rows(): Cardinality` - how many items `generate()` yields                                    |
+| `SelfDescribingFile`: `close()`, `schema()`, `source()` | `+ statistics(): Statistics` - that one file's rows and bytes from its own metadata             |
+| `CacheIndex` rows: `key`                                | `key`, `rows` - an index written by 0.44.x reads fine, its row count is unknown                 |
+| `JsonFileReader::samples()` yields `Generator`s         | yields `JsonFileSample` (`IteratorAggregate`)                                                   |
+| `WorkbookSampler::samples()` yields `Generator`s        | yields `WorkbookSheetSample` (`IteratorAggregate`)                                              |
+
+```php
+final class MyExtractor implements Extractor
+{
+    public function statistics(): Statistics
+    {
+        return new Statistics();
+    }
+}
+```
+
+### 26) `flow-php/etl` - `Report` takes the source statistics of the run
+
+| Before                                           | After                                                                                                |
+|--------------------------------------------------|------------------------------------------------------------------------------------------------------|
+| `new Report(?Schema $schema, Statistics $stats)` | `new Report(?Schema $schema, Statistics $stats, ?array $sources)` - `null` unless analyzed with them |
+
 ---
 
 ## Upgrading from 0.43.x to 0.44.x

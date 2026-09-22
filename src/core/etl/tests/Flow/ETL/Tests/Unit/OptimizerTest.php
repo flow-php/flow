@@ -9,6 +9,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Optimizer;
 use Flow\ETL\Optimizer\Rule\CombineLimits;
 use Flow\ETL\Optimizer\Rule\CombineSortAndLimit;
+use Flow\ETL\Optimizer\Rule\CountFromStatistics;
 use Flow\ETL\Optimizer\Rule\PushFilterIntoSource;
 use Flow\ETL\Optimizer\Rule\PushLimitIntoSource;
 use Flow\ETL\Tests\Double\RecordingRule;
@@ -55,10 +56,16 @@ final class OptimizerTest extends FlowTestCase
         static::assertSame($plan, (new Optimizer())->optimize($plan, NodeMother::context()));
     }
 
-    public function test_default_registers_combine_limits_combine_sort_and_limit_push_limit_then_push_filter_into_source(): void
+    public function test_default_registers_combine_limits_combine_sort_and_limit_push_limit_push_filter_then_count_from_statistics(): void
     {
         static::assertSame(
-            [CombineLimits::class, CombineSortAndLimit::class, PushLimitIntoSource::class, PushFilterIntoSource::class],
+            [
+                CombineLimits::class,
+                CombineSortAndLimit::class,
+                PushLimitIntoSource::class,
+                PushFilterIntoSource::class,
+                CountFromStatistics::class,
+            ],
             array_map(static fn($rule) => $rule::class, Optimizer::default()->rules()),
         );
     }
@@ -66,7 +73,7 @@ final class OptimizerTest extends FlowTestCase
     public function test_without_drops_the_named_rule_and_keeps_the_rest(): void
     {
         static::assertSame(
-            [CombineLimits::class, CombineSortAndLimit::class, PushFilterIntoSource::class],
+            [CombineLimits::class, CombineSortAndLimit::class, PushFilterIntoSource::class, CountFromStatistics::class],
             array_map(
                 static fn($rule) => $rule::class,
                 Optimizer::default()->without(PushLimitIntoSource::class)->rules(),

@@ -7,9 +7,13 @@ namespace Flow\ETL\Tests\Integration\Extractor;
 use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Cache\Implementation\FilesystemCache;
 use Flow\ETL\Cache\Implementation\InMemoryCache;
+use Flow\ETL\Cardinality;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Rows;
+use Flow\ETL\Tests\Double\CountingCache;
+use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\ETL\Tests\Mother\RowsMother;
 
 use function array_map;
 use function array_merge;
@@ -28,6 +32,76 @@ use function iterator_to_array;
 
 final class CacheExtractorTest extends FlowIntegrationTestCase
 {
+    public function test_a_cached_index_declares_its_rows_exactly(): void
+    {
+        $cache = new InMemoryCache();
+        df(config_builder()->cache($cache))
+            ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]))
+            ->cache('cached')
+            ->run();
+
+        $extractor = from_cache('cached', cache: $cache);
+
+        static::assertEquals(Cardinality::exact(3), $extractor->statistics()->rows);
+        static::assertSame($extractor->statistics(), $extractor->statistics());
+    }
+
+    public function test_schema_and_statistics_load_the_index_once(): void
+    {
+        $cache = new CountingCache(new InMemoryCache());
+        df(config_builder()->cache($cache))
+            ->read(from_array([['id' => 1], ['id' => 2]]))
+            ->cache('cached')
+            ->run();
+        $loads = $cache->getCalls;
+
+        $extractor = from_cache('cached', cache: $cache);
+        $extractor->schema();
+        $extractor->statistics();
+
+        static::assertSame($loads + 1, $cache->getCalls);
+    }
+
+    public function test_a_cache_from_the_context_declares_nothing(): void
+    {
+        static::assertEquals(
+            Cardinality::unknown(),
+            from_cache('cached', from_array([['id' => 1]]))->statistics()->rows,
+        );
+    }
+
+    public function test_a_missing_entry_without_a_fallback_declares_zero_rows(): void
+    {
+        static::assertEquals(
+            Cardinality::exact(0),
+            from_cache('missing', cache: new InMemoryCache())->statistics()->rows,
+        );
+    }
+
+    public function test_a_missing_entry_declares_what_the_fallback_declares(): void
+    {
+        static::assertEquals(
+            Cardinality::exact(2),
+            from_cache(
+                'missing',
+                from_array([['id' => 1], ['id' => 2]]),
+                cache: new InMemoryCache(),
+            )->statistics()->rows,
+        );
+    }
+
+    public function test_a_missing_entry_with_an_undeclaring_fallback_declares_nothing(): void
+    {
+        static::assertEquals(
+            Cardinality::unknown(),
+            from_cache(
+                'missing',
+                new CountingExtractor(schema(int_schema('id')), RowsMother::sequentialIds(2)),
+                cache: new InMemoryCache(),
+            )->statistics()->rows,
+        );
+    }
+
     public function test_extracting_rows_from_cache(): void
     {
         $cache = new InMemoryCache();

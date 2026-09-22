@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
+use Flow\ETL\Cardinality;
 use Flow\ETL\Extractor\FilesExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Schema;
 use Flow\ETL\Tests\Context\ExtractedRows;
+use Flow\ETL\Tests\Context\MemoryFiles;
+use Flow\ETL\Tests\Double\CountingFilesystem;
+use Flow\ETL\Tests\Double\UnsizedFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\files;
@@ -18,6 +22,48 @@ use function iterator_to_array;
 
 final class FilesExtractorTest extends FlowTestCase
 {
+    public function test_it_declares_one_row_per_listed_file_and_their_bytes_exactly(): void
+    {
+        $statistics = files('memory://dir/*', MemoryFiles::with([
+            'memory://dir/a.txt' => 'abcdefghij',
+            'memory://dir/b.txt' => 'abcde',
+        ]))->statistics();
+
+        static::assertEquals(Cardinality::exact(2), $statistics->rows);
+        static::assertEquals(Cardinality::exact(15), $statistics->size);
+    }
+
+    public function test_an_empty_listing_declares_zero_rows_and_zero_bytes(): void
+    {
+        $statistics = files('memory://dir/*', MemoryFiles::with([]))->statistics();
+
+        static::assertEquals(Cardinality::exact(0), $statistics->rows);
+        static::assertEquals(Cardinality::exact(0), $statistics->size);
+    }
+
+    public function test_a_member_without_a_size_makes_the_size_unknown(): void
+    {
+        $statistics = files(
+            'memory://dir/*',
+            new UnsizedFilesystem(MemoryFiles::with([
+                'memory://dir/a.txt' => 'abcdefghij',
+                'memory://dir/b.txt' => 'abcde',
+            ]), ['memory://dir/b.txt']),
+        )->statistics();
+
+        static::assertEquals(Cardinality::exact(2), $statistics->rows);
+        static::assertEquals(Cardinality::unknown(), $statistics->size);
+    }
+
+    public function test_the_listing_is_read_once(): void
+    {
+        $filesystem = new CountingFilesystem(MemoryFiles::with(['memory://dir/a.txt' => 'abc']));
+        $extractor = files('memory://dir/*', $filesystem);
+
+        static::assertSame($extractor->statistics(), $extractor->statistics());
+        static::assertSame(1, $filesystem->listCalls);
+    }
+
     public function test_a_zero_string_extension_is_not_null(): void
     {
         $batches = iterator_to_array(files(__DIR__ . '/Fixtures/ZeroExtension/*')->extract(flow_context()));

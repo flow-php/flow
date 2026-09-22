@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Text\Tests\Integration;
 
 use Flow\ETL\Adapter\Text\TextExtractor;
+use Flow\ETL\Cardinality;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Tests\Context\ExtractedRows;
+use Flow\ETL\Tests\Context\MemoryFiles;
+use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\Double\RecordingFilesystem;
+use Flow\ETL\Tests\Double\UnsizedFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\Adapter\Text\from_text;
@@ -17,6 +21,7 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\native_local_filesystem;
+use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_string;
 use function iterator_to_array;
@@ -142,5 +147,43 @@ final class TextExtractorTest extends FlowTestCase
         $generator->send(Signal::STOP);
 
         static::assertContains('closeSource', $filesystem->calls);
+    }
+
+    public function test_it_declares_the_listed_byte_total_exactly(): void
+    {
+        $statistics = from_text(
+            path('memory://dir/*.txt'),
+            MemoryFiles::with(['memory://dir/a.txt' => 'abcdefghij', 'memory://dir/b.txt' => 'abcde']),
+        )->statistics();
+
+        static::assertEquals(Cardinality::exact(15), $statistics->size);
+        static::assertEquals(Cardinality::unknown(), $statistics->rows);
+    }
+
+    public function test_a_member_without_a_size_makes_the_size_unknown(): void
+    {
+        $statistics = from_text(
+            path('memory://dir/*.txt'),
+            new UnsizedFilesystem(MemoryFiles::with([
+                'memory://dir/a.txt' => 'abcdefghij',
+                'memory://dir/b.txt' => 'abcde',
+            ]), ['memory://dir/b.txt']),
+        )->statistics();
+
+        static::assertEquals(Cardinality::unknown(), $statistics->size);
+    }
+
+    public function test_the_listing_is_read_once(): void
+    {
+        $filesystem = new CountingFilesystem(MemoryFiles::with([
+            'memory://dir/a.txt' => 'abcdefghij',
+            'memory://dir/b.txt' => 'abcde',
+        ]));
+        $extractor = from_text(path('memory://dir/*.txt'), $filesystem);
+
+        $extractor->statistics();
+        $extractor->statistics();
+
+        static::assertSame(1, $filesystem->listCalls);
     }
 }

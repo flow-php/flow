@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\Http;
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
@@ -125,5 +126,10 @@ final class PsrHttpClientDynamicExtractor implements Extractor
         $this->schema = $schema;
 
         return $this;
+    }
+
+    public function statistics(): Statistics
+    {
+        return new Statistics();
     }
 }

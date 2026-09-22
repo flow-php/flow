@@ -7,12 +7,14 @@ namespace Flow\ETL\Adapter\JSON\Tests\Integration\JSONMachine;
 use Closure;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
 use Flow\ETL\Adapter\JSON\Tests\Context\JsonFixtureContext;
+use Flow\ETL\Cardinality;
 use Flow\ETL\Config;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Schema\Definition\StringDefinition;
 use Flow\ETL\Tests\Context\ExtractedRows;
+use Flow\ETL\Tests\Context\MemoryFiles;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
@@ -580,5 +582,109 @@ final class JsonExtractorTest extends FlowTestCase
     public function test_is_repeatable(): void
     {
         static::assertTrue(from_json(__DIR__ . '/../../Fixtures/timezones.json')->isRepeatable());
+    }
+
+    /**
+     * @param Closure(JsonExtractor): void $setter
+     */
+    #[DataProvider('shapeChangingSetters')]
+    public function test_a_shape_changing_setter_drops_the_sample(Closure $setter): void
+    {
+        $extractor = from_json(JsonFixtureContext::path('five_rows.json'));
+        $extractor->schema();
+
+        static::assertEquals(Cardinality::exact(5), $extractor->statistics()->rows);
+
+        $setter($extractor);
+
+        static::assertEquals(Cardinality::unknown(), $extractor->statistics()->rows);
+    }
+
+    public function test_a_declared_schema_declares_unknown_rows(): void
+    {
+        $extractor = from_json(JsonFixtureContext::path('five_rows.json'), schema: schema(int_schema('id')));
+        $extractor->schema();
+
+        static::assertEquals(Cardinality::unknown(), $extractor->statistics()->rows);
+        static::assertEquals(Cardinality::exact(46), $extractor->statistics()->size);
+    }
+
+    public function test_a_document_the_sample_read_whole_declares_an_exact_row_count(): void
+    {
+        $extractor = from_json(JsonFixtureContext::path('five_rows.json'));
+        $extractor->schema();
+
+        static::assertEquals(Cardinality::exact(5), $extractor->statistics()->rows);
+    }
+
+    public function test_a_document_the_sample_did_not_finish_declares_unknown_rows(): void
+    {
+        $extractor = from_json(JsonFixtureContext::path('five_rows.json'))->inferSchema(infer_schema()->sampleSize(2));
+        $extractor->schema();
+
+        static::assertEquals(Cardinality::unknown(), $extractor->statistics()->rows);
+    }
+
+    public function test_a_file_the_sample_never_opened_declares_unknown_rows(): void
+    {
+        $extractor = from_json(JsonFixtureContext::path('glob_with_empty/*.json'))
+            ->inferSchema(infer_schema()->filesToSniff(1));
+        $extractor->schema();
+
+        static::assertEquals(Cardinality::unknown(), $extractor->statistics()->rows);
+    }
+
+    public function test_a_member_without_a_size_makes_the_size_unknown(): void
+    {
+        static::assertEquals(
+            Cardinality::unknown(),
+            from_json(JsonFixtureContext::path('glob_with_empty/*.json'))->statistics()->size,
+        );
+    }
+
+    public function test_it_declares_the_listed_byte_total_exactly(): void
+    {
+        $extractor = from_json(
+            path('memory://dir/*.json'),
+            filesystem: MemoryFiles::with([
+                'memory://dir/a.json' => '[{"id":1}]',
+                'memory://dir/b.json' => '[{"id":2},{"id":3}]',
+            ]),
+        );
+
+        static::assertEquals(Cardinality::exact(29), $extractor->statistics()->size);
+    }
+
+    public function test_statistics_before_schema_declares_unknown_rows(): void
+    {
+        $extractor = from_json(JsonFixtureContext::path('five_rows.json'));
+
+        static::assertEquals(Cardinality::unknown(), $extractor->statistics()->rows);
+
+        $extractor->schema();
+
+        static::assertEquals(Cardinality::exact(5), $extractor->statistics()->rows);
+    }
+
+    public function test_statistics_are_computed_at_most_once(): void
+    {
+        $filesystem = new CountingFilesystem(new NativeLocalFilesystem());
+        $extractor = from_json(JsonFixtureContext::path('five_rows.json'), filesystem: $filesystem);
+        $extractor->schema();
+        $listCalls = $filesystem->listCalls;
+
+        static::assertSame($extractor->statistics(), $extractor->statistics());
+        static::assertSame($listCalls + 1, $filesystem->listCalls);
+    }
+
+    public function test_the_listing_is_read_once(): void
+    {
+        $filesystem = new CountingFilesystem(new NativeLocalFilesystem());
+        $extractor = from_json(JsonFixtureContext::path('five_rows.json'), filesystem: $filesystem);
+
+        $extractor->statistics();
+        $extractor->statistics();
+
+        static::assertSame(1, $filesystem->listCalls);
     }
 }

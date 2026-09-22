@@ -38,6 +38,7 @@ use function array_values;
 use function count;
 use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\to_output;
+use function Flow\Types\DSL\type_integer;
 use function is_string;
 
 /**
@@ -202,18 +203,19 @@ final class DataFrame
      */
     public function count(): int
     {
-        $total = 0;
-
-        foreach ($this->context
-            ->config
-            ->executor()
-            ->execute(
-                $this->context->config->planner()->plan(Trigger::rows->plan($this->root, $this->sinks), $this->context),
-            ) as $rows) {
-            $total += $rows->count();
-        }
-
-        return $total;
+        return type_integer()->assert(
+            $this->context
+                ->config
+                ->executor()
+                ->fetch(
+                    $this->context
+                        ->config
+                        ->planner()
+                        ->plan(Trigger::count->plan($this->root, $this->sinks), $this->context),
+                )
+                ->first()
+                ->get('count'),
+        );
     }
 
     /**
@@ -715,7 +717,10 @@ final class DataFrame
             ->config
             ->executor()
             ->execute(
-                $this->context->config->planner()->plan(Trigger::run->plan($this->root, $this->sinks), $this->context),
+                $this->context
+                    ->config
+                    ->planner()
+                    ->plan(Trigger::run->plan($this->root, $this->sinks), $this->context, $collector->sources()),
             ) as $rows) {
             $collector->capture($rows);
         }
