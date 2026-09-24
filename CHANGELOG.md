@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-09-22
+## [Unreleased] - 2026-09-24
 
 ### Added
 - [#2649](https://github.com/flow-php/flow/pull/2649) - **flow-php/postgresql - RelationCollector visitor collecting only relation references** - [@norberttech](https://github.com/norberttech)
@@ -37,6 +37,8 @@
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/cli - ProgressBarLoader advancing a progress bar per batch** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2652](https://github.com/flow-php/flow/pull/2652) - **flow-php/types - DateTimeType casts Z-suffixed ISO datetimes ~9x faster** - [@norberttech](https://github.com/norberttech)
+- [#2652](https://github.com/flow-php/flow/pull/2652) - **flow-php/flow-php-ext - native hydrator casts Z-suffixed ISO datetimes ~14x faster** - [@norberttech](https://github.com/norberttech)
 - [#2650](https://github.com/flow-php/flow/pull/2650) - **flow-php/arrow-ext - bumped parquet and arrow crates to 59** - [@norberttech](https://github.com/norberttech)
 - [#2650](https://github.com/flow-php/flow/pull/2650) - **Flow PHP - bumped twig, google/protobuf and ramsey/uuid** - [@norberttech](https://github.com/norberttech)
 - [#2650](https://github.com/flow-php/flow/pull/2650) - **Flow PHP - bumped codecov and setup-buildx GitHub actions** - [@norberttech](https://github.com/norberttech)
