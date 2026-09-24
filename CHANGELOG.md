@@ -40,6 +40,7 @@
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/cli - ProgressBarLoader advancing a progress bar per batch** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [94146f](https://github.com/flow-php/flow/commit/94146f546921570e8ce34d988e8f3ff9f8274af1) - **fix(flow-php/flow): extension jobs upload coverage on Blacksmith runners** - [@norberttech](https://github.com/norberttech)
 - [#2653](https://github.com/flow-php/flow/pull/2653) - **flow-php/etl - Floe reader and writer use the fused native path when the hydrator is native** - [@norberttech](https://github.com/norberttech)
 - [#2653](https://github.com/flow-php/flow/pull/2653) - **flow-php/etl - Floe offset reads skip rows before decoding them** - [@norberttech](https://github.com/norberttech)
 - [#2653](https://github.com/flow-php/flow/pull/2653) - **flow-php/etl - Floe extractor adds file constants per batch, only when there are any** - [@norberttech](https://github.com/norberttech)
