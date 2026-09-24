@@ -8,7 +8,6 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Row\AdaptiveRowHydrator;
-use Flow\ETL\Row\Hydrator;
 use Flow\ETL\Row\NativeRowHydrator;
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Row\TypedRowValues;
@@ -101,18 +100,21 @@ final class NativeFloeEncoderTest extends TestCase
     }
 
     /**
-     * @return array<string, array{Hydrator}>
+     * Flags, not instances: PHPUnit builds provider data before setUp() skips, and a native hydrator cannot be
+     * constructed without the extension.
+     *
+     * @return array<string, array{bool}>
      */
     public static function native_hydrators(): array
     {
         return [
-            'native' => [new NativeRowHydrator()],
-            'adaptive' => [new AdaptiveRowHydrator()],
+            'native' => [false],
+            'adaptive' => [true],
         ];
     }
 
     #[DataProvider('native_hydrators')]
-    public function test_decode_rows_matches_hydrate_of_decode(Hydrator $hydrator): void
+    public function test_decode_rows_matches_hydrate_of_decode(bool $adaptive): void
     {
         $data = rows(
             schema(int_schema('id'), str_schema('name', nullable: true), datetime_schema('at')),
@@ -129,7 +131,7 @@ final class NativeFloeEncoderTest extends TestCase
 
         static::assertEquals(
             (new NativeRowHydrator())->hydrate($encoder->decode($bodies), $schema),
-            $encoder->decodeRows($bodies, $schema, $hydrator),
+            $encoder->decodeRows($bodies, $schema, $adaptive ? new AdaptiveRowHydrator() : new NativeRowHydrator()),
         );
     }
 
@@ -175,14 +177,14 @@ final class NativeFloeEncoderTest extends TestCase
     }
 
     #[DataProvider('native_hydrators')]
-    public function test_encode_frames_matches_framing_encode_of_dehydrate(Hydrator $hydrator): void
+    public function test_encode_frames_matches_framing_encode_of_dehydrate(bool $adaptive): void
     {
         $data = RowsMother::numbered(4);
         $encoder = new NativeFloeEncoder($data->schema());
 
         static::assertSame(
             Format::rowFrames($encoder->encode((new PhpRowHydrator())->dehydrate($data))),
-            $encoder->encodeFrames($data, $hydrator),
+            $encoder->encodeFrames($data, $adaptive ? new AdaptiveRowHydrator() : new NativeRowHydrator()),
         );
     }
 

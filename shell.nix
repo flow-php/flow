@@ -30,21 +30,41 @@ let
             allowUnfree = true;
         };
         overlays = [
-            # Blackfire upstream republishes the same versioned tarball with different
-            # bytes when they rebuild, invalidating the sha256 pinned in nixpkgs. Override
-            # just the CLI agent's src on macOS arm64 with the current upstream hash.
-            # Linux and other platforms keep nixpkgs' original src untouched. The PHP
-            # extension (php83.extensions.blackfire) uses a separate upstream URL and is
-            # unaffected on every platform.
             (final: prev:
-                if prev.stdenv.hostPlatform.system == "aarch64-darwin" then {
-                    blackfire = prev.blackfire.overrideAttrs (old: {
-                        src = prev.fetchurl {
-                            url = "https://packages.blackfire.io/blackfire/2.29.7/blackfire-darwin_arm64.pkg.tar.gz";
-                            sha256 = "sha256-e0oTxGFxgURMyUoTNh+NFGVoO9qGKrHNKud3IFD0fec=";
+                if prev.stdenv.hostPlatform.system == "aarch64-darwin" then
+                    let
+                        blackfire-probe-version = "2026.9.2";
+                        blackfire-probe-hashes = {
+                            "83" = "sha256-3oJtMuVKGUgpduMp7snSdGE/BH764EA7yz+N70+qFNg=";
+                            "84" = "sha256-0HOCBB9dgU9Vq5/F0iKCzumjwT81qxHElPsLGKgVhr0=";
+                            "85" = "sha256-Hi9bC/CigkA3VWFTqfE7JzBcGGJAhUwnmMndHgbFIW4=";
                         };
-                    });
-                } else {}
+                        with-blackfire-probe = php-version: php: php.override {
+                            packageOverrides = php-final: php-prev: {
+                                extensions = php-prev.extensions // {
+                                    blackfire = php-prev.extensions.blackfire.overrideAttrs (old: {
+                                        version = blackfire-probe-version;
+                                        src = prev.fetchurl {
+                                            url = "https://packages.blackfire.io/binaries/blackfire-php/${blackfire-probe-version}/blackfire-php-darwin_arm64-php-${php-version}.so";
+                                            hash = blackfire-probe-hashes.${php-version};
+                                        };
+                                    });
+                                };
+                            };
+                        };
+                    in {
+                        blackfire = prev.blackfire.overrideAttrs (old: {
+                            version = "2026.9.1";
+                            src = prev.fetchurl {
+                                url = "https://packages.blackfire.io/blackfire/2026.9.1/blackfire-darwin_arm64.pkg.tar.gz";
+                                sha256 = "sha256-xNn78U4jdABzWrSKMSSZXE5tuf/SRK8OwdhldKBBKk0=";
+                            };
+                        });
+                        php83 = with-blackfire-probe "83" prev.php83;
+                        php84 = with-blackfire-probe "84" prev.php84;
+                        php85 = with-blackfire-probe "85" prev.php85;
+                    }
+                else {}
             )
         ];
     };
