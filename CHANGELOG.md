@@ -1,6 +1,9 @@
 ## [Unreleased] - 2026-09-24
 
 ### Added
+- [#2653](https://github.com/flow-php/flow/pull/2653) - **flow-php/flow-php-ext - RustFloeEncoderNative::decodeRows() decodes Floe frames straight into Rows in one native pass** - [@norberttech](https://github.com/norberttech)
+- [#2653](https://github.com/flow-php/flow/pull/2653) - **flow-php/flow-php-ext - RustFloeEncoderNative::encodeFrames() encodes Rows straight into complete ROW frames** - [@norberttech](https://github.com/norberttech)
+- [#2653](https://github.com/flow-php/flow/pull/2653) - **flow-php/etl - FloeEncoder contract with decodeRows() / encodeFrames()** - [@norberttech](https://github.com/norberttech)
 - [#2649](https://github.com/flow-php/flow/pull/2649) - **flow-php/postgresql - RelationCollector visitor collecting only relation references** - [@norberttech](https://github.com/norberttech)
 - [#2649](https://github.com/flow-php/flow/pull/2649) - **flow-php/postgresql - sql_query_tables() reports DROP / COMMENT ON / SECURITY LABEL / ALTER EXTENSION targets** - [@norberttech](https://github.com/norberttech)
 - [#2648](https://github.com/flow-php/flow/pull/2648) - **flow-php/postgresql - collate() expression and COLLATE support in the query builder** - [@norberttech](https://github.com/norberttech)
@@ -37,6 +40,11 @@
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/cli - ProgressBarLoader advancing a progress bar per batch** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2653](https://github.com/flow-php/flow/pull/2653) - **flow-php/etl - Floe reader and writer use the fused native path when the hydrator is native** - [@norberttech](https://github.com/norberttech)
+- [#2653](https://github.com/flow-php/flow/pull/2653) - **flow-php/etl - Floe offset reads skip rows before decoding them** - [@norberttech](https://github.com/norberttech)
+- [#2653](https://github.com/flow-php/flow/pull/2653) - **flow-php/etl - Floe extractor adds file constants per batch, only when there are any** - [@norberttech](https://github.com/norberttech)
+- [#2653](https://github.com/flow-php/flow/pull/2653) - **flow-php/flow-php-ext - datetimes are built from timestamps without parsing on PHP 8.4+** - [@norberttech](https://github.com/norberttech)
+- [#2653](https://github.com/flow-php/flow/pull/2653) - **flow-php/etl - an extension without the new methods falls back to the PHP Floe engine** - [@norberttech](https://github.com/norberttech)
 - [#2652](https://github.com/flow-php/flow/pull/2652) - **flow-php/types - DateTimeType casts Z-suffixed ISO datetimes ~9x faster** - [@norberttech](https://github.com/norberttech)
 - [#2652](https://github.com/flow-php/flow/pull/2652) - **flow-php/flow-php-ext - native hydrator casts Z-suffixed ISO datetimes ~14x faster** - [@norberttech](https://github.com/norberttech)
 - [#2650](https://github.com/flow-php/flow/pull/2650) - **flow-php/arrow-ext - bumped parquet and arrow crates to 59** - [@norberttech](https://github.com/norberttech)
@@ -69,6 +77,7 @@
 - [#2635](https://github.com/flow-php/flow/pull/2635) - **flow-php/parquet - reader and writer row types widened to array-key.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2653](https://github.com/flow-php/flow/pull/2653) - **flow-php/flow-php-ext - native hydrator keeps per-value metadata of numeric-named columns, like the PHP one** - [@norberttech](https://github.com/norberttech)
 - [#2650](https://github.com/flow-php/flow/pull/2650) - **Flow PHP - regenerated stale CodeMirror completions on the landing site** - [@norberttech](https://github.com/norberttech)
 - [#2649](https://github.com/flow-php/flow/pull/2649) - **flow-php/postgresql - sql_query_tables() no longer returns FOR UPDATE OF names and CTE references** - [@norberttech](https://github.com/norberttech)
 - [#2649](https://github.com/flow-php/flow/pull/2649) - **flow-php/postgresql - false circular view dependencies and false view drops in schema diffs** - [@norberttech](https://github.com/norberttech)
@@ -93,6 +102,7 @@
 - [#2635](https://github.com/flow-php/flow/pull/2635) - **flow-php/etl - chained rename strategies no longer desync rows from the schema on numeric entry names.** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2653](https://github.com/flow-php/flow/pull/2653) - **flow-php/etl - AdaptiveFloeEncoder, FloeEngine::adaptive picks the encoder itself** - [@norberttech](https://github.com/norberttech)
 - [#2650](https://github.com/flow-php/flow/pull/2650) - **flow-php/arrow-ext - dropped the thrift crate dependency** - [@norberttech](https://github.com/norberttech)
 - [#2648](https://github.com/flow-php/flow/pull/2648) - **flow-php/postgresql - NodeVisitor::REMOVE_NODE** - [@norberttech](https://github.com/norberttech)
 - [#2648](https://github.com/flow-php/flow/pull/2648) - **flow-php/postgresql - ExpressionParser::normalizeNode()** - [@norberttech](https://github.com/norberttech)
