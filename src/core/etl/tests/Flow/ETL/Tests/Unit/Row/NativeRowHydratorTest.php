@@ -364,7 +364,6 @@ final class NativeRowHydratorTest extends FlowTestCase
         /** @var UnionType<mixed, mixed> $unmatchable */
         $unmatchable = type_union(type_uuid(), type_datetime());
 
-        // the row gate refuses this one, so it is the case that reaches NativeRowHydrator::unwrap()
         yield 'null in a not null column' => [
             schema(int_schema('id'), str_schema('name')),
             [new RawRowValues(['id' => 1, 'name' => null])],

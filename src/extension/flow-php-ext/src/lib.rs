@@ -18,7 +18,9 @@ use ext_php_rs::zend::ModuleEntry;
 use ext_php_rs::{info_table_end, info_table_row, info_table_start};
 
 use crate::ctx::{ht_insert, zval_str, Ctx};
-use crate::encode::{build_encode_plan, encode_typed_row, expect_object, ht_for_each, read_slot, EncodePlan};
+use crate::encode::{
+    build_encode_plan, encode_frames, encode_typed_row, expect_object, ht_for_each, read_slot, EncodePlan,
+};
 use crate::exception::ext_exception;
 use crate::format::Reader;
 use crate::plan::Plan;
@@ -72,7 +74,8 @@ fn ensure_plan<P>(
 }
 
 /// Floe's consolidated binary codec, both directions: ROW frame bodies to/from
-/// `Flow\ETL\Row\RawRowValues` (decode) and `Flow\ETL\Row\TypedRowValues` (encode).
+/// `Flow\ETL\Row\RawRowValues` (decode) and `Flow\ETL\Row\TypedRowValues` (encode),
+/// plus `decode_rows` / `encode_frames`, which go straight between frames and `Flow\ETL\Rows`.
 /// The PHP side keeps buffering/framing/sectioning and hands over bare frame
 /// bodies; the extension owns value encode/decode against a primed schema.
 #[php_class]
@@ -82,6 +85,10 @@ pub struct RustFloeEncoderNative {
     encode_bound: Option<BoundPlan<EncodePlan>>,
     decode_bound: Option<BoundPlan<Plan>>,
     row_values_class: hydrate::RowValuesClass,
+    cast_plan: Option<cast::CastPlan>,
+    assembly: hydrate::AssemblyClasses,
+    rows_classes: hydrate::RowsClasses,
+    def_dehydrate_fns: hydrate::DefFnCache,
 }
 
 #[php_impl]
@@ -92,6 +99,10 @@ impl RustFloeEncoderNative {
             encode_bound: None,
             decode_bound: None,
             row_values_class: hydrate::RowValuesClass::resolve()?,
+            cast_plan: None,
+            assembly: hydrate::AssemblyClasses::resolve()?,
+            rows_classes: hydrate::RowsClasses::resolve()?,
+            def_dehydrate_fns: hydrate::DefFnCache::new(),
         })
     }
 
@@ -131,7 +142,8 @@ impl RustFloeEncoderNative {
                 ext_exception("flow_php expected TypedRowValues::metadata to be an array")
             })?;
 
-            let body = encode_typed_row(plan, row_index, values_ht, metadata_ht, ctx)?;
+            let mut body = Vec::with_capacity(1024);
+            encode_typed_row(plan, row_index, values_ht, metadata_ht, &mut body, ctx)?;
 
             encoded.push(zval_str(&body)).map_err(|e| {
                 ext_exception(format!("flow_php failed to collect a row body: {e:?}"))
@@ -144,6 +156,35 @@ impl RustFloeEncoderNative {
         zv.set_hashtable(encoded);
 
         Ok(zv)
+    }
+
+    /// `Rows` straight to complete ROW frames (frame type + length + body per row) in one string - see
+    /// `encode::encode_frames`.
+    pub fn encode_frames(
+        &mut self,
+        rows: &Zval,
+        schema_body: BinarySlice<u8>,
+        schema: &Zval,
+    ) -> PhpResult<Zval> {
+        ensure_plan(
+            &mut self.encode_bound,
+            &mut self.ctx,
+            &schema_body,
+            |body, ctx| build_encode_plan(body, schema, ctx),
+        )?;
+
+        let (rows_ht, columns) =
+            hydrate::dehydrate_batch(rows, &self.rows_classes, &mut self.def_dehydrate_fns, &mut self.ctx)?;
+
+        let frames = encode_frames(
+            &self.encode_bound.as_ref().expect("plan bound above").plan,
+            rows_ht,
+            self.rows_classes.row_values_slot,
+            &hydrate::batch_metadata(&columns),
+            &mut self.ctx,
+        )?;
+
+        Ok(zval_str(&frames))
     }
 
     /// Decodes a list of ROW frame bodies written with the given SCHEMA frame
@@ -192,6 +233,30 @@ impl RustFloeEncoderNative {
         zv.set_hashtable(decoded);
 
         Ok(zv)
+    }
+
+    /// Frame bodies decoded and cast against `schema` straight into `Flow\ETL\Rows` - see `cast::decode_rows`.
+    pub fn decode_rows(
+        &mut self,
+        frame_bodies: &Zval,
+        schema_body: BinarySlice<u8>,
+        schema: &Zval,
+    ) -> PhpResult<Zval> {
+        ensure_plan(
+            &mut self.decode_bound,
+            &mut self.ctx,
+            &schema_body,
+            plan::build_plan,
+        )?;
+
+        cast::decode_rows(
+            frame_bodies,
+            &self.decode_bound.as_ref().expect("plan bound above").plan,
+            schema,
+            &mut self.cast_plan,
+            &self.assembly,
+            &mut self.ctx,
+        )
     }
 }
 

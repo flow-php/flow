@@ -17,11 +17,6 @@ use function Flow\ETL\DSL\from_rows;
 
 final readonly class CountFromStatistics implements Rule
 {
-    /**
-     * A count straight over a source that knows its rows exactly reads a row holding that number instead. Any node
-     * in between runs code that may fail or skip a batch, and a pushed limit or partition filter changes the rows
-     * the statistics describe, so those plans are counted by running them.
-     */
     public function apply(LogicalPlan $plan, FlowContext $context): LogicalPlan
     {
         $count = $plan->root instanceof Result ? $plan->root->children()[0] : null;

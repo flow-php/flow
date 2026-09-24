@@ -45,7 +45,7 @@ final class FrameWriter
     }
 
     /**
-     * Verbatim byte passthrough for the mergeSplice fast path (no re-encode).
+     * Complete frames the caller already built, appended as they are.
      */
     public function raw(string $bytes): void
     {

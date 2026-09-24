@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Row;
 
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Row\AdaptiveRowHydrator;
+use Flow\ETL\Row\NativeRowHydrator;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -52,5 +53,10 @@ final class AdaptiveRowHydratorTest extends FlowTestCase
         (new AdaptiveRowHydrator())->hydrate([new RawRowValues(['data' => [
             'id' => 1,
         ]])], schema(structure_schema('data', type_structure(['id' => type_integer(), 'name' => type_string()]))));
+    }
+
+    public function test_is_native_when_the_native_hydrator_is_supported(): void
+    {
+        static::assertSame(NativeRowHydrator::isSupported(), (new AdaptiveRowHydrator())->isNative());
     }
 }

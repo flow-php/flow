@@ -18,6 +18,9 @@ extern "C" {
     fn php_date_instantiate(pce: *mut ext_php_rs::zend::ClassEntry, object: *mut Zval)
         -> *mut Zval;
 
+    #[cfg(php84)]
+    fn php_date_initialize_from_ts_long(dateobj: *mut c_void, sec: i64, usec: c_int);
+
     fn php_date_initialize(
         dateobj: *mut c_void,
         time_str: *const c_char,
@@ -29,6 +32,14 @@ extern "C" {
 }
 
 const PHP_DATE_OBJ_STD_OFFSET: usize = std::mem::size_of::<*const c_void>();
+
+/// `php_date_obj_from_obj`: the `php_date_obj` a datetime `zend_object` is embedded in.
+fn php_date_obj(object: &mut ZendObject) -> *mut c_void {
+    std::ptr::from_mut(object)
+        .cast::<u8>()
+        .wrapping_sub(PHP_DATE_OBJ_STD_OFFSET)
+        .cast::<c_void>()
+}
 
 /// `new DateTimeImmutable($str, $timezone)` through the same C-level timelib parser, in its
 /// non-throwing `date_create()` flavor: `Ok(None)` on parse failure, no exception.
@@ -59,10 +70,7 @@ pub(crate) fn date_from_free_form(
 
     let initialized = unsafe {
         php_date_initialize(
-            std::ptr::from_mut(datetime_obj)
-                .cast::<u8>()
-                .sub(PHP_DATE_OBJ_STD_OFFSET)
-                .cast::<c_void>(),
+            php_date_obj(datetime_obj),
             time_str.as_mut_ptr().cast::<c_char>(),
             time_str.len() - 1,
             std::ptr::null(),
@@ -211,6 +219,13 @@ fn decode_datetime(reader: &mut Reader, ctx: &mut Ctx) -> Result<Zval, PhpExcept
     let timezone_length = reader.u32("datetime value")? as usize;
     let timezone_name = reader.bytes(timezone_length, "datetime value")?;
 
+    let restore_failed = || ext_exception(format!("flow_php failed to restore datetime from timestamp \"{timestamp}\""));
+
+    // "U.u" refuses a fraction longer than six digits as trailing data
+    if microseconds > 999_999 {
+        return Err(restore_failed());
+    }
+
     // the class is not stored: a datetime column always hydrates to DateTimeImmutable
     let fns = ctx.datetime_fns(false)?;
 
@@ -229,29 +244,38 @@ fn decode_datetime(reader: &mut Reader, ctx: &mut Ctx) -> Result<Zval, PhpExcept
         .object_mut()
         .ok_or_else(|| ext_exception("flow_php failed to instantiate a datetime object"))?;
 
-    // timelib reads the byte AFTER the consumed input, so the buffer must be
-    // NUL-terminated like the zend_strings PHP hands it (length excludes the NUL)
-    let mut time_str = format!("{timestamp}.{microseconds:06}\0");
-    let initialized = unsafe {
-        php_date_initialize(
-            std::ptr::from_mut(datetime_obj)
-                .cast::<u8>()
-                .sub(PHP_DATE_OBJ_STD_OFFSET)
-                .cast::<c_void>(),
-            time_str.as_mut_ptr().cast::<c_char>(),
-            time_str.len() - 1,
-            c"U.u".as_ptr(),
-            std::ptr::null_mut(),
-            // PHP_DATE_INIT_FORMAT - the flags createFromFormat passes.
-            0x02,
-        )
+    let dateobj = php_date_obj(datetime_obj);
+
+    // the createFromTimestamp() initializer, exported from PHP 8.4
+    #[cfg(php84)]
+    let initialized = {
+        unsafe { php_date_initialize_from_ts_long(dateobj, timestamp, microseconds as c_int) };
+
+        true
+    };
+
+    #[cfg(not(php84))]
+    let initialized = {
+        // timelib reads the byte AFTER the consumed input, so the buffer must be
+        // NUL-terminated like the zend_strings PHP hands it (length excludes the NUL)
+        let mut time_str = format!("{timestamp}.{microseconds:06}\0");
+
+        unsafe {
+            php_date_initialize(
+                dateobj,
+                time_str.as_mut_ptr().cast::<c_char>(),
+                time_str.len() - 1,
+                c"U.u".as_ptr(),
+                std::ptr::null_mut(),
+                // PHP_DATE_INIT_FORMAT - the flags createFromFormat passes.
+                0x02,
+            )
+        }
     };
     ensure_no_pending_exception("restore a datetime value")?;
 
     if !initialized {
-        return Err(ext_exception(format!(
-            "flow_php failed to restore datetime from timestamp \"{timestamp}\""
-        )));
+        return Err(restore_failed());
     }
 
     let timezone = ctx.timezone(timezone_name)?.shallow_clone();

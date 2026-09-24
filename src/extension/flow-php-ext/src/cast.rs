@@ -13,9 +13,13 @@ use crate::ctx::{
 };
 use crate::encode::{expect_object, ht_for_each, read_slot};
 use crate::exception::ext_exception;
-use crate::hydrate::{build_hydrate_plan, fold_metadata_into_schema, AssemblyClasses, HydratePlan, RowValuesClass};
+use crate::format::Reader;
+use crate::hydrate::{
+    build_hydrate_plan, fold_metadata_into_schema, fold_pending_metadata, read_cell, AssemblyClasses,
+    HydrateColumn, HydratePlan, RowValuesClass,
+};
 use crate::json_check::json_valid;
-use crate::plan::{parse_schema_json, TypeJson};
+use crate::plan::{parse_schema_json, Plan, TypeJson};
 use crate::values::date_from_free_form;
 
 extern "C" {
@@ -868,6 +872,96 @@ fn cast_json(value: &Zval, ctx: &mut Ctx) -> Result<Option<Zval>, PhpException> 
     Ok(None)
 }
 
+/// One value of a row against its column: a present null under NOT NULL is refused, a null passes, anything else is
+/// cast natively where proven identical and otherwise through the retained PHP `Type::cast`.
+fn cast_cell(
+    column: &HydrateColumn,
+    cast_column: &CastColumn,
+    value: &Zval,
+    row_index: u64,
+    assembly: &AssemblyClasses,
+    ctx: &mut Ctx,
+) -> Result<Zval, PhpException> {
+    // a present null is a DIFFERENT refusal from an absence: valueDoesNotMatch, not
+    // missingColumn, and 027 pins the two messages apart
+    if value.is_null() && !column.nullable {
+        return Err(schema_mismatch(
+            assembly.schema_mismatch_ce,
+            assembly.value_does_not_match,
+            row_index,
+            &mut [column.base_def.shallow_clone(), null_zval()],
+        )?);
+    }
+
+    if value.is_null() {
+        return Ok(null_zval());
+    }
+
+    if let Some(casted) = cast_value(&cast_column.kind, value, ctx)? {
+        return Ok(casted);
+    }
+
+    let type_obj = cast_column
+        .type_zv
+        .object()
+        .ok_or_else(|| ext_exception("flow_php expected a Type object"))?;
+
+    match call_handle_catching(cast_column.cast_fn, Some(type_obj), &mut [value.shallow_clone()]) {
+        Ok(casted) => Ok(casted),
+        Err(mut refusal) => {
+            if !refusal.instance_of(assembly.types_exception_ce) {
+                return Err(transparent_exception(&mut refusal));
+            }
+
+            // The declared type refused the value. Its own exception is dropped rather than chained, exactly as
+            // HydratedBatch's guard drops it - 027 compares the two hydrators' class and message byte for byte.
+            Err(schema_mismatch(
+                assembly.schema_mismatch_ce,
+                assembly.value_does_not_match,
+                row_index,
+                &mut [column.base_def.shallow_clone(), value.shallow_clone()],
+            )?)
+        }
+    }
+}
+
+/// Builds one `Row` through its PHP constructor and appends it to the batch.
+fn push_row(
+    rows_ht: &mut ZendHashTable,
+    row_values: ZBox<ZendHashTable>,
+    assembly: &AssemblyClasses,
+) -> Result<(), PhpException> {
+    let mut values_zv = Zval::new();
+    values_zv.set_hashtable(row_values);
+
+    let mut row = construct_with_zvals(assembly.row_ce, &mut [values_zv], "a Row")?;
+    let mut row_zv = Zval::new();
+    row_zv.set_object(&mut row);
+
+    rows_ht
+        .push(row_zv)
+        .map_err(|e| ext_exception(format!("flow_php failed to collect hydrated rows: {e:?}")))
+}
+
+/// Every non-null value was cast to its column's type, so the batch takes the shape-only door - the one
+/// HydratedBatch returns through. Row::conform() returns $this for a row holding exactly the Schema's keys, in
+/// order, with no null under NOT NULL - which every cast row is once no column was absent. An absence keeps the
+/// PHP door: padding, missingColumn and the failing row's index are conform()'s to decide.
+fn assemble_rows(
+    rows_ht: ZBox<ZendHashTable>,
+    schema_zv: Zval,
+    every_column_present: bool,
+    assembly: &AssemblyClasses,
+) -> Result<Zval, PhpException> {
+    let mut rows_zv = Zval::new();
+    rows_zv.set_hashtable(rows_ht);
+
+    let door = if every_column_present { assembly.rows_trusted } else { assembly.rows_conformed };
+
+    // conform()'s refusal surfaces as the SchemaMismatchException PHP threw, like the cast refusals above
+    call_handle_transparent(door, None, &mut [schema_zv, rows_zv])
+}
+
 /// Native `PhpRowHydrator::hydrate`: raw scalars cast against a `Schema` and
 /// assembled into `Flow\ETL\Rows` in one pass. Column values cast natively
 /// where proven identical, otherwise per value through the retained PHP
@@ -914,80 +1008,96 @@ pub fn cast_rows(
                 continue;
             };
 
-            // a present null is a DIFFERENT refusal from an absence: valueDoesNotMatch, not
-            // missingColumn, and 027 pins the two messages apart
-            if value.is_null() && !column.nullable {
-                return Err(schema_mismatch(
-                    assembly.schema_mismatch_ce,
-                    assembly.value_does_not_match,
-                    row_index,
-                    &mut [column.base_def.shallow_clone(), null_zval()],
-                )?);
-            }
-
-            let casted = if value.is_null() {
-                null_zval()
-            } else {
-                match cast_value(&cast_column.kind, value, ctx)? {
-                    Some(casted) => casted,
-                    None => {
-                        let type_obj = cast_column
-                            .type_zv
-                            .object()
-                            .ok_or_else(|| ext_exception("flow_php expected a Type object"))?;
-
-                        match call_handle_catching(
-                            cast_column.cast_fn,
-                            Some(type_obj),
-                            &mut [value.shallow_clone()],
-                        ) {
-                            Ok(casted) => casted,
-                            Err(mut refusal) => {
-                                if !refusal.instance_of(assembly.types_exception_ce) {
-                                    return Err(transparent_exception(&mut refusal));
-                                }
-
-                                // The declared type refused the value. Its own exception is dropped
-                                // rather than chained, exactly as HydratedBatch's guard drops it -
-                                // 027 compares the two hydrators' class and message byte for byte.
-                                return Err(schema_mismatch(
-                                    assembly.schema_mismatch_ce,
-                                    assembly.value_does_not_match,
-                                    row_index,
-                                    &mut [column.base_def.shallow_clone(), value.shallow_clone()],
-                                )?);
-                            }
-                        }
-                    }
-                }
-            };
-
+            let casted = cast_cell(column, cast_column, value, row_index, assembly, ctx)?;
             ht_insert_key(&mut row_values, &key, casted);
         }
 
-        let mut values_zv = Zval::new();
-        values_zv.set_hashtable(row_values);
-
-        let mut row = construct_with_zvals(assembly.row_ce, &mut [values_zv], "a Row")?;
-        let mut row_zv = Zval::new();
-        row_zv.set_object(&mut row);
-        rows_ht.push(row_zv).map_err(|e| {
-            ext_exception(format!("flow_php failed to collect hydrated rows: {e:?}"))
-        })?;
-
-        Ok(())
+        push_row(&mut rows_ht, row_values, assembly)
     })?;
 
-    let mut rows_zv = Zval::new();
-    rows_zv.set_hashtable(rows_ht);
+    assemble_rows(rows_ht, schema_zv, every_column_present, assembly)
+}
 
-    // every non-null value was just cast to its column's type, so the batch takes
-    // the shape-only door - the one HydratedBatch returns through. Row::conform() returns
-    // $this for a row holding exactly the Schema's keys, in order, with no null under
-    // NOT NULL - which every row built above is once no column was absent. An absence
-    // keeps the PHP door: padding, missingColumn and the failing row's index are
-    // conform()'s to decide.
-    let door = if every_column_present { assembly.rows_trusted } else { assembly.rows_conformed };
+/// `cast_rows(decode(...))` in one pass: each ROW frame body is decoded straight into the cast, so no
+/// `RawRowValues` is built. A Schema column takes the decoded column of the same name - the lookup `cast_rows` does
+/// in `RawRowValues::values` - and a Schema column the frames do not carry is an absence, exactly as there.
+pub fn decode_rows(
+    frame_bodies: &Zval,
+    decode_plan: &Plan,
+    schema: &Zval,
+    plan_slot: &mut Option<CastPlan>,
+    assembly: &AssemblyClasses,
+    ctx: &mut Ctx,
+) -> Result<Zval, PhpException> {
+    ensure_cast_plan(plan_slot, schema, ctx)?;
+    let plan = plan_slot.as_ref().expect("plan built above");
 
-    call_handle(door, None, &mut [schema_zv, rows_zv], "assemble Rows")
+    let bodies_ht = frame_bodies
+        .array()
+        .ok_or_else(|| ext_exception("flow_php expected a list of row frame bodies"))?;
+
+    let decoded_names: Vec<&[u8]> = decode_plan.columns.iter().map(|column| column.name.as_bytes()).collect();
+    // RawRowValues::values refuses a name decoded twice at the second occurrence
+    let duplicated = (0..decoded_names.len()).find(|&index| decoded_names[..index].contains(&decoded_names[index]));
+    let sources: Vec<Option<usize>> = plan
+        .hydrate
+        .columns
+        .iter()
+        .map(|column| {
+            let name = column.name_zv.zend_str().map(ZendStr::as_bytes);
+            decoded_names.iter().position(|decoded| Some(*decoded) == name)
+        })
+        .collect();
+
+    let mut decoded: Vec<Zval> = (0..decoded_names.len()).map(|_| Zval::new()).collect();
+    let mut metadata: Vec<(Vec<u8>, Zval)> = Vec::new();
+    let mut rows_ht = ZendHashTable::with_capacity(bodies_ht.len() as u32);
+    let every_column_present = sources.iter().all(Option::is_some);
+
+    ht_for_each(bodies_ht, |_, row_index, body_zv| {
+        let bytes = body_zv
+            .zend_str()
+            .ok_or_else(|| ext_exception("flow_php expected a row frame body to be a string"))?
+            .as_bytes();
+
+        let mut reader = Reader::new(bytes);
+
+        for (index, column) in decode_plan.columns.iter().enumerate() {
+            let (value, value_metadata) = read_cell(&column.decoder, &mut reader, ctx)?;
+
+            if let Some(value_metadata) = value_metadata {
+                metadata.push((column.name.as_bytes().to_vec(), value_metadata));
+            }
+
+            if duplicated == Some(index) {
+                return Err(ext_exception(format!(
+                    "flow_php found duplicated entry name \"{}\" in a row frame",
+                    column.name
+                )));
+            }
+
+            decoded[index] = value;
+        }
+
+        if !reader.is_eof() {
+            return Err(ext_exception("flow_php row frame length does not match its content"));
+        }
+
+        let mut row_values = ZendHashTable::with_capacity(plan.hydrate.columns.len() as u32);
+
+        for ((column, cast_column), source) in plan.hydrate.columns.iter().zip(&plan.columns).zip(&sources) {
+            let Some(source) = source else {
+                continue;
+            };
+
+            let casted = cast_cell(column, cast_column, &decoded[*source], row_index, assembly, ctx)?;
+            ht_insert_key(&mut row_values, &column.key(), casted);
+        }
+
+        push_row(&mut rows_ht, row_values, assembly)
+    })?;
+
+    let schema_zv = fold_pending_metadata(schema, metadata, ctx)?;
+
+    assemble_rows(rows_ht, schema_zv, every_column_present, assembly)
 }

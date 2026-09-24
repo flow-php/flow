@@ -4,18 +4,26 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Context;
 
+use Flow\ETL\Row\Hydrator;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
+use Flow\Floe\Codec;
 use Flow\Floe\Codec\NoopCodec;
+use Flow\Floe\FloeEngine;
 use Flow\Floe\FloeReader;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\Footer;
 use Flow\Floe\FooterReader;
 use Flow\Floe\Format;
 use Flow\Floe\FrameReader;
+use Flow\Floe\Options;
+use Flow\Floe\Section;
+use Flow\Floe\Statistics;
 
+use function count;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
@@ -132,12 +140,67 @@ final class FloeStreamReaderContext
     /**
      * @param array<string, string> $metadata
      */
-    public static function write(Filesystem $filesystem, Path $path, Rows $rows, array $metadata = []): void
-    {
-        $writer = new FloeWriter($filesystem, $rows->schema());
+    public static function write(
+        Filesystem $filesystem,
+        Path $path,
+        Rows $rows,
+        array $metadata = [],
+        Codec $codec = new NoopCodec(),
+    ): void {
+        $writer = new FloeWriter($filesystem, $rows->schema(), new Options(codec: $codec));
         $writer->create($path, Metadata::fromArray($metadata));
         $writer->write($rows);
         $writer->close();
+    }
+
+    /**
+     * A file holding exactly these ROW frame bodies under `$schema` - frames no FloeWriter would produce.
+     *
+     * @param list<string> $bodies
+     */
+    public static function writeFrames(Filesystem $filesystem, Path $path, Schema $schema, array $bodies): void
+    {
+        /** @var array<int, array<string, mixed>> $normalized */
+        $normalized = $schema->normalize();
+        $footerJson = (new Footer(
+            Format::VERSION,
+            'test',
+            $normalized,
+            [new Section(Format::HEADER_LENGTH, count($bodies))],
+            new Statistics(count($bodies), strlen(Format::rowFrames($bodies))),
+            Metadata::empty(),
+        ))->toJson();
+
+        $stream = $filesystem->writeTo($path);
+        $stream->append(
+            Format::header(0x00) . Format::rowFrames($bodies)
+                . Format::frame(Format::FRAME_FOOTER, $footerJson . Format::trailer(strlen($footerJson))),
+        );
+        $stream->close();
+    }
+
+    /**
+     * @param list<Rows> $batches
+     */
+    public static function writeBatches(
+        Filesystem $filesystem,
+        Path $path,
+        Schema $schema,
+        array $batches,
+        Options $options = new Options(),
+        ?Hydrator $hydrator = null,
+        FloeEngine $engine = FloeEngine::adaptive,
+    ): string {
+        $writer = new FloeWriter($filesystem, $schema, $options, $hydrator, $engine);
+        $writer->create($path);
+
+        foreach ($batches as $batch) {
+            $writer->write($batch);
+        }
+
+        $writer->close();
+
+        return $filesystem->readFrom($path)->content();
     }
 
     /**

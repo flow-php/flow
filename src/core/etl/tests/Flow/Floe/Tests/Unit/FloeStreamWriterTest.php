@@ -4,17 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Unit;
 
+use DateTimeImmutable;
 use Flow\ETL\Schema\Metadata;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Exception\IncompatibleSchemaException;
+use Flow\Floe\FloeEngine;
 use Flow\Floe\FloeStreamWriter;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\Format;
+use Flow\Floe\NativeFloeEncoder;
 use Flow\Floe\Options;
 use Flow\Floe\Tests\Context\FloeStreamReaderContext;
 use Flow\Floe\Tests\Double\CodecStub;
+use Flow\Floe\Tests\Double\PrefixingCodecStub;
+use Flow\Floe\Tests\Double\SpyHydrator;
+use Flow\Floe\Tests\Mother\RowsMother;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
@@ -356,5 +363,141 @@ final class FloeStreamWriterTest extends TestCase
         $this->expectExceptionMessage('new column "b"');
 
         $writer->write(rows(schema(int_schema('a'), int_schema('b')), row(['a' => 1, 'b' => 2])));
+    }
+
+    public function test_fused_write_is_byte_identical_to_the_two_step_write_across_sections(): void
+    {
+        if (!NativeFloeEncoder::isSupported()) {
+            static::markTestSkipped('flow_php extension with RustFloeEncoderNative is not loaded');
+        }
+
+        $filesystem = memory_filesystem();
+        $schema = schema(int_schema('id'));
+        $batches = [RowsMother::ids(1, 100_000), RowsMother::ids(100_001, 100_002)];
+        $spy = new SpyHydrator();
+
+        $twoStep = FloeStreamReaderContext::writeBatches(
+            $filesystem,
+            path('memory://two-step.floe'),
+            $schema,
+            $batches,
+            hydrator: $spy,
+        );
+        $fused = FloeStreamReaderContext::writeBatches($filesystem, path('memory://fused.floe'), $schema, $batches);
+
+        static::assertSame($twoStep, $fused);
+        static::assertSame(2, $spy->dehydrateCalls);
+        static::assertCount(2, FloeStreamReaderContext::footer($filesystem, path('memory://fused.floe'))->sections);
+    }
+
+    public function test_fused_write_is_byte_identical_to_the_two_step_write_around_an_empty_batch(): void
+    {
+        if (!NativeFloeEncoder::isSupported()) {
+            static::markTestSkipped('flow_php extension with RustFloeEncoderNative is not loaded');
+        }
+
+        $filesystem = memory_filesystem();
+        $numbered = RowsMother::numbered(5);
+        $batches = [rows($numbered->schema()), $numbered, rows($numbered->schema())];
+
+        static::assertSame(
+            FloeStreamReaderContext::writeBatches(
+                $filesystem,
+                path('memory://two-step.floe'),
+                $numbered->schema(),
+                $batches,
+                hydrator: new SpyHydrator(),
+            ),
+            FloeStreamReaderContext::writeBatches(
+                $filesystem,
+                path('memory://fused.floe'),
+                $numbered->schema(),
+                $batches,
+            ),
+        );
+    }
+
+    public function test_fused_write_is_byte_identical_to_the_two_step_write_for_a_batch_that_needs_match_to(): void
+    {
+        if (!NativeFloeEncoder::isSupported()) {
+            static::markTestSkipped('flow_php extension with RustFloeEncoderNative is not loaded');
+        }
+
+        $filesystem = memory_filesystem();
+        $session = RowsMother::numbered(1)->schema();
+        $batches = [rows(
+            schema(datetime_schema('at'), int_schema('id')),
+            row(['at' => new DateTimeImmutable('2026-01-01 00:00:00'), 'id' => 1]),
+        )];
+
+        static::assertSame(
+            FloeStreamReaderContext::writeBatches(
+                $filesystem,
+                path('memory://two-step.floe'),
+                $session,
+                $batches,
+                hydrator: new SpyHydrator(),
+            ),
+            FloeStreamReaderContext::writeBatches($filesystem, path('memory://fused.floe'), $session, $batches),
+        );
+    }
+
+    public function test_native_engine_writes_a_transforming_codec_like_the_php_engine(): void
+    {
+        if (!NativeFloeEncoder::isSupported()) {
+            static::markTestSkipped('flow_php extension with RustFloeEncoderNative is not loaded');
+        }
+
+        $filesystem = memory_filesystem();
+        $options = new Options(codec: new PrefixingCodecStub());
+        $numbered = RowsMother::numbered(10);
+        $batches = [$numbered, RowsMother::numbered(3)];
+
+        static::assertSame(
+            FloeStreamReaderContext::writeBatches(
+                $filesystem,
+                path('memory://php.floe'),
+                $numbered->schema(),
+                $batches,
+                $options,
+                engine: FloeEngine::php,
+            ),
+            FloeStreamReaderContext::writeBatches(
+                $filesystem,
+                path('memory://native.floe'),
+                $numbered->schema(),
+                $batches,
+                $options,
+                engine: FloeEngine::native,
+            ),
+        );
+    }
+
+    public function test_native_engine_writes_like_the_php_engine(): void
+    {
+        if (!NativeFloeEncoder::isSupported()) {
+            static::markTestSkipped('flow_php extension with RustFloeEncoderNative is not loaded');
+        }
+
+        $filesystem = memory_filesystem();
+        $numbered = RowsMother::numbered(10);
+        $batches = [$numbered, RowsMother::numbered(3)];
+
+        static::assertSame(
+            FloeStreamReaderContext::writeBatches(
+                $filesystem,
+                path('memory://php.floe'),
+                $numbered->schema(),
+                $batches,
+                engine: FloeEngine::php,
+            ),
+            FloeStreamReaderContext::writeBatches(
+                $filesystem,
+                path('memory://native.floe'),
+                $numbered->schema(),
+                $batches,
+                engine: FloeEngine::native,
+            ),
+        );
     }
 }

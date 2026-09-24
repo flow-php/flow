@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
-use Flow\ETL\Row;
 use Flow\ETL\Row\AdaptiveRowHydrator;
-use Flow\ETL\Row\Encoder;
 use Flow\ETL\Row\Hydrator;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
 use Flow\Filesystem\SourceStream;
+use Flow\Floe\Codec\NoopCodec;
 use Flow\Floe\Exception\ExtensionException;
 use Flow\Floe\Exception\FloeException;
 use Flow\Serializer\Exception\SerializationException;
@@ -19,6 +18,7 @@ use Generator;
 
 use function count;
 use function max;
+use function min;
 use function ord;
 use function sprintf;
 use function strlen;
@@ -27,10 +27,7 @@ use function unpack;
 
 final class FloeStreamReader
 {
-    /**
-     * @var null|Encoder<string>
-     */
-    private ?Encoder $encoder = null;
+    private ?FloeEncoder $encoder = null;
 
     private ?Footer $footer = null;
 
@@ -59,10 +56,7 @@ final class FloeStreamReader
         $this->source->close();
     }
 
-    /**
-     * @return Encoder<string>
-     */
-    private function encoder(Schema $schema): Encoder
+    private function encoder(Schema $schema): FloeEncoder
     {
         return $this->encoder ??= $this->engine->encoder($schema);
     }
@@ -92,7 +86,7 @@ final class FloeStreamReader
      *
      * @throws FloeException
      *
-     * @return \Generator<int, Rows> every batch matches the merged file schema - Rows::__construct sees to that
+     * @return \Generator<int, Rows> every batch carries the merged file schema
      */
     public function rows(int $batchSize = 1000, int $offset = 0, ?int $limit = null): Generator
     {
@@ -198,12 +192,11 @@ final class FloeStreamReader
     ): Generator {
         $fill = FrameReader::chunkFiller($buffer, $position, $chunks);
 
-        $batch = [];
         $yielded = 0;
         /** @var list<string> $pending */
         $pending = [];
-        $stop = false;
         $flushThreshold = $limit !== null && $limit < $batchSize ? $limit : $batchSize;
+        $transforms = !$this->codec instanceof NoopCodec;
 
         try {
             while (true) {
@@ -226,26 +219,26 @@ final class FloeStreamReader
                 $frameEnd = $position + $frameLength;
 
                 if ($frameType === Format::FRAME_ROW) {
-                    $pending[] = $this->codec->decode(substr($buffer, $position, $frameLength));
+                    if ($skip > 0) {
+                        $skip--;
+                    } else {
+                        $body = substr($buffer, $position, $frameLength);
+                        $pending[] = $transforms ? $this->codec->decode($body) : $body;
+                    }
+
                     $position = $frameEnd;
 
                     if (count($pending) === $flushThreshold) {
-                        foreach ($this->emitBatch(
-                            $schema,
-                            $pending,
-                            $batch,
-                            $batchSize,
-                            $limit,
-                            $yielded,
-                            $stop,
-                            $skip,
-                        ) as $ready) {
-                            yield $ready;
-                        }
+                        yield $this->decode($schema, $pending);
+                        $yielded += $flushThreshold;
                         $pending = [];
 
-                        if ($stop) {
-                            return;
+                        if ($limit !== null) {
+                            if ($yielded === $limit) {
+                                return;
+                            }
+
+                            $flushThreshold = min($batchSize, $limit - $yielded);
                         }
                     }
                 } elseif ($frameType === Format::FRAME_FOOTER) {
@@ -261,108 +254,23 @@ final class FloeStreamReader
             }
 
             if ($pending !== []) {
-                foreach ($this->emitBatch(
-                    $schema,
-                    $pending,
-                    $batch,
-                    $batchSize,
-                    $limit,
-                    $yielded,
-                    $stop,
-                    $skip,
-                ) as $ready) {
-                    yield $ready;
-                }
-
-                if ($stop) {
-                    return;
-                }
+                yield $this->decode($schema, $pending);
             }
         } catch (SerializationException|ExtensionException $e) {
             throw new FloeException($e->getMessage(), 0, $e);
         }
-
-        if ($batch !== []) {
-            yield $this->batch($batch);
-        }
     }
 
     /**
-     * Applies the per-row skip / batch-yield / limit logic to a hydrated
-     * batch of row frame bodies; $batch, $yielded, $stop and $skip are updated by reference.
+     * A batch carries the file schema even when the hydrator folded per-value metadata into a schema of its own.
      *
      * @param list<string> $pending
-     * @param array<int, Row> $batch
-     * @param int<1, max> $batchSize
-     *
-     * @return array<int, Rows> completed batches ready to yield
      */
-    private function emitBatch(
-        Schema $schema,
-        array $pending,
-        array &$batch,
-        int $batchSize,
-        ?int $limit,
-        int &$yielded,
-        bool &$stop,
-        int &$skip,
-    ): array {
-        return $this->emitRows(
-            $this->hydrator->hydrate($this->encoder($schema)->decode($pending), $schema)->all(),
-            $batch,
-            $batchSize,
-            $limit,
-            $yielded,
-            $stop,
-            $skip,
-        );
-    }
+    private function decode(Schema $schema, array $pending): Rows
+    {
+        $rows = $this->encoder($schema)->decodeRows($pending, $schema, $this->hydrator);
 
-    /**
-     * Per-row skip / batch-yield / limit logic over already-hydrated rows;
-     * $batch, $yielded, $stop and $skip are updated by reference.
-     *
-     * @param array<array-key, Row> $rows
-     * @param array<int, Row> $batch
-     * @param int<1, max> $batchSize
-     *
-     * @return array<int, Rows> completed batches ready to yield
-     */
-    private function emitRows(
-        array $rows,
-        array &$batch,
-        int $batchSize,
-        ?int $limit,
-        int &$yielded,
-        bool &$stop,
-        int &$skip,
-    ): array {
-        $ready = [];
-
-        foreach ($rows as $row) {
-            if ($skip > 0) {
-                $skip--;
-
-                continue;
-            }
-
-            $batch[] = $row;
-
-            if ($limit !== null && ++$yielded >= $limit) {
-                $ready[] = $this->batch($batch);
-                $batch = [];
-                $stop = true;
-
-                return $ready;
-            }
-
-            if (count($batch) === $batchSize) {
-                $ready[] = $this->batch($batch);
-                $batch = [];
-            }
-        }
-
-        return $ready;
+        return $rows->schema() === $schema ? $rows : Rows::trusted($schema, $rows->all());
     }
 
     /**
@@ -389,16 +297,6 @@ final class FloeStreamReader
     public function totalRows(): int
     {
         return $this->footer()->statistics->rows;
-    }
-
-    /**
-     * @param array<int, Row> $rows
-     */
-    private function batch(array $rows): Rows
-    {
-        // every row comes out of the hydrator, which already conformed it to the file schema - padding and the
-        // NOT NULL check included
-        return Rows::trusted($this->schema(), $rows);
     }
 
     /**

@@ -6,13 +6,13 @@ namespace Flow\Floe;
 
 use Composer\InstalledVersions;
 use Flow\ETL\Row\AdaptiveRowHydrator;
-use Flow\ETL\Row\Encoder;
 use Flow\ETL\Row\Hydrator;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Schema\Validator\EvolvingValidator;
 use Flow\Filesystem\DestinationStream;
+use Flow\Floe\Codec\NoopCodec;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Exception\IncompatibleSchemaException;
 
@@ -51,10 +51,7 @@ final class FloeStreamWriter
 
     private Schema $sessionSchema;
 
-    /**
-     * @var null|Encoder<string>
-     */
-    private ?Encoder $sessionEncoder = null;
+    private ?FloeEncoder $sessionEncoder = null;
 
     private ?FrameWriter $frameWriter = null;
 
@@ -160,14 +157,22 @@ final class FloeStreamWriter
         $this->openSession();
         $this->assertBatchFitsSession($rows->schema());
 
-        $typed = $this->hydrator->dehydrate(
-            $rows->schema()->isSame($this->sessionSchema) ? $rows : $rows->matchTo($this->sessionSchema),
-        );
+        $matched = $rows->schema()->isSame($this->sessionSchema) ? $rows : $rows->matchTo($this->sessionSchema);
 
-        if (!$this->sectionOpen || $this->sectionRowCount >= self::SECTION_MAX_ROWS) {
-            $this->startSection();
+        if ($this->options->codec instanceof NoopCodec) {
+            $frames = $this->sessionEncoder()->encodeFrames($matched, $this->hydrator);
+
+            $this->startSectionWhenDue();
+            $this->frameWriter()->raw($frames);
+            $this->sectionRowCount += $matched->count();
+            $this->totalRows += $matched->count();
+
+            return;
         }
 
+        $typed = $this->hydrator->dehydrate($matched);
+
+        $this->startSectionWhenDue();
         $this->emitBatch($typed);
     }
 
@@ -258,6 +263,16 @@ final class FloeStreamWriter
     /**
      * @throws FloeException
      */
+    private function startSectionWhenDue(): void
+    {
+        if (!$this->sectionOpen || $this->sectionRowCount >= self::SECTION_MAX_ROWS) {
+            $this->startSection();
+        }
+    }
+
+    /**
+     * @throws FloeException
+     */
     private function startSection(): void
     {
         $this->closeSection();
@@ -269,10 +284,8 @@ final class FloeStreamWriter
 
     /**
      * @throws FloeException
-     *
-     * @return Encoder<string>
      */
-    private function sessionEncoder(): Encoder
+    private function sessionEncoder(): FloeEncoder
     {
         return $this->sessionEncoder ?? throw new FloeException('Floe writer has no active session encoder');
     }

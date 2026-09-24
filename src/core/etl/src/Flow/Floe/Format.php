@@ -63,6 +63,20 @@ final class Format
     }
 
     /**
+     * @param list<string> $bodies
+     */
+    public static function rowFrames(array $bodies): string
+    {
+        $frames = '';
+
+        foreach ($bodies as $body) {
+            $frames .= self::frame(self::FRAME_ROW, $body);
+        }
+
+        return $frames;
+    }
+
+    /**
      * @throws FloeException
      */
     public static function metadataBytes(Metadata $metadata): string

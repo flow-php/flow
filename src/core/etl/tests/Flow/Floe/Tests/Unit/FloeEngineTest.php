@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\Floe\Tests\Unit;
 
 use Flow\ETL\Schema;
-use Flow\Floe\AdaptiveFloeEncoder;
 use Flow\Floe\FloeEngine;
 use Flow\Floe\NativeFloeEncoder;
 use Flow\Floe\PhpFloeEncoder;
@@ -19,9 +18,12 @@ use function Flow\ETL\DSL\str_schema;
 
 final class FloeEngineTest extends TestCase
 {
-    public function test_adaptive_engine_builds_adaptive_encoder(): void
+    public function test_adaptive_engine_builds_the_native_encoder_when_supported_else_the_php_one(): void
     {
-        static::assertInstanceOf(AdaptiveFloeEncoder::class, FloeEngine::adaptive->encoder($this->schema()));
+        static::assertInstanceOf(
+            NativeFloeEncoder::isSupported() ? NativeFloeEncoder::class : PhpFloeEncoder::class,
+            FloeEngine::adaptive->encoder($this->schema()),
+        );
     }
 
     public function test_native_engine_builds_native_encoder_when_supported(): void

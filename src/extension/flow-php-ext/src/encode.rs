@@ -12,7 +12,7 @@ use crate::ctx::{
 };
 use crate::exception::ext_exception;
 use crate::format::{
-    write_u32, VALUE_ABSENT, VALUE_NULL, VALUE_NULL_WITH_META, VALUE_PRESENT, VALUE_PRESENT_WITH_META,
+    write_u32, FRAME_ROW, VALUE_ABSENT, VALUE_NULL, VALUE_NULL_WITH_META, VALUE_PRESENT, VALUE_PRESENT_WITH_META,
 };
 use crate::plan::{parse_schema_json, TypeJson};
 
@@ -334,18 +334,17 @@ fn schema_definitions(schema: &Zval) -> Result<Vec<Zval>, PhpException> {
     Ok(base_defs)
 }
 
-/// Encodes one `Flow\ETL\Row\TypedRowValues` (its `values` + `metadata` maps)
-/// into a bare ROW frame body (no length prefix, no frame type). Byte-identical
+/// Appends one `Flow\ETL\Row\TypedRowValues` (its `values` + `metadata` maps) to `out`
+/// as a bare ROW frame body (no length prefix, no frame type). Byte-identical
 /// to `Flow\Floe\PhpFloeEncoder::encode` for the same row.
 pub fn encode_typed_row(
     plan: &EncodePlan,
     row_index: u64,
     values_ht: &ZendHashTable,
     metadata_ht: &ZendHashTable,
+    out: &mut Vec<u8>,
     ctx: &mut Ctx,
-) -> Result<Vec<u8>, PhpException> {
-    let mut out = Vec::with_capacity(1024);
-
+) -> Result<(), PhpException> {
     for column in &plan.columns {
         let Some(value) = ht_find(values_ht, &column.name) else {
             return Err(ext_exception(format!(
@@ -368,7 +367,7 @@ pub fn encode_typed_row(
 
             if diverges {
                 out.push(VALUE_NULL_WITH_META);
-                write_len_prefixed(&mut out, &entry_metadata_json);
+                write_len_prefixed(out, &entry_metadata_json);
             } else {
                 out.push(VALUE_NULL);
             }
@@ -378,13 +377,45 @@ pub fn encode_typed_row(
 
         if diverges {
             out.push(VALUE_PRESENT_WITH_META);
-            write_len_prefixed(&mut out, &entry_metadata_json);
+            write_len_prefixed(out, &entry_metadata_json);
         } else {
             out.push(VALUE_PRESENT);
         }
 
-        encode_value(&column.encoder, value, &mut out, ctx)?;
+        encode_value(&column.encoder, value, out, ctx)?;
     }
+
+    Ok(())
+}
+
+/// `Format::frame(Format::FRAME_ROW, $body)` over `encode_typed_row` for every `Row` of a batch: the rows' own
+/// values tables and the batch's one `TypedRowValues::metadata` map, complete ROW frames in one buffer.
+pub fn encode_frames(
+    plan: &EncodePlan,
+    rows_ht: &ZendHashTable,
+    row_values_slot: u32,
+    metadata_ht: &ZendHashTable,
+    ctx: &mut Ctx,
+) -> Result<Vec<u8>, PhpException> {
+    let mut out = Vec::with_capacity(rows_ht.len() * 256);
+
+    ht_for_each(rows_ht, |_, row_index, row_zv| {
+        let values_ht = read_slot(expect_object(row_zv, "a Row")?, row_values_slot)
+            .array()
+            .ok_or_else(|| ext_exception("flow_php expected Row::values to be an array"))?;
+
+        out.push(FRAME_ROW);
+        let length_at = out.len();
+        out.extend_from_slice(&[0; 4]);
+
+        encode_typed_row(plan, row_index, values_ht, metadata_ht, &mut out, ctx)?;
+
+        let length = u32::try_from(out.len() - length_at - 4)
+            .map_err(|_| ext_exception("flow_php encoded a row frame longer than 4 GiB"))?;
+        out[length_at..length_at + 4].copy_from_slice(&length.to_le_bytes());
+
+        Ok(())
+    })?;
 
     Ok(out)
 }

@@ -13,6 +13,8 @@ final class SpyHydrator implements Hydrator
 {
     public int $dehydrateCalls = 0;
 
+    public int $hydrateCalls = 0;
+
     public function dehydrate(Rows $rows): array
     {
         $this->dehydrateCalls++;
@@ -22,6 +24,8 @@ final class SpyHydrator implements Hydrator
 
     public function hydrate(array $batch, Schema $schema): Rows
     {
+        $this->hydrateCalls++;
+
         return (new AdaptiveRowHydrator())->hydrate($batch, $schema);
     }
 }

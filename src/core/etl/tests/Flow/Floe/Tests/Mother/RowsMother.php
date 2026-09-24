@@ -12,6 +12,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
 
+use function array_map;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
@@ -41,6 +42,7 @@ use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_uuid;
 use function Flow\Types\DSL\type_xml;
 use function Flow\Types\DSL\type_xml_element;
+use function range;
 
 use const PHP_INT_MAX;
 use const PHP_INT_MIN;
@@ -50,6 +52,32 @@ final class RowsMother
     public static function empty(): Rows
     {
         return rows(schema());
+    }
+
+    public static function ids(int $from, int $to): Rows
+    {
+        return rows(
+            schema(int_schema('id')),
+            ...array_map(static fn(int $id) => row(['id' => $id]), range($from, $to)),
+        );
+    }
+
+    /**
+     * Ids 1..$count, every fourth name null, one datetime an hour apart per row.
+     */
+    public static function numbered(int $count): Rows
+    {
+        return rows(
+            schema(int_schema('id'), str_schema('name', nullable: true), datetime_schema('at')),
+            ...array_map(
+                static fn(int $id) => row([
+                    'id' => $id,
+                    'name' => ($id % 4) === 0 ? null : 'user_' . $id,
+                    'at' => (new DateTimeImmutable('2026-01-01 00:00:00.000001 +00:00'))->modify("+{$id} hours"),
+                ]),
+                range(1, $count),
+            ),
+        );
     }
 
     public static function heterogeneous(): Rows

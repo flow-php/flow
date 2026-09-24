@@ -16,6 +16,11 @@ final class AdaptiveRowHydrator implements Hydrator
         $this->delegate = NativeRowHydrator::isSupported() ? new NativeRowHydrator() : new PhpRowHydrator();
     }
 
+    public function isNative(): bool
+    {
+        return $this->delegate instanceof NativeRowHydrator;
+    }
+
     public function dehydrate(Rows $rows): array
     {
         return $this->delegate->dehydrate($rows);

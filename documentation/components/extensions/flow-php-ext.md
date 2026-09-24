@@ -58,10 +58,12 @@ implementation automatically:
 
 - **`Flow\Floe\RustFloeEncoderNative`** - the Floe ROW frame-body codec:
   `encode(list<TypedRowValues>, schemaBody)` returns the encoded frame bodies,
-  `decode(list<string>, schemaBody)` returns `list<Flow\ETL\Row\RawRowValues>`. The userland wrapper
-  `Flow\Floe\NativeFloeEncoder` carries the `Flow\ETL\Row\Encoder` interface, and
-  `Flow\Floe\AdaptiveFloeEncoder` - built by every writer/reader - selects it over
-  `Flow\Floe\PhpFloeEncoder` when the extension is loaded.
+  `decode(list<string>, schemaBody)` returns `list<Flow\ETL\Row\RawRowValues>`, and
+  `decodeRows(list<string>, schemaBody, Schema)` decodes and casts straight into `Flow\ETL\Rows` in one pass, and
+  `encodeFrames(Rows, schemaBody, Schema)` turns `Rows` straight into one string of complete ROW frames - what the
+  reader and the writer use when the configured hydrator is the native one. The userland wrapper
+  `Flow\Floe\NativeFloeEncoder` carries the `Flow\Floe\FloeEncoder` interface, and `FloeEngine::adaptive` - the
+  engine every writer/reader defaults to - builds it over `Flow\Floe\PhpFloeEncoder` when the extension is loaded.
 - **`Flow\ETL\Row\RustRowHydratorNative`** - the native `hydrate`/`cast`/`dehydrate` behind
   `Flow\ETL\Row\NativeRowHydrator`, which `Flow\ETL\Row\AdaptiveRowHydrator` (the config default)
   selects when the extension is loaded - used by adapter loaders and raw-scalar extractors such as

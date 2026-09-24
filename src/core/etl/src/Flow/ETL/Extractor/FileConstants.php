@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
+use Flow\ETL\Row;
+use Flow\ETL\Rows;
+use Flow\ETL\Schema;
+
 final readonly class FileConstants
 {
     /**
@@ -32,5 +36,25 @@ final readonly class FileConstants
         }
 
         return $this->partitionColumns->fill($row, $this->partitionNames, $this->partitionValues);
+    }
+
+    /**
+     * fill() over a batch the reader already matched to the file's body schema, adopting $declared - the schema
+     * FileColumns::declare() built over that body schema. A batch with nothing to add is returned as it is.
+     */
+    public function fillRows(Rows $rows, Schema $declared): Rows
+    {
+        if ($this->uri === null && $this->partitionNames === []) {
+            return $rows;
+        }
+
+        $filled = [];
+
+        foreach ($rows->all() as $row) {
+            $filled[] = new Row($this->fill($row->values()));
+        }
+
+        // declare() appends the tail in the order fill() writes it, so the rows need no second check
+        return Rows::trusted($declared, $filled);
     }
 }
