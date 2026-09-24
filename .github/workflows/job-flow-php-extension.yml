@@ -99,13 +99,13 @@ jobs:
           php -m | grep flow_php
 
       - name: Run ETL Unit Tests with Flow PHP Extension
-        run: just test --testsuite=etl-unit ${{ (matrix.php == '8.3' && matrix.os == 'ubuntu-latest') && '--coverage-clover=./var/phpunit/coverage/clover/coverage.xml' || '' }}
+        run: just test --testsuite=etl-unit ${{ (matrix.php == '8.3' && runner.os == 'Linux') && '--coverage-clover=./var/phpunit/coverage/clover/coverage.xml' || '' }}
 
       - name: Run ETL Integration Tests with Flow PHP Extension
         run: just test --testsuite=etl-integration
 
       - name: Upload to Codecov
-        if: ${{ !cancelled() && matrix.php == '8.3' && matrix.os == 'ubuntu-latest' }}
+        if: ${{ !cancelled() && matrix.php == '8.3' && runner.os == 'Linux' }}
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

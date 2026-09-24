@@ -21,8 +21,8 @@ assert (!(with-c && with-pg-query-ext)) || builtins.throw "Cannot use --arg with
 
 let
     nixpkgs = fetchTarball {
-        url = "https://github.com/NixOS/nixpkgs/archive/0c4e77908e1204498184d81cda8716e1ba4c47af.tar.gz";
-        sha256 = "0mbr776gj2qk9klvara4zlww3g0da4nfbnrmi114nnmmayx3pyj4";
+        url = "https://github.com/NixOS/nixpkgs/archive/00455b0a3690d3f5dc61e9aef4277dc86235b73f.tar.gz";
+        sha256 = "0vz9jxm81zl356vvqaswlf8fqgsz6p5yjy0iy5qq7kr81kpfvbch";
     };
 
     pkgs = import nixpkgs {
@@ -31,40 +31,15 @@ let
         };
         overlays = [
             (final: prev:
-                if prev.stdenv.hostPlatform.system == "aarch64-darwin" then
-                    let
-                        blackfire-probe-version = "2026.9.2";
-                        blackfire-probe-hashes = {
-                            "83" = "sha256-3oJtMuVKGUgpduMp7snSdGE/BH764EA7yz+N70+qFNg=";
-                            "84" = "sha256-0HOCBB9dgU9Vq5/F0iKCzumjwT81qxHElPsLGKgVhr0=";
-                            "85" = "sha256-Hi9bC/CigkA3VWFTqfE7JzBcGGJAhUwnmMndHgbFIW4=";
+                if prev.stdenv.hostPlatform.system == "aarch64-darwin" then {
+                    blackfire = prev.blackfire.overrideAttrs (old: {
+                        version = "2026.9.1";
+                        src = prev.fetchurl {
+                            url = "https://packages.blackfire.io/blackfire/2026.9.1/blackfire-darwin_arm64.pkg.tar.gz";
+                            sha256 = "sha256-xNn78U4jdABzWrSKMSSZXE5tuf/SRK8OwdhldKBBKk0=";
                         };
-                        with-blackfire-probe = php-version: php: php.override {
-                            packageOverrides = php-final: php-prev: {
-                                extensions = php-prev.extensions // {
-                                    blackfire = php-prev.extensions.blackfire.overrideAttrs (old: {
-                                        version = blackfire-probe-version;
-                                        src = prev.fetchurl {
-                                            url = "https://packages.blackfire.io/binaries/blackfire-php/${blackfire-probe-version}/blackfire-php-darwin_arm64-php-${php-version}.so";
-                                            hash = blackfire-probe-hashes.${php-version};
-                                        };
-                                    });
-                                };
-                            };
-                        };
-                    in {
-                        blackfire = prev.blackfire.overrideAttrs (old: {
-                            version = "2026.9.1";
-                            src = prev.fetchurl {
-                                url = "https://packages.blackfire.io/blackfire/2026.9.1/blackfire-darwin_arm64.pkg.tar.gz";
-                                sha256 = "sha256-xNn78U4jdABzWrSKMSSZXE5tuf/SRK8OwdhldKBBKk0=";
-                            };
-                        });
-                        php83 = with-blackfire-probe "83" prev.php83;
-                        php84 = with-blackfire-probe "84" prev.php84;
-                        php85 = with-blackfire-probe "85" prev.php85;
-                    }
-                else {}
+                    });
+                } else {}
             )
         ];
     };
