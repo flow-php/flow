@@ -32,7 +32,10 @@ final readonly class OrdersDataset
 
         $fixture->prune();
 
-        data_frame()->read(from_parquet($this->parquet()))->write(to_csv($fixture->path()))->run();
+        data_frame()
+            ->read(from_parquet($this->parquet()))
+            ->write(to_csv($fixture->path())->withDateTimeFormat('Y-m-d\TH:i:sp'))
+            ->run();
 
         return $fixture->path();
     }

@@ -193,9 +193,25 @@ final class DateTimeTypeTest extends TestCase
     #[TestWith(['2024-03-05 12:34:56+02'])]
     #[TestWith(['2024-02-29 00:00:00'])]
     #[TestWith(['2024-03-05 24:00:00'])]
-    public function test_an_iso_date_time_casts_to_the_instant_it_names(string $value): void
+    #[TestWith(['2026-01-02T03:04:05Z'])]
+    #[TestWith(['2026-01-02 03:04:05Z'])]
+    #[TestWith(['2026-01-02T03:04Z'])]
+    #[TestWith(["2026-01-02T03:04:05Z\n"])]
+    #[TestWith(['2026-01-02T03:04:05.1Z'])]
+    #[TestWith(['2026-01-02T03:04:05.123456Z'])]
+    #[TestWith(['2026-01-02T03:04:05.123456789Z'])]
+    #[TestWith(['2026-12-31T23:59:60Z'])]
+    #[TestWith(['2026-01-02T24:00:00Z'])]
+    #[TestWith(['0001-01-01T00:00:00Z'])]
+    #[TestWith(['2026-01-02T03:04:05.123456789+02:00'])]
+    #[TestWith(['2026-01-02T03:04:05+00:00'])]
+    #[TestWith(['2026-01-02T03:04:05-0530'])]
+    #[TestWith(['2026-01-02T03:04:05-05'])]
+    #[TestWith(['2026-01-02 03:04'])]
+    #[TestWith(['2026-01-02T03:04:05'])]
+    public function test_an_iso_date_time_casts_to_the_object_the_constructor_builds(string $value): void
     {
-        static::assertEquals(new DateTimeImmutable($value), type_datetime()->cast($value));
+        static::assertSame(serialize(new DateTimeImmutable($value)), serialize(type_datetime()->cast($value)));
     }
 
     #[TestWith(['2023-02-29 10:00:00'])]
@@ -203,6 +219,9 @@ final class DateTimeTypeTest extends TestCase
     #[TestWith(['2024-13-01 10:00:00'])]
     #[TestWith(['2024-03-05 25:00:00'])]
     #[TestWith(['2024-03-05 12:60:00'])]
+    #[TestWith(['2026-01-02T25:99:99Z'])]
+    #[TestWith(['2026-01-02T03:60:00Z'])]
+    #[TestWith(['2026-01-02T03:04:61Z'])]
     public function test_an_iso_date_time_off_the_calendar_or_clock_is_refused(string $value): void
     {
         $this->expectException(CastingException::class);

@@ -595,14 +595,25 @@ fn cast_value(kind: &CastKind, value: &Zval, ctx: &mut Ctx) -> Result<Option<Zva
                 // Only DateTimeType::cast's ISO branch is mirrored: its regex and checkdate() are exact, and
                 // what passes them goes straight to the constructor. Every other string is gated on
                 // StringTemporalParts, whose recogniser is a PHP class, so it bails whole
-                if iso_date_time_gate(string.as_bytes()) {
-                    // None (e.g. "25:99:99") bails, and PHP throws the same exception
-                    date_from_free_form(string.as_bytes(), ctx)?
-                } else {
+                let bytes = string.as_bytes();
+
+                // None (e.g. "25:99:99") from either parse bails, and PHP throws the same exception
+                if !iso_date_time_gate(bytes) {
                     None
+                } else if let Some(local) = bytes
+                    .strip_suffix(b"\n")
+                    .unwrap_or(bytes)
+                    .strip_suffix(b"Z")
+                {
+                    // mirrors DateTimeType::cast's Z branch
+                    let mut zulu = ctx.timezone(b"Z")?.shallow_clone();
+
+                    date_from_free_form(local, Some(&mut zulu), ctx)?
+                } else {
+                    date_from_free_form(bytes, None, ctx)?
                 }
             } else if value.is_long() || value.is_double() {
-                date_from_free_form(&timestamp_string(value)?, ctx)?
+                date_from_free_form(&timestamp_string(value)?, None, ctx)?
             } else {
                 None
             }
@@ -777,7 +788,7 @@ fn cast_date(value: &Zval, ctx: &mut Ctx) -> Result<Option<Zval>, PhpException> 
     }
 
     let parsed = if value.is_long() || value.is_double() {
-        date_from_free_form(&timestamp_string(value)?, ctx)?
+        date_from_free_form(&timestamp_string(value)?, None, ctx)?
     } else {
         None
     };

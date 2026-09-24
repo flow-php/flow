@@ -8,6 +8,7 @@ use DateInterval;
 use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
+use DateTimeZone;
 use DOMElement;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
@@ -20,6 +21,7 @@ use function is_bool;
 use function is_numeric;
 use function is_string;
 use function preg_match;
+use function substr;
 
 /**
  * @template T of \DateTimeInterface
@@ -32,7 +34,7 @@ final readonly class DateTimeType implements Type
      * A date, its day spelled out, and a time: every string this matches with a real calendar day is one
      * StringTemporalParts would accept, and the constructor rejects the rest just as it would after that check.
      */
-    private const string ISO_DATE_TIME = '/^(\d{4})-(\d{2})-(\d{2})[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(?:Z|[+-]\d{2}(?::?\d{2})?)?$/';
+    private const string ISO_DATE_TIME = '/^(\d{4})-(\d{2})-(\d{2})[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(Z|[+-]\d{2}(?::?\d{2})?)?$/';
 
     public function assert(mixed $value): DateTimeInterface
     {
@@ -65,6 +67,14 @@ final readonly class DateTimeType implements Type
                     preg_match(self::ISO_DATE_TIME, $value, $date) === 1
                     && checkdate((int) $date[2], (int) $date[3], (int) $date[1])
                 ) {
+                    if (($date[4] ?? '') === 'Z') {
+                        // timelib resolves the "Z" abbreviation by scanning its whole abbreviation table, ten
+                        // times the cost of parsing the rest; the zone handed in builds the identical object
+                        static $zulu = new DateTimeZone('Z');
+
+                        return new DateTimeImmutable(substr($date[0], 0, -1), $zulu);
+                    }
+
                     return new DateTimeImmutable($value);
                 }
 

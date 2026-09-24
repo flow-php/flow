@@ -30,10 +30,11 @@ extern "C" {
 
 const PHP_DATE_OBJ_STD_OFFSET: usize = std::mem::size_of::<*const c_void>();
 
-/// `new DateTimeImmutable($str)` through the same C-level timelib parser, in its
+/// `new DateTimeImmutable($str, $timezone)` through the same C-level timelib parser, in its
 /// non-throwing `date_create()` flavor: `Ok(None)` on parse failure, no exception.
 pub(crate) fn date_from_free_form(
     bytes: &[u8],
+    timezone: Option<&mut Zval>,
     ctx: &mut Ctx,
 ) -> Result<Option<Zval>, PhpException> {
     let ce = ctx.datetime_fns(false)?.ce;
@@ -65,7 +66,7 @@ pub(crate) fn date_from_free_form(
             time_str.as_mut_ptr().cast::<c_char>(),
             time_str.len() - 1,
             std::ptr::null(),
-            std::ptr::null_mut(),
+            timezone.map_or(std::ptr::null_mut(), std::ptr::from_mut),
             0,
         )
     };
