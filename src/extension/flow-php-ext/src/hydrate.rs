@@ -20,7 +20,7 @@ use crate::exception::ext_exception;
 use crate::format::{
     Reader, VALUE_NULL, VALUE_NULL_WITH_META, VALUE_PRESENT, VALUE_PRESENT_WITH_META,
 };
-use crate::plan::Plan;
+use crate::plan::{Decoder, Plan};
 use crate::values::decode_value;
 
 /// Resolved `Flow\ETL\Row\RawRowValues` class handles, shared by the binary decoder and the hydrator.
@@ -67,6 +67,29 @@ fn read_metadata(reader: &mut Reader, ctx: &mut Ctx) -> Result<Zval, PhpExceptio
     call_handle(from_array, None, &mut [map], "build per-value metadata")
 }
 
+/// One column of a ROW frame body: its value, and the per-value metadata when the flag carries one.
+pub(crate) fn read_cell(
+    decoder: &Decoder,
+    reader: &mut Reader,
+    ctx: &mut Ctx,
+) -> Result<(Zval, Option<Zval>), PhpException> {
+    Ok(match reader.u8("row value flag")? {
+        VALUE_PRESENT => (decode_value(decoder, reader, ctx)?, None),
+        VALUE_NULL => (Zval::new(), None),
+        VALUE_PRESENT_WITH_META => {
+            let metadata = read_metadata(reader, ctx)?;
+
+            (decode_value(decoder, reader, ctx)?, Some(metadata))
+        }
+        VALUE_NULL_WITH_META => (Zval::new(), Some(read_metadata(reader, ctx)?)),
+        other => {
+            return Err(ext_exception(format!(
+                "flow_php found unknown value flag 0x{other:02X}"
+            )));
+        }
+    })
+}
+
 /// Decodes one ROW frame body into a `Flow\ETL\Row\RawRowValues` object - values keyed by
 /// column name, absent columns omitted, diverging per-value metadata recorded in `metadata`.
 pub fn decode_row_values(
@@ -79,29 +102,11 @@ pub fn decode_row_values(
     let mut metadata_ht = ZendHashTable::new();
 
     for column in &plan.columns {
-        let flag = reader.u8("row value flag")?;
+        let (value, metadata) = read_cell(&column.decoder, reader, ctx)?;
 
-        let value = match flag {
-            VALUE_PRESENT => decode_value(&column.decoder, reader, ctx)?,
-            VALUE_NULL => Zval::new(),
-            VALUE_PRESENT_WITH_META => {
-                let metadata = read_metadata(reader, ctx)?;
-                ht_insert(&mut metadata_ht, column.name.as_bytes(), metadata);
-
-                decode_value(&column.decoder, reader, ctx)?
-            }
-            VALUE_NULL_WITH_META => {
-                let metadata = read_metadata(reader, ctx)?;
-                ht_insert(&mut metadata_ht, column.name.as_bytes(), metadata);
-
-                Zval::new()
-            }
-            other => {
-                return Err(ext_exception(format!(
-                    "flow_php found unknown value flag 0x{other:02X}"
-                )));
-            }
-        };
+        if let Some(metadata) = metadata {
+            ht_insert(&mut metadata_ht, column.name.as_bytes(), metadata);
+        }
 
         if !ht_add(&mut values_ht, column.name.as_bytes(), value) {
             return Err(ext_exception(format!(
@@ -189,7 +194,7 @@ pub(crate) fn def_dehydrate_fns(
 
 /// One column of a batch's dehydrate plan: the key, and the `type()` /
 /// `metadata()` zvals read once from the batch Schema.
-struct DehydrateColumn {
+pub(crate) struct DehydrateColumn {
     numeric_key: Option<i64>,
     name_zv: Zval,
     type_zv: Zval,
@@ -251,15 +256,14 @@ fn dehydrate_row(
     Ok(row_values)
 }
 
-/// Native `PhpRowHydrator::dehydrate`: turns a `Flow\ETL\Rows` into a list of
-/// `Flow\ETL\Row\TypedRowValues`, value zvals moved verbatim (no casting).
-pub fn dehydrate_rows(
-    rows: &Zval,
+/// The batch behind a `Flow\ETL\Rows`: its `rows` table and one dehydrate column per Schema definition - the
+/// `type()`/`metadata()` calls made once per batch, not once per cell.
+pub(crate) fn dehydrate_batch<'a>(
+    rows: &'a Zval,
     rows_classes: &RowsClasses,
-    class: &TypedRowValuesClass,
     def_fn_cache: &mut DefFnCache,
     ctx: &mut Ctx,
-) -> Result<Zval, PhpException> {
+) -> Result<(&'a ZendHashTable, Vec<DehydrateColumn>), PhpException> {
     let rows_obj = expect_object(rows, "Rows")?;
     let rows_ht = read_slot(rows_obj, rows_classes.rows_slot)
         .array()
@@ -274,7 +278,6 @@ pub fn dehydrate_rows(
 
     let metadata_map_slot = ctx.metadata_map_slot()?;
 
-    // one type()/metadata() call per column per batch, not per cell
     let mut columns: Vec<DehydrateColumn> = Vec::with_capacity(definitions_ht.len());
 
     ht_for_each(definitions_ht, |_, _, def_zv| {
@@ -316,6 +319,34 @@ pub fn dehydrate_rows(
 
         Ok(())
     })?;
+
+    Ok((rows_ht, columns))
+}
+
+/// `TypedRowValues::metadata` as `dehydrate_row` builds it - the batch's columns with non-empty metadata, the same
+/// map for every row of the batch.
+pub(crate) fn batch_metadata(columns: &[DehydrateColumn]) -> ZBox<ZendHashTable> {
+    let mut metadata_ht = ZendHashTable::new();
+
+    for column in columns {
+        if let Some(metadata) = &column.metadata_zv {
+            ht_insert_key(&mut metadata_ht, &column.key(), metadata.shallow_clone());
+        }
+    }
+
+    metadata_ht
+}
+
+/// Native `PhpRowHydrator::dehydrate`: turns a `Flow\ETL\Rows` into a list of
+/// `Flow\ETL\Row\TypedRowValues`, value zvals moved verbatim (no casting).
+pub fn dehydrate_rows(
+    rows: &Zval,
+    rows_classes: &RowsClasses,
+    class: &TypedRowValuesClass,
+    def_fn_cache: &mut DefFnCache,
+    ctx: &mut Ctx,
+) -> Result<Zval, PhpException> {
+    let (rows_ht, columns) = dehydrate_batch(rows, rows_classes, def_fn_cache, ctx)?;
 
     let mut out = ZendHashTable::with_capacity(rows_ht.len() as u32);
 
@@ -491,15 +522,24 @@ pub fn fold_metadata_into_schema(
             return Ok(());
         };
 
-        ht_for_each(metadata_ht, |key, _, metadata_zv| {
-            if let Some(name) = key {
-                pending.push((name.as_bytes().to_vec(), metadata_zv.shallow_clone()));
-            }
+        ht_for_each(metadata_ht, |key, index, metadata_zv| {
+            // PHP stores a numeric column name as an integer key; HydratedBatch casts it back to the name
+            let name = key.map_or_else(|| (index as i64).to_string().into_bytes(), |name| name.as_bytes().to_vec());
+            pending.push((name, metadata_zv.shallow_clone()));
 
             Ok(())
         })
     })?;
 
+    fold_pending_metadata(schema, pending, ctx)
+}
+
+/// Folds `(column name, Metadata)` pairs, in the order the rows carried them, into the Schema.
+pub fn fold_pending_metadata(
+    schema: &Zval,
+    pending: Vec<(Vec<u8>, Zval)>,
+    ctx: &mut Ctx,
+) -> Result<Zval, PhpException> {
     if pending.is_empty() {
         return Ok(schema.shallow_clone());
     }

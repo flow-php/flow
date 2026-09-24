@@ -63,6 +63,10 @@ $datasets = [
             new RawRowValues(['id' => 2], ['id' => Metadata::fromArray(['k' => 'v2'])]),
         ],
     ],
+    'numeric_name_metadata' => [
+        schema(int_schema('7'), int_schema('id')),
+        [new RawRowValues(['7' => 1, 'id' => 1], ['7' => Metadata::fromArray(['k' => 'v']), 'id' => Metadata::fromArray(['n' => 1])])],
+    ],
     'temporal' => [
         schema(datetime_schema('at'), date_schema('d'), time_schema('t'), uuid_schema('u')),
         [new RawRowValues([
@@ -124,6 +128,7 @@ scalars          hydrate:yes dehydrate:yes
 null_nonnullable hydrate:yes dehydrate:yes
 absent           hydrate:yes dehydrate:yes
 metadata         hydrate:yes dehydrate:yes
+numeric_name_metadata hydrate:yes dehydrate:yes
 temporal         hydrate:yes dehydrate:yes
 containers       hydrate:yes dehydrate:yes
 enum_and_null    hydrate:yes dehydrate:yes

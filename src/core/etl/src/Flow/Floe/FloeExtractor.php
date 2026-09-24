@@ -16,9 +16,7 @@ use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Hydrator;
-use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Validator\StrictValidator;
 use Flow\Filesystem\Filesystem;
@@ -125,15 +123,7 @@ final class FloeExtractor implements
                 foreach ($file->reader->rows($this->batchSize(), $fileOffset, $remaining) as $rows) {
                     // R7: the stamp stays post-hydration - FloeStreamReader::rows() yields hydrated Rows and
                     // must not learn about paths - but the constants are the shared ones, already typed
-                    $filled = [];
-
-                    foreach ($rows->all() as $row) {
-                        $filled[] = new Row($constants->fill($row->values()));
-                    }
-
-                    // the reader already matched every row against the footer schema, and the tail is
-                    // written in the order declare() emits it, so a second full check buys nothing
-                    $rows = Rows::trusted($fileSchema, $filled);
+                    $rows = $constants->fillRows($rows, $fileSchema);
 
                     if ($matchTo !== null) {
                         $rows = $rows->matchTo($matchTo);

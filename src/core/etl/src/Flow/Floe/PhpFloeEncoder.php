@@ -6,8 +6,9 @@ namespace Flow\Floe;
 
 use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Exception\SchemaMismatchException;
-use Flow\ETL\Row\Encoder;
+use Flow\ETL\Row\Hydrator;
 use Flow\ETL\Row\RawRowValues;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
 use Flow\Floe\Exception\FloeException;
@@ -21,10 +22,7 @@ use function strlen;
 
 use const JSON_THROW_ON_ERROR;
 
-/**
- * @implements Encoder<string>
- */
-final class PhpFloeEncoder implements Encoder
+final class PhpFloeEncoder implements FloeEncoder
 {
     /**
      * @var null|array<int, ColumnBlueprint>
@@ -83,6 +81,16 @@ final class PhpFloeEncoder implements Encoder
         }
 
         return $decoded;
+    }
+
+    public function decodeRows(array $bodies, Schema $schema, Hydrator $hydrator): Rows
+    {
+        return $hydrator->hydrate($this->decode($bodies), $schema);
+    }
+
+    public function encodeFrames(Rows $rows, Hydrator $hydrator): string
+    {
+        return Format::rowFrames($this->encode($hydrator->dehydrate($rows)));
     }
 
     public function encode(array $batch): array

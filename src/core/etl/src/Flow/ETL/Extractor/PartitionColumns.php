@@ -24,12 +24,6 @@ final readonly class PartitionColumns
     ) {}
 
     /**
-     * One read yields one Schema, so a partition column that only some paths under the listing carry
-     * still has to be declared for all of them - and it is nullable when some path lacks it, or when
-     * some path carries the Hive null sentinel, which is a value the column has to be able to hold.
-     * Partition values live in the path, so both the union and its nullability are known without
-     * opening a single file.
-     *
      * @return array<string, bool> partition name => nullable
      */
     public function names(Path $path, Filter $filter): array
@@ -62,10 +56,6 @@ final readonly class PartitionColumns
     }
 
     /**
-     * A partition column keeps the type its declared definition gives it, but never its body
-     * position: it is removed from wherever the file put it and re-appended in the partition block,
-     * so a declared read and an undeclared one emit the same column order.
-     *
      * @param array<string, bool> $names
      */
     public function declare(Schema $schema, array $names, PartitionTypes $types = new PartitionTypes()): Schema
@@ -93,10 +83,6 @@ final readonly class PartitionColumns
     }
 
     /**
-     * Inference sees one stream at a time, so it types a partition column from that stream alone -
-     * `string` where the path carries it, `?null` where it does not, and the two batches then refuse
-     * to merge. The path knows better than the values do, so here the partition definition wins.
-     *
      * @param array<string, bool> $names
      */
     public function apply(Rows $rows, array $names, PartitionTypes $types = new PartitionTypes()): Rows
@@ -128,8 +114,6 @@ final readonly class PartitionColumns
     public function fill(array $row, array $names, array $values): array
     {
         foreach ($names as $name => $_) {
-            // declare() re-appends every partition column in the partition block, so a column the
-            // file data also carries must leave its body position here or the two disagree
             unset($row[$name]);
             $row[$name] = array_key_exists($name, $values) ? $values[$name] : null;
         }

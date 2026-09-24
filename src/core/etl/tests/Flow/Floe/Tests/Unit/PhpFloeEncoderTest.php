@@ -9,8 +9,10 @@ use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Row\TypedRowValues;
 use Flow\ETL\Schema\Metadata;
 use Flow\Floe\Exception\FloeException;
+use Flow\Floe\Format;
 use Flow\Floe\PhpFloeEncoder;
 use Flow\Floe\Tests\Context\FloeSchemaContext;
+use Flow\Floe\Tests\Mother\RowsMother;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\ETL\DSL\float_schema;
@@ -175,5 +177,33 @@ final class PhpFloeEncoderTest extends TestCase
         $this->expectExceptionMessage('unknown value flag');
 
         (new PhpFloeEncoder($schema))->decode(["\xEF"]);
+    }
+
+    public function test_decode_rows_hydrates_the_decoded_values(): void
+    {
+        $data = rows(
+            schema(int_schema('id'), str_schema('name', nullable: true)),
+            row(['id' => 1, 'name' => 'flow']),
+            row(['id' => 2, 'name' => null]),
+        );
+        $schema = schema_from_json(FloeSchemaContext::schemaBody($data->schema()));
+        $encoder = new PhpFloeEncoder($schema);
+        $bodies = $encoder->encode((new PhpRowHydrator())->dehydrate($data));
+
+        static::assertEquals(
+            (new PhpRowHydrator())->hydrate($encoder->decode($bodies), $schema),
+            $encoder->decodeRows($bodies, $schema, new PhpRowHydrator()),
+        );
+    }
+
+    public function test_encode_frames_frames_the_encoded_dehydrated_rows(): void
+    {
+        $data = RowsMother::numbered(3);
+        $encoder = new PhpFloeEncoder($data->schema());
+
+        static::assertSame(
+            Format::rowFrames($encoder->encode((new PhpRowHydrator())->dehydrate($data))),
+            $encoder->encodeFrames($data, new PhpRowHydrator()),
+        );
     }
 }

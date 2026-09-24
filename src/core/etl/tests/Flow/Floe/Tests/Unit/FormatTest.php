@@ -19,6 +19,15 @@ final class FormatTest extends TestCase
         static::assertSame(chr(Format::FRAME_ROW) . pack('V', 3) . 'abc', Format::frame(Format::FRAME_ROW, 'abc'));
     }
 
+    public function test_row_frames_frames_every_body_in_order(): void
+    {
+        static::assertSame(
+            chr(Format::FRAME_ROW) . pack('V', 1) . 'a' . chr(Format::FRAME_ROW) . pack('V', 0),
+            Format::rowFrames(['a', '']),
+        );
+        static::assertSame('', Format::rowFrames([]));
+    }
+
     public function test_header_starts_with_magic_version_and_flags(): void
     {
         $header = Format::header(0x00);

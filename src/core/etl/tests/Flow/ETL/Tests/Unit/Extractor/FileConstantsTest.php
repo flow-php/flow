@@ -8,6 +8,11 @@ use Flow\ETL\Extractor\FileConstants;
 use Flow\ETL\Extractor\PartitionColumns;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
 
 final class FileConstantsTest extends FlowTestCase
@@ -51,6 +56,40 @@ final class FileConstantsTest extends FlowTestCase
             (new FileConstants(new PartitionColumns(memory_filesystem()), 'memory://orders/data.csv', [], []))->fill([
                 'name' => 'Norbert',
             ]),
+        );
+    }
+
+    public function test_fill_rows_returns_a_batch_with_nothing_to_add_as_it_is(): void
+    {
+        $rows = rows(schema(str_schema('name')), row(['name' => 'Norbert']));
+
+        static::assertSame($rows, (new FileConstants(
+            new PartitionColumns(memory_filesystem()),
+            null,
+            [],
+            [],
+        ))->fillRows($rows, $rows->schema()));
+    }
+
+    public function test_fill_rows_adds_the_constants_to_every_row_under_the_declared_schema(): void
+    {
+        $declared = schema(str_schema('name'), str_schema('_input_file_uri'), int_schema('year'));
+
+        static::assertEquals(
+            rows(
+                $declared,
+                row(['name' => 'Norbert', '_input_file_uri' => 'memory://orders/data.csv', 'year' => 2024]),
+                row(['name' => 'Flow', '_input_file_uri' => 'memory://orders/data.csv', 'year' => 2024]),
+            ),
+            (new FileConstants(
+                new PartitionColumns(memory_filesystem()),
+                'memory://orders/data.csv',
+                ['year' => false],
+                ['year' => 2024],
+            ))->fillRows(
+                rows(schema(str_schema('name')), row(['name' => 'Norbert']), row(['name' => 'Flow'])),
+                $declared,
+            ),
         );
     }
 }

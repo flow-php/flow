@@ -356,6 +356,13 @@ final class MyExtractor implements Extractor
 | `sql_query_tables('DROP TABLE a, s.b')` - `[]`                                       | `[a, s.b]` |
 | `sql_query_tables("COMMENT ON COLUMN s.t.c IS 'x'")` - `[]`                          | `[s.t]`    |
 
+### 35) `flow-php/etl` - `AdaptiveFloeEncoder` removed, Floe engines build a `FloeEncoder`
+
+| Before                                   | After                                                                                                                                |
+|------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| `Flow\Floe\AdaptiveFloeEncoder`          | removed - `FloeEngine::adaptive->encoder($schema)` returns `NativeFloeEncoder` when the extension supports it, else `PhpFloeEncoder` |
+| `FloeEngine::encoder(): Encoder<string>` | `FloeEngine::encoder(): Flow\Floe\FloeEncoder` (`Encoder<string>` plus `decodeRows()` / `encodeFrames()`)                            |
+
 ---
 
 ## Upgrading from 0.43.x to 0.44.x

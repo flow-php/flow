@@ -9,6 +9,8 @@ use crate::exception::ext_exception;
 #[cfg(target_endian = "big")]
 compile_error!("flow_php only supports little-endian targets");
 
+pub const FRAME_ROW: u8 = 0x02;
+
 pub const VALUE_NULL: u8 = 0x00;
 pub const VALUE_PRESENT: u8 = 0x01;
 pub const VALUE_NULL_WITH_META: u8 = 0x02;
