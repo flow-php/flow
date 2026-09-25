@@ -1,6 +1,9 @@
 ## [Unreleased] - 2026-09-25
 
 ### Added
+- [#2658](https://github.com/flow-php/flow/pull/2658) - **flow-php/types - type_datetime($zone) - a datetime type carries one time zone, UTC by default** - [@norberttech](https://github.com/norberttech)
+- [#2658](https://github.com/flow-php/flow/pull/2658) - **flow-php/etl - datetime_schema(zone:) declares a datetime column zone** - [@norberttech](https://github.com/norberttech)
+- [#2658](https://github.com/flow-php/flow/pull/2658) - **flow-php/flow-php-ext - datetimeZones() capability marker for column-zone aware casts and decoders** - [@norberttech](https://github.com/norberttech)
 - [#2656](https://github.com/flow-php/flow/pull/2656) - **flow-php/types - public ISO gates StringTemporalParts::isoDateTime() / isoDate() and DateType::ISO_DATE** - [@norberttech](https://github.com/norberttech)
 - [#2653](https://github.com/flow-php/flow/pull/2653) - **flow-php/flow-php-ext - RustFloeEncoderNative::decodeRows() decodes Floe frames straight into Rows in one native pass** - [@norberttech](https://github.com/norberttech)
 - [#2653](https://github.com/flow-php/flow/pull/2653) - **flow-php/flow-php-ext - RustFloeEncoderNative::encodeFrames() encodes Rows straight into complete ROW frames** - [@norberttech](https://github.com/norberttech)
@@ -41,6 +44,15 @@
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/cli - ProgressBarLoader advancing a progress bar per batch** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2658](https://github.com/flow-php/flow/pull/2658) - **flow-php/types - datetime casts land in the column zone, naive strings ignore date.timezone** - [@norberttech](https://github.com/norberttech)
+- [#2658](https://github.com/flow-php/flow/pull/2658) - **flow-php/types - date casts land at midnight UTC** - [@norberttech](https://github.com/norberttech)
+- [#2658](https://github.com/flow-php/flow/pull/2658) - **flow-php/types - nullable types always cast their value** - [@norberttech](https://github.com/norberttech)
+- [#2658](https://github.com/flow-php/flow/pull/2658) - **flow-php/etl - rows and Floe reads move datetime values into the column zone** - [@norberttech](https://github.com/norberttech)
+- [#2658](https://github.com/flow-php/flow/pull/2658) - **flow-php/etl - merging datetime columns of different zones widens to UTC, time with date/datetime to string** - [@norberttech](https://github.com/norberttech)
+- [#2658](https://github.com/flow-php/flow/pull/2658) - **flow-php/etl - to_timezone(), now(), to_date_time() return zoned columns, to_timezone() takes a constant zone only** - [@norberttech](https://github.com/norberttech)
+- [#2658](https://github.com/flow-php/flow/pull/2658) - **flow-php/flow-php-ext - native casts and decoders apply the column zone** - [@norberttech](https://github.com/norberttech)
+- [#2658](https://github.com/flow-php/flow/pull/2658) - **flow-php/etl-adapter-excel - date cells read as UTC wall clock** - [@norberttech](https://github.com/norberttech)
+- [#2658](https://github.com/flow-php/flow/pull/2658) - **flow-php/filesystem - datetime partition values use the column zone date** - [@norberttech](https://github.com/norberttech)
 - [#2657](https://github.com/flow-php/flow/pull/2657) - **flow-php/etl - null|T inside list, map and structure column types becomes ?T** - [@norberttech](https://github.com/norberttech)
 - [#2657](https://github.com/flow-php/flow/pull/2657) - **flow-php/etl - any other union inside a column type throws UnsupportedUnionTypeException** - [@norberttech](https://github.com/norberttech)
 - [#2657](https://github.com/flow-php/flow/pull/2657) - **flow-php/etl-adapter-json - JSON Schema anyOf nested in items or properties is refused** - [@norberttech](https://github.com/norberttech)
@@ -92,6 +104,9 @@
 - [#2635](https://github.com/flow-php/flow/pull/2635) - **flow-php/parquet - reader and writer row types widened to array-key.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2658](https://github.com/flow-php/flow/pull/2658) - **flow-php/types - type_time() cast of a datetime returns its wall clock** - [@norberttech](https://github.com/norberttech)
+- [#2658](https://github.com/flow-php/flow/pull/2658) - **flow-php/types - type_date() cast no longer mutates a DateTime** - [@norberttech](https://github.com/norberttech)
+- [#2658](https://github.com/flow-php/flow/pull/2658) - **flow-php/etl - to_date_time() keeps the time of a datetime object** - [@norberttech](https://github.com/norberttech)
 - [#2657](https://github.com/flow-php/flow/pull/2657) - **flow-php/etl-adapter-postgresql - array columns are typed list<?T> and can be written to Floe and Parquet** - [@norberttech](https://github.com/norberttech)
 - [#2653](https://github.com/flow-php/flow/pull/2653) - **flow-php/flow-php-ext - native hydrator keeps per-value metadata of numeric-named columns, like the PHP one** - [@norberttech](https://github.com/norberttech)
 - [#2650](https://github.com/flow-php/flow/pull/2650) - **Flow PHP - regenerated stale CodeMirror completions on the landing site** - [@norberttech](https://github.com/norberttech)
