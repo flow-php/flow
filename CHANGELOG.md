@@ -1,6 +1,7 @@
-## [Unreleased] - 2026-09-24
+## [Unreleased] - 2026-09-25
 
 ### Added
+- [#2656](https://github.com/flow-php/flow/pull/2656) - **flow-php/types - public ISO gates StringTemporalParts::isoDateTime() / isoDate() and DateType::ISO_DATE** - [@norberttech](https://github.com/norberttech)
 - [#2653](https://github.com/flow-php/flow/pull/2653) - **flow-php/flow-php-ext - RustFloeEncoderNative::decodeRows() decodes Floe frames straight into Rows in one native pass** - [@norberttech](https://github.com/norberttech)
 - [#2653](https://github.com/flow-php/flow/pull/2653) - **flow-php/flow-php-ext - RustFloeEncoderNative::encodeFrames() encodes Rows straight into complete ROW frames** - [@norberttech](https://github.com/norberttech)
 - [#2653](https://github.com/flow-php/flow/pull/2653) - **flow-php/etl - FloeEncoder contract with decodeRows() / encodeFrames()** - [@norberttech](https://github.com/norberttech)
@@ -40,6 +41,16 @@
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/cli - ProgressBarLoader advancing a progress bar per batch** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2656](https://github.com/flow-php/flow/pull/2656) - **flow-php/types - ISO dates and datetimes narrowed without date_parse()** - [@norberttech](https://github.com/norberttech)
+- [#2656](https://github.com/flow-php/flow/pull/2656) - **flow-php/types - ISO date fast path in DateType and DateTimeType casts** - [@norberttech](https://github.com/norberttech)
+- [#2656](https://github.com/flow-php/flow/pull/2656) - **flow-php/types - DateTimeType::ISO_DATE_TIME public and limited to timelib field ranges** - [@norberttech](https://github.com/norberttech)
+- [#2656](https://github.com/flow-php/flow/pull/2656) - **flow-php/flow-php-ext - native CSV narrowing and date casts use byte-level ISO gates** - [@norberttech](https://github.com/norberttech)
+- [#2656](https://github.com/flow-php/flow/pull/2656) - **flow-php/etl-adapter-csv - file constants stamped after hydration via fillRows()** - [@norberttech](https://github.com/norberttech)
+- [#2656](https://github.com/flow-php/flow/pull/2656) - **flow-php/etl-adapter-json - file constants stamped after hydration via fillRows()** - [@norberttech](https://github.com/norberttech)
+- [#2656](https://github.com/flow-php/flow/pull/2656) - **flow-php/etl-adapter-text - file constants stamped after hydration via fillRows()** - [@norberttech](https://github.com/norberttech)
+- [#2656](https://github.com/flow-php/flow/pull/2656) - **flow-php/etl-adapter-xml - file constants stamped after hydration via fillRows()** - [@norberttech](https://github.com/norberttech)
+- [#2656](https://github.com/flow-php/flow/pull/2656) - **flow-php/etl-adapter-excel - file constants stamped after hydration via fillRows()** - [@norberttech](https://github.com/norberttech)
+- [#2656](https://github.com/flow-php/flow/pull/2656) - **flow-php/etl-adapter-parquet - file constants stamped after hydration via fillRows()** - [@norberttech](https://github.com/norberttech)
 - [94146f](https://github.com/flow-php/flow/commit/94146f546921570e8ce34d988e8f3ff9f8274af1) - **fix(flow-php/flow): extension jobs upload coverage on Blacksmith runners** - [@norberttech](https://github.com/norberttech)
 - [#2653](https://github.com/flow-php/flow/pull/2653) - **flow-php/etl - Floe reader and writer use the fused native path when the hydrator is native** - [@norberttech](https://github.com/norberttech)
 - [#2653](https://github.com/flow-php/flow/pull/2653) - **flow-php/etl - Floe offset reads skip rows before decoding them** - [@norberttech](https://github.com/norberttech)
