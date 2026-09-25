@@ -41,6 +41,9 @@
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/cli - ProgressBarLoader advancing a progress bar per batch** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2657](https://github.com/flow-php/flow/pull/2657) - **flow-php/etl - null|T inside list, map and structure column types becomes ?T** - [@norberttech](https://github.com/norberttech)
+- [#2657](https://github.com/flow-php/flow/pull/2657) - **flow-php/etl - any other union inside a column type throws UnsupportedUnionTypeException** - [@norberttech](https://github.com/norberttech)
+- [#2657](https://github.com/flow-php/flow/pull/2657) - **flow-php/etl-adapter-json - JSON Schema anyOf nested in items or properties is refused** - [@norberttech](https://github.com/norberttech)
 - [#2656](https://github.com/flow-php/flow/pull/2656) - **flow-php/types - ISO dates and datetimes narrowed without date_parse()** - [@norberttech](https://github.com/norberttech)
 - [#2656](https://github.com/flow-php/flow/pull/2656) - **flow-php/types - ISO date fast path in DateType and DateTimeType casts** - [@norberttech](https://github.com/norberttech)
 - [#2656](https://github.com/flow-php/flow/pull/2656) - **flow-php/types - DateTimeType::ISO_DATE_TIME public and limited to timelib field ranges** - [@norberttech](https://github.com/norberttech)
@@ -89,6 +92,7 @@
 - [#2635](https://github.com/flow-php/flow/pull/2635) - **flow-php/parquet - reader and writer row types widened to array-key.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2657](https://github.com/flow-php/flow/pull/2657) - **flow-php/etl-adapter-postgresql - array columns are typed list<?T> and can be written to Floe and Parquet** - [@norberttech](https://github.com/norberttech)
 - [#2653](https://github.com/flow-php/flow/pull/2653) - **flow-php/flow-php-ext - native hydrator keeps per-value metadata of numeric-named columns, like the PHP one** - [@norberttech](https://github.com/norberttech)
 - [#2650](https://github.com/flow-php/flow/pull/2650) - **Flow PHP - regenerated stale CodeMirror completions on the landing site** - [@norberttech](https://github.com/norberttech)
 - [#2649](https://github.com/flow-php/flow/pull/2649) - **flow-php/postgresql - sql_query_tables() no longer returns FOR UPDATE OF names and CTE references** - [@norberttech](https://github.com/norberttech)
@@ -114,6 +118,7 @@
 - [#2635](https://github.com/flow-php/flow/pull/2635) - **flow-php/etl - chained rename strategies no longer desync rows from the schema on numeric entry names.** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2657](https://github.com/flow-php/flow/pull/2657) - **flow-php/etl - UnionDefinition and union_schema()** - [@norberttech](https://github.com/norberttech)
 - [#2653](https://github.com/flow-php/flow/pull/2653) - **flow-php/etl - AdaptiveFloeEncoder, FloeEngine::adaptive picks the encoder itself** - [@norberttech](https://github.com/norberttech)
 - [#2650](https://github.com/flow-php/flow/pull/2650) - **flow-php/arrow-ext - dropped the thrift crate dependency** - [@norberttech](https://github.com/norberttech)
 - [#2648](https://github.com/flow-php/flow/pull/2648) - **flow-php/postgresql - NodeVisitor::REMOVE_NODE** - [@norberttech](https://github.com/norberttech)
