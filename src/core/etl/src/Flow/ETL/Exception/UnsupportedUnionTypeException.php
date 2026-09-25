@@ -14,6 +14,28 @@ final class UnsupportedUnionTypeException extends InvalidArgumentException
     /**
      * @param UnionType<mixed, mixed> $type
      */
+    public static function forElement(Reference $column, UnionType $type): self
+    {
+        return new self(sprintf(
+            'Column "%s" cannot hold elements of type "%s": a column holds exactly one type, and so does every '
+            . 'element inside it.'
+            . "\n"
+            . 'Only "null|T" is a valid union - that is a nullable element.'
+            . "\n"
+            . 'Possible fixes:'
+            . "\n"
+            . '* Declare the widest common element type, e.g. type_string()'
+            . "\n"
+            . '* Declare json_schema(\'%s\') when the shape is genuinely dynamic',
+            $column->name(),
+            $type->toString(),
+            $column->name(),
+        ));
+    }
+
+    /**
+     * @param UnionType<mixed, mixed> $type
+     */
     public static function forColumn(Reference $column, UnionType $type): self
     {
         return new self(sprintf(

@@ -19,9 +19,8 @@ use RuntimeException;
 use function extension_loaded;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
-use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
-use function Flow\Types\DSL\type_union;
 use function sprintf;
 
 final class ResultSchemaTest extends FlowTestCase
@@ -137,10 +136,7 @@ final class ResultSchemaTest extends FlowTestCase
         );
 
         // The element type admits null because a pg array may hold SQL NULLs.
-        static::assertEquals(
-            type_list(type_union(type_integer(), type_null())),
-            $schema->findDefinition('tags')?->type(),
-        );
+        static::assertEquals(type_list(type_optional(type_integer())), $schema->findDefinition('tags')?->type());
     }
 
     public function test_a_refused_probe_becomes_a_schema_not_derivable_exception(): void

@@ -146,6 +146,12 @@ definition_from_type('value', type_union(type_string(), type_integer()));
 // Possible fixes:
 // * Declare the widest common type: str_schema('value')
 // * Declare json_schema('value') when the shape is genuinely dynamic
+
+list_schema('tags', type_list(type_union(type_string(), type_null())));
+// list<?string>
+
+list_schema('tags', type_list(type_union(type_string(), type_integer())));
+// UnsupportedUnionTypeException: Column "tags" cannot hold elements of type "integer|string": ...
 ```
 
 ## Declaring the Source Schema

@@ -363,6 +363,38 @@ final class MyExtractor implements Extractor
 | `Flow\Floe\AdaptiveFloeEncoder`          | removed - `FloeEngine::adaptive->encoder($schema)` returns `NativeFloeEncoder` when the extension supports it, else `PhpFloeEncoder` |
 | `FloeEngine::encoder(): Encoder<string>` | `FloeEngine::encoder(): Flow\Floe\FloeEncoder` (`Encoder<string>` plus `decodeRows()` / `encodeFrames()`)                            |
 
+### 36) `flow-php/etl` - `UnionDefinition` and `union_schema()` removed
+
+| Before                                                                | After                                                     |
+|-----------------------------------------------------------------------|-----------------------------------------------------------|
+| `union_schema('a', type_union(type_string(), type_null()))`           | `str_schema('a', nullable: true)`                         |
+| `new UnionDefinition('a', type_union(type_integer(), type_string()))` | `str_schema('a')`, or `json_schema('a')` for dynamic data |
+
+Removed with them: `UnionMembers`, `UnionTypeNormalizer`, `Row\EntryTypeResolver`, `TypeProjection::union()`.
+`TypeProjection` now takes the column's `Reference`; `TypeFloor` no longer takes a `TypeProjection`.
+
+### 37) `flow-php/etl` - a union inside a list, map or structure column type
+
+| Column type                                                              | Before                                                     | After                                                            |
+|--------------------------------------------------------------------------|------------------------------------------------------------|------------------------------------------------------------------|
+| `list_schema('a', type_list(type_union(type_integer(), type_null())))`   | `list<integer\|null>`, Floe and Parquet refuse to write it | `list<?integer>`                                                 |
+| `list_schema('a', type_list(type_union(type_integer(), type_string())))` | accepted, Floe and Parquet refuse to write it              | `UnsupportedUnionTypeException`                                  |
+| `ref('a')->cast(type_list(type_union(type_integer(), type_string())))`   | accepted, fails on every row                               | `InvalidArgumentException` `Cast function does not support type` |
+
+The same applies to map values and structure elements.
+
+### 38) `flow-php/etl-adapter-postgresql` - array columns are `list<?T>`
+
+| Before                                                                | After            |
+|-----------------------------------------------------------------------|------------------|
+| `int4[]` → `list<integer\|null>`, Floe and Parquet refuse to write it | `list<?integer>` |
+
+### 39) `flow-php/etl-adapter-json` - `anyOf` / `oneOf` / multi-type `type` inside `items`, `properties` or `additionalProperties`
+
+| Before                                                                                   | After                                             |
+|------------------------------------------------------------------------------------------|---------------------------------------------------|
+| `list<integer\|string>`, `structure{x: integer\|string}`, `map<string, integer\|string>` | `UnsupportedUnionTypeException` naming the column |
+
 ---
 
 ## Upgrading from 0.43.x to 0.44.x

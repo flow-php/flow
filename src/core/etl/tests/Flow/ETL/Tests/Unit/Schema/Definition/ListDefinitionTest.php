@@ -5,24 +5,26 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\UnsupportedUnionTypeException;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\ListDefinition;
-use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\Types\DSL\type_array;
-use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_union;
@@ -331,24 +333,27 @@ final class ListDefinitionTest extends FlowTestCase
         static::assertStringContainsString('list', $def->type()->toString());
     }
 
-    public function test_merge_with_union_containing_this_type_returns_union(): void
-    {
-        $merged = list_schema('col', type_list(type_integer()))->merge(
-            new UnionDefinition('col', type_union(type_list(type_integer()), type_boolean())),
-        );
-
-        static::assertInstanceOf(UnionDefinition::class, $merged);
-        static::assertSame('boolean|list<integer>', $merged->type()->toString());
-    }
-
-    public function test_merge_with_union_not_containing_this_type_falls_back_to_string(): void
+    public function test_merge_with_an_unrelated_type_falls_back_to_common_type(): void
     {
         static::assertSame(
             'string',
-            list_schema('col', type_list(type_integer()))
-                ->merge(new UnionDefinition('col', type_union(type_integer(), type_string())))
-                ->type()
-                ->toString(),
+            list_schema('col', type_list(type_integer()))->merge(bool_schema('col'))->type()->toString(),
         );
+    }
+
+    public function test_a_null_or_t_element_is_the_optional_element(): void
+    {
+        static::assertTrue(list_schema('a', type_list(type_union(type_integer(), type_null())))->isSame(list_schema(
+            'a',
+            type_list(type_optional(type_integer())),
+        )));
+    }
+
+    public function test_a_union_element_is_refused_naming_the_column(): void
+    {
+        $this->expectException(UnsupportedUnionTypeException::class);
+        $this->expectExceptionMessage('Column "tags" cannot hold elements of type "integer|string"');
+
+        list_schema('tags', type_list(type_union(type_integer(), type_string())));
     }
 }

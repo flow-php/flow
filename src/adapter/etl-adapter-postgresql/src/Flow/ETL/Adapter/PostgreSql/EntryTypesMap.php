@@ -37,10 +37,9 @@ use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
-use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_time;
-use function Flow\Types\DSL\type_union;
 use function Flow\Types\DSL\type_uuid;
 use function Flow\Types\DSL\type_xml;
 use function str_starts_with;
@@ -160,7 +159,7 @@ final readonly class EntryTypesMap
         $type = $this->resolve($normalized['name'], floorUnrecognised: false);
 
         // the catalog names an array by its element (int4) plus a flag, where the result route sees _int4
-        return $normalized['is_array'] ?? false ? type_list(type_union($type, type_null())) : $type;
+        return $normalized['is_array'] ?? false ? type_list(type_optional($type)) : $type;
     }
 
     /**
@@ -184,7 +183,7 @@ final readonly class EntryTypesMap
             // pg carries no dimensionality: int4[] and int4[][] are both _int4, so the schema takes
             // the one-dimensional reading. The element is nullable because a pg array may hold SQL
             // NULLs, which the caster preserves and a non-nullable element type would destroy.
-            return type_list(type_union($this->resolve(substr($name, 1), $floorUnrecognised), type_null()));
+            return type_list(type_optional($this->resolve(substr($name, 1), $floorUnrecognised)));
         }
 
         return match ($name) {

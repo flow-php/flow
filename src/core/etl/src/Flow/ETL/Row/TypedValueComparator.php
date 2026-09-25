@@ -19,7 +19,6 @@ use Flow\Types\Type\Logical\TimeZoneType;
 use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLElementType;
 use Flow\Types\Type\Logical\XMLType;
-use Flow\Types\Type\Native\UnionType;
 
 use function Flow\ETL\DSL\date_interval_to_microseconds;
 use function Flow\Types\DSL\type_array;
@@ -43,12 +42,6 @@ final readonly class TypedValueComparator
     {
         if ($left === null || $right === null) {
             return $left === $right;
-        }
-
-        if ($type instanceof UnionType) {
-            $member = $type->memberFor($left);
-
-            return $member !== null && $member->isValid($right) && $this->equals($member, $left, $right);
         }
 
         return match (true) {

@@ -52,7 +52,7 @@ jobs:
           fi
 
       - name: "MD Link Linter"
-        uses: "docker://norberttech/md-link-linter:latest"
+        uses: "docker://norberttech/md-link-linter@sha256:bf17e53dd716dcc2f0a41ed45af3e7bfc06b56b40fe6d8064b29646c1582c54c" # latest as of 2026-09-25
         with:
           entrypoint: "/composer/vendor/bin/mdlinklint"
           args: "--exclude=vendor --exclude=tests --exclude=examples --exclude=documentation ."

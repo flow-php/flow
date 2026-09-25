@@ -1617,23 +1617,6 @@ function structure_schema(
     return new StructureDefinition($name, $type, $nullable, $metadata);
 }
 
-/**
- * @param Type<mixed>|UnionType<mixed, mixed> $type
- *
- * @deprecated a column holds exactly one type - use definition_from_type() instead
- *
- * @return Definition<mixed>
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function union_schema(
-    string $name,
-    UnionType|Type $type,
-    bool $nullable = false,
-    ?Metadata $metadata = null,
-): Definition {
-    return definition_from_type($name, $type, $nullable, $metadata);
-}
-
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
 function uuid_schema(string $name, bool $nullable = false, ?Metadata $metadata = null): UuidDefinition
 {

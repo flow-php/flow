@@ -30,12 +30,11 @@ use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
-use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_time;
 use function Flow\Types\DSL\type_time_zone;
-use function Flow\Types\DSL\type_union;
 use function Flow\Types\DSL\type_uuid;
 use function Flow\Types\DSL\type_xml;
 
@@ -197,15 +196,15 @@ final class EntryTypesMapTest extends TestCase
         // A pg array may hold SQL NULLs, which the caster preserves, so the element type has to
         // admit them or the read corrupts them.
         static::assertEquals(
-            type_list(type_union(type_integer(), type_null())),
+            type_list(type_optional(type_integer())),
             $map->toFlowTypeWithTextFloor(column_type_from_string('_int4')),
         );
         static::assertEquals(
-            type_list(type_union(type_string(), type_null())),
+            type_list(type_optional(type_string())),
             $map->toFlowTypeWithTextFloor(column_type_from_string('_text')),
         );
         static::assertEquals(
-            type_list(type_union(type_datetime(), type_null())),
+            type_list(type_optional(type_datetime())),
             $map->toFlowTypeWithTextFloor(column_type_from_string('_timestamptz')),
         );
     }
@@ -221,9 +220,9 @@ final class EntryTypesMapTest extends TestCase
      */
     public static function provide_catalog_array_types(): Generator
     {
-        yield 'integer[]' => ['integer[]', type_list(type_union(type_integer(), type_null()))];
-        yield 'text[]' => ['text[]', type_list(type_union(type_string(), type_null()))];
-        yield 'timestamptz[]' => ['timestamptz[]', type_list(type_union(type_datetime(), type_null()))];
+        yield 'integer[]' => ['integer[]', type_list(type_optional(type_integer()))];
+        yield 'text[]' => ['text[]', type_list(type_optional(type_string()))];
+        yield 'timestamptz[]' => ['timestamptz[]', type_list(type_optional(type_datetime()))];
     }
 
     public function test_allows_override_for_integer_type_to_int2(): void

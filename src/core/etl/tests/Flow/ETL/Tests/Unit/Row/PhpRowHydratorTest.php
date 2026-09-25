@@ -9,7 +9,7 @@ use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Row\TypedRowValues;
-use Flow\ETL\Schema\Definition\UnionDefinition;
+use Flow\ETL\Tests\Double\ForeignTypeDefinition;
 use Flow\ETL\Tests\Double\ThrowingType;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Type\Logical\ListType;
@@ -33,7 +33,6 @@ use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
-use function Flow\Types\DSL\type_union;
 use function serialize;
 
 final class PhpRowHydratorTest extends FlowTestCase
@@ -59,7 +58,7 @@ final class PhpRowHydratorTest extends FlowTestCase
         (new PhpRowHydrator())->hydrate([new RawRowValues(['a' => [
             1,
             2,
-        ]])], schema(new UnionDefinition('a', type_union(new ThrowingType(new LogicException('stub type refuses everything')), type_string()))));
+        ]])], schema(new ForeignTypeDefinition('a', new ThrowingType(new LogicException('stub type refuses everything')))));
     }
 
     public function test_hydrate_throws_on_missing_required_structure_element(): void

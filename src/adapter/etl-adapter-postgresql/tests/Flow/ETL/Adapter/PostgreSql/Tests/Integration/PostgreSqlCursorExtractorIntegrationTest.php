@@ -38,9 +38,8 @@ use function Flow\PostgreSql\DSL\star;
 use function Flow\PostgreSql\DSL\table;
 use function Flow\PostgreSql\DSL\table_func;
 use function Flow\Types\DSL\type_list;
-use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
-use function Flow\Types\DSL\type_union;
 use function range;
 use function sprintf;
 
@@ -309,7 +308,7 @@ final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
         $extractor = from_pgsql_cursor($this->client, 'SELECT id, tags FROM flow_pg_arrays ORDER BY id');
 
         static::assertEquals(
-            type_list(type_union(type_string(), type_null())),
+            type_list(type_optional(type_string())),
             $extractor->schema()->findDefinition('tags')?->type(),
         );
         static::assertSame(['a', 'b'], df()->read($extractor)->fetch()->toArray()[0]['tags']);

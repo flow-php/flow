@@ -29,7 +29,6 @@ use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_time;
 use function Flow\Types\DSL\type_time_zone;
-use function Flow\Types\DSL\type_union;
 use function Flow\Types\DSL\type_uuid;
 use function Flow\Types\DSL\type_xml;
 use function Flow\Types\DSL\type_xml_element;
@@ -208,16 +207,6 @@ final class TypedValueComparatorTest extends FlowTestCase
             new DateTimeImmutable('2024-01-02 03:04:05', new DateTimeZone('UTC')),
             new DateTimeImmutable('2024-01-02 03:04:05', new DateTimeZone('UTC')),
         ));
-    }
-
-    public function test_union_equality_resolves_the_member(): void
-    {
-        $comparator = new TypedValueComparator();
-        $type = type_union(type_string(), type_integer());
-
-        static::assertTrue($comparator->equals($type, 5, 5));
-        static::assertFalse($comparator->equals($type, 5, '5'));
-        static::assertTrue($comparator->equals($type, '5', '5'));
     }
 
     public function test_uuid_equality_compares_the_value(): void

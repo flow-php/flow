@@ -8,20 +8,17 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\StringDefinition;
 use Flow\ETL\Schema\Definition\TimeZoneDefinition;
-use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Type\Logical\TimeZoneType;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\time_zone_schema;
-use function Flow\Types\DSL\type_boolean;
-use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_time_zone;
-use function Flow\Types\DSL\type_union;
 
 final class TimeZoneDefinitionTest extends FlowTestCase
 {
@@ -110,21 +107,7 @@ final class TimeZoneDefinitionTest extends FlowTestCase
 
     public function test_merge_with_an_unrelated_type_falls_back_to_common_type(): void
     {
-        static::assertSame(
-            'string',
-            time_zone_schema('tz')
-                ->merge(new UnionDefinition('tz', type_union(type_boolean(), type_string())))
-                ->type()
-                ->toString(),
-        );
-    }
-
-    public function test_merge_with_a_union_containing_this_type_returns_a_union(): void
-    {
-        static::assertInstanceOf(
-            UnionDefinition::class,
-            time_zone_schema('tz')->merge(new UnionDefinition('tz', type_union(type_time_zone(), type_boolean()))),
-        );
+        static::assertSame('string', time_zone_schema('tz')->merge(bool_schema('tz'))->type()->toString());
     }
 
     public function test_merge_with_a_different_name_throws(): void

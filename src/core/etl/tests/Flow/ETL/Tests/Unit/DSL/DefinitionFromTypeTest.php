@@ -17,7 +17,6 @@ use Flow\Types\Type\Native\String\StringTypeNarrower;
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\time_zone_schema;
-use function Flow\ETL\DSL\union_schema;
 use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_integer;
@@ -96,14 +95,6 @@ final class DefinitionFromTypeTest extends FlowTestCase
         definition_from_type('value', type_union(type_string(), type_integer()));
     }
 
-    public function test_union_schema_delegates_the_same_refusal(): void
-    {
-        $this->expectException(UnsupportedUnionTypeException::class);
-
-        // @mago-expect analysis:deprecated-function
-        union_schema('value', type_union(type_string(), type_integer()));
-    }
-
     /**
      * The string inference ladder narrows an IANA identifier to type_time_zone(), and
      * definition_from_type() had no arm for it, so the ladder crashed on its own output.
@@ -126,14 +117,5 @@ final class DefinitionFromTypeTest extends FlowTestCase
     public function test_time_zone_schema_delegates_purely(): void
     {
         static::assertEquals(new TimeZoneDefinition('tz', true), time_zone_schema('tz', true));
-    }
-
-    public function test_union_schema_delegates_an_optional_union_to_a_nullable_column(): void
-    {
-        // @mago-expect analysis:deprecated-function
-        $definition = union_schema('value', type_union(type_string(), type_null()));
-
-        static::assertInstanceOf(StringDefinition::class, $definition);
-        static::assertTrue($definition->isNullable());
     }
 }

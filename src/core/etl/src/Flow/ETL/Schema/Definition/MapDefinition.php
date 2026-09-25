@@ -45,7 +45,7 @@ final readonly class MapDefinition implements Definition
     ) {
         $this->ref = UnresolvedReference::init($ref);
         $this->metadata = $metadata ?? Metadata::empty();
-        $this->type = (new TypeProjection())->map($type);
+        $this->type = (new TypeProjection($this->ref))->map($type);
     }
 
     /**
@@ -160,15 +160,6 @@ final readonly class MapDefinition implements Definition
         if ($definition instanceof StringDefinition) {
             return new StringDefinition(
                 $this->ref,
-                $this->nullable || $definition->isNullable(),
-                $this->metadata->merge($definition->metadata()),
-            );
-        }
-
-        if ($definition instanceof UnionDefinition && (new UnionMembers())->contains($definition, $this)) {
-            return new UnionDefinition(
-                $this->ref,
-                $definition->type(),
                 $this->nullable || $definition->isNullable(),
                 $this->metadata->merge($definition->metadata()),
             );

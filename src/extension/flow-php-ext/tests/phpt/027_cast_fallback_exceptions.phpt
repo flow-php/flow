@@ -21,9 +21,8 @@ use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_positive_integer;
 use function Flow\Types\DSL\type_string;
-use function Flow\Types\DSL\type_union;
 
-use Flow\ETL\Schema\Definition\UnionDefinition;
+use Flow\ETL\Tests\Double\ForeignTypeDefinition;
 use Flow\ETL\Tests\Double\ThrowingType;
 use Flow\ETL\Row\NativeRowHydrator;
 use Flow\ETL\Row\PhpRowHydrator;
@@ -74,10 +73,7 @@ $throwing = [
         [new RawRowValues(['l' => 5])],
     ],
     'exception outside the types package' => [
-        schema(new UnionDefinition('a', type_union(
-            new ThrowingType(new LogicException('stub type refuses everything')),
-            type_string(),
-        ))),
+        schema(new ForeignTypeDefinition('a', new ThrowingType(new LogicException('stub type refuses everything')))),
         [new RawRowValues(['a' => [1, 2]])],
     ],
 ];

@@ -7,7 +7,7 @@ namespace Flow\Floe\Tests\Unit;
 use DateInterval;
 use DateTimeImmutable;
 use DateTimeZone;
-use Flow\ETL\Schema\Definition\UnionDefinition;
+use Flow\ETL\Tests\Double\ForeignTypeDefinition;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\ValueDecoder;
@@ -19,11 +19,15 @@ use function class_exists;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\enum_schema;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\time_schema;
 use function Flow\ETL\DSL\uuid_schema;
 use function Flow\ETL\DSL\xml_schema;
 use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_mixed;
+use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_union;
@@ -110,9 +114,9 @@ final class ValueDecoderTest extends TestCase
     public function test_decoding_value_of_unsupported_type_throws(): void
     {
         $this->expectException(FloeException::class);
-        $this->expectExceptionMessage('Floe does not support columns of type "integer|string"');
+        $this->expectExceptionMessage('Floe does not support columns of type "mixed"');
 
-        (new ValueDecoder())->decoderFor(new UnionDefinition('c', type_union(type_integer(), type_string())));
+        (new ValueDecoder())->decoderFor(new ForeignTypeDefinition('c', type_mixed()));
     }
 
     public function test_round_trip_of_datetime_preserves_timezone_and_microseconds(): void
@@ -209,5 +213,21 @@ final class ValueDecoderTest extends TestCase
 
         static::assertInstanceOf(Uuid::class, $decoded);
         static::assertSame($uuid->toString(), $decoded->toString());
+    }
+
+    public function test_round_trip_of_a_list_with_null_or_t_elements(): void
+    {
+        $definition = list_schema('c', type_list(type_union(type_integer(), type_null())));
+        $encoded = (new ValueEncoder())
+            ->encoderFor($definition)
+            ->encode([1, null]);
+        $position = 0;
+
+        static::assertSame(
+            [1, null],
+            (new ValueDecoder())
+                ->decoderFor($definition)
+                ->decode($encoded, $position),
+        );
     }
 }

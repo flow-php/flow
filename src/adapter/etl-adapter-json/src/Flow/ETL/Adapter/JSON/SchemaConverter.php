@@ -889,12 +889,6 @@ final class SchemaConverter
      */
     private function nullify(array $property): array
     {
-        if (array_key_exists('anyOf', $property) && is_array($property['anyOf'])) {
-            $property['anyOf'][] = ['type' => 'null'];
-
-            return $property;
-        }
-
         if (array_key_exists('type', $property) && is_array($property['type'])) {
             if (!in_array('null', $property['type'], true)) {
                 $property['type'][] = 'null';
@@ -1010,11 +1004,6 @@ final class SchemaConverter
                 : ['type' => 'array', 'items' => $this->typeToJsonSchema($type->element())],
             $type instanceof MapType => $this->mapToJsonSchema($type),
             $type instanceof StructureType => $this->structureToJsonSchema($type),
-            $type instanceof UnionType => [
-                'anyOf' => array_map(fn(Type $member): array => $this->typeToJsonSchema(
-                    $member,
-                ), $type->types()->all()),
-            ],
             default => throw new RuntimeException(sprintf('Type %s cannot be converted to JSON Schema', $type::class)),
         };
     }

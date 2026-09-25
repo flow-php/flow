@@ -3,3 +3,6 @@ rules:
   dangerous-triggers:
     ignore:
       - readonly.yaml
+  # actionlint (1.7.12) rejects the $/ self-repository syntax; keep ./ until it parses it
+  self-repository:
+    disable: true

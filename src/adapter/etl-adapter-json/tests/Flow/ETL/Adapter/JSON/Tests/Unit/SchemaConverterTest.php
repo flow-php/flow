@@ -12,7 +12,6 @@ use Flow\ETL\Adapter\JSON\SchemaConverter;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\UnsupportedUnionTypeException;
-use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
@@ -46,7 +45,6 @@ use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
-use function Flow\Types\DSL\type_union;
 use function sprintf;
 
 final class SchemaConverterTest extends FlowTestCase
@@ -417,9 +415,12 @@ final class SchemaConverterTest extends FlowTestCase
         );
     }
 
-    public function test_to_flow_nested_union_inside_structure(): void
+    public function test_to_flow_nested_union_inside_structure_is_refused(): void
     {
-        $flowSchema = (new SchemaConverter())->toFlow([
+        $this->expectException(UnsupportedUnionTypeException::class);
+        $this->expectExceptionMessage('Column "config" cannot hold elements of type "integer|string"');
+
+        (new SchemaConverter())->toFlow([
             'type' => 'object',
             'required' => ['config'],
             'properties' => [
@@ -432,12 +433,40 @@ final class SchemaConverterTest extends FlowTestCase
                 ],
             ],
         ]);
+    }
 
-        static::assertEquals(
-            schema(structure_schema('config', type_structure([
-                'value' => type_union(type_integer(), type_string()),
-            ]))),
-            $flowSchema,
+    public function test_to_flow_items_any_of_is_refused(): void
+    {
+        $this->expectException(UnsupportedUnionTypeException::class);
+        $this->expectExceptionMessage('Column "tags" cannot hold elements of type "integer|string"');
+
+        (new SchemaConverter())->toFlow([
+            'type' => 'object',
+            'required' => ['tags'],
+            'properties' => [
+                'tags' => ['type' => 'array', 'items' => ['anyOf' => [['type' => 'integer'], ['type' => 'string']]]],
+            ],
+        ]);
+    }
+
+    public function test_to_flow_items_nullable_type_is_an_optional_element(): void
+    {
+        static::assertSame(
+            'list<?integer>',
+            (new SchemaConverter())
+                ->toFlow([
+                    'type' => 'object',
+                    'required' => ['tags'],
+                    'properties' => [
+                        'tags' => [
+                            'type' => 'array',
+                            'items' => ['anyOf' => [['type' => 'integer'], ['type' => 'null']]],
+                        ],
+                    ],
+                ])
+                ->get('tags')
+                ->type()
+                ->toString(),
         );
     }
 
@@ -735,18 +764,6 @@ final class SchemaConverterTest extends FlowTestCase
         );
     }
 
-    public function test_a_union_column_cannot_round_trip_because_it_cannot_be_read_back(): void
-    {
-        $converter = new SchemaConverter();
-        $jsonSchema = $converter->toJsonSchema(schema(
-            new UnionDefinition('value', type_union(type_integer(), type_string()), true),
-        ));
-
-        $this->expectException(UnsupportedUnionTypeException::class);
-
-        $converter->toFlow($jsonSchema);
-    }
-
     public function test_round_trip_json_schema_to_flow_and_back(): void
     {
         $jsonSchema = [
@@ -968,24 +985,6 @@ final class SchemaConverterTest extends FlowTestCase
                 '$schema' => 'https://json-schema.org/draft/2020-12/schema',
                 'type' => 'object',
                 'properties' => ['nothing' => ['type' => 'null']],
-            ],
-            $jsonSchema,
-        );
-    }
-
-    public function test_to_json_schema_nullable_union_appends_null_member(): void
-    {
-        $jsonSchema = (new SchemaConverter())->toJsonSchema(schema(
-            new UnionDefinition('value', type_union(type_integer(), type_string()), true),
-        ));
-
-        static::assertSame(
-            [
-                '$schema' => 'https://json-schema.org/draft/2020-12/schema',
-                'type' => 'object',
-                'properties' => [
-                    'value' => ['anyOf' => [['type' => 'integer'], ['type' => 'string'], ['type' => 'null']]],
-                ],
             ],
             $jsonSchema,
         );
