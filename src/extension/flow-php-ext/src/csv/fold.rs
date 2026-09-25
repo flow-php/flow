@@ -12,8 +12,10 @@ use ext_php_rs::types::{ZendHashTable, Zval};
 use crate::ctx::{call_handle, zval_str, Ctx};
 use crate::csv::php_trim;
 use crate::csv::tokenizer::is_space;
+use crate::date_check::{checkdate, iso_date_gate, iso_date_time_gate};
 use crate::exception::ext_exception;
 use crate::json_check::json_valid;
+use crate::uuid_check::is_uuid;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Leaf {
@@ -198,6 +200,14 @@ impl Narrower {
     /// `StringTemporalParts::from()` past its `hasExplicitDay()` gate: `Date`, `DateTime`, or `None` when the value
     /// is not a calendar date.
     fn temporal(&mut self, value: &[u8]) -> Result<Option<Leaf>, PhpException> {
+        if iso_date_time_gate(value) {
+            return Ok(Some(Leaf::DateTime));
+        }
+
+        if iso_date_gate(value) {
+            return Ok(Some(Leaf::Date));
+        }
+
         let parts_zv = call_handle(self.ctx.date_parse()?, None, &mut [zval_str(value)], "parse a temporal cell")?;
         let parts = parts_zv
             .array()
@@ -252,15 +262,6 @@ fn is_null(value: &[u8]) -> bool {
 /// `Json::isValid()`'s shape gate before `json_validate()`.
 fn is_json_shaped(value: &[u8]) -> bool {
     matches!((value.first(), value.last()), (Some(b'{'), Some(b'}')) | (Some(b'['), Some(b']')))
-}
-
-/// `Uuid::isValid()`: 36 bytes, `/\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/`.
-fn is_uuid(value: &[u8]) -> bool {
-    value.len() == 36
-        && value.iter().enumerate().all(|(index, byte)| match index {
-            8 | 13 | 18 | 23 => *byte == b'-',
-            _ => byte.is_ascii_digit() || (b'a'..=b'f').contains(byte),
-        })
 }
 
 /// PHP 8 `is_numeric()` on a string: optional leading and trailing whitespace, optional sign,
@@ -343,23 +344,6 @@ fn has_explicit_day(value: &[u8]) -> bool {
 /// `StringTypeNarrower::isTimeZone()`'s `/^[+-]\d{2}:\d{2}$/` on a trimmed value.
 fn is_offset(value: &[u8]) -> bool {
     matches!(value, [b'+' | b'-', h1, h2, b':', m1, m2] if [h1, h2, m1, m2].iter().all(|byte| byte.is_ascii_digit()))
-}
-
-/// `checkdate()`.
-fn checkdate(month: i64, day: i64, year: i64) -> bool {
-    if !(1..=32767).contains(&year) || !(1..=12).contains(&month) || day < 1 {
-        return false;
-    }
-
-    let leap = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
-    let days = match month {
-        2 if leap => 29,
-        2 => 28,
-        4 | 6 | 9 | 11 => 30,
-        _ => 31,
-    };
-
-    day <= days
 }
 
 struct Column {

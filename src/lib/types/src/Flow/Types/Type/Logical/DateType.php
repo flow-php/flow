@@ -26,6 +26,8 @@ use function is_string;
  */
 final readonly class DateType implements Type
 {
+    public const string ISO_DATE = '/^(\d{4})-(\d{2})-(\d{2})$/';
+
     public function assert(mixed $value): DateTimeInterface
     {
         if ($this->isValid($value)) {
@@ -51,6 +53,10 @@ final readonly class DateType implements Type
             }
 
             if (is_string($value)) {
+                if (StringTemporalParts::isoDate($value)) {
+                    return new DateTimeImmutable($value);
+                }
+
                 $parts = StringTemporalParts::from($value);
 
                 if (!$parts->isDate() && !$parts->isDateTime()) {

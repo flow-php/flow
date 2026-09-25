@@ -16,7 +16,6 @@ use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Filesystem;
@@ -83,6 +82,7 @@ final class TextExtractor implements
 
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
         $schema = $fileColumns->declare($baseSchema);
+        $body = $fileColumns->withoutTail($schema);
 
         foreach ($this->sourceFiles($this->filesystem, $this->path, $pathFilter) as $source) {
             $stream = $this->filesystem->readFrom($source->path);
@@ -96,15 +96,12 @@ final class TextExtractor implements
                     $rawLines[] = $line;
 
                     if (count($rawLines) >= $batchSize) {
-                        $batch = [];
-
-                        foreach ($encoder->decode($rawLines) as $rowValues) {
-                            $batch[] = new RawRowValues($constants->fill($rowValues->values));
-                        }
+                        $hydrated = $constants->fillRows(
+                            $hydrator->hydrate($encoder->decode($rawLines), $body),
+                            $schema,
+                        );
 
                         $rawLines = [];
-
-                        $hydrated = $hydrator->hydrate($batch, $schema);
 
                         $yielded += $hydrated->count();
 
@@ -121,13 +118,7 @@ final class TextExtractor implements
                 }
 
                 if ($rawLines !== []) {
-                    $batch = [];
-
-                    foreach ($encoder->decode($rawLines) as $rowValues) {
-                        $batch[] = new RawRowValues($constants->fill($rowValues->values));
-                    }
-
-                    $hydrated = $hydrator->hydrate($batch, $schema);
+                    $hydrated = $constants->fillRows($hydrator->hydrate($encoder->decode($rawLines), $body), $schema);
 
                     $yielded += $hydrated->count();
 

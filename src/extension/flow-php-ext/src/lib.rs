@@ -1,12 +1,14 @@
 mod cast;
 mod csv;
 mod ctx;
+mod date_check;
 mod encode;
 mod exception;
 mod format;
 mod hydrate;
 mod json_check;
 mod plan;
+mod uuid_check;
 mod values;
 
 use std::alloc::System;

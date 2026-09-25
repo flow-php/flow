@@ -30,11 +30,7 @@ use function substr;
  */
 final readonly class DateTimeType implements Type
 {
-    /**
-     * A date, its day spelled out, and a time: every string this matches with a real calendar day is one
-     * StringTemporalParts would accept, and the constructor rejects the rest just as it would after that check.
-     */
-    private const string ISO_DATE_TIME = '/^(\d{4})-(\d{2})-(\d{2})[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(Z|[+-]\d{2}(?::?\d{2})?)?$/';
+    public const string ISO_DATE_TIME = '/^(\d{4})-(\d{2})-(\d{2})[T ](?:[01]\d|2[0-4]):[0-5]\d(?::(?:[0-5]\d|60)(?:\.\d{1,9})?)?(Z|[+-](?:(?:[01]\d|2[0-4]):?[0-5]\d|\d{2}))?$/';
 
     public function assert(mixed $value): DateTimeInterface
     {
@@ -75,6 +71,10 @@ final readonly class DateTimeType implements Type
                         return new DateTimeImmutable(substr($date[0], 0, -1), $zulu);
                     }
 
+                    return new DateTimeImmutable($value);
+                }
+
+                if (StringTemporalParts::isoDate($value)) {
                     return new DateTimeImmutable($value);
                 }
 

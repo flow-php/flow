@@ -105,6 +105,7 @@ final class XMLParserExtractor implements
 
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
         $schema = $fileColumns->declare($baseSchema);
+        $body = $fileColumns->withoutTail($schema);
 
         foreach ($this->sourceFiles($this->filesystem, $this->path, $pathFilter) as $source) {
             $stream = $this->filesystem->readFrom($source->path);
@@ -115,10 +116,10 @@ final class XMLParserExtractor implements
                 $batch = [];
 
                 foreach ($nodes->of($stream, $this->bufferSize) as $node) {
-                    $batch[] = new RawRowValues($constants->fill(['node' => $node]));
+                    $batch[] = new RawRowValues(['node' => $node]);
 
                     if (count($batch) >= $batchSize) {
-                        $hydrated = $hydrator->hydrate($batch, $schema);
+                        $hydrated = $constants->fillRows($hydrator->hydrate($batch, $body), $schema);
 
                         $batch = [];
 
@@ -137,7 +138,7 @@ final class XMLParserExtractor implements
                 }
 
                 if ($batch !== []) {
-                    $hydrated = $hydrator->hydrate($batch, $schema);
+                    $hydrated = $constants->fillRows($hydrator->hydrate($batch, $body), $schema);
 
                     $yielded += $hydrated->count();
 
