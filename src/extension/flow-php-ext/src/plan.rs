@@ -19,7 +19,10 @@ pub enum Decoder {
     Boolean,
     String,
     Null,
-    DateTime,
+    /// A `datetime` column: the stored instant, in the column zone.
+    DateTime(Vec<u8>),
+    /// A `date`, or a zone-less `datetime` from an older flow-php/etl: each value's stored zone.
+    StoredZoneDateTime,
     Interval,
     Uuid,
     Json,
@@ -56,6 +59,8 @@ pub struct TypeJson {
     fields: Vec<StructureElementJson>,
     #[serde(default)]
     allow_extra: bool,
+    #[serde(default)]
+    zone: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -93,6 +98,10 @@ impl TypeJson {
     pub fn allow_extra(&self) -> bool {
         self.allow_extra
     }
+
+    pub fn zone(&self) -> Option<&[u8]> {
+        self.zone.as_deref().map(str::as_bytes)
+    }
 }
 
 #[derive(Deserialize)]
@@ -126,7 +135,11 @@ fn build_decoder(type_json: &TypeJson) -> Result<Decoder, PhpException> {
         "boolean" => Decoder::Boolean,
         "string" | "non_empty_string" | "numeric-string" | "class_string" => Decoder::String,
         "null" => Decoder::Null,
-        "datetime" | "date" => Decoder::DateTime,
+        "datetime" => match type_json.zone() {
+            Some(zone) => Decoder::DateTime(zone.to_vec()),
+            None => Decoder::StoredZoneDateTime,
+        },
+        "date" => Decoder::StoredZoneDateTime,
         "time" => Decoder::Interval,
         "uuid" => Decoder::Uuid,
         "json" => Decoder::Json,

@@ -1,5 +1,13 @@
-/// `DateTimeType::ISO_DATE_TIME` + `checkdate()`.
-pub fn iso_date_time_gate(bytes: &[u8]) -> bool {
+/// The zone suffix `DateTimeType::ISO_DATE_TIME` matched.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum IsoSuffix {
+    Naive,
+    Zulu,
+    Offset,
+}
+
+/// `DateTimeType::ISO_DATE_TIME` + `checkdate()`, with the zone suffix it matched.
+pub fn iso_date_time_gate(bytes: &[u8]) -> Option<IsoSuffix> {
     // PCRE `$` without the D modifier also matches before one final "\n"
     let bytes = bytes.strip_suffix(b"\n").unwrap_or(bytes);
     let byte_at = |at: usize| bytes.get(at).copied();
@@ -16,7 +24,7 @@ pub fn iso_date_time_gate(bytes: &[u8]) -> bool {
         && byte_at(13) == Some(b':')
         && number_at(14, 59))
     {
-        return false;
+        return None;
     }
 
     let mut at = 16;
@@ -28,15 +36,19 @@ pub fn iso_date_time_gate(bytes: &[u8]) -> bool {
             let fraction = bytes[at + 1..].iter().take_while(|byte| byte.is_ascii_digit()).count();
 
             if !(1..=9).contains(&fraction) {
-                return false;
+                return None;
             }
 
             at += 1 + fraction;
         }
     }
 
-    match byte_at(at) {
-        Some(b'Z') => at += 1,
+    let suffix = match byte_at(at) {
+        Some(b'Z') => {
+            at += 1;
+
+            IsoSuffix::Zulu
+        }
         Some(b'+' | b'-') if number_at(at + 1, 99) => {
             at += 3;
 
@@ -46,11 +58,13 @@ pub fn iso_date_time_gate(bytes: &[u8]) -> bool {
             if number_at(at + colon, 59) && number_at(at - 2, 24) {
                 at += colon + 2;
             }
-        }
-        _ => {}
-    }
 
-    at == bytes.len()
+            IsoSuffix::Offset
+        }
+        _ => IsoSuffix::Naive,
+    };
+
+    (at == bytes.len()).then_some(suffix)
 }
 
 /// `DateType::ISO_DATE` + `checkdate()`.

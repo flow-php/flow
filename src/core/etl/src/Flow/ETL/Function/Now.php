@@ -10,6 +10,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\Types\Type;
+use Flow\Types\Type\Logical\DateTimeType;
 
 use function Flow\ETL\DSL\lit;
 use function Flow\Types\DSL\type_datetime;
@@ -20,9 +21,17 @@ final class Now implements ScalarFunction
 
     private readonly ScalarFunction $timeZone;
 
+    /**
+     * @var DateTimeType<\DateTimeInterface>
+     */
+    private readonly DateTimeType $type;
+
     public function __construct(ScalarFunction|DateTimeZone $timeZone = new DateTimeZone('UTC'))
     {
         $this->timeZone = $timeZone instanceof ScalarFunction ? $timeZone : lit($timeZone);
+        // @mago-ignore analysis:mixed-assignment
+        $zone = $this->timeZone instanceof Literal ? $this->timeZone->value() : null;
+        $this->type = $zone instanceof DateTimeZone ? type_datetime($zone) : type_datetime();
     }
 
     /**
@@ -52,7 +61,7 @@ final class Now implements ScalarFunction
      */
     public function returns(): Type
     {
-        return type_datetime();
+        return $this->type;
     }
 
     public function eval(Row $row, FlowContext $context): ?DateTimeImmutable
@@ -63,6 +72,6 @@ final class Now implements ScalarFunction
             throw new InvalidArgumentException('Now function requires valid DateTimeZone');
         }
 
-        return new DateTimeImmutable('now', $tz);
+        return $this->type->cast(new DateTimeImmutable('now', $tz));
     }
 }

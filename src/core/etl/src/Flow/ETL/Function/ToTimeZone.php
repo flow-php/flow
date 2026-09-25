@@ -10,24 +10,26 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\Types\Type;
+use Flow\Types\Type\Logical\DateTimeType;
 
 use function Flow\ETL\DSL\lit;
 use function Flow\Types\DSL\type_datetime;
-use function Flow\Types\DSL\type_instance_of;
-use function Flow\Types\DSL\type_string;
-use function is_string;
 
 final class ToTimeZone implements ScalarFunction
 {
     use ScalarFunctionChain;
 
     private readonly ScalarFunction $value;
-    private readonly ScalarFunction $timezone;
 
-    public function __construct(ScalarFunction|DateTimeInterface $value, ScalarFunction|DateTimeZone|string $timezone)
+    /**
+     * @var DateTimeType<\DateTimeInterface>
+     */
+    private readonly DateTimeType $type;
+
+    public function __construct(ScalarFunction|DateTimeInterface $value, DateTimeZone|string $timezone)
     {
         $this->value = $value instanceof ScalarFunction ? $value : lit($value);
-        $this->timezone = $timezone instanceof ScalarFunction ? $timezone : lit($timezone);
+        $this->type = type_datetime($timezone);
     }
 
     /**
@@ -35,7 +37,7 @@ final class ToTimeZone implements ScalarFunction
      */
     public function children(): array
     {
-        return [$this->value, $this->timezone];
+        return [$this->value];
     }
 
     /**
@@ -44,7 +46,7 @@ final class ToTimeZone implements ScalarFunction
     public function withChildren(array $children): static
     {
         /** @var list<ScalarFunction> $children */
-        return new self($children[0], $children[1]);
+        return new self($children[0], $this->type->zone());
     }
 
     /**
@@ -52,26 +54,17 @@ final class ToTimeZone implements ScalarFunction
      */
     public function returns(): Type
     {
-        return type_datetime();
+        return $this->type;
     }
 
     public function eval(Row $row, FlowContext $context): mixed
     {
         $dateTime = (new Parameter($this->value))->asInstanceOf($row, $context, DateTimeInterface::class);
-        $tz = (new Parameter($this->timezone))->as(
-            $row,
-            $context,
-            type_string(),
-            type_instance_of(DateTimeZone::class),
-        );
 
-        if ($dateTime === null || $tz === null) {
+        if ($dateTime === null) {
             throw new InvalidArgumentException('ToTimeZone function requires non-null values');
         }
 
-        $tz = is_string($tz) ? new DateTimeZone($tz) : $tz;
-
-        /** @var \DateTime|\DateTimeImmutable $dateTime */
-        return $dateTime->setTimezone($tz);
+        return $this->type->cast($dateTime);
     }
 }

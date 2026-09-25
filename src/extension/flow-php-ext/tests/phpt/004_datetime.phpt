@@ -15,10 +15,10 @@ use function Flow\ETL\DSL\schema;
 $rows = rows(
     schema(
         int_schema('id'),
-        datetime_schema('immutable'),
-        datetime_schema('mutable'),
+        datetime_schema('immutable', zone: 'Europe/Warsaw'),
+        datetime_schema('mutable', zone: 'America/New_York'),
         datetime_schema('nullable', nullable: true),
-        datetime_schema('before_epoch'),
+        datetime_schema('before_epoch', zone: 'Europe/Warsaw'),
     ),
     row([
         'id' => 1,

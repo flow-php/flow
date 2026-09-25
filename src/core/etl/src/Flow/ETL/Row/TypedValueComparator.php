@@ -23,7 +23,6 @@ use Flow\Types\Type\Logical\XMLType;
 use function Flow\ETL\DSL\date_interval_to_microseconds;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_date;
-use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_html_element;
 use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_string;
@@ -52,7 +51,7 @@ final readonly class TypedValueComparator
             $type instanceof JsonType => type_json()->assert($left)->isEqual(type_json()->assert($right)),
             $type instanceof UuidType => type_uuid()->assert($left)->isEqual(type_uuid()->assert($right)),
             $type instanceof DateType => type_date()->assert($left) == type_date()->assert($right),
-            $type instanceof DateTimeType => type_datetime()->assert($left) == type_datetime()->assert($right),
+            $type instanceof DateTimeType => $type->assert($left) == $type->assert($right),
             $type instanceof TimeType => date_interval_to_microseconds(type_time()->assert(
                 $left,
             )) === date_interval_to_microseconds(type_time()->assert($right)),

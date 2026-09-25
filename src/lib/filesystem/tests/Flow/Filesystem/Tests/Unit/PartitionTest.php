@@ -54,9 +54,18 @@ final class PartitionTest extends TestCase
 
     public function test_creating_partition_value_from_datetime(): void
     {
-        static::assertEquals('2023-01-01', Partition::fromValue(
+        static::assertEquals('2023-01-02', Partition::fromValue(
             'date',
             type_datetime(),
+            new DateTimeImmutable('2023-01-01 21:51:14 PST'),
+        ));
+    }
+
+    public function test_partition_value_is_the_date_in_the_column_zone(): void
+    {
+        static::assertEquals('2023-01-01', Partition::fromValue(
+            'date',
+            type_datetime('America/Los_Angeles'),
             new DateTimeImmutable('2023-01-01 21:51:14 PST'),
         ));
     }

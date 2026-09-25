@@ -115,6 +115,22 @@ would substitute a *different* value:
   throw, and the message names the remedy (`wrap the value first, e.g. type_list(type_string())`).
   `type_array()->cast(null)` throws too, rather than fabricating an empty array
 
+A `datetime` type carries one time zone - UTC unless you name one - and every value it casts lands in that zone, the
+instant unchanged:
+
+```php
+type_datetime()->cast('2026-01-02 03:04');                                 // 2026-01-02 03:04:00 UTC, date.timezone ignored
+type_datetime('Europe/Warsaw')->cast('2026-01-02T03:04:05Z');               // 2026-01-02 04:04:05 Europe/Warsaw
+type_datetime('Europe/Warsaw')->cast('2026-03-29 02:30:00');                // 2026-03-29 03:30:00 +02:00 - a DST gap moves forward
+type_datetime('Europe/Warsaw')->cast('2026-10-25 02:30:00');                // +01:00 - an overlap takes the later occurrence...
+type_datetime('America/New_York')->cast('2026-11-01 01:30:00');             // -04:00 - ...or the earlier one, west of UTC
+type_datetime('America/New_York')->cast(type_date()->cast('2026-01-02'));   // 2026-01-01 19:00 - a date is midnight UTC
+type_equals(type_datetime(), type_datetime('+02:00'));                      // false
+```
+
+A zone is an IANA region (`Europe/Warsaw`), `UTC` or an offset (`+05:30`). Abbreviations such as `CET` or `PST` are
+refused: PHP reads them as fixed offsets without daylight-saving rules.
+
 `DateTimeInterface` and `DateInterval` convert to `int`/`float` in **seconds**, so they round-trip
 with `type_datetime()->cast(<int>)`. `float` keeps the sub-second fraction; `int` floors to whole
 seconds.

@@ -20,7 +20,6 @@ use Flow\Types\Type\TypedValueFormatter;
 use function array_filter;
 use function array_keys;
 use function explode;
-use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_string;
 use function preg_match;
 use function rawurldecode;
@@ -113,7 +112,7 @@ final class Partition
     public static function fromValue(string $name, Type $type, mixed $value): string
     {
         if ($type instanceof DateTimeType) {
-            return type_datetime()->assert($value)->format('Y-m-d');
+            return $type->cast($type->assert($value))->format('Y-m-d');
         }
 
         if (

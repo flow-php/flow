@@ -16,6 +16,7 @@ use function Flow\Types\DSL\type_callable;
 use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_enum;
+use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_from_array;
 use function Flow\Types\DSL\type_html;
@@ -198,5 +199,18 @@ final class TypeFactoryTest extends TestCase
     {
         $timeZone = type_time_zone();
         static::assertEquals($timeZone, type_from_array($timeZone->normalize()));
+    }
+
+    public function test_datetime_zone_round_trips_normalize(): void
+    {
+        static::assertSame(
+            ['type' => 'datetime', 'zone' => 'Europe/Warsaw'],
+            TypeFactory::fromArray(['type' => 'datetime', 'zone' => 'Europe/Warsaw'])->normalize(),
+        );
+    }
+
+    public function test_zone_less_datetime_is_utc(): void
+    {
+        static::assertTrue(type_equals(TypeFactory::fromArray(['type' => 'datetime']), type_datetime()));
     }
 }

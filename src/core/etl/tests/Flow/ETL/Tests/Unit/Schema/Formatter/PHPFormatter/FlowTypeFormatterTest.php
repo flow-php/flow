@@ -169,6 +169,14 @@ final class FlowTypeFormatterTest extends FlowTestCase
         static::assertEquals('\\Flow\\Types\\DSL\\type_boolean()', (new TypeFormatter())->format(type_boolean()));
         static::assertEquals('\\Flow\\Types\\DSL\\type_date()', (new TypeFormatter())->format(type_date()));
         static::assertEquals('\\Flow\\Types\\DSL\\type_datetime()', (new TypeFormatter())->format(type_datetime()));
+        static::assertEquals(
+            "\\Flow\\Types\\DSL\\type_datetime('Europe/Warsaw')",
+            (new TypeFormatter())->format(type_datetime('Europe/Warsaw')),
+        );
+        static::assertEquals(
+            "\\Flow\\Types\\DSL\\type_optional(\\Flow\\Types\\DSL\\type_datetime('Europe/Warsaw'))",
+            (new TypeFormatter())->format(type_optional(type_datetime('Europe/Warsaw'))),
+        );
         static::assertEquals('\\Flow\\Types\\DSL\\type_time()', (new TypeFormatter())->format(type_time()));
         static::assertEquals('\\Flow\\Types\\DSL\\type_html()', (new TypeFormatter())->format(type_html()));
         static::assertEquals(

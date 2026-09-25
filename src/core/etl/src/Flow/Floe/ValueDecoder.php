@@ -76,6 +76,7 @@ use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\StringType;
 
 use function class_exists;
+use function Flow\Types\DSL\type_instance_of;
 use function sprintf;
 
 use const LIBXML_NOERROR;
@@ -151,7 +152,8 @@ final class ValueDecoder
             ClassStringType::class,
                 => new StringDecoder(),
             TimeZoneType::class => new TimeZoneDecoder($this->timeZones),
-            DateTimeType::class, DateType::class => $this->dateTimeDecoder,
+            DateTimeType::class => $this->zonedDateTimeDecoder($type),
+            DateType::class => $this->dateTimeDecoder,
             TimeType::class => new IntervalDecoder(),
             UuidType::class => $this->uuidDecoder,
             JsonType::class => $this->jsonDecoder,
@@ -285,5 +287,13 @@ final class ValueDecoder
         }
 
         return new StructureDecoder($elements);
+    }
+
+    /**
+     * @param Type<mixed> $type
+     */
+    private function zonedDateTimeDecoder(Type $type): DateTimeDecoder
+    {
+        return new DateTimeDecoder($this->timeZones, type_instance_of(DateTimeType::class)->assert($type)->zone());
     }
 }

@@ -11,7 +11,7 @@ use crate::ctx::{
     ce_method_ref, construct_with_zvals, ht_find_key, ht_insert, ht_insert_key, null_zval,
     schema_mismatch, transparent_exception, write_slot, zval_long, Ctx, HtKey,
 };
-use crate::date_check::{iso_date_gate, iso_date_time_gate};
+use crate::date_check::{iso_date_gate, iso_date_time_gate, IsoSuffix};
 use crate::encode::{expect_object, ht_for_each, read_slot};
 use crate::exception::ext_exception;
 use crate::format::Reader;
@@ -57,7 +57,7 @@ pub(crate) enum CastKind {
     Boolean,
     String,
     NonEmptyString,
-    DateTime,
+    DateTime(Vec<u8>),
     Date,
     Uuid,
     Json,
@@ -100,7 +100,10 @@ fn build_cast_kind(type_json: &TypeJson) -> CastKind {
         "boolean" => CastKind::Boolean,
         "string" => CastKind::String,
         "non_empty_string" => CastKind::NonEmptyString,
-        "datetime" => CastKind::DateTime,
+        "datetime" => match type_json.zone() {
+            Some(zone) => CastKind::DateTime(zone.to_vec()),
+            None => CastKind::Fallback,
+        },
         "date" => CastKind::Date,
         "uuid" => CastKind::Uuid,
         "json" => CastKind::Json,
@@ -504,35 +507,47 @@ fn cast_value(kind: &CastKind, value: &Zval, ctx: &mut Ctx) -> Result<Option<Zva
                 None
             }
         }
-        CastKind::DateTime => {
+        CastKind::DateTime(zone) => {
             if let Some(object) = value.object() {
                 let immutable_ce = ctx.datetime_fns(false)?.ce;
 
-                if object.instance_of(immutable_ce) {
+                if !object.instance_of(immutable_ce) {
+                    None
+                } else if zone_name(object, ctx)? == zone.as_slice() {
                     Some(value.shallow_clone())
                 } else {
-                    None
+                    Some(in_zone(value, zone, ctx)?)
                 }
             } else if let Some(string) = value.zend_str() {
                 // any other string is gated on StringTemporalParts, a PHP class, so it bails
                 let bytes = string.as_bytes();
 
-                if !iso_date_time_gate(bytes) && !iso_date_gate(bytes) {
-                    None
-                } else if let Some(local) = bytes
-                    .strip_suffix(b"\n")
-                    .unwrap_or(bytes)
-                    .strip_suffix(b"Z")
-                {
-                    // mirrors DateTimeType::cast's Z branch
-                    let mut zulu = ctx.timezone(b"Z")?.shallow_clone();
+                match iso_date_time_gate(bytes).or_else(|| iso_date_gate(bytes).then_some(IsoSuffix::Naive)) {
+                    Some(IsoSuffix::Zulu) => {
+                        // mirrors DateTimeType::cast's Z branch
+                        let local = bytes.strip_suffix(b"\n").unwrap_or(bytes);
+                        let local = local.strip_suffix(b"Z").unwrap_or(local);
+                        let mut utc = ctx.timezone(b"UTC")?.shallow_clone();
 
-                    date_from_free_form(local, Some(&mut zulu), ctx)?
-                } else {
-                    date_from_free_form(bytes, None, ctx)?
+                        match date_from_free_form(local, Some(&mut utc), ctx)? {
+                            Some(instant) if zone.as_slice() != b"UTC" => Some(in_zone(&instant, zone, ctx)?),
+                            instant => instant,
+                        }
+                    }
+                    Some(IsoSuffix::Offset) => date_from_free_form(bytes, None, ctx)?
+                        .map(|instant| in_zone(&instant, zone, ctx))
+                        .transpose()?,
+                    Some(IsoSuffix::Naive) => {
+                        let mut column = ctx.timezone(zone)?.shallow_clone();
+
+                        date_from_free_form(bytes, Some(&mut column), ctx)?
+                    }
+                    None => None,
                 }
             } else if value.is_long() || value.is_double() {
                 date_from_free_form(&timestamp_string(value)?, None, ctx)?
+                    .map(|instant| in_zone(&instant, zone, ctx))
+                    .transpose()?
             } else {
                 None
             }
@@ -676,6 +691,34 @@ fn timestamp_string(value: &Zval) -> Result<Vec<u8>, PhpException> {
     Ok(bytes)
 }
 
+/// `$datetime->getTimezone()->getName()` of a DateTimeImmutable.
+fn zone_name(datetime: &ZendObject, ctx: &mut Ctx) -> Result<Vec<u8>, PhpException> {
+    let immutable_ce = ctx.datetime_fns(false)?.ce;
+    let get_timezone = ctx.datetime_encode_fns(std::ptr::from_ref(immutable_ce))?.get_timezone;
+    let timezone_zv = call_handle_on(get_timezone, datetime, &mut [], "read a timezone")?;
+    let timezone = expect_object(&timezone_zv, "a timezone")?;
+    let name = call_handle_on(ctx.timezone_get_name()?, timezone, &mut [], "read a timezone name")?;
+
+    Ok(name
+        .zend_str()
+        .ok_or_else(|| ext_exception("flow_php expected a timezone name string"))?
+        .as_bytes()
+        .to_vec())
+}
+
+/// `$datetime->setTimezone(new DateTimeZone($zone))` of a DateTimeImmutable.
+fn in_zone(datetime: &Zval, zone: &[u8], ctx: &mut Ctx) -> Result<Zval, PhpException> {
+    let set_timezone = ctx.datetime_fns(false)?.set_timezone;
+    let timezone = ctx.timezone(zone)?.shallow_clone();
+
+    call_handle_on(
+        &set_timezone,
+        expect_object(datetime, "a datetime value")?,
+        &mut [timezone],
+        "move a datetime into its column zone",
+    )
+}
+
 fn cast_date(value: &Zval, ctx: &mut Ctx) -> Result<Option<Zval>, PhpException> {
     if let Some(object) = value.object() {
         let immutable_ce = ctx.datetime_fns(false)?.ce;
@@ -694,7 +737,7 @@ fn cast_date(value: &Zval, ctx: &mut Ctx) -> Result<Option<Zval>, PhpException> 
             return Ok(None);
         };
 
-        if formatted.zend_str().map(ZendStr::as_bytes) == Some(b"00:00:00") {
+        if formatted.zend_str().map(ZendStr::as_bytes) == Some(b"00:00:00.000000") {
             return Ok(Some(value.shallow_clone()));
         }
 
@@ -703,7 +746,9 @@ fn cast_date(value: &Zval, ctx: &mut Ctx) -> Result<Option<Zval>, PhpException> 
 
     if let Some(string) = value.zend_str() {
         return if iso_date_gate(string.as_bytes()) {
-            date_from_free_form(string.as_bytes(), None, ctx)
+            let mut utc = ctx.timezone(b"UTC")?.shallow_clone();
+
+            date_from_free_form(string.as_bytes(), Some(&mut utc), ctx)
         } else {
             Ok(None)
         };
@@ -715,9 +760,10 @@ fn cast_date(value: &Zval, ctx: &mut Ctx) -> Result<Option<Zval>, PhpException> 
         None
     };
 
-    let Some(datetime) = parsed else {
+    let Some(instant) = parsed else {
         return Ok(None);
     };
+    let datetime = in_zone(&instant, b"UTC", ctx)?;
     let object = datetime
         .object()
         .ok_or_else(|| ext_exception("flow_php expected a datetime object"))?;

@@ -57,6 +57,29 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
     /**
      * @param Definition<mixed> $definition
      */
+    private function dateTimeType(Definition $definition): string
+    {
+        $type = type_instance_of(DateTimeType::class)->assert($definition->type());
+
+        if ($type->zoneName() === 'UTC') {
+            return $this->simpleType($definition);
+        }
+
+        $reflection = new ReflectionFunction('\Flow\ETL\DSL\datetime_schema');
+
+        return sprintf(
+            '\%s("%s", nullable: %s, metadata: %s, zone: "%s")',
+            $reflection->getName(),
+            $definition->entry()->name(),
+            $definition->isNullable() ? 'true' : 'false',
+            $this->formatMetadata($definition->metadata()),
+            $type->zoneName(),
+        );
+    }
+
+    /**
+     * @param Definition<mixed> $definition
+     */
     private function enumType(Definition $definition): string
     {
         $type = type_instance_of(EnumType::class)->assert($definition->type());
@@ -125,8 +148,8 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
                 HTMLElementType::class,
                 XMLType::class,
                 XMLElementType::class,
-                DateTimeType::class,
                     => $this->simpleType($definition),
+                DateTimeType::class => $this->dateTimeType($definition),
                 FloatType::class => $this->floatType($definition),
                 EnumType::class => $this->enumType($definition),
                 ListType::class => $this->listType($definition),

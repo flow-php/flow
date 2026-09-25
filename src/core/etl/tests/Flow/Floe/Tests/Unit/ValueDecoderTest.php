@@ -16,6 +16,7 @@ use Flow\Types\Value\Uuid;
 use PHPUnit\Framework\TestCase;
 
 use function class_exists;
+use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\enum_schema;
 use function Flow\ETL\DSL\int_schema;
@@ -119,7 +120,7 @@ final class ValueDecoderTest extends TestCase
         (new ValueDecoder())->decoderFor(new ForeignTypeDefinition('c', type_mixed()));
     }
 
-    public function test_round_trip_of_datetime_preserves_timezone_and_microseconds(): void
+    public function test_round_trip_of_datetime_reads_the_column_zone(): void
     {
         $value = new DateTimeImmutable('2025-06-15 12:30:45.987654', new DateTimeZone('Australia/Eucla'));
         $encoded = (new ValueEncoder())
@@ -134,8 +135,27 @@ final class ValueDecoderTest extends TestCase
 
         static::assertInstanceOf(DateTimeImmutable::class, $decoded);
         static::assertEquals($value, $decoded);
-        static::assertSame('Australia/Eucla', $decoded->getTimezone()->getName());
+        static::assertSame('UTC', $decoded->getTimezone()->getName());
         static::assertSame('987654', $decoded->format('u'));
+        static::assertSame(strlen($encoded), $position);
+    }
+
+    public function test_round_trip_of_date_keeps_the_stored_zone(): void
+    {
+        $value = new DateTimeImmutable('2025-06-15 00:00:00', new DateTimeZone('Australia/Eucla'));
+        $encoded = (new ValueEncoder())
+            ->encoderFor(date_schema('c'))
+            ->encode($value);
+        $position = 0;
+
+        // @mago-ignore analysis:mixed-assignment
+        $decoded = (new ValueDecoder())
+            ->decoderFor(date_schema('c'))
+            ->decode($encoded, $position);
+
+        static::assertInstanceOf(DateTimeImmutable::class, $decoded);
+        static::assertEquals($value, $decoded);
+        static::assertSame('Australia/Eucla', $decoded->getTimezone()->getName());
         static::assertSame(strlen($encoded), $position);
     }
 

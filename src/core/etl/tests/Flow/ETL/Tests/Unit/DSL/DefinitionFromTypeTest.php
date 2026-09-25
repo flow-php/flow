@@ -12,13 +12,16 @@ use Flow\ETL\Schema\Definition\NullDefinition;
 use Flow\ETL\Schema\Definition\StringDefinition;
 use Flow\ETL\Schema\Definition\TimeZoneDefinition;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Type\Logical\DateTimeType;
 use Flow\Types\Type\Native\String\StringTypeNarrower;
 
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\time_zone_schema;
+use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_equals;
+use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_null;
@@ -117,5 +120,15 @@ final class DefinitionFromTypeTest extends FlowTestCase
     public function test_time_zone_schema_delegates_purely(): void
     {
         static::assertEquals(new TimeZoneDefinition('tz', true), time_zone_schema('tz', true));
+    }
+
+    public function test_a_datetime_type_keeps_its_zone(): void
+    {
+        static::assertSame(
+            'Europe/Warsaw',
+            type_instance_of(DateTimeType::class)
+                ->assert(definition_from_type('at', type_datetime('Europe/Warsaw'))->type())
+                ->zoneName(),
+        );
     }
 }

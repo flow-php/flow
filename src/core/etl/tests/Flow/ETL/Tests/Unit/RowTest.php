@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit;
 
 use DateTimeImmutable;
+use DateTimeZone;
 use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
@@ -18,6 +19,7 @@ use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
+use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
@@ -333,5 +335,40 @@ final class RowTest extends FlowTestCase
             ],
             $values,
         );
+    }
+
+    public function test_match_to_hops_a_reordered_row_into_the_column_zone(): void
+    {
+        static::assertSame(
+            '2026-01-02 04:04:05 Europe/Warsaw',
+            type_datetime()
+                ->assert(
+                    row(['at' => new DateTimeImmutable('2026-01-02 03:04:05', new DateTimeZone('UTC')), 'id' => 1])
+                        ->matchTo(schema(int_schema('id'), datetime_schema('at', zone: 'Europe/Warsaw')))
+                        ->get('at'),
+                )
+                ->format('Y-m-d H:i:s e'),
+        );
+    }
+
+    public function test_match_to_refuses_a_reordered_row_with_a_wrong_typed_value(): void
+    {
+        $this->expectException(ColumnMismatchException::class);
+
+        row(['b' => 'x', 'a' => 1])->matchTo(schema(int_schema('a'), int_schema('b')));
+    }
+
+    public function test_match_to_refuses_null_in_a_non_nullable_datetime_column(): void
+    {
+        $this->expectException(ColumnMismatchException::class);
+
+        row(['at' => null])->matchTo(schema(datetime_schema('at')));
+    }
+
+    public function test_match_to_refuses_a_non_datetime_in_a_datetime_column(): void
+    {
+        $this->expectException(ColumnMismatchException::class);
+
+        row(['at' => '2026-01-02 03:04:05'])->matchTo(schema(datetime_schema('at')));
     }
 }

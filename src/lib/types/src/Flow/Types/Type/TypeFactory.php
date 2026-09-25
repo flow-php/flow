@@ -7,6 +7,7 @@ namespace Flow\Types\Type;
 use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\ClassStringType;
+use Flow\Types\Type\Logical\DateTimeType;
 use Flow\Types\Type\Logical\InstanceOfType;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\LiteralType;
@@ -22,7 +23,6 @@ use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_callable;
 use function Flow\Types\DSL\type_date;
-use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_html;
@@ -84,7 +84,7 @@ final class TypeFactory
             'time' => type_time(),
             'timezone' => type_time_zone(),
             'date' => type_date(),
-            'datetime' => type_datetime(),
+            'datetime' => DateTimeType::fromArray($data),
             'json' => type_json(),
             'uuid' => type_uuid(),
             'literal' => LiteralType::fromArray($data),

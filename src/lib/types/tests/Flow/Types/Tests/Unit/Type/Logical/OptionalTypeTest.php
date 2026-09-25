@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\OptionalType;
@@ -11,6 +13,7 @@ use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_from_array;
@@ -19,6 +22,7 @@ use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_union;
 
 final class OptionalTypeTest extends TestCase
@@ -215,5 +219,26 @@ final class OptionalTypeTest extends TestCase
         static::assertSame('?float', type_optional(type_float())->toString());
 
         static::assertSame('?string', type_optional(type_string())->toString());
+    }
+
+    public function test_cast_moves_a_datetime_into_the_base_zone(): void
+    {
+        static::assertSame(
+            '2026-01-02 04:04:05 Europe/Warsaw',
+            type_datetime()
+                ->assert(
+                    type_optional(type_datetime('Europe/Warsaw'))
+                        ->cast(new DateTimeImmutable('2026-01-02 03:04:05', new DateTimeZone('UTC'))),
+                )
+                ->format('Y-m-d H:i:s e'),
+        );
+    }
+
+    public function test_cast_puts_structure_keys_in_declared_order(): void
+    {
+        static::assertSame(
+            ['a' => 1, 'b' => 'x'],
+            type_optional(type_structure(['a' => type_integer(), 'b' => type_string()]))->cast(['b' => 'x', 'a' => 1]),
+        );
     }
 }

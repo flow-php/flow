@@ -12,6 +12,7 @@ use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Tests\Mother\DateTimeDecoderMother;
 use PHPUnit\Framework\TestCase;
 
+use function pack;
 use function strlen;
 
 final class DateTimeDecoderTest extends TestCase
@@ -61,5 +62,43 @@ final class DateTimeDecoderTest extends TestCase
         $this->expectExceptionMessage('Floe found a truncated datetime value');
 
         DateTimeDecoderMother::create()->decode("\xEE", $position);
+    }
+
+    public function test_column_zone_decoder_advances_the_position(): void
+    {
+        $value = new DateTimeImmutable('2025-06-15 12:30:45', new DateTimeZone('Australia/Eucla'));
+        $encoded = (new DateTimeEncoder())->encode($value) . (new DateTimeEncoder())->encode($value);
+        $position = 0;
+
+        DateTimeDecoderMother::inColumnZone('Europe/Warsaw')->decode($encoded, $position);
+
+        static::assertSame(strlen($encoded) / 2, $position);
+    }
+
+    public function test_column_zone_decoder_ignores_an_unknown_stored_zone(): void
+    {
+        $position = 0;
+
+        static::assertSame(
+            '2025-06-15 12:30:45.000000 Europe/Warsaw',
+            DateTimeDecoderMother::inColumnZone('Europe/Warsaw')
+                ->decode(pack('P', 1749983445) . pack('V', 0) . pack('V', 13) . 'Europe/Xarsaw', $position)
+                ->format('Y-m-d H:i:s.u e'),
+        );
+    }
+
+    public function test_decodes_into_the_column_zone(): void
+    {
+        $value = new DateTimeImmutable('2025-06-15 12:30:45.987654', new DateTimeZone('Australia/Eucla'));
+        $position = 0;
+
+        $decoded = DateTimeDecoderMother::inColumnZone('Europe/Warsaw')->decode(
+            (new DateTimeEncoder())->encode($value),
+            $position,
+        );
+
+        static::assertSame('Europe/Warsaw', $decoded->getTimezone()->getName());
+        static::assertSame($value->getTimestamp(), $decoded->getTimestamp());
+        static::assertSame('987654', $decoded->format('u'));
     }
 }

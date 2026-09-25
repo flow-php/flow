@@ -11,6 +11,8 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\Types\Type;
+use Flow\Types\Type\Logical\DateTimeType;
+use Flow\Types\Type\Logical\OptionalType;
 
 use function Flow\ETL\DSL\lit;
 use function Flow\Types\DSL\type_datetime;
@@ -50,7 +52,10 @@ final class ModifyDateTime implements ScalarFunction
      */
     public function returns(): Type
     {
-        return type_datetime();
+        $type = $this->reference->returns();
+        $base = $type instanceof OptionalType ? $type->base() : $type;
+
+        return $base instanceof DateTimeType ? $base : type_datetime();
     }
 
     public function eval(Row $row, FlowContext $context): mixed

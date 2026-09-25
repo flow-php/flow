@@ -8,7 +8,7 @@ use DateInterval;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
-use Flow\ETL\Schema\Definition\DateTimeDefinition;
+use Flow\ETL\Schema\Definition\StringDefinition;
 use Flow\ETL\Schema\Definition\TimeDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
@@ -74,16 +74,16 @@ final class TimeDefinitionTest extends FlowTestCase
 
     public static function provideMergeWithExpectedTypeCases(): Generator
     {
-        yield 'with date produces datetime' => [
+        yield 'with date produces string' => [
             time_schema('col'),
             date_schema('col'),
-            DateTimeDefinition::class,
+            StringDefinition::class,
         ];
 
-        yield 'with datetime produces datetime' => [
+        yield 'with datetime produces string' => [
             time_schema('col'),
             datetime_schema('col'),
-            DateTimeDefinition::class,
+            StringDefinition::class,
         ];
     }
 

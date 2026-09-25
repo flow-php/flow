@@ -157,6 +157,15 @@ final class PHPSchemaFormatterTest extends FlowTestCase
             PHP, (new PHPSchemaFormatter())->format(schema(time_zone_schema('tz'))));
     }
 
+    public function test_php_schema_formatter_renders_a_zoned_datetime_column(): void
+    {
+        static::assertEquals(<<<'PHP'
+            \Flow\ETL\DSL\schema(
+                \Flow\ETL\DSL\datetime_schema("at", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata(), zone: "Europe/Warsaw"),
+            );
+            PHP, (new PHPSchemaFormatter())->format(schema(datetime_schema('at', zone: 'Europe/Warsaw'))));
+    }
+
     public function test_formatting_structure_schema(): void
     {
         static::assertEquals(<<<'PHP'

@@ -164,6 +164,8 @@ $row['created_at']->format('Y-m-d H:i:s');   // '2026-01-01 14:30:00'
 `\DateTime`, `\DateTimeImmutable`, and `\DateInterval`. A **string** has to be a real calendar date -
 a date-only string lands at midnight, while a wall-clock expression such as `''`, `'now'` or `'+12'`
 is refused, so the same input never produces a different value on a different run.
+A string without an offset is read in the column zone - UTC for `type_datetime()`, never `date.timezone`. Declare
+`type_datetime('Europe/Warsaw')` to read local timestamps.
 
 ### String → Date
 

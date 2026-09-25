@@ -35,7 +35,8 @@ final class SchemaFormatCommandTest extends TestCase
                 {
                     "ref": "created_at",
                     "type": {
-                        "type": "datetime"
+                        "type": "datetime",
+                        "zone": "UTC"
                     },
                     "nullable": false,
                     "metadata": []
@@ -43,7 +44,8 @@ final class SchemaFormatCommandTest extends TestCase
                 {
                     "ref": "updated_at",
                     "type": {
-                        "type": "datetime"
+                        "type": "datetime",
+                        "zone": "UTC"
                     },
                     "nullable": false,
                     "metadata": []

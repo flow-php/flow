@@ -133,12 +133,12 @@ final class DefinitionTest extends FlowTestCase
 
     public function test_merging_time_with_date(): void
     {
-        static::assertEquals(datetime_schema('datetime'), date_schema('datetime')->merge(time_schema('datetime')));
+        static::assertEquals(string_schema('datetime'), date_schema('datetime')->merge(time_schema('datetime')));
     }
 
     public function test_merging_time_with_datetime(): void
     {
-        static::assertEquals(datetime_schema('datetime'), datetime_schema('datetime')->merge(time_schema('datetime')));
+        static::assertEquals(string_schema('datetime'), datetime_schema('datetime')->merge(time_schema('datetime')));
     }
 
     public function test_merging_two_null_definitions(): void

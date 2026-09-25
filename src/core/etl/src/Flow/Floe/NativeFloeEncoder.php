@@ -39,12 +39,13 @@ final class NativeFloeEncoder implements FloeEncoder
 
     public static function isSupported(): bool
     {
-        // an extension older than this library lacks decodeRows()/encodeFrames() - it falls back to the PHP engine instead
+        // an extension older than this library lacks decodeRows()/encodeFrames()/datetimeZones() - it falls back to the PHP engine instead
         return (
             extension_loaded('flow_php')
             && class_exists(RustFloeEncoderNative::class, false)
             && method_exists(RustFloeEncoderNative::class, 'decodeRows')
             && method_exists(RustFloeEncoderNative::class, 'encodeFrames')
+            && method_exists(RustFloeEncoderNative::class, 'datetimeZones')
         );
     }
 

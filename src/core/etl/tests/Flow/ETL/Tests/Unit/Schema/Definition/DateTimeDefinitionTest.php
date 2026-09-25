@@ -69,6 +69,36 @@ final class DateTimeDefinitionTest extends FlowTestCase
             string_schema('col'),
             string_schema('col'),
         ];
+
+        yield 'same zone keeps the zone' => [
+            datetime_schema('col', zone: 'Europe/Warsaw'),
+            datetime_schema('col', zone: 'Europe/Warsaw'),
+            datetime_schema('col', zone: 'Europe/Warsaw'),
+        ];
+
+        yield 'different zones widen to utc' => [
+            datetime_schema('col', zone: 'Europe/Warsaw'),
+            datetime_schema('col'),
+            datetime_schema('col'),
+        ];
+
+        yield 'with date keeps the zone' => [
+            datetime_schema('col', zone: 'Europe/Warsaw'),
+            date_schema('col'),
+            datetime_schema('col', zone: 'Europe/Warsaw'),
+        ];
+
+        yield 'with null keeps the zone' => [
+            datetime_schema('col', zone: 'Europe/Warsaw'),
+            null_schema('col'),
+            datetime_schema('col', true, zone: 'Europe/Warsaw'),
+        ];
+
+        yield 'with time produces string' => [
+            datetime_schema('col', zone: 'Europe/Warsaw'),
+            time_schema('col'),
+            string_schema('col'),
+        ];
     }
 
     public static function provideMergeWithExpectedTypeCases(): Generator
@@ -76,12 +106,6 @@ final class DateTimeDefinitionTest extends FlowTestCase
         yield 'with date produces datetime' => [
             datetime_schema('col'),
             date_schema('col'),
-            DateTimeDefinition::class,
-        ];
-
-        yield 'with time produces datetime' => [
-            datetime_schema('col'),
-            time_schema('col'),
             DateTimeDefinition::class,
         ];
     }
@@ -236,7 +260,7 @@ final class DateTimeDefinitionTest extends FlowTestCase
 
         static::assertSame('created_at', $normalized['ref']);
         static::assertTrue($normalized['nullable']);
-        static::assertArrayHasKey('type', $normalized);
+        static::assertSame(['type' => 'datetime', 'zone' => 'UTC'], $normalized['type']);
         static::assertArrayHasKey('metadata', $normalized);
     }
 
@@ -292,5 +316,39 @@ final class DateTimeDefinitionTest extends FlowTestCase
     public function test_merge_with_an_unrelated_type_falls_back_to_common_type(): void
     {
         static::assertSame('string', datetime_schema('col')->merge(bool_schema('col'))->type()->toString());
+    }
+
+    public function test_is_compatible_ignores_the_zone(): void
+    {
+        static::assertTrue(datetime_schema('at', zone: 'Europe/Warsaw')->isCompatible(datetime_schema('at')));
+    }
+
+    public function test_is_same_compares_the_zone(): void
+    {
+        static::assertFalse(datetime_schema('at', zone: 'Europe/Warsaw')->isSame(datetime_schema('at')));
+        static::assertTrue(datetime_schema('at', zone: 'Europe/Warsaw')->isSame(datetime_schema(
+            'at',
+            zone: 'Europe/Warsaw',
+        )));
+    }
+
+    public function test_rename_keeps_the_zone(): void
+    {
+        static::assertSame(
+            'datetime<Europe/Warsaw>',
+            datetime_schema('at', zone: 'Europe/Warsaw')->rename('b')->type()->toString(),
+        );
+    }
+
+    public function test_nullability_and_metadata_changes_keep_the_zone(): void
+    {
+        $definition = datetime_schema('at', zone: 'Europe/Warsaw');
+
+        static::assertSame('datetime<Europe/Warsaw>', $definition->makeNullable()->type()->toString());
+        static::assertSame('datetime<Europe/Warsaw>', $definition->addMetadata('k', 'v')->type()->toString());
+        static::assertSame(
+            'datetime<Europe/Warsaw>',
+            $definition->setMetadata(Metadata::with('k', 'v'))->type()->toString(),
+        );
     }
 }

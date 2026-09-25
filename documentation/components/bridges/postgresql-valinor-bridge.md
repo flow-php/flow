@@ -118,6 +118,8 @@ $user = $client->fetchInto($mapper, 'SELECT id, name, address FROM users WHERE i
 
 PostgreSQL returns `TIMESTAMP` values like `'2026-01-01 14:30:00'`. Valinor cannot construct `\DateTimeImmutable` from a raw string without explicit configuration, but `type_datetime()` can.
 
+The string carries no offset, so `type_datetime()` reads it as UTC; `type_datetime('Europe/Warsaw')` reads it as Warsaw local time.
+
 ```php
 <?php
 

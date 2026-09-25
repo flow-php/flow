@@ -16,10 +16,12 @@ use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\TestWith;
 use stdClass;
 
+use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_string;
 
 final class DbalQueryExtractorTest extends FlowTestCase
@@ -161,5 +163,27 @@ final class DbalQueryExtractorTest extends FlowTestCase
         $extractor->withTypes([]);
 
         static::assertNotSame($before, $extractor->statistics());
+    }
+
+    public function test_naive_datetime_text_reads_as_utc_under_non_utc_default(): void
+    {
+        $previous = date_default_timezone_get();
+        date_default_timezone_set('Asia/Tokyo');
+
+        try {
+            $values = [];
+
+            foreach ((new DbalQueryExtractor(InMemorySqlite::connection(), "SELECT '2026-01-01 14:30:00' AS at"))
+                ->withSchema(schema(datetime_schema('at')))
+                ->extract(flow_context()) as $batch) {
+                foreach ($batch as $row) {
+                    $values[] = type_datetime()->assert($row->get('at'))->format('Y-m-d H:i:s e');
+                }
+            }
+
+            static::assertSame(['2026-01-01 14:30:00 UTC'], $values);
+        } finally {
+            date_default_timezone_set($previous);
+        }
     }
 }

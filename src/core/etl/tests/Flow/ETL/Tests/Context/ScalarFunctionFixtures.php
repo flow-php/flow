@@ -716,7 +716,7 @@ final class ScalarFunctionFixtures
                 'returns' => type_string(),
             ],
             Function\ToTimeZone::class => [
-                'factory' => static fn(): ScalarFunction => new Function\ToTimeZone(ref('datetime'), lit('UTC')),
+                'factory' => static fn(): ScalarFunction => new Function\ToTimeZone(ref('datetime'), 'UTC'),
                 'returns' => type_datetime(),
             ],
             Function\ToUpper::class => [

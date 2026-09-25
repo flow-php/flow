@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\DSL;
 
+use DateTimeZone;
 use Dom\Element;
 use Dom\HTMLDocument;
 use Dom\HTMLElement;
@@ -253,9 +254,9 @@ function type_json(): JsonType
  * @return DateTimeType<\DateTimeInterface>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_datetime(): DateTimeType
+function type_datetime(DateTimeZone|string $zone = 'UTC'): DateTimeType
 {
-    return new DateTimeType();
+    return new DateTimeType($zone);
 }
 
 /**

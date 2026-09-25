@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Floe\Decoding;
 
 use DateTimeImmutable;
-use DateTimeInterface;
+use DateTimeZone;
 use Flow\Floe\Exception\FloeException;
 
 use function sprintf;
@@ -20,9 +20,10 @@ final class DateTimeDecoder implements ValueDecoder
 {
     public function __construct(
         private readonly TimeZones $timeZones,
+        private readonly ?DateTimeZone $columnZone = null,
     ) {}
 
-    public function decode(string $data, int &$position): DateTimeInterface
+    public function decode(string $data, int &$position): DateTimeImmutable
     {
         // unpack() raises a ValueError past the end of the buffer, which is not a Floe error
         if (strlen($data) < ($position + 16)) {
@@ -48,6 +49,6 @@ final class DateTimeDecoder implements ValueDecoder
             throw new FloeException(sprintf('Floe failed to restore datetime from timestamp "%s"', $timestamp));
         }
 
-        return $value->setTimezone($this->timeZones->get($timezoneName));
+        return $value->setTimezone($this->columnZone ?? $this->timeZones->get($timezoneName));
     }
 }

@@ -26,7 +26,7 @@ final class FileSchemaCommandTest extends TestCase
         $tester->assertCommandIsSuccessful();
 
         self::assertCommandOutputIdentical(<<<'OUTPUT'
-            [{"ref":"order_id","type":{"type":"uuid"},"nullable":true,"metadata":[]},{"ref":"created_at","type":{"type":"datetime"},"nullable":true,"metadata":[]},{"ref":"updated_at","type":{"type":"datetime"},"nullable":true,"metadata":[]},{"ref":"discount","type":{"type":"float"},"nullable":true,"metadata":[]},{"ref":"address","type":{"type":"json"},"nullable":true,"metadata":[]},{"ref":"notes","type":{"type":"json"},"nullable":true,"metadata":[]},{"ref":"items","type":{"type":"json"},"nullable":true,"metadata":[]}]
+            [{"ref":"order_id","type":{"type":"uuid"},"nullable":true,"metadata":[]},{"ref":"created_at","type":{"type":"datetime","zone":"UTC"},"nullable":true,"metadata":[]},{"ref":"updated_at","type":{"type":"datetime","zone":"UTC"},"nullable":true,"metadata":[]},{"ref":"discount","type":{"type":"float"},"nullable":true,"metadata":[]},{"ref":"address","type":{"type":"json"},"nullable":true,"metadata":[]},{"ref":"notes","type":{"type":"json"},"nullable":true,"metadata":[]},{"ref":"items","type":{"type":"json"},"nullable":true,"metadata":[]}]
 
             OUTPUT, $tester->getDisplay());
     }
@@ -329,7 +329,8 @@ final class FileSchemaCommandTest extends TestCase
                 {
                     "ref": "created_at",
                     "type": {
-                        "type": "datetime"
+                        "type": "datetime",
+                        "zone": "UTC"
                     },
                     "nullable": true,
                     "metadata": []
@@ -337,7 +338,8 @@ final class FileSchemaCommandTest extends TestCase
                 {
                     "ref": "updated_at",
                     "type": {
-                        "type": "datetime"
+                        "type": "datetime",
+                        "zone": "UTC"
                     },
                     "nullable": true,
                     "metadata": []

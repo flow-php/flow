@@ -58,7 +58,6 @@ final readonly class DirectoryListing
             $entries[] = DirectoryEntry::file(
                 $path,
                 type_optional(type_integer())->assert($value->size ?? null),
-                // @mago-expect analysis:less-specific-argument
                 isset($value->mtime) ? type_datetime()->cast($value->mtime) : null,
             );
         }

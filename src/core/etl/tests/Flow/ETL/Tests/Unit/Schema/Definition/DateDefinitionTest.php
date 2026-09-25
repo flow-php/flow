@@ -70,16 +70,22 @@ final class DateDefinitionTest extends FlowTestCase
             string_schema('col'),
             string_schema('col'),
         ];
+
+        yield 'with time produces string' => [
+            date_schema('col'),
+            time_schema('col'),
+            string_schema('col'),
+        ];
+
+        yield 'with datetime carries the datetime zone' => [
+            date_schema('col'),
+            datetime_schema('col', zone: 'Europe/Warsaw'),
+            datetime_schema('col', zone: 'Europe/Warsaw'),
+        ];
     }
 
     public static function provideMergeWithExpectedTypeCases(): Generator
     {
-        yield 'with time produces datetime' => [
-            date_schema('col'),
-            time_schema('col'),
-            DateTimeDefinition::class,
-        ];
-
         yield 'with datetime produces datetime' => [
             date_schema('col'),
             datetime_schema('col'),
