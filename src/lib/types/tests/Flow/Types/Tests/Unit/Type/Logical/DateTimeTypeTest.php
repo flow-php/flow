@@ -229,6 +229,26 @@ final class DateTimeTypeTest extends TestCase
         type_datetime()->cast($value);
     }
 
+    #[TestWith(['2026-01-02'])]
+    #[TestWith(['2024-02-29'])]
+    #[TestWith(["2026-01-02\n"])]
+    #[TestWith(['0001-01-01'])]
+    #[TestWith(['9999-12-31'])]
+    public function test_an_iso_date_casts_to_the_object_the_constructor_builds(string $value): void
+    {
+        static::assertSame(serialize(new DateTimeImmutable($value)), serialize(type_datetime()->cast($value)));
+    }
+
+    #[TestWith(['2026-02-30'])]
+    #[TestWith(['2026-13-01'])]
+    #[TestWith(['0000-01-01'])]
+    public function test_an_iso_date_off_the_calendar_is_refused(string $value): void
+    {
+        $this->expectException(CastingException::class);
+
+        type_datetime()->cast($value);
+    }
+
     /**
      * @param null|class-string<\Throwable> $exceptionClass
      */

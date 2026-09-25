@@ -11,6 +11,7 @@ use crate::ctx::{
     ce_method_ref, construct_with_zvals, ht_find_key, ht_insert, ht_insert_key, null_zval,
     schema_mismatch, transparent_exception, write_slot, zval_long, Ctx, HtKey,
 };
+use crate::date_check::{iso_date_gate, iso_date_time_gate};
 use crate::encode::{expect_object, ht_for_each, read_slot};
 use crate::exception::ext_exception;
 use crate::format::Reader;
@@ -20,6 +21,7 @@ use crate::hydrate::{
 };
 use crate::json_check::json_valid;
 use crate::plan::{parse_schema_json, Plan, TypeJson};
+use crate::uuid_check::is_uuid;
 use crate::values::date_from_free_form;
 
 extern "C" {
@@ -312,95 +314,11 @@ fn bool_from_str(bytes: &[u8]) -> Option<bool> {
     }
 }
 
-/// The `Uuid::UUID_REGEXP` pattern: 8-4-4-4-12 LOWERCASE hex groups.
-fn is_uuid(bytes: &[u8]) -> bool {
-    if bytes.len() != 36 {
-        return false;
-    }
-
-    bytes.iter().enumerate().all(|(index, byte)| match index {
-        8 | 13 | 18 | 23 => *byte == b'-',
-        _ => matches!(byte, b'0'..=b'9' | b'a'..=b'f'),
-    })
-}
-
 /// The cheap prefix of `Json::isValid`: non-empty + matching `{}`/`[]` pair.
 fn json_gate(bytes: &[u8]) -> bool {
     bytes.len() >= 2
         && ((bytes[0] == b'{' && bytes[bytes.len() - 1] == b'}')
             || (bytes[0] == b'[' && bytes[bytes.len() - 1] == b']'))
-}
-
-/// `DateTimeType::ISO_DATE_TIME` followed by `checkdate()`: true only when PHP takes its
-/// `new DateTimeImmutable($value)` branch without consulting StringTemporalParts.
-fn iso_date_time_gate(bytes: &[u8]) -> bool {
-    // PCRE `$` without the D modifier also matches before one final "\n"
-    let bytes = bytes.strip_suffix(b"\n").unwrap_or(bytes);
-    let byte_at = |at: usize| bytes.get(at).copied();
-    let digits_at = |at: usize, count: usize| {
-        bytes
-            .get(at..at + count)
-            .is_some_and(|run| run.iter().all(u8::is_ascii_digit))
-    };
-
-    if !(digits_at(0, 4)
-        && byte_at(4) == Some(b'-')
-        && digits_at(5, 2)
-        && byte_at(7) == Some(b'-')
-        && digits_at(8, 2)
-        && matches!(byte_at(10), Some(b'T' | b' '))
-        && digits_at(11, 2)
-        && byte_at(13) == Some(b':')
-        && digits_at(14, 2))
-    {
-        return false;
-    }
-
-    let mut at = 16;
-
-    if byte_at(at) == Some(b':') && digits_at(at + 1, 2) {
-        at += 3;
-
-        if byte_at(at) == Some(b'.') {
-            let fraction = bytes[at + 1..].iter().take_while(|byte| byte.is_ascii_digit()).count();
-
-            if !(1..=9).contains(&fraction) {
-                return false;
-            }
-
-            at += 1 + fraction;
-        }
-    }
-
-    match byte_at(at) {
-        Some(b'Z') => at += 1,
-        Some(b'+' | b'-') if digits_at(at + 1, 2) => {
-            at += 3;
-
-            if byte_at(at) == Some(b':') && digits_at(at + 1, 2) {
-                at += 3;
-            } else if digits_at(at, 2) {
-                at += 2;
-            }
-        }
-        _ => {}
-    }
-
-    let number = |range: std::ops::Range<usize>| {
-        bytes[range]
-            .iter()
-            .fold(0u32, |value, digit| value * 10 + u32::from(digit - b'0'))
-    };
-    let (year, month, day) = (number(0..4), number(5..7), number(8..10));
-    let leap = year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
-    let days_in_month = match month {
-        2 if leap => 29,
-        2 => 28,
-        4 | 6 | 9 | 11 => 30,
-        _ => 31,
-    };
-
-    at == bytes.len() && year >= 1 && (1..=12).contains(&month) && (1..=days_in_month).contains(&day)
 }
 
 /// `source` is a gated JSON string; the Json shares its zend_string instead of copying the bytes.
@@ -596,13 +514,10 @@ fn cast_value(kind: &CastKind, value: &Zval, ctx: &mut Ctx) -> Result<Option<Zva
                     None
                 }
             } else if let Some(string) = value.zend_str() {
-                // Only DateTimeType::cast's ISO branch is mirrored: its regex and checkdate() are exact, and
-                // what passes them goes straight to the constructor. Every other string is gated on
-                // StringTemporalParts, whose recogniser is a PHP class, so it bails whole
+                // any other string is gated on StringTemporalParts, a PHP class, so it bails
                 let bytes = string.as_bytes();
 
-                // None (e.g. "25:99:99") from either parse bails, and PHP throws the same exception
-                if !iso_date_time_gate(bytes) {
+                if !iso_date_time_gate(bytes) && !iso_date_gate(bytes) {
                     None
                 } else if let Some(local) = bytes
                     .strip_suffix(b"\n")
@@ -786,9 +701,12 @@ fn cast_date(value: &Zval, ctx: &mut Ctx) -> Result<Option<Zval>, PhpException> 
         return set_midnight(set_time, object);
     }
 
-    if value.is_string() {
-        // DateType::cast has no ISO branch: every string is gated on StringTemporalParts, a PHP class
-        return Ok(None);
+    if let Some(string) = value.zend_str() {
+        return if iso_date_gate(string.as_bytes()) {
+            date_from_free_form(string.as_bytes(), None, ctx)
+        } else {
+            Ok(None)
+        };
     }
 
     let parsed = if value.is_long() || value.is_double() {

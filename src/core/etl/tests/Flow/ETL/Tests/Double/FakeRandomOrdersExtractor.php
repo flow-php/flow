@@ -16,6 +16,7 @@ use Generator;
 use function array_map;
 use function count;
 use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\list_schema;
@@ -69,6 +70,7 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
                     'price' => type_float(),
                 ])),
             ),
+            date_schema('ordered_on'),
         );
     }
 
@@ -147,6 +149,7 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
                     ],
                     range(1, $faker->numberBetween(1, 4)),
                 ),
+                'ordered_on' => $createdAt->setTime(0, 0),
             ];
 
             if ($signal === Signal::STOP) {

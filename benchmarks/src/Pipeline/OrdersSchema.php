@@ -6,6 +6,7 @@ namespace Flow\Benchmarks\Pipeline;
 
 use Flow\ETL\Schema;
 
+use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\json_schema;
@@ -49,6 +50,7 @@ final readonly class OrdersSchema
                 json_schema('address', true),
                 json_schema('notes', true),
                 json_schema('items', true),
+                date_schema('ordered_on', true),
             ),
             Source::json, Source::json_lines => schema(
                 string_schema('order_id', true),
@@ -79,6 +81,7 @@ final readonly class OrdersSchema
                     ])),
                     true,
                 ),
+                string_schema('ordered_on', true),
             ),
             Source::array, Source::floe, Source::memory, Source::parquet => schema(
                 uuid_schema('order_id', true),
@@ -109,6 +112,7 @@ final readonly class OrdersSchema
                     ])),
                     true,
                 ),
+                date_schema('ordered_on', true),
             ),
         };
     }
@@ -132,6 +136,7 @@ final readonly class OrdersSchema
                 json_schema('address', true),
                 json_schema('notes', true),
                 json_schema('items', true),
+                date_schema('ordered_on', true),
             ),
         };
     }

@@ -17,7 +17,6 @@ use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Filesystem;
@@ -112,6 +111,7 @@ final class XMLReaderExtractor implements
 
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
         $schema = $fileColumns->declare($baseSchema);
+        $body = $fileColumns->withoutTail($schema);
 
         foreach ($this->sourceFiles($this->filesystem, $this->path, $pathFilter) as $source) {
             $constants = $fileColumns->forFile($source, $schema);
@@ -152,15 +152,12 @@ final class XMLReaderExtractor implements
                             $rawNodes[] = $node === false ? '' : (string) $dom->saveXML($node);
 
                             if (count($rawNodes) >= $batchSize) {
-                                $batch = [];
-
-                                foreach ($encoder->decode($rawNodes) as $rowValues) {
-                                    $batch[] = new RawRowValues($constants->fill($rowValues->values));
-                                }
+                                $hydrated = $constants->fillRows(
+                                    $hydrator->hydrate($encoder->decode($rawNodes), $body),
+                                    $schema,
+                                );
 
                                 $rawNodes = [];
-
-                                $hydrated = $hydrator->hydrate($batch, $schema);
 
                                 $yielded += $hydrated->count();
 
@@ -181,13 +178,7 @@ final class XMLReaderExtractor implements
                 }
 
                 if ($rawNodes !== []) {
-                    $batch = [];
-
-                    foreach ($encoder->decode($rawNodes) as $rowValues) {
-                        $batch[] = new RawRowValues($constants->fill($rowValues->values));
-                    }
-
-                    $hydrated = $hydrator->hydrate($batch, $schema);
+                    $hydrated = $constants->fillRows($hydrator->hydrate($encoder->decode($rawNodes), $body), $schema);
 
                     $yielded += $hydrated->count();
 

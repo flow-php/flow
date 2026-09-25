@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Native\String;
 
+use Flow\Types\Type\Logical\DateTimeType;
+use Flow\Types\Type\Logical\DateType;
+
 use function checkdate;
 use function date_parse;
 use function Flow\Types\DSL\type_integer;
@@ -15,15 +18,23 @@ final readonly class StringTemporalParts
 {
     public function __construct(
         private bool $calendarDate,
-        private bool $explicitDay,
         private bool $time,
     ) {}
 
-    /**
-     * One date_parse() for both temporal rungs; running it per rung cost ~90% of narrow() on non-temporal cells.
-     */
     public static function from(string $value): self
     {
+        if (!self::hasExplicitDay($value)) {
+            return new self(false, false);
+        }
+
+        if (self::isoDateTime($value)) {
+            return new self(true, true);
+        }
+
+        if (self::isoDate($value)) {
+            return new self(true, false);
+        }
+
         $parts = date_parse($value);
 
         if (
@@ -33,7 +44,7 @@ final readonly class StringTemporalParts
             || $parts['day'] === false
             || !checkdate((int) $parts['month'], (int) $parts['day'], (int) $parts['year'])
         ) {
-            return new self(false, false, false);
+            return new self(false, false);
         }
 
         $time =
@@ -49,17 +60,29 @@ final readonly class StringTemporalParts
                 ($relative['hour'] ?? 0) !== 0 || ($relative['minute'] ?? 0) !== 0 || ($relative['second'] ?? 0) !== 0;
         }
 
-        return new self(true, self::hasExplicitDay($value), $time);
+        return new self(true, $time);
     }
 
-    /**
-     * date_parse() defaults a missing day to 1, so '2024-01' is indistinguishable from '2024-01-01' by its parts
-     * alone and a month-precision column would be typed date with a fabricated day. The day has to be read back
-     * out of the input: three numeric groups, or two plus a spelled-out month ('02-Jun-2022').
-     *
-     * Compact ISO ('20240305') is one group and a real calendar date; from()'s checkdate() gate keeps '12345678'
-     * and friends out, so the widening is exactly that one form.
-     */
+    public static function isoDateTime(string $value): bool
+    {
+        $iso = [];
+
+        return (
+            preg_match(DateTimeType::ISO_DATE_TIME, $value, $iso) === 1
+            && checkdate((int) $iso[2], (int) $iso[3], (int) $iso[1])
+        );
+    }
+
+    public static function isoDate(string $value): bool
+    {
+        $iso = [];
+
+        return (
+            preg_match(DateType::ISO_DATE, $value, $iso) === 1
+            && checkdate((int) $iso[2], (int) $iso[3], (int) $iso[1])
+        );
+    }
+
     public static function hasExplicitDay(string $value): bool
     {
         $numericGroups = (int) preg_match_all('/\d+/', $value);
@@ -77,11 +100,11 @@ final readonly class StringTemporalParts
 
     public function isDate(): bool
     {
-        return $this->calendarDate && $this->explicitDay && !$this->time;
+        return $this->calendarDate && !$this->time;
     }
 
     public function isDateTime(): bool
     {
-        return $this->calendarDate && $this->explicitDay && $this->time;
+        return $this->calendarDate && $this->time;
     }
 }

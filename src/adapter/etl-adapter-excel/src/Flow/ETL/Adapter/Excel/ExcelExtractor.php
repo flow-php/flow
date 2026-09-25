@@ -19,7 +19,6 @@ use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\SchemaInference;
@@ -170,6 +169,7 @@ final class ExcelExtractor implements
             }
 
             $schema = $fileColumns->declare($base);
+            $body = $fileColumns->withoutTail($schema);
             $tail = $fileColumns->tail();
             $expected = $base->references()->names();
 
@@ -199,13 +199,13 @@ final class ExcelExtractor implements
                     $batch = [];
 
                     foreach ($sheet->rows() as $rowValues) {
-                        $batch[] = new RawRowValues($constants->fill($rowValues->values));
+                        $batch[] = $rowValues;
 
                         if (count($batch) < $batchSize) {
                             continue;
                         }
 
-                        $hydrated = $hydrator->hydrate($batch, $schema);
+                        $hydrated = $constants->fillRows($hydrator->hydrate($batch, $body), $schema);
                         $batch = [];
 
                         $yielded += $hydrated->count();
@@ -225,7 +225,7 @@ final class ExcelExtractor implements
                         continue;
                     }
 
-                    $hydrated = $hydrator->hydrate($batch, $schema);
+                    $hydrated = $constants->fillRows($hydrator->hydrate($batch, $body), $schema);
 
                     $yielded += $hydrated->count();
 

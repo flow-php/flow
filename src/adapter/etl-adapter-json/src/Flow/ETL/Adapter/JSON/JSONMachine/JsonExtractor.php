@@ -18,7 +18,6 @@ use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\SchemaInference;
@@ -126,19 +125,14 @@ final class JsonExtractor implements
         }
 
         $schema = $fileColumns->declare($base);
+        $body = $fileColumns->withoutTail($schema);
 
         foreach ($sources as $source) {
             // forFile() reads the PARTITION definitions, which only declare() creates - $base is the body
             $constants = $fileColumns->forFile($source, $schema);
 
             foreach ($reader->batches($source, $batchSize) as $rawBatch) {
-                $batch = [];
-
-                foreach ($rawBatch as $values) {
-                    $batch[] = new RawRowValues($constants->fill($values->values));
-                }
-
-                $hydrated = $hydrator->hydrate($batch, $schema);
+                $hydrated = $constants->fillRows($hydrator->hydrate($rawBatch, $body), $schema);
 
                 $yielded += $hydrated->count();
 

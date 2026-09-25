@@ -140,6 +140,8 @@ final class ParquetExtractor implements
                 // R6: over the FILE's schema, never over schema()'s output
                 $fileSchema = $fileColumns->declare($this->schema ?? $file->schema());
                 $constants = $fileColumns->forFile($file->source(), $fileSchema);
+                $rowsSchema = $promisedSchema ?? $fileSchema;
+                $body = $fileColumns->withoutTail($rowsSchema);
                 $matchTo = $promisedSchema === null && !$fileSchema->isSame($target) ? $target : null;
 
                 $encoder = new ParquetEncoder($file->file->schema());
@@ -151,10 +153,13 @@ final class ParquetExtractor implements
                     $limit === null ? null : $limit - $yielded,
                     $fileOffset,
                 ) as $row) {
-                    $rawBatch[] = $constants->fill($row);
+                    $rawBatch[] = $row;
 
                     if (count($rawBatch) >= $batchSize) {
-                        $hydrated = $hydrator->hydrate($encoder->decode($rawBatch), $promisedSchema ?? $fileSchema);
+                        $hydrated = $constants->fillRows(
+                            $hydrator->hydrate($encoder->decode($rawBatch), $body),
+                            $rowsSchema,
+                        );
 
                         if ($matchTo !== null) {
                             $hydrated = $hydrated->matchTo($matchTo);
@@ -177,7 +182,10 @@ final class ParquetExtractor implements
                 }
 
                 if ($rawBatch !== []) {
-                    $hydrated = $hydrator->hydrate($encoder->decode($rawBatch), $promisedSchema ?? $fileSchema);
+                    $hydrated = $constants->fillRows(
+                        $hydrator->hydrate($encoder->decode($rawBatch), $body),
+                        $rowsSchema,
+                    );
 
                     if ($matchTo !== null) {
                         $hydrated = $hydrated->matchTo($matchTo);

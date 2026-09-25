@@ -14,14 +14,14 @@ final class OrdersSchemaTest extends TestCase
     public function test_every_service_source_declares_eleven_columns(): void
     {
         foreach (ServiceSource::cases() as $source) {
-            static::assertCount(11, OrdersSchema::ofService($source)->definitions(), $source->value);
+            static::assertCount(12, OrdersSchema::ofService($source)->definitions(), $source->value);
         }
     }
 
     public function test_every_source_declares_eleven_columns(): void
     {
         foreach (Source::cases() as $source) {
-            static::assertCount(11, OrdersSchema::of($source)->definitions(), $source->value);
+            static::assertCount(12, OrdersSchema::of($source)->definitions(), $source->value);
         }
     }
 

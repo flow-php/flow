@@ -28,6 +28,7 @@ final class InMemoryOrdersTest extends TestCase
                 'address',
                 'notes',
                 'items',
+                'ordered_on',
             ],
             array_keys(InMemoryOrders::of(self::ROWS)[0]),
         );
