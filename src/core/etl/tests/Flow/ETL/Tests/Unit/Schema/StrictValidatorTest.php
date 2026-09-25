@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Schema;
 
-use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Schema\Validator\MismatchedDefinition;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -22,13 +21,11 @@ use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_float;
-use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
-use function Flow\Types\DSL\type_union;
 
 final class StrictValidatorTest extends FlowTestCase
 {
@@ -101,52 +98,6 @@ final class StrictValidatorTest extends FlowTestCase
         );
         static::assertSame([], $context->missingDefinitions());
         static::assertSame([], $context->unexpectedDefinitions());
-    }
-
-    public function test_given_schema_with_matching_union_definition(): void
-    {
-        static::assertTrue(
-            schema_validate(
-                expected: schema(
-                    integer_schema('id'),
-                    new UnionDefinition('value', type_union(type_string(), type_integer())),
-                ),
-                given: schema(
-                    integer_schema('id'),
-                    new UnionDefinition('value', type_union(type_string(), type_integer())),
-                ),
-                validator: schema_strict_validator(),
-            )->isValid(),
-        );
-    }
-
-    public function test_given_schema_with_mismatched_union_definition(): void
-    {
-        $context = schema_validate(
-            expected: schema(new UnionDefinition('value', type_union(type_string(), type_integer()))),
-            given: schema(bool_schema('value')),
-            validator: schema_strict_validator(),
-        );
-
-        static::assertFalse($context->isValid());
-        static::assertEquals(
-            [new MismatchedDefinition(
-                new UnionDefinition('value', type_union(type_string(), type_integer())),
-                bool_schema('value'),
-            )],
-            $context->mismatchedDefinitions(),
-        );
-    }
-
-    public function test_given_schema_with_union_member_definition(): void
-    {
-        static::assertTrue(
-            schema_validate(
-                expected: schema(new UnionDefinition('value', type_union(type_string(), type_integer()))),
-                given: schema(string_schema('value')),
-                validator: schema_strict_validator(),
-            )->isValid(),
-        );
     }
 
     public function test_given_schema_inferred_from_untyped_arrays_against_declared_array_type(): void

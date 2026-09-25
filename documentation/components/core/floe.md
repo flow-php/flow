@@ -257,7 +257,7 @@ Floe does not support map keys of type "uuid"
 Floe does not support structures that allow extra values
 ```
 
-That covers `mixed`, union columns built with `union_schema()`, and `type_structure(..., allow_extra: true)`.
+That covers `mixed` and `type_structure(..., allow_extra: true)`.
 Use a declared element type, or a `json_schema()` column when the shape is genuinely dynamic.
 
 ## On-Disk Layout

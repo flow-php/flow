@@ -59,32 +59,31 @@ Every column is described by a [Definition](/src/core/etl/src/Flow/ETL/Schema/De
 the matching `*_schema()` [DSL function](/src/core/etl/src/Flow/ETL/DSL/functions.php). A definition owns
 the column name, its [Flow Type](/documentation/components/libs/types.md), nullability and metadata.
 
-| Column | DSL function | Definition |
-|--------|--------------|------------|
-| Boolean | `bool_schema()` | [BooleanDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/BooleanDefinition.php) |
-| Date | `date_schema()` | [DateDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/DateDefinition.php) |
-| DateTime | `datetime_schema()` | [DateTimeDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/DateTimeDefinition.php) |
-| Enum | `enum_schema()` | [EnumDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/EnumDefinition.php) |
-| Float | `float_schema()` | [FloatDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/FloatDefinition.php) |
-| HTML | `html_schema()` | [HTMLDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/HTMLDefinition.php) |
-| HTML Element | `html_element_schema()` | [HTMLElementDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/HTMLElementDefinition.php) |
-| Integer | `int_schema()`, `integer_schema()` | [IntegerDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/IntegerDefinition.php) |
-| Json | `json_schema()` | [JsonDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/JsonDefinition.php) |
-| List | `list_schema()` | [ListDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/ListDefinition.php) |
-| Map | `map_schema()` | [MapDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/MapDefinition.php) |
-| Null | `null_schema()` | [NullDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/NullDefinition.php) |
-| String | `str_schema()`, `string_schema()` | [StringDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/StringDefinition.php) |
-| Structure | `structure_schema()` | [StructureDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/StructureDefinition.php) |
-| Time | `time_schema()` | [TimeDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/TimeDefinition.php) |
-| Time Zone | `time_zone_schema()` | [TimeZoneDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/TimeZoneDefinition.php) |
-| Union | `union_schema()` | resolves to the single member's Definition - see below |
-| Uuid | `uuid_schema()` | [UuidDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/UuidDefinition.php) |
-| XML | `xml_schema()` | [XMLDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/XMLDefinition.php) |
-| XML Element | `xml_element_schema()` | [XMLElementDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/XMLElementDefinition.php) |
+| Column       | DSL function                       | Definition                                                                                      |
+|--------------|------------------------------------|-------------------------------------------------------------------------------------------------|
+| Boolean      | `bool_schema()`                    | [BooleanDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/BooleanDefinition.php)         |
+| Date         | `date_schema()`                    | [DateDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/DateDefinition.php)               |
+| DateTime     | `datetime_schema()`                | [DateTimeDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/DateTimeDefinition.php)       |
+| Enum         | `enum_schema()`                    | [EnumDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/EnumDefinition.php)               |
+| Float        | `float_schema()`                   | [FloatDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/FloatDefinition.php)             |
+| HTML         | `html_schema()`                    | [HTMLDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/HTMLDefinition.php)               |
+| HTML Element | `html_element_schema()`            | [HTMLElementDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/HTMLElementDefinition.php) |
+| Integer      | `int_schema()`, `integer_schema()` | [IntegerDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/IntegerDefinition.php)         |
+| Json         | `json_schema()`                    | [JsonDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/JsonDefinition.php)               |
+| List         | `list_schema()`                    | [ListDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/ListDefinition.php)               |
+| Map          | `map_schema()`                     | [MapDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/MapDefinition.php)                 |
+| Null         | `null_schema()`                    | [NullDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/NullDefinition.php)               |
+| String       | `str_schema()`, `string_schema()`  | [StringDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/StringDefinition.php)           |
+| Structure    | `structure_schema()`               | [StructureDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/StructureDefinition.php)     |
+| Time         | `time_schema()`                    | [TimeDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/TimeDefinition.php)               |
+| Time Zone    | `time_zone_schema()`               | [TimeZoneDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/TimeZoneDefinition.php)       |
+| Uuid         | `uuid_schema()`                    | [UuidDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/UuidDefinition.php)               |
+| XML          | `xml_schema()`                     | [XMLDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/XMLDefinition.php)                 |
+| XML Element  | `xml_element_schema()`             | [XMLElementDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/XMLElementDefinition.php)   |
 
-A column holds exactly one type, so `union_schema()` accepts only `null|T` - a nullable column - and
-refuses every other union. Declare the widest common type with `str_schema()`, or `json_schema()` when the
-shape is genuinely dynamic.
+A column holds exactly one type. `null|T` spells a nullable column, and a nullable list element, map value or
+structure element; every other union is refused. Declare the widest common type with `str_schema()`, or
+`json_schema()` when the shape is genuinely dynamic.
 
 The schema is declared, never guessed: `array_to_rows()` takes it as its second argument and a
 [Hydrator](/src/core/etl/src/Flow/ETL/Row/Hydrator.php) turns the raw values into `Rows` against it,

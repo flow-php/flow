@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Schema\Definition;
 
+use Flow\ETL\Exception\UnsupportedUnionTypeException;
+use Flow\ETL\Row\Reference;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
@@ -14,6 +16,7 @@ use Flow\Types\Type\Native\EmptyArrayType;
 use Flow\Types\Type\Native\UnionType;
 
 use function Flow\Types\DSL\structure_element;
+use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
@@ -21,6 +24,10 @@ use function Flow\Types\DSL\type_optional;
 
 final readonly class TypeProjection
 {
+    public function __construct(
+        private Reference $column,
+    ) {}
+
     /**
      * @param ListType<list<mixed>> $type
      *
@@ -75,7 +82,12 @@ final readonly class TypeProjection
         }
 
         if ($type instanceof UnionType) {
-            return $this->union($type);
+            // Iceberg's rule, as definition_from_type() applies it to the column itself
+            if (!$type->isOptionalType()) {
+                throw UnsupportedUnionTypeException::forElement($this->column, $type);
+            }
+
+            return type_optional($this->project(type_bare($type)));
         }
 
         return $type;
@@ -102,38 +114,5 @@ final readonly class TypeProjection
         }
 
         return $changed ? new StructureType($elements, $type->allowsExtra()) : $type;
-    }
-
-    /**
-     * @param UnionType<mixed, mixed> $type
-     *
-     * @return UnionType<mixed, mixed>
-     */
-    public function union(UnionType $type): UnionType
-    {
-        $changed = false;
-        $members = [];
-
-        foreach ($type->types()->all() as $member) {
-            $projected = $this->project($member);
-
-            if ($projected !== $member) {
-                $changed = true;
-            }
-
-            $members[] = $projected;
-        }
-
-        if (!$changed) {
-            return $type;
-        }
-
-        $union = null;
-
-        foreach ($members as $member) {
-            $union = $union === null ? $member : new UnionType($union, $member);
-        }
-
-        return $union instanceof UnionType ? $union : $type;
     }
 }

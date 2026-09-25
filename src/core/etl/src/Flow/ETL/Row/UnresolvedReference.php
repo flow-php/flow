@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Row;
 
 use Flow\ETL\Exception\InvalidLogicException;
-use Flow\ETL\Exception\UnsupportedUnionTypeException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\FunctionTree;
 use Flow\ETL\Function\ListFunctions;
@@ -15,9 +14,7 @@ use Flow\ETL\Function\StructureFunctions;
 use Flow\ETL\Row;
 use Flow\ETL\Schema\Definition;
 use Flow\Types\Type;
-use Flow\Types\Type\Native\UnionType;
 
-use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_optional;
 use function is_string;
 
@@ -127,36 +124,11 @@ final class UnresolvedReference implements Reference
      * Kept on the leaf rather than inlined in the resolver so $alias/$sort copying stays in the class
      * that owns those fields - the resolver never learns the leaf's internal shape.
      *
-     * The Definition's type and nullability are fused here, at the resolver boundary. This is also the
-     * one place the fusion can fail - type_optional() refuses a multi-member UnionType, so a nullable
-     * UnionDefinition has no expressible returns(). Doing it here is what keeps
-     * ResolvedReference::returns() total.
+     * The Definition's type and nullability are fused here, at the resolver boundary.
      */
     public function resolve(Definition $definition): ResolvedReference
     {
         $type = $definition->type();
-
-        // q13's third reachability closure, adopting Iceberg's rule verbatim exactly as
-        // definition_from_type() and union_schema() do: "null|T" is the one legal union and it means a
-        // nullable T; every other union has no expressible returns(). type_optional() refuses both
-        // shapes, so without this the raw flow-php/types InvalidTypeException escapes below the DSL.
-        if ($type instanceof UnionType) {
-            if (!$type->isOptionalType()) {
-                throw UnsupportedUnionTypeException::forColumn($this, $type);
-            }
-
-            return new ResolvedReference(
-                $this->entry,
-                type_optional(
-                    $type->types()->without(type_null())->first() ?? throw UnsupportedUnionTypeException::forColumn(
-                        $this,
-                        $type,
-                    ),
-                ),
-                $this->alias,
-                $this->sort,
-            );
-        }
 
         return new ResolvedReference(
             $this->entry,

@@ -8,22 +8,18 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\DateTimeDefinition;
-use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\time_schema;
-use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_datetime;
-use function Flow\Types\DSL\type_integer;
-use function Flow\Types\DSL\type_string;
-use function Flow\Types\DSL\type_union;
 
 final class DateTimeDefinitionTest extends FlowTestCase
 {
@@ -293,24 +289,8 @@ final class DateTimeDefinitionTest extends FlowTestCase
         static::assertSame('datetime', $def->type()->toString());
     }
 
-    public function test_merge_with_union_containing_this_type_returns_union(): void
+    public function test_merge_with_an_unrelated_type_falls_back_to_common_type(): void
     {
-        $merged = datetime_schema('col')->merge(
-            new UnionDefinition('col', type_union(type_datetime(), type_boolean())),
-        );
-
-        static::assertInstanceOf(UnionDefinition::class, $merged);
-        static::assertSame('boolean|datetime', $merged->type()->toString());
-    }
-
-    public function test_merge_with_union_not_containing_this_type_falls_back_to_string(): void
-    {
-        static::assertSame(
-            'string',
-            datetime_schema('col')
-                ->merge(new UnionDefinition('col', type_union(type_integer(), type_string())))
-                ->type()
-                ->toString(),
-        );
+        static::assertSame('string', datetime_schema('col')->merge(bool_schema('col'))->type()->toString());
     }
 }

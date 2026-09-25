@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Floe\Tests\Unit;
 
 use DOMElement;
-use Flow\ETL\Schema\Definition\UnionDefinition;
+use Flow\ETL\Tests\Double\ForeignTypeDefinition;
 use Flow\ETL\Tests\Fixtures\CustomDateTime;
 use Flow\Floe\Encoding\DateTimeEncoder;
 use Flow\Floe\Exception\FloeException;
@@ -27,7 +27,6 @@ use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_non_empty_string;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
-use function Flow\Types\DSL\type_union;
 use function pack;
 
 use const PHP_INT_MAX;
@@ -44,12 +43,12 @@ final class ValueEncoderTest extends TestCase
         (new DateTimeEncoder())->encode(new CustomDateTime('2025-01-01 00:00:00 UTC'));
     }
 
-    public function test_encoding_union_column_throws(): void
+    public function test_encoding_a_column_of_an_unsupported_type_throws(): void
     {
         $this->expectException(FloeException::class);
-        $this->expectExceptionMessage('Floe does not support columns of type "integer|string"');
+        $this->expectExceptionMessage('Floe does not support columns of type "mixed"');
 
-        (new ValueEncoder())->encoderFor(new UnionDefinition('c', type_union(type_integer(), type_string())));
+        (new ValueEncoder())->encoderFor(new ForeignTypeDefinition('c', type_mixed()));
     }
 
     public function test_encoding_list_of_mixed_elements_throws(): void

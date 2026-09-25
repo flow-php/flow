@@ -13,7 +13,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use function array_shift;
 use function explode;
 use function preg_split;
-use function str_contains;
 use function str_starts_with;
 use function trim;
 
@@ -25,26 +24,25 @@ final class MergeMatrixTest extends FlowTestCase
     public static function provideMergeCases(): Generator
     {
         $grid = <<<'GRID'
-                     null     bool     int      float    string   date     datetime time     uuid     enum     json     struct   list     map      union    html     htmlel   xml      xmlel
-            null     null     bool     int      float    string   date     datetime time     uuid     enum     json     struct   list     map      union    html     htmlel   xml      xmlel
-            bool     bool     bool     string   string   string   string   string   string   string   string   string   string   string   string   string   string   string   string   string
-            int      int      string   int      float    string   string   string   string   string   string   string   string   string   string   union    string   string   string   string
-            float    float    string   float    float    string   string   string   string   string   string   string   string   string   string   string   string   string   string   string
-            string   string   string   string   string   string   string   string   string   string   string   string   string   string   string   union    string   string   string   string
-            date     date     string   string   string   string   date     datetime datetime string   string   string   string   string   string   string   string   string   string   string
-            datetime datetime string   string   string   string   datetime datetime datetime string   string   string   string   string   string   string   string   string   string   string
-            time     time     string   string   string   string   datetime datetime time     string   string   string   string   string   string   string   string   string   string   string
-            uuid     uuid     string   string   string   string   string   string   string   uuid     string   string   string   string   string   string   string   string   string   string
-            enum     enum     string   string   string   string   string   string   string   string   enum     string   string   string   string   string   string   string   string   string
-            json     json     string   string   string   string   string   string   string   string   string   json     json     json     json     string   string   string   string   string
-            struct   struct   string   string   string   string   string   string   string   string   string   json     struct   json     json     string   string   string   string   string
-            list     list     string   string   string   string   string   string   string   string   string   json     json     list     json     string   string   string   string   string
-            map      map      string   string   string   string   string   string   string   string   string   json     json     json     map      string   string   string   string   string
-            union    union    string   union    string   union    string   string   string   string   string   string   string   string   string   union    string   string   string   string
-            html     html     string   string   string   string   string   string   string   string   string   string   string   string   string   string   html     string   string   string
-            htmlel   htmlel   string   string   string   string   string   string   string   string   string   string   string   string   string   string   string   htmlel   string   string
-            xml      xml      string   string   string   string   string   string   string   string   string   string   string   string   string   string   string   string   xml      string
-            xmlel    xmlel    string   string   string   string   string   string   string   string   string   string   string   string   string   string   string   string   string   xmlel
+                     null     bool     int      float    string   date     datetime time     uuid     enum     json     struct   list     map      html     htmlel   xml      xmlel
+            null     null     bool     int      float    string   date     datetime time     uuid     enum     json     struct   list     map      html     htmlel   xml      xmlel
+            bool     bool     bool     string   string   string   string   string   string   string   string   string   string   string   string   string   string   string   string
+            int      int      string   int      float    string   string   string   string   string   string   string   string   string   string   string   string   string   string
+            float    float    string   float    float    string   string   string   string   string   string   string   string   string   string   string   string   string   string
+            string   string   string   string   string   string   string   string   string   string   string   string   string   string   string   string   string   string   string
+            date     date     string   string   string   string   date     datetime datetime string   string   string   string   string   string   string   string   string   string
+            datetime datetime string   string   string   string   datetime datetime datetime string   string   string   string   string   string   string   string   string   string
+            time     time     string   string   string   string   datetime datetime time     string   string   string   string   string   string   string   string   string   string
+            uuid     uuid     string   string   string   string   string   string   string   uuid     string   string   string   string   string   string   string   string   string
+            enum     enum     string   string   string   string   string   string   string   string   enum     string   string   string   string   string   string   string   string
+            json     json     string   string   string   string   string   string   string   string   string   json     json     json     json     string   string   string   string
+            struct   struct   string   string   string   string   string   string   string   string   string   json     struct   json     json     string   string   string   string
+            list     list     string   string   string   string   string   string   string   string   string   json     json     list     json     string   string   string   string
+            map      map      string   string   string   string   string   string   string   string   string   json     json     json     map      string   string   string   string
+            html     html     string   string   string   string   string   string   string   string   string   string   string   string   string   html     string   string   string
+            htmlel   htmlel   string   string   string   string   string   string   string   string   string   string   string   string   string   string   htmlel   string   string
+            xml      xml      string   string   string   string   string   string   string   string   string   string   string   string   string   string   string   xml      string
+            xmlel    xmlel    string   string   string   string   string   string   string   string   string   string   string   string   string   string   string   string   xmlel
             GRID;
 
         $lines = explode("\n", $grid);
@@ -72,7 +70,6 @@ final class MergeMatrixTest extends FlowTestCase
             str_starts_with($type, 'list') => 'list',
             str_starts_with($type, 'map') => 'map',
             str_starts_with($type, 'enum') => 'enum',
-            str_contains($type, '|') => 'union',
             $type === 'boolean' => 'bool',
             $type === 'integer' => 'int',
             $type === 'html_element' => 'htmlel',

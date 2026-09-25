@@ -5,20 +5,20 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\UnsupportedUnionTypeException;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\MapDefinition;
-use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\Types\DSL\type_array;
-use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_empty_array;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
@@ -348,24 +348,19 @@ final class MapDefinitionTest extends FlowTestCase
         static::assertStringContainsString('map', $def->type()->toString());
     }
 
-    public function test_merge_with_union_containing_this_type_returns_union(): void
-    {
-        $merged = map_schema('col', type_map(type_string(), type_integer()))->merge(
-            new UnionDefinition('col', type_union(type_map(type_string(), type_integer()), type_boolean())),
-        );
-
-        static::assertInstanceOf(UnionDefinition::class, $merged);
-        static::assertSame('boolean|map<string, integer>', $merged->type()->toString());
-    }
-
-    public function test_merge_with_union_not_containing_this_type_falls_back_to_string(): void
+    public function test_merge_with_an_unrelated_type_falls_back_to_common_type(): void
     {
         static::assertSame(
             'string',
-            map_schema('col', type_map(type_string(), type_integer()))
-                ->merge(new UnionDefinition('col', type_union(type_integer(), type_string())))
-                ->type()
-                ->toString(),
+            map_schema('col', type_map(type_string(), type_integer()))->merge(bool_schema('col'))->type()->toString(),
         );
+    }
+
+    public function test_a_union_value_is_refused_naming_the_column(): void
+    {
+        $this->expectException(UnsupportedUnionTypeException::class);
+        $this->expectExceptionMessage('Column "tags" cannot hold elements of type "integer|string"');
+
+        map_schema('tags', type_map(type_string(), type_union(type_integer(), type_string())));
     }
 }

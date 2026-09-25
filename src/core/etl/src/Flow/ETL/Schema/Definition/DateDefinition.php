@@ -131,15 +131,6 @@ final readonly class DateDefinition implements Definition
             );
         }
 
-        if ($definition instanceof UnionDefinition && (new UnionMembers())->contains($definition, $this)) {
-            return new UnionDefinition(
-                $this->ref,
-                $definition->type(),
-                $this->nullable || $definition->isNullable(),
-                $this->metadata->merge($definition->metadata()),
-            );
-        }
-
         return (new CommonType())->merge($this, $definition);
     }
 

@@ -9,7 +9,6 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\EnumDefinition;
-use Flow\ETL\Schema\Definition\UnionDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
@@ -19,14 +18,10 @@ use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use UnitEnum;
 
+use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\enum_schema;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
-use function Flow\Types\DSL\type_boolean;
-use function Flow\Types\DSL\type_enum;
-use function Flow\Types\DSL\type_integer;
-use function Flow\Types\DSL\type_string;
-use function Flow\Types\DSL\type_union;
 
 final class EnumDefinitionTest extends FlowTestCase
 {
@@ -344,24 +339,11 @@ final class EnumDefinitionTest extends FlowTestCase
         static::assertStringContainsString('enum', $def->type()->toString());
     }
 
-    public function test_merge_with_union_containing_this_type_returns_union(): void
-    {
-        $merged = enum_schema('col', BackedStringEnum::class)->merge(
-            new UnionDefinition('col', type_union(type_enum(BackedStringEnum::class), type_boolean())),
-        );
-
-        static::assertInstanceOf(UnionDefinition::class, $merged);
-        static::assertSame('boolean|enum<Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum>', $merged->type()->toString());
-    }
-
-    public function test_merge_with_union_not_containing_this_type_falls_back_to_string(): void
+    public function test_merge_with_an_unrelated_type_falls_back_to_common_type(): void
     {
         static::assertSame(
             'string',
-            enum_schema('col', BackedStringEnum::class)
-                ->merge(new UnionDefinition('col', type_union(type_integer(), type_string())))
-                ->type()
-                ->toString(),
+            enum_schema('col', BackedStringEnum::class)->merge(bool_schema('col'))->type()->toString(),
         );
     }
 }

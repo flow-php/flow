@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Schema\Inference;
 
-use Flow\ETL\Schema\Definition\TypeProjection;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\InstanceOfType;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Logical\StructureType;
+use Flow\Types\Type\Native\ArrayType;
+use Flow\Types\Type\Native\EmptyArrayType;
 use Flow\Types\Type\Native\MixedType;
 use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\UnionType;
@@ -26,21 +27,17 @@ final readonly class TypeFloor
 {
     public function __construct(
         private InferredTypes $types,
-        private TypeProjection $projection = new TypeProjection(),
     ) {}
 
     /**
-     * project() only rewrites arrays to json, so the container arms below must recurse again to reach the leaves.
-     *
      * @param Type<mixed> $type
      *
      * @return Type<mixed>
      */
     public function floor(Type $type): Type
     {
-        $type = $this->projection->project($type);
-
         return match (true) {
+            $type instanceof ArrayType, $type instanceof EmptyArrayType => $this->floor(type_json()),
             $type instanceof OptionalType => $this->optional($type),
             // [] and {} both decode to [], so list<null> is "some container", which only json holds
             $type instanceof ListType => $type->element() instanceof NullType

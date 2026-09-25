@@ -125,7 +125,7 @@ file.
 | empty schema `{}` / boolean schema `true`                                    | `json` (accept anything, marked in metadata)                      |
 | `enum` / `const`                                                             | scalar type derived from the values, values preserved in metadata |
 | `type: [X, "null"]`, `anyOf`/`oneOf` with a null member                      | nullable X                                                        |
-| heterogeneous `type` arrays, `anyOf`, `oneOf`                                | union type                                                        |
+| heterogeneous `type` arrays, `anyOf`, `oneOf`                                | refused - `UnsupportedUnionTypeException`, at any depth           |
 | `allOf`                                                                      | deep merged object schema                                         |
 
 Annotations (`description`, `title`, `default`, `examples`, constraints like `pattern` or `minimum`) of top level

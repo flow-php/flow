@@ -13,14 +13,11 @@ use Flow\ETL\Extractor\ArrayExtractor;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Schema\Definition;
-use Flow\ETL\Schema\Definition\UnionDefinition;
-use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Double\FixedTmpDirFilesystem;
 use Flow\ETL\Tests\Double\FreshRowsAggregate;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\RowsMother;
 use Flow\Filesystem\Exception\RuntimeException as FilesystemRuntimeException;
-use Flow\Types\Type\Native\UnionType;
 use Generator;
 use NoRewindIterator;
 use PHPUnit\Framework\Attributes\TestWith;
@@ -38,9 +35,6 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
-use function Flow\Types\DSL\type_integer;
-use function Flow\Types\DSL\type_string;
-use function Flow\Types\DSL\type_union;
 use function iterator_to_array;
 use function range;
 
@@ -188,28 +182,6 @@ final class ArrayExtractorTest extends FlowTestCase
             $extractor,
             execution_context(config_builder()->build()),
         );
-    }
-
-    public function test_extraction_with_a_union_column_in_the_schema(): void
-    {
-        /** @var UnionType<mixed, mixed> $union */
-        $union = type_union(type_string(), type_integer());
-
-        $extractor = from_array(
-            [
-                ['id' => 1, 'a' => 42],
-                ['id' => 2, 'a' => 'x'],
-                ['id' => 3, 'a' => null],
-            ],
-            schema: schema(int_schema('id'), new UnionDefinition('a', $union, true)),
-        );
-
-        $rows = ExtractedRows::of($extractor, execution_context(config_builder()->build()));
-
-        static::assertSame(42, $rows->all()[0]->get('a'));
-        static::assertSame('x', $rows->all()[1]->get('a'));
-        static::assertNull($rows->all()[2]->get('a'));
-        static::assertInstanceOf(UnionDefinition::class, $rows->schema()->get('a'));
     }
 
     public function test_generator_extraction_with_a_declared_schema(): void

@@ -9,8 +9,10 @@ use DateTimeZone;
 use DOMDocument;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Type;
 use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\cast;
@@ -19,7 +21,10 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
 use function is_object;
 
 final class CastTest extends FlowTestCase
@@ -67,6 +72,30 @@ final class CastTest extends FlowTestCase
         $this->expectExceptionMessage('Cast function does not support type: json_pretty');
 
         cast(ref('value'), 'json_pretty');
+    }
+
+    /**
+     * @return Generator<string, array{Type<mixed>, string}>
+     */
+    public static function union_targets(): Generator
+    {
+        yield 'union' => [type_union(type_integer(), type_string()), 'integer|string'];
+        yield 'union nested in a list' => [
+            type_list(type_union(type_integer(), type_string())),
+            'list<integer|string>',
+        ];
+    }
+
+    /**
+     * @param Type<mixed> $type
+     */
+    #[DataProvider('union_targets')]
+    public function test_constructor_rejects_a_union_target(Type $type, string $described): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cast function does not support type: ' . $described);
+
+        cast(ref('value'), $type);
     }
 
     /**
