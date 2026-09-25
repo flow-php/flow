@@ -239,4 +239,39 @@ final class DateTypeTest extends TestCase
     {
         static::assertSame('date', type_date()->toString());
     }
+
+    public function test_cast_does_not_mutate_a_datetime(): void
+    {
+        $value = new DateTime('2026-01-02 10:00:00', new DateTimeZone('UTC'));
+
+        static::assertInstanceOf(DateTimeImmutable::class, type_date()->cast($value));
+        static::assertSame('10:00:00', $value->format('H:i:s'));
+    }
+
+    public static function provide_non_string_dates(): Generator
+    {
+        yield 'timestamp' => [1767312245, '2026-01-02 00:00:00 UTC'];
+        yield 'bool' => [true, '1970-01-01 00:00:00 UTC'];
+        yield 'interval' => [new DateInterval('P1D'), '1970-01-02 00:00:00 UTC'];
+    }
+
+    #[DataProvider('provide_non_string_dates')]
+    public function test_non_string_date_is_midnight_utc(mixed $value, string $expected): void
+    {
+        static::assertSame($expected, type_date()->cast($value)->format('Y-m-d H:i:s e'));
+    }
+
+    #[TestWith(['2026-01-02'])]
+    #[TestWith(['2026-01-02T23:00:00-05:00'])]
+    public function test_string_date_is_midnight_utc_under_non_utc_default(string $value): void
+    {
+        $previous = date_default_timezone_get();
+        date_default_timezone_set('Asia/Tokyo');
+
+        try {
+            static::assertSame('2026-01-02 00:00:00 UTC', type_date()->cast($value)->format('Y-m-d H:i:s e'));
+        } finally {
+            date_default_timezone_set($previous);
+        }
+    }
 }

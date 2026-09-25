@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\Types\Type\Logical;
 
 use DateInterval;
-use DateTimeImmutable;
 use DateTimeInterface;
 use DOMElement;
 use Flow\Types\Exception\CastingException;
@@ -40,7 +39,11 @@ final readonly class TimeType implements Type
         }
 
         if ($value instanceof DateTimeInterface) {
-            return $value->diff(new DateTimeImmutable($value->format('Y-m-d')), true);
+            $time = new DateInterval($value->format('\\P\\TG\\Hi\\Ms\\S'));
+            // @mago-ignore analysis:invalid-property-write
+            $time->f = (int) $value->format('u') / 1_000_000;
+
+            return $time;
         }
 
         if ($value instanceof DOMElement) {

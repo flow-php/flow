@@ -66,7 +66,6 @@ final readonly class SFTPFilesystem implements Filesystem
                         $path,
                         true,
                         type_integer()->assert($this->sftp->filesize($remotePath)),
-                        // @mago-expect analysis:less-specific-argument
                         type_datetime()->cast($this->sftp->filemtime($remotePath)),
                     );
 

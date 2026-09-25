@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Unit;
 
+use DateTimeImmutable;
 use Flow\ETL\Schema\Metadata;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Exception\IncompatibleSchemaException;
@@ -15,6 +16,7 @@ use Flow\Floe\Tests\Double\CodecStub;
 use Flow\Floe\Tests\Double\UnsizedFilesystem;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
@@ -493,5 +495,24 @@ final class FloeWriterTest extends TestCase
         $this->expectExceptionMessage('Floe writer session is not open');
 
         $writer->write(rows(schema(int_schema('id')), row(['id' => 1])));
+    }
+
+    public function test_append_refuses_a_different_datetime_zone(): void
+    {
+        $filesystem = memory_filesystem();
+        $path = path('memory://zoned.floe');
+
+        $writer = new FloeWriter($filesystem, schema(datetime_schema('at')));
+        $writer->create($path);
+        $writer->write(rows(
+            schema(datetime_schema('at')),
+            row(['at' => new DateTimeImmutable('2026-01-02 03:04:05')]),
+        ));
+        $writer->close();
+
+        $this->expectException(IncompatibleSchemaException::class);
+        $this->expectExceptionMessage('Floe append schema does not match the existing file schema.');
+
+        (new FloeWriter($filesystem, schema(datetime_schema('at', zone: 'Europe/Warsaw'))))->append($path);
     }
 }

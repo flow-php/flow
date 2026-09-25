@@ -259,6 +259,7 @@ use function enum_exists;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_null;
 use function is_array;
 use function is_bool;
@@ -1063,7 +1064,7 @@ function not(ScalarFunction $value): Not
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function to_timezone(ScalarFunction|DateTimeInterface $value, ScalarFunction|DateTimeZone|string $timeZone): ToTimeZone
+function to_timezone(ScalarFunction|DateTimeInterface $value, DateTimeZone|string $timeZone): ToTimeZone
 {
     return new ToTimeZone($value, $timeZone);
 }
@@ -1552,9 +1553,13 @@ function null_schema(string $name, ?Metadata $metadata = null): NullDefinition
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function datetime_schema(string $name, bool $nullable = false, ?Metadata $metadata = null): DateTimeDefinition
-{
-    return new DateTimeDefinition($name, $nullable, $metadata);
+function datetime_schema(
+    string $name,
+    bool $nullable = false,
+    ?Metadata $metadata = null,
+    DateTimeZone|string $zone = 'UTC',
+): DateTimeDefinition {
+    return new DateTimeDefinition($name, type_datetime($zone), $nullable, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
@@ -1682,7 +1687,7 @@ function definition_from_type(
         $type instanceof FloatType => new FloatDefinition($ref, $nullable, $metadata),
         $type instanceof StringType => new StringDefinition($ref, $nullable, $metadata),
         $type instanceof DateType => new DateDefinition($ref, $nullable, $metadata),
-        $type instanceof DateTimeType => new DateTimeDefinition($ref, $nullable, $metadata),
+        $type instanceof DateTimeType => new DateTimeDefinition($ref, $type, $nullable, $metadata),
         $type instanceof TimeType => new TimeDefinition($ref, $nullable, $metadata),
         $type instanceof JsonType => new JsonDefinition($ref, $nullable, $metadata),
         $type instanceof ArrayType => new JsonDefinition($ref, $nullable, $metadata),

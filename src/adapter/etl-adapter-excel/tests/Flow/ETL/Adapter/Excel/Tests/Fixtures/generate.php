@@ -77,6 +77,20 @@ write_xlsx($dir . '/dates_mixed.xlsx', [
     [Cell::fromValue(new DateTimeImmutable('2024-01-03 10:30:00'), $dateTimeStyle)],
 ]);
 
+write_ods($dir . '/dates_mixed.ods', [
+    ['d'],
+    [Cell::fromValue(new DateTimeImmutable('2024-01-01', new DateTimeZone('UTC')), $dateStyle)],
+    [Cell::fromValue(new DateTimeImmutable('2024-01-03 10:30:00', new DateTimeZone('UTC')), $dateTimeStyle)],
+]);
+// OpenSpout writes date-value with a trailing Z; LibreOffice writes it zone-less, which the reader builds in the host zone
+$zip = new ZipArchive();
+$zip->open($dir . '/dates_mixed.ods');
+$zip->addFromString(
+    'content.xml',
+    (string) preg_replace('/(office:date-value="[^"]+)Z"/', '$1"', (string) $zip->getFromName('content.xml')),
+);
+$zip->close();
+
 write_xlsx($dir . '/int_then_str.xlsx', [['v'], [1], [2], ['n/a']]);
 
 write_xlsx($dir . '/int_float_bool.xlsx', [

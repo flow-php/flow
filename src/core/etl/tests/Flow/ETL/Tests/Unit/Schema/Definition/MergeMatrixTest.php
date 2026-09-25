@@ -30,9 +30,9 @@ final class MergeMatrixTest extends FlowTestCase
             int      int      string   int      float    string   string   string   string   string   string   string   string   string   string   string   string   string   string
             float    float    string   float    float    string   string   string   string   string   string   string   string   string   string   string   string   string   string
             string   string   string   string   string   string   string   string   string   string   string   string   string   string   string   string   string   string   string
-            date     date     string   string   string   string   date     datetime datetime string   string   string   string   string   string   string   string   string   string
-            datetime datetime string   string   string   string   datetime datetime datetime string   string   string   string   string   string   string   string   string   string
-            time     time     string   string   string   string   datetime datetime time     string   string   string   string   string   string   string   string   string   string
+            date     date     string   string   string   string   date     datetime string   string   string   string   string   string   string   string   string   string   string
+            datetime datetime string   string   string   string   datetime datetime string   string   string   string   string   string   string   string   string   string   string
+            time     time     string   string   string   string   string   string   time     string   string   string   string   string   string   string   string   string   string
             uuid     uuid     string   string   string   string   string   string   string   uuid     string   string   string   string   string   string   string   string   string
             enum     enum     string   string   string   string   string   string   string   string   enum     string   string   string   string   string   string   string   string
             json     json     string   string   string   string   string   string   string   string   string   json     json     json     json     string   string   string   string

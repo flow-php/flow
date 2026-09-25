@@ -108,7 +108,8 @@ pub fn decode_value(
             zv.set_zend_string(ZendStr::new(reader.bytes(length, "string value")?, false));
         }
         Decoder::Null => zv.set_null(),
-        Decoder::DateTime => zv = decode_datetime(reader, ctx)?,
+        Decoder::DateTime(zone) => zv = decode_datetime(reader, Some(zone), ctx)?,
+        Decoder::StoredZoneDateTime => zv = decode_datetime(reader, None, ctx)?,
         Decoder::Interval => zv = decode_interval(reader, ctx)?,
         Decoder::Uuid => zv = decode_uuid(reader, ctx)?,
         Decoder::Json => zv = decode_json(reader, ctx)?,
@@ -212,8 +213,8 @@ fn decode_structure(
     Ok(zv)
 }
 
-/// Mirrors `ValueDecoder::decodeDateTime`.
-fn decode_datetime(reader: &mut Reader, ctx: &mut Ctx) -> Result<Zval, PhpException> {
+/// Mirrors `DateTimeDecoder`: `zone` is its column zone, `None` restores each value's stored zone.
+fn decode_datetime(reader: &mut Reader, zone: Option<&[u8]>, ctx: &mut Ctx) -> Result<Zval, PhpException> {
     let timestamp = reader.i64("datetime value")?;
     let microseconds = reader.u32("datetime value")?;
     let timezone_length = reader.u32("datetime value")? as usize;
@@ -278,7 +279,7 @@ fn decode_datetime(reader: &mut Reader, ctx: &mut Ctx) -> Result<Zval, PhpExcept
         return Err(restore_failed());
     }
 
-    let timezone = ctx.timezone(timezone_name)?.shallow_clone();
+    let timezone = ctx.timezone(zone.unwrap_or(timezone_name))?.shallow_clone();
     let datetime = call_handle(
         &set_timezone,
         Some(datetime_obj),

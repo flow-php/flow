@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Bucketing\Storage;
 
+use DateTimeImmutable;
 use Flow\ETL\Bucketing\Storage\FilesystemBuckets;
 use Flow\ETL\Row;
 use Flow\ETL\Tests\Context\BucketsStorageContext;
@@ -12,6 +13,7 @@ use Flow\Floe\Exception\IncompatibleSchemaException;
 use Flow\Floe\FloeWriter;
 
 use function array_map;
+use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
@@ -20,6 +22,7 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\Filesystem\DSL\path;
+use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
@@ -307,5 +310,28 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $this->expectException(IncompatibleSchemaException::class);
 
         $writer->append($path);
+    }
+
+    public function test_datetime_values_read_back_as_admitted(): void
+    {
+        $cacheDir = path(__DIR__ . '/var/buckets_datetime_zone');
+        $this->fs()->rm($cacheDir);
+
+        $rows = rows(
+            schema(datetime_schema('at', zone: 'Europe/Warsaw')),
+            row(['at' => new DateTimeImmutable('2026-01-02 03:04:05+05:00')]),
+        );
+        $admitted = type_datetime()->assert($rows->first()->get('at'))->format('c');
+
+        $storage = new FilesystemBuckets($this->fs(), cacheDir: $cacheDir);
+        $storage->set('b', $rows);
+
+        static::assertSame('2026-01-01T23:04:05+01:00', $admitted);
+        static::assertSame(
+            $admitted,
+            type_datetime()->assert(BucketsStorageContext::rows($storage->get('b'))[0]->get('at'))->format('c'),
+        );
+
+        $this->fs()->rm($cacheDir);
     }
 }

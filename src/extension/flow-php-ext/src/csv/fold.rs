@@ -200,7 +200,7 @@ impl Narrower {
     /// `StringTemporalParts::from()` past its `hasExplicitDay()` gate: `Date`, `DateTime`, or `None` when the value
     /// is not a calendar date.
     fn temporal(&mut self, value: &[u8]) -> Result<Option<Leaf>, PhpException> {
-        if iso_date_time_gate(value) {
+        if iso_date_time_gate(value).is_some() {
             return Ok(Some(Leaf::DateTime));
         }
 

@@ -33,6 +33,7 @@ use RuntimeException;
 use function implode;
 use function is_int;
 use function sprintf;
+use function var_export;
 
 final class TypeFormatter
 {
@@ -55,6 +56,15 @@ final class TypeFormatter
 
         if ($type instanceof OptionalType) {
             return $this->format($type->base(), true);
+        }
+
+        if ($type instanceof DateTimeType && $type->zoneName() !== 'UTC') {
+            return sprintf(
+                $nullable
+                    ? '\\Flow\\Types\\DSL\\type_optional(\\Flow\\Types\\DSL\\type_datetime(%s))'
+                    : '\\Flow\\Types\\DSL\\type_datetime(%s)',
+                var_export($type->zoneName(), true),
+            );
         }
 
         return $this->formatSimpleType($type, $nullable);

@@ -72,4 +72,9 @@ final class Literal implements ScalarFunction
     {
         return $this->value;
     }
+
+    public function value(): mixed
+    {
+        return $this->value;
+    }
 }

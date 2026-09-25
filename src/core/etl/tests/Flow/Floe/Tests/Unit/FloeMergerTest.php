@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Unit;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use Flow\ETL\Schema\Metadata;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Exception\IncompatibleSchemaException;
@@ -15,6 +17,7 @@ use Flow\Floe\Tests\Double\UnsizedFilesystem;
 use PHPUnit\Framework\TestCase;
 
 use function chr;
+use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
@@ -22,6 +25,7 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
+use function Flow\Types\DSL\type_datetime;
 use function pack;
 use function str_repeat;
 
@@ -390,5 +394,38 @@ final class FloeMergerTest extends TestCase
         $this->expectExceptionMessage('footer does not fit');
 
         (new FloeMerger($fs))->merge([path('memory://torn.floe')], path('memory://out.floe'));
+    }
+
+    public function test_merge_of_different_datetime_zones_widens_to_utc(): void
+    {
+        $fs = memory_filesystem();
+        $warsaw = new DateTimeImmutable('2026-01-02 03:04:05', new DateTimeZone('Europe/Warsaw'));
+        $utc = new DateTimeImmutable('2026-01-02 03:04:05', new DateTimeZone('UTC'));
+        FloeStreamReaderContext::write(
+            $fs,
+            path('memory://warsaw.floe'),
+            rows(schema(datetime_schema('at', zone: 'Europe/Warsaw')), row(['at' => $warsaw])),
+        );
+        FloeStreamReaderContext::write(
+            $fs,
+            path('memory://utc.floe'),
+            rows(schema(datetime_schema('at')), row(['at' => $utc])),
+        );
+
+        (new FloeMerger($fs))->merge([
+            path('memory://warsaw.floe'),
+            path('memory://utc.floe'),
+        ], path('memory://merged.floe'));
+
+        $merged = FloeStreamReaderContext::readAll($fs, path('memory://merged.floe'));
+
+        static::assertSame(
+            'datetime',
+            FloeStreamReaderContext::footer($fs, path('memory://merged.floe'))->schema()->get('at')->type()->toString(),
+        );
+        static::assertSame([$warsaw->getTimestamp(), $utc->getTimestamp()], [
+            type_datetime()->assert($merged->all()[0]->get('at'))->getTimestamp(),
+            type_datetime()->assert($merged->all()[1]->get('at'))->getTimestamp(),
+        ]);
     }
 }

@@ -6,12 +6,13 @@ native datetime decode builds the same DateTimeImmutable as createFromFormat('U.
 <?php
 require __DIR__ . '/bootstrap.php';
 
+use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
+use function Flow\Types\DSL\type_date;
+use function Flow\Types\DSL\type_datetime;
 
-use Flow\ETL\Row\PhpRowHydrator;
+use Flow\ETL\Row\TypedRowValues;
 use Flow\Floe\PhpFloeEncoder;
 use Flow\Floe\RustFloeEncoderNative;
 
@@ -56,8 +57,6 @@ $instants = [
     '-0044-03-15 12:00:00 UTC',
 ];
 
-$schema = schema(datetime_schema('at'));
-$schemaBody = json_encode($schema->normalize(), JSON_THROW_ON_ERROR);
 $values = [];
 
 foreach ($timezones as $timezone) {
@@ -66,21 +65,48 @@ foreach ($timezones as $timezone) {
     }
 }
 
-$bodies = (new PhpFloeEncoder($schema))->encode((new PhpRowHydrator())->dehydrate(rows($schema, ...array_map(static fn($at) => row(['at' => $at]), $values))));
-$php = (new PhpFloeEncoder($schema))->decode($bodies);
-$native = (new RustFloeEncoderNative())->decode($bodies, $schemaBody);
+$bodies = (new PhpFloeEncoder(schema(datetime_schema('at'))))->encode(
+    array_map(static fn(DateTimeImmutable $at): TypedRowValues => new TypedRowValues(['at' => $at], ['at' => type_datetime()]), $values),
+);
 
-$differences = 0;
+foreach (['UTC', 'Europe/Warsaw', '+05:30'] as $zone) {
+    $schema = schema(datetime_schema('at', zone: $zone));
+    $php = (new PhpFloeEncoder($schema))->decode($bodies);
+    $native = (new RustFloeEncoderNative())->decode($bodies, json_encode($schema->normalize(), JSON_THROW_ON_ERROR));
+    $differences = 0;
+    $inZone = 0;
 
-foreach ($php as $index => $expected) {
-    if (observe($expected->values['at']) !== observe($native[$index]->values['at'])) {
-        $differences++;
-        echo 'FAIL: ', $values[$index]->format('Y-m-d H:i:s.u e'), "\n";
-        var_dump(array_diff_assoc(observe($expected->values['at']), observe($native[$index]->values['at'])));
+    foreach ($php as $index => $expected) {
+        if (observe($expected->values['at']) !== observe($native[$index]->values['at'])) {
+            $differences++;
+            echo 'FAIL: ', $values[$index]->format('Y-m-d H:i:s.u e'), "\n";
+            var_dump(array_diff_assoc(observe($expected->values['at']), observe($native[$index]->values['at'])));
+        }
+
+        $inZone += $native[$index]->values['at']->getTimezone()->getName() === $zone ? 1 : 0;
     }
+
+    printf("datetime %s: %d values, %d differences, %d in the column zone\n", $zone, count($php), $differences, $inZone);
 }
 
-echo count($php), ' values, ', $differences, " differences\n";
+$dates = array_map(static fn(DateTimeImmutable $at): DateTimeImmutable => $at->setTime(0, 0), $values);
+$dateSchema = schema(date_schema('on'));
+$dateBodies = (new PhpFloeEncoder($dateSchema))->encode(
+    array_map(static fn(DateTimeImmutable $on): TypedRowValues => new TypedRowValues(['on' => $on], ['on' => type_date()]), $dates),
+);
+$php = (new PhpFloeEncoder($dateSchema))->decode($dateBodies);
+$native = (new RustFloeEncoderNative())->decode($dateBodies, json_encode($dateSchema->normalize(), JSON_THROW_ON_ERROR));
+$differences = 0;
+$own = 0;
+
+foreach ($php as $index => $expected) {
+    $differences += observe($expected->values['on']) === observe($native[$index]->values['on']) ? 0 : 1;
+    $own += $native[$index]->values['on']->getTimezone()->getName() === $dates[$index]->getTimezone()->getName() ? 1 : 0;
+}
+
+printf("date: %d values, %d differences, %d kept their own zone\n", count($php), $differences, $own);
+
+$schemaBody = json_encode(schema(datetime_schema('at'))->normalize(), JSON_THROW_ON_ERROR);
 
 $overlong = pack('P', 0) . pack('V', 1_000_000) . pack('V', 3) . 'UTC';
 
@@ -92,13 +118,16 @@ try {
 }
 
 try {
-    (new PhpFloeEncoder($schema))->decode(["\x01" . $overlong]);
+    (new PhpFloeEncoder(schema(datetime_schema('at'))))->decode(["\x01" . $overlong]);
     echo "FAIL: no exception\n";
 } catch (Flow\Floe\Exception\FloeException $e) {
     echo $e->getMessage(), "\n";
 }
 ?>
 --EXPECT--
-110 values, 0 differences
+datetime UTC: 110 values, 0 differences, 110 in the column zone
+datetime Europe/Warsaw: 110 values, 0 differences, 110 in the column zone
+datetime +05:30: 110 values, 0 differences, 110 in the column zone
+date: 110 values, 0 differences, 110 kept their own zone
 flow_php failed to restore datetime from timestamp "0"
 Floe failed to restore datetime from timestamp "0"

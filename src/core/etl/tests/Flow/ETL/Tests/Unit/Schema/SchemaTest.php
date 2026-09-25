@@ -20,6 +20,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 use function array_keys;
 use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\integer_schema;
 use function Flow\ETL\DSL\json_schema;
@@ -929,5 +930,14 @@ final class SchemaTest extends FlowTestCase
                 schema(int_schema('id'))->matchOrderTo(schema(int_schema('id'), str_schema('name')))->definitions(),
             ),
         );
+    }
+
+    public function test_zoned_definitions_are_computed_in_the_constructor(): void
+    {
+        $schema = schema(int_schema('i'), datetime_schema('at'));
+
+        static::assertSame(['at'], array_keys($schema->zonedDefinitions()));
+        static::assertSame(['b'], array_keys($schema->rename('at', 'b')->zonedDefinitions()));
+        static::assertSame([], $schema->remove('at')->zonedDefinitions());
     }
 }

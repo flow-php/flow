@@ -10,6 +10,7 @@ use RuntimeException;
 
 use function class_exists;
 use function extension_loaded;
+use function method_exists;
 
 final class NativeRowHydrator implements Hydrator
 {
@@ -26,7 +27,11 @@ final class NativeRowHydrator implements Hydrator
 
     public static function isSupported(): bool
     {
-        return extension_loaded('flow_php') && class_exists(RustRowHydratorNative::class, false);
+        return (
+            extension_loaded('flow_php')
+            && class_exists(RustRowHydratorNative::class, false)
+            && method_exists(RustRowHydratorNative::class, 'datetimeZones')
+        );
     }
 
     public function dehydrate(Rows $rows): array

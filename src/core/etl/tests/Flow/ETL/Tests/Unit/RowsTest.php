@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\SchemaMismatchException;
@@ -16,6 +18,7 @@ use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\ref;
@@ -25,8 +28,10 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\structure_schema;
+use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function iterator_to_array;
@@ -1052,5 +1057,49 @@ final class RowsTest extends FlowTestCase
         $this->expectExceptionMessage('Cannot merge Rows with different schemas');
 
         $left->merge($right);
+    }
+
+    public function test_a_row_in_zone_is_kept(): void
+    {
+        $row = row(['at' => new DateTimeImmutable('2026-01-02 03:04:05', new DateTimeZone('Europe/Warsaw'))]);
+
+        static::assertSame($row, $row->matchTo(schema(datetime_schema('at', zone: 'Europe/Warsaw'))));
+    }
+
+    public function test_rows_hop_a_foreign_zone_at_ingest(): void
+    {
+        static::assertSame(
+            '2026-01-01 22:04:05 UTC',
+            type_datetime()
+                ->assert(rows(
+                    schema(datetime_schema('at')),
+                    row(['at' => new DateTimeImmutable('2026-01-02 03:04:05+05:00')]),
+                )->first()->get('at'))
+                ->format('Y-m-d H:i:s e'),
+        );
+    }
+
+    public function test_rows_hop_nested_datetimes(): void
+    {
+        static::assertSame(
+            '2026-01-02 04:04:05 Europe/Warsaw',
+            type_list(type_datetime())
+                ->assert(rows(
+                    schema(list_schema('l', type_list(type_datetime('Europe/Warsaw')))),
+                    row(['l' => [new DateTimeImmutable('2026-01-02 03:04:05', new DateTimeZone('UTC'))]]),
+                )->first()->get('l'))[0]->format('Y-m-d H:i:s e'),
+        );
+    }
+
+    public function test_rows_hop_nested_optional_datetimes(): void
+    {
+        static::assertSame(
+            '2026-01-02 04:04:05 Europe/Warsaw',
+            type_list(type_optional(type_datetime()))
+                ->assert(rows(
+                    schema(list_schema('l', type_list(type_optional(type_datetime('Europe/Warsaw'))))),
+                    row(['l' => [new DateTimeImmutable('2026-01-02 03:04:05', new DateTimeZone('UTC')), null]]),
+                )->first()->get('l'))[0]?->format('Y-m-d H:i:s e'),
+        );
     }
 }

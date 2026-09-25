@@ -86,8 +86,10 @@ The default sample is the first `20 480` rows of up to `10` files. Every inferre
 narrowing is not safe the column floors to `string`.
 
 A workbook has its own cell types, so inference reads those first: a numeric cell is `integer` or `float`, a boolean
-cell is `boolean`, a date-formatted cell is `date` or `datetime`. A cell holding **text** stays `string` even when the
-text looks like something else - `TRUE`, `12.9` and `2023-10-02` are all text a spreadsheet author chose not to type.
+cell is `boolean`, a date-formatted cell is `date` or `datetime`. A date cell has no zone, so it reads as a UTC wall
+clock whatever `date.timezone` says; `withSchema(schema(datetime_schema('d', zone: 'Europe/Warsaw')))` converts it.
+A cell holding **text** stays `string` even when the text looks like something else - `TRUE`, `12.9` and `2023-10-02`
+are all text a spreadsheet author chose not to type.
 
 The exception is types a cell cannot hold at all. There is no uuid, json or timezone cell, so text is the only way to
 write one and text is narrowed for exactly those three:

@@ -260,6 +260,12 @@ impl RustFloeEncoderNative {
             &mut self.ctx,
         )
     }
+
+    /// Present in every extension whose casts and decoders apply the datetime column zone.
+    #[php(name = "datetimeZones")]
+    pub fn datetime_zones(&self) -> bool {
+        true
+    }
 }
 
 /// Native counterpart of `PhpRowHydrator`: `hydrate` builds `Flow\ETL\Rows` from
@@ -313,6 +319,12 @@ impl RustRowHydratorNative {
             &mut self.def_dehydrate_fns,
             &mut self.ctx,
         )
+    }
+
+    /// Present in every extension whose casts and decoders apply the datetime column zone.
+    #[php(name = "datetimeZones")]
+    pub fn datetime_zones(&self) -> bool {
+        true
     }
 }
 

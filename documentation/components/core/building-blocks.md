@@ -81,6 +81,9 @@ the column name, its [Flow Type](/documentation/components/libs/types.md), nulla
 | XML          | `xml_schema()`                     | [XMLDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/XMLDefinition.php)                 |
 | XML Element  | `xml_element_schema()`             | [XMLElementDefinition](/src/core/etl/src/Flow/ETL/Schema/Definition/XMLElementDefinition.php)   |
 
+A `datetime` column has one time zone, UTC by default: `datetime_schema('at', zone: 'Europe/Warsaw')`. A value in any
+other zone is converted to it when the row is admitted, the instant unchanged.
+
 A column holds exactly one type. `null|T` spells a nullable column, and a nullable list element, map value or
 structure element; every other union is refused. Declare the widest common type with `str_schema()`, or
 `json_schema()` when the shape is genuinely dynamic.

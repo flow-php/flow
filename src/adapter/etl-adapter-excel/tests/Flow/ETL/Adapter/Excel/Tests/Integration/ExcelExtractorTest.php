@@ -31,6 +31,7 @@ use function Flow\ETL\Adapter\Excel\DSL\from_excel;
 use function Flow\ETL\Adapter\Excel\DSL\is_valid_excel_sheet_name;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\date_schema;
+use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_rows;
@@ -44,6 +45,7 @@ use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path_real;
+use function Flow\Types\DSL\type_datetime;
 use function max;
 
 final class ExcelExtractorTest extends FlowTestCase
@@ -899,5 +901,50 @@ final class ExcelExtractorTest extends FlowTestCase
         )])), false);
 
         static::assertEquals(Cardinality::unknown(), $extractor->statistics()->rows);
+    }
+
+    public function test_date_cell_in_a_zoned_column_is_converted(): void
+    {
+        static::assertSame(
+            '2024-01-03 11:30:00 Europe/Warsaw',
+            type_datetime()
+                ->assert(df()
+                    ->extract(
+                        from_excel(ExcelFixtureContext::file('dates_mixed.xlsx'))
+                            ->withSchema(schema(datetime_schema('d', zone: 'Europe/Warsaw'))),
+                    )
+                    ->fetch()
+                    ->all()[2]->get('d'))
+                ->format('Y-m-d H:i:s e'),
+        );
+    }
+
+    public function test_date_cells_read_as_utc_wall_clock_under_non_utc_default(): void
+    {
+        $previous = date_default_timezone_get();
+        date_default_timezone_set('Asia/Tokyo');
+
+        try {
+            static::assertSame(
+                '2024-01-03 10:30:00 UTC',
+                type_datetime()
+                    ->assert(df()
+                        ->extract(from_excel(ExcelFixtureContext::file('dates_mixed.xlsx')))
+                        ->fetch()
+                        ->all()[2]->get('d'))
+                    ->format('Y-m-d H:i:s e'),
+            );
+            static::assertSame(
+                '2024-01-03 10:30:00 UTC',
+                type_datetime()
+                    ->assert(df()
+                        ->extract(from_excel(ExcelFixtureContext::file('dates_mixed.ods')))
+                        ->fetch()
+                        ->all()[1]->get('d'))
+                    ->format('Y-m-d H:i:s e'),
+            );
+        } finally {
+            date_default_timezone_set($previous);
+        }
     }
 }

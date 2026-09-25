@@ -63,4 +63,30 @@ final class ScalarUnificationTest extends TestCase
             static::assertTrue(type_equals($expected, $result), $result->toString());
         }
     }
+
+    public function test_date_and_zoned_datetime_keep_the_zone(): void
+    {
+        static::assertSame(
+            'datetime<Europe/Warsaw>',
+            (new ScalarUnification())
+                ->unify(type_date(), type_datetime('Europe/Warsaw'))
+                ?->toString(),
+        );
+        static::assertSame(
+            'datetime<Europe/Warsaw>',
+            (new ScalarUnification())
+                ->unify(type_datetime('Europe/Warsaw'), type_date())
+                ?->toString(),
+        );
+    }
+
+    public function test_datetimes_of_different_zones_widen_to_utc(): void
+    {
+        static::assertSame(
+            'datetime',
+            (new ScalarUnification())
+                ->unify(type_datetime('Europe/Warsaw'), type_datetime('+02:00'))
+                ?->toString(),
+        );
+    }
 }

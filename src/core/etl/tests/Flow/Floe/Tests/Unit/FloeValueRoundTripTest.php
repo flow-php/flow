@@ -65,9 +65,9 @@ final class FloeValueRoundTripTest extends TestCase
         static::assertEquals(
             $rows = rows(
                 schema(
-                    datetime_schema('immutable'),
-                    datetime_schema('mutable'),
-                    datetime_schema('offset_timezone'),
+                    datetime_schema('immutable', zone: 'Europe/Warsaw'),
+                    datetime_schema('mutable', zone: 'America/New_York'),
+                    datetime_schema('offset_timezone', zone: '+02:30'),
                     datetime_schema('before_epoch'),
                     date_schema('date'),
                 ),

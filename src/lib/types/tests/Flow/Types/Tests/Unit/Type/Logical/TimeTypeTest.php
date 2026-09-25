@@ -11,6 +11,7 @@ use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -224,5 +225,18 @@ final class TimeTypeTest extends TestCase
     public function test_to_string(): void
     {
         static::assertSame('time', type_time()->toString());
+    }
+
+    #[TestWith(['2026-01-01 00:05:07', 'UTC', '00:05:07.000000'])]
+    #[TestWith(['2026-01-01 10:00:00+05:00', 'UTC', '10:00:00.000000'])]
+    #[TestWith(['2026-01-01 22:00:00-05:00', 'UTC', '22:00:00.000000'])]
+    #[TestWith(['2026-03-29 10:00', 'Europe/Warsaw', '10:00:00.000000'])]
+    #[TestWith(['2026-10-25 10:00:00.25', 'Europe/Warsaw', '10:00:00.250000'])]
+    public function test_time_of_day_is_the_wall_clock(string $value, string $zone, string $expected): void
+    {
+        $time = type_time()->cast(new DateTimeImmutable($value, new DateTimeZone($zone)));
+
+        static::assertSame($expected, $time->format('%H:%I:%S.%F'));
+        static::assertSame(0, $time->d);
     }
 }

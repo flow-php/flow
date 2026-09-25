@@ -75,4 +75,12 @@ final class RustFloeEncoderNative
     {
         throw new RuntimeException('flow_php extension is not loaded');
     }
+
+    /**
+     * Present in every extension whose casts and decoders apply the datetime column zone.
+     */
+    public function datetimeZones(): bool
+    {
+        throw new RuntimeException('flow_php extension is not loaded');
+    }
 }

@@ -91,11 +91,7 @@ final readonly class OptionalType implements Type
      */
     public function cast(mixed $value): mixed
     {
-        if ($this->isValid($value)) {
-            return $value;
-        }
-
-        return $this->base->cast($value);
+        return $value === null ? null : $this->base->cast($value);
     }
 
     public function isValid(mixed $value): bool

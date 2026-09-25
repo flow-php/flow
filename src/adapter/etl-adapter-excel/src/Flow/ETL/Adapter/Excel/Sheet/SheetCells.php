@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Excel\Sheet;
 
 use DateInterval;
+use DateTimeImmutable;
 use DateTimeInterface;
+use DateTimeZone;
 use Generator;
 use OpenSpout\Common\Entity\Cell;
+use OpenSpout\Common\Entity\Cell\DateTimeCell;
 use OpenSpout\Reader\SheetInterface;
 use OpenSpout\Reader\XLSX\Sheet as XlsxSheet;
 
@@ -68,8 +71,12 @@ final readonly class SheetCells
             return;
         }
 
+        static $utc = new DateTimeZone('UTC');
+
         foreach ($this->sheet->getRowIterator() as $sheetRow) {
-            yield array_map(static fn(Cell $cell) => $cell->getValue(), $sheetRow->cells);
+            yield array_map(static fn(Cell $cell) => $cell instanceof DateTimeCell
+                ? new DateTimeImmutable($cell->getValue()->format('Y-m-d H:i:s.u'), $utc)
+                : $cell->getValue(), $sheetRow->cells);
         }
     }
 }

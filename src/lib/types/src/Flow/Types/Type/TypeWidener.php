@@ -84,7 +84,11 @@ final readonly class TypeWidener
             ($left instanceof DateType || $left instanceof DateTimeType)
             && ($right instanceof DateType || $right instanceof DateTimeType)
         ) {
-            return type_datetime();
+            return match (true) {
+                $left instanceof DateTimeType && $right instanceof DateTimeType => type_datetime(),
+                $left instanceof DateTimeType => $left,
+                default => $right,
+            };
         }
 
         if ($left instanceof StructureType && $right instanceof StructureType) {

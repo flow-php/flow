@@ -8,6 +8,7 @@ use DateInterval;
 use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
+use DateTimeZone;
 use DOMElement;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
@@ -39,6 +40,8 @@ final readonly class DateType implements Type
 
     public function cast(mixed $value): DateTimeInterface
     {
+        static $utc = new DateTimeZone('UTC');
+
         if ($this->isValid($value)) {
             return $value;
         }
@@ -49,12 +52,12 @@ final readonly class DateType implements Type
 
         try {
             if ($value instanceof DateTimeImmutable || $value instanceof DateTime) {
-                return $value->setTime(0, 0, 0, 0);
+                return DateTimeImmutable::createFromInterface($value)->setTime(0, 0, 0, 0);
             }
 
             if (is_string($value)) {
                 if (StringTemporalParts::isoDate($value)) {
-                    return new DateTimeImmutable($value);
+                    return new DateTimeImmutable($value, $utc);
                 }
 
                 $parts = StringTemporalParts::from($value);
@@ -65,19 +68,26 @@ final readonly class DateType implements Type
                     throw new CastingException($value, $this, reason: 'value is not a calendar date');
                 }
 
-                return (new DateTimeImmutable($value))->setTime(0, 0, 0, 0);
+                return new DateTimeImmutable((new DateTimeImmutable($value))->format('Y-m-d'), $utc);
             }
 
             if (is_numeric($value)) {
-                return (new DateTimeImmutable('@' . $value))->setTime(0, 0, 0, 0);
+                return (new DateTimeImmutable('@' . $value))
+                    ->setTimezone($utc)
+                    ->setTime(0, 0, 0, 0);
             }
 
             if (is_bool($value)) {
-                return (new DateTimeImmutable('@' . (int) $value))->setTime(0, 0, 0, 0);
+                return (new DateTimeImmutable('@' . (int) $value))
+                    ->setTimezone($utc)
+                    ->setTime(0, 0, 0, 0);
             }
 
             if ($value instanceof DateInterval) {
-                return (new DateTimeImmutable('@0'))->add($value)->setTime(0, 0, 0, 0);
+                return (new DateTimeImmutable('@0'))
+                    ->add($value)
+                    ->setTimezone($utc)
+                    ->setTime(0, 0, 0, 0);
             }
         } catch (Throwable) {
             throw new CastingException($value, $this);

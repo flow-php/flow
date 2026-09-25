@@ -93,3 +93,10 @@ A version-skewed pair fails loudly instead of writing wrong bytes:
 
 Either message means the extension and `flow-php/etl` disagree on the structure schema format:
 reinstall one to match the other, or set the Floe engine to `FloeEngine::php` while upgrading.
+
+Datetime column zones do not fail, they degrade:
+
+- new `flow-php/etl` with an extension that predates column zones: the extension is ignored and the
+  PHP engine runs
+- old `flow-php/etl` with a current extension: a zone-less `datetime` column keeps that library's
+  behaviour, each value in its stored zone

@@ -9,10 +9,12 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Hash\Algorithm;
 use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Schema\Definition\ZoneAlignment;
 use Flow\ETL\Schema\SimilarNames;
 use Flow\Types\Type\TypedValueFormatter;
 use Flow\Types\Value\Json;
 
+use function array_diff_key;
 use function array_key_exists;
 use function array_keys;
 use function array_map;
@@ -165,9 +167,11 @@ final readonly class Row
     private function conform(Schema $schema, bool $checkValues): self
     {
         $definitions = $schema->definitions();
+        $columns = $checkValues ? $schema->zonedDefinitions() : [];
+        $changed = false;
 
         if (count($this->values) === count($definitions) && array_keys($this->values) === array_keys($definitions)) {
-            foreach ($definitions as $name => $definition) {
+            foreach ($columns === [] ? $definitions : array_diff_key($definitions, $columns) as $name => $definition) {
                 if (
                     $checkValues
                         ? !$definition->matches($this->values[$name])
@@ -177,44 +181,75 @@ final readonly class Row
                 }
             }
 
-            return $this;
-        }
+            if ($columns === []) {
+                return $this;
+            }
 
-        $matched = [];
-        $taken = 0;
+            $values = $this->values;
+        } else {
+            $matched = [];
+            $taken = 0;
 
-        foreach ($definitions as $name => $definition) {
-            if (!array_key_exists($name, $this->values)) {
-                if (!$definition->isNullable()) {
-                    throw ColumnMismatchException::missingColumn($definition);
+            foreach ($definitions as $name => $definition) {
+                if (!array_key_exists($name, $this->values)) {
+                    if (!$definition->isNullable()) {
+                        throw ColumnMismatchException::missingColumn($definition);
+                    }
+
+                    $matched[$name] = null;
+
+                    continue;
                 }
 
-                $matched[$name] = null;
+                $taken++;
 
+                if (
+                    $checkValues
+                        ? !$definition->matches($this->values[$name])
+                        : $this->values[$name] === null && !$definition->isNullable()
+                ) {
+                    throw ColumnMismatchException::valueDoesNotMatch($definition, $this->values[$name]);
+                }
+
+                $matched[$name] = $this->values[$name];
+            }
+
+            if ($taken !== count($this->values)) {
+                foreach ($this->values as $name => $_) {
+                    if (!array_key_exists($name, $definitions)) {
+                        throw ColumnMismatchException::unexpectedColumn((string) $name);
+                    }
+                }
+            }
+
+            if ($columns === []) {
+                return new self($matched);
+            }
+
+            $values = $matched;
+            $changed = true;
+        }
+
+        $alignment = new ZoneAlignment();
+
+        foreach ($columns as $name => $definition) {
+            if ($alignment->inZone($definition, $values[$name])) {
                 continue;
             }
 
-            $taken++;
-
-            if (
-                $checkValues
-                    ? !$definition->matches($this->values[$name])
-                    : $this->values[$name] === null && !$definition->isNullable()
-            ) {
-                throw ColumnMismatchException::valueDoesNotMatch($definition, $this->values[$name]);
+            if (!$definition->matches($values[$name])) {
+                throw ColumnMismatchException::valueDoesNotMatch($definition, $values[$name]);
             }
 
-            $matched[$name] = $this->values[$name];
-        }
+            // @mago-ignore analysis:mixed-assignment
+            $aligned = $alignment->align($definition, $values[$name]);
 
-        if ($taken !== count($this->values)) {
-            foreach ($this->values as $name => $_) {
-                if (!array_key_exists($name, $definitions)) {
-                    throw ColumnMismatchException::unexpectedColumn((string) $name);
-                }
+            if ($aligned !== $values[$name]) {
+                $values[$name] = $aligned;
+                $changed = true;
             }
         }
 
-        return new self($matched);
+        return $changed ? new self($values) : $this;
     }
 }

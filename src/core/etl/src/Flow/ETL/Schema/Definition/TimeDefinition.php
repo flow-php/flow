@@ -115,15 +115,11 @@ final readonly class TimeDefinition implements Definition
             );
         }
 
-        if ($definition instanceof DateDefinition || $definition instanceof DateTimeDefinition) {
-            return new DateTimeDefinition(
-                $this->ref,
-                $this->nullable || $definition->isNullable(),
-                $this->metadata->merge($definition->metadata()),
-            );
-        }
-
-        if ($definition instanceof StringDefinition) {
+        if (
+            $definition instanceof DateDefinition
+            || $definition instanceof DateTimeDefinition
+            || $definition instanceof StringDefinition
+        ) {
             return new StringDefinition(
                 $this->ref,
                 $this->nullable || $definition->isNullable(),

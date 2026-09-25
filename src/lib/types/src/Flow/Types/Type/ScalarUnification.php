@@ -46,7 +46,11 @@ final readonly class ScalarUnification
             ($left instanceof DateType || $left instanceof DateTimeType)
             && ($right instanceof DateType || $right instanceof DateTimeType)
         ) {
-            return type_datetime();
+            return match (true) {
+                $left instanceof DateTimeType && $right instanceof DateTimeType => type_datetime(),
+                $left instanceof DateTimeType => $left,
+                default => $right,
+            };
         }
 
         return null;

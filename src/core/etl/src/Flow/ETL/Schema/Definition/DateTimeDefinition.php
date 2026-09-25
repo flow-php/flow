@@ -9,7 +9,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Metadata;
-use Flow\Types\Type;
+use Flow\Types\Type\Logical\DateTimeType;
 
 use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_equals;
@@ -25,18 +25,22 @@ final readonly class DateTimeDefinition implements Definition
     private Reference $ref;
 
     /**
-     * @var Type<\DateTimeInterface>
+     * @var DateTimeType<\DateTimeInterface>
      */
-    private Type $type;
+    private DateTimeType $type;
 
+    /**
+     * @param DateTimeType<\DateTimeInterface> $type
+     */
     public function __construct(
         string|Reference $ref,
+        DateTimeType $type = new DateTimeType(),
         private bool $nullable = false,
         ?Metadata $metadata = null,
     ) {
         $this->ref = UnresolvedReference::init($ref);
+        $this->type = $type;
         $this->metadata = $metadata ?? Metadata::empty();
-        $this->type = type_datetime();
     }
 
     /**
@@ -44,7 +48,7 @@ final readonly class DateTimeDefinition implements Definition
      */
     public function addMetadata(string $key, int|string|bool|float|array $value): static
     {
-        return new self($this->ref, $this->nullable, $this->metadata->add($key, $value));
+        return new self($this->ref, $this->type, $this->nullable, $this->metadata->add($key, $value));
     }
 
     public function entry(): Reference
@@ -62,7 +66,7 @@ final readonly class DateTimeDefinition implements Definition
             return false;
         }
 
-        return type_equals($this->type, $definition->type());
+        return $definition->type() instanceof DateTimeType;
     }
 
     public function isNullable(): bool
@@ -85,7 +89,7 @@ final readonly class DateTimeDefinition implements Definition
 
     public function makeNullable(bool $nullable = true): static
     {
-        return new self($this->ref, $nullable, $this->metadata);
+        return new self($this->ref, $this->type, $nullable, $this->metadata);
     }
 
     public function matches(mixed $value): bool
@@ -107,19 +111,25 @@ final readonly class DateTimeDefinition implements Definition
             return $this->makeNullable()->setMetadata($this->metadata->merge($definition->metadata()));
         }
 
-        if (
-            $definition instanceof self
-            || $definition instanceof DateDefinition
-            || $definition instanceof TimeDefinition
-        ) {
+        if ($definition instanceof self) {
             return new self(
                 $this->ref,
+                type_equals($this->type, $definition->type) ? $this->type : type_datetime(),
                 $this->nullable || $definition->isNullable(),
                 $this->metadata->merge($definition->metadata()),
             );
         }
 
-        if ($definition instanceof StringDefinition) {
+        if ($definition instanceof DateDefinition) {
+            return new self(
+                $this->ref,
+                $this->type,
+                $this->nullable || $definition->isNullable(),
+                $this->metadata->merge($definition->metadata()),
+            );
+        }
+
+        if ($definition instanceof TimeDefinition || $definition instanceof StringDefinition) {
             return new StringDefinition(
                 $this->ref,
                 $this->nullable || $definition->isNullable(),
@@ -150,15 +160,18 @@ final readonly class DateTimeDefinition implements Definition
 
     public function rename(string $newName): static
     {
-        return new self($newName, $this->nullable, $this->metadata);
+        return new self($newName, $this->type, $this->nullable, $this->metadata);
     }
 
     public function setMetadata(Metadata $metadata): static
     {
-        return new self($this->ref, $this->nullable, $metadata);
+        return new self($this->ref, $this->type, $this->nullable, $metadata);
     }
 
-    public function type(): Type
+    /**
+     * @return DateTimeType<\DateTimeInterface>
+     */
+    public function type(): DateTimeType
     {
         return $this->type;
     }

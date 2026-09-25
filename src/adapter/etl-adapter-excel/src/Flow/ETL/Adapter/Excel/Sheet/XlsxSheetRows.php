@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel\Sheet;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use DOMElement;
 use Generator;
+use OpenSpout\Common\Entity\Cell\DateTimeCell;
 use OpenSpout\Common\Exception\InvalidArgumentException;
 use OpenSpout\Common\Exception\IOException;
 use OpenSpout\Reader\Exception\XMLProcessingException;
@@ -79,6 +82,8 @@ final readonly class XlsxSheetRows
      */
     public function values(): Generator
     {
+        static $utc = new DateTimeZone('UTC');
+
         $reader = new XMLReader();
         // libxml reports into its own buffer only while this generator runs - never across a yield
         $internalErrors = libxml_use_internal_errors(true);
@@ -108,7 +113,10 @@ final readonly class XlsxSheetRows
                         throw self::failure();
                     }
 
-                    $values[$column] = $this->formatter->extractAndFormatNodeValue($node)->getValue();
+                    $cell = $this->formatter->extractAndFormatNodeValue($node);
+                    $values[$column] = $cell instanceof DateTimeCell
+                        ? new DateTimeImmutable($cell->getValue()->format('Y-m-d H:i:s.u'), $utc)
+                        : $cell->getValue();
                     $moved = $reader->next();
 
                     continue;

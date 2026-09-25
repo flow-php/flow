@@ -644,10 +644,10 @@ impl Ctx {
         Ok(self.format_u.as_ref().expect("just initialized"))
     }
 
-    /// Cached `"H:i:s"` format-string zval for the date midnight check.
+    /// Cached `"H:i:s.u"` format-string zval for the date midnight check.
     pub fn format_his(&mut self) -> Result<&Zval, PhpException> {
         if self.format_his.is_none() {
-            self.format_his = Some(zval_str(b"H:i:s"));
+            self.format_his = Some(zval_str(b"H:i:s.u"));
         }
 
         Ok(self.format_his.as_ref().expect("just initialized"))

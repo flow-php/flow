@@ -28,7 +28,7 @@ $schema = schema(
     int_schema('id'),
     str_schema('name', nullable: true),
     float_schema('price'),
-    datetime_schema('at'),
+    datetime_schema('at', zone: 'Europe/Warsaw'),
     uuid_schema('u'),
     list_schema('nums', type_list(type_integer())),
 );

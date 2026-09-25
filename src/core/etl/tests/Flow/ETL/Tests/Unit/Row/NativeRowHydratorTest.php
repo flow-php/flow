@@ -48,6 +48,7 @@ use function Flow\ETL\DSL\time_schema;
 use function Flow\ETL\DSL\uuid_schema;
 use function Flow\ETL\DSL\xml_schema;
 use function Flow\Types\DSL\structure_element;
+use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
@@ -168,6 +169,25 @@ final class NativeRowHydratorTest extends FlowTestCase
             ],
         ];
 
+        yield 'nested optional datetimes and structures move into the declared shape' => [
+            schema(
+                list_schema('at', type_list(type_optional(type_datetime('Europe/Warsaw')))),
+                structure_schema('s', type_structure([
+                    'at' => type_optional(type_datetime('Europe/Warsaw')),
+                    'inner' => type_optional(type_structure(['a' => type_integer(), 'b' => type_string()])),
+                ])),
+            ),
+            [
+                new RawRowValues([
+                    'at' => [new DateTimeImmutable('2026-01-02 03:04:05', new DateTimeZone('UTC')), null],
+                    's' => [
+                        'at' => new DateTimeImmutable('2026-01-02 03:04:05', new DateTimeZone('UTC')),
+                        'inner' => ['b' => 'x', 'a' => 1],
+                    ],
+                ]),
+            ],
+        ];
+
         yield 'nested positive integer and string family elements' => [
             schema(
                 list_schema('counts', type_list(type_positive_integer())),
@@ -201,7 +221,11 @@ final class NativeRowHydratorTest extends FlowTestCase
         $shared = new DateTimeImmutable('2025-01-01 12:00:00.123456', new DateTimeZone('Europe/Warsaw'));
 
         yield 'temporal columns preserving object identity topology' => [
-            schema(datetime_schema('at'), datetime_schema('at2'), date_schema('d')),
+            schema(
+                datetime_schema('at', zone: 'Europe/Warsaw'),
+                datetime_schema('at2', zone: 'Europe/Warsaw'),
+                date_schema('d'),
+            ),
             [
                 new RawRowValues(['at' => $shared, 'at2' => $shared, 'd' => $shared]),
                 new RawRowValues([
