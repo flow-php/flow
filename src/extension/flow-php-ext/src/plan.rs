@@ -58,8 +58,6 @@ pub struct TypeJson {
     #[serde(default)]
     fields: Vec<StructureElementJson>,
     #[serde(default)]
-    allow_extra: bool,
-    #[serde(default)]
     zone: Option<String>,
 }
 
@@ -93,10 +91,6 @@ impl TypeJson {
 
     pub fn fields(&self) -> &[StructureElementJson] {
         &self.fields
-    }
-
-    pub fn allow_extra(&self) -> bool {
-        self.allow_extra
     }
 
     pub fn zone(&self) -> Option<&[u8]> {
@@ -192,12 +186,6 @@ fn build_decoder(type_json: &TypeJson) -> Result<Decoder, PhpException> {
 
             for field in &type_json.fields {
                 elements.push((field.name.clone().into_bytes(), build_decoder(&field.type_)?));
-            }
-
-            if type_json.allow_extra {
-                return Err(ext_exception(
-                    "flow_php does not support structures that allow extra values",
-                ));
             }
 
             Decoder::Structure(elements)

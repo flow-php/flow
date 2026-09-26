@@ -351,22 +351,10 @@ final class TypeWidenerTest extends TestCase
             type_structure(['id' => type_integer(), 'name' => type_optional(type_string())]),
         ];
 
-        yield 'allow extra on the left wins' => [
-            type_structure(['id' => type_integer()], true),
-            type_structure(['id' => type_integer()], false),
-            type_structure(['id' => type_integer()], true),
-        ];
-
-        yield 'allow extra on the right wins' => [
-            type_structure(['id' => type_integer()], false),
-            type_structure(['id' => type_integer()], true),
-            type_structure(['id' => type_integer()], true),
-        ];
-
-        yield 'allow extra false on both sides stays false' => [
-            type_structure(['id' => type_integer()], false),
-            type_structure(['id' => type_integer()], false),
-            type_structure(['id' => type_integer()], false),
+        yield 'identical structures widen to themselves' => [
+            type_structure(['id' => type_integer()]),
+            type_structure(['id' => type_integer()]),
+            type_structure(['id' => type_integer()]),
         ];
 
         yield 'nested structures merge recursively when equal' => [

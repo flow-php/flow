@@ -51,25 +51,15 @@ final class TypeStructureShapeTest extends TestCase
         static::assertSame([false, false, false], [$shape['a'][0], $shape['b'][0], $shape['c'][0]]);
     }
 
-    public function test_literal_allow_extra_unseals_the_shape(): void
+    public function test_derived_shape_is_sealed(): void
     {
-        $derived = (new TypeStructureShape())->derive(InvocationMother::typeStructure(
-            InvocationMother::sealedMap(InvocationMother::item('id', InvocationMother::flowType(Type::int()))),
-            Type::true(),
-        ));
+        $keyedArray = DerivedShapeContext::keyedArray((new TypeStructureShape())->derive(InvocationMother::typeStructure(InvocationMother::sealedMap(InvocationMother::item(
+            'id',
+            InvocationMother::flowType(Type::int()),
+        )))));
 
-        $keyedArray = DerivedShapeContext::keyedArray($derived);
-
-        static::assertNotNull($keyedArray->keyType);
-        static::assertNotNull($keyedArray->valueType);
-    }
-
-    public function test_non_literal_allow_extra_refuses_to_derive(): void
-    {
-        static::assertNull((new TypeStructureShape())->derive(InvocationMother::typeStructure(
-            InvocationMother::sealedMap(InvocationMother::item('id', InvocationMother::flowType(Type::int()))),
-            Type::bool(),
-        )));
+        static::assertNull($keyedArray->keyType);
+        static::assertNull($keyedArray->valueType);
     }
 
     public function test_unsealed_elements_refuse_to_derive(): void

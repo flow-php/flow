@@ -276,10 +276,6 @@ final class ValueDecoder
     private function structureDecoder(Type $type): Decoding\ValueDecoder
     {
         /** @var StructureType<array<array-key, mixed>> $type */
-        if ($type->allowsExtra()) {
-            throw new FloeException('Floe does not support structures that allow extra values');
-        }
-
         $elements = [];
 
         foreach ($type->elements() as $element) {

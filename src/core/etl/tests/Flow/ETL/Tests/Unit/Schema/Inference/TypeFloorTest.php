@@ -249,13 +249,12 @@ final class TypeFloorTest extends FlowTestCase
         $floored = (new TypeFloor(new InferredTypes(type_string())))->floor(type_structure([
             'b' => structure_element('b', type_null(), optional: true),
             'a' => type_integer(),
-        ], allow_extra: true));
+        ]));
 
         static::assertInstanceOf(StructureType::class, $floored);
         static::assertSame(['b', 'a'], array_map(static fn($element) => $element->name, $floored->elements()));
         static::assertTrue($floored->elements()[0]->optional);
         static::assertFalse($floored->elements()[1]->optional);
-        static::assertTrue($floored->allowsExtra());
     }
 
     public function test_the_array_to_json_projection_happens_at_depth(): void

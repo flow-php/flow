@@ -18,10 +18,6 @@ final readonly class StructureComparison
      */
     public function identical(StructureType $left, StructureType $right, Comparator $comparator): bool
     {
-        if ($left->allowsExtra() !== $right->allowsExtra()) {
-            return false;
-        }
-
         if (count($left->elements()) !== count($right->elements())) {
             return false;
         }

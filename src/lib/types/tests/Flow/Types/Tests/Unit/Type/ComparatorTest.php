@@ -139,18 +139,13 @@ final class ComparatorTest extends TestCase
             false,
         ];
         yield [
-            type_structure(['a' => type_integer()], false),
-            type_structure(['a' => type_integer()], true),
-            false,
-        ];
-        yield [
-            type_structure(['a' => type_integer()], true),
-            type_structure(['a' => type_integer()], true),
+            type_structure(['a' => type_integer()]),
+            type_structure(['a' => type_integer()]),
             true,
         ];
         yield [
-            type_structure(['a' => type_integer(), 'b' => structure_element('b', type_string(), optional: true)], true),
-            type_structure(['a' => type_integer(), 'b' => structure_element('b', type_string(), optional: true)], true),
+            type_structure(['a' => type_integer(), 'b' => structure_element('b', type_string(), optional: true)]),
+            type_structure(['a' => type_integer(), 'b' => structure_element('b', type_string(), optional: true)]),
             true,
         ];
         yield 'same fields, different order' => [

@@ -107,8 +107,7 @@ final class SchemaFormatCommandTest extends TestCase
                                 },
                                 "optional": false
                             }
-                        ],
-                        "allow_extra": false
+                        ]
                     },
                     "nullable": false,
                     "metadata": []
@@ -152,8 +151,7 @@ final class SchemaFormatCommandTest extends TestCase
                                     },
                                     "optional": false
                                 }
-                            ],
-                            "allow_extra": false
+                            ]
                         }
                     },
                     "nullable": false,

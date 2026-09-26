@@ -198,6 +198,6 @@ final readonly class TypeWidener
             $elements[] = structure_element($element->name, $element->type, optional: true);
         }
 
-        return new StructureType($elements, $left->allowsExtra() || $right->allowsExtra());
+        return new StructureType($elements);
     }
 }

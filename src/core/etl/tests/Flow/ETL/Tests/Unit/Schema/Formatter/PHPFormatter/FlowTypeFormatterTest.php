@@ -129,25 +129,6 @@ final class FlowTypeFormatterTest extends FlowTestCase
         );
     }
 
-    public function test_format_structure_type_with_allow_extra(): void
-    {
-        static::assertEquals(
-            '\\Flow\\Types\\DSL\\type_structure(elements: ["name" => \\Flow\\Types\\DSL\\type_string()], allow_extra: true)',
-            (new TypeFormatter())->format(type_structure(['name' => type_string()], true)),
-        );
-    }
-
-    public function test_format_structure_type_with_optional_elements_and_allow_extra(): void
-    {
-        static::assertEquals(
-            '\\Flow\\Types\\DSL\\type_structure(elements: ["name" => \\Flow\\Types\\DSL\\type_string(), "nickname" => \\Flow\\Types\\DSL\\structure_element("nickname", \\Flow\\Types\\DSL\\type_string(), optional: true)], allow_extra: true)',
-            (new TypeFormatter())->format(type_structure([
-                'name' => type_string(),
-                'nickname' => structure_element('nickname', type_string(), optional: true),
-            ], true)),
-        );
-    }
-
     public function test_format_nullable_structure_type_with_optional_elements(): void
     {
         static::assertEquals(

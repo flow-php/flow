@@ -254,10 +254,9 @@ These throw `FloeException` when the write session opens:
 ```
 Floe does not support values of type "mixed"
 Floe does not support map keys of type "uuid"
-Floe does not support structures that allow extra values
 ```
 
-That covers `mixed` and `type_structure(..., allow_extra: true)`.
+That covers `mixed`.
 Use a declared element type, or a `json_schema()` column when the shape is genuinely dynamic.
 
 ## On-Disk Layout

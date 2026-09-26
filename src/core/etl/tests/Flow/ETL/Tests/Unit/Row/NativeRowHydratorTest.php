@@ -19,7 +19,6 @@ use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\Double\ForeignTypeDefinition;
 use Flow\ETL\Tests\Double\ThrowingType;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid;
 use Generator;
@@ -249,12 +248,6 @@ final class NativeRowHydratorTest extends FlowTestCase
             ],
         ];
 
-        /** @var StructureType<array<array-key, mixed>> $allowExtraStructure */
-        $allowExtraStructure = type_structure([
-            'a' => type_integer(),
-            'b' => structure_element('b', type_string(), optional: true),
-        ], true);
-
         yield 'containers from raw values' => [
             schema(
                 list_schema('l', type_list(type_integer())),
@@ -266,7 +259,6 @@ final class NativeRowHydratorTest extends FlowTestCase
                     'a' => type_integer(),
                     'b' => structure_element('b', type_string(), optional: true),
                 ])),
-                structure_schema('se', $allowExtraStructure),
             ),
             [
                 new RawRowValues([
@@ -276,7 +268,6 @@ final class NativeRowHydratorTest extends FlowTestCase
                     'mi' => [0 => 'x', 5 => 7],
                     'lo' => ['1', null, 3],
                     'st' => ['a' => '5', 'extra' => 'dropped'],
-                    'se' => ['a' => 1, 'b' => 'kept', 'other' => 'dropped'],
                 ]),
                 new RawRowValues([
                     'l' => [],
@@ -285,7 +276,6 @@ final class NativeRowHydratorTest extends FlowTestCase
                     'mi' => [],
                     'lo' => [],
                     'st' => ['a' => 1, 'b' => 'present'],
-                    'se' => ['a' => 2],
                 ]),
             ],
         ];

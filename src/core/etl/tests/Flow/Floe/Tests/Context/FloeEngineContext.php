@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Context;
 
+use Flow\ETL\Row;
 use Flow\ETL\Row\NativeRowHydrator;
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Rows;
@@ -45,6 +46,25 @@ final class FloeEngineContext
     public static function nativeReader(Filesystem $filesystem, Codec $codec = new NoopCodec()): FloeReader
     {
         return new FloeReader($filesystem, $codec, hydrator: new NativeRowHydrator());
+    }
+
+    /**
+     * @return list<Row>
+     */
+    public static function readRows(FloeReader $reader, Path $path): array
+    {
+        $file = $reader->read($path);
+        $rows = [];
+
+        foreach ($file->rows() as $batch) {
+            foreach ($batch as $row) {
+                $rows[] = $row;
+            }
+        }
+
+        $file->close();
+
+        return $rows;
     }
 
     /**

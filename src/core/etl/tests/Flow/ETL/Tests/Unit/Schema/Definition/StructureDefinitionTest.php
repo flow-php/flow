@@ -124,40 +124,19 @@ final class StructureDefinitionTest extends FlowTestCase
             false,
         ];
 
-        yield 'allow extra accepts an undeclared key' => [
-            structure_schema('data', type_structure(['id' => type_integer()], true)),
-            structure_schema('data', type_structure(['id' => type_integer(), 'nickname' => type_string()])),
-            true,
-        ];
-
-        yield 'allow extra accepts an undeclared optional key' => [
-            structure_schema('data', type_structure(['id' => type_integer()], true)),
-            structure_schema('data', type_structure([
-                'id' => type_integer(),
-                'nickname' => structure_element('nickname', type_string(), optional: true),
-            ])),
-            true,
-        ];
-
-        yield 'without allow extra an undeclared key is rejected' => [
-            structure_schema('data', type_structure(['id' => type_integer()], false)),
+        yield 'an undeclared key is rejected' => [
+            structure_schema('data', type_structure(['id' => type_integer()])),
             structure_schema('data', type_structure(['id' => type_integer(), 'nickname' => type_string()])),
             false,
         ];
 
-        yield 'without allow extra an undeclared optional key is rejected' => [
-            structure_schema('data', type_structure(['id' => type_integer()], false)),
+        yield 'an undeclared optional key is rejected' => [
+            structure_schema('data', type_structure(['id' => type_integer()])),
             structure_schema('data', type_structure([
                 'id' => type_integer(),
                 'nickname' => structure_element('nickname', type_string(), optional: true),
             ])),
             false,
-        ];
-
-        yield 'openness is read from the declared side only' => [
-            structure_schema('data', type_structure(['id' => type_integer()], false)),
-            structure_schema('data', type_structure(['id' => type_integer()], true)),
-            true,
         ];
 
         yield 'declared optional element accepts a null value' => [
@@ -277,16 +256,10 @@ final class StructureDefinitionTest extends FlowTestCase
             ])),
         ];
 
-        yield 'allow extra is the union of both sides' => [
-            structure_schema('data', type_structure(['id' => type_integer()], false)),
-            structure_schema('data', type_structure(['id' => type_integer()], true)),
-            structure_schema('data', type_structure(['id' => type_integer()], true)),
-        ];
-
-        yield 'allow extra false on both sides stays false' => [
-            structure_schema('data', type_structure(['id' => type_integer()], false)),
-            structure_schema('data', type_structure(['id' => type_integer()], false)),
-            structure_schema('data', type_structure(['id' => type_integer()], false)),
+        yield 'identical structures merge to themselves' => [
+            structure_schema('data', type_structure(['id' => type_integer()])),
+            structure_schema('data', type_structure(['id' => type_integer()])),
+            structure_schema('data', type_structure(['id' => type_integer()])),
         ];
 
         yield 'disjoint keys stay a structure, both optional' => [
@@ -336,7 +309,7 @@ final class StructureDefinitionTest extends FlowTestCase
         static::assertFalse($def->matches(['b' => 'x']));
     }
 
-    public function test_does_not_match_an_entry_with_extra_elements_when_extra_is_not_allowed(): void
+    public function test_does_not_match_an_entry_with_undeclared_elements(): void
     {
         $def = structure_schema('col', type_structure(['a' => type_integer()]));
 
@@ -446,13 +419,6 @@ final class StructureDefinitionTest extends FlowTestCase
 
         static::assertTrue($nullable->isNullable());
         static::assertFalse($def->isNullable());
-    }
-
-    public function test_matches_an_entry_with_extra_elements_when_extra_is_allowed(): void
-    {
-        $def = structure_schema('col', type_structure(['a' => type_integer()], true));
-
-        static::assertTrue($def->matches(['a' => 1, 'b' => 'x']));
     }
 
     public function test_matches_and_is_compatible_agree_on_a_different_instantiation(): void

@@ -213,7 +213,7 @@ final class XMLEncoderTest extends FlowTestCase
             'city' => 'Krakow',
             'zip' => '31-021',
             'extra' => 'lost',
-        ]], ['address' => type_structure(['city' => type_string(), 'zip' => type_string()], true)])]);
+        ]], ['address' => type_structure(['city' => type_string(), 'zip' => type_string()])])]);
     }
 
     public function test_encodes_null_scalar_as_an_empty_node(): void

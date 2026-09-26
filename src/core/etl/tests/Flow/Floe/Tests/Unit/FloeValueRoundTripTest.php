@@ -10,7 +10,6 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
-use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Tests\Context\FloeStreamReaderContext;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
@@ -358,17 +357,6 @@ final class FloeValueRoundTripTest extends TestCase
         $decoded = FloeStreamReaderContext::roundTrip($outOfOrder)->first();
 
         static::assertSame(['a' => 1, 'b' => 'x'], $decoded->get('s'));
-    }
-
-    public function test_structure_allowing_extra_values_is_rejected(): void
-    {
-        $this->expectException(FloeException::class);
-        $this->expectExceptionMessage('does not support structures that allow extra values');
-
-        FloeStreamReaderContext::roundTrip(rows(
-            schema(structure_schema('with_extra', type_structure(['id' => type_integer()], true))),
-            row(['with_extra' => ['id' => 1, 'custom' => 'x']]),
-        ));
     }
 
     public function test_uuid_entries(): void

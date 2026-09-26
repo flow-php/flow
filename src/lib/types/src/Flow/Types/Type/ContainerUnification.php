@@ -98,7 +98,7 @@ final readonly class ContainerUnification
                 );
             }
 
-            return new StructureType($elements, $left->allowsExtra() || $right->allowsExtra());
+            return new StructureType($elements);
         }
 
         return null;

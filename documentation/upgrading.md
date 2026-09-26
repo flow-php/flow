@@ -467,6 +467,23 @@ The same applies to map values and structure elements.
 |---------------------------------------------|-------------------------------------|
 | `'d' => [1641600000]` - seconds since epoch | `'d' => [19000]` - days since epoch |
 
+### 48) `flow-php/types` - a structure declares every element it carries
+
+| Before                                                                                                       | After                                                                            |
+|--------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
+| `type_structure($elements, allow_extra: true)`                                                               | `Error: Unknown named parameter $allow_extra`                                    |
+| `type_structure($elements, true)`, `StructureType::fromElements($elements, true)`                            | the extra argument is ignored by PHP - the structure is sealed                   |
+| `new StructureType($elements, true)`                                                                         | the extra argument is ignored by PHP - the structure is sealed                   |
+| `StructureType::allowsExtra()`                                                                               | removed                                                                          |
+| `normalize()` / `schema_to_json()` write `"allow_extra": false` on every structure                           | the key is not written                                                           |
+| a stored schema with `"allow_extra": false`                                                                  | read, the key is ignored                                                         |
+| a stored schema with `"allow_extra": true`                                                                   | `InvalidArgumentException: Structure "allow_extra": true is no longer supported` |
+| `Rows` / `Schema` with a structure column natively serialized by 0.44.x (`ApcuCache`, `NativePHPSerializer`) | `Error: Cannot create dynamic property StructureType::$allowExtra`               |
+
+A value with a key its structure does not declare is invalid. Declare every element, or use `type_map()` /
+`type_json()` when the keys are dynamic. flow-php 0.44.x cannot read a Floe file, cached schema or `schema_to_json()`
+document written by 0.45.x that has a structure column. Clear APCu and natively serialized caches after upgrading.
+
 ---
 
 ## Upgrading from 0.43.x to 0.44.x
