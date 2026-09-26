@@ -40,13 +40,4 @@ final class StructureComparisonTest extends TestCase
             new Comparator(),
         ));
     }
-
-    public function test_identical_includes_allows_extra(): void
-    {
-        static::assertFalse((new StructureComparison())->identical(
-            new StructureType([new StructureElement('a', type_integer())], true),
-            new StructureType([new StructureElement('a', type_integer())]),
-            new Comparator(),
-        ));
-    }
 }

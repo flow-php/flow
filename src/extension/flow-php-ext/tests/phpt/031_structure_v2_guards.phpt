@@ -39,7 +39,6 @@ $emptyFields = json_encode([[
     'type' => [
         'type' => 'structure_v2',
         'fields' => [],
-        'allow_extra' => false,
     ],
     'nullable' => false,
     'metadata' => [],

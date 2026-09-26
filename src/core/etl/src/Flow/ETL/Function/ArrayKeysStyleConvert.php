@@ -82,7 +82,7 @@ final class ArrayKeysStyleConvert implements ScalarFunction
             $elements[] = structure_element($converted, $element->type, $element->optional);
         }
 
-        return new StructureType($elements, $array->allowsExtra());
+        return new StructureType($elements);
     }
 
     public function eval(Row $row, FlowContext $context): mixed

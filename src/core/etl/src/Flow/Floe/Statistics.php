@@ -7,6 +7,7 @@ namespace Flow\Floe;
 use Flow\Floe\Exception\FloeException;
 use Flow\Types\Exception\InvalidTypeException;
 
+use function array_intersect_key;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_structure;
 
@@ -42,7 +43,7 @@ final readonly class Statistics
             $data = type_structure([
                 'rows' => type_integer(),
                 'byteSize' => type_integer(),
-            ], allow_extra: true)->assert($data);
+            ])->assert(array_intersect_key($data, ['rows' => true, 'byteSize' => true]));
         } catch (InvalidTypeException $e) {
             throw new FloeException('Floe footer statistics are malformed: ' . $e->getMessage(), 0, $e);
         }

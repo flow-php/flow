@@ -121,12 +121,6 @@ fn build_encoder(type_json: &TypeJson) -> Result<Encoder, PhpException> {
                 elements.push((declared, bytes, build_encoder(&field.type_)?));
             }
 
-            if type_json.allow_extra() {
-                return Err(ext_exception(
-                    "flow_php does not support structures that allow extra values",
-                ));
-            }
-
             Encoder::Structure(elements)
         }
         "optional" => Encoder::Optional(Box::new(build_encoder(

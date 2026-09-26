@@ -113,6 +113,6 @@ final readonly class TypeProjection
             $elements[] = structure_element($element->name, $projected, $element->optional);
         }
 
-        return $changed ? new StructureType($elements, $type->allowsExtra()) : $type;
+        return $changed ? new StructureType($elements) : $type;
     }
 }

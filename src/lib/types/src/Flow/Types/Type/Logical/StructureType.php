@@ -18,6 +18,7 @@ use function array_is_list;
 use function array_key_exists;
 use function array_keys;
 use function count;
+use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_from_array;
@@ -52,10 +53,8 @@ final readonly class StructureType implements Type
      *
      * @throws InvalidArgumentException
      */
-    public function __construct(
-        array $elements,
-        private bool $allowExtra = false,
-    ) {
+    public function __construct(array $elements)
+    {
         if (0 === count($elements)) {
             throw new InvalidArgumentException('Structure must receive at least one element (required or optional).');
         }
@@ -87,7 +86,7 @@ final readonly class StructureType implements Type
      *
      * @return self<array<array-key, E>>
      */
-    public static function fromElements(array $elements, bool $allowExtra = false): self
+    public static function fromElements(array $elements): self
     {
         $list = [];
 
@@ -107,7 +106,7 @@ final readonly class StructureType implements Type
             $list[] = new StructureElement($name, $type);
         }
 
-        return new self($list, $allowExtra);
+        return new self($list);
     }
 
     /**
@@ -124,8 +123,14 @@ final readonly class StructureType implements Type
                 'type' => type_map(type_string(), type_mixed()),
                 'optional' => type_boolean(),
             ])),
-            'allow_extra' => type_boolean(),
+            'allow_extra' => structure_element('allow_extra', type_boolean(), optional: true),
         ])->assert($data);
+
+        if (array_key_exists('allow_extra', $data) && $data['allow_extra']) {
+            throw new InvalidArgumentException(
+                'Structure "allow_extra": true is no longer supported, declare every element or use type_map() / type_json() for dynamic keys',
+            );
+        }
 
         $elements = [];
 
@@ -137,12 +142,7 @@ final readonly class StructureType implements Type
             );
         }
 
-        return new self($elements, $data['allow_extra']);
-    }
-
-    public function allowsExtra(): bool
-    {
-        return $this->allowExtra;
+        return new self($elements);
     }
 
     /**
@@ -251,23 +251,21 @@ final readonly class StructureType implements Type
             }
         }
 
-        if (!$this->allowExtra) {
-            $knownKeys = [];
+        $knownKeys = [];
 
-            foreach ($this->elements as $element) {
-                $knownKeys[] = $element->name;
-            }
+        foreach ($this->elements as $element) {
+            $knownKeys[] = $element->name;
+        }
 
-            if (!empty(array_diff(array_keys($value), $knownKeys))) {
-                return false;
-            }
+        if (!empty(array_diff(array_keys($value), $knownKeys))) {
+            return false;
         }
 
         return true;
     }
 
     /**
-     * @return array{type: 'structure_v2', fields: list<array{name: string, type: array<string, mixed>, optional: bool}>, allow_extra: bool}
+     * @return array{type: 'structure_v2', fields: list<array{name: string, type: array<string, mixed>, optional: bool}>}
      */
     public function normalize(): array
     {
@@ -285,7 +283,6 @@ final readonly class StructureType implements Type
         return [
             'type' => 'structure_v2',
             'fields' => $fields,
-            'allow_extra' => $this->allowExtra,
         ];
     }
 

@@ -116,12 +116,6 @@ final class StructureTypeTest extends TestCase
             'exceptionClass' => InvalidTypeException::class,
         ];
 
-        yield 'valid structure with extra field when allow_extra is true' => [
-            'value' => ['id' => 1, 'name' => 'test', 'active' => false],
-            'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()], true),
-            'exceptionClass' => null,
-        ];
-
         yield 'valid structure with type_array field containing a list of structures' => [
             'value' => [
                 'id' => 'test-id',
@@ -168,15 +162,9 @@ final class StructureTypeTest extends TestCase
             'exceptionClass' => null,
         ];
 
-        yield 'valid structure with multiple extra fields when allow_extra is true' => [
-            'value' => ['id' => 1, 'name' => 'test', 'active' => false, 'created_at' => '2023-01-01'],
-            'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()], true),
-            'exceptionClass' => null,
-        ];
-
-        yield 'invalid structure with missing required field even when allow_extra is true' => [
+        yield 'invalid structure with missing required field' => [
             'value' => ['name' => 'test', 'active' => false],
-            'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()], true),
+            'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()]),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
@@ -221,7 +209,7 @@ final class StructureTypeTest extends TestCase
             'exceptionClass' => InvalidTypeException::class,
         ];
 
-        yield 'invalid structure with unknown field when optional elements present and allow_extra false' => [
+        yield 'invalid structure with unknown field when optional elements present' => [
             'value' => ['id' => 1, 'name' => 'test', 'unknown' => 'value'],
             'structureType' => type_structure([
                 'id' => type_integer(),
@@ -229,16 +217,6 @@ final class StructureTypeTest extends TestCase
                 'active' => structure_element('active', type_boolean(), optional: true),
             ]),
             'exceptionClass' => InvalidTypeException::class,
-        ];
-
-        yield 'valid structure with unknown field when optional elements present and allow_extra true' => [
-            'value' => ['id' => 1, 'name' => 'test', 'unknown' => 'value'],
-            'structureType' => type_structure([
-                'id' => type_integer(),
-                'name' => type_string(),
-                'active' => structure_element('active', type_boolean(), optional: true),
-            ], true),
-            'exceptionClass' => null,
         ];
     }
 
@@ -475,40 +453,16 @@ final class StructureTypeTest extends TestCase
             'expected' => false,
         ];
 
-        yield 'invalid structure with extra fields when allow_extra is false' => [
+        yield 'invalid structure with extra fields' => [
             'structure' => type_structure(['id' => type_integer(), 'name' => type_string()]),
             'value' => ['id' => 1, 'name' => 'test', 'active' => true],
             'expected' => false,
         ];
 
-        yield 'valid structure with extra fields when allow_extra is true' => [
-            'structure' => type_structure(['id' => type_integer(), 'name' => type_string()], true),
-            'value' => ['id' => 1, 'name' => 'test', 'active' => true],
-            'expected' => true,
-        ];
-
-        yield 'valid structure with multiple extra fields when allow_extra is true' => [
-            'structure' => type_structure(['id' => type_integer(), 'name' => type_string()], true),
-            'value' => [
-                'id' => 1,
-                'name' => 'test',
-                'active' => true,
-                'created_at' => '2023-01-01',
-                'updated_at' => '2023-01-02',
-            ],
-            'expected' => true,
-        ];
-
-        yield 'invalid structure with missing required field when allow_extra is true' => [
-            'structure' => type_structure(['id' => type_integer(), 'name' => type_string()], true),
+        yield 'invalid structure with missing required field' => [
+            'structure' => type_structure(['id' => type_integer(), 'name' => type_string()]),
             'value' => ['name' => 'test', 'active' => true],
             'expected' => false,
-        ];
-
-        yield 'valid structure with only required fields when allow_extra is true' => [
-            'structure' => type_structure(['id' => type_integer(), 'name' => type_string()], true),
-            'value' => ['id' => 1, 'name' => 'test'],
-            'expected' => true,
         ];
 
         yield 'valid structure with optional elements present' => [
@@ -562,7 +516,7 @@ final class StructureTypeTest extends TestCase
             'expected' => false,
         ];
 
-        yield 'invalid structure with extra field when optional elements present and allow_extra false' => [
+        yield 'invalid structure with extra field when optional elements present' => [
             'structure' => type_structure([
                 'id' => type_integer(),
                 'name' => structure_element('name', type_string(), optional: true),
@@ -570,27 +524,6 @@ final class StructureTypeTest extends TestCase
             'value' => ['id' => 1, 'name' => 'test', 'unknown' => 'value'],
             'expected' => false,
         ];
-
-        yield 'valid structure with extra field when optional elements present and allow_extra true' => [
-            'structure' => type_structure([
-                'id' => type_integer(),
-                'name' => structure_element('name', type_string(), optional: true),
-            ], true),
-            'value' => ['id' => 1, 'name' => 'test', 'unknown' => 'value'],
-            'expected' => true,
-        ];
-    }
-
-    public function test_allows_extra_false_by_default(): void
-    {
-        $type = type_structure(['id' => type_integer()]);
-        static::assertFalse($type->allowsExtra());
-    }
-
-    public function test_allows_extra_true_when_set(): void
-    {
-        $type = type_structure(['id' => type_integer()], true);
-        static::assertTrue($type->allowsExtra());
     }
 
     /**
@@ -673,11 +606,11 @@ final class StructureTypeTest extends TestCase
             new StructureType([
                 new StructureElement('id', type_integer()),
                 new StructureElement('nick', type_string(), optional: true),
-            ], true),
+            ]),
             type_structure([
                 'id' => type_integer(),
                 'nick' => structure_element('nick', type_string(), optional: true),
-            ], allow_extra: true),
+            ]),
         );
     }
 
@@ -763,16 +696,6 @@ final class StructureTypeTest extends TestCase
         static::assertEquals($type, $recreated);
     }
 
-    public function test_normalization_with_allow_extra(): void
-    {
-        $type = type_structure(['string' => type_string(), 'float' => type_float()], true);
-        $normalized = $type->normalize();
-        $recreated = StructureType::fromArray($normalized);
-
-        static::assertEquals($type, $recreated);
-        static::assertTrue($recreated->allowsExtra());
-    }
-
     public function test_normalization_with_optional_elements(): void
     {
         $type = type_structure([
@@ -815,7 +738,7 @@ final class StructureTypeTest extends TestCase
         $normalized = $type->normalize();
 
         static::assertSame(
-            '{"type":"structure_v2","fields":[{"name":"0","type":{"type":"integer"},"optional":false},{"name":"b","type":{"type":"string"},"optional":false}],"allow_extra":false}',
+            '{"type":"structure_v2","fields":[{"name":"0","type":{"type":"integer"},"optional":false},{"name":"b","type":{"type":"string"},"optional":false}]}',
             json_encode($normalized, JSON_THROW_ON_ERROR),
         );
 
@@ -825,6 +748,30 @@ final class StructureTypeTest extends TestCase
         static::assertSame('structure{0: integer, b: string}', $recreated->toString());
         static::assertSame(0, $recreated->element(0)?->name);
         static::assertNull($recreated->element('0'));
+    }
+
+    public function test_from_array_ignores_allow_extra_false(): void
+    {
+        static::assertEquals(
+            type_structure(['id' => type_integer()]),
+            StructureType::fromArray([
+                'type' => 'structure_v2',
+                'fields' => [['name' => 'id', 'type' => ['type' => 'integer'], 'optional' => false]],
+                'allow_extra' => false,
+            ]),
+        );
+    }
+
+    public function test_from_array_refuses_allow_extra_true(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Structure "allow_extra": true is no longer supported');
+
+        StructureType::fromArray([
+            'type' => 'structure_v2',
+            'fields' => [['name' => 'id', 'type' => ['type' => 'integer'], 'optional' => false]],
+            'allow_extra' => true,
+        ]);
     }
 
     public function test_from_array_rejects_legacy_two_bucket_shape(): void

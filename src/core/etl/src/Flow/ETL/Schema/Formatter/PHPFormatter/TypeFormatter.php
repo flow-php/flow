@@ -158,16 +158,10 @@ final class TypeFormatter
                 : sprintf('%s => %s', $name, $this->format($element->type));
         }
 
-        $arguments = sprintf('elements: [%s]', implode(', ', $fields));
-
-        if ($type->allowsExtra()) {
-            $arguments .= ', allow_extra: true';
-        }
-
         return sprintf(
             $nullable ? '\\Flow\\Types\\DSL\\type_optional(\%s(%s))' : '\%s(%s)',
             $reflection->getName(),
-            $arguments,
+            sprintf('elements: [%s]', implode(', ', $fields)),
         );
     }
 }

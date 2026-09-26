@@ -826,8 +826,7 @@ final class SchemaTest extends FlowTestCase
                                 },
                                 "optional": false
                             }
-                        ],
-                        "allow_extra": false
+                        ]
                     },
                     "nullable": false,
                     "metadata": []

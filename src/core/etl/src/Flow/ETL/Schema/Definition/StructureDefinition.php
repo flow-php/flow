@@ -108,10 +108,6 @@ final readonly class StructureDefinition implements Definition
             }
         }
 
-        if ($this->type->allowsExtra()) {
-            return true;
-        }
-
         foreach ($givenByName as $given) {
             if (!array_key_exists($given->name, $declaredByName)) {
                 return false;

@@ -261,16 +261,16 @@ final class TypeUnifierTest extends TestCase
         static::assertSame('structure{a: integer, b: string}', $result->toString());
     }
 
-    public function test_structure_optionality_and_allows_extra_are_or_ed(): void
+    public function test_structure_optionality_is_or_ed(): void
     {
         $result = (new PromotingUnifier())->unify(
-            type_structure(['a' => type_integer()], false),
-            type_structure(['a' => structure_element('a', type_integer(), optional: true)], true),
+            type_structure(['a' => type_integer()]),
+            type_structure(['a' => structure_element('a', type_integer(), optional: true)]),
         );
 
         static::assertNotNull($result);
         static::assertTrue(
-            type_equals(type_structure(['a' => structure_element('a', type_integer(), optional: true)], true), $result),
+            type_equals(type_structure(['a' => structure_element('a', type_integer(), optional: true)]), $result),
             $result->toString(),
         );
     }

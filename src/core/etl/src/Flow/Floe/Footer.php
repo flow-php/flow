@@ -11,6 +11,7 @@ use Flow\Floe\Exception\FloeException;
 use Flow\Types\Exception\InvalidTypeException;
 use JsonException;
 
+use function array_intersect_key;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
@@ -71,7 +72,14 @@ final readonly class Footer
                 'sections' => type_list(type_array()),
                 'statistics' => type_array(),
                 'metadata' => type_array(),
-            ], allow_extra: true)->assert($data);
+            ])->assert(array_intersect_key($data, [
+                'version' => true,
+                'writer' => true,
+                'schema' => true,
+                'sections' => true,
+                'statistics' => true,
+                'metadata' => true,
+            ]));
         } catch (InvalidTypeException $e) {
             throw new FloeException('Floe footer is malformed: ' . $e->getMessage(), 0, $e);
         }

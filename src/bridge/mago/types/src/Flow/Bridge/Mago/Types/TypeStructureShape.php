@@ -9,8 +9,6 @@ use Mago\Sdk\Analyzer\Type;
 use Mago\Sdk\Analyzer\Type\ArrayItem;
 use Mago\Sdk\Analyzer\Type\KeyedArrayType;
 use Mago\Sdk\Analyzer\Type\NamedObjectType;
-use Mago\Sdk\Analyzer\Type\ScalarType;
-use Mago\Sdk\Analyzer\Type\ScalarTypeKind;
 
 /**
  * Derives the array shape a `Flow\Types\DSL\type_structure()` call represents. Beyond Mago's
@@ -34,16 +32,6 @@ final readonly class TypeStructureShape
             return null;
         }
 
-        $allowExtra = false;
-
-        if (($allowExtraArgument = $invocation->getArgument(1, 'allow_extra')) !== null) {
-            $allowExtra = $allowExtraArgument->type?->getLiteralBool();
-
-            if ($allowExtra === null) {
-                return null;
-            }
-        }
-
         $items = [];
 
         foreach ($elementsArray->knownItems as $item) {
@@ -58,8 +46,8 @@ final readonly class TypeStructureShape
 
         $shape = Type::fromAtomic(new KeyedArrayType(
             knownItems: array_values($items),
-            keyType: $allowExtra ? Type::fromAtomic(new ScalarType(ScalarTypeKind::ArrayKey)) : null,
-            valueType: $allowExtra ? Type::mixed() : null,
+            keyType: null,
+            valueType: null,
             nonEmpty: $items !== [],
         ));
 

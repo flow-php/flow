@@ -52,6 +52,5 @@ Requires `carthage-software/mago` 1.47.4 or newer (the first release with extens
 
 - `type_structure(['a' => type_integer()])` - `array{a: int}`, every plain `Type` value required.
 - A `structure_element()` value with a literal `optional: true` - `a?:` (possibly undefined key).
-- A literal `allow_extra: true` - the shape stays open (`array-key => mixed` parameters).
-- Anything not statically known (unsealed arrays, non-literal flags, non-`Type` values) - the
+- Anything not statically known (unsealed arrays, non-`Type` values) - the
   derivation backs off to the native docblock instead of guessing.

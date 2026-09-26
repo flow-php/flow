@@ -85,6 +85,6 @@ final readonly class TypeFloor
             );
         }
 
-        return new StructureType($elements, $type->allowsExtra());
+        return new StructureType($elements);
     }
 }

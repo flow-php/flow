@@ -62,20 +62,8 @@ final class StructureSchemaMatchTest extends FlowIntegrationTestCase
             true,
         ];
 
-        yield 'allow extra, undeclared key present' => [
-            type_structure(['id' => type_integer(), 'email' => type_string()], true),
-            $withNickname,
-            true,
-        ];
-
-        yield 'allow extra, undeclared key absent' => [
-            type_structure(['id' => type_integer(), 'email' => type_string()], true),
-            $withoutNickname,
-            true,
-        ];
-
-        yield 'without allow extra, undeclared key present' => [
-            type_structure(['id' => type_integer(), 'email' => type_string()], false),
+        yield 'undeclared key present' => [
+            type_structure(['id' => type_integer(), 'email' => type_string()]),
             $withNickname,
             false,
         ];

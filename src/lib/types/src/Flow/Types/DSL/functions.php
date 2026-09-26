@@ -68,9 +68,9 @@ use UnitEnum;
  * @return StructureType<array<array-key, T>>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_structure(array $elements = [], bool $allow_extra = false): StructureType
+function type_structure(array $elements = []): StructureType
 {
-    return StructureType::fromElements($elements, $allow_extra);
+    return StructureType::fromElements($elements);
 }
 
 /**

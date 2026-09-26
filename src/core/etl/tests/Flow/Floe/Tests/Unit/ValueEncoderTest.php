@@ -18,7 +18,6 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\map_schema;
-use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\uuid_schema;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
@@ -26,7 +25,6 @@ use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_non_empty_string;
 use function Flow\Types\DSL\type_string;
-use function Flow\Types\DSL\type_structure;
 use function pack;
 
 use const PHP_INT_MAX;
@@ -57,14 +55,6 @@ final class ValueEncoderTest extends TestCase
         $this->expectExceptionMessage('Floe does not support values of type "mixed"');
 
         (new ValueEncoder())->encoderFor(list_schema('c', type_list(type_mixed())));
-    }
-
-    public function test_encoding_structure_allowing_extra_values_throws(): void
-    {
-        $this->expectException(FloeException::class);
-        $this->expectExceptionMessage('Floe does not support structures that allow extra values');
-
-        (new ValueEncoder())->encoderFor(structure_schema('c', type_structure(['id' => type_integer()], true)));
     }
 
     public function test_encoding_map_with_unsupported_key_type_throws(): void

@@ -69,18 +69,10 @@ final class FloeGoldenTest extends FlowIntegrationTestCase
             }
         }
 
-        $read = [];
-        $reader = FloeEngineContext::phpReader($this->fs())->read(FloeGoldenContext::path($name));
-
-        foreach ($reader->rows() as $batch) {
-            foreach ($batch as $row) {
-                $read[] = $row;
-            }
-        }
-
-        $reader->close();
-
-        static::assertEquals($expected, $read);
+        static::assertEquals($expected, FloeEngineContext::readRows(
+            FloeEngineContext::phpReader($this->fs()),
+            FloeGoldenContext::path($name),
+        ));
     }
 
     #[DataProvider('golden_fixture_names')]
