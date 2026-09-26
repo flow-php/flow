@@ -1,6 +1,10 @@
-## [Unreleased] - 2026-09-25
+## [Unreleased] - 2026-09-26
 
 ### Added
+- [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/parquet - DECIMAL on INT32, INT64, BYTE_ARRAY and FLBA of any width** - [@norberttech](https://github.com/norberttech)
+- [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/parquet - TimeUnit enum with MILLIS, MICROS, NANOS** - [@norberttech](https://github.com/norberttech)
+- [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/arrow-ext - unit and utc schema keys for TIMESTAMP and TIME** - [@norberttech](https://github.com/norberttech)
+- [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/arrow-ext - Decimal256 reading** - [@norberttech](https://github.com/norberttech)
 - [#2658](https://github.com/flow-php/flow/pull/2658) - **flow-php/types - type_datetime($zone) - a datetime type carries one time zone, UTC by default** - [@norberttech](https://github.com/norberttech)
 - [#2658](https://github.com/flow-php/flow/pull/2658) - **flow-php/etl - datetime_schema(zone:) declares a datetime column zone** - [@norberttech](https://github.com/norberttech)
 - [#2658](https://github.com/flow-php/flow/pull/2658) - **flow-php/flow-php-ext - datetimeZones() capability marker for column-zone aware casts and decoders** - [@norberttech](https://github.com/norberttech)
@@ -44,6 +48,12 @@
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/cli - ProgressBarLoader advancing a progress bar per batch** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/parquet - TIMESTAMP written with isAdjustedToUTC=true** - [@norberttech](https://github.com/norberttech)
+- [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/parquet - Converter::isFor() replaced by static forColumn()** - [@norberttech](https://github.com/norberttech)
+- [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/parquet - Timestamp/Time logical types take a TimeUnit** - [@norberttech](https://github.com/norberttech)
+- [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/parquet - encode_decimal()/decode_decimal() drop ByteOrder** - [@norberttech](https://github.com/norberttech)
+- [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/parquet - float decimals rounded half away from zero on the shortest repr** - [@norberttech](https://github.com/norberttech)
+- [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/arrow-ext - DATE int lane is days since epoch** - [@norberttech](https://github.com/norberttech)
 - [#2658](https://github.com/flow-php/flow/pull/2658) - **flow-php/types - datetime casts land in the column zone, naive strings ignore date.timezone** - [@norberttech](https://github.com/norberttech)
 - [#2658](https://github.com/flow-php/flow/pull/2658) - **flow-php/types - date casts land at midnight UTC** - [@norberttech](https://github.com/norberttech)
 - [#2658](https://github.com/flow-php/flow/pull/2658) - **flow-php/types - nullable types always cast their value** - [@norberttech](https://github.com/norberttech)
@@ -104,6 +114,13 @@
 - [#2635](https://github.com/flow-php/flow/pull/2635) - **flow-php/parquet - reader and writer row types widened to array-key.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/parquet - TIMESTAMP and TIME honour MILLIS/NANOS units** - [@norberttech](https://github.com/norberttech)
+- [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/parquet - DATE written as the value's wall-clock day** - [@norberttech](https://github.com/norberttech)
+- [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/parquet - ConvertedType-only columns read as temporal and decimal values** - [@norberttech](https://github.com/norberttech)
+- [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/parquet - BYTE_ARRAY decimal statistics without length prefix** - [@norberttech](https://github.com/norberttech)
+- [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/arrow-ext - pre-1970 timestamps with a fraction read correctly** - [@norberttech](https://github.com/norberttech)
+- [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/arrow-ext - declared TIMESTAMP/TIME unit written instead of MICROS** - [@norberttech](https://github.com/norberttech)
+- [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/etl-adapter-parquet - legacy TIMESTAMP/TIME/DECIMAL columns read as datetime/time/float** - [@norberttech](https://github.com/norberttech)
 - [#2658](https://github.com/flow-php/flow/pull/2658) - **flow-php/types - type_time() cast of a datetime returns its wall clock** - [@norberttech](https://github.com/norberttech)
 - [#2658](https://github.com/flow-php/flow/pull/2658) - **flow-php/types - type_date() cast no longer mutates a DateTime** - [@norberttech](https://github.com/norberttech)
 - [#2658](https://github.com/flow-php/flow/pull/2658) - **flow-php/etl - to_date_time() keeps the time of a datetime object** - [@norberttech](https://github.com/norberttech)
@@ -133,6 +150,8 @@
 - [#2635](https://github.com/flow-php/flow/pull/2635) - **flow-php/etl - chained rename strategies no longer desync rows from the schema on numeric entry names.** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/parquet - Int32DateTimeConverter** - [@norberttech](https://github.com/norberttech)
+- [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/parquet - Option::ROUND_NANOSECONDS** - [@norberttech](https://github.com/norberttech)
 - [#2657](https://github.com/flow-php/flow/pull/2657) - **flow-php/etl - UnionDefinition and union_schema()** - [@norberttech](https://github.com/norberttech)
 - [#2653](https://github.com/flow-php/flow/pull/2653) - **flow-php/etl - AdaptiveFloeEncoder, FloeEngine::adaptive picks the encoder itself** - [@norberttech](https://github.com/norberttech)
 - [#2650](https://github.com/flow-php/flow/pull/2650) - **flow-php/arrow-ext - dropped the thrift crate dependency** - [@norberttech](https://github.com/norberttech)
