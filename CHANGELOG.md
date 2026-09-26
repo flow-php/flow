@@ -48,6 +48,9 @@
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/cli - ProgressBarLoader advancing a progress bar per batch** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2660](https://github.com/flow-php/flow/pull/2660) - **flow-php/types - structure normalize() no longer writes allow_extra, fromArray() refuses allow_extra true** - [@norberttech](https://github.com/norberttech)
+- [#2660](https://github.com/flow-php/flow/pull/2660) - **flow-php/etl - Floe footer ignores unknown keys without an open structure** - [@norberttech](https://github.com/norberttech)
+- [#2660](https://github.com/flow-php/flow/pull/2660) - **flow-php/mago-types-bridge - type_structure() always derives a sealed shape** - [@norberttech](https://github.com/norberttech)
 - [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/parquet - TIMESTAMP written with isAdjustedToUTC=true** - [@norberttech](https://github.com/norberttech)
 - [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/parquet - Converter::isFor() replaced by static forColumn()** - [@norberttech](https://github.com/norberttech)
 - [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/parquet - Timestamp/Time logical types take a TimeUnit** - [@norberttech](https://github.com/norberttech)
@@ -150,6 +153,9 @@
 - [#2635](https://github.com/flow-php/flow/pull/2635) - **flow-php/etl - chained rename strategies no longer desync rows from the schema on numeric entry names.** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2660](https://github.com/flow-php/flow/pull/2660) - **flow-php/types - type_structure() allow_extra argument and StructureType::allowsExtra()** - [@norberttech](https://github.com/norberttech)
+- [#2660](https://github.com/flow-php/flow/pull/2660) - **flow-php/etl - Floe refusal of structures allowing extra values** - [@norberttech](https://github.com/norberttech)
+- [#2660](https://github.com/flow-php/flow/pull/2660) - **flow-php/flow-php-ext - allow_extra schema field and its refusals** - [@norberttech](https://github.com/norberttech)
 - [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/parquet - Int32DateTimeConverter** - [@norberttech](https://github.com/norberttech)
 - [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/parquet - Option::ROUND_NANOSECONDS** - [@norberttech](https://github.com/norberttech)
 - [#2657](https://github.com/flow-php/flow/pull/2657) - **flow-php/etl - UnionDefinition and union_schema()** - [@norberttech](https://github.com/norberttech)
