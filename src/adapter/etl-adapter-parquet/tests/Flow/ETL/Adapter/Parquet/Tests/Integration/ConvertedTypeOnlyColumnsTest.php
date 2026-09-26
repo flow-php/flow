@@ -15,30 +15,25 @@ use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\ParquetFile\Schema\Repetition;
 use Flow\Parquet\Writer;
 
-use function file_exists;
 use function Flow\ETL\Adapter\Parquet\from_parquet;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\time_schema;
-use function unlink;
+use function Flow\Filesystem\DSL\memory_filesystem;
+use function Flow\Filesystem\DSL\path;
 
 final class ConvertedTypeOnlyColumnsTest extends FlowTestCase
 {
-    protected function tearDown(): void
-    {
-        if (file_exists(__DIR__ . '/var/converted_type_only_columns.parquet')) {
-            unlink(__DIR__ . '/var/converted_type_only_columns.parquet');
-        }
-    }
-
     public function test_converted_type_only_columns_read_as_temporal_and_float_entries(): void
     {
-        $path = __DIR__ . '/var/converted_type_only_columns.parquet';
+        $memory = memory_filesystem();
+        $path = path('memory://var/converted_type_only_columns.parquet');
+        $writer = new Writer(engine: new PhpParquetEngine());
 
-        (new Writer(engine: new PhpParquetEngine()))->write(
-            $path,
+        $writer->openForStream(
+            $memory->writeTo($path),
             Schema::with(
                 new FlatColumn(
                     'ts_ms',
@@ -58,16 +53,17 @@ final class ConvertedTypeOnlyColumnsTest extends FlowTestCase
                 new FlatColumn('t_us', PhysicalType::INT64, ConvertedType::TIME_MICROS, null, Repetition::OPTIONAL),
                 new FlatColumn('dec9', PhysicalType::INT32, ConvertedType::DECIMAL, null, Repetition::OPTIONAL, 9, 2),
             ),
-            [[
-                'ts_ms' => 1577934245678,
-                'ts_us' => 1577934245678901,
-                't_ms' => 11045678,
-                't_us' => 11045678901,
-                'dec9' => 1234567,
-            ]],
         );
+        $writer->writeBatch([[
+            'ts_ms' => 1577934245678,
+            'ts_us' => 1577934245678901,
+            't_ms' => 11045678,
+            't_us' => 11045678901,
+            'dec9' => 1234567,
+        ]]);
+        $writer->close();
 
-        $rows = data_frame()->read(from_parquet($path))->fetch();
+        $rows = data_frame()->read(from_parquet($path, filesystem: $memory))->fetch();
 
         static::assertEquals(
             schema(
