@@ -24,7 +24,7 @@ use Flow\Parquet\ThriftModel\NullType;
 use Flow\Parquet\ThriftModel\StringType;
 use Flow\Parquet\ThriftModel\TimestampType;
 use Flow\Parquet\ThriftModel\TimeType;
-use Flow\Parquet\ThriftModel\TimeUnit;
+use Flow\Parquet\ThriftModel\TimeUnit as ThriftTimeUnit;
 use Flow\Parquet\ThriftModel\UUIDType;
 
 final readonly class LogicalType
@@ -82,6 +82,25 @@ final readonly class LogicalType
     public static function enum(): self
     {
         return new self(self::ENUM);
+    }
+
+    public static function fromConvertedType(ConvertedType $convertedType, ?int $scale, ?int $precision): ?self
+    {
+        return match ($convertedType) {
+            ConvertedType::DATE => self::date(),
+            ConvertedType::DECIMAL => self::decimal($scale ?? 0, $precision ?? 0),
+            ConvertedType::TIME_MILLIS => new self(self::TIME, time: new Time(true, TimeUnit::MILLISECONDS)),
+            ConvertedType::TIME_MICROS => new self(self::TIME, time: new Time(true, TimeUnit::MICROSECONDS)),
+            ConvertedType::TIMESTAMP_MILLIS => new self(
+                self::TIMESTAMP,
+                timestamp: new Timestamp(true, TimeUnit::MILLISECONDS),
+            ),
+            ConvertedType::TIMESTAMP_MICROS => new self(
+                self::TIMESTAMP,
+                timestamp: new Timestamp(true, TimeUnit::MICROSECONDS),
+            ),
+            default => null,
+        };
     }
 
     public static function fromThrift(ThriftLogicalType $logicalType): ?self
@@ -219,12 +238,12 @@ final readonly class LogicalType
 
     public static function time(): self
     {
-        return new self(self::TIME, time: new Time(false, false, true, false));
+        return new self(self::TIME, time: new Time(false, TimeUnit::MICROSECONDS));
     }
 
     public static function timestamp(): self
     {
-        return new self(self::TIMESTAMP, timestamp: new Timestamp(false, false, true, false));
+        return new self(self::TIMESTAMP, timestamp: new Timestamp(true, TimeUnit::MICROSECONDS));
     }
 
     public static function unknown(): self
@@ -281,7 +300,7 @@ final readonly class LogicalType
             self::TIME => $this->is(self::TIME)
                 ? new TimeType([
                     'isAdjustedToUTC' => $this->timeData()?->isAdjustedToUTC(),
-                    'unit' => new TimeUnit([
+                    'unit' => new ThriftTimeUnit([
                         'MILLIS' => $this->timeData()?->millis() ? new MilliSeconds() : null,
                         'MICROS' => $this->timeData()?->micros() ? new MicroSeconds() : null,
                         'NANOS' => $this->timeData()?->nanos() ? new NanoSeconds() : null,
@@ -290,7 +309,7 @@ final readonly class LogicalType
             self::TIMESTAMP => $this->is(self::TIMESTAMP)
                 ? new TimestampType([
                     'isAdjustedToUTC' => $this->timestampData()?->isAdjustedToUTC(),
-                    'unit' => new TimeUnit([
+                    'unit' => new ThriftTimeUnit([
                         'MILLIS' => $this->timestampData()?->millis() ? new MilliSeconds() : null,
                         'MICROS' => $this->timestampData()?->micros() ? new MicroSeconds() : null,
                         'NANOS' => $this->timestampData()?->nanos() ? new NanoSeconds() : null,

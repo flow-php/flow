@@ -77,17 +77,16 @@ final readonly class PlainValueUnpacker
     }
 
     /**
-     * @return \Generator<string>
+     * @return \Generator<float|string>
      */
     private function unpackByteArray(FlatColumn $column, int $total): Generator
     {
-        for ($i = 0; $i < $total; $i++) {
-            $length = decode_u32($this->byteOrder, $this->reader->readBytes(4))[0];
+        $decimal = $column->logicalType()?->decimalData();
 
-            yield match ($column->logicalType()?->name()) {
-                LogicalType::STRING, LogicalType::JSON, LogicalType::UUID => $this->reader->readBytes($length),
-                default => $this->reader->readBytes($length),
-            };
+        for ($i = 0; $i < $total; $i++) {
+            $bytes = $this->reader->readBytes(decode_u32($this->byteOrder, $this->reader->readBytes(4))[0]);
+
+            yield $decimal === null ? $bytes : decode_decimal($bytes, $decimal->scale());
         }
     }
 
@@ -117,12 +116,7 @@ final readonly class PlainValueUnpacker
             $raw = $this->reader->readBytes($typeLength);
 
             yield match ($logicalType?->name()) {
-                LogicalType::DECIMAL => decode_decimal(
-                    $this->byteOrder,
-                    $raw,
-                    $decimalData?->precision() ?? 10,
-                    $decimalData?->scale() ?? 0,
-                ),
+                LogicalType::DECIMAL => decode_decimal($raw, $decimalData?->scale() ?? 0),
                 LogicalType::UUID => $this->rawBytesToUuidString($raw),
                 default => $raw,
             };

@@ -132,24 +132,32 @@ final class FlatColumn implements Column
 
     public static function fromThrift(SchemaElement $thrift): self
     {
+        // @mago-ignore analysis:redundant-comparison
+        // @mago-ignore analysis:impossible-condition
+        $convertedType = $thrift->converted_type === null ? null : ConvertedType::from($thrift->converted_type);
+        // @mago-ignore analysis:redundant-comparison
+        // @mago-ignore analysis:redundant-condition
+        $precision = $thrift->precision !== null ? (int) $thrift->precision : null;
+        // @mago-ignore analysis:redundant-comparison
+        // @mago-ignore analysis:redundant-condition
+        $scale = $thrift->scale !== null ? (int) $thrift->scale : null;
+        // @mago-ignore analysis:redundant-comparison
+        // @mago-ignore analysis:impossible-condition
+        $logicalType = $thrift->logicalType === null ? null : LogicalType::fromThrift($thrift->logicalType);
+
         return new self(
             $thrift->name,
             PhysicalType::from($thrift->type),
+            $convertedType,
+            $logicalType
             // @mago-ignore analysis:redundant-comparison
             // @mago-ignore analysis:impossible-condition
-            $thrift->converted_type === null ? null : ConvertedType::from($thrift->converted_type),
-            // @mago-ignore analysis:redundant-comparison
-            // @mago-ignore analysis:impossible-condition
-            $thrift->logicalType === null ? null : LogicalType::fromThrift($thrift->logicalType),
+            ?? ($convertedType === null ? null : LogicalType::fromConvertedType($convertedType, $scale, $precision)),
             // @mago-ignore analysis:redundant-comparison
             // @mago-ignore analysis:impossible-condition
             $thrift->repetition_type === null ? null : Repetition::from($thrift->repetition_type),
-            // @mago-ignore analysis:redundant-comparison
-            // @mago-ignore analysis:redundant-condition
-            $thrift->precision !== null ? (int) $thrift->precision : null,
-            // @mago-ignore analysis:redundant-comparison
-            // @mago-ignore analysis:redundant-condition
-            $thrift->scale !== null ? (int) $thrift->scale : null,
+            $precision,
+            $scale,
             // @mago-ignore analysis:redundant-comparison
             // @mago-ignore analysis:redundant-condition
             $thrift->type_length !== null ? (int) $thrift->type_length : null,

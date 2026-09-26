@@ -27,6 +27,22 @@ abstract class ParquetIntegrationTestCase extends TestCase
         return $engines;
     }
 
+    /**
+     * @return array<string, array{0: \Flow\Parquet\ParquetEngine, 1: \Flow\Parquet\ParquetEngine}>
+     */
+    public static function engine_pair_provider(): array
+    {
+        $pairs = ['php/php' => [new PhpParquetEngine(), new PhpParquetEngine()]];
+
+        if (extension_loaded('arrow')) {
+            $pairs['php/arrow'] = [new PhpParquetEngine(), new ArrowParquetEngine()];
+            $pairs['arrow/php'] = [new ArrowParquetEngine(), new PhpParquetEngine()];
+            $pairs['arrow/arrow'] = [new ArrowParquetEngine(), new ArrowParquetEngine()];
+        }
+
+        return $pairs;
+    }
+
     protected function tearDown(): void
     {
         TestParquetFile::remove($this);

@@ -16,7 +16,7 @@ use Flow\Parquet\ParquetFile\Statistics;
 use function count;
 use function Flow\Parquet\array_flatten;
 use function is_array;
-use function is_string;
+use function substr;
 
 final class StatisticsCounter
 {
@@ -180,25 +180,23 @@ final class StatisticsCounter
         $max = $this->max();
 
         if ($min !== null) {
-            if ($this->column->type() === PhysicalType::BYTE_ARRAY && is_string($min)) {
-                (new BinaryBufferWriter($minBuffer))->append($min);
-            } else {
-                (new PlainValuesPacker(new BinaryBufferWriter($minBuffer), $this->byteOrder))->packValues(
-                    $this->column,
-                    [$min],
-                );
-            }
+            (new PlainValuesPacker(new BinaryBufferWriter($minBuffer), $this->byteOrder))->packValues(
+                $this->column,
+                [$min],
+            );
         }
 
         if ($max !== null) {
-            if ($this->column->type() === PhysicalType::BYTE_ARRAY && is_string($max)) {
-                (new BinaryBufferWriter($maxBuffer))->append($max);
-            } else {
-                (new PlainValuesPacker(new BinaryBufferWriter($maxBuffer), $this->byteOrder))->packValues(
-                    $this->column,
-                    [$max],
-                );
-            }
+            (new PlainValuesPacker(new BinaryBufferWriter($maxBuffer), $this->byteOrder))->packValues(
+                $this->column,
+                [$max],
+            );
+        }
+
+        if ($this->column->type() === PhysicalType::BYTE_ARRAY) {
+            // Statistics hold the PLAIN encoding of the value without the BYTE_ARRAY length prefix.
+            $minBuffer = substr($minBuffer, 4);
+            $maxBuffer = substr($maxBuffer, 4);
         }
 
         return new Statistics(

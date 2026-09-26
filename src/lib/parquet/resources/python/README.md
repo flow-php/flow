@@ -20,6 +20,7 @@ Once all dependencies are installed, you can run the following command to genera
 
 ```shell
 python generators/lists.py
+python generators/logical_types.py
 python generators/maps.py
 python generators/orders.py
 python generators/primitives.py

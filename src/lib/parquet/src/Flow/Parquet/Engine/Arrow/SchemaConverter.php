@@ -65,6 +65,19 @@ final class SchemaConverter
             $entry['scale'] = $column->scale();
         }
 
+        $timestamp = $column->logicalType()?->timestampData();
+
+        if ($timestamp !== null) {
+            $entry['unit'] = $timestamp->unit()->value;
+            $entry['utc'] = $timestamp->isAdjustedToUTC();
+        }
+
+        $time = $column->logicalType()?->timeData();
+
+        if ($time !== null) {
+            $entry['unit'] = $time->unit()->value;
+        }
+
         if (
             $column->type() === PhysicalType::FIXED_LEN_BYTE_ARRAY
             && $column->logicalType()?->name() !== LogicalType::DECIMAL

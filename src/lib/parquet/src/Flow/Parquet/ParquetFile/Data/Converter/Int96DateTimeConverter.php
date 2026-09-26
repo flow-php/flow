@@ -19,21 +19,17 @@ use function round;
 use function sprintf;
 use function unpack;
 
-final class Int96DateTimeConverter implements Converter
+final readonly class Int96DateTimeConverter implements Converter
 {
+    public static function forColumn(FlatColumn $column, Options $options): ?self
+    {
+        return $column->type() === PhysicalType::INT96 && $options->get(Option::INT_96_AS_DATETIME) ? new self() : null;
+    }
+
     public function fromParquetType(mixed $data): DateTimeImmutable
     {
         /** @var string $data */
         return $this->convertRawBytesToDateTime($data);
-    }
-
-    public function isFor(FlatColumn $column, Options $options): bool
-    {
-        if ($column->type() === PhysicalType::INT96 && $options->get(Option::INT_96_AS_DATETIME)) {
-            return true;
-        }
-
-        return false;
     }
 
     /**

@@ -151,14 +151,6 @@ enum Option
     case PAGE_SIZE_CHECK_INTERVAL;
 
     /**
-     * Since PHP does not support nanoseconds precision for DateTime objects, when this options is set to true,
-     * reader will round nanoseconds to microseconds.
-     *
-     * Default value is false
-     */
-    case ROUND_NANOSECONDS;
-
-    /**
      * RowGroupBuilder is going to use this value to determine for how long it should keep adding rows to the buffer
      * before flushing it on disk.
      *

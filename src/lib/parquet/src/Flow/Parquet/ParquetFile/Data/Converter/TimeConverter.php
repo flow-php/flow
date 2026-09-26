@@ -11,31 +11,40 @@ use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Data\Converter;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\LogicalType;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
+use Flow\Parquet\ParquetFile\Schema\TimeUnit;
 
+use function Flow\Parquet\floor_div;
 use function get_debug_type;
 use function is_int;
 use function sprintf;
 
-final class TimeConverter implements Converter
+final readonly class TimeConverter implements Converter
 {
+    public function __construct(
+        private TimeUnit $unit,
+    ) {}
+
+    public static function forColumn(FlatColumn $column, Options $options): ?self
+    {
+        $time = $column->logicalType()?->timeData();
+
+        return ($column->type() === PhysicalType::INT32 || $column->type() === PhysicalType::INT64) && $time !== null
+            ? new self($time->unit())
+            : null;
+    }
+
     public function fromParquetType(mixed $data): DateInterval
     {
         if (!is_int($data)) {
             throw new InvalidArgumentException(sprintf('Expected int, got %s', get_debug_type($data)));
         }
 
-        return $this->toDateInterval($data);
-    }
-
-    public function isFor(FlatColumn $column, Options $options): bool
-    {
-        if ($column->type() === PhysicalType::INT64 && $column->logicalType()?->name() === LogicalType::TIME) {
-            return true;
-        }
-
-        return false;
+        return $this->toDateInterval(match ($this->unit) {
+            TimeUnit::MILLISECONDS => $data * 1_000,
+            TimeUnit::MICROSECONDS => $data,
+            TimeUnit::NANOSECONDS => floor_div($data, 1_000),
+        });
     }
 
     public function toParquetType(mixed $data): int
@@ -44,7 +53,13 @@ final class TimeConverter implements Converter
             throw new InvalidArgumentException(sprintf('Expected DateInterval, got %s', get_debug_type($data)));
         }
 
-        return $this->toInt($data);
+        $micros = $this->toInt($data);
+
+        return match ($this->unit) {
+            TimeUnit::MILLISECONDS => floor_div($micros, 1_000),
+            TimeUnit::MICROSECONDS => $micros,
+            TimeUnit::NANOSECONDS => $micros * 1_000,
+        };
     }
 
     private function toDateInterval(int $microseconds): DateInterval

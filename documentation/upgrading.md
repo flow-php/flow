@@ -419,6 +419,54 @@ The same applies to map values and structure elements.
 | `new DateTimeDefinition('at', true)`                                                                        | `new DateTimeDefinition('at', type_datetime(), true)` or `datetime_schema('at', nullable: true, zone: 'Europe/Warsaw')`                                                                                                          |
 | a `flow_php` extension older than this release                                                              | ignored - the PHP engine runs; a current extension with an older `flow-php/etl` keeps that library's behaviour                                                                                                                   |
 
+### 41) `flow-php/parquet` - `Converter::isFor()` replaced by `static Converter::forColumn()`, `Int32DateTimeConverter` removed
+
+| Before                                                             | After                                                                              |
+|--------------------------------------------------------------------|------------------------------------------------------------------------------------|
+| `Converter::isFor(FlatColumn, Options): bool` on a shared instance | `static Converter::forColumn(FlatColumn, Options): ?self` - a converter per column |
+| `new DataConverter([new TimeConverter(), ...], $options)`          | `new DataConverter([TimeConverter::class, ...], $options)`                         |
+| `Int32DateTimeConverter`                                           | removed - INT32 TIMESTAMP is not a legal Parquet carrier                           |
+
+### 42) `flow-php/parquet` - `LogicalType\Timestamp` / `Time` take a `TimeUnit`
+
+| Before                                                      | After                                                                                            |
+|-------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| `new Timestamp($isAdjustedToUTC, $millis, $micros, $nanos)` | `new Timestamp($isAdjustedToUTC, TimeUnit::MICROSECONDS)`, same for `Time`                       |
+| `TimeUnit` - pure enum with `MICROSECONDS` only             | string-backed enum `MILLISECONDS = 'MILLIS'`, `MICROSECONDS = 'MICROS'`, `NANOSECONDS = 'NANOS'` |
+
+### 43) `flow-php/parquet` - `Option::ROUND_NANOSECONDS` removed
+
+| Before                      | After                                                                                 |
+|-----------------------------|---------------------------------------------------------------------------------------|
+| `Option::ROUND_NANOSECONDS` | removed - NANOS timestamps always read as `DateTimeImmutable` floored to microseconds |
+
+### 44) `flow-php/parquet` - `encode_decimal()` / `decode_decimal()` drop `ByteOrder` and the read-side precision check
+
+| Before                                                                          | After                                                                                                        |
+|---------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------|
+| `encode_decimal(ByteOrder, float, int $byteLength, int $precision, int $scale)` | `encode_decimal(float, int $precision, int $scale, ?int $byteLength)` - `null` = minimal length (BYTE_ARRAY) |
+| `decode_decimal(ByteOrder, string, int $precision, int $scale)`                 | `decode_decimal(string, int $scale)` - no precision check                                                    |
+
+### 45) `flow-php/parquet`, `flow-php/arrow-ext` - TIMESTAMP columns are written `isAdjustedToUTC=true`
+
+| Before                                                                                                       | After                                                                                                |
+|--------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
+| `FlatColumn::dateTime()` / arrow `TIMESTAMP` written `isAdjustedToUTC=false` (DuckDB/Spark read `TIMESTAMP`) | written `isAdjustedToUTC=true` (DuckDB/Spark read `TIMESTAMPTZ`); reading `false` files is unchanged |
+
+### 46) `flow-php/parquet`, `flow-php/etl-adapter-parquet` - ConvertedType-only TIMESTAMP/TIME/DECIMAL columns are typed
+
+| Before                                                                        | After      |
+|-------------------------------------------------------------------------------|------------|
+| `TIMESTAMP_MILLIS` / `TIMESTAMP_MICROS` column without a logical type → `int` | `datetime` |
+| `TIME_MILLIS` / `TIME_MICROS` column without a logical type → `int`           | `time`     |
+| `DECIMAL` converted type on INT32/INT64 → unscaled `int`                      | `float`    |
+
+### 47) `flow-php/arrow-ext` - `Writer` DATE `int` lane is days since epoch
+
+| Before                                      | After                               |
+|---------------------------------------------|-------------------------------------|
+| `'d' => [1641600000]` - seconds since epoch | `'d' => [19000]` - days since epoch |
+
 ---
 
 ## Upgrading from 0.43.x to 0.44.x

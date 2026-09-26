@@ -65,7 +65,7 @@ $writer->writeBatch([
     'col_double' => [3.14159, -2.71828, null],
     'col_string' => ['hello', 'world', null],
     'col_binary' => ["\x00\x01\x02", "\xff\xfe", null],
-    'col_date' => [1641600000, 0, null],
+    'col_date' => [19000, 0, null],
     'col_timestamp' => [1700000000000000, 0, null],
     'col_decimal' => ['123.45', '-999.99', null],
 ]);

@@ -100,44 +100,9 @@ final class ByteConverterTest extends TestCase
     }
 
     #[DataProvider('decimalProvider')]
-    public function test_decimal_roundtrip_big_endian(float $value, int $byteLength, int $precision, int $scale): void
+    public function test_decimal_roundtrip(float $value, int $byteLength, int $precision, int $scale): void
     {
-        $encoded = encode_decimal(ByteOrder::BIG_ENDIAN, $value, $byteLength, $precision, $scale);
-        $decoded = decode_decimal(ByteOrder::BIG_ENDIAN, $encoded, $precision, $scale);
-
-        static::assertSame($value, $decoded);
-    }
-
-    #[DataProvider('decimalProvider')]
-    public function test_decimal_roundtrip_little_endian(
-        float $value,
-        int $byteLength,
-        int $precision,
-        int $scale,
-    ): void {
-        $encoded = encode_decimal(ByteOrder::LITTLE_ENDIAN, $value, $byteLength, $precision, $scale);
-        $decoded = decode_decimal(ByteOrder::LITTLE_ENDIAN, $encoded, $precision, $scale);
-
-        static::assertSame($value, $decoded);
-    }
-
-    public function test_decode_decimal_throws_on_precision_overflow(): void
-    {
-        $this->expectException(OverflowException::class);
-        $this->expectExceptionMessage('exceeds maximum precision of 3 digits');
-
-        $encoded = encode_decimal(ByteOrder::LITTLE_ENDIAN, 12.34, 4, 10, 2);
-
-        decode_decimal(ByteOrder::LITTLE_ENDIAN, $encoded, 3, 2);
-    }
-
-    public function test_decode_decimal_validates_precision(): void
-    {
-        $encoded = encode_decimal(ByteOrder::LITTLE_ENDIAN, 9.99, 4, 10, 2);
-
-        $decoded = decode_decimal(ByteOrder::LITTLE_ENDIAN, $encoded, 3, 2);
-
-        static::assertSame(9.99, $decoded);
+        static::assertSame($value, decode_decimal(encode_decimal($value, $precision, $scale, $byteLength), $scale));
     }
 
     public function test_encode_decimal_throws_on_precision_overflow(): void
@@ -145,7 +110,7 @@ final class ByteConverterTest extends TestCase
         $this->expectException(OverflowException::class);
         $this->expectExceptionMessage('exceeds maximum precision of 10 digits');
 
-        encode_decimal(ByteOrder::LITTLE_ENDIAN, 933162046.43, 5, 10, 2);
+        encode_decimal(933162046.43, 10, 2, 5);
     }
 
     public function test_encode_decode_f32_big_endian(): void

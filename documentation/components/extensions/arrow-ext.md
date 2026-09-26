@@ -35,7 +35,7 @@ The Arrow Rust crates offer additional I/O capabilities that are candidates for 
 ## Features
 
 - Read and write Apache Parquet files through PHP streaming interfaces
-- Flat types: INT32, INT64, FLOAT, DOUBLE, BOOLEAN, STRING, BINARY, DATE32, TIMESTAMP
+- Flat types: INT32, INT64, FLOAT, DOUBLE, BOOLEAN, STRING, BINARY, DATE, TIMESTAMP, TIME, DECIMAL
 - Nested types: LIST, STRUCT, MAP (arbitrarily nested)
 - Compression codecs: UNCOMPRESSED, SNAPPY, GZIP, ZSTD, LZ4_RAW, BROTLI
 - Column projection for selective reads
@@ -179,20 +179,23 @@ $writer->close();
 
 The schema is an array of column definitions. Each column has a `name`, `type`, and optional `optional` flag.
 
-| Type | PHP Read Value | Notes |
-|------|---------------|-------|
-| `BOOLEAN` | `bool` | |
-| `INT32` | `int` | |
-| `INT64` | `int` | |
-| `FLOAT` | `float` | |
-| `DOUBLE` | `float` | |
-| `STRING` | `string` | |
-| `BINARY` | `string` (raw bytes) | |
-| `DATE32` | `string` (YYYY-MM-DD) | |
-| `TIMESTAMP` | `string` (ISO 8601) | |
-| `LIST` | `array` | Requires `children` key with 1 element |
-| `STRUCT` | `array` (associative) | Requires `children` key with N elements |
-| `MAP` | `array` (associative) | Requires `children` key with 2 elements (key + value) |
+| Type        | PHP Read Value        | Notes                                                                                                             |
+|-------------|-----------------------|-------------------------------------------------------------------------------------------------------------------|
+| `BOOLEAN`   | `bool`                |                                                                                                                   |
+| `INT32`     | `int`                 |                                                                                                                   |
+| `INT64`     | `int`                 |                                                                                                                   |
+| `FLOAT`     | `float`               |                                                                                                                   |
+| `DOUBLE`    | `float`               |                                                                                                                   |
+| `STRING`    | `string`              |                                                                                                                   |
+| `BINARY`    | `string` (raw bytes)  |                                                                                                                   |
+| `DATE`      | `DateTimeImmutable`   | `int` lane: days since epoch                                                                                      |
+| `TIMESTAMP` | `DateTimeImmutable`   | Keys `unit` (`MILLIS\|MICROS\|NANOS`, default `MICROS`) and `utc` (default `true`); `int` lane in the column unit |
+| `TIME`      | `DateInterval`        | Key `unit` (`MILLIS\|MICROS\|NANOS`, default `MICROS`)                                                            |
+| `DECIMAL`   | `float`               | Keys `precision`, `scale`                                                                                         |
+| `UUID`      | `string`              |                                                                                                                   |
+| `LIST`      | `array`               | Requires `children` key with 1 element                                                                            |
+| `STRUCT`    | `array` (associative) | Requires `children` key with N elements                                                                           |
+| `MAP`       | `array` (associative) | Requires `children` key with 2 elements (key + value)                                                             |
 
 **Nested schema example:**
 
