@@ -6,8 +6,8 @@ namespace Flow\Parquet\ParquetFile\Data;
 
 use Flow\Parquet\Exception\DataConversionException;
 use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Data\Converter\DecimalConverter;
 use Flow\Parquet\ParquetFile\Data\Converter\Int32DateConverter;
-use Flow\Parquet\ParquetFile\Data\Converter\Int32DateTimeConverter;
 use Flow\Parquet\ParquetFile\Data\Converter\Int64DateTimeConverter;
 use Flow\Parquet\ParquetFile\Data\Converter\Int96DateTimeConverter;
 use Flow\Parquet\ParquetFile\Data\Converter\JsonConverter;
@@ -26,7 +26,7 @@ final class DataConverter
     private array $cache;
 
     /**
-     * @param array<Converter> $converters
+     * @param list<class-string<Converter>> $converters
      */
     public function __construct(
         private readonly array $converters,
@@ -38,13 +38,13 @@ final class DataConverter
     public static function initialize(Options $options): self
     {
         return new self([
-            new TimeConverter(),
-            new Int32DateConverter(),
-            new Int32DateTimeConverter(),
-            new Int64DateTimeConverter(),
-            new Int96DateTimeConverter(),
-            new UuidConverter(),
-            new JsonConverter(),
+            TimeConverter::class,
+            Int32DateConverter::class,
+            Int64DateTimeConverter::class,
+            Int96DateTimeConverter::class,
+            DecimalConverter::class,
+            UuidConverter::class,
+            JsonConverter::class,
         ], $options);
     }
 
@@ -54,35 +54,21 @@ final class DataConverter
             return null;
         }
 
-        $flatPath = $column->flatPath();
+        $converter = $this->resolveConverter($column);
 
-        if (array_key_exists($flatPath, $this->cache)) {
-            if ($this->cache[$flatPath] === null) {
-                return $data;
-            }
-
-            return $this->cache[$flatPath]->fromParquetType($data);
+        if ($converter === null) {
+            return $data;
         }
 
-        foreach ($this->converters as $converter) {
-            if ($converter->isFor($column, $this->options)) {
-                $this->cache[$flatPath] = $converter;
-
-                try {
-                    return $converter->fromParquetType($data);
-                } catch (Throwable $e) {
-                    throw new DataConversionException(
-                        "Failed to convert data from parquet type for column '{$flatPath}'. {$e->getMessage()}",
-                        0,
-                        $e,
-                    );
-                }
-            }
+        try {
+            return $converter->fromParquetType($data);
+        } catch (Throwable $e) {
+            throw new DataConversionException(
+                "Failed to convert data from parquet type for column '{$column->flatPath()}'. {$e->getMessage()}",
+                0,
+                $e,
+            );
         }
-
-        $this->cache[$flatPath] = null;
-
-        return $data;
     }
 
     public function resolveConverter(FlatColumn $column): ?Converter
@@ -93,17 +79,16 @@ final class DataConverter
             return $this->cache[$flatPath];
         }
 
-        foreach ($this->converters as $converter) {
-            if ($converter->isFor($column, $this->options)) {
-                $this->cache[$flatPath] = $converter;
+        foreach ($this->converters as $class) {
+            // @mago-ignore analysis:possibly-static-access-on-interface
+            $converter = $class::forColumn($column, $this->options);
 
-                return $converter;
+            if ($converter !== null) {
+                return $this->cache[$flatPath] = $converter;
             }
         }
 
-        $this->cache[$flatPath] = null;
-
-        return null;
+        return $this->cache[$flatPath] = null;
     }
 
     public function toParquetType(FlatColumn $column, mixed $data): mixed
@@ -112,26 +97,8 @@ final class DataConverter
             return null;
         }
 
-        $flatPath = $column->flatPath();
+        $converter = $this->resolveConverter($column);
 
-        if (array_key_exists($flatPath, $this->cache)) {
-            if ($this->cache[$flatPath] === null) {
-                return $data;
-            }
-
-            return $this->cache[$flatPath]->toParquetType($data);
-        }
-
-        foreach ($this->converters as $converter) {
-            if ($converter->isFor($column, $this->options)) {
-                $this->cache[$flatPath] = $converter;
-
-                return $converter->toParquetType($data);
-            }
-        }
-
-        $this->cache[$flatPath] = null;
-
-        return $data;
+        return $converter === null ? $data : $converter->toParquetType($data);
     }
 }

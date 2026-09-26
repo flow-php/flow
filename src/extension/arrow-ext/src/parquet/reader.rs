@@ -1,4 +1,4 @@
-use arrow_schema::DataType;
+use arrow_schema::{DataType, TimeUnit};
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, ZendObject};
@@ -108,6 +108,15 @@ impl Reader {
     }
 }
 
+fn time_unit_name(unit: &TimeUnit) -> &'static str {
+    match unit {
+        // Parquet has no second unit; arrow-rs stores seconds as MILLIS.
+        TimeUnit::Second | TimeUnit::Millisecond => "MILLIS",
+        TimeUnit::Microsecond => "MICROS",
+        TimeUnit::Nanosecond => "NANOS",
+    }
+}
+
 fn field_to_php_schema(field: &arrow_schema::Field) -> PhpResult<ZBox<ZendHashTable>> {
     let mut entry = ZendHashTable::new();
     entry
@@ -131,7 +140,7 @@ fn field_to_php_schema(field: &arrow_schema::Field) -> PhpResult<ZBox<ZendHashTa
         DataType::Date32 | DataType::Date64 => "DATE",
         DataType::Timestamp(_, _) => "TIMESTAMP",
         DataType::Time32(_) | DataType::Time64(_) => "TIME",
-        DataType::Decimal128(_, _) => "DECIMAL",
+        DataType::Decimal128(_, _) | DataType::Decimal256(_, _) => "DECIMAL",
         DataType::FixedSizeBinary(_) => "FIXED_SIZE_BINARY",
         DataType::List(_) | DataType::LargeList(_) => "LIST",
         DataType::Struct(_) => "STRUCT",
@@ -152,12 +161,25 @@ fn field_to_php_schema(field: &arrow_schema::Field) -> PhpResult<ZBox<ZendHashTa
         .map_err(|_| parquet_exception("Failed to build schema entry"))?;
 
     match field.data_type() {
-        DataType::Decimal128(precision, scale) => {
+        DataType::Decimal128(precision, scale) | DataType::Decimal256(precision, scale) => {
             entry
                 .insert("precision", *precision as i64)
                 .map_err(|_| parquet_exception("Failed to build schema entry"))?;
             entry
                 .insert("scale", *scale as i64)
+                .map_err(|_| parquet_exception("Failed to build schema entry"))?;
+        }
+        DataType::Timestamp(unit, tz) => {
+            entry
+                .insert("unit", time_unit_name(unit))
+                .map_err(|_| parquet_exception("Failed to build schema entry"))?;
+            entry
+                .insert("utc", tz.is_some())
+                .map_err(|_| parquet_exception("Failed to build schema entry"))?;
+        }
+        DataType::Time32(unit) | DataType::Time64(unit) => {
+            entry
+                .insert("unit", time_unit_name(unit))
                 .map_err(|_| parquet_exception("Failed to build schema entry"))?;
         }
         DataType::FixedSizeBinary(n) => {

@@ -6,6 +6,8 @@ namespace Flow\Parquet\Tests\Unit\Writer;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\LogicalType;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Writer\StatisticsCounter;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -521,6 +523,23 @@ final class StatisticsCounterTest extends TestCase
         static::assertSame('world', $result->max);
         static::assertSame('hello', $result->minValue);
         static::assertSame('world', $result->maxValue);
+    }
+
+    public function test_to_statistics_encodes_byte_array_decimal_without_length_prefix(): void
+    {
+        $statistics = new StatisticsCounter(
+            new FlatColumn('test_column', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::decimal(2, 9)),
+        );
+
+        $statistics->add(12345.67);
+        $statistics->add(-12345.67);
+
+        $result = $statistics->toStatistics();
+
+        static::assertSame("\xED\x29\x79", $result->min);
+        static::assertSame("\x12\xD6\x87", $result->max);
+        static::assertSame("\xED\x29\x79", $result->minValue);
+        static::assertSame("\x12\xD6\x87", $result->maxValue);
     }
 
     public function test_to_statistics_with_int32_encodes_with_packer(): void

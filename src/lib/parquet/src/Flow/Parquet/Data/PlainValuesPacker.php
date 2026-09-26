@@ -12,6 +12,7 @@ use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use RuntimeException;
 
 use function array_filter;
+use function array_map;
 use function Flow\Parquet\Binary\encode_decimal;
 use function Flow\Parquet\Binary\encode_f32;
 use function Flow\Parquet\Binary\encode_f64;
@@ -43,26 +44,13 @@ final readonly class PlainValuesPacker
 
                 break;
             case PhysicalType::INT32:
-                switch ($column->logicalType()?->name()) {
-                    case LogicalType::DATE:
-                    case null:
-                        /** @var array<int> $values */
-                        $this->packInt32s($values);
-
-                        break;
-                }
+                /** @var array<int> $values */
+                $this->packInt32s($values);
 
                 break;
             case PhysicalType::INT64:
-                switch ($column->logicalType()?->name()) {
-                    case LogicalType::TIME:
-                    case LogicalType::TIMESTAMP:
-                    case null:
-                        /** @var array<int> $values */
-                        $this->packInt64s($values);
-
-                        break;
-                }
+                /** @var array<int> $values */
+                $this->packInt64s($values);
 
                 break;
             case PhysicalType::FLOAT:
@@ -87,8 +75,8 @@ final readonly class PlainValuesPacker
                         $this->packDecimals(
                             $values,
                             (int) $column->typeLength(),
-                            (int) $column->precision(),
-                            (int) $column->scale(),
+                            (int) $column->logicalType()?->decimalData()?->precision(),
+                            (int) $column->logicalType()?->decimalData()?->scale(),
                         );
 
                         break;
@@ -106,6 +94,19 @@ final readonly class PlainValuesPacker
                     case LogicalType::STRING:
                         /** @var array<string> $values */
                         $this->packStrings($values);
+
+                        break;
+                    case LogicalType::DECIMAL:
+                        $precision = (int) $column->logicalType()?->decimalData()?->precision();
+                        $scale = (int) $column->logicalType()?->decimalData()?->scale();
+
+                        /** @var array<float|int> $values */
+                        $this->packByteArrays(array_map(static fn(float|int $value): string => encode_decimal(
+                            (float) $value,
+                            $precision,
+                            $scale,
+                            null,
+                        ), $values));
 
                         break;
                     default:
@@ -154,7 +155,7 @@ final readonly class PlainValuesPacker
     private function packDecimals(array $decimals, int $byteLength, int $precision, int $scale): void
     {
         foreach ($decimals as $decimal) {
-            $this->writer->append(encode_decimal($this->byteOrder, $decimal, $byteLength, $precision, $scale));
+            $this->writer->append(encode_decimal($decimal, $precision, $scale, $byteLength));
         }
     }
 

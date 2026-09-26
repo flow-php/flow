@@ -8,10 +8,15 @@ use Flow\Parquet\Engine\Arrow\SchemaConverter;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\ListElement;
+use Flow\Parquet\ParquetFile\Schema\LogicalType;
+use Flow\Parquet\ParquetFile\Schema\LogicalType\Time;
+use Flow\Parquet\ParquetFile\Schema\LogicalType\Timestamp;
 use Flow\Parquet\ParquetFile\Schema\MapKey;
 use Flow\Parquet\ParquetFile\Schema\MapValue;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\ParquetFile\Schema\Repetition;
+use Flow\Parquet\ParquetFile\Schema\TimeUnit;
 use PHPUnit\Framework\TestCase;
 
 final class SchemaConverterTest extends TestCase
@@ -40,6 +45,8 @@ final class SchemaConverterTest extends TestCase
         $result = SchemaConverter::toExtension($schema);
 
         static::assertSame('TIMESTAMP', $result[0]['type']);
+        static::assertSame('MICROS', $result[0]['unit']);
+        static::assertTrue($result[0]['utc']);
     }
 
     public function test_decimal_column_to_extension(): void
@@ -107,6 +114,38 @@ final class SchemaConverterTest extends TestCase
         static::assertSame('DATE', $result[2]['type']);
         static::assertSame('LIST', $result[3]['type']);
         static::assertSame('STRUCT', $result[4]['type']);
+    }
+
+    public function test_local_millis_timestamp_column_to_extension(): void
+    {
+        $result = SchemaConverter::toExtension(Schema::with(
+            new FlatColumn(
+                'ts',
+                PhysicalType::INT64,
+                logicalType: new LogicalType(
+                    LogicalType::TIMESTAMP,
+                    timestamp: new Timestamp(false, TimeUnit::MILLISECONDS),
+                ),
+            ),
+        ));
+
+        static::assertSame('TIMESTAMP', $result[0]['type']);
+        static::assertSame('MILLIS', $result[0]['unit']);
+        static::assertFalse($result[0]['utc']);
+    }
+
+    public function test_nanos_time_column_to_extension(): void
+    {
+        $result = SchemaConverter::toExtension(Schema::with(
+            new FlatColumn(
+                't',
+                PhysicalType::INT64,
+                logicalType: new LogicalType(LogicalType::TIME, time: new Time(false, TimeUnit::NANOSECONDS)),
+            ),
+        ));
+
+        static::assertSame('TIME', $result[0]['type']);
+        static::assertSame('NANOS', $result[0]['unit']);
     }
 
     public function test_int32_column_to_extension(): void
@@ -218,6 +257,8 @@ final class SchemaConverterTest extends TestCase
         $result = SchemaConverter::toExtension($schema);
 
         static::assertSame('TIME', $result[0]['type']);
+        static::assertSame('MICROS', $result[0]['unit']);
+        static::assertArrayNotHasKey('utc', $result[0]);
     }
 
     public function test_uuid_column_to_extension(): void

@@ -17,8 +17,13 @@ use function is_string;
 use function method_exists;
 use function sprintf;
 
-final class UuidConverter implements Converter
+final readonly class UuidConverter implements Converter
 {
+    public static function forColumn(FlatColumn $column, Options $options): ?self
+    {
+        return $column->logicalType()?->name() === LogicalType::UUID ? new self() : null;
+    }
+
     public function fromParquetType(mixed $data): string
     {
         if (!is_string($data)) {
@@ -26,15 +31,6 @@ final class UuidConverter implements Converter
         }
 
         return $data;
-    }
-
-    public function isFor(FlatColumn $column, Options $options): bool
-    {
-        if ($column->logicalType()?->name() === LogicalType::UUID) {
-            return true;
-        }
-
-        return false;
     }
 
     public function toParquetType(mixed $data): string

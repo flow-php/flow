@@ -4,22 +4,36 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Binary;
 
+use Flow\Parquet\Exception\InvalidArgumentException;
 use OverflowException;
 
 use function abs;
-use function array_reverse;
 use function array_values;
+use function bcadd;
 use function bccomp;
 use function bcdiv;
+use function bcmod;
+use function bcmul;
 use function bcpow;
+use function bcsub;
+use function chr;
 use function count;
+use function explode;
+use function is_numeric;
+use function ltrim;
 use function max;
-use function number_format;
+use function ord;
 use function pack;
 use function sprintf;
+use function str_pad;
 use function str_repeat;
+use function str_replace;
+use function str_starts_with;
 use function strlen;
+use function strpos;
+use function substr;
 use function unpack;
+use function var_export;
 
 /**
  * @param array<int> $values
@@ -287,71 +301,131 @@ function decode_f64(ByteOrder $order, string $bytes): array
     return array_values($values);
 }
 
-function encode_decimal(ByteOrder $order, float $value, int $byteLength, int $precision, int $scale): string
+/**
+ * Rounds the shortest round-trip representation of the float half away from zero - the same digits arrow-ext writes.
+ *
+ * @return numeric-string
+ */
+function decimal_unscaled(float $value, int $precision, int $scale): string
 {
-    $decimalInt = (int) number_format($value, $scale, '', '');
+    $repr = var_export($value, true);
+    $parts = explode('E', $repr);
+    $mantissa = ltrim($parts[0], '-');
+    $dot = strpos($mantissa, '.');
+    $digits = str_replace('.', '', $mantissa);
+    $point = ($dot === false ? strlen($mantissa) : $dot) + (int) ($parts[1] ?? 0);
+    $scale = max(0, $scale);
 
-    $maxUnscaled = bcpow('10', (string) $precision);
+    $plain = (str_starts_with($repr, '-') ? '-' : '') . match (true) {
+        $point <= 0 => '0.' . str_repeat('0', abs($point)) . $digits,
+        $point >= strlen($digits) => str_pad($digits, $point, '0'),
+        default => substr($digits, 0, $point) . '.' . substr($digits, $point),
+    };
 
-    if (bccomp((string) abs($decimalInt), $maxUnscaled) >= 0) {
+    if (!is_numeric($plain)) {
+        throw new InvalidArgumentException(sprintf('Decimal value %s is not a finite number', $repr));
+    }
+
+    $half = bcdiv('5', bcpow('10', (string) ($scale + 1)), $scale + 1);
+    $unscaled = bcmul(
+        bcadd($plain, str_starts_with($plain, '-') ? bcsub('0', $half, $scale + 1) : $half, $scale),
+        bcpow('10', (string) $scale),
+        0,
+    );
+
+    if (strlen(ltrim($unscaled, '-')) > $precision) {
         throw new OverflowException(sprintf(
             'Decimal value %s exceeds maximum precision of %d digits',
-            $value,
+            $unscaled,
             $precision,
         ));
     }
 
-    $bytes = [];
-
-    for ($i = $byteLength - 1; $i >= 0; $i--) {
-        $shift = $i * 8;
-        $bytes[] = ($decimalInt >> $shift) & 0xFF;
-    }
-
-    if ($order === ByteOrder::BIG_ENDIAN) {
-        $bytes = array_reverse($bytes);
-    }
-
-    $packedBytes = '';
-
-    foreach ($bytes as $byte) {
-        $packedBytes .= pack('C', $byte);
-    }
-
-    return $packedBytes;
+    return $unscaled;
 }
 
-function decode_decimal(ByteOrder $order, string $bytes, int $precision, int $scale): float
+/**
+ * @param numeric-string $unscaled
+ */
+function decimal_from_unscaled(string $unscaled, int $scale): float
 {
+    $scale = max(0, $scale);
+
+    return (float) bcdiv($unscaled, bcpow('10', (string) $scale), $scale);
+}
+
+/**
+ * Decimals are big-endian two's complement. A null byte length encodes the minimal number of bytes (BYTE_ARRAY).
+ */
+function encode_decimal(float $value, int $precision, int $scale, ?int $byteLength): string
+{
+    $unscaled = decimal_unscaled($value, $precision, $scale);
+    $negative = str_starts_with($unscaled, '-');
+
+    if (strlen(ltrim($unscaled, '-')) <= 18) {
+        $bytes = pack('J', (int) $unscaled);
+
+        if ($byteLength === null) {
+            $signByte = $negative ? "\xFF" : "\x00";
+
+            while (strlen($bytes) > 1 && $bytes[0] === $signByte && ord($bytes[1]) >= 0x80 === $negative) {
+                $bytes = substr($bytes, 1);
+            }
+
+            return $bytes;
+        }
+
+        return $byteLength <= 8
+            ? substr($bytes, -$byteLength)
+            : str_pad($bytes, $byteLength, $negative ? "\xFF" : "\x00", STR_PAD_LEFT);
+    }
+
+    if ($byteLength === null) {
+        $byteLength = 1;
+
+        while (
+            bccomp($unscaled, bcpow('2', (string) ((8 * $byteLength) - 1))) >= 0
+            || bccomp($unscaled, bcsub('0', bcpow('2', (string) ((8 * $byteLength) - 1)))) < 0
+        ) {
+            $byteLength++;
+        }
+    }
+
+    $unsigned = $negative ? bcadd(bcpow('2', (string) (8 * $byteLength)), $unscaled) : $unscaled;
+    $bytes = '';
+
+    for ($i = 0; $i < $byteLength; $i++) {
+        $bytes = chr((int) bcmod($unsigned, '256')) . $bytes;
+        $unsigned = bcdiv($unsigned, '256', 0);
+    }
+
+    return $bytes;
+}
+
+function decode_decimal(string $bytes, int $scale): float
+{
+    if ($bytes === '') {
+        return 0.0;
+    }
+
     $byteLength = strlen($bytes);
-    $intValue = 0;
+    $negative = ord($bytes[0]) >= 0x80;
 
-    /** @var array<int, int> $byteArray */
-    $byteArray = unpack('C*', $bytes);
+    if ($byteLength <= 8) {
+        /** @var array{1: int} $unpacked */
+        $unpacked = unpack('J', str_pad($bytes, 8, $negative ? "\xFF" : "\x00", STR_PAD_LEFT));
 
-    if ($order === ByteOrder::BIG_ENDIAN) {
-        $byteArray = array_values(array_reverse($byteArray));
-
-        foreach ($byteArray as $i => $byte) {
-            $shift = ($byteLength - $i - 1) * 8;
-            $intValue |= $byte << $shift;
-        }
-    } else {
-        foreach ($byteArray as $i => $byte) {
-            $shift = ($byteLength - $i) * 8;
-            $intValue |= $byte << $shift;
-        }
+        return decimal_from_unscaled((string) $unpacked[1], $scale);
     }
 
-    $maxUnscaled = bcpow('10', (string) $precision);
+    $unscaled = '0';
 
-    if (bccomp((string) abs($intValue), $maxUnscaled) >= 0) {
-        throw new OverflowException(sprintf(
-            'Decoded decimal value %d exceeds maximum precision of %d digits',
-            $intValue,
-            $precision,
-        ));
+    for ($i = 0; $i < $byteLength; $i++) {
+        $unscaled = bcadd(bcmul($unscaled, '256'), (string) ord($bytes[$i]));
     }
 
-    return (float) bcdiv((string) $intValue, bcpow('10', (string) $scale), max(0, $scale));
+    return decimal_from_unscaled(
+        $negative ? bcsub($unscaled, bcpow('2', (string) (8 * $byteLength))) : $unscaled,
+        $scale,
+    );
 }

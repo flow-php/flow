@@ -6,6 +6,7 @@ namespace Flow\Parquet\Dremel\Statistics;
 
 use DateInterval;
 use Flow\Parquet\ParquetFile\Data\Converter\TimeConverter;
+use Flow\Parquet\ParquetFile\Schema\TimeUnit;
 use RuntimeException;
 
 use function gettype;
@@ -29,8 +30,8 @@ final class Comparator
         }
 
         if ($value instanceof DateInterval) {
-            $value = (new TimeConverter())->toParquetType($value);
-            $nextValue = (new TimeConverter())->toParquetType($nextValue);
+            $value = (new TimeConverter(TimeUnit::MICROSECONDS))->toParquetType($value);
+            $nextValue = (new TimeConverter(TimeUnit::MICROSECONDS))->toParquetType($nextValue);
         }
 
         if (!is_scalar($value) || !is_scalar($nextValue)) {
@@ -59,8 +60,8 @@ final class Comparator
         }
 
         if ($value instanceof DateInterval) {
-            $value = (new TimeConverter())->toParquetType($value);
-            $nextValue = (new TimeConverter())->toParquetType($nextValue);
+            $value = (new TimeConverter(TimeUnit::MICROSECONDS))->toParquetType($value);
+            $nextValue = (new TimeConverter(TimeUnit::MICROSECONDS))->toParquetType($nextValue);
         }
 
         if (!is_scalar($value) || !is_scalar($nextValue)) {

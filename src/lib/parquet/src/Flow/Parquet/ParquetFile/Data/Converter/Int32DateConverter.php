@@ -16,12 +16,26 @@ use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use InvalidArgumentException;
 
 use function abs;
+use function Flow\Parquet\floor_div;
 use function get_debug_type;
 use function is_int;
 use function sprintf;
 
-final class Int32DateConverter implements Converter
+final readonly class Int32DateConverter implements Converter
 {
+    public static function forColumn(FlatColumn $column, Options $options): ?self
+    {
+        if ($column->type() === PhysicalType::INT32 && $column->logicalType()?->name() === LogicalType::DATE) {
+            return new self();
+        }
+
+        if ($column->type() === PhysicalType::INT32 && $column->convertedType() === ConvertedType::DATE) {
+            return new self();
+        }
+
+        return null;
+    }
+
     public function fromParquetType(mixed $data): DateTimeImmutable
     {
         if (!is_int($data)) {
@@ -29,19 +43,6 @@ final class Int32DateConverter implements Converter
         }
 
         return $this->numberOfDaysToDateTime($data);
-    }
-
-    public function isFor(FlatColumn $column, Options $options): bool
-    {
-        if ($column->type() === PhysicalType::INT32 && $column->logicalType()?->name() === LogicalType::DATE) {
-            return true;
-        }
-
-        if ($column->type() === PhysicalType::INT32 && $column->convertedType() === ConvertedType::DATE) {
-            return true;
-        }
-
-        return false;
     }
 
     public function toParquetType(mixed $data): int
@@ -53,15 +54,7 @@ final class Int32DateConverter implements Converter
             ));
         }
 
-        return $this->dateTimeToNumberOfDays($data);
-    }
-
-    private function dateTimeToNumberOfDays(DateTime|DateTimeImmutable $date): int
-    {
-        $epoch = new DateTimeImmutable('1970-01-01 00:00:00 UTC');
-        $interval = $epoch->diff($date->setTime(0, 0, 0, 0));
-
-        return $interval->invert ? -(int) $interval->format('%a') : (int) $interval->format('%a');
+        return floor_div($data->getTimestamp() + $data->getOffset(), 86_400);
     }
 
     private function numberOfDaysToDateTime(int $data): DateTimeImmutable

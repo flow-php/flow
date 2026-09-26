@@ -1,9 +1,9 @@
 use arrow_array::builder::{
     BinaryBuilder, BooleanBuilder, Date32Builder, Decimal128Builder, FixedSizeBinaryBuilder,
     Float32Builder, Float64Builder, Int16Builder, Int32Builder, Int64Builder, Int8Builder,
-    StringBuilder, Time64MicrosecondBuilder, TimestampMicrosecondBuilder, UInt16Builder,
-    UInt32Builder, UInt64Builder, UInt8Builder,
+    StringBuilder, UInt16Builder, UInt32Builder, UInt64Builder, UInt8Builder,
 };
+use arrow_array::types::{Decimal128Type, Decimal256Type, DecimalType};
 use arrow_array::*;
 use arrow_buffer::{NullBuffer, OffsetBuffer, ScalarBuffer};
 use arrow_schema::{
@@ -17,6 +17,13 @@ use ext_php_rs::zend::ClassEntry;
 use std::sync::Arc;
 
 use crate::parquet::exception::parquet_exception;
+
+fn split_epoch(value: i64, units_per_second: i64) -> (i64, i64) {
+    (
+        value.div_euclid(units_per_second),
+        value.rem_euclid(units_per_second) * (1_000_000 / units_per_second),
+    )
+}
 
 fn create_datetime_immutable(seconds: i64, microseconds: i64) -> PhpResult<Zval> {
     let mut callable_ht = ZendHashTable::with_capacity(2);
@@ -39,7 +46,7 @@ fn create_datetime_immutable(seconds: i64, microseconds: i64) -> PhpResult<Zval>
     callable.set_hashtable(callable_ht);
 
     let format = "U.u".to_string();
-    let value = format!("{}.{:06}", seconds, microseconds.unsigned_abs());
+    let value = format!("{}.{:06}", seconds, microseconds);
 
     callable
         .try_call(vec![
@@ -121,6 +128,17 @@ fn extract_datetime_timestamp(zv: &Zval, column_name: &str) -> Result<(i64, i64)
     Ok((seconds, microseconds))
 }
 
+fn extract_datetime_offset(zv: &Zval, column_name: &str) -> Result<i64, String> {
+    let obj = zv
+        .object()
+        .ok_or_else(|| format!("Column '{}': expected object", column_name))?;
+
+    obj.try_call_method("getOffset", vec![])
+        .map_err(|e| format!("Column '{}': getOffset() failed: {:?}", column_name, e))?
+        .long()
+        .ok_or_else(|| format!("Column '{}': getOffset() did not return int", column_name))
+}
+
 fn extract_date_interval_microseconds(zv: &Zval, column_name: &str) -> Result<i64, String> {
     let obj = zv
         .object()
@@ -142,6 +160,19 @@ fn extract_date_interval_microseconds(zv: &Zval, column_name: &str) -> Result<i6
     let f: f64 = obj.get_property::<f64>("f").unwrap_or(0.0);
 
     Ok(h * 3_600_000_000 + i * 60_000_000 + s * 1_000_000 + (f * 1_000_000.0) as i64)
+}
+
+fn decimal_to_zval<T: DecimalType>(value: T::Native, precision: u8, scale: i8) -> PhpResult<Zval> {
+    let str_val = T::format_decimal(value, precision, scale);
+    let float_val: f64 = str_val.parse().map_err(|e| {
+        parquet_exception(format!(
+            "Failed to parse decimal value '{}': {}",
+            str_val, e
+        ))
+    })?;
+    let mut zv = Zval::new();
+    zv.set_double(float_val);
+    Ok(zv)
 }
 
 fn downcast_array<'a, T: 'static>(array: &'a dyn Array, type_name: &str) -> PhpResult<&'a T> {
@@ -335,8 +366,8 @@ fn convert_single_arrow_value(array: &dyn Array, index: usize, is_uuid: bool) ->
         }
         DataType::Date64 => {
             let arr = downcast_array::<Date64Array>(array, "Date64Array")?;
-            let ms = arr.value(index);
-            create_datetime_immutable(ms / 1000, (ms % 1000) * 1000)
+            let (s, us) = split_epoch(arr.value(index), 1_000);
+            create_datetime_immutable(s, us)
         }
         DataType::Timestamp(TimeUnit::Second, _) => {
             let arr = downcast_array::<TimestampSecondArray>(array, "TimestampSecondArray")?;
@@ -345,20 +376,20 @@ fn convert_single_arrow_value(array: &dyn Array, index: usize, is_uuid: bool) ->
         DataType::Timestamp(TimeUnit::Millisecond, _) => {
             let arr =
                 downcast_array::<TimestampMillisecondArray>(array, "TimestampMillisecondArray")?;
-            let v = arr.value(index);
-            create_datetime_immutable(v / 1000, (v % 1000) * 1000)
+            let (s, us) = split_epoch(arr.value(index), 1_000);
+            create_datetime_immutable(s, us)
         }
         DataType::Timestamp(TimeUnit::Microsecond, _) => {
             let arr =
                 downcast_array::<TimestampMicrosecondArray>(array, "TimestampMicrosecondArray")?;
-            let v = arr.value(index);
-            create_datetime_immutable(v / 1_000_000, v % 1_000_000)
+            let (s, us) = split_epoch(arr.value(index), 1_000_000);
+            create_datetime_immutable(s, us)
         }
         DataType::Timestamp(TimeUnit::Nanosecond, _) => {
             let arr =
                 downcast_array::<TimestampNanosecondArray>(array, "TimestampNanosecondArray")?;
-            let v = arr.value(index);
-            create_datetime_immutable(v / 1_000_000_000, (v / 1000) % 1_000_000)
+            let (s, us) = split_epoch(arr.value(index).div_euclid(1_000), 1_000_000);
+            create_datetime_immutable(s, us)
         }
         DataType::Time32(TimeUnit::Second) => {
             let arr = downcast_array::<Time32SecondArray>(array, "Time32SecondArray")?;
@@ -374,20 +405,15 @@ fn convert_single_arrow_value(array: &dyn Array, index: usize, is_uuid: bool) ->
         }
         DataType::Time64(TimeUnit::Nanosecond) => {
             let arr = downcast_array::<Time64NanosecondArray>(array, "Time64NanosecondArray")?;
-            create_date_interval(arr.value(index) / 1000)
+            create_date_interval(arr.value(index).div_euclid(1_000))
         }
-        DataType::Decimal128(_, _) => {
+        DataType::Decimal128(precision, scale) => {
             let arr = downcast_array::<Decimal128Array>(array, "Decimal128Array")?;
-            let str_val = arr.value_as_string(index);
-            let float_val: f64 = str_val.parse().map_err(|e| {
-                parquet_exception(format!(
-                    "Failed to parse decimal value '{}': {}",
-                    str_val, e
-                ))
-            })?;
-            let mut zv = Zval::new();
-            zv.set_double(float_val);
-            Ok(zv)
+            decimal_to_zval::<Decimal128Type>(arr.value(index), *precision, *scale)
+        }
+        DataType::Decimal256(precision, scale) => {
+            let arr = downcast_array::<Decimal256Array>(array, "Decimal256Array")?;
+            decimal_to_zval::<Decimal256Type>(arr.value(index), *precision, *scale)
         }
         DataType::List(element_field) => {
             let list_array = downcast_array::<ListArray>(array, "ListArray")?;
@@ -622,7 +648,8 @@ pub fn arrow_array_to_php_values(array: &dyn Array, field: Option<&Field>) -> Ph
         DataType::Date64 => {
             let arr = downcast_array::<Date64Array>(array, "Date64Array")?;
             convert_primitive_values(arr, |v| {
-                create_datetime_immutable(v / 1000, (v % 1000) * 1000)
+                let (s, us) = split_epoch(v, 1_000);
+                create_datetime_immutable(s, us)
             })
         }
 
@@ -634,21 +661,24 @@ pub fn arrow_array_to_php_values(array: &dyn Array, field: Option<&Field>) -> Ph
             let arr =
                 downcast_array::<TimestampMillisecondArray>(array, "TimestampMillisecondArray")?;
             convert_primitive_values(arr, |v| {
-                create_datetime_immutable(v / 1000, (v % 1000) * 1000)
+                let (s, us) = split_epoch(v, 1_000);
+                create_datetime_immutable(s, us)
             })
         }
         DataType::Timestamp(TimeUnit::Microsecond, _) => {
             let arr =
                 downcast_array::<TimestampMicrosecondArray>(array, "TimestampMicrosecondArray")?;
             convert_primitive_values(arr, |v| {
-                create_datetime_immutable(v / 1_000_000, v % 1_000_000)
+                let (s, us) = split_epoch(v, 1_000_000);
+                create_datetime_immutable(s, us)
             })
         }
         DataType::Timestamp(TimeUnit::Nanosecond, _) => {
             let arr =
                 downcast_array::<TimestampNanosecondArray>(array, "TimestampNanosecondArray")?;
             convert_primitive_values(arr, |v| {
-                create_datetime_immutable(v / 1_000_000_000, (v / 1000) % 1_000_000)
+                let (s, us) = split_epoch(v.div_euclid(1_000), 1_000_000);
+                create_datetime_immutable(s, us)
             })
         }
 
@@ -666,30 +696,21 @@ pub fn arrow_array_to_php_values(array: &dyn Array, field: Option<&Field>) -> Ph
         }
         DataType::Time64(TimeUnit::Nanosecond) => {
             let arr = downcast_array::<Time64NanosecondArray>(array, "Time64NanosecondArray")?;
-            convert_primitive_values(arr, |v| create_date_interval(v / 1000))
+            convert_primitive_values(arr, |v| create_date_interval(v.div_euclid(1_000)))
         }
 
-        DataType::Decimal128(_, _) => {
+        DataType::Decimal128(precision, scale) => {
             let arr = downcast_array::<Decimal128Array>(array, "Decimal128Array")?;
-            let len = arr.len();
-            let mut result = Vec::with_capacity(len);
-            for i in 0..len {
-                let mut zv = Zval::new();
-                if arr.is_null(i) {
-                    zv.set_null();
-                } else {
-                    let str_val = arr.value_as_string(i);
-                    let float_val: f64 = str_val.parse().map_err(|e| {
-                        parquet_exception(format!(
-                            "Failed to parse decimal value '{}': {}",
-                            str_val, e
-                        ))
-                    })?;
-                    zv.set_double(float_val);
-                }
-                result.push(zv);
-            }
-            Ok(result)
+            convert_primitive_values(arr, |v| {
+                decimal_to_zval::<Decimal128Type>(v, *precision, *scale)
+            })
+        }
+
+        DataType::Decimal256(precision, scale) => {
+            let arr = downcast_array::<Decimal256Array>(array, "Decimal256Array")?;
+            convert_primitive_values(arr, |v| {
+                decimal_to_zval::<Decimal256Type>(v, *precision, *scale)
+            })
         }
 
         DataType::List(_) | DataType::LargeList(_) | DataType::Struct(_) | DataType::Map(_, _) => {
@@ -727,6 +748,52 @@ fn zval_type_name(zv: &Zval) -> &'static str {
     } else {
         "unknown"
     }
+}
+
+fn round_decimal_half_away(repr: &str, scale: i8) -> String {
+    let (sign, digits) = match repr.strip_prefix('-') {
+        Some(stripped) => ("-", stripped),
+        None => ("", repr),
+    };
+    let (integer_part, fractional_part) = match digits.find('.') {
+        Some(dot_pos) => (&digits[..dot_pos], &digits[dot_pos + 1..]),
+        None => (digits, ""),
+    };
+    let scale = scale.max(0) as usize;
+
+    if fractional_part.len() <= scale {
+        return format!(
+            "{}{}.{:0<width$}",
+            sign,
+            integer_part,
+            fractional_part,
+            width = scale
+        );
+    }
+
+    let mut kept: Vec<u8> = format!("{}{}", integer_part, &fractional_part[..scale]).into_bytes();
+
+    if fractional_part.as_bytes()[scale] >= b'5' {
+        let mut i = kept.len();
+        loop {
+            if i == 0 {
+                kept.insert(0, b'1');
+                break;
+            }
+            i -= 1;
+            if kept[i] == b'9' {
+                kept[i] = b'0';
+            } else {
+                kept[i] += 1;
+                break;
+            }
+        }
+    }
+
+    let kept = String::from_utf8(kept).unwrap_or_default();
+    let split = kept.len() - scale;
+
+    format!("{}{}.{}", sign, &kept[..split], &kept[split..])
 }
 
 fn parse_decimal_string(s: &str, scale: i8) -> Result<i128, String> {
@@ -835,6 +902,18 @@ macro_rules! build_float_array {
     }};
 }
 
+fn parse_time_unit(entry_ht: &ZendHashTable, name: &str) -> Result<TimeUnit, String> {
+    match entry_ht.get("unit").and_then(|z| z.str()) {
+        None | Some("MICROS") => Ok(TimeUnit::Microsecond),
+        Some("MILLIS") => Ok(TimeUnit::Millisecond),
+        Some("NANOS") => Ok(TimeUnit::Nanosecond),
+        Some(s) => Err(format!(
+            "Column '{}': unsupported unit '{}', expected MILLIS, MICROS or NANOS",
+            name, s
+        )),
+    }
+}
+
 fn php_schema_entry_to_field(entry_ht: &ZendHashTable) -> Result<Field, String> {
     let name = entry_ht
         .get("name")
@@ -868,8 +947,15 @@ fn php_schema_entry_to_field(entry_ht: &ZendHashTable) -> Result<Field, String> 
         "STRING" => DataType::Utf8,
         "BINARY" => DataType::Binary,
         "DATE" => DataType::Date32,
-        "TIMESTAMP" => DataType::Timestamp(TimeUnit::Microsecond, None),
-        "TIME" => DataType::Time64(TimeUnit::Microsecond),
+        "TIMESTAMP" => {
+            let unit = parse_time_unit(entry_ht, &name)?;
+            let utc = entry_ht.get("utc").and_then(|z| z.bool()).unwrap_or(true);
+            DataType::Timestamp(unit, if utc { Some("UTC".into()) } else { None })
+        }
+        "TIME" => match parse_time_unit(entry_ht, &name)? {
+            TimeUnit::Millisecond => DataType::Time32(TimeUnit::Millisecond),
+            unit => DataType::Time64(unit),
+        },
         "DECIMAL" => {
             let precision = entry_ht
                 .get("precision")
@@ -1166,10 +1252,16 @@ pub fn php_array_to_arrow(
                 if zv.is_null() {
                     builder.append_null();
                 } else if let Some(v) = zv.long() {
-                    builder.append_value((v / 86400) as i32);
+                    builder.append_value(i32::try_from(v).map_err(|_| {
+                        format!(
+                            "Column '{}': value {} out of range for DATE days",
+                            column_name, v
+                        )
+                    })?);
                 } else if zv.is_object() {
                     let (seconds, _) = extract_datetime_timestamp(zv, column_name)?;
-                    builder.append_value((seconds / 86400) as i32);
+                    let offset = extract_datetime_offset(zv, column_name)?;
+                    builder.append_value((seconds + offset).div_euclid(86_400) as i32);
                 } else {
                     return Err(format!(
                         "Column '{}': expected DateTimeInterface or int, got {}",
@@ -1180,16 +1272,27 @@ pub fn php_array_to_arrow(
             }
             Ok(Arc::new(builder.finish()) as ArrayRef)
         }
-        DataType::Timestamp(TimeUnit::Microsecond, _) => {
-            let mut builder = TimestampMicrosecondBuilder::with_capacity(values.len());
+        DataType::Timestamp(unit, tz) => {
+            let mut result: Vec<Option<i64>> = Vec::with_capacity(values.len());
             for zv in values {
                 if zv.is_null() {
-                    builder.append_null();
+                    result.push(None);
                 } else if let Some(v) = zv.long() {
-                    builder.append_value(v);
+                    result.push(Some(v));
                 } else if zv.is_object() {
                     let (seconds, microseconds) = extract_datetime_timestamp(zv, column_name)?;
-                    builder.append_value(seconds * 1_000_000 + microseconds);
+                    let total = seconds * 1_000_000 + microseconds;
+                    result.push(Some(match unit {
+                        TimeUnit::Second => total.div_euclid(1_000_000),
+                        TimeUnit::Millisecond => total.div_euclid(1_000),
+                        TimeUnit::Microsecond => total,
+                        TimeUnit::Nanosecond => total.checked_mul(1_000).ok_or_else(|| {
+                            format!(
+                                "Column '{}': DateTime outside the TIMESTAMP(NANOS) range",
+                                column_name
+                            )
+                        })?,
+                    }));
                 } else {
                     return Err(format!(
                         "Column '{}': expected DateTimeInterface or int, got {}",
@@ -1198,17 +1301,42 @@ pub fn php_array_to_arrow(
                     ));
                 }
             }
-            Ok(Arc::new(builder.finish()) as ArrayRef)
+            Ok(match unit {
+                TimeUnit::Second => {
+                    Arc::new(TimestampSecondArray::from(result).with_timezone_opt(tz.clone()))
+                        as ArrayRef
+                }
+                TimeUnit::Millisecond => {
+                    Arc::new(TimestampMillisecondArray::from(result).with_timezone_opt(tz.clone()))
+                        as ArrayRef
+                }
+                TimeUnit::Microsecond => {
+                    Arc::new(TimestampMicrosecondArray::from(result).with_timezone_opt(tz.clone()))
+                        as ArrayRef
+                }
+                TimeUnit::Nanosecond => {
+                    Arc::new(TimestampNanosecondArray::from(result).with_timezone_opt(tz.clone()))
+                        as ArrayRef
+                }
+            })
         }
-        DataType::Time64(TimeUnit::Microsecond) => {
-            let mut builder = Time64MicrosecondBuilder::with_capacity(values.len());
+        DataType::Time32(TimeUnit::Millisecond) => {
+            let mut result: Vec<Option<i32>> = Vec::with_capacity(values.len());
             for zv in values {
                 if zv.is_null() {
-                    builder.append_null();
+                    result.push(None);
                 } else if let Some(v) = zv.long() {
-                    builder.append_value(v);
+                    result.push(Some(i32::try_from(v).map_err(|_| {
+                        format!(
+                            "Column '{}': value {} out of range for TIME(MILLIS)",
+                            column_name, v
+                        )
+                    })?));
                 } else if zv.is_object() {
-                    builder.append_value(extract_date_interval_microseconds(zv, column_name)?);
+                    result.push(Some(
+                        extract_date_interval_microseconds(zv, column_name)?.div_euclid(1_000)
+                            as i32,
+                    ));
                 } else {
                     return Err(format!(
                         "Column '{}': expected DateInterval or int, got {}",
@@ -1217,7 +1345,35 @@ pub fn php_array_to_arrow(
                     ));
                 }
             }
-            Ok(Arc::new(builder.finish()) as ArrayRef)
+            Ok(Arc::new(Time32MillisecondArray::from(result)) as ArrayRef)
+        }
+        DataType::Time64(unit @ (TimeUnit::Microsecond | TimeUnit::Nanosecond)) => {
+            let mut result: Vec<Option<i64>> = Vec::with_capacity(values.len());
+            for zv in values {
+                if zv.is_null() {
+                    result.push(None);
+                } else if let Some(v) = zv.long() {
+                    result.push(Some(v));
+                } else if zv.is_object() {
+                    let micros = extract_date_interval_microseconds(zv, column_name)?;
+                    result.push(Some(if *unit == TimeUnit::Nanosecond {
+                        micros * 1_000
+                    } else {
+                        micros
+                    }));
+                } else {
+                    return Err(format!(
+                        "Column '{}': expected DateInterval or int, got {}",
+                        column_name,
+                        zval_type_name(zv)
+                    ));
+                }
+            }
+            Ok(if *unit == TimeUnit::Nanosecond {
+                Arc::new(Time64NanosecondArray::from(result)) as ArrayRef
+            } else {
+                Arc::new(Time64MicrosecondArray::from(result)) as ArrayRef
+            })
         }
         DataType::Decimal128(p, s) => {
             let mut builder = Decimal128Builder::with_capacity(values.len());
@@ -1228,7 +1384,7 @@ pub fn php_array_to_arrow(
                     let unscaled = parse_decimal_string(str_val, *s)?;
                     builder.append_value(unscaled);
                 } else if let Some(v) = zv.double() {
-                    let str_val = format!("{:.prec$}", v, prec = *s as usize);
+                    let str_val = round_decimal_half_away(&format!("{}", v), *s);
                     let unscaled = parse_decimal_string(&str_val, *s)?;
                     builder.append_value(unscaled);
                 } else if let Some(v) = zv.long() {

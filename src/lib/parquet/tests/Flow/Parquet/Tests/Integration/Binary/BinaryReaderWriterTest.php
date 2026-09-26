@@ -7,11 +7,11 @@ namespace Flow\Parquet\Tests\Integration\Binary;
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 use function array_values;
-use function ceil;
 use function count;
 use function Flow\Parquet\Binary\decode_decimal;
 use function Flow\Parquet\Binary\decode_f32;
@@ -25,7 +25,6 @@ use function Flow\Parquet\Binary\encode_i16;
 use function Flow\Parquet\Binary\encode_i32;
 use function Flow\Parquet\Binary\encode_i64;
 use function Flow\Parquet\Binary\encode_u32;
-use function log;
 use function pack;
 use function strlen;
 use function unpack;
@@ -107,9 +106,7 @@ final class BinaryReaderWriterTest extends TestCase
     #[DataProvider('decimalProvider')]
     public function test_writing_and_reading_decimals_with_functions(array $decimals, int $precision, int $scale): void
     {
-        $byteOrder = ByteOrder::LITTLE_ENDIAN;
-        $bitsNeeded = ceil(log(10 ** $precision, 2));
-        $byteLength = (int) ceil($bitsNeeded / 8);
+        $byteLength = (int) FlatColumn::decimal('decimal', $precision, $scale)->typeLength();
 
         $buffer = '';
         $writer = new BinaryBufferWriter($buffer);
@@ -117,14 +114,14 @@ final class BinaryReaderWriterTest extends TestCase
         // @mago-ignore analysis:mixed-assignment
         foreach ($decimals as $decimal) {
             static::assertIsFloat($decimal);
-            $writer->append(encode_decimal($byteOrder, $decimal, $byteLength, $precision, $scale));
+            $writer->append(encode_decimal($decimal, $precision, $scale, $byteLength));
         }
 
         $reader = new BinaryBufferReader($buffer);
         $decoded = [];
 
         foreach ($decimals as $_ignored) {
-            $decoded[] = decode_decimal($byteOrder, $reader->readBytes($byteLength), $precision, $scale);
+            $decoded[] = decode_decimal($reader->readBytes($byteLength), $scale);
         }
 
         static::assertSame($decimals, $decoded);

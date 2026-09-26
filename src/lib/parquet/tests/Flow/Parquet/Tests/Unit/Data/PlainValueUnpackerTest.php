@@ -137,17 +137,40 @@ final class PlainValueUnpackerTest extends TestCase
 
     public function test_unpack_fixed_len_byte_array_with_decimal_logical_type(): void
     {
-        $byteOrder = ByteOrder::LITTLE_ENDIAN;
         $column = FlatColumn::decimal('test_column', 10, 2);
         $typeLength = $column->typeLength();
         static::assertNotNull($typeLength);
-        $buffer = encode_decimal($byteOrder, 123.45, $typeLength, 10, 2);
-        $buffer .= encode_decimal($byteOrder, 678.90, $typeLength, 10, 2);
+        $buffer = encode_decimal(123.45, 10, 2, $typeLength);
+        $buffer .= encode_decimal(678.90, 10, 2, $typeLength);
         $reader = new BinaryBufferReader($buffer);
 
         $unpacker = new PlainValueUnpacker($reader);
 
         static::assertEquals([123.45, 678.90], iterator_to_array($unpacker->unpack($column, 2)));
+    }
+
+    public function test_unpack_byte_array_with_decimal_logical_type(): void
+    {
+        $buffer =
+            encode_u32(ByteOrder::LITTLE_ENDIAN, [3])
+            . "\x12\xD6\x87"
+            . encode_u32(ByteOrder::LITTLE_ENDIAN, [3])
+            . "\xED\x29\x79";
+        $column = new FlatColumn('test_column', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::decimal(2, 9));
+
+        $unpacker = new PlainValueUnpacker(new BinaryBufferReader($buffer));
+
+        static::assertSame([12345.67, -12345.67], iterator_to_array($unpacker->unpack($column, 2)));
+    }
+
+    public function test_unpack_fixed_len_byte_array_with_negative_decimal(): void
+    {
+        $unpacker = new PlainValueUnpacker(new BinaryBufferReader("\xFF\xED\x29\x79"));
+
+        static::assertSame(
+            [-12345.67],
+            iterator_to_array($unpacker->unpack(FlatColumn::decimal('test_column', 9, 2), 1)),
+        );
     }
 
     public function test_unpack_fixed_len_byte_array_with_null_logical_type_returns_raw_string(): void

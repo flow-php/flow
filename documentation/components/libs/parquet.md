@@ -256,6 +256,8 @@ $schema = Schema::with(
 );
 ```
 
+`FlatColumn::dateTime()` is written as `TIMESTAMP(isAdjustedToUTC=true, MICROS)`; files with `isAdjustedToUTC=false` read as UTC wall clock.
+
 Once we have a schema, we can create a writer.
 
 ```php
@@ -333,8 +335,6 @@ $writer->close();
 - `GZIP_COMPRESSION_LEVEL` - default: `9` - compression level for GZIP compression (applied only when GZIP compression
   is enabled).
 - `PAGE_SIZE_BYTES` - default: `8Kb` - maximum size of data page.
-- `ROUND_NANOSECONDS` - default: `false` - Since PHP does not support nanoseconds precision for DateTime objects, when
-  this options is set to true, reader will round nanoseconds to microseconds.
 - `ROW_GROUP_SIZE_BYTES` - default: `8Mb` - maximum size of row group.
 - `ROW_GROUP_SIZE_CHECK_INTERVAL` default: `1000` - number of rows to write before checking if row group size limit is
   reached.

@@ -4,28 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Schema\LogicalType;
 
+use Flow\Parquet\ParquetFile\Schema\TimeUnit;
 use Flow\Parquet\ThriftModel\TimestampType;
 
 final readonly class Timestamp
 {
     public function __construct(
         private bool $isAdjustedToUTC,
-        private bool $millis,
-        private bool $micros,
-        private bool $nanos,
+        private TimeUnit $unit,
     ) {}
 
     public static function fromThrift(TimestampType $timestamp): self
     {
-        return new self(
-            $timestamp->isAdjustedToUTC,
-            // @mago-ignore analysis:redundant-comparison
-            $timestamp->unit->MILLIS !== null,
-            // @mago-ignore analysis:redundant-comparison
-            $timestamp->unit->MICROS !== null,
-            // @mago-ignore analysis:redundant-comparison
-            $timestamp->unit->NANOS !== null,
-        );
+        return new self($timestamp->isAdjustedToUTC, TimeUnit::fromThrift($timestamp->unit));
     }
 
     public function isAdjustedToUTC(): bool
@@ -35,16 +26,21 @@ final readonly class Timestamp
 
     public function micros(): bool
     {
-        return $this->micros;
+        return $this->unit === TimeUnit::MICROSECONDS;
     }
 
     public function millis(): bool
     {
-        return $this->millis;
+        return $this->unit === TimeUnit::MILLISECONDS;
     }
 
     public function nanos(): bool
     {
-        return $this->nanos;
+        return $this->unit === TimeUnit::NANOSECONDS;
+    }
+
+    public function unit(): TimeUnit
+    {
+        return $this->unit;
     }
 }

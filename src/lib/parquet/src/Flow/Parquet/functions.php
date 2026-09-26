@@ -9,6 +9,7 @@ use Flow\Parquet\Exception\InvalidArgumentException;
 use Generator;
 
 use function get_debug_type;
+use function intdiv;
 use function is_array;
 use function is_int;
 use function is_string;
@@ -133,4 +134,11 @@ function array_flatten(array $array): array
 function empty_generator(): Generator
 {
     yield from [];
+}
+
+function floor_div(int $dividend, int $divisor): int
+{
+    $quotient = intdiv($dividend, $divisor);
+
+    return ($dividend % $divisor) !== 0 && $dividend < 0 !== $divisor < 0 ? $quotient - 1 : $quotient;
 }
