@@ -11,9 +11,12 @@ use Flow\ETL\Exception\RequiredPHPVersionException;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\html_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class HTMLQuerySelectorAllTest extends TestCase
 {
@@ -21,7 +24,9 @@ final class HTMLQuerySelectorAllTest extends TestCase
     public function test_getting_element_for_older_versions(): void
     {
         $this->expectException(RequiredPHPVersionException::class);
-        ref('value')->htmlQuerySelectorAll('body div p')->eval(row(['value' => '']), flow_context());
+        ref('value')
+            ->htmlQuerySelectorAll('body div p')
+            ->eval(array_to_row(['value' => ''], schema(str_schema('value'))), flow_context());
     }
 
     #[RequiresPhp('>= 8.4.0')]
@@ -32,7 +37,9 @@ final class HTMLQuerySelectorAllTest extends TestCase
             '<!DOCTYPE html><html><head></head><body><div><span>foobar</span></div></body></html>',
         );
         /** @var array<mixed> $result */
-        $result = ref('value')->htmlQuerySelectorAll('body div span')->eval(row(['value' => $html]), flow_context());
+        $result = ref('value')
+            ->htmlQuerySelectorAll('body div span')
+            ->eval(array_to_row(['value' => $html], schema(html_schema('value'))), flow_context());
         static::assertCount(1, $result);
         static::assertInstanceOf(Element::class, $result[0]);
     }
@@ -44,7 +51,9 @@ final class HTMLQuerySelectorAllTest extends TestCase
         $html = HTMLDocument::createFromString(
             '<!DOCTYPE html><html><head></head><body><div><span>foobar</span></div></body></html>',
         );
-        $result = ref('value')->htmlQuerySelectorAll('body div p')->eval(row(['value' => $html]), flow_context());
+        $result = ref('value')
+            ->htmlQuerySelectorAll('body div p')
+            ->eval(array_to_row(['value' => $html], schema(html_schema('value'))), flow_context());
         static::assertNull($result);
     }
 
@@ -54,6 +63,8 @@ final class HTMLQuerySelectorAllTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected one of');
 
-        ref('value')->htmlQuerySelectorAll('body div span')->eval(row(['value' => '']), flow_context());
+        ref('value')
+            ->htmlQuerySelectorAll('body div span')
+            ->eval(array_to_row(['value' => ''], schema(str_schema('value'))), flow_context());
     }
 }

@@ -19,6 +19,7 @@ use Flow\ETL\Tests\Mother\RowsMother;
 use Generator;
 
 use function array_map;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
@@ -31,8 +32,6 @@ use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_schema;
@@ -73,7 +72,24 @@ final class DisplayTest extends FlowIntegrationTestCase
             public function extract(FlowContext $context, ?int $limit = null): Generator
             {
                 for ($i = 0; $i < 20; $i++) {
-                    yield rows(
+                    yield array_to_rows(
+                        [[
+                            'id' => 1234,
+                            'price' => 123.45,
+                            '100' => 100,
+                            'deleted' => false,
+                            'created-at' => new DateTimeImmutable('2020-07-13 15:00'),
+                            'phase' => null,
+                            'array' => type_json()->cast([
+                                ['id' => 1, 'status' => 'NEW'],
+                                ['id' => 2, 'status' => 'PENDING'],
+                            ]),
+                            'list' => [1, 2, 3],
+                            'map' => ['NEW', 'PENDING'],
+                            'items' => ['item-id' => '1', 'name' => 'one'],
+                            'enum' => BackedStringEnum::three,
+                            'xml' => type_xml()->cast('<xml><node id="123">test<foo>bar</foo></node></xml>'),
+                        ]],
                         schema(
                             int_schema('id'),
                             float_schema('price'),
@@ -91,24 +107,6 @@ final class DisplayTest extends FlowIntegrationTestCase
                             enum_schema('enum', BackedStringEnum::class),
                             xml_schema('xml'),
                         ),
-                        // PHP casts the numeric column name "100" to an int array key
-                        row([
-                            'id' => 1234,
-                            'price' => 123.45,
-                            '100' => 100,
-                            'deleted' => false,
-                            'created-at' => new DateTimeImmutable('2020-07-13 15:00'),
-                            'phase' => null,
-                            'array' => type_json()->cast([
-                                ['id' => 1, 'status' => 'NEW'],
-                                ['id' => 2, 'status' => 'PENDING'],
-                            ]),
-                            'list' => [1, 2, 3],
-                            'map' => ['NEW', 'PENDING'],
-                            'items' => ['item-id' => '1', 'name' => 'one'],
-                            'enum' => BackedStringEnum::three,
-                            'xml' => type_xml()->cast('<xml><node id="123">test<foo>bar</foo></node></xml>'),
-                        ]),
                     );
                 }
             }
@@ -154,29 +152,15 @@ final class DisplayTest extends FlowIntegrationTestCase
                 public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     for ($i = 0; $i < 5; $i++) {
-                        yield rows(
-                            schema(
-                                int_schema('id'),
-                                float_schema('price'),
-                                int_schema('100'),
-                                bool_schema('deleted'),
-                                datetime_schema('created-at'),
-                                string_schema('group'),
-                            ),
-                            // PHP casts the numeric column name "100" to an int array key
-                            row([
+                        yield array_to_rows(
+                            [[
                                 'id' => 1234,
                                 'price' => 123.45,
                                 '100' => 100,
                                 'deleted' => false,
                                 'created-at' => new DateTimeImmutable('2020-07-13 15:00'),
                                 'group' => 'A',
-                            ]),
-                        );
-                    }
-
-                    for ($i = 0; $i < 5; $i++) {
-                        yield rows(
+                            ]],
                             schema(
                                 int_schema('id'),
                                 float_schema('price'),
@@ -185,15 +169,27 @@ final class DisplayTest extends FlowIntegrationTestCase
                                 datetime_schema('created-at'),
                                 string_schema('group'),
                             ),
-                            // PHP casts the numeric column name "100" to an int array key
-                            row([
+                        );
+                    }
+
+                    for ($i = 0; $i < 5; $i++) {
+                        yield array_to_rows(
+                            [[
                                 'id' => 1234,
                                 'price' => 123.45,
                                 '100' => 100,
                                 'deleted' => false,
                                 'created-at' => new DateTimeImmutable('2020-07-13 15:00'),
                                 'group' => 'B',
-                            ]),
+                            ]],
+                            schema(
+                                int_schema('id'),
+                                float_schema('price'),
+                                int_schema('100'),
+                                bool_schema('deleted'),
+                                datetime_schema('created-at'),
+                                string_schema('group'),
+                            ),
                         );
                     }
                 }
@@ -288,21 +284,25 @@ final class DisplayTest extends FlowIntegrationTestCase
         ob_start();
         df()
             ->read(from_rows(
-                rows(
+                array_to_rows(
+                    [
+                        ['id' => 1, 'country' => 'PL', 'age' => 20],
+                        ['id' => 2, 'country' => 'PL', 'age' => 20],
+                        ['id' => 3, 'country' => 'PL', 'age' => 25],
+                    ],
                     schema(int_schema('id'), str_schema('country'), int_schema('age')),
-                    row(['id' => 1, 'country' => 'PL', 'age' => 20]),
-                    row(['id' => 2, 'country' => 'PL', 'age' => 20]),
-                    row(['id' => 3, 'country' => 'PL', 'age' => 25]),
                 ),
-                rows(
+                array_to_rows(
+                    [
+                        ['id' => 1, 'country' => 'PL', 'age' => 20, 'salary' => 5000],
+                        ['id' => 1, 'country' => 'PL', 'age' => 20, 'salary' => null],
+                    ],
                     schema(
                         int_schema('id'),
                         str_schema('country'),
                         int_schema('age'),
                         int_schema('salary', nullable: true),
                     ),
-                    row(['id' => 1, 'country' => 'PL', 'age' => 20, 'salary' => 5000]),
-                    row(['id' => 1, 'country' => 'PL', 'age' => 20, 'salary' => null]),
                 ),
             ))
             ->printRows();
@@ -342,21 +342,25 @@ final class DisplayTest extends FlowIntegrationTestCase
         ob_start();
         df()
             ->read(from_rows(
-                rows(
+                array_to_rows(
+                    [
+                        ['id' => 1, 'country' => 'PL', 'age' => 20],
+                        ['id' => 2, 'country' => 'PL', 'age' => 20],
+                        ['id' => 3, 'country' => 'PL', 'age' => 25],
+                    ],
                     schema(int_schema('id'), str_schema('country'), int_schema('age')),
-                    row(['id' => 1, 'country' => 'PL', 'age' => 20]),
-                    row(['id' => 2, 'country' => 'PL', 'age' => 20]),
-                    row(['id' => 3, 'country' => 'PL', 'age' => 25]),
                 ),
-                rows(
+                array_to_rows(
+                    [
+                        ['id' => 1, 'country' => 'PL', 'age' => 20, 'salary' => 5000],
+                        ['id' => 1, 'country' => 'PL', 'age' => 20, 'salary' => null],
+                    ],
                     schema(
                         int_schema('id'),
                         str_schema('country'),
                         int_schema('age'),
                         int_schema('salary', nullable: true),
                     ),
-                    row(['id' => 1, 'country' => 'PL', 'age' => 20, 'salary' => 5000]),
-                    row(['id' => 1, 'country' => 'PL', 'age' => 20, 'salary' => null]),
                 ),
             ))
             ->printSchema();

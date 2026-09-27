@@ -6,10 +6,12 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\collect_unique;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class CollectUniqueTest extends FlowTestCase
 {
@@ -22,10 +24,10 @@ final class CollectUniqueTest extends FlowTestCase
     {
         $aggregator = collect_unique(ref('data'));
 
-        $aggregator->aggregate(row(['data' => 'a']), flow_context());
-        $aggregator->aggregate(row(['data' => 'b']), flow_context());
-        $aggregator->aggregate(row(['data' => 'b']), flow_context());
-        $aggregator->aggregate(row(['data' => 'c']), flow_context());
+        $aggregator->aggregate(array_to_row(['data' => 'a'], schema(str_schema('data'))), flow_context());
+        $aggregator->aggregate(array_to_row(['data' => 'b'], schema(str_schema('data'))), flow_context());
+        $aggregator->aggregate(array_to_row(['data' => 'b'], schema(str_schema('data'))), flow_context());
+        $aggregator->aggregate(array_to_row(['data' => 'c'], schema(str_schema('data'))), flow_context());
 
         static::assertSame(
             [

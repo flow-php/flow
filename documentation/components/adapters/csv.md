@@ -40,11 +40,9 @@ $rows = data_frame()
 
 data_frame()
     ->read(from_rows(
-        rows(
+        array_to_rows(
+            [['id' => 1, 'name' => 'Norbert'], ['id' => 2, 'name' => 'Tomek'], ['id' => 3, 'name' => 'Dawid']],
             schema(int_schema('id'), str_schema('name')),
-            row(['id' => 1, 'name' => 'Norbert']),
-            row(['id' => 2, 'name' => 'Tomek']),
-            row(['id' => 3, 'name' => 'Dawid']),
         )
     ))
     ->load(to_csv($path, true, true))

@@ -7,13 +7,15 @@ namespace Flow\ETL\Tests\Unit\Function;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\match_cases;
 use function Flow\ETL\DSL\match_condition;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class MatchCasesTest extends FlowTestCase
 {
@@ -24,7 +26,7 @@ final class MatchCasesTest extends FlowTestCase
 
         match_cases([
             match_condition(ref('string')->contains('_'), ref('string')->strReplace('_', ' ')),
-        ])->eval(row(['string' => 'weirdstring']), flow_context());
+        ])->eval(array_to_row(['string' => 'weirdstring'], schema(str_schema('string'))), flow_context());
     }
 
     public function test_case_match(): void
@@ -34,8 +36,12 @@ final class MatchCasesTest extends FlowTestCase
             match_condition(ref('string')->contains('-'), ref('string')->strReplace('-', ' ')),
         ]);
 
-        static::assertSame('this is slug', $match->eval(row(['string' => 'this-is-slug']), flow_context()));
-        static::assertSame('this is slug', $match->eval(row(['string' => 'this_is_slug']), flow_context()));
+        static::assertSame('this is slug', $match->eval(array_to_row([
+            'string' => 'this-is-slug',
+        ], schema(str_schema('string'))), flow_context()));
+        static::assertSame('this is slug', $match->eval(array_to_row([
+            'string' => 'this_is_slug',
+        ], schema(str_schema('string'))), flow_context()));
     }
 
     public function test_not_matching_anything_in_strict_mode(): void
@@ -51,7 +57,7 @@ final class MatchCasesTest extends FlowTestCase
         ]);
 
         $context = flow_context(config());
-        $match->eval(row(['string' => 'weirdstring']), $context);
+        $match->eval(array_to_row(['string' => 'weirdstring'], schema(str_schema('string'))), $context);
     }
 
     public function test_not_matching_anything_with_default(): void
@@ -61,6 +67,8 @@ final class MatchCasesTest extends FlowTestCase
             match_condition(ref('string')->contains('-'), ref('string')->strReplace('-', ' ')),
         ], default: lit('normal string'));
 
-        static::assertEquals('normal string', $match->eval(row(['string' => 'weirdstring']), flow_context()));
+        static::assertEquals('normal string', $match->eval(array_to_row([
+            'string' => 'weirdstring',
+        ], schema(str_schema('string'))), flow_context()));
     }
 }

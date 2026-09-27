@@ -13,7 +13,6 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\NativePHPRandomValueGenerator;
 use Flow\ETL\Processor\BucketingProcessor;
 use Flow\ETL\Processor\MergeSortProcessor;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\SpyBucketsStorage;
 use Flow\ETL\Tests\Double\ThrowingRemoveBucketsStorage;
@@ -22,13 +21,12 @@ use Generator;
 
 use function array_map;
 use function array_merge;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function iterator_to_array;
 use function range;
@@ -69,13 +67,7 @@ final class MergeSortProcessorTest extends FlowTestCase
         );
 
         $input = (static function () {
-            yield rows(
-                schema(int_schema('id')),
-                row(['id' => 3]),
-                row(['id' => 1]),
-                row(['id' => 4]),
-                row(['id' => 2]),
-            );
+            yield array_to_rows([['id' => 3], ['id' => 1], ['id' => 4], ['id' => 2]], schema(int_schema('id')));
         })();
 
         $result = iterator_to_array($merge->process($bucketing->process($input, $context), $context), false);
@@ -137,7 +129,7 @@ final class MergeSortProcessorTest extends FlowTestCase
         );
 
         $input = (static function () {
-            yield rows(schema(int_schema('id')), ...array_map(static fn(int $i): Row => row(['id' => $i]), [
+            yield array_to_rows(array_map(static fn(int $i): array => ['id' => $i], [
                 0,
                 10,
                 1,
@@ -146,7 +138,7 @@ final class MergeSortProcessorTest extends FlowTestCase
                 12,
                 3,
                 13,
-            ]));
+            ]), schema(int_schema('id')));
         })();
 
         $result = iterator_to_array($merge->process($bucketing->process($input, $context), $context), false);
@@ -178,12 +170,9 @@ final class MergeSortProcessorTest extends FlowTestCase
         );
 
         $input = (static function () {
-            yield rows(
+            yield array_to_rows(
+                [['a' => 1, 'b' => 2], ['a' => 1, 'b' => 1], ['a' => 0, 'b' => 5], ['a' => 0, 'b' => 3]],
                 schema(int_schema('a'), int_schema('b')),
-                row(['a' => 1, 'b' => 2]),
-                row(['a' => 1, 'b' => 1]),
-                row(['a' => 0, 'b' => 5]),
-                row(['a' => 0, 'b' => 3]),
             );
         })();
 
@@ -221,9 +210,9 @@ final class MergeSortProcessorTest extends FlowTestCase
         );
 
         $input = (static function () {
-            yield rows(
+            yield array_to_rows(
+                array_map(static fn(int $i): array => ['id' => $i], range(19, 0)),
                 schema(int_schema('id')),
-                ...array_map(static fn(int $i): Row => row(['id' => $i]), range(19, 0)),
             );
         })();
 
@@ -246,7 +235,7 @@ final class MergeSortProcessorTest extends FlowTestCase
 
         // the upstream throws during the drain, so reduce() never writes a merged run - seed one, or the
         // merge-side assertion is true whether or not the nested finally ran
-        $mergeStorage->append('pre-existing', rows(schema(int_schema('id')), row(['id' => 1])));
+        $mergeStorage->append('pre-existing', array_to_rows([['id' => 1]], schema(int_schema('id'))));
         $merge->add(new Bucket('pre-existing', 1, 0));
 
         $bucketing = new BucketingProcessor(
@@ -256,9 +245,9 @@ final class MergeSortProcessorTest extends FlowTestCase
         $processor = new MergeSortProcessor(refs('id'), $spill, $merge, new NativePHPRandomValueGenerator(), 2, 1000);
 
         $upstream = (static function (): Generator {
-            yield rows(
+            yield array_to_rows(
+                array_map(static fn(int $i): array => ['id' => $i], range(9, 0)),
                 schema(int_schema('id')),
-                ...array_map(static fn(int $i): Row => row(['id' => $i]), range(9, 0)),
             );
 
             throw new RuntimeException('upstream failed');

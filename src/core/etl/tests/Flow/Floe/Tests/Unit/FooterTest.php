@@ -12,8 +12,8 @@ use Flow\Floe\Tests\Context\FloeStreamReaderContext;
 use Flow\Floe\Tests\Mother\FooterMother;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -193,7 +193,7 @@ final class FooterTest extends TestCase
     {
         $filesystem = memory_filesystem();
         $path = path('memory://footer-rows.floe');
-        $value = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
+        $value = array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
 
         $writer = new FloeWriter($filesystem, $value->schema());
         $writer->create($path);

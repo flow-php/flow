@@ -15,6 +15,7 @@ use Flow\ETL\Tests\Mother\RowsMother;
 use RuntimeException;
 
 use function array_column;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\average;
 use function Flow\ETL\DSL\constraint_unique;
 use function Flow\ETL\DSL\data_frame;
@@ -26,9 +27,7 @@ use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\pivot_values;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\row_number;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\skip_rows_handler;
 use function Flow\ETL\DSL\str_schema;
@@ -196,10 +195,9 @@ final class SinkRootBlockingOperationsTest extends FlowIntegrationTestCase
         // grouped by join key in 2 chunks of 3 - byte for byte what the same join gives on the outer frame.
         $spy = new SpyLoader();
         $joinNames = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->join(
-            data_frame()->process(rows(
+            data_frame()->process(array_to_rows(
+                [['code' => 'a', 'n' => 'Alpha'], ['code' => 'b', 'n' => 'Bravo']],
                 schema(str_schema('code'), str_schema('n')),
-                row(['code' => 'a', 'n' => 'Alpha']),
-                row(['code' => 'b', 'n' => 'Bravo']),
             )),
             join_on(['g' => 'code'], 'j_'),
             Join::inner,

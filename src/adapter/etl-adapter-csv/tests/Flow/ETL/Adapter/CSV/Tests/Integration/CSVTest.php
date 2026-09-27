@@ -13,6 +13,7 @@ use function file_exists;
 use function file_get_contents;
 use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\Adapter\CSV\to_csv;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
@@ -22,8 +23,6 @@ use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\str_schema;
@@ -49,10 +48,9 @@ final class CSVTest extends FlowTestCase
         // R10: the Schema owns column order and rows are never rekeyed, so the writer reads the order
         // off the Schema - the first row's key order must not decide the header
         df()
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [['name' => 'a', 'id' => 1], ['id' => 2, 'name' => 'b']],
                 schema(int_schema('id'), str_schema('name')),
-                row(['name' => 'a', 'id' => 1]),
-                row(['id' => 2, 'name' => 'b']),
             )))
             ->load(to_csv($path = __DIR__ . '/var/test_schema_order.csv')->saveMode(overwrite()))
             ->run();

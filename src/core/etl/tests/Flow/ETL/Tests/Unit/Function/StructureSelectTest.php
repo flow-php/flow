@@ -10,13 +10,15 @@ use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Function\StructureSelect;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\structure_schema;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 
@@ -26,10 +28,10 @@ final class StructureSelectTest extends FlowTestCase
     {
         static::assertEquals(
             ['id' => 1, 'name' => 'test'],
-            (new StructureSelect(ref('struct'), ref('id'), ref('name')))->eval(row(['struct' => [
+            (new StructureSelect(ref('struct'), ref('id'), ref('name')))->eval(array_to_row(['struct' => [
                 'id' => 1,
                 'name' => 'test',
-            ]]), flow_context()),
+            ]], schema(structure_schema('struct', type_structure(['id' => type_integer(), 'name' => type_string()])))), flow_context()),
         );
     }
 
@@ -37,10 +39,10 @@ final class StructureSelectTest extends FlowTestCase
     {
         static::assertEquals(
             ['id' => 1],
-            (new StructureSelect(ref('struct'), 'id'))->eval(row(['struct' => [
+            (new StructureSelect(ref('struct'), 'id'))->eval(array_to_row(['struct' => [
                 'id' => 1,
                 'name' => 'test',
-            ]]), flow_context()),
+            ]], schema(structure_schema('struct', type_structure(['id' => type_integer(), 'name' => type_string()])))), flow_context()),
         );
     }
 
@@ -48,10 +50,10 @@ final class StructureSelectTest extends FlowTestCase
     {
         static::assertEquals(
             ['new_id' => 1],
-            (new StructureSelect(ref('struct'), ref('id')->as('new_id')))->eval(row(['struct' => [
+            (new StructureSelect(ref('struct'), ref('id')->as('new_id')))->eval(array_to_row(['struct' => [
                 'id' => 1,
                 'name' => 'test',
-            ]]), flow_context()),
+            ]], schema(structure_schema('struct', type_structure(['id' => type_integer(), 'name' => type_string()])))), flow_context()),
         );
     }
 
@@ -59,11 +61,15 @@ final class StructureSelectTest extends FlowTestCase
     {
         static::assertEquals(
             ['new_id' => null],
-            (new StructureSelect(ref('struct'), ref('id')->as('new_id')))->eval(row(['struct' => [
+            (new StructureSelect(ref('struct'), ref('id')->as('new_id')))->eval(array_to_row(['struct' => [
                 'id' => null,
                 'email' => 'email@email.com',
                 'name' => null,
-            ]]), flow_context()),
+            ]], schema(structure_schema('struct', type_structure([
+                'id' => type_optional(type_integer()),
+                'email' => type_string(),
+                'name' => type_optional(type_string()),
+            ])))), flow_context()),
         );
     }
 

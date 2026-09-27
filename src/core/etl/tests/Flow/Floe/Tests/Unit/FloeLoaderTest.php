@@ -8,14 +8,13 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\Floe\Exception\IncompatibleSchemaException;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\partition_by;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
@@ -33,7 +32,7 @@ final class FloeLoaderTest extends TestCase
         $path = path('memory://closed.floe');
 
         $loader = to_floe($path, filesystem: $memory);
-        $loader->load(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])), $context);
+        $loader->load(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))), $context);
         $loader->closure($context);
 
         $ids = [];
@@ -64,10 +63,9 @@ final class FloeLoaderTest extends TestCase
 
         $loader = to_floe($path, filesystem: $memory);
         $loader->load(
-            rows(
+            array_to_rows(
+                [['id' => 1, 'note' => 'a'], ['id' => 2, 'note' => null]],
                 schema(int_schema('id'), str_schema('note', nullable: true)),
-                row(['id' => 1, 'note' => 'a']),
-                row(['id' => 2, 'note' => null]),
             ),
             $context,
         );
@@ -83,10 +81,9 @@ final class FloeLoaderTest extends TestCase
     {
         $this->expectException(RuntimeException::class);
 
-        to_floe(path('memory://no-extension'), filesystem: memory_filesystem())->load(
-            rows(schema(int_schema('id')), row(['id' => 1])),
-            flow_context(config()),
-        );
+        to_floe(path('memory://no-extension'), filesystem: memory_filesystem())->load(array_to_rows([[
+            'id' => 1,
+        ]], schema(int_schema('id'))), flow_context(config()));
     }
 
     public function test_partitioned_batches_write_one_file_per_partition(): void
@@ -98,10 +95,9 @@ final class FloeLoaderTest extends TestCase
         // one batch carrying both combinations: the loader routes it, B39
         $loader = to_floe($base, filesystem: $memory)->partitionBy(partition_by('country'));
         $loader->load(
-            rows(
+            array_to_rows(
+                [['id' => 1, 'country' => 'PL'], ['id' => 2, 'country' => 'US']],
                 schema(int_schema('id'), str_schema('country')),
-                row(['id' => 1, 'country' => 'PL']),
-                row(['id' => 2, 'country' => 'US']),
             ),
             $context,
         );
@@ -130,8 +126,8 @@ final class FloeLoaderTest extends TestCase
         $path = path('memory://repeated.floe');
 
         $loader = to_floe($path, filesystem: $memory);
-        $loader->load(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])), $context);
-        $loader->load(rows(schema(int_schema('id')), row(['id' => 3])), $context);
+        $loader->load(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))), $context);
+        $loader->load(array_to_rows([['id' => 3]], schema(int_schema('id'))), $context);
         $loader->closure($context);
 
         $ids = [];

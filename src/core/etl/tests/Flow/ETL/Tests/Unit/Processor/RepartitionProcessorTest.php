@@ -17,11 +17,11 @@ use Generator;
 use PHPUnit\Framework\Attributes\TestWith;
 
 use function array_map;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -59,8 +59,8 @@ final class RepartitionProcessorTest extends FlowTestCase
         );
 
         $input = (static function () use ($schema): Generator {
-            yield rows($schema, row(['k' => 'a', 'v' => 1]), row(['k' => 'b', 'v' => 2]));
-            yield rows($schema, row(['k' => 'a', 'v' => 3]), row(['k' => 'b', 'v' => 4]));
+            yield array_to_rows([['k' => 'a', 'v' => 1], ['k' => 'b', 'v' => 2]], $schema);
+            yield array_to_rows([['k' => 'a', 'v' => 3], ['k' => 'b', 'v' => 4]], $schema);
         })();
 
         $metadata = [];
@@ -107,7 +107,7 @@ final class RepartitionProcessorTest extends FlowTestCase
 
         foreach ($strategy->bucketize(
             (static function () use ($schema): Generator {
-                yield rows($schema, row(['k' => 'a', 'v' => 1]));
+                yield array_to_rows([['k' => 'a', 'v' => 1]], $schema);
             })(),
             $buckets->storage(),
         ) as $bucket) {

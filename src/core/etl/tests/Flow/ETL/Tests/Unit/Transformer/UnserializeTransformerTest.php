@@ -10,11 +10,12 @@ use Flow\ETL\Transformer\UnserializeTransformer;
 use Flow\Floe\FloeSerializer;
 use Flow\Serializer\Base64Serializer;
 
+use function Flow\ETL\DSL\array_to_row;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\list_schema;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -26,18 +27,16 @@ final class UnserializeTransformerTest extends FlowTestCase
 {
     public function test_a_payload_written_with_another_type_is_refused(): void
     {
-        $payload = serialize_to_string(
-            new Base64Serializer(new FloeSerializer()),
-            rows(schema(str_schema('id')), row(['id' => '12'])),
-        );
+        $payload = serialize_to_string(new Base64Serializer(new FloeSerializer()), array_to_rows([[
+            'id' => '12',
+        ]], schema(str_schema('id'))));
 
         $this->expectException(SchemaMismatchException::class);
         $this->expectExceptionMessage('column "id" (row 0): could not convert \'12\' (string) to integer');
 
-        (new UnserializeTransformer('serialized', schema(int_schema('id'))))->transform(
-            rows(schema(str_schema('serialized')), row(['serialized' => $payload])),
-            flow_context(),
-        );
+        (new UnserializeTransformer('serialized', schema(int_schema('id'))))->transform(array_to_rows([[
+            'serialized' => $payload,
+        ]], schema(str_schema('serialized'))), flow_context());
     }
 
     public function test_bind_expands_the_declared_target_into_nullable_columns(): void
@@ -82,26 +81,35 @@ final class UnserializeTransformerTest extends FlowTestCase
 
     public function test_unserializing_row_from_entry(): void
     {
-        $row1 = row(['id' => 1, 'name' => 'John', 'active' => true, 'tags' => ['tag1', 'tag2']]);
+        $row1 = array_to_row(
+            ['id' => 1, 'name' => 'John', 'active' => true, 'tags' => ['tag1', 'tag2']],
+            schema(
+                int_schema('id'),
+                str_schema('name'),
+                bool_schema('active'),
+                list_schema('tags', type_list(type_string())),
+            ),
+        );
         $rowSchema = schema(
             int_schema('id'),
             str_schema('name'),
             bool_schema('active'),
             list_schema('tags', type_list(type_string())),
         );
-        $row2 = row(['id' => 2, 'name' => 'Jane', 'active' => false, 'tags' => ['tag3', 'tag4']]);
-
-        $rows = rows(
-            schema(str_schema('serialized')),
-            row(['serialized' => serialize_to_string(
-                new Base64Serializer(new FloeSerializer()),
-                rows($rowSchema, $row1),
-            )]),
-            row(['serialized' => serialize_to_string(
-                new Base64Serializer(new FloeSerializer()),
-                rows($rowSchema, $row2),
-            )]),
+        $row2 = array_to_row(
+            ['id' => 2, 'name' => 'Jane', 'active' => false, 'tags' => ['tag3', 'tag4']],
+            schema(
+                int_schema('id'),
+                str_schema('name'),
+                bool_schema('active'),
+                list_schema('tags', type_list(type_string())),
+            ),
         );
+
+        $rows = array_to_rows([
+            ['serialized' => serialize_to_string(new Base64Serializer(new FloeSerializer()), rows($rowSchema, $row1))],
+            ['serialized' => serialize_to_string(new Base64Serializer(new FloeSerializer()), rows($rowSchema, $row2))],
+        ], schema(str_schema('serialized')));
 
         $transformer = new UnserializeTransformer('serialized', $rowSchema);
 
@@ -136,7 +144,7 @@ final class UnserializeTransformerTest extends FlowTestCase
 
     public function test_unserializing_something_that_is_not_serialized_row(): void
     {
-        $rows = rows(schema(str_schema('serialized')), row(['serialized' => 'not-serialized']));
+        $rows = array_to_rows([['serialized' => 'not-serialized']], schema(str_schema('serialized')));
 
         $transformer = new UnserializeTransformer('serialized', schema(int_schema('id')));
 
@@ -148,7 +156,7 @@ final class UnserializeTransformerTest extends FlowTestCase
 
     public function test_unserializing_row_without_source_column_emits_the_declared_shape(): void
     {
-        $rows = rows(schema(int_schema('id')), row(['id' => 1]));
+        $rows = array_to_rows([['id' => 1]], schema(int_schema('id')));
 
         $transformer = new UnserializeTransformer('serialized', schema(str_schema('name')));
 
@@ -157,7 +165,7 @@ final class UnserializeTransformerTest extends FlowTestCase
 
     public function test_unserializing_non_string_value_emits_the_declared_shape(): void
     {
-        $rows = rows(schema(int_schema('serialized')), row(['serialized' => 123]));
+        $rows = array_to_rows([['serialized' => 123]], schema(int_schema('serialized')));
 
         $transformer = new UnserializeTransformer('serialized', schema(str_schema('name')));
 
@@ -169,11 +177,11 @@ final class UnserializeTransformerTest extends FlowTestCase
 
     public function test_unserializing_multi_row_payload_emits_the_declared_shape(): void
     {
-        $payload = serialize_to_string(
-            new Base64Serializer(new FloeSerializer()),
-            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])),
-        );
-        $rows = rows(schema(str_schema('serialized')), row(['serialized' => $payload]));
+        $payload = serialize_to_string(new Base64Serializer(new FloeSerializer()), array_to_rows([
+            ['id' => 1],
+            ['id' => 2],
+        ], schema(int_schema('id'))));
+        $rows = array_to_rows([['serialized' => $payload]], schema(str_schema('serialized')));
 
         $transformer = new UnserializeTransformer('serialized', schema(int_schema('id')));
 
@@ -185,43 +193,53 @@ final class UnserializeTransformerTest extends FlowTestCase
 
     public function test_the_declared_columns_land_under_the_merge_prefix(): void
     {
-        $payload = serialize_to_string(
-            new Base64Serializer(new FloeSerializer()),
-            rows(schema(int_schema('id')), row(['id' => 7])),
-        );
+        $payload = serialize_to_string(new Base64Serializer(new FloeSerializer()), array_to_rows([[
+            'id' => 7,
+        ]], schema(int_schema('id'))));
 
         $transformer = new UnserializeTransformer('serialized', schema(int_schema('id')), mergePrefix: 'payload_');
 
         static::assertSame(
             [['serialized' => $payload, 'payload_id' => 7]],
             $transformer
-                ->transform(rows(schema(str_schema('serialized')), row(['serialized' => $payload])), flow_context())
+                ->transform(array_to_rows([[
+                    'serialized' => $payload,
+                ]], schema(str_schema('serialized'))), flow_context())
                 ->toArray(),
         );
     }
 
     public function test_unserializing_without_merge(): void
     {
-        $row1 = row(['id' => 1, 'name' => 'John', 'active' => true, 'tags' => ['tag1', 'tag2']]);
+        $row1 = array_to_row(
+            ['id' => 1, 'name' => 'John', 'active' => true, 'tags' => ['tag1', 'tag2']],
+            schema(
+                int_schema('id'),
+                str_schema('name'),
+                bool_schema('active'),
+                list_schema('tags', type_list(type_string())),
+            ),
+        );
         $rowSchema = schema(
             int_schema('id'),
             str_schema('name'),
             bool_schema('active'),
             list_schema('tags', type_list(type_string())),
         );
-        $row2 = row(['id' => 2, 'name' => 'Jane', 'active' => false, 'tags' => ['tag3', 'tag4']]);
-
-        $rows = rows(
-            schema(str_schema('serialized')),
-            row(['serialized' => serialize_to_string(
-                new Base64Serializer(new FloeSerializer()),
-                rows($rowSchema, $row1),
-            )]),
-            row(['serialized' => serialize_to_string(
-                new Base64Serializer(new FloeSerializer()),
-                rows($rowSchema, $row2),
-            )]),
+        $row2 = array_to_row(
+            ['id' => 2, 'name' => 'Jane', 'active' => false, 'tags' => ['tag3', 'tag4']],
+            schema(
+                int_schema('id'),
+                str_schema('name'),
+                bool_schema('active'),
+                list_schema('tags', type_list(type_string())),
+            ),
         );
+
+        $rows = array_to_rows([
+            ['serialized' => serialize_to_string(new Base64Serializer(new FloeSerializer()), rows($rowSchema, $row1))],
+            ['serialized' => serialize_to_string(new Base64Serializer(new FloeSerializer()), rows($rowSchema, $row2))],
+        ], schema(str_schema('serialized')));
 
         $transformer = new UnserializeTransformer('serialized', $rowSchema, false);
 
@@ -248,18 +266,17 @@ final class UnserializeTransformerTest extends FlowTestCase
 
     public function test_a_declared_column_replaces_an_input_column_of_the_same_name(): void
     {
-        $payload = serialize_to_string(
-            new Base64Serializer(new FloeSerializer()),
-            rows(schema(int_schema('id')), row(['id' => 7])),
-        );
+        $payload = serialize_to_string(new Base64Serializer(new FloeSerializer()), array_to_rows([[
+            'id' => 7,
+        ]], schema(int_schema('id'))));
 
         static::assertSame(
             [['serialized' => $payload, 'id' => 7]],
             (new UnserializeTransformer('serialized', schema(int_schema('id'))))
                 ->transform(
-                    rows(
+                    array_to_rows(
+                        [['serialized' => $payload, 'id' => 1]],
                         schema(str_schema('serialized'), int_schema('id')),
-                        row(['serialized' => $payload, 'id' => 1]),
                     ),
                     flow_context(),
                 )
@@ -269,15 +286,16 @@ final class UnserializeTransformerTest extends FlowTestCase
 
     public function test_a_declared_column_the_payload_does_not_carry_is_null(): void
     {
-        $payload = serialize_to_string(
-            new Base64Serializer(new FloeSerializer()),
-            rows(schema(int_schema('id')), row(['id' => 7])),
-        );
+        $payload = serialize_to_string(new Base64Serializer(new FloeSerializer()), array_to_rows([[
+            'id' => 7,
+        ]], schema(int_schema('id'))));
 
         static::assertSame(
             [['serialized' => $payload, 'id' => 7, 'absent' => null]],
             (new UnserializeTransformer('serialized', schema(int_schema('id'), str_schema('absent'))))
-                ->transform(rows(schema(str_schema('serialized')), row(['serialized' => $payload])), flow_context())
+                ->transform(array_to_rows([[
+                    'serialized' => $payload,
+                ]], schema(str_schema('serialized'))), flow_context())
                 ->toArray(),
         );
     }

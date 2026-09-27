@@ -29,9 +29,9 @@ $logger = new TestLogger();
 
 $loader = new PsrLoggerLoader($logger, 'row log', LogLevel::ERROR);
 
-$loader->load(rows(
+$loader->load(array_to_rows(
+    [['id' => 12345, 'name' => 'norbert']],
     schema(int_schema('id'), str_schema('name')),
-    row(['id' => 12345, 'name' => 'norbert']),
 ));
 
 $this->assertTrue($logger->hasErrorRecords());

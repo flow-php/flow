@@ -11,12 +11,11 @@ use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\Double\DeclaringExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_memory;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function iterator_to_array;
@@ -27,8 +26,8 @@ final class CollectingExtractorTest extends FlowTestCase
     {
         $collected = iterator_to_array(
             (new CollectingExtractor(from_rows(
-                rows(schema(int_schema('id')), row(['id' => 1])),
-                rows(schema(int_schema('id')), row(['id' => 2])),
+                array_to_rows([['id' => 1]], schema(int_schema('id'))),
+                array_to_rows([['id' => 2]], schema(int_schema('id'))),
             )))->extract(flow_context()),
             false,
         );
@@ -39,7 +38,7 @@ final class CollectingExtractorTest extends FlowTestCase
 
     public function test_with_schema_does_not_leak_into_a_second_pipeline(): void
     {
-        $child = from_rows(rows(schema(int_schema('id')), row(['id' => 1])));
+        $child = from_rows(array_to_rows([['id' => 1]], schema(int_schema('id'))));
 
         iterator_to_array(
             (new CollectingExtractor($child))
@@ -57,7 +56,9 @@ final class CollectingExtractorTest extends FlowTestCase
     public function test_is_repeatable(): void
     {
         static::assertTrue(
-            (new CollectingExtractor(from_rows(rows(schema(int_schema('id')), row(['id' => 1])))))->isRepeatable(),
+            (new CollectingExtractor(from_rows(array_to_rows([[
+                'id' => 1,
+            ]], schema(int_schema('id'))))))->isRepeatable(),
         );
     }
 

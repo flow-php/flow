@@ -11,9 +11,8 @@ use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Override;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
@@ -61,7 +60,10 @@ abstract class CacheTestCase extends FlowIntegrationTestCase
 
         static::assertFalse($cache->has('rows'));
 
-        $cache->set('rows', $rows = rows(schema(str_schema('name')), row(['name' => 'John']), row(['name' => 'Jane'])));
+        $cache->set(
+            'rows',
+            $rows = array_to_rows([['name' => 'John'], ['name' => 'Jane']], schema(str_schema('name'))),
+        );
 
         static::assertTrue($cache->has('rows'));
 
@@ -74,7 +76,7 @@ abstract class CacheTestCase extends FlowIntegrationTestCase
 
         $cache->set(
             'rows',
-            $rows = rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'John'])),
+            $rows = array_to_rows([['id' => 1, 'name' => 'John']], schema(int_schema('id'), str_schema('name'))),
         );
 
         static::assertEquals($rows->schema(), $cache->schema('rows'));
@@ -92,8 +94,8 @@ abstract class CacheTestCase extends FlowIntegrationTestCase
         $cache = $this->cache();
 
         $cache->set('index', (new CacheIndex('index'))->toRows());
-        $cache->set('row', rows(schema(str_schema('name')), row(['name' => 'John'])));
-        $cache->set('rows', rows(schema(str_schema('name')), row(['name' => 'John']), row(['name' => 'Jane'])));
+        $cache->set('row', array_to_rows([['name' => 'John']], schema(str_schema('name'))));
+        $cache->set('rows', array_to_rows([['name' => 'John'], ['name' => 'Jane']], schema(str_schema('name'))));
 
         $cache->clear();
 
@@ -106,7 +108,7 @@ abstract class CacheTestCase extends FlowIntegrationTestCase
     {
         $cache = $this->cache();
 
-        $cache->set('rows', rows(schema(str_schema('name')), row(['name' => 'John'])));
+        $cache->set('rows', array_to_rows([['name' => 'John']], schema(str_schema('name'))));
 
         $cache->clear();
 
@@ -138,8 +140,8 @@ abstract class CacheTestCase extends FlowIntegrationTestCase
         $cache = $this->cache();
 
         $cache->set('index', (new CacheIndex('index'))->toRows());
-        $cache->set('row', rows(schema(str_schema('name')), row(['name' => 'John'])));
-        $cache->set('rows', rows(schema(str_schema('name')), row(['name' => 'John']), row(['name' => 'Jane'])));
+        $cache->set('row', array_to_rows([['name' => 'John']], schema(str_schema('name'))));
+        $cache->set('rows', array_to_rows([['name' => 'John'], ['name' => 'Jane']], schema(str_schema('name'))));
 
         $cache->delete('row');
 
@@ -152,8 +154,8 @@ abstract class CacheTestCase extends FlowIntegrationTestCase
     {
         $cache = $this->cache();
 
-        $cache->set('row', rows(schema(str_schema('name')), row(['name' => 'John'])));
-        $cache->set('rows', $rows = rows(schema(int_schema('id')), row(['id' => 1])));
+        $cache->set('row', array_to_rows([['name' => 'John']], schema(str_schema('name'))));
+        $cache->set('rows', $rows = array_to_rows([['id' => 1]], schema(int_schema('id'))));
 
         $cache->delete('row');
 

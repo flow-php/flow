@@ -14,9 +14,8 @@ use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 
 use function apcu_enabled;
 use function apcu_store;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
@@ -59,10 +58,9 @@ final class ApcuCacheTest extends FlowTestCase
 
         $this->cache->set(
             'rows',
-            $rows = rows(
+            $rows = array_to_rows(
+                [['id' => 1, 'name' => 'John'], ['id' => 2, 'name' => 'Jane']],
                 schema(int_schema('id'), str_schema('name')),
-                row(['id' => 1, 'name' => 'John']),
-                row(['id' => 2, 'name' => 'Jane']),
             ),
         );
 
@@ -74,7 +72,7 @@ final class ApcuCacheTest extends FlowTestCase
     {
         $this->cache->set(
             'rows',
-            $rows = rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'John'])),
+            $rows = array_to_rows([['id' => 1, 'name' => 'John']], schema(int_schema('id'), str_schema('name'))),
         );
 
         static::assertEquals($rows->schema(), $this->cache->schema('rows'));
@@ -87,8 +85,8 @@ final class ApcuCacheTest extends FlowTestCase
 
     public function test_clearing_cache_removes_only_its_own_namespace(): void
     {
-        $this->cache->set('rows', rows(schema(int_schema('id')), row(['id' => 1])));
-        $this->otherCache->set('rows', rows(schema(int_schema('id')), row(['id' => 2])));
+        $this->cache->set('rows', array_to_rows([['id' => 1]], schema(int_schema('id'))));
+        $this->otherCache->set('rows', array_to_rows([['id' => 2]], schema(int_schema('id'))));
 
         $this->cache->clear();
 
@@ -98,7 +96,7 @@ final class ApcuCacheTest extends FlowTestCase
 
     public function test_clearing_cache_removes_schemas(): void
     {
-        $this->cache->set('rows', rows(schema(int_schema('id')), row(['id' => 1])));
+        $this->cache->set('rows', array_to_rows([['id' => 1]], schema(int_schema('id'))));
 
         $this->cache->clear();
 
@@ -133,8 +131,8 @@ final class ApcuCacheTest extends FlowTestCase
 
     public function test_removing_from_cache(): void
     {
-        $this->cache->set('first', rows(schema(int_schema('id')), row(['id' => 1])));
-        $this->cache->set('second', rows(schema(int_schema('id')), row(['id' => 2])));
+        $this->cache->set('first', array_to_rows([['id' => 1]], schema(int_schema('id'))));
+        $this->cache->set('second', array_to_rows([['id' => 2]], schema(int_schema('id'))));
 
         $this->cache->delete('second');
 
@@ -144,8 +142,8 @@ final class ApcuCacheTest extends FlowTestCase
 
     public function test_removing_from_cache_removes_its_schema(): void
     {
-        $this->cache->set('first', $rows = rows(schema(int_schema('id')), row(['id' => 1])));
-        $this->cache->set('second', rows(schema(int_schema('id')), row(['id' => 2])));
+        $this->cache->set('first', $rows = array_to_rows([['id' => 1]], schema(int_schema('id'))));
+        $this->cache->set('second', array_to_rows([['id' => 2]], schema(int_schema('id'))));
 
         $this->cache->delete('second');
 
@@ -165,7 +163,7 @@ final class ApcuCacheTest extends FlowTestCase
 
     public function test_schema_of_an_entry_without_a_stored_schema_is_a_cache_miss(): void
     {
-        apcu_store('flow_php_cache_test:orphan', rows(schema(int_schema('id')), row(['id' => 1])));
+        apcu_store('flow_php_cache_test:orphan', array_to_rows([['id' => 1]], schema(int_schema('id'))));
 
         static::assertTrue($this->cache->has('orphan'));
 

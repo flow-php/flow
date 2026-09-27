@@ -17,11 +17,10 @@ use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\analyze;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function iterator_to_array;
@@ -32,10 +31,9 @@ final class StatisticsCollectorTest extends FlowTestCase
     {
         $collector = new StatisticsCollector(analyze()->withColumnStatistics(), flow_context());
 
-        $collector->capture(rows(
+        $collector->capture(array_to_rows(
+            [['id' => 1, 'name' => 'Alice'], ['id' => 2, 'name' => 'Bob']],
             schema(int_schema('id'), str_schema('name')),
-            row(['id' => 1, 'name' => 'Alice']),
-            row(['id' => 2, 'name' => 'Bob']),
         ));
 
         $report = $collector->report();
@@ -51,7 +49,10 @@ final class StatisticsCollectorTest extends FlowTestCase
     {
         $collector = new StatisticsCollector(analyze()->withSchema(), flow_context());
 
-        $collector->capture(rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'Alice'])));
+        $collector->capture(array_to_rows(
+            [['id' => 1, 'name' => 'Alice']],
+            schema(int_schema('id'), str_schema('name')),
+        ));
 
         $report = $collector->report();
 
@@ -67,8 +68,8 @@ final class StatisticsCollectorTest extends FlowTestCase
     {
         $collector = new StatisticsCollector(true, flow_context());
 
-        $collector->capture(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])));
-        $collector->capture(rows(schema(int_schema('id')), row(['id' => 3])));
+        $collector->capture(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))));
+        $collector->capture(array_to_rows([['id' => 3]], schema(int_schema('id'))));
 
         $report = $collector->report();
 
@@ -80,7 +81,7 @@ final class StatisticsCollectorTest extends FlowTestCase
     {
         $collector = new StatisticsCollector(false, flow_context());
 
-        $collector->capture(rows(schema(int_schema('id')), row(['id' => 1])));
+        $collector->capture(array_to_rows([['id' => 1]], schema(int_schema('id'))));
 
         static::assertNull($collector->report());
     }
@@ -89,7 +90,7 @@ final class StatisticsCollectorTest extends FlowTestCase
     {
         $collector = new StatisticsCollector(analyze(), flow_context());
 
-        $collector->capture(rows(schema(int_schema('id')), row(['id' => 1])));
+        $collector->capture(array_to_rows([['id' => 1]], schema(int_schema('id'))));
 
         $report = $collector->report();
 
@@ -135,7 +136,7 @@ final class StatisticsCollectorTest extends FlowTestCase
         $collector = new StatisticsCollector(true, $context);
 
         $clock->modify('+5 minutes');
-        $collector->capture(rows(schema(int_schema('id')), row(['id' => 1])));
+        $collector->capture(array_to_rows([['id' => 1]], schema(int_schema('id'))));
 
         $clock->modify('+5 minutes');
         $report = $collector->report();
@@ -156,7 +157,7 @@ final class StatisticsCollectorTest extends FlowTestCase
     {
         $collector = new StatisticsCollector(true, flow_context());
 
-        $collector->capture(rows(schema(int_schema('id')), row(['id' => 1])));
+        $collector->capture(array_to_rows([['id' => 1]], schema(int_schema('id'))));
 
         $report = $collector->report();
 
@@ -168,7 +169,7 @@ final class StatisticsCollectorTest extends FlowTestCase
     {
         $collector = new StatisticsCollector(true, flow_context());
 
-        $collector->capture(rows(schema(int_schema('id')), row(['id' => 1])));
+        $collector->capture(array_to_rows([['id' => 1]], schema(int_schema('id'))));
 
         $report = $collector->report();
 
@@ -208,7 +209,7 @@ final class StatisticsCollectorTest extends FlowTestCase
     {
         $collector = new StatisticsCollector(analyze(), flow_context());
 
-        $collector->capture(rows(schema(int_schema('id')), row(['id' => 1])));
+        $collector->capture(array_to_rows([['id' => 1]], schema(int_schema('id'))));
 
         $report = $collector->report();
 

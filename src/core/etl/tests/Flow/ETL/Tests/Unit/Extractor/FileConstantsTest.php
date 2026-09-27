@@ -8,9 +8,8 @@ use Flow\ETL\Extractor\FileConstants;
 use Flow\ETL\Extractor\PartitionColumns;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
@@ -61,7 +60,7 @@ final class FileConstantsTest extends FlowTestCase
 
     public function test_fill_rows_returns_a_batch_with_nothing_to_add_as_it_is(): void
     {
-        $rows = rows(schema(str_schema('name')), row(['name' => 'Norbert']));
+        $rows = array_to_rows([['name' => 'Norbert']], schema(str_schema('name')));
 
         static::assertSame($rows, (new FileConstants(
             new PartitionColumns(memory_filesystem()),
@@ -76,20 +75,19 @@ final class FileConstantsTest extends FlowTestCase
         $declared = schema(str_schema('name'), str_schema('_input_file_uri'), int_schema('year'));
 
         static::assertEquals(
-            rows(
-                $declared,
-                row(['name' => 'Norbert', '_input_file_uri' => 'memory://orders/data.csv', 'year' => 2024]),
-                row(['name' => 'Flow', '_input_file_uri' => 'memory://orders/data.csv', 'year' => 2024]),
-            ),
+            array_to_rows([
+                ['name' => 'Norbert', '_input_file_uri' => 'memory://orders/data.csv', 'year' => 2024],
+                ['name' => 'Flow', '_input_file_uri' => 'memory://orders/data.csv', 'year' => 2024],
+            ], $declared),
             (new FileConstants(
                 new PartitionColumns(memory_filesystem()),
                 'memory://orders/data.csv',
                 ['year' => false],
                 ['year' => 2024],
-            ))->fillRows(
-                rows(schema(str_schema('name')), row(['name' => 'Norbert']), row(['name' => 'Flow'])),
-                $declared,
-            ),
+            ))->fillRows(array_to_rows([
+                ['name' => 'Norbert'],
+                ['name' => 'Flow'],
+            ], schema(str_schema('name'))), $declared),
         );
     }
 }

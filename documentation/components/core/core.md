@@ -38,7 +38,7 @@ These methods build the processing pipeline without executing it immediately:
 
 These methods execute the entire pipeline and return results:
 
-- **Data retrieval**: `get()`, `getEach()`, `fetch()`, `count()`
+- **Data retrieval**: `get()`, `getEachAsArray()`, `fetch()`, `count()`
 - **Output operations**: `run()`, `forEach()`, `printRows()`
 - **Schema inspection**: `display()`
 
@@ -221,7 +221,7 @@ $dataFrame = data_frame()
 
 ## Memory Management Best Practices
 
-1. **Prefer Generator Methods**: Use `get()`, `getEach()`, `getEachAsArray()` over `fetch()` for large datasets
+1. **Prefer Generator Methods**: Use `get()`, `getEachAsArray()` over `fetch()` for large datasets
 2. **Avoid Memory-Intensive Operations**: Be cautious with `collect()`, `sortBy()`, `groupBy()`, and `join()` on large datasets
 3. **Use Appropriate Batch Sizes**: Start with 1000-5000 rows and adjust based on your memory constraints
 4. **Monitor Memory Usage**: Use `run(analyze: true)` to track memory consumption during development

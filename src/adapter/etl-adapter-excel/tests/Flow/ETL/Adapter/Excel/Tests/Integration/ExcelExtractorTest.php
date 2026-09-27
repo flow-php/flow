@@ -28,6 +28,7 @@ use PHPUnit\Framework\Attributes\TestWith;
 use function array_keys;
 use function Flow\ETL\Adapter\Excel\DSL\from_excel;
 use function Flow\ETL\Adapter\Excel\DSL\is_valid_excel_sheet_name;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
@@ -37,8 +38,6 @@ use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\infer_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_schema;
@@ -272,14 +271,13 @@ final class ExcelExtractorTest extends FlowTestCase
     public function test_is_valid_excel_sheet_name_function(): void
     {
         $result = df()
-            ->read(from_rows(rows(
-                schema(string_schema('sheet')),
-                row(['sheet' => 'ValidSheet']),
-                row(['sheet' => 'Invalid/Sheet']),
-                row(['sheet' => 'Sheet*Name']),
-                row(['sheet' => 'This is a very long sheet name that exceeds the 31 character limit']),
-                row(['sheet' => 'Normal']),
-            )))
+            ->read(from_rows(array_to_rows([
+                ['sheet' => 'ValidSheet'],
+                ['sheet' => 'Invalid/Sheet'],
+                ['sheet' => 'Sheet*Name'],
+                ['sheet' => 'This is a very long sheet name that exceeds the 31 character limit'],
+                ['sheet' => 'Normal'],
+            ], schema(string_schema('sheet')))))
             ->withEntry('is_valid', is_valid_excel_sheet_name(ref('sheet')))
             ->fetch()
             ->toArray();

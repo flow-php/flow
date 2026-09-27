@@ -21,12 +21,11 @@ use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Override;
 
 use function Flow\ETL\DSL\analyze;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\external_sort;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\memory_sort;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function str_replace;
 
@@ -55,7 +54,7 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
 
         $config->cache->cache->set(
             'key',
-            $rows = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3])),
+            $rows = array_to_rows([['id' => 1], ['id' => 2], ['id' => 3]], schema(int_schema('id'))),
         );
 
         static::assertEquals($rows, $config->cache->cache->get('key'));

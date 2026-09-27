@@ -7,8 +7,8 @@ namespace Flow\ETL\Bucketing;
 use Flow\ETL\Row;
 use Flow\ETL\Schema;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
@@ -27,9 +27,9 @@ final readonly class Bucket
 
     public function toRow(): Row
     {
-        return row([
+        return array_to_row([
             BucketShape::id->value => $this->id,
             BucketShape::totalRows->value => $this->totalRows,
-        ]);
+        ], self::schema());
     }
 }

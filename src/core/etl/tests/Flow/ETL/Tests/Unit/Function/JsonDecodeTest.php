@@ -7,9 +7,12 @@ namespace Flow\ETL\Tests\Unit\Function;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class JsonDecodeTest extends FlowTestCase
 {
@@ -17,7 +20,9 @@ final class JsonDecodeTest extends FlowTestCase
     {
         static::assertSame(
             ['value' => 1],
-            ref('value')->jsonDecode()->eval(row(['value' => '{"value": 1}']), flow_context()),
+            ref('value')
+                ->jsonDecode()
+                ->eval(array_to_row(['value' => '{"value": 1}'], schema(str_schema('value'))), flow_context()),
         );
     }
 
@@ -26,7 +31,9 @@ final class JsonDecodeTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('JsonDecode error: Syntax error');
 
-        ref('value')->jsonDecode()->eval(row(['value' => '{"value": 1']), flow_context());
+        ref('value')
+            ->jsonDecode()
+            ->eval(array_to_row(['value' => '{"value": 1'], schema(str_schema('value'))), flow_context());
     }
 
     public function test_json_decode_on_non_json_value(): void
@@ -34,7 +41,7 @@ final class JsonDecodeTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('JsonDecode function requires string, array, or Json value');
 
-        ref('value')->jsonDecode()->eval(row(['value' => 125]), flow_context());
+        ref('value')->jsonDecode()->eval(array_to_row(['value' => 125], schema(int_schema('value'))), flow_context());
     }
 
     public function test_json_decode_on_scalar_json_throws(): void
@@ -44,6 +51,6 @@ final class JsonDecodeTest extends FlowTestCase
             'JsonDecode function requires JSON that decodes to an array, cast scalar JSON instead',
         );
 
-        ref('value')->jsonDecode()->eval(row(['value' => '5']), flow_context());
+        ref('value')->jsonDecode()->eval(array_to_row(['value' => '5'], schema(str_schema('value'))), flow_context());
     }
 }

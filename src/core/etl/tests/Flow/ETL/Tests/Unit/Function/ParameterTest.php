@@ -15,10 +15,12 @@ use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use stdClass;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
@@ -86,31 +88,31 @@ final class ParameterTest extends FlowTestCase
     public function test_as_array_with_empty_array(): void
     {
         $parameter = new Parameter(lit([]));
-        static::assertSame([], $parameter->asArray(row([]), flow_context()));
+        static::assertSame([], $parameter->asArray(array_to_row([], schema()), flow_context()));
     }
 
     public function test_as_boolean_throws_on_a_malformed_value(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
-        (new Parameter(lit(['value'])))->asBoolean(row([]), flow_context());
+        (new Parameter(lit(['value'])))->asBoolean(array_to_row([], schema()), flow_context());
     }
 
     public function test_as_boolean_propagates_null(): void
     {
-        static::assertNull((new Parameter(lit(null)))->asBoolean(row([]), flow_context()));
+        static::assertNull((new Parameter(lit(null)))->asBoolean(array_to_row([], schema()), flow_context()));
     }
 
     public function test_as_float_throws_on_a_malformed_value(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
-        (new Parameter(lit('3.14')))->asFloat(row([]), flow_context());
+        (new Parameter(lit('3.14')))->asFloat(array_to_row([], schema()), flow_context());
     }
 
     public function test_as_float_propagates_null(): void
     {
-        static::assertNull((new Parameter(lit(null)))->asFloat(row([]), flow_context()));
+        static::assertNull((new Parameter(lit(null)))->asFloat(array_to_row([], schema()), flow_context()));
     }
 
     public function test_as_int_throws_on_a_malformed_value(): void
@@ -118,54 +120,54 @@ final class ParameterTest extends FlowTestCase
         // A default never applies to a malformed value - only to a NULL input.
         $this->expectException(InvalidArgumentException::class);
 
-        (new Parameter(lit(3.14)))->asInt(row([]), flow_context(), 99);
+        (new Parameter(lit(3.14)))->asInt(array_to_row([], schema()), flow_context(), 99);
     }
 
     public function test_as_int_propagates_null(): void
     {
-        static::assertNull((new Parameter(lit(null)))->asInt(row([]), flow_context()));
+        static::assertNull((new Parameter(lit(null)))->asInt(array_to_row([], schema()), flow_context()));
     }
 
     public function test_as_number_throws_on_a_malformed_value(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
-        (new Parameter(lit('not numeric')))->asNumber(row([]), flow_context(), 99);
+        (new Parameter(lit('not numeric')))->asNumber(array_to_row([], schema()), flow_context(), 99);
     }
 
     public function test_as_number_propagates_null(): void
     {
-        static::assertNull((new Parameter(lit(null)))->asNumber(row([]), flow_context()));
+        static::assertNull((new Parameter(lit(null)))->asNumber(array_to_row([], schema()), flow_context()));
     }
 
     public function test_as_string_throws_on_a_malformed_value(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
-        (new Parameter(lit(42)))->asString(row([]), flow_context(), 'default');
+        (new Parameter(lit(42)))->asString(array_to_row([], schema()), flow_context(), 'default');
     }
 
     public function test_as_string_propagates_null(): void
     {
-        static::assertNull((new Parameter(lit(null)))->asString(row([]), flow_context()));
+        static::assertNull((new Parameter(lit(null)))->asString(array_to_row([], schema()), flow_context()));
     }
 
     public function test_as_array_throws_on_a_malformed_value(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
-        (new Parameter(lit('not an array')))->asArray(row([]), flow_context());
+        (new Parameter(lit('not an array')))->asArray(array_to_row([], schema()), flow_context());
     }
 
     public function test_as_array_propagates_null(): void
     {
-        static::assertNull((new Parameter(lit(null)))->asArray(row([]), flow_context()));
+        static::assertNull((new Parameter(lit(null)))->asArray(array_to_row([], schema()), flow_context()));
     }
 
     public function test_as_array_with_valid_array(): void
     {
         $parameter = new Parameter(lit(['key' => 'value', 'number' => 42]));
-        $result = $parameter->asArray(row([]), flow_context());
+        $result = $parameter->asArray(array_to_row([], schema()), flow_context());
 
         static::assertSame(['key' => 'value', 'number' => 42], $result);
     }
@@ -174,24 +176,28 @@ final class ParameterTest extends FlowTestCase
     public function test_as_boolean(mixed $input, ?bool $expected): void
     {
         $parameter = new Parameter(lit($input));
-        static::assertSame($expected, $parameter->asBoolean(row([]), flow_context()));
+        static::assertSame($expected, $parameter->asBoolean(array_to_row([], schema()), flow_context()));
     }
 
     public function test_as_value_with_literal(): void
     {
-        static::assertNull((new Parameter(lit('literal_value')))->asValue(row([])));
+        static::assertNull((new Parameter(lit('literal_value')))->asValue(array_to_row([], schema())));
     }
 
     public function test_as_value_with_missing_reference(): void
     {
-        static::assertNull((new Parameter(ref('missing_column')))->asValue(row(['other_column' => 'test_value'])));
+        static::assertNull((new Parameter(ref('missing_column')))->asValue(array_to_row([
+            'other_column' => 'test_value',
+        ], schema(str_schema('other_column')))));
     }
 
     public function test_as_value_with_reference(): void
     {
         static::assertSame(
             'test_value',
-            (new Parameter(ref('test_column')))->asValue(row(['test_column' => 'test_value'])),
+            (new Parameter(ref('test_column')))->asValue(array_to_row([
+                'test_column' => 'test_value',
+            ], schema(str_schema('test_column')))),
         );
     }
 
@@ -199,18 +205,26 @@ final class ParameterTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        (new Parameter(lit('not an enum')))->asEnum(row([]), flow_context(), SQLParametersStyle::class);
+        (new Parameter(lit('not an enum')))->asEnum(
+            array_to_row([], schema()),
+            flow_context(),
+            SQLParametersStyle::class,
+        );
     }
 
     public function test_as_enum_propagates_null(): void
     {
-        static::assertNull((new Parameter(lit(null)))->asEnum(row([]), flow_context(), SQLParametersStyle::class));
+        static::assertNull((new Parameter(lit(null)))->asEnum(
+            array_to_row([], schema()),
+            flow_context(),
+            SQLParametersStyle::class,
+        ));
     }
 
     public function test_as_enum_with_valid_enum(): void
     {
         $parameter = new Parameter(lit(SQLParametersStyle::NAMED));
-        $result = $parameter->asEnum(row([]), flow_context(), SQLParametersStyle::class);
+        $result = $parameter->asEnum(array_to_row([], schema()), flow_context(), SQLParametersStyle::class);
 
         static::assertSame(SQLParametersStyle::NAMED, $result);
     }
@@ -219,26 +233,38 @@ final class ParameterTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        (new Parameter(lit(SQLParametersStyle::NAMED)))->asEnum(row([]), flow_context(), StringStyles::class);
+        (new Parameter(lit(SQLParametersStyle::NAMED)))->asEnum(
+            array_to_row([], schema()),
+            flow_context(),
+            StringStyles::class,
+        );
     }
 
     #[DataProvider('float_data_provider')]
     public function test_as_float(mixed $input, ?float $expected): void
     {
         $parameter = new Parameter(lit($input));
-        static::assertSame($expected, $parameter->asFloat(row([]), flow_context()));
+        static::assertSame($expected, $parameter->asFloat(array_to_row([], schema()), flow_context()));
     }
 
     public function test_as_instance_of_throws_on_a_malformed_value(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
-        (new Parameter(lit('not an object')))->asInstanceOf(row([]), flow_context(), DateTimeImmutable::class);
+        (new Parameter(lit('not an object')))->asInstanceOf(
+            array_to_row([], schema()),
+            flow_context(),
+            DateTimeImmutable::class,
+        );
     }
 
     public function test_as_instance_of_propagates_null(): void
     {
-        static::assertNull((new Parameter(lit(null)))->asInstanceOf(row([]), flow_context(), DateTimeImmutable::class));
+        static::assertNull((new Parameter(lit(null)))->asInstanceOf(
+            array_to_row([], schema()),
+            flow_context(),
+            DateTimeImmutable::class,
+        ));
     }
 
     public function test_as_instance_of_with_valid_object(): void
@@ -246,10 +272,10 @@ final class ParameterTest extends FlowTestCase
         $dateTime = new DateTimeImmutable('2023-01-01');
         $parameter = new Parameter(lit($dateTime));
 
-        $result = $parameter->asInstanceOf(row([]), flow_context(), DateTimeImmutable::class);
+        $result = $parameter->asInstanceOf(array_to_row([], schema()), flow_context(), DateTimeImmutable::class);
         static::assertSame($dateTime, $result);
 
-        $result = $parameter->asInstanceOf(row([]), flow_context(), DateTimeInterface::class);
+        $result = $parameter->asInstanceOf(array_to_row([], schema()), flow_context(), DateTimeInterface::class);
         static::assertSame($dateTime, $result);
     }
 
@@ -257,13 +283,13 @@ final class ParameterTest extends FlowTestCase
     public function test_as_int(mixed $input, ?int $default, ?int $expected): void
     {
         $parameter = new Parameter(lit($input));
-        static::assertSame($expected, $parameter->asInt(row([]), flow_context(), $default));
+        static::assertSame($expected, $parameter->asInt(array_to_row([], schema()), flow_context(), $default));
     }
 
     public function test_as_list_of_objects_with_empty_array(): void
     {
         $parameter = new Parameter(lit([]));
-        $result = $parameter->asListOfObjects(row([]), flow_context(), DateTimeImmutable::class);
+        $result = $parameter->asListOfObjects(array_to_row([], schema()), flow_context(), DateTimeImmutable::class);
 
         static::assertSame([], $result);
     }
@@ -273,7 +299,7 @@ final class ParameterTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
 
         (new Parameter(lit([new DateTimeImmutable('2023-01-01'), 'not an object'])))->asListOfObjects(
-            row([]),
+            array_to_row([], schema()),
             flow_context(),
             DateTimeImmutable::class,
         );
@@ -283,13 +309,17 @@ final class ParameterTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        (new Parameter(lit('not an array')))->asListOfObjects(row([]), flow_context(), DateTimeImmutable::class);
+        (new Parameter(lit('not an array')))->asListOfObjects(
+            array_to_row([], schema()),
+            flow_context(),
+            DateTimeImmutable::class,
+        );
     }
 
     public function test_as_list_of_objects_propagates_null(): void
     {
         static::assertNull((new Parameter(lit(null)))->asListOfObjects(
-            row([]),
+            array_to_row([], schema()),
             flow_context(),
             DateTimeImmutable::class,
         ));
@@ -301,7 +331,7 @@ final class ParameterTest extends FlowTestCase
         $date2 = new DateTimeImmutable('2023-01-02');
         $parameter = new Parameter(lit([$date1, $date2]));
 
-        $result = $parameter->asListOfObjects(row([]), flow_context(), DateTimeImmutable::class);
+        $result = $parameter->asListOfObjects(array_to_row([], schema()), flow_context(), DateTimeImmutable::class);
         static::assertSame([$date1, $date2], $result);
     }
 
@@ -310,7 +340,7 @@ final class ParameterTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
 
         (new Parameter(lit([new DateTimeImmutable('2023-01-01'), new stdClass()])))->asListOfObjects(
-            row([]),
+            array_to_row([], schema()),
             flow_context(),
             DateTimeImmutable::class,
         );
@@ -320,19 +350,19 @@ final class ParameterTest extends FlowTestCase
     public function test_as_number(mixed $input, int|float|null $default, int|float|null $expected): void
     {
         $parameter = new Parameter(lit($input));
-        static::assertSame($expected, $parameter->asNumber(row([]), flow_context(), $default));
+        static::assertSame($expected, $parameter->asNumber(array_to_row([], schema()), flow_context(), $default));
     }
 
     public function test_as_object_throws_on_a_malformed_value(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
-        (new Parameter(lit('not an object')))->asObject(row([]), flow_context());
+        (new Parameter(lit('not an object')))->asObject(array_to_row([], schema()), flow_context());
     }
 
     public function test_as_object_propagates_null(): void
     {
-        static::assertNull((new Parameter(lit(null)))->asObject(row([]), flow_context()));
+        static::assertNull((new Parameter(lit(null)))->asObject(array_to_row([], schema()), flow_context()));
     }
 
     public function test_as_object_with_valid_object(): void
@@ -341,13 +371,13 @@ final class ParameterTest extends FlowTestCase
         $object->property = 'value';
         $parameter = new Parameter(lit($object));
 
-        static::assertSame($object, $parameter->asObject(row([]), flow_context()));
+        static::assertSame($object, $parameter->asObject(array_to_row([], schema()), flow_context()));
     }
 
     public function test_as_one_of(): void
     {
         static::assertSame('42', (new Parameter(ref('value')))->as(
-            row(['value' => '42']),
+            array_to_row(['value' => '42'], schema(str_schema('value'))),
             flow_context(),
             type_string(),
             type_integer(),
@@ -358,18 +388,23 @@ final class ParameterTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        (new Parameter(ref('value')))->as(row(['value' => '42']), flow_context(), type_integer(), type_boolean());
+        (new Parameter(ref('value')))->as(
+            array_to_row(['value' => '42'], schema(str_schema('value'))),
+            flow_context(),
+            type_integer(),
+            type_boolean(),
+        );
     }
 
     public function test_as_propagates_null(): void
     {
-        static::assertNull((new Parameter(lit(null)))->as(row([]), flow_context(), type_integer()));
+        static::assertNull((new Parameter(lit(null)))->as(array_to_row([], schema()), flow_context(), type_integer()));
     }
 
     public function test_as_scalar(): void
     {
         static::assertSame('42', (new Parameter(ref('value')))->as(
-            row(['value' => '42']),
+            array_to_row(['value' => '42'], schema(str_schema('value'))),
             flow_context(),
             type_string(),
         ));
@@ -379,19 +414,19 @@ final class ParameterTest extends FlowTestCase
     public function test_as_string(mixed $input, ?string $default, ?string $expected): void
     {
         $parameter = new Parameter(lit($input));
-        static::assertSame($expected, $parameter->asString(row([]), flow_context(), $default));
+        static::assertSame($expected, $parameter->asString(array_to_row([], schema()), flow_context(), $default));
     }
 
     public function test_constructor_with_mixed_value(): void
     {
         $parameter = new Parameter('direct_string');
-        static::assertSame('direct_string', $parameter->eval(row([]), flow_context()));
+        static::assertSame('direct_string', $parameter->eval(array_to_row([], schema()), flow_context()));
 
         $parameter = new Parameter(123);
-        static::assertSame(123, $parameter->eval(row([]), flow_context()));
+        static::assertSame(123, $parameter->eval(array_to_row([], schema()), flow_context()));
 
         $parameter = new Parameter(true);
-        static::assertTrue($parameter->eval(row([]), flow_context()));
+        static::assertTrue($parameter->eval(array_to_row([], schema()), flow_context()));
     }
 
     public function test_constructor_with_scalar_function(): void
@@ -399,22 +434,24 @@ final class ParameterTest extends FlowTestCase
         $scalarFunction = lit('test');
         $parameter = new Parameter($scalarFunction);
 
-        static::assertSame('test', $parameter->eval(row([]), flow_context()));
+        static::assertSame('test', $parameter->eval(array_to_row([], schema()), flow_context()));
     }
 
     public function test_eval_with_direct_value(): void
     {
         $parameter = new Parameter(lit('direct_value'));
-        static::assertSame('direct_value', $parameter->eval(row([]), flow_context()));
+        static::assertSame('direct_value', $parameter->eval(array_to_row([], schema()), flow_context()));
 
         $parameter = new Parameter(lit(42));
-        static::assertSame(42, $parameter->eval(row([]), flow_context()));
+        static::assertSame(42, $parameter->eval(array_to_row([], schema()), flow_context()));
     }
 
     public function test_eval_with_reference(): void
     {
         $parameter = new Parameter(ref('column'));
-        $result = $parameter->eval(row(['column' => 'ref_value']), flow_context());
+        $result = $parameter->eval(array_to_row([
+            'column' => 'ref_value',
+        ], schema(str_schema('column'))), flow_context());
 
         static::assertSame('ref_value', $result);
     }

@@ -14,11 +14,10 @@ use Flow\ETL\Tests\Context\BucketsStorageContext;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function array_map;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
@@ -27,24 +26,21 @@ final class KWayMergeTest extends FlowTestCase
     public function test_merges_multiple_sorted_runs_ascending(): void
     {
         $buckets = new Buckets(new MemoryBuckets());
-        $buckets->storage()->append('a', rows(
-            schema(int_schema('id')),
-            row(['id' => 1]),
-            row(['id' => 4]),
-            row(['id' => 7]),
-        ));
-        $buckets->storage()->append('b', rows(
-            schema(int_schema('id')),
-            row(['id' => 2]),
-            row(['id' => 5]),
-            row(['id' => 8]),
-        ));
-        $buckets->storage()->append('c', rows(
-            schema(int_schema('id')),
-            row(['id' => 3]),
-            row(['id' => 6]),
-            row(['id' => 9]),
-        ));
+        $buckets->storage()->append('a', array_to_rows([
+            ['id' => 1],
+            ['id' => 4],
+            ['id' => 7],
+        ], schema(int_schema('id'))));
+        $buckets->storage()->append('b', array_to_rows([
+            ['id' => 2],
+            ['id' => 5],
+            ['id' => 8],
+        ], schema(int_schema('id'))));
+        $buckets->storage()->append('c', array_to_rows([
+            ['id' => 3],
+            ['id' => 6],
+            ['id' => 9],
+        ], schema(int_schema('id'))));
 
         $merge = new KWayMerge(refs(ref('id')->asc()));
 
@@ -61,8 +57,8 @@ final class KWayMergeTest extends FlowTestCase
         $spill = new Buckets(new MemoryBuckets());
         $merged = new Buckets(new MemoryBuckets());
 
-        $spill->storage()->append('sort-run-0', rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 3])));
-        $merged->storage()->append('sort-merge-0', rows(schema(int_schema('id')), row(['id' => 2]), row(['id' => 4])));
+        $spill->storage()->append('sort-run-0', array_to_rows([['id' => 1], ['id' => 3]], schema(int_schema('id'))));
+        $merged->storage()->append('sort-merge-0', array_to_rows([['id' => 2], ['id' => 4]], schema(int_schema('id'))));
 
         // neither storage holds the other's id, so a routing miss reads 0 batches instead of throwing
         static::assertSame([], BucketsStorageContext::rows($spill->storage()->get('sort-merge-0')));
@@ -84,18 +80,16 @@ final class KWayMergeTest extends FlowTestCase
     public function test_merges_multiple_sorted_runs_descending(): void
     {
         $buckets = new Buckets(new MemoryBuckets());
-        $buckets->storage()->append('a', rows(
-            schema(int_schema('id')),
-            row(['id' => 7]),
-            row(['id' => 4]),
-            row(['id' => 1]),
-        ));
-        $buckets->storage()->append('b', rows(
-            schema(int_schema('id')),
-            row(['id' => 8]),
-            row(['id' => 5]),
-            row(['id' => 2]),
-        ));
+        $buckets->storage()->append('a', array_to_rows([
+            ['id' => 7],
+            ['id' => 4],
+            ['id' => 1],
+        ], schema(int_schema('id'))));
+        $buckets->storage()->append('b', array_to_rows([
+            ['id' => 8],
+            ['id' => 5],
+            ['id' => 2],
+        ], schema(int_schema('id'))));
 
         $merge = new KWayMerge(refs(ref('id')->desc()));
 
@@ -110,13 +104,12 @@ final class KWayMergeTest extends FlowTestCase
     public function test_merges_runs_of_uneven_length(): void
     {
         $buckets = new Buckets(new MemoryBuckets());
-        $buckets->storage()->append('a', rows(
-            schema(int_schema('id')),
-            row(['id' => 1]),
-            row(['id' => 2]),
-            row(['id' => 3]),
-        ));
-        $buckets->storage()->append('b', rows(schema(int_schema('id')), row(['id' => 4])));
+        $buckets->storage()->append('a', array_to_rows([
+            ['id' => 1],
+            ['id' => 2],
+            ['id' => 3],
+        ], schema(int_schema('id'))));
+        $buckets->storage()->append('b', array_to_rows([['id' => 4]], schema(int_schema('id'))));
 
         $merge = new KWayMerge(refs(ref('id')->asc()));
 
@@ -131,8 +124,8 @@ final class KWayMergeTest extends FlowTestCase
     public function test_merges_non_numeric_values(): void
     {
         $buckets = new Buckets(new MemoryBuckets());
-        $buckets->storage()->append('a', rows(schema(str_schema('id')), row(['id' => 'a']), row(['id' => 'c'])));
-        $buckets->storage()->append('b', rows(schema(str_schema('id')), row(['id' => 'b']), row(['id' => 'd'])));
+        $buckets->storage()->append('a', array_to_rows([['id' => 'a'], ['id' => 'c']], schema(str_schema('id'))));
+        $buckets->storage()->append('b', array_to_rows([['id' => 'b'], ['id' => 'd']], schema(str_schema('id'))));
 
         $merge = new KWayMerge(refs(ref('id')->asc()));
 
@@ -147,11 +140,11 @@ final class KWayMergeTest extends FlowTestCase
     public function test_runs_under_different_schemas_are_conformed_to_the_first(): void
     {
         $buckets = new Buckets(new MemoryBuckets());
-        $buckets->storage()->append('a', rows(
+        $buckets->storage()->append('a', array_to_rows(
+            [['id' => 1, 'name' => 'a']],
             schema(int_schema('id'), str_schema('name', true)),
-            row(['id' => 1, 'name' => 'a']),
         ));
-        $buckets->storage()->append('b', rows(schema(int_schema('id')), row(['id' => 2])));
+        $buckets->storage()->append('b', array_to_rows([['id' => 2]], schema(int_schema('id'))));
 
         $merge = new KWayMerge(refs(ref('id')->asc()));
 
@@ -170,7 +163,7 @@ final class KWayMergeTest extends FlowTestCase
     public function test_single_run_passthrough(): void
     {
         $buckets = new Buckets(new MemoryBuckets());
-        $buckets->storage()->append('a', rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])));
+        $buckets->storage()->append('a', array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))));
 
         $merge = new KWayMerge(refs(ref('id')->asc()));
 
@@ -192,13 +185,12 @@ final class KWayMergeTest extends FlowTestCase
     public function test_merged_rows_are_yielded_in_batches_of_batch_size(): void
     {
         $buckets = new Buckets(new MemoryBuckets());
-        $buckets->storage()->append('a', rows(
-            schema(int_schema('id')),
-            row(['id' => 1]),
-            row(['id' => 3]),
-            row(['id' => 5]),
-        ));
-        $buckets->storage()->append('b', rows(schema(int_schema('id')), row(['id' => 2]), row(['id' => 4])));
+        $buckets->storage()->append('a', array_to_rows([
+            ['id' => 1],
+            ['id' => 3],
+            ['id' => 5],
+        ], schema(int_schema('id'))));
+        $buckets->storage()->append('b', array_to_rows([['id' => 2], ['id' => 4]], schema(int_schema('id'))));
 
         $merge = new KWayMerge(refs(ref('id')->asc()), batchSize: 2);
 

@@ -16,13 +16,12 @@ use Flow\Floe\ValueDecoder;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 
 use function assert;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\html_element_schema;
 use function Flow\ETL\DSL\html_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\map_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
@@ -43,10 +42,9 @@ final class RowsSerializationTest extends FlowTestCase
 {
     public function test_native_columns_survive_a_serialize_round_trip(): void
     {
-        $rows = rows(
+        $rows = array_to_rows(
+            [['id' => 1, 'name' => 'a'], ['id' => 2, 'name' => null]],
             schema(int_schema('id'), str_schema('name', nullable: true)),
-            row(['id' => 1, 'name' => 'a']),
-            row(['id' => 2, 'name' => null]),
         );
 
         /** @var Rows $restored */
@@ -61,10 +59,9 @@ final class RowsSerializationTest extends FlowTestCase
         $document = new DOMDocument();
         $document->loadXML('<a>1</a>');
 
-        $rows = rows(
-            schema(xml_schema('x', metadata: Metadata::empty()->add('src', 'file.xml'))),
-            row(['x' => $document]),
-        );
+        $rows = array_to_rows([[
+            'x' => $document,
+        ]], schema(xml_schema('x', metadata: Metadata::empty()->add('src', 'file.xml'))));
 
         /** @var Rows $restored */
         $restored = unserialize(serialize($rows));
@@ -81,10 +78,9 @@ final class RowsSerializationTest extends FlowTestCase
         $document = new DOMDocument();
         $document->loadXML('<a><b>1</b></a>');
 
-        $restored = type_instance_of(DOMDocument::class)->assert(RowsSerializationContext::roundTrip(rows(
-            schema(xml_schema('x')),
-            row(['x' => $document]),
-        ))->first()->get('x'));
+        $restored = type_instance_of(DOMDocument::class)->assert(RowsSerializationContext::roundTrip(array_to_rows([[
+            'x' => $document,
+        ]], schema(xml_schema('x'))))->first()->get('x'));
 
         static::assertSame($document->C14N(), $restored->C14N());
     }
@@ -94,10 +90,9 @@ final class RowsSerializationTest extends FlowTestCase
         $document = new DOMDocument();
         $document->loadXML('<a><b>1</b></a>');
 
-        $restored = type_instance_of(DOMElement::class)->assert(RowsSerializationContext::roundTrip(rows(
-            schema(xml_element_schema('x')),
-            row(['x' => $document->documentElement]),
-        ))->first()->get('x'));
+        $restored = type_instance_of(DOMElement::class)->assert(RowsSerializationContext::roundTrip(array_to_rows([[
+            'x' => $document->documentElement,
+        ]], schema(xml_element_schema('x'))))->first()->get('x'));
 
         static::assertSame('<a><b>1</b></a>', $restored->C14N());
     }
@@ -109,11 +104,10 @@ final class RowsSerializationTest extends FlowTestCase
         $right = new DOMDocument();
         $right->loadXML('<z><y>999</y></z>');
 
-        $restored = RowsSerializationContext::roundTrip(rows(
-            schema(xml_element_schema('x')),
-            row(['x' => $left->documentElement]),
-            row(['x' => $right->documentElement]),
-        ));
+        $restored = RowsSerializationContext::roundTrip(array_to_rows([
+            ['x' => $left->documentElement],
+            ['x' => $right->documentElement],
+        ], schema(xml_element_schema('x'))));
         $restoredLeft = type_instance_of(DOMElement::class)->assert($restored->first()->get('x'));
         $restoredRight = type_instance_of(DOMElement::class)->assert($restored->row(1)->get('x'));
 
@@ -128,10 +122,9 @@ final class RowsSerializationTest extends FlowTestCase
 
         static::assertSame(
             type_string()->cast($document),
-            type_string()->cast(RowsSerializationContext::roundTrip(rows(
-                schema(html_schema('x')),
-                row(['x' => $document]),
-            ))->first()->get('x')),
+            type_string()->cast(RowsSerializationContext::roundTrip(array_to_rows([[
+                'x' => $document,
+            ]], schema(html_schema('x'))))->first()->get('x')),
         );
     }
 
@@ -142,16 +135,19 @@ final class RowsSerializationTest extends FlowTestCase
 
         static::assertSame(
             type_string()->cast($element),
-            type_string()->cast(RowsSerializationContext::roundTrip(rows(
-                schema(html_element_schema('x')),
-                row(['x' => $element]),
-            ))->first()->get('x')),
+            type_string()->cast(RowsSerializationContext::roundTrip(array_to_rows([[
+                'x' => $element,
+            ]], schema(html_element_schema('x'))))->first()->get('x')),
         );
     }
 
     public function test_container_columns_survive_a_round_trip(): void
     {
-        $rows = rows(
+        $rows = array_to_rows(
+            [
+                ['l' => [1, null], 'm' => ['a' => 1], 's' => ['id' => 1, 'note' => 'x']],
+                ['l' => null, 'm' => [], 's' => ['id' => 2]],
+            ],
             schema(
                 list_schema('l', type_list(type_optional(type_integer())), nullable: true),
                 map_schema('m', type_map(type_string(), type_integer())),
@@ -160,8 +156,6 @@ final class RowsSerializationTest extends FlowTestCase
                     'note' => structure_element('note', type_string(), optional: true),
                 ])),
             ),
-            row(['l' => [1, null], 'm' => ['a' => 1], 's' => ['id' => 1, 'note' => 'x']]),
-            row(['l' => null, 'm' => [], 's' => ['id' => 2]]),
         );
 
         static::assertEquals($rows, RowsSerializationContext::roundTrip($rows));
@@ -188,7 +182,7 @@ final class RowsSerializationTest extends FlowTestCase
 
     public function test_a_batch_without_columns_keeps_its_row_count(): void
     {
-        $rows = rows(schema(), row([]), row([]), row([]));
+        $rows = array_to_rows([[], [], []], schema());
 
         static::assertSame(3, RowsSerializationContext::roundTrip($rows)->count());
     }

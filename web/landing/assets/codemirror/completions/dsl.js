@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 814
+ * Total functions: 813
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -700,7 +700,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">array_to_row</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$data</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Hydrator</span> <span class=\"fn-param\">$hydrator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Row\\AdaptiveRowHydrator::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Partitions|array</span> <span class=\"fn-param\">$partitions</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Row</span>
+                    <span class=\"fn-name\">array_to_row</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$data</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Backend</span> <span class=\"fn-param\">$backend</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Column\\DefaultBackend::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Partitions|array</span> <span class=\"fn-param\">$partitions</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Row</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param array<array<mixed>>|array<mixed|string> $data<br>@param array<Partition>|Partitions $partitions
@@ -708,7 +708,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\array_to_row(" + "$" + "{" + "1:data" + "}" + ", " + "$" + "{" + "2:schema" + "}" + ", " + "$" + "{" + "3:hydrator" + "}" + ", " + "$" + "{" + "4:partitions" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\array_to_row(" + "$" + "{" + "1:data" + "}" + ", " + "$" + "{" + "2:schema" + "}" + ", " + "$" + "{" + "3:backend" + "}" + ", " + "$" + "{" + "4:partitions" + "}" + ")"),
         boost: 10
     },                {
         label: "array_to_rows",
@@ -718,7 +718,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">array_to_rows</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$data</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Hydrator</span> <span class=\"fn-param\">$hydrator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Row\\AdaptiveRowHydrator::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Rows</span>
+                    <span class=\"fn-name\">array_to_rows</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$data</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Backend</span> <span class=\"fn-param\">$backend</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Column\\DefaultBackend::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Rows</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param array<array<mixed>>|array<mixed|string> $data
@@ -726,7 +726,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\array_to_rows(" + "$" + "{" + "1:data" + "}" + ", " + "$" + "{" + "2:schema" + "}" + ", " + "$" + "{" + "3:hydrator" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\array_to_rows(" + "$" + "{" + "1:data" + "}" + ", " + "$" + "{" + "2:schema" + "}" + ", " + "$" + "{" + "3:backend" + "}" + ")"),
         boost: 10
     },                {
         label: "array_unpack",
@@ -4336,7 +4336,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_floe</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Codec</span> <span class=\"fn-param\">$codec</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Floe\\Codec\\NoopCodec::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$chunk_size</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">65536</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">FloeEngine</span> <span class=\"fn-param\">$engine</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Floe\\FloeEngine::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FloeExtractor</span>
+                    <span class=\"fn-name\">from_floe</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Codec</span> <span class=\"fn-param\">$codec</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Floe\\Codec\\NoopCodec::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$chunk_size</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">65536</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FloeExtractor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param Path|string $path
@@ -4344,7 +4344,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\Floe\\DSL\\from_floe(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:codec" + "}" + ", " + "$" + "{" + "3:chunk_size" + "}" + ", " + "$" + "{" + "4:engine" + "}" + ", " + "$" + "{" + "5:filesystem" + "}" + ")"),
+        apply: snippet("\\Flow\\Floe\\DSL\\from_floe(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:codec" + "}" + ", " + "$" + "{" + "3:chunk_size" + "}" + ", " + "$" + "{" + "4:filesystem" + "}" + ")"),
         boost: 10
     },                {
         label: "from_google_sheet",
@@ -8514,24 +8514,6 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\round(" + "$" + "{" + "1:value" + "}" + ", " + "$" + "{" + "2:precision" + "}" + ", " + "$" + "{" + "3:mode" + "}" + ")"),
         boost: 10
     },                {
-        label: "row",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">row</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$values</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Row</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @param array<array-key, mixed> $values
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\row(" + "$" + "{" + "1:values" + "}" + ")"),
-        boost: 10
-    },                {
         label: "rows",
         type: "function",
         detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
@@ -11257,7 +11239,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_floe</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Options</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Floe\\Options::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">FloeEngine</span> <span class=\"fn-param\">$engine</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Floe\\FloeEngine::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FloeLoader</span>
+                    <span class=\"fn-name\">to_floe</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Options</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Floe\\Options::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FloeLoader</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param Path|string $path
@@ -11265,7 +11247,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\Floe\\DSL\\to_floe(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:metadata" + "}" + ", " + "$" + "{" + "3:options" + "}" + ", " + "$" + "{" + "4:engine" + "}" + ", " + "$" + "{" + "5:filesystem" + "}" + ")"),
+        apply: snippet("\\Flow\\Floe\\DSL\\to_floe(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:metadata" + "}" + ", " + "$" + "{" + "3:options" + "}" + ", " + "$" + "{" + "4:filesystem" + "}" + ")"),
         boost: 10
     },                {
         label: "to_json",

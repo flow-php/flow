@@ -17,6 +17,7 @@ use Flow\Filesystem\Path\Filter;
 use RuntimeException;
 
 use function array_filter;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_all;
@@ -26,8 +27,6 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\to_memory;
 
@@ -89,7 +88,7 @@ final class SinglePlanTest extends FlowTestCase
     {
         $source = new RecordingFileExtractor(
             schema(int_schema('id')),
-            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])),
+            array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))),
         );
         $right = df(config_builder()->optimizer(new Optimizer()))->read($source)->limit(1);
 

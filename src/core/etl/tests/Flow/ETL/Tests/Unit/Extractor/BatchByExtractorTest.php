@@ -13,6 +13,7 @@ use Flow\ETL\Tests\Double\DeclaringExtractor;
 use Flow\ETL\Tests\Double\VaryingBatchesExtractor;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\batched_by;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
@@ -20,7 +21,6 @@ use function Flow\ETL\DSL\from_memory;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -31,8 +31,8 @@ final class BatchByExtractorTest extends TestCase
     public function test_a_group_spanning_child_batches_answers_to_the_first_batch_schema(): void
     {
         $child = new VaryingBatchesExtractor(
-            rows(schema(int_schema('g'), str_schema('name', nullable: true)), row(['g' => 1, 'name' => 'a'])),
-            rows(schema(int_schema('g')), row(['g' => 1])),
+            array_to_rows([['g' => 1, 'name' => 'a']], schema(int_schema('g'), str_schema('name', nullable: true))),
+            array_to_rows([['g' => 1]], schema(int_schema('g'))),
         );
 
         $batches = iterator_to_array(batched_by($child, ref('g'))->extract(flow_context(config())), false);
@@ -44,8 +44,8 @@ final class BatchByExtractorTest extends TestCase
     public function test_a_later_child_batch_that_widens_the_shape_is_refused(): void
     {
         $child = new VaryingBatchesExtractor(
-            rows(schema(int_schema('g')), row(['g' => 1])),
-            rows(schema(int_schema('g'), str_schema('extra')), row(['g' => 1, 'extra' => 'x'])),
+            array_to_rows([['g' => 1]], schema(int_schema('g'))),
+            array_to_rows([['g' => 1, 'extra' => 'x']], schema(int_schema('g'), str_schema('extra'))),
         );
 
         $this->expectException(SchemaMismatchException::class);
@@ -57,13 +57,15 @@ final class BatchByExtractorTest extends TestCase
     public function test_grouping_by_column_with_min_size(): void
     {
         $extractor = batched_by(
-            from_rows(rows(
+            from_rows(array_to_rows(
+                [
+                    ['order_id' => 1, 'item' => 1],
+                    ['order_id' => 2, 'item' => 2],
+                    ['order_id' => 3, 'item' => 3],
+                    ['order_id' => 4, 'item' => 4],
+                    ['order_id' => 5, 'item' => 5],
+                ],
                 schema(int_schema('order_id'), int_schema('item')),
-                row(['order_id' => 1, 'item' => 1]),
-                row(['order_id' => 2, 'item' => 2]),
-                row(['order_id' => 3, 'item' => 3]),
-                row(['order_id' => 4, 'item' => 4]),
-                row(['order_id' => 5, 'item' => 5]),
             )),
             ref('order_id'),
             3,
@@ -77,13 +79,15 @@ final class BatchByExtractorTest extends TestCase
     public function test_grouping_by_column_without_min_size(): void
     {
         $extractor = batched_by(
-            from_rows(rows(
+            from_rows(array_to_rows(
+                [
+                    ['order_id' => 1, 'item' => 1],
+                    ['order_id' => 1, 'item' => 2],
+                    ['order_id' => 2, 'item' => 3],
+                    ['order_id' => 2, 'item' => 4],
+                    ['order_id' => 3, 'item' => 5],
+                ],
                 schema(int_schema('order_id'), int_schema('item')),
-                row(['order_id' => 1, 'item' => 1]),
-                row(['order_id' => 1, 'item' => 2]),
-                row(['order_id' => 2, 'item' => 3]),
-                row(['order_id' => 2, 'item' => 4]),
-                row(['order_id' => 3, 'item' => 5]),
             )),
             ref('order_id'),
             null,
@@ -98,11 +102,9 @@ final class BatchByExtractorTest extends TestCase
     public function test_grouping_with_all_unique_values(): void
     {
         $extractor = batched_by(
-            from_rows(rows(
+            from_rows(array_to_rows(
+                [['order_id' => 1, 'item' => 1], ['order_id' => 2, 'item' => 2], ['order_id' => 3, 'item' => 3]],
                 schema(int_schema('order_id'), int_schema('item')),
-                row(['order_id' => 1, 'item' => 1]),
-                row(['order_id' => 2, 'item' => 2]),
-                row(['order_id' => 3, 'item' => 3]),
             )),
             ref('order_id'),
             null,
@@ -124,14 +126,16 @@ final class BatchByExtractorTest extends TestCase
     public function test_grouping_with_large_group_exceeding_min_size(): void
     {
         $extractor = batched_by(
-            from_rows(rows(
+            from_rows(array_to_rows(
+                [
+                    ['order_id' => 1, 'item' => 1],
+                    ['order_id' => 1, 'item' => 2],
+                    ['order_id' => 1, 'item' => 3],
+                    ['order_id' => 1, 'item' => 4],
+                    ['order_id' => 1, 'item' => 5],
+                    ['order_id' => 2, 'item' => 6],
+                ],
                 schema(int_schema('order_id'), int_schema('item')),
-                row(['order_id' => 1, 'item' => 1]),
-                row(['order_id' => 1, 'item' => 2]),
-                row(['order_id' => 1, 'item' => 3]),
-                row(['order_id' => 1, 'item' => 4]),
-                row(['order_id' => 1, 'item' => 5]),
-                row(['order_id' => 2, 'item' => 6]),
             )),
             ref('order_id'),
             2,
@@ -145,11 +149,9 @@ final class BatchByExtractorTest extends TestCase
     public function test_grouping_with_single_group(): void
     {
         $extractor = batched_by(
-            from_rows(rows(
+            from_rows(array_to_rows(
+                [['order_id' => 1, 'item' => 1], ['order_id' => 1, 'item' => 2], ['order_id' => 1, 'item' => 3]],
                 schema(int_schema('order_id'), int_schema('item')),
-                row(['order_id' => 1, 'item' => 1]),
-                row(['order_id' => 1, 'item' => 2]),
-                row(['order_id' => 1, 'item' => 3]),
             )),
             ref('order_id'),
             null,
@@ -169,7 +171,7 @@ final class BatchByExtractorTest extends TestCase
 
     public function test_with_schema_does_not_leak_into_a_second_pipeline(): void
     {
-        $child = from_rows(rows(schema(int_schema('id')), row(['id' => 1])));
+        $child = from_rows(array_to_rows([['id' => 1]], schema(int_schema('id'))));
 
         iterator_to_array(
             batched_by($child, ref('id'))
@@ -188,7 +190,7 @@ final class BatchByExtractorTest extends TestCase
     public function test_is_repeatable(): void
     {
         static::assertTrue(
-            batched_by(from_rows(rows(schema(int_schema('id')), row(['id' => 1]))), ref('id'))->isRepeatable(),
+            batched_by(from_rows(array_to_rows([['id' => 1]], schema(int_schema('id')))), ref('id'))->isRepeatable(),
         );
     }
 

@@ -10,9 +10,8 @@ use Flow\ETL\Exception\KeyNotInCacheException;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Cache\Psr16Cache;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 
 final class PSRSimpleFilesystemCacheTest extends CacheTestCase
@@ -21,7 +20,7 @@ final class PSRSimpleFilesystemCacheTest extends CacheTestCase
     {
         $psr = new Psr16Cache(new FilesystemAdapter(directory: __DIR__ . '/var/psr-simple-file-cache'));
         $cache = new PSRSimpleCache($psr);
-        $cache->set('torn', rows(schema(int_schema('id')), row(['id' => 1])));
+        $cache->set('torn', array_to_rows([['id' => 1]], schema(int_schema('id'))));
 
         $psr->set('torn', 'not a valid floe payload');
 
@@ -34,7 +33,7 @@ final class PSRSimpleFilesystemCacheTest extends CacheTestCase
     {
         $psr = new Psr16Cache(new FilesystemAdapter(directory: __DIR__ . '/var/psr-simple-file-cache'));
         $cache = new PSRSimpleCache($psr);
-        $cache->set('orphan', rows(schema(int_schema('id')), row(['id' => 1])));
+        $cache->set('orphan', array_to_rows([['id' => 1]], schema(int_schema('id'))));
 
         $psr->delete('orphan.schema');
 
@@ -47,7 +46,7 @@ final class PSRSimpleFilesystemCacheTest extends CacheTestCase
     {
         $psr = new Psr16Cache(new FilesystemAdapter(directory: __DIR__ . '/var/psr-simple-file-cache'));
         $cache = new PSRSimpleCache($psr);
-        $cache->set('torn-schema', rows(schema(int_schema('id')), row(['id' => 1])));
+        $cache->set('torn-schema', array_to_rows([['id' => 1]], schema(int_schema('id'))));
 
         $psr->set('torn-schema.schema', 'not a valid schema payload');
 

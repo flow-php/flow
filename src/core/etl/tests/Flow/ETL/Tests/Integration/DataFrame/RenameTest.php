@@ -8,6 +8,7 @@ use Flow\ETL\Schema\Metadata;
 use Flow\ETL\String\StringStyles;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_rows;
@@ -18,8 +19,6 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\rename_map;
 use function Flow\ETL\DSL\rename_replace;
 use function Flow\ETL\DSL\rename_style;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Types\DSL\type_json;
@@ -30,21 +29,25 @@ final class RenameTest extends FlowIntegrationTestCase
     public function test_rename(): void
     {
         $rows = df()
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [
+                    ['id' => 1, 'name' => 'foo', 'active' => true],
+                    ['id' => 2, 'name' => null, 'active' => false],
+                    ['id' => 2, 'name' => 'bar', 'active' => false],
+                ],
                 schema(int_schema('id'), str_schema('name', nullable: true), bool_schema('active')),
-                row(['id' => 1, 'name' => 'foo', 'active' => true]),
-                row(['id' => 2, 'name' => null, 'active' => false]),
-                row(['id' => 2, 'name' => 'bar', 'active' => false]),
             )))
             ->rename('name', 'new_name')
             ->fetch();
 
         static::assertEquals(
-            rows(
+            array_to_rows(
+                [
+                    ['id' => 1, 'new_name' => 'foo', 'active' => true],
+                    ['id' => 2, 'new_name' => null, 'active' => false],
+                    ['id' => 2, 'new_name' => 'bar', 'active' => false],
+                ],
                 schema(int_schema('id'), str_schema('new_name', nullable: true), bool_schema('active')),
-                row(['id' => 1, 'new_name' => 'foo', 'active' => true]),
-                row(['id' => 2, 'new_name' => null, 'active' => false]),
-                row(['id' => 2, 'new_name' => 'bar', 'active' => false]),
             ),
             $rows,
         );
@@ -53,17 +56,17 @@ final class RenameTest extends FlowIntegrationTestCase
     public function test_rename_each_with_numeric_entry_names(): void
     {
         $rows = df()
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [['broker' => 'acme', '2023' => 1, '2024' => 2]],
                 schema(str_schema('broker'), int_schema('2023'), int_schema('2024')),
-                row(['broker' => 'acme', '2023' => 1, '2024' => 2]),
             )))
             ->renameEach(rename_map(['2023' => 'y_2023', '2024' => 'y_2024']))
             ->fetch();
 
         static::assertEquals(
-            rows(
+            array_to_rows(
+                [['broker' => 'acme', 'y_2023' => 1, 'y_2024' => 2]],
                 schema(str_schema('broker'), int_schema('y_2023'), int_schema('y_2024')),
-                row(['broker' => 'acme', 'y_2023' => 1, 'y_2024' => 2]),
             ),
             $rows,
         );
@@ -71,11 +74,10 @@ final class RenameTest extends FlowIntegrationTestCase
 
     public function test_rename_all(): void
     {
-        $rows = rows(
-            schema(json_schema('array')),
-            row(['array' => type_json()->cast(['id' => 1, 'name' => 'name', 'active' => true])]),
-            row(['array' => type_json()->cast(['id' => 2, 'name' => 'name', 'active' => false])]),
-        );
+        $rows = array_to_rows([
+            ['array' => type_json()->cast(['id' => 1, 'name' => 'name', 'active' => true])],
+            ['array' => type_json()->cast(['id' => 2, 'name' => 'name', 'active' => false])],
+        ], schema(json_schema('array')));
 
         $ds = df()
             ->read(from_rows($rows))
@@ -98,10 +100,9 @@ final class RenameTest extends FlowIntegrationTestCase
 
     public function test_rename_all_lower_case(): void
     {
-        $rows = rows(
+        $rows = array_to_rows(
+            [['ID' => 1, 'NAME' => 'name', 'ACTIVE' => true], ['ID' => 2, 'NAME' => 'name', 'ACTIVE' => false]],
             schema(int_schema('ID'), str_schema('NAME'), bool_schema('ACTIVE')),
-            row(['ID' => 1, 'NAME' => 'name', 'ACTIVE' => true]),
-            row(['ID' => 2, 'NAME' => 'name', 'ACTIVE' => false]),
         );
 
         $ds = df()->read(from_rows($rows))->renameEach(rename_style(StringStyles::LOWER))->getEachAsArray();
@@ -117,11 +118,10 @@ final class RenameTest extends FlowIntegrationTestCase
 
     public function test_rename_all_lower_case_i18n(): void
     {
-        $rows = rows(
-            schema(int_schema('ILOŚĆ PRZEDMIOTÓW')),
-            row(['ILOŚĆ PRZEDMIOTÓW' => 0]),
-            row(['ILOŚĆ PRZEDMIOTÓW' => 10]),
-        );
+        $rows = array_to_rows([
+            ['ILOŚĆ PRZEDMIOTÓW' => 0],
+            ['ILOŚĆ PRZEDMIOTÓW' => 10],
+        ], schema(int_schema('ILOŚĆ PRZEDMIOTÓW')));
 
         $ds = df()->read(from_rows($rows))->renameEach(rename_style(StringStyles::LOWER))->getEachAsArray();
 
@@ -136,11 +136,10 @@ final class RenameTest extends FlowIntegrationTestCase
 
     public function test_rename_all_multiple(): void
     {
-        $rows = rows(
-            schema(json_schema('array')),
-            row(['array' => type_json()->cast(['id' => 1, 'name' => 'name', 'isActive' => true])]),
-            row(['array' => type_json()->cast(['id' => 2, 'name' => 'name', 'isActive' => false])]),
-        );
+        $rows = array_to_rows([
+            ['array' => type_json()->cast(['id' => 1, 'name' => 'name', 'isActive' => true])],
+            ['array' => type_json()->cast(['id' => 2, 'name' => 'name', 'isActive' => false])],
+        ], schema(json_schema('array')));
 
         $ds = df()
             ->read(from_rows($rows))
@@ -163,10 +162,9 @@ final class RenameTest extends FlowIntegrationTestCase
 
     public function test_rename_all_to_ascii(): void
     {
-        $rows = rows(
+        $rows = array_to_rows(
+            [['ÓSMY' => 8], ['DZIEWIĄTY' => 9]],
             schema(int_schema('ÓSMY', nullable: true), int_schema('DZIEWIĄTY', nullable: true)),
-            row(['ÓSMY' => 8]),
-            row(['DZIEWIĄTY' => 9]),
         );
 
         $ds = df()->read(from_rows($rows))->renameEach(rename_style(StringStyles::ASCII))->getEachAsArray();
@@ -182,7 +180,7 @@ final class RenameTest extends FlowIntegrationTestCase
 
     public function test_rename_all_to_camel(): void
     {
-        $rows = rows(schema(int_schema('ósmy i dziewiąty')), row(['ósmy i dziewiąty' => 89]));
+        $rows = array_to_rows([['ósmy i dziewiąty' => 89]], schema(int_schema('ósmy i dziewiąty')));
 
         $ds = df()->read(from_rows($rows))->renameEach(rename_style(StringStyles::CAMEL))->getEachAsArray();
 
@@ -196,7 +194,7 @@ final class RenameTest extends FlowIntegrationTestCase
 
     public function test_rename_all_to_slug(): void
     {
-        $rows = rows(schema(int_schema('ÓSMY I DZIEWIĄTY')), row(['ÓSMY I DZIEWIĄTY' => 89]));
+        $rows = array_to_rows([['ÓSMY I DZIEWIĄTY' => 89]], schema(int_schema('ÓSMY I DZIEWIĄTY')));
 
         $ds = df()
             ->read(from_rows($rows))
@@ -214,10 +212,12 @@ final class RenameTest extends FlowIntegrationTestCase
 
     public function test_rename_all_to_snake_case(): void
     {
-        $rows = rows(
+        $rows = array_to_rows(
+            [
+                ['id' => 1, 'UserName' => 'name', 'isActive' => true],
+                ['id' => 2, 'UserName' => 'name', 'isActive' => false],
+            ],
             schema(int_schema('id'), str_schema('UserName'), bool_schema('isActive')),
-            row(['id' => 1, 'UserName' => 'name', 'isActive' => true]),
-            row(['id' => 2, 'UserName' => 'name', 'isActive' => false]),
         );
 
         $ds = df()
@@ -237,7 +237,7 @@ final class RenameTest extends FlowIntegrationTestCase
 
     public function test_rename_all_to_title(): void
     {
-        $rows = rows(schema(int_schema('ósmy i dziewiąty')), row(['ósmy i dziewiąty' => 89]));
+        $rows = array_to_rows([['ósmy i dziewiąty' => 89]], schema(int_schema('ósmy i dziewiąty')));
 
         $ds = df()->read(from_rows($rows))->renameEach(rename_style(StringStyles::TITLE))->getEachAsArray();
 
@@ -251,10 +251,9 @@ final class RenameTest extends FlowIntegrationTestCase
 
     public function test_rename_all_upper_case(): void
     {
-        $rows = rows(
+        $rows = array_to_rows(
+            [['id' => 1, 'name' => 'name', 'active' => true], ['id' => 2, 'name' => 'name', 'active' => false]],
             schema(int_schema('id'), str_schema('name'), bool_schema('active')),
-            row(['id' => 1, 'name' => 'name', 'active' => true]),
-            row(['id' => 2, 'name' => 'name', 'active' => false]),
         );
 
         $ds = df()->read(from_rows($rows))->renameEach(rename_style(StringStyles::UPPER))->getEachAsArray();
@@ -270,10 +269,9 @@ final class RenameTest extends FlowIntegrationTestCase
 
     public function test_rename_all_upper_case_first(): void
     {
-        $rows = rows(
+        $rows = array_to_rows(
+            [['id' => 1, 'name' => 'name', 'active' => true], ['id' => 2, 'name' => 'name', 'active' => false]],
             schema(int_schema('id'), str_schema('name'), bool_schema('active')),
-            row(['id' => 1, 'name' => 'name', 'active' => true]),
-            row(['id' => 2, 'name' => 'name', 'active' => false]),
         );
 
         $ds = df()->read(from_rows($rows))->renameEach(rename_style(StringStyles::UCFIRST))->getEachAsArray();
@@ -289,10 +287,9 @@ final class RenameTest extends FlowIntegrationTestCase
 
     public function test_rename_all_upper_case_word(): void
     {
-        $rows = rows(
+        $rows = array_to_rows(
+            [['id' => 1, 'name' => 'name', 'active' => true], ['id' => 2, 'name' => 'name', 'active' => false]],
             schema(int_schema('id'), str_schema('name'), bool_schema('active')),
-            row(['id' => 1, 'name' => 'name', 'active' => true]),
-            row(['id' => 2, 'name' => 'name', 'active' => false]),
         );
 
         $ds = df()->read(from_rows($rows))->renameEach(rename_style(StringStyles::UCWORDS))->getEachAsArray();
@@ -308,10 +305,9 @@ final class RenameTest extends FlowIntegrationTestCase
 
     public function test_rename_all_upper_case_word_i18n(): void
     {
-        $rows = rows(
+        $rows = array_to_rows(
+            [['ósmy' => 8], ['dziewiąty' => 9]],
             schema(int_schema('ósmy', nullable: true), int_schema('dziewiąty', nullable: true)),
-            row(['ósmy' => 8]),
-            row(['dziewiąty' => 9]),
         );
 
         $ds = df()->read(from_rows($rows))->renameEach(rename_style(StringStyles::UCWORDS))->getEachAsArray();
@@ -328,12 +324,15 @@ final class RenameTest extends FlowIntegrationTestCase
     public function test_rename_each_with_empty_map(): void
     {
         $rows = df()
-            ->read(from_rows(rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'foo']))))
+            ->read(from_rows(array_to_rows(
+                [['id' => 1, 'name' => 'foo']],
+                schema(int_schema('id'), str_schema('name')),
+            )))
             ->renameEach(rename_map([]))
             ->fetch();
 
         static::assertEquals(
-            rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'foo'])),
+            array_to_rows([['id' => 1, 'name' => 'foo']], schema(int_schema('id'), str_schema('name'))),
             $rows,
         );
     }
@@ -341,10 +340,12 @@ final class RenameTest extends FlowIntegrationTestCase
     public function test_rename_each_with_map_chained_with_other_operations(): void
     {
         $ds = df()
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [
+                    ['user_id' => 1, 'user_name' => 'John', 'is_active' => true],
+                    ['user_id' => 2, 'user_name' => 'Jane', 'is_active' => false],
+                ],
                 schema(int_schema('user_id'), str_schema('user_name'), bool_schema('is_active')),
-                row(['user_id' => 1, 'user_name' => 'John', 'is_active' => true]),
-                row(['user_id' => 2, 'user_name' => 'Jane', 'is_active' => false]),
             )))
             ->renameEach(rename_map(['user_id' => 'id', 'user_name' => 'name']))
             ->filter(ref('is_active')->equals(lit(true)))
@@ -362,10 +363,12 @@ final class RenameTest extends FlowIntegrationTestCase
     public function test_rename_each_with_map_multiple_entries(): void
     {
         $rows = df()
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [
+                    ['id' => 1, 'first_name' => 'John', 'last_name' => 'Doe'],
+                    ['id' => 2, 'first_name' => 'Jane', 'last_name' => 'Smith'],
+                ],
                 schema(int_schema('id'), str_schema('first_name'), str_schema('last_name')),
-                row(['id' => 1, 'first_name' => 'John', 'last_name' => 'Doe']),
-                row(['id' => 2, 'first_name' => 'Jane', 'last_name' => 'Smith']),
             )))
             ->renameEach(rename_map([
                 'first_name' => 'name',
@@ -374,10 +377,12 @@ final class RenameTest extends FlowIntegrationTestCase
             ->fetch();
 
         static::assertEquals(
-            rows(
+            array_to_rows(
+                [
+                    ['id' => 1, 'name' => 'John', 'surname' => 'Doe'],
+                    ['id' => 2, 'name' => 'Jane', 'surname' => 'Smith'],
+                ],
                 schema(int_schema('id'), str_schema('name'), str_schema('surname')),
-                row(['id' => 1, 'name' => 'John', 'surname' => 'Doe']),
-                row(['id' => 2, 'name' => 'Jane', 'surname' => 'Smith']),
             ),
             $rows,
         );
@@ -388,7 +393,9 @@ final class RenameTest extends FlowIntegrationTestCase
         $metadata = Metadata::fromArray(['description' => 'test metadata']);
 
         $rows = df()
-            ->read(from_rows(rows(schema(str_schema('old_name', metadata: $metadata)), row(['old_name' => 'value']))))
+            ->read(from_rows(array_to_rows([[
+                'old_name' => 'value',
+            ]], schema(str_schema('old_name', metadata: $metadata)))))
             ->renameEach(rename_map(['old_name' => 'new_name']))
             ->fetch();
 
@@ -397,15 +404,13 @@ final class RenameTest extends FlowIntegrationTestCase
 
     public function test_rename_each_with_multiple_strategies(): void
     {
-        $rows = rows(
+        $rows = array_to_rows(
+            [['ÓSMY' => 8], ['DZIEWIĄTY' => 9], ['ÓSMY I DZIEWIĄTY' => 89]],
             schema(
                 int_schema('ÓSMY', nullable: true),
                 int_schema('DZIEWIĄTY', nullable: true),
                 int_schema('ÓSMY I DZIEWIĄTY', nullable: true),
             ),
-            row(['ÓSMY' => 8]),
-            row(['DZIEWIĄTY' => 9]),
-            row(['ÓSMY I DZIEWIĄTY' => 89]),
         );
 
         $ds = df()
@@ -432,7 +437,9 @@ final class RenameTest extends FlowIntegrationTestCase
         $metadata = Metadata::fromArray(['description' => 'test metadata']);
 
         $rows = df()
-            ->read(from_rows(rows(schema(str_schema('old_name', metadata: $metadata)), row(['old_name' => 'value']))))
+            ->read(from_rows(array_to_rows([[
+                'old_name' => 'value',
+            ]], schema(str_schema('old_name', metadata: $metadata)))))
             ->rename('old_name', 'new_name')
             ->fetch();
 

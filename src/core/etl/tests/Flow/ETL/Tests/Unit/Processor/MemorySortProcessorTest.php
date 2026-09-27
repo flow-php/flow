@@ -8,12 +8,11 @@ use Flow\ETL\Processor\MemorySortProcessor;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 
 final class MemorySortProcessorTest extends FlowTestCase
@@ -37,7 +36,7 @@ final class MemorySortProcessorTest extends FlowTestCase
         $declared = schema(int_schema('id', nullable: true));
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 2]), row(['id' => 1]));
+            yield array_to_rows([['id' => 2], ['id' => 1]], schema(int_schema('id')));
         })();
 
         /** @var list<Rows> $result */
@@ -66,9 +65,9 @@ final class MemorySortProcessorTest extends FlowTestCase
         $processor = new MemorySortProcessor(refs(ref('id')));
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 3]));
-            yield rows(schema(int_schema('id')), row(['id' => 1]));
-            yield rows(schema(int_schema('id')), row(['id' => 2]));
+            yield array_to_rows([['id' => 3]], schema(int_schema('id')));
+            yield array_to_rows([['id' => 1]], schema(int_schema('id')));
+            yield array_to_rows([['id' => 2]], schema(int_schema('id')));
         })();
 
         /** @var list<Rows> $result */
@@ -89,7 +88,7 @@ final class MemorySortProcessorTest extends FlowTestCase
         $processor = new MemorySortProcessor(refs(ref('id')));
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 1]), row(['id' => 2]));
+            yield array_to_rows([['id' => 3], ['id' => 1], ['id' => 2]], schema(int_schema('id')));
         })();
 
         /** @var list<Rows> $result */
@@ -110,7 +109,7 @@ final class MemorySortProcessorTest extends FlowTestCase
         $processor = new MemorySortProcessor(refs(ref('id')->desc()));
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 3]), row(['id' => 2]));
+            yield array_to_rows([['id' => 1], ['id' => 3], ['id' => 2]], schema(int_schema('id')));
         })();
 
         /** @var list<Rows> $result */

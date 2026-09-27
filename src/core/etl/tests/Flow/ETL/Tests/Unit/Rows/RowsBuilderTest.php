@@ -14,9 +14,8 @@ use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
@@ -28,22 +27,22 @@ final class RowsBuilderTest extends FlowTestCase
     public static function refused_views(): Generator
     {
         yield 'a not null column the source lacks' => [
-            rows(schema(int_schema('id')), row(['id' => 1])),
+            array_to_rows([['id' => 1]], schema(int_schema('id'))),
             schema(int_schema('id'), str_schema('name')),
             'column "name" (row 0) declared by the schema is missing from the row',
         ];
         yield 'null under not null' => [
-            rows(schema(int_schema('id', nullable: true)), row(['id' => null])),
+            array_to_rows([['id' => null]], schema(int_schema('id', nullable: true))),
             schema(int_schema('id')),
             'column "id" (row 0): could not convert null to integer, column is not nullable',
         ];
         yield 'a value that matches only after a cast' => [
-            rows(schema(str_schema('id')), row(['id' => '2'])),
+            array_to_rows([['id' => '2']], schema(str_schema('id'))),
             schema(int_schema('id')),
             'column "id" (row 0): could not convert \'2\' (string) to integer',
         ];
         yield 'a column the target does not declare' => [
-            rows(schema(int_schema('id'), int_schema('extra')), row(['id' => 1, 'extra' => 2])),
+            array_to_rows([['id' => 1, 'extra' => 2]], schema(int_schema('id'), int_schema('extra'))),
             schema(int_schema('id')),
             'column "extra" (row 0) is not declared by the schema',
         ];
@@ -87,7 +86,7 @@ final class RowsBuilderTest extends FlowTestCase
         static::assertSame(
             [['id' => 5, 'name' => null]],
             (new RowsBuilder(schema(int_schema('id'), str_schema('name', nullable: true)), new PhpBackend()))
-                ->appendFrom(rows(schema(int_schema('id', nullable: true)), row(['id' => 5])), 0)
+                ->appendFrom(array_to_rows([['id' => 5]], schema(int_schema('id', nullable: true))), 0)
                 ->finish()
                 ->toArray(),
         );
@@ -99,8 +98,8 @@ final class RowsBuilderTest extends FlowTestCase
         $this->expectExceptionMessage('column "id" (row 1): could not convert \'x\' (string) to integer');
 
         (new RowsBuilder(schema(int_schema('id')), new PhpBackend()))
-            ->appendFrom(rows(schema(int_schema('id')), row(['id' => 1])), 0)
-            ->appendFrom(rows(schema(str_schema('id')), row(['id' => 'x'])), 0);
+            ->appendFrom(array_to_rows([['id' => 1]], schema(int_schema('id'))), 0)
+            ->appendFrom(array_to_rows([['id' => 'x']], schema(str_schema('id'))), 0);
     }
 
     #[DataProvider('refused_views')]
@@ -118,7 +117,7 @@ final class RowsBuilderTest extends FlowTestCase
     public function test_a_missing_nullable_column_is_padded_with_null(): void
     {
         static::assertEquals(
-            rows(schema(int_schema('id'), str_schema('name', nullable: true)), row(['id' => 1, 'name' => null])),
+            array_to_rows([['id' => 1, 'name' => null]], schema(int_schema('id'), str_schema('name', nullable: true))),
             (new RowsBuilder(
                 schema(int_schema('id'), str_schema('name', nullable: true)),
                 new PhpBackend(),
@@ -210,7 +209,7 @@ final class RowsBuilderTest extends FlowTestCase
     public function test_every_value_is_cast_against_its_own_column(): void
     {
         static::assertEquals(
-            rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => '2'])),
+            array_to_rows([['id' => 1, 'name' => '2']], schema(int_schema('id'), str_schema('name'))),
             (new RowsBuilder(schema(int_schema('id'), str_schema('name')), new PhpBackend()))->append([
                 'id' => '1',
                 'name' => 2,
@@ -236,13 +235,15 @@ final class RowsBuilderTest extends FlowTestCase
 
     public function test_copies_physical_cells_from_another_batch(): void
     {
-        $source = rows(
+        $source = array_to_rows(
+            [
+                ['id' => 1, 'name' => 'a'],
+                [
+                    'id' => 2,
+                    'name' => 'b',
+                ],
+            ],
             schema(int_schema('id'), str_schema('name')),
-            row(['id' => 1, 'name' => 'a']),
-            row([
-                'id' => 2,
-                'name' => 'b',
-            ]),
         );
 
         static::assertSame(

@@ -10,8 +10,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\Types\DSL\type_string;
 use function sprintf;
 
@@ -38,7 +37,7 @@ final readonly class AddStampToStringEntryTransformer implements Transformer
         $stamped = [];
 
         foreach ($rows->all() as $row) {
-            $stamped[] = row([
+            $stamped[] = [
                 ...$row->values(),
                 $this->entryName => sprintf(
                     '%s%s%s',
@@ -46,9 +45,9 @@ final readonly class AddStampToStringEntryTransformer implements Transformer
                     $this->divider,
                     $this->stamp,
                 ),
-            ]);
+            ];
         }
 
-        return rows($rows->schema(), ...$stamped);
+        return array_to_rows($stamped, $rows->schema());
     }
 }

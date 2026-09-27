@@ -8,12 +8,15 @@ use DateTimeImmutable;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_row;
+use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\min;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\Types\DSL\type_datetime;
 
 final class MinTest extends FlowTestCase
@@ -27,7 +30,7 @@ final class MinTest extends FlowTestCase
     {
         $aggregator = min(ref('int'));
 
-        $aggregator->aggregate(row(['int' => 10]), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 10], schema(int_schema('int'))), flow_context());
 
         static::assertSame('int_min', $aggregator->outputName());
     }
@@ -36,11 +39,13 @@ final class MinTest extends FlowTestCase
     {
         $aggregator = min(ref('int'));
 
-        $aggregator->aggregate(row(['int' => '10']), flow_context());
-        $aggregator->aggregate(row(['int' => '20']), flow_context());
-        $aggregator->aggregate(row(['int' => '55']), flow_context());
-        $aggregator->aggregate(row(['int' => '25']), flow_context());
-        $aggregator->aggregate(row(['not_int' => null]), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => '10'], schema(str_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => '20'], schema(str_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => '55'], schema(str_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => '25'], schema(str_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row([
+            'not_int' => null,
+        ], schema(str_schema('not_int', nullable: true))), flow_context());
 
         static::assertSame(10.0, $aggregator->value());
     }
@@ -49,10 +54,12 @@ final class MinTest extends FlowTestCase
     {
         $aggregator = min(ref('int'));
 
-        $aggregator->aggregate(row(['int' => 10]), flow_context());
-        $aggregator->aggregate(row(['int' => 20]), flow_context());
-        $aggregator->aggregate(row(['int' => 30]), flow_context());
-        $aggregator->aggregate(row(['int' => null]), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 10], schema(int_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 20], schema(int_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 30], schema(int_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row([
+            'int' => null,
+        ], schema(int_schema('int', nullable: true))), flow_context());
 
         static::assertSame(10.0, $aggregator->value());
     }
@@ -61,10 +68,18 @@ final class MinTest extends FlowTestCase
     {
         $aggregator = min(ref('datetime'));
 
-        $aggregator->aggregate(row(['datetime' => type_datetime()->cast('2021-01-01 00:00:00')]), flow_context());
-        $aggregator->aggregate(row(['datetime' => type_datetime()->cast('2021-01-02 00:00:00')]), flow_context());
-        $aggregator->aggregate(row(['datetime' => type_datetime()->cast('2021-01-03 00:00:00')]), flow_context());
-        $aggregator->aggregate(row(['datetime' => type_datetime()->cast('2021-01-04 00:00:00')]), flow_context());
+        $aggregator->aggregate(array_to_row([
+            'datetime' => type_datetime()->cast('2021-01-01 00:00:00'),
+        ], schema(datetime_schema('datetime'))), flow_context());
+        $aggregator->aggregate(array_to_row([
+            'datetime' => type_datetime()->cast('2021-01-02 00:00:00'),
+        ], schema(datetime_schema('datetime'))), flow_context());
+        $aggregator->aggregate(array_to_row([
+            'datetime' => type_datetime()->cast('2021-01-03 00:00:00'),
+        ], schema(datetime_schema('datetime'))), flow_context());
+        $aggregator->aggregate(array_to_row([
+            'datetime' => type_datetime()->cast('2021-01-04 00:00:00'),
+        ], schema(datetime_schema('datetime'))), flow_context());
 
         static::assertEquals(new DateTimeImmutable('2021-01-01 00:00:00'), $aggregator->value());
     }
@@ -73,10 +88,10 @@ final class MinTest extends FlowTestCase
     {
         $aggregator = min(ref('int'));
 
-        $aggregator->aggregate(row(['int' => 10.25]), flow_context());
-        $aggregator->aggregate(row(['int' => 20]), flow_context());
-        $aggregator->aggregate(row(['int' => 305]), flow_context());
-        $aggregator->aggregate(row(['int' => 25]), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 10.25], schema(float_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 20], schema(int_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 305], schema(int_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 25], schema(int_schema('int'))), flow_context());
 
         static::assertSame(10.25, $aggregator->value());
     }
@@ -85,10 +100,10 @@ final class MinTest extends FlowTestCase
     {
         $aggregator = min(ref('int'));
 
-        $aggregator->aggregate(row(['int' => 10]), flow_context());
-        $aggregator->aggregate(row(['int' => 20]), flow_context());
-        $aggregator->aggregate(row(['int' => 30]), flow_context());
-        $aggregator->aggregate(row(['int' => 40]), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 10], schema(int_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 20], schema(int_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 30], schema(int_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 40], schema(int_schema('int'))), flow_context());
 
         static::assertSame(10.0, $aggregator->value());
     }

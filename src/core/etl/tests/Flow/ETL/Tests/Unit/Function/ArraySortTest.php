@@ -9,11 +9,13 @@ use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_array;
@@ -29,7 +31,7 @@ final class ArraySortTest extends FlowTestCase
         $this->expectExceptionMessage('Expected type "array<mixed>", got "string".');
 
         $context = flow_context(config());
-        ref('array')->arraySort()->eval(row(['array' => 'string']), $context);
+        ref('array')->arraySort()->eval(array_to_row(['array' => 'string'], schema(str_schema('array'))), $context);
     }
 
     public function test_sorting_big_arrays(): void
@@ -37,20 +39,20 @@ final class ArraySortTest extends FlowTestCase
         static::assertSame(
             ref('array')
                 ->arraySort()
-                ->eval(row(['array' => type_array()->assert(json_decode(
+                ->eval(array_to_row(['array' => type_array()->assert(json_decode(
                     $this->jsonDifferentOrder(),
                     true,
                     512,
                     JSON_THROW_ON_ERROR,
-                ))]), flow_context()),
+                ))], schema(json_schema('array'))), flow_context()),
             ref('array')
                 ->arraySort()
-                ->eval(row(['array' => type_array()->assert(json_decode(
+                ->eval(array_to_row(['array' => type_array()->assert(json_decode(
                     $this->json(),
                     true,
                     512,
                     JSON_THROW_ON_ERROR,
-                ))]), flow_context()),
+                ))], schema(json_schema('array'))), flow_context()),
         );
     }
 
@@ -68,7 +70,7 @@ final class ArraySortTest extends FlowTestCase
             ],
             ref('array')
                 ->arraySort(Sort::asort)
-                ->eval(row([
+                ->eval(array_to_row([
                     'array' => [
                         'a' => [
                             'b' => [
@@ -78,7 +80,7 @@ final class ArraySortTest extends FlowTestCase
                             'g' => 'h',
                         ],
                     ],
-                ]), flow_context()),
+                ], schema(json_schema('array'))), flow_context()),
         );
     }
 
@@ -96,7 +98,7 @@ final class ArraySortTest extends FlowTestCase
             ],
             ref('array')
                 ->arraySort(Sort::ksort)
-                ->eval(row([
+                ->eval(array_to_row([
                     'array' => [
                         'a' => [
                             'g' => 'h',
@@ -106,7 +108,7 @@ final class ArraySortTest extends FlowTestCase
                             ],
                         ],
                     ],
-                ]), flow_context()),
+                ], schema(json_schema('array'))), flow_context()),
         );
     }
 
@@ -115,7 +117,9 @@ final class ArraySortTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected type "array<mixed>", got "string".');
 
-        ref('array')->arraySort()->eval(row(['array' => 'string']), flow_context());
+        ref('array')
+            ->arraySort()
+            ->eval(array_to_row(['array' => 'string'], schema(str_schema('array'))), flow_context());
     }
 
     private function json(): string

@@ -8,7 +8,9 @@ use Flow\ETL\Join\Comparison;
 use Flow\ETL\Join\Comparison\All;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\array_to_row;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\schema;
 
 final class AllTest extends FlowTestCase
 {
@@ -20,7 +22,10 @@ final class AllTest extends FlowTestCase
         $comparison2 = self::createStub(Comparison::class);
         $comparison2->method('compare')->willReturn(false);
 
-        static::assertFalse((new All($comparison1, $comparison2))->compare(row(['id' => 1]), row(['id' => 2])));
+        static::assertFalse((new All($comparison1, $comparison2))->compare(
+            array_to_row(['id' => 1], schema(int_schema('id'))),
+            array_to_row(['id' => 2], schema(int_schema('id'))),
+        ));
     }
 
     public function test_success(): void
@@ -31,6 +36,9 @@ final class AllTest extends FlowTestCase
         $comparison2 = self::createStub(Comparison::class);
         $comparison2->method('compare')->willReturn(true);
 
-        static::assertTrue((new All($comparison1, $comparison2))->compare(row(['id' => 1]), row(['id' => 2])));
+        static::assertTrue((new All($comparison1, $comparison2))->compare(
+            array_to_row(['id' => 1], schema(int_schema('id'))),
+            array_to_row(['id' => 2], schema(int_schema('id'))),
+        ));
     }
 }

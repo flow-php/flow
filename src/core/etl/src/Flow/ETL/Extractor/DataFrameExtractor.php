@@ -10,6 +10,7 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Plan;
 use Flow\ETL\Plan\Node\Limit;
 use Flow\ETL\Plan\Trigger;
+use Flow\ETL\Row\DeclaredColumns;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
@@ -46,7 +47,11 @@ final class DataFrameExtractor implements RewindableExtractor
 
         foreach ($config->executor()->execute($config->planner()->plan($logical, $this->plan->context)) as $rows) {
             if ($this->schema !== null) {
-                $rows = array_to_rows($rows->toArray(), $this->schema, $context->backend());
+                $rows = array_to_rows(
+                    (new DeclaredColumns())->project($rows->toArray(), $this->schema),
+                    $this->schema,
+                    $context->backend(),
+                );
             }
 
             $signal = yield $rows;

@@ -8,10 +8,14 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Window\Accumulator\SumAccumulator;
 
+use function Flow\ETL\DSL\array_to_row;
+use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class SumAccumulatorTest extends FlowTestCase
 {
@@ -24,8 +28,8 @@ final class SumAccumulatorTest extends FlowTestCase
     {
         $accumulator = new SumAccumulator(ref('value'), lit(true), flow_context());
 
-        $accumulator->accumulate(row(['value' => 0.1]));
-        $accumulator->accumulate(row(['value' => 0.2]));
+        $accumulator->accumulate(array_to_row(['value' => 0.1], schema(float_schema('value'))));
+        $accumulator->accumulate(array_to_row(['value' => 0.2], schema(float_schema('value'))));
 
         static::assertSame(0.3, $accumulator->value());
     }
@@ -34,8 +38,8 @@ final class SumAccumulatorTest extends FlowTestCase
     {
         $accumulator = new SumAccumulator(ref('value'), true, flow_context());
 
-        $accumulator->accumulate(row(['value' => 0.1]));
-        $accumulator->accumulate(row(['value' => 0.2]));
+        $accumulator->accumulate(array_to_row(['value' => 0.1], schema(float_schema('value'))));
+        $accumulator->accumulate(array_to_row(['value' => 0.2], schema(float_schema('value'))));
 
         static::assertSame(0.3, $accumulator->value());
     }
@@ -44,8 +48,8 @@ final class SumAccumulatorTest extends FlowTestCase
     {
         $accumulator = new SumAccumulator(ref('value'), false, flow_context());
 
-        $accumulator->accumulate(row(['value' => 0.1]));
-        $accumulator->accumulate(row(['value' => 0.2]));
+        $accumulator->accumulate(array_to_row(['value' => 0.1], schema(float_schema('value'))));
+        $accumulator->accumulate(array_to_row(['value' => 0.2], schema(float_schema('value'))));
 
         static::assertSame(0.1 + 0.2, $accumulator->value());
     }
@@ -56,17 +60,19 @@ final class SumAccumulatorTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessageMatches('/^Sum window function error: /');
 
-        (new SumAccumulator(ref('value'), false, $context))->accumulate(row(['other' => 'x']));
+        (new SumAccumulator(ref('value'), false, $context))->accumulate(array_to_row([
+            'other' => 'x',
+        ], schema(str_schema('other'))));
     }
 
     public function test_non_numeric_values_are_skipped(): void
     {
         $accumulator = new SumAccumulator(ref('value'), false, flow_context());
 
-        $accumulator->accumulate(row(['value' => 10]));
-        $accumulator->accumulate(row(['value' => 'not a number']));
-        $accumulator->accumulate(row(['value' => null]));
-        $accumulator->accumulate(row(['value' => 5]));
+        $accumulator->accumulate(array_to_row(['value' => 10], schema(int_schema('value'))));
+        $accumulator->accumulate(array_to_row(['value' => 'not a number'], schema(str_schema('value'))));
+        $accumulator->accumulate(array_to_row(['value' => null], schema(str_schema('value', nullable: true))));
+        $accumulator->accumulate(array_to_row(['value' => 5], schema(int_schema('value'))));
 
         static::assertSame(15, $accumulator->value());
     }
@@ -75,8 +81,8 @@ final class SumAccumulatorTest extends FlowTestCase
     {
         $accumulator = new SumAccumulator(ref('value'), false, flow_context());
 
-        $accumulator->accumulate(row(['value' => '10']));
-        $accumulator->accumulate(row(['value' => '2.5']));
+        $accumulator->accumulate(array_to_row(['value' => '10'], schema(str_schema('value'))));
+        $accumulator->accumulate(array_to_row(['value' => '2.5'], schema(str_schema('value'))));
 
         static::assertSame(12.5, $accumulator->value());
     }
@@ -85,7 +91,7 @@ final class SumAccumulatorTest extends FlowTestCase
     {
         $accumulator = new SumAccumulator(ref('value'), false, flow_context());
 
-        $accumulator->accumulate(row(['value' => null]));
+        $accumulator->accumulate(array_to_row(['value' => null], schema(str_schema('value', nullable: true))));
 
         static::assertNull($accumulator->value());
     }
@@ -93,12 +99,12 @@ final class SumAccumulatorTest extends FlowTestCase
     public function test_value_is_idempotent(): void
     {
         $accumulator = new SumAccumulator(ref('value'), false, flow_context());
-        $accumulator->accumulate(row(['value' => 10]));
+        $accumulator->accumulate(array_to_row(['value' => 10], schema(int_schema('value'))));
 
         static::assertSame(10, $accumulator->value());
         static::assertSame(10, $accumulator->value());
 
-        $accumulator->accumulate(row(['value' => 5]));
+        $accumulator->accumulate(array_to_row(['value' => 5], schema(int_schema('value'))));
 
         static::assertSame(15, $accumulator->value());
     }
@@ -107,8 +113,8 @@ final class SumAccumulatorTest extends FlowTestCase
     {
         $accumulator = new SumAccumulator(ref('value'), false, flow_context());
 
-        $accumulator->accumulate(row(['value' => 1.5]));
-        $accumulator->accumulate(row(['value' => 2.5]));
+        $accumulator->accumulate(array_to_row(['value' => 1.5], schema(float_schema('value'))));
+        $accumulator->accumulate(array_to_row(['value' => 2.5], schema(float_schema('value'))));
 
         static::assertSame(4.0, $accumulator->value());
     }

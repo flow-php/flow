@@ -25,8 +25,6 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_memory;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function iterator_to_array;
@@ -62,8 +60,8 @@ final class BatchExtractorTest extends FlowTestCase
         // the second child batch omits a column the first declares nullable - the buffer that spans
         // both must carry one schema, and the later rows are matched to it rather than mislabelled
         $child = new VaryingBatchesExtractor(
-            rows(schema(int_schema('id'), str_schema('name', nullable: true)), row(['id' => 1, 'name' => 'a'])),
-            rows(schema(int_schema('id')), row(['id' => 2])),
+            array_to_rows([['id' => 1, 'name' => 'a']], schema(int_schema('id'), str_schema('name', nullable: true))),
+            array_to_rows([['id' => 2]], schema(int_schema('id'))),
         );
 
         $batches = iterator_to_array(batches($child, 2)->extract(flow_context()), false);
@@ -76,8 +74,8 @@ final class BatchExtractorTest extends FlowTestCase
     public function test_a_later_child_batch_that_widens_the_shape_is_refused(): void
     {
         $child = new VaryingBatchesExtractor(
-            rows(schema(int_schema('id')), row(['id' => 1])),
-            rows(schema(int_schema('id'), str_schema('extra')), row(['id' => 2, 'extra' => 'x'])),
+            array_to_rows([['id' => 1]], schema(int_schema('id'))),
+            array_to_rows([['id' => 2, 'extra' => 'x']], schema(int_schema('id'), str_schema('extra'))),
         );
 
         $this->expectException(SchemaMismatchException::class);
@@ -126,7 +124,7 @@ final class BatchExtractorTest extends FlowTestCase
 
     public function test_with_schema_does_not_leak_into_a_second_pipeline(): void
     {
-        $child = from_rows(rows(schema(int_schema('id')), row(['id' => 1])));
+        $child = from_rows(array_to_rows([['id' => 1]], schema(int_schema('id'))));
 
         iterator_to_array(
             batches($child, 1)

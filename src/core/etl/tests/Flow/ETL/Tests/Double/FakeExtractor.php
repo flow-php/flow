@@ -16,6 +16,7 @@ use Flow\Types\Value\Uuid as FlowUuid;
 use Generator;
 use Ramsey\Uuid\Uuid;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\enum_schema;
@@ -26,8 +27,6 @@ use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\null_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\structure_schema;
@@ -91,7 +90,28 @@ final readonly class FakeExtractor implements Extractor
         for ($i = 0; $i < $this->total; $i++) {
             $id = $i;
 
-            yield rows(
+            yield array_to_rows(
+                [[
+                    'int' => $id,
+                    'float' => type_float()->cast(generate_random_int(100, 100000) / 100),
+                    'bool' => random_int(0, 1) === 1,
+                    'datetime' => new DateTimeImmutable('now'),
+                    'null' => null,
+                    'uuid' => new FlowUuid(Uuid::uuid4()),
+                    'json' => type_json()->cast(['id' => $id, 'status' => 'NEW']),
+                    'list' => [1, 2, 3],
+                    'list_of_datetimes' => [new DateTimeImmutable(), new DateTimeImmutable(), new DateTimeImmutable()],
+                    'map' => ['NEW', 'PENDING'],
+                    'struct' => [
+                        'street' => 'street_' . $id,
+                        'city' => 'city_' . $id,
+                        'zip' => 'zip_' . $id,
+                        'country' => 'country_' . $id,
+                        'location' => ['lat' => 1.5, 'lon' => 1.5],
+                    ],
+                    'enum' => BackedStringEnum::three,
+                    'xml' => type_xml()->cast('<xml><node id="' . $id . '">node-' . $id . '</node></xml>'),
+                ]],
                 schema(
                     int_schema('int'),
                     float_schema('float'),
@@ -116,27 +136,6 @@ final readonly class FakeExtractor implements Extractor
                     enum_schema('enum', BackedStringEnum::class),
                     xml_schema('xml'),
                 ),
-                row([
-                    'int' => $id,
-                    'float' => type_float()->cast(generate_random_int(100, 100000) / 100),
-                    'bool' => random_int(0, 1) === 1,
-                    'datetime' => new DateTimeImmutable('now'),
-                    'null' => null,
-                    'uuid' => new FlowUuid(Uuid::uuid4()),
-                    'json' => type_json()->cast(['id' => $id, 'status' => 'NEW']),
-                    'list' => [1, 2, 3],
-                    'list_of_datetimes' => [new DateTimeImmutable(), new DateTimeImmutable(), new DateTimeImmutable()],
-                    'map' => ['NEW', 'PENDING'],
-                    'struct' => [
-                        'street' => 'street_' . $id,
-                        'city' => 'city_' . $id,
-                        'zip' => 'zip_' . $id,
-                        'country' => 'country_' . $id,
-                        'location' => ['lat' => 1.5, 'lon' => 1.5],
-                    ],
-                    'enum' => BackedStringEnum::three,
-                    'xml' => type_xml()->cast('<xml><node id="' . $id . '">node-' . $id . '</node></xml>'),
-                ]),
             );
         }
     }

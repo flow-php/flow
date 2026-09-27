@@ -492,7 +492,7 @@ document written by 0.45.x that has a structure column. Clear APCu and natively 
 |------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
 | `new Rows($schema, ...$rows)`                                                                              | `Rows::of($schema, ...$rows)` / `rows($schema, ...$rows)`                                        |
 | `Rows::trusted($schema, $rows)` / `Rows::conformed($schema, $rows)`                                        | `Rows::of($schema, ...$rows)` (views) / `Rows::fromColumns($schema, $columns, $count)` (columns) |
-| `new Row(array $values)`                                                                                   | `row($values)` / `array_to_row($values, $schema)`                                                |
+| `new Row(array $values)`                                                                                   | `array_to_row($values, $schema)`                                                                 |
 | -                                                                                                          | `new Row(Rows $rows, int $index)` - a view over row `$index` of `$rows`                          |
 | `Row::matchTo()` / `Row::conformTo()` / `Row::project()`                                                   | removed - `Rows::matchTo()` / `Rows::project()`                                                  |
 | `Rows::empty(): bool`                                                                                      | `Rows::isEmpty(): bool`                                                                          |
@@ -503,13 +503,17 @@ document written by 0.45.x that has a structure column. Clear APCu and natively 
 | `serialize(Rows)` payload `{schema, rows}`                                                                 | `{schema, count, columns}` - payloads of 0.44.x cannot be unserialized                           |
 | `Rows::drop()` / `dropRight()` / `take()` / `takeRight()` with a negative size - `array_slice()` semantics | `InvalidArgumentException`                                                                       |
 
-### 50) `flow-php/etl` - `row()` infers through a batch
+### 50) `flow-php/etl` - `row()`, `InferredBatch` and `DataFrame::getEach()` removed
 
-| Before                                                                 | After                                                                                                         |
-|------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
-| `row(['a' => [1, 'x']])` - an `array` value                            | a `Json` value (`json` column)                                                                                |
-| `row(['a' => new stdClass()])` / a closure - refused later by `rows()` | refused by `row()` (`RuntimeException` / `InvalidArgumentException`)                                          |
-| `row(['at' => $datetimeInWarsaw])` - the instance with its zone        | a `datetime` (UTC) column - the instant reads back in UTC; declare the zone with `datetime_schema(zone: ...)` |
+| Before                            | After                                                                          |
+|-----------------------------------|--------------------------------------------------------------------------------|
+| `row($values)`                    | `array_to_row($values, $schema)`                                               |
+| `rows($schema, row($a), row($b))` | `array_to_rows([$a, $b], $schema)`                                             |
+| `Flow\ETL\Row\InferredBatch`      | removed - `array_to_rows($data, $schema)`, or `from_array($data)` to infer one |
+| `DataFrame::getEach()`            | `getEachAsArray()` (values) / `get()` (batches with their schema)              |
+
+`array_to_row()` / `array_to_rows()` cast values to the declared type and refuse keys the schema does not declare
+(`SchemaMismatchException` naming the row and the column; before, those keys were silently dropped).
 
 ### 51) `flow-php/etl` - date and time columns store days and microseconds
 

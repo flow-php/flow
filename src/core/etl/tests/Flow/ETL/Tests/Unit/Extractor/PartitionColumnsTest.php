@@ -10,9 +10,10 @@ use Flow\Filesystem\Local\MemoryFilesystem;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
 
 use function array_keys;
+use function Flow\ETL\DSL\array_to_row;
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\path;
@@ -33,7 +34,7 @@ final class PartitionColumnsTest extends FlowTestCase
         static::assertEquals(
             schema(int_schema('id'), str_schema('date', nullable: true)),
             (new PartitionColumns(new MemoryFilesystem()))
-                ->apply(rows(schema(int_schema('id')), row(['id' => 1])), ['date' => true])
+                ->apply(array_to_rows([['id' => 1]], schema(int_schema('id'))), ['date' => true])
                 ->schema(),
         );
     }
@@ -41,9 +42,12 @@ final class PartitionColumnsTest extends FlowTestCase
     public function test_apply_keeps_the_rows_it_was_given(): void
     {
         static::assertEquals(
-            [row(['id' => 1, 'date' => null])],
+            [array_to_row(['id' => 1, 'date' => null], schema(int_schema('id'), bool_schema('date', nullable: true)))],
             (new PartitionColumns(new MemoryFilesystem()))->apply(
-                rows(schema(int_schema('id'), str_schema('date', nullable: true)), row(['id' => 1, 'date' => null])),
+                array_to_rows(
+                    [['id' => 1, 'date' => null]],
+                    schema(int_schema('id'), str_schema('date', nullable: true)),
+                ),
                 ['date' => true],
             )->all(),
         );
@@ -54,9 +58,12 @@ final class PartitionColumnsTest extends FlowTestCase
         static::assertEquals(
             schema(int_schema('id'), str_schema('date', nullable: true)),
             (new PartitionColumns(new MemoryFilesystem()))
-                ->apply(rows(schema(int_schema('id'), str_schema('date')), row(['id' => 1, 'date' => '2026-01-01'])), [
-                    'date' => true,
-                ])
+                ->apply(
+                    array_to_rows([['id' => 1, 'date' => '2026-01-01']], schema(int_schema('id'), str_schema('date'))),
+                    [
+                        'date' => true,
+                    ],
+                )
                 ->schema(),
         );
     }
@@ -66,7 +73,7 @@ final class PartitionColumnsTest extends FlowTestCase
         static::assertEquals(
             schema(str_schema('date'), str_schema('region', nullable: true)),
             (new PartitionColumns(new MemoryFilesystem()))
-                ->apply(rows(schema(str_schema('date', nullable: true)), row(['date' => '2026-01-01'])), [
+                ->apply(array_to_rows([['date' => '2026-01-01']], schema(str_schema('date', nullable: true))), [
                     'date' => false,
                     'region' => true,
                 ])
@@ -104,9 +111,9 @@ final class PartitionColumnsTest extends FlowTestCase
             schema(int_schema('id'), str_schema('value'), str_schema('group')),
             (new PartitionColumns(new MemoryFilesystem()))
                 ->apply(
-                    rows(
+                    array_to_rows(
+                        [['group' => '1', 'id' => 1, 'value' => 'a']],
                         schema(str_schema('group'), int_schema('id'), str_schema('value')),
-                        row(['group' => '1', 'id' => 1, 'value' => 'a']),
                     ),
                     ['group' => false],
                 )
@@ -125,8 +132,10 @@ final class PartitionColumnsTest extends FlowTestCase
     public function test_apply_leaves_rows_alone_when_nothing_was_discovered(): void
     {
         static::assertEquals(
-            rows(schema(int_schema('id')), row(['id' => 1])),
-            (new PartitionColumns(new MemoryFilesystem()))->apply(rows(schema(int_schema('id')), row(['id' => 1])), []),
+            array_to_rows([['id' => 1]], schema(int_schema('id'))),
+            (new PartitionColumns(new MemoryFilesystem()))->apply(array_to_rows([[
+                'id' => 1,
+            ]], schema(int_schema('id'))), []),
         );
     }
 

@@ -14,6 +14,7 @@ use Flow\Types\Value\Uuid;
 
 use function Flow\ETL\Adapter\PostgreSql\from_pgsql_limit_offset;
 use function Flow\ETL\Adapter\PostgreSql\to_pgsql_table;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
@@ -25,8 +26,6 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\map_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
@@ -110,7 +109,26 @@ final class PostgreSqlLoaderAllTypesIntegrationTest extends IntegrationTestCase
         $xmlElement = $xmlElementDoc->getElementsByTagName('item')->item(0);
 
         df()
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [[
+                    'col_string' => 'test string',
+                    'col_integer' => 42,
+                    'col_float' => 3.14159,
+                    'col_boolean' => true,
+                    'col_date' => $date,
+                    'col_datetime' => $dateTime,
+                    'col_time' => $time,
+                    'col_uuid' => $uuid,
+                    'col_json' => type_json()->cast(['key' => 'value', 'number' => 123]),
+                    'col_xml' => $xmlDoc,
+                    'col_xml_element' => $xmlElement,
+                    'col_html' => '<p>HTML content</p>',
+                    'col_html_element' => '<span>element</span>',
+                    'col_enum' => BackedStringEnum::one,
+                    'col_list' => [1, 2, 3],
+                    'col_map' => ['a' => 1, 'b' => 2],
+                    'col_structure' => ['name' => 'John', 'age' => 30],
+                ]],
                 schema(
                     str_schema('col_string'),
                     int_schema('col_integer'),
@@ -133,25 +151,6 @@ final class PostgreSqlLoaderAllTypesIntegrationTest extends IntegrationTestCase
                         'age' => type_integer(),
                     ])),
                 ),
-                row([
-                    'col_string' => 'test string',
-                    'col_integer' => 42,
-                    'col_float' => 3.14159,
-                    'col_boolean' => true,
-                    'col_date' => $date,
-                    'col_datetime' => $dateTime,
-                    'col_time' => $time,
-                    'col_uuid' => $uuid,
-                    'col_json' => type_json()->cast(['key' => 'value', 'number' => 123]),
-                    'col_xml' => $xmlDoc,
-                    'col_xml_element' => $xmlElement,
-                    'col_html' => '<p>HTML content</p>',
-                    'col_html_element' => '<span>element</span>',
-                    'col_enum' => BackedStringEnum::one,
-                    'col_list' => [1, 2, 3],
-                    'col_map' => ['a' => 1, 'b' => 2],
-                    'col_structure' => ['name' => 'John', 'age' => 30],
-                ]),
             )))
             ->write(to_pgsql_table($this->client, $this->tableName))
             ->run();
@@ -225,7 +224,26 @@ final class PostgreSqlLoaderAllTypesIntegrationTest extends IntegrationTestCase
     public function test_inserts_null_values_for_all_entry_types(): void
     {
         df()
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [[
+                    'col_string' => null,
+                    'col_integer' => null,
+                    'col_float' => null,
+                    'col_boolean' => null,
+                    'col_date' => null,
+                    'col_datetime' => null,
+                    'col_time' => null,
+                    'col_uuid' => null,
+                    'col_json' => null,
+                    'col_xml' => null,
+                    'col_xml_element' => null,
+                    'col_html' => null,
+                    'col_html_element' => null,
+                    'col_enum' => null,
+                    'col_list' => null,
+                    'col_map' => null,
+                    'col_structure' => null,
+                ]],
                 schema(
                     str_schema('col_string', nullable: true),
                     int_schema('col_integer', nullable: true),
@@ -252,25 +270,6 @@ final class PostgreSqlLoaderAllTypesIntegrationTest extends IntegrationTestCase
                         nullable: true,
                     ),
                 ),
-                row([
-                    'col_string' => null,
-                    'col_integer' => null,
-                    'col_float' => null,
-                    'col_boolean' => null,
-                    'col_date' => null,
-                    'col_datetime' => null,
-                    'col_time' => null,
-                    'col_uuid' => null,
-                    'col_json' => null,
-                    'col_xml' => null,
-                    'col_xml_element' => null,
-                    'col_html' => null,
-                    'col_html_element' => null,
-                    'col_enum' => null,
-                    'col_list' => null,
-                    'col_map' => null,
-                    'col_structure' => null,
-                ]),
             )))
             ->write(to_pgsql_table($this->client, $this->tableName))
             ->run();

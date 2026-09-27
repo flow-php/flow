@@ -8,12 +8,11 @@ use Dom\HTMLDocument;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\html_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 
 // @mago-ignore analysis:unavailable-method
@@ -33,7 +32,7 @@ final class HTMLQuerySelectorTest extends TestCase
                 ],
             ],
             df()
-                ->read(from_rows(rows(schema(html_schema('html_raw')), row(['html_raw' => $html]))))
+                ->read(from_rows(array_to_rows([['html_raw' => $html]], schema(html_schema('html_raw')))))
                 ->withEntry('html_element', ref('html_raw')->htmlQuerySelector('body div p'))
                 ->drop('html_raw')
                 ->fetch()
@@ -71,7 +70,7 @@ final class HTMLQuerySelectorTest extends TestCase
                 ],
             ],
             df()
-                ->read(from_rows(rows(schema(html_schema('html_raw')), row(['html_raw' => $html]))))
+                ->read(from_rows(array_to_rows([['html_raw' => $html]], schema(html_schema('html_raw')))))
                 ->withEntry('containers', ref('html_raw')->htmlQuerySelectorAll('body div')->expand())
                 ->withEntry('span_element', ref('containers')->htmlQuerySelector('body span')->domElementValue())
                 ->withEntry('p_element', ref('containers')->htmlQuerySelector('p')->domElementValue())

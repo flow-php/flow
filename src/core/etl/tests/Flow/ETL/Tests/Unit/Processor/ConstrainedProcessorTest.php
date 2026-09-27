@@ -16,10 +16,9 @@ use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\RowsMother;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 
 final class ConstrainedProcessorTest extends FlowTestCase
@@ -48,7 +47,7 @@ final class ConstrainedProcessorTest extends FlowTestCase
     {
         $processor = new ConstrainedProcessor([]);
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 1]));
+            yield array_to_rows([['id' => 1]], schema(int_schema('id')));
         })();
         $result = iterator_to_array($processor->process($generator, flow_context()));
         static::assertCount(1, $result);
@@ -101,7 +100,7 @@ final class ConstrainedProcessorTest extends FlowTestCase
         };
         $processor = new ConstrainedProcessor([$constraint]);
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
+            yield array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
         })();
         /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()));
@@ -138,7 +137,7 @@ final class ConstrainedProcessorTest extends FlowTestCase
         };
         $processor = new ConstrainedProcessor([$constraint]);
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => -1]));
+            yield array_to_rows([['id' => 1], ['id' => -1]], schema(int_schema('id')));
         })();
         $this->expectException(ConstraintViolationException::class);
         iterator_to_array($processor->process($generator, flow_context()));

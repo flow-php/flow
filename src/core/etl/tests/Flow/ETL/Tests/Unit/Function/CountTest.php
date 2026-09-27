@@ -8,14 +8,16 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\WindowContextMother;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\count;
+use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\window;
 
 final class CountTest extends FlowTestCase
@@ -34,11 +36,13 @@ final class CountTest extends FlowTestCase
     {
         $aggregator = count(ref('int'));
 
-        $aggregator->aggregate(row(['int' => '10']), flow_context());
-        $aggregator->aggregate(row(['int' => '20']), flow_context());
-        $aggregator->aggregate(row(['int' => '55']), flow_context());
-        $aggregator->aggregate(row(['int' => '25']), flow_context());
-        $aggregator->aggregate(row(['not_int' => null]), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => '10'], schema(str_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => '20'], schema(str_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => '55'], schema(str_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => '25'], schema(str_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row([
+            'not_int' => null,
+        ], schema(str_schema('not_int', nullable: true))), flow_context());
 
         static::assertSame(4, $aggregator->value());
     }
@@ -47,10 +51,10 @@ final class CountTest extends FlowTestCase
     {
         $aggregator = count(ref('int'));
 
-        $aggregator->aggregate(row(['int' => 10.25]), flow_context());
-        $aggregator->aggregate(row(['int' => 20]), flow_context());
-        $aggregator->aggregate(row(['int' => 305]), flow_context());
-        $aggregator->aggregate(row(['int' => 25]), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 10.25], schema(float_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 20], schema(int_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 305], schema(int_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 25], schema(int_schema('int'))), flow_context());
 
         static::assertSame(4, $aggregator->value());
     }
@@ -59,11 +63,13 @@ final class CountTest extends FlowTestCase
     {
         $aggregator = count();
 
-        $aggregator->aggregate(row(['int' => '10']), flow_context());
-        $aggregator->aggregate(row(['int' => '20']), flow_context());
-        $aggregator->aggregate(row(['int' => '55']), flow_context());
-        $aggregator->aggregate(row(['int' => '25']), flow_context());
-        $aggregator->aggregate(row(['not_int' => null]), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => '10'], schema(str_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => '20'], schema(str_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => '55'], schema(str_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => '25'], schema(str_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row([
+            'not_int' => null,
+        ], schema(str_schema('not_int', nullable: true))), flow_context());
 
         static::assertSame(5, $aggregator->value());
     }
@@ -72,11 +78,15 @@ final class CountTest extends FlowTestCase
     {
         $aggregator = count(ref('int'));
 
-        $aggregator->aggregate(row(['int' => 10]), flow_context());
-        $aggregator->aggregate(row(['int' => 20]), flow_context());
-        $aggregator->aggregate(row(['int' => 30]), flow_context());
-        $aggregator->aggregate(row(['int' => null]), flow_context());
-        $aggregator->aggregate(row(['test' => null]), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 10], schema(int_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 20], schema(int_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 30], schema(int_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row([
+            'int' => null,
+        ], schema(int_schema('int', nullable: true))), flow_context());
+        $aggregator->aggregate(array_to_row([
+            'test' => null,
+        ], schema(str_schema('test', nullable: true))), flow_context());
 
         static::assertSame(4, $aggregator->value());
     }
@@ -85,9 +95,9 @@ final class CountTest extends FlowTestCase
     {
         $rows = rows(
             schema(int_schema('id'), int_schema('value', nullable: true)),
-            $row1 = row(['id' => 1, 'value' => 10]),
-            row(['id' => 2, 'value' => null]),
-            row(['id' => 3, 'value' => 30]),
+            $row1 = array_to_row(['id' => 1, 'value' => 10], schema(int_schema('id'), int_schema('value'))),
+            array_to_row(['id' => 2, 'value' => null], schema(int_schema('id'), int_schema('value', nullable: true))),
+            array_to_row(['id' => 3, 'value' => 30], schema(int_schema('id'), int_schema('value'))),
         );
 
         $count = count(ref('value'))->over(window()->orderBy(ref('id')));
@@ -99,9 +109,9 @@ final class CountTest extends FlowTestCase
     {
         $rows = rows(
             schema(int_schema('id'), int_schema('value', nullable: true)),
-            $row1 = row(['id' => 1, 'value' => 10]),
-            row(['id' => 2, 'value' => null]),
-            row(['id' => 3, 'value' => 30]),
+            $row1 = array_to_row(['id' => 1, 'value' => 10], schema(int_schema('id'), int_schema('value'))),
+            array_to_row(['id' => 2, 'value' => null], schema(int_schema('id'), int_schema('value', nullable: true))),
+            array_to_row(['id' => 3, 'value' => 30], schema(int_schema('id'), int_schema('value'))),
         );
 
         $count = count()->over(window()->orderBy(ref('id')));
@@ -114,7 +124,11 @@ final class CountTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Count window function error:');
 
-        $rows = rows(schema(int_schema('id')), $row1 = row(['id' => 1]), row(['id' => 2]));
+        $rows = rows(
+            schema(int_schema('id')),
+            $row1 = array_to_row(['id' => 1], schema(int_schema('id'))),
+            array_to_row(['id' => 2], schema(int_schema('id'))),
+        );
 
         $count = count(ref('missing_column'))->over(window()->orderBy(ref('id')));
 

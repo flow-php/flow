@@ -8,8 +8,7 @@ use Flow\ETL\Adapter\Text\TextExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\Adapter\Text\from_text;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
@@ -19,12 +18,7 @@ final class TextExtractorBatchContractTest extends FlowTestCase
     {
         self::assertExtractorHonoursBatchContract(
             static fn(): TextExtractor => from_text(__DIR__ . '/../Fixtures/parity_lines.txt'),
-            rows(
-                schema(str_schema('text')),
-                row(['text' => 'alpha']),
-                row(['text' => 'beta']),
-                row(['text' => 'gamma']),
-            ),
+            array_to_rows([['text' => 'alpha'], ['text' => 'beta'], ['text' => 'gamma']], schema(str_schema('text'))),
         );
     }
 }

@@ -8,8 +8,8 @@ use Flow\ETL\Sort\Merge\BucketCursor;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 
@@ -18,8 +18,8 @@ final class BucketCursorTest extends FlowTestCase
     public function test_iterates_rows_across_batch_boundaries(): void
     {
         $batches = static function (): Generator {
-            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
-            yield rows(schema(int_schema('id')), row(['id' => 3]));
+            yield array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
+            yield array_to_rows([['id' => 3]], schema(int_schema('id')));
         };
 
         $cursor = new BucketCursor($batches());
@@ -47,9 +47,9 @@ final class BucketCursorTest extends FlowTestCase
     {
         $batches = static function (): Generator {
             yield rows(schema());
-            yield rows(schema(int_schema('id')), row(['id' => 1]));
+            yield array_to_rows([['id' => 1]], schema(int_schema('id')));
             yield rows(schema());
-            yield rows(schema(int_schema('id')), row(['id' => 2]));
+            yield array_to_rows([['id' => 2]], schema(int_schema('id')));
         };
 
         $cursor = new BucketCursor($batches());
@@ -67,8 +67,8 @@ final class BucketCursorTest extends FlowTestCase
     public function test_next_batch_is_not_decoded_until_the_current_one_is_exhausted(): void
     {
         $batches = static function (): Generator {
-            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
-            yield rows(schema(int_schema('id')), row(['id' => 3]));
+            yield array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
+            yield array_to_rows([['id' => 3]], schema(int_schema('id')));
         };
 
         $generator = $batches();

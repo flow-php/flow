@@ -7,12 +7,13 @@ namespace Flow\ETL\Tests\Unit\Function;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\collect;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class CollectTest extends FlowTestCase
 {
@@ -25,10 +26,10 @@ final class CollectTest extends FlowTestCase
     {
         $aggregator = collect(ref('data'));
 
-        $aggregator->aggregate(row(['data' => 'a']), flow_context());
-        $aggregator->aggregate(row(['data' => 'b']), flow_context());
-        $aggregator->aggregate(row(['data' => 'b']), flow_context());
-        $aggregator->aggregate(row(['data' => 'c']), flow_context());
+        $aggregator->aggregate(array_to_row(['data' => 'a'], schema(str_schema('data'))), flow_context());
+        $aggregator->aggregate(array_to_row(['data' => 'b'], schema(str_schema('data'))), flow_context());
+        $aggregator->aggregate(array_to_row(['data' => 'b'], schema(str_schema('data'))), flow_context());
+        $aggregator->aggregate(array_to_row(['data' => 'c'], schema(str_schema('data'))), flow_context());
 
         static::assertSame(
             [

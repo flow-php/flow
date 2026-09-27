@@ -8,9 +8,9 @@ use Flow\ETL\Join\Join;
 use Flow\ETL\Join\JoinShape;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
@@ -106,8 +106,8 @@ final class JoinShapeTest extends FlowTestCase
         static::assertSame(
             ['id' => 1, 'country' => 'PL', 'name' => 'Norbert'],
             JoinShape::of(join_on(['id' => 'id']), Join::inner)->merger()->merge(
-                row(['id' => 1, 'country' => 'PL']),
-                row(['id' => 1, 'name' => 'Norbert']),
+                array_to_row(['id' => 1, 'country' => 'PL'], schema(int_schema('id'), str_schema('country'))),
+                array_to_row(['id' => 1, 'name' => 'Norbert'], schema(int_schema('id'), str_schema('name'))),
             ),
         );
     }
@@ -117,8 +117,8 @@ final class JoinShapeTest extends FlowTestCase
         static::assertSame(
             ['country' => 'PL', 'id' => 2, 'name' => 'Norbert'],
             JoinShape::of(join_on(['id' => 'id']), Join::right)->merger()->merge(
-                row(['id' => 1, 'country' => 'PL']),
-                row(['id' => 2, 'name' => 'Norbert']),
+                array_to_row(['id' => 1, 'country' => 'PL'], schema(int_schema('id'), str_schema('country'))),
+                array_to_row(['id' => 2, 'name' => 'Norbert'], schema(int_schema('id'), str_schema('name'))),
             ),
         );
     }

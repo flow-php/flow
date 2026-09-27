@@ -10,9 +10,8 @@ use Flow\Floe\FloeReader;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\Tests\Mother\RowsMother;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function iterator_to_array;
@@ -28,22 +27,25 @@ final class FloeStreamReaderTest extends FlowIntegrationTestCase
         $fileTwo = $this->cacheDir->suffix('evolving-2.floe');
         $fileThree = $this->cacheDir->suffix('evolving-3.floe');
 
-        $rowsOne = rows(schema(int_schema('id')), row(['id' => 1]));
+        $rowsOne = array_to_rows([['id' => 1]], schema(int_schema('id')));
         $writer = new FloeWriter($this->fs(), $rowsOne->schema());
         $writer->create($fileOne);
         $writer->write($rowsOne);
         $writer->close();
 
-        $rowsTwo = rows(
+        $rowsTwo = array_to_rows(
+            [['id' => 2, 'email' => null]],
             schema(int_schema('id'), str_schema('email', nullable: true)),
-            row(['id' => 2, 'email' => null]),
         );
         $writer = new FloeWriter($this->fs(), $rowsTwo->schema());
         $writer->create($fileTwo);
         $writer->write($rowsTwo);
         $writer->close();
 
-        $rowsThree = rows(schema(int_schema('id'), str_schema('email')), row(['id' => 3, 'email' => 'third@flow.php']));
+        $rowsThree = array_to_rows(
+            [['id' => 3, 'email' => 'third@flow.php']],
+            schema(int_schema('id'), str_schema('email')),
+        );
         $writer = new FloeWriter($this->fs(), $rowsThree->schema());
         $writer->create($fileThree);
         $writer->write($rowsThree);
@@ -71,18 +73,18 @@ final class FloeStreamReaderTest extends FlowIntegrationTestCase
     {
         $path = $this->cacheDir->suffix('large.floe');
 
-        $schema = rows(
+        $schema = array_to_rows(
+            [['id' => 0, 'payload' => str_pad('row_0', 300, 'x')]],
             schema(int_schema('id'), str_schema('payload')),
-            row(['id' => 0, 'payload' => str_pad('row_0', 300, 'x')]),
         )->schema();
         $writer = new FloeWriter($this->fs(), $schema);
         $writer->create($path);
         $written = 0;
 
         for ($i = 0; $i < 4000; $i++) {
-            $writer->write(rows(
+            $writer->write(array_to_rows(
+                [['id' => $i, 'payload' => str_pad('row_' . $i, 300, 'x')]],
                 schema(int_schema('id'), str_schema('payload')),
-                row(['id' => $i, 'payload' => str_pad('row_' . $i, 300, 'x')]),
             ));
             $written++;
         }

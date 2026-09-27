@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DataFrame Methods
  *
- * DataFrame methods: 47
+ * DataFrame methods: 46
  * DataFrame-returning methods from classes: 3
  *
  * This completer triggers after DataFrame-returning methods
@@ -253,7 +253,7 @@ const dataframeMethods = [
                     <span class=\"fn-name\">fetch</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Rows</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Be aware that fetch is not memory safe and will load all rows into memory.<br>If you want to safely iterate over Rows use oe of the following methods:.<br>DataFrame::get() : \\Generator<br>DataFrame::getAsArray() : \\Generator<br>DataFrame::getEach() : \\Generator<br>DataFrame::getEachAsArray() : \\Generator<br>@trigger<br>@throws InvalidArgumentException
+                    Be aware that fetch is not memory safe and will load all rows into memory.<br>If you want to safely iterate over Rows use oe of the following methods:.<br>DataFrame::get() : \\Generator<br>DataFrame::getAsArray() : \\Generator<br>DataFrame::getEachAsArray() : \\Generator<br>@trigger<br>@throws InvalidArgumentException
                 </div>
                             `
             return div
@@ -349,24 +349,6 @@ const dataframeMethods = [
             return div
         },
         apply: snippet("getAsArray()"),
-        boost: 10
-    },        {
-        label: "getEach",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">getEach</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Generator</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Yield each row as an instance of Row.<br>@trigger<br>@return \\Generator<Row>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("getEach()"),
         boost: 10
     },        {
         label: "getEachAsArray",

@@ -9,12 +9,14 @@ use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\array_keys_style_convert;
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\to_memory;
 
 final class ArrayKeysStyleConvertTest extends FlowTestCase
@@ -43,6 +45,8 @@ final class ArrayKeysStyleConvertTest extends FlowTestCase
         $this->expectExceptionMessage('Expected type "array<mixed>", got "string".');
 
         $context = flow_context(config());
-        array_keys_style_convert(ref('string'), 'camel')->eval(row(['string' => 'test']), $context);
+        array_keys_style_convert(ref('string'), 'camel')->eval(array_to_row([
+            'string' => 'test',
+        ], schema(str_schema('string'))), $context);
     }
 }

@@ -15,6 +15,7 @@ use Flow\ETL\Tests\Double\SpyBucketsStorage;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\PruneEntriesTransformer;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
@@ -25,8 +26,6 @@ use function Flow\ETL\DSL\hash_group_by;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\pivot_values;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\sum;
@@ -78,9 +77,9 @@ final class GroupByStepsTest extends FlowTestCase
         $result = GroupByContext::aggregate(
             $groupBy,
             flow_context(config_builder()->groupBy(hash_group_by()->storage(new MemoryBuckets()))->build()),
-            rows(schema(str_schema('category'), int_schema('amount')), row(['category' => 'a', 'amount' => 10])),
-            rows(schema(str_schema('category'), int_schema('amount')), row(['category' => 'a', 'amount' => 20])),
-            rows(schema(str_schema('category'), int_schema('amount')), row(['category' => 'b', 'amount' => 15])),
+            array_to_rows([['category' => 'a', 'amount' => 10]], schema(str_schema('category'), int_schema('amount'))),
+            array_to_rows([['category' => 'a', 'amount' => 20]], schema(str_schema('category'), int_schema('amount'))),
+            array_to_rows([['category' => 'b', 'amount' => 15]], schema(str_schema('category'), int_schema('amount'))),
         );
 
         $aggregated = [];
@@ -106,11 +105,13 @@ final class GroupByStepsTest extends FlowTestCase
             flow_context(
                 config_builder()->groupBy(hash_group_by()->storage(new MemoryBuckets())->bucketsCount(1))->build(),
             ),
-            rows(
+            array_to_rows(
+                [
+                    ['category' => 'a', 'amount' => 10],
+                    ['category' => 'b', 'amount' => 15],
+                    ['category' => 'a', 'amount' => 20],
+                ],
                 schema(str_schema('category'), int_schema('amount')),
-                row(['category' => 'a', 'amount' => 10]),
-                row(['category' => 'b', 'amount' => 15]),
-                row(['category' => 'a', 'amount' => 20]),
             ),
         );
 
@@ -136,10 +137,9 @@ final class GroupByStepsTest extends FlowTestCase
         $batches = [];
 
         for ($id = 0; $id < 20; $id++) {
-            $batches[] = rows(
+            $batches[] = array_to_rows(
+                [['id' => $id, 'amount' => 1], ['id' => $id, 'amount' => 2]],
                 schema(int_schema('id'), int_schema('amount')),
-                row(['id' => $id, 'amount' => 1]),
-                row(['id' => $id, 'amount' => 2]),
             );
         }
 
@@ -176,10 +176,9 @@ final class GroupByStepsTest extends FlowTestCase
         GroupByContext::aggregate(
             $groupBy,
             flow_context(config_builder()->groupBy(hash_group_by()->storage($storage))->build()),
-            rows(
+            array_to_rows(
+                [['category' => 'a', 'amount' => 10], ['category' => 'b', 'amount' => 15]],
                 schema(str_schema('category'), int_schema('amount')),
-                row(['category' => 'a', 'amount' => 10]),
-                row(['category' => 'b', 'amount' => 15]),
             ),
         );
 
@@ -195,11 +194,9 @@ final class GroupByStepsTest extends FlowTestCase
         $result = GroupByContext::aggregate(
             $groupBy,
             flow_context(config_builder()->groupBy(hash_group_by()->storage(new MemoryBuckets()))->build()),
-            rows(
+            array_to_rows(
+                [['category' => 'a', 'amount' => 10], ['amount' => 15], ['amount' => 20]],
                 schema(str_schema('category', nullable: true), int_schema('amount')),
-                row(['category' => 'a', 'amount' => 10]),
-                row(['amount' => 15]),
-                row(['amount' => 20]),
             ),
         );
 
@@ -226,10 +223,12 @@ final class GroupByStepsTest extends FlowTestCase
         GroupByContext::aggregate(
             $groupBy,
             flow_context(config_builder()->groupBy(hash_group_by()->storage($storage))->build()),
-            rows(
+            array_to_rows(
+                [
+                    ['category' => 'a', 'amount' => 10, 'noise' => 'x', 'id' => 1],
+                    ['category' => 'b', 'amount' => 15, 'noise' => 'y', 'id' => 2],
+                ],
                 schema(str_schema('category'), int_schema('amount'), str_schema('noise'), int_schema('id')),
-                row(['category' => 'a', 'amount' => 10, 'noise' => 'x', 'id' => 1]),
-                row(['category' => 'b', 'amount' => 15, 'noise' => 'y', 'id' => 2]),
             ),
         );
 
@@ -252,10 +251,12 @@ final class GroupByStepsTest extends FlowTestCase
         $result = GroupByContext::aggregate(
             $groupBy,
             flow_context(config_builder()->groupBy(hash_group_by()->storage($storage))->build()),
-            rows(
+            array_to_rows(
+                [
+                    ['category' => 'a', 'amount' => 0.1, 'flag' => true],
+                    ['category' => 'a', 'amount' => 0.2, 'flag' => true],
+                ],
                 schema(str_schema('category'), float_schema('amount'), bool_schema('flag')),
-                row(['category' => 'a', 'amount' => 0.1, 'flag' => true]),
-                row(['category' => 'a', 'amount' => 0.2, 'flag' => true]),
             ),
         );
 
@@ -279,10 +280,9 @@ final class GroupByStepsTest extends FlowTestCase
         $result = GroupByContext::aggregate(
             $groupBy,
             $context,
-            rows(
+            array_to_rows(
+                [['category' => 'a', 'amount' => 10], ['category' => 'a']],
                 schema(str_schema('category'), int_schema('amount', nullable: true)),
-                row(['category' => 'a', 'amount' => 10]),
-                row(['category' => 'a']),
             ),
         );
 

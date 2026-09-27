@@ -8,11 +8,10 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\DropDuplicatesTransformer;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
@@ -37,21 +36,21 @@ final class DropDuplicatesTransformerTest extends FlowTestCase
     {
         $transformer = new DropDuplicatesTransformer('id');
 
-        $rows = rows(
+        $rows = array_to_rows(
+            [
+                ['id' => 1, 'name' => 'name1'],
+                ['id' => 1, 'name' => 'name1'],
+                ['id' => 2, 'name' => 'name2'],
+                ['id' => 2, 'name' => 'name2'],
+                ['id' => 3, 'name' => 'name3'],
+            ],
             schema(int_schema('id'), str_schema('name')),
-            row(['id' => 1, 'name' => 'name1']),
-            row(['id' => 1, 'name' => 'name1']),
-            row(['id' => 2, 'name' => 'name2']),
-            row(['id' => 2, 'name' => 'name2']),
-            row(['id' => 3, 'name' => 'name3']),
         );
 
         static::assertEquals(
-            rows(
+            array_to_rows(
+                [['id' => 1, 'name' => 'name1'], ['id' => 2, 'name' => 'name2'], ['id' => 3, 'name' => 'name3']],
                 schema(int_schema('id'), str_schema('name')),
-                row(['id' => 1, 'name' => 'name1']),
-                row(['id' => 2, 'name' => 'name2']),
-                row(['id' => 3, 'name' => 'name3']),
             ),
             $transformer->transform($rows, flow_context(config())),
         );
@@ -61,23 +60,27 @@ final class DropDuplicatesTransformerTest extends FlowTestCase
     {
         $transformer = new DropDuplicatesTransformer('id');
 
-        $rows = rows(
+        $rows = array_to_rows(
+            [
+                ['id' => 1, 'name' => 'name1'],
+                ['id' => 1, 'name' => 'name1'],
+                ['id' => 2, 'name' => 'name2'],
+                ['id' => 2, 'name' => 'name2'],
+                ['name' => 'name3'],
+                ['id' => 4, 'name' => 'name4'],
+            ],
             schema(int_schema('id', nullable: true), str_schema('name')),
-            row(['id' => 1, 'name' => 'name1']),
-            row(['id' => 1, 'name' => 'name1']),
-            row(['id' => 2, 'name' => 'name2']),
-            row(['id' => 2, 'name' => 'name2']),
-            row(['name' => 'name3']),
-            row(['id' => 4, 'name' => 'name4']),
         );
 
         static::assertEquals(
-            rows(
+            array_to_rows(
+                [
+                    ['id' => 1, 'name' => 'name1'],
+                    ['id' => 2, 'name' => 'name2'],
+                    ['name' => 'name3'],
+                    ['id' => 4, 'name' => 'name4'],
+                ],
                 schema(int_schema('id', nullable: true), str_schema('name')),
-                row(['id' => 1, 'name' => 'name1']),
-                row(['id' => 2, 'name' => 'name2']),
-                row(['name' => 'name3']),
-                row(['id' => 4, 'name' => 'name4']),
             ),
             $transformer->transform($rows, flow_context(config())),
         );
@@ -87,21 +90,21 @@ final class DropDuplicatesTransformerTest extends FlowTestCase
     {
         $transformer = new DropDuplicatesTransformer('id', 'name');
 
-        $rows = rows(
+        $rows = array_to_rows(
+            [
+                ['id' => 1, 'name' => 'name1'],
+                ['id' => 1, 'name' => 'name1'],
+                ['id' => 2, 'name' => 'name2'],
+                ['id' => 2, 'name' => 'name2'],
+                ['id' => 3, 'name' => 'name3'],
+            ],
             schema(int_schema('id'), str_schema('name')),
-            row(['id' => 1, 'name' => 'name1']),
-            row(['id' => 1, 'name' => 'name1']),
-            row(['id' => 2, 'name' => 'name2']),
-            row(['id' => 2, 'name' => 'name2']),
-            row(['id' => 3, 'name' => 'name3']),
         );
 
         static::assertEquals(
-            rows(
+            array_to_rows(
+                [['id' => 1, 'name' => 'name1'], ['id' => 2, 'name' => 'name2'], ['id' => 3, 'name' => 'name3']],
                 schema(int_schema('id'), str_schema('name')),
-                row(['id' => 1, 'name' => 'name1']),
-                row(['id' => 2, 'name' => 'name2']),
-                row(['id' => 3, 'name' => 'name3']),
             ),
             $transformer->transform($rows, flow_context(config())),
         );

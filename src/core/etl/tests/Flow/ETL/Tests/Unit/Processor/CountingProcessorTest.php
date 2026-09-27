@@ -7,9 +7,9 @@ namespace Flow\ETL\Tests\Unit\Processor;
 use Flow\ETL\Processor\CountingProcessor;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -20,13 +20,13 @@ final class CountingProcessorTest extends FlowTestCase
     public function test_every_batch_is_counted_into_one_row(): void
     {
         $batches = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
+            yield array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
             yield rows(schema(int_schema('id')));
-            yield rows(schema(int_schema('id')), row(['id' => 3]));
+            yield array_to_rows([['id' => 3]], schema(int_schema('id')));
         })();
 
         static::assertEquals(
-            [rows(schema(int_schema('count')), row(['count' => 3]))],
+            [array_to_rows([['count' => 3]], schema(int_schema('count')))],
             iterator_to_array((new CountingProcessor())->process($batches, flow_context())),
         );
     }
@@ -38,7 +38,7 @@ final class CountingProcessorTest extends FlowTestCase
         })();
 
         static::assertEquals(
-            [rows(schema(int_schema('count')), row(['count' => 0]))],
+            [array_to_rows([['count' => 0]], schema(int_schema('count')))],
             iterator_to_array((new CountingProcessor())->process($batches, flow_context())),
         );
     }

@@ -25,6 +25,7 @@ use RuntimeException;
 
 use function array_map;
 use function array_merge;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
@@ -35,8 +36,6 @@ use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function iterator_to_array;
@@ -46,7 +45,7 @@ final class DataFrameExtractorTest extends FlowTestCase
     public function test_a_build_error_in_the_wrapped_frame_is_not_a_schema_refusal(): void
     {
         $extractor = from_data_frame(
-            df()->read(from_rows(rows(schema(int_schema('id')), row(['id' => 1]))))->select('nope'),
+            df()->read(from_rows(array_to_rows([['id' => 1]], schema(int_schema('id')))))->select('nope'),
         );
 
         try {
@@ -61,11 +60,10 @@ final class DataFrameExtractorTest extends FlowTestCase
 
     public function test_a_declared_schema_wins_over_the_wrapped_frame(): void
     {
-        $extractor = from_data_frame(df()->read(from_rows(rows(
-            schema(int_schema('id')),
-            row(['id' => 1]),
-            row(['id' => 2]),
-        ))))
+        $extractor = from_data_frame(df()->read(from_rows(array_to_rows([
+            ['id' => 1],
+            ['id' => 2],
+        ], schema(int_schema('id'))))))
             ->withSchema(schema(str_schema('id')));
 
         $batches = iterator_to_array($extractor->extract(flow_context(config())));
@@ -73,6 +71,19 @@ final class DataFrameExtractorTest extends FlowTestCase
         static::assertEquals(schema(str_schema('id')), $extractor->schema());
         static::assertEquals(schema(str_schema('id')), $batches[0]->schema());
         static::assertSame([['id' => '1'], ['id' => '2']], $batches[0]->toArray());
+    }
+
+    public function test_a_declared_schema_narrower_than_the_frame_projects_its_columns(): void
+    {
+        $extractor = from_data_frame(df()->read(from_rows(array_to_rows(
+            [['id' => 1, 'name' => 'one'], ['id' => 2, 'name' => 'two']],
+            schema(int_schema('id'), str_schema('name')),
+        ))))
+            ->withSchema(schema(int_schema('id')));
+
+        $batches = iterator_to_array($extractor->extract(flow_context(config())));
+
+        static::assertSame([['id' => 1], ['id' => 2]], $batches[0]->toArray());
     }
 
     public function test_a_declared_schema_describes_a_frame_that_cannot_describe_itself(): void
@@ -146,7 +157,7 @@ final class DataFrameExtractorTest extends FlowTestCase
     {
         $source = new RecordingFileExtractor(
             schema(int_schema('id')),
-            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3])),
+            array_to_rows([['id' => 1], ['id' => 2], ['id' => 3]], schema(int_schema('id'))),
         );
 
         $batches = iterator_to_array(from_data_frame(df()->read($source))->extract(flow_context(config()), 2), false);
@@ -174,7 +185,7 @@ final class DataFrameExtractorTest extends FlowTestCase
 
     public function test_the_frame_is_frozen_at_construction(): void
     {
-        $inner = df()->read(from_rows(rows(schema(int_schema('id')), row(['id' => 1]))));
+        $inner = df()->read(from_rows(array_to_rows([['id' => 1]], schema(int_schema('id')))));
 
         $extractor = from_data_frame($inner);
         $inner->withEntry('doubled', ref('id')->multiply(lit(2)));
@@ -187,7 +198,9 @@ final class DataFrameExtractorTest extends FlowTestCase
         static::assertSame(
             [['id' => 1]],
             df()
-                ->read(new DataFrameExtractor(df()->read(from_rows(rows(schema(int_schema('id')), row(['id' => 1]))))))
+                ->read(new DataFrameExtractor(df()->read(from_rows(array_to_rows([[
+                    'id' => 1,
+                ]], schema(int_schema('id')))))))
                 ->fetch()
                 ->toArray(),
         );
@@ -209,7 +222,7 @@ final class DataFrameExtractorTest extends FlowTestCase
 
     public function test_extract_runs_the_snapshot_plan_when_reached_through_a_chain_wrapper(): void
     {
-        $inner = df()->read(from_rows(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]))))->limit(1);
+        $inner = df()->read(from_rows(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')))))->limit(1);
 
         static::assertSame(
             [['id' => 1], ['id' => 3]],
@@ -224,8 +237,8 @@ final class DataFrameExtractorTest extends FlowTestCase
     {
         $counting = new CountingExtractor(
             schema(int_schema('id')),
-            rows(schema(int_schema('id')), row(['id' => 1])),
-            rows(schema(int_schema('id')), row(['id' => 2])),
+            array_to_rows([['id' => 1]], schema(int_schema('id'))),
+            array_to_rows([['id' => 2]], schema(int_schema('id'))),
         );
         $counting->withBatchSize(1);
         $generator = from_data_frame(df()->read($counting))->extract(flow_context(config()));
@@ -239,7 +252,10 @@ final class DataFrameExtractorTest extends FlowTestCase
 
     public function test_the_snapshot_source_is_read_once_across_schema_and_extract(): void
     {
-        $counting = new CountingExtractor(schema(int_schema('id')), rows(schema(int_schema('id')), row(['id' => 1])));
+        $counting = new CountingExtractor(
+            schema(int_schema('id')),
+            array_to_rows([['id' => 1]], schema(int_schema('id'))),
+        );
         $extractor = from_data_frame(df()->read($counting)->limit(1));
 
         $extractor->schema();
@@ -254,7 +270,7 @@ final class DataFrameExtractorTest extends FlowTestCase
     {
         $telemetry = new MemoryTelemetryContext();
         $extractor = from_data_frame(
-            df($telemetry->config)->read(from_rows(rows(schema(int_schema('id')), row(['id' => 1])))),
+            df($telemetry->config)->read(from_rows(array_to_rows([['id' => 1]], schema(int_schema('id'))))),
         )
             ->withSchema(schema(int_schema('id')));
 
@@ -267,18 +283,17 @@ final class DataFrameExtractorTest extends FlowTestCase
     public function test_extracting_from_another_data_frame(): void
     {
         $extractor = from_data_frame(df()->read(from_rows(
-            rows(schema(str_schema('value')), row(['value' => 'test']), row(['value' => 'test'])),
-            rows(schema(str_schema('value')), row(['value' => 'test']), row(['value' => 'test'])),
+            array_to_rows([['value' => 'test'], ['value' => 'test']], schema(str_schema('value'))),
+            array_to_rows([['value' => 'test'], ['value' => 'test']], schema(str_schema('value'))),
         )));
 
         self::assertExtractedRowsEquals(
-            rows(
-                schema(str_schema('value')),
-                row(['value' => 'test']),
-                row(['value' => 'test']),
-                row(['value' => 'test']),
-                row(['value' => 'test']),
-            ),
+            array_to_rows([
+                ['value' => 'test'],
+                ['value' => 'test'],
+                ['value' => 'test'],
+                ['value' => 'test'],
+            ], schema(str_schema('value'))),
             $extractor,
         );
     }

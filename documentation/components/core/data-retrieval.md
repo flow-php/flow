@@ -36,17 +36,6 @@ which is what lets you call `get()` or `run()` on it more than once, exactly as 
 array. (`schema()` never consumed the source in the first place - it answers from the plan.) Declare the schema up front with `from_array($largeDataset)->withSchema($schema)` to skip the spill
 entirely; a declared schema streams the source directly and can therefore be read only once.
 
-### getEach() - Retrieve individual Rows
-
-```php
-<?php
-
-foreach ($dataFrame->getEach() as $row) {
-    echo "ID: " . $row->get('id')->value() . "\n";
-    echo "Name: " . $row->get('name')->value() . "\n";
-}
-```
-
 ### getAsArray() - Retrieve as array batches
 
 ```php

@@ -4,13 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Mother;
 
+use Flow\ETL\Row;
 use Flow\ETL\Rows;
 
+use function Flow\ETL\DSL\array_to_row;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\structure_schema;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 
 final class RowsMother
 {
@@ -22,9 +28,9 @@ final class RowsMother
     public static function descendingIdBatches(): array
     {
         return [
-            rows(schema(int_schema('id')), row(['id' => 5]), row(['id' => 4])),
-            rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 2])),
-            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 0])),
+            array_to_rows([['id' => 5], ['id' => 4]], schema(int_schema('id'))),
+            array_to_rows([['id' => 3], ['id' => 2]], schema(int_schema('id'))),
+            array_to_rows([['id' => 1], ['id' => 0]], schema(int_schema('id'))),
         ];
     }
 
@@ -36,9 +42,9 @@ final class RowsMother
     public static function interleavedGroupBatches(): array
     {
         return [
-            rows(schema(str_schema('g'), int_schema('v')), row(['g' => 'a', 'v' => 1]), row(['g' => 'b', 'v' => 10])),
-            rows(schema(str_schema('g'), int_schema('v')), row(['g' => 'a', 'v' => 2]), row(['g' => 'b', 'v' => 20])),
-            rows(schema(str_schema('g'), int_schema('v')), row(['g' => 'a', 'v' => 3]), row(['g' => 'b', 'v' => 30])),
+            array_to_rows([['g' => 'a', 'v' => 1], ['g' => 'b', 'v' => 10]], schema(str_schema('g'), int_schema('v'))),
+            array_to_rows([['g' => 'a', 'v' => 2], ['g' => 'b', 'v' => 20]], schema(str_schema('g'), int_schema('v'))),
+            array_to_rows([['g' => 'a', 'v' => 3], ['g' => 'b', 'v' => 30]], schema(str_schema('g'), int_schema('v'))),
         ];
     }
 
@@ -51,9 +57,9 @@ final class RowsMother
     public static function sortedGroupBatches(): array
     {
         return [
-            rows(schema(str_schema('g'), int_schema('v')), row(['g' => 'a', 'v' => 1]), row(['g' => 'a', 'v' => 2])),
-            rows(schema(str_schema('g'), int_schema('v')), row(['g' => 'a', 'v' => 3]), row(['g' => 'b', 'v' => 10])),
-            rows(schema(str_schema('g'), int_schema('v')), row(['g' => 'b', 'v' => 20]), row(['g' => 'b', 'v' => 30])),
+            array_to_rows([['g' => 'a', 'v' => 1], ['g' => 'a', 'v' => 2]], schema(str_schema('g'), int_schema('v'))),
+            array_to_rows([['g' => 'a', 'v' => 3], ['g' => 'b', 'v' => 10]], schema(str_schema('g'), int_schema('v'))),
+            array_to_rows([['g' => 'b', 'v' => 20], ['g' => 'b', 'v' => 30]], schema(str_schema('g'), int_schema('v'))),
         ];
     }
 
@@ -62,9 +68,24 @@ final class RowsMother
         $sequence = [];
 
         for ($id = 1; $id <= $count; $id++) {
-            $sequence[] = row(['id' => $id]);
+            $sequence[] = ['id' => $id];
         }
 
-        return rows(schema(int_schema('id')), ...$sequence);
+        return array_to_rows($sequence, schema(int_schema('id')));
+    }
+
+    /**
+     * One row whose "array_entry" structure nests a structure: {id, status, enabled, array: {foo}}.
+     */
+    public static function arrayEntry(): Row
+    {
+        return array_to_row([
+            'array_entry' => ['id' => 1, 'status' => 'PENDING', 'enabled' => true, 'array' => ['foo' => 'bar']],
+        ], schema(structure_schema('array_entry', type_structure([
+            'id' => type_integer(),
+            'status' => type_string(),
+            'enabled' => type_boolean(),
+            'array' => type_structure(['foo' => type_string()]),
+        ]))));
     }
 }

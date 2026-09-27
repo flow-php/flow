@@ -7,9 +7,9 @@ namespace Flow\ETL\Tests\Unit\Function;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\WindowContextMother;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\row_number;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
@@ -21,11 +21,11 @@ final class RowNumberTest extends FlowTestCase
     {
         $rows = rows(
             schema(int_schema('id'), int_schema('value')),
-            row(['id' => 5, 'value' => 1]),
-            row(['id' => 4, 'value' => 1]),
-            row(['id' => 3, 'value' => 1]),
-            row(['id' => 2, 'value' => 1]),
-            $row1 = row(['id' => 1, 'value' => 1]),
+            array_to_row(['id' => 5, 'value' => 1], schema(int_schema('id'), int_schema('value'))),
+            array_to_row(['id' => 4, 'value' => 1], schema(int_schema('id'), int_schema('value'))),
+            array_to_row(['id' => 3, 'value' => 1], schema(int_schema('id'), int_schema('value'))),
+            array_to_row(['id' => 2, 'value' => 1], schema(int_schema('id'), int_schema('value'))),
+            $row1 = array_to_row(['id' => 1, 'value' => 1], schema(int_schema('id'), int_schema('value'))),
         );
 
         $rowNumber = row_number()->over(window()->partitionBy(ref('value'))->orderBy(ref('id')->desc()));
@@ -37,8 +37,8 @@ final class RowNumberTest extends FlowTestCase
     {
         $rows = rows(
             schema(int_schema('id'), int_schema('value')),
-            $row1 = row(['id' => 1, 'value' => 100]),
-            $row2 = row(['id' => 1, 'value' => 100]),
+            $row1 = array_to_row(['id' => 1, 'value' => 100], schema(int_schema('id'), int_schema('value'))),
+            $row2 = array_to_row(['id' => 1, 'value' => 100], schema(int_schema('id'), int_schema('value'))),
         );
 
         $rowNumber = row_number()->over(window()->orderBy(ref('value')));

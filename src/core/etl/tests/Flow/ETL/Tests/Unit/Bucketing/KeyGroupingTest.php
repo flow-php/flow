@@ -9,12 +9,12 @@ use Flow\ETL\Tests\Context\KeyGroupingContext;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -32,8 +32,8 @@ final class KeyGroupingTest extends FlowTestCase
             KeyGroupingContext::groupedValuesOf(
                 [ref('k')],
                 (static function () use ($schema): Generator {
-                    yield rows($schema, row(['k' => 'a', 'v' => 1]), row(['k' => 'b', 'v' => 2]));
-                    yield rows($schema, row(['k' => 'a', 'v' => 3]));
+                    yield array_to_rows([['k' => 'a', 'v' => 1], ['k' => 'b', 'v' => 2]], $schema);
+                    yield array_to_rows([['k' => 'a', 'v' => 3]], $schema);
                 })(),
                 'v',
             ),
@@ -50,12 +50,11 @@ final class KeyGroupingTest extends FlowTestCase
             KeyGroupingContext::groupedValuesOf(
                 [ref('tags')],
                 (static function () use ($schema): Generator {
-                    yield rows(
-                        $schema,
-                        row(['tags' => [1, 2], 'v' => 1]),
-                        row(['tags' => [3], 'v' => 2]),
-                        row(['tags' => [1, 2], 'v' => 3]),
-                    );
+                    yield array_to_rows([
+                        ['tags' => [1, 2], 'v' => 1],
+                        ['tags' => [3], 'v' => 2],
+                        ['tags' => [1, 2], 'v' => 3],
+                    ], $schema);
                 })(),
                 'v',
             ),
@@ -73,13 +72,12 @@ final class KeyGroupingTest extends FlowTestCase
             KeyGroupingContext::groupedValuesOf(
                 [ref('at')],
                 (static function () use ($schema): Generator {
-                    yield rows(
-                        $schema,
-                        row(['at' => new DateTimeImmutable('2024-01-01 09:00:00'), 'v' => 1]),
-                        row(['at' => new DateTimeImmutable('2024-01-01 21:00:00'), 'v' => 2]),
-                        row(['at' => new DateTimeImmutable('2024-01-01 09:00:00'), 'v' => 3]),
-                        row(['at' => new DateTimeImmutable('2024-01-01 21:00:00'), 'v' => 4]),
-                    );
+                    yield array_to_rows([
+                        ['at' => new DateTimeImmutable('2024-01-01 09:00:00'), 'v' => 1],
+                        ['at' => new DateTimeImmutable('2024-01-01 21:00:00'), 'v' => 2],
+                        ['at' => new DateTimeImmutable('2024-01-01 09:00:00'), 'v' => 3],
+                        ['at' => new DateTimeImmutable('2024-01-01 21:00:00'), 'v' => 4],
+                    ], $schema);
                 })(),
                 'v',
             ),
@@ -96,7 +94,7 @@ final class KeyGroupingTest extends FlowTestCase
                 [ref('k')],
                 (static function () use ($schema): Generator {
                     yield rows($schema);
-                    yield rows($schema, row(['k' => 'a', 'v' => 1]));
+                    yield array_to_rows([['k' => 'a', 'v' => 1]], $schema);
                 })(),
                 'v',
             ),
@@ -127,7 +125,7 @@ final class KeyGroupingTest extends FlowTestCase
             KeyGroupingContext::groupedValuesOf(
                 [ref('k')],
                 (static function () use ($schema): Generator {
-                    yield rows($schema, row(['k' => 1.0, 'v' => 1]), row(['k' => 1.0, 'v' => 2]));
+                    yield array_to_rows([['k' => 1.0, 'v' => 1], ['k' => 1.0, 'v' => 2]], $schema);
                 })(),
                 'v',
             ),
@@ -143,12 +141,11 @@ final class KeyGroupingTest extends FlowTestCase
             KeyGroupingContext::groupedValuesOf(
                 [ref('k')],
                 (static function () use ($schema): Generator {
-                    yield rows(
-                        $schema,
-                        row(['k' => null, 'v' => 1]),
-                        row(['k' => 'a', 'v' => 2]),
-                        row(['k' => null, 'v' => 3]),
-                    );
+                    yield array_to_rows([
+                        ['k' => null, 'v' => 1],
+                        ['k' => 'a', 'v' => 2],
+                        ['k' => null, 'v' => 3],
+                    ], $schema);
                 })(),
                 'v',
             ),
@@ -164,7 +161,7 @@ final class KeyGroupingTest extends FlowTestCase
             KeyGroupingContext::groupedValuesOf(
                 [ref('k')],
                 (static function () use ($schema): Generator {
-                    yield rows($schema, row(['k' => 'a', 'v' => 1]), row(['k' => 'a', 'v' => 2]));
+                    yield array_to_rows([['k' => 'a', 'v' => 1], ['k' => 'a', 'v' => 2]], $schema);
                 })(),
                 'v',
             ),
@@ -180,7 +177,7 @@ final class KeyGroupingTest extends FlowTestCase
             KeyGroupingContext::groups(
                 [ref('k')],
                 (static function () use ($schema): Generator {
-                    yield rows($schema, row(['k' => 'a', 'v' => 1]));
+                    yield array_to_rows([['k' => 'a', 'v' => 1]], $schema);
                 })(),
             )[0]->schema(),
         );

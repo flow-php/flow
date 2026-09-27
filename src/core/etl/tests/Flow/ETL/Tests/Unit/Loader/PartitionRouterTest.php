@@ -10,10 +10,9 @@ use Flow\ETL\Tests\Context\PartitionRoutingContext;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function array_map;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
@@ -23,11 +22,9 @@ final class PartitionRouterTest extends FlowTestCase
     {
         $groups = PartitionRoutingContext::route(
             Partitioning::by(ref('region')),
-            rows(
+            array_to_rows(
+                [['id' => 1, 'region' => 'eu'], ['id' => 2, 'region' => 'us'], ['id' => 3, 'region' => 'eu']],
                 schema(int_schema('id'), str_schema('region')),
-                row(['id' => 1, 'region' => 'eu']),
-                row(['id' => 2, 'region' => 'us']),
-                row(['id' => 3, 'region' => 'eu']),
             ),
         );
 
@@ -44,7 +41,7 @@ final class PartitionRouterTest extends FlowTestCase
     {
         $groups = PartitionRoutingContext::route(
             Partitioning::by(ref('region')),
-            rows(schema(int_schema('id'), str_schema('region')), row(['id' => 1, 'region' => 'eu'])),
+            array_to_rows([['id' => 1, 'region' => 'eu']], schema(int_schema('id'), str_schema('region'))),
         );
 
         static::assertSame(['id'], $groups[0][1]->schema()->references()->names());
@@ -55,7 +52,7 @@ final class PartitionRouterTest extends FlowTestCase
     {
         $groups = PartitionRoutingContext::route(
             Partitioning::by(ref('region'))->writeColumns(),
-            rows(schema(int_schema('id'), str_schema('region')), row(['id' => 1, 'region' => 'eu'])),
+            array_to_rows([['id' => 1, 'region' => 'eu']], schema(int_schema('id'), str_schema('region'))),
         );
 
         static::assertSame(['id', 'region'], $groups[0][1]->schema()->references()->names());
@@ -65,7 +62,10 @@ final class PartitionRouterTest extends FlowTestCase
     {
         $groups = PartitionRoutingContext::route(
             Partitioning::by(ref('region')),
-            rows(schema(int_schema('id'), str_schema('region', nullable: true)), row(['id' => 1, 'region' => null])),
+            array_to_rows(
+                [['id' => 1, 'region' => null]],
+                schema(int_schema('id'), str_schema('region', nullable: true)),
+            ),
         );
 
         static::assertNull($groups[0][0]->get('region')->value);
@@ -76,9 +76,9 @@ final class PartitionRouterTest extends FlowTestCase
     {
         $groups = PartitionRoutingContext::route(
             Partitioning::by(ref('year'), ref('day'), ref('month')),
-            rows(
+            array_to_rows(
+                [['id' => 1, 'year' => '2024', 'month' => '03', 'day' => '01']],
                 schema(int_schema('id'), str_schema('year'), str_schema('month'), str_schema('day')),
-                row(['id' => 1, 'year' => '2024', 'month' => '03', 'day' => '01']),
             ),
         );
 
@@ -95,7 +95,7 @@ final class PartitionRouterTest extends FlowTestCase
 
         PartitionRoutingContext::route(
             Partitioning::by('region'),
-            rows(schema(str_schema('region')), row(['region' => 'eu'])),
+            array_to_rows([['region' => 'eu']], schema(str_schema('region'))),
         );
     }
 
@@ -105,7 +105,7 @@ final class PartitionRouterTest extends FlowTestCase
             [['region' => 'eu']],
             PartitionRoutingContext::route(
                 Partitioning::by('region')->writeColumns(),
-                rows(schema(str_schema('region')), row(['region' => 'eu'])),
+                array_to_rows([['region' => 'eu']], schema(str_schema('region'))),
             )[0][1]->toArray(),
         );
     }

@@ -7,9 +7,11 @@ namespace Flow\ETL\Tests\Unit\Row;
 use Flow\ETL\Row\SortOrder;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
 
 final class UnresolvedReferenceTest extends FlowTestCase
 {
@@ -40,31 +42,34 @@ final class UnresolvedReferenceTest extends FlowTestCase
     {
         $ref = ref('a')->equals(ref('b'));
 
-        static::assertTrue($ref->eval(row(['a' => 1, 'b' => 1]), flow_context()));
+        static::assertTrue($ref->eval(
+            array_to_row(['a' => 1, 'b' => 1], schema(int_schema('a'), int_schema('b'))),
+            flow_context(),
+        ));
     }
 
     public function test_executing_expression(): void
     {
         $ref = ref('b')->literal(100);
 
-        static::assertSame(100, $ref->eval(row(['a' => 1]), flow_context()));
+        static::assertSame(100, $ref->eval(array_to_row(['a' => 1], schema(int_schema('a'))), flow_context()));
     }
 
     public function test_is_even(): void
     {
         $ref = ref('a')->isEven();
 
-        static::assertFalse($ref->eval(row(['a' => 1]), flow_context()));
+        static::assertFalse($ref->eval(array_to_row(['a' => 1], schema(int_schema('a'))), flow_context()));
 
-        static::assertTrue($ref->eval(row(['a' => 2]), flow_context()));
+        static::assertTrue($ref->eval(array_to_row(['a' => 2], schema(int_schema('a'))), flow_context()));
     }
 
     public function test_is_odd(): void
     {
         $ref = ref('a')->isOdd();
 
-        static::assertTrue($ref->eval(row(['a' => 1]), flow_context()));
+        static::assertTrue($ref->eval(array_to_row(['a' => 1], schema(int_schema('a'))), flow_context()));
 
-        static::assertFalse($ref->eval(row(['a' => 2]), flow_context()));
+        static::assertFalse($ref->eval(array_to_row(['a' => 2], schema(int_schema('a'))), flow_context()));
     }
 }

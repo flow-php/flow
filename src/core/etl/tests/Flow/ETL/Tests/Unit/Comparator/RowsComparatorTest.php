@@ -11,9 +11,9 @@ use PHPUnit\Framework\TestCase;
 use SebastianBergmann\Comparator\ComparisonFailure;
 use SebastianBergmann\Comparator\Factory;
 
+use function Flow\ETL\DSL\array_to_row;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
@@ -22,10 +22,10 @@ final class RowsComparatorTest extends TestCase
     public function test_accepts_only_two_rows(): void
     {
         $comparator = new RowsComparator();
-        $rows = rows(schema(int_schema('id')), row(['id' => 1]));
+        $rows = array_to_rows([['id' => 1]], schema(int_schema('id')));
 
         static::assertTrue($comparator->accepts($rows, $rows));
-        static::assertFalse($comparator->accepts($rows, row(['id' => 1])));
+        static::assertFalse($comparator->accepts($rows, array_to_row(['id' => 1], schema(int_schema('id')))));
         static::assertFalse($comparator->accepts([], $rows));
     }
 
@@ -35,8 +35,8 @@ final class RowsComparatorTest extends TestCase
         $comparator->setFactory(Factory::getInstance());
 
         $comparator->assertEquals(
-            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])),
-            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])),
+            array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))),
+            array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))),
         );
 
         $this->addToAssertionCount(1);
@@ -53,7 +53,7 @@ final class RowsComparatorTest extends TestCase
                 ['id' => (new PhpBackend())->constant(int_schema('id'), 7, 2)],
                 2,
             ),
-            rows(schema(int_schema('id')), row(['id' => 7]), row(['id' => 7])),
+            array_to_rows([['id' => 7], ['id' => 7]], schema(int_schema('id'))),
         );
 
         $this->addToAssertionCount(1);
@@ -68,8 +68,8 @@ final class RowsComparatorTest extends TestCase
         $this->expectExceptionMessage('Failed asserting that two Rows have the same schema.');
 
         $comparator->assertEquals(
-            rows(schema(int_schema('id')), row(['id' => 1])),
-            rows(schema(int_schema('id', nullable: true)), row(['id' => 1])),
+            array_to_rows([['id' => 1]], schema(int_schema('id'))),
+            array_to_rows([['id' => 1]], schema(int_schema('id', nullable: true))),
         );
     }
 
@@ -80,8 +80,8 @@ final class RowsComparatorTest extends TestCase
 
         try {
             $comparator->assertEquals(
-                rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'a'])),
-                rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'b'])),
+                array_to_rows([['id' => 1, 'name' => 'a']], schema(int_schema('id'), str_schema('name'))),
+                array_to_rows([['id' => 1, 'name' => 'b']], schema(int_schema('id'), str_schema('name'))),
             );
         } catch (ComparisonFailure $failure) {
             static::assertSame('Failed asserting that two Rows are equal.', $failure->getMessage());
@@ -97,12 +97,12 @@ final class RowsComparatorTest extends TestCase
     public function test_assert_equals_uses_the_registered_comparator(): void
     {
         static::assertEquals(
-            rows(schema(int_schema('id')), row(['id' => 1])),
-            rows(schema(int_schema('id')), row(['id' => 1])),
+            array_to_rows([['id' => 1]], schema(int_schema('id'))),
+            array_to_rows([['id' => 1]], schema(int_schema('id'))),
         );
         static::assertNotEquals(
-            rows(schema(int_schema('id')), row(['id' => 1])),
-            rows(schema(int_schema('id')), row(['id' => 2])),
+            array_to_rows([['id' => 1]], schema(int_schema('id'))),
+            array_to_rows([['id' => 2]], schema(int_schema('id'))),
         );
     }
 }

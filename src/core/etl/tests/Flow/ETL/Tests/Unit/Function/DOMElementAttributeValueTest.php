@@ -11,9 +11,12 @@ use DOMElement;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\html_element_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\xml_element_schema;
 
 use const LIBXML_HTML_NOIMPLIED;
 use const LIBXML_NOERROR;
@@ -32,7 +35,9 @@ final class DOMElementAttributeValueTest extends TestCase
         static::assertInstanceOf(HTMLElement::class, $element->documentElement);
         static::assertEquals('foobar', ref('value')
             ->domElementAttributeValue('id')
-            ->eval(row(['value' => $element->documentElement]), flow_context()));
+            ->eval(array_to_row([
+                'value' => $element->documentElement,
+            ], schema(html_element_schema('value'))), flow_context()));
     }
 
     #[RequiresPhp('>= 8.4.0')]
@@ -45,7 +50,9 @@ final class DOMElementAttributeValueTest extends TestCase
         static::assertNull(
             ref('value')
                 ->domElementAttributeValue('id')
-                ->eval(row(['value' => $element->documentElement]), flow_context()),
+                ->eval(array_to_row([
+                    'value' => $element->documentElement,
+                ], schema(html_element_schema('value'))), flow_context()),
         );
     }
 
@@ -57,7 +64,9 @@ final class DOMElementAttributeValueTest extends TestCase
         static::assertInstanceOf(DOMElement::class, $xml->documentElement);
         static::assertEquals('buz', ref('value')
             ->domElementAttributeValue('baz')
-            ->eval(row(['value' => $xml->documentElement->firstChild]), flow_context()));
+            ->eval(array_to_row([
+                'value' => $xml->documentElement->firstChild,
+            ], schema(xml_element_schema('value'))), flow_context()));
     }
 
     public function test_xml_extracting_non_existing_attribute_from_dom_element_entry(): void
@@ -69,7 +78,9 @@ final class DOMElementAttributeValueTest extends TestCase
         static::assertNull(
             ref('value')
                 ->domElementAttributeValue('bar')
-                ->eval(row(['value' => $xml->documentElement->firstChild]), flow_context()),
+                ->eval(array_to_row([
+                    'value' => $xml->documentElement->firstChild,
+                ], schema(xml_element_schema('value'))), flow_context()),
         );
     }
 }

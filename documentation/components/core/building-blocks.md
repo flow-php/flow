@@ -15,27 +15,6 @@ Let's look at the following example:
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\{bool_schema, int_schema, row, rows, schema, str_schema};
-
-$rows = rows(
-    schema(int_schema('id'), str_schema('name'), bool_schema('active')),
-    row(['id' => 1, 'name' => 'user_01', 'active' => true]),
-    row(['id' => 2, 'name' => 'user_02', 'active' => false]),
-    row(['id' => 3, 'name' => 'user_03', 'active' => true]),
-    row(['id' => 4, 'name' => 'user_04', 'active' => false]),
-);
-```
-
-Rows are the main data structure in Flow ETL, they're used to represent data in the data frame.
-Extractors are yielding Rows and Loaders are saving Rows.
-
-The same can be achieved using the following code:
-
-```php
-<?php
-
-declare(strict_types=1);
-
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\int_schema;
@@ -52,6 +31,9 @@ $rows = array_to_rows(
     schema(int_schema('id'), str_schema('name'), bool_schema('active')),
 );
 ```
+
+Rows are the main data structure in Flow ETL, they're used to represent data in the data frame.
+Extractors are yielding Rows and Loaders are saving Rows.
 
 ## Column Types
 

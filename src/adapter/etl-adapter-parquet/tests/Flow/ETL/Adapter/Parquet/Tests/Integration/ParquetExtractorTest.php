@@ -24,14 +24,13 @@ use function array_keys;
 use function Flow\ETL\Adapter\Parquet\from_parquet;
 use function Flow\ETL\Adapter\Parquet\to_parquet;
 use function Flow\ETL\DSL\analyze;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\partition_types;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
@@ -455,13 +454,13 @@ final class ParquetExtractorTest extends FlowTestCase
     {
         $memory = memory_filesystem();
         ParquetFilesContext::write($memory, [
-            'memory://glob/a.parquet' => rows(schema(int_schema('id')), row(['id' => 1])),
-            'memory://glob/b.parquet' => rows(
-                schema(int_schema('id'), str_schema('extra')),
-                row([
+            'memory://glob/a.parquet' => array_to_rows([['id' => 1]], schema(int_schema('id'))),
+            'memory://glob/b.parquet' => array_to_rows(
+                [[
                     'id' => 2,
                     'extra' => 'x',
-                ]),
+                ]],
+                schema(int_schema('id'), str_schema('extra')),
             ),
         ]);
 
@@ -477,13 +476,13 @@ final class ParquetExtractorTest extends FlowTestCase
     {
         $memory = memory_filesystem();
         ParquetFilesContext::write($memory, [
-            'memory://glob/a.parquet' => rows(schema(int_schema('id')), row(['id' => 1])),
-            'memory://glob/b.parquet' => rows(
-                schema(int_schema('id'), str_schema('extra')),
-                row([
+            'memory://glob/a.parquet' => array_to_rows([['id' => 1]], schema(int_schema('id'))),
+            'memory://glob/b.parquet' => array_to_rows(
+                [[
                     'id' => 2,
                     'extra' => 'x',
-                ]),
+                ]],
+                schema(int_schema('id'), str_schema('extra')),
             ),
         ]);
 

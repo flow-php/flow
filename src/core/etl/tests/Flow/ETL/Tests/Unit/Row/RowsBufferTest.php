@@ -11,10 +11,11 @@ use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class RowsBufferTest extends FlowTestCase
 {
@@ -27,7 +28,7 @@ final class RowsBufferTest extends FlowTestCase
 
         static::assertTrue(
             $buffer
-                ->add(row(['id' => 1]))
+                ->add(array_to_row(['id' => 1], schema(int_schema('id'))))
                 ?->schema()
                 ->get('id')
                 ->isNullable(),
@@ -38,28 +39,28 @@ final class RowsBufferTest extends FlowTestCase
     {
         $this->expectException(SchemaMismatchException::class);
 
-        (new RowsBuffer(schema(int_schema('id')), 1))->add(row(['id' => 'x']));
+        (new RowsBuffer(schema(int_schema('id')), 1))->add(array_to_row(['id' => 'x'], schema(str_schema('id'))));
     }
 
     public function test_add_returns_a_full_batch_and_resets(): void
     {
         $buffer = new RowsBuffer(schema(int_schema('id')), 2);
 
-        static::assertNull($buffer->add(row(['id' => 1])));
+        static::assertNull($buffer->add(array_to_row(['id' => 1], schema(int_schema('id')))));
 
-        $batch = $buffer->add(row(['id' => 2]));
+        $batch = $buffer->add(array_to_row(['id' => 2], schema(int_schema('id'))));
 
         static::assertNotNull($batch);
         static::assertSame([1, 2], $batch->reduceToArray('id'));
-        static::assertNull($buffer->add(row(['id' => 3])));
+        static::assertNull($buffer->add(array_to_row(['id' => 3], schema(int_schema('id')))));
     }
 
     public function test_add_returns_null_until_size_is_reached(): void
     {
         $buffer = new RowsBuffer(schema(int_schema('id')), 3);
 
-        static::assertNull($buffer->add(row(['id' => 1])));
-        static::assertNull($buffer->add(row(['id' => 2])));
+        static::assertNull($buffer->add(array_to_row(['id' => 1], schema(int_schema('id')))));
+        static::assertNull($buffer->add(array_to_row(['id' => 2], schema(int_schema('id')))));
     }
 
     public function test_flush_returns_null_when_empty(): void
@@ -70,7 +71,7 @@ final class RowsBufferTest extends FlowTestCase
     public function test_flush_returns_the_remainder(): void
     {
         $buffer = new RowsBuffer(schema(int_schema('id')), 3);
-        $buffer->add(row(['id' => 1]));
+        $buffer->add(array_to_row(['id' => 1], schema(int_schema('id'))));
 
         $batch = $buffer->flush();
 

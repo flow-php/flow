@@ -9,9 +9,8 @@ use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\DerivedColumns;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
@@ -61,7 +60,7 @@ final class DerivedColumnsTest extends FlowTestCase
             [['a' => 1, 'note' => 'x']],
             (new DerivedColumns())
                 ->rows(
-                    rows(schema(int_schema('a')), row(['a' => 1])),
+                    array_to_rows([['a' => 1]], schema(int_schema('a'))),
                     $output,
                     $output,
                     'note',
@@ -79,7 +78,7 @@ final class DerivedColumnsTest extends FlowTestCase
             [['a' => 1, 'note' => 'x', 'extra' => null]],
             (new DerivedColumns())
                 ->rows(
-                    rows(schema(int_schema('a')), row(['a' => 1])),
+                    array_to_rows([['a' => 1]], schema(int_schema('a'))),
                     $declared,
                     $declared->add(str_schema('extra', nullable: true)),
                     'note',

@@ -9,12 +9,12 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\TestWith;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\map_schema;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
@@ -31,7 +31,7 @@ final class RowTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Column "missing" does not exist');
 
-        row(['id' => 1])->get('missing');
+        array_to_row(['id' => 1], schema(int_schema('id')))->get('missing');
     }
 
     #[TestWith([-1])]
@@ -41,12 +41,12 @@ final class RowTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Row {$index} does not exist in a batch of 1 rows");
 
-        row(['id' => 1])->rows->row($index);
+        array_to_row(['id' => 1], schema(int_schema('id')))->rows->row($index);
     }
 
     public function test_has(): void
     {
-        $row = row(['id' => 1, 'name' => 'one']);
+        $row = array_to_row(['id' => 1, 'name' => 'one'], schema(int_schema('id'), str_schema('name')));
 
         static::assertTrue($row->has('id'));
         static::assertTrue($row->has('id', 'name'));
@@ -63,26 +63,35 @@ final class RowTest extends FlowTestCase
         $schema = schema(int_schema('id'), bool_schema('bool'), str_schema('string'));
 
         static::assertSame(
-            row(['id' => 1, 'string' => 'string', 'bool' => false])->hash($schema),
-            row(['bool' => false, 'id' => 1, 'string' => 'string'])->hash($schema),
+            array_to_row(
+                ['id' => 1, 'string' => 'string', 'bool' => false],
+                schema(int_schema('id'), str_schema('string'), bool_schema('bool')),
+            )->hash($schema),
+            array_to_row(
+                ['bool' => false, 'id' => 1, 'string' => 'string'],
+                schema(bool_schema('bool'), int_schema('id'), str_schema('string')),
+            )->hash($schema),
         );
     }
 
     public function test_hash_of_an_empty_row(): void
     {
-        static::assertSame(row([])->hash(schema()), row([])->hash(schema()));
+        static::assertSame(array_to_row([], schema())->hash(schema()), array_to_row([], schema())->hash(schema()));
     }
 
     public function test_hash_of_different_rows(): void
     {
         $schema = schema(list_schema('list', type_list(type_integer())));
 
-        static::assertNotSame(row(['list' => [1, 2, 3]])->hash($schema), row(['list' => [3, 2, 1]])->hash($schema));
+        static::assertNotSame(
+            array_to_row(['list' => [1, 2, 3]], schema(list_schema('list', type_list(type_integer()))))->hash($schema),
+            array_to_row(['list' => [3, 2, 1]], schema(list_schema('list', type_list(type_integer()))))->hash($schema),
+        );
     }
 
     public function test_names_and_values_keep_storage_order(): void
     {
-        $row = row(['b' => 2, 'a' => 1]);
+        $row = array_to_row(['b' => 2, 'a' => 1], schema(int_schema('b'), int_schema('a')));
 
         static::assertSame(['b', 'a'], $row->names());
         static::assertSame(['b' => 2, 'a' => 1], $row->values());
@@ -90,14 +99,24 @@ final class RowTest extends FlowTestCase
 
     public function test_transforms_row_to_array(): void
     {
-        $row = row([
-            'id' => 1234,
-            'deleted' => false,
-            'created-at' => $createdAt = new DateTimeImmutable('2020-07-13 15:00'),
-            'phase' => null,
-            'items' => ['item-id' => 1, 'name' => 'one'],
-            'statuses' => ['NEW', 'PENDING'],
-        ]);
+        $row = array_to_row(
+            [
+                'id' => 1234,
+                'deleted' => false,
+                'created-at' => $createdAt = new DateTimeImmutable('2020-07-13 15:00'),
+                'phase' => null,
+                'items' => ['item-id' => 1, 'name' => 'one'],
+                'statuses' => ['NEW', 'PENDING'],
+            ],
+            schema(
+                int_schema('id'),
+                bool_schema('deleted'),
+                datetime_schema('created-at'),
+                str_schema('phase', nullable: true),
+                structure_schema('items', type_structure(['item-id' => type_integer(), 'name' => type_string()])),
+                list_schema('statuses', type_list(type_string())),
+            ),
+        );
 
         static::assertEquals(
             [
@@ -114,7 +133,12 @@ final class RowTest extends FlowTestCase
 
     public function test_transforms_row_to_array_without_keys(): void
     {
-        static::assertSame([1, 'one'], row(['id' => 1, 'name' => 'one'])->toArray(withKeys: false));
+        static::assertSame(
+            [1, 'one'],
+            array_to_row(['id' => 1, 'name' => 'one'], schema(int_schema('id'), str_schema('name')))->toArray(
+                withKeys: false,
+            ),
+        );
     }
 
     /**
@@ -130,13 +154,13 @@ final class RowTest extends FlowTestCase
             map_schema('statuses', type_map(type_integer(), type_string())),
         );
         $createdAt = new DateTimeImmutable('2020-07-13 15:00');
-        $row = row([
+        $row = array_to_row([
             'id' => 1,
             'name' => 'one',
             'created-at' => $createdAt,
             'items' => ['a' => 1],
             'statuses' => ['NEW'],
-        ]);
+        ], $schema);
 
         $values = [];
 

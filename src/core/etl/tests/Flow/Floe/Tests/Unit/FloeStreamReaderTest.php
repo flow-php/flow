@@ -18,9 +18,8 @@ use Flow\Floe\Tests\Double\ClosingSpySourceStream;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
@@ -34,7 +33,7 @@ final class FloeStreamReaderTest extends TestCase
         $filesystem = memory_filesystem();
         $path = path('memory://close.floe');
 
-        $data = rows(schema(int_schema('id')), row(['id' => 1]));
+        $data = array_to_rows([['id' => 1]], schema(int_schema('id')));
         $writer = new FloeWriter($filesystem, $data->schema());
         $writer->create($path);
         $writer->write($data);

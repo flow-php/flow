@@ -8,7 +8,6 @@ use Flow\ETL\Bucketing\Storage\MemoryBuckets;
 use Flow\ETL\Processor\BucketingProcessor;
 use Flow\ETL\Processor\MemorySortProcessor;
 use Flow\ETL\Processor\MergeSortProcessor;
-use Flow\ETL\Row;
 use Flow\ETL\Sort\SortSteps;
 use Flow\ETL\Tests\Double\RecordingBucketsStorage;
 use Flow\ETL\Tests\FlowTestCase;
@@ -16,6 +15,7 @@ use Generator;
 
 use function array_filter;
 use function array_map;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\external_sort;
@@ -24,8 +24,6 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\memory_sort;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function iterator_to_array;
 use function range;
@@ -57,9 +55,9 @@ final class SortStepsTest extends FlowTestCase
 
         $context = flow_context(config());
         $input = (static function (): Generator {
-            yield rows(
+            yield array_to_rows(
+                array_map(static fn(int $i): array => ['id' => $i], range(9, 0)),
                 schema(int_schema('id')),
-                ...array_map(static fn(int $i): Row => row(['id' => $i]), range(9, 0)),
             );
         })();
 
@@ -88,9 +86,9 @@ final class SortStepsTest extends FlowTestCase
 
         $context = flow_context(config());
         $input = (static function (): Generator {
-            yield rows(
+            yield array_to_rows(
+                array_map(static fn(int $i): array => ['id' => $i], range(9, 0)),
                 schema(int_schema('id')),
-                ...array_map(static fn(int $i): Row => row(['id' => $i]), range(9, 0)),
             );
         })();
 

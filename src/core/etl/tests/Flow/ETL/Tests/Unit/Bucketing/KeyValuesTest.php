@@ -8,10 +8,10 @@ use Flow\ETL\Bucketing\KeyValues;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_row;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
@@ -21,7 +21,7 @@ final class KeyValuesTest extends FlowTestCase
     {
         static::assertSame(
             [[1], [2]],
-            (new KeyValues([ref('id')]))->of(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]))),
+            (new KeyValues([ref('id')]))->of(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')))),
         );
     }
 
@@ -29,7 +29,9 @@ final class KeyValuesTest extends FlowTestCase
     {
         static::assertSame(
             [null],
-            (new KeyValues([ref('id')]))->ofRow(row(['id' => null]), schema(int_schema('id', nullable: true))),
+            (new KeyValues([ref('id')]))->ofRow(array_to_row([
+                'id' => null,
+            ], schema(str_schema('id', nullable: true))), schema(int_schema('id', nullable: true))),
         );
     }
 
@@ -38,7 +40,7 @@ final class KeyValuesTest extends FlowTestCase
         static::assertSame(
             [1, 'PL'],
             (new KeyValues([ref('id'), ref('country')]))->ofRow(
-                row(['id' => 1, 'country' => 'PL']),
+                array_to_row(['id' => 1, 'country' => 'PL'], schema(int_schema('id'), str_schema('country'))),
                 schema(int_schema('id'), str_schema('country')),
             ),
         );
@@ -48,7 +50,9 @@ final class KeyValuesTest extends FlowTestCase
     {
         static::assertSame(
             [1, 1],
-            (new KeyValues([ref('id'), ref('id')]))->ofRow(row(['id' => 1]), schema(int_schema('id'))),
+            (new KeyValues([ref('id'), ref('id')]))->ofRow(array_to_row([
+                'id' => 1,
+            ], schema(int_schema('id'))), schema(int_schema('id'))),
         );
     }
 
@@ -57,7 +61,10 @@ final class KeyValuesTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Column "id" does not exist');
 
-        (new KeyValues([ref('id')]))->ofRow(row(['name' => 'flow']), schema(int_schema('id'), str_schema('name')));
+        (new KeyValues([ref('id')]))->ofRow(
+            array_to_row(['name' => 'flow'], schema(str_schema('name'))),
+            schema(int_schema('id'), str_schema('name')),
+        );
     }
 
     public function test_a_missing_nullable_ref_is_null_when_the_schema_allows_it(): void
@@ -65,7 +72,7 @@ final class KeyValuesTest extends FlowTestCase
         static::assertSame(
             [null, 'flow'],
             (new KeyValues([ref('id'), ref('name')]))->ofRow(
-                row(['name' => 'flow']),
+                array_to_row(['name' => 'flow'], schema(str_schema('name'))),
                 schema(int_schema('id', nullable: true), str_schema('name')),
             ),
         );

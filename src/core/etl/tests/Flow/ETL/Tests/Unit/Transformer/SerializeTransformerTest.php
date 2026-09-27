@@ -9,11 +9,11 @@ use Flow\ETL\Transformer\SerializeTransformer;
 use Flow\Floe\FloeSerializer;
 use Flow\Serializer\Base64Serializer;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\list_schema;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -52,7 +52,7 @@ final class SerializeTransformerTest extends FlowTestCase
 
     public function test_serializing_empty_row_under_one_entry(): void
     {
-        $rows = rows($rowSchema = schema(), $row1 = row([]));
+        $rows = rows($rowSchema = schema(), $row1 = array_to_row([], schema()));
 
         $transformer = new SerializeTransformer('serialized');
         $transformedRows = $transformer->transform($rows, flow_context());
@@ -80,8 +80,24 @@ final class SerializeTransformerTest extends FlowTestCase
         );
         $rows = rows(
             $rowSchema,
-            $row1 = row(['id' => 1, 'name' => 'John', 'active' => true, 'tags' => ['tag1', 'tag2']]),
-            $row2 = row(['id' => 2, 'name' => 'Jane', 'active' => false, 'tags' => ['tag3', 'tag4']]),
+            $row1 = array_to_row(
+                ['id' => 1, 'name' => 'John', 'active' => true, 'tags' => ['tag1', 'tag2']],
+                schema(
+                    int_schema('id'),
+                    str_schema('name'),
+                    bool_schema('active'),
+                    list_schema('tags', type_list(type_string())),
+                ),
+            ),
+            $row2 = array_to_row(
+                ['id' => 2, 'name' => 'Jane', 'active' => false, 'tags' => ['tag3', 'tag4']],
+                schema(
+                    int_schema('id'),
+                    str_schema('name'),
+                    bool_schema('active'),
+                    list_schema('tags', type_list(type_string())),
+                ),
+            ),
         );
 
         $transformer = new SerializeTransformer('serialized');
@@ -125,8 +141,24 @@ final class SerializeTransformerTest extends FlowTestCase
         );
         $rows = rows(
             $rowSchema,
-            $row1 = row(['id' => 1, 'name' => 'John', 'active' => true, 'tags' => ['tag1', 'tag2']]),
-            $row2 = row(['id' => 2, 'name' => 'Jane', 'active' => false, 'tags' => ['tag3', 'tag4']]),
+            $row1 = array_to_row(
+                ['id' => 1, 'name' => 'John', 'active' => true, 'tags' => ['tag1', 'tag2']],
+                schema(
+                    int_schema('id'),
+                    str_schema('name'),
+                    bool_schema('active'),
+                    list_schema('tags', type_list(type_string())),
+                ),
+            ),
+            $row2 = array_to_row(
+                ['id' => 2, 'name' => 'Jane', 'active' => false, 'tags' => ['tag3', 'tag4']],
+                schema(
+                    int_schema('id'),
+                    str_schema('name'),
+                    bool_schema('active'),
+                    list_schema('tags', type_list(type_string())),
+                ),
+            ),
         );
 
         $transformer = new SerializeTransformer('serialized', true);

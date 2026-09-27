@@ -15,6 +15,7 @@ use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Generator;
 
 use function array_map;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
@@ -22,7 +23,6 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\integer_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\Types\DSL\type_integer;
@@ -139,7 +139,7 @@ final class OffsetTest extends FlowIntegrationTestCase
                 public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     for ($i = 0; $i < 10; $i++) {
-                        yield rows(schema(integer_schema('id')), row(['id' => $i + 1]));
+                        yield array_to_rows([['id' => $i + 1]], schema(integer_schema('id')));
                     }
                 }
 
@@ -187,7 +187,7 @@ final class OffsetTest extends FlowIntegrationTestCase
                 public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     for ($i = 0; $i < 5; $i++) {
-                        yield rows(schema(integer_schema('id')), row(['id' => $i + 1]));
+                        yield array_to_rows([['id' => $i + 1]], schema(integer_schema('id')));
                     }
                 }
 
@@ -237,21 +237,15 @@ final class OffsetTest extends FlowIntegrationTestCase
                 public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     for ($i = 0; $i < 100; $i++) {
-                        yield rows(
-                            schema(list_schema(
-                                'ids',
-                                type_list(type_structure([
-                                    'id' => type_integer(),
-                                ])),
-                            )),
-                            row([
-                                'ids' => [
-                                    ['id' => $i + 1],
-                                    ['id' => $i + 2],
-                                    ['id' => $i + 3],
-                                ],
-                            ]),
-                        );
+                        yield array_to_rows([[
+                            'ids' => [
+                                ['id' => $i + 1],
+                                ['id' => $i + 2],
+                                ['id' => $i + 3],
+                            ],
+                        ]], schema(list_schema('ids', type_list(type_structure([
+                            'id' => type_integer(),
+                        ])))));
                     }
                 }
 
@@ -319,7 +313,7 @@ final class OffsetTest extends FlowIntegrationTestCase
                 public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     for ($i = 0; $i < 10; $i++) {
-                        yield rows(schema(integer_schema('id')), row(['id' => $i + 1]));
+                        yield array_to_rows([['id' => $i + 1]], schema(integer_schema('id')));
                     }
                 }
 

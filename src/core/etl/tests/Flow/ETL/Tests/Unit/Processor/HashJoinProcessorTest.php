@@ -18,10 +18,10 @@ use Flow\ETL\Tests\Mother\HashJoinProcessorMother;
 use Flow\ETL\Tests\Mother\PhysicalPlanMother;
 use Flow\ETL\Tests\Mother\RowsMother;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -34,9 +34,9 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_bind_derives_the_joined_schema_from_both_sides(): void
     {
         $processor = HashJoinProcessorMother::resident(
-            PhysicalPlanMother::reading(from_rows(rows(
+            PhysicalPlanMother::reading(from_rows(array_to_rows(
+                [['id' => 1, 'name' => 'Alice']],
                 schema(int_schema('id'), str_schema('name')),
-                row(['id' => 1, 'name' => 'Alice']),
             ))),
             Expression::on(['id' => 'id']),
             Join::inner,
@@ -50,14 +50,19 @@ final class HashJoinProcessorTest extends FlowTestCase
 
     public function test_builds_hash_table_from_the_smaller_side_without_changing_results(): void
     {
-        $bigger = rows(
+        $bigger = array_to_rows(
+            [
+                ['id' => 1, 'amount' => 100],
+                ['id' => 1, 'amount' => 150],
+                ['id' => 2, 'amount' => 200],
+                ['id' => 3, 'amount' => 300],
+            ],
             schema(int_schema('id'), int_schema('amount')),
-            row(['id' => 1, 'amount' => 100]),
-            row(['id' => 1, 'amount' => 150]),
-            row(['id' => 2, 'amount' => 200]),
-            row(['id' => 3, 'amount' => 300]),
         );
-        $smaller = rows(schema(int_schema('user_id'), str_schema('name')), row(['user_id' => 1, 'name' => 'Alice']));
+        $smaller = array_to_rows(
+            [['user_id' => 1, 'name' => 'Alice']],
+            schema(int_schema('user_id'), str_schema('name')),
+        );
 
         $leftBiggerJoined = [];
 
@@ -95,17 +100,13 @@ final class HashJoinProcessorTest extends FlowTestCase
 
     public function test_grace_and_resident_storages_produce_the_same_rows(): void
     {
-        $leftRows = rows(
+        $leftRows = array_to_rows(
+            [['id' => 1, 'amount' => 100], ['id' => 2, 'amount' => 200], ['id' => 404, 'amount' => 300]],
             schema(int_schema('id'), int_schema('amount')),
-            row(['id' => 1, 'amount' => 100]),
-            row(['id' => 2, 'amount' => 200]),
-            row(['id' => 404, 'amount' => 300]),
         );
-        $rightRows = rows(
+        $rightRows = array_to_rows(
+            [['user_id' => 1, 'name' => 'Alice'], ['user_id' => 2, 'name' => 'Bob'], ['user_id' => 3, 'name' => 'Cid']],
             schema(int_schema('user_id'), str_schema('name')),
-            row(['user_id' => 1, 'name' => 'Alice']),
-            row(['user_id' => 2, 'name' => 'Bob']),
-            row(['user_id' => 3, 'name' => 'Cid']),
         );
 
         $results = [];
@@ -155,9 +156,9 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_handles_empty_left_side(): void
     {
         $processor = HashJoinProcessorMother::grace(
-            PhysicalPlanMother::reading(from_rows(rows(
+            PhysicalPlanMother::reading(from_rows(array_to_rows(
+                [['user_id' => 1, 'name' => 'Alice']],
                 schema(int_schema('user_id'), str_schema('name')),
-                row(['user_id' => 1, 'name' => 'Alice']),
             ))),
             Expression::on(['id' => 'user_id']),
             Join::inner,
@@ -179,7 +180,7 @@ final class HashJoinProcessorTest extends FlowTestCase
         );
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id'), int_schema('amount')), row(['id' => 1, 'amount' => 100]));
+            yield array_to_rows([['id' => 1, 'amount' => 100]], schema(int_schema('id'), int_schema('amount')));
         })();
 
         $result = iterator_to_array($processor->process($generator, flow_context()), false);
@@ -197,21 +198,18 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_inner_join(): void
     {
         $processor = HashJoinProcessorMother::grace(
-            PhysicalPlanMother::reading(from_rows(rows(
+            PhysicalPlanMother::reading(from_rows(array_to_rows(
+                [['user_id' => 1, 'name' => 'Alice'], ['user_id' => 2, 'name' => 'Bob']],
                 schema(int_schema('user_id'), str_schema('name')),
-                row(['user_id' => 1, 'name' => 'Alice']),
-                row(['user_id' => 2, 'name' => 'Bob']),
             ))),
             Expression::on(['id' => 'user_id']),
             Join::inner,
         );
 
         $generator = (static function () {
-            yield rows(
+            yield array_to_rows(
+                [['id' => 1, 'amount' => 100], ['id' => 2, 'amount' => 200], ['id' => 3, 'amount' => 300]],
                 schema(int_schema('id'), int_schema('amount')),
-                row(['id' => 1, 'amount' => 100]),
-                row(['id' => 2, 'amount' => 200]),
-                row(['id' => 3, 'amount' => 300]),
             );
         })();
 
@@ -239,9 +237,9 @@ final class HashJoinProcessorTest extends FlowTestCase
         $storage = new SpyBucketsStorage(new MemoryBuckets());
 
         $processor = HashJoinProcessorMother::grace(
-            PhysicalPlanMother::reading(from_rows(rows(
+            PhysicalPlanMother::reading(from_rows(array_to_rows(
+                [['user_id' => 1, 'name' => 'Alice']],
                 schema(int_schema('user_id'), str_schema('name')),
-                row(['user_id' => 1, 'name' => 'Alice']),
             ))),
             Expression::on(['id' => 'user_id']),
             Join::inner,
@@ -249,7 +247,7 @@ final class HashJoinProcessorTest extends FlowTestCase
         );
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id', nullable: true)), row(['id' => null]), row(['id' => null]));
+            yield array_to_rows([['id' => null], ['id' => null]], schema(int_schema('id', nullable: true)));
         })();
 
         static::assertCount(0, iterator_to_array($processor->process($generator, flow_context()), false));
@@ -259,17 +257,16 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_inner_join_emits_every_matching_right_row(): void
     {
         $processor = HashJoinProcessorMother::grace(
-            PhysicalPlanMother::reading(from_rows(rows(
+            PhysicalPlanMother::reading(from_rows(array_to_rows(
+                [['user_id' => 1, 'role' => 'admin'], ['user_id' => 1, 'role' => 'writer']],
                 schema(int_schema('user_id'), str_schema('role')),
-                row(['user_id' => 1, 'role' => 'admin']),
-                row(['user_id' => 1, 'role' => 'writer']),
             ))),
             Expression::on(['id' => 'user_id']),
             Join::inner,
         );
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 1]));
+            yield array_to_rows([['id' => 1]], schema(int_schema('id')));
         })();
 
         $joined = [];
@@ -294,13 +291,13 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_left_anti_join(): void
     {
         $processor = HashJoinProcessorMother::grace(
-            PhysicalPlanMother::reading(from_rows(rows(schema(int_schema('user_id')), row(['user_id' => 1])))),
+            PhysicalPlanMother::reading(from_rows(array_to_rows([['user_id' => 1]], schema(int_schema('user_id'))))),
             Expression::on(['id' => 'user_id']),
             Join::left_anti,
         );
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
+            yield array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
         })();
 
         $joined = [];
@@ -319,13 +316,13 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_left_anti_join_keeps_null_key_left_rows(): void
     {
         $processor = HashJoinProcessorMother::grace(
-            PhysicalPlanMother::reading(from_rows(rows(schema(int_schema('user_id')), row(['user_id' => 1])))),
+            PhysicalPlanMother::reading(from_rows(array_to_rows([['user_id' => 1]], schema(int_schema('user_id'))))),
             Expression::on(['id' => 'user_id']),
             Join::left_anti,
         );
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id', nullable: true)), row(['id' => 1]), row(['id' => null]));
+            yield array_to_rows([['id' => 1], ['id' => null]], schema(int_schema('id', nullable: true)));
         })();
 
         $joined = [];
@@ -344,19 +341,18 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_left_join(): void
     {
         $processor = HashJoinProcessorMother::grace(
-            PhysicalPlanMother::reading(from_rows(rows(
+            PhysicalPlanMother::reading(from_rows(array_to_rows(
+                [['user_id' => 1, 'name' => 'Alice']],
                 schema(int_schema('user_id'), str_schema('name')),
-                row(['user_id' => 1, 'name' => 'Alice']),
             ))),
             Expression::on(['id' => 'user_id']),
             Join::left,
         );
 
         $generator = (static function () {
-            yield rows(
+            yield array_to_rows(
+                [['id' => 1, 'amount' => 100], ['id' => 2, 'amount' => 200]],
                 schema(int_schema('id'), int_schema('amount')),
-                row(['id' => 1, 'amount' => 100]),
-                row(['id' => 2, 'amount' => 200]),
             );
         })();
 
@@ -380,16 +376,16 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_left_join_pads_null_key_left_rows(): void
     {
         $processor = HashJoinProcessorMother::grace(
-            PhysicalPlanMother::reading(from_rows(rows(
+            PhysicalPlanMother::reading(from_rows(array_to_rows(
+                [['user_id' => 1, 'name' => 'Alice']],
                 schema(int_schema('user_id'), str_schema('name')),
-                row(['user_id' => 1, 'name' => 'Alice']),
             ))),
             Expression::on(['id' => 'user_id']),
             Join::left,
         );
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id', nullable: true)), row(['id' => 1]), row(['id' => null]));
+            yield array_to_rows([['id' => 1], ['id' => null]], schema(int_schema('id', nullable: true)));
         })();
 
         $joined = [];
@@ -416,17 +412,16 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_non_equality_join_falls_back_to_a_single_bucket(): void
     {
         $processor = HashJoinProcessorMother::grace(
-            PhysicalPlanMother::reading(from_rows(rows(
+            PhysicalPlanMother::reading(from_rows(array_to_rows(
+                [['user_id' => 1, 'name' => 'Alice'], ['user_id' => 2, 'name' => 'Bob']],
                 schema(int_schema('user_id'), str_schema('name')),
-                row(['user_id' => 1, 'name' => 'Alice']),
-                row(['user_id' => 2, 'name' => 'Bob']),
             ))),
             Expression::on(new Any(new Equal('id', 'user_id'))),
             Join::inner,
         );
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 3]));
+            yield array_to_rows([['id' => 1], ['id' => 3]], schema(int_schema('id')));
         })();
 
         $joined = [];
@@ -445,19 +440,21 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_resident_storage_preserves_left_row_order(): void
     {
         $processor = HashJoinProcessorMother::resident(
-            PhysicalPlanMother::reading(from_rows(rows(
+            PhysicalPlanMother::reading(from_rows(array_to_rows(
+                [
+                    ['user_id' => 1, 'name' => 'Alice'],
+                    ['user_id' => 2, 'name' => 'Bob'],
+                    ['user_id' => 3, 'name' => 'Cid'],
+                ],
                 schema(int_schema('user_id'), str_schema('name')),
-                row(['user_id' => 1, 'name' => 'Alice']),
-                row(['user_id' => 2, 'name' => 'Bob']),
-                row(['user_id' => 3, 'name' => 'Cid']),
             ))),
             Expression::on(['id' => 'user_id']),
             Join::inner,
         );
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 1]));
-            yield rows(schema(int_schema('id')), row(['id' => 2]));
+            yield array_to_rows([['id' => 3], ['id' => 1]], schema(int_schema('id')));
+            yield array_to_rows([['id' => 2]], schema(int_schema('id')));
         })();
 
         $joined = [];
@@ -483,17 +480,16 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_right_join(): void
     {
         $processor = HashJoinProcessorMother::grace(
-            PhysicalPlanMother::reading(from_rows(rows(
+            PhysicalPlanMother::reading(from_rows(array_to_rows(
+                [['user_id' => 1, 'name' => 'Alice'], ['user_id' => 2, 'name' => 'Bob']],
                 schema(int_schema('user_id'), str_schema('name')),
-                row(['user_id' => 1, 'name' => 'Alice']),
-                row(['user_id' => 2, 'name' => 'Bob']),
             ))),
             Expression::on(['id' => 'user_id']),
             Join::right,
         );
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id'), int_schema('amount')), row(['id' => 1, 'amount' => 100]));
+            yield array_to_rows([['id' => 1, 'amount' => 100]], schema(int_schema('id'), int_schema('amount')));
         })();
 
         $joined = [];
@@ -520,17 +516,16 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_right_join_pads_null_key_right_rows(): void
     {
         $processor = HashJoinProcessorMother::grace(
-            PhysicalPlanMother::reading(from_rows(rows(
+            PhysicalPlanMother::reading(from_rows(array_to_rows(
+                [['user_id' => 1, 'name' => 'Alice'], ['user_id' => null, 'name' => 'Bob']],
                 schema(int_schema('user_id', nullable: true), str_schema('name')),
-                row(['user_id' => 1, 'name' => 'Alice']),
-                row(['user_id' => null, 'name' => 'Bob']),
             ))),
             Expression::on(['id' => 'user_id']),
             Join::right,
         );
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id', nullable: true)), row(['id' => 1]), row(['id' => null]));
+            yield array_to_rows([['id' => 1], ['id' => null]], schema(int_schema('id', nullable: true)));
         })();
 
         $joined = [];
@@ -559,9 +554,9 @@ final class HashJoinProcessorTest extends FlowTestCase
         $storage = new SpyBucketsStorage(new MemoryBuckets());
 
         $processor = HashJoinProcessorMother::grace(
-            PhysicalPlanMother::reading(from_rows(rows(
+            PhysicalPlanMother::reading(from_rows(array_to_rows(
+                [['user_id' => 1, 'name' => 'Alice']],
                 schema(int_schema('user_id'), str_schema('name')),
-                row(['user_id' => 1, 'name' => 'Alice']),
             ))),
             Expression::on(['id' => 'user_id']),
             Join::left,
@@ -569,7 +564,7 @@ final class HashJoinProcessorTest extends FlowTestCase
         );
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
+            yield array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
         })();
 
         iterator_to_array($processor->process($generator, flow_context()), false);
@@ -589,7 +584,7 @@ final class HashJoinProcessorTest extends FlowTestCase
         );
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
+            yield array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
         })();
 
         iterator_to_array($processor->process($generator, flow_context()), false);
@@ -625,16 +620,16 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_duplicated_entries_outside_join_columns_throw_join_exception(): void
     {
         $processor = HashJoinProcessorMother::grace(
-            PhysicalPlanMother::reading(from_rows(rows(
+            PhysicalPlanMother::reading(from_rows(array_to_rows(
+                [['user_id' => 1, 'name' => 'Alice']],
                 schema(int_schema('user_id'), str_schema('name')),
-                row(['user_id' => 1, 'name' => 'Alice']),
             ))),
             Expression::on(['id' => 'user_id']),
             Join::inner,
         );
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'Norbert']));
+            yield array_to_rows([['id' => 1, 'name' => 'Norbert']], schema(int_schema('id'), str_schema('name')));
         })();
 
         $this->expectException(JoinException::class);
@@ -647,14 +642,14 @@ final class HashJoinProcessorTest extends FlowTestCase
 
     public function test_the_right_side_is_pulled_through_a_frame_output(): void
     {
-        $right = PhysicalPlanMother::reading(from_rows(rows(
+        $right = PhysicalPlanMother::reading(from_rows(array_to_rows(
+            [['id' => 1, 'name' => 'Alice']],
             schema(int_schema('id'), str_schema('name')),
-            row(['id' => 1, 'name' => 'Alice']),
         )));
         $processor = HashJoinProcessorMother::resident($right, Expression::on(['id' => 'id'], 'r_'), Join::inner);
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
+            yield array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
         })();
 
         $batches = iterator_to_array($processor->process($generator, flow_context()), false);

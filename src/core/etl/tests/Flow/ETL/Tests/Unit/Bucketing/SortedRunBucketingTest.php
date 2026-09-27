@@ -14,10 +14,9 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function array_map;
 use function array_unique;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function iterator_to_array;
 
@@ -28,8 +27,8 @@ final class SortedRunBucketingTest extends FlowTestCase
         $strategy = new SortedRunBucketing([ref('id')], 2, new NativePHPRandomValueGenerator());
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
-            yield rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 4]));
+            yield array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
+            yield array_to_rows([['id' => 3], ['id' => 4]], schema(int_schema('id')));
         })();
 
         $ids = [];
@@ -48,7 +47,7 @@ final class SortedRunBucketingTest extends FlowTestCase
         $strategy = new SortedRunBucketing([ref('id')], 2, new NativePHPRandomValueGenerator());
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 1]), row(['id' => 2]));
+            yield array_to_rows([['id' => 3], ['id' => 1], ['id' => 2]], schema(int_schema('id')));
         })();
 
         $sizes = [];
@@ -66,7 +65,7 @@ final class SortedRunBucketingTest extends FlowTestCase
         $storage = new MemoryBuckets();
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 1]), row(['id' => 2]));
+            yield array_to_rows([['id' => 3], ['id' => 1], ['id' => 2]], schema(int_schema('id')));
         })();
 
         $buckets = iterator_to_array($strategy->bucketize($generator, $storage));
@@ -86,8 +85,8 @@ final class SortedRunBucketingTest extends FlowTestCase
         $storage = new MemoryBuckets();
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
-            yield rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 4]));
+            yield array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
+            yield array_to_rows([['id' => 3], ['id' => 4]], schema(int_schema('id')));
         })();
 
         $firstRun = $strategy->bucketize($generator, $storage)->current();
@@ -102,8 +101,8 @@ final class SortedRunBucketingTest extends FlowTestCase
         $strategy = new SortedRunBucketing([ref('id')], 2, new NativePHPRandomValueGenerator());
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
-            yield rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 4]));
+            yield array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
+            yield array_to_rows([['id' => 3], ['id' => 4]], schema(int_schema('id')));
         })();
 
         $sizes = [];
@@ -120,9 +119,9 @@ final class SortedRunBucketingTest extends FlowTestCase
         $strategy = new SortedRunBucketing([ref('id')], 2, new NativePHPRandomValueGenerator());
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
-            yield rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 4]));
-            yield rows(schema(int_schema('id')), row(['id' => 5]));
+            yield array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
+            yield array_to_rows([['id' => 3], ['id' => 4]], schema(int_schema('id')));
+            yield array_to_rows([['id' => 5]], schema(int_schema('id')));
         })();
 
         $indexes = [];

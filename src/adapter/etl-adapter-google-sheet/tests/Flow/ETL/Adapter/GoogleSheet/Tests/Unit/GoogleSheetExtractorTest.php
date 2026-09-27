@@ -21,10 +21,10 @@ use Google\Service\Sheets;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function array_sum;
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\infer_schema;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function iterator_to_array;
@@ -121,11 +121,17 @@ final class GoogleSheetExtractorTest extends FlowTestCase
 
         static::assertCount(2, $rows);
         static::assertEquals(
-            row(['header' => 'row1', '_spread_sheet_id' => 'spread-id', '_sheet_name' => 'sheet']),
+            array_to_row(
+                ['header' => 'row1', '_spread_sheet_id' => 'spread-id', '_sheet_name' => 'sheet'],
+                schema(str_schema('header'), str_schema('_spread_sheet_id'), str_schema('_sheet_name')),
+            ),
             $rows->all()[0],
         );
         static::assertEquals(
-            row(['header' => 'row2', '_spread_sheet_id' => 'spread-id', '_sheet_name' => 'sheet']),
+            array_to_row(
+                ['header' => 'row2', '_spread_sheet_id' => 'spread-id', '_sheet_name' => 'sheet'],
+                schema(str_schema('header'), str_schema('_spread_sheet_id'), str_schema('_sheet_name')),
+            ),
             $rows->all()[1],
         );
     }

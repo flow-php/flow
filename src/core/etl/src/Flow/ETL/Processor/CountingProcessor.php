@@ -11,9 +11,8 @@ use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 
 final readonly class CountingProcessor implements Processor
@@ -39,7 +38,7 @@ final readonly class CountingProcessor implements Processor
      */
     public function rows(int $count): Rows
     {
-        return rows($this->schema(), row(['count' => $count]));
+        return array_to_rows([['count' => $count]], $this->schema());
     }
 
     public function schema(): Schema

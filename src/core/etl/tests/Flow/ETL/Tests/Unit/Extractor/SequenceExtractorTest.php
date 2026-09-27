@@ -15,6 +15,7 @@ use Flow\ETL\Tests\Double\RecordingSequenceGenerator;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\RowsMother;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\float_schema;
@@ -23,8 +24,6 @@ use function Flow\ETL\DSL\from_sequence_date_period;
 use function Flow\ETL\DSL\from_sequence_date_period_recurrences;
 use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\infer_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function iterator_to_array;
@@ -34,7 +33,7 @@ final class SequenceExtractorTest extends FlowTestCase
     public function test_declared_schema_is_used_to_hydrate_extracted_rows(): void
     {
         self::assertExtractedRowsEquals(
-            rows(schema(str_schema('num')), row(['num' => '1']), row(['num' => '2']), row(['num' => '3'])),
+            array_to_rows([['num' => '1'], ['num' => '2'], ['num' => '3']], schema(str_schema('num'))),
             from_sequence_number('num', 1, 3)->withSchema(schema(str_schema('num'))),
         );
     }
@@ -50,18 +49,17 @@ final class SequenceExtractorTest extends FlowTestCase
         );
 
         self::assertExtractedRowsEquals(
-            rows(
-                schema(date_schema('day', true)),
-                row(['day' => new DateTimeImmutable('2023-01-02')]),
-                row(['day' => new DateTimeImmutable('2023-01-03')]),
-                row(['day' => new DateTimeImmutable('2023-01-04')]),
-                row(['day' => new DateTimeImmutable('2023-01-05')]),
-                row(['day' => new DateTimeImmutable('2023-01-06')]),
-                row(['day' => new DateTimeImmutable('2023-01-07')]),
-                row(['day' => new DateTimeImmutable('2023-01-08')]),
-                row(['day' => new DateTimeImmutable('2023-01-09')]),
-                row(['day' => new DateTimeImmutable('2023-01-10')]),
-            ),
+            array_to_rows([
+                ['day' => new DateTimeImmutable('2023-01-02')],
+                ['day' => new DateTimeImmutable('2023-01-03')],
+                ['day' => new DateTimeImmutable('2023-01-04')],
+                ['day' => new DateTimeImmutable('2023-01-05')],
+                ['day' => new DateTimeImmutable('2023-01-06')],
+                ['day' => new DateTimeImmutable('2023-01-07')],
+                ['day' => new DateTimeImmutable('2023-01-08')],
+                ['day' => new DateTimeImmutable('2023-01-09')],
+                ['day' => new DateTimeImmutable('2023-01-10')],
+            ], schema(date_schema('day', true))),
             $extractor,
         );
     }
@@ -77,19 +75,18 @@ final class SequenceExtractorTest extends FlowTestCase
         );
 
         self::assertExtractedRowsEquals(
-            rows(
-                schema(date_schema('day', true)),
-                row(['day' => new DateTimeImmutable('2023-01-02')]),
-                row(['day' => new DateTimeImmutable('2023-01-03')]),
-                row(['day' => new DateTimeImmutable('2023-01-04')]),
-                row(['day' => new DateTimeImmutable('2023-01-05')]),
-                row(['day' => new DateTimeImmutable('2023-01-06')]),
-                row(['day' => new DateTimeImmutable('2023-01-07')]),
-                row(['day' => new DateTimeImmutable('2023-01-08')]),
-                row(['day' => new DateTimeImmutable('2023-01-09')]),
-                row(['day' => new DateTimeImmutable('2023-01-10')]),
-                row(['day' => new DateTimeImmutable('2023-01-11')]),
-            ),
+            array_to_rows([
+                ['day' => new DateTimeImmutable('2023-01-02')],
+                ['day' => new DateTimeImmutable('2023-01-03')],
+                ['day' => new DateTimeImmutable('2023-01-04')],
+                ['day' => new DateTimeImmutable('2023-01-05')],
+                ['day' => new DateTimeImmutable('2023-01-06')],
+                ['day' => new DateTimeImmutable('2023-01-07')],
+                ['day' => new DateTimeImmutable('2023-01-08')],
+                ['day' => new DateTimeImmutable('2023-01-09')],
+                ['day' => new DateTimeImmutable('2023-01-10')],
+                ['day' => new DateTimeImmutable('2023-01-11')],
+            ], schema(date_schema('day', true))),
             $extractor,
         );
     }
@@ -99,16 +96,15 @@ final class SequenceExtractorTest extends FlowTestCase
         $extractor = from_sequence_number('num', 0, 10, 1.5);
 
         self::assertExtractedRowsEquals(
-            rows(
-                schema(float_schema('num', true)),
-                row(['num' => 0.0]),
-                row(['num' => 1.5]),
-                row(['num' => 3.0]),
-                row(['num' => 4.5]),
-                row(['num' => 6.0]),
-                row(['num' => 7.5]),
-                row(['num' => 9.0]),
-            ),
+            array_to_rows([
+                ['num' => 0.0],
+                ['num' => 1.5],
+                ['num' => 3.0],
+                ['num' => 4.5],
+                ['num' => 6.0],
+                ['num' => 7.5],
+                ['num' => 9.0],
+            ], schema(float_schema('num', true))),
             $extractor,
         );
     }

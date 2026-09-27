@@ -18,12 +18,11 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function array_map;
 use function count;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function iterator_to_array;
@@ -66,13 +65,7 @@ final class BucketingProcessorTest extends FlowTestCase
         );
 
         $generator = (static function () {
-            yield rows(
-                schema(int_schema('id')),
-                row(['id' => 1]),
-                row(['id' => 2]),
-                row(['id' => 3]),
-                row(['id' => 4]),
-            );
+            yield array_to_rows([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4]], schema(int_schema('id')));
         })();
 
         /** @var list<Rows> $result */
@@ -96,7 +89,7 @@ final class BucketingProcessorTest extends FlowTestCase
         );
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 1]), row(['id' => 2]));
+            yield array_to_rows([['id' => 3], ['id' => 1], ['id' => 2]], schema(int_schema('id')));
         })();
 
         /** @var list<Rows> $result */

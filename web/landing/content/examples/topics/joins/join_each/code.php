@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\{data_frame, df, equal, from_array, int_schema, join_on, row, rows, schema, str_schema, to_output};
+use function Flow\ETL\DSL\{array_to_rows, data_frame, df, equal, from_array, int_schema, join_on, schema, str_schema, to_output};
 use Flow\ETL\{DataFrame, DataFrameFactory, Extractor, FlowContext, Rows};
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\Join\Join;
@@ -19,9 +19,9 @@ $apiExtractor = new class($apiSchema) implements Extractor {
 
     public function extract(FlowContext $context, ?int $limit = null): Generator
     {
-        yield rows($this->schema, row(['id' => 1, 'sku' => 'PRODUCT01']), row(['id' => 2, 'sku' => 'PRODUCT02']));
+        yield array_to_rows([['id' => 1, 'sku' => 'PRODUCT01'], ['id' => 2, 'sku' => 'PRODUCT02']], $this->schema);
 
-        yield rows($this->schema, row(['id' => 10_001, 'sku' => 'PRODUCT10_001']));
+        yield array_to_rows([['id' => 10_001, 'sku' => 'PRODUCT10_001']], $this->schema);
     }
 
     public function schema(): Schema

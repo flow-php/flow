@@ -27,6 +27,7 @@ use function extension_loaded;
 use function file_exists;
 use function Flow\ETL\Adapter\Parquet\from_parquet;
 use function Flow\ETL\Adapter\Parquet\to_parquet;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\datetime_schema;
@@ -42,8 +43,6 @@ use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\partition_types;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\str_schema;
@@ -162,7 +161,12 @@ final class ParquetTest extends FlowTestCase
         $config = config();
 
         data_frame($config)
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [[
+                    'body' => ['data' => Json::fromArray(['a' => 1]), 'n' => 1],
+                    'json_list' => [Json::fromArray(['c' => 3])],
+                    'outer' => ['inner' => ['deep' => Json::fromArray(['e' => 5])]],
+                ]],
                 schema(
                     structure_schema('body', type_structure([
                         'data' => type_json(),
@@ -173,11 +177,6 @@ final class ParquetTest extends FlowTestCase
                         'inner' => type_structure(['deep' => type_json()]),
                     ])),
                 ),
-                row([
-                    'body' => ['data' => Json::fromArray(['a' => 1]), 'n' => 1],
-                    'json_list' => [Json::fromArray(['c' => 3])],
-                    'outer' => ['inner' => ['deep' => Json::fromArray(['e' => 5])]],
-                ]),
             )))
             ->write(to_parquet($path, filesystem: $memory))
             ->run();
@@ -212,7 +211,12 @@ final class ParquetTest extends FlowTestCase
         $uuid = 'f6d6e0e8-4b7e-4b0e-8d7a-ff0a0c9c9a5a';
 
         data_frame($config)
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [[
+                    'body' => ['id' => FlowUuid::fromString($uuid), 'n' => 1],
+                    'uuid_list' => [FlowUuid::fromString($uuid)],
+                    'outer' => ['inner' => ['id' => FlowUuid::fromString($uuid)]],
+                ]],
                 schema(
                     structure_schema('body', type_structure([
                         'id' => type_uuid(),
@@ -223,11 +227,6 @@ final class ParquetTest extends FlowTestCase
                         'inner' => type_structure(['id' => type_uuid()]),
                     ])),
                 ),
-                row([
-                    'body' => ['id' => FlowUuid::fromString($uuid), 'n' => 1],
-                    'uuid_list' => [FlowUuid::fromString($uuid)],
-                    'outer' => ['inner' => ['id' => FlowUuid::fromString($uuid)]],
-                ]),
             )))
             ->write(to_parquet($path, filesystem: $memory))
             ->run();
@@ -260,15 +259,15 @@ final class ParquetTest extends FlowTestCase
         $uuid = 'f6d6e0e8-4b7e-4b0e-8d7a-ff0a0c9c9a5a';
 
         data_frame($config)
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [[
+                    'uuid_map' => ['k' => FlowUuid::fromString($uuid)],
+                    'json_map' => ['k' => Json::fromArray(['d' => 4])],
+                ]],
                 schema(
                     map_schema('uuid_map', type_map(type_string(), type_uuid())),
                     map_schema('json_map', type_map(type_string(), type_json())),
                 ),
-                row([
-                    'uuid_map' => ['k' => FlowUuid::fromString($uuid)],
-                    'json_map' => ['k' => Json::fromArray(['d' => 4])],
-                ]),
             )))
             ->write(to_parquet($path, filesystem: $memory))
             ->run();

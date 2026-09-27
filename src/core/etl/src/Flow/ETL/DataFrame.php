@@ -299,7 +299,6 @@ final class DataFrame
      *
      * DataFrame::get() : \Generator
      * DataFrame::getAsArray() : \Generator
-     * DataFrame::getEach() : \Generator
      * DataFrame::getEachAsArray() : \Generator
      *
      * @trigger
@@ -398,27 +397,6 @@ final class DataFrame
                 $this->context->config->planner()->plan(Trigger::rows->plan($this->root, $this->sinks), $this->context),
             ) as $rows) {
             yield $rows->toArray();
-        }
-    }
-
-    /**
-     * Yield each row as an instance of Row.
-     *
-     * @trigger
-     *
-     * @return \Generator<Row>
-     */
-    public function getEach(): Generator
-    {
-        foreach ($this->context
-            ->config
-            ->executor()
-            ->execute(
-                $this->context->config->planner()->plan(Trigger::rows->plan($this->root, $this->sinks), $this->context),
-            ) as $rows) {
-            foreach ($rows as $row) {
-                yield $row;
-            }
         }
     }
 

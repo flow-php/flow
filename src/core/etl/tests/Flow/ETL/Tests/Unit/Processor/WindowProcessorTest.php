@@ -17,6 +17,7 @@ use Flow\ETL\Tests\Mother\ListColumnsMother;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\average;
 use function Flow\ETL\DSL\count;
 use function Flow\ETL\DSL\current_row;
@@ -28,7 +29,6 @@ use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\preceding;
 use function Flow\ETL\DSL\rank;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\row_number;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
@@ -80,12 +80,14 @@ final class WindowProcessorTest extends FlowTestCase
             WindowProcessorContext::values(
                 'total',
                 $function->over(window()->partitionBy(ref('group'))),
-                rows(
+                array_to_rows(
+                    [
+                        ['group' => 'a', 'value' => 10],
+                        ['group' => 'a', 'value' => 20],
+                        ['group' => 'a', 'value' => 30],
+                        ['group' => 'a', 'value' => 40],
+                    ],
                     schema(str_schema('group'), int_schema('value')),
-                    row(['group' => 'a', 'value' => 10]),
-                    row(['group' => 'a', 'value' => 20]),
-                    row(['group' => 'a', 'value' => 30]),
-                    row(['group' => 'a', 'value' => 40]),
                 ),
             ),
         );
@@ -106,13 +108,12 @@ final class WindowProcessorTest extends FlowTestCase
             WindowProcessorContext::values(
                 'total',
                 $function->over(window()->orderBy(ref('value'))),
-                rows(
-                    schema(int_schema('value')),
-                    row(['value' => 10]),
-                    row(['value' => 20]),
-                    row(['value' => 30]),
-                    row(['value' => 40]),
-                ),
+                array_to_rows([
+                    ['value' => 10],
+                    ['value' => 20],
+                    ['value' => 30],
+                    ['value' => 40],
+                ], schema(int_schema('value'))),
             ),
         );
         static::assertSame(1, $function->accumulatorCalls);
@@ -131,13 +132,12 @@ final class WindowProcessorTest extends FlowTestCase
             WindowProcessorContext::values(
                 'total',
                 $function->over(window()->orderBy(ref('value'))),
-                rows(
-                    schema(int_schema('value')),
-                    row(['value' => 10]),
-                    row(['value' => 10]),
-                    row(['value' => 20]),
-                    row(['value' => 30]),
-                ),
+                array_to_rows([
+                    ['value' => 10],
+                    ['value' => 10],
+                    ['value' => 20],
+                    ['value' => 30],
+                ], schema(int_schema('value'))),
             ),
         );
         static::assertSame(1, $function->accumulatorCalls);
@@ -156,13 +156,12 @@ final class WindowProcessorTest extends FlowTestCase
             WindowProcessorContext::values(
                 'total',
                 $function->over(window()->orderBy(ref('value'))->rowsBetween(preceding(1), current_row())),
-                rows(
-                    schema(int_schema('value')),
-                    row(['value' => 10]),
-                    row(['value' => 20]),
-                    row(['value' => 30]),
-                    row(['value' => 40]),
-                ),
+                array_to_rows([
+                    ['value' => 10],
+                    ['value' => 20],
+                    ['value' => 30],
+                    ['value' => 40],
+                ], schema(int_schema('value'))),
             ),
         );
         static::assertSame(3, $function->accumulatorCalls);
@@ -178,10 +177,9 @@ final class WindowProcessorTest extends FlowTestCase
         $batches = WindowProcessorContext::batches(
             int_schema('total')->addMetadata('origin', 'window'),
             sum(ref('value'))->over(window()->partitionBy(ref('group'))),
-            rows(
+            array_to_rows(
+                [['group' => 'a', 'value' => 40], ['group' => 'a', 'value' => 60]],
                 schema(str_schema('group'), int_schema('value')),
-                row(['group' => 'a', 'value' => 40]),
-                row(['group' => 'a', 'value' => 60]),
             ),
         );
 
@@ -201,7 +199,7 @@ final class WindowProcessorTest extends FlowTestCase
         WindowProcessorContext::values(
             'row_number',
             row_number()->over(window()->partitionBy(ref('missing'))->orderBy(ref('value'))),
-            rows(schema(int_schema('value')), row(['value' => 10]), row(['value' => 20]), row(['value' => 30])),
+            array_to_rows([['value' => 10], ['value' => 20], ['value' => 30]], schema(int_schema('value'))),
         );
     }
 
@@ -213,7 +211,7 @@ final class WindowProcessorTest extends FlowTestCase
         WindowProcessorContext::values(
             'row_number',
             row_number()->over(window()->orderBy(ref('missing'))),
-            rows(schema(int_schema('value')), row(['value' => 10]), row(['value' => 20]), row(['value' => 30])),
+            array_to_rows([['value' => 10], ['value' => 20], ['value' => 30]], schema(int_schema('value'))),
         );
     }
 
@@ -224,7 +222,7 @@ final class WindowProcessorTest extends FlowTestCase
             WindowProcessorContext::values(
                 'total',
                 sum(ref('value'))->over(window()->orderBy(ref('value'))->rowsBetween(following(10), following(20))),
-                rows(schema(int_schema('value')), row(['value' => 10]), row(['value' => 20]), row(['value' => 30])),
+                array_to_rows([['value' => 10], ['value' => 20], ['value' => 30]], schema(int_schema('value'))),
             ),
         );
     }
@@ -236,12 +234,14 @@ final class WindowProcessorTest extends FlowTestCase
      */
     public function test_row_number_is_not_memoised_by_a_constant_frame(): void
     {
-        $partition = rows(
+        $partition = array_to_rows(
+            [
+                ['group' => 'a', 'value' => 10],
+                ['group' => 'a', 'value' => 20],
+                ['group' => 'a', 'value' => 30],
+                ['group' => 'a', 'value' => 40],
+            ],
             schema(str_schema('group'), int_schema('value')),
-            row(['group' => 'a', 'value' => 10]),
-            row(['group' => 'a', 'value' => 20]),
-            row(['group' => 'a', 'value' => 30]),
-            row(['group' => 'a', 'value' => 40]),
         );
         $frame = window()->partitionBy(ref('group'))->frame();
 
@@ -263,12 +263,14 @@ final class WindowProcessorTest extends FlowTestCase
             WindowProcessorContext::values(
                 'total',
                 sum(ref('value'))->over(window()->partitionBy(ref('group'))),
-                rows(
+                array_to_rows(
+                    [
+                        ['group' => 'a', 'value' => 10],
+                        ['group' => 'a', 'value' => 20],
+                        ['group' => 'a', 'value' => 30],
+                        ['group' => 'a', 'value' => 40],
+                    ],
                     schema(str_schema('group'), int_schema('value')),
-                    row(['group' => 'a', 'value' => 10]),
-                    row(['group' => 'a', 'value' => 20]),
-                    row(['group' => 'a', 'value' => 30]),
-                    row(['group' => 'a', 'value' => 40]),
                 ),
             ),
         );
@@ -281,11 +283,13 @@ final class WindowProcessorTest extends FlowTestCase
         $processor = new WindowProcessor('rank', $windowFunction);
 
         $generator = (static function () {
-            yield rows(
+            yield array_to_rows(
+                [
+                    ['category' => 'a', 'amount' => 100],
+                    ['category' => 'a', 'amount' => 200],
+                    ['category' => 'b', 'amount' => 150],
+                ],
                 schema(str_schema('category'), int_schema('amount')),
-                row(['category' => 'a', 'amount' => 100]),
-                row(['category' => 'a', 'amount' => 200]),
-                row(['category' => 'b', 'amount' => 150]),
             );
         })();
 
@@ -326,12 +330,11 @@ final class WindowProcessorTest extends FlowTestCase
         $processor = new WindowProcessor('rank', $windowFunction);
 
         $generator = (static function () {
-            yield rows(
-                schema(int_schema('amount')),
-                row(['amount' => 300]),
-                row(['amount' => 100]),
-                row(['amount' => 200]),
-            );
+            yield array_to_rows([
+                ['amount' => 300],
+                ['amount' => 100],
+                ['amount' => 200],
+            ], schema(int_schema('amount')));
         })();
 
         /** @var list<Rows> $result */
@@ -391,7 +394,7 @@ final class WindowProcessorTest extends FlowTestCase
         $batches = WindowProcessorContext::batches(
             'total',
             sum(ref('value'))->over(window()->orderBy(ref('value'))),
-            rows(schema(float_schema('value')), row(['value' => 1.0]), row(['value' => 2.5]), row(['value' => 3.0])),
+            array_to_rows([['value' => 1.0], ['value' => 2.5], ['value' => 3.0]], schema(float_schema('value'))),
         );
 
         $definitions = [];
@@ -416,12 +419,14 @@ final class WindowProcessorTest extends FlowTestCase
         $processor = new WindowProcessor('rank', $windowFunction);
 
         $generator = (static function () {
-            yield rows(
+            yield array_to_rows(
+                [
+                    ['group' => 'a', 'value' => 10],
+                    ['group' => 'a', 'value' => 20],
+                    ['group' => 'b', 'value' => 5],
+                    ['group' => 'b', 'value' => 15],
+                ],
                 schema(str_schema('group'), int_schema('value')),
-                row(['group' => 'a', 'value' => 10]),
-                row(['group' => 'a', 'value' => 20]),
-                row(['group' => 'b', 'value' => 5]),
-                row(['group' => 'b', 'value' => 15]),
             );
         })();
 
@@ -450,7 +455,7 @@ final class WindowProcessorTest extends FlowTestCase
 
         $generator = (static function () {
             yield rows(schema(int_schema('value')));
-            yield rows(schema(int_schema('value')), row(['value' => 10]), row(['value' => 20]));
+            yield array_to_rows([['value' => 10], ['value' => 20]], schema(int_schema('value')));
         })();
 
         $batches = iterator_to_array($processor->process($generator, flow_context()), preserve_keys: false);

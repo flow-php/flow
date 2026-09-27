@@ -9,11 +9,12 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_row;
+use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Types\DSL\type_date;
@@ -27,7 +28,9 @@ final class ModifyDateTimeTest extends FlowTestCase
             new DateTimeImmutable('2025-01-01 12:00:00 +00:00'),
             ref('datetime')
                 ->modifyDateTime('noon')
-                ->eval(row(['datetime' => type_date()->cast('2025-01-01')]), flow_context()),
+                ->eval(array_to_row([
+                    'datetime' => type_date()->cast('2025-01-01'),
+                ], schema(date_schema('datetime'))), flow_context()),
         );
     }
 
@@ -37,7 +40,9 @@ final class ModifyDateTimeTest extends FlowTestCase
             new DateTimeImmutable('2025-01-01 00:00:00 +00:00'),
             ref('datetime')
                 ->modifyDateTime('midnight')
-                ->eval(row(['datetime' => type_datetime()->cast('2025-01-01 10:00:23 +00:00')]), flow_context()),
+                ->eval(array_to_row([
+                    'datetime' => type_datetime()->cast('2025-01-01 10:00:23 +00:00'),
+                ], schema(datetime_schema('datetime'))), flow_context()),
         );
     }
 
@@ -48,7 +53,9 @@ final class ModifyDateTimeTest extends FlowTestCase
 
         ref('datetime')
             ->modifyDateTime(lit(1))
-            ->eval(row(['datetime' => type_datetime()->cast('2025-01-01 10:00:23 +00:00')]), flow_context());
+            ->eval(array_to_row([
+                'datetime' => type_datetime()->cast('2025-01-01 10:00:23 +00:00'),
+            ], schema(datetime_schema('datetime'))), flow_context());
     }
 
     public function test_zone_of_the_reference_is_kept(): void

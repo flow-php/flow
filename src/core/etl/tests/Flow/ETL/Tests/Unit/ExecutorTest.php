@@ -35,12 +35,12 @@ use RuntimeException;
 
 use function array_map;
 use function array_sum;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function iterator_to_array;
@@ -241,7 +241,7 @@ final class ExecutorTest extends FlowTestCase
         );
         $batches = (static function () {
             yield RowsMother::sequentialIds(1);
-            yield rows(schema(int_schema('id')), row(['id' => 2]));
+            yield array_to_rows([['id' => 2]], schema(int_schema('id')));
         })();
 
         static::assertSame(
@@ -351,8 +351,8 @@ final class ExecutorTest extends FlowTestCase
     {
         $plan = NodeMother::plan(NodeMother::limit(
             NodeMother::read(from_rows(
-                rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])),
-                rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 4])),
+                array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))),
+                array_to_rows([['id' => 3], ['id' => 4]], schema(int_schema('id'))),
             )),
             3,
         ));
@@ -449,8 +449,8 @@ final class ExecutorTest extends FlowTestCase
         $telemetry = new MemoryTelemetryContext();
         $generator = ExecutedPlan::of(
             NodeMother::plan(NodeMother::read(from_rows(
-                rows(schema(int_schema('id')), row(['id' => 1])),
-                rows(schema(int_schema('id')), row(['id' => 2])),
+                array_to_rows([['id' => 1]], schema(int_schema('id'))),
+                array_to_rows([['id' => 2]], schema(int_schema('id'))),
             ))),
             $telemetry->flowContext,
         );

@@ -11,9 +11,8 @@ use Flow\ETL\Tests\Double\ArrayCache;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function array_map;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function iterator_to_array;
@@ -23,8 +22,8 @@ final class PSRCacheBucketsTest extends FlowTestCase
     public function test_append_then_get_returns_rows_in_order_across_chunks(): void
     {
         $storage = new PSRCacheBuckets(new ArrayCache());
-        $storage->append('bucket', rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])));
-        $storage->append('bucket', rows(schema(int_schema('id')), row(['id' => 3])));
+        $storage->append('bucket', array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))));
+        $storage->append('bucket', array_to_rows([['id' => 3]], schema(int_schema('id'))));
 
         static::assertSame(
             [1, 2, 3],
@@ -35,10 +34,9 @@ final class PSRCacheBucketsTest extends FlowTestCase
     public function test_custom_prefix_is_used_in_keys(): void
     {
         $cache = new ArrayCache();
-        (new PSRCacheBuckets($cache, prefix: 'custom:pfx'))->append('bucket', rows(
-            schema(int_schema('id')),
-            row(['id' => 1]),
-        ));
+        (new PSRCacheBuckets($cache, prefix: 'custom:pfx'))->append('bucket', array_to_rows([[
+            'id' => 1,
+        ]], schema(int_schema('id'))));
 
         static::assertTrue($cache->has('custom:pfx:bucket:chunks'));
         static::assertTrue($cache->has('custom:pfx:bucket:chunk:0'));
@@ -70,8 +68,8 @@ final class PSRCacheBucketsTest extends FlowTestCase
     {
         $cache = new ArrayCache();
         $storage = new PSRCacheBuckets($cache);
-        $storage->append('bucket', rows(schema(int_schema('id')), row(['id' => 1])));
-        $storage->append('bucket', rows(schema(int_schema('id')), row(['id' => 2])));
+        $storage->append('bucket', array_to_rows([['id' => 1]], schema(int_schema('id'))));
+        $storage->append('bucket', array_to_rows([['id' => 2]], schema(int_schema('id'))));
 
         $storage->remove('bucket');
 
@@ -84,11 +82,9 @@ final class PSRCacheBucketsTest extends FlowTestCase
     public function test_round_trips_schema_changing_rows(): void
     {
         $storage = new PSRCacheBuckets(new ArrayCache());
-        $input = rows(
+        $input = array_to_rows(
+            [['id' => 1], ['id' => 2, 'name' => 'John'], ['name' => 'Jane']],
             schema(int_schema('id', nullable: true), str_schema('name', nullable: true)),
-            row(['id' => 1]),
-            row(['id' => 2, 'name' => 'John']),
-            row(['name' => 'Jane']),
         );
         $storage->append('bucket', $input);
 
@@ -101,8 +97,8 @@ final class PSRCacheBucketsTest extends FlowTestCase
     public function test_set_replaces_previous_content(): void
     {
         $storage = new PSRCacheBuckets(new ArrayCache());
-        $storage->append('bucket', rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])));
-        $storage->set('bucket', rows(schema(int_schema('id')), row(['id' => 42])));
+        $storage->append('bucket', array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))));
+        $storage->set('bucket', array_to_rows([['id' => 42]], schema(int_schema('id'))));
 
         static::assertSame(
             [42],

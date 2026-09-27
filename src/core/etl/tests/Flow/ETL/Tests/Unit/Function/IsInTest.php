@@ -9,10 +9,12 @@ use DateTimeImmutable;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Exception\InvalidArgumentException;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class IsInTest extends FlowTestCase
 {
@@ -27,7 +29,7 @@ final class IsInTest extends FlowTestCase
                 ->returns()
                 ->toString(),
         );
-        static::assertTrue(lit('a')->isIn(lit([1, 'a']))->eval(row([]), flow_context()));
+        static::assertTrue(lit('a')->isIn(lit([1, 'a']))->eval(array_to_row([], schema()), flow_context()));
     }
 
     public function test_is_in_matches_two_equal_datetimes(): void
@@ -36,7 +38,7 @@ final class IsInTest extends FlowTestCase
         static::assertTrue(
             lit(new DateTimeImmutable('2024-01-01 10:00:00'))
                 ->isIn(lit([new DateTimeImmutable('2024-01-01 10:00:00')]))
-                ->eval(row([]), flow_context()),
+                ->eval(array_to_row([], schema()), flow_context()),
         );
     }
 
@@ -44,22 +46,26 @@ final class IsInTest extends FlowTestCase
     {
         // Equals::eval() has a DateInterval arm and IsIn deliberately does not
         static::assertTrue(
-            lit(new DateInterval('PT1H'))->equals(lit(new DateInterval('PT60M')))->eval(row([]), flow_context()),
+            lit(new DateInterval('PT1H'))
+                ->equals(lit(new DateInterval('PT60M')))
+                ->eval(array_to_row([], schema()), flow_context()),
         );
         static::assertFalse(
-            lit(new DateInterval('PT1H'))->isIn(lit([new DateInterval('PT60M')]))->eval(row([]), flow_context()),
+            lit(new DateInterval('PT1H'))
+                ->isIn(lit([new DateInterval('PT60M')]))
+                ->eval(array_to_row([], schema()), flow_context()),
         );
     }
 
     public function test_is_in_over_an_empty_haystack(): void
     {
         static::assertSame('boolean', lit('a')->isIn(lit([]))->returns()->toString());
-        static::assertFalse(lit('a')->isIn(lit([]))->eval(row([]), flow_context()));
+        static::assertFalse(lit('a')->isIn(lit([]))->eval(array_to_row([], schema()), flow_context()));
     }
 
     public function test_is_in_agrees_with_equals_on_numeric_operands(): void
     {
-        $row = row(['a' => '1']);
+        $row = array_to_row(['a' => '1'], schema(str_schema('a')));
 
         static::assertTrue(ref('a')->equals(lit(1))->eval($row, flow_context()));
         static::assertTrue(ref('a')->isIn(lit([1]))->eval($row, flow_context()));
@@ -77,26 +83,26 @@ final class IsInTest extends FlowTestCase
 
     public function test_a_match_beats_a_null_element(): void
     {
-        static::assertTrue(lit(5)->isIn(lit([1, null, 5]))->eval(row([]), flow_context()));
+        static::assertTrue(lit(5)->isIn(lit([1, null, 5]))->eval(array_to_row([], schema()), flow_context()));
     }
 
     public function test_no_match_with_a_null_element_is_null(): void
     {
-        static::assertNull(lit(7)->isIn(lit([1, null, 5]))->eval(row([]), flow_context()));
+        static::assertNull(lit(7)->isIn(lit([1, null, 5]))->eval(array_to_row([], schema()), flow_context()));
     }
 
     public function test_no_match_without_a_null_element_is_false(): void
     {
-        static::assertFalse(lit(7)->isIn(lit([1, 3, 5]))->eval(row([]), flow_context()));
+        static::assertFalse(lit(7)->isIn(lit([1, 3, 5]))->eval(array_to_row([], schema()), flow_context()));
     }
 
     public function test_a_null_needle_is_null(): void
     {
-        static::assertNull(lit(null)->isIn(lit([1, 3, 5]))->eval(row([]), flow_context()));
+        static::assertNull(lit(null)->isIn(lit([1, 3, 5]))->eval(array_to_row([], schema()), flow_context()));
     }
 
     public function test_a_null_haystack_is_null(): void
     {
-        static::assertNull(lit(5)->isIn(lit(null))->eval(row(['x' => []]), flow_context()));
+        static::assertNull(lit(5)->isIn(lit(null))->eval(array_to_row([], schema()), flow_context()));
     }
 }

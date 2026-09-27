@@ -14,11 +14,10 @@ use Flow\ETL\Adapter\Doctrine\Parameter;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
 
 use function Flow\ETL\Adapter\Doctrine\dbal_dataframe_factory;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Types\DSL\type_integer;
@@ -69,13 +68,7 @@ final class DbalDataFrameFactoryTest extends IntegrationTestCase
             Parameter::ints('ids', ref('id')),
             new LiteralParameter('name', 'Name 1'),
         )
-            ->from(rows(
-                schema(int_schema('id')),
-                row(['id' => 1]),
-                row(['id' => 2]),
-                row(['id' => 3]),
-                row(['id' => 55]),
-            ))
+            ->from(array_to_rows([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 55]], schema(int_schema('id'))))
             ->select('id')
             ->fetch();
 
@@ -134,13 +127,7 @@ final class DbalDataFrameFactoryTest extends IntegrationTestCase
                 str_schema('name'),
                 map_schema('tags', type_map(type_string(), type_integer())),
             ))
-            ->from(rows(
-                schema(int_schema('id')),
-                row(['id' => 1]),
-                row(['id' => 2]),
-                row(['id' => 3]),
-                row(['id' => 55]),
-            ))
+            ->from(array_to_rows([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 55]], schema(int_schema('id'))))
             ->schema();
 
         static::assertSame(

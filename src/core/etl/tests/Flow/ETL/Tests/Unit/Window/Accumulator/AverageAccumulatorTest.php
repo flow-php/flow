@@ -9,9 +9,12 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Window\Accumulator\AverageAccumulator;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class AverageAccumulatorTest extends FlowTestCase
 {
@@ -19,8 +22,8 @@ final class AverageAccumulatorTest extends FlowTestCase
     {
         $accumulator = new AverageAccumulator(ref('value'), 2, Rounding::HALF_UP, flow_context());
 
-        $accumulator->accumulate(row(['value' => 10]));
-        $accumulator->accumulate(row(['value' => 20]));
+        $accumulator->accumulate(array_to_row(['value' => 10], schema(int_schema('value'))));
+        $accumulator->accumulate(array_to_row(['value' => 20], schema(int_schema('value'))));
 
         static::assertSame(15.0, $accumulator->value());
     }
@@ -36,17 +39,19 @@ final class AverageAccumulatorTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessageMatches('/^Average window function error: /');
 
-        (new AverageAccumulator(ref('value'), 2, Rounding::HALF_UP, $context))->accumulate(row(['other' => 'x']));
+        (new AverageAccumulator(ref('value'), 2, Rounding::HALF_UP, $context))->accumulate(array_to_row([
+            'other' => 'x',
+        ], schema(str_schema('other'))));
     }
 
     public function test_non_numeric_values_are_skipped(): void
     {
         $accumulator = new AverageAccumulator(ref('value'), 2, Rounding::HALF_UP, flow_context());
 
-        $accumulator->accumulate(row(['value' => 10]));
-        $accumulator->accumulate(row(['value' => 'not a number']));
-        $accumulator->accumulate(row(['value' => null]));
-        $accumulator->accumulate(row(['value' => 20]));
+        $accumulator->accumulate(array_to_row(['value' => 10], schema(int_schema('value'))));
+        $accumulator->accumulate(array_to_row(['value' => 'not a number'], schema(str_schema('value'))));
+        $accumulator->accumulate(array_to_row(['value' => null], schema(str_schema('value', nullable: true))));
+        $accumulator->accumulate(array_to_row(['value' => 20], schema(int_schema('value'))));
 
         static::assertSame(15.0, $accumulator->value());
     }
@@ -55,7 +60,7 @@ final class AverageAccumulatorTest extends FlowTestCase
     {
         $accumulator = new AverageAccumulator(ref('value'), 2, Rounding::HALF_UP, flow_context());
 
-        $accumulator->accumulate(row(['value' => null]));
+        $accumulator->accumulate(array_to_row(['value' => null], schema(str_schema('value', nullable: true))));
 
         static::assertNull($accumulator->value());
     }
@@ -64,9 +69,9 @@ final class AverageAccumulatorTest extends FlowTestCase
     {
         $accumulator = new AverageAccumulator(ref('value'), 3, Rounding::HALF_UP, flow_context());
 
-        $accumulator->accumulate(row(['value' => 10]));
-        $accumulator->accumulate(row(['value' => 20]));
-        $accumulator->accumulate(row(['value' => 25]));
+        $accumulator->accumulate(array_to_row(['value' => 10], schema(int_schema('value'))));
+        $accumulator->accumulate(array_to_row(['value' => 20], schema(int_schema('value'))));
+        $accumulator->accumulate(array_to_row(['value' => 25], schema(int_schema('value'))));
 
         static::assertSame(18.333, $accumulator->value());
     }
@@ -74,12 +79,12 @@ final class AverageAccumulatorTest extends FlowTestCase
     public function test_value_is_idempotent(): void
     {
         $accumulator = new AverageAccumulator(ref('value'), 2, Rounding::HALF_UP, flow_context());
-        $accumulator->accumulate(row(['value' => 10]));
+        $accumulator->accumulate(array_to_row(['value' => 10], schema(int_schema('value'))));
 
         static::assertSame(10.0, $accumulator->value());
         static::assertSame(10.0, $accumulator->value());
 
-        $accumulator->accumulate(row(['value' => 20]));
+        $accumulator->accumulate(array_to_row(['value' => 20], schema(int_schema('value'))));
 
         static::assertSame(15.0, $accumulator->value());
     }

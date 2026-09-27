@@ -10,14 +10,13 @@ use Flow\ETL\Tests\Double\ReadsBackOnSecondBatch;
 use Flow\ETL\Tests\Double\StaticDataFrameFactory;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_data_frame;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 
 final class PipelineTest extends FlowTestCase
@@ -47,8 +46,8 @@ final class PipelineTest extends FlowTestCase
     {
         $frame = df()
             ->read(from_rows(
-                rows(schema(int_schema('id')), row(['id' => 1])),
-                rows(schema(int_schema('id')), row(['id' => 2])),
+                array_to_rows([['id' => 1]], schema(int_schema('id'))),
+                array_to_rows([['id' => 2]], schema(int_schema('id'))),
             ))
             ->transform($transformer = new ReadsBackOnSecondBatch());
 

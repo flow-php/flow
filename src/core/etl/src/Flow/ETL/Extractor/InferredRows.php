@@ -7,6 +7,7 @@ namespace Flow\ETL\Extractor;
 use Flow\ETL\Column\Backend;
 use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\SchemaMismatchException;
+use Flow\ETL\Row\DeclaredColumns;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\SchemaInference;
@@ -38,7 +39,7 @@ final class InferredRows
     public function of(array $rows, Schema $schema, Backend $backend): Rows
     {
         try {
-            $batch = array_to_rows($rows, $schema, $backend);
+            $batch = array_to_rows((new DeclaredColumns())->project($rows, $schema), $schema, $backend);
         } catch (SchemaMismatchException $mismatch) {
             $row = $this->offset + $mismatch->rowIndex;
 

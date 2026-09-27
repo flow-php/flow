@@ -12,6 +12,7 @@ use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\average;
 use function Flow\ETL\DSL\collect;
 use function Flow\ETL\DSL\collect_unique;
@@ -25,8 +26,6 @@ use function Flow\ETL\DSL\max;
 use function Flow\ETL\DSL\min;
 use function Flow\ETL\DSL\pivot_values;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_agg;
@@ -144,12 +143,11 @@ final class PivotProcessorTest extends FlowTestCase
         $result = iterator_to_array(
             $bound->step->process(
                 (static function () use ($input): Generator {
-                    yield rows(
-                        $input,
-                        row(['date' => '2024-01-01', 'user' => 'norbert', 'contributions' => 2]),
-                        row(['date' => '2024-01-01', 'user' => 'stloyd', 'contributions' => 3]),
-                        row(['date' => '2024-01-02', 'user' => 'norbert', 'contributions' => 5]),
-                    );
+                    yield array_to_rows([
+                        ['date' => '2024-01-01', 'user' => 'norbert', 'contributions' => 2],
+                        ['date' => '2024-01-01', 'user' => 'stloyd', 'contributions' => 3],
+                        ['date' => '2024-01-02', 'user' => 'norbert', 'contributions' => 5],
+                    ], $input);
                 })(),
                 flow_context(),
             ),
@@ -174,11 +172,13 @@ final class PivotProcessorTest extends FlowTestCase
         $groupBy->aggregate(sum(ref('contributions')));
 
         $input = (static function (): Generator {
-            yield rows(
+            yield array_to_rows(
+                [
+                    ['date' => '2024-01-01', 'user' => 'norbert', 'contributions' => 2],
+                    ['date' => '2024-01-01', 'user' => 'stloyd', 'contributions' => 3],
+                    ['date' => '2024-01-02', 'user' => 'norbert', 'contributions' => 5],
+                ],
                 schema(str_schema('date'), str_schema('user'), int_schema('contributions')),
-                row(['date' => '2024-01-01', 'user' => 'norbert', 'contributions' => 2]),
-                row(['date' => '2024-01-01', 'user' => 'stloyd', 'contributions' => 3]),
-                row(['date' => '2024-01-02', 'user' => 'norbert', 'contributions' => 5]),
             );
         })();
 

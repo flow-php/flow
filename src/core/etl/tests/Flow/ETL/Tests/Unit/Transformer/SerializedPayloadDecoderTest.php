@@ -9,26 +9,27 @@ use Flow\ETL\Transformer\SerializedPayloadDecoder;
 use Flow\Floe\FloeSerializer;
 use Flow\Serializer\Base64Serializer;
 
+use function Flow\ETL\DSL\array_to_row;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\Serializer\DSL\serialize_to_string;
 
 final class SerializedPayloadDecoderTest extends FlowTestCase
 {
     public function test_a_multi_row_payload_gives_up(): void
     {
-        $payload = serialize_to_string(
-            new Base64Serializer(new FloeSerializer()),
-            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])),
-        );
+        $payload = serialize_to_string(new Base64Serializer(new FloeSerializer()), array_to_rows([
+            ['id' => 1],
+            ['id' => 2],
+        ], schema(int_schema('id'))));
 
         static::assertSame(
             [],
             SerializedPayloadDecoderTest::decoder()
-                ->decode(row(['serialized' => $payload]))
+                ->decode(array_to_row(['serialized' => $payload], schema(str_schema('serialized'))))
                 ->values(),
         );
     }
@@ -38,7 +39,7 @@ final class SerializedPayloadDecoderTest extends FlowTestCase
         static::assertSame(
             [],
             SerializedPayloadDecoderTest::decoder()
-                ->decode(row(['serialized' => 123]))
+                ->decode(array_to_row(['serialized' => 123], schema(int_schema('serialized'))))
                 ->values(),
         );
     }
@@ -48,7 +49,7 @@ final class SerializedPayloadDecoderTest extends FlowTestCase
         static::assertSame(
             [],
             SerializedPayloadDecoderTest::decoder()
-                ->decode(row(['serialized' => 'not-serialized']))
+                ->decode(array_to_row(['serialized' => 'not-serialized'], schema(str_schema('serialized'))))
                 ->values(),
         );
     }
@@ -58,22 +59,21 @@ final class SerializedPayloadDecoderTest extends FlowTestCase
         static::assertSame(
             [],
             SerializedPayloadDecoderTest::decoder()
-                ->decode(row(['other' => 1]))
+                ->decode(array_to_row(['other' => 1], schema(int_schema('other'))))
                 ->values(),
         );
     }
 
     public function test_it_reads_the_declared_columns_out_of_the_payload(): void
     {
-        $payload = serialize_to_string(
-            new Base64Serializer(new FloeSerializer()),
-            rows(schema(int_schema('id')), row(['id' => 7])),
-        );
+        $payload = serialize_to_string(new Base64Serializer(new FloeSerializer()), array_to_rows([[
+            'id' => 7,
+        ]], schema(int_schema('id'))));
 
         static::assertSame(
             ['id' => 7],
             SerializedPayloadDecoderTest::decoder()
-                ->decode(row(['serialized' => $payload]))
+                ->decode(array_to_row(['serialized' => $payload], schema(str_schema('serialized'))))
                 ->values(),
         );
     }

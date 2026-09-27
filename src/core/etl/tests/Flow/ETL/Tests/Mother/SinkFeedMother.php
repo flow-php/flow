@@ -17,16 +17,15 @@ use Flow\ETL\Processor;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 
 final class SinkFeedMother
 {
     public static function batch(int $id = 1): Rows
     {
-        return rows(schema(int_schema('id')), row(['id' => $id]));
+        return array_to_rows([['id' => $id]], schema(int_schema('id')));
     }
 
     public static function feed(): FeedExtractor

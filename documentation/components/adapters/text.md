@@ -44,15 +44,13 @@ $rows = (new Flow())
 ```php
 <?php
 
-use function Flow\ETL\DSL\{row, rows, schema, str_schema};
+use function Flow\ETL\DSL\{array_to_rows, schema, str_schema};
 
 (new Flow())
     ->process(
-        rows(
+        array_to_rows(
+            [['name' => 'Norbert'], ['name' => 'Tomek'], ['name' => 'Dawid']],
             schema(str_schema('name')),
-            row(['name' => 'Norbert']),
-            row(['name' => 'Tomek']),
-            row(['name' => 'Dawid']),
         )
     )
     ->load(to_text($path))

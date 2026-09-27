@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Unit;
 
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\FloeSerializer;
@@ -15,8 +14,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 use function array_map;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -33,8 +32,11 @@ final class FloeSerializerTest extends TestCase
     public static function values(): array
     {
         return [
-            'single row' => [rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'John']))],
-            'rows' => [rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]))],
+            'single row' => [array_to_rows(
+                [['id' => 1, 'name' => 'John']],
+                schema(int_schema('id'), str_schema('name')),
+            )],
+            'rows' => [array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')))],
             'heterogeneous rows' => [RowsMother::heterogeneous()],
             'all entry types' => [RowsMother::withAllEntryTypes()],
             'empty rows' => [rows(schema())],
@@ -75,10 +77,9 @@ final class FloeSerializerTest extends TestCase
 
     public function test_cache_round_trip_preserves_rows_without_a_partition_table(): void
     {
-        $value = rows(
+        $value = array_to_rows(
+            [['id' => 1, 'country' => 'PL'], ['id' => 2, 'country' => 'PL']],
             schema(int_schema('id'), str_schema('country')),
-            row(['id' => 1, 'country' => 'PL']),
-            row(['id' => 2, 'country' => 'PL']),
         );
 
         static::assertEquals($value, unserialize_from_string(
@@ -93,11 +94,9 @@ final class FloeSerializerTest extends TestCase
         // one write session = one schema: rows keep their own columns (unpadded) but
         // entry types widen to the batch union - id and name become nullable because
         // each is absent from some row. Values are unchanged; only nullability widens.
-        $value = rows(
+        $value = array_to_rows(
+            [['id' => 1], ['id' => 2, 'name' => 'John'], ['name' => 'Jane']],
             schema(int_schema('id', nullable: true), str_schema('name', nullable: true)),
-            row(['id' => 1]),
-            row(['id' => 2, 'name' => 'John']),
-            row(['name' => 'Jane']),
         );
 
         $result = unserialize_from_string($serializer, serialize_to_string($serializer, $value));
@@ -131,9 +130,9 @@ final class FloeSerializerTest extends TestCase
     public function test_batch_size_smaller_than_row_count(): void
     {
         $serializer = new FloeSerializer(3);
-        $value = rows(
+        $value = array_to_rows(
+            array_map(static fn(int $id): array => ['id' => $id], range(1, 10)),
             schema(int_schema('id')),
-            ...array_map(static fn(int $id): Row => row(['id' => $id]), range(1, 10)),
         );
 
         static::assertEquals($value, unserialize_from_string($serializer, serialize_to_string(
@@ -145,7 +144,7 @@ final class FloeSerializerTest extends TestCase
     public function test_batch_size_larger_than_row_count(): void
     {
         $serializer = new FloeSerializer(100);
-        $value = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
+        $value = array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
 
         static::assertEquals($value, unserialize_from_string($serializer, serialize_to_string($serializer, $value)));
     }
@@ -176,7 +175,7 @@ final class FloeSerializerTest extends TestCase
 
     public function test_unserialize_rejects_row_count_mismatch(): void
     {
-        $bytes = serialize_to_string(new FloeSerializer(), rows(schema(int_schema('id')), row(['id' => 1])));
+        $bytes = serialize_to_string(new FloeSerializer(), array_to_rows([['id' => 1]], schema(int_schema('id'))));
         // inflate the footer's row count while the body still holds a single row; the JSON
         // byte-length is unchanged (1 -> 2) so the trailer stays valid and the read reaches
         // the whole-value row-count guard

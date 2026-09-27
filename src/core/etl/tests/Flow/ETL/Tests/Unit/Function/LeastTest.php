@@ -9,12 +9,12 @@ use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\least;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
 
 final class LeastTest extends FlowTestCase
@@ -46,18 +46,22 @@ final class LeastTest extends FlowTestCase
 
     public function test_null_only_when_every_argument_is_null(): void
     {
-        static::assertNull(least(null, null)->eval(row(['int' => 4]), flow_context()));
+        static::assertNull(least(null, null)->eval(array_to_row([
+            'int' => 4,
+        ], schema(int_schema('int'))), flow_context()));
     }
 
     public function test_least_value(): void
     {
         $lest = least(10, 20, ref('int'), 40);
 
-        static::assertSame(10, $lest->eval(row(['int' => 55]), flow_context()));
+        static::assertSame(10, $lest->eval(array_to_row(['int' => 55], schema(int_schema('int'))), flow_context()));
     }
 
     public function test_least_with_null(): void
     {
-        static::assertSame(4, least(null, 20, ref('int'), 1257)->eval(row(['int' => 4]), flow_context()));
+        static::assertSame(4, least(null, 20, ref('int'), 1257)->eval(array_to_row([
+            'int' => 4,
+        ], schema(int_schema('int'))), flow_context()));
     }
 }

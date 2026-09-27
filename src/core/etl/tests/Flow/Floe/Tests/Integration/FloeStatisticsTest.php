@@ -8,9 +8,8 @@ use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\Tests\Context\FloeStreamReaderContext;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Floe\DSL\merge_floe;
@@ -23,12 +22,11 @@ final class FloeStatisticsTest extends FlowIntegrationTestCase
         $b = $this->cacheDir->suffix('compact-b.floe');
         $spliced = $this->cacheDir->suffix('compact-spliced.floe');
         $compacted = $this->cacheDir->suffix('compact-compacted.floe');
-        FloeStreamReaderContext::write(
-            $this->fs(),
-            $a,
-            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])),
-        );
-        FloeStreamReaderContext::write($this->fs(), $b, rows(schema(int_schema('id')), row(['id' => 3])));
+        FloeStreamReaderContext::write($this->fs(), $a, array_to_rows([
+            ['id' => 1],
+            ['id' => 2],
+        ], schema(int_schema('id'))));
+        FloeStreamReaderContext::write($this->fs(), $b, array_to_rows([['id' => 3]], schema(int_schema('id'))));
 
         merge_floe([$a, $b], $spliced);
         merge_floe([$a, $b], $compacted, compact: true);
@@ -46,8 +44,12 @@ final class FloeStatisticsTest extends FlowIntegrationTestCase
         $a = $this->cacheDir->suffix('splice-a.floe');
         $b = $this->cacheDir->suffix('splice-b.floe');
         $out = $this->cacheDir->suffix('splice-out.floe');
-        FloeStreamReaderContext::write($this->fs(), $a, rows(schema(str_schema('name')), row(['name' => 'first'])));
-        FloeStreamReaderContext::write($this->fs(), $b, rows(schema(str_schema('name')), row(['name' => 'second'])));
+        FloeStreamReaderContext::write($this->fs(), $a, array_to_rows([[
+            'name' => 'first',
+        ]], schema(str_schema('name'))));
+        FloeStreamReaderContext::write($this->fs(), $b, array_to_rows([[
+            'name' => 'second',
+        ]], schema(str_schema('name'))));
 
         merge_floe([$a, $b], $out);
 
@@ -68,14 +70,14 @@ final class FloeStatisticsTest extends FlowIntegrationTestCase
     public function test_a_multi_section_file_sums_its_sections(): void
     {
         $path = $this->cacheDir->suffix('sections.floe');
-        FloeStreamReaderContext::write($this->fs(), $path, rows(schema(int_schema('id')), row(['id' => 1])));
+        FloeStreamReaderContext::write($this->fs(), $path, array_to_rows([['id' => 1]], schema(int_schema('id'))));
 
         foreach ([[2, 3], [4, 5, 6]] as $ids) {
             $writer = new FloeWriter($this->fs(), schema(int_schema('id')));
             $writer->append($path);
 
             foreach ($ids as $id) {
-                $writer->write(rows(schema(int_schema('id')), row(['id' => $id])));
+                $writer->write(array_to_rows([['id' => $id]], schema(int_schema('id'))));
             }
 
             $writer->close();
@@ -97,11 +99,10 @@ final class FloeStatisticsTest extends FlowIntegrationTestCase
     public function test_a_written_file_reports_its_rows_and_byte_size(): void
     {
         $path = $this->cacheDir->suffix('written.floe');
-        FloeStreamReaderContext::write(
-            $this->fs(),
-            $path,
-            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])),
-        );
+        FloeStreamReaderContext::write($this->fs(), $path, array_to_rows([
+            ['id' => 1],
+            ['id' => 2],
+        ], schema(int_schema('id'))));
 
         $statistics = FloeStreamReaderContext::footer($this->fs(), $path)->statistics;
 
@@ -113,12 +114,12 @@ final class FloeStatisticsTest extends FlowIntegrationTestCase
     public function test_an_appended_file_reports_the_combined_totals(): void
     {
         $path = $this->cacheDir->suffix('appended.floe');
-        FloeStreamReaderContext::write($this->fs(), $path, rows(schema(int_schema('id')), row(['id' => 1])));
+        FloeStreamReaderContext::write($this->fs(), $path, array_to_rows([['id' => 1]], schema(int_schema('id'))));
         $before = FloeStreamReaderContext::footer($this->fs(), $path)->statistics->byteSize;
 
         $writer = new FloeWriter($this->fs(), schema(int_schema('id')));
         $writer->append($path);
-        $writer->write(rows(schema(int_schema('id')), row(['id' => 2]), row(['id' => 3])));
+        $writer->write(array_to_rows([['id' => 2], ['id' => 3]], schema(int_schema('id'))));
         $writer->close();
 
         $statistics = FloeStreamReaderContext::footer($this->fs(), $path)->statistics;

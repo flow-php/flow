@@ -8,12 +8,11 @@ use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\SelectEntriesTransformer;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\json_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_schema;
@@ -43,9 +42,9 @@ final class SelectEntriesTransformerTest extends FlowTestCase
 
     public function test_selecting_entries(): void
     {
-        $rows = rows(
+        $rows = array_to_rows(
+            [['id' => 1, 'name' => 'Row Name', 'array' => type_json()->cast(['test'])]],
             schema(int_schema('id'), str_schema('name'), json_schema('array')),
-            row(['id' => 1, 'name' => 'Row Name', 'array' => type_json()->cast(['test'])]),
         );
 
         $transformer = new SelectEntriesTransformer('name');
@@ -59,9 +58,9 @@ final class SelectEntriesTransformerTest extends FlowTestCase
 
     public function test_selecting_not_existing_entries(): void
     {
-        $rows = rows(
+        $rows = array_to_rows(
+            [['id' => 1, 'name' => 'Row Name', 'array' => type_json()->cast(['test'])]],
             schema(int_schema('id'), string_schema('name'), json_schema('array')),
-            row(['id' => 1, 'name' => 'Row Name', 'array' => type_json()->cast(['test'])]),
         );
 
         $this->expectException(SchemaDefinitionNotFoundException::class);
@@ -78,10 +77,9 @@ final class SelectEntriesTransformerTest extends FlowTestCase
             schema(int_schema('id', nullable: true)),
             $transformer
                 ->transform(
-                    rows(
+                    array_to_rows(
+                        [['id' => 1], ['name' => 'no id here']],
                         schema(int_schema('id', nullable: true), str_schema('name', nullable: true)),
-                        row(['id' => 1]),
-                        row(['name' => 'no id here']),
                     ),
                     flow_context(config()),
                 )
@@ -91,9 +89,9 @@ final class SelectEntriesTransformerTest extends FlowTestCase
 
     public function test_using_select_entries_in_order_to_change_entries_order(): void
     {
-        $rows = rows(
+        $rows = array_to_rows(
+            [['id' => 1, 'name' => 'Row Name', 'array' => type_json()->cast(['test'])]],
             schema(int_schema('id'), str_schema('name'), json_schema('array')),
-            row(['id' => 1, 'name' => 'Row Name', 'array' => type_json()->cast(['test'])]),
         );
 
         $result = (new SelectEntriesTransformer('name', 'id', 'array'))->transform($rows, flow_context(config()));
@@ -113,10 +111,9 @@ final class SelectEntriesTransformerTest extends FlowTestCase
             schema(int_schema('id')),
             (new SelectEntriesTransformer('id'))
                 ->transform(
-                    rows(
+                    array_to_rows(
+                        [['id' => 1, 'name' => 'Alice'], ['id' => 2, 'name' => 'Bob']],
                         schema(int_schema('id'), str_schema('name')),
-                        row(['id' => 1, 'name' => 'Alice']),
-                        row(['id' => 2, 'name' => 'Bob']),
                     ),
                     flow_context(config()),
                 )

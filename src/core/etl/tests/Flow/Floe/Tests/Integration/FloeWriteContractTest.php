@@ -13,10 +13,9 @@ use Flow\Floe\Options;
 use Flow\Floe\Tests\Context\FloeStreamReaderContext;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
@@ -27,27 +26,27 @@ final class FloeWriteContractTest extends FlowIntegrationTestCase
         return [
             'string into int' => [
                 schema(int_schema('id')),
-                rows(schema(str_schema('id')), row(['id' => 'AB-1'])),
+                array_to_rows([['id' => 'AB-1']], schema(str_schema('id'))),
                 'expected: id<integer>, given: id<string>',
             ],
             'float into int' => [
                 schema(int_schema('id')),
-                rows(schema(float_schema('id')), row(['id' => 1.5])),
+                array_to_rows([['id' => 1.5]], schema(float_schema('id'))),
                 'expected: id<integer>, given: id<float>',
             ],
             'int into string' => [
                 schema(str_schema('name')),
-                rows(schema(int_schema('name')), row(['name' => 1000])),
+                array_to_rows([['name' => 1000]], schema(int_schema('name'))),
                 'expected: name<string>, given: name<integer>',
             ],
             'null into non nullable' => [
                 schema(str_schema('name')),
-                rows(schema(str_schema('name', nullable: true)), row(['name' => null])),
+                array_to_rows([['name' => null]], schema(str_schema('name', nullable: true))),
                 'expected: name<string>, given: name<?string>',
             ],
             'undeclared column' => [
                 schema(int_schema('id')),
-                rows(schema(int_schema('id'), int_schema('extra')), row(['id' => 1, 'extra' => 2])),
+                array_to_rows([['id' => 1, 'extra' => 2]], schema(int_schema('id'), int_schema('extra'))),
                 'new column "extra"',
             ],
         ];
@@ -84,10 +83,10 @@ final class FloeWriteContractTest extends FlowIntegrationTestCase
         $path = $this->cacheDir->suffix('contract-survivor.floe');
         $writer = new FloeWriter($this->fs(), schema(int_schema('id')), new Options());
         $writer->create($path);
-        $writer->write(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])));
+        $writer->write(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))));
 
         try {
-            $writer->write(rows(schema(str_schema('id')), row(['id' => 'AB-1'])));
+            $writer->write(array_to_rows([['id' => 'AB-1']], schema(str_schema('id'))));
             static::fail('rejected batch was accepted');
         } catch (IncompatibleSchemaException) {
         }
@@ -111,11 +110,11 @@ final class FloeWriteContractTest extends FlowIntegrationTestCase
             new Options(),
         );
         $writer->create($path);
-        $writer->write(rows(
+        $writer->write(array_to_rows(
+            [['id' => 1, 'name' => 'a']],
             schema(int_schema('id'), str_schema('name', nullable: true)),
-            row(['id' => 1, 'name' => 'a']),
         ));
-        $writer->write(rows(schema(int_schema('id')), row(['id' => 2])));
+        $writer->write(array_to_rows([['id' => 2]], schema(int_schema('id'))));
         $writer->close();
 
         static::assertSame(
@@ -133,11 +132,11 @@ final class FloeWriteContractTest extends FlowIntegrationTestCase
         $path = $this->cacheDir->suffix('contract-absent-not-null.floe');
         $writer = new FloeWriter($this->fs(), schema(int_schema('id'), str_schema('name')), new Options());
         $writer->create($path);
-        $writer->write(rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'a'])));
+        $writer->write(array_to_rows([['id' => 1, 'name' => 'a']], schema(int_schema('id'), str_schema('name'))));
 
         $this->expectException(IncompatibleSchemaException::class);
         $this->expectExceptionMessage('Missing Definitions');
 
-        $writer->write(rows(schema(int_schema('id')), row(['id' => 2])));
+        $writer->write(array_to_rows([['id' => 2]], schema(int_schema('id'))));
     }
 }

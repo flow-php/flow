@@ -10,11 +10,15 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\html_element_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\xml_element_schema;
+use function Flow\ETL\DSL\xml_schema;
 
 use const LIBXML_HTML_NOIMPLIED;
 use const LIBXML_NOERROR;
@@ -32,7 +36,9 @@ final class DOMElementParentTest extends TestCase
         ref('value')
             ->domElementParent()
             // @mago-ignore analysis:possibly-null-property-access
-            ->eval(row(['value' => $element->documentElement->parentElement]), $context);
+            ->eval(array_to_row([
+                'value' => $element->documentElement->parentElement,
+            ], schema(html_element_schema('value', nullable: true))), $context);
     }
 
     #[RequiresPhp('>= 8.4.0')]
@@ -45,7 +51,7 @@ final class DOMElementParentTest extends TestCase
         );
         static::assertEquals(
             $element->documentElement,
-            lit($element->querySelector('span'))->domElementParent()->eval(row([]), flow_context()),
+            lit($element->querySelector('span'))->domElementParent()->eval(array_to_row([], schema()), flow_context()),
         );
     }
 
@@ -54,7 +60,9 @@ final class DOMElementParentTest extends TestCase
     {
         // @mago-ignore analysis:unavailable-method
         $element = HTMLDocument::createFromString('<span>bar</span>', LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR);
-        static::assertNull(lit($element->documentElement)->domElementParent()->eval(row([]), flow_context()));
+        static::assertNull(
+            lit($element->documentElement)->domElementParent()->eval(array_to_row([], schema()), flow_context()),
+        );
     }
 
     public function test_xml_fails_when_parent_not_available_in_strict_mode(): void
@@ -66,7 +74,9 @@ final class DOMElementParentTest extends TestCase
         $this->expectExceptionMessage('DOMElementParent requires non-null DOMNode or HTMLElement.');
         static::assertEquals($xml, ref('value')
             ->domElementParent()
-            ->eval(row(['value' => $xml->parentNode]), $context));
+            ->eval(array_to_row([
+                'value' => $xml->parentNode,
+            ], schema(xml_element_schema('value', nullable: true))), $context));
     }
 
     public function test_xml_getting_parent_element(): void
@@ -77,7 +87,9 @@ final class DOMElementParentTest extends TestCase
             $xml->documentElement,
             // a batch stores the element's markup, so the parent is only reachable on the live node
             // @mago-ignore analysis:possibly-null-property-access
-            lit($xml->documentElement->firstChild)->domElementParent()->eval(row([]), flow_context()),
+            lit($xml->documentElement->firstChild)
+                ->domElementParent()
+                ->eval(array_to_row([], schema()), flow_context()),
         );
     }
 
@@ -86,7 +98,11 @@ final class DOMElementParentTest extends TestCase
         $xml = new DOMDocument();
         $xml->loadXML('<root>foobar</root>');
         static::assertNull(
-            ref('value')->domElementParent()->eval(row(['value' => $xml->documentElement]), flow_context()),
+            ref('value')
+                ->domElementParent()
+                ->eval(array_to_row([
+                    'value' => $xml->documentElement,
+                ], schema(xml_element_schema('value'))), flow_context()),
         );
     }
 
@@ -94,6 +110,10 @@ final class DOMElementParentTest extends TestCase
     {
         $xml = new DOMDocument();
         $xml->loadXML('<root>foobar</root>');
-        static::assertNull(ref('value')->domElementParent()->eval(row(['value' => $xml]), flow_context()));
+        static::assertNull(
+            ref('value')
+                ->domElementParent()
+                ->eval(array_to_row(['value' => $xml], schema(xml_schema('value'))), flow_context()),
+        );
     }
 }

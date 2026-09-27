@@ -9,6 +9,7 @@ use Flow\ETL\GroupBy;
 use Flow\ETL\GroupBy\BucketAggregation;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\first;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
@@ -16,7 +17,6 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\last;
 use function Flow\ETL\DSL\min;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -30,10 +30,9 @@ final class BucketAggregationTest extends FlowTestCase
         $groupBy->aggregate(sum(ref('v')));
 
         $batches = (static function () {
-            yield rows(
+            yield array_to_rows(
+                [['k' => 'a', 'v' => 1], ['k' => 'b', 'v' => 10]],
                 schema(str_schema('k'), int_schema('v')),
-                row(['k' => 'a', 'v' => 1]),
-                row(['k' => 'b', 'v' => 10]),
             );
         })();
 
@@ -66,15 +65,13 @@ final class BucketAggregationTest extends FlowTestCase
         $groupBy->aggregate(sum(ref('v')));
 
         $batches = (static function () {
-            yield rows(
+            yield array_to_rows(
+                [['k' => 'a', 'v' => 1], ['k' => 'b', 'v' => 10]],
                 schema(str_schema('k'), int_schema('v')),
-                row(['k' => 'a', 'v' => 1]),
-                row(['k' => 'b', 'v' => 10]),
             );
-            yield rows(
+            yield array_to_rows(
+                [['k' => 'a', 'v' => 2], ['k' => 'b', 'v' => 20]],
                 schema(str_schema('k'), int_schema('v')),
-                row(['k' => 'a', 'v' => 2]),
-                row(['k' => 'b', 'v' => 20]),
             );
         })();
 
@@ -100,8 +97,8 @@ final class BucketAggregationTest extends FlowTestCase
         $groupBy->aggregate(first(ref('v')));
 
         $batches = (static function () {
-            yield rows(schema(str_schema('k'), int_schema('v')), row(['k' => 'a', 'v' => 100]));
-            yield rows(schema(str_schema('k'), int_schema('v')), row(['k' => 'a', 'v' => 200]));
+            yield array_to_rows([['k' => 'a', 'v' => 100]], schema(str_schema('k'), int_schema('v')));
+            yield array_to_rows([['k' => 'a', 'v' => 200]], schema(str_schema('k'), int_schema('v')));
         })();
 
         $firsts = [];
@@ -126,8 +123,8 @@ final class BucketAggregationTest extends FlowTestCase
         $groupBy->aggregate(last(ref('v')));
 
         $batches = (static function () {
-            yield rows(schema(str_schema('k'), int_schema('v')), row(['k' => 'a', 'v' => 100]));
-            yield rows(schema(str_schema('k'), int_schema('v')), row(['k' => 'a', 'v' => 200]));
+            yield array_to_rows([['k' => 'a', 'v' => 100]], schema(str_schema('k'), int_schema('v')));
+            yield array_to_rows([['k' => 'a', 'v' => 200]], schema(str_schema('k'), int_schema('v')));
         })();
 
         $lasts = [];
@@ -151,10 +148,9 @@ final class BucketAggregationTest extends FlowTestCase
 
         $batches = (static function () {
             yield rows(schema());
-            yield rows(
+            yield array_to_rows(
+                [['k' => 'a', 'v' => 1], ['k' => 'a', 'v' => 2]],
                 schema(str_schema('k'), int_schema('v')),
-                row(['k' => 'a', 'v' => 1]),
-                row(['k' => 'a', 'v' => 2]),
             );
         })();
 
@@ -173,10 +169,9 @@ final class BucketAggregationTest extends FlowTestCase
         $groupBy->aggregate(min(ref('v')));
 
         $batches = (static function () {
-            yield rows(
+            yield array_to_rows(
+                [['k' => 'a', 'v' => 10.0], ['k' => 'b', 'v' => 0.5]],
                 schema(str_schema('k'), float_schema('v')),
-                row(['k' => 'a', 'v' => 10.0]),
-                row(['k' => 'b', 'v' => 0.5]),
             );
         })();
 
@@ -206,10 +201,9 @@ final class BucketAggregationTest extends FlowTestCase
         $groupBy->aggregate(min(ref('v')));
 
         $batches = (static function () {
-            yield rows(
+            yield array_to_rows(
+                [['k' => 'a'], ['k' => 'a']],
                 schema(str_schema('k'), float_schema('v', nullable: true)),
-                row(['k' => 'a']),
-                row(['k' => 'a']),
             );
         })();
 

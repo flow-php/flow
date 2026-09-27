@@ -8,14 +8,15 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\WindowContextMother;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\average;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\window;
 
 final class AverageTest extends FlowTestCase
@@ -29,11 +30,13 @@ final class AverageTest extends FlowTestCase
     {
         $aggregator = average(ref('int'));
 
-        $aggregator->aggregate(row(['int' => '10']), flow_context());
-        $aggregator->aggregate(row(['int' => '20']), flow_context());
-        $aggregator->aggregate(row(['int' => '30']), flow_context());
-        $aggregator->aggregate(row(['int' => '25']), flow_context());
-        $aggregator->aggregate(row(['not_int' => null]), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => '10'], schema(str_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => '20'], schema(str_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => '30'], schema(str_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => '25'], schema(str_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row([
+            'not_int' => null,
+        ], schema(str_schema('not_int', nullable: true))), flow_context());
 
         static::assertSame(21.25, $aggregator->value());
     }
@@ -42,10 +45,12 @@ final class AverageTest extends FlowTestCase
     {
         $aggregator = average(ref('int'));
 
-        $aggregator->aggregate(row(['int' => 10]), flow_context());
-        $aggregator->aggregate(row(['int' => 20]), flow_context());
-        $aggregator->aggregate(row(['int' => 30]), flow_context());
-        $aggregator->aggregate(row(['int' => null]), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 10], schema(int_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 20], schema(int_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 30], schema(int_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row([
+            'int' => null,
+        ], schema(int_schema('int', nullable: true))), flow_context());
 
         static::assertSame(20.0, $aggregator->value());
     }
@@ -54,10 +59,10 @@ final class AverageTest extends FlowTestCase
     {
         $aggregator = average(ref('int'));
 
-        $aggregator->aggregate(row(['int' => 10]), flow_context());
-        $aggregator->aggregate(row(['int' => 20]), flow_context());
-        $aggregator->aggregate(row(['int' => 30]), flow_context());
-        $aggregator->aggregate(row(['int' => 25]), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 10], schema(int_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 20], schema(int_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 30], schema(int_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 25], schema(int_schema('int'))), flow_context());
 
         static::assertSame(21.25, $aggregator->value());
     }
@@ -66,10 +71,10 @@ final class AverageTest extends FlowTestCase
     {
         $aggregator = average(ref('int'));
 
-        $aggregator->aggregate(row(['int' => 10]), flow_context());
-        $aggregator->aggregate(row(['int' => 20]), flow_context());
-        $aggregator->aggregate(row(['int' => 30]), flow_context());
-        $aggregator->aggregate(row(['int' => 40]), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 10], schema(int_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 20], schema(int_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 30], schema(int_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => 40], schema(int_schema('int'))), flow_context());
 
         static::assertSame(25.0, $aggregator->value());
     }
@@ -85,11 +90,11 @@ final class AverageTest extends FlowTestCase
     {
         $rows = rows(
             schema(int_schema('id'), int_schema('value')),
-            $row1 = row(['id' => 1, 'value' => 1]),
-            row(['id' => 2, 'value' => 100]),
-            row(['id' => 3, 'value' => 25]),
-            row(['id' => 4, 'value' => 64]),
-            row(['id' => 5, 'value' => 23]),
+            $row1 = array_to_row(['id' => 1, 'value' => 1], schema(int_schema('id'), int_schema('value'))),
+            array_to_row(['id' => 2, 'value' => 100], schema(int_schema('id'), int_schema('value'))),
+            array_to_row(['id' => 3, 'value' => 25], schema(int_schema('id'), int_schema('value'))),
+            array_to_row(['id' => 4, 'value' => 64], schema(int_schema('id'), int_schema('value'))),
+            array_to_row(['id' => 5, 'value' => 23], schema(int_schema('id'), int_schema('value'))),
         );
 
         $avg = average(ref('value'))->over(window()->orderBy(ref('value')));
@@ -102,7 +107,11 @@ final class AverageTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Average window function error:');
 
-        $rows = rows(schema(int_schema('id')), $row1 = row(['id' => 1]), row(['id' => 2]));
+        $rows = rows(
+            schema(int_schema('id')),
+            $row1 = array_to_row(['id' => 1], schema(int_schema('id'))),
+            array_to_row(['id' => 2], schema(int_schema('id'))),
+        );
 
         $avg = average(ref('missing_column'))->over(window()->orderBy(ref('id')));
 

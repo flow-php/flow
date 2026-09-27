@@ -19,11 +19,10 @@ use Flow\ETL\Sink\Transactional;
 use function Flow\ETL\Adapter\Doctrine\to_dbal_table_delete;
 use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
 use function Flow\ETL\Adapter\Doctrine\to_dbal_transaction;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\integer_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\string_schema;
 use function getenv;
@@ -48,8 +47,8 @@ final class SqliteTransactionSinkTest extends IntegrationTestCase
 
         df()
             ->read(from_rows(
-                rows(schema(integer_schema('id'), integer_schema('value')), row(['id' => 1, 'value' => 100])),
-                rows(schema(integer_schema('id'), integer_schema('value')), row(['id' => 2, 'value' => 200])),
+                array_to_rows([['id' => 1, 'value' => 100]], schema(integer_schema('id'), integer_schema('value'))),
+                array_to_rows([['id' => 2, 'value' => 200]], schema(integer_schema('id'), integer_schema('value'))),
             ))
             ->write(to_dbal_transaction($connection, to_dbal_table_insert($connection, 'test_table')))
             ->run();
@@ -88,9 +87,9 @@ final class SqliteTransactionSinkTest extends IntegrationTestCase
 
         try {
             df()
-                ->read(from_rows(rows(
+                ->read(from_rows(array_to_rows(
+                    [['id' => 1, 'name' => 'Should fail']],
                     schema(integer_schema('id'), string_schema('name')),
-                    row(['id' => 1, 'name' => 'Should fail']),
                 )))
                 ->write(to_dbal_transaction(
                     $connection,
@@ -130,10 +129,9 @@ final class SqliteTransactionSinkTest extends IntegrationTestCase
         $connection = $this->sqliteDatabaseContext->connection();
 
         df()
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [['id' => 1, 'name' => 'Updated'], ['id' => 2, 'name' => 'Updated']],
                 schema(integer_schema('id'), string_schema('name')),
-                row(['id' => 1, 'name' => 'Updated']),
-                row(['id' => 2, 'name' => 'Updated']),
             )))
             ->write(to_dbal_transaction(
                 $connection,
@@ -168,9 +166,9 @@ final class SqliteTransactionSinkTest extends IntegrationTestCase
         $connection = $this->sqliteDatabaseContext->connection();
 
         df()
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [['id' => 1, 'name' => 'Test']],
                 schema(integer_schema('id'), string_schema('name')),
-                row(['id' => 1, 'name' => 'Test']),
             )))
             ->write(
                 new Transactional(

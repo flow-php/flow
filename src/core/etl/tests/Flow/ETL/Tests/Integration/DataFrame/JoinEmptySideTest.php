@@ -8,12 +8,12 @@ use Flow\ETL\Join\Join;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\hash_join;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -23,7 +23,7 @@ final class JoinEmptySideTest extends FlowTestCase
     public function test_cross_join_against_an_empty_side_yields_no_rows_under_the_cross_schema(): void
     {
         $joined = df()
-            ->read(from_rows(rows(schema(int_schema('id')), row(['id' => 1]))))
+            ->read(from_rows(array_to_rows([['id' => 1]], schema(int_schema('id')))))
             ->crossJoin(df()->process(rows(schema(str_schema('code')))))
             ->fetch();
 
@@ -57,7 +57,7 @@ final class JoinEmptySideTest extends FlowTestCase
     public function leftJoinedAgainstNothing(int $buckets): Rows
     {
         return df()
-            ->read(from_rows(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]))))
+            ->read(from_rows(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')))))
             ->join(
                 df()->process(rows(schema(int_schema('id'), str_schema('r')))),
                 join_on(['id' => 'id']),
@@ -75,7 +75,7 @@ final class JoinEmptySideTest extends FlowTestCase
         return df()
             ->read(from_rows(rows(schema(int_schema('id'), str_schema('l')))))
             ->join(
-                df()->process(rows(schema(int_schema('id')), row(['id' => 1]))),
+                df()->process(array_to_rows([['id' => 1]], schema(int_schema('id')))),
                 join_on(['id' => 'id']),
                 Join::right,
                 hash_join()->bucketsCount($buckets),

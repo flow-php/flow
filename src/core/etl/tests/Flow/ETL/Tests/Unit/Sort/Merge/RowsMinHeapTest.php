@@ -9,8 +9,11 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function array_map;
 use function count;
+use function Flow\ETL\DSL\array_to_row;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function range;
 
 final class RowsMinHeapTest extends FlowTestCase
@@ -19,12 +22,12 @@ final class RowsMinHeapTest extends FlowTestCase
     {
         $minHeap = new RowsMinHeap(ref('id')->asc());
 
-        $minHeap->push(row(['id' => 1]), 'cache_id');
-        $minHeap->push(row(['id' => 2]), 'cache_id');
-        $minHeap->push(row(['id' => 3]), 'cache_id');
-        $minHeap->push(row(['id' => 4]), 'cache_id');
-        $minHeap->push(row(['id' => 5]), 'cache_id');
-        $minHeap->push(row(['id' => 6]), 'cache_id');
+        $minHeap->push(array_to_row(['id' => 1], schema(int_schema('id'))), 'cache_id');
+        $minHeap->push(array_to_row(['id' => 2], schema(int_schema('id'))), 'cache_id');
+        $minHeap->push(array_to_row(['id' => 3], schema(int_schema('id'))), 'cache_id');
+        $minHeap->push(array_to_row(['id' => 4], schema(int_schema('id'))), 'cache_id');
+        $minHeap->push(array_to_row(['id' => 5], schema(int_schema('id'))), 'cache_id');
+        $minHeap->push(array_to_row(['id' => 6], schema(int_schema('id'))), 'cache_id');
 
         static::assertEquals(
             [
@@ -43,12 +46,12 @@ final class RowsMinHeapTest extends FlowTestCase
     {
         $minHeap = new RowsMinHeap(ref('id')->desc());
 
-        $minHeap->push(row(['id' => 1]), 'cache_id');
-        $minHeap->push(row(['id' => 2]), 'cache_id');
-        $minHeap->push(row(['id' => 3]), 'cache_id');
-        $minHeap->push(row(['id' => 4]), 'cache_id');
-        $minHeap->push(row(['id' => 5]), 'cache_id');
-        $minHeap->push(row(['id' => 6]), 'cache_id');
+        $minHeap->push(array_to_row(['id' => 1], schema(int_schema('id'))), 'cache_id');
+        $minHeap->push(array_to_row(['id' => 2], schema(int_schema('id'))), 'cache_id');
+        $minHeap->push(array_to_row(['id' => 3], schema(int_schema('id'))), 'cache_id');
+        $minHeap->push(array_to_row(['id' => 4], schema(int_schema('id'))), 'cache_id');
+        $minHeap->push(array_to_row(['id' => 5], schema(int_schema('id'))), 'cache_id');
+        $minHeap->push(array_to_row(['id' => 6], schema(int_schema('id'))), 'cache_id');
 
         static::assertEquals(
             [
@@ -67,12 +70,12 @@ final class RowsMinHeapTest extends FlowTestCase
     {
         $minHeap = new RowsMinHeap(ref('id')->asc());
 
-        $minHeap->push(row(['id' => 'a']), 'cache_id');
-        $minHeap->push(row(['id' => 'b']), 'cache_id');
-        $minHeap->push(row(['id' => 'c']), 'cache_id');
-        $minHeap->push(row(['id' => 'd']), 'cache_id');
-        $minHeap->push(row(['id' => 'e']), 'cache_id');
-        $minHeap->push(row(['id' => 'f']), 'cache_id');
+        $minHeap->push(array_to_row(['id' => 'a'], schema(str_schema('id'))), 'cache_id');
+        $minHeap->push(array_to_row(['id' => 'b'], schema(str_schema('id'))), 'cache_id');
+        $minHeap->push(array_to_row(['id' => 'c'], schema(str_schema('id'))), 'cache_id');
+        $minHeap->push(array_to_row(['id' => 'd'], schema(str_schema('id'))), 'cache_id');
+        $minHeap->push(array_to_row(['id' => 'e'], schema(str_schema('id'))), 'cache_id');
+        $minHeap->push(array_to_row(['id' => 'f'], schema(str_schema('id'))), 'cache_id');
 
         static::assertEquals(
             [
@@ -91,12 +94,12 @@ final class RowsMinHeapTest extends FlowTestCase
     {
         $minHeap = new RowsMinHeap(ref('id')->desc());
 
-        $minHeap->push(row(['id' => 'a']), 'cache_id');
-        $minHeap->push(row(['id' => 'b']), 'cache_id');
-        $minHeap->push(row(['id' => 'c']), 'cache_id');
-        $minHeap->push(row(['id' => 'd']), 'cache_id');
-        $minHeap->push(row(['id' => 'e']), 'cache_id');
-        $minHeap->push(row(['id' => 'f']), 'cache_id');
+        $minHeap->push(array_to_row(['id' => 'a'], schema(str_schema('id'))), 'cache_id');
+        $minHeap->push(array_to_row(['id' => 'b'], schema(str_schema('id'))), 'cache_id');
+        $minHeap->push(array_to_row(['id' => 'c'], schema(str_schema('id'))), 'cache_id');
+        $minHeap->push(array_to_row(['id' => 'd'], schema(str_schema('id'))), 'cache_id');
+        $minHeap->push(array_to_row(['id' => 'e'], schema(str_schema('id'))), 'cache_id');
+        $minHeap->push(array_to_row(['id' => 'f'], schema(str_schema('id'))), 'cache_id');
 
         static::assertEquals(
             [

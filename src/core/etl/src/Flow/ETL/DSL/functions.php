@@ -33,8 +33,10 @@ use Flow\ETL\DataFrame;
 use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\ErrorHandler\SkipRows;
 use Flow\ETL\ErrorHandler\ThrowError;
+use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Exception\UnsupportedUnionTypeException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\ArrayExtractor;
@@ -150,7 +152,6 @@ use Flow\ETL\RandomValueGenerator;
 use Flow\ETL\Row;
 use Flow\ETL\Row\ColumnName;
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
-use Flow\ETL\Row\InferredBatch;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\SortOrder;
@@ -255,6 +256,7 @@ use UnitEnum;
 use function array_is_list;
 use function array_key_exists;
 use function array_map;
+use function array_values;
 use function class_exists;
 use function enum_exists;
 use function Flow\Filesystem\DSL\path;
@@ -568,15 +570,6 @@ function rename_replace(string|array $search, string|array $replace): RenameRepl
 function rename_map(array $renames): RenameMapEntryStrategy
 {
     return new RenameMapEntryStrategy($renames);
-}
-
-/**
- * @param array<array-key, mixed> $values
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function row(array $values): Row
-{
-    return (new InferredBatch())->of([$values])->first();
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
@@ -1183,23 +1176,13 @@ function array_to_row(
     Backend $backend = new DefaultBackend(),
     array|Partitions $partitions = [],
 ): Row {
-    $map = [];
-
-    // @mago-ignore analysis:mixed-assignment
-    foreach ($data as $key => $value) {
-        $map[(new ColumnName())->of($key)] = $value;
-    }
-
     foreach ($partitions as $partition) {
-        if (!array_key_exists($partition->name, $map)) {
-            $map[$partition->name] = $partition->value;
+        if (!array_key_exists($partition->name, $data)) {
+            $data[$partition->name] = $partition->value;
         }
     }
 
-    return (new RowsBuilder($schema, $backend))
-        ->appendRows([$map])
-        ->finish()
-        ->first();
+    return array_to_rows([$data], $schema, $backend)->first();
 }
 
 /**
@@ -1223,7 +1206,7 @@ function array_to_rows(array $data, Schema $schema, Backend $backend = new Defau
     $maps = [];
 
     // @mago-ignore analysis:mixed-assignment
-    foreach ($rawRows as $row) {
+    foreach (array_values($rawRows) as $index => $row) {
         $row = type_array()->assert($row);
         $map = [];
 
@@ -1232,8 +1215,13 @@ function array_to_rows(array $data, Schema $schema, Backend $backend = new Defau
             // PHP gives back a numeric-string column name as an int key, which the positional rule
             // would rename to eNN. A declared schema naming that column settles which one it is.
             $declared = $schema->findDefinition((string) $key);
+            $name = $declared === null ? (new ColumnName())->of($key) : (string) $key;
 
-            $map[$declared === null ? (new ColumnName())->of($key) : (string) $key] = $value;
+            if ($declared === null && $schema->findDefinition($name) === null) {
+                throw new SchemaMismatchException($index, ColumnMismatchException::unexpectedColumn($name));
+            }
+
+            $map[$name] = $value;
         }
 
         $maps[] = $map;

@@ -10,10 +10,9 @@ use Flow\ETL\Formatter\ASCII\Headers;
 use Flow\ETL\Tests\CommandOutputNormalizer;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 
 final class ASCIIHeadersTest extends FlowTestCase
@@ -22,10 +21,9 @@ final class ASCIIHeadersTest extends FlowTestCase
 
     public function test_printing_ascii_headers(): void
     {
-        $rows = rows(
+        $rows = array_to_rows(
+            [['id' => 1, 'value' => 1.4], ['id' => 2, 'value' => 3.4]],
             schema(int_schema('id'), float_schema('value')),
-            row(['id' => 1, 'value' => 1.4]),
-            row(['id' => 2, 'value' => 3.4]),
         );
 
         $headers = new ASCIIHeaders(new Headers($rows), new Body($rows));

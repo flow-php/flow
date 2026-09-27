@@ -16,8 +16,6 @@ use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure;
@@ -42,14 +40,10 @@ final class NestedExpandTransformerTest extends FlowTestCase
                 ['id' => 'a', 'tags' => ['x', 'y'], 's' => ['tag' => 'x']],
                 ['id' => 'a', 'tags' => ['x', 'y'], 's' => ['tag' => 'y']],
             ],
-            $step->transform(
-                rows(
-                    ListColumnsMother::tagsSchema(),
-                    row(['id' => 'a', 'tags' => ['x', 'y']]),
-                    row(['id' => 'b', 'tags' => []]),
-                ),
-                flow_context(config()),
-            )->toArray(),
+            $step->transform(array_to_rows([
+                ['id' => 'a', 'tags' => ['x', 'y']],
+                ['id' => 'b', 'tags' => []],
+            ], ListColumnsMother::tagsSchema()), flow_context(config()))->toArray(),
         );
     }
 
@@ -66,10 +60,10 @@ final class NestedExpandTransformerTest extends FlowTestCase
                 ['id' => 'a', 'tags' => ['x', 'y'], 'u.tag' => 'x'],
                 ['id' => 'a', 'tags' => ['x', 'y'], 'u.tag' => 'y'],
             ],
-            $step->transform(
-                rows(ListColumnsMother::tagsSchema(), row(['id' => 'a', 'tags' => ['x', 'y']])),
-                flow_context(config()),
-            )->toArray(),
+            $step->transform(array_to_rows([[
+                'id' => 'a',
+                'tags' => ['x', 'y'],
+            ]], ListColumnsMother::tagsSchema()), flow_context(config()))->toArray(),
         );
     }
 
@@ -111,10 +105,10 @@ final class NestedExpandTransformerTest extends FlowTestCase
                 ['id' => 'a', 'tags' => ['x', 'y'], 's' => 'ax'],
                 ['id' => 'a', 'tags' => ['x', 'y'], 's' => 'ay'],
             ],
-            $step->transform(
-                rows(ListColumnsMother::tagsSchema(), row(['id' => 'a', 'tags' => ['x', 'y']])),
-                flow_context(config()),
-            )->toArray(),
+            $step->transform(array_to_rows([[
+                'id' => 'a',
+                'tags' => ['x', 'y'],
+            ]], ListColumnsMother::tagsSchema()), flow_context(config()))->toArray(),
         );
     }
 
@@ -128,10 +122,10 @@ final class NestedExpandTransformerTest extends FlowTestCase
 
         static::assertInstanceOf(NestedExpandTransformer::class, $step);
 
-        $result = $step->transform(
-            rows(ListColumnsMother::tagsSchema(), row(['id' => 'a', 'tags' => ['x']])),
-            flow_context(config()),
-        );
+        $result = $step->transform(array_to_rows([[
+            'id' => 'a',
+            'tags' => ['x'],
+        ]], ListColumnsMother::tagsSchema()), flow_context(config()));
 
         static::assertEquals(
             schema(

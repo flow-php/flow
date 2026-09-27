@@ -9,16 +9,17 @@ use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 
 final class ListSelectTest extends FlowTestCase
 {
@@ -57,13 +58,13 @@ final class ListSelectTest extends FlowTestCase
 
     public function test_selecting_non_existing_value_from_list_using_alias(): void
     {
-        $list = row([
+        $list = array_to_row([
             'list' => [
                 ['id' => 1, 'name' => 'test'],
                 ['id' => 2, 'name' => 'test2'],
                 ['id' => 3, 'name' => 'test3'],
             ],
-        ]);
+        ], schema(list_schema('list', type_list(type_structure(['id' => type_integer(), 'name' => type_string()])))));
 
         static::assertEquals(
             [
@@ -77,13 +78,13 @@ final class ListSelectTest extends FlowTestCase
 
     public function test_selecting_value_from_list(): void
     {
-        $list = row([
+        $list = array_to_row([
             'list' => [
                 ['id' => 1, 'name' => 'test'],
                 ['id' => 2, 'name' => 'test2'],
                 ['id' => 3, 'name' => 'test3'],
             ],
-        ]);
+        ], schema(list_schema('list', type_list(type_structure(['id' => type_integer(), 'name' => type_string()])))));
 
         static::assertEquals(
             [
@@ -97,13 +98,13 @@ final class ListSelectTest extends FlowTestCase
 
     public function test_selecting_value_from_list_using_alias(): void
     {
-        $list = row([
+        $list = array_to_row([
             'list' => [
                 ['id' => 1, 'name' => 'test'],
                 ['id' => 2, 'name' => 'test2'],
                 ['id' => 3, 'name' => 'test3'],
             ],
-        ]);
+        ], schema(list_schema('list', type_list(type_structure(['id' => type_integer(), 'name' => type_string()])))));
 
         static::assertEquals(
             [
@@ -117,12 +118,12 @@ final class ListSelectTest extends FlowTestCase
 
     public function test_selecting_value_from_simple_list(): void
     {
-        $list = row(['list' => [
+        $list = array_to_row(['list' => [
             'a',
             'b',
             'c',
             'd',
-        ]]);
+        ]], schema(list_schema('list', type_list(type_string()))));
 
         static::assertEquals(
             [

@@ -15,6 +15,7 @@ use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Filesystem\Path\Filter\KeepAll;
 
 use function array_column;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\count as count_agg;
 use function Flow\ETL\DSL\df;
@@ -26,8 +27,6 @@ use function Flow\ETL\DSL\hash_join;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\sum;
@@ -116,9 +115,9 @@ final class AlgorithmOverrideTest extends FlowIntegrationTestCase
                 new class implements DataFrameFactory {
                     public function from(Rows $rows): DataFrame
                     {
-                        return df()->process(rows(
+                        return df()->process(array_to_rows(
+                            [['id' => 1, 'n' => 'a']],
                             schema(int_schema('id'), str_schema('n')),
-                            row(['id' => 1, 'n' => 'a']),
                         ));
                     }
                 },

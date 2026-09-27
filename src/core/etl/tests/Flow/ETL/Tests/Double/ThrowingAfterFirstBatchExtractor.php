@@ -11,16 +11,15 @@ use Flow\ETL\Schema;
 use Generator;
 use RuntimeException;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 
 final class ThrowingAfterFirstBatchExtractor implements Extractor
 {
     public function extract(FlowContext $context, ?int $limit = null): Generator
     {
-        yield rows($this->schema(), row(['id' => 1]));
+        yield array_to_rows([['id' => 1]], $this->schema());
 
         throw new RuntimeException('source failed after its first batch');
     }

@@ -8,9 +8,8 @@ use Flow\ETL\Schema;
 use Flow\ETL\Tests\Double\RecordingFileExtractor;
 use Flow\Filesystem\FileStatus;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\path;
@@ -30,10 +29,9 @@ final class PartitionedSourceMother
     {
         return (new RecordingFileExtractor(
             schema(int_schema('year'), str_schema('month'), str_schema('value')),
-            rows(
+            array_to_rows(
+                [['year' => 2023, 'month' => '07', 'value' => 'a'], ['year' => 2024, 'month' => '08', 'value' => 'b']],
                 schema(int_schema('year'), str_schema('month'), str_schema('value')),
-                row(['year' => 2023, 'month' => '07', 'value' => 'a']),
-                row(['year' => 2024, 'month' => '08', 'value' => 'b']),
             ),
         ))->withPartitionSchema(self::partitions());
     }

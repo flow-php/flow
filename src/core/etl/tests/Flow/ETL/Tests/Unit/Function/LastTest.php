@@ -7,12 +7,13 @@ namespace Flow\ETL\Tests\Unit\Function;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\last;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class LastTest extends FlowTestCase
 {
@@ -25,11 +26,13 @@ final class LastTest extends FlowTestCase
     {
         $aggregator = last(ref('int'));
 
-        $aggregator->aggregate(row(['int' => '10']), flow_context());
-        $aggregator->aggregate(row(['int' => '20']), flow_context());
-        $aggregator->aggregate(row(['int' => '55']), flow_context());
-        $aggregator->aggregate(row(['int' => '25']), flow_context());
-        $aggregator->aggregate(row(['not_int' => null]), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => '10'], schema(str_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => '20'], schema(str_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => '55'], schema(str_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row(['int' => '25'], schema(str_schema('int'))), flow_context());
+        $aggregator->aggregate(array_to_row([
+            'not_int' => null,
+        ], schema(str_schema('not_int', nullable: true))), flow_context());
 
         static::assertSame('25', $aggregator->value());
     }

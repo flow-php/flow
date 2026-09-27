@@ -7,11 +7,10 @@ namespace Flow\ETL\Tests\Unit\Transformer;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\PruneEntriesTransformer;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
@@ -43,9 +42,9 @@ final class PruneEntriesTransformerTest extends FlowTestCase
             [['id' => 1, 'name' => 'a']],
             (new PruneEntriesTransformer(ref('id'), ref('name')))
                 ->transform(
-                    rows(
+                    array_to_rows(
+                        [['id' => 1, 'name' => 'a', 'dropped' => 9]],
                         schema(int_schema('id'), str_schema('name'), int_schema('dropped')),
-                        row(['id' => 1, 'name' => 'a', 'dropped' => 9]),
                     ),
                     flow_context(),
                 )
@@ -59,10 +58,9 @@ final class PruneEntriesTransformerTest extends FlowTestCase
             [['id' => 1, 'name' => 'a'], ['id' => 2, 'name' => null]],
             (new PruneEntriesTransformer(ref('id'), ref('name')))
                 ->transform(
-                    rows(
+                    array_to_rows(
+                        [['id' => 1, 'name' => 'a'], ['id' => 2]],
                         schema(int_schema('id'), str_schema('name', nullable: true)),
-                        row(['id' => 1, 'name' => 'a']),
-                        row(['id' => 2]),
                     ),
                     flow_context(),
                 )
@@ -75,7 +73,7 @@ final class PruneEntriesTransformerTest extends FlowTestCase
         static::assertSame(
             [[]],
             (new PruneEntriesTransformer(ref('missing')))
-                ->transform(rows(schema(int_schema('id')), row(['id' => 1])), flow_context())
+                ->transform(array_to_rows([['id' => 1]], schema(int_schema('id'))), flow_context())
                 ->toArray(),
         );
     }

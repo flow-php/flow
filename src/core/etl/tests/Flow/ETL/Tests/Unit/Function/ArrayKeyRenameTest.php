@@ -7,12 +7,18 @@ namespace Flow\ETL\Tests\Unit\Function;
 use Flow\ArrayDot\Exception\InvalidPathException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\RowsMother;
 
 use function Flow\ETL\DSL\array_key_rename;
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\structure_schema;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 
 final class ArrayKeyRenameTest extends FlowTestCase
 {
@@ -22,7 +28,7 @@ final class ArrayKeyRenameTest extends FlowTestCase
         $this->expectExceptionMessage('Expected type "array<mixed>", got "integer".');
 
         $context = flow_context(config());
-        $row = row(['integer_entry' => 1]);
+        $row = array_to_row(['integer_entry' => 1], schema(int_schema('integer_entry')));
 
         array_key_rename(ref('integer_entry'), 'invalid_path', 'new_name')->eval($row, $context);
     }
@@ -32,26 +38,35 @@ final class ArrayKeyRenameTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected type "array<mixed>", got "integer".');
 
-        $row = row(['integer_entry' => 1]);
+        $row = array_to_row(['integer_entry' => 1], schema(int_schema('integer_entry')));
 
         array_key_rename(ref('integer_entry'), 'invalid_path', 'new_name')->eval($row, flow_context());
     }
 
     public function test_renames_array_entry_keys_in_multiple_array_entry(): void
     {
-        $row = row([
-            'customer' => [
-                'first' => 'John',
-                'last' => 'Snow',
-            ],
-            'shipping' => [
-                'address' => [
-                    'line' => '3644 Clement Street',
-                    'city' => 'Atalanta',
+        $row = array_to_row(
+            [
+                'customer' => [
+                    'first' => 'John',
+                    'last' => 'Snow',
                 ],
-                'estimated_delivery_date' => '2023-04-01T10:00:00+00:00',
+                'shipping' => [
+                    'address' => [
+                        'line' => '3644 Clement Street',
+                        'city' => 'Atalanta',
+                    ],
+                    'estimated_delivery_date' => '2023-04-01T10:00:00+00:00',
+                ],
             ],
-        ]);
+            schema(
+                structure_schema('customer', type_structure(['first' => type_string(), 'last' => type_string()])),
+                structure_schema('shipping', type_structure([
+                    'address' => type_structure(['line' => type_string(), 'city' => type_string()]),
+                    'estimated_delivery_date' => type_string(),
+                ])),
+            ),
+        );
 
         static::assertEquals(
             [
@@ -75,14 +90,7 @@ final class ArrayKeyRenameTest extends FlowTestCase
 
     public function test_renames_array_entry_keys_in_single_array_entry(): void
     {
-        $row = row([
-            'array_entry' => [
-                'id' => 1,
-                'status' => 'PENDING',
-                'enabled' => true,
-                'array' => ['foo' => 'bar'],
-            ],
-        ]);
+        $row = RowsMother::arrayEntry();
 
         static::assertEquals(
             [
@@ -97,14 +105,7 @@ final class ArrayKeyRenameTest extends FlowTestCase
 
     public function test_throws_exception_for_invalid_path(): void
     {
-        $row = row([
-            'array_entry' => [
-                'id' => 1,
-                'status' => 'PENDING',
-                'enabled' => true,
-                'array' => ['foo' => 'bar'],
-            ],
-        ]);
+        $row = RowsMother::arrayEntry();
 
         $this->expectException(InvalidPathException::class);
         $this->expectExceptionMessage('Path "invalid_path" does not exists in array ');

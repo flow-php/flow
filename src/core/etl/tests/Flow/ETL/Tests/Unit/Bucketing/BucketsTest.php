@@ -9,9 +9,8 @@ use Flow\ETL\Bucketing\Storage\MemoryBuckets;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\BucketMother;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function iterator_to_array;
 
@@ -29,8 +28,8 @@ final class BucketsTest extends FlowTestCase
     public function test_clear_empties_manifest_and_storage(): void
     {
         $storage = new MemoryBuckets();
-        $storage->append('a', rows(schema(int_schema('id')), row(['id' => 1])));
-        $storage->append('b', rows(schema(int_schema('id')), row(['id' => 2])));
+        $storage->append('a', array_to_rows([['id' => 1]], schema(int_schema('id'))));
+        $storage->append('b', array_to_rows([['id' => 2]], schema(int_schema('id'))));
 
         $buckets = new Buckets($storage);
         $buckets->add(BucketMother::withTotalRows('a', 1));
@@ -46,7 +45,7 @@ final class BucketsTest extends FlowTestCase
     public function test_remove_drops_manifest_entry_and_storage(): void
     {
         $storage = new MemoryBuckets();
-        $storage->append('a', rows(schema(int_schema('id')), row(['id' => 1])));
+        $storage->append('a', array_to_rows([['id' => 1]], schema(int_schema('id'))));
 
         $buckets = new Buckets($storage);
         $buckets->add(BucketMother::withTotalRows('a', 1));
@@ -60,8 +59,8 @@ final class BucketsTest extends FlowTestCase
     public function test_rows_yields_storage_batches(): void
     {
         $storage = new MemoryBuckets();
-        $storage->append('a', rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])));
-        $storage->append('a', rows(schema(int_schema('id')), row(['id' => 3])));
+        $storage->append('a', array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))));
+        $storage->append('a', array_to_rows([['id' => 3]], schema(int_schema('id'))));
 
         $batches = iterator_to_array((new Buckets($storage))->rows('a'), false);
 

@@ -11,11 +11,10 @@ use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Floe\Tests\Context\FloeStreamReaderContext;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\Floe\DSL\from_floe;
 use function Flow\Types\DSL\type_datetime;
@@ -27,12 +26,12 @@ final class FloeExtractorTest extends FlowIntegrationTestCase
         FloeStreamReaderContext::write(
             $this->fs(),
             $this->cacheDir->suffix('glob/a.floe'),
-            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])),
+            array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))),
         );
         FloeStreamReaderContext::write(
             $this->fs(),
             $this->cacheDir->suffix('glob/b.floe'),
-            rows(schema(int_schema('id')), row(['id' => 3])),
+            array_to_rows([['id' => 3]], schema(int_schema('id'))),
         );
         $firstBytes = FloeStreamReaderContext::dataBytes($this->fs(), $this->cacheDir->suffix('glob/a.floe'));
 
@@ -48,11 +47,10 @@ final class FloeExtractorTest extends FlowIntegrationTestCase
     public function test_a_single_file_declares_exact_rows_and_byte_size(): void
     {
         $path = $this->cacheDir->suffix('single.floe');
-        FloeStreamReaderContext::write(
-            $this->fs(),
-            $path,
-            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])),
-        );
+        FloeStreamReaderContext::write($this->fs(), $path, array_to_rows([
+            ['id' => 1],
+            ['id' => 2],
+        ], schema(int_schema('id'))));
 
         $statistics = from_floe($path, filesystem: $this->fs())->statistics();
 
@@ -66,11 +64,10 @@ final class FloeExtractorTest extends FlowIntegrationTestCase
     public function test_an_offset_is_subtracted_from_the_row_count(): void
     {
         $path = $this->cacheDir->suffix('offset.floe');
-        FloeStreamReaderContext::write(
-            $this->fs(),
-            $path,
-            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])),
-        );
+        FloeStreamReaderContext::write($this->fs(), $path, array_to_rows([
+            ['id' => 1],
+            ['id' => 2],
+        ], schema(int_schema('id'))));
 
         $extractor = from_floe($path, filesystem: $this->fs());
 
@@ -82,7 +79,7 @@ final class FloeExtractorTest extends FlowIntegrationTestCase
     public function test_statistics_are_computed_at_most_once(): void
     {
         $path = $this->cacheDir->suffix('memo.floe');
-        FloeStreamReaderContext::write($this->fs(), $path, rows(schema(int_schema('id')), row(['id' => 1])));
+        FloeStreamReaderContext::write($this->fs(), $path, array_to_rows([['id' => 1]], schema(int_schema('id'))));
         $filesystem = new CountingFilesystem($this->fs());
         $extractor = from_floe($path, filesystem: $filesystem);
 
@@ -94,7 +91,7 @@ final class FloeExtractorTest extends FlowIntegrationTestCase
     public function test_schema_then_statistics_reads_the_footer_once(): void
     {
         $path = $this->cacheDir->suffix('schema-first.floe');
-        FloeStreamReaderContext::write($this->fs(), $path, rows(schema(int_schema('id')), row(['id' => 1])));
+        FloeStreamReaderContext::write($this->fs(), $path, array_to_rows([['id' => 1]], schema(int_schema('id'))));
         $filesystem = new CountingFilesystem($this->fs());
         $extractor = from_floe($path, filesystem: $filesystem);
 
@@ -107,7 +104,7 @@ final class FloeExtractorTest extends FlowIntegrationTestCase
     public function test_a_declared_schema_still_reads_the_footer_for_statistics(): void
     {
         $path = $this->cacheDir->suffix('declared.floe');
-        FloeStreamReaderContext::write($this->fs(), $path, rows(schema(int_schema('id')), row(['id' => 1])));
+        FloeStreamReaderContext::write($this->fs(), $path, array_to_rows([['id' => 1]], schema(int_schema('id'))));
 
         static::assertEquals(
             Cardinality::exact(1),
@@ -120,12 +117,12 @@ final class FloeExtractorTest extends FlowIntegrationTestCase
         FloeStreamReaderContext::write(
             $this->fs(),
             $this->cacheDir->suffix('union/a.floe'),
-            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])),
+            array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))),
         );
         FloeStreamReaderContext::write(
             $this->fs(),
             $this->cacheDir->suffix('union/b.floe'),
-            rows(schema(int_schema('id')), row(['id' => 3])),
+            array_to_rows([['id' => 3]], schema(int_schema('id'))),
         );
 
         $statistics = from_floe($this->cacheDir->suffix('union/*.floe'), filesystem: $this->fs())
@@ -145,7 +142,7 @@ final class FloeExtractorTest extends FlowIntegrationTestCase
     public function test_union_by_name_invalidates_the_memo(): void
     {
         $path = $this->cacheDir->suffix('union-memo.floe');
-        FloeStreamReaderContext::write($this->fs(), $path, rows(schema(int_schema('id')), row(['id' => 1])));
+        FloeStreamReaderContext::write($this->fs(), $path, array_to_rows([['id' => 1]], schema(int_schema('id'))));
         $filesystem = new CountingFilesystem($this->fs());
         $extractor = from_floe($path, filesystem: $filesystem);
 
@@ -158,14 +155,10 @@ final class FloeExtractorTest extends FlowIntegrationTestCase
     public function test_declared_zone_rezones_a_utc_file(): void
     {
         $path = $this->cacheDir->suffix('utc.floe');
-        FloeStreamReaderContext::write(
-            $this->fs(),
-            $path,
-            rows(
-                schema(datetime_schema('at')),
-                row(['at' => new DateTimeImmutable('2026-01-02 03:04:05', new DateTimeZone('UTC'))]),
-            ),
-        );
+        FloeStreamReaderContext::write($this->fs(), $path, array_to_rows([['at' => new DateTimeImmutable(
+            '2026-01-02 03:04:05',
+            new DateTimeZone('UTC'),
+        )]], schema(datetime_schema('at'))));
 
         static::assertSame(
             '2026-01-02 04:04:05 Europe/Warsaw',
@@ -189,18 +182,18 @@ final class FloeExtractorTest extends FlowIntegrationTestCase
         FloeStreamReaderContext::write(
             $this->fs(),
             $this->cacheDir->suffix('zones/a.floe'),
-            rows(
-                schema(datetime_schema('at', zone: 'Europe/Warsaw')),
-                row(['at' => new DateTimeImmutable('2026-01-02 03:04:05', new DateTimeZone('Europe/Warsaw'))]),
-            ),
+            array_to_rows([['at' => new DateTimeImmutable(
+                '2026-01-02 03:04:05',
+                new DateTimeZone('Europe/Warsaw'),
+            )]], schema(datetime_schema('at', zone: 'Europe/Warsaw'))),
         );
         FloeStreamReaderContext::write(
             $this->fs(),
             $this->cacheDir->suffix('zones/b.floe'),
-            rows(
-                schema(datetime_schema('at')),
-                row(['at' => new DateTimeImmutable('2026-01-02 03:04:05', new DateTimeZone('UTC'))]),
-            ),
+            array_to_rows([['at' => new DateTimeImmutable(
+                '2026-01-02 03:04:05',
+                new DateTimeZone('UTC'),
+            )]], schema(datetime_schema('at'))),
         );
 
         $zones = [];

@@ -16,14 +16,15 @@ use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_array;
@@ -32,6 +33,7 @@ use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function serialize;
@@ -49,7 +51,11 @@ final class OnEachTest extends FlowTestCase
                 ref('array')->onEach(ref('element')->upper()),
                 schema(list_schema('array', type_list(type_integer()))),
             )
-            ->eval(row(['array' => [1, 2, 3]]), flow_context());
+            ->eval(array_to_row(['array' => [
+                1,
+                2,
+                3,
+            ]], schema(list_schema('array', type_list(type_integer())))), flow_context());
     }
 
     public function test_an_element_the_declared_type_refuses_is_not_swallowed(): void
@@ -61,7 +67,10 @@ final class OnEachTest extends FlowTestCase
                 ref('array')->onEach(ref('element')->upper()),
                 schema(list_schema('array', type_list(type_string()))),
             )
-            ->eval(row(['array' => ['a', null]]), flow_context());
+            ->eval(array_to_row(['array' => [
+                'a',
+                null,
+            ]], schema(list_schema('array', type_list(type_optional(type_string()))))), flow_context());
     }
 
     public function test_executing_function_on_each_value_from_array(): void
@@ -73,7 +82,13 @@ final class OnEachTest extends FlowTestCase
                     ref('array')->onEach(ref('element')->cast(type_string())),
                     schema(list_schema('array', type_list(type_integer()))),
                 )
-                ->eval(row(['array' => [1, 2, 3, 4, 5]]), flow_context()),
+                ->eval(array_to_row(['array' => [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                ]], schema(list_schema('array', type_list(type_integer())))), flow_context()),
         );
     }
 
@@ -86,7 +101,10 @@ final class OnEachTest extends FlowTestCase
                     ref('array')->onEach(ref('element')->cast(type_string())),
                     schema(list_schema('array', type_list(type_integer()))),
                 )
-                ->eval(row(['array' => []]), flow_context()),
+                ->eval(array_to_row(
+                    ['array' => []],
+                    schema(list_schema('array', type_list(type_integer()))),
+                ), flow_context()),
         );
     }
 
@@ -99,7 +117,13 @@ final class OnEachTest extends FlowTestCase
                     ref('array')->onEach(ref('element')->cast(type_string()), true),
                     schema(map_schema('array', type_map(type_string(), type_integer()))),
                 )
-                ->eval(row(['array' => ['a' => 1, 'b' => 2, 'c' => 3, 'd' => 4, 'e' => 5]]), flow_context()),
+                ->eval(array_to_row(['array' => [
+                    'a' => 1,
+                    'b' => 2,
+                    'c' => 3,
+                    'd' => 4,
+                    'e' => 5,
+                ]], schema(map_schema('array', type_map(type_string(), type_integer())))), flow_context()),
         );
     }
 
@@ -112,7 +136,13 @@ final class OnEachTest extends FlowTestCase
                     ref('array')->onEach(ref('element')->cast(type_string()), false),
                     schema(map_schema('array', type_map(type_string(), type_integer()))),
                 )
-                ->eval(row(['array' => ['a' => 1, 'b' => 2, 'c' => 3, 'd' => 4, 'e' => 5]]), flow_context()),
+                ->eval(array_to_row(['array' => [
+                    'a' => 1,
+                    'b' => 2,
+                    'c' => 3,
+                    'd' => 4,
+                    'e' => 5,
+                ]], schema(map_schema('array', type_map(type_string(), type_integer())))), flow_context()),
         );
     }
 
@@ -128,14 +158,17 @@ final class OnEachTest extends FlowTestCase
                 ref('array')->onEach(ref('element')->cast(type_string())),
                 schema(definition_from_type('array', type_array())),
             )
-            ->eval(row(['array' => [1, 2]]), flow_context());
+            ->eval(array_to_row(['array' => [
+                1,
+                2,
+            ]], schema(list_schema('array', type_list(type_integer())))), flow_context());
     }
 
     public function test_the_element_schema_is_built_once_per_eval_not_once_per_element(): void
     {
         $operand = new CountingReturnsFunction(lit([1, 2, 3, 4, 5]), type_list(type_integer()));
 
-        (new OnEach($operand, ref('element')->cast(type_string())))->eval(row([]), flow_context());
+        (new OnEach($operand, ref('element')->cast(type_string())))->eval(array_to_row([], schema()), flow_context());
 
         static::assertSame(1, $operand->returnsCalls);
     }
@@ -224,7 +257,9 @@ final class OnEachTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('OnEach requires non-null array');
 
-        ref('tags')->onEach(ref('element'))->eval(row(['tags' => null]), flow_context());
+        ref('tags')
+            ->onEach(ref('element'))
+            ->eval(array_to_row(['tags' => null], schema(str_schema('tags', nullable: true))), flow_context());
     }
 
     public function test_with_children_keeps_the_element_schema(): void

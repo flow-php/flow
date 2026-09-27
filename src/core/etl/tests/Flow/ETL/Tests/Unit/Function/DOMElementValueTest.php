@@ -11,9 +11,12 @@ use DOMElement;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\html_element_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\xml_element_schema;
 
 use const LIBXML_HTML_NOIMPLIED;
 use const LIBXML_NOERROR;
@@ -29,7 +32,9 @@ final class DOMElementValueTest extends FlowTestCase
         static::assertInstanceOf(HTMLElement::class, $element->documentElement);
         static::assertEquals('foobar', ref('value')
             ->domElementValue()
-            ->eval(row(['value' => $element->documentElement]), flow_context()));
+            ->eval(array_to_row([
+                'value' => $element->documentElement,
+            ], schema(html_element_schema('value'))), flow_context()));
     }
 
     #[RequiresPhp('>= 8.4.0')]
@@ -41,7 +46,9 @@ final class DOMElementValueTest extends FlowTestCase
         static::assertInstanceOf(HTMLElement::class, $element->documentElement);
         static::assertEquals('bar', ref('value')
             ->domElementValue()
-            ->eval(row(['value' => $element->documentElement]), flow_context()));
+            ->eval(array_to_row([
+                'value' => $element->documentElement,
+            ], schema(html_element_schema('value'))), flow_context()));
     }
 
     public function test_xml_getting_element_value_with_children(): void
@@ -52,7 +59,9 @@ final class DOMElementValueTest extends FlowTestCase
         static::assertInstanceOf(DOMElement::class, $xml->documentElement);
         static::assertEquals('baz', ref('value')
             ->domElementValue()
-            ->eval(row(['value' => $xml->documentElement->firstChild]), flow_context()));
+            ->eval(array_to_row([
+                'value' => $xml->documentElement->firstChild,
+            ], schema(xml_element_schema('value'))), flow_context()));
     }
 
     public function test_xml_getting_simple_element_value(): void
@@ -63,6 +72,8 @@ final class DOMElementValueTest extends FlowTestCase
         static::assertInstanceOf(DOMElement::class, $xml->documentElement);
         static::assertEquals('bar', ref('value')
             ->domElementValue()
-            ->eval(row(['value' => $xml->documentElement->firstChild]), flow_context()));
+            ->eval(array_to_row([
+                'value' => $xml->documentElement->firstChild,
+            ], schema(xml_element_schema('value'))), flow_context()));
     }
 }

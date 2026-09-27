@@ -6,13 +6,11 @@ namespace Flow\ETL\Cache;
 
 use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
 
 use function array_map;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function get_debug_type;
@@ -86,10 +84,7 @@ final class CacheIndex
 
     public function toRows(): Rows
     {
-        return rows(
-            schema(str_schema('key'), int_schema('rows', nullable: true)),
-            ...array_map(static fn(array $chunk): Row => row($chunk), $this->chunks),
-        );
+        return array_to_rows($this->chunks, schema(str_schema('key'), int_schema('rows', nullable: true)));
     }
 
     /**

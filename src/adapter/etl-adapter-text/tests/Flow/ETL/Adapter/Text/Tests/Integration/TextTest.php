@@ -11,13 +11,12 @@ use function file_exists;
 use function file_get_contents;
 use function Flow\ETL\Adapter\Text\from_text;
 use function Flow\ETL\Adapter\Text\to_text;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\generate_random_string;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\string_schema;
@@ -37,12 +36,11 @@ final class TextTest extends FlowTestCase
         $path = __DIR__ . '/var/flow_php_etl_csv_loader' . generate_random_string() . '.csv';
 
         data_frame()
-            ->process(rows(
-                schema(string_schema('name')),
-                row(['name' => 'Norbert']),
-                row(['name' => 'Tomek']),
-                row(['name' => 'Dawid']),
-            ))
+            ->process(array_to_rows([
+                ['name' => 'Norbert'],
+                ['name' => 'Tomek'],
+                ['name' => 'Dawid'],
+            ], schema(string_schema('name'))))
             ->write(to_text($path))
             ->run();
 

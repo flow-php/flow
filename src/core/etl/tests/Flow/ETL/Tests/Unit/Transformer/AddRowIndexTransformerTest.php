@@ -10,10 +10,9 @@ use Flow\ETL\Transformation\AddRowIndex\StartFrom;
 use Flow\ETL\Transformer\AddRowIndexTransformer;
 use PHPUnit\Framework\Attributes\TestWith;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 
 final class AddRowIndexTransformerTest extends FlowTestCase
@@ -23,10 +22,9 @@ final class AddRowIndexTransformerTest extends FlowTestCase
         $this->expectException(SchemaDefinitionNotUniqueException::class);
         $this->expectExceptionMessage('Entry definitions must be unique, duplicated entries: [id]');
 
-        (new AddRowIndexTransformer('id', StartFrom::ZERO))->transform(
-            rows(schema(int_schema('id')), row(['id' => 1])),
-            flow_context(),
-        );
+        (new AddRowIndexTransformer('id', StartFrom::ZERO))->transform(array_to_rows([[
+            'id' => 1,
+        ]], schema(int_schema('id'))), flow_context());
     }
 
     public function test_bind_adds_an_int_index_column(): void
@@ -45,11 +43,11 @@ final class AddRowIndexTransformerTest extends FlowTestCase
 
         static::assertSame(
             [['id' => 1, 'idx' => 0], ['id' => 2, 'idx' => 1]],
-            $transformer->transform(rows($schema, row(['id' => 1]), row(['id' => 2])), $context)->toArray(),
+            $transformer->transform(array_to_rows([['id' => 1], ['id' => 2]], $schema), $context)->toArray(),
         );
         static::assertSame(
             [['id' => 3, 'idx' => 2]],
-            $transformer->transform(rows($schema, row(['id' => 3])), $context)->toArray(),
+            $transformer->transform(array_to_rows([['id' => 3]], $schema), $context)->toArray(),
         );
     }
 
@@ -59,14 +57,14 @@ final class AddRowIndexTransformerTest extends FlowTestCase
     {
         $transformer = new AddRowIndexTransformer('idx', $startFrom);
         $schema = schema(int_schema('id'));
-        $transformer->transform(rows($schema, row(['id' => 1]), row(['id' => 2])), flow_context());
+        $transformer->transform(array_to_rows([['id' => 1], ['id' => 2]], $schema), flow_context());
 
         $fresh = $transformer->fresh();
 
         static::assertNotSame($transformer, $fresh);
         static::assertSame(
             [['id' => 1, 'idx' => $first]],
-            $fresh->transform(rows($schema, row(['id' => 1])), flow_context())->toArray(),
+            $fresh->transform(array_to_rows([['id' => 1]], $schema), flow_context())->toArray(),
         );
     }
 
@@ -75,7 +73,7 @@ final class AddRowIndexTransformerTest extends FlowTestCase
         static::assertSame(
             [['id' => 1, 'idx' => 1]],
             (new AddRowIndexTransformer('idx', StartFrom::ONE))
-                ->transform(rows(schema(int_schema('id')), row(['id' => 1])), flow_context())
+                ->transform(array_to_rows([['id' => 1]], schema(int_schema('id'))), flow_context())
                 ->toArray(),
         );
     }

@@ -12,11 +12,10 @@ use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function iterator_to_array;
 
@@ -40,7 +39,7 @@ final class SourceRowsTest extends FlowTestCase
     {
         $extractor = new CountingExtractor(
             schema(int_schema('id')),
-            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3])),
+            array_to_rows([['id' => 1], ['id' => 2], ['id' => 3]], schema(int_schema('id'))),
         );
         $extractor->withBatchSize(1);
         $sources = new SourceRows();

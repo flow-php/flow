@@ -10,13 +10,14 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Unit\Function\Fixtures\CallUserFunc\StaticCalculator;
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
 
+use function Flow\ETL\DSL\array_to_row;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\call;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\row_number;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Types\DSL\type_integer;
@@ -38,13 +39,16 @@ final class CallUserFuncTest extends FlowTestCase
         ]);
         $rebuilt = $function->withChildren($function->children());
 
-        static::assertEquals($function->eval(row([]), flow_context()), $rebuilt->eval(row([]), flow_context()));
-        static::assertEquals(['1', '2', '3'], $rebuilt->eval(row([]), flow_context()));
+        static::assertEquals(
+            $function->eval(array_to_row([], schema()), flow_context()),
+            $rebuilt->eval(array_to_row([], schema()), flow_context()),
+        );
+        static::assertEquals(['1', '2', '3'], $rebuilt->eval(array_to_row([], schema()), flow_context()));
     }
 
     public function test_call_user_func_as_dsl(): void
     {
-        static::assertIsInt(call(lit('time'), type_integer())->eval(row([]), flow_context()));
+        static::assertIsInt(call(lit('time'), type_integer())->eval(array_to_row([], schema()), flow_context()));
     }
 
     public function test_a_non_scalar_function_cannot_replace_the_callable_child(): void
@@ -61,19 +65,23 @@ final class CallUserFuncTest extends FlowTestCase
     {
         static::assertSame(3, ref('list')
             ->call(lit([new StaticCalculator(), 'count']), type_integer())
-            ->eval(row(['list' => [1, 2, 3]]), flow_context()));
+            ->eval(array_to_row(['list' => [
+                1,
+                2,
+                3,
+            ]], schema(list_schema('list', type_list(type_integer())))), flow_context()));
     }
 
     public function test_call_user_func_with_native_function(): void
     {
-        $row = row(['list' => [1, 2, 3]]);
+        $row = array_to_row(['list' => [1, 2, 3]], schema(list_schema('list', type_list(type_integer()))));
 
         static::assertSame(3, ref('list')->call(lit('count'), type_integer())->eval($row, flow_context()));
     }
 
     public function test_call_user_func_with_ref_alias_and_optional_arguments(): void
     {
-        $row = row(['item_ids' => '1,2,3']);
+        $row = array_to_row(['item_ids' => '1,2,3'], schema(str_schema('item_ids')));
 
         static::assertEquals(
             ['1', '2', '3'],
@@ -85,7 +93,7 @@ final class CallUserFuncTest extends FlowTestCase
 
     public function test_call_user_func_with_ref_alias_and_optional_arguments_and_return_type(): void
     {
-        $row = row(['item_ids' => '1,2,3']);
+        $row = array_to_row(['item_ids' => '1,2,3'], schema(str_schema('item_ids')));
 
         static::assertEquals(
             [1, 2, 3],
@@ -97,7 +105,7 @@ final class CallUserFuncTest extends FlowTestCase
 
     public function test_call_user_func_with_static_method(): void
     {
-        $row = row(['list' => [1, 2, 3]]);
+        $row = array_to_row(['list' => [1, 2, 3]], schema(list_schema('list', type_list(type_integer()))));
 
         static::assertSame(3, ref('list')
             ->call(lit(StaticCalculator::class . '::count'), type_integer())
@@ -116,7 +124,7 @@ final class CallUserFuncTest extends FlowTestCase
         $result = (new ScalarFunctionTransformer(
             'out',
             new CallUserFunc(lit([StaticCalculator::class, 'alwaysNull']), type_string(), []),
-        ))->transform(rows(schema(str_schema('name')), row(['name' => 'a'])), flow_context());
+        ))->transform(array_to_rows([['name' => 'a']], schema(str_schema('name'))), flow_context());
 
         static::assertTrue($result->schema()->get('out')->isNullable());
         static::assertNull($result->first()->get('out'));

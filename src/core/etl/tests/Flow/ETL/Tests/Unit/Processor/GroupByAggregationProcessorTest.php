@@ -19,12 +19,12 @@ use Flow\ETL\Tests\Double\SpyBucketsStorage;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\count;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -47,11 +47,13 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
         );
 
         $input = (static function (): Generator {
-            yield rows(
+            yield array_to_rows(
+                [
+                    ['category' => 'a', 'amount' => 10],
+                    ['category' => 'b', 'amount' => 15],
+                    ['category' => 'a', 'amount' => 20],
+                ],
                 schema(str_schema('category'), int_schema('amount')),
-                row(['category' => 'a', 'amount' => 10]),
-                row(['category' => 'b', 'amount' => 15]),
-                row(['category' => 'a', 'amount' => 20]),
             );
         })();
 
@@ -100,11 +102,13 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
         );
 
         $input = (static function (): Generator {
-            yield rows(
+            yield array_to_rows(
+                [
+                    ['category' => 'a', 'amount' => 10],
+                    ['category' => 'b', 'amount' => 15],
+                    ['category' => 'a', 'amount' => 20],
+                ],
                 schema(str_schema('category'), int_schema('amount')),
-                row(['category' => 'a', 'amount' => 10]),
-                row(['category' => 'b', 'amount' => 15]),
-                row(['category' => 'a', 'amount' => 20]),
             );
         })();
 
@@ -181,10 +185,9 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
         );
 
         $input = (static function (): Generator {
-            yield rows(
+            yield array_to_rows(
+                [['category' => 'a', 'amount' => 10], ['category' => 'b', 'amount' => 15]],
                 schema(str_schema('category'), int_schema('amount')),
-                row(['category' => 'a', 'amount' => 10]),
-                row(['category' => 'b', 'amount' => 15]),
             );
         })();
 
@@ -313,11 +316,10 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
         $groupBy->aggregate(sum(ref('amount')), count(ref('amount')));
 
         $buckets = new Buckets(new MemoryBuckets());
-        $metadata = GroupByContext::bucketMetadata(
-            $buckets,
-            [],
-            rows(schema(int_schema('amount')), row(['amount' => 10]), row(['amount' => 20])),
-        );
+        $metadata = GroupByContext::bucketMetadata($buckets, [], array_to_rows([
+            ['amount' => 10],
+            ['amount' => 20],
+        ], schema(int_schema('amount'))));
 
         $bound = (new GroupByAggregationProcessor($groupBy, $buckets))->bind(schema(int_schema('amount')));
 

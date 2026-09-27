@@ -9,12 +9,12 @@ use Flow\ETL\Processor\WindowProcessor;
 use Flow\ETL\Tests\Context\ExecutedSegments;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\row_number;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
@@ -39,10 +39,9 @@ final class WindowFunctionPipelineTest extends TestCase
 
     public function test_handles_no_order_by(): void
     {
-        $segments = new Segments(from_rows(rows(
+        $segments = new Segments(from_rows(array_to_rows(
+            [['dept' => 'IT', 'value' => 100], ['dept' => 'IT', 'value' => 150]],
             schema(str_schema('dept'), int_schema('value')),
-            row(['dept' => 'IT', 'value' => 100]),
-            row(['dept' => 'IT', 'value' => 150]),
         )));
 
         $window = window()->partitionBy(ref('dept'));
@@ -65,8 +64,8 @@ final class WindowFunctionPipelineTest extends TestCase
         // one Rows per partition key
         $schema = schema(str_schema('dept'), int_schema('salary'));
         $segments = new Segments(from_rows(
-            rows($schema, row(['dept' => 'IT', 'salary' => 5000])),
-            rows($schema, row(['dept' => 'HR', 'salary' => 4000])),
+            array_to_rows([['dept' => 'IT', 'salary' => 5000]], $schema),
+            array_to_rows([['dept' => 'HR', 'salary' => 4000]], $schema),
         ));
 
         $window = window()->partitionBy(ref('dept'))->orderBy(ref('salary'));
@@ -85,8 +84,8 @@ final class WindowFunctionPipelineTest extends TestCase
     {
         $schema = schema(str_schema('dept'), int_schema('salary'));
         $segments = new Segments(from_rows(
-            rows($schema, row(['dept' => 'IT', 'salary' => 5000]), row(['dept' => 'IT', 'salary' => 6000])),
-            rows($schema, row(['dept' => 'HR', 'salary' => 4000]), row(['dept' => 'HR', 'salary' => 4500])),
+            array_to_rows([['dept' => 'IT', 'salary' => 5000], ['dept' => 'IT', 'salary' => 6000]], $schema),
+            array_to_rows([['dept' => 'HR', 'salary' => 4000], ['dept' => 'HR', 'salary' => 4500]], $schema),
         ));
 
         $window = window()->partitionBy(ref('dept'))->orderBy(ref('salary'));
@@ -109,11 +108,9 @@ final class WindowFunctionPipelineTest extends TestCase
 
     public function test_processes_single_partition_without_partition_by(): void
     {
-        $segments = new Segments(from_rows(rows(
+        $segments = new Segments(from_rows(array_to_rows(
+            [['id' => 1, 'value' => 100], ['id' => 2, 'value' => 150], ['id' => 3, 'value' => 200]],
             schema(int_schema('id'), int_schema('value')),
-            row(['id' => 1, 'value' => 100]),
-            row(['id' => 2, 'value' => 150]),
-            row(['id' => 3, 'value' => 200]),
         )));
 
         $window = window()->orderBy(ref('id'));
@@ -132,11 +129,13 @@ final class WindowFunctionPipelineTest extends TestCase
 
     public function test_sorts_partition_by_order_by(): void
     {
-        $segments = new Segments(from_rows(rows(
+        $segments = new Segments(from_rows(array_to_rows(
+            [
+                ['dept' => 'IT', 'salary' => 6000],
+                ['dept' => 'IT', 'salary' => 5000],
+                ['dept' => 'IT', 'salary' => 7000],
+            ],
             schema(str_schema('dept'), int_schema('salary')),
-            row(['dept' => 'IT', 'salary' => 6000]),
-            row(['dept' => 'IT', 'salary' => 5000]),
-            row(['dept' => 'IT', 'salary' => 7000]),
         )));
 
         $window = window()->partitionBy(ref('dept'))->orderBy(ref('salary'));

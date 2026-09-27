@@ -14,10 +14,9 @@ use Flow\ETL\Tests\Double\ConstantHasher;
 use Flow\ETL\Tests\Double\CountingHasher;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function iterator_to_array;
 use function sort;
@@ -35,7 +34,7 @@ final class HashBucketingTest extends FlowTestCase
         );
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 1]));
+            yield array_to_rows([['id' => 1]], schema(int_schema('id')));
         })();
 
         foreach ($strategy->bucketize($generator, new MemoryBuckets()) as $bucket) {
@@ -49,8 +48,8 @@ final class HashBucketingTest extends FlowTestCase
         $storage = new MemoryBuckets();
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
-            yield rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 4]));
+            yield array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
+            yield array_to_rows([['id' => 3], ['id' => 4]], schema(int_schema('id')));
         })();
 
         $totalRows = 0;
@@ -73,7 +72,7 @@ final class HashBucketingTest extends FlowTestCase
         );
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3]));
+            yield array_to_rows([['id' => 1], ['id' => 2], ['id' => 3]], schema(int_schema('id')));
         })();
 
         $buckets = iterator_to_array($strategy->bucketize($generator, new MemoryBuckets()));
@@ -89,11 +88,11 @@ final class HashBucketingTest extends FlowTestCase
         $rows = [];
 
         for ($i = 0; $i < 100; $i++) {
-            $rows[] = row(['id' => $i]);
+            $rows[] = ['id' => $i];
         }
 
         $generator = (static function () use ($rows) {
-            yield rows(schema(int_schema('id')), ...$rows);
+            yield array_to_rows($rows, schema(int_schema('id')));
         })();
 
         $total = 0;
@@ -113,11 +112,11 @@ final class HashBucketingTest extends FlowTestCase
         $rows = [];
 
         for ($i = 0; $i < 100; $i++) {
-            $rows[] = row(['id' => $i]);
+            $rows[] = ['id' => $i];
         }
 
         $generator = (static function () use ($rows) {
-            yield rows(schema(int_schema('id')), ...$rows);
+            yield array_to_rows($rows, schema(int_schema('id')));
         })();
 
         $indexes = [];
@@ -137,8 +136,8 @@ final class HashBucketingTest extends FlowTestCase
         $strategy = new HashBucketing([ref('id')], 4, $spy, new NativePHPRandomValueGenerator());
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
-            yield rows(schema(int_schema('id')), row(['id' => 3]));
+            yield array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
+            yield array_to_rows([['id' => 3]], schema(int_schema('id')));
         })();
 
         iterator_to_array($strategy->bucketize($generator, new MemoryBuckets()));
@@ -152,8 +151,8 @@ final class HashBucketingTest extends FlowTestCase
         $storage = new MemoryBuckets();
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 1]));
-            yield rows(schema(int_schema('id')), row(['id' => 1]));
+            yield array_to_rows([['id' => 1], ['id' => 1]], schema(int_schema('id')));
+            yield array_to_rows([['id' => 1]], schema(int_schema('id')));
         })();
 
         $buckets = iterator_to_array($strategy->bucketize($generator, $storage));
@@ -169,10 +168,9 @@ final class HashBucketingTest extends FlowTestCase
         $storage = new MemoryBuckets();
 
         $generator = (static function () {
-            yield rows(
+            yield array_to_rows(
+                [['id' => null], ['other' => 1]],
                 schema(int_schema('id', nullable: true), int_schema('other', nullable: true)),
-                row(['id' => null]),
-                row(['other' => 1]),
             );
         })();
 
@@ -187,7 +185,7 @@ final class HashBucketingTest extends FlowTestCase
         $strategy = new HashBucketing([ref('id')], 4, new NativeHasher(), new NativePHPRandomValueGenerator());
 
         $generator = (static function () {
-            yield rows(schema(int_schema('other')), row(['other' => 1]));
+            yield array_to_rows([['other' => 1]], schema(int_schema('other')));
         })();
 
         $this->expectException(InvalidArgumentException::class);

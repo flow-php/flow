@@ -16,9 +16,8 @@ use Flow\Floe\FloeReader;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\Options;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\path;
 
@@ -64,7 +63,7 @@ final class FloeFilesContext
             self::writeAll(
                 self::phpWriter($filesystem, $schema),
                 path($root . '/country=' . $country . '/data.floe'),
-                [rows($schema, row(['id' => $id]))],
+                [array_to_rows([['id' => $id]], $schema)],
             );
         }
     }
@@ -81,7 +80,7 @@ final class FloeFilesContext
             self::writeAll(
                 self::phpWriter($filesystem, $schema),
                 path($root . '/year=' . $year . '/data.floe'),
-                [rows($schema, row(['id' => $id]))],
+                [array_to_rows([['id' => $id]], $schema)],
             );
         }
     }

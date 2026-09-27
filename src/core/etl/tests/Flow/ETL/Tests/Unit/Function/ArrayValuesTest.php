@@ -9,15 +9,19 @@ use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 
 final class ArrayValuesTest extends FlowTestCase
@@ -26,7 +30,12 @@ final class ArrayValuesTest extends FlowTestCase
     {
         static::assertSame(
             [1, 2],
-            ref('map')->arrayValues()->eval(row(['map' => ['a' => 1, 'b' => 2]]), flow_context()),
+            ref('map')
+                ->arrayValues()
+                ->eval(array_to_row(['map' => [
+                    'a' => 1,
+                    'b' => 2,
+                ]], schema(map_schema('map', type_map(type_string(), type_integer())))), flow_context()),
         );
     }
 
@@ -36,7 +45,7 @@ final class ArrayValuesTest extends FlowTestCase
         $this->expectExceptionMessage('Expected type "array<mixed>", got "string".');
 
         $context = flow_context(config());
-        ref('map')->arrayValues()->eval(row(['map' => 'test']), $context);
+        ref('map')->arrayValues()->eval(array_to_row(['map' => 'test'], schema(str_schema('map'))), $context);
     }
 
     public function test_array_values_on_non_array(): void
@@ -44,7 +53,7 @@ final class ArrayValuesTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected type "array<mixed>", got "string".');
 
-        ref('map')->arrayValues()->eval(row(['map' => 'test']), flow_context());
+        ref('map')->arrayValues()->eval(array_to_row(['map' => 'test'], schema(str_schema('map'))), flow_context());
     }
 
     public function test_a_structure_operand_declares_the_unified_field_type(): void

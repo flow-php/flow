@@ -63,4 +63,16 @@ final class InferredRowsTest extends FlowTestCase
             $sampleSize === null ? null : new SchemaInference(sampleSize: $sampleSize),
         ))->of([['code' => 1], ['code' => 'x']], schema(int_schema('code', true)), new PhpBackend());
     }
+
+    public function test_a_declared_schema_narrower_than_the_rows_projects_its_columns(): void
+    {
+        static::assertSame(
+            [['code' => 1], ['code' => 2]],
+            (new InferredRows('from_array()', null))->of(
+                [['code' => 1, 'name' => 'one'], ['code' => 2, 'name' => 'two']],
+                schema(int_schema('code')),
+                new PhpBackend(),
+            )->toArray(),
+        );
+    }
 }

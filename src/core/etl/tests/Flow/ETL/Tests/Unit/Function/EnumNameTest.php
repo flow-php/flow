@@ -12,11 +12,13 @@ use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\TestWith;
 use UnitEnum;
 
+use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\enum_name;
+use function Flow\ETL\DSL\enum_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_string;
 
@@ -24,7 +26,7 @@ final class EnumNameTest extends FlowTestCase
 {
     public function test_enum_name_accepts_literal_enum(): void
     {
-        static::assertSame('one', enum_name(BackedStringEnum::one)->eval(row([]), flow_context()));
+        static::assertSame('one', enum_name(BackedStringEnum::one)->eval(array_to_row([], schema()), flow_context()));
     }
 
     public function test_enum_name_carries_string_type(): void
@@ -34,7 +36,11 @@ final class EnumNameTest extends FlowTestCase
 
     public function test_enum_name_from_scalar_function_chain(): void
     {
-        static::assertSame('one', ref('e')->enumName()->eval(row(['e' => BackedIntEnum::one]), flow_context()));
+        static::assertSame('one', ref('e')
+            ->enumName()
+            ->eval(array_to_row([
+                'e' => BackedIntEnum::one,
+            ], schema(enum_schema('e', BackedIntEnum::class))), flow_context()));
     }
 
     #[TestWith([BackedStringEnum::one])]
@@ -42,7 +48,8 @@ final class EnumNameTest extends FlowTestCase
     #[TestWith([BasicEnum::one])]
     public function test_enum_name_returns_case_name(UnitEnum $enum): void
     {
-        static::assertSame('one', enum_name(ref('e'))->eval(row(['e' => $enum]), flow_context()));
+        static::assertSame('one', enum_name(ref('e'))
+            ->eval(array_to_row(['e' => $enum], schema(enum_schema('e', $enum::class))), flow_context()));
     }
 
     #[TestWith([null])]
@@ -54,6 +61,6 @@ final class EnumNameTest extends FlowTestCase
         $this->expectExceptionMessage('EnumName function requires a UnitEnum value');
 
         $context = flow_context(config());
-        enum_name($input)->eval(row([]), $context);
+        enum_name($input)->eval(array_to_row([], schema()), $context);
     }
 }

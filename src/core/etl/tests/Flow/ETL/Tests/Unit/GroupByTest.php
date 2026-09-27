@@ -14,6 +14,8 @@ use Flow\ETL\Tests\Context\GroupByContext;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 
+use function Flow\ETL\DSL\array_to_row;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\count;
 use function Flow\ETL\DSL\float_schema;
@@ -22,8 +24,6 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\min;
 use function Flow\ETL\DSL\pivot_values;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\sum;
@@ -38,11 +38,9 @@ final class GroupByTest extends FlowTestCase
         $result = GroupByContext::aggregated(
             $groupBy,
             flow_context(config()),
-            rows(
+            array_to_rows(
+                [['type' => 'a'], ['not-type' => 'b'], ['type' => 'c']],
                 schema(str_schema('type', nullable: true), str_schema('not-type', nullable: true)),
-                row(['type' => 'a']),
-                row(['not-type' => 'b']),
-                row(['type' => 'c']),
             ),
         );
 
@@ -65,13 +63,15 @@ final class GroupByTest extends FlowTestCase
         $result = GroupByContext::aggregated(
             $group,
             flow_context(config()),
-            rows(
+            array_to_rows(
+                [
+                    ['id' => 1, 'type' => 'a'],
+                    ['id' => 2, 'type' => 'b'],
+                    ['id' => 3, 'type' => 'c'],
+                    ['id' => 4, 'type' => 'a'],
+                    ['id' => 5, 'type' => 'd'],
+                ],
                 schema(int_schema('id'), str_schema('type')),
-                row(['id' => 1, 'type' => 'a']),
-                row(['id' => 2, 'type' => 'b']),
-                row(['id' => 3, 'type' => 'c']),
-                row(['id' => 4, 'type' => 'a']),
-                row(['id' => 5, 'type' => 'd']),
             ),
         );
 
@@ -116,9 +116,9 @@ final class GroupByTest extends FlowTestCase
 
         $schema = iterator_to_array((new PivotAggregation())->aggregate(
             (static function (): Generator {
-                yield rows(
+                yield array_to_rows(
+                    [['product' => 'Banana', 'country' => 'USA', 'amount' => 1000]],
                     schema(str_schema('product'), str_schema('country'), int_schema('amount')),
-                    row(['product' => 'Banana', 'country' => 'USA', 'amount' => 1000]),
                 );
             })(),
             flow_context(config()),
@@ -198,10 +198,12 @@ final class GroupByTest extends FlowTestCase
 
         $result = iterator_to_array((new PivotAggregation())->aggregate(
             (static function (): Generator {
-                yield rows(
+                yield array_to_rows(
+                    [
+                        ['product' => 'Banana', 'country' => 'USA', 'amount' => 30],
+                        ['product' => 'Banana', 'country' => 'USA', 'amount' => 10],
+                    ],
                     schema(str_schema('product'), str_schema('country'), int_schema('amount')),
-                    row(['product' => 'Banana', 'country' => 'USA', 'amount' => 30]),
-                    row(['product' => 'Banana', 'country' => 'USA', 'amount' => 10]),
                 );
             })(),
             flow_context(config()),
@@ -230,10 +232,12 @@ final class GroupByTest extends FlowTestCase
 
         $result = iterator_to_array((new PivotAggregation())->aggregate(
             (static function (): Generator {
-                yield rows(
+                yield array_to_rows(
+                    [
+                        ['product' => 'Banana', 'country' => '0', 'amount' => 7],
+                        ['product' => 'Banana', 'country' => 'USA', 'amount' => 3],
+                    ],
                     schema(str_schema('product'), str_schema('country'), int_schema('amount')),
-                    row(['product' => 'Banana', 'country' => '0', 'amount' => 7]),
-                    row(['product' => 'Banana', 'country' => 'USA', 'amount' => 3]),
                 );
             })(),
             flow_context(config()),
@@ -251,7 +255,13 @@ final class GroupByTest extends FlowTestCase
         $group->pivot(ref('country'), pivot_values('Canada', 'China', 'Mexico', 'USA'));
 
         static::assertEquals(
-            rows(
+            array_to_rows(
+                [
+                    ['product' => 'Banana', 'Canada' => 2000.0, 'China' => 400.0, 'Mexico' => null, 'USA' => 1000.0],
+                    ['product' => 'Beans', 'Canada' => null, 'China' => 1500.0, 'Mexico' => 2000.0, 'USA' => 1600.0],
+                    ['product' => 'Carrots', 'Canada' => 2000.0, 'China' => 1200.0, 'Mexico' => null, 'USA' => 1500.0],
+                    ['product' => 'Orange', 'Canada' => null, 'China' => 4000.0, 'Mexico' => null, 'USA' => 4000.0],
+                ],
                 schema(
                     str_schema('product'),
                     // PivotSchema declares every pivot column optional: the yield loop writes null
@@ -261,28 +271,26 @@ final class GroupByTest extends FlowTestCase
                     float_schema('Mexico', nullable: true),
                     float_schema('USA', nullable: true),
                 ),
-                row(['product' => 'Banana', 'Canada' => 2000.0, 'China' => 400.0, 'Mexico' => null, 'USA' => 1000.0]),
-                row(['product' => 'Beans', 'Canada' => null, 'China' => 1500.0, 'Mexico' => 2000.0, 'USA' => 1600.0]),
-                row(['product' => 'Carrots', 'Canada' => 2000.0, 'China' => 1200.0, 'Mexico' => null, 'USA' => 1500.0]),
-                row(['product' => 'Orange', 'Canada' => null, 'China' => 4000.0, 'Mexico' => null, 'USA' => 4000.0]),
             ),
             GroupByContext::aggregated(
                 $group,
                 flow_context(config()),
-                rows(
+                array_to_rows(
+                    [
+                        ['product' => 'Banana', 'amount' => 1000, 'country' => 'USA'],
+                        ['product' => 'Carrots', 'amount' => 1500, 'country' => 'USA'],
+                        ['product' => 'Beans', 'amount' => 1600, 'country' => 'USA'],
+                        ['product' => 'Orange', 'amount' => 2000, 'country' => 'USA'],
+                        ['product' => 'Orange', 'amount' => 2000, 'country' => 'USA'],
+                        ['product' => 'Banana', 'amount' => 400, 'country' => 'China'],
+                        ['product' => 'Carrots', 'amount' => 1200, 'country' => 'China'],
+                        ['product' => 'Beans', 'amount' => 1500, 'country' => 'China'],
+                        ['product' => 'Orange', 'amount' => 4000, 'country' => 'China'],
+                        ['product' => 'Banana', 'amount' => 2000, 'country' => 'Canada'],
+                        ['product' => 'Carrots', 'amount' => 2000, 'country' => 'Canada'],
+                        ['product' => 'Beans', 'amount' => 2000, 'country' => 'Mexico'],
+                    ],
                     schema(str_schema('product'), int_schema('amount'), str_schema('country')),
-                    row(['product' => 'Banana', 'amount' => 1000, 'country' => 'USA']),
-                    row(['product' => 'Carrots', 'amount' => 1500, 'country' => 'USA']),
-                    row(['product' => 'Beans', 'amount' => 1600, 'country' => 'USA']),
-                    row(['product' => 'Orange', 'amount' => 2000, 'country' => 'USA']),
-                    row(['product' => 'Orange', 'amount' => 2000, 'country' => 'USA']),
-                    row(['product' => 'Banana', 'amount' => 400, 'country' => 'China']),
-                    row(['product' => 'Carrots', 'amount' => 1200, 'country' => 'China']),
-                    row(['product' => 'Beans', 'amount' => 1500, 'country' => 'China']),
-                    row(['product' => 'Orange', 'amount' => 4000, 'country' => 'China']),
-                    row(['product' => 'Banana', 'amount' => 2000, 'country' => 'Canada']),
-                    row(['product' => 'Carrots', 'amount' => 2000, 'country' => 'Canada']),
-                    row(['product' => 'Beans', 'amount' => 2000, 'country' => 'Mexico']),
                 ),
             )->sortBy(ref('product')),
         );
@@ -295,18 +303,19 @@ final class GroupByTest extends FlowTestCase
         $group->pivot(ref('country'), pivot_values('USA'));
 
         static::assertEquals(
-            rows(
+            array_to_rows(
+                [['product' => 'Apple', 'USA' => null], ['product' => 'Banana', 'USA' => 1000.0]],
                 schema(str_schema('product'), float_schema('USA', nullable: true)),
-                row(['product' => 'Apple', 'USA' => null]),
-                row(['product' => 'Banana', 'USA' => 1000.0]),
             ),
             GroupByContext::aggregated(
                 $group,
                 flow_context(config()),
-                rows(
+                array_to_rows(
+                    [
+                        ['product' => 'Banana', 'country' => 'USA', 'amount' => 1000],
+                        ['product' => 'Apple', 'country' => null, 'amount' => 400],
+                    ],
                     schema(str_schema('product'), str_schema('country', nullable: true), int_schema('amount')),
-                    row(['product' => 'Banana', 'country' => 'USA', 'amount' => 1000]),
-                    row(['product' => 'Apple', 'country' => null, 'amount' => 400]),
                 ),
             )->sortBy(ref('product')),
         );
@@ -327,7 +336,7 @@ final class GroupByTest extends FlowTestCase
         GroupByContext::aggregated(
             $groupBy,
             flow_context(config()),
-            rows(schema(str_schema('type')), row(['type' => 'a']), row(['type' => 'b'])),
+            array_to_rows([['type' => 'a'], ['type' => 'b']], schema(str_schema('type'))),
         );
     }
 
@@ -362,7 +371,10 @@ final class GroupByTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Column "country" does not exist.');
 
-        (new GroupBy('country'))->keyValues(row(['age' => 20]), schema(str_schema('country'), int_schema('age')));
+        (new GroupBy('country'))->keyValues(
+            array_to_row(['age' => 20], schema(int_schema('age'))),
+            schema(str_schema('country'), int_schema('age')),
+        );
     }
 
     public function test_key_values_substitutes_null_when_a_row_lacks_a_nullable_key(): void
@@ -370,7 +382,7 @@ final class GroupByTest extends FlowTestCase
         static::assertSame(
             ['country' => null],
             iterator_to_array((new GroupBy('country'))->keyValues(
-                row(['age' => 20]),
+                array_to_row(['age' => 20], schema(int_schema('age'))),
                 schema(str_schema('country', nullable: true), int_schema('age')),
             )),
         );

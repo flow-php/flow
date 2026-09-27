@@ -12,11 +12,10 @@ use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\RowsMother;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function iterator_to_array;
@@ -47,12 +46,14 @@ final class BatchingByProcessorTest extends FlowTestCase
     {
         $processor = new BatchingByProcessor(ref('group'));
         $generator = (static function () {
-            yield rows(
+            yield array_to_rows(
+                [
+                    ['group' => 'a', 'id' => 1],
+                    ['group' => 'a', 'id' => 2],
+                    ['group' => 'b', 'id' => 3],
+                    ['group' => 'b', 'id' => 4],
+                ],
                 schema(str_schema('group'), int_schema('id')),
-                row(['group' => 'a', 'id' => 1]),
-                row(['group' => 'a', 'id' => 2]),
-                row(['group' => 'b', 'id' => 3]),
-                row(['group' => 'b', 'id' => 4]),
             );
         })();
         $result = iterator_to_array($processor->process($generator, flow_context()));
@@ -79,10 +80,9 @@ final class BatchingByProcessorTest extends FlowTestCase
     {
         $processor = new BatchingByProcessor(ref('group'));
         $generator = (static function () {
-            yield rows(
+            yield array_to_rows(
+                [['group' => 'a', 'id' => 1], ['group' => 'a', 'id' => 2]],
                 schema(str_schema('group'), int_schema('id')),
-                row(['group' => 'a', 'id' => 1]),
-                row(['group' => 'a', 'id' => 2]),
             );
         })();
         $result = iterator_to_array($processor->process($generator, flow_context()));
@@ -94,12 +94,14 @@ final class BatchingByProcessorTest extends FlowTestCase
     {
         $processor = new BatchingByProcessor(ref('group'), minSize: 3);
         $generator = (static function () {
-            yield rows(
+            yield array_to_rows(
+                [
+                    ['group' => 'a', 'id' => 1],
+                    ['group' => 'a', 'id' => 2],
+                    ['group' => 'b', 'id' => 3],
+                    ['group' => 'b', 'id' => 4],
+                ],
                 schema(str_schema('group'), int_schema('id')),
-                row(['group' => 'a', 'id' => 1]),
-                row(['group' => 'a', 'id' => 2]),
-                row(['group' => 'b', 'id' => 3]),
-                row(['group' => 'b', 'id' => 4]),
             );
         })();
         $result = iterator_to_array($processor->process($generator, flow_context()));
