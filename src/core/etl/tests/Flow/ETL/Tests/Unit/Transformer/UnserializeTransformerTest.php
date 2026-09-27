@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\UnserializeTransformer;
 use Flow\Floe\FloeSerializer;
@@ -23,6 +24,22 @@ use function Flow\Types\DSL\type_string;
 
 final class UnserializeTransformerTest extends FlowTestCase
 {
+    public function test_a_payload_written_with_another_type_is_refused(): void
+    {
+        $payload = serialize_to_string(
+            new Base64Serializer(new FloeSerializer()),
+            rows(schema(str_schema('id')), row(['id' => '12'])),
+        );
+
+        $this->expectException(SchemaMismatchException::class);
+        $this->expectExceptionMessage('column "id" (row 0): could not convert \'12\' (string) to integer');
+
+        (new UnserializeTransformer('serialized', schema(int_schema('id'))))->transform(
+            rows(schema(str_schema('serialized')), row(['serialized' => $payload])),
+            flow_context(),
+        );
+    }
+
     public function test_bind_expands_the_declared_target_into_nullable_columns(): void
     {
         static::assertEquals(

@@ -36,7 +36,7 @@ final readonly class MemorySortProcessor implements Processor
 
         foreach ($rows as $batch) {
             $schema ??= $batch->schema();
-            if ($batch->empty()) {
+            if ($batch->isEmpty()) {
                 continue;
             }
 
@@ -47,9 +47,9 @@ final readonly class MemorySortProcessor implements Processor
             }
         }
 
-        yield from (new Rows($this->declared ?? $schema ?? new Schema(), ...$buffer))
-            ->sortBy(...$this->refs->all())
-            ->chunks($maxSize);
+        yield from Rows::of($this->declared ?? $schema ?? new Schema(), ...$buffer)->sortBy(
+            ...$this->refs->all(),
+        )->chunks($maxSize);
     }
 
     public function bind(Schema $input): BoundStep

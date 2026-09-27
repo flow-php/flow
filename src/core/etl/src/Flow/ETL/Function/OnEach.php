@@ -101,14 +101,14 @@ final class OnEach implements ScalarFunction
 
         $output = [];
 
-        $hydrator = $context->hydrator();
+        $backend = $context->backend();
         // hoisted: array_to_row() runs per element, and the schema is the same for every one of them
         $elementSchema = $this->elementSchema->of(type_bare($this->array->returns()));
 
         // @mago-ignore analysis:mixed-assignment
         foreach ($value as $key => $item) {
             $result = (new Parameter($this->function))->eval(
-                array_to_row(['element' => $item], $elementSchema, $hydrator),
+                array_to_row(['element' => $item], $elementSchema, $backend),
                 $context,
             );
 

@@ -46,7 +46,7 @@ final class DataFrameExtractor implements RewindableExtractor
 
         foreach ($config->executor()->execute($config->planner()->plan($logical, $this->plan->context)) as $rows) {
             if ($this->schema !== null) {
-                $rows = array_to_rows($rows->toArray(), $this->schema, $context->hydrator());
+                $rows = array_to_rows($rows->toArray(), $this->schema, $context->backend());
             }
 
             $signal = yield $rows;

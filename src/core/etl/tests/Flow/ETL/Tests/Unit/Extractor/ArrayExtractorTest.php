@@ -7,11 +7,11 @@ namespace Flow\ETL\Tests\Unit\Extractor;
 use ArrayIterator;
 use ArrayObject;
 use Flow\ETL\Cardinality;
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Extractor\ArrayExtractor;
 use Flow\ETL\Extractor\Statistics;
-use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Tests\Double\FixedTmpDirFilesystem;
 use Flow\ETL\Tests\Double\FreshRowsAggregate;
@@ -310,7 +310,7 @@ final class ArrayExtractorTest extends FlowTestCase
         iterator_to_array(
             from_array($dataset)
                 ->inferSchema(infer_schema()->sampleSize(3))
-                ->extract(execution_context(config_builder()->hydrator(new PhpRowHydrator())->build())),
+                ->extract(execution_context(config_builder()->backend(new PhpBackend())->build())),
         );
     }
 

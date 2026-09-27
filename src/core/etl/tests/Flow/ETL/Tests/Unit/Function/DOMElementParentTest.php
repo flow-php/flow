@@ -12,6 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 
@@ -44,7 +45,7 @@ final class DOMElementParentTest extends TestCase
         );
         static::assertEquals(
             $element->documentElement,
-            ref('value')->domElementParent()->eval(row(['value' => $element->querySelector('span')]), flow_context()),
+            lit($element->querySelector('span'))->domElementParent()->eval(row([]), flow_context()),
         );
     }
 
@@ -53,9 +54,7 @@ final class DOMElementParentTest extends TestCase
     {
         // @mago-ignore analysis:unavailable-method
         $element = HTMLDocument::createFromString('<span>bar</span>', LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR);
-        static::assertNull(
-            ref('value')->domElementParent()->eval(row(['value' => $element->documentElement]), flow_context()),
-        );
+        static::assertNull(lit($element->documentElement)->domElementParent()->eval(row([]), flow_context()));
     }
 
     public function test_xml_fails_when_parent_not_available_in_strict_mode(): void
@@ -76,13 +75,9 @@ final class DOMElementParentTest extends TestCase
         $xml->loadXML('<root><foo>foo</foo><bar>bar</bar></root>');
         static::assertEquals(
             $xml->documentElement,
-            ref('value')
-                ->domElementParent()
-                ->eval(
-                    // @mago-ignore analysis:possibly-null-property-access
-                    row(['value' => $xml->documentElement->firstChild]),
-                    flow_context(),
-                ),
+            // a batch stores the element's markup, so the parent is only reachable on the live node
+            // @mago-ignore analysis:possibly-null-property-access
+            lit($xml->documentElement->firstChild)->domElementParent()->eval(row([]), flow_context()),
         );
     }
 

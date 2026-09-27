@@ -52,7 +52,7 @@ final readonly class TopNProcessor implements Processor
         foreach ($rows as $batch) {
             $schema ??= $batch->schema();
 
-            if ($batch->empty()) {
+            if ($batch->isEmpty()) {
                 continue;
             }
 
@@ -68,7 +68,7 @@ final readonly class TopNProcessor implements Processor
             }
         }
 
-        yield from (new Rows($this->declared ?? $schema ?? new Schema(), ...$this->top($kept, $schema)))->chunks(
+        yield from Rows::of($this->declared ?? $schema ?? new Schema(), ...$this->top($kept, $schema))->chunks(
             $maxSize,
         );
     }
@@ -80,9 +80,8 @@ final readonly class TopNProcessor implements Processor
      */
     public function top(array $rows, ?Schema $schema): array
     {
-        return (new Rows($this->declared ?? $schema ?? new Schema(), ...$rows))
-            ->sortBy(...$this->refs->all())
-            ->take($this->limit)
-            ->all();
+        return Rows::of($this->declared ?? $schema ?? new Schema(), ...$rows)->sortBy(
+            ...$this->refs->all(),
+        )->take($this->limit)->all();
     }
 }

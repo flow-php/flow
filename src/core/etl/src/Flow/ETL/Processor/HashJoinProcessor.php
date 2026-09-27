@@ -299,9 +299,9 @@ final class HashJoinProcessor implements Processor
                     $kept[] = $row;
                 }
 
-                $batch = Rows::trusted($batch->schema(), $kept);
+                $batch = Rows::of($batch->schema(), ...$kept);
 
-                if ($batch->empty()) {
+                if ($batch->isEmpty()) {
                     continue;
                 }
             }

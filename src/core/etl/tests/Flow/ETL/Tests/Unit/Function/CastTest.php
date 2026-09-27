@@ -138,10 +138,11 @@ final class CastTest extends FlowTestCase
             ],
             'string_to_timezone' => ['UTC', 'timezone', new DateTimeZone('UTC')],
             'string_to_timezone_america' => ['America/New_York', 'timezone', new DateTimeZone('America/New_York')],
+            // row() infers a UTC datetime column, so the value reads back under the column zone
             'datetime_to_timezone' => [
                 new DateTimeImmutable('2023-01-01 00:00:00', new DateTimeZone('Europe/London')),
                 'timezone',
-                new DateTimeZone('Europe/London'),
+                new DateTimeZone('UTC'),
             ],
             'uuid' => [
                 Uuid::fromString('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'),

@@ -14,7 +14,6 @@ use Flow\ETL\Schema;
 use Flow\Filesystem\Partitions;
 use Generator;
 
-use function array_diff_key;
 use function array_flip;
 use function array_keys;
 use function array_values;
@@ -72,22 +71,10 @@ final class PartitionRouter
 
         $stripped = $this->dropped === [] ? $schema : $schema->gracefulRemove(...$this->partitioning->by->names());
 
-        // a group is a subset of a batch that already passed the gate, and stripping removes the same
-        // columns from its rows and from the schema, so neither needs checking again
         foreach ($groups as [$partitions, $rowsOfGroup]) {
-            if ($this->dropped === []) {
-                yield [$partitions, Rows::trusted($schema, $rowsOfGroup)];
+            $group = Rows::of($schema, ...$rowsOfGroup);
 
-                continue;
-            }
-
-            $strippedRows = [];
-
-            foreach ($rowsOfGroup as $row) {
-                $strippedRows[] = new Row(array_diff_key($row->values(), $this->dropped));
-            }
-
-            yield [$partitions, Rows::trusted($stripped, $strippedRows)];
+            yield [$partitions, $this->dropped === [] ? $group : $group->project($stripped)];
         }
     }
 

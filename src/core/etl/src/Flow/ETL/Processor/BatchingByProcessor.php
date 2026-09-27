@@ -73,7 +73,7 @@ final readonly class BatchingByProcessor implements Processor
                 if ($value !== $currentValue) {
                     if ($this->minSize === null || count($buffer) >= $this->minSize) {
                         if ($buffer !== []) {
-                            $signal = yield new Rows($schema, ...$buffer);
+                            $signal = yield Rows::of($schema, ...$buffer);
 
                             if ($signal === Signal::STOP) {
                                 $rows->send(Signal::STOP);
@@ -94,7 +94,7 @@ final readonly class BatchingByProcessor implements Processor
         }
 
         if ($buffer !== []) {
-            yield new Rows($schema ?? new Schema(), ...$buffer);
+            yield Rows::of($schema ?? new Schema(), ...$buffer);
         }
     }
 }

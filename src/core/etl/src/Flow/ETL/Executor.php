@@ -105,9 +105,9 @@ final readonly class Executor
         }
 
         try {
-            return new Rows($plan->schema());
+            return Rows::of($plan->schema());
         } catch (SchemaNotDerivableException) {
-            return new Rows(new Schema());
+            return Rows::of(new Schema());
         }
     }
 

@@ -29,9 +29,7 @@ final class RowsBuffer
 
     /**
      * @param int<1, max> $size
-     * @param null|Closure(Schema, list<Row>): Rows $batch builds each released batch - Rows::trusted(...) or
-     *                                                   Rows::conformed(...) for rows that already passed the gate;
-     *                                                   null checks every row through new Rows()
+     * @param null|Closure(Schema, list<Row>): Rows $batch builds each released batch; null uses Rows::of()
      */
     public function __construct(
         private readonly Schema $schema,
@@ -49,7 +47,7 @@ final class RowsBuffer
             /**
              * @param list<Row> $rows
              */
-            static fn(Schema $schema, array $rows): Rows => new Rows($schema, ...$rows);
+            static fn(Schema $schema, array $rows): Rows => Rows::of($schema, ...$rows);
     }
 
     public function add(Row $row): ?Rows

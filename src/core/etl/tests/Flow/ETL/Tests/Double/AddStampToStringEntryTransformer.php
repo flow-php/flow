@@ -11,6 +11,7 @@ use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 
 use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
 use function Flow\Types\DSL\type_string;
 use function sprintf;
 
@@ -48,6 +49,6 @@ final readonly class AddStampToStringEntryTransformer implements Transformer
             ]);
         }
 
-        return new Rows($rows->schema(), ...$stamped);
+        return rows($rows->schema(), ...$stamped);
     }
 }

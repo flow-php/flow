@@ -51,7 +51,7 @@ final class UntilTransformer implements Transformer
                     TelemetryAttributes::ATTR_TRANSFORMATION_OUTPUT_ROWS => 0,
                 ]);
 
-                throw new LimitReachedException(0, new Rows($rows->schema()));
+                throw new LimitReachedException(0, Rows::of($rows->schema()));
             }
 
             // the unbound path has no plan to hold the resolved predicate, so it is memoised here -
@@ -68,7 +68,7 @@ final class UntilTransformer implements Transformer
                         TelemetryAttributes::ATTR_TRANSFORMATION_OUTPUT_ROWS => count($nextRows),
                     ]);
 
-                    throw new LimitReachedException(0, new Rows($rows->schema(), ...$nextRows));
+                    throw new LimitReachedException(0, Rows::of($rows->schema(), ...$nextRows));
                 }
 
                 $nextRows[] = $row;

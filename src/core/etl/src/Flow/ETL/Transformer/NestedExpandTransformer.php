@@ -7,8 +7,8 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\BoundStep;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Transformer;
@@ -66,36 +66,56 @@ final readonly class NestedExpandTransformer implements Transformer
     {
         $columns = new DerivedColumns();
         $declared = $columns->declare($rows->schema(), $derived);
-        $name = $derived->entry()->name();
-        $mapped = [];
+        $cast = [];
+        $sources = [];
 
-        foreach ($rows->all() as $r) {
+        foreach ($rows->all() as $index => $r) {
             // @mago-ignore analysis:mixed-assignment
             foreach ($this->expansion->eval($r, $context) as $value) {
-                $mapped[] = new Row([...$r->values(), $name => $columns->value($derived, $value, count($mapped))]);
+                $sources[] = $index;
+                $cast[] = $columns->value($derived, $value, count($cast));
             }
         }
 
-        return $columns->rows($declared, $this->output, $mapped);
+        $builder = $context->backend()->builder($derived);
+        $builder->appendMany($cast);
+
+        return $columns->rows(
+            $rows->gather($sources),
+            $declared,
+            $this->output,
+            $derived->entry()->name(),
+            $builder->finish(),
+        );
     }
 
     private function unpack(Rows $rows, FlowContext $context, Schema $declared): Rows
     {
         $columns = new UnpackedColumns();
-        $unpacked = [];
+        $prefix = $this->entryName . '.';
+        $prefixed = [];
 
-        foreach ($rows->all() as $r) {
+        foreach ($declared->definitions() as $name => $_) {
+            $prefixed[] = $prefix . $name;
+        }
+
+        $payloads = [];
+        $sources = [];
+
+        foreach ($rows->all() as $index => $r) {
             // @mago-ignore analysis:mixed-assignment
             foreach ($this->expansion->eval($r, $context) as $payload) {
-                $unpacked[] = new Row($columns->values(
-                    $r->values(),
-                    $this->entryName . '.',
-                    $declared,
-                    type_array()->assert($payload),
-                ));
+                $sources[] = $index;
+                $payloads[] = $columns->values($prefix, $declared, type_array()->assert($payload));
             }
         }
 
-        return new Rows($this->output, ...$unpacked);
+        return $rows->gather($sources)->withColumns(
+            $this->output,
+            (new RowsBuilder($this->output->keep(...$prefixed), $context->backend()))
+                ->appendRows($payloads)
+                ->finish()
+                ->columns(),
+        );
     }
 }

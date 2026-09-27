@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use Flow\Calculator\Calculator;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Config\Telemetry\TelemetryContext;
 use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\Row\Hydrator;
@@ -38,6 +39,11 @@ final class FlowContext
     public function errorHandler(): ErrorHandler
     {
         return $this->errorHandler;
+    }
+
+    public function backend(): Backend
+    {
+        return $this->config->backend();
     }
 
     /**

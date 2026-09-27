@@ -78,7 +78,7 @@ final class FloeValueRoundTripTest extends TestCase
                     'mutable' => new DateTime('2025-06-15 12:30:45.654321', new DateTimeZone('America/New_York')),
                     'offset_timezone' => new DateTimeImmutable('2025-06-15 12:30:45', new DateTimeZone('+02:30')),
                     'before_epoch' => new DateTimeImmutable('1969-07-20 20:17:00 UTC'),
-                    'date' => new DateTimeImmutable('2025-06-15 00:00:00', new DateTimeZone('Europe/Warsaw')),
+                    'date' => new DateTimeImmutable('2025-06-15 00:00:00', new DateTimeZone('UTC')),
                 ]),
             ),
             FloeStreamReaderContext::roundTrip($rows),

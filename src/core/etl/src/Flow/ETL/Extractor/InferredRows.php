@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\SchemaMismatchException;
-use Flow\ETL\Row\Hydrator;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\SchemaInference;
@@ -35,10 +35,10 @@ final class InferredRows
      *
      * @throws InferredSchemaException|SchemaMismatchException
      */
-    public function of(array $rows, Schema $schema, Hydrator $hydrator): Rows
+    public function of(array $rows, Schema $schema, Backend $backend): Rows
     {
         try {
-            $batch = array_to_rows($rows, $schema, $hydrator);
+            $batch = array_to_rows($rows, $schema, $backend);
         } catch (SchemaMismatchException $mismatch) {
             $row = $this->offset + $mismatch->rowIndex;
 

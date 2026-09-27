@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Exception;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
@@ -29,6 +31,10 @@ final class ColumnMismatchExceptionTest extends FlowTestCase
         yield 'true' => [true, 'could not convert true (boolean) to integer'];
         yield 'false' => [false, 'could not convert false (boolean) to integer'];
         yield 'array' => [[1, 2], 'could not convert array (list<integer>) to integer'];
+        yield 'datetime with its offset' => [
+            new DateTimeImmutable('2026-01-01 00:00:00.5', new DateTimeZone('Europe/Warsaw')),
+            'could not convert 2026-01-01T00:00:00.500000+01:00 (datetime) to integer',
+        ];
     }
 
     public function test_a_message_carries_no_row_coordinate(): void

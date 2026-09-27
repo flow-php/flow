@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Extractor\InferredRows;
-use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Schema\Inference\SchemaInference;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\TestWith;
@@ -20,7 +20,7 @@ final class InferredRowsTest extends FlowTestCase
     public function test_a_row_past_the_sample_is_reported_at_its_position_in_the_whole_source(): void
     {
         $rows = new InferredRows('from_array()', new SchemaInference(sampleSize: 2));
-        $rows->of([['code' => 1], ['code' => 2]], schema(int_schema('code', true)), new PhpRowHydrator());
+        $rows->of([['code' => 1], ['code' => 2]], schema(int_schema('code', true)), new PhpBackend());
 
         $this->expectException(InferredSchemaException::class);
         $this->expectExceptionMessage(
@@ -29,7 +29,7 @@ final class InferredRowsTest extends FlowTestCase
             . 'or declare the schema with ->withSchema(...).',
         );
 
-        $rows->of([['code' => 3], ['code' => 'x']], schema(int_schema('code', true)), new PhpRowHydrator());
+        $rows->of([['code' => 3], ['code' => 'x']], schema(int_schema('code', true)), new PhpBackend());
     }
 
     public function test_a_row_past_the_sample_keeps_the_refusal_it_was_raised_from(): void
@@ -38,7 +38,7 @@ final class InferredRowsTest extends FlowTestCase
             (new InferredRows('from_array()', new SchemaInference(sampleSize: 1)))->of(
                 [['code' => 1], ['code' => 'x']],
                 schema(int_schema('code', true)),
-                new PhpRowHydrator(),
+                new PhpBackend(),
             );
 
             static::fail('The row past the sample was not refused.');
@@ -61,6 +61,6 @@ final class InferredRowsTest extends FlowTestCase
         (new InferredRows(
             'from_array()',
             $sampleSize === null ? null : new SchemaInference(sampleSize: $sampleSize),
-        ))->of([['code' => 1], ['code' => 'x']], schema(int_schema('code', true)), new PhpRowHydrator());
+        ))->of([['code' => 1], ['code' => 'x']], schema(int_schema('code', true)), new PhpBackend());
     }
 }

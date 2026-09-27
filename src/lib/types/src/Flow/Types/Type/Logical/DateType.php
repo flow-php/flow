@@ -98,7 +98,11 @@ final readonly class DateType implements Type
 
     public function isValid(mixed $value): bool
     {
-        return $value instanceof DateTimeInterface && $value->format('H:i:s.u') === '00:00:00.000000';
+        return (
+            $value instanceof DateTimeInterface
+            && $value->getOffset() === 0
+            && $value->format('H:i:s.u') === '00:00:00.000000'
+        );
     }
 
     public function normalize(): array

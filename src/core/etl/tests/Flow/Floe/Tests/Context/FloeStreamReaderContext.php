@@ -12,7 +12,6 @@ use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
 use Flow\Floe\Codec;
 use Flow\Floe\Codec\NoopCodec;
-use Flow\Floe\FloeEngine;
 use Flow\Floe\FloeReader;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\Footer;
@@ -118,7 +117,7 @@ final class FloeStreamReaderContext
             }
         }
 
-        return new Rows($file->footer()->schema(), ...$rows);
+        return rows($file->footer()->schema(), ...$rows);
     }
 
     /**
@@ -189,9 +188,8 @@ final class FloeStreamReaderContext
         array $batches,
         Options $options = new Options(),
         ?Hydrator $hydrator = null,
-        FloeEngine $engine = FloeEngine::adaptive,
     ): string {
-        $writer = new FloeWriter($filesystem, $schema, $options, $hydrator, $engine);
+        $writer = new FloeWriter($filesystem, $schema, $options, $hydrator);
         $writer->create($path);
 
         foreach ($batches as $batch) {

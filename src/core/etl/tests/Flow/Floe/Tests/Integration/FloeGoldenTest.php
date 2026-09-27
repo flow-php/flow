@@ -6,7 +6,7 @@ namespace Flow\Floe\Tests\Integration;
 
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
-use Flow\Floe\Tests\Context\FloeEngineContext;
+use Flow\Floe\Tests\Context\FloeFilesContext;
 use Flow\Floe\Tests\Context\FloeGoldenContext;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -43,8 +43,8 @@ final class FloeGoldenTest extends FlowIntegrationTestCase
     {
         $written = $this->cacheDir->suffix('golden-' . $name . '.floe');
 
-        FloeEngineContext::writeAll(
-            FloeEngineContext::phpWriter($this->fs(), FloeGoldenContext::schema($batches)),
+        FloeFilesContext::writeAll(
+            FloeFilesContext::phpWriter($this->fs(), FloeGoldenContext::schema($batches)),
             $written,
             $batches,
         );
@@ -69,8 +69,8 @@ final class FloeGoldenTest extends FlowIntegrationTestCase
             }
         }
 
-        static::assertEquals($expected, FloeEngineContext::readRows(
-            FloeEngineContext::phpReader($this->fs()),
+        static::assertEquals($expected, FloeFilesContext::readRows(
+            FloeFilesContext::phpReader($this->fs()),
             FloeGoldenContext::path($name),
         ));
     }

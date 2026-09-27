@@ -11,14 +11,12 @@ use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\list_schema;
-use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Types\DSL\type_list;
-use function Flow\Types\DSL\type_map;
-use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_string;
 
 final class ArrayToRowTest extends FlowTestCase
@@ -28,7 +26,7 @@ final class ArrayToRowTest extends FlowTestCase
         $row = array_to_row(
             ['data' => ['a', 'b', 'c', 'd']],
             schema(list_schema('data', type_list(type_string()))),
-            flow_context(config())->hydrator(),
+            flow_context(config())->backend(),
         );
 
         static::assertEquals(row(['data' => ['a', 'b', 'c', 'd']]), $row);
@@ -41,11 +39,8 @@ final class ArrayToRowTest extends FlowTestCase
                 ['id' => 1234, 'deleted' => false, 'phase' => null],
                 ['id' => 4321, 'deleted' => true, 'phase' => 'launch'],
             ],
-            schema(
-                map_schema('e00', type_map(type_string(), type_mixed()), nullable: true),
-                map_schema('e01', type_map(type_string(), type_mixed()), nullable: true),
-            ),
-            flow_context(config())->hydrator(),
+            schema(json_schema('e00', nullable: true), json_schema('e01', nullable: true)),
+            flow_context(config())->backend(),
         );
 
         static::assertEquals(
@@ -62,7 +57,7 @@ final class ArrayToRowTest extends FlowTestCase
         $row = array_to_row(
             ['id' => 1234, 'deleted' => false, 'phase' => null],
             schema(int_schema('id'), bool_schema('deleted')),
-            flow_context(config())->hydrator(),
+            flow_context(config())->backend(),
         );
 
         static::assertEquals(row(['id' => 1234, 'deleted' => false]), $row);
@@ -73,7 +68,7 @@ final class ArrayToRowTest extends FlowTestCase
         $row = array_to_row(
             ['id' => 1234, 'deleted' => false],
             schema(int_schema('id'), bool_schema('deleted'), str_schema('phase', true)),
-            flow_context(config())->hydrator(),
+            flow_context(config())->backend(),
         );
 
         static::assertEquals(row(['id' => 1234, 'deleted' => false, 'phase' => null]), $row);
@@ -88,7 +83,7 @@ final class ArrayToRowTest extends FlowTestCase
                 'phase' => null,
             ],
             schema(int_schema('id'), bool_schema('deleted'), str_schema('phase', true)),
-            flow_context(config())->hydrator(),
+            flow_context(config())->backend(),
         );
 
         static::assertEquals(row(['id' => 1234, 'deleted' => false, 'phase' => null]), $row);

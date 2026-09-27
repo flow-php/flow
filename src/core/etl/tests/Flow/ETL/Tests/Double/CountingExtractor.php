@@ -17,6 +17,7 @@ use Generator;
 
 use function array_values;
 use function count;
+use function Flow\ETL\DSL\rows;
 
 /**
  * Counts how many times extract() was pulled, so a test can prove the plan bind read no row, and how
@@ -63,7 +64,7 @@ final class CountingExtractor implements BatchableExtractor, Extractor, Rewindab
                 if (count($buffer) === $this->batchSize()) {
                     $this->batchesYielded++;
 
-                    $signal = yield Rows::trusted($this->schema, $buffer);
+                    $signal = yield rows($this->schema, ...$buffer);
 
                     if ($signal === Signal::STOP) {
                         return;
@@ -77,7 +78,7 @@ final class CountingExtractor implements BatchableExtractor, Extractor, Rewindab
         if ($buffer !== []) {
             $this->batchesYielded++;
 
-            yield Rows::trusted($this->schema, $buffer);
+            yield rows($this->schema, ...$buffer);
         }
     }
 

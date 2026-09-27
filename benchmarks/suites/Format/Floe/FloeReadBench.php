@@ -6,11 +6,8 @@ namespace Flow\Benchmarks\Format\Floe;
 
 use Flow\Benchmarks\BenchmarkRows;
 use Flow\Benchmarks\Datasets\Datasets;
-use Flow\Floe\FloeEngine;
 use Generator;
 use PhpBench\Attributes as Bench;
-
-use function extension_loaded;
 
 #[Bench\BeforeMethods('warm')]
 final class FloeReadBench
@@ -20,11 +17,11 @@ final class FloeReadBench
         Datasets::orders((int) $params['rows'])->floe();
     }
 
-    #[Bench\ParamProviders(['rows', 'engines'])]
+    #[Bench\ParamProviders(['rows'])]
     #[Bench\Groups(['format', 'format-floe'])]
     public function bench_floe_read(array $params): void
     {
-        (new FloeReadScenario((int) $params['rows'], FloeEngine::from((string) $params['engine'])))->run();
+        (new FloeReadScenario((int) $params['rows']))->run();
     }
 
     public function rows(): Generator
@@ -32,14 +29,5 @@ final class FloeReadBench
         $rows = BenchmarkRows::count();
 
         yield number_format($rows) => ['rows' => $rows];
-    }
-
-    public function engines(): Generator
-    {
-        yield 'php' => ['engine' => FloeEngine::php->value];
-
-        if (extension_loaded('flow_php')) {
-            yield 'native' => ['engine' => FloeEngine::native->value];
-        }
     }
 }

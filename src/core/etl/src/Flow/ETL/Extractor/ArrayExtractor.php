@@ -86,7 +86,7 @@ final class ArrayExtractor implements BatchableExtractor, Extractor, InfersSchem
                 continue;
             }
 
-            $signal = yield $batches->of($buffer, $schema, $context->hydrator());
+            $signal = yield $batches->of($buffer, $schema, $context->backend());
 
             if ($signal === Signal::STOP) {
                 return;
@@ -96,7 +96,7 @@ final class ArrayExtractor implements BatchableExtractor, Extractor, InfersSchem
         }
 
         if ($buffer !== []) {
-            yield $batches->of($buffer, $schema, $context->hydrator());
+            yield $batches->of($buffer, $schema, $context->backend());
         }
     }
 

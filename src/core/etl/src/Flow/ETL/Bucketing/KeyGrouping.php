@@ -50,7 +50,7 @@ final readonly class KeyGrouping
         }
 
         foreach ($groups as $rowsOfKey) {
-            yield new Rows($schema, ...$rowsOfKey);
+            yield Rows::of($schema, ...$rowsOfKey);
         }
     }
 }

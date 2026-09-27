@@ -10,12 +10,16 @@ use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Extractor\BatchExtractor;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\Memory\ArrayMemory;
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\DeclaringExtractor;
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\Tests\Double\VaryingBatchesExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\RowsMother;
 
+use function array_map;
+use function array_merge;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\batches;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_memory;
@@ -26,9 +30,33 @@ use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function iterator_to_array;
+use function range;
 
 final class BatchExtractorTest extends FlowTestCase
 {
+    public function test_windows_built_from_many_child_batches_keep_counts_and_order(): void
+    {
+        $children = [];
+
+        for ($batch = 0; $batch < 25; $batch++) {
+            $children[] = array_to_rows(
+                array_map(static fn(int $id): array => ['id' => $id], range(($batch * 100) + 1, ($batch * 100) + 100)),
+                schema(int_schema('id')),
+            );
+        }
+
+        $windows = iterator_to_array(
+            batches(new VaryingBatchesExtractor(...$children), 1_000)->extract(flow_context()),
+            false,
+        );
+
+        static::assertSame([1000, 1000, 500], array_map(static fn(Rows $rows): int => $rows->count(), $windows));
+        static::assertSame(
+            range(1, 2_500),
+            array_merge(...array_map(static fn(Rows $rows): array => $rows->reduceToArray('id'), $windows)),
+        );
+    }
+
     public function test_a_buffer_spanning_child_batches_answers_to_the_first_batch_schema(): void
     {
         // the second child batch omits a column the first declares nullable - the buffer that spans

@@ -29,7 +29,7 @@ final class ArrayToRowsTest extends FlowTestCase
                 ['data' => ['e', 'f', 'g', 'd']],
             ],
             schema(list_schema('data', type_list(type_string()))),
-            flow_context(config())->hydrator(),
+            flow_context(config())->backend(),
         );
 
         static::assertEquals(
@@ -49,7 +49,7 @@ final class ArrayToRowsTest extends FlowTestCase
                 ['data' => ['e', 'f', 'g', 'd']],
             ],
             schema(list_schema('data', type_list(type_string()))),
-            flow_context(config())->hydrator(),
+            flow_context(config())->backend(),
         );
 
         static::assertEquals(
@@ -63,7 +63,7 @@ final class ArrayToRowsTest extends FlowTestCase
         $rows = array_to_rows(
             ['id' => 1234, 'deleted' => false, 'phase' => null],
             schema(int_schema('id'), bool_schema('deleted')),
-            flow_context(config())->hydrator(),
+            flow_context(config())->backend(),
         );
 
         static::assertEquals(
@@ -77,7 +77,7 @@ final class ArrayToRowsTest extends FlowTestCase
         $rows = array_to_rows(
             ['id' => 1234, 'deleted' => false],
             schema(int_schema('id'), bool_schema('deleted'), str_schema('phase', true)),
-            flow_context(config())->hydrator(),
+            flow_context(config())->backend(),
         );
 
         static::assertEquals(
@@ -97,7 +97,7 @@ final class ArrayToRowsTest extends FlowTestCase
                 ['id' => 4321, 'deleted' => true, 'phase' => 'launch'],
             ],
             schema(int_schema('id'), bool_schema('deleted'), str_schema('phase', nullable: true)),
-            flow_context(config())->hydrator(),
+            flow_context(config())->backend(),
         );
 
         static::assertEquals(
@@ -118,7 +118,7 @@ final class ArrayToRowsTest extends FlowTestCase
                 ['id' => 4321, 'deleted' => true, 'phase' => 'launch'],
             ],
             schema(int_schema('id'), bool_schema('deleted')),
-            flow_context(config())->hydrator(),
+            flow_context(config())->backend(),
         );
 
         static::assertEquals(
@@ -139,7 +139,7 @@ final class ArrayToRowsTest extends FlowTestCase
                 ['id' => 4321, 'deleted' => true],
             ],
             schema(int_schema('id'), bool_schema('deleted'), str_schema('phase', true)),
-            flow_context(config())->hydrator(),
+            flow_context(config())->backend(),
         );
 
         static::assertEquals(

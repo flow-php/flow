@@ -7,7 +7,7 @@ namespace Flow\ETL\Tests\Unit\Function;
 use DateTime;
 use DateTimeImmutable;
 use DateTimeZone;
-use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Tests\FlowTestCase;
 use stdClass;
 
@@ -153,8 +153,8 @@ final class ToDateTimeTest extends FlowTestCase
 
     public function test_non_datetime_object_is_refused(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('ToDateTime function requires DateTimeInterface object');
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Cannot create Definition from type');
 
         to_date_time(ref('at'))->eval(row(['at' => new stdClass()]), flow_context());
     }

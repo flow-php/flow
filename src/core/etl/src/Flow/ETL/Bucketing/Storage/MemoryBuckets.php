@@ -17,7 +17,7 @@ final class MemoryBuckets implements ResidentBucketsStorage
 
     public function append(string $bucketId, Rows $rows): void
     {
-        if (!$rows->empty()) {
+        if (!$rows->isEmpty()) {
             $this->buckets[$bucketId][] = $rows;
         }
     }

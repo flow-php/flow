@@ -15,7 +15,6 @@ use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Double\CountingFilesystem;
@@ -548,30 +547,6 @@ final class ExcelExtractorTest extends FlowTestCase
         $extractor->schema();
 
         static::assertCount(10, df()->extract($extractor)->fetch()->toArray());
-    }
-
-    public function test_the_same_schema_on_both_hydrators(): void
-    {
-        $extractor = from_excel(ExcelFixtureContext::file('fixture.xlsx'));
-
-        $default = df()
-            ->extract(from_excel(ExcelFixtureContext::file('fixture.xlsx')))
-            ->fetch()
-            ->toArray();
-        $adaptive = [];
-
-        foreach ($extractor->extract(
-            flow_context(Config::builder()->hydrator(new AdaptiveRowHydrator())->build()),
-        ) as $rows) {
-            static::assertEquals($extractor->schema(), $rows->schema());
-
-            foreach ($rows->toArray() as $row) {
-                $adaptive[] = $row;
-            }
-        }
-
-        static::assertCount(10, $adaptive);
-        static::assertSame($default, $adaptive);
     }
 
     public function test_the_sample_leaves_no_shared_strings_temp_folder(): void

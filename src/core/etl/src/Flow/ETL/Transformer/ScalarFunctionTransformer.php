@@ -15,8 +15,8 @@ use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Function\ScalarFunction\ExpandResults;
 use Flow\ETL\Function\ScalarFunction\UnpackResults;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Transformer;
@@ -143,29 +143,33 @@ final readonly class ScalarFunctionTransformer implements Transformer
         $derived = $this->derived ?? $this->derived($function);
         $declared = $columns->declare($rows->schema(), $derived);
         $output = $this->output ?? $declared;
-        $name = $derived->entry()->name();
-        $mapped = [];
+        $cast = [];
+        $sources = [];
 
-        foreach ($rows->all() as $r) {
+        foreach ($rows->all() as $index => $r) {
             if ($function instanceof ExpandResults) {
                 // @mago-ignore analysis:mixed-assignment
                 foreach (type_array()->assert($function->eval($r, $context)) as $val) {
-                    $mapped[] = new Row([
-                        ...$r->values(),
-                        $name => $columns->value($derived, $val, count($mapped)),
-                    ]);
+                    $sources[] = $index;
+                    $cast[] = $columns->value($derived, $val, count($cast));
                 }
 
                 continue;
             }
 
-            $mapped[] = new Row([
-                ...$r->values(),
-                $name => $columns->value($derived, $function->eval($r, $context), count($mapped)),
-            ]);
+            $cast[] = $columns->value($derived, $function->eval($r, $context), $index);
         }
 
-        return $columns->rows($declared, $output, $mapped);
+        $builder = $context->backend()->builder($derived);
+        $builder->appendMany($cast);
+
+        return $columns->rows(
+            $function instanceof ExpandResults ? $rows->gather($sources) : $rows,
+            $declared,
+            $output,
+            $derived->entry()->name(),
+            $builder->finish(),
+        );
     }
 
     /**
@@ -201,17 +205,25 @@ final readonly class ScalarFunctionTransformer implements Transformer
         $declared = $this->unpacked($function);
         $columns = new UnpackedColumns();
         $output = $this->output ?? $columns->of($rows->schema(), $this->entryName() . '.', $declared);
-        $unpacked = [];
+        $prefix = $this->entryName() . '.';
+        $prefixed = [];
 
-        foreach ($rows->all() as $r) {
-            $unpacked[] = new Row($columns->values(
-                $r->values(),
-                $this->entryName() . '.',
-                $declared,
-                $function->eval($r, $context),
-            ));
+        foreach ($declared->definitions() as $name => $_) {
+            $prefixed[] = $prefix . $name;
         }
 
-        return new Rows($output, ...$unpacked);
+        $payloads = [];
+
+        foreach ($rows->all() as $r) {
+            $payloads[] = $columns->values($prefix, $declared, $function->eval($r, $context));
+        }
+
+        return $rows->withColumns(
+            $output,
+            (new RowsBuilder($output->keep(...$prefixed), $context->backend()))
+                ->appendRows($payloads)
+                ->finish()
+                ->columns(),
+        );
     }
 }

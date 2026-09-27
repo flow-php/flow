@@ -114,17 +114,17 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
         $cache->set('rows_01', array_to_rows(
             [['id' => 1], ['id' => 2]],
             schema(int_schema('id')),
-            flow_context(config())->hydrator(),
+            flow_context(config())->backend(),
         ));
         $cache->set('rows_02', array_to_rows(
             [['id' => 3], ['id' => 4]],
             schema(int_schema('id')),
-            flow_context(config())->hydrator(),
+            flow_context(config())->backend(),
         ));
         $cache->set('rows_03', array_to_rows(
             [['id' => 5]],
             schema(int_schema('id')),
-            flow_context(config())->hydrator(),
+            flow_context(config())->backend(),
         ));
 
         $cache->set('key', $index->toRows());
@@ -152,17 +152,17 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
         $cache->set('rows_01', array_to_rows(
             [['id' => 1], ['id' => 2]],
             schema(int_schema('id')),
-            flow_context(config())->hydrator(),
+            flow_context(config())->backend(),
         ));
         $cache->set('rows_02', array_to_rows(
             [['id' => 3], ['id' => 4]],
             schema(int_schema('id')),
-            flow_context(config())->hydrator(),
+            flow_context(config())->backend(),
         ));
         $cache->set('rows_03', array_to_rows(
             [['id' => 5]],
             schema(int_schema('id')),
-            flow_context(config())->hydrator(),
+            flow_context(config())->backend(),
         ));
 
         $cache->set('key', $index->toRows());
@@ -195,7 +195,7 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
                 ['id' => 5],
             ],
             schema(int_schema('id')),
-            flow_context(config())->hydrator(),
+            flow_context(config())->backend(),
         ));
         $cache->set('key', $index->toRows());
 
@@ -229,7 +229,7 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
                 ['id' => 5],
             ],
             schema(int_schema('id')),
-            flow_context(config())->hydrator(),
+            flow_context(config())->backend(),
         ));
         $cache->set('key', $index->toRows());
 

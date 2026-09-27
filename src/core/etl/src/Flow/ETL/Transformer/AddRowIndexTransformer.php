@@ -7,13 +7,13 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\BoundStep;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Transformation\AddRowIndex\StartFrom;
 use Throwable;
 
 use function Flow\ETL\DSL\int_schema;
+use function range;
 
 final class AddRowIndexTransformer implements Stateful
 {
@@ -41,14 +41,16 @@ final class AddRowIndexTransformer implements Stateful
         $context->telemetry()->transformationStarted($this);
 
         try {
-            $indexed = [];
+            $column = $context->backend()->builder(int_schema($this->indexColumn));
 
-            foreach ($rows->all() as $row) {
-                $indexed[] = new Row([...$row->values(), $this->indexColumn => $this->index]);
-                $this->index++;
+            if ($rows->count() > 0) {
+                $column->appendMany(range($this->index, $this->index + $rows->count() - 1));
+                $this->index += $rows->count();
             }
 
-            $result = new Rows($rows->schema()->add(int_schema($this->indexColumn)), ...$indexed);
+            $result = $rows->withColumns($rows->schema()->add(int_schema($this->indexColumn)), [
+                $this->indexColumn => $column->finish(),
+            ]);
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

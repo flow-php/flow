@@ -54,8 +54,8 @@ final class FloeGoldenContext
                 $filesystem->rm($path);
             }
 
-            FloeEngineContext::writeAll(
-                FloeEngineContext::phpWriter($filesystem, self::schema($batches)),
+            FloeFilesContext::writeAll(
+                FloeFilesContext::phpWriter($filesystem, self::schema($batches)),
                 $path,
                 $batches,
             );

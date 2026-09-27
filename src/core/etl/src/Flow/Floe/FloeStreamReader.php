@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
-use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Row\Hydrator;
+use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
@@ -36,7 +36,7 @@ final class FloeStreamReader
     private readonly Hydrator $hydrator;
 
     /**
-     * @param null|Hydrator $hydrator null uses the adaptive hydrator
+     * @param null|Hydrator $hydrator null uses `new PhpRowHydrator()`
      *
      * @throws FloeException
      */
@@ -45,10 +45,9 @@ final class FloeStreamReader
         private readonly Codec $codec,
         private readonly int $chunkSize,
         ?Hydrator $hydrator = null,
-        private readonly FloeEngine $engine = FloeEngine::adaptive,
     ) {
         Format::validateCodecId($this->codec->id());
-        $this->hydrator = $hydrator ?? new AdaptiveRowHydrator();
+        $this->hydrator = $hydrator ?? new PhpRowHydrator();
     }
 
     public function close(): void
@@ -58,7 +57,7 @@ final class FloeStreamReader
 
     private function encoder(Schema $schema): FloeEncoder
     {
-        return $this->encoder ??= $this->engine->encoder($schema);
+        return $this->encoder ??= new PhpFloeEncoder($schema);
     }
 
     /**
@@ -270,7 +269,7 @@ final class FloeStreamReader
     {
         $rows = $this->encoder($schema)->decodeRows($pending, $schema, $this->hydrator);
 
-        return $rows->schema() === $schema ? $rows : Rows::trusted($schema, $rows->all());
+        return $rows->schema() === $schema ? $rows : $rows->withSchema($schema);
     }
 
     /**

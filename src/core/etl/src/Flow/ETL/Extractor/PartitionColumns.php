@@ -101,7 +101,7 @@ final readonly class PartitionColumns
                 : str_schema($name, nullable: $nullable);
         }
 
-        return new Rows($rows->schema()->gracefulRemove(...array_keys($names))->add(...$definitions), ...$rows->all());
+        return $rows->matchTo($rows->schema()->gracefulRemove(...array_keys($names))->add(...$definitions));
     }
 
     /**

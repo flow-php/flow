@@ -10,6 +10,7 @@ use Flow\ETL\Tests\Mother\ListColumnsMother;
 use Flow\ETL\Transformer\NestedExpandTransformer;
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\concat;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
@@ -154,6 +155,6 @@ final class NestedExpandTransformerTest extends FlowTestCase
         $this->expectException(SchemaMismatchException::class);
         $this->expectExceptionMessage('column "s" (row 1)');
 
-        $step->transform(rows($input, row(['tags' => ['x']]), row(['tags' => [null]])), flow_context(config()));
+        $step->transform(array_to_rows([['tags' => ['x']], ['tags' => [null]]], $input), flow_context(config()));
     }
 }

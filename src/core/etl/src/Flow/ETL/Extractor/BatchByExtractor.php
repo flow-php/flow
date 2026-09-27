@@ -62,7 +62,7 @@ final class BatchByExtractor implements Extractor, OverridingExtractor, Rewindab
                     $currentGroupValue = $groupValue;
                 } elseif ($currentGroupValue !== $groupValue) {
                     if ($this->minSize === null || count($buffer) >= $this->minSize) {
-                        $signal = yield Rows::trusted($schema, $buffer);
+                        $signal = yield Rows::of($schema, ...$buffer);
 
                         if ($signal === Signal::STOP) {
                             return;
@@ -79,7 +79,7 @@ final class BatchByExtractor implements Extractor, OverridingExtractor, Rewindab
         }
 
         if (count($buffer) > 0) {
-            yield Rows::trusted($schema ?? $this->schema(), $buffer);
+            yield Rows::of($schema ?? $this->schema(), ...$buffer);
         }
     }
 

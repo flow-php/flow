@@ -58,7 +58,7 @@ final class FlowContextTest extends FlowTestCase
         $constructor = (new ReflectionClass(Config::class))->getConstructor();
 
         static::assertNotNull($constructor);
-        static::assertCount(17, $constructor->getParameters());
+        static::assertCount(18, $constructor->getParameters());
         static::assertSame(
             [],
             array_filter(
@@ -77,6 +77,7 @@ final class FlowContextTest extends FlowTestCase
                 'cache',
                 'calculator',
                 'errorHandler',
+                'backend',
                 'hydrator',
                 'setErrorHandler',
                 'withErrorHandler',

@@ -75,7 +75,7 @@ that Flow detects and uses automatically:
 
 | Extension  | Package                                                                       | Effect when loaded                                                                                                                                     |
 |------------|-------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `flow_php` | [flow-php/flow-php-ext](/documentation/components/extensions/flow-php-ext.md) | `AdaptiveRowHydrator` and the adaptive Floe engine run native, fusing every Floe read/write and every raw-scalar hydration into one native call per batch |
+| `flow_php` | [flow-php/flow-php-ext](/documentation/components/extensions/flow-php-ext.md) | the CSV reader and the schema narrower run native                                                                                                      |
 | `arrow`    | [flow-php/arrow-ext](/documentation/components/extensions/arrow-ext.md)       | `AdaptiveParquetEngine` selects `ArrowParquetEngine`, so Parquet reads and writes run native                                                           |
 | `pg_query` | [flow-php/pg-query-ext](/documentation/components/extensions/pg-query-ext.md) | `Flow\PostgreSql\Parser` becomes usable at all - SQL parsing, normalization and AST manipulation                                                       |
 | `protobuf` | `pecl/protobuf`                                                               | `Flow\PostgreSql\Parser` decodes the parse tree in C instead of pure PHP - measured ~69x faster end to end                                             |
@@ -90,22 +90,20 @@ that Flow detects and uses automatically:
 
 ### Opting out of the native path
 
-Engine selection happens per read and per write, so a single step can be pinned to the PHP implementation:
+Parquet engine selection happens per read:
 
 ```php
 <?php
 
-use Flow\ETL\Row\PhpRowHydrator;
-use Flow\Floe\FloeEngine;
 use Flow\Parquet\Engine\PhpParquetEngine;
 
 use function Flow\ETL\Adapter\Parquet\from_parquet;
-use function Flow\ETL\DSL\{config_builder, data_frame};
+use function Flow\ETL\DSL\data_frame;
 use function Flow\Floe\DSL\to_floe;
 
-return data_frame(config_builder()->hydrator(new PhpRowHydrator()))
+return data_frame()
     ->read(from_parquet(__DIR__ . '/input.parquet', engine: new PhpParquetEngine()))
-    ->write(to_floe(__DIR__ . '/output.floe', engine: FloeEngine::php));
+    ->write(to_floe(__DIR__ . '/output.floe'));
 ```
 
 To take the whole container off one native path, mount an empty file over that extension's ini:

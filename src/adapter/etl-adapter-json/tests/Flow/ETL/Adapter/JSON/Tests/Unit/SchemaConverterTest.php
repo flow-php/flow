@@ -121,7 +121,7 @@ final class SchemaConverterTest extends FlowTestCase
         static::assertEquals(schema(null_schema('value')), $flowSchema);
     }
 
-    public function test_to_flow_array_without_items_becomes_list_of_mixed(): void
+    public function test_to_flow_array_without_items_becomes_json(): void
     {
         $flowSchema = (new SchemaConverter())->toFlow([
             'type' => 'object',
@@ -131,7 +131,7 @@ final class SchemaConverterTest extends FlowTestCase
             ],
         ]);
 
-        static::assertEquals(schema(list_schema('values', type_list(type_mixed()))), $flowSchema);
+        static::assertEquals(schema(json_schema('values')), $flowSchema);
     }
 
     public function test_to_flow_basic_types(): void
@@ -315,7 +315,7 @@ final class SchemaConverterTest extends FlowTestCase
         );
     }
 
-    public function test_to_flow_free_form_object_becomes_map_of_mixed(): void
+    public function test_to_flow_free_form_object_becomes_json(): void
     {
         $flowSchema = (new SchemaConverter())->toFlow([
             'type' => 'object',
@@ -325,7 +325,7 @@ final class SchemaConverterTest extends FlowTestCase
             ],
         ]);
 
-        static::assertEquals(schema(map_schema('attributes', type_map(type_string(), type_mixed()))), $flowSchema);
+        static::assertEquals(schema(json_schema('attributes')), $flowSchema);
     }
 
     public function test_to_flow_internal_reference_via_defs(): void

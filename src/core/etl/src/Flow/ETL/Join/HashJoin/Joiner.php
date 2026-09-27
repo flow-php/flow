@@ -8,6 +8,7 @@ use Flow\ETL\Bucketing\Hasher;
 use Flow\ETL\Bucketing\KeyValues;
 use Flow\ETL\Bucketing\NativeHasher;
 use Flow\ETL\Bucketing\SingleBucketHasher;
+use Flow\ETL\Column\DefaultBackend;
 use Flow\ETL\Exception\DuplicatedEntriesException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Join\Expression;
@@ -15,10 +16,12 @@ use Flow\ETL\Join\Join;
 use Flow\ETL\Join\JoinSchema;
 use Flow\ETL\Join\JoinShape;
 use Flow\ETL\Row;
-use Flow\ETL\Row\RowsBuffer;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Generator;
+
+use function count;
 
 final class Joiner
 {
@@ -134,22 +137,17 @@ final class Joiner
                 }
 
                 if (!$matched && $this->type === Join::left_anti) {
-                    $joined[] = $leftRow;
+                    $joined[] = $leftRow->values();
                 }
             }
 
             if ($joined !== []) {
-                // a later batch can be wider than the side schema the output was derived from, and
-                // every arm answers for the same declared output - so all of them project, not one
-                $projected = [];
-
-                foreach ($joined as $joinedRow) {
-                    $projected[] = $joinedRow->project($outputSchema);
-                }
-
-                // every joined value passed the gate on its own side - conforming checks the joined shape and the
-                // nulls the join introduced, not the values again
-                yield Rows::conformed($outputSchema, $projected);
+                // a later batch can be wider than the side schema the output was derived from, and every arm answers
+                // for the same declared output - the builder ignores the undeclared keys and pads the nulls the join
+                // introduced
+                yield (new RowsBuilder($outputSchema, new DefaultBackend()))
+                    ->appendRows($joined)
+                    ->finish();
             }
         }
 
@@ -157,16 +155,23 @@ final class Joiner
             $leftSchema ??= new Schema();
             $nullLeftRow ??= (new NullRowBuilder($leftSchema))->row();
             $outputSchema ??= $this->joinSchema->of($this->type, $leftSchema, $rightSchema);
-            $buffer = new RowsBuffer($outputSchema, $this->batchSize, Rows::conformed(...));
+            $pending = [];
 
             foreach ($hashTable->unmatchedRows() as $rightRow) {
-                if (null !== ($batch = $buffer->add($this->merge($nullLeftRow, $rightRow)->project($outputSchema)))) {
-                    yield $batch;
+                $pending[] = $this->merge($nullLeftRow, $rightRow);
+
+                if (count($pending) >= $this->batchSize) {
+                    yield (new RowsBuilder($outputSchema, new DefaultBackend()))
+                        ->appendRows($pending)
+                        ->finish();
+                    $pending = [];
                 }
             }
 
-            if (null !== ($batch = $buffer->flush())) {
-                yield $batch;
+            if ($pending !== []) {
+                yield (new RowsBuilder($outputSchema, new DefaultBackend()))
+                    ->appendRows($pending)
+                    ->finish();
             }
         }
     }
@@ -247,13 +252,9 @@ final class Joiner
             }
 
             if ($joined !== []) {
-                $projected = [];
-
-                foreach ($joined as $joinedRow) {
-                    $projected[] = $joinedRow->project($outputSchema);
-                }
-
-                yield Rows::conformed($outputSchema, $projected);
+                yield (new RowsBuilder($outputSchema, new DefaultBackend()))
+                    ->appendRows($joined)
+                    ->finish();
             }
         }
 
@@ -262,23 +263,31 @@ final class Joiner
         if ($this->type === Join::left || $this->type === Join::left_anti) {
             $nullRightRow ??= (new NullRowBuilder($rightSchema))->row();
             $outputSchema ??= $this->joinSchema->of($this->type, $leftSchema, $rightSchema);
-            $buffer = new RowsBuffer($outputSchema, $this->batchSize, Rows::conformed(...));
+            $pending = [];
 
             foreach ($hashTable->unmatchedRows() as $leftRow) {
-                $joined = $this->type === Join::left ? $this->merge($leftRow, $nullRightRow) : $leftRow;
+                $pending[] = $this->type === Join::left ? $this->merge($leftRow, $nullRightRow) : $leftRow->values();
 
-                if (null !== ($batch = $buffer->add($joined->project($outputSchema)))) {
-                    yield $batch;
+                if (count($pending) >= $this->batchSize) {
+                    yield (new RowsBuilder($outputSchema, new DefaultBackend()))
+                        ->appendRows($pending)
+                        ->finish();
+                    $pending = [];
                 }
             }
 
-            if (null !== ($batch = $buffer->flush())) {
-                yield $batch;
+            if ($pending !== []) {
+                yield (new RowsBuilder($outputSchema, new DefaultBackend()))
+                    ->appendRows($pending)
+                    ->finish();
             }
         }
     }
 
-    private function merge(Row $left, Row $right): Row
+    /**
+     * @return array<array-key, mixed>
+     */
+    private function merge(Row $left, Row $right): array
     {
         try {
             return $this->merger->merge($left, $right);

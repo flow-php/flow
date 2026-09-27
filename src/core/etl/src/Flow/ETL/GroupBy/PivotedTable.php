@@ -88,13 +88,13 @@ final class PivotedTable
             $buffer[] = $row;
 
             if (count($buffer) >= $batchSize) {
-                yield array_to_rows($buffer, $this->shape->output, $context->hydrator());
+                yield array_to_rows($buffer, $this->shape->output, $context->backend());
                 $buffer = [];
             }
         }
 
         if ($buffer !== []) {
-            yield array_to_rows($buffer, $this->shape->output, $context->hydrator());
+            yield array_to_rows($buffer, $this->shape->output, $context->backend());
         }
     }
 }

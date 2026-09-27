@@ -1,0 +1,66 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Column;
+
+use Flow\ETL\Column\Php\Buffers;
+use Flow\ETL\Column\Php\CastingColumnBuilder;
+use Flow\ETL\Column\Php\ColumnDecoder;
+use Flow\ETL\Column\Php\ConstantColumn;
+use Flow\ETL\Column\Php\PhysicalBuilderFor;
+use Flow\ETL\Column\Php\PhysicalFor;
+use Flow\ETL\Exception\ColumnMismatchException;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Schema\Definition;
+use Flow\ETL\Schema\Definition\NullDefinition;
+
+use function sprintf;
+
+final readonly class PhpBackend implements Backend
+{
+    public function builder(Definition $definition): ColumnBuilder
+    {
+        return new CastingColumnBuilder(
+            $definition,
+            (new PhysicalFor())->definition($definition),
+            (new PhysicalBuilderFor())->type($definition->type()),
+        );
+    }
+
+    public function constant(Definition $definition, mixed $value, int $count): Column
+    {
+        $physical = (new PhysicalFor())->definition($definition);
+
+        if ($value === null) {
+            if (!$definition->isNullable() && !$definition instanceof NullDefinition) {
+                throw ColumnMismatchException::valueDoesNotMatch($definition, null);
+            }
+
+            return new ConstantColumn($definition->type(), $physical, null, $count);
+        }
+
+        return new ConstantColumn(
+            $definition->type(),
+            $physical,
+            $physical->toPhysical($definition->type()->cast($value)),
+            $count,
+        );
+    }
+
+    public function decode(Definition $definition, array $buffers, int $count, int $nullCount): Column
+    {
+        $cursor = new Buffers($buffers);
+        $column = (new ColumnDecoder())->decode($definition->type(), $cursor, $count, $nullCount);
+
+        if ($cursor->remaining() !== 0) {
+            throw new InvalidArgumentException(sprintf(
+                'Column "%s": %d buffers left after decoding',
+                $definition->entry()->name(),
+                $cursor->remaining(),
+            ));
+        }
+
+        return $column;
+    }
+}

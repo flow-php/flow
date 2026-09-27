@@ -28,13 +28,14 @@ final readonly class UnpackedColumns
     }
 
     /**
-     * @param array<array-key, mixed> $values
      * @param array<array-key, mixed> $payload
      *
-     * @return array<array-key, mixed>
+     * @return array<array-key, mixed> the cast values, keyed "$prefix$column"
      */
-    public function values(array $values, string $prefix, Schema $declared, array $payload): array
+    public function values(string $prefix, Schema $declared, array $payload): array
     {
+        $values = [];
+
         foreach ($declared->definitions() as $name => $definition) {
             // @mago-ignore analysis:mixed-assignment
             $value = $payload[$name] ?? null;

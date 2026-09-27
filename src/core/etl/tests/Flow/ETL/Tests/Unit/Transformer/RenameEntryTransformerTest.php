@@ -23,6 +23,17 @@ use function Flow\Types\DSL\type_json;
 
 final class RenameEntryTransformerTest extends FlowTestCase
 {
+    public function test_renaming_keeps_the_column_position_and_its_values(): void
+    {
+        $renamed = (new RenameEntryTransformer('a', 'x'))->transform(
+            rows(schema(integer_schema('a'), integer_schema('b')), row(['a' => 1, 'b' => 2])),
+            flow_context(config()),
+        );
+
+        static::assertSame(['x', 'b'], $renamed->first()->names());
+        static::assertSame([['x' => 1, 'b' => 2]], $renamed->toArray());
+    }
+
     public function test_bind_renames_the_column_in_place(): void
     {
         static::assertEquals(

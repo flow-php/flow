@@ -7,6 +7,9 @@ namespace Flow\ETL;
 use ArrayAccess;
 use ArrayIterator;
 use Countable;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Column\DefaultBackend;
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
@@ -23,160 +26,162 @@ use Flow\ETL\Row\Comparator;
 use Flow\ETL\Row\Comparator\NativeComparator;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\SortOrder;
-use Flow\ETL\Schema\Definition;
-use Flow\ETL\Serializer\DomValueCodec;
+use Flow\ETL\Rows\RowsBuilder;
+use Flow\ETL\Schema\Formatter\InlineSchemaFormatter;
+use Flow\ETL\Schema\SimilarNames;
 use Flow\ETL\Sort\ValuesSorter;
 use Flow\Types\Exception\InvalidTypeException;
 use Generator;
 use Iterator;
 use IteratorAggregate;
 
+use function array_diff_key;
 use function array_key_exists;
+use function array_keys;
 use function array_map;
 use function array_reverse;
-use function array_slice;
+use function array_shift;
 use function array_values;
 use function count;
 use function Flow\Types\DSL\type_integer;
 use function implode;
 use function is_int;
-use function iterator_to_array;
+use function min;
 use function sprintf;
 
 /**
+ * @type RowsPayload = array{
+ *     schema: Schema,
+ *     count: int,
+ *     columns: array<array-key, array{buffers: list<string>, nullCount: int}>
+ * }
+ *
  * @implements \ArrayAccess<int, Row>
  * @implements \IteratorAggregate<int, Row>
  */
 final class Rows implements ArrayAccess, Countable, IteratorAggregate
 {
     /**
-     * @var array<int, Row>
+     * @param array<array-key, Column> $columns keyed and ordered by $schema
      */
-    private array $rows;
-
-    /**
-     * @throws SchemaMismatchException
-     */
-    public function __construct(
+    private function __construct(
         private Schema $schema,
-        Row ...$rows,
-    ) {
-        $this->rows = [];
-
-        foreach ($rows as $row) {
-            try {
-                $this->rows[] = $row->matchTo($schema);
-            } catch (ColumnMismatchException $e) {
-                throw new SchemaMismatchException(count($this->rows), $e);
-            }
-        }
-    }
+        private array $columns,
+        private int $count,
+    ) {}
 
     /**
-     * Skips the shape check the constructor performs. The caller vouches that every row already
-     * satisfies $schema and stores its columns in the Schema's order - which holds when the same
-     * operation produced the schema and the rows, or when the rows are a subset or a permutation of
-     * a batch that already passed.
-     *
-     * Engine paths only.
-     *
-     * @param array<Row> $rows re-indexed here - first(), last(), chunks() and offsetGet() read by position
-     */
-    public static function trusted(Schema $schema, array $rows): self
-    {
-        $instance = new self($schema);
-        $instance->rows = array_values($rows);
-
-        return $instance;
-    }
-
-    /**
-     * The constructor's shape check without its value check. Columns take the Schema's order, a declared-nullable
-     * absence is padded, and a missing NOT NULL column, an unknown column or a null under NOT NULL is refused - but a
-     * non-null value is not validated against its type, because the caller produced it by casting to, or decoding
-     * from, that type. A value is validated once, where it enters the engine.
-     *
-     * Engine paths only.
-     *
-     * @param array<Row> $rows
-     *
-     * @throws SchemaMismatchException
-     */
-    public static function conformed(Schema $schema, array $rows): self
-    {
-        $instance = new self($schema);
-
-        foreach ($rows as $row) {
-            try {
-                $instance->rows[] = $row->conformTo($schema);
-            } catch (ColumnMismatchException $e) {
-                throw new SchemaMismatchException(count($instance->rows), $e);
-            }
-        }
-
-        return $instance;
-    }
-
-    /**
-     * @return array{schema: Schema, rows: list<array<array-key, mixed>>}
+     * @return RowsPayload
      */
     public function __serialize(): array
     {
-        $codec = new DomValueCodec();
-        $domColumns = [];
+        $columns = [];
 
-        foreach ($this->schema->definitions() as $definition) {
-            if ($codec->handles($definition->type())) {
-                $domColumns[$definition->entry()->name()] = $definition->type();
-            }
+        foreach ($this->columns as $name => $column) {
+            $columns[$name] = ['buffers' => $column->encode(), 'nullCount' => $column->nullCount()];
         }
 
-        $rows = [];
-
-        foreach ($this->rows as $row) {
-            $values = $row->values();
-
-            foreach ($domColumns as $name => $type) {
-                if (array_key_exists($name, $values)) {
-                    $values[$name] = $codec->encode($type, $values[$name]);
-                }
-            }
-
-            $rows[] = $values;
-        }
-
-        return ['schema' => $this->schema, 'rows' => $rows];
+        return ['schema' => $this->schema, 'count' => $this->count, 'columns' => $columns];
     }
 
     /**
-     * @param array{schema: Schema, rows: list<array<array-key, mixed>>} $data
+     * @param RowsPayload $data
      */
     public function __unserialize(array $data): void
     {
-        $this->schema = $data['schema'];
+        if (array_keys($data['columns']) !== array_keys($data['schema']->definitions())) {
+            throw new InvalidArgumentException(sprintf(
+                'Rows::fromColumns() expects columns [%s], got [%s]',
+                implode(', ', array_keys($data['schema']->definitions())),
+                implode(', ', array_keys($data['columns'])),
+            ));
+        }
 
-        $codec = new DomValueCodec();
-        $domColumns = [];
+        $backend = new PhpBackend();
+        $columns = [];
 
-        foreach ($this->schema->definitions() as $definition) {
-            if ($codec->handles($definition->type())) {
-                $domColumns[$definition->entry()->name()] = $definition->type();
+        foreach ($data['schema']->definitions() as $name => $definition) {
+            $column = $data['columns'][$name];
+            $columns[$name] = $backend->decode($definition, $column['buffers'], $data['count'], $column['nullCount']);
+        }
+
+        $rows = self::fromColumns($data['schema'], $columns, $data['count']);
+
+        $this->schema = $rows->schema;
+        $this->columns = $rows->columns;
+        $this->count = $rows->count;
+    }
+
+    /**
+     * @throws SchemaMismatchException
+     */
+    public static function of(Schema $schema, Row ...$rows): self
+    {
+        if ($rows === []) {
+            $backend = new PhpBackend();
+            $columns = [];
+
+            foreach ($schema->definitions() as $name => $definition) {
+                $columns[$name] = $backend->builder($definition)->finish();
+            }
+
+            return new self($schema, $columns, 0);
+        }
+
+        $rows = array_values($rows);
+        $batch = $rows[0]->rows;
+        $single = true;
+
+        foreach ($rows as $row) {
+            if ($row->rows !== $batch) {
+                $single = false;
+
+                break;
             }
         }
 
-        $rows = [];
+        if ($single && $batch->schema->isSame($schema)) {
+            $gathered = $batch->gather(array_map(static fn(Row $row): int => $row->index, $rows));
 
-        foreach ($data['rows'] as $values) {
-            foreach ($domColumns as $name => $type) {
-                if (array_key_exists($name, $values)) {
-                    $values[$name] = $codec->decode($type, $values[$name]);
-                }
-            }
-
-            $rows[] = new Row($values);
+            return new self($schema, $gathered->columns, $gathered->count);
         }
 
-        $this->rows = (new self($this->schema, ...$rows))->rows;
+        $builder = new RowsBuilder($schema, new PhpBackend());
+
+        foreach ($rows as $row) {
+            $builder->appendFrom($row->rows, $row->index);
+        }
+
+        return $builder->finish();
+    }
+
+    /**
+     * @param array<array-key, Column> $columns keyed and ordered by $schema, every one of $count rows
+     *
+     * @throws InvalidArgumentException
+     */
+    public static function fromColumns(Schema $schema, array $columns, int $count): self
+    {
+        if (array_keys($columns) !== array_keys($schema->definitions())) {
+            throw new InvalidArgumentException(sprintf(
+                'Rows::fromColumns() expects columns [%s], got [%s]',
+                implode(', ', array_keys($schema->definitions())),
+                implode(', ', array_keys($columns)),
+            ));
+        }
+
+        foreach ($columns as $name => $column) {
+            if ($column->count() !== $count) {
+                throw new InvalidArgumentException(sprintf(
+                    'Column "%s" holds %d rows, the batch %d',
+                    $name,
+                    $column->count(),
+                    $count,
+                ));
+            }
+        }
+
+        return new self($schema, $columns, $count);
     }
 
     /**
@@ -184,64 +189,147 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      */
     public function add(Row ...$rows): self
     {
-        $matched = $this->rows;
-
-        foreach ($rows as $row) {
-            try {
-                $matched[] = $row->matchTo($this->schema);
-            } catch (ColumnMismatchException $e) {
-                throw new SchemaMismatchException(count($matched), $e);
-            }
+        try {
+            $added = self::of($this->schema, ...$rows);
+        } catch (SchemaMismatchException $e) {
+            throw new SchemaMismatchException($e->rowIndex + $this->count, $e->cause);
         }
 
-        return self::trusted($this->schema, $matched);
+        return $this->concat($added);
     }
 
     /**
-     * @return array<Row>
+     * @return list<Row>
      */
     public function all(): array
     {
-        return $this->rows;
+        $rows = [];
+
+        for ($i = 0; $i < $this->count; $i++) {
+            $rows[] = new Row($this, $i);
+        }
+
+        return $rows;
     }
 
     /**
      * @param int<1, max> $size
      *
-     * @return \Generator<Rows>
+     * @return \Generator<int, Rows>
      */
     public function chunks(int $size): Generator
     {
-        foreach (array_chunk($this->rows, $size) as $chunk) {
-            yield self::trusted($this->schema, $chunk);
+        for ($offset = 0; $offset < $this->count; $offset += $size) {
+            yield $this->slice($offset, min($size, $this->count - $offset));
         }
     }
 
     /**
-     * Re-checks the batch against a different Schema and adopts it - the door the constructor opens,
-     * for rows already gathered into a batch.
-     *
-     * @throws SchemaMismatchException
+     * @throws InvalidArgumentException
      */
-    public function matchTo(Schema $schema): self
+    public function column(string $name): Column
     {
-        return new self($schema, ...$this->rows);
+        if (array_key_exists($name, $this->columns)) {
+            return $this->columns[$name];
+        }
+
+        $suggestions = (new SimilarNames())->closestTo($name, array_values($this->schema->references()->names()));
+
+        throw new InvalidArgumentException(
+            $suggestions === []
+                ? "Column \"{$name}\" does not exist."
+                : "Column \"{$name}\" does not exist. Did you mean one of the following? [\""
+                . implode('", "', $suggestions)
+                . '"]',
+        );
+    }
+
+    /**
+     * @return array<array-key, Column> schema order
+     */
+    public function columns(): array
+    {
+        return $this->columns;
+    }
+
+    /**
+     * Every input carries this schema; zero-row inputs add no rows.
+     *
+     * @throws InvalidArgumentException
+     */
+    public function concat(self ...$others): self
+    {
+        $inputs = $this->count > 0 ? [$this] : [];
+        $count = $this->count;
+
+        foreach ($others as $other) {
+            if (!$other->schema->isSame($this->schema)) {
+                throw InvalidArgumentException::because(
+                    'Cannot merge Rows with different schemas: [%s] and [%s]',
+                    (new InlineSchemaFormatter())->format($this->schema),
+                    (new InlineSchemaFormatter())->format($other->schema),
+                );
+            }
+
+            if ($other->count > 0) {
+                $inputs[] = $other;
+                $count += $other->count;
+            }
+        }
+
+        $head = array_shift($inputs);
+
+        if ($head === null) {
+            return self::of($this->schema);
+        }
+
+        $backend = new PhpBackend();
+        $columns = [];
+
+        foreach ($this->schema->definitions() as $name => $definition) {
+            $first = $head->columns[$name];
+            $rest = [];
+            $sameClass = true;
+
+            foreach ($inputs as $input) {
+                $part = $input->columns[$name];
+                $rest[] = $part;
+                $sameClass = $sameClass && $part::class === $first::class;
+            }
+
+            if ($sameClass) {
+                $columns[$name] = $first->concat(...$rest);
+
+                continue;
+            }
+
+            $builder = $backend->builder($definition);
+
+            foreach ([$first, ...$rest] as $part) {
+                $builder->appendTake($part, range(0, $part->count() - 1));
+            }
+
+            $columns[$name] = $builder->finish();
+        }
+
+        return new self($this->schema, $columns, $count);
     }
 
     public function count(): int
     {
-        return count($this->rows);
+        return $this->count;
     }
 
     public function diffLeft(self $rows): self
     {
         $comparator = new NativeComparator();
-        $differentRows = [];
+        $others = $rows->all();
+        $kept = [];
 
-        foreach ($this->rows as $row) {
+        foreach ($this->all() as $row) {
             $found = false;
 
-            foreach ($rows->rows as $otherRow) {
+            foreach ($others as $otherRow) {
                 if ($comparator->equals($row, $otherRow, $this->schema)) {
                     $found = true;
 
@@ -250,22 +338,23 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             }
 
             if (!$found) {
-                $differentRows[] = $row;
+                $kept[] = $row->index;
             }
         }
 
-        return self::trusted($this->schema, $differentRows);
+        return $this->gather($kept);
     }
 
     public function diffRight(self $rows): self
     {
         $comparator = new NativeComparator();
-        $differentRows = [];
+        $own = $this->all();
+        $kept = [];
 
-        foreach ($rows->rows as $row) {
+        foreach ($rows->all() as $row) {
             $found = false;
 
-            foreach ($this->rows as $otherRow) {
+            foreach ($own as $otherRow) {
                 if ($comparator->equals($row, $otherRow, $this->schema)) {
                     $found = true;
 
@@ -274,40 +363,73 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             }
 
             if (!$found) {
-                $differentRows[] = $row;
+                $kept[] = $row->index;
             }
         }
 
         // the surviving rows come from the right side, so the right side's schema describes them
-        return self::trusted($rows->schema, $differentRows);
+        return $rows->gather($kept);
     }
 
     public function drop(int $size): self
     {
+        if ($size < 0) {
+            throw new InvalidArgumentException('Size must be greater than or equal to 0');
+        }
+
         if ($size === 0) {
             return $this;
         }
 
-        return self::trusted($this->schema, array_slice($this->rows, $size));
+        return $this->slice(min($size, $this->count), $this->count - min($size, $this->count));
     }
 
     public function dropRight(int $size): self
     {
+        if ($size < 0) {
+            throw new InvalidArgumentException('Size must be greater than or equal to 0');
+        }
+
         if ($size === 0) {
             return $this;
         }
 
-        return self::trusted($this->schema, array_slice($this->rows, 0, -$size));
-    }
-
-    public function empty(): bool
-    {
-        return $this->count() === 0;
+        return $this->slice(0, $this->count - min($size, $this->count));
     }
 
     public function first(): Row
     {
-        return $this->rows[0] ?? throw new RuntimeException('First row does not exist in empty collection');
+        if ($this->count === 0) {
+            throw new RuntimeException('First row does not exist in empty collection');
+        }
+
+        return new Row($this, 0);
+    }
+
+    /**
+     * @param list<int> $indices rows to keep, in the order given
+     *
+     * @throws InvalidArgumentException
+     */
+    public function gather(array $indices): self
+    {
+        foreach ($indices as $index) {
+            if ($index < 0 || $index >= $this->count) {
+                throw new InvalidArgumentException(sprintf(
+                    'Rows::gather() index %d is outside a batch of %d rows',
+                    $index,
+                    $this->count,
+                ));
+            }
+        }
+
+        $columns = [];
+
+        foreach ($this->columns as $name => $column) {
+            $columns[$name] = $column->take($indices);
+        }
+
+        return new self($this->schema, $columns, count($indices));
     }
 
     /**
@@ -315,15 +437,15 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      */
     public function getIterator(): Iterator
     {
-        return new ArrayIterator($this->rows);
+        return new ArrayIterator($this->all());
     }
 
     public function hash(Algorithm $algorithm = new NativePHPHash()): string
     {
         $hash = '';
 
-        foreach ($this->rows as $row) {
-            $hash .= $row->hash($this->schema, $algorithm);
+        for ($i = 0; $i < $this->count; $i++) {
+            $hash .= (new Row($this, $i))->hash($this->schema, $algorithm);
         }
 
         return $algorithm->hash($hash);
@@ -342,35 +464,30 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             throw new InvalidArgumentException('Count must be greater than or equal to 0');
         }
 
-        if ($count === 0) {
-            return self::trusted($this->schema, []);
-        }
+        return $this->slice(0, min($count, $this->count));
+    }
 
-        return self::trusted($this->schema, array_slice($this->rows, 0, $count));
+    public function isEmpty(): bool
+    {
+        return $this->count === 0;
     }
 
     public function joinCross(self $right, string $joinPrefix = 'joined_'): self
     {
         $schema = (new JoinSchema($joinPrefix))->cross($this->schema, $right->schema);
-
-        /**
-         * @var array<Row> $joined
-         */
+        $merger = new RowMerger($joinPrefix);
+        $rightRows = $right->all();
         $joined = [];
 
-        $merger = new RowMerger($joinPrefix);
-
-        foreach ($this->rows as $leftRow) {
-            foreach ($right->rows as $rightRow) {
-                try {
-                    $joined[] = $merger->merge($leftRow, $rightRow);
-                } catch (InvalidArgumentException $e) {
-                    throw new InvalidArgumentException($e->getMessage() . '. Please consider using join prefix option');
-                }
+        foreach ($this->all() as $leftRow) {
+            foreach ($rightRows as $rightRow) {
+                $joined[] = $merger->merge($leftRow, $rightRow);
             }
         }
 
-        return new self($schema, ...$joined);
+        return (new RowsBuilder($schema, new DefaultBackend()))
+            ->appendRows($joined)
+            ->finish();
     }
 
     /**
@@ -405,70 +522,117 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
         return $this->joinUsing($right, $expression, Join::right);
     }
 
-    /**
-     * @throws InvalidArgumentException
-     */
-    private function joinUsing(self $right, Expression $expression, Join $type): self
+    public function last(): ?Row
     {
-        $single = static function (self $rows): Generator {
-            yield $rows;
-        };
+        return $this->count === 0 ? null : new Row($this, $this->count - 1);
+    }
 
-        $joiner = new Joiner($expression, $type);
+    /**
+     * Adopts $schema, checking every column whose definition it changes (Definition::matches per value).
+     *
+     * @throws SchemaMismatchException
+     */
+    public function matchTo(Schema $schema): self
+    {
+        if ($schema->isSame($this->schema)) {
+            return new self($schema, $this->columns, $this->count);
+        }
 
-        /**
-         * @var array<Row> $joined
-         */
-        $joined = [];
+        foreach ($this->schema->definitions() as $definition) {
+            $name = $definition->entry()->name();
 
-        foreach ($joiner->join(JoinSide::of($single($this)), JoinSide::of($single($right))) as $batch) {
-            foreach ($batch as $row) {
-                $joined[] = $row;
+            if ($this->count > 0 && $schema->findDefinition($name) === null) {
+                throw new SchemaMismatchException(0, ColumnMismatchException::unexpectedColumn($name));
             }
         }
 
-        return new self($joiner->schema($this->schema, $right->schema), ...$joined);
-    }
+        $backend = new PhpBackend();
+        $columns = [];
+        $changed = [];
 
-    public function last(): ?Row
-    {
-        if (empty($this->rows)) {
-            return null;
+        foreach ($schema->definitions() as $name => $definition) {
+            $own = $this->schema->findDefinition($definition->entry()->name());
+
+            if ($own === null) {
+                if (!$definition->isNullable()) {
+                    if ($this->count > 0) {
+                        throw new SchemaMismatchException(0, ColumnMismatchException::missingColumn($definition));
+                    }
+
+                    $columns[$name] = $backend->builder($definition)->finish();
+
+                    continue;
+                }
+
+                $columns[$name] = $backend->constant($definition, null, $this->count);
+
+                continue;
+            }
+
+            if ($own->isSame($definition)) {
+                $columns[$name] = $this->columns[$name];
+
+                continue;
+            }
+
+            $changed[$name] = $definition;
         }
 
-        return $this->rows[count($this->rows) - 1];
+        for ($i = 0; $i < $this->count; $i++) {
+            foreach ($changed as $name => $definition) {
+                // @mago-ignore analysis:mixed-assignment
+                $value = $this->columns[$name]->value($i);
+
+                if ($value === null ? !$definition->isNullable() : !$definition->matches($value)) {
+                    throw new SchemaMismatchException($i, ColumnMismatchException::valueDoesNotMatch(
+                        $definition,
+                        $value,
+                    ));
+                }
+            }
+        }
+
+        foreach ($changed as $name => $definition) {
+            try {
+                $columns[$name] = $this->columns[$name]->withType($definition->type());
+            } catch (InvalidArgumentException) {
+                $builder = $backend->builder($definition);
+                $builder->appendMany($this->columns[$name]->values());
+                $columns[$name] = $builder->finish();
+            }
+        }
+
+        $ordered = [];
+
+        foreach ($schema->definitions() as $name => $_) {
+            $ordered[$name] = $columns[$name];
+        }
+
+        return self::fromColumns($schema, $ordered, $this->count);
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function merge(self $rows): self
     {
-        if ($this->empty()) {
+        if ($this->isEmpty()) {
             return $rows;
         }
 
-        if ($rows->empty()) {
+        if ($rows->isEmpty()) {
             return $this;
         }
 
         if (!$this->schema->isSame($rows->schema())) {
-            // names alone cannot show a type-only disagreement - both sides would print identically
-            $describe = static fn(Schema $schema): string => implode(', ', array_map(
-                static fn(Definition $definition): string => (
-                    $definition->entry()->name()
-                    . ': '
-                    . ($definition->isNullable() ? '?' : '')
-                    . $definition->type()->toString()
-                ),
-                $schema->definitions(),
-            ));
-
-            throw new InvalidArgumentException(sprintf(
+            throw InvalidArgumentException::because(
                 'Cannot merge Rows with different schemas: [%s] and [%s]',
-                $describe($this->schema),
-                $describe($rows->schema()),
-            ));
+                (new InlineSchemaFormatter())->format($this->schema),
+                (new InlineSchemaFormatter())->format($rows->schema),
+            );
         }
 
-        return self::trusted($this->schema, [...$this->rows, ...$rows->rows]);
+        return $this->concat($rows);
     }
 
     /**
@@ -483,7 +647,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             throw new InvalidArgumentException('Rows accepts only integer offsets');
         }
 
-        return isset($this->rows[$offset]);
+        return $offset >= 0 && $offset < $this->count;
     }
 
     /**
@@ -494,7 +658,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
     public function offsetGet($offset): Row
     {
         if ($this->offsetExists($offset)) {
-            return $this->rows[$offset];
+            return new Row($this, $offset);
         }
 
         throw new InvalidArgumentException("Row {$offset} does not exists.");
@@ -516,17 +680,6 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
     }
 
     /**
-     * @param Reference|string $reference
-     * @param Reference|string ...$references
-     *
-     * @throws InvalidArgumentException
-     *
-     * @return array<Rows>
-     */
-    /**
-     * @return array<mixed>
-     */
-    /**
      * Drops the columns $schema does not declare and adopts it. Widening or retyping the batch is
      * not a projection - that goes through matchTo().
      *
@@ -534,33 +687,33 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      */
     public function project(Schema $schema): self
     {
-        $projected = [];
-
-        foreach ($this->rows as $row) {
-            $projected[] = $row->project($schema);
-        }
+        $definitions = [];
+        $columns = [];
 
         foreach ($schema->definitions() as $name => $definition) {
-            $own = $this->schema->findDefinition($name);
+            $own = $this->schema->findDefinition($definition->entry()->name());
 
-            if ($own === null || !$own->isSame($definition)) {
-                return new self($schema, ...$projected);
+            if ($own !== null) {
+                $definitions[] = $own;
+                $columns[$name] = $this->columns[$name];
             }
         }
 
-        // every kept column kept its definition, so each value already passed the gate under it
-        return self::trusted($schema, $projected);
+        return (new self(new Schema(...$definitions), $columns, $this->count))->matchTo($schema);
     }
 
+    /**
+     * @throws InvalidArgumentException
+     *
+     * @return list<mixed>
+     */
     public function reduceToArray(string|Reference $reference): array
     {
-        $ids = [];
-
-        foreach ($this->rows as $row) {
-            $ids[] = $row->get($reference);
+        if ($this->count === 0) {
+            return [];
         }
 
-        return $ids;
+        return $this->column($reference instanceof Reference ? $reference->base() : $reference)->values();
     }
 
     public function remove(int $offset): self
@@ -569,15 +722,23 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             throw new InvalidArgumentException("Rows does not have {$offset} offset");
         }
 
-        $rows = iterator_to_array($this->getIterator());
-        unset($rows[$offset]);
-
-        return self::trusted($this->schema, array_values($rows));
+        return $this->gather(array_values(array_diff_key(range(0, $this->count - 1), [$offset => true])));
     }
 
     public function reverse(): self
     {
-        return self::trusted($this->schema, array_reverse($this->rows));
+        $indices = [];
+
+        for ($i = $this->count - 1; $i >= 0; $i--) {
+            $indices[] = $i;
+        }
+
+        return $this->gather($indices);
+    }
+
+    public function row(int $i): Row
+    {
+        return new Row($this, $i);
     }
 
     public function schema(): Schema
@@ -588,21 +749,42 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
     /**
      * @throws InvalidArgumentException
      */
+    public function slice(int $offset, int $length): self
+    {
+        if ($offset < 0 || $length < 0 || ($offset + $length) > $this->count) {
+            throw new InvalidArgumentException(sprintf(
+                'Rows::slice(%d, %d) is outside a batch of %d rows',
+                $offset,
+                $length,
+                $this->count,
+            ));
+        }
+
+        $columns = [];
+
+        foreach ($this->columns as $name => $column) {
+            $columns[$name] = $column->slice($offset, $length);
+        }
+
+        return new self($this->schema, $columns, $length);
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
     public function sortAscending(string|Reference $reference): self
     {
-        $values = [];
-
-        foreach ($this->rows as $index => $row) {
-            $values[$index] = $row->get($reference);
+        if ($this->count === 0) {
+            return $this;
         }
 
-        $rows = [];
+        /** @var list<int> $order */
+        $order = array_keys(ValuesSorter::sort(
+            $this->column($reference instanceof Reference ? $reference->base() : $reference)->values(),
+            SortOrder::ASC,
+        ));
 
-        foreach (array_keys(ValuesSorter::sort($values, SortOrder::ASC)) as $index) {
-            $rows[] = $this->rows[$index];
-        }
-
-        return self::trusted($this->schema, $rows);
+        return $this->gather($order);
     }
 
     /**
@@ -624,19 +806,17 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      */
     public function sortDescending(string|Reference $reference): self
     {
-        $values = [];
-
-        foreach ($this->rows as $index => $row) {
-            $values[$index] = $row->get($reference);
+        if ($this->count === 0) {
+            return $this;
         }
 
-        $rows = [];
+        /** @var list<int> $order */
+        $order = array_keys(ValuesSorter::sort(
+            $this->column($reference instanceof Reference ? $reference->base() : $reference)->values(),
+            SortOrder::DESC,
+        ));
 
-        foreach (array_keys(ValuesSorter::sort($values, SortOrder::DESC)) as $index) {
-            $rows[] = $this->rows[$index];
-        }
-
-        return self::trusted($this->schema, $rows);
+        return $this->gather($order);
     }
 
     /**
@@ -652,27 +832,29 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             throw new InvalidArgumentException('Count must be greater than or equal to 0');
         }
 
-        if ($count === 0) {
-            return self::trusted($this->schema, []);
+        if ($count >= $this->count) {
+            return $this;
         }
 
-        $rowsCount = count($this->rows);
-
-        if ($count >= $rowsCount) {
-            return self::trusted($this->schema, $this->rows);
-        }
-
-        return self::trusted($this->schema, array_slice($this->rows, -$count));
+        return $this->slice($this->count - $count, $count);
     }
 
     public function take(int $size): self
     {
-        return self::trusted($this->schema, array_slice($this->rows, 0, $size));
+        if ($size < 0) {
+            throw new InvalidArgumentException('Size must be greater than or equal to 0');
+        }
+
+        return $this->slice(0, min($size, $this->count));
     }
 
     public function takeRight(int $size): self
     {
-        return self::trusted($this->schema, array_reverse(array_slice($this->rows, -$size, $size)));
+        if ($size < 0) {
+            throw new InvalidArgumentException('Size must be greater than or equal to 0');
+        }
+
+        return $this->slice($this->count - min($size, $this->count), min($size, $this->count))->reverse();
     }
 
     /**
@@ -682,8 +864,8 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
     {
         $array = [];
 
-        foreach ($this->rows as $row) {
-            $array[] = $row->toArray($withKeys);
+        for ($i = 0; $i < $this->count; $i++) {
+            $array[] = (new Row($this, $i))->toArray($withKeys);
         }
 
         return $array;
@@ -691,27 +873,121 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
 
     public function unique(Comparator $comparator = new NativeComparator()): self
     {
-        /**
-         * @var array<Row> $uniqueRows
-         */
-        $uniqueRows = [];
+        $unique = [];
 
-        foreach ($this->rows as $row) {
-            $alreadyAdded = false;
-
-            foreach ($uniqueRows as $uniqueRow) {
+        foreach ($this->all() as $row) {
+            foreach ($unique as $uniqueRow) {
                 if ($comparator->equals($row, $uniqueRow, $this->schema)) {
-                    $alreadyAdded = true;
-
-                    break;
+                    continue 2;
                 }
             }
 
-            if (!$alreadyAdded) {
-                $uniqueRows[] = $row;
+            $unique[] = $row;
+        }
+
+        return $this->gather(array_map(static fn(Row $row): int => $row->index, $unique));
+    }
+
+    /**
+     * @return array<array-key, mixed> the logical row, schema order
+     */
+    public function values(int $i): array
+    {
+        $values = [];
+
+        foreach ($this->columns as $name => $column) {
+            $values[$name] = $column->value($i);
+        }
+
+        return $values;
+    }
+
+    /**
+     * @param array<array-key, Column> $columns each of count() rows; a same-named column is replaced in place
+     *
+     * @throws InvalidArgumentException
+     */
+    public function withColumns(Schema $schema, array $columns): self
+    {
+        foreach ($columns as $name => $column) {
+            if ($column->count() !== $this->count) {
+                throw new InvalidArgumentException(sprintf(
+                    'Column "%s" holds %d rows, the batch %d',
+                    $name,
+                    $column->count(),
+                    $this->count,
+                ));
             }
         }
 
-        return self::trusted($this->schema, array_values($uniqueRows));
+        $merged = [];
+
+        foreach ($schema->definitions() as $name => $_) {
+            if (array_key_exists($name, $columns)) {
+                $merged[$name] = $columns[$name];
+            } elseif (array_key_exists($name, $this->columns)) {
+                $merged[$name] = $this->columns[$name];
+            }
+        }
+
+        return self::fromColumns($schema, $merged, $this->count);
+    }
+
+    /**
+     * Positional restamp: the n-th definition of $schema retypes the n-th column (Column::withType).
+     *
+     * @throws ColumnMismatchException
+     * @throws InvalidArgumentException
+     */
+    public function withSchema(Schema $schema): self
+    {
+        if ($schema->count() !== $this->schema->count()) {
+            throw new InvalidArgumentException(sprintf(
+                'Rows::withSchema() expects %d definitions, got %d',
+                $this->schema->count(),
+                $schema->count(),
+            ));
+        }
+
+        $columns = array_values($this->columns);
+        $retyped = [];
+        $position = 0;
+
+        foreach ($schema->definitions() as $name => $definition) {
+            $column = $columns[$position++];
+
+            if (!$definition->isNullable() && $column->nullCount() > 0) {
+                throw ColumnMismatchException::valueDoesNotMatch($definition, null);
+            }
+
+            try {
+                $retyped[$name] = $column->withType($definition->type());
+            } catch (InvalidArgumentException $e) {
+                throw ColumnMismatchException::retype($definition, $e->getMessage());
+            }
+        }
+
+        return new self($schema, $retyped, $this->count);
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    private function joinUsing(self $right, Expression $expression, Join $type): self
+    {
+        $single = static function (self $rows): Generator {
+            yield $rows;
+        };
+
+        $joiner = new Joiner($expression, $type);
+        $joined = [];
+
+        foreach ($joiner->join(JoinSide::of($single($this)), JoinSide::of($single($right))) as $batch) {
+            foreach ($batch->all() as $row) {
+                $joined[] = $row;
+            }
+        }
+
+        return self::of($joiner->schema($this->schema, $right->schema), ...$joined);
     }
 }

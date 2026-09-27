@@ -24,12 +24,8 @@ use Flow\Types\Type\Native\UnionType;
 use function Flow\Types\DSL\type_instance_of;
 use function in_array;
 
-final class Comparator
+final readonly class Comparator
 {
-    public function __construct(
-        private StructureComparison $structures = new StructureComparison(),
-    ) {}
-
     /**
      * @param Type<mixed> $left
      * @param Type<mixed> $right
@@ -125,7 +121,7 @@ final class Comparator
         }
 
         if ($left instanceof StructureType && $right instanceof StructureType) {
-            return $this->structures->identical($left, $right, $this);
+            return (new StructureComparison())->identical($left, $right, $this);
         }
 
         return $left->toString() === $right->toString();

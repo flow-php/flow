@@ -50,7 +50,7 @@ final class SortedRunBucketing implements BucketingStrategy
             }
         }
 
-        if ($buffer !== null && !$buffer->empty()) {
+        if ($buffer !== null && !$buffer->isEmpty()) {
             yield $this->spill($buffer, $storage, $runId, $index);
         }
     }

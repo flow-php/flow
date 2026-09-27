@@ -152,7 +152,7 @@ final class RowsMother
                 ),
                 'datetime_mutable' => new DateTime('2025-06-15 12:30:45.654321', new DateTimeZone('America/New_York')),
                 'datetime_before_epoch' => new DateTimeImmutable('1969-07-20 20:17:00.500000 UTC'),
-                'date' => new DateTimeImmutable('2025-06-15 00:00:00', new DateTimeZone('Europe/Warsaw')),
+                'date' => new DateTimeImmutable('2025-06-15 00:00:00', new DateTimeZone('UTC')),
                 'time' => new DateInterval('PT2H30M15S'),
                 'uuid' => type_uuid()->cast('0196aecb-b568-7e57-a381-8ec8d3e4a531'),
                 'json' => type_json()->cast('[1,2,3]'),

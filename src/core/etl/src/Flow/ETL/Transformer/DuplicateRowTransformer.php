@@ -102,9 +102,9 @@ final class DuplicateRowTransformer implements Transformer
                     }
                 }
 
-                $rows = new Rows($output, ...$interleaved);
+                $rows = Rows::of($output, ...$interleaved);
             } else {
-                $rows = new Rows($output, ...$rows->all());
+                $rows = Rows::of($output, ...$rows->all());
             }
 
             $context->telemetry()->transformationCompleted($this, [

@@ -59,7 +59,7 @@ final class FeedExtractor implements Extractor
             // is parked, so both operands can change between the yield and this check.
             if ($this->batch === null && !$this->finished) {
                 // a downstream projection still sees the columns it was built against
-                $signal = yield new Rows($this->schema);
+                $signal = yield Rows::of($this->schema);
 
                 if ($signal === Signal::STOP) {
                     return;

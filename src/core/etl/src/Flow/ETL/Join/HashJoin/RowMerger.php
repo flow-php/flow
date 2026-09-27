@@ -56,8 +56,10 @@ final class RowMerger
 
     /**
      * @throws DuplicatedEntriesException
+     *
+     * @return array<array-key, mixed>
      */
-    public function merge(Row $left, Row $right): Row
+    public function merge(Row $left, Row $right): array
     {
         $leftValues = $left->values();
         $rightValues = $right->values();
@@ -85,7 +87,7 @@ final class RowMerger
             $values[$renames[$name] ?? $name] = $value;
         }
 
-        return new Row($values);
+        return $values;
     }
 
     /**

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use Flow\ETL\Row\InferredBatch;
-use Flow\ETL\Row\RawRowValues;
-use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\int_schema;
@@ -22,8 +22,8 @@ final class InferredBatchTest extends FlowTestCase
         static::assertEquals(
             schema(int_schema('id'), str_schema('name', nullable: true)),
             (new InferredBatch())->of([
-                new RawRowValues(['id' => 1, 'name' => 'a']),
-                new RawRowValues(['id' => 2]),
+                ['id' => 1, 'name' => 'a'],
+                ['id' => 2],
             ])->schema(),
         );
     }
@@ -38,8 +38,8 @@ final class InferredBatchTest extends FlowTestCase
         static::assertEquals(
             schema(int_schema('id'), str_schema('name', nullable: true)),
             (new InferredBatch())->of([
-                new RawRowValues(['id' => 1, 'name' => 'a']),
-                new RawRowValues(['id' => 2, 'name' => null]),
+                ['id' => 1, 'name' => 'a'],
+                ['id' => 2, 'name' => null],
             ])->schema(),
         );
     }
@@ -55,32 +55,17 @@ final class InferredBatchTest extends FlowTestCase
         }
 
         // PHP cannot hold '0' as a string key, which is precisely the shape under test
-        $inferred = (new InferredBatch())->of([new RawRowValues($values)]);
+        $inferred = (new InferredBatch())->of([$values]);
 
         static::assertSame(['0', '7'], $inferred->schema()->references()->names());
         static::assertSame([['0' => 1, '7' => 8]], $inferred->toArray());
-    }
-
-    public function test_metadata_travels_from_the_raw_values_onto_the_definition(): void
-    {
-        static::assertSame(
-            ['origin' => 'csv'],
-            (new InferredBatch())
-                ->of([
-                    new RawRowValues(['id' => 1], ['id' => Metadata::fromArray(['origin' => 'csv'])]),
-                ])
-                ->schema()
-                ->get('id')
-                ->metadata()
-                ->normalize(),
-        );
     }
 
     public function test_rows_keep_their_values_verbatim(): void
     {
         static::assertEquals(
             rows(schema(int_schema('id'), str_schema('name')), row(['id' => 1, 'name' => 'a'])),
-            (new InferredBatch())->of([new RawRowValues(['id' => 1, 'name' => 'a'])]),
+            (new InferredBatch())->of([['id' => 1, 'name' => 'a']]),
         );
     }
 
@@ -91,11 +76,37 @@ final class InferredBatchTest extends FlowTestCase
     public function test_widening_folds_int_and_string_into_one_column_and_converts_the_values(): void
     {
         $rows = (new InferredBatch())->of([
-            new RawRowValues(['v' => 1]),
-            new RawRowValues(['v' => 'text']),
+            ['v' => 1],
+            ['v' => 'text'],
         ]);
 
         static::assertSame('string', $rows->schema()->get('v')->type()->toString());
         static::assertSame([['v' => '1'], ['v' => 'text']], $rows->toArray());
+    }
+
+    public function test_a_midnight_outside_utc_infers_datetime(): void
+    {
+        static::assertSame(
+            'datetime',
+            (new InferredBatch())
+                ->of([['at' => new DateTimeImmutable('2026-01-01 00:00:00', new DateTimeZone('Europe/Warsaw'))]])
+                ->schema()
+                ->get('at')
+                ->type()
+                ->toString(),
+        );
+    }
+
+    public function test_a_midnight_in_utc_infers_date(): void
+    {
+        static::assertSame(
+            'date',
+            (new InferredBatch())
+                ->of([['at' => new DateTimeImmutable('2026-01-01 00:00:00', new DateTimeZone('UTC'))]])
+                ->schema()
+                ->get('at')
+                ->type()
+                ->toString(),
+        );
     }
 }

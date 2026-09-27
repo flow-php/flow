@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Processor;
 
 use Flow\ETL\BoundStep;
+use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
+use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ExpandingFunctions;
 use Flow\ETL\Function\FrameAccumulating;
@@ -56,7 +58,7 @@ final class WindowProcessor implements Processor
             $bound ??= $this->boundTo($batch->schema());
 
             if (!$batch->count()) {
-                yield new Rows($bound->output);
+                yield Rows::of($bound->output);
 
                 continue;
             }
@@ -182,7 +184,7 @@ final class WindowProcessor implements Processor
         $partitionRows = rows($bound->input, ...$rows)->sortBy(...$sortBy);
 
         $frame = $window->frame();
-        $processedRows = [];
+        $builder = $context->backend()->builder($derived);
 
         $values = match (true) {
             $resolved instanceof PartitionRanking => $resolved->rankPartition($partitionRows),
@@ -200,12 +202,13 @@ final class WindowProcessor implements Processor
                 ? $resolved->apply(new WindowContext($row, $index, $partitionRows, $frame, $context))
                 : $values[$index];
 
-            $processedRows[] = new Row([
-                ...$row->values(),
-                $derived->entry()->name() => $value === null ? null : $derived->type()->cast($value),
-            ]);
+            try {
+                $builder->append($value === null ? null : $derived->type()->cast($value));
+            } catch (ColumnMismatchException $e) {
+                throw new SchemaMismatchException($index, $e);
+            }
         }
 
-        return rows($bound->output, ...$processedRows);
+        return $partitionRows->withColumns($bound->output, [$derived->entry()->name() => $builder->finish()]);
     }
 }

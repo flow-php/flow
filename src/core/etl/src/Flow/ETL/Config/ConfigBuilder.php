@@ -7,6 +7,8 @@ namespace Flow\ETL\Config;
 use Flow\Clock\SystemClock;
 use Flow\ETL\Analyze;
 use Flow\ETL\Cache;
+use Flow\ETL\Column\Backend;
+use Flow\ETL\Column\DefaultBackend;
 use Flow\ETL\Config;
 use Flow\ETL\Config\Cache\CacheConfigBuilder;
 use Flow\ETL\Config\Grouping\GroupByAlgorithmBuilder;
@@ -23,8 +25,7 @@ use Flow\ETL\Executor;
 use Flow\ETL\NativePHPRandomValueGenerator;
 use Flow\ETL\Optimizer;
 use Flow\ETL\RandomValueGenerator;
-use Flow\ETL\Row\AdaptiveRowHydrator;
-use Flow\ETL\Row\Hydrator;
+use Flow\ETL\Row\PhpRowHydrator;
 use Flow\Filesystem\Path;
 use Flow\Floe\FloeSerializer;
 use Flow\Serializer\Serializer;
@@ -40,12 +41,9 @@ final class ConfigBuilder
 
     private ?ClockInterface $clock;
 
-    private ?GroupByAlgorithmBuilder $groupBy;
+    private Backend $backend;
 
-    /**
-     * @var null|Hydrator
-     */
-    private ?Hydrator $hydrator;
+    private ?GroupByAlgorithmBuilder $groupBy;
 
     private ?JoinAlgorithmBuilder $join;
 
@@ -74,7 +72,7 @@ final class ConfigBuilder
         $this->id = null;
         $this->name = null;
         $this->serializer = null;
-        $this->hydrator = null;
+        $this->backend = new DefaultBackend();
         $this->optimizer = null;
         $this->executor = null;
         $this->clock = null;
@@ -98,19 +96,25 @@ final class ConfigBuilder
         return $this;
     }
 
+    public function backend(Backend $backend): self
+    {
+        $this->backend = $backend;
+
+        return $this;
+    }
+
     public function build(): Config
     {
         $id = $this->id ??= 'flow-php-' . $this->randomValueGenerator->string(32);
         $this->optimizer ??= Optimizer::default();
         $this->executor ??= new Executor();
-        $this->hydrator ??= new AdaptiveRowHydrator();
+        $hydrator = new PhpRowHydrator($this->backend);
         // the default serializer shares the context hydrator - one source of Row objects
-        $this->serializer ??= new FloeSerializer(hydrator: $this->hydrator);
+        $this->serializer ??= new FloeSerializer(hydrator: $hydrator);
 
         $serializer = $this->serializer;
         $optimizer = $this->optimizer;
         $executor = $this->executor;
-        $hydrator = $this->hydrator;
         $dataframeName = $this->name ?? 'flow_dataframe';
 
         $cacheConfig = $this->cache->build($serializer, $this->telemetryConfig, $dataframeName);
@@ -132,6 +136,7 @@ final class ConfigBuilder
             ($this->join ?? new HashJoinBuilder())->build($cacheConfig->localFilesystemCacheDir),
             ($this->repartition ?? new HashRepartitionBuilder())->build($cacheConfig->localFilesystemCacheDir),
             randomValueGenerator: $this->randomValueGenerator,
+            backend: $this->backend,
         );
     }
 
@@ -159,16 +164,6 @@ final class ConfigBuilder
     public function groupBy(GroupByAlgorithmBuilder $algorithm): self
     {
         $this->groupBy = $algorithm;
-
-        return $this;
-    }
-
-    /**
-     * @param Hydrator $hydrator
-     */
-    public function hydrator(Hydrator $hydrator): self
-    {
-        $this->hydrator = $hydrator;
 
         return $this;
     }

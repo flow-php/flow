@@ -121,11 +121,11 @@ final class GoogleSheetExtractorTest extends FlowTestCase
 
         static::assertCount(2, $rows);
         static::assertEquals(
-            row(['_sheet_name' => 'sheet', '_spread_sheet_id' => 'spread-id', 'header' => 'row1']),
+            row(['header' => 'row1', '_spread_sheet_id' => 'spread-id', '_sheet_name' => 'sheet']),
             $rows->all()[0],
         );
         static::assertEquals(
-            row(['_sheet_name' => 'sheet', '_spread_sheet_id' => 'spread-id', 'header' => 'row2']),
+            row(['header' => 'row2', '_spread_sheet_id' => 'spread-id', '_sheet_name' => 'sheet']),
             $rows->all()[1],
         );
     }

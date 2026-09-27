@@ -15,7 +15,6 @@ use Flow\ETL\Executor;
 use Flow\ETL\Optimizer;
 use Flow\ETL\Optimizer\Rule\PushLimitIntoSource;
 use Flow\ETL\Planner;
-use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Tests\Double\SpySerializer;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
@@ -149,9 +148,9 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         static::assertInstanceOf(FilesystemBuckets::class, $config->sort->bucketing->storage);
     }
 
-    public function test_default_hydrator_is_the_adaptive_hydrator(): void
+    public function test_default_hydrator_is_the_php_hydrator(): void
     {
-        static::assertInstanceOf(AdaptiveRowHydrator::class, config_builder()->build()->hydrator());
+        static::assertInstanceOf(PhpRowHydrator::class, config_builder()->build()->hydrator());
     }
 
     public function test_default_sorting_algorithm_is_external_sort(): void
@@ -162,13 +161,6 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
     public function test_memory_sort_algorithm_override(): void
     {
         static::assertInstanceOf(MemorySortConfig::class, config_builder()->sort(memory_sort())->build()->sort);
-    }
-
-    public function test_hydrator_override_wins_over_the_default(): void
-    {
-        $hydrator = new PhpRowHydrator();
-
-        static::assertSame($hydrator, config_builder()->hydrator($hydrator)->build()->hydrator());
     }
 
     public function test_external_sort_storage_override(): void

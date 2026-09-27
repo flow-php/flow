@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Join;
 
+use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
 use Flow\ETL\Schema;
 
 final readonly class JoinSchema
@@ -34,11 +35,19 @@ final readonly class JoinSchema
             }
         }
 
-        return match ($type) {
-            Join::left_anti => $leftSide,
-            Join::left => $leftSide->add(...$rightSide->makeNullable()->definitions()),
-            Join::right => $leftSide->makeNullable()->add(...$rightSide->definitions()),
-            Join::inner => $leftSide->add(...$rightSide->definitions()),
-        };
+        try {
+            return match ($type) {
+                Join::left_anti => $leftSide,
+                Join::left => $leftSide->add(...$rightSide->makeNullable()->definitions()),
+                Join::right => $leftSide->makeNullable()->add(...$rightSide->definitions()),
+                Join::inner => $leftSide->add(...$rightSide->definitions()),
+            };
+        } catch (SchemaDefinitionNotUniqueException $e) {
+            throw new SchemaDefinitionNotUniqueException(
+                $e->getMessage() . '. Please consider using join prefix option',
+                (int) $e->getCode(),
+                $e,
+            );
+        }
     }
 }

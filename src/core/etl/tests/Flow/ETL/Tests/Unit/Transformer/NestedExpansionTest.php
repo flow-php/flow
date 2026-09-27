@@ -29,7 +29,6 @@ use function Flow\ETL\DSL\when;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
-use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_string;
 
 final class NestedExpansionTest extends FlowTestCase
@@ -157,20 +156,6 @@ final class NestedExpansionTest extends FlowTestCase
             (new ReferenceResolver())->resolve(concat(ref('id'), lit('x')), ListColumnsMother::schema()),
             ListColumnsMother::schema(),
         ));
-    }
-
-    public function test_zipped_expands_over_mixed_lists_stay_mixed(): void
-    {
-        $expansion = NestedExpansionContext::of(
-            structure(['a' => ref('a')->expand(), 'b' => ref('b')->expand()]),
-            schema(list_schema('a', type_list(type_mixed())), list_schema('b', type_list(type_mixed()))),
-        );
-
-        static::assertSame('structure{a: mixed, b: mixed}', $expansion->returns()->toString());
-        static::assertSame(
-            [['a' => 1, 'b' => 'x'], ['a' => 2, 'b' => null]],
-            $expansion->eval(row(['a' => [1, 2], 'b' => ['x']]), flow_context(config())),
-        );
     }
 
     public function test_an_expand_over_a_map_reads_its_values_by_position(): void

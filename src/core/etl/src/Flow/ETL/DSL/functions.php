@@ -17,6 +17,8 @@ use Flow\Documentation\Attribute\Type as DSLType;
 use Flow\ETL\Analyze;
 use Flow\ETL\Cache;
 use Flow\ETL\Cache\Implementation\FilesystemCache;
+use Flow\ETL\Column\Backend;
+use Flow\ETL\Column\DefaultBackend;
 use Flow\ETL\Config;
 use Flow\ETL\Config\ConfigBuilder;
 use Flow\ETL\Config\Grouping\HashGroupByBuilder;
@@ -146,16 +148,15 @@ use Flow\ETL\Memory\Memory;
 use Flow\ETL\NativePHPRandomValueGenerator;
 use Flow\ETL\RandomValueGenerator;
 use Flow\ETL\Row;
-use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Row\ColumnName;
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
-use Flow\ETL\Row\Hydrator;
-use Flow\ETL\Row\RawRowValues;
+use Flow\ETL\Row\InferredBatch;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\SortOrder;
 use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
@@ -575,13 +576,13 @@ function rename_map(array $renames): RenameMapEntryStrategy
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function row(array $values): Row
 {
-    return new Row($values);
+    return (new InferredBatch())->of([$values])->first();
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function rows(Schema $schema, Row ...$row): Rows
 {
-    return new Rows($schema, ...$row);
+    return Rows::of($schema, ...$row);
 }
 
 /**
@@ -1179,7 +1180,7 @@ function number_format(
 function array_to_row(
     array $data,
     Schema $schema,
-    Hydrator $hydrator = new AdaptiveRowHydrator(),
+    Backend $backend = new DefaultBackend(),
     array|Partitions $partitions = [],
 ): Row {
     $map = [];
@@ -1195,14 +1196,17 @@ function array_to_row(
         }
     }
 
-    return $hydrator->hydrate([new RawRowValues($map)], $schema)->first();
+    return (new RowsBuilder($schema, $backend))
+        ->appendRows([$map])
+        ->finish()
+        ->first();
 }
 
 /**
  * @param array<array<mixed>>|array<mixed|string> $data
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function array_to_rows(array $data, Schema $schema, Hydrator $hydrator = new AdaptiveRowHydrator()): Rows
+function array_to_rows(array $data, Schema $schema, Backend $backend = new DefaultBackend()): Rows
 {
     $isRows = true;
 
@@ -1232,10 +1236,12 @@ function array_to_rows(array $data, Schema $schema, Hydrator $hydrator = new Ada
             $map[$declared === null ? (new ColumnName())->of($key) : (string) $key] = $value;
         }
 
-        $maps[] = new RawRowValues($map);
+        $maps[] = $map;
     }
 
-    return $hydrator->hydrate($maps, $schema);
+    return (new RowsBuilder($schema, $backend))
+        ->appendRows($maps)
+        ->finish();
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::WINDOW_FUNCTION)]

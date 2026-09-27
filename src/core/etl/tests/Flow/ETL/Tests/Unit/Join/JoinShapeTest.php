@@ -105,10 +105,10 @@ final class JoinShapeTest extends FlowTestCase
     {
         static::assertSame(
             ['id' => 1, 'country' => 'PL', 'name' => 'Norbert'],
-            JoinShape::of(join_on(['id' => 'id']), Join::inner)
-                ->merger()
-                ->merge(row(['id' => 1, 'country' => 'PL']), row(['id' => 1, 'name' => 'Norbert']))
-                ->toArray(),
+            JoinShape::of(join_on(['id' => 'id']), Join::inner)->merger()->merge(
+                row(['id' => 1, 'country' => 'PL']),
+                row(['id' => 1, 'name' => 'Norbert']),
+            ),
         );
     }
 
@@ -116,10 +116,10 @@ final class JoinShapeTest extends FlowTestCase
     {
         static::assertSame(
             ['country' => 'PL', 'id' => 2, 'name' => 'Norbert'],
-            JoinShape::of(join_on(['id' => 'id']), Join::right)
-                ->merger()
-                ->merge(row(['id' => 1, 'country' => 'PL']), row(['id' => 2, 'name' => 'Norbert']))
-                ->toArray(),
+            JoinShape::of(join_on(['id' => 'id']), Join::right)->merger()->merge(
+                row(['id' => 1, 'country' => 'PL']),
+                row(['id' => 2, 'name' => 'Norbert']),
+            ),
         );
     }
 }

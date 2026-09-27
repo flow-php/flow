@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\Floe;
 
 use Composer\InstalledVersions;
-use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Row\Hydrator;
+use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
@@ -66,11 +66,10 @@ final class FloeStreamWriter
         Schema $schema,
         private readonly Options $options = new Options(),
         ?Hydrator $hydrator = null,
-        private readonly FloeEngine $engine = FloeEngine::adaptive,
     ) {
         Format::validateCodecId($this->options->codec->id());
         $this->sessionSchema = $schema;
-        $this->hydrator = $hydrator ?? new AdaptiveRowHydrator();
+        $this->hydrator = $hydrator ?? new PhpRowHydrator();
     }
 
     /**
@@ -192,7 +191,7 @@ final class FloeStreamWriter
             return;
         }
 
-        $this->sessionEncoder = $this->engine->encoder($this->sessionSchema);
+        $this->sessionEncoder = new PhpFloeEncoder($this->sessionSchema);
     }
 
     /**

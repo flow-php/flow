@@ -123,6 +123,16 @@ final class DateTypeTest extends TestCase
             'expected' => true,
         ];
 
+        yield 'midnight outside UTC is not a date' => [
+            'value' => new DateTimeImmutable('2026-01-01 00:00:00', new DateTimeZone('Europe/Warsaw')),
+            'expected' => false,
+        ];
+
+        yield 'midnight in UTC is a date' => [
+            'value' => new DateTimeImmutable('2026-01-01 00:00:00', new DateTimeZone('UTC')),
+            'expected' => true,
+        ];
+
         yield 'invalid DateTimeImmutable with time' => [
             'value' => new DateTimeImmutable(),
             'expected' => false,

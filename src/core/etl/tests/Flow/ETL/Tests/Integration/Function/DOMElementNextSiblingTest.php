@@ -16,7 +16,7 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\xml_element_schema;
+use function Flow\ETL\DSL\xml_schema;
 use function Flow\Types\DSL\type_html_element;
 
 final class DOMElementNextSiblingTest extends FlowTestCase
@@ -84,13 +84,14 @@ final class DOMElementNextSiblingTest extends FlowTestCase
         $dom = new DOMDocument();
         $dom->loadXML('<user><name>User Name</name><number>01</number></user>');
 
+        // a batch stores an element's own markup, so siblings are reached from the document it belongs to
         $rows = df()
-            ->read(from_rows(rows(
-                schema(xml_element_schema('xml_element')),
-                row(['xml_element' => $dom->getElementsByTagName('name')->item(0)]),
-            )))
-            ->withEntry('user_name', ref('xml_element')->domElementValue())
-            ->withEntry('user_id', ref('xml_element')->domElementNextSibling()->domElementValue())
+            ->read(from_rows(rows(schema(xml_schema('xml')), row(['xml' => $dom]))))
+            ->withEntry('user_name', ref('xml')->xpath('/user/name')->arrayGet('0')->domElementValue())
+            ->withEntry(
+                'user_id',
+                ref('xml')->xpath('/user/name')->arrayGet('0')->domElementNextSibling()->domElementValue(),
+            )
             ->select('user_name', 'user_id')
             ->fetch();
 

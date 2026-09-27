@@ -13,7 +13,6 @@ use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Flow\Floe\Codec;
 use Flow\Floe\Codec\NoopCodec;
-use Flow\Floe\FloeEngine;
 use Flow\Floe\FloeExtractor;
 use Flow\Floe\FloeLoader;
 use Flow\Floe\FloeMerger;
@@ -32,10 +31,9 @@ function from_floe(
     string|Path $path,
     Codec $codec = new NoopCodec(),
     int $chunk_size = 65536,
-    FloeEngine $engine = FloeEngine::adaptive,
     Filesystem $filesystem = new NativeLocalFilesystem(),
 ): FloeExtractor {
-    return new FloeExtractor(is_string($path) ? path_real($path) : $path, $codec, $chunk_size, $engine, $filesystem);
+    return new FloeExtractor(is_string($path) ? path_real($path) : $path, $codec, $chunk_size, $filesystem);
 }
 
 /**
@@ -46,10 +44,9 @@ function to_floe(
     string|Path $path,
     ?Metadata $metadata = null,
     Options $options = new Options(),
-    FloeEngine $engine = FloeEngine::adaptive,
     Filesystem $filesystem = new NativeLocalFilesystem(),
 ): FloeLoader {
-    return new FloeLoader(is_string($path) ? path_real($path) : $path, $metadata, $options, $engine, $filesystem);
+    return new FloeLoader(is_string($path) ? path_real($path) : $path, $metadata, $options, $filesystem);
 }
 
 #[DocumentationDSL(module: Module::FLOE, type: DSLType::HELPER)]

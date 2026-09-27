@@ -6,11 +6,7 @@ namespace Flow\ETL\Adapter\GoogleSheet\Tests\Integration;
 
 use Flow\ETL\Adapter\GoogleSheet\Tests\GoogleSheetsContext;
 use Flow\ETL\Config;
-use Flow\ETL\Row\AdaptiveRowHydrator;
-use Flow\ETL\Row\Hydrator;
-use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Tests\FlowTestCase;
-use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\Adapter\GoogleSheet\from_google_sheet;
 use function Flow\ETL\DSL\bool_schema;
@@ -25,12 +21,6 @@ use function reset;
 
 final class GoogleSheetHydratorParityTest extends FlowTestCase
 {
-    public static function hydrators(): iterable
-    {
-        yield 'php' => [new PhpRowHydrator()];
-        yield 'adaptive' => [new AdaptiveRowHydrator()];
-    }
-
     public function test_appends_spread_sheet_id_and_sheet_name_to_the_schema_when_metadata_columns_are_enabled(): void
     {
         $extractor = from_google_sheet(
@@ -57,31 +47,7 @@ final class GoogleSheetHydratorParityTest extends FlowTestCase
         }
     }
 
-    public function test_honours_a_hydrator_configured_on_the_context(): void
-    {
-        $extractor = from_google_sheet(
-            (new GoogleSheetsContext())->sheets(
-                __DIR__ . '/../Fixtures/sample-batch.json',
-                __DIR__ . '/../Fixtures/batch.json',
-            ),
-            '1234567890',
-            'Sheet',
-        );
-
-        $count = 0;
-
-        foreach ($extractor->extract(
-            flow_context(Config::builder()->hydrator(new AdaptiveRowHydrator())->build()),
-        ) as $batch) {
-            static::assertTrue($batch->schema()->isSame($extractor->schema()));
-            $count += $batch->count();
-        }
-
-        static::assertSame(19, $count);
-    }
-
-    #[DataProvider('hydrators')]
-    public function test_infers_the_same_typed_rows_on_both_hydrators(Hydrator $hydrator): void
+    public function test_infers_typed_rows(): void
     {
         $extractor = from_google_sheet(
             (new GoogleSheetsContext())->sheetsOfGrid(
@@ -95,7 +61,7 @@ final class GoogleSheetHydratorParityTest extends FlowTestCase
 
         $rows = [];
 
-        foreach ($extractor->extract(flow_context(Config::builder()->hydrator($hydrator)->build())) as $batch) {
+        foreach ($extractor->extract(flow_context(Config::builder()->build())) as $batch) {
             static::assertTrue(
                 $batch
                     ->schema()

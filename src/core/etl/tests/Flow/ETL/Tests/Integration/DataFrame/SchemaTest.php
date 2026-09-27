@@ -139,7 +139,7 @@ final class SchemaTest extends FlowIntegrationTestCase
                 range(1, 100),
             ),
             schema(int_schema('id'), str_schema('name'), bool_schema('active')),
-            flow_context(config())->hydrator(),
+            flow_context(config())->backend(),
         );
 
         static::assertEquals(
@@ -165,7 +165,7 @@ final class SchemaTest extends FlowIntegrationTestCase
                 range(1, 100),
             ),
             schema(int_schema('id'), str_schema('name'), bool_schema('active'), str_schema('union', nullable: true)),
-            flow_context(config())->hydrator(),
+            flow_context(config())->backend(),
         );
 
         static::assertEquals(

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Double;
 
-use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Row\Hydrator;
+use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 
@@ -19,13 +19,13 @@ final class SpyHydrator implements Hydrator
     {
         $this->dehydrateCalls++;
 
-        return (new AdaptiveRowHydrator())->dehydrate($rows);
+        return (new PhpRowHydrator())->dehydrate($rows);
     }
 
     public function hydrate(array $batch, Schema $schema): Rows
     {
         $this->hydrateCalls++;
 
-        return (new AdaptiveRowHydrator())->hydrate($batch, $schema);
+        return (new PhpRowHydrator())->hydrate($batch, $schema);
     }
 }

@@ -37,6 +37,6 @@ final readonly class CollectingProcessor implements Processor
             $collected = $collected === null ? $batch : $collected->merge($batch);
         }
 
-        yield $collected ?? new Rows($this->declared ?? new Schema());
+        yield $collected ?? Rows::of($this->declared ?? new Schema());
     }
 }

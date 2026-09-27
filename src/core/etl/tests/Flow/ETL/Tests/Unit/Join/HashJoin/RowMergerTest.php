@@ -26,7 +26,7 @@ final class RowMergerTest extends FlowTestCase
 
         static::assertSame(
             ['amount' => 100, 'id' => 1, 'name' => 'Alice'],
-            $merger->merge(row(['id' => 1, 'amount' => 100]), row(['id' => 1, 'name' => 'Alice']))->toArray(),
+            $merger->merge(row(['id' => 1, 'amount' => 100]), row(['id' => 1, 'name' => 'Alice'])),
         );
     }
 
@@ -36,7 +36,7 @@ final class RowMergerTest extends FlowTestCase
 
         static::assertSame(
             ['id' => 1, 'amount' => 100, 'name' => 'Alice'],
-            $merger->merge(row(['id' => 1, 'amount' => 100]), row(['id' => 1, 'name' => 'Alice']))->toArray(),
+            $merger->merge(row(['id' => 1, 'amount' => 100]), row(['id' => 1, 'name' => 'Alice'])),
         );
     }
 
@@ -44,9 +44,7 @@ final class RowMergerTest extends FlowTestCase
     {
         static::assertSame(
             ['id' => 1, 'name' => 'Alice'],
-            (new RowMerger())
-                ->merge(row(['id' => 1]), row(['name' => 'Alice']))
-                ->toArray(),
+            (new RowMerger())->merge(row(['id' => 1]), row(['name' => 'Alice'])),
         );
     }
 
@@ -61,9 +59,7 @@ final class RowMergerTest extends FlowTestCase
     {
         static::assertSame(
             ['id' => 1, 'right_id' => 1, 'right_name' => 'Alice'],
-            (new RowMerger('right_'))
-                ->merge(row(['id' => 1]), row(['id' => 1, 'name' => 'Alice']))
-                ->toArray(),
+            (new RowMerger('right_'))->merge(row(['id' => 1]), row(['id' => 1, 'name' => 'Alice'])),
         );
     }
 
@@ -71,33 +67,26 @@ final class RowMergerTest extends FlowTestCase
     {
         $merged = (new RowMerger('r_'))->merge(row(['id' => 1]), row(['name' => 'Alice']));
 
-        static::assertSame(['id', 'r_name'], $merged->names());
-        static::assertSame('Alice', $merged->get('r_name'));
+        static::assertSame(['id' => 1, 'r_name' => 'Alice'], $merged);
     }
 
     public function test_reused_plan_renames_rows_with_identical_name_sets(): void
     {
         $merger = new RowMerger('r_');
 
-        static::assertSame(['id' => 1, 'r_x' => 'a'], $merger->merge(row(['id' => 1]), row(['x' => 'a']))->toArray());
-        static::assertSame(['id' => 2, 'r_x' => 5], $merger->merge(row(['id' => 2]), row(['x' => 5]))->toArray());
+        static::assertSame(['id' => 1, 'r_x' => 'a'], $merger->merge(row(['id' => 1]), row(['x' => 'a'])));
+        static::assertSame(['id' => 2, 'r_x' => 5], $merger->merge(row(['id' => 2]), row(['x' => 5])));
     }
 
     public function test_reused_merger_handles_rows_with_different_entry_sets(): void
     {
         $merger = new RowMerger();
 
-        static::assertSame(
-            ['id' => 1, 'name' => 'Alice'],
-            $merger->merge(row(['id' => 1]), row(['name' => 'Alice']))->toArray(),
-        );
+        static::assertSame(['id' => 1, 'name' => 'Alice'], $merger->merge(row(['id' => 1]), row(['name' => 'Alice'])));
         static::assertSame(
             ['id' => 2, 'name' => 'Bob', 'age' => 30],
-            $merger->merge(row(['id' => 2]), row(['name' => 'Bob', 'age' => 30]))->toArray(),
+            $merger->merge(row(['id' => 2]), row(['name' => 'Bob', 'age' => 30])),
         );
-        static::assertSame(
-            ['id' => 3, 'name' => 'Cid'],
-            $merger->merge(row(['id' => 3]), row(['name' => 'Cid']))->toArray(),
-        );
+        static::assertSame(['id' => 3, 'name' => 'Cid'], $merger->merge(row(['id' => 3]), row(['name' => 'Cid'])));
     }
 }

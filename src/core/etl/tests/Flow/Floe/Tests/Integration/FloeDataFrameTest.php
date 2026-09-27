@@ -5,13 +5,10 @@ declare(strict_types=1);
 namespace Flow\Floe\Tests\Integration;
 
 use DateTimeZone;
-use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Tests\Context\LoaderEndingContext;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Filesystem\Exception\RuntimeException as FilesystemRuntimeException;
 use Flow\Filesystem\Tests\Double\FailingCloseFilesystem;
-use Flow\Floe\FloeEngine;
-use Flow\Floe\NativeFloeEncoder;
 use Flow\Types\Value\Json;
 
 use function array_keys;
@@ -60,37 +57,16 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
         static::assertSame(2, data_frame()->read(from_floe($dir . '/*.floe'))->count());
     }
 
-    public function test_writing_and_reading_with_explicit_native_engine(): void
-    {
-        if (!NativeFloeEncoder::isSupported()) {
-            static::markTestSkipped('flow_php extension is not loaded');
-        }
-
-        $path = $this->cacheDir->suffix('native-engine.floe');
-
-        data_frame()
-            ->read(from_array([['id' => 1], ['id' => 2]]))
-            ->write(to_floe($path, engine: FloeEngine::native)->saveMode(overwrite()))
-            ->run();
-
-        static::assertSame(2, data_frame()->read(from_floe($path, engine: FloeEngine::native))->count());
-    }
-
-    public function test_writing_and_reading_with_explicit_php_engine(): void
+    public function test_writing_and_reading_with_the_php_hydrator(): void
     {
         $path = $this->cacheDir->suffix('php-engine.floe');
 
-        data_frame(config_builder()->hydrator(new PhpRowHydrator()))
+        data_frame(config_builder())
             ->read(from_array([['id' => 1], ['id' => 2]]))
-            ->write(to_floe($path, engine: FloeEngine::php)->saveMode(overwrite()))
+            ->write(to_floe($path)->saveMode(overwrite()))
             ->run();
 
-        static::assertSame(
-            2,
-            data_frame(config_builder()->hydrator(new PhpRowHydrator()))
-                ->read(from_floe($path, engine: FloeEngine::php))
-                ->count(),
-        );
+        static::assertSame(2, data_frame(config_builder())->read(from_floe($path))->count());
     }
 
     public function test_a_timezone_column_round_trips_through_floe(): void

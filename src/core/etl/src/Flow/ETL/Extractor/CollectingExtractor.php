@@ -32,7 +32,7 @@ final class CollectingExtractor implements Extractor, OverridingExtractor, Rewin
             $collectedRows = $collectedRows === null ? $rows : $collectedRows->merge($rows);
         }
 
-        yield $collectedRows ?? new Rows($this->schema());
+        yield $collectedRows ?? Rows::of($this->schema());
     }
 
     public function isRepeatable(): bool

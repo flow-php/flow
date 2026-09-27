@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\Floe\Tests\Integration;
 
 use Flow\ETL\Tests\FlowIntegrationTestCase;
-use Flow\Floe\NativeFloeEncoder;
-use Flow\Floe\Tests\Context\FloeEngineContext;
+use Flow\Floe\Tests\Context\FloeFilesContext;
 use Flow\Floe\Tests\Mother\RowsMother;
 
 use function array_values;
@@ -31,23 +30,8 @@ final class FloePreAllowExtraRemovalTest extends FlowIntegrationTestCase
     {
         static::assertEquals(
             array_values(RowsMother::withAllEntryTypes()->all()),
-            FloeEngineContext::readRows(
-                FloeEngineContext::phpReader($this->fs()),
-                path(__DIR__ . '/../Fixtures/pre-allow-extra-removal/all-entry-types.floe'),
-            ),
-        );
-    }
-
-    public function test_native_reader_reads_a_footer_that_carries_allow_extra(): void
-    {
-        if (!NativeFloeEncoder::isSupported()) {
-            static::markTestSkipped('flow_php extension with the RawRowValues pipeline is not loaded.');
-        }
-
-        static::assertEquals(
-            array_values(RowsMother::withAllEntryTypes()->all()),
-            FloeEngineContext::readRows(
-                FloeEngineContext::nativeReader($this->fs()),
+            FloeFilesContext::readRows(
+                FloeFilesContext::phpReader($this->fs()),
                 path(__DIR__ . '/../Fixtures/pre-allow-extra-removal/all-entry-types.floe'),
             ),
         );

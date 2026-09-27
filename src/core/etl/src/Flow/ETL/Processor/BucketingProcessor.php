@@ -31,7 +31,7 @@ final class BucketingProcessor implements Processor
         foreach ($this->strategy->bucketize($rows, $this->buckets->storage()) as $bucket) {
             $this->buckets->add($bucket);
 
-            yield new Rows(Bucket::schema(), $bucket->toRow());
+            yield Rows::of(Bucket::schema(), $bucket->toRow());
         }
     }
 

@@ -119,8 +119,10 @@ file.
 | `string` (+ `format: date` / `date-time` / `time` / `uuid` / `html` / `xml`) | `string` / `date` / `datetime` / `time` / `uuid` / `html` / `xml` |
 | `integer` / `number` / `boolean` / `null`                                    | `integer` / `float` / `boolean` / null column                     |
 | `array` + `items`                                                            | `list<items>`                                                     |
+| `array` without `items`                                                      | `json`                                                            |
 | `object` + `properties`                                                      | `structure` (`required` controls optional members)                |
 | `object` + `additionalProperties: <schema>`                                  | `map<string, value>`                                              |
+| `object` without `properties` / `additionalProperties`                       | `json`                                                            |
 | `type: ["object", "array"]`                                                  | `json`                                                            |
 | empty schema `{}` / boolean schema `true`                                    | `json` (accept anything, marked in metadata)                      |
 | `enum` / `const`                                                             | scalar type derived from the values, values preserved in metadata |

@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\DerivedColumns;
 
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
@@ -51,26 +53,38 @@ final class DerivedColumnsTest extends FlowTestCase
         (new DerivedColumns())->value(int_schema('a'), null, 3);
     }
 
-    public function test_rows_trusts_a_batch_declared_under_the_output_schema(): void
+    public function test_rows_adds_the_derived_column_under_the_output_schema(): void
     {
         $output = schema(int_schema('a'), str_schema('note', nullable: true));
 
         static::assertSame(
-            [['a' => 1]],
+            [['a' => 1, 'note' => 'x']],
             (new DerivedColumns())
-                ->rows($output, $output, [row(['a' => 1])])
+                ->rows(
+                    rows(schema(int_schema('a')), row(['a' => 1])),
+                    $output,
+                    $output,
+                    'note',
+                    (new PhpBackend())->constant(str_schema('note', nullable: true), 'x', 1),
+                )
                 ->toArray(),
         );
     }
 
-    public function test_rows_conforms_a_batch_declared_under_another_schema(): void
+    public function test_rows_matches_a_batch_declared_under_another_schema(): void
     {
+        $declared = schema(int_schema('a'), str_schema('note', nullable: true));
+
         static::assertSame(
-            [['a' => 1, 'note' => null]],
+            [['a' => 1, 'note' => 'x', 'extra' => null]],
             (new DerivedColumns())
-                ->rows(schema(int_schema('a')), schema(int_schema('a'), str_schema('note', nullable: true)), [row([
-                    'a' => 1,
-                ])])
+                ->rows(
+                    rows(schema(int_schema('a')), row(['a' => 1])),
+                    $declared,
+                    $declared->add(str_schema('extra', nullable: true)),
+                    'note',
+                    (new PhpBackend())->constant(str_schema('note', nullable: true), 'x', 1),
+                )
                 ->toArray(),
         );
     }

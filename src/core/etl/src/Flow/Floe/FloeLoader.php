@@ -56,7 +56,6 @@ final class FloeLoader implements Closure, Discardable, FileLoader, Loader, Part
         private readonly Path $path,
         private readonly ?Metadata $metadata = null,
         private readonly Options $options = new Options(),
-        private readonly FloeEngine $engine = FloeEngine::adaptive,
         Filesystem $filesystem = new NativeLocalFilesystem(),
     ) {
         if (!$filesystem->supports($path)) {
@@ -172,7 +171,6 @@ final class FloeLoader implements Closure, Discardable, FileLoader, Loader, Part
             $declared->gracefulRemove(...$this->router->droppedNames()),
             $this->options,
             hydrator: $context->hydrator(),
-            engine: $this->engine,
         );
         $writer->createForStream($stream, $this->metadata);
 

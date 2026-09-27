@@ -119,7 +119,7 @@ final class DbalQueryExtractor implements BatchableExtractor, Extractor, Rewinda
                 $yielded++;
 
                 if (count($buffer) === $this->batchSize) {
-                    $signal = yield Rows::trusted($hydrated->schema(), $buffer);
+                    $signal = yield Rows::of($hydrated->schema(), ...$buffer);
 
                     if ($signal === Signal::STOP) {
                         return;
@@ -134,7 +134,7 @@ final class DbalQueryExtractor implements BatchableExtractor, Extractor, Rewinda
             }
 
             if ($buffer !== []) {
-                $signal = yield Rows::trusted($hydrated->schema(), $buffer);
+                $signal = yield Rows::of($hydrated->schema(), ...$buffer);
 
                 if ($signal === Signal::STOP) {
                     return;

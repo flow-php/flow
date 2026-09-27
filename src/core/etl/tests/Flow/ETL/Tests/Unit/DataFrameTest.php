@@ -23,7 +23,6 @@ use Flow\ETL\Plan\Node\CrossJoin;
 use Flow\ETL\Plan\Node\Read;
 use Flow\ETL\Plan\Stage;
 use Flow\ETL\Plan\Trigger;
-use Flow\ETL\Row\RowRenaming;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Validator\SelectiveValidator;
@@ -557,7 +556,7 @@ final class DataFrameTest extends FlowTestCase
                     $stamped[] = row([...$row->values(), 'stamp' => 'zero']);
                 }
 
-                return new Rows($rows->schema()->add(str_schema('stamp')), ...$stamped);
+                return rows($rows->schema()->add(str_schema('stamp')), ...$stamped);
             }
         };
 
@@ -837,13 +836,7 @@ final class DataFrameTest extends FlowTestCase
 
                 public function transform(Rows $rows, FlowContext $context): Rows
                 {
-                    $renamed = [];
-
-                    foreach ($rows->all() as $row) {
-                        $renamed[] = RowRenaming::of(['id' => 'new_id'])->apply($row);
-                    }
-
-                    return new Rows($rows->schema()->rename('id', 'new_id'), ...$renamed);
+                    return $rows->withSchema($rows->schema()->rename('id', 'new_id'));
                 }
             })
             ->batchSize(2)
@@ -895,13 +888,7 @@ final class DataFrameTest extends FlowTestCase
 
                 public function transform(Rows $rows, FlowContext $context): Rows
                 {
-                    $renamed = [];
-
-                    foreach ($rows->all() as $row) {
-                        $renamed[] = RowRenaming::of(['id' => 'new_id'])->apply($row);
-                    }
-
-                    return new Rows($rows->schema()->rename('id', 'new_id'), ...$renamed);
+                    return $rows->withSchema($rows->schema()->rename('id', 'new_id'));
                 }
             })
             ->collect()

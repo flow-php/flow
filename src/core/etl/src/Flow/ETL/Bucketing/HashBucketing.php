@@ -70,7 +70,7 @@ final class HashBucketing implements BucketingStrategy
 
             // a bucket is a subset of a batch that already passed the gate, under the same schema
             foreach ($groups as $id => $groupRows) {
-                $storage->append($id, Rows::trusted($batch->schema(), $groupRows));
+                $storage->append($id, Rows::of($batch->schema(), ...$groupRows));
                 $totals[$id] = ($totals[$id] ?? 0) + count($groupRows);
             }
         }

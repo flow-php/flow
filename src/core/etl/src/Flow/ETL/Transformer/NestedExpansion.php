@@ -12,13 +12,17 @@ use Flow\ETL\Function\ScalarFunction\ExpandResults;
 use Flow\ETL\Row;
 use Flow\ETL\Row\ResolvedReference;
 use Flow\ETL\Schema;
+use Flow\ETL\Schema\Definition;
 use Flow\Types\Type;
+use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\TypeWidener;
 
+use function array_fill;
 use function array_key_exists;
 use function array_map;
 use function array_values;
 use function count;
+use function Flow\ETL\DSL\definition_from_type;
 use function max;
 use function spl_object_id;
 
@@ -27,10 +31,15 @@ final readonly class NestedExpansion
     /**
      * @param non-empty-array<string, ExpandResults> $expands keyed by the synthesized column the root reads
      *                                                        each element from
+     * @param array<string, Definition<mixed>> $expandDefinitions the synthesized columns, keyed like $expands
+     * @param Schema $elementSchema $input with the synthesized columns, built once
      */
     private function __construct(
         private ScalarFunction $root,
         private array $expands,
+        private Schema $input,
+        private array $expandDefinitions,
+        private Schema $elementSchema,
     ) {}
 
     public static function of(ScalarFunction $resolved, Schema $input): ?self
@@ -54,6 +63,7 @@ final readonly class NestedExpansion
         $pads = count($distinct) > 1;
         $references = [];
         $expands = [];
+        $expandDefinitions = [];
         $suffix = 0;
 
         foreach ($distinct as $id => $expand) {
@@ -61,9 +71,12 @@ final readonly class NestedExpansion
                 $name = "\0expand:" . $suffix++;
             } while ($input->findDefinition($name) !== null);
 
-            $references[$id] = new ResolvedReference(
+            $type = $pads ? (new TypeWidener())->nullable($expand->returns()) : $expand->returns();
+            $references[$id] = new ResolvedReference($name, $type);
+            $expandDefinitions[$name] = definition_from_type(
                 $name,
-                $pads ? (new TypeWidener())->nullable($expand->returns()) : $expand->returns(),
+                $type instanceof OptionalType ? $type->base() : $type,
+                nullable: true,
             );
             $expands[$name] = $expand;
         }
@@ -71,7 +84,7 @@ final readonly class NestedExpansion
         /** @var ScalarFunction $root the root is not an expand, so rewrite() rebuilds it with its own class */
         $root = self::rewrite($resolved, $references);
 
-        return new self($root, $expands);
+        return new self($root, $expands, $input, $expandDefinitions, $input->add(...array_values($expandDefinitions)));
     }
 
     /**
@@ -93,16 +106,30 @@ final readonly class NestedExpansion
             $lists[$name] = array_values($expand->eval($row, $context));
         }
 
-        $values = [];
         $length = max(array_map(count(...), $lists));
-        $element = $row->values();
+        $elements = $row->rows->gather(array_fill(0, $length, $row->index));
+        $schema = $elements->schema()->isSame($this->input)
+            ? $this->elementSchema
+            : $elements->schema()->add(...array_values($this->expandDefinitions));
+        $columns = [];
 
-        for ($position = 0; $position < $length; $position++) {
-            foreach ($lists as $name => $list) {
-                $element[$name] = $list[$position] ?? null;
+        foreach ($lists as $name => $list) {
+            $builder = $context->backend()->builder($this->expandDefinitions[$name]);
+            $cells = [];
+
+            for ($position = 0; $position < $length; $position++) {
+                $cells[] = $list[$position] ?? null;
             }
 
-            $values[] = $this->root->eval(new Row($element), $context);
+            $builder->appendMany($cells);
+            $columns[$name] = $builder->finish();
+        }
+
+        $batch = $elements->withColumns($schema, $columns);
+        $values = [];
+
+        for ($position = 0; $position < $length; $position++) {
+            $values[] = $this->root->eval($batch->row($position), $context);
         }
 
         return $values;

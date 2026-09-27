@@ -88,9 +88,9 @@ A column holds exactly one type. `null|T` spells a nullable column, and a nullab
 structure element; every other union is refused. Declare the widest common type with `str_schema()`, or
 `json_schema()` when the shape is genuinely dynamic.
 
-The schema is declared, never guessed: `array_to_rows()` takes it as its second argument and a
-[Hydrator](/src/core/etl/src/Flow/ETL/Row/Hydrator.php) turns the raw values into `Rows` against it,
-casting each one to the type its column declares. A value the declared type refuses aborts the batch
+The schema is declared, never guessed: `array_to_rows()` takes it as its second argument and the column backend
+([`Backend`](/src/core/etl/src/Flow/ETL/Column/Backend.php)) builds `Rows` against it, casting each value to the type
+its column declares. A value the declared type refuses aborts the batch
 with a `SchemaMismatchException` naming the column and its row.
 
 Schema *inference* belongs to the readers, which sample a source and derive a schema from it before any

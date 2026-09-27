@@ -14,7 +14,6 @@ use Flow\Floe\Exception\FloeException;
 use Flow\Serializer\Exception\SerializationException;
 use Flow\Serializer\Serializer;
 
-use function count;
 use function sprintf;
 
 final class FloeSerializer implements Serializer
@@ -23,7 +22,7 @@ final class FloeSerializer implements Serializer
 
     /**
      * @param int<1, max> $batchSize
-     * @param null|Hydrator $hydrator null uses the adaptive hydrator
+     * @param null|Hydrator $hydrator null uses `new PhpRowHydrator()`
      */
     public function __construct(
         private readonly int $batchSize = 1000,
@@ -55,24 +54,23 @@ final class FloeSerializer implements Serializer
 
             $footer = $reader->footer();
 
-            $rows = [];
+            $batches = [];
+            $decoded = 0;
 
             foreach ($reader->rows($this->batchSize) as $batch) {
-                foreach ($batch->all() as $row) {
-                    $rows[] = $row;
-                }
+                $batches[] = $batch;
+                $decoded += $batch->count();
             }
 
-            if (count($rows) !== $footer->statistics->rows) {
+            if ($decoded !== $footer->statistics->rows) {
                 throw new FloeException(sprintf(
                     'Floe payload is corrupted, decoded %d of %d rows',
-                    count($rows),
+                    $decoded,
                     $footer->statistics->rows,
                 ));
             }
 
-            // every row came out of a reader batch already conformed to this schema
-            return Rows::trusted($reader->schema(), $rows);
+            return Rows::of($reader->schema())->concat(...$batches);
         } catch (FloeException|ExtensionException $e) {
             throw new SerializationException($e->getMessage(), 0, $e);
         } finally {

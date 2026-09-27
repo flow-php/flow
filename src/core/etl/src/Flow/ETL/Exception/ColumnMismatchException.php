@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Exception;
 
+use DateTimeInterface;
 use Flow\ETL\Schema\Definition;
+use Flow\Types\Exception\Exception as TypesException;
 use Flow\Types\Type\TypeDetector;
+use Throwable;
 
 use function get_debug_type;
 use function is_bool;
@@ -21,8 +24,9 @@ final class ColumnMismatchException extends InvalidArgumentException
     private function __construct(
         public readonly string $column,
         public readonly string $detail,
+        ?Throwable $previous = null,
     ) {
-        parent::__construct('Row does not match its schema: column "' . $column . '"' . $detail);
+        parent::__construct('Row does not match its schema: column "' . $column . '"' . $detail, 0, $previous);
     }
 
     /**
@@ -41,20 +45,47 @@ final class ColumnMismatchException extends InvalidArgumentException
     /**
      * @param Definition<mixed> $definition
      */
-    public static function valueDoesNotMatch(Definition $definition, mixed $value): self
+    public static function retype(Definition $definition, string $reason): self
+    {
+        return new self($definition->entry()->name(), sprintf(
+            ': cannot retype the column to %s, %s',
+            $definition->type()->toString(),
+            $reason,
+        ));
+    }
+
+    /**
+     * @param Definition<mixed> $definition
+     */
+    public static function unsupportedType(Definition $definition, string $reason): self
+    {
+        return new self($definition->entry()->name(), sprintf(
+            ': %s cannot be a batch column, %s',
+            $definition->type()->toString(),
+            $reason,
+        ));
+    }
+
+    /**
+     * @param Definition<mixed> $definition
+     */
+    public static function valueDoesNotMatch(Definition $definition, mixed $value, ?TypesException $reason = null): self
     {
         return new self(
             $definition->entry()->name(),
-            $value === null
-                ? sprintf(': could not convert null to %s, column is not nullable', $definition->type()->toString())
-                : sprintf(
-                    ': could not convert %s (%s) to %s',
-                    self::describe($value),
-                    (new TypeDetector())
-                        ->detectType($value)
-                        ->toString(),
-                    $definition->type()->toString(),
-                ),
+            (
+                $value === null
+                    ? sprintf(': could not convert null to %s, column is not nullable', $definition->type()->toString())
+                    : sprintf(
+                        ': could not convert %s (%s) to %s',
+                        self::describe($value),
+                        (new TypeDetector())
+                            ->detectType($value)
+                            ->toString(),
+                        $definition->type()->toString(),
+                    )
+            ) . ($reason === null ? '' : ' - ' . $reason->getMessage()),
+            $reason,
         );
     }
 
@@ -64,6 +95,7 @@ final class ColumnMismatchException extends InvalidArgumentException
             is_string($value) => "'" . (strlen($value) > 32 ? substr($value, 0, 32) . '...' : $value) . "'",
             is_bool($value) => $value ? 'true' : 'false',
             is_int($value), is_float($value) => (string) $value,
+            $value instanceof DateTimeInterface => $value->format('Y-m-d\TH:i:s.uP'),
             default => get_debug_type($value),
         };
     }

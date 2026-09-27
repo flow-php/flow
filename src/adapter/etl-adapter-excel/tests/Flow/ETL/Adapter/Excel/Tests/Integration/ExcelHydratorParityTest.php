@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Excel\Tests\Integration;
 
 use Flow\ETL\Config;
-use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\Adapter\Excel\DSL\from_excel;
@@ -46,23 +45,5 @@ final class ExcelHydratorParityTest extends FlowTestCase
                 static::assertSame($path->uri(), $row->get('_input_file_uri'));
             }
         }
-    }
-
-    public function test_honours_a_hydrator_configured_on_the_context(): void
-    {
-        $extractor = from_excel(path_real(__DIR__ . '/../Fixtures/fixture.xlsx'));
-
-        $count = 0;
-
-        foreach ($extractor->extract(
-            flow_context(Config::builder()->hydrator(new AdaptiveRowHydrator())->build()),
-        ) as $rows) {
-            static::assertEquals($extractor->schema(), $rows->schema());
-            static::assertEquals(type_integer(), $rows->schema()->get('id')->type());
-
-            $count += $rows->count();
-        }
-
-        static::assertSame(10, $count);
     }
 }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
 use Flow\ETL\Config;
-use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\Adapter\CSV\from_csv;
@@ -43,64 +42,6 @@ final class CSVHydratorParityTest extends FlowTestCase
                 ['id' => 1, 'name' => 'Norbert', 'active' => null, '_input_file_uri' => $path->uri()],
             ],
             $actual,
-        );
-    }
-
-    public function test_honours_a_hydrator_configured_on_the_context(): void
-    {
-        $extractor = from_csv(path_real(__DIR__ . '/../Fixtures/file_with_empty_columns.csv'))
-            ->withSchema(schema(
-                int_schema('id', nullable: true),
-                str_schema('name', nullable: true),
-                bool_schema('active', nullable: true),
-            ));
-
-        $actual = [];
-
-        foreach ($extractor->extract(
-            flow_context(Config::builder()->hydrator(new AdaptiveRowHydrator())->build()),
-        ) as $rows) {
-            foreach ($rows as $row) {
-                $actual[] = $row->toArray();
-            }
-        }
-
-        static::assertSame(
-            [
-                ['id' => null, 'name' => null, 'active' => false],
-                ['id' => 1, 'name' => 'Norbert', 'active' => null],
-            ],
-            $actual,
-        );
-    }
-
-    public function test_honours_a_hydrator_configured_on_the_context_without_a_declared_schema(): void
-    {
-        $default = [];
-
-        foreach (from_csv(path_real(__DIR__ . '/../Fixtures/file_with_empty_columns.csv'))
-            ->extract(flow_context(Config::builder()->build())) as $rows) {
-            foreach ($rows as $row) {
-                $default[] = $row->toArray();
-            }
-        }
-
-        $adaptive = [];
-
-        foreach (from_csv(path_real(__DIR__ . '/../Fixtures/file_with_empty_columns.csv'))
-            ->extract(flow_context(Config::builder()->hydrator(new AdaptiveRowHydrator())->build())) as $rows) {
-            foreach ($rows as $row) {
-                $adaptive[] = $row->toArray();
-            }
-        }
-
-        static::assertSame($default, $adaptive);
-        static::assertSame(
-            [
-                ['id' => null, 'name' => null, 'active' => false],
-                ['id' => 1, 'name' => 'Norbert', 'active' => null],
-            ],
-            $default,
         );
     }
 

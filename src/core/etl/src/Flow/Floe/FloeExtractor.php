@@ -54,7 +54,6 @@ final class FloeExtractor implements
         private readonly Path $path,
         private readonly Codec $codec = new NoopCodec(),
         private readonly int $chunkSize = 65536,
-        private readonly FloeEngine $engine = FloeEngine::adaptive,
         Filesystem $filesystem = new NativeLocalFilesystem(),
     ) {
         if (!$filesystem->supports($path)) {
@@ -123,7 +122,7 @@ final class FloeExtractor implements
                 foreach ($file->reader->rows($this->batchSize(), $fileOffset, $remaining) as $rows) {
                     // R7: the stamp stays post-hydration - FloeStreamReader::rows() yields hydrated Rows and
                     // must not learn about paths - but the constants are the shared ones, already typed
-                    $rows = $constants->fillRows($rows, $fileSchema);
+                    $rows = $constants->fillRows($rows, $fileSchema, $context->backend());
 
                     if ($matchTo !== null) {
                         $rows = $rows->matchTo($matchTo);
@@ -224,7 +223,6 @@ final class FloeExtractor implements
                     $this->codec,
                     $this->chunkSize,
                     hydrator: $hydrator,
-                    engine: $this->engine,
                 ))->read($source->path),
                 $source,
             );

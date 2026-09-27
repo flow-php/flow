@@ -35,7 +35,7 @@ final class RepeatableExtractor implements Extractor, OverridingExtractor, Rewin
 
     public function extract(FlowContext $context, ?int $limit = null): Generator
     {
-        yield new Rows($this->schema());
+        yield Rows::of($this->schema());
     }
 
     /**

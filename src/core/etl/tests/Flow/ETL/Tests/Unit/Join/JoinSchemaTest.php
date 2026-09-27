@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Join;
 
+use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Join\JoinSchema;
 use Flow\ETL\Tests\FlowTestCase;
@@ -119,5 +120,25 @@ final class JoinSchemaTest extends FlowTestCase
                 schema(str_schema('code'), str_schema('name')),
             ),
         );
+    }
+
+    public function test_a_cross_name_collision_suggests_a_prefix(): void
+    {
+        $this->expectException(SchemaDefinitionNotUniqueException::class);
+        $this->expectExceptionMessageMatches(
+            '/Entry definitions must be unique.*\. Please consider using join prefix option$/',
+        );
+
+        (new JoinSchema())->cross(schema(int_schema('id')), schema(int_schema('id')));
+    }
+
+    public function test_a_keyed_join_name_collision_suggests_a_prefix(): void
+    {
+        $this->expectException(SchemaDefinitionNotUniqueException::class);
+        $this->expectExceptionMessageMatches(
+            '/Entry definitions must be unique.*\. Please consider using join prefix option$/',
+        );
+
+        (new JoinSchema())->of(Join::left, schema(int_schema('id'), str_schema('name')), schema(str_schema('name')));
     }
 }

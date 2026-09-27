@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\GroupBy;
 
+use Flow\ETL\Column\DefaultBackend;
 use Flow\ETL\FlowContext;
 use Flow\ETL\GroupBy;
-use Flow\ETL\Row\RowsBuffer;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
 use Generator;
+
+use function count;
 
 final class AggregatedGroups
 {
@@ -38,18 +41,23 @@ final class AggregatedGroups
      */
     public function flush(int $batchSize): Generator
     {
-        $buffer = new RowsBuffer($this->shape->output, $batchSize);
+        $pending = [];
 
         foreach ($this->groups as $group) {
-            $aggregated = $this->groupBy->aggregatedRow($group->key, $group->aggregators, $this->shape->output);
+            $pending[] = $this->groupBy->aggregatedValues($group->key, $group->aggregators, $this->shape->output);
 
-            if (null !== ($batch = $buffer->add($aggregated))) {
-                yield $batch;
+            if (count($pending) >= $batchSize) {
+                yield (new RowsBuilder($this->shape->output, new DefaultBackend()))
+                    ->appendRows($pending)
+                    ->finish();
+                $pending = [];
             }
         }
 
-        if (null !== ($batch = $buffer->flush())) {
-            yield $batch;
+        if ($pending !== []) {
+            yield (new RowsBuilder($this->shape->output, new DefaultBackend()))
+                ->appendRows($pending)
+                ->finish();
         }
     }
 }

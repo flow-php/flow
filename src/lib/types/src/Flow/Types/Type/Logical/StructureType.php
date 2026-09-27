@@ -44,7 +44,7 @@ use const JSON_THROW_ON_ERROR;
 final readonly class StructureType implements Type
 {
     /**
-     * @var list<StructureElement<value-of<T>>>
+     * @var non-empty-list<StructureElement<value-of<T>>>
      */
     private array $elements;
 
@@ -220,7 +220,7 @@ final readonly class StructureType implements Type
     }
 
     /**
-     * @return list<StructureElement<value-of<T>>>
+     * @return non-empty-list<StructureElement<value-of<T>>>
      */
     public function elements(): array
     {

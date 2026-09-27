@@ -7,6 +7,7 @@ namespace Flow\ETL\Processor;
 use Flow\ETL\BoundStep;
 use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\Bucketing\BucketShape;
+use Flow\ETL\Column\DefaultBackend;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\FlowContext;
@@ -16,6 +17,7 @@ use Flow\ETL\GroupBy\GroupByShape;
 use Flow\ETL\GroupBy\GroupKey;
 use Flow\ETL\Processor;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Generator;
 
@@ -89,14 +91,13 @@ final class GroupByAggregationProcessor implements Processor
             // SQL's scalar aggregate: no input and no grouping key is one row of the initial accumulators,
             // not no row. Only reachable bound - an unbound plan has no schema to type the defaults with.
             if (!$emitted && $this->shape !== null && $this->groupBy->isGlobal()) {
-                yield new Rows(
-                    $this->shape->output,
-                    $this->groupBy->aggregatedRow(
+                yield (new RowsBuilder($this->shape->output, new DefaultBackend()))->appendRows([
+                    $this->groupBy->aggregatedValues(
                         new GroupKey([]),
                         $this->shape->aggregators->cloned(),
                         $this->shape->output,
                     ),
-                );
+                ])->finish();
             }
         } finally {
             $this->buckets->clear();

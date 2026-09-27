@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
 use Flow\ETL\Adapter\Parquet\ParquetEncoder;
 use Flow\ETL\Adapter\Parquet\SchemaConverter;
-use Flow\ETL\Row\AdaptiveRowHydrator;
+use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\Tests\FlowTestCase;
@@ -26,7 +26,7 @@ use function unlink;
 /**
  * Guards the Parquet read path: the trusted (no-cast) read - reader values normalized to Flow-native
  * by ParquetEncoder::decode, then hydrated without casting - must be byte-identical to the previous
- * casting read (AdaptiveRowHydrator over the raw reader values). If the reader ever returns a value the
+ * casting read (PhpRowHydrator over the raw reader values). If the reader ever returns a value the
  * casting read fixed but decode does not, this fails loudly.
  */
 final class ParquetHydratorParityTest extends FlowTestCase
@@ -55,8 +55,8 @@ final class ParquetHydratorParityTest extends FlowTestCase
         $encoder = new ParquetEncoder($file->schema());
         $decodedRows = $encoder->decode($rawRows);
 
-        $trusted = (new AdaptiveRowHydrator())->hydrate($decodedRows, $flowSchema);
-        $cast = (new AdaptiveRowHydrator())->hydrate(
+        $trusted = (new PhpRowHydrator())->hydrate($decodedRows, $flowSchema);
+        $cast = (new PhpRowHydrator())->hydrate(
             array_map(static fn(array $values): RawRowValues => new RawRowValues($values), $rawRows),
             $flowSchema,
         );

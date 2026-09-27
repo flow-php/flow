@@ -8,20 +8,30 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Row\RowsBuffer;
 use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 
 final class RowsBufferTest extends FlowTestCase
 {
     public function test_a_batch_factory_builds_each_released_batch(): void
     {
-        // Rows::trusted() takes the rows as given - a value the default gate would refuse passes through
-        $buffer = new RowsBuffer(schema(int_schema('id')), 1, Rows::trusted(...));
+        $buffer = new RowsBuffer(schema(int_schema('id')), 1, static fn(Schema $schema, array $rows): Rows => rows(
+            schema(int_schema('id', nullable: true)),
+            ...$rows,
+        ));
 
-        static::assertSame([['id' => 'x']], $buffer->add(row(['id' => 'x']))?->toArray());
+        static::assertTrue(
+            $buffer
+                ->add(row(['id' => 1]))
+                ?->schema()
+                ->get('id')
+                ->isNullable(),
+        );
     }
 
     public function test_the_default_batch_checks_every_row(): void

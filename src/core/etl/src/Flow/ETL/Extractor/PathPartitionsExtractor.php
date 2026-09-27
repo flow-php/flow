@@ -90,7 +90,7 @@ final class PathPartitionsExtractor implements BatchableExtractor, Extractor, Fi
 
             $yielded += count($buffer);
 
-            $signal = yield array_to_rows($buffer, $schema, $context->hydrator());
+            $signal = yield array_to_rows($buffer, $schema, $context->backend());
 
             if ($signal === Signal::STOP) {
                 return;
@@ -104,7 +104,7 @@ final class PathPartitionsExtractor implements BatchableExtractor, Extractor, Fi
         }
 
         if ($buffer !== []) {
-            yield array_to_rows($buffer, $schema, $context->hydrator());
+            yield array_to_rows($buffer, $schema, $context->backend());
         }
     }
 

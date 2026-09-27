@@ -48,7 +48,10 @@ final class GroupBy
         $this->aggregations = new Aggregators(...$aggregator);
     }
 
-    public function aggregatedRow(GroupKey $key, Aggregators $aggregators, Schema $output): Row
+    /**
+     * @return array<array-key, mixed>
+     */
+    public function aggregatedValues(GroupKey $key, Aggregators $aggregators, Schema $output): array
     {
         $values = [];
 
@@ -64,7 +67,7 @@ final class GroupBy
             $values[$aggregator->outputName()] = $value === null ? null : $definition->type()->cast($value);
         }
 
-        return new Row($values);
+        return $values;
     }
 
     /**

@@ -31,6 +31,6 @@ final readonly class VoidProcessor implements Processor
         }
 
         // void() drops rows, not columns
-        yield new Rows($this->declared ?? new Schema());
+        yield Rows::of($this->declared ?? new Schema());
     }
 }

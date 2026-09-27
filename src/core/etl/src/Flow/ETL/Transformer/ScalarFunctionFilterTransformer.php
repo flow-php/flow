@@ -51,7 +51,7 @@ final readonly class ScalarFunctionFilterTransformer implements Transformer
                 }
             }
 
-            $result = Rows::trusted($rows->schema(), $kept);
+            $result = Rows::of($rows->schema(), ...$kept);
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

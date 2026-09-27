@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
+use Flow\ETL\Column\Column;
 use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Exception\SchemaMismatchException;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
@@ -40,11 +40,10 @@ final readonly class DerivedColumns
         return $cast;
     }
 
-    /**
-     * @param list<Row> $rows each carrying a derived column checked by value()
-     */
-    public function rows(Schema $declared, Schema $output, array $rows): Rows
+    public function rows(Rows $input, Schema $declared, Schema $output, string $name, Column $derived): Rows
     {
-        return $declared->isSame($output) ? Rows::trusted($output, $rows) : new Rows($output, ...$rows);
+        $withDerived = $input->withColumns($declared, [$name => $derived]);
+
+        return $declared->isSame($output) ? $withDerived : $withDerived->matchTo($output);
     }
 }

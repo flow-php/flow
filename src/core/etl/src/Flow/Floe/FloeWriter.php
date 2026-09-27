@@ -21,7 +21,7 @@ final class FloeWriter
 
     /**
      * @param Schema $schema fixes the session schema for the writer's life
-     * @param null|Hydrator $hydrator null uses the adaptive hydrator
+     * @param null|Hydrator $hydrator null uses `new PhpRowHydrator()`
      *
      * @throws FloeException
      */
@@ -30,9 +30,8 @@ final class FloeWriter
         Schema $schema,
         private readonly Options $options = new Options(),
         ?Hydrator $hydrator = null,
-        FloeEngine $engine = FloeEngine::adaptive,
     ) {
-        $this->inner = new FloeStreamWriter($schema, $this->options, $hydrator, $engine);
+        $this->inner = new FloeStreamWriter($schema, $this->options, $hydrator);
     }
 
     /**

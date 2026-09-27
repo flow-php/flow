@@ -72,7 +72,7 @@ final readonly class DropDuplicatesTransformer implements Transformer
                 }
             }
 
-            $result = new Rows($rows->schema(), ...$newRows);
+            $result = Rows::of($rows->schema(), ...$newRows);
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),
