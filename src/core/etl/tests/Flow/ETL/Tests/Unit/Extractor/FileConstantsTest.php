@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Extractor\FileConstants;
 use Flow\ETL\Extractor\PartitionColumns;
 use Flow\ETL\Tests\FlowTestCase;
@@ -67,7 +68,7 @@ final class FileConstantsTest extends FlowTestCase
             null,
             [],
             [],
-        ))->fillRows($rows, $rows->schema()));
+        ))->fillRows($rows, $rows->schema(), new PhpBackend()));
     }
 
     public function test_fill_rows_adds_the_constants_to_every_row_under_the_declared_schema(): void
@@ -84,10 +85,14 @@ final class FileConstantsTest extends FlowTestCase
                 'memory://orders/data.csv',
                 ['year' => false],
                 ['year' => 2024],
-            ))->fillRows(array_to_rows([
-                ['name' => 'Norbert'],
-                ['name' => 'Flow'],
-            ], schema(str_schema('name'))), $declared),
+            ))->fillRows(
+                array_to_rows([
+                    ['name' => 'Norbert'],
+                    ['name' => 'Flow'],
+                ], schema(str_schema('name'))),
+                $declared,
+                new PhpBackend(),
+            ),
         );
     }
 }

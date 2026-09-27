@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel;
 
+use DateTimeInterface;
 use LogicException;
 use OpenSpout\Common\Entity\Row as OpenSpoutRow;
 use OpenSpout\Common\Entity\Style\Style;
@@ -100,7 +101,7 @@ final class WorkbookManager
     }
 
     /**
-     * @param array<int, null|bool|float|int|string> $values
+     * @param array<int, null|bool|DateTimeInterface|float|int|string> $values
      * @param null|array<int, null|Style> $styles
      */
     public function writeRow(string $sheetName, array $values, ?array $styles = null): void

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
-use Flow\ETL\Row\Hydrator;
+use Flow\ETL\Column\Backend;
+use Flow\ETL\Column\DefaultBackend;
 use Flow\ETL\Rows;
 use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\SourceStream;
@@ -22,11 +23,10 @@ final class FloeSerializer implements Serializer
 
     /**
      * @param int<1, max> $batchSize
-     * @param null|Hydrator $hydrator null uses `new PhpRowHydrator()`
      */
     public function __construct(
         private readonly int $batchSize = 1000,
-        private readonly ?Hydrator $hydrator = null,
+        private readonly Backend $backend = new DefaultBackend(),
     ) {
         // @mago-ignore analysis:impossible-condition,redundant-comparison
         if ($this->batchSize < 1) {
@@ -38,7 +38,7 @@ final class FloeSerializer implements Serializer
     {
         try {
             // validation stays on until an upstream mechanism guarantees Rows match their schema
-            $writer = new FloeStreamWriter($rows->schema(), new Options(), hydrator: $this->hydrator);
+            $writer = new FloeStreamWriter($rows->schema(), new Options());
             $writer->create($destination);
             $writer->write($rows);
             $writer->close();
@@ -50,7 +50,7 @@ final class FloeSerializer implements Serializer
     public function unserialize(SourceStream $source): Rows
     {
         try {
-            $reader = new FloeStreamReader($source, new NoopCodec(), self::CHUNK_SIZE, $this->hydrator);
+            $reader = new FloeStreamReader($source, new NoopCodec(), self::CHUNK_SIZE, $this->backend);
 
             $footer = $reader->footer();
 

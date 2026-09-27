@@ -29,13 +29,12 @@ use Flow\Parquet\Thrift\CompactProtocol;
 use Flow\Parquet\Thrift\MemoryBuffer;
 use Flow\Parquet\ThriftModel\FileMetaData;
 use Generator;
-use MultipleIterator;
 
-use function array_map;
 use function array_push;
 use function count;
 use function is_array;
 use function iterator_to_array;
+use function min;
 use function unpack;
 
 final class PhpParquetEngine implements ParquetEngine
@@ -60,22 +59,19 @@ final class PhpParquetEngine implements ParquetEngine
         );
     }
 
-    public function readValues(
+    public function readColumns(
         SourceStream $stream,
         Schema $schema,
-        array $columns = [],
-        ?int $limit = null,
-        ?int $offset = null,
+        array $columns,
+        int $batchSize,
+        ?int $limit,
+        ?int $offset,
     ): Generator {
         $dataConverter = DataConverter::initialize($this->options);
         $dremelAssembler = new DremelAssembler($dataConverter);
         $chunkReader = new ColumnChunkReader(new PageReader($this->byteOrder, $this->options), $this->options);
 
         $metadata = $this->readMetadata($stream);
-
-        if (!count($columns)) {
-            $columns = array_map(static fn(Column $c) => $c->name(), $schema->columns());
-        }
 
         $totalRows = $metadata->rowsNumber();
 
@@ -97,45 +93,54 @@ final class PhpParquetEngine implements ParquetEngine
             return;
         }
 
-        $multipleIterator = new MultipleIterator(MultipleIterator::MIT_KEYS_ASSOC);
+        $generators = [];
 
         foreach ($columns as $columnName) {
-            $multipleIterator->attachIterator(
-                $this->readColumn(
-                    $schema->get($columnName),
-                    $metadata,
-                    $stream,
-                    $chunkReader,
-                    $dremelAssembler,
-                    $limit,
-                    $offset,
-                ),
-                $columnName,
+            $generators[$columnName] = $this->readColumn(
+                $schema->get($columnName),
+                $metadata,
+                $stream,
+                $chunkReader,
+                $dremelAssembler,
+                $limit,
+                $offset,
             );
         }
 
-        $rowCount = 0;
+        $remaining = $totalRows;
 
-        foreach ($multipleIterator as $rowData) {
-            if ($limit !== null && $rowCount >= $limit) {
-                break;
-            }
+        while ($remaining > 0) {
+            $take = min($batchSize, $remaining);
+            $chunk = [];
+            $read = 0;
 
-            $row = [];
+            foreach ($generators as $name => $generator) {
+                $values = [];
 
-            // Row payload assembled from per-column generators; values are user data (mixed).
-            // @mago-ignore analysis:mixed-assignment
-            foreach ($rowData as $columnData) {
-                if (is_array($columnData)) {
+                while (count($values) < $take && $generator->valid()) {
                     // @mago-ignore analysis:mixed-assignment
-                    foreach ($columnData as $key => $value) {
-                        $row[(string) $key] = $value;
+                    $entry = $generator->current();
+
+                    if (is_array($entry)) {
+                        // @mago-ignore analysis:mixed-assignment
+                        foreach ($entry as $value) {
+                            $values[] = $value;
+                        }
                     }
+
+                    $generator->next();
                 }
+
+                $chunk[$name] = $values;
+                $read = count($values);
             }
 
-            yield $row;
-            $rowCount++;
+            if ($read === 0) {
+                return;
+            }
+
+            yield $chunk;
+            $remaining -= $read;
         }
     }
 

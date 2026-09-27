@@ -125,7 +125,7 @@ final class FloeLoader implements Closure, Discardable, FileLoader, Loader, Part
                     $partitions->toArray(),
                 );
 
-                ($this->writers[$stream->path()->uri()] ??= $this->openWriter($stream, $context))->write($group);
+                ($this->writers[$stream->path()->uri()] ??= $this->openWriter($stream))->write($group);
             }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
@@ -155,7 +155,7 @@ final class FloeLoader implements Closure, Discardable, FileLoader, Loader, Part
         }
     }
 
-    private function openWriter(DestinationStream $stream, FlowContext $context): FloeWriter
+    private function openWriter(DestinationStream $stream): FloeWriter
     {
         $declared =
             $this->schema
@@ -170,7 +170,6 @@ final class FloeLoader implements Closure, Discardable, FileLoader, Loader, Part
             $this->filesystem,
             $declared->gracefulRemove(...$this->router->droppedNames()),
             $this->options,
-            hydrator: $context->hydrator(),
         );
         $writer->createForStream($stream, $this->metadata);
 

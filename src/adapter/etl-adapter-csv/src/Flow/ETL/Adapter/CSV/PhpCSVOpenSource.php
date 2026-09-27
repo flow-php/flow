@@ -26,7 +26,7 @@ final class PhpCSVOpenSource implements CSVOpenSource
 
     public function __construct(
         private readonly SourceStream $stream,
-        private readonly CSVEncoder $encoder,
+        private readonly CSVDecoder $decoder,
         private readonly CSVLineReader $lineReader,
     ) {}
 
@@ -43,12 +43,17 @@ final class PhpCSVOpenSource implements CSVOpenSource
     public function columns(): array
     {
         foreach ($this->lineReader->readLines($this->stream) as $line) {
-            $this->encoder->decode([$line]);
+            $this->decoder->decode([$line]);
 
             break;
         }
 
-        return $this->encoder->headers() ?? [];
+        return $this->decoder->headers() ?? [];
+    }
+
+    public function headers(): array
+    {
+        return $this->decoder->headers() ?? [];
     }
 
     /**
@@ -60,7 +65,7 @@ final class PhpCSVOpenSource implements CSVOpenSource
     public function records(): Generator
     {
         foreach ($this->lineReader->readLines($this->stream) as $line) {
-            foreach ($this->encoder->decode([$line]) as $values) {
+            foreach ($this->decoder->decode([$line]) as $values) {
                 $this->producedBytes += $this->lineReader->lastRecordBytes();
                 $this->producedRows++;
 

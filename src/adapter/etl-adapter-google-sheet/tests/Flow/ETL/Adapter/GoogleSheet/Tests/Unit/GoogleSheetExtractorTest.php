@@ -16,12 +16,14 @@ use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Context\ExtractedRows;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Google\Service\Sheets;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function array_sum;
 use function Flow\ETL\DSL\array_to_row;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\infer_schema;
 use function Flow\ETL\DSL\int_schema;
@@ -622,5 +624,22 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         $setter($extractor);
 
         static::assertEquals(new Statistics(), $extractor->statistics());
+    }
+
+    public function test_extract_builds_through_the_config_backend(): void
+    {
+        $backend = new SpyBackend();
+
+        iterator_to_array(
+            GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(100, GoogleSheetFixtureContext::valuesAndBatches([], [SheetValuesMother::batch([[
+                ['header'],
+                ['row1'],
+            ]])])))
+                ->withSchema(schema(str_schema('header')))
+                ->extract(flow_context(config_builder()->backend($backend)->build())),
+            false,
+        );
+
+        static::assertGreaterThanOrEqual(1, $backend->builders());
     }
 }

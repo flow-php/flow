@@ -19,6 +19,8 @@ use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Options;
 use Flow\Parquet\Reader;
+use Flow\Types\Value\Json;
+use Flow\Types\Value\Uuid;
 
 use function array_keys;
 use function Flow\ETL\Adapter\Parquet\from_parquet;
@@ -28,15 +30,25 @@ use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\partition_types;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\structure_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_json;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
+use function Flow\Types\DSL\type_uuid;
 use function iterator_to_array;
 
 final class ParquetExtractorTest extends FlowTestCase
@@ -88,15 +100,51 @@ final class ParquetExtractorTest extends FlowTestCase
 
     public function test_extract_yields_the_metadata_column_schema_promises(): void
     {
-        $extractor = from_parquet(path(__DIR__ . '/Fixtures/orders_1k.parquet'), columns: ['email'])
-            ->withMetadataColumns(true)
-            ->withSchema(schema(str_schema('email')));
+        $extractor = from_parquet(
+            path(__DIR__ . '/Fixtures/orders_1k.parquet'),
+            columns: ['email'],
+        )->withMetadataColumns(true);
 
         foreach ($extractor->extract(flow_context(config())) as $batch) {
-            static::assertSame($extractor->schema()->references()->names(), $batch->first()->names());
+            static::assertSame($extractor->schema()->references()->names(), $batch->schema()->references()->names());
 
             break;
         }
+    }
+
+    public function test_nested_uuid_and_json_read_as_value_objects(): void
+    {
+        $memory = memory_filesystem();
+        $uuid = '5f0e3a0e-0b8a-4b7a-9d6e-1f2a3b4c5d6e';
+
+        df()
+            ->read(from_rows(array_to_rows(
+                [['lu' => [$uuid], 's' => ['j' => ['b' => 2], 'u' => $uuid], 'm' => ['k' => $uuid]]],
+                schema(
+                    list_schema('lu', type_list(type_uuid())),
+                    structure_schema('s', type_structure(['j' => type_json(), 'u' => type_uuid()])),
+                    map_schema('m', type_map(type_string(), type_uuid())),
+                ),
+            )))
+            ->write(to_parquet(path('memory://nested.parquet'), filesystem: $memory))
+            ->run();
+
+        $rows = df()->read(from_parquet(path('memory://nested.parquet'), filesystem: $memory))->fetch();
+
+        // @mago-ignore analysis:mixed-assignment
+        $list = $rows->column('lu')->value(0);
+        // @mago-ignore analysis:mixed-assignment
+        $structure = $rows->column('s')->value(0);
+        // @mago-ignore analysis:mixed-assignment
+        $map = $rows->column('m')->value(0);
+
+        static::assertIsArray($list);
+        static::assertInstanceOf(Uuid::class, $list[0]);
+        static::assertIsArray($structure);
+        static::assertInstanceOf(Json::class, $structure['j']);
+        static::assertInstanceOf(Uuid::class, $structure['u']);
+        static::assertIsArray($map);
+        static::assertInstanceOf(Uuid::class, $map['k']);
     }
 
     public function test_schema_appends_the_metadata_column(): void

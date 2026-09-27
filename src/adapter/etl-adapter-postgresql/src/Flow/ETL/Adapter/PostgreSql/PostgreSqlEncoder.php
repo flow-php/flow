@@ -4,31 +4,31 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql;
 
-use Flow\ETL\Row\Encoder;
-use Flow\ETL\Row\RawRowValues;
+use Flow\ETL\Rows;
 
-/**
- * @implements Encoder<array<string, mixed>>
- */
-final class PostgreSqlEncoder implements Encoder
+final class PostgreSqlEncoder
 {
-    public function decode(array $batch): array
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function encode(Rows $rows): array
     {
-        $decoded = [];
+        $columns = [];
 
-        foreach ($batch as $values) {
-            $decoded[] = new RawRowValues($values);
+        foreach ($rows->schema()->definitions() as $definition) {
+            $columns[$definition->entry()->name()] = $rows->column($definition->entry()->name())->values();
         }
 
-        return $decoded;
-    }
-
-    public function encode(array $batch): array
-    {
         $encoded = [];
 
-        foreach ($batch as $rowValues) {
-            $encoded[] = $rowValues->values;
+        for ($i = 0, $count = $rows->count(); $i < $count; $i++) {
+            $row = [];
+
+            foreach ($columns as $name => $column) {
+                $row[$name] = $column[$i];
+            }
+
+            $encoded[] = $row;
         }
 
         return $encoded;

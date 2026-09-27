@@ -56,7 +56,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
         static::assertSame(2, data_frame()->read(from_floe($dir . '/*.floe'))->count());
     }
 
-    public function test_writing_and_reading_with_the_php_hydrator(): void
+    public function test_writing_and_reading_with_the_default_backend(): void
     {
         $path = $this->cacheDir->suffix('php-engine.floe');
 

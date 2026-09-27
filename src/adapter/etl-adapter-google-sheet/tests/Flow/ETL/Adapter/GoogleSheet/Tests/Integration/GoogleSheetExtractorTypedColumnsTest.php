@@ -19,7 +19,7 @@ use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_schema;
 use function reset;
 
-final class GoogleSheetHydratorParityTest extends FlowTestCase
+final class GoogleSheetExtractorTypedColumnsTest extends FlowTestCase
 {
     public function test_appends_spread_sheet_id_and_sheet_name_to_the_schema_when_metadata_columns_are_enabled(): void
     {

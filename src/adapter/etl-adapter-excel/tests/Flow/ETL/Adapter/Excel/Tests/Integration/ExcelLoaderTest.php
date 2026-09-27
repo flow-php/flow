@@ -8,6 +8,7 @@ use DateInterval;
 use DateTimeImmutable;
 use Flow\ETL\Adapter\Excel\CellStyler;
 use Flow\ETL\Adapter\Excel\ExcelWriter;
+use Flow\ETL\Adapter\Excel\Tests\Double\RecordingCellStyler;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Tests\FlowTestCase;
@@ -503,6 +504,33 @@ final class ExcelLoaderTest extends FlowTestCase
             ],
             $rows,
         );
+    }
+
+    public function test_cell_styler_receives_the_row_index_within_the_batch(): void
+    {
+        $styler = new RecordingCellStyler();
+
+        df()
+            ->read(from_rows(array_to_rows(
+                [
+                    ['id' => 1, 'sheet' => 'A'],
+                    ['id' => 2, 'sheet' => 'B'],
+                    ['id' => 3, 'sheet' => 'A'],
+                    ['id' => 4, 'sheet' => 'A'],
+                    ['id' => 5, 'sheet' => 'B'],
+                ],
+                schema(int_schema('id'), string_schema('sheet')),
+            )))
+            ->batchSize(2)
+            ->write(
+                to_excel(__DIR__ . '/var/output_row_number.xlsx')
+                    ->withSheetNameFromEntry('sheet')
+                    ->withCellStyler($styler)
+                    ->saveMode(overwrite()),
+            )
+            ->run();
+
+        static::assertSame(['A:1@1', 'B:2@2', 'A:3@1', 'A:4@2', 'B:5@1'], $styler->firstColumnCells);
     }
 
     public function test_with_header_style(): void

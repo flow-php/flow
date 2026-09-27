@@ -45,7 +45,7 @@ final readonly class CSVSourceOpener
 
             return new PhpCSVOpenSource(
                 $stream,
-                new CSVEncoder(
+                new CSVDecoder(
                     withHeader: $this->options->withHeader,
                     separator: $dialect->separator,
                     enclosure: $dialect->enclosure,

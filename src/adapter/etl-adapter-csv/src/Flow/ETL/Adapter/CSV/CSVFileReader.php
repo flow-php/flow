@@ -22,11 +22,12 @@ final readonly class CSVFileReader implements SchemaSampler
     ) {}
 
     /**
-     * Abandoning the generator closes the source.
+     * Abandoning the generator closes the source. Returns the header the read resolved, so a source without data rows
+     * needs no second open to name its columns.
      *
      * @param int<1, max> $batchSize
      *
-     * @return Generator<int, non-empty-list<RawRowValues>>
+     * @return Generator<int, non-empty-list<RawRowValues>, mixed, list<string>>
      */
     public function batches(SourceFile $source, int $batchSize): Generator
     {
@@ -46,6 +47,8 @@ final readonly class CSVFileReader implements SchemaSampler
             if ($batch !== []) {
                 yield $batch;
             }
+
+            return $open->headers();
         } finally {
             $open->close();
         }

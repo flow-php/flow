@@ -23,8 +23,11 @@ use Generator;
 
 use function array_column;
 use function array_keys;
+use function array_push;
+use function array_slice;
 use function count;
 use function extension_loaded;
+use function min;
 
 final class ArrowParquetEngine implements ParquetEngine
 {
@@ -77,55 +80,67 @@ final class ArrowParquetEngine implements ParquetEngine
         );
     }
 
-    /**
-     * @param array<string> $columns
-     *
-     * @return \Generator<int, array<array-key, mixed>>
-     */
-    public function readValues(
+    public function readColumns(
         SourceStream $stream,
         Schema $schema,
-        array $columns = [],
-        ?int $limit = null,
-        ?int $offset = null,
+        array $columns,
+        int $batchSize,
+        ?int $limit,
+        ?int $offset,
     ): Generator {
         $adapter = new SourceStreamAdapter($stream);
         $extensionOptions = OptionsConverter::toExtension($this->options);
         $reader = new Reader($adapter, $extensionOptions);
 
         try {
-            $skipped = 0;
-            $yielded = 0;
+            $toSkip = $offset ?? 0;
+            $remaining = $limit;
+            /** @var array<string, list<mixed>> $carry */
+            $carry = [];
+            $carryCount = 0;
 
-            while (null !== ($batch = $reader->readRowGroup($columns ?: null))) {
-                $colNames = array_keys($batch);
+            while (($remaining === null || $remaining > 0) && null !== ($got = $reader->readRowGroup($columns))) {
+                $names = array_keys($got);
 
-                if ($colNames === []) {
+                if ($names === []) {
                     continue;
                 }
 
-                $rowCount = count($batch[$colNames[0]]);
+                $available = count($got[$names[0]]);
+                $cursor = min($toSkip, $available);
+                $toSkip -= $cursor;
 
-                for ($i = 0; $i < $rowCount; $i++) {
-                    if ($offset !== null && $skipped < $offset) {
-                        $skipped++;
+                while ($cursor < $available && ($remaining === null || $remaining > 0)) {
+                    $take = min($batchSize - $carryCount, $available - $cursor, $remaining ?? $available);
 
-                        continue;
+                    foreach ($names as $name) {
+                        /** @var list<mixed> $slice */
+                        $slice = array_slice($got[$name], $cursor, $take);
+
+                        if ($carryCount === 0) {
+                            $carry[$name] = $slice;
+                        } else {
+                            array_push($carry[$name], ...$slice);
+                        }
                     }
 
-                    if ($limit !== null && $yielded >= $limit) {
-                        return;
+                    $carryCount += $take;
+                    $cursor += $take;
+
+                    if ($remaining !== null) {
+                        $remaining -= $take;
                     }
 
-                    $row = [];
-
-                    foreach ($colNames as $name) {
-                        $row[$name] = $batch[$name][$i];
+                    if ($carryCount === $batchSize) {
+                        yield $carry;
+                        $carry = [];
+                        $carryCount = 0;
                     }
-
-                    yield $row;
-                    $yielded++;
                 }
+            }
+
+            if ($carryCount > 0) {
+                yield $carry;
             }
         } finally {
             $reader->close();

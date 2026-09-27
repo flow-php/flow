@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\HTTP\Tests\Unit;
 
-use Flow\ETL\Adapter\Http\HttpEncoder;
+use Flow\ETL\Adapter\Http\HttpDecoder;
 use Flow\ETL\Adapter\Http\HttpExchange;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Tests\FlowTestCase;
@@ -16,7 +16,7 @@ use Psr\Http\Message\ResponseInterface;
 
 use function json_encode;
 
-final class HttpEncoderTest extends FlowTestCase
+final class HttpDecoderTest extends FlowTestCase
 {
     public static function structured_bodies(): Generator
     {
@@ -81,7 +81,7 @@ final class HttpEncoderTest extends FlowTestCase
     ): void {
         $exchange = new HttpExchange((new Psr17Factory())->createRequest('GET', 'https://api.example.com'), $response);
 
-        static::assertSame($expected, (new HttpEncoder())->decode([$exchange])[0]->values['response_body']);
+        static::assertSame($expected, (new HttpDecoder())->decode([$exchange])[0]['response_body']);
     }
 
     public function test_decodes_full_row_values(): void
@@ -93,7 +93,7 @@ final class HttpEncoderTest extends FlowTestCase
             body: json_encode(['id' => 1], JSON_THROW_ON_ERROR),
         );
 
-        $values = (new HttpEncoder())->decode([new HttpExchange($request, $response)])[0]->values;
+        $values = (new HttpDecoder())->decode([new HttpExchange($request, $response)])[0];
 
         static::assertSame('{"id":1}', $values['response_body']);
         static::assertSame(
@@ -108,31 +108,23 @@ final class HttpEncoderTest extends FlowTestCase
         static::assertSame('1.1', $values['request_protocol_version']);
     }
 
-    public function test_encode_is_unsupported(): void
-    {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('read-only');
-
-        (new HttpEncoder())->encode([]);
-    }
-
     /**
      * @param array<mixed> $expected
      */
     #[DataProvider('structured_bodies')]
     public function test_pagination_reads_a_structured_body(ResponseInterface $response, array $expected): void
     {
-        static::assertSame($expected, (new HttpEncoder())->structuredBody($response));
+        static::assertSame($expected, (new HttpDecoder())->structuredBody($response));
     }
 
     public function test_a_row_carries_an_undecodable_body_as_text(): void
     {
         static::assertSame(
             'not json {',
-            (new HttpEncoder())->decode([new HttpExchange(
+            (new HttpDecoder())->decode([new HttpExchange(
                 (new Psr17Factory())->createRequest('GET', 'https://api.example.com'),
                 new Response(503, ['Content-Type' => 'application/json'], 'not json {'),
-            )])[0]->values['response_body'],
+            )])[0]['response_body'],
         );
     }
 
@@ -141,6 +133,6 @@ final class HttpEncoderTest extends FlowTestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('status 503');
 
-        (new HttpEncoder())->structuredBody(new Response(503, ['Content-Type' => 'application/json'], 'not json {'));
+        (new HttpDecoder())->structuredBody(new Response(503, ['Content-Type' => 'application/json'], 'not json {'));
     }
 }

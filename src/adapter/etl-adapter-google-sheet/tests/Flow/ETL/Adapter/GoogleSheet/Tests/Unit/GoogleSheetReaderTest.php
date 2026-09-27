@@ -108,7 +108,7 @@ final class GoogleSheetReaderTest extends FlowTestCase
         static::assertSame($options, $values->getCalls[0][2]);
     }
 
-    public function test_sample_decodes_names_and_rows_through_its_own_encoder(): void
+    public function test_sample_decodes_names_and_rows_through_its_own_decoder(): void
     {
         $sample = GoogleSheetFixtureContext::reader(GoogleSheetFixtureContext::service(
             100,

@@ -11,15 +11,18 @@ use Flow\ETL\Adapter\Doctrine\Tests\Context\SelectQueryCounter;
 use Flow\ETL\Adapter\Doctrine\Tests\Double\NativeHandleStub;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\SchemaNotDerivableException;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use stdClass;
 
 use function Flow\ETL\Adapter\Doctrine\pagination_key_asc;
 use function Flow\ETL\Adapter\Doctrine\pagination_key_set;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function iterator_to_array;
 
 final class DbalKeySetExtractorTest extends FlowTestCase
 {
@@ -139,5 +142,22 @@ final class DbalKeySetExtractorTest extends FlowTestCase
         $extractor->withMaximum(5);
 
         static::assertEquals(Cardinality::atMost(5), $extractor->statistics()->rows);
+    }
+
+    public function test_extract_builds_through_the_config_backend(): void
+    {
+        $connection = InMemorySqlite::withUsers(InMemorySqlite::connection(), 1);
+        $backend = new SpyBackend();
+
+        iterator_to_array(
+            (new DbalKeySetExtractor(
+                $connection,
+                $connection->createQueryBuilder()->select('*')->from('users'),
+                pagination_key_set(pagination_key_asc('id')),
+            ))->extract(flow_context(config_builder()->backend($backend)->build())),
+            false,
+        );
+
+        static::assertGreaterThanOrEqual(1, $backend->builders());
     }
 }

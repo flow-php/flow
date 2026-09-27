@@ -8,7 +8,6 @@ use Flow\ETL\Bucketing\Hasher;
 use Flow\ETL\Bucketing\KeyValues;
 use Flow\ETL\Bucketing\NativeHasher;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Partitions;
@@ -16,7 +15,6 @@ use Generator;
 
 use function array_flip;
 use function array_keys;
-use function array_values;
 use function implode;
 use function sprintf;
 
@@ -61,18 +59,18 @@ final class PartitionRouter
 
         $hashes = $this->hasher->hash((new KeyValues($this->partitioning->by->all()))->of($rows));
 
-        /** @var array<string, array{Partitions, list<Row>}> $groups */
+        /** @var array<string, array{Partitions, list<int>}> $groups */
         $groups = [];
 
-        foreach (array_values($rows->all()) as $index => $row) {
-            $groups[$hashes[$index]] ??= [$this->rowPartitions->of($row, $schema), []];
-            $groups[$hashes[$index]][1][] = $row;
+        foreach ($hashes as $index => $hash) {
+            $groups[$hash] ??= [$this->rowPartitions->of($rows, $index), []];
+            $groups[$hash][1][] = $index;
         }
 
         $stripped = $this->dropped === [] ? $schema : $schema->gracefulRemove(...$this->partitioning->by->names());
 
-        foreach ($groups as [$partitions, $rowsOfGroup]) {
-            $group = Rows::of($schema, ...$rowsOfGroup);
+        foreach ($groups as [$partitions, $indices]) {
+            $group = $rows->gather($indices);
 
             yield [$partitions, $this->dropped === [] ? $group : $group->project($stripped)];
         }

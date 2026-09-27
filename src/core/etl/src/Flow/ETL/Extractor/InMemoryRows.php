@@ -36,7 +36,7 @@ final readonly class InMemoryRows implements SchemaSampler
 
     /**
      * The same ColumnName normalisation array_to_rows() applies, so the fold's names are the
-     * hydrator's names.
+     * batch builder's names.
      *
      * @return Generator<int, RawRowValues>
      */

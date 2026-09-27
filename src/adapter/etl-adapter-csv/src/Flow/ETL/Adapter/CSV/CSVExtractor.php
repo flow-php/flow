@@ -19,7 +19,9 @@ use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\SchemaInference;
 use Flow\ETL\Schema\Inference\SchemaInferenceBuilder;
@@ -96,7 +98,7 @@ final class CSVExtractor implements
      */
     public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
     {
-        $hydrator = $context->hydrator();
+        $backend = $context->backend();
         $batchSize = $this->batchSize();
         $yielded = 0;
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
@@ -132,7 +134,9 @@ final class CSVExtractor implements
             $constants = $fileColumns->forFile($source, $schema);
             $columns = null;
 
-            foreach ($reader->batches($source, $batchSize) as $rawBatch) {
+            $batches = $reader->batches($source, $batchSize);
+
+            foreach ($batches as $rawBatch) {
                 if ($columns === null) {
                     $columns = array_map(
                         strval(...),
@@ -154,11 +158,17 @@ final class CSVExtractor implements
                     }
                 }
 
-                $hydrated = $constants->fillRows($hydrator->hydrate($rawBatch, $body), $schema);
+                $rows = $constants->fillRows(
+                    (new RowsBuilder($body, $backend))
+                        ->appendRows(array_map(static fn(RawRowValues $r): array => $r->values, $rawBatch))
+                        ->finish(),
+                    $schema,
+                    $backend,
+                );
 
-                $yielded += $hydrated->count();
+                $yielded += $rows->count();
 
-                $signal = yield $hydrated;
+                $signal = yield $rows;
 
                 if ($signal === Signal::STOP) {
                     return;
@@ -170,7 +180,7 @@ final class CSVExtractor implements
             }
 
             if ($columns === null && $this->schema === null && !$this->inference->unionByName) {
-                $columns = array_values(array_diff($reader->columns($source), $tail));
+                $columns = array_values(array_diff($batches->getReturn(), $tail));
 
                 if (
                     $columns !== []

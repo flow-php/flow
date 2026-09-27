@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\Floe\Tests\Context;
 
 use Flow\ETL\Row;
-use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Filesystem;
@@ -25,12 +24,12 @@ final class FloeFilesContext
 {
     public static function phpWriter(Filesystem $filesystem, Schema $schema, Codec $codec = new NoopCodec()): FloeWriter
     {
-        return new FloeWriter($filesystem, $schema, new Options(codec: $codec), new PhpRowHydrator());
+        return new FloeWriter($filesystem, $schema, new Options(codec: $codec));
     }
 
     public static function phpReader(Filesystem $filesystem, Codec $codec = new NoopCodec()): FloeReader
     {
-        return new FloeReader($filesystem, $codec, hydrator: new PhpRowHydrator());
+        return new FloeReader($filesystem, $codec);
     }
 
     /**

@@ -218,9 +218,8 @@ data_frame()
 ## Typing the row with a schema
 
 All three extractors expose `withSchema(Schema)` (also the optional last argument of the `from_*` DSL functions). The
-schema is passed straight to the DataFrame Hydrator's `cast()` - it describes the **row**, so to type the body you
-declare `response_body` as a `structure`. As with every extractor, `cast()` keeps only the columns the schema mentions,
-so include any envelope columns you want to keep.
+schema describes the **row**, so to type the body you declare `response_body` as a `structure`. As with every
+extractor, only the columns the schema mentions are kept, so include any envelope columns you want to keep.
 
 ```php
 <?php

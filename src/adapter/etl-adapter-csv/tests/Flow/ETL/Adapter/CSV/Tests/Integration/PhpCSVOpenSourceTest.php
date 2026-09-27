@@ -49,6 +49,19 @@ final class PhpCSVOpenSourceTest extends FlowTestCase
         }
     }
 
+    public function test_headers_are_the_header_records_resolved(): void
+    {
+        $open = CSVFixtureContext::openPhp('header_only.csv');
+
+        try {
+            static::assertSame([], $open->headers());
+            static::assertSame([], iterator_to_array($open->records(), false));
+            static::assertSame(['id', 'name'], $open->headers());
+        } finally {
+            $open->close();
+        }
+    }
+
     public function test_columns_reports_the_resolved_header(): void
     {
         $open = CSVFixtureContext::openPhp('header_only.csv');

@@ -19,7 +19,9 @@ use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\SchemaInference;
 use Flow\ETL\Schema\Inference\SchemaInferenceBuilder;
@@ -33,6 +35,7 @@ use Generator;
 use Throwable;
 
 use function array_diff;
+use function array_map;
 use function array_values;
 use function count;
 use function iterator_to_array;
@@ -123,7 +126,7 @@ final class ExcelExtractor implements
      */
     public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
     {
-        $hydrator = $context->hydrator();
+        $backend = $context->backend();
         $batchSize = $this->batchSize();
         $yielded = 0;
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
@@ -205,12 +208,18 @@ final class ExcelExtractor implements
                             continue;
                         }
 
-                        $hydrated = $constants->fillRows($hydrator->hydrate($batch, $body), $schema);
+                        $rows = $constants->fillRows(
+                            (new RowsBuilder($body, $backend))
+                                ->appendRows(array_map(static fn(RawRowValues $r): array => $r->values, $batch))
+                                ->finish(),
+                            $schema,
+                            $backend,
+                        );
                         $batch = [];
 
-                        $yielded += $hydrated->count();
+                        $yielded += $rows->count();
 
-                        $signal = yield $hydrated;
+                        $signal = yield $rows;
 
                         if ($signal === Signal::STOP) {
                             return;
@@ -225,11 +234,17 @@ final class ExcelExtractor implements
                         continue;
                     }
 
-                    $hydrated = $constants->fillRows($hydrator->hydrate($batch, $body), $schema);
+                    $rows = $constants->fillRows(
+                        (new RowsBuilder($body, $backend))
+                            ->appendRows(array_map(static fn(RawRowValues $r): array => $r->values, $batch))
+                            ->finish(),
+                        $schema,
+                        $backend,
+                    );
 
-                    $yielded += $hydrated->count();
+                    $yielded += $rows->count();
 
-                    $signal = yield $hydrated;
+                    $signal = yield $rows;
 
                     if ($signal === Signal::STOP) {
                         return;

@@ -92,7 +92,7 @@ final class ColumnTypes
     }
 
     /**
-     * RawRowValues::$metadata is not read: the fold types columns, metadata is folded by the hydrator per batch.
+     * RawRowValues::$metadata is not read: the fold types columns.
      */
     public function observe(RawRowValues $row): void
     {

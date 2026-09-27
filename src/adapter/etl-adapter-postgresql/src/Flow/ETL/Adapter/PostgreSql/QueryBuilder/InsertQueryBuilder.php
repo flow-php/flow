@@ -31,7 +31,7 @@ final readonly class InsertQueryBuilder
      * Every value already in PostgreSQL's text form. A column's converter is resolved once, on its first non-null
      * value - so a column of an unmapped type holding only nulls passes.
      *
-     * @param list<array<string, mixed>> $values pre-sorted dehydrated value maps
+     * @param list<array<string, mixed>> $values pre-sorted encoded value maps
      *
      * @return array{Sql, ConvertedParameters}
      */

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Extractor;
 
 use Flow\ETL\Column\Backend;
-use Flow\ETL\Column\DefaultBackend;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 
@@ -45,7 +44,7 @@ final readonly class FileConstants
      * fill() over a batch the reader already matched to the file's body schema, adopting $declared - the schema
      * FileColumns::declare() built over that body schema. A batch with nothing to add is returned as it is.
      */
-    public function fillRows(Rows $rows, Schema $declared, Backend $backend = new DefaultBackend()): Rows
+    public function fillRows(Rows $rows, Schema $declared, Backend $backend): Rows
     {
         if ($this->uri === null && $this->partitionNames === []) {
             return $rows;

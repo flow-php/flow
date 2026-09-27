@@ -29,8 +29,8 @@ final readonly class PsrLoggerLoader implements Loader
         $context->telemetry()->loadingStarted($this);
 
         try {
-            foreach ($rows->all() as $row) {
-                $this->logger->log($this->logLevel, $this->message, $row->toArray());
+            foreach ($rows->toArray() as $values) {
+                $this->logger->log($this->logLevel, $this->message, $values);
             }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);

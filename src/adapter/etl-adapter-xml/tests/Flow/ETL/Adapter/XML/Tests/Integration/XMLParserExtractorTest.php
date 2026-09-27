@@ -14,6 +14,7 @@ use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Context\MemoryFiles;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\Double\RecordingFilesystem;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\Double\UnsizedFilesystem;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
@@ -21,6 +22,7 @@ use function array_keys;
 use function file_get_contents;
 use function Flow\ETL\Adapter\XML\from_xml;
 use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\ref;
@@ -32,6 +34,7 @@ use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_string;
+use function iterator_to_array;
 
 final class XMLParserExtractorTest extends FlowIntegrationTestCase
 {
@@ -441,5 +444,19 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
         $extractor->statistics();
 
         static::assertSame(1, $filesystem->listCalls);
+    }
+
+    public function test_extract_builds_through_the_config_backend(): void
+    {
+        $backend = new SpyBackend();
+
+        iterator_to_array(
+            from_xml(path_real(__DIR__ . '/../Fixtures/one_line_items.xml'))
+                ->withXMLNodePath('root/item')
+                ->extract(flow_context(config_builder()->backend($backend)->build())),
+            false,
+        );
+
+        static::assertGreaterThanOrEqual(1, $backend->builders());
     }
 }

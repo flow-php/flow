@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Flow\Floe;
 
 use Composer\InstalledVersions;
-use Flow\ETL\Row\Hydrator;
-use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
@@ -51,13 +49,11 @@ final class FloeStreamWriter
 
     private Schema $sessionSchema;
 
-    private ?FloeEncoder $sessionEncoder = null;
+    private ?PhpFloeEncoder $sessionEncoder = null;
 
     private ?FrameWriter $frameWriter = null;
 
     private int $totalRows = 0;
-
-    private readonly Hydrator $hydrator;
 
     /**
      * @throws FloeException
@@ -65,11 +61,9 @@ final class FloeStreamWriter
     public function __construct(
         Schema $schema,
         private readonly Options $options = new Options(),
-        ?Hydrator $hydrator = null,
     ) {
         Format::validateCodecId($this->options->codec->id());
         $this->sessionSchema = $schema;
-        $this->hydrator = $hydrator ?? new PhpRowHydrator();
     }
 
     /**
@@ -159,7 +153,7 @@ final class FloeStreamWriter
         $matched = $rows->schema()->isSame($this->sessionSchema) ? $rows : $rows->matchTo($this->sessionSchema);
 
         if ($this->options->codec instanceof NoopCodec) {
-            $frames = $this->sessionEncoder()->encodeFrames($matched, $this->hydrator);
+            $frames = $this->sessionEncoder()->encodeFrames($matched);
 
             $this->startSectionWhenDue();
             $this->frameWriter()->raw($frames);
@@ -169,10 +163,8 @@ final class FloeStreamWriter
             return;
         }
 
-        $typed = $this->hydrator->dehydrate($matched);
-
         $this->startSectionWhenDue();
-        $this->emitBatch($typed);
+        $this->emitBatch($this->sessionEncoder()->encode($matched));
     }
 
     public static function writerVersion(): string
@@ -217,13 +209,13 @@ final class FloeStreamWriter
     }
 
     /**
-     * @param list<\Flow\ETL\Row\TypedRowValues> $typed
+     * @param list<string> $bodies
      *
      * @throws FloeException
      */
-    private function emitBatch(array $typed): void
+    private function emitBatch(array $bodies): void
     {
-        foreach ($this->sessionEncoder()->encode($typed) as $encoded) {
+        foreach ($bodies as $encoded) {
             $this->frameWriter()->row($this->options->codec->encode($encoded));
             $this->sectionRowCount++;
             $this->totalRows++;
@@ -284,7 +276,7 @@ final class FloeStreamWriter
     /**
      * @throws FloeException
      */
-    private function sessionEncoder(): FloeEncoder
+    private function sessionEncoder(): PhpFloeEncoder
     {
         return $this->sessionEncoder ?? throw new FloeException('Floe writer has no active session encoder');
     }

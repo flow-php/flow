@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
-use Flow\ETL\Row\Hydrator;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
@@ -21,7 +20,6 @@ final class FloeWriter
 
     /**
      * @param Schema $schema fixes the session schema for the writer's life
-     * @param null|Hydrator $hydrator null uses `new PhpRowHydrator()`
      *
      * @throws FloeException
      */
@@ -29,9 +27,8 @@ final class FloeWriter
         private readonly Filesystem $filesystem,
         Schema $schema,
         private readonly Options $options = new Options(),
-        ?Hydrator $hydrator = null,
     ) {
-        $this->inner = new FloeStreamWriter($schema, $this->options, $hydrator);
+        $this->inner = new FloeStreamWriter($schema, $this->options);
     }
 
     /**

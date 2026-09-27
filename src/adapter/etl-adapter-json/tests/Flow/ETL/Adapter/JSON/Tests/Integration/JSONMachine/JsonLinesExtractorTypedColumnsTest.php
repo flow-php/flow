@@ -15,7 +15,7 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\path_real;
 
-final class JsonLinesHydratorParityTest extends FlowTestCase
+final class JsonLinesExtractorTypedColumnsTest extends FlowTestCase
 {
     public function test_hydrates_typed_columns_with_missing_column_null(): void
     {

@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Sort\Merge;
 
 use Flow\ETL\Bucketing\BucketRun;
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\References;
-use Flow\ETL\Row\RowsBuffer;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuffer;
 use Flow\ETL\Schema;
 use Generator;
 
@@ -52,12 +53,12 @@ final readonly class KWayMerge
             }
         }
 
-        $buffer = new RowsBuffer($schema ?? new Schema(), $this->batchSize);
+        $buffer = new RowsBuffer($schema ?? new Schema(), new PhpBackend(), $this->batchSize);
 
         while (!$heap->isEmpty()) {
             $top = $heap->extract();
 
-            if (null !== ($batch = $buffer->add($top->row))) {
+            if (null !== ($batch = $buffer->appendFrom($top->row->rows, $top->row->index))) {
                 yield $batch;
             }
 

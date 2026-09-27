@@ -84,32 +84,6 @@ trait PathFiltering
     }
 
     /**
-     * The same footers without deriving a schema, for a read whose schema was declared: nothing else opens them.
-     *
-     * @param Generator<int, SelfDescribingFile> $files an unstarted generator
-     */
-    private function footers(Generator $files, bool $unionByName): FooterStatistics
-    {
-        $statistics = new Statistics(rows: Cardinality::exact(0), size: Cardinality::exact(0));
-        $read = 0;
-
-        foreach ($files as $file) {
-            try {
-                $statistics = $statistics->merge($file->statistics());
-                $read++;
-            } finally {
-                $file->close();
-            }
-
-            if (!$unionByName) {
-                break;
-            }
-        }
-
-        return new FooterStatistics($statistics, $read);
-    }
-
-    /**
      * @return array<string, bool>
      */
     public function partitionNames(PartitionColumns $partitionColumns, Path $path): array

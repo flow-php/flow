@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
-use Flow\ETL\Row\Hydrator;
-use Flow\ETL\Row\PhpRowHydrator;
+use Flow\ETL\Column\Backend;
+use Flow\ETL\Column\DefaultBackend;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
@@ -33,21 +33,16 @@ final class FloeStreamReader
 
     private ?Schema $schema = null;
 
-    private readonly Hydrator $hydrator;
-
     /**
-     * @param null|Hydrator $hydrator null uses `new PhpRowHydrator()`
-     *
      * @throws FloeException
      */
     public function __construct(
         private readonly SourceStream $source,
         private readonly Codec $codec,
         private readonly int $chunkSize,
-        ?Hydrator $hydrator = null,
+        private readonly Backend $backend = new DefaultBackend(),
     ) {
         Format::validateCodecId($this->codec->id());
-        $this->hydrator = $hydrator ?? new PhpRowHydrator();
     }
 
     public function close(): void
@@ -57,7 +52,7 @@ final class FloeStreamReader
 
     private function encoder(Schema $schema): FloeEncoder
     {
-        return $this->encoder ??= new PhpFloeEncoder($schema);
+        return $this->encoder ??= new PhpFloeEncoder($schema, $this->backend);
     }
 
     /**
@@ -261,13 +256,13 @@ final class FloeStreamReader
     }
 
     /**
-     * A batch carries the file schema even when the hydrator folded per-value metadata into a schema of its own.
+     * A batch carries the file schema even when `decodeRows` folded per-value metadata into a schema of its own.
      *
      * @param list<string> $pending
      */
     private function decode(Schema $schema, array $pending): Rows
     {
-        $rows = $this->encoder($schema)->decodeRows($pending, $schema, $this->hydrator);
+        $rows = $this->encoder($schema)->decodeRows($pending, $schema);
 
         return $rows->schema() === $schema ? $rows : $rows->withSchema($schema);
     }

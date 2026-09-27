@@ -47,6 +47,14 @@ final class CSVFileReaderTest extends FlowTestCase
         );
     }
 
+    public function test_batches_return_the_header_of_a_source_without_rows(): void
+    {
+        $batches = CSVFixtureContext::reader()->batches(CSVFixtureContext::source('header_only.csv'), 10);
+
+        static::assertSame([], iterator_to_array($batches, false));
+        static::assertSame(['id', 'name'], $batches->getReturn());
+    }
+
     public function test_columns_of_one_source(): void
     {
         static::assertSame(

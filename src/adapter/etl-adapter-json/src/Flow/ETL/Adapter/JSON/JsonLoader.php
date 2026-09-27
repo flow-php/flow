@@ -101,7 +101,7 @@ final class JsonLoader implements Closure, Discardable, FileLoader, Loader, Part
 
         try {
             foreach ($this->router->route($rows) as [$partitions, $group]) {
-                $this->write($group, $partitions->toArray(), $context);
+                $this->write($group, $partitions->toArray());
             }
 
             $context->telemetry()->loadingCompleted($this, [
@@ -152,15 +152,12 @@ final class JsonLoader implements Closure, Discardable, FileLoader, Loader, Part
     /**
      * @param array<Partition> $partitions
      */
-    public function write(Rows $nextRows, array $partitions, FlowContext $context): void
+    public function write(Rows $nextRows, array $partitions): void
     {
         ($this->documents ??= new JsonDocuments(
             new FilesSink($this->filesystem, $this->path, $this->saveMode),
             $this->putRowsInNewLines,
-        ))->append(
-            $this->encodeJSON($this->encoder()->encode($context->hydrator()->dehydrate($nextRows))),
-            $partitions,
-        );
+        ))->append($this->encodeJSON($this->encoder()->encode($nextRows)), $partitions);
     }
 
     /**

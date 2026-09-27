@@ -15,7 +15,9 @@ use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\to_timezone;
 use function Flow\Floe\DSL\from_floe;
 use function Flow\Types\DSL\type_datetime;
 
@@ -101,17 +103,6 @@ final class FloeExtractorTest extends FlowIntegrationTestCase
         static::assertSame(1, $filesystem->readFromCalls);
     }
 
-    public function test_a_declared_schema_still_reads_the_footer_for_statistics(): void
-    {
-        $path = $this->cacheDir->suffix('declared.floe');
-        FloeStreamReaderContext::write($this->fs(), $path, array_to_rows([['id' => 1]], schema(int_schema('id'))));
-
-        static::assertEquals(
-            Cardinality::exact(1),
-            from_floe($path, filesystem: $this->fs())->withSchema(schema(int_schema('id')))->statistics()->rows,
-        );
-    }
-
     public function test_union_by_name_sums_every_footer_exactly(): void
     {
         FloeStreamReaderContext::write(
@@ -152,7 +143,7 @@ final class FloeExtractorTest extends FlowIntegrationTestCase
         static::assertSame(2, $filesystem->readFromCalls);
     }
 
-    public function test_declared_zone_rezones_a_utc_file(): void
+    public function test_a_utc_file_is_rezoned_after_reading(): void
     {
         $path = $this->cacheDir->suffix('utc.floe');
         FloeStreamReaderContext::write($this->fs(), $path, array_to_rows([['at' => new DateTimeImmutable(
@@ -165,10 +156,8 @@ final class FloeExtractorTest extends FlowIntegrationTestCase
             type_datetime()
                 ->assert(
                     df()
-                        ->read(from_floe($path, filesystem: $this->fs())->withSchema(schema(datetime_schema(
-                            'at',
-                            zone: 'Europe/Warsaw',
-                        ))))
+                        ->read(from_floe($path, filesystem: $this->fs()))
+                        ->withEntry('at', to_timezone(ref('at'), 'Europe/Warsaw'))
                         ->fetch()
                         ->first()
                         ->get('at'),

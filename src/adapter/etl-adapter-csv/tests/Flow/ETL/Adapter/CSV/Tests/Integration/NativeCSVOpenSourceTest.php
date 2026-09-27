@@ -75,6 +75,23 @@ final class NativeCSVOpenSourceTest extends FlowTestCase
         }
     }
 
+    public function test_headers_are_the_header_records_resolved(): void
+    {
+        if (!NativeCSVOpenSource::isSupported()) {
+            static::markTestSkipped('flow_php extension with RustCSVReaderNative is not loaded');
+        }
+
+        $open = CSVFixtureContext::openNative('header_only.csv');
+
+        try {
+            static::assertSame([], $open->headers());
+            static::assertSame([], iterator_to_array($open->records(), false));
+            static::assertSame(['id', 'name'], $open->headers());
+        } finally {
+            $open->close();
+        }
+    }
+
     public function test_columns_reports_the_resolved_header(): void
     {
         if (!NativeCSVOpenSource::isSupported()) {

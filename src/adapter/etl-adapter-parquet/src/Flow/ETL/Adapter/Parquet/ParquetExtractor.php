@@ -17,6 +17,7 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Validator\StrictValidator;
 use Flow\Filesystem\Filesystem;
@@ -31,7 +32,6 @@ use Flow\Parquet\Reader;
 use Generator;
 
 use function array_values;
-use function count;
 use function iterator_count;
 use function max;
 use function sprintf;
@@ -43,8 +43,6 @@ final class ParquetExtractor implements
     MetadataColumnsExtractor,
     RewindableExtractor
 {
-    private ?Schema $schema = null;
-
     use Batches;
     use FileReading;
 
@@ -101,15 +99,14 @@ final class ParquetExtractor implements
      */
     public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
     {
-        $hydrator = $context->hydrator();
+        $backend = $context->backend();
         $batchSize = $this->batchSize();
         $yielded = 0;
 
         $fileOffset = $this->offset ?? 0;
-        $promisedSchema = $this->schema === null ? null : $this->schema();
-        // undeclared, every file is read under the first file's schema, or the union of all of them
-        $expected = $this->schema === null ? $this->derivedSchema($this->files(), $this->unionByName) : null;
-        $target = $promisedSchema ?? $this->schema();
+        // every file is read under the first file's schema, or the union of all of them
+        $expected = $this->derivedSchema($this->files(), $this->unionByName);
+        $target = $this->schema();
 
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
 
@@ -125,7 +122,7 @@ final class ParquetExtractor implements
                     continue;
                 }
 
-                if ($expected !== null && !$this->unionByName) {
+                if (!$this->unionByName) {
                     $validation = (new StrictValidator())->validate($expected, $file->schema());
 
                     if (!$validation->isValid()) {
@@ -137,63 +134,35 @@ final class ParquetExtractor implements
                     }
                 }
 
+                $body = $fileColumns->withoutTail($file->schema());
                 // R6: over the FILE's schema, never over schema()'s output
-                $fileSchema = $fileColumns->declare($this->schema ?? $file->schema());
-                $constants = $fileColumns->forFile($file->source(), $fileSchema);
-                $rowsSchema = $promisedSchema ?? $fileSchema;
-                $body = $fileColumns->withoutTail($rowsSchema);
-                $matchTo = $promisedSchema === null && !$fileSchema->isSame($target) ? $target : null;
+                $rowsSchema = $fileColumns->declare($file->schema());
+                $constants = $fileColumns->forFile($file->source(), $rowsSchema);
+                $matchTo = !$rowsSchema->isSame($target) ? $target : null;
 
-                $encoder = new ParquetEncoder($file->file->schema());
-
-                $rawBatch = [];
-
-                foreach ($file->file->values(
+                foreach ($file->file->columns(
+                    $batchSize,
                     $this->columns,
                     $limit === null ? null : $limit - $yielded,
                     $fileOffset,
-                ) as $row) {
-                    $rawBatch[] = $row;
+                ) as $chunk) {
+                    $builder = new RowsBuilder($body, $backend);
 
-                    if (count($rawBatch) >= $batchSize) {
-                        $hydrated = $constants->fillRows(
-                            $hydrator->hydrate($encoder->decode($rawBatch), $body),
-                            $rowsSchema,
-                        );
-
-                        if ($matchTo !== null) {
-                            $hydrated = $hydrated->matchTo($matchTo);
-                        }
-
-                        $yielded += $hydrated->count();
-
-                        $signal = yield $hydrated;
-
-                        if ($signal === Signal::STOP) {
-                            return;
-                        }
-
-                        if ($limit !== null && $yielded >= $limit) {
-                            return;
-                        }
-
-                        $rawBatch = [];
+                    foreach ($body->definitions() as $definition) {
+                        $builder
+                            ->column($definition->entry()->name())
+                            ->appendMany($chunk[$definition->entry()->name()]);
                     }
-                }
 
-                if ($rawBatch !== []) {
-                    $hydrated = $constants->fillRows(
-                        $hydrator->hydrate($encoder->decode($rawBatch), $body),
-                        $rowsSchema,
-                    );
+                    $rows = $constants->fillRows($builder->finish(), $rowsSchema, $backend);
 
                     if ($matchTo !== null) {
-                        $hydrated = $hydrated->matchTo($matchTo);
+                        $rows = $rows->matchTo($matchTo);
                     }
 
-                    $yielded += $hydrated->count();
+                    $yielded += $rows->count();
 
-                    $signal = yield $hydrated;
+                    $signal = yield $rows;
 
                     if ($signal === Signal::STOP) {
                         return;
@@ -213,9 +182,10 @@ final class ParquetExtractor implements
 
     public function schema(): Schema
     {
-        return $this->fileColumns($this->filesystem, $this->path)->declare(
-            $this->schema ?? $this->derivedSchema($this->files(), $this->unionByName),
-        );
+        return $this->fileColumns($this->filesystem, $this->path)->declare($this->derivedSchema(
+            $this->files(),
+            $this->unionByName,
+        ));
     }
 
     public function statistics(): Statistics
@@ -237,7 +207,7 @@ final class ParquetExtractor implements
 
     public function partitionSchema(): Schema
     {
-        return $this->fileColumns($this->filesystem, $this->path)->partitions($this->schema ?? new Schema());
+        return $this->fileColumns($this->filesystem, $this->path)->partitions(new Schema());
     }
 
     public function source(): Path
@@ -302,11 +272,10 @@ final class ParquetExtractor implements
      */
     private function declare(): Statistics
     {
-        $footers = $this->schema === null
-            ? $this->derivedFooters($this->files(), $this->unionByName)
-            : $this->footers($this->files(), $this->unionByName);
-
-        return $footers->of(iterator_count($this->sourceFiles($this->filesystem, $this->path)), $this->offset ?? 0);
+        return $this->derivedFooters($this->files(), $this->unionByName)->of(
+            iterator_count($this->sourceFiles($this->filesystem, $this->path)),
+            $this->offset ?? 0,
+        );
     }
 
     /**
@@ -331,8 +300,8 @@ final class ParquetExtractor implements
 
     public function withSchema(Schema $schema): static
     {
-        $this->schema = $schema;
-
-        return $this;
+        throw new InvalidArgumentException(
+            'Parquet is a self-describing format and does not accept a schema; declaring one is not supported yet.',
+        );
     }
 }

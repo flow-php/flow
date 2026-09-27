@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
-use Flow\ETL\Row\Hydrator;
+use Flow\ETL\Column\Backend;
+use Flow\ETL\Column\DefaultBackend;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
 use Flow\Floe\Codec\NoopCodec;
@@ -12,14 +13,11 @@ use Flow\Floe\Exception\FloeException;
 
 final readonly class FloeReader
 {
-    /**
-     * @param null|Hydrator $hydrator null uses `new PhpRowHydrator()`
-     */
     public function __construct(
         private Filesystem $filesystem,
         private Codec $codec = new NoopCodec(),
         private int $chunkSize = 65536,
-        private ?Hydrator $hydrator = null,
+        private Backend $backend = new DefaultBackend(),
     ) {}
 
     /**
@@ -27,11 +25,6 @@ final readonly class FloeReader
      */
     public function read(Path $path): FloeStreamReader
     {
-        return new FloeStreamReader(
-            $this->filesystem->readFrom($path),
-            $this->codec,
-            $this->chunkSize,
-            $this->hydrator,
-        );
+        return new FloeStreamReader($this->filesystem->readFrom($path), $this->codec, $this->chunkSize, $this->backend);
     }
 }

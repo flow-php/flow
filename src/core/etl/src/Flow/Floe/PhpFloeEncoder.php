@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
+use Flow\ETL\Column\Backend;
+use Flow\ETL\Column\DefaultBackend;
 use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Exception\SchemaMismatchException;
-use Flow\ETL\Row\Hydrator;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
 use Flow\Floe\Exception\FloeException;
 use JsonException;
 
-use function array_key_exists;
+use function array_map;
 use function json_encode;
 use function ord;
 use function sprintf;
@@ -40,10 +42,18 @@ final class PhpFloeEncoder implements FloeEncoder
 
     public function __construct(
         private readonly Schema $schema,
+        private readonly Backend $backend = new DefaultBackend(),
     ) {
         $this->schemaDecoder = new SchemaDecoder(new ValueDecoder());
     }
 
+    /**
+     * @param list<string> $batch
+     *
+     * @throws FloeException
+     *
+     * @return list<RawRowValues>
+     */
     public function decode(array $batch): array
     {
         $decodePlan = $this->decodePlan ??= $this->schemaDecoder->decode($this->schemaBody());
@@ -83,40 +93,83 @@ final class PhpFloeEncoder implements FloeEncoder
         return $decoded;
     }
 
-    public function decodeRows(array $bodies, Schema $schema, Hydrator $hydrator): Rows
+    public function decodeRows(array $bodies, Schema $schema): Rows
     {
-        return $hydrator->hydrate($this->decode($bodies), $schema);
+        $batch = $this->decode($bodies);
+
+        // metadata belongs to the column, so it is folded into the schema once - a per-row divergent Metadata is
+        // no longer representable
+        foreach ($batch as $rowValues) {
+            foreach ($rowValues->metadata as $name => $metadata) {
+                // PHP casts a numeric array key to int, column names are always strings
+                $name = (string) $name;
+
+                if ($schema->findDefinition($name) !== null) {
+                    $schema = $schema->setMetadata($name, $metadata);
+                }
+            }
+        }
+
+        return (new RowsBuilder($schema, $this->backend))
+            ->appendRows(array_map(static fn(RawRowValues $r): array => $r->values, $batch))
+            ->finish();
     }
 
-    public function encodeFrames(Rows $rows, Hydrator $hydrator): string
+    public function encodeFrames(Rows $rows): string
     {
-        return Format::rowFrames($this->encode($hydrator->dehydrate($rows)));
+        return Format::rowFrames($this->encode($rows));
     }
 
-    public function encode(array $batch): array
+    /**
+     * @throws FloeException
+     * @throws SchemaMismatchException
+     *
+     * @return list<string>
+     */
+    public function encode(Rows $rows): array
     {
         $encoders = $this->encoders ??= $this->buildEncoders();
 
+        /** @var array<array-key, null|array{list<mixed>, bool, Metadata}> $columns */
+        $columns = [];
+
+        foreach ($this->schema->definitions() as $name => $definition) {
+            $own = $rows->schema()->findDefinition($definition->entry()->name());
+
+            if ($own === null) {
+                $columns[$name] = null;
+
+                continue;
+            }
+
+            $metadata = $own->metadata();
+            $columnMetadata = $definition->metadata();
+
+            $columns[$name] = [
+                $rows->column($definition->entry()->name())->values(),
+                $metadata->isEmpty() && $columnMetadata->isEmpty() ? false : !$metadata->isEqual($columnMetadata),
+                $metadata,
+            ];
+        }
+
         $bodies = [];
 
-        foreach ($batch as $rowIndex => $rowValues) {
+        for ($rowIndex = 0, $count = $rows->count(); $rowIndex < $count; $rowIndex++) {
             $body = '';
 
             foreach ($this->schema->definitions() as $name => $definition) {
-                if (!array_key_exists($name, $rowValues->values)) {
+                $column = $columns[$name];
+
+                if ($column === null) {
                     throw new FloeException(sprintf(
                         'Floe found a row that does not carry the declared column "%s"',
                         $name,
                     ));
                 }
 
+                [$values, $diverges, $metadata] = $column;
                 // @mago-ignore analysis:mixed-assignment
-                $value = $rowValues->values[$name];
-                $metadata = $rowValues->metadata[$name] ?? Metadata::empty();
-                $columnMetadata = $definition->metadata();
-                $diverges = $metadata->isEmpty() && $columnMetadata->isEmpty()
-                    ? false
-                    : !$metadata->isEqual($columnMetadata);
+                $value = $values[$rowIndex];
 
                 if ($value === null) {
                     if (!$definition->isNullable()) {

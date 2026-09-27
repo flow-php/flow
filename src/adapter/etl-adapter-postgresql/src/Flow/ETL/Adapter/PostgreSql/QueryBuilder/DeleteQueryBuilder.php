@@ -28,7 +28,7 @@ final readonly class DeleteQueryBuilder
     ) {}
 
     /**
-     * @param array<string, mixed> $value dehydrated value map for a single row
+     * @param array<string, mixed> $value encoded value map for a single row
      *
      * @return array{Sql, list<null|TypedValue>}
      */

@@ -12,15 +12,18 @@ use Flow\ETL\Adapter\Doctrine\Tests\Double\NativeHandleStub;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Rows;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use stdClass;
 
 use function array_map;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function implode;
+use function iterator_to_array;
 
 final class DbalLimitOffsetExtractorTest extends FlowTestCase
 {
@@ -286,5 +289,21 @@ final class DbalLimitOffsetExtractorTest extends FlowTestCase
                 $connection->createQueryBuilder()->select('*')->from('users')->orderBy('id')->setMaxResults(2),
             ))->statistics()->rows,
         );
+    }
+
+    public function test_extract_builds_through_the_config_backend(): void
+    {
+        $connection = InMemorySqlite::withUsers(InMemorySqlite::connection(), 1);
+        $backend = new SpyBackend();
+
+        iterator_to_array(
+            (new DbalLimitOffsetExtractor(
+                $connection,
+                $connection->createQueryBuilder()->select('*')->from('users')->orderBy('id'),
+            ))->extract(flow_context(config_builder()->backend($backend)->build())),
+            false,
+        );
+
+        static::assertGreaterThanOrEqual(1, $backend->builders());
     }
 }

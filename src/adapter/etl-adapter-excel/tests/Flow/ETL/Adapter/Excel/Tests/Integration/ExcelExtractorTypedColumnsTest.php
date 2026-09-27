@@ -15,7 +15,7 @@ use function Flow\ETL\DSL\string_schema;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_integer;
 
-final class ExcelHydratorParityTest extends FlowTestCase
+final class ExcelExtractorTypedColumnsTest extends FlowTestCase
 {
     public function test_reads_typed_columns_with_a_schema(): void
     {

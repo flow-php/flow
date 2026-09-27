@@ -12,22 +12,6 @@ final readonly class ElementsValueConverter implements ValueConverter
         private ValueConverter $element,
     ) {}
 
-    public function decode(mixed $value): mixed
-    {
-        if (!is_array($value)) {
-            return $value;
-        }
-
-        // @mago-ignore analysis:mixed-assignment
-        foreach ($value as $key => $element) {
-            if ($element !== null) {
-                $value[$key] = $this->element->decode($element);
-            }
-        }
-
-        return $value;
-    }
-
     public function encode(mixed $value): mixed
     {
         if (!is_array($value)) {

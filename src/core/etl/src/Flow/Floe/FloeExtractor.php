@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
+use Flow\ETL\Column\Backend;
+use Flow\ETL\Column\DefaultBackend;
 use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
@@ -16,7 +18,6 @@ use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row\Hydrator;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Validator\StrictValidator;
 use Flow\Filesystem\Filesystem;
@@ -37,8 +38,6 @@ final class FloeExtractor implements
     MetadataColumnsExtractor,
     RewindableExtractor
 {
-    private ?Schema $schema = null;
-
     use Batches;
     use FileReading;
 
@@ -81,14 +80,13 @@ final class FloeExtractor implements
     {
         $fileOffset = $this->offset ?? 0;
         $yielded = 0;
-        $promisedSchema = $this->schema === null ? null : $this->schema();
-        // undeclared, every file is read under the first file's schema, or the union of all of them
-        $expected = $this->schema === null ? $this->derivedSchema($this->files(), $this->unionByName) : null;
-        $target = $promisedSchema ?? $this->schema();
+        // every file is read under the first file's schema, or the union of all of them
+        $expected = $this->derivedSchema($this->files(), $this->unionByName);
+        $target = $this->schema();
 
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
 
-        foreach ($this->files($context->hydrator(), $pathFilter) as $file) {
+        foreach ($this->files($context->backend(), $pathFilter) as $file) {
             // finally, not a close() per exit: the offset-skip continue, the STOP/limit return
             // below and an abandoned generator all have to release the handle (b73)
             try {
@@ -100,7 +98,7 @@ final class FloeExtractor implements
                     continue;
                 }
 
-                if ($expected !== null && !$this->unionByName) {
+                if (!$this->unionByName) {
                     $validation = (new StrictValidator())->validate($expected, $file->schema());
 
                     if (!$validation->isValid()) {
@@ -113,15 +111,14 @@ final class FloeExtractor implements
                 }
 
                 // R6: over the FILE's schema, never over schema()'s output
-                $fileSchema = $fileColumns->declare($this->schema ?? $file->schema());
+                $fileSchema = $fileColumns->declare($file->schema());
                 $constants = $fileColumns->forFile($file->source(), $fileSchema);
-                // a declared schema is always matched: the rows below are only trusted against the footer
-                $matchTo = $promisedSchema ?? (!$fileSchema->isSame($target) ? $target : null);
+                $matchTo = !$fileSchema->isSame($target) ? $target : null;
                 $remaining = $limit === null ? null : $limit - $yielded;
 
                 foreach ($file->reader->rows($this->batchSize(), $fileOffset, $remaining) as $rows) {
-                    // R7: the stamp stays post-hydration - FloeStreamReader::rows() yields hydrated Rows and
-                    // must not learn about paths - but the constants are the shared ones, already typed
+                    // R7: the stamp stays after decoding - FloeStreamReader::rows() yields built Rows and must not
+                    // learn about paths - but the constants are the shared ones, already typed
                     $rows = $constants->fillRows($rows, $fileSchema, $context->backend());
 
                     if ($matchTo !== null) {
@@ -154,9 +151,10 @@ final class FloeExtractor implements
      */
     public function schema(): Schema
     {
-        return $this->fileColumns($this->filesystem, $this->path)->declare(
-            $this->schema ?? $this->derivedSchema($this->files(), $this->unionByName),
-        );
+        return $this->fileColumns($this->filesystem, $this->path)->declare($this->derivedSchema(
+            $this->files(),
+            $this->unionByName,
+        ));
     }
 
     public function statistics(): Statistics
@@ -178,7 +176,7 @@ final class FloeExtractor implements
 
     public function partitionSchema(): Schema
     {
-        return $this->fileColumns($this->filesystem, $this->path)->partitions($this->schema ?? new Schema());
+        return $this->fileColumns($this->filesystem, $this->path)->partitions(new Schema());
     }
 
     public function source(): Path
@@ -204,17 +202,16 @@ final class FloeExtractor implements
      */
     private function declare(): Statistics
     {
-        $footers = $this->schema === null
-            ? $this->derivedFooters($this->files(), $this->unionByName)
-            : $this->footers($this->files(), $this->unionByName);
-
-        return $footers->of(iterator_count($this->sourceFiles($this->filesystem, $this->path)), $this->offset ?? 0);
+        return $this->derivedFooters($this->files(), $this->unionByName)->of(
+            iterator_count($this->sourceFiles($this->filesystem, $this->path)),
+            $this->offset ?? 0,
+        );
     }
 
     /**
      * @return Generator<int, FloeSourceFile>
      */
-    private function files(?Hydrator $hydrator = null, Filter $pathFilter = new OnlyFiles()): Generator
+    private function files(Backend $backend = new DefaultBackend(), Filter $pathFilter = new OnlyFiles()): Generator
     {
         foreach ($this->sourceFiles($this->filesystem, $this->path, $pathFilter) as $source) {
             yield new FloeSourceFile(
@@ -222,7 +219,7 @@ final class FloeExtractor implements
                     $this->filesystem,
                     $this->codec,
                     $this->chunkSize,
-                    hydrator: $hydrator,
+                    backend: $backend,
                 ))->read($source->path),
                 $source,
             );
@@ -231,8 +228,8 @@ final class FloeExtractor implements
 
     public function withSchema(Schema $schema): static
     {
-        $this->schema = $schema;
-
-        return $this;
+        throw new InvalidArgumentException(
+            'Floe is a self-describing format and does not accept a schema; declaring one is not supported yet.',
+        );
     }
 }

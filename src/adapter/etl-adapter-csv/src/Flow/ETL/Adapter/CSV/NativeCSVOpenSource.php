@@ -106,6 +106,11 @@ final class NativeCSVOpenSource implements CSVOpenSource
         return $this->producedRows;
     }
 
+    public function headers(): array
+    {
+        return $this->reader->headers();
+    }
+
     public function records(): Generator
     {
         foreach ($this->stream->iterate($this->chunkSize) as $chunk) {

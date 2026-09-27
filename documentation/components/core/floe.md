@@ -38,10 +38,20 @@ data_frame()
     ->run();
 ```
 
-When the [`flow_php` extension](/documentation/components/extensions/flow-php-ext.md) is loaded, the
-strict read and the write fuse frame-split + value decode/encode + hydrate/dehydrate into one native
-call per batch. It is transparent - the on-disk format is unchanged and the rows are byte-for-byte
-identical to the pure-PHP engine.
+The footer is the schema: `from_floe(...)->withSchema()` throws. Change a column's type or zone after reading:
+
+```php
+<?php
+
+use function Flow\ETL\DSL\{data_frame, ref, to_output, to_timezone};
+use function Flow\Floe\DSL\from_floe;
+
+data_frame()
+    ->read(from_floe(__DIR__ . '/output.floe'))
+    ->withEntry('at', to_timezone(ref('at'), 'Europe/Warsaw'))
+    ->write(to_output())
+    ->run();
+```
 
 ## Save Modes
 

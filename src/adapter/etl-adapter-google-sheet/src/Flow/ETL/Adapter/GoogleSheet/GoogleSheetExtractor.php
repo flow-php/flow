@@ -19,6 +19,7 @@ use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\SchemaInference;
 use Flow\ETL\Schema\Inference\SchemaInferenceBuilder;
@@ -104,7 +105,7 @@ final class GoogleSheetExtractor implements
         $schema = $this->addMetadataColumns
             ? $base->add(str_schema('_spread_sheet_id'), str_schema('_sheet_name'))
             : $base;
-        $hydrator = $context->hydrator();
+        $backend = $context->backend();
         $checked = $this->schema !== null || $this->inference->unionByName;
 
         $batchSize = $this->batchSize();
@@ -157,11 +158,13 @@ final class GoogleSheetExtractor implements
                 );
             }
 
-            $hydrated = $hydrator->hydrate($batch, $schema);
+            $rows = (new RowsBuilder($schema, $backend))
+                ->appendRows(array_map(static fn(RawRowValues $r): array => $r->values, $batch))
+                ->finish();
 
-            $yielded += $hydrated->count();
+            $yielded += $rows->count();
 
-            $signal = yield $hydrated;
+            $signal = yield $rows;
 
             if ($signal === Signal::STOP) {
                 return;

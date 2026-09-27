@@ -12,8 +12,7 @@ use Dom\XMLDocument;
 use DOMDocument;
 use DOMElement;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Encoder;
-use Flow\ETL\Row\RawRowValues;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateTimeType;
 use Flow\Types\Type\Logical\DateType;
@@ -40,37 +39,34 @@ use function is_float;
 use function is_int;
 use function is_string;
 
-/**
- * @implements Encoder<array<string, mixed>>
- */
-final class SealEncoder implements Encoder
+final class SealEncoder
 {
     public function __construct(
         private readonly string $dateTimeFormat = DateTimeInterface::ATOM,
         private readonly string $dateFormat = 'Y-m-d',
     ) {}
 
-    public function decode(array $batch): array
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function encode(Rows $rows): array
     {
-        $decoded = [];
+        $columns = [];
+        $types = [];
 
-        foreach ($batch as $values) {
-            $decoded[] = new RawRowValues($values);
+        foreach ($rows->schema()->definitions() as $definition) {
+            $name = $definition->entry()->name();
+            $columns[$name] = $rows->column($name)->values();
+            $types[$name] = $definition->type();
         }
 
-        return $decoded;
-    }
-
-    public function encode(array $batch): array
-    {
         $documents = [];
 
-        foreach ($batch as $rowValues) {
+        for ($i = 0, $count = $rows->count(); $i < $count; $i++) {
             $document = [];
 
-            /** @var mixed $value */
-            foreach ($rowValues->values as $name => $value) {
-                $document[$name] = $this->renderValue($rowValues->types[$name], $value);
+            foreach ($columns as $name => $column) {
+                $document[$name] = $this->renderValue($types[$name], $column[$i]);
             }
 
             $documents[] = $document;

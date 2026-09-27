@@ -15,8 +15,7 @@ use Flow\ETL\Adapter\XML\Abstraction\XMLAttribute;
 use Flow\ETL\Adapter\XML\Abstraction\XMLNode;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Encoder;
-use Flow\ETL\Row\RawRowValues;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateTimeType;
 use Flow\Types\Type\Logical\DateType;
@@ -52,10 +51,7 @@ use function substr;
 
 use const JSON_THROW_ON_ERROR;
 
-/**
- * @implements Encoder<string>
- */
-final class XMLEncoder implements Encoder
+final class XMLEncoder
 {
     public function __construct(
         private readonly ?XMLWriter $xmlWriter = null,
@@ -69,28 +65,29 @@ final class XMLEncoder implements Encoder
         private readonly string $rowElementName = 'row',
     ) {}
 
-    public function decode(array $batch): array
-    {
-        $maps = [];
-
-        foreach ($batch as $xml) {
-            $maps[] = new RawRowValues(['node' => $xml]);
-        }
-
-        return $maps;
-    }
-
-    public function encode(array $batch): array
+    /**
+     * @return list<string>
+     */
+    public function encode(Rows $rows): array
     {
         $xmlWriter = $this->xmlWriter ?? throw new RuntimeException('XMLEncoder requires an XMLWriter to encode rows');
 
+        $columns = [];
+        $types = [];
+
+        foreach ($rows->schema()->definitions() as $definition) {
+            $name = $definition->entry()->name();
+            $columns[$name] = $rows->column($name)->values();
+            $types[$name] = $definition->type();
+        }
+
         $lines = [];
 
-        foreach ($batch as $rowValues) {
+        for ($i = 0, $count = $rows->count(); $i < $count; $i++) {
             $elements = [];
 
-            foreach ($rowValues->types as $name => $type) {
-                $elements[] = $this->normalize($name, $type, $rowValues->values[$name]);
+            foreach ($columns as $name => $column) {
+                $elements[] = $this->normalize($name, $types[$name], $column[$i]);
             }
 
             $lines[] = $xmlWriter->write(XMLNode::nested($this->rowElementName, ...$elements));
@@ -161,15 +158,6 @@ final class XMLEncoder implements Encoder
 
         if ($type instanceof StructureType) {
             $values = is_array($value) ? array_values($value) : [];
-
-            if (count($values) > count($type->elements())) {
-                throw new RuntimeException(sprintf(
-                    'XML encoder received %d values for structure "%s" which declares %d elements - extra values would be silently lost',
-                    count($values),
-                    $type->toString(),
-                    count($type->elements()),
-                ));
-            }
 
             $elements = [];
 

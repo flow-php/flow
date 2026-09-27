@@ -9,7 +9,6 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
 
-use function array_key_exists;
 use function array_map;
 use function array_merge;
 use function array_values;
@@ -43,19 +42,21 @@ final class PieChart implements Chart
 
     public function collect(Rows $rows): void
     {
-        foreach ($rows as $row) {
-            foreach ($this->datasets as $dataset) {
-                $labelValue = $row->get($this->label);
+        if ($rows->count() === 0) {
+            return;
+        }
 
-                if (!array_key_exists('pie', $this->data['datasets'])) {
-                    $this->data['datasets']['pie'] = [
-                        'data' => [$row->get($dataset)],
-                        'label' => is_scalar($labelValue) ? (string) $labelValue : '',
-                    ];
-                } else {
-                    $this->data['datasets']['pie']['data'][] = $row->get($dataset);
-                    $this->data['datasets']['pie']['label'] = is_scalar($labelValue) ? (string) $labelValue : '';
-                }
+        $label = $rows->column($this->label->base())->values();
+        $columns = [];
+
+        foreach ($this->datasets as $dataset) {
+            $columns[$dataset->name()] = $rows->column($dataset->base())->values();
+        }
+
+        for ($i = 0, $count = $rows->count(); $i < $count; $i++) {
+            foreach ($this->datasets as $dataset) {
+                $this->data['datasets']['pie']['data'][] = $columns[$dataset->name()][$i];
+                $this->data['datasets']['pie']['label'] = is_scalar($label[$i]) ? (string) $label[$i] : '';
             }
         }
     }

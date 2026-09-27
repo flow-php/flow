@@ -36,6 +36,13 @@ interface CSVOpenSource
     public function columns(): array;
 
     /**
+     * The header records() resolved; [] before it ran or for a 0-byte source.
+     *
+     * @return list<string>
+     */
+    public function headers(): array;
+
+    /**
      * This instance is consumed afterwards.
      *
      * @return Generator<int, RawRowValues>

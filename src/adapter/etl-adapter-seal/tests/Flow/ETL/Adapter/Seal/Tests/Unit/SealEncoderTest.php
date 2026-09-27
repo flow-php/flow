@@ -9,7 +9,6 @@ use DateTimeImmutable;
 use DateTimeZone;
 use DOMDocument;
 use Flow\ETL\Adapter\Seal\SealEncoder;
-use Flow\ETL\Row\TypedRowValues;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Type;
@@ -18,8 +17,14 @@ use Flow\Types\Value\Uuid;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\date_schema;
+use function Flow\ETL\DSL\definition_from_type;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\xml_schema;
 use function Flow\Types\DSL\type_boolean;
-use function Flow\Types\DSL\type_date;
 use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_enum;
 use function Flow\Types\DSL\type_float;
@@ -32,7 +37,6 @@ use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_time;
 use function Flow\Types\DSL\type_time_zone;
 use function Flow\Types\DSL\type_uuid;
-use function Flow\Types\DSL\type_xml;
 
 final class SealEncoderTest extends FlowTestCase
 {
@@ -84,7 +88,9 @@ final class SealEncoderTest extends FlowTestCase
     {
         static::assertSame(
             $expected,
-            (new SealEncoder())->encode([new TypedRowValues(['field' => $value], ['field' => $type])])[0]['field'],
+            (new SealEncoder())->encode(array_to_rows([[
+                'field' => $value,
+            ]], schema(definition_from_type('field', $type, nullable: $value === null))))[0]['field'],
         );
     }
 
@@ -95,7 +101,7 @@ final class SealEncoderTest extends FlowTestCase
 
         static::assertSame(
             '<root><a>1</a></root>',
-            (new SealEncoder())->encode([new TypedRowValues(['xml' => $doc], ['xml' => type_xml()])])[0]['xml'],
+            (new SealEncoder())->encode(array_to_rows([['xml' => $doc]], schema(xml_schema('xml'))))[0]['xml'],
         );
     }
 
@@ -103,9 +109,9 @@ final class SealEncoderTest extends FlowTestCase
     {
         static::assertSame(
             '2023-10-01',
-            (new SealEncoder())->encode([
-                new TypedRowValues(['date' => new DateTimeImmutable('2023-10-01 00:00:00')], ['date' => type_date()]),
-            ])[0]['date'],
+            (new SealEncoder())->encode(array_to_rows([[
+                'date' => new DateTimeImmutable('2023-10-01 00:00:00'),
+            ]], schema(date_schema('date'))))[0]['date'],
         );
     }
 
@@ -113,10 +119,10 @@ final class SealEncoderTest extends FlowTestCase
     {
         static::assertSame(
             [['id' => 1, 'name' => 'Alice'], ['id' => 2, 'name' => 'Bob']],
-            (new SealEncoder())->encode([
-                new TypedRowValues(['id' => 1, 'name' => 'Alice'], ['id' => type_integer(), 'name' => type_string()]),
-                new TypedRowValues(['id' => 2, 'name' => 'Bob'], ['id' => type_integer(), 'name' => type_string()]),
-            ]),
+            (new SealEncoder())->encode(array_to_rows(
+                [['id' => 1, 'name' => 'Alice'], ['id' => 2, 'name' => 'Bob']],
+                schema(int_schema('id'), str_schema('name')),
+            )),
         );
     }
 }

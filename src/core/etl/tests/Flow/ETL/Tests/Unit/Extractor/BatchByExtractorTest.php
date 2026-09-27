@@ -9,10 +9,12 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\Memory\ArrayMemory;
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\DeclaringExtractor;
 use Flow\ETL\Tests\Double\VaryingBatchesExtractor;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\batched_by;
 use function Flow\ETL\DSL\config;
@@ -39,6 +41,36 @@ final class BatchByExtractorTest extends TestCase
 
         static::assertCount(1, $batches);
         static::assertSame([['g' => 1, 'name' => 'a'], ['g' => 1, 'name' => null]], $batches[0]->toArray());
+    }
+
+    public function test_a_group_spanning_two_child_batches_is_one_batch(): void
+    {
+        $child = new VaryingBatchesExtractor(
+            array_to_rows([['g' => 1], ['g' => 1]], schema(int_schema('g'))),
+            array_to_rows([['g' => 1], ['g' => 2]], schema(int_schema('g'))),
+        );
+
+        $batches = iterator_to_array(batched_by($child, ref('g'))->extract(flow_context(config())), false);
+
+        static::assertSame(
+            [[1, 1, 1], [2]],
+            array_map(static fn(Rows $rows): array => $rows->reduceToArray('g'), $batches),
+        );
+    }
+
+    public function test_a_group_spanning_two_child_batches_counts_toward_the_min_size(): void
+    {
+        $child = new VaryingBatchesExtractor(
+            array_to_rows([['g' => 1], ['g' => 1]], schema(int_schema('g'))),
+            array_to_rows([['g' => 1], ['g' => 2]], schema(int_schema('g'))),
+        );
+
+        $batches = iterator_to_array(batched_by($child, ref('g'), 3)->extract(flow_context(config())), false);
+
+        static::assertSame(
+            [[1, 1, 1], [2]],
+            array_map(static fn(Rows $rows): array => $rows->reduceToArray('g'), $batches),
+        );
     }
 
     public function test_a_later_child_batch_that_widens_the_shape_is_refused(): void

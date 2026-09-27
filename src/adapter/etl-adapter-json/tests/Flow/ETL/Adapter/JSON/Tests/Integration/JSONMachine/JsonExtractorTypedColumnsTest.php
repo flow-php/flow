@@ -16,7 +16,7 @@ use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\path_real;
 use function usort;
 
-final class JsonHydratorParityTest extends FlowTestCase
+final class JsonExtractorTypedColumnsTest extends FlowTestCase
 {
     public function test_fast_path_hydrates_typed_columns_with_missing_column_null_and_input_uri(): void
     {

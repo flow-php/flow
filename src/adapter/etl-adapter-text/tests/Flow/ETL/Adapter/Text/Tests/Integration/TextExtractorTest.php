@@ -11,11 +11,13 @@ use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Context\MemoryFiles;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\Double\RecordingFilesystem;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\Double\UnsizedFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\Adapter\Text\from_text;
 use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\schema;
@@ -185,5 +187,18 @@ final class TextExtractorTest extends FlowTestCase
         $extractor->statistics();
 
         static::assertSame(1, $filesystem->listCalls);
+    }
+
+    public function test_extract_builds_through_the_config_backend(): void
+    {
+        $backend = new SpyBackend();
+
+        iterator_to_array(
+            from_text(path_real(__DIR__ . '/../Fixtures/orders_flow.csv'))
+                ->extract(flow_context(config_builder()->backend($backend)->build())),
+            false,
+        );
+
+        static::assertGreaterThanOrEqual(1, $backend->builders());
     }
 }

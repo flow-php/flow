@@ -9,36 +9,28 @@ use Dom\XMLDocument;
 use DOMDocument;
 use DOMElement;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Encoder;
-use Flow\ETL\Row\RawRowValues;
+use Flow\ETL\Rows;
 
-/**
- * @implements Encoder<array<string, mixed>>
- */
-final class DbalEncoder implements Encoder
+final class DbalEncoder
 {
-    public function decode(array $batch): array
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function encode(Rows $rows): array
     {
-        $decoded = [];
+        $columns = [];
 
-        foreach ($batch as $values) {
-            $decoded[] = new RawRowValues($values);
+        foreach ($rows->schema()->definitions() as $definition) {
+            $columns[$definition->entry()->name()] = $rows->column($definition->entry()->name())->values();
         }
 
-        return $decoded;
-    }
-
-    public function encode(array $batch): array
-    {
         $normalized = [];
 
-        foreach ($batch as $rowValues) {
-            $values = $rowValues->values;
+        for ($i = 0, $count = $rows->count(); $i < $count; $i++) {
             $row = [];
 
-            /** @var mixed $value */
-            foreach ($values as $name => $value) {
-                $row[$name] = $this->renderValue($value);
+            foreach ($columns as $name => $column) {
+                $row[$name] = $this->renderValue($column[$i]);
             }
 
             $normalized[] = $row;

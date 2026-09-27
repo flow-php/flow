@@ -8,7 +8,6 @@ use Flow\Calculator\Calculator;
 use Flow\ETL\Column\Backend;
 use Flow\ETL\Config\Telemetry\TelemetryContext;
 use Flow\ETL\ErrorHandler\ThrowError;
-use Flow\ETL\Row\Hydrator;
 
 /**
  * Mutable Flow execution context.
@@ -44,14 +43,6 @@ final class FlowContext
     public function backend(): Backend
     {
         return $this->config->backend();
-    }
-
-    /**
-     * @return Hydrator
-     */
-    public function hydrator(): Hydrator
-    {
-        return $this->config->hydrator();
     }
 
     public function setErrorHandler(ErrorHandler $handler): self

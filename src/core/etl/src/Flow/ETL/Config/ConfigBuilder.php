@@ -25,7 +25,6 @@ use Flow\ETL\Executor;
 use Flow\ETL\NativePHPRandomValueGenerator;
 use Flow\ETL\Optimizer;
 use Flow\ETL\RandomValueGenerator;
-use Flow\ETL\Row\PhpRowHydrator;
 use Flow\Filesystem\Path;
 use Flow\Floe\FloeSerializer;
 use Flow\Serializer\Serializer;
@@ -108,9 +107,7 @@ final class ConfigBuilder
         $id = $this->id ??= 'flow-php-' . $this->randomValueGenerator->string(32);
         $this->optimizer ??= Optimizer::default();
         $this->executor ??= new Executor();
-        $hydrator = new PhpRowHydrator($this->backend);
-        // the default serializer shares the context hydrator - one source of Row objects
-        $this->serializer ??= new FloeSerializer(hydrator: $hydrator);
+        $this->serializer ??= new FloeSerializer(backend: $this->backend);
 
         $serializer = $this->serializer;
         $optimizer = $this->optimizer;
@@ -127,7 +124,6 @@ final class ConfigBuilder
             $this->getClock(),
             $optimizer,
             $executor,
-            $hydrator,
             $cacheConfig,
             ($this->sort ?? new ExternalSortBuilder())->build($cacheConfig->localFilesystemCacheDir),
             $this->analyze,

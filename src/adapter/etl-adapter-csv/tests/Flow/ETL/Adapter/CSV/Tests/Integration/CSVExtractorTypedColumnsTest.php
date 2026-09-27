@@ -16,7 +16,7 @@ use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\path_real;
 use function usort;
 
-final class CSVHydratorParityTest extends FlowTestCase
+final class CSVExtractorTypedColumnsTest extends FlowTestCase
 {
     public function test_hydrates_typed_columns_with_empty_to_null_and_input_uri(): void
     {

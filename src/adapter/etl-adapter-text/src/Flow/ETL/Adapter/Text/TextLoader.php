@@ -98,7 +98,7 @@ final class TextLoader implements Closure, Discardable, FileLoader, Loader, Part
             foreach ($this->router->route($rows) as [$partitions, $group]) {
                 ($this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode))
                     ->writeTo($partitions->toArray())
-                    ->append(implode('', $this->encoder()->encode($context->hydrator()->dehydrate($group))));
+                    ->append(implode('', $this->encoder()->encode($group)));
             }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);

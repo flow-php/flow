@@ -18,7 +18,9 @@ use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\SchemaInference;
 use Flow\ETL\Schema\Inference\SchemaInferenceBuilder;
@@ -31,6 +33,7 @@ use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Flow\Types\Type\Logical\InstanceOfTypeNarrower;
 use Generator;
 
+use function array_map;
 use function iterator_to_array;
 use function sprintf;
 
@@ -92,7 +95,7 @@ final class JsonLinesExtractor implements
      */
     public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
     {
-        $hydrator = $context->hydrator();
+        $backend = $context->backend();
         $batchSize = $this->batchSize();
         $yielded = 0;
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
@@ -132,11 +135,17 @@ final class JsonLinesExtractor implements
             $constants = $fileColumns->forFile($source, $schema);
 
             foreach ($reader->batches($source, $batchSize) as $rawBatch) {
-                $hydrated = $constants->fillRows($hydrator->hydrate($rawBatch, $body), $schema);
+                $rows = $constants->fillRows(
+                    (new RowsBuilder($body, $backend))
+                        ->appendRows(array_map(static fn(RawRowValues $r): array => $r->values, $rawBatch))
+                        ->finish(),
+                    $schema,
+                    $backend,
+                );
 
-                $yielded += $hydrated->count();
+                $yielded += $rows->count();
 
-                $signal = yield $hydrated;
+                $signal = yield $rows;
 
                 if ($signal === Signal::STOP) {
                     return;

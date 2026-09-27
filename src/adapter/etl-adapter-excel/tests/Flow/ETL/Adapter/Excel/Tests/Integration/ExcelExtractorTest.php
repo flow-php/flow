@@ -19,6 +19,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\Double\KeepPaths;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\Double\UnsizedFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
@@ -30,6 +31,7 @@ use function Flow\ETL\Adapter\Excel\DSL\from_excel;
 use function Flow\ETL\Adapter\Excel\DSL\is_valid_excel_sheet_name;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
@@ -44,6 +46,7 @@ use function Flow\ETL\DSL\string_schema;
 use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_datetime;
+use function iterator_to_array;
 use function max;
 
 final class ExcelExtractorTest extends FlowTestCase
@@ -919,5 +922,19 @@ final class ExcelExtractorTest extends FlowTestCase
         } finally {
             date_default_timezone_set($previous);
         }
+    }
+
+    public function test_extract_builds_through_the_config_backend(): void
+    {
+        $backend = new SpyBackend();
+
+        iterator_to_array(
+            from_excel(__DIR__ . '/../Fixtures/fixture.xlsx')->extract(
+                flow_context(config_builder()->backend($backend)->build()),
+            ),
+            false,
+        );
+
+        static::assertGreaterThanOrEqual(1, $backend->builders());
     }
 }

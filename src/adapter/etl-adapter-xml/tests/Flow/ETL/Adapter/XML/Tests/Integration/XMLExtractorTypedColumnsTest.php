@@ -12,7 +12,7 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_xml;
 
-final class XMLHydratorParityTest extends FlowTestCase
+final class XMLExtractorTypedColumnsTest extends FlowTestCase
 {
     public function test_reads_each_node_into_a_typed_xml_column(): void
     {

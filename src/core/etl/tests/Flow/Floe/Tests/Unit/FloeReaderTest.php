@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Unit;
 
-use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema\Metadata;
 use Flow\Floe\Exception\FloeException;
@@ -652,9 +651,9 @@ final class FloeReaderTest extends TestCase
         $filesystem = memory_filesystem();
         $path = path('memory://custom-codec-long-row.floe');
         $schemaBody = FloeSchemaContext::schemaBody(schema(int_schema('id')));
-        $rowBody = (new PhpFloeEncoder(schema_from_json(
-            $schemaBody,
-        )))->encode((new PhpRowHydrator())->dehydrate(array_to_rows([['id' => 1]], schema(int_schema('id')))))[0];
+        $rowBody = (new PhpFloeEncoder(schema_from_json($schemaBody)))->encode(array_to_rows([[
+            'id' => 1,
+        ]], schema(int_schema('id'))))[0];
         $footerJson = FooterMother::footer(schema: schema(int_schema('id'))->normalize())->toJson();
         $stream = $filesystem->writeTo($path);
         $stream->append(
@@ -700,9 +699,9 @@ final class FloeReaderTest extends TestCase
         $filesystem = memory_filesystem();
         $path = path('memory://long-row.floe');
         $schemaBody = FloeSchemaContext::schemaBody(schema(int_schema('id')));
-        $rowBody = (new PhpFloeEncoder(schema_from_json(
-            $schemaBody,
-        )))->encode((new PhpRowHydrator())->dehydrate(array_to_rows([['id' => 1]], schema(int_schema('id')))))[0];
+        $rowBody = (new PhpFloeEncoder(schema_from_json($schemaBody)))->encode(array_to_rows([[
+            'id' => 1,
+        ]], schema(int_schema('id'))))[0];
         $footerJson = FooterMother::footer(schema: schema(int_schema('id'))->normalize())->toJson();
         $stream = $filesystem->writeTo($path);
         $stream->append(

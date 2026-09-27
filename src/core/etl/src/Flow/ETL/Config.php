@@ -15,7 +15,6 @@ use Flow\ETL\Config\Repartition\HashRepartitionConfig;
 use Flow\ETL\Config\Sort\ExternalSortConfig;
 use Flow\ETL\Config\Sort\MemorySortConfig;
 use Flow\ETL\Config\Telemetry\TelemetryConfig;
-use Flow\ETL\Row\Hydrator;
 use Flow\Serializer\Serializer;
 use Psr\Clock\ClockInterface;
 
@@ -27,9 +26,6 @@ final readonly class Config
 {
     private Planner $planner;
 
-    /**
-     * @param Hydrator $hydrator
-     */
     public function __construct(
         private string $id,
         private string $name,
@@ -38,7 +34,6 @@ final readonly class Config
         private ClockInterface $clock,
         private Optimizer $optimizer,
         private Executor $executor,
-        private Hydrator $hydrator,
         public CacheConfig $cache,
         public MemorySortConfig|ExternalSortConfig $sort,
         private ?Analyze $analyze,
@@ -86,14 +81,6 @@ final readonly class Config
     public function executor(): Executor
     {
         return $this->executor;
-    }
-
-    /**
-     * @return Hydrator
-     */
-    public function hydrator(): Hydrator
-    {
-        return $this->hydrator;
     }
 
     public function id(): string

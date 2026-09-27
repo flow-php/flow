@@ -11,8 +11,7 @@ use DateTimeZone;
 use Dom\XMLDocument;
 use DOMDocument;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Encoder;
-use Flow\ETL\Row\RawRowValues;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateTimeType;
 use Flow\Types\Type\Logical\DateType;
@@ -28,80 +27,48 @@ use Flow\Types\Type\Native\ArrayType;
 use Flow\Types\Type\Native\EnumType;
 use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid;
-use Stringable;
 use UnitEnum;
 
-use function array_map;
 use function array_values;
-use function count;
 use function is_array;
 use function is_scalar;
 use function json_encode;
-use function str_pad;
 
 use const JSON_THROW_ON_ERROR;
 
-/**
- * @implements Encoder<array<int, mixed>>
- */
-final class ExcelEncoder implements Encoder
+final class ExcelEncoder
 {
-    /**
-     * @var null|list<string>
-     */
-    private ?array $headers = null;
-
     public function __construct(
-        private readonly bool $withHeader = true,
-        private readonly bool $convertEmptyToNull = true,
         private readonly string $timeFormat = '%H:%I:%S',
     ) {}
 
-    public function decode(array $batch): array
+    /**
+     * @return list<array<int, bool|DateTimeInterface|float|int|string|null>>
+     */
+    public function encode(Rows $rows): array
     {
-        $decoded = [];
+        $columns = [];
+        $types = [];
 
-        foreach ($batch as $cells) {
-            if ($this->headers === null) {
-                if ($this->withHeader) {
-                    $this->headers = $this->mapHeaders($cells);
-
-                    continue;
-                }
-
-                $this->headers = $this->generateAutoHeaders(count($cells));
-            }
-
-            $values = [];
-
-            foreach ($this->headers as $index => $name) {
-                // @mago-ignore analysis:mixed-assignment
-                $cell = $cells[$index] ?? null;
-                $values[$name] = $this->convertEmptyToNull && '' === $cell ? null : $cell;
-            }
-
-            $decoded[] = new RawRowValues($values);
+        foreach ($rows->schema()->definitions() as $definition) {
+            $name = $definition->entry()->name();
+            $columns[$name] = $rows->column($name)->values();
+            $types[$name] = $definition->type();
         }
 
-        return $decoded;
-    }
+        $encoded = [];
 
-    public function encode(array $batch): array
-    {
-        $rows = [];
-
-        foreach ($batch as $rowValues) {
+        for ($i = 0, $count = $rows->count(); $i < $count; $i++) {
             $cells = [];
 
-            /** @var mixed $value */
-            foreach ($rowValues->values as $name => $value) {
-                $cells[] = $this->renderValue($rowValues->types[$name], $value);
+            foreach ($columns as $name => $column) {
+                $cells[] = $this->renderValue($types[$name], $column[$i]);
             }
 
-            $rows[] = $cells;
+            $encoded[] = $cells;
         }
 
-        return $rows;
+        return $encoded;
     }
 
     /**
@@ -112,42 +79,6 @@ final class ExcelEncoder implements Encoder
     public function encodeHeader(array $headers): array
     {
         return array_values($headers);
-    }
-
-    /**
-     * The names decode() resolved from the first row it saw; null before the first decode().
-     *
-     * @return null|list<string>
-     */
-    public function headers(): ?array
-    {
-        return $this->headers;
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function generateAutoHeaders(int $count): array
-    {
-        $headers = [];
-
-        for ($i = 0; $i < $count; $i++) {
-            $headers[] = 'e' . str_pad((string) $i, 2, '0', STR_PAD_LEFT);
-        }
-
-        return $headers;
-    }
-
-    /**
-     * @param array<int, mixed> $cells
-     *
-     * @return list<string>
-     */
-    private function mapHeaders(array $cells): array
-    {
-        return array_values(array_map(static fn(mixed $header): string => is_scalar($header)
-            ? (string) $header
-            : '', $cells));
     }
 
     private function renderValue(Type $type, mixed $value): bool|DateTimeInterface|float|int|string|null
@@ -183,7 +114,6 @@ final class ExcelEncoder implements Encoder
     {
         return match (true) {
             is_scalar($value) => $value,
-            $value instanceof Stringable => (string) $value,
             default => null,
         };
     }

@@ -536,12 +536,12 @@ document written by 0.45.x that has a structure column. Clear APCu and natively 
 
 ### 53) `flow-php/etl` - the column backend replaces the adaptive hydrator
 
-| Before                                                                             | After                                                               |
-|------------------------------------------------------------------------------------|---------------------------------------------------------------------|
-| `AdaptiveRowHydrator`, `NativeRowHydrator`                                         | removed - `PhpRowHydrator(Backend $backend = new DefaultBackend())` |
-| `array_to_row(..., Hydrator $hydrator)` / `array_to_rows(..., Hydrator $hydrator)` | `Backend $backend`                                                  |
-| `ConfigBuilder::hydrator(Hydrator)`                                                | removed - `ConfigBuilder::backend(Backend)`                         |
-| -                                                                                  | `Config::backend()`, `FlowContext::backend()`                       |
+| Before                                                                             | After                                         |
+|------------------------------------------------------------------------------------|-----------------------------------------------|
+| `AdaptiveRowHydrator`, `NativeRowHydrator`                                         | removed                                       |
+| `array_to_row(..., Hydrator $hydrator)` / `array_to_rows(..., Hydrator $hydrator)` | `Backend $backend`                            |
+| `ConfigBuilder::hydrator(Hydrator)`                                                | removed - `ConfigBuilder::backend(Backend)`   |
+| -                                                                                  | `Config::backend()`, `FlowContext::backend()` |
 
 ### 54) `flow-php/etl` - `FloeEngine` and `NativeFloeEncoder` removed
 
@@ -552,16 +552,16 @@ document written by 0.45.x that has a structure column. Clear APCu and natively 
 
 ### 55) `flow-php/etl` - engine classes follow the batch
 
-| Before                                                                                         | After                                                                            |
-|------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
-| `Schema::zonedDefinitions()`, `ZoneAlignment`, `HydratedBatch`, `RowRenaming`, `DomValueCodec` | removed                                                                          |
-| `GroupBy::aggregatedRow(): Row`                                                                | `GroupBy::aggregatedValues(): array`                                             |
-| `RowMerger::merge(): Row`                                                                      | `RowMerger::merge(): array`                                                      |
-| `DerivedColumns::rows(Schema, Schema, list<Row>)`                                              | `DerivedColumns::rows(Rows, Schema, Schema, string, Column)`                     |
-| `UnpackedColumns::values(array, string, Schema, array)`                                        | `UnpackedColumns::values(string, Schema, array)`                                 |
-| `InferredBatch::of(list<RawRowValues>)`                                                        | `InferredBatch::of(list<array>)`                                                 |
-| `InferredRows::of(..., Hydrator)`                                                              | `InferredRows::of(..., Backend)`                                                 |
-| `FileConstants::fillRows(Rows, Schema)`                                                        | `FileConstants::fillRows(Rows, Schema, Backend $backend = new DefaultBackend())` |
+| Before                                                                                         | After                                                        |
+|------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
+| `Schema::zonedDefinitions()`, `ZoneAlignment`, `HydratedBatch`, `RowRenaming`, `DomValueCodec` | removed                                                      |
+| `GroupBy::aggregatedRow(): Row`                                                                | `GroupBy::aggregatedValues(): array`                         |
+| `RowMerger::merge(): Row`                                                                      | `RowMerger::merge(): array`                                  |
+| `DerivedColumns::rows(Schema, Schema, list<Row>)`                                              | `DerivedColumns::rows(Rows, Schema, Schema, string, Column)` |
+| `UnpackedColumns::values(array, string, Schema, array)`                                        | `UnpackedColumns::values(string, Schema, array)`             |
+| `InferredBatch::of(list<RawRowValues>)`                                                        | `InferredBatch::of(list<array>)`                             |
+| `InferredRows::of(..., Hydrator)`                                                              | `InferredRows::of(..., Backend)`                             |
+| `FileConstants::fillRows(Rows, Schema)`                                                        | `FileConstants::fillRows(Rows, Schema, Backend $backend)`    |
 
 ### 56) `flow-php/etl-adapter-json` - untyped JSON Schema arrays and objects become `json`
 
@@ -598,6 +598,72 @@ different instant; it now stays a `datetime` unless it is cast to a date explici
 |---------------------------------------------------|--------------------|
 | `new Comparator(StructureComparison $structures)` | `new Comparator()` |
 
+
+### 60) `flow-php/etl` - the row-shaped reader/writer API is removed
+
+| Before                                                        | After                                                                                                 |
+|---------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
+| `Hydrator`, `PhpRowHydrator`, `TypedRowValues`, `Row\Encoder` | removed - readers build with `RowsBuilder`, encoders take `encode(Rows)`                              |
+| `Row\RowsBuffer(Schema, int $size, ?Closure $batch)`          | `Rows\RowsBuffer(Schema, Backend, int $size)` - `append()`, `appendFrom()`, `appendTake()`, `flush()` |
+| `Config::hydrator()`, `FlowContext::hydrator()`               | removed - `Config::backend()`, `FlowContext::backend()`                                               |
+
+### 61) `flow-php/etl` - Floe takes a `Backend`
+
+| Before                                                                                    | After                                                                 |
+|-------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
+| `?Hydrator $hydrator` on `FloeReader`, `FloeStreamReader`, `FloeSerializer`, `FloeMerger` | `Backend $backend = new DefaultBackend()`                             |
+| `?Hydrator $hydrator` on `FloeWriter`, `FloeStreamWriter`                                 | removed                                                               |
+| `new PhpFloeEncoder(Schema)`                                                              | `new PhpFloeEncoder(Schema, Backend $backend = new DefaultBackend())` |
+| `FloeEncoder::decodeRows(array, Schema, Hydrator)`, `encodeFrames(Rows, Hydrator)`        | `decodeRows(array, Schema)`, `encodeFrames(Rows)`                     |
+| `PhpFloeEncoder::encode(list<TypedRowValues>)`                                            | `PhpFloeEncoder::encode(Rows)`                                        |
+| `FloeMerger(Filesystem, ?Hydrator, Codec)`                                                | `FloeMerger(Filesystem, Backend, Codec)`                              |
+
+### 62) adapters - encoders split into decoders and encoders
+
+| Before                                                                                                                               | After                                                                                                          |
+|--------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
+| `CSVEncoder::decode()`, `CSVEncoder::headers()`                                                                                      | `CSVDecoder::decode()`, `CSVDecoder::headers()`                                                                |
+| `new CSVEncoder(withHeader:, emptyToNull:, ...)`                                                                                     | `new CSVDecoder(withHeader:, emptyToNull:, ...)` - `CSVEncoder` keeps only the write options                   |
+| `PhpCSVOpenSource(..., CSVEncoder $encoder, ...)`                                                                                    | `PhpCSVOpenSource(..., CSVDecoder $decoder, ...)`                                                              |
+| `TextEncoder::decode()`                                                                                                              | removed - `TextExtractor` builds `['text' => $line]` rows itself                                               |
+| `XMLEncoder::decode()`                                                                                                               | removed - `XMLReaderExtractor` builds `['node' => $xml]` rows itself                                           |
+| `ExcelEncoder(withHeader:, convertEmptyToNull:, timeFormat:)`, `decode()`, `headers()`                                               | `ExcelDecoder(withHeader:, convertEmptyToNull:)` with `decode()`, `headers()`; `ExcelEncoder(timeFormat:)`     |
+| `OpenSheet::$encoder` (`ExcelEncoder`)                                                                                               | `OpenSheet::$decoder` (`ExcelDecoder`)                                                                         |
+| `GoogleSheetEncoder`                                                                                                                 | `GoogleSheetDecoder` - its throwing `encode()` is removed                                                      |
+| `GoogleSheetReadOptions::encoder(): GoogleSheetEncoder`                                                                              | `GoogleSheetReadOptions::decoder(): GoogleSheetDecoder`                                                        |
+| `HttpEncoder`                                                                                                                        | `HttpDecoder` - `decode()` returns `list<array>`, its throwing `encode()` is removed, `structuredBody()` stays |
+| `JSONEncoder::decode()`, `DbalEncoder::decode()`, `PostgreSqlEncoder::decode()`, `SealEncoder::decode()`, `ParquetEncoder::decode()` | removed                                                                                                        |
+| `*Encoder::encode(list<TypedRowValues>)`                                                                                             | `*Encoder::encode(Rows)`; no encoder implements `Row\Encoder`                                                  |
+| `CSVLoader::write(Rows, array, FlowContext, array)`                                                                                  | `CSVLoader::write(Rows, array $headers, array $partitions)`                                                    |
+| `JsonLoader::write(Rows, array, FlowContext)`, `JsonLinesLoader::write(...)`, `XMLLoader::write(...)`                                | `write(Rows, array $partitions)`                                                                               |
+| `XMLEncoder` refusing a structure value with more values than elements                                                               | removed - a structure cast drops undeclared keys, so the case cannot occur                                     |
+| `CSVOpenSource` implementations                                                                                                      | must implement `headers(): list<string>` - the header `records()` resolved                                     |
+
+### 63) `flow-php/parquet` - `readColumns()` replaces `readValues()`
+
+| Before                                                                                                          | After                                                                                                                                         |
+|-----------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
+| `ParquetEngine::readValues(SourceStream, Schema, array $columns = [], ?int $limit = null, ?int $offset = null)` | `ParquetEngine::readColumns(SourceStream, Schema, list<string> $columns, int $batchSize, ?int $limit, ?int $offset)` - chunks keyed by column |
+| -                                                                                                               | `ParquetFile::columns(int $batchSize, array $columns = [], ?int $limit = null, ?int $offset = null)`                                          |
+| `ParquetFile::values(offset: -1)` without a limit - read from row 0                                             | `InvalidArgumentException`                                                                                                                    |
+
+### 64) `flow-php/etl-adapter-parquet`, `flow-php/etl` - self-describing formats take no schema
+
+| Before                                                                  | After                                                      |
+|-------------------------------------------------------------------------|------------------------------------------------------------|
+| `from_parquet(...)->withSchema(...)`, `from_floe(...)->withSchema(...)` | `InvalidArgumentException` - the file footer is the schema |
+| `InferredSchemaException::filesDiverge` suggesting `->withSchema(...)`  | suggests only `->unionByName()`                            |
+| `ValueConverter::decode()`                                              | removed - values are cast by the batch builder             |
+
+Project with `from_parquet(..., columns: [...])`. Change a type after reading, e.g. a JSON column another tool wrote as
+`string`: `->withEntry('payload', ref('payload')->cast(type_json()))`. Re-zone a datetime after reading:
+`->withEntry('at', to_timezone(ref('at'), 'Europe/Warsaw'))`.
+
+### 65) `flow-php/etl` - `RowPartitions` reads a batch
+
+| Before                                        | After                                       |
+|-----------------------------------------------|---------------------------------------------|
+| `RowPartitions::of(Row $row, Schema $schema)` | `RowPartitions::of(Rows $rows, int $index)` |
 ---
 
 ## Upgrading from 0.43.x to 0.44.x

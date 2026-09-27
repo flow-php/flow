@@ -15,7 +15,6 @@ use Flow\ETL\Executor;
 use Flow\ETL\Optimizer;
 use Flow\ETL\Optimizer\Rule\PushLimitIntoSource;
 use Flow\ETL\Planner;
-use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Tests\Double\SpySerializer;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Override;
@@ -145,11 +144,6 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
 
         static::assertInstanceOf(ExternalSortConfig::class, $config->sort);
         static::assertInstanceOf(FilesystemBuckets::class, $config->sort->bucketing->storage);
-    }
-
-    public function test_default_hydrator_is_the_php_hydrator(): void
-    {
-        static::assertInstanceOf(PhpRowHydrator::class, config_builder()->build()->hydrator());
     }
 
     public function test_default_sorting_algorithm_is_external_sort(): void

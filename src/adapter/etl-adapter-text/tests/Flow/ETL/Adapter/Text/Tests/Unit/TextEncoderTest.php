@@ -6,35 +6,23 @@ namespace Flow\ETL\Adapter\Text\Tests\Unit;
 
 use Flow\ETL\Adapter\Text\TextEncoder;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\RawRowValues;
-use Flow\ETL\Row\TypedRowValues;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function array_map;
-use function Flow\Types\DSL\type_integer;
-use function Flow\Types\DSL\type_string;
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class TextEncoderTest extends FlowTestCase
 {
-    public function test_decode_trims_trailing_new_lines_into_a_single_text_column(): void
-    {
-        static::assertSame(
-            [['text' => 'first'], ['text' => 'second']],
-            array_map(
-                static fn(RawRowValues $rowValues): array => $rowValues->values,
-                (new TextEncoder())->decode(["first\n", "second\r\n"]),
-            ),
-        );
-    }
-
     public function test_encode_appends_the_new_line_separator_to_the_single_value(): void
     {
         static::assertSame(
             ["first\n", "second\n"],
-            (new TextEncoder("\n"))->encode([
-                new TypedRowValues(['text' => 'first'], ['text' => type_string()]),
-                new TypedRowValues(['text' => 'second'], ['text' => type_string()]),
-            ]),
+            (new TextEncoder("\n"))->encode(array_to_rows([
+                ['text' => 'first'],
+                ['text' => 'second'],
+            ], schema(str_schema('text')))),
         );
     }
 
@@ -42,7 +30,9 @@ final class TextEncoderTest extends FlowTestCase
     {
         static::assertSame(
             ["\n"],
-            (new TextEncoder("\n"))->encode([new TypedRowValues(['text' => null], ['text' => type_string()])]),
+            (new TextEncoder("\n"))->encode(array_to_rows([[
+                'text' => null,
+            ]], schema(str_schema('text', nullable: true)))),
         );
     }
 
@@ -51,8 +41,14 @@ final class TextEncoderTest extends FlowTestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Text data loader supports only a single entry rows, and you have 2 rows.');
 
-        (new TextEncoder())->encode([
-            new TypedRowValues(['a' => 1, 'b' => 2], ['a' => type_integer(), 'b' => type_integer()]),
-        ]);
+        (new TextEncoder())->encode(array_to_rows([['a' => 1, 'b' => 2]], schema(int_schema('a'), int_schema('b'))));
+    }
+
+    public function test_encode_of_an_empty_batch_with_more_than_one_column_returns_no_lines(): void
+    {
+        static::assertSame(
+            [],
+            (new TextEncoder())->encode(array_to_rows([], schema(int_schema('a'), int_schema('b')))),
+        );
     }
 }

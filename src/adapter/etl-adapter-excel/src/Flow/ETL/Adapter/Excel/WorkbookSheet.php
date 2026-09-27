@@ -45,12 +45,12 @@ final class WorkbookSheet
             $row = $sheet->cells->current();
 
             if ($row !== null) {
-                $this->buffered = $sheet->encoder->decode([$row]);
+                $this->buffered = $sheet->decoder->decode([$row]);
                 $sheet->cells->next();
             }
         }
 
-        return $sheet->encoder->headers() ?? [];
+        return $sheet->decoder->headers() ?? [];
     }
 
     /**
@@ -74,7 +74,7 @@ final class WorkbookSheet
             // buffered, so rows() neither repeats nor skips a row
             $sheet->cells->next();
 
-            foreach ($sheet->encoder->decode([$row]) as $rowValues) {
+            foreach ($sheet->decoder->decode([$row]) as $rowValues) {
                 $this->buffered[] = $rowValues;
 
                 yield $rowValues;
@@ -101,7 +101,7 @@ final class WorkbookSheet
             $this->buffered = [];
 
             while (($row = $sheet->cells->current()) !== null) {
-                foreach ($sheet->encoder->decode([$row]) as $rowValues) {
+                foreach ($sheet->decoder->decode([$row]) as $rowValues) {
                     yield $rowValues;
                 }
 

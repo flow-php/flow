@@ -10,11 +10,13 @@ use Flow\ETL\Cardinality;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Double\CountingFilesystem;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\Double\UnsizedFilesystem;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 use function array_keys;
 use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\schema;
@@ -24,6 +26,7 @@ use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_string;
+use function iterator_to_array;
 
 final class XMLReaderExtractorTest extends FlowIntegrationTestCase
 {
@@ -229,5 +232,16 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
         $extractor->statistics();
 
         static::assertSame(1, $filesystem->listCalls);
+    }
+
+    public function test_extract_builds_through_the_config_backend(): void
+    {
+        $backend = new SpyBackend();
+        // @mago-ignore analysis:deprecated-class
+        $extractor = new XMLReaderExtractor(path_real(__DIR__ . '/../Fixtures/one_line_items.xml'), 'root/item');
+
+        iterator_to_array($extractor->extract(flow_context(config_builder()->backend($backend)->build())), false);
+
+        static::assertGreaterThanOrEqual(1, $backend->builders());
     }
 }

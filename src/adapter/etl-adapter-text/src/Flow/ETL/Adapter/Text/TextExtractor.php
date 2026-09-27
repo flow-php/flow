@@ -17,6 +17,7 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
@@ -28,6 +29,7 @@ use Generator;
 use function count;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function rtrim;
 use function sprintf;
 
 final class TextExtractor implements
@@ -73,10 +75,9 @@ final class TextExtractor implements
      */
     public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
     {
-        $hydrator = $context->hydrator();
+        $backend = $context->backend();
         $batchSize = $this->batchSize();
         $yielded = 0;
-        $encoder = new TextEncoder();
 
         $baseSchema = $this->schema ?? schema(str_schema('text'));
 
@@ -93,19 +94,22 @@ final class TextExtractor implements
                 $rawLines = [];
 
                 foreach ($stream->readLines() as $line) {
-                    $rawLines[] = $line;
+                    $rawLines[] = ['text' => rtrim($line)];
 
                     if (count($rawLines) >= $batchSize) {
-                        $hydrated = $constants->fillRows(
-                            $hydrator->hydrate($encoder->decode($rawLines), $body),
+                        $rows = $constants->fillRows(
+                            (new RowsBuilder($body, $backend))
+                                ->appendRows($rawLines)
+                                ->finish(),
                             $schema,
+                            $backend,
                         );
 
                         $rawLines = [];
 
-                        $yielded += $hydrated->count();
+                        $yielded += $rows->count();
 
-                        $signal = yield $hydrated;
+                        $signal = yield $rows;
 
                         if ($signal === Signal::STOP) {
                             return;
@@ -118,11 +122,17 @@ final class TextExtractor implements
                 }
 
                 if ($rawLines !== []) {
-                    $hydrated = $constants->fillRows($hydrator->hydrate($encoder->decode($rawLines), $body), $schema);
+                    $rows = $constants->fillRows(
+                        (new RowsBuilder($body, $backend))
+                            ->appendRows($rawLines)
+                            ->finish(),
+                        $schema,
+                        $backend,
+                    );
 
-                    $yielded += $hydrated->count();
+                    $yielded += $rows->count();
 
-                    $signal = yield $hydrated;
+                    $signal = yield $rows;
 
                     if ($signal === Signal::STOP) {
                         return;

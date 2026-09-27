@@ -5,59 +5,40 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\PostgreSql\Tests\Unit;
 
 use Flow\ETL\Adapter\PostgreSql\PostgreSqlEncoder;
-use Flow\ETL\Row\RawRowValues;
-use Flow\ETL\Row\TypedRowValues;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\Types\DSL\type_boolean;
-use function Flow\Types\DSL\type_integer;
-use function Flow\Types\DSL\type_string;
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class PostgreSqlEncoderTest extends FlowTestCase
 {
-    public function test_decode_wraps_each_value_map_in_row_values(): void
+    public function test_encode_returns_each_row_as_its_value_map(): void
     {
-        $decoded = (new PostgreSqlEncoder())->decode([
-            ['id' => 1, 'name' => 'Norbert'],
-            ['id' => 2, 'name' => null],
-        ]);
-
-        static::assertEquals(
-            [new RawRowValues(['id' => 1, 'name' => 'Norbert']), new RawRowValues(['id' => 2, 'name' => null])],
-            $decoded,
+        static::assertSame(
+            [['id' => 1, 'name' => 'Norbert'], ['id' => 2, 'name' => null]],
+            (new PostgreSqlEncoder())->encode(array_to_rows(
+                [['id' => 1, 'name' => 'Norbert'], ['id' => 2, 'name' => null]],
+                schema(int_schema('id'), str_schema('name', nullable: true)),
+            )),
         );
-    }
-
-    public function test_encode_unwraps_each_typed_row_values_to_its_value_map(): void
-    {
-        $types = ['id' => type_integer(), 'name' => type_string()];
-
-        $encoded = (new PostgreSqlEncoder())->encode([
-            new TypedRowValues(['id' => 1, 'name' => 'Norbert'], $types),
-            new TypedRowValues(['id' => 2, 'name' => null], $types),
-        ]);
-
-        static::assertSame([['id' => 1, 'name' => 'Norbert'], ['id' => 2, 'name' => null]], $encoded);
     }
 
     public function test_encode_returns_the_original_value_maps(): void
     {
-        $types = ['id' => type_integer(), 'active' => type_boolean()];
-
         static::assertSame(
             [['id' => 1, 'active' => true], ['id' => 2, 'active' => false]],
-            (new PostgreSqlEncoder())->encode([
-                new TypedRowValues(['id' => 1, 'active' => true], $types),
-                new TypedRowValues(['id' => 2, 'active' => false], $types),
-            ]),
+            (new PostgreSqlEncoder())->encode(array_to_rows(
+                [['id' => 1, 'active' => true], ['id' => 2, 'active' => false]],
+                schema(int_schema('id'), bool_schema('active')),
+            )),
         );
     }
 
-    public function test_encode_and_decode_of_an_empty_batch_return_empty(): void
+    public function test_encode_of_an_empty_batch_returns_empty(): void
     {
-        $encoder = new PostgreSqlEncoder();
-
-        static::assertSame([], $encoder->decode([]));
-        static::assertSame([], $encoder->encode([]));
+        static::assertSame([], (new PostgreSqlEncoder())->encode(array_to_rows([], schema(int_schema('id')))));
     }
 }

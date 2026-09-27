@@ -20,16 +20,18 @@ interface ParquetEngine
     ): ParquetFileWriter;
 
     /**
-     * @param array<string> $columns
+     * @param list<string> $columns resolved names, never empty
+     * @param int<1, max> $batchSize upper bound of rows per chunk
      *
-     * @return \Generator<int, array<array-key, mixed>>
+     * @return Generator<int, array<string, list<mixed>>> chunks keyed by column, every list the same length (>0)
      */
-    public function readValues(
+    public function readColumns(
         SourceStream $stream,
         Schema $schema,
-        array $columns = [],
-        ?int $limit = null,
-        ?int $offset = null,
+        array $columns,
+        int $batchSize,
+        ?int $limit,
+        ?int $offset,
     ): Generator;
 
     /**

@@ -99,7 +99,7 @@ final class JsonLinesLoader implements Closure, Discardable, FileLoader, Loader,
 
         try {
             foreach ($this->router->route($rows) as [$partitions, $group]) {
-                $this->write($group, $partitions->toArray(), $context);
+                $this->write($group, $partitions->toArray());
             }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
@@ -141,13 +141,13 @@ final class JsonLinesLoader implements Closure, Discardable, FileLoader, Loader,
     /**
      * @param array<Partition> $partitions
      */
-    public function write(Rows $nextRows, array $partitions, FlowContext $context): void
+    public function write(Rows $nextRows, array $partitions): void
     {
         $stream = ($this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode))->writeTo(
             $partitions,
         );
 
-        foreach ($this->encoder()->encode($context->hydrator()->dehydrate($nextRows)) as $normalizedRow) {
+        foreach ($this->encoder()->encode($nextRows) as $normalizedRow) {
             try {
                 $json = json_encode($normalizedRow, $this->flags);
 

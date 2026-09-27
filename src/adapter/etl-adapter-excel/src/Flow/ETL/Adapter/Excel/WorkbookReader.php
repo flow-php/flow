@@ -41,7 +41,7 @@ final readonly class WorkbookReader
         return new OpenSheet(
             $reader,
             (new SheetCells($sheet, $this->options->withHeader, $this->options->offset))->rows(),
-            new ExcelEncoder(
+            new ExcelDecoder(
                 withHeader: $this->options->withHeader,
                 convertEmptyToNull: $this->options->convertEmptyToNull,
             ),

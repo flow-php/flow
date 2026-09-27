@@ -25,11 +25,11 @@ final readonly class GoogleSheetReadOptions
     ) {}
 
     /**
-     * A fresh encoder per pass - the sample and the read each consume their own header row.
+     * A fresh decoder per pass - the sample and the read each consume their own header row.
      */
-    public function encoder(): GoogleSheetEncoder
+    public function decoder(): GoogleSheetDecoder
     {
-        return new GoogleSheetEncoder($this->withHeader, $this->dropExtraColumns, $this->emptyToNull);
+        return new GoogleSheetDecoder($this->withHeader, $this->dropExtraColumns, $this->emptyToNull);
     }
 
     /**

@@ -127,7 +127,7 @@ final class XMLLoader implements Closure, Discardable, FileLoader, Loader, Parti
 
         try {
             foreach ($this->router->route($rows) as [$partitions, $group]) {
-                $this->write($group, $partitions->toArray(), $context);
+                $this->write($group, $partitions->toArray());
             }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
@@ -221,7 +221,7 @@ final class XMLLoader implements Closure, Discardable, FileLoader, Loader, Parti
     /**
      * @param array<Partition> $partitions
      */
-    public function write(Rows $nextRows, array $partitions, FlowContext $context): void
+    public function write(Rows $nextRows, array $partitions): void
     {
         $files = $this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode);
         $opening = !$files->touched($partitions);
@@ -237,7 +237,7 @@ final class XMLLoader implements Closure, Discardable, FileLoader, Loader, Parti
             $stream->append('<?xml ' . trim($attributes) . "?>\n<" . $this->rootElementName . ">\n");
         }
 
-        foreach ($this->encoder()->encode($context->hydrator()->dehydrate($nextRows)) as $node) {
+        foreach ($this->encoder()->encode($nextRows) as $node) {
             $stream->append($node . "\n");
         }
     }

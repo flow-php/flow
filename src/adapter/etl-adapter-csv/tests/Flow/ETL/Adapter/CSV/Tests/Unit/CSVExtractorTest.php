@@ -9,6 +9,7 @@ use Flow\ETL\Adapter\CSV\CSVExtractor;
 use Flow\ETL\Adapter\CSV\Tests\Context\CSVFixtureContext;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Tests\Double\CountingFilesystem;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Generator;
@@ -16,6 +17,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 use function abs;
 use function Flow\ETL\Adapter\CSV\from_csv;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\infer_schema;
 use function Flow\ETL\DSL\int_schema;
@@ -81,6 +83,17 @@ final class CSVExtractorTest extends FlowTestCase
 
         static::assertEquals(Cardinality::exact(0), $extractor->statistics()->rows);
         static::assertEquals(Cardinality::exact(8), $extractor->statistics()->size);
+    }
+
+    public function test_a_header_only_file_is_opened_once_by_extract(): void
+    {
+        $filesystem = new CountingFilesystem(new NativeLocalFilesystem());
+        $extractor = from_csv(CSVFixtureContext::path('header_only.csv'), filesystem: $filesystem);
+        $extractor->schema();
+        $opened = $filesystem->readFromCalls;
+
+        static::assertSame([], iterator_to_array($extractor->extract(flow_context()), false));
+        static::assertSame($opened + 1, $filesystem->readFromCalls);
     }
 
     public function test_a_member_without_a_size_makes_both_facts_unknown(): void
@@ -180,5 +193,18 @@ final class CSVExtractorTest extends FlowTestCase
         $extractor->statistics();
 
         static::assertSame(1, $filesystem->listCalls);
+    }
+
+    public function test_extract_builds_through_the_config_backend(): void
+    {
+        $backend = new SpyBackend();
+
+        iterator_to_array(
+            from_csv(CSVFixtureContext::path('five_rows.csv'))
+                ->extract(flow_context(config_builder()->backend($backend)->build())),
+            false,
+        );
+
+        static::assertGreaterThanOrEqual(1, $backend->builders());
     }
 }

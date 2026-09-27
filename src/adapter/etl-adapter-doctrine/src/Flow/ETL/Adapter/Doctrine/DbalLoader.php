@@ -85,10 +85,7 @@ final class DbalLoader implements Loader
             $this->bulk()->{$this->operation}(
                 $this->connection(),
                 $this->tableName,
-                new BulkData(
-                    $this->encoder()->encode($context->hydrator()->dehydrate($rows)),
-                    $this->typesMap()->flowSchemaTypes($rows->schema()),
-                ),
+                new BulkData($this->encoder()->encode($rows), $this->typesMap()->flowSchemaTypes($rows->schema())),
                 $this->operationOptions,
             );
 

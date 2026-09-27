@@ -47,10 +47,8 @@ final class SealLoader implements Loader
         try {
             $this->engine->bulk(
                 $this->index,
-                $this->operation === Operation::UPSERT
-                    ? $this->encoder()->encode($context->hydrator()->dehydrate($rows))
-                    : [],
-                $this->operation === Operation::DELETE ? $this->deleteIdentifiers($rows, $context) : [],
+                $this->operation === Operation::UPSERT ? $this->encoder()->encode($rows) : [],
+                $this->operation === Operation::DELETE ? $this->deleteIdentifiers($rows) : [],
                 $this->bulkSize,
             );
 
@@ -98,9 +96,9 @@ final class SealLoader implements Loader
     /**
      * @return Generator<int, string>
      */
-    private function deleteIdentifiers(Rows $rows, FlowContext $context): Generator
+    private function deleteIdentifiers(Rows $rows): Generator
     {
-        foreach ($this->encoder()->encode($context->hydrator()->dehydrate($rows)) as $document) {
+        foreach ($this->encoder()->encode($rows) as $document) {
             // @mago-ignore analysis:mixed-assignment
             $identifier = array_key_exists($this->identifierEntry, $document)
                 ? $document[$this->identifierEntry]

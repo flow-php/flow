@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\GoogleSheet;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Encoder;
 use Flow\ETL\Row\RawRowValues;
 
 use function array_combine;
@@ -16,10 +14,7 @@ use function array_slice;
 use function count;
 use function str_pad;
 
-/**
- * @implements Encoder<array<array-key, mixed>>
- */
-final class GoogleSheetEncoder implements Encoder
+final class GoogleSheetDecoder
 {
     /**
      * @var list<string>
@@ -34,6 +29,11 @@ final class GoogleSheetEncoder implements Encoder
         private readonly bool $emptyToNull = true,
     ) {}
 
+    /**
+     * @param list<array<array-key, mixed>> $batch
+     *
+     * @return list<RawRowValues>
+     */
     public function decode(array $batch): array
     {
         $maps = [];
@@ -91,13 +91,6 @@ final class GoogleSheetEncoder implements Encoder
         }
 
         return $maps;
-    }
-
-    public function encode(array $batch): array
-    {
-        throw new RuntimeException(
-            'Google Sheet adapter is read-only, encoding rows back to sheet values is not supported',
-        );
     }
 
     /**

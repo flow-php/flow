@@ -132,9 +132,7 @@ final class ParquetLoader implements Closure, Discardable, FileLoader, Loader, P
                 );
 
                 ($this->writers[$stream->path()->uri()] ??=
-                    $this->openWriter($stream))->writeBatch($this->encoder()->encode(
-                    $context->hydrator()->dehydrate($group),
-                ));
+                    $this->openWriter($stream))->writeBatch($this->encoder()->encode($group));
             }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);

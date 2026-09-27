@@ -16,6 +16,7 @@ use Flow\ETL\Schema\Definition\StringDefinition;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Context\MemoryFiles;
 use Flow\ETL\Tests\Double\CountingFilesystem;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Generator;
@@ -26,6 +27,7 @@ use function array_keys;
 use function array_sum;
 use function Flow\ETL\Adapter\JSON\from_json;
 use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
@@ -686,5 +688,19 @@ final class JsonExtractorTest extends FlowTestCase
         $extractor->statistics();
 
         static::assertSame(1, $filesystem->listCalls);
+    }
+
+    public function test_extract_builds_through_the_config_backend(): void
+    {
+        $backend = new SpyBackend();
+
+        iterator_to_array(
+            from_json(__DIR__ . '/../../Fixtures/timezones.json')->extract(
+                flow_context(config_builder()->backend($backend)->build()),
+            ),
+            false,
+        );
+
+        static::assertGreaterThanOrEqual(1, $backend->builders());
     }
 }

@@ -12,8 +12,7 @@ use Dom\XMLDocument;
 use DOMDocument;
 use DOMElement;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Encoder;
-use Flow\ETL\Row\RawRowValues;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateTimeType;
 use Flow\Types\Type\Logical\DateType;
@@ -33,94 +32,54 @@ use Flow\Types\Value\Uuid;
 use Stringable;
 use UnitEnum;
 
-use function array_combine;
-use function array_keys;
-use function array_map;
-use function array_values;
-use function count;
 use function Flow\ETL\DSL\date_interval_to_microseconds;
 use function is_array;
 use function is_bool;
 use function is_float;
 use function is_int;
-use function is_numeric;
 use function is_resource;
-use function is_scalar;
 use function is_string;
 use function json_encode;
-use function str_getcsv;
-use function str_pad;
-use function trim;
 
 use const JSON_THROW_ON_ERROR;
 
-/**
- * @implements Encoder<string>
- */
-final class CSVEncoder implements Encoder
+final class CSVEncoder
 {
     /**
      * @var null|resource
      */
     private $buffer = null;
 
-    private readonly CSVRowNormalizer $rowNormalizer;
-
-    /**
-     * @var null|list<string>
-     */
-    private ?array $headers = null;
-
     public function __construct(
-        private readonly bool $withHeader = true,
         private readonly string $separator = ',',
         private readonly string $enclosure = '"',
         private readonly string $escape = '\\',
-        bool $emptyToNull = true,
         private readonly string $dateTimeFormat = DateTimeInterface::ATOM,
         private readonly string $dateFormat = 'Y-m-d',
         private readonly string $newLineSeparator = PHP_EOL,
-    ) {
-        $this->rowNormalizer = new CSVRowNormalizer($emptyToNull);
-    }
+    ) {}
 
-    public function decode(array $batch): array
+    /**
+     * @return list<string>
+     */
+    public function encode(Rows $rows): array
     {
-        $maps = [];
+        $columns = [];
+        $types = [];
 
-        foreach ($batch as $line) {
-            /** @var list<null|string> $fields */
-            $fields = str_getcsv($line, $this->separator, $this->enclosure, $this->escape);
-
-            if ($this->headers === null) {
-                if ($this->withHeader) {
-                    $this->headers = $this->mapHeaders($fields);
-
-                    continue;
-                }
-
-                $this->headers = $this->generateAutoHeaders(count($fields));
-            }
-
-            $maps[] = new RawRowValues(array_combine(
-                $this->headers,
-                $this->rowNormalizer->normalize($fields, count($this->headers)),
-            ));
+        foreach ($rows->schema()->definitions() as $definition) {
+            $name = $definition->entry()->name();
+            $columns[$name] = $rows->column($name)->values();
+            $types[$name] = $definition->type();
         }
 
-        return $maps;
-    }
-
-    public function encode(array $batch): array
-    {
         $lines = [];
 
-        foreach ($batch as $rowValues) {
+        for ($i = 0, $count = $rows->count(); $i < $count; $i++) {
             $fields = [];
 
-            /** @var mixed $value */
-            foreach ($rowValues->values as $name => $value) {
-                $fields[] = $this->renderValue($rowValues->types[$name], $value);
+            foreach ($columns as $name => $column) {
+                $fields[] = $this->renderValue($types[$name], $column[$i]);
             }
 
             $lines[] = $this->line($fields);
@@ -135,54 +94,6 @@ final class CSVEncoder implements Encoder
     public function encodeHeader(array $headers): string
     {
         return $this->line($headers);
-    }
-
-    /**
-     * Null before the first decoded line: a 0-byte source resolves no header, which is not the same as a
-     * header of zero columns.
-     *
-     * @return null|list<string>
-     */
-    public function headers(): ?array
-    {
-        return $this->headers;
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function generateAutoHeaders(int $count): array
-    {
-        $headers = [];
-
-        for ($i = 0; $i < $count; $i++) {
-            $headers[] = 'e' . str_pad((string) $i, 2, '0', STR_PAD_LEFT);
-        }
-
-        return $headers;
-    }
-
-    /**
-     * @param array<array-key, mixed> $headers
-     *
-     * @return list<string>
-     */
-    private function mapHeaders(array $headers): array
-    {
-        $headers = array_map(static fn(mixed $header): string => trim(match (true) {
-            is_string($header) => $header,
-            is_numeric($header) => (string) $header,
-            $header === null => '',
-            default => is_scalar($header) ? (string) $header : '',
-        }), $headers);
-
-        return array_values(array_map(
-            static fn(string $header, int|string $index): string => $header !== ''
-                ? $header
-                : 'e' . str_pad((string) $index, 2, '0', STR_PAD_LEFT),
-            $headers,
-            array_keys($headers),
-        ));
     }
 
     /**

@@ -11,6 +11,7 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Generator;
 use Psr\Http\Client\ClientInterface;
@@ -50,8 +51,8 @@ final class PsrHttpClientPaginatedExtractor implements Extractor
      */
     public function extract(FlowContext $context, ?int $limit = null): Generator
     {
-        $encoder = new HttpEncoder();
-        $hydrator = $context->hydrator();
+        $decoder = new HttpDecoder();
+        $backend = $context->backend();
 
         $request = $this->paginator->initialRequest($this->request);
 
@@ -66,11 +67,11 @@ final class PsrHttpClientPaginatedExtractor implements Extractor
                 ($this->postRequest)($request, $response);
             }
 
-            $raw = $encoder->decode([new HttpExchange($request, $response)]);
+            $rows = (new RowsBuilder($this->schema(), $backend))
+                ->appendRows($decoder->decode([new HttpExchange($request, $response)]))
+                ->finish();
 
-            $hydrated = $hydrator->hydrate($raw, $this->schema());
-
-            $signal = yield $hydrated;
+            $signal = yield $rows;
 
             if ($signal === Signal::STOP) {
                 return;
@@ -78,7 +79,7 @@ final class PsrHttpClientPaginatedExtractor implements Extractor
 
             $request = $this->paginator->nextRequest(
                 $this->request,
-                new DecodedResponse($encoder->structuredBody($response), $response),
+                new DecodedResponse($decoder->structuredBody($response), $response),
             );
         }
     }

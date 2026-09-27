@@ -61,12 +61,22 @@ final class CrossEngineTest extends TestCase
 
         $parquetFile = (new Reader())->read($path);
         $readStream = NativeLocalSourceStream::open(path_real($path));
-        $result = iterator_to_array($engine->readValues($readStream, $parquetFile->schema()));
+        $chunks = iterator_to_array(
+            $engine->readColumns(
+                $readStream,
+                $parquetFile->schema(),
+                ['id', 'label', 'big_number'],
+                batchSize: 2,
+                limit: null,
+                offset: null,
+            ),
+            false,
+        );
 
-        static::assertCount(2, $result);
-        static::assertSame(1, $result[0]['id']);
-        static::assertSame('first', $result[0]['label']);
-        static::assertSame(1_000_000_000_000, $result[0]['big_number']);
+        static::assertSame(
+            [['id' => [1, 2], 'label' => ['first', 'second'], 'big_number' => [1_000_000_000_000, 2_000_000_000_000]]],
+            $chunks,
+        );
     }
 
     public function test_arrow_write_php_read(): void
@@ -147,14 +157,24 @@ final class CrossEngineTest extends TestCase
 
         $engine = new ArrowParquetEngine();
         $parquetFile = (new Reader())->read($path);
-        $result = iterator_to_array($engine->readValues(
-            NativeLocalSourceStream::open(path_real($path)),
-            $parquetFile->schema(),
-        ));
+        $chunks = iterator_to_array(
+            $engine->readColumns(
+                NativeLocalSourceStream::open(path_real($path)),
+                $parquetFile->schema(),
+                ['id', 'name', 'value'],
+                batchSize: 2,
+                limit: null,
+                offset: null,
+            ),
+            false,
+        );
 
-        static::assertCount(3, $result);
-        static::assertSame(1, $result[0]['id']);
-        static::assertSame('one', $result[0]['name']);
-        static::assertEqualsWithDelta(1.1, $result[0]['value'], 0.001);
+        static::assertSame(
+            [
+                ['id' => [1, 2], 'name' => ['one', 'two'], 'value' => [1.1, 2.2]],
+                ['id' => [3], 'name' => ['three'], 'value' => [3.3]],
+            ],
+            $chunks,
+        );
     }
 }

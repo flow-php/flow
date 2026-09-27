@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Unit;
 
-use Flow\ETL\Row\PhpRowHydrator;
+use Flow\ETL\Column\DefaultBackend;
+use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Row\RawRowValues;
-use Flow\ETL\Row\TypedRowValues;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema\Metadata;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Format;
 use Flow\Floe\PhpFloeEncoder;
@@ -15,6 +17,7 @@ use Flow\Floe\Tests\Context\FloeSchemaContext;
 use Flow\Floe\Tests\Mother\RowsMother;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\int_schema;
@@ -22,8 +25,6 @@ use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\schema_from_json;
 use function Flow\ETL\DSL\str_schema;
-use function Flow\Types\DSL\type_integer;
-use function Flow\Types\DSL\type_string;
 
 final class PhpFloeEncoderTest extends TestCase
 {
@@ -36,14 +37,14 @@ final class PhpFloeEncoderTest extends TestCase
 
         $encoder = new PhpFloeEncoder(schema_from_json(FloeSchemaContext::schemaBody($original->schema())));
 
-        $decoded = $encoder->decode($encoder->encode((new PhpRowHydrator())->dehydrate($original)));
+        $decoded = $encoder->decode($encoder->encode($original));
 
         static::assertSame(['id' => 1, 'name' => 'flow', 'price' => 1.5], $decoded[0]->values);
         static::assertSame([], $decoded[0]->metadata);
         static::assertSame(['id' => 2, 'name' => null, 'price' => 0.5], $decoded[1]->values);
     }
 
-    public function test_encode_from_dehydrated_rows_round_trips(): void
+    public function test_encode_round_trips(): void
     {
         $original = array_to_rows(
             [['id' => 1, 'name' => 'flow'], ['id' => 2, 'name' => null]],
@@ -52,7 +53,7 @@ final class PhpFloeEncoderTest extends TestCase
 
         $encoder = new PhpFloeEncoder(schema_from_json(FloeSchemaContext::schemaBody($original->schema())));
 
-        $decoded = $encoder->decode($encoder->encode((new PhpRowHydrator())->dehydrate($original)));
+        $decoded = $encoder->decode($encoder->encode($original));
 
         static::assertEquals(
             [
@@ -75,7 +76,7 @@ final class PhpFloeEncoderTest extends TestCase
         $this->expectException(FloeException::class);
         $this->expectExceptionMessage('Floe found a row that does not carry the declared column "name"');
 
-        $encoder->encode([new TypedRowValues(['id' => 4], ['id' => type_integer()])]);
+        $encoder->encode(array_to_rows([['id' => 4]], schema(int_schema('id'))));
     }
 
     public function test_encode_decode_round_trip_preserves_flags(): void
@@ -89,14 +90,15 @@ final class PhpFloeEncoderTest extends TestCase
 
         $encoder = new PhpFloeEncoder($schema);
 
-        $types = ['id' => type_integer(), 'name' => type_string()];
         $encoded = [
-            new TypedRowValues(['id' => 1, 'name' => 'flow'], $types),
-            new TypedRowValues(['id' => 2, 'name' => null], $types),
-            new TypedRowValues(['id' => 3, 'name' => null], $types, ['name' => Metadata::fromArray(['tag' => 'x'])]),
+            ...$encoder->encode(array_to_rows([['id' => 1, 'name' => 'flow'], ['id' => 2, 'name' => null]], $schema)),
+            ...$encoder->encode(array_to_rows(
+                [['id' => 3, 'name' => null]],
+                $schema->setMetadata('name', Metadata::fromArray(['tag' => 'x'])),
+            )),
         ];
 
-        $decoded = $encoder->decode($encoder->encode($encoded));
+        $decoded = $encoder->decode($encoded);
 
         static::assertEquals(
             [
@@ -116,15 +118,11 @@ final class PhpFloeEncoderTest extends TestCase
         $encoder = new PhpFloeEncoder($schema);
 
         $metadata = ['name' => Metadata::fromArray(['source' => 'trusted', 'weight' => 3])];
-        $encoded = [
-            new TypedRowValues(
-                ['id' => 1, 'name' => 'flow'],
-                ['id' => type_integer(), 'name' => type_string()],
-                $metadata,
-            ),
-        ];
 
-        $decoded = $encoder->decode($encoder->encode($encoded));
+        $decoded = $encoder->decode($encoder->encode(array_to_rows(
+            [['id' => 1, 'name' => 'flow']],
+            $schema->setMetadata('name', $metadata['name']),
+        )));
 
         static::assertEquals([new RawRowValues(['id' => 1, 'name' => 'flow'], $metadata)], $decoded);
         static::assertSame('trusted', $decoded[0]->metadata['name']->get('source'));
@@ -139,10 +137,10 @@ final class PhpFloeEncoderTest extends TestCase
         )));
 
         $encoder = new PhpFloeEncoder($schema);
-        $body = $encoder->encode((new PhpRowHydrator())->dehydrate(array_to_rows(
+        $body = $encoder->encode(array_to_rows(
             [['id' => 2, 'name' => null]],
             schema(int_schema('id'), null_schema('name')),
-        )))[0];
+        ))[0];
 
         $decoded = $encoder->decode([$body]);
 
@@ -155,10 +153,10 @@ final class PhpFloeEncoderTest extends TestCase
         $schema = schema_from_json(FloeSchemaContext::schemaBody(schema(int_schema('id'), str_schema('name'))));
 
         $encoder = new PhpFloeEncoder($schema);
-        $body = $encoder->encode((new PhpRowHydrator())->dehydrate(array_to_rows(
+        $body = $encoder->encode(array_to_rows(
             [['id' => 1, 'name' => 'flow']],
             schema(int_schema('id'), str_schema('name')),
-        )))[0];
+        ))[0];
 
         $this->expectException(FloeException::class);
         $this->expectExceptionMessage('Floe row frame length does not match its content');
@@ -176,7 +174,7 @@ final class PhpFloeEncoderTest extends TestCase
         (new PhpFloeEncoder($schema))->decode(["\xEF"]);
     }
 
-    public function test_decode_rows_hydrates_the_decoded_values(): void
+    public function test_decode_rows_builds_the_decoded_values(): void
     {
         $data = array_to_rows(
             [['id' => 1, 'name' => 'flow'], ['id' => 2, 'name' => null]],
@@ -184,22 +182,109 @@ final class PhpFloeEncoderTest extends TestCase
         );
         $schema = schema_from_json(FloeSchemaContext::schemaBody($data->schema()));
         $encoder = new PhpFloeEncoder($schema);
-        $bodies = $encoder->encode((new PhpRowHydrator())->dehydrate($data));
+        $bodies = $encoder->encode($data);
 
         static::assertEquals(
-            (new PhpRowHydrator())->hydrate($encoder->decode($bodies), $schema),
-            $encoder->decodeRows($bodies, $schema, new PhpRowHydrator()),
+            (new RowsBuilder($schema, new DefaultBackend()))
+                ->appendRows(array_map(static fn(RawRowValues $r): array => $r->values, $encoder->decode($bodies)))
+                ->finish(),
+            $encoder->decodeRows($bodies, $schema),
         );
     }
 
-    public function test_encode_frames_frames_the_encoded_dehydrated_rows(): void
+    public function test_decode_rows_builds_through_the_given_backend(): void
+    {
+        $data = RowsMother::numbered(3);
+        $backend = new SpyBackend();
+
+        (new PhpFloeEncoder($data->schema(), $backend))->decodeRows(
+            (new PhpFloeEncoder($data->schema()))->encode($data),
+            $data->schema(),
+        );
+
+        static::assertGreaterThanOrEqual(1, $backend->builders());
+    }
+
+    public function test_decode_rows_folds_metadata_onto_the_column_with_last_write_winning(): void
+    {
+        $plain = schema(int_schema('id', nullable: true));
+        $encoder = new PhpFloeEncoder($plain);
+
+        $bodies = [
+            ...$encoder->encode(array_to_rows(
+                [['id' => 1]],
+                $plain->setMetadata('id', Metadata::fromArray(['k' => 'v1'])),
+            )),
+            ...$encoder->encode(array_to_rows(
+                [['id' => 2]],
+                $plain->setMetadata('id', Metadata::fromArray(['k' => 'v2'])),
+            )),
+        ];
+
+        static::assertSame(
+            ['k' => 'v2'],
+            $encoder->decodeRows($bodies, $plain)->schema()->get('id')->metadata()->normalize(),
+        );
+    }
+
+    public function test_decode_rows_folds_metadata_onto_a_numeric_column_name(): void
+    {
+        $plain = schema(int_schema('0', nullable: true));
+        $encoder = new PhpFloeEncoder($plain);
+
+        $bodies = $encoder->encode(array_to_rows(
+            [['0' => 1]],
+            $plain->setMetadata('0', Metadata::fromArray(['k' => 'v'])),
+        ));
+
+        static::assertSame(
+            ['k' => 'v'],
+            $encoder->decodeRows($bodies, $plain)->schema()->get('0')->metadata()->normalize(),
+        );
+    }
+
+    public function test_decode_rows_ignores_metadata_of_an_undeclared_column(): void
+    {
+        $written = schema(int_schema('id'), int_schema('nope'));
+        $encoder = new PhpFloeEncoder($written);
+
+        $bodies = $encoder->encode(array_to_rows(
+            [['id' => 1, 'nope' => 2]],
+            $written->setMetadata('nope', Metadata::fromArray(['k' => 'v'])),
+        ));
+
+        static::assertEquals(
+            schema(int_schema('id')),
+            $encoder->decodeRows($bodies, schema(int_schema('id')))->schema(),
+        );
+    }
+
+    public function test_encode_of_an_empty_batch_returns_no_bodies(): void
+    {
+        static::assertSame(
+            [],
+            (new PhpFloeEncoder(schema(int_schema('id'), str_schema('name'))))->encode(array_to_rows(
+                [],
+                schema(int_schema('id')),
+            )),
+        );
+    }
+
+    public function test_a_not_null_refusal_on_an_earlier_column_wins_over_a_missing_later_column(): void
+    {
+        $this->expectException(SchemaMismatchException::class);
+        $this->expectExceptionMessage('column "id" (row 0)');
+
+        (new PhpFloeEncoder(schema(int_schema('id'), str_schema('name'))))->encode(array_to_rows([[
+            'id' => null,
+        ]], schema(int_schema('id', nullable: true))));
+    }
+
+    public function test_encode_frames_frames_the_encoded_rows(): void
     {
         $data = RowsMother::numbered(3);
         $encoder = new PhpFloeEncoder($data->schema());
 
-        static::assertSame(
-            Format::rowFrames($encoder->encode((new PhpRowHydrator())->dehydrate($data))),
-            $encoder->encodeFrames($data, new PhpRowHydrator()),
-        );
+        static::assertSame(Format::rowFrames($encoder->encode($data)), $encoder->encodeFrames($data));
     }
 }

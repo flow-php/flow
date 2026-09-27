@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Floe\Tests\Unit;
 
 use Flow\ETL\Rows;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\FloeSerializer;
 use Flow\Floe\Format;
@@ -201,5 +202,15 @@ final class FloeSerializerTest extends TestCase
         $this->expectExceptionMessage('footer does not fit');
 
         unserialize_from_string(new FloeSerializer(), Format::header(0x00) . Format::trailer(1000));
+    }
+
+    public function test_unserialize_builds_through_the_given_backend(): void
+    {
+        $backend = new SpyBackend();
+        $serializer = new FloeSerializer(backend: $backend);
+
+        unserialize_from_string($serializer, serialize_to_string($serializer, RowsMother::numbered(3)));
+
+        static::assertGreaterThanOrEqual(1, $backend->builders());
     }
 }

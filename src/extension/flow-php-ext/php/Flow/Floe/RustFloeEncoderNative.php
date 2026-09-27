@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\Floe;
 
 use Flow\ETL\Row\RawRowValues;
-use Flow\ETL\Row\TypedRowValues;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\Floe\Exception\ExtensionException;
@@ -25,7 +24,7 @@ final class RustFloeEncoderNative
     }
 
     /**
-     * @param list<TypedRowValues> $batch
+     * @param list<object> $batch
      * @param string $schemaBody SCHEMA frame body (JSON list of normalized definitions)
      * @param Schema $schema the same definitions as objects, so a refusal is raised through the PHP factory
      *

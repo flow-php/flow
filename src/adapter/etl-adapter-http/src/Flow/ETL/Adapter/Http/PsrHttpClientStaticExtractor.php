@@ -9,6 +9,7 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Generator;
 use Psr\Http\Client\ClientInterface;
@@ -50,8 +51,8 @@ final class PsrHttpClientStaticExtractor implements Extractor
      */
     public function extract(FlowContext $context, ?int $limit = null): Generator
     {
-        $encoder = new HttpEncoder();
-        $hydrator = $context->hydrator();
+        $decoder = new HttpDecoder();
+        $backend = $context->backend();
 
         foreach ($this->requests as $request) {
             if ($this->preRequest) {
@@ -64,9 +65,11 @@ final class PsrHttpClientStaticExtractor implements Extractor
                 ($this->postRequest)($request, $response);
             }
 
-            $hydrated = $hydrator->hydrate($encoder->decode([new HttpExchange($request, $response)]), $this->schema());
+            $rows = (new RowsBuilder($this->schema(), $backend))
+                ->appendRows($decoder->decode([new HttpExchange($request, $response)]))
+                ->finish();
 
-            $signal = yield $hydrated;
+            $signal = yield $rows;
 
             if ($signal === Signal::STOP) {
                 return;

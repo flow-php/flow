@@ -36,14 +36,15 @@ final readonly class AdaptiveParquetEngine implements ParquetEngine
         return $this->delegate->openForWrite($stream, $schema, $compression, $options);
     }
 
-    public function readValues(
+    public function readColumns(
         SourceStream $stream,
         Schema $schema,
-        array $columns = [],
-        ?int $limit = null,
-        ?int $offset = null,
+        array $columns,
+        int $batchSize,
+        ?int $limit,
+        ?int $offset,
     ): Generator {
-        return $this->delegate->readValues($stream, $schema, $columns, $limit, $offset);
+        return $this->delegate->readColumns($stream, $schema, $columns, $batchSize, $limit, $offset);
     }
 
     public function writeRows(

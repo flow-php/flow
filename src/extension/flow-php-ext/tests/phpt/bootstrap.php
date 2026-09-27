@@ -42,7 +42,7 @@ function expect_exception(callable $fn): void
 }
 
 /**
- * The PHP CSV path - CSVLineReader + CSVEncoder::decode() - as `[headers, list of RawRowValues::$values]`.
+ * The PHP CSV path - CSVLineReader + CSVDecoder::decode() - as `[headers, list of RawRowValues::$values]`.
  *
  * @return array{list<string>, list<array<array-key, mixed>>}
  */
@@ -55,7 +55,7 @@ function csv_php_rows(
     bool $emptyToNull = true,
     bool $removeBOM = true,
 ): array {
-    $encoder = new Flow\ETL\Adapter\CSV\CSVEncoder(
+    $decoder = new Flow\ETL\Adapter\CSV\CSVDecoder(
         withHeader: $withHeader,
         separator: $separator,
         enclosure: $enclosure,
@@ -68,12 +68,12 @@ function csv_php_rows(
     foreach ($lines->readLines(
         new Flow\Filesystem\Stream\StringSourceStream(Flow\Filesystem\DSL\path('memory://phpt.csv'), $raw),
     ) as $line) {
-        foreach ($encoder->decode([$line]) as $values) {
+        foreach ($decoder->decode([$line]) as $values) {
             $rows[] = $values->values;
         }
     }
 
-    return [$encoder->headers() ?? [], $rows];
+    return [$decoder->headers() ?? [], $rows];
 }
 
 /**

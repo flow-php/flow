@@ -12,7 +12,7 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_string;
 
-final class TextHydratorParityTest extends FlowTestCase
+final class TextExtractorTypedColumnsTest extends FlowTestCase
 {
     public function test_reads_each_line_into_a_string_text_column(): void
     {

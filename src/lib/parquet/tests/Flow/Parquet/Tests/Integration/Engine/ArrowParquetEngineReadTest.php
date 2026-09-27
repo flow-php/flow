@@ -61,16 +61,25 @@ final class ArrowParquetEngineReadTest extends TestCase
 
         $engine = new ArrowParquetEngine();
         $parquetFile = (new Reader())->read($path);
-        $result = iterator_to_array($engine->readValues(
-            NativeLocalSourceStream::open(path_real($path)),
-            $parquetFile->schema(),
-        ));
+        $chunks = iterator_to_array(
+            $engine->readColumns(
+                NativeLocalSourceStream::open(path_real($path)),
+                $parquetFile->schema(),
+                ['id', 'name', 'active', 'score'],
+                batchSize: 2,
+                limit: null,
+                offset: null,
+            ),
+            false,
+        );
 
-        static::assertCount(3, $result);
-        static::assertSame(1, $result[0]['id']);
-        static::assertSame('Alice', $result[0]['name']);
-        static::assertTrue($result[0]['active']);
-        static::assertEqualsWithDelta(99.5, $result[0]['score'], 0.001);
+        static::assertSame(
+            [
+                ['id' => [1, 2], 'name' => ['Alice', 'Bob'], 'active' => [true, false], 'score' => [99.5, 87.3]],
+                ['id' => [3], 'name' => ['Charlie'], 'active' => [true], 'score' => [92.1]],
+            ],
+            $chunks,
+        );
     }
 
     public function test_read_nested_lists(): void
@@ -91,14 +100,19 @@ final class ArrowParquetEngineReadTest extends TestCase
 
         $engine = new ArrowParquetEngine();
         $parquetFile = (new Reader())->read($path);
-        $result = iterator_to_array($engine->readValues(
-            NativeLocalSourceStream::open(path_real($path)),
-            $parquetFile->schema(),
-        ));
+        $chunks = iterator_to_array(
+            $engine->readColumns(
+                NativeLocalSourceStream::open(path_real($path)),
+                $parquetFile->schema(),
+                ['id', 'tags'],
+                batchSize: 2,
+                limit: null,
+                offset: null,
+            ),
+            false,
+        );
 
-        static::assertCount(2, $result);
-        static::assertSame(['php', 'rust'], $result[0]['tags']);
-        static::assertSame(['python'], $result[1]['tags']);
+        static::assertSame([['id' => [1, 2], 'tags' => [['php', 'rust'], ['python']]]], $chunks);
     }
 
     public function test_read_nested_maps(): void
@@ -119,17 +133,22 @@ final class ArrowParquetEngineReadTest extends TestCase
 
         $engine = new ArrowParquetEngine();
         $parquetFile = (new Reader())->read($path);
-        $result = iterator_to_array($engine->readValues(
-            NativeLocalSourceStream::open(path_real($path)),
-            $parquetFile->schema(),
-        ));
+        $chunks = iterator_to_array(
+            $engine->readColumns(
+                NativeLocalSourceStream::open(path_real($path)),
+                $parquetFile->schema(),
+                ['id', 'metadata'],
+                batchSize: 2,
+                limit: null,
+                offset: null,
+            ),
+            false,
+        );
 
-        static::assertCount(2, $result);
-        /** @var array<string, mixed> $metadata */
-        $metadata = $result[0]['metadata'];
-        static::assertIsArray($metadata);
-        static::assertSame(100, $metadata['score']);
-        static::assertSame(5, $metadata['level']);
+        static::assertSame(
+            [['id' => [1, 2], 'metadata' => [['score' => 100, 'level' => 5], ['score' => 200]]]],
+            $chunks,
+        );
     }
 
     public function test_read_nested_structs(): void
@@ -153,17 +172,22 @@ final class ArrowParquetEngineReadTest extends TestCase
 
         $engine = new ArrowParquetEngine();
         $parquetFile = (new Reader())->read($path);
-        $result = iterator_to_array($engine->readValues(
-            NativeLocalSourceStream::open(path_real($path)),
-            $parquetFile->schema(),
-        ));
+        $chunks = iterator_to_array(
+            $engine->readColumns(
+                NativeLocalSourceStream::open(path_real($path)),
+                $parquetFile->schema(),
+                ['id', 'address'],
+                batchSize: 2,
+                limit: null,
+                offset: null,
+            ),
+            false,
+        );
 
-        static::assertCount(2, $result);
-        /** @var array<string, mixed> $address */
-        $address = $result[0]['address'];
-        static::assertIsArray($address);
-        static::assertSame('Berlin', $address['city']);
-        static::assertSame(10115, $address['zip']);
+        static::assertSame(
+            [['id' => [1, 2], 'address' => [['city' => 'Berlin', 'zip' => 10115], ['city' => 'Warsaw', 'zip' => 1]]]],
+            $chunks,
+        );
     }
 
     public function test_read_nested_uuid_as_canonical_strings(): void
@@ -185,14 +209,26 @@ final class ArrowParquetEngineReadTest extends TestCase
 
         $engine = new ArrowParquetEngine();
         $parquetFile = (new Reader())->read($path);
-        $result = iterator_to_array($engine->readValues(
-            NativeLocalSourceStream::open(path_real($path)),
-            $parquetFile->schema(),
-        ));
+        $chunks = iterator_to_array(
+            $engine->readColumns(
+                NativeLocalSourceStream::open(path_real($path)),
+                $parquetFile->schema(),
+                ['top_uuid', 'body', 'uuid_list'],
+                batchSize: 2,
+                limit: null,
+                offset: null,
+            ),
+            false,
+        );
 
-        static::assertSame($uuid, $result[0]['top_uuid']);
-        static::assertSame(['id' => $uuid, 'data' => '{"a":1}'], $result[0]['body']);
-        static::assertSame([$uuid, $uuid], $result[0]['uuid_list']);
+        static::assertSame(
+            [[
+                'top_uuid' => [$uuid],
+                'body' => [['id' => $uuid, 'data' => '{"a":1}']],
+                'uuid_list' => [[$uuid, $uuid]],
+            ]],
+            $chunks,
+        );
     }
 
     public function test_read_with_column_projection(): void
@@ -214,16 +250,19 @@ final class ArrowParquetEngineReadTest extends TestCase
 
         $engine = new ArrowParquetEngine();
         $parquetFile = (new Reader())->read($path);
-        $result = iterator_to_array($engine->readValues(
-            NativeLocalSourceStream::open(path_real($path)),
-            $parquetFile->schema(),
-            ['id', 'name'],
-        ));
+        $chunks = iterator_to_array(
+            $engine->readColumns(
+                NativeLocalSourceStream::open(path_real($path)),
+                $parquetFile->schema(),
+                ['id', 'name'],
+                batchSize: 2,
+                limit: null,
+                offset: null,
+            ),
+            false,
+        );
 
-        static::assertCount(2, $result);
-        static::assertArrayHasKey('id', $result[0]);
-        static::assertArrayHasKey('name', $result[0]);
-        static::assertArrayNotHasKey('email', $result[0]);
+        static::assertSame([['id' => [1, 2], 'name' => ['Alice', 'Bob']]], $chunks);
     }
 
     public function test_read_with_limit(): void
@@ -238,16 +277,19 @@ final class ArrowParquetEngineReadTest extends TestCase
 
         $engine = new ArrowParquetEngine();
         $parquetFile = (new Reader())->read($path);
-        $result = iterator_to_array($engine->readValues(
-            NativeLocalSourceStream::open(path_real($path)),
-            $parquetFile->schema(),
-            [],
-            10,
-        ));
+        $chunks = iterator_to_array(
+            $engine->readColumns(
+                NativeLocalSourceStream::open(path_real($path)),
+                $parquetFile->schema(),
+                ['id'],
+                batchSize: 2,
+                limit: 5,
+                offset: null,
+            ),
+            false,
+        );
 
-        static::assertCount(10, $result);
-        static::assertSame(1, $result[0]['id']);
-        static::assertSame(10, $result[9]['id']);
+        static::assertSame([['id' => [1, 2]], ['id' => [3, 4]], ['id' => [5]]], $chunks);
     }
 
     public function test_read_with_limit_and_offset(): void
@@ -262,17 +304,19 @@ final class ArrowParquetEngineReadTest extends TestCase
 
         $engine = new ArrowParquetEngine();
         $parquetFile = (new Reader())->read($path);
-        $result = iterator_to_array($engine->readValues(
-            NativeLocalSourceStream::open(path_real($path)),
-            $parquetFile->schema(),
-            [],
-            5,
-            10,
-        ));
+        $chunks = iterator_to_array(
+            $engine->readColumns(
+                NativeLocalSourceStream::open(path_real($path)),
+                $parquetFile->schema(),
+                ['id'],
+                batchSize: 2,
+                limit: 5,
+                offset: 10,
+            ),
+            false,
+        );
 
-        static::assertCount(5, $result);
-        static::assertSame(11, $result[0]['id']);
-        static::assertSame(15, $result[4]['id']);
+        static::assertSame([['id' => [11, 12]], ['id' => [13, 14]], ['id' => [15]]], $chunks);
     }
 
     public function test_read_with_offset(): void
@@ -287,15 +331,18 @@ final class ArrowParquetEngineReadTest extends TestCase
 
         $engine = new ArrowParquetEngine();
         $parquetFile = (new Reader())->read($path);
-        $result = iterator_to_array($engine->readValues(
-            NativeLocalSourceStream::open(path_real($path)),
-            $parquetFile->schema(),
-            [],
-            null,
-            50,
-        ));
+        $chunks = iterator_to_array(
+            $engine->readColumns(
+                NativeLocalSourceStream::open(path_real($path)),
+                $parquetFile->schema(),
+                ['id'],
+                batchSize: 2,
+                limit: null,
+                offset: 96,
+            ),
+            false,
+        );
 
-        static::assertCount(50, $result);
-        static::assertSame(51, $result[0]['id']);
+        static::assertSame([['id' => [97, 98]], ['id' => [99, 100]]], $chunks);
     }
 }

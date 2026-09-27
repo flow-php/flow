@@ -16,6 +16,7 @@ use function Flow\ETL\Adapter\Parquet\from_parquet;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_memory;
 use function Flow\Floe\DSL\from_floe;
+use function in_array;
 
 final readonly class SourceExtractor
 {
@@ -40,7 +41,7 @@ final readonly class SourceExtractor
             Source::parquet => from_parquet($orders->parquet()),
         };
 
-        return $this->mode === SchemaMode::declared
+        return $this->mode === SchemaMode::declared && !in_array($this->source, [Source::floe, Source::parquet], true)
             ? $extractor->withSchema(OrdersSchema::of($this->source))
             : $extractor;
     }

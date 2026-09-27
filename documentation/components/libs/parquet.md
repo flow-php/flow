@@ -225,6 +225,20 @@ foreach ($file->values(["column_1", "column_2"], limit: 100, offset: 1000) as $r
 }
 ```
 
+### Reading columns in batches
+
+```php
+use Flow\Parquet\Reader;
+
+$file = (new Reader())->read('path/to/file.parquet');
+
+foreach ($file->columns(batchSize: 1000, columns: ["column_1", "column_2"]) as $chunk) {
+    // $chunk = ['column_1' => [...up to 1000 values], 'column_2' => [...]]
+}
+```
+
+`limit` and `offset` work as in `values()`.
+
 ## Writing Parquet Files
 
 Since parquet is a binary format, we need to provide a schema for the writer so it can know how

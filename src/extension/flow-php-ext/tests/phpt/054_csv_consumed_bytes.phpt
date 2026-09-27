@@ -6,7 +6,7 @@ native CSV consumedBytes() counts the bytes of the rows it produced exactly like
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\CSV\CSVEncoder;
+use Flow\ETL\Adapter\CSV\CSVDecoder;
 use Flow\ETL\Adapter\CSV\CSVLineReader;
 use Flow\ETL\Adapter\CSV\PhpCSVOpenSource;
 use Flow\ETL\Adapter\CSV\RustColumnFoldNative;
@@ -18,7 +18,7 @@ use function Flow\Filesystem\DSL\path;
 $php = static function (string $raw, bool $withHeader, int $rows): int {
     $source = new PhpCSVOpenSource(
         new StringSourceStream(path('memory://phpt.csv'), $raw),
-        new CSVEncoder(withHeader: $withHeader),
+        new CSVDecoder(withHeader: $withHeader),
         new CSVLineReader('"'),
     );
     $taken = 0;

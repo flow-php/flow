@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV\Tests\Context;
 
+use Flow\ETL\Adapter\CSV\CSVDecoder;
 use Flow\ETL\Adapter\CSV\CSVDialect;
-use Flow\ETL\Adapter\CSV\CSVEncoder;
 use Flow\ETL\Adapter\CSV\CSVFileReader;
 use Flow\ETL\Adapter\CSV\CSVFileSample;
 use Flow\ETL\Adapter\CSV\CSVLineReader;
@@ -155,7 +155,7 @@ final class CSVFixtureContext
 
         return new PhpCSVOpenSource(
             $stream,
-            new CSVEncoder(
+            new CSVDecoder(
                 withHeader: $options->withHeader,
                 separator: $dialect->separator,
                 enclosure: $dialect->enclosure,

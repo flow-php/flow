@@ -8,6 +8,7 @@ use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Tests\Double\CountingFilesystem;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\RowsMother;
 use Flow\Filesystem\Tests\Double\RejectingFilter;
@@ -282,14 +283,41 @@ final class FloeExtractorTest extends FlowTestCase
         $loader->load(array_to_rows([['id' => 1]], schema(int_schema('id'))), $context);
         $loader->closure($context);
 
-        $extractor = from_floe($path, filesystem: $memory)
-            ->withMetadataColumns(true)
-            ->withSchema(schema(int_schema('id')));
+        $extractor = from_floe($path, filesystem: $memory)->withMetadataColumns(true);
 
         $batches = iterator_to_array($extractor->extract($context));
 
         static::assertSame($extractor->schema()->references()->names(), $batches[0]->first()->names());
         static::assertSame($path->uri(), $batches[0]->first()->get('_input_file_uri'));
+    }
+
+    public function test_with_schema_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'Floe is a self-describing format and does not accept a schema; declaring one is not supported yet.',
+        );
+
+        from_floe(path('memory://x.floe'), filesystem: memory_filesystem())->withSchema(schema(int_schema('id')));
+    }
+
+    public function test_extract_builds_through_the_config_backend(): void
+    {
+        $memory = memory_filesystem();
+        $path = path('memory://backend.floe');
+        $context = flow_context(config());
+
+        $loader = to_floe($path, filesystem: $memory);
+        $loader->load(array_to_rows([['id' => 1]], schema(int_schema('id'))), $context);
+        $loader->closure($context);
+
+        $backend = new SpyBackend();
+
+        iterator_to_array(from_floe($path, filesystem: $memory)->extract(
+            flow_context(config_builder()->backend($backend)->build()),
+        ));
+
+        static::assertGreaterThanOrEqual(1, $backend->builders());
     }
 
     public function test_negative_offset_throws(): void
@@ -394,25 +422,6 @@ final class FloeExtractorTest extends FlowTestCase
 
         foreach ($extractor->extract(flow_context(config())) as $rows) {
             static::assertEquals($extractor->schema(), $rows->schema());
-            static::assertSame(2024, $rows->first()->get('year'));
-
-            return;
-        }
-
-        static::fail('extractor yielded nothing');
-    }
-
-    public function test_a_declared_schema_may_name_the_partition_column(): void
-    {
-        $memory = memory_filesystem();
-        FloeFilesContext::writeYearPartitionedFiles($memory);
-
-        $extractor = from_floe(path('memory://years/*/*.floe'), filesystem: $memory)->withSchema(schema(
-            int_schema('id'),
-            int_schema('year'),
-        ));
-
-        foreach ($extractor->extract(flow_context(config())) as $rows) {
             static::assertSame(2024, $rows->first()->get('year'));
 
             return;

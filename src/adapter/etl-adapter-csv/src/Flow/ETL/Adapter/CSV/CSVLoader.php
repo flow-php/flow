@@ -111,12 +111,7 @@ final class CSVLoader implements Closure, Discardable, FileLoader, Loader, Parti
 
         try {
             foreach ($this->router->route($rows) as [$partitions, $group]) {
-                $this->write(
-                    $group,
-                    array_values($group->schema()->references()->names()),
-                    $context,
-                    $partitions->toArray(),
-                );
+                $this->write($group, array_values($group->schema()->references()->names()), $partitions->toArray());
             }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
@@ -187,7 +182,7 @@ final class CSVLoader implements Closure, Discardable, FileLoader, Loader, Parti
      * @param list<string> $headers
      * @param array<Partition> $partitions
      */
-    public function write(Rows $nextRows, array $headers, FlowContext $context, array $partitions): void
+    public function write(Rows $nextRows, array $headers, array $partitions): void
     {
         $files = $this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode);
 
@@ -200,13 +195,12 @@ final class CSVLoader implements Closure, Discardable, FileLoader, Loader, Parti
             $stream->append($encoder->encodeHeader($headers));
         }
 
-        $stream->append(implode('', $encoder->encode($context->hydrator()->dehydrate($nextRows))));
+        $stream->append(implode('', $encoder->encode($nextRows)));
     }
 
     private function encoder(): CSVEncoder
     {
         return $this->encoder ??= new CSVEncoder(
-            withHeader: $this->header,
             separator: $this->separator,
             enclosure: $this->enclosure,
             escape: $this->escape,

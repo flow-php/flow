@@ -18,6 +18,7 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
@@ -102,10 +103,9 @@ final class XMLReaderExtractor implements
      */
     public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
     {
-        $hydrator = $context->hydrator();
+        $backend = $context->backend();
         $batchSize = $this->batchSize();
         $yielded = 0;
-        $encoder = new XMLEncoder();
 
         $baseSchema = $this->schema ?? schema(xml_schema('node'));
 
@@ -149,19 +149,22 @@ final class XMLReaderExtractor implements
                         ) {
                             $dom = new DOMDocument('1.0', '');
                             $node = $xmlReader->expand($dom);
-                            $rawNodes[] = $node === false ? '' : (string) $dom->saveXML($node);
+                            $rawNodes[] = ['node' => $node === false ? '' : (string) $dom->saveXML($node)];
 
                             if (count($rawNodes) >= $batchSize) {
-                                $hydrated = $constants->fillRows(
-                                    $hydrator->hydrate($encoder->decode($rawNodes), $body),
+                                $rows = $constants->fillRows(
+                                    (new RowsBuilder($body, $backend))
+                                        ->appendRows($rawNodes)
+                                        ->finish(),
                                     $schema,
+                                    $backend,
                                 );
 
                                 $rawNodes = [];
 
-                                $yielded += $hydrated->count();
+                                $yielded += $rows->count();
 
-                                $signal = yield $hydrated;
+                                $signal = yield $rows;
 
                                 if ($signal === Signal::STOP) {
                                     return;
@@ -178,11 +181,17 @@ final class XMLReaderExtractor implements
                 }
 
                 if ($rawNodes !== []) {
-                    $hydrated = $constants->fillRows($hydrator->hydrate($encoder->decode($rawNodes), $body), $schema);
+                    $rows = $constants->fillRows(
+                        (new RowsBuilder($body, $backend))
+                            ->appendRows($rawNodes)
+                            ->finish(),
+                        $schema,
+                        $backend,
+                    );
 
-                    $yielded += $hydrated->count();
+                    $yielded += $rows->count();
 
-                    $signal = yield $hydrated;
+                    $signal = yield $rows;
 
                     if ($signal === Signal::STOP) {
                         return;

@@ -11,6 +11,7 @@ use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
 use Flow\PostgreSql\Client\Exception\PostgreSqlError;
@@ -19,6 +20,7 @@ use RuntimeException;
 
 use function array_map;
 use function Flow\ETL\Adapter\PostgreSql\from_pgsql_cursor;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
@@ -453,5 +455,22 @@ final class PostgreSqlCursorExtractorTest extends FlowTestCase
             new Cardinality(atMost: 100, estimate: 42, relativeError: Cardinality::DEFAULT_RELATIVE_ERROR),
             $extractor->statistics()->rows,
         );
+    }
+
+    public function test_extract_builds_through_the_config_backend(): void
+    {
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willReturnCursors(new StubCursor([['id' => '1']]), new StubCursor());
+        $backend = new SpyBackend();
+
+        iterator_to_array(
+            from_pgsql_cursor($client, 'SELECT id FROM t')->extract(
+                flow_context(config_builder()->backend($backend)->build()),
+            ),
+            false,
+        );
+
+        static::assertGreaterThanOrEqual(1, $backend->builders());
     }
 }

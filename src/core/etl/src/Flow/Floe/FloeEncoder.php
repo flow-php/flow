@@ -5,33 +5,27 @@ declare(strict_types=1);
 namespace Flow\Floe;
 
 use Flow\ETL\Exception\SchemaMismatchException;
-use Flow\ETL\Row\Encoder;
-use Flow\ETL\Row\Hydrator;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\Floe\Exception\FloeException;
 
-/**
- * @extends Encoder<string>
- */
-interface FloeEncoder extends Encoder
+interface FloeEncoder
 {
     /**
-     * `$hydrator->hydrate($this->decode($bodies), $schema)`, in one native pass where the hydrator is native too.
+     * `RowsBuilder` over `decode()`.
      *
      * @param list<string> $bodies
      *
      * @throws FloeException
      * @throws SchemaMismatchException
      */
-    public function decodeRows(array $bodies, Schema $schema, Hydrator $hydrator): Rows;
+    public function decodeRows(array $bodies, Schema $schema): Rows;
 
     /**
-     * `Format::rowFrames($this->encode($hydrator->dehydrate($rows)))`, in one native pass where the hydrator is native
-     * too - complete ROW frames for a writer whose codec leaves bodies as they are.
+     * `Format::rowFrames($this->encode($rows))`.
      *
      * @throws FloeException
      * @throws SchemaMismatchException
      */
-    public function encodeFrames(Rows $rows, Hydrator $hydrator): string;
+    public function encodeFrames(Rows $rows): string;
 }

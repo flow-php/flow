@@ -46,7 +46,7 @@ final class InferredSchemaException extends InvalidArgumentException
     {
         return new self(sprintf(
             "Columns of %s do not match the schema read from %s:\n%sRead the files as one wider schema with "
-            . '->unionByName(), or declare the schema with ->withSchema(...).',
+            . '->unionByName().',
             $source,
             $readFrom,
             $validation->toString(),

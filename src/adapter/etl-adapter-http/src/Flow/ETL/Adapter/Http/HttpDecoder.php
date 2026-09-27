@@ -6,9 +6,6 @@ namespace Flow\ETL\Adapter\Http;
 
 use DOMDocument;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Encoder;
-use Flow\ETL\Row\RawRowValues;
-use Flow\ETL\Row\TypedRowValues;
 use Flow\Types\Type\Logical\XML\XMLConverter;
 use JsonException;
 use Psr\Http\Message\MessageInterface;
@@ -22,17 +19,15 @@ use function sprintf;
 /**
  * A row carries the body as raw text, so response_body holds one type whatever the content type is.
  * Pagination, which needs to navigate into a structured body, calls structuredBody() instead.
- *
- * @implements Encoder<HttpExchange>
  */
-final class HttpEncoder implements Encoder
+final class HttpDecoder
 {
     /**
      * @param list<HttpExchange> $batch
      *
      * @throws RuntimeException
      *
-     * @return list<RawRowValues>
+     * @return list<array<string, mixed>>
      */
     public function decode(array $batch): array
     {
@@ -42,7 +37,7 @@ final class HttpEncoder implements Encoder
             $response = $exchange->response;
             $request = $exchange->request;
 
-            $rows[] = new RawRowValues([
+            $rows[] = [
                 'response_body' => $this->body($response),
                 'response_headers' => $response->getHeaders(),
                 'response_status_code' => $response->getStatusCode(),
@@ -53,20 +48,10 @@ final class HttpEncoder implements Encoder
                 'request_headers' => $request->getHeaders(),
                 'request_protocol_version' => $request->getProtocolVersion(),
                 'request_method' => $request->getMethod(),
-            ]);
+            ];
         }
 
         return $rows;
-    }
-
-    /**
-     * @param list<TypedRowValues> $batch
-     */
-    public function encode(array $batch): array
-    {
-        throw new RuntimeException(
-            'HTTP adapter is read-only, encoding Rows back to an HTTP exchange is not supported.',
-        );
     }
 
     /**

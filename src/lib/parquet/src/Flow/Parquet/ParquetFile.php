@@ -18,13 +18,17 @@ use Flow\Parquet\Thrift\MemoryBuffer;
 use Flow\Parquet\ThriftModel\FileMetaData;
 use Generator;
 
+use function array_keys;
 use function array_map;
+use function array_values;
 use function count;
 use function unpack;
 
 final class ParquetFile
 {
     public const string PARQUET_MAGIC_NUMBER = 'PAR1';
+
+    private const int VALUES_BATCH_SIZE = 1024;
 
     private ?Metadata $metadata = null;
 
@@ -98,15 +102,19 @@ final class ParquetFile
     /**
      * @param array<string> $columns
      *
-     * @return \Generator<int, array<array-key, mixed>>
+     * @return Generator<int, array<string, list<mixed>>>
      */
-    public function values(array $columns = [], ?int $limit = null, ?int $offset = null): Generator
+    public function columns(int $batchSize, array $columns = [], ?int $limit = null, ?int $offset = null): Generator
     {
+        if ($batchSize < 1) {
+            throw new InvalidArgumentException('Batch size must be greater than 0');
+        }
+
         if ($limit !== null && $limit <= 0) {
             throw new InvalidArgumentException('Limit must be greater than 0');
         }
 
-        if ($limit !== null && $offset !== null && $offset < 0) {
+        if ($offset !== null && $offset < 0) {
             throw new InvalidArgumentException('Offset must be greater than or equal to 0');
         }
 
@@ -120,7 +128,37 @@ final class ParquetFile
             }
         }
 
-        yield from $this->engine->readValues($this->stream, $this->schema(), $columns, $limit, $offset);
+        yield from $this->engine->readColumns(
+            $this->stream,
+            $this->schema(),
+            array_values($columns),
+            $batchSize,
+            $limit,
+            $offset,
+        );
+    }
+
+    /**
+     * @param array<string> $columns
+     *
+     * @return Generator<int, array<string, mixed>>
+     */
+    public function values(array $columns = [], ?int $limit = null, ?int $offset = null): Generator
+    {
+        foreach ($this->columns(self::VALUES_BATCH_SIZE, $columns, $limit, $offset) as $chunk) {
+            $names = array_keys($chunk);
+            $count = count($chunk[$names[0]]);
+
+            for ($i = 0; $i < $count; $i++) {
+                $row = [];
+
+                foreach ($names as $name) {
+                    $row[$name] = $chunk[$name][$i];
+                }
+
+                yield $row;
+            }
+        }
     }
 
     /**

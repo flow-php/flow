@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Context;
 
-use Flow\ETL\Row\Hydrator;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
@@ -187,9 +186,8 @@ final class FloeStreamReaderContext
         Schema $schema,
         array $batches,
         Options $options = new Options(),
-        ?Hydrator $hydrator = null,
     ): string {
-        $writer = new FloeWriter($filesystem, $schema, $options, $hydrator);
+        $writer = new FloeWriter($filesystem, $schema, $options);
         $writer->create($path);
 
         foreach ($batches as $batch) {

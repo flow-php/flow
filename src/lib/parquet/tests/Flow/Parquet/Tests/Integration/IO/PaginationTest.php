@@ -150,6 +150,77 @@ class PaginationTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
+    public function test_columns_refuses_a_batch_size_below_one(ParquetEngine $engine): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Batch size must be greater than 0');
+
+        iterator_to_array(
+            (new Reader(engine: $engine))
+                ->read(__DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet')
+                ->columns(0, ['id']),
+        );
+    }
+
+    #[DataProvider('engine_provider')]
+    public function test_columns_refuses_a_limit_of_zero(ParquetEngine $engine): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Limit must be greater than 0');
+
+        iterator_to_array(
+            (new Reader(engine: $engine))
+                ->read(__DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet')
+                ->columns(2, ['id'], limit: 0),
+        );
+    }
+
+    #[DataProvider('engine_provider')]
+    public function test_columns_refuses_a_negative_offset_without_a_limit(ParquetEngine $engine): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Offset must be greater than or equal to 0');
+
+        iterator_to_array(
+            (new Reader(engine: $engine))
+                ->read(__DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet')
+                ->columns(2, ['id'], offset: -1),
+        );
+    }
+
+    #[DataProvider('engine_provider')]
+    public function test_columns_refuses_an_unknown_column(ParquetEngine $engine): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Column "nope" does not exist');
+
+        iterator_to_array(
+            (new Reader(engine: $engine))
+                ->read(__DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet')
+                ->columns(2, ['nope']),
+        );
+    }
+
+    #[DataProvider('engine_provider')]
+    public function test_values_equal_the_zip_of_columns(ParquetEngine $engine): void
+    {
+        $file = (new Reader(engine: $engine))->read(__DIR__
+        . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet');
+
+        $zipped = [];
+
+        foreach ($file->columns(3, ['id', 'name'], limit: 7, offset: 1020) as $chunk) {
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($chunk['id'] as $i => $id) {
+                $zipped[] = ['id' => $id, 'name' => $chunk['name'][$i]];
+            }
+        }
+
+        static::assertSame($zipped, iterator_to_array($file->values(['id', 'name'], limit: 7, offset: 1020), false));
+        static::assertCount(7, $zipped);
+    }
+
+    #[DataProvider('engine_provider')]
     public function test_simple_pagination_on_small_row_group_size(ParquetEngine $engine): void
     {
         $path = __DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet';

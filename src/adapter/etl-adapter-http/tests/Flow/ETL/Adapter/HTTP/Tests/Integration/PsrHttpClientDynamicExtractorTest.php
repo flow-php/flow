@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\HTTP\Tests\Integration;
 
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
+use Flow\ETL\Adapter\HTTP\Tests\Double\NumberedRequestFactory;
+use Flow\ETL\Adapter\HTTP\Tests\Mother\PaginationMother;
 use Flow\ETL\Rows;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Http\Mock\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
@@ -17,6 +20,7 @@ use RuntimeException;
 use function file_get_contents;
 use function Flow\ETL\Adapter\Http\from_dynamic_http_requests;
 use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\map_schema;
@@ -29,6 +33,7 @@ use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function iterator_to_array;
 use function json_encode;
 
 final class PsrHttpClientDynamicExtractorTest extends FlowTestCase
@@ -80,7 +85,7 @@ final class PsrHttpClientDynamicExtractorTest extends FlowTestCase
         }
 
         // The row carries the body as raw text, so response_body holds one type whatever the
-        // content type is; pagination reads the structured map through HttpEncoder::structuredBody().
+        // content type is; pagination reads the structured map through HttpDecoder::structuredBody().
         $body = type_array()->assert(json_decode(
             type_string()->assert($currentRows->first()->get('response_body')),
             true,
@@ -174,5 +179,22 @@ final class PsrHttpClientDynamicExtractorTest extends FlowTestCase
             $rows->schema()->get('response_body')->type(),
         );
         static::assertSame(['login' => 'flow-php', 'id' => 73_495_297], $rows->first()->get('response_body'));
+    }
+
+    public function test_extract_builds_through_the_config_backend(): void
+    {
+        $client = new Client(new Psr17Factory());
+        $client->addResponse(PaginationMother::jsonResponse(['id' => 1]));
+        $backend = new SpyBackend();
+
+        iterator_to_array(
+            from_dynamic_http_requests(
+                $client,
+                new NumberedRequestFactory('https://api.example.com/items/', 1),
+            )->extract(flow_context(config_builder()->backend($backend)->build())),
+            false,
+        );
+
+        static::assertGreaterThanOrEqual(1, $backend->builders());
     }
 }

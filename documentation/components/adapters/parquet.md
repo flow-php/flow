@@ -21,3 +21,23 @@ the robust and adaptable nature of the Flow PHP ecosystem.
 ## Installation
 
 For detailed installation instructions, see the [installation page](/documentation/installation/packages/etl-adapter-parquet.md).
+
+## Schema
+
+The file footer is the schema: `from_parquet(...)->withSchema()` throws. Project with `columns:`, change types after
+reading:
+
+```php
+<?php
+
+use function Flow\ETL\Adapter\Parquet\from_parquet;
+use function Flow\ETL\DSL\{data_frame, ref, to_output, to_timezone};
+use function Flow\Types\DSL\type_json;
+
+data_frame()
+    ->read(from_parquet(__DIR__ . '/orders.parquet', columns: ['id', 'payload', 'created_at']))
+    ->withEntry('payload', ref('payload')->cast(type_json()))
+    ->withEntry('created_at', to_timezone(ref('created_at'), 'Europe/Warsaw'))
+    ->write(to_output())
+    ->run();
+```

@@ -12,10 +12,14 @@ use Flow\ETL\Adapter\Doctrine\Tests\Context\SelectQueryCounter;
 use Flow\ETL\Adapter\Doctrine\Tests\Double\NativeHandleStub;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\SchemaNotDerivableException;
+use Flow\ETL\Rows;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\TestWith;
 use stdClass;
 
+use function array_map;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
@@ -23,6 +27,7 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_string;
+use function iterator_to_array;
 
 final class DbalQueryExtractorTest extends FlowTestCase
 {
@@ -185,5 +190,36 @@ final class DbalQueryExtractorTest extends FlowTestCase
         } finally {
             date_default_timezone_set($previous);
         }
+    }
+
+    public function test_batches_split_at_the_batch_size(): void
+    {
+        $extractor = (new DbalQueryExtractor(
+            InMemorySqlite::withUsers(InMemorySqlite::connection(), 5),
+            'SELECT * FROM users',
+        ))->withBatchSize(2);
+
+        static::assertSame(
+            [2, 2, 1],
+            array_map(
+                static fn(Rows $rows): int => $rows->count(),
+                iterator_to_array($extractor->extract(flow_context()), false),
+            ),
+        );
+    }
+
+    public function test_extract_builds_through_the_config_backend(): void
+    {
+        $backend = new SpyBackend();
+
+        iterator_to_array(
+            (new DbalQueryExtractor(
+                InMemorySqlite::withUsers(InMemorySqlite::connection(), 1),
+                'SELECT * FROM users',
+            ))->extract(flow_context(config_builder()->backend($backend)->build())),
+            false,
+        );
+
+        static::assertGreaterThanOrEqual(1, $backend->builders());
     }
 }

@@ -6,23 +6,14 @@ namespace Flow\ETL\Adapter\Parquet;
 
 use Flow\ETL\Adapter\Parquet\ValueConverter\ValueConverter;
 use Flow\ETL\Adapter\Parquet\ValueConverter\ValueConverters;
-use Flow\ETL\Row\Encoder;
-use Flow\ETL\Row\RawRowValues;
+use Flow\ETL\Rows;
 use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
 use Flow\Types\Type;
 
 use function array_key_exists;
 
-/**
- * @implements Encoder<array<array-key, mixed>>
- */
-final class ParquetEncoder implements Encoder
+final class ParquetEncoder
 {
-    /**
-     * @var array<string, ValueConverter>
-     */
-    private array $decodePlan;
-
     /**
      * @var array<string, array{Type<mixed>, ?ValueConverter}>
      */
@@ -31,46 +22,34 @@ final class ParquetEncoder implements Encoder
     public function __construct(ParquetSchema $schema)
     {
         $converter = new SchemaConverter();
-        $decodePlan = [];
         $encodePlan = [];
 
         foreach ($schema->columns() as $column) {
-            $valueConverter = ValueConverters::for($column);
-
-            $encodePlan[$column->name()] = [$converter->parquetToFlowType($column), $valueConverter];
-
-            if ($valueConverter !== null) {
-                $decodePlan[$column->name()] = $valueConverter;
-            }
+            $encodePlan[$column->name()] = [$converter->parquetToFlowType($column), ValueConverters::for($column)];
         }
 
-        $this->decodePlan = $decodePlan;
         $this->encodePlan = $encodePlan;
     }
 
-    public function decode(array $batch): array
+    /**
+     * @return list<array<array-key, mixed>>
+     */
+    public function encode(Rows $rows): array
     {
-        $decoded = [];
+        $columns = [];
 
-        foreach ($batch as $values) {
-            foreach ($this->decodePlan as $name => $valueConverter) {
-                if (array_key_exists($name, $values) && $values[$name] !== null) {
-                    $values[$name] = $valueConverter->decode($values[$name]);
-                }
-            }
-
-            $decoded[] = new RawRowValues($values);
+        foreach ($rows->schema()->definitions() as $definition) {
+            $columns[$definition->entry()->name()] = $rows->column($definition->entry()->name())->values();
         }
 
-        return $decoded;
-    }
-
-    public function encode(array $batch): array
-    {
         $encoded = [];
 
-        foreach ($batch as $rowValues) {
-            $values = $rowValues->values;
+        for ($i = 0, $count = $rows->count(); $i < $count; $i++) {
+            $values = [];
+
+            foreach ($columns as $name => $column) {
+                $values[$name] = $column[$i];
+            }
 
             foreach ($this->encodePlan as $name => [$type, $valueConverter]) {
                 if (array_key_exists($name, $values) && $values[$name] !== null) {

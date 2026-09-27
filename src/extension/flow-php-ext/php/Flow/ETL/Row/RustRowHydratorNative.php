@@ -30,7 +30,7 @@ final class RustRowHydratorNative
     }
 
     /**
-     * @return list<TypedRowValues>
+     * @return list<object>
      */
     public function dehydrate(Rows $rows): array
     {
