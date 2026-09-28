@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Column\Php;
 
-use Flow\Floe\ValueDecoder;
+use Dom\HTMLDocument;
+use Flow\ETL\Exception\InvalidArgumentException;
 
 use function assert;
+use function class_exists;
 use function is_object;
 use function is_string;
+
+use const LIBXML_NOERROR;
 
 final readonly class HtmlDocumentPhysical implements Physical
 {
@@ -25,7 +29,12 @@ final readonly class HtmlDocumentPhysical implements Physical
     {
         assert(is_string($physical));
 
-        return ValueDecoder::htmlDocumentFromString($physical);
+        if (!class_exists('\Dom\HTMLDocument')) {
+            throw new InvalidArgumentException('Floe cannot restore HTML values, \Dom\HTMLDocument requires PHP 8.4+');
+        }
+
+        // @mago-expect analysis:unavailable-method
+        return HTMLDocument::createFromString($physical, LIBXML_NOERROR);
     }
 
     public function fromPhysicalAll(array $physicals): array
@@ -34,8 +43,7 @@ final readonly class HtmlDocumentPhysical implements Physical
 
         // @mago-ignore analysis:mixed-assignment
         foreach ($physicals as $physical) {
-            assert($physical === null || is_string($physical));
-            $values[] = $physical === null ? null : ValueDecoder::htmlDocumentFromString($physical);
+            $values[] = $physical === null ? null : $this->fromPhysical($physical);
         }
 
         return $values;

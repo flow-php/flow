@@ -7,6 +7,7 @@ namespace Flow\Floe;
 use Flow\ETL\Column\Backend;
 use Flow\ETL\Column\DefaultBackend;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\SourceStream;
 use Flow\Floe\Codec\NoopCodec;
@@ -15,6 +16,7 @@ use Flow\Floe\Exception\FloeException;
 use Flow\Serializer\Exception\SerializationException;
 use Flow\Serializer\Serializer;
 
+use function array_slice;
 use function sprintf;
 
 final class FloeSerializer implements Serializer
@@ -70,7 +72,9 @@ final class FloeSerializer implements Serializer
                 ));
             }
 
-            return Rows::of($reader->schema())->concat(...$batches);
+            return $batches === []
+                ? (new RowsBuilder($reader->schema(), $this->backend))->finish()
+                : $batches[0]->concat(...array_slice($batches, 1));
         } catch (FloeException|ExtensionException $e) {
             throw new SerializationException($e->getMessage(), 0, $e);
         } finally {

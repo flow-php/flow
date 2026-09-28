@@ -21,7 +21,6 @@ use Flow\Floe\Options;
 use Flow\Floe\Section;
 use Flow\Floe\Statistics;
 
-use function count;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
@@ -152,26 +151,29 @@ final class FloeStreamReaderContext
     }
 
     /**
-     * A file holding exactly these ROW frame bodies under `$schema` - frames no FloeWriter would produce.
-     *
-     * @param list<string> $bodies
+     * A file holding exactly these complete frames under `$schema` - frames no FloeWriter would produce.
      */
-    public static function writeFrames(Filesystem $filesystem, Path $path, Schema $schema, array $bodies): void
-    {
+    public static function writeFrames(
+        Filesystem $filesystem,
+        Path $path,
+        Schema $schema,
+        string $frames,
+        int $rowCount,
+    ): void {
         /** @var array<int, array<string, mixed>> $normalized */
         $normalized = $schema->normalize();
         $footerJson = (new Footer(
             Format::VERSION,
             'test',
             $normalized,
-            [new Section(Format::HEADER_LENGTH, count($bodies))],
-            new Statistics(count($bodies), strlen(Format::rowFrames($bodies))),
+            [new Section(Format::HEADER_LENGTH, $rowCount)],
+            new Statistics($rowCount, strlen($frames)),
             Metadata::empty(),
         ))->toJson();
 
         $stream = $filesystem->writeTo($path);
         $stream->append(
-            Format::header(0x00) . Format::rowFrames($bodies)
+            Format::header(0x00) . $frames
                 . Format::frame(Format::FRAME_FOOTER, $footerJson . Format::trailer(strlen($footerJson))),
         );
         $stream->close();

@@ -8,9 +8,11 @@ use Dom\XMLDocument;
 use DOMDocument;
 use DOMElement;
 use Flow\ETL\Column\Php\XmlElementPhysical;
+use Flow\ETL\Exception\InvalidArgumentException;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_string;
 
 final class XmlElementPhysicalTest extends TestCase
@@ -38,5 +40,23 @@ final class XmlElementPhysicalTest extends TestCase
 
         static::assertSame('<root><a>1</a></root>', $markup);
         static::assertInstanceOf(DOMElement::class, $physical->fromPhysical($markup));
+    }
+
+    public function test_restoring_xml_element_from_string(): void
+    {
+        static::assertSame(
+            'item',
+            type_instance_of(DOMElement::class)->assert((new XmlElementPhysical())->fromPhysical(
+                '<item id="5">value</item>',
+            ))->tagName,
+        );
+    }
+
+    public function test_a_detached_dom_element_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('failed to convert DOMElement to XML string');
+
+        (new XmlElementPhysical())->toPhysical(new DOMElement('detached'));
     }
 }

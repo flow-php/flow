@@ -12,8 +12,6 @@ use Flow\Floe\FloeReader;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\Format;
 use Flow\Floe\Options;
-use Flow\Floe\PhpFloeEncoder;
-use Flow\Floe\Tests\Context\FloeSchemaContext;
 use Flow\Floe\Tests\Context\FloeStreamReaderContext;
 use Flow\Floe\Tests\Double\CodecStub;
 use Flow\Floe\Tests\Double\UnsizedFilesystem;
@@ -22,12 +20,12 @@ use Flow\Floe\Tests\Mother\RowsMother;
 use PHPUnit\Framework\TestCase;
 
 use function array_map;
+use function array_merge;
 use function array_slice;
 use function count;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\schema_from_json;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
@@ -85,7 +83,7 @@ final class FloeReaderTest extends TestCase
              */
             static fn(int $batchSize): array => array_map(
                 static fn(Rows $batch): int => $batch->count(),
-                iterator_to_array($reader->rows($batchSize)),
+                iterator_to_array($reader->rows($batchSize), false),
             );
 
         static::assertSame([2, 2, 1], $sizes(2));
@@ -398,13 +396,13 @@ final class FloeReaderTest extends TestCase
         $footerJson = FooterMother::footer(schema: schema(int_schema('id'))->normalize())->toJson();
         $stream = $filesystem->writeTo($path);
         $stream->append(
-            Format::header(0x00) . Format::frame(Format::FRAME_ROW, "\xEE")
+            Format::header(0x00) . Format::frame(Format::FRAME_BATCH, "\xEE")
                 . Format::frame(Format::FRAME_FOOTER, $footerJson . Format::trailer(strlen($footerJson))),
         );
         $stream->close();
 
         $this->expectException(FloeException::class);
-        $this->expectExceptionMessage('unknown value flag');
+        $this->expectExceptionMessage('Floe BATCH frame is truncated, its directory is incomplete');
 
         iterator_to_array(
             (new FloeReader($filesystem))
@@ -456,10 +454,13 @@ final class FloeReaderTest extends TestCase
             (new FloeReader($filesystem))
                 ->read($path)
                 ->rows(),
+            false,
         );
 
-        static::assertCount(1, $batches);
-        static::assertSame([1, 2], array_map(static fn($row) => $row->get('id'), $batches[0]->all()));
+        static::assertSame(
+            [[['id' => 1]], [['id' => 2]]],
+            array_map(static fn(Rows $batch) => $batch->toArray(), $batches),
+        );
     }
 
     public function test_empty_file_yields_no_batches(): void
@@ -473,7 +474,7 @@ final class FloeReaderTest extends TestCase
 
         $reader = (new FloeReader($filesystem))->read($path);
 
-        static::assertSame([], iterator_to_array($reader->rows()));
+        static::assertSame([], iterator_to_array($reader->rows(), false));
         static::assertSame(0, $reader->totalRows());
         static::assertCount(0, $reader->schema()->definitions());
     }
@@ -508,17 +509,18 @@ final class FloeReaderTest extends TestCase
             (new FloeReader($filesystem))
                 ->read($path)
                 ->rows(),
+            false,
         );
-        $rows = $batches[0]->all();
 
-        static::assertCount(4, $rows);
-
-        foreach ($rows as $row) {
-            static::assertSame(['id', 'email'], $row->names());
-        }
-
-        static::assertNull($rows[0]->get('email'));
-        static::assertSame('x@flow.php', $rows[3]->get('email'));
+        static::assertSame(
+            [
+                ['id' => 1, 'email' => null],
+                ['id' => 2, 'email' => null],
+                ['id' => 3, 'email' => null],
+                ['id' => 4, 'email' => 'x@flow.php'],
+            ],
+            array_merge(...array_map(static fn(Rows $batch) => $batch->toArray(), $batches)),
+        );
 
         // the merged schema is what carries nullability now, not a per-cell definition
         $merged = $batches[0]->schema();
@@ -644,80 +646,6 @@ final class FloeReaderTest extends TestCase
 
         static::assertCount(1, $batches);
         static::assertCount(2, $batches[0]->all());
-    }
-
-    public function test_rows_through_a_custom_identity_codec_with_long_row_body_throws(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://custom-codec-long-row.floe');
-        $schemaBody = FloeSchemaContext::schemaBody(schema(int_schema('id')));
-        $rowBody = (new PhpFloeEncoder(schema_from_json($schemaBody)))->encode(array_to_rows([[
-            'id' => 1,
-        ]], schema(int_schema('id'))))[0];
-        $footerJson = FooterMother::footer(schema: schema(int_schema('id'))->normalize())->toJson();
-        $stream = $filesystem->writeTo($path);
-        $stream->append(
-            Format::header(0x00) . Format::frame(Format::FRAME_ROW, $rowBody . 'extra-bytes')
-                . Format::frame(Format::FRAME_FOOTER, $footerJson . Format::trailer(strlen($footerJson))),
-        );
-        $stream->close();
-
-        $this->expectException(FloeException::class);
-        $this->expectExceptionMessage('row frame length does not match its content');
-
-        iterator_to_array(
-            (new FloeReader($filesystem, new CodecStub(0x00)))
-                ->read($path)
-                ->rows(),
-        );
-    }
-
-    public function test_row_frame_not_described_by_the_footer_schema_throws(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://row-first.floe');
-        $footerJson = FooterMother::footer()->toJson();
-        $stream = $filesystem->writeTo($path);
-        $stream->append(
-            Format::header(0x00) . Format::frame(Format::FRAME_ROW, 'row-bytes')
-                . Format::frame(Format::FRAME_FOOTER, $footerJson . Format::trailer(strlen($footerJson))),
-        );
-        $stream->close();
-
-        $this->expectException(FloeException::class);
-        $this->expectExceptionMessage('row frame length does not match its content');
-
-        iterator_to_array(
-            (new FloeReader($filesystem))
-                ->read($path)
-                ->rows(),
-        );
-    }
-
-    public function test_row_body_longer_than_hydrated_content_throws(): void
-    {
-        $filesystem = memory_filesystem();
-        $path = path('memory://long-row.floe');
-        $schemaBody = FloeSchemaContext::schemaBody(schema(int_schema('id')));
-        $rowBody = (new PhpFloeEncoder(schema_from_json($schemaBody)))->encode(array_to_rows([[
-            'id' => 1,
-        ]], schema(int_schema('id'))))[0];
-        $footerJson = FooterMother::footer(schema: schema(int_schema('id'))->normalize())->toJson();
-        $stream = $filesystem->writeTo($path);
-        $stream->append(
-            Format::header(0x00) . Format::frame(Format::FRAME_ROW, $rowBody . 'extra-bytes')
-                . Format::frame(Format::FRAME_FOOTER, $footerJson . Format::trailer(strlen($footerJson))),
-        );
-        $stream->close();
-
-        $this->expectException(FloeException::class);
-        $this->expectExceptionMessage('row frame length does not match its content');
-
-        iterator_to_array(
-            (new FloeReader($filesystem))
-                ->read($path)
-                ->rows(),
-        );
     }
 
     public function test_torn_file_without_footer_throws_in_strict_mode(): void

@@ -30,6 +30,8 @@ use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema\Formatter\InlineSchemaFormatter;
 use Flow\ETL\Schema\SimilarNames;
 use Flow\ETL\Sort\ValuesSorter;
+use Flow\Floe\FrameDecoder;
+use Flow\Floe\FrameEncoder;
 use Flow\Types\Exception\InvalidTypeException;
 use Generator;
 use Iterator;
@@ -50,11 +52,7 @@ use function min;
 use function sprintf;
 
 /**
- * @type RowsPayload = array{
- *     schema: Schema,
- *     count: int,
- *     columns: array<array-key, array{buffers: list<string>, nullCount: int}>
- * }
+ * @type RowsPayload = array{schema: Schema, frame: string}
  *
  * @implements \ArrayAccess<int, Row>
  * @implements \IteratorAggregate<int, Row>
@@ -75,13 +73,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      */
     public function __serialize(): array
     {
-        $columns = [];
-
-        foreach ($this->columns as $name => $column) {
-            $columns[$name] = ['buffers' => $column->encode(), 'nullCount' => $column->nullCount()];
-        }
-
-        return ['schema' => $this->schema, 'count' => $this->count, 'columns' => $columns];
+        return ['schema' => $this->schema, 'frame' => $this->encodeFrame()];
     }
 
     /**
@@ -89,23 +81,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      */
     public function __unserialize(array $data): void
     {
-        if (array_keys($data['columns']) !== array_keys($data['schema']->definitions())) {
-            throw new InvalidArgumentException(sprintf(
-                'Rows::fromColumns() expects columns [%s], got [%s]',
-                implode(', ', array_keys($data['schema']->definitions())),
-                implode(', ', array_keys($data['columns'])),
-            ));
-        }
-
-        $backend = new PhpBackend();
-        $columns = [];
-
-        foreach ($data['schema']->definitions() as $name => $definition) {
-            $column = $data['columns'][$name];
-            $columns[$name] = $backend->decode($definition, $column['buffers'], $data['count'], $column['nullCount']);
-        }
-
-        $rows = self::fromColumns($data['schema'], $columns, $data['count']);
+        $rows = (new FrameDecoder())->decode($data['frame'], $data['schema'], new PhpBackend());
 
         $this->schema = $rows->schema;
         $this->columns = $rows->columns;
@@ -159,6 +135,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      * @param array<array-key, Column> $columns keyed and ordered by $schema, every one of $count rows
      *
      * @throws InvalidArgumentException
+     * @throws SchemaMismatchException a NOT NULL column holds a null
      */
     public static function fromColumns(Schema $schema, array $columns, int $count): self
     {
@@ -177,6 +154,21 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
                     $name,
                     $column->count(),
                     $count,
+                ));
+            }
+        }
+
+        foreach ($schema->definitions() as $name => $definition) {
+            if (!$definition->isNullable() && $columns[$name]->nullCount() > 0) {
+                $index = 0;
+
+                while (!$columns[$name]->isNull($index)) {
+                    $index++;
+                }
+
+                throw new SchemaMismatchException($index, ColumnMismatchException::valueDoesNotMatch(
+                    $definition,
+                    null,
                 ));
             }
         }
@@ -250,6 +242,11 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
     public function columns(): array
     {
         return $this->columns;
+    }
+
+    public function encodeFrame(): string
+    {
+        return (new FrameEncoder())->encode($this);
     }
 
     /**

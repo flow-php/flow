@@ -211,6 +211,15 @@ final class FloeSerializerTest extends TestCase
 
         unserialize_from_string($serializer, serialize_to_string($serializer, RowsMother::numbered(3)));
 
-        static::assertGreaterThanOrEqual(1, $backend->builders());
+        static::assertGreaterThanOrEqual(1, $backend->decodes());
+    }
+
+    public function test_an_empty_payload_unserializes_to_an_empty_batch_of_its_schema(): void
+    {
+        $serializer = new FloeSerializer();
+        $rows = unserialize_from_string($serializer, serialize_to_string($serializer, rows(schema(int_schema('id')))));
+
+        static::assertSame(0, $rows->count());
+        static::assertSame(schema(int_schema('id'))->normalize(), $rows->schema()->normalize());
     }
 }

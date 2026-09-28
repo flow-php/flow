@@ -38,13 +38,13 @@ final class FrameReaderTest extends TestCase
         $bytes = Format::header(0x00);
 
         for ($i = 0; $i < 200; $i++) {
-            $bytes .= Format::frame(Format::FRAME_ROW, $body);
+            $bytes .= Format::frame(Format::FRAME_BATCH, $body);
         }
 
         $read = 0;
 
         foreach (FrameReaderMother::overBytes($bytes, chunkSize: 4096)->frames() as [$type, $frameBody]) {
-            static::assertSame(Format::FRAME_ROW, $type);
+            static::assertSame(Format::FRAME_BATCH, $type);
             static::assertSame($body, $frameBody);
             $read++;
         }
@@ -56,12 +56,12 @@ final class FrameReaderTest extends TestCase
     {
         $bytes =
             Format::header(0x00)
-            . Format::frame(Format::FRAME_ROW, 'row-1')
+            . Format::frame(Format::FRAME_BATCH, 'row-1')
             . Format::frame(Format::FRAME_FOOTER, 'footer');
 
         static::assertSame(
             [
-                [Format::FRAME_ROW,    'row-1'],
+                [Format::FRAME_BATCH,  'row-1'],
                 [Format::FRAME_FOOTER, 'footer'],
             ],
             iterator_to_array(FrameReaderMother::overBytes($bytes)->frames()),
@@ -70,14 +70,14 @@ final class FrameReaderTest extends TestCase
 
     public function test_stream_ending_at_frame_boundary_ends_cleanly(): void
     {
-        $bytes = Format::header(0x00) . Format::frame(Format::FRAME_ROW, 'row');
+        $bytes = Format::header(0x00) . Format::frame(Format::FRAME_BATCH, 'row');
 
         static::assertCount(1, iterator_to_array(FrameReaderMother::overBytes($bytes)->frames()));
     }
 
     public function test_truncated_frame_body_throws(): void
     {
-        $bytes = Format::header(0x00) . chr(Format::FRAME_ROW) . pack('V', 100) . 'short';
+        $bytes = Format::header(0x00) . chr(Format::FRAME_BATCH) . pack('V', 100) . 'short';
 
         $this->expectException(FloeException::class);
         $this->expectExceptionMessage('frame body is incomplete');
@@ -87,7 +87,7 @@ final class FrameReaderTest extends TestCase
 
     public function test_truncated_frame_header_throws(): void
     {
-        $bytes = Format::header(0x00) . chr(Format::FRAME_ROW) . 'xy';
+        $bytes = Format::header(0x00) . chr(Format::FRAME_BATCH) . 'xy';
 
         $this->expectException(FloeException::class);
         $this->expectExceptionMessage('frame header is incomplete');

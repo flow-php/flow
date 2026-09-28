@@ -54,6 +54,14 @@ final class RowsMother
         return rows(schema());
     }
 
+    public static function workedExample(): Rows
+    {
+        return array_to_rows(
+            [['id' => 1, 'name' => 'ab'], ['id' => 2, 'name' => null]],
+            schema(int_schema('id'), str_schema('name', nullable: true)),
+        );
+    }
+
     public static function ids(int $from, int $to): Rows
     {
         return array_to_rows(

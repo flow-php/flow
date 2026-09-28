@@ -6,8 +6,6 @@ namespace Flow\Floe;
 
 use Flow\Filesystem\DestinationStream;
 
-use function chr;
-use function pack;
 use function strlen;
 
 final class FrameWriter
@@ -31,9 +29,9 @@ final class FrameWriter
         $this->position += Format::HEADER_LENGTH;
     }
 
-    public function row(string $body): void
+    public function frame(int $type, string $body): void
     {
-        $this->buffer .= chr(Format::FRAME_ROW) . pack('V', strlen($body)) . $body;
+        $this->buffer .= Format::frame($type, $body);
         $this->position += Format::FRAME_HEADER_LENGTH + strlen($body);
         $this->flushIfFull();
     }

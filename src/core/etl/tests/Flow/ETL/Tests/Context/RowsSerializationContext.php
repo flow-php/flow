@@ -19,7 +19,7 @@ final class RowsSerializationContext
     }
 
     /**
-     * @param array{schema: \Flow\ETL\Schema, count: int, columns: array<array-key, array{buffers: list<string>, nullCount: int}>} $payload
+     * @param array{schema: \Flow\ETL\Schema, frame: string} $payload
      */
     public static function unserialize(array $payload): Rows
     {

@@ -1237,6 +1237,24 @@ final class RowsTest extends FlowTestCase
         Rows::fromColumns(schema(int_schema('id')), ['id' => (new PhpBackend())->constant(int_schema('id'), 1, 2)], 1);
     }
 
+    public function test_of_refuses_a_null_in_a_not_null_column(): void
+    {
+        $this->expectException(SchemaMismatchException::class);
+        $this->expectExceptionMessage(
+            'Rows do not match their schema: column "id" (row 1): could not convert null to integer, column is not nullable',
+        );
+
+        Rows::fromColumns(
+            schema(int_schema('id')),
+            [
+                'id' => array_to_rows([['id' => 1], ['id' => null]], schema(int_schema('id', nullable: true)))->column(
+                    'id',
+                ),
+            ],
+            2,
+        );
+    }
+
     public function test_project_shares_kept_columns(): void
     {
         $rows = array_to_rows([['id' => 1, 'name' => 'a']], schema(int_schema('id'), str_schema('name')));

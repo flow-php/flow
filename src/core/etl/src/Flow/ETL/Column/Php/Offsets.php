@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Column\Php;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\OffsetOverflow;
 
 use function array_values;
 use function count;
@@ -23,7 +24,7 @@ final readonly class Offsets
         $last = $offsets[count($offsets) - 1];
 
         if ($last > 2_147_483_647) {
-            throw new InvalidArgumentException(sprintf(
+            throw new OffsetOverflow(sprintf(
                 'Offsets exceed the i32 range of a batch buffer: the last offset is %d',
                 $last,
             ));

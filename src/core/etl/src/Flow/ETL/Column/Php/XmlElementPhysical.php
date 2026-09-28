@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Column\Php;
 
+use DOMDocument;
 use DOMElement;
-use Flow\Floe\ValueDecoder;
-use Flow\Floe\ValueEncoder;
+use Flow\ETL\Exception\InvalidArgumentException;
 
 use function assert;
+use function Flow\Types\DSL\type_instance_of;
 use function is_string;
+use function sprintf;
 
 /**
  * A \Dom\Element (PHP 8.4) is stored by its markup too and reads back as the DOMElement XMLElementType::cast() builds
@@ -17,10 +19,20 @@ use function is_string;
  */
 final readonly class XmlElementPhysical implements Physical
 {
+    public function __construct(
+        private XmlDocumentPhysical $document = new XmlDocumentPhysical(),
+    ) {}
+
     public function toPhysical(mixed $value): mixed
     {
         if ($value instanceof DOMElement) {
-            return ValueEncoder::xmlElementToString($value);
+            $xml = $value->ownerDocument?->saveXML($value);
+
+            if ($xml === null || $xml === false) {
+                throw new InvalidArgumentException('Floe failed to convert DOMElement to XML string');
+            }
+
+            return $xml;
         }
 
         /** @var \Dom\Element $value */
@@ -36,7 +48,15 @@ final readonly class XmlElementPhysical implements Physical
     {
         assert(is_string($physical));
 
-        return ValueDecoder::xmlElementFromString($physical);
+        $element = type_instance_of(DOMDocument::class)->assert($this->document->fromPhysical(
+            $physical,
+        ))->documentElement;
+
+        if ($element === null) {
+            throw new InvalidArgumentException(sprintf('Floe failed to restore DOMElement from "%s"', $physical));
+        }
+
+        return $element;
     }
 
     public function fromPhysicalAll(array $physicals): array
@@ -45,8 +65,7 @@ final readonly class XmlElementPhysical implements Physical
 
         // @mago-ignore analysis:mixed-assignment
         foreach ($physicals as $physical) {
-            assert($physical === null || is_string($physical));
-            $values[] = $physical === null ? null : ValueDecoder::xmlElementFromString($physical);
+            $values[] = $physical === null ? null : $this->fromPhysical($physical);
         }
 
         return $values;

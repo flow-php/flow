@@ -4,17 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Unit;
 
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\OffsetOverflow;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema\Metadata;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Exception\IncompatibleSchemaException;
+use Flow\Floe\FloeReader;
 use Flow\Floe\FloeStreamWriter;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\Format;
 use Flow\Floe\Options;
 use Flow\Floe\Tests\Context\FloeStreamReaderContext;
 use Flow\Floe\Tests\Double\CodecStub;
+use Flow\Floe\Tests\Double\OverflowingColumnStub;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
+use function array_merge;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\rows;
@@ -22,6 +29,7 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
+use function iterator_to_array;
 
 final class FloeStreamWriterTest extends TestCase
 {
@@ -91,7 +99,7 @@ final class FloeStreamWriterTest extends TestCase
         static::assertSame(3, $footer->statistics->rows);
         static::assertSame(['source' => 'stream'], $footer->metadata->normalize());
         static::assertSame(
-            [Format::FRAME_ROW, Format::FRAME_ROW, Format::FRAME_ROW, Format::FRAME_FOOTER],
+            [Format::FRAME_BATCH, Format::FRAME_FOOTER],
             FloeStreamReaderContext::frameTypes($filesystem, $path),
         );
     }
@@ -125,7 +133,7 @@ final class FloeStreamWriterTest extends TestCase
         $writer->write(array_to_rows([['id' => 1]], schema(int_schema('id'))));
     }
 
-    public function test_aligned_multi_batch_session_is_byte_identical_to_a_single_batch(): void
+    public function test_a_multi_batch_session_reads_back_the_rows_of_a_single_batch(): void
     {
         $filesystem = memory_filesystem();
         $multi = path('memory://multi-batch.floe');
@@ -148,7 +156,26 @@ final class FloeStreamWriterTest extends TestCase
         $singleWriter->write($data);
         $singleWriter->close();
 
-        static::assertSame($filesystem->readFrom($single)->content(), $filesystem->readFrom($multi)->content());
+        static::assertSame(
+            [Format::FRAME_BATCH, Format::FRAME_BATCH, Format::FRAME_FOOTER],
+            FloeStreamReaderContext::frameTypes($filesystem, $multi),
+        );
+        static::assertSame(
+            (new FloeReader($filesystem))
+                ->read($single)
+                ->rows()
+                ->current()
+                ->toArray(),
+            array_merge(...array_map(
+                static fn(Rows $batch) => $batch->toArray(),
+                iterator_to_array(
+                    (new FloeReader($filesystem))
+                        ->read($multi)
+                        ->rows(),
+                    false,
+                ),
+            )),
+        );
 
         $footer = FloeStreamReaderContext::footer($filesystem, $multi);
         static::assertNotSame([], $footer->schema);
@@ -282,31 +309,6 @@ final class FloeStreamWriterTest extends TestCase
         $writer->close();
     }
 
-    public function test_multi_batch_is_byte_identical_to_single_batch(): void
-    {
-        $filesystem = memory_filesystem();
-        $multi = path('memory://off-multi.floe');
-        $single = path('memory://off-single.floe');
-        $data = array_to_rows(
-            [['id' => 1, 'name' => 'a'], ['id' => 2, 'name' => 'b']],
-            schema(int_schema('id'), str_schema('name')),
-        );
-        $schema = $data->schema();
-
-        $multiWriter = new FloeStreamWriter($schema);
-        $multiWriter->create($filesystem->writeTo($multi));
-        $multiWriter->write(array_to_rows([['id' => 1, 'name' => 'a']], schema(int_schema('id'), str_schema('name'))));
-        $multiWriter->write(array_to_rows([['id' => 2, 'name' => 'b']], schema(int_schema('id'), str_schema('name'))));
-        $multiWriter->close();
-
-        $singleWriter = new FloeStreamWriter($schema);
-        $singleWriter->create($filesystem->writeTo($single));
-        $singleWriter->write($data);
-        $singleWriter->close();
-
-        static::assertSame($filesystem->readFrom($single)->content(), $filesystem->readFrom($multi)->content());
-    }
-
     public function test_a_later_null_into_a_non_nullable_session_column_is_rejected(): void
     {
         $first = array_to_rows([['id' => 1, 'opt' => 'present']], schema(int_schema('id'), str_schema('opt')));
@@ -354,5 +356,89 @@ final class FloeStreamWriterTest extends TestCase
         $this->expectExceptionMessage('new column "b"');
 
         $writer->write(array_to_rows([['a' => 1, 'b' => 2]], schema(int_schema('a'), int_schema('b'))));
+    }
+
+    public function test_an_overflowing_batch_is_split_in_halves(): void
+    {
+        $filesystem = memory_filesystem();
+        $path = path('memory://split.floe');
+        $schema = schema(int_schema('id'), str_schema('name'));
+        $data = array_to_rows([
+            ['id' => 1, 'name' => 'a'],
+            ['id' => 2, 'name' => 'b'],
+            ['id' => 3, 'name' => 'c'],
+            ['id' => 4, 'name' => 'd'],
+        ], $schema);
+        $rows = Rows::fromColumns(
+            $schema,
+            [
+                'id' => $data->column('id'),
+                'name' => new OverflowingColumnStub($data->column('name'), new OffsetOverflow('overflow'), maxRows: 2),
+            ],
+            4,
+        );
+
+        $writer = new FloeStreamWriter($schema);
+        $writer->create($filesystem->writeTo($path));
+        $writer->write($rows);
+        $writer->close();
+
+        static::assertSame(
+            [Format::FRAME_BATCH, Format::FRAME_BATCH, Format::FRAME_FOOTER],
+            FloeStreamReaderContext::frameTypes($filesystem, $path),
+        );
+        static::assertSame(
+            [[1, 2], [3, 4]],
+            array_map(
+                static fn(Rows $batch) => $batch->reduceToArray('id'),
+                iterator_to_array(
+                    (new FloeReader($filesystem))
+                        ->read($path)
+                        ->rows(),
+                    false,
+                ),
+            ),
+        );
+    }
+
+    public function test_a_corrupt_column_fails_on_the_first_encode(): void
+    {
+        $filesystem = memory_filesystem();
+        $schema = schema(str_schema('name'));
+        $name = new OverflowingColumnStub(
+            array_to_rows([['name' => 'a'], ['name' => 'b']], $schema)->column('name'),
+            new InvalidArgumentException('corrupt offsets'),
+            maxRows: 0,
+        );
+
+        $writer = new FloeStreamWriter($schema);
+        $writer->create($filesystem->writeTo(path('memory://corrupt.floe')));
+
+        try {
+            $writer->write(Rows::fromColumns($schema, ['name' => $name], 2));
+            static::fail('A corrupt column must fail the write');
+        } catch (InvalidArgumentException $e) {
+            static::assertSame('corrupt offsets', $e->getMessage());
+            static::assertSame(1, $name->encodeCalls);
+        }
+    }
+
+    public function test_a_single_overflowing_row_rethrows_offset_overflow(): void
+    {
+        $filesystem = memory_filesystem();
+        $schema = schema(str_schema('name'));
+        $name = new OverflowingColumnStub(
+            array_to_rows([['name' => 'a']], $schema)->column('name'),
+            new OffsetOverflow('overflow'),
+            maxRows: 0,
+        );
+
+        $writer = new FloeStreamWriter($schema);
+        $writer->create($filesystem->writeTo(path('memory://single.floe')));
+
+        $this->expectException(OffsetOverflow::class);
+        $this->expectExceptionMessage('overflow (row 0)');
+
+        $writer->write(Rows::fromColumns($schema, ['name' => $name], 1));
     }
 }

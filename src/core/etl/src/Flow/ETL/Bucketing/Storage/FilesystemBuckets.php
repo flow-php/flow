@@ -15,6 +15,8 @@ use Flow\Floe\FloeWriter;
 use Flow\Floe\Options;
 use Generator;
 
+use function array_slice;
+
 final class FilesystemBuckets implements BucketsStorage
 {
     private readonly Path $cacheDir;
@@ -74,9 +76,25 @@ final class FilesystemBuckets implements BucketsStorage
 
         // finally, not a trailing close(): PHP runs it on generator destruction too, and a KWayMerge cursor is
         // destroyed rather than exhausted when a merge throws
+        // every append() is one Floe frame and a read never spans two, so small appends are coalesced back into
+        // batches of up to batchSize rows
+        $pending = [];
+        $pendingRows = 0;
+
         try {
             foreach ($reader->rows($this->batchSize) as $batch) {
-                yield $batch;
+                if (($pendingRows + $batch->count()) > $this->batchSize) {
+                    yield $pending[0]->concat(...array_slice($pending, 1));
+                    $pending = [];
+                    $pendingRows = 0;
+                }
+
+                $pending[] = $batch;
+                $pendingRows += $batch->count();
+            }
+
+            if ($pending !== []) {
+                yield $pending[0]->concat(...array_slice($pending, 1));
             }
         } finally {
             $reader->close();

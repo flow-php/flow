@@ -6,13 +6,14 @@ namespace Flow\ETL\Tests\Unit;
 
 use DOMDocument;
 use DOMElement;
+use Flow\ETL\Column\Php\HtmlDocumentPhysical;
+use Flow\ETL\Column\Php\HtmlElementPhysical;
 use Flow\ETL\Column\PhpBackend;
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\Context\RowsSerializationContext;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\Floe\ValueDecoder;
+use Flow\Floe\Exception\FloeException;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 
 use function assert;
@@ -32,9 +33,11 @@ use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_object;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function pack;
 use function serialize;
 use function unserialize;
 
@@ -118,7 +121,7 @@ final class RowsSerializationTest extends FlowTestCase
     #[RequiresPhp('>= 8.4.0')]
     public function test_html_document_survives_a_round_trip(): void
     {
-        $document = ValueDecoder::htmlDocumentFromString('<p>x</p>');
+        $document = type_object()->assert((new HtmlDocumentPhysical())->fromPhysical('<p>x</p>'));
 
         static::assertSame(
             type_string()->cast($document),
@@ -131,7 +134,7 @@ final class RowsSerializationTest extends FlowTestCase
     #[RequiresPhp('>= 8.4.0')]
     public function test_html_element_survives_a_round_trip(): void
     {
-        $element = ValueDecoder::htmlElementFromString('<p>x</p>');
+        $element = type_object()->assert((new HtmlElementPhysical())->fromPhysical('<p>x</p>'));
 
         static::assertSame(
             type_string()->cast($element),
@@ -187,27 +190,35 @@ final class RowsSerializationTest extends FlowTestCase
         static::assertSame(3, RowsSerializationContext::roundTrip($rows)->count());
     }
 
-    public function test_unserialize_refuses_columns_that_disagree_with_the_schema(): void
+    public function test_unserialize_refuses_a_frame_that_disagrees_with_the_schema(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Rows::fromColumns() expects columns [id], got [other]');
+        $this->expectException(FloeException::class);
+        $this->expectExceptionMessage('Floe BATCH frame holds 2 nodes, the schema describes 1');
 
         RowsSerializationContext::unserialize([
             'schema' => schema(int_schema('id')),
-            'count' => 1,
-            'columns' => ['other' => ['buffers' => ['', "\x01\x00\x00\x00\x00\x00\x00\x00"], 'nullCount' => 0]],
+            'frame' => array_to_rows(
+                [['id' => 1, 'other' => 2]],
+                schema(int_schema('id'), int_schema('other')),
+            )->encodeFrame(),
         ]);
     }
 
     public function test_unserialize_refuses_a_corrupt_buffer(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Int64 values buffer of 2 bytes, expected 8 for 1 rows');
+        $this->expectException(FloeException::class);
+        $this->expectExceptionMessage('is malformed: Int64 values buffer of 2 bytes, expected 8 for 1 rows');
 
         RowsSerializationContext::unserialize([
             'schema' => schema(int_schema('id')),
-            'count' => 1,
-            'columns' => ['id' => ['buffers' => ['', "\x01\x00"], 'nullCount' => 0]],
+            'frame' =>
+                pack('VVV', 1, 1, 2)
+                    . pack('VV', 1, 0)
+                    . pack('VV', 0, 0)
+                    . pack('VV', 0, 10)
+                    . "\0\0\0\0"
+                    . pack('P', -1)
+                    . "\x01\x00\0\0\0\0\0\0",
         ]);
     }
 }

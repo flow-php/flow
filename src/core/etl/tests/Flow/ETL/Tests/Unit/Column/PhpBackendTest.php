@@ -513,7 +513,7 @@ final class PhpBackendTest extends TestCase
         ];
         yield 'map entries validity present' => [
             map_schema('a', type_map(type_string(), type_integer())),
-            ['', "\x00\x00\x00\x00\x00\x00\x00\x00", "\x01"],
+            ['', "\x00\x00\x00\x00\x00\x00\x00\x00", "\x01", '', "\x00\x00\x00\x00", '', '', ''],
             1,
             0,
             'Map entries validity must be omitted, got 1 bytes',

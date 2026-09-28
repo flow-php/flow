@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Context;
 
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Filesystem;
@@ -30,25 +29,6 @@ final class FloeFilesContext
     public static function phpReader(Filesystem $filesystem, Codec $codec = new NoopCodec()): FloeReader
     {
         return new FloeReader($filesystem, $codec);
-    }
-
-    /**
-     * @return list<Row>
-     */
-    public static function readRows(FloeReader $reader, Path $path): array
-    {
-        $file = $reader->read($path);
-        $rows = [];
-
-        foreach ($file->rows() as $batch) {
-            foreach ($batch as $row) {
-                $rows[] = $row;
-            }
-        }
-
-        $file->close();
-
-        return $rows;
     }
 
     /**

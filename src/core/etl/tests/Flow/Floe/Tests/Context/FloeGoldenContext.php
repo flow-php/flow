@@ -40,8 +40,8 @@ final class FloeGoldenContext
 
     /**
      * Rewrites every golden file from the batches above. Committed on purpose: fixtures are only
-     * trustworthy when the thing that made them is reviewable, and phase 5 of the format bump has
-     * to be reproducible by someone who is not the author.
+     * trustworthy when the thing that made them is reviewable and reproducible by someone who is not
+     * the author.
      */
     public static function regenerate(string $version = self::VERSION_DIRECTORY): void
     {

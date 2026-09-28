@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Column\Php;
 
 use Flow\ETL\Column\Php\Offsets;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\OffsetOverflow;
 use PHPUnit\Framework\TestCase;
 
 use function bin2hex;
@@ -25,7 +26,7 @@ final class OffsetsTest extends TestCase
 
     public function test_refuses_an_offset_past_the_i32_range(): void
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(OffsetOverflow::class);
         $this->expectExceptionMessage('Offsets exceed the i32 range of a batch buffer: the last offset is 2147483648');
 
         (new Offsets())->pack([0, 2_147_483_648]);

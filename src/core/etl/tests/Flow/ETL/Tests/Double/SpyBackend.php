@@ -14,6 +14,8 @@ final class SpyBackend implements Backend
 {
     private int $builders = 0;
 
+    private int $decodes = 0;
+
     private readonly PhpBackend $php;
 
     public function __construct()
@@ -33,6 +35,11 @@ final class SpyBackend implements Backend
         return $this->builders;
     }
 
+    public function decodes(): int
+    {
+        return $this->decodes;
+    }
+
     public function constant(Definition $definition, mixed $value, int $count): Column
     {
         return $this->php->constant($definition, $value, $count);
@@ -40,6 +47,8 @@ final class SpyBackend implements Backend
 
     public function decode(Definition $definition, array $buffers, int $count, int $nullCount): Column
     {
+        $this->decodes++;
+
         return $this->php->decode($definition, $buffers, $count, $nullCount);
     }
 }

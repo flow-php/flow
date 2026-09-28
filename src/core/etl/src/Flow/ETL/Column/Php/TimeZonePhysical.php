@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Column\Php;
 
 use DateTimeZone;
-use Flow\Floe\Decoding\TimeZones;
 
 use function assert;
 use function is_string;

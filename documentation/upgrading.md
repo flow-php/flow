@@ -488,20 +488,20 @@ document written by 0.45.x that has a structure column. Clear APCu and natively 
 
 ### 49) `flow-php/etl` - `Rows` is a columnar batch, `Row` is a view
 
-| Before                                                                                                     | After                                                                                            |
-|------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
-| `new Rows($schema, ...$rows)`                                                                              | `Rows::of($schema, ...$rows)` / `rows($schema, ...$rows)`                                        |
-| `Rows::trusted($schema, $rows)` / `Rows::conformed($schema, $rows)`                                        | `Rows::of($schema, ...$rows)` (views) / `Rows::fromColumns($schema, $columns, $count)` (columns) |
-| `new Row(array $values)`                                                                                   | `array_to_row($values, $schema)`                                                                 |
-| -                                                                                                          | `new Row(Rows $rows, int $index)` - a view over row `$index` of `$rows`                          |
-| `Row::matchTo()` / `Row::conformTo()` / `Row::project()`                                                   | removed - `Rows::matchTo()` / `Rows::project()`                                                  |
-| `Rows::empty(): bool`                                                                                      | `Rows::isEmpty(): bool`                                                                          |
-| `Row::get()` of a datetime / date / time / uuid / json / xml / html cell - the instance handed in          | a new object per call - compare with `assertEquals`, not `assertSame`                            |
-| a `DOMElement` / `HTMLElement` cell keeps its document (parent and siblings reachable)                     | the cell is the element's own markup - navigate from the document column (`xpath()`)             |
-| an optional and nullable structure element given `null`                                                    | reads back absent (the element's validity bit)                                                   |
-| `$row == $other` - compares the rows' values                                                               | compares both views' whole batches and indices - compare `toArray()`                             |
-| `serialize(Rows)` payload `{schema, rows}`                                                                 | `{schema, count, columns}` - payloads of 0.44.x cannot be unserialized                           |
-| `Rows::drop()` / `dropRight()` / `take()` / `takeRight()` with a negative size - `array_slice()` semantics | `InvalidArgumentException`                                                                       |
+| Before                                                                                                     | After                                                                                                                        |
+|------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| `new Rows($schema, ...$rows)`                                                                              | `Rows::of($schema, ...$rows)` / `rows($schema, ...$rows)`                                                                    |
+| `Rows::trusted($schema, $rows)` / `Rows::conformed($schema, $rows)`                                        | `Rows::of($schema, ...$rows)` (views) / `Rows::fromColumns($schema, $columns, $count)` (columns)                             |
+| `new Row(array $values)`                                                                                   | `array_to_row($values, $schema)`                                                                                             |
+| -                                                                                                          | `new Row(Rows $rows, int $index)` - a view over row `$index` of `$rows`                                                      |
+| `Row::matchTo()` / `Row::conformTo()` / `Row::project()`                                                   | removed - `Rows::matchTo()` / `Rows::project()`                                                                              |
+| `Rows::empty(): bool`                                                                                      | `Rows::isEmpty(): bool`                                                                                                      |
+| `Row::get()` of a datetime / date / time / uuid / json / xml / html cell - the instance handed in          | a new object per call - compare with `assertEquals`, not `assertSame`                                                        |
+| a `DOMElement` / `HTMLElement` cell keeps its document (parent and siblings reachable)                     | the cell is the element's own markup - navigate from the document column (`xpath()`)                                         |
+| an optional and nullable structure element given `null`                                                    | reads back absent (the element's validity bit)                                                                               |
+| `$row == $other` - compares the rows' values                                                               | compares both views' whole batches and indices - compare `toArray()`                                                         |
+| `serialize(Rows)` payload `{schema, rows}`                                                                 | `{schema, frame}` - the Floe BATCH body; payloads of 0.44.x cannot be unserialized, a corrupt payload throws `FloeException` |
+| `Rows::drop()` / `dropRight()` / `take()` / `takeRight()` with a negative size - `array_slice()` semantics | `InvalidArgumentException`                                                                                                   |
 
 ### 50) `flow-php/etl` - `row()`, `InferredBatch` and `DataFrame::getEach()` removed
 
@@ -545,10 +545,10 @@ document written by 0.45.x that has a structure column. Clear APCu and natively 
 
 ### 54) `flow-php/etl` - `FloeEngine` and `NativeFloeEncoder` removed
 
-| Before                                                                                                                      | After                                |
-|-----------------------------------------------------------------------------------------------------------------------------|--------------------------------------|
-| `from_floe(..., engine: ...)` / `to_floe(..., engine: ...)`                                                                 | removed - Floe runs `PhpFloeEncoder` |
-| the `engine` parameter of `FloeReader`, `FloeWriter`, `FloeStreamReader`, `FloeStreamWriter`, `FloeExtractor`, `FloeLoader` | removed                              |
+| Before                                                                                                                      | After   |
+|-----------------------------------------------------------------------------------------------------------------------------|---------|
+| `from_floe(..., engine: ...)` / `to_floe(..., engine: ...)`                                                                 | removed |
+| the `engine` parameter of `FloeReader`, `FloeWriter`, `FloeStreamReader`, `FloeStreamWriter`, `FloeExtractor`, `FloeLoader` | removed |
 
 ### 55) `flow-php/etl` - engine classes follow the batch
 
@@ -609,14 +609,11 @@ different instant; it now stays a `datetime` unless it is cast to a date explici
 
 ### 61) `flow-php/etl` - Floe takes a `Backend`
 
-| Before                                                                                    | After                                                                 |
-|-------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
-| `?Hydrator $hydrator` on `FloeReader`, `FloeStreamReader`, `FloeSerializer`, `FloeMerger` | `Backend $backend = new DefaultBackend()`                             |
-| `?Hydrator $hydrator` on `FloeWriter`, `FloeStreamWriter`                                 | removed                                                               |
-| `new PhpFloeEncoder(Schema)`                                                              | `new PhpFloeEncoder(Schema, Backend $backend = new DefaultBackend())` |
-| `FloeEncoder::decodeRows(array, Schema, Hydrator)`, `encodeFrames(Rows, Hydrator)`        | `decodeRows(array, Schema)`, `encodeFrames(Rows)`                     |
-| `PhpFloeEncoder::encode(list<TypedRowValues>)`                                            | `PhpFloeEncoder::encode(Rows)`                                        |
-| `FloeMerger(Filesystem, ?Hydrator, Codec)`                                                | `FloeMerger(Filesystem, Backend, Codec)`                              |
+| Before                                                                                    | After                                     |
+|-------------------------------------------------------------------------------------------|-------------------------------------------|
+| `?Hydrator $hydrator` on `FloeReader`, `FloeStreamReader`, `FloeSerializer`, `FloeMerger` | `Backend $backend = new DefaultBackend()` |
+| `?Hydrator $hydrator` on `FloeWriter`, `FloeStreamWriter`                                 | removed                                   |
+| `FloeMerger(Filesystem, ?Hydrator, Codec)`                                                | `FloeMerger(Filesystem, Backend, Codec)`  |
 
 ### 62) adapters - encoders split into decoders and encoders
 
@@ -664,6 +661,21 @@ Project with `from_parquet(..., columns: [...])`. Change a type after reading, e
 | Before                                        | After                                       |
 |-----------------------------------------------|---------------------------------------------|
 | `RowPartitions::of(Row $row, Schema $schema)` | `RowPartitions::of(Rows $rows, int $index)` |
+
+### 66) `flow-php/etl` - Floe writes one BATCH frame per batch
+
+| Before                                                                                                                                                                                                     | After                                                                                                                           |
+|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
+| `FloeEncoder`, `PhpFloeEncoder`, `Format::rowFrames()`, `Format::metadataBytes()`, `Format::readMetadata()`, `Format::FRAME_ROW`, `Format::VALUE_*_BYTE`, `Flow\Floe\ValueEncoder`, `Flow\Floe\Encoding\*` | removed - `Rows::encodeFrame()` / `Flow\Floe\FrameEncoder`                                                                      |
+| `Flow\Floe\Decoding\*`, `Flow\Floe\ValueDecoder`, `Flow\Floe\SchemaDecoder`, `Flow\Floe\ColumnBlueprint`                                                                                                   | removed - `Flow\Floe\FrameDecoder`                                                                                              |
+| `FrameWriter::row(string $body)`                                                                                                                                                                           | `FrameWriter::frame(int $type, string $body)`                                                                                   |
+| `ValueEncoder::{xmlDocument,xmlElement,htmlElement}ToString()`, `ValueDecoder::{xmlDocument,xmlElement,htmlDocument,htmlElement}FromString()`                                                              | removed - `(new XmlDocumentPhysical())->toPhysical()` / `fromPhysical()` and the other `Flow\ETL\Column\Php\*Physical`          |
+| `Flow\Floe\Decoding\TimeZones`                                                                                                                                                                             | `Flow\ETL\Column\Php\TimeZones`                                                                                                 |
+| `Offsets::pack()` throws `InvalidArgumentException` past 2³¹−1                                                                                                                                             | throws `Flow\ETL\Exception\OffsetOverflow` (extends `InvalidArgumentException`)                                                 |
+| `from_floe()->withBatchSize($n)`, `FloeReader::rows($n)` - batches of exactly `$n` rows                                                                                                                    | at most `$n` rows, never spanning two BATCH frames - re-batch with `->batchSize($n)`                                            |
+| a codec wraps every frame body                                                                                                                                                                             | a codec wraps each buffer of a BATCH frame behind an i64 uncompressed length (`-1` = stored raw); the directory stays plaintext |
+| a null in a NOT NULL column refused by the Floe writer (`SchemaMismatchException`)                                                                                                                         | refused by `Rows::fromColumns()` / `withColumns()` with the same exception and message, whatever the sink                       |
+| an XML/HTML value that cannot be converted to or from its string while building a column throws `FloeException`                                                                                            | throws `Flow\ETL\Exception\InvalidArgumentException`, same message                                                              |
 ---
 
 ## Upgrading from 0.43.x to 0.44.x

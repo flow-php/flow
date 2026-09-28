@@ -317,7 +317,7 @@ final class FloeExtractorTest extends FlowTestCase
             flow_context(config_builder()->backend($backend)->build()),
         ));
 
-        static::assertGreaterThanOrEqual(1, $backend->builders());
+        static::assertGreaterThanOrEqual(1, $backend->decodes());
     }
 
     public function test_negative_offset_throws(): void

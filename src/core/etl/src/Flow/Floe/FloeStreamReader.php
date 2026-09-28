@@ -10,15 +10,12 @@ use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
 use Flow\Filesystem\SourceStream;
-use Flow\Floe\Codec\NoopCodec;
 use Flow\Floe\Exception\ExtensionException;
 use Flow\Floe\Exception\FloeException;
 use Flow\Serializer\Exception\SerializationException;
 use Generator;
 
-use function count;
 use function max;
-use function min;
 use function ord;
 use function sprintf;
 use function strlen;
@@ -27,11 +24,11 @@ use function unpack;
 
 final class FloeStreamReader
 {
-    private ?FloeEncoder $encoder = null;
-
     private ?Footer $footer = null;
 
     private ?Schema $schema = null;
+
+    private readonly FrameDecoder $frameDecoder;
 
     /**
      * @throws FloeException
@@ -43,16 +40,12 @@ final class FloeStreamReader
         private readonly Backend $backend = new DefaultBackend(),
     ) {
         Format::validateCodecId($this->codec->id());
+        $this->frameDecoder = new FrameDecoder($this->codec);
     }
 
     public function close(): void
     {
         $this->source->close();
-    }
-
-    private function encoder(Schema $schema): FloeEncoder
-    {
-        return $this->encoder ??= new PhpFloeEncoder($schema, $this->backend);
     }
 
     /**
@@ -74,7 +67,8 @@ final class FloeStreamReader
     /**
      * Hot path: frames are walked in-buffer. offset skips whole leading sections
      * using the footer, then the remaining rows inside the start section; limit
-     * stops the read after that many rows.
+     * stops the read after that many rows. Batches are frame-sized: batchSize is
+     * an upper bound, a batch never spans two BATCH frames.
      *
      * @param int<1, max> $batchSize
      *
@@ -167,6 +161,8 @@ final class FloeStreamReader
      * The single strict frame-walk shared by rows() and rowsFromOffset(); they
      * differ only in how it is seeded - start position and skip. The
      * file carries exactly one schema, so decode state comes from the footer.
+     * Every BATCH frame yields at most batchSize rows per batch; a frame wholly
+     * inside skip is passed over without decoding.
      *
      * @param \Generator<int, string> $chunks
      * @param int<1, max> $batchSize
@@ -187,10 +183,6 @@ final class FloeStreamReader
         $fill = FrameReader::chunkFiller($buffer, $position, $chunks);
 
         $yielded = 0;
-        /** @var list<string> $pending */
-        $pending = [];
-        $flushThreshold = $limit !== null && $limit < $batchSize ? $limit : $batchSize;
-        $transforms = !$this->codec instanceof NoopCodec;
 
         try {
             while (true) {
@@ -212,29 +204,48 @@ final class FloeStreamReader
 
                 $frameEnd = $position + $frameLength;
 
-                if ($frameType === Format::FRAME_ROW) {
-                    if ($skip > 0) {
-                        $skip--;
+                if ($frameType === Format::FRAME_BATCH) {
+                    if ($frameLength < 4) {
+                        throw new FloeException('Floe BATCH frame is truncated, its directory is incomplete');
+                    }
+
+                    /** @var int $rowCount */
+                    $rowCount = unpack('V', $buffer, $position)[1];
+
+                    if ($skip >= $rowCount) {
+                        $skip -= $rowCount;
                     } else {
-                        $body = substr($buffer, $position, $frameLength);
-                        $pending[] = $transforms ? $this->codec->decode($body) : $body;
+                        $rows = $this->frameDecoder->decode(
+                            substr($buffer, $position, $frameLength),
+                            $schema,
+                            $this->backend,
+                        );
+
+                        if ($skip > 0) {
+                            $rows = $rows->slice($skip, $rows->count() - $skip);
+                            $skip = 0;
+                        }
+
+                        if ($limit !== null && $rows->count() > ($limit - $yielded)) {
+                            $rows = $rows->slice(0, $limit - $yielded);
+                        }
+
+                        if ($rows->count() <= $batchSize) {
+                            yield $rows;
+                        } else {
+                            foreach ($rows->chunks($batchSize) as $chunk) {
+                                yield $chunk;
+                            }
+                        }
+
+                        $yielded += $rows->count();
+
+                        if ($limit !== null && $yielded === $limit) {
+                            return;
+                        }
                     }
 
                     $position = $frameEnd;
-
-                    if (count($pending) === $flushThreshold) {
-                        yield $this->decode($schema, $pending);
-                        $yielded += $flushThreshold;
-                        $pending = [];
-
-                        if ($limit !== null) {
-                            if ($yielded === $limit) {
-                                return;
-                            }
-
-                            $flushThreshold = min($batchSize, $limit - $yielded);
-                        }
-                    }
                 } elseif ($frameType === Format::FRAME_FOOTER) {
                     $position = $frameEnd;
                 } else {
@@ -246,25 +257,9 @@ final class FloeStreamReader
                     $position = 0;
                 }
             }
-
-            if ($pending !== []) {
-                yield $this->decode($schema, $pending);
-            }
         } catch (SerializationException|ExtensionException $e) {
             throw new FloeException($e->getMessage(), 0, $e);
         }
-    }
-
-    /**
-     * A batch carries the file schema even when `decodeRows` folded per-value metadata into a schema of its own.
-     *
-     * @param list<string> $pending
-     */
-    private function decode(Schema $schema, array $pending): Rows
-    {
-        $rows = $this->encoder($schema)->decodeRows($pending, $schema);
-
-        return $rows->schema() === $schema ? $rows : $rows->withSchema($schema);
     }
 
     /**

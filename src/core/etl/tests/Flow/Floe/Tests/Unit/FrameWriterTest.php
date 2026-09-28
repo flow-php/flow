@@ -28,15 +28,15 @@ final class FrameWriterTest extends TestCase
         static::assertSame(Format::HEADER_LENGTH, $writer->position());
     }
 
-    public function test_row_frame_is_type_length_prefixed_body(): void
+    public function test_frame_is_type_length_prefixed_body(): void
     {
         $sink = new StringDestinationStream(path('memory://frame.floe'));
         $writer = new FrameWriter($sink, 0x00);
 
-        $writer->row('abc');
+        $writer->frame(Format::FRAME_BATCH, 'abc');
         $writer->flush();
 
-        static::assertSame(chr(Format::FRAME_ROW) . pack('V', 3) . 'abc', $sink->content());
+        static::assertSame(chr(Format::FRAME_BATCH) . pack('V', 3) . 'abc', $sink->content());
         static::assertSame(Format::FRAME_HEADER_LENGTH + 3, $writer->position());
     }
 
@@ -71,7 +71,7 @@ final class FrameWriterTest extends TestCase
 
         static::assertSame(128, $writer->position());
 
-        $writer->row('x');
+        $writer->frame(Format::FRAME_BATCH, 'x');
 
         static::assertSame(128 + Format::FRAME_HEADER_LENGTH + 1, $writer->position());
     }
@@ -93,9 +93,9 @@ final class FrameWriterTest extends TestCase
         $sink = new StringDestinationStream(path('memory://frame.floe'));
         $writer = new FrameWriter($sink, 0x00);
 
-        $writer->row('pending');
+        $writer->frame(Format::FRAME_BATCH, 'pending');
         $writer->close();
 
-        static::assertSame(chr(Format::FRAME_ROW) . pack('V', 7) . 'pending', $sink->content());
+        static::assertSame(chr(Format::FRAME_BATCH) . pack('V', 7) . 'pending', $sink->content());
     }
 }

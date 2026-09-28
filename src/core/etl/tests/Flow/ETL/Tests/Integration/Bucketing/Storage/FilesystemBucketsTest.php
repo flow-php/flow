@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Integration\Bucketing\Storage;
 use DateTimeImmutable;
 use Flow\ETL\Bucketing\Storage\FilesystemBuckets;
 use Flow\ETL\Row;
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\Context\BucketsStorageContext;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Floe\Exception\IncompatibleSchemaException;
@@ -27,6 +28,7 @@ use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function iterator_to_array;
 
 final class FilesystemBucketsTest extends FlowIntegrationTestCase
 {
@@ -105,6 +107,28 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $storage->append('bucket', array_to_rows([['id' => 1], ['id' => 2], ['id' => 3]], schema(int_schema('id'))));
 
         static::assertCount(3, BucketsStorageContext::rows($storage->get('bucket')));
+
+        $this->fs()->rm($cacheDir);
+    }
+
+    public function test_small_appends_read_back_coalesced_up_to_the_batch_size(): void
+    {
+        $cacheDir = path(__DIR__ . '/var/buckets_coalesced');
+        $this->fs()->rm($cacheDir);
+
+        $storage = new FilesystemBuckets($this->fs(), cacheDir: $cacheDir, batchSize: 3);
+
+        foreach ([1, 2, 3, 4, 5] as $id) {
+            $storage->append('bucket', array_to_rows([['id' => $id]], schema(int_schema('id'))));
+        }
+
+        static::assertSame(
+            [[1, 2, 3], [4, 5]],
+            array_map(
+                static fn(Rows $batch) => $batch->reduceToArray('id'),
+                iterator_to_array($storage->get('bucket'), false),
+            ),
+        );
 
         $this->fs()->rm($cacheDir);
     }

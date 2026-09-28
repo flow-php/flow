@@ -220,7 +220,7 @@ final class FloeWriterTest extends TestCase
         $filesystem = memory_filesystem();
         $path = path('memory://torn.floe');
         $stream = $filesystem->writeTo($path);
-        $stream->append(Format::header(0x00) . Format::frame(Format::FRAME_ROW, 'not closed'));
+        $stream->append(Format::header(0x00) . Format::frame(Format::FRAME_BATCH, 'not closed'));
         $stream->close();
 
         $this->expectException(FloeException::class);
@@ -326,7 +326,7 @@ final class FloeWriterTest extends TestCase
         $writer->close();
 
         static::assertSame(
-            [Format::FRAME_ROW, Format::FRAME_FOOTER, Format::FRAME_ROW, Format::FRAME_FOOTER],
+            [Format::FRAME_BATCH, Format::FRAME_FOOTER, Format::FRAME_BATCH, Format::FRAME_FOOTER],
             FloeStreamReaderContext::frameTypes($filesystem, $path),
         );
 
@@ -404,7 +404,7 @@ final class FloeWriterTest extends TestCase
         static::assertSame(2, $footer->statistics->rows);
         static::assertCount(1, $footer->sections);
         static::assertSame(
-            [Format::FRAME_ROW, Format::FRAME_ROW, Format::FRAME_FOOTER],
+            [Format::FRAME_BATCH, Format::FRAME_BATCH, Format::FRAME_FOOTER],
             FloeStreamReaderContext::frameTypes($filesystem, $path),
         );
     }
@@ -475,7 +475,7 @@ final class FloeWriterTest extends TestCase
         static::assertSame(Format::HEADER_LENGTH, $footer->sections[0]->offset);
 
         foreach ($footer->sections as $section) {
-            static::assertSame(Format::FRAME_ROW, ord($source->read(1, $section->offset)));
+            static::assertSame(Format::FRAME_BATCH, ord($source->read(1, $section->offset)));
         }
     }
 
