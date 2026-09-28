@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Excel\Tests\Unit;
 
 use Flow\ETL\Adapter\Excel\WorkbookSheetSample;
-use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function iterator_to_array;
@@ -16,8 +15,8 @@ final class WorkbookSheetSampleTest extends FlowTestCase
     {
         $sample = new WorkbookSheetSample(
             (static function () {
-                yield new RawRowValues(['id' => 1]);
-                yield new RawRowValues(['id' => 2]);
+                yield ['id' => 1];
+                yield ['id' => 2];
             })(),
         );
 
@@ -33,8 +32,8 @@ final class WorkbookSheetSampleTest extends FlowTestCase
     {
         $sample = new WorkbookSheetSample(
             (static function () {
-                yield new RawRowValues(['id' => 1]);
-                yield new RawRowValues(['id' => 2]);
+                yield ['id' => 1];
+                yield ['id' => 2];
             })(),
         );
 
@@ -48,7 +47,7 @@ final class WorkbookSheetSampleTest extends FlowTestCase
     {
         $sample = new WorkbookSheetSample(
             (static function () {
-                yield new RawRowValues(['id' => 1]);
+                yield ['id' => 1];
             })(),
         );
 

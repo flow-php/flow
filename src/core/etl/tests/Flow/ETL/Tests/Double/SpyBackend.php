@@ -12,15 +12,35 @@ use Flow\ETL\Schema\Definition;
 
 final class SpyBackend implements Backend
 {
+    private int $adopts = 0;
+
     private int $builders = 0;
 
     private int $decodes = 0;
 
     private readonly PhpBackend $php;
 
-    public function __construct()
-    {
+    public function __construct(
+        private readonly int $allocatedBytes = 0,
+    ) {
         $this->php = new PhpBackend();
+    }
+
+    public function adopt(Definition $definition, Column $column): Column
+    {
+        $this->adopts++;
+
+        return $this->php->adopt($definition, $column);
+    }
+
+    public function adopts(): int
+    {
+        return $this->adopts;
+    }
+
+    public function allocatedBytes(): int
+    {
+        return $this->allocatedBytes;
     }
 
     public function builder(Definition $definition): ColumnBuilder

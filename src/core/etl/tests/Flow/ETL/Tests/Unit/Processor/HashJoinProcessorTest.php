@@ -12,6 +12,7 @@ use Flow\ETL\Join\Comparison\Equal;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Tests\Double\CountingExtractor;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\Double\SpyBucketsStorage;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\HashJoinProcessorMother;
@@ -19,6 +20,7 @@ use Flow\ETL\Tests\Mother\PhysicalPlanMother;
 use Flow\ETL\Tests\Mother\RowsMother;
 
 use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
@@ -655,5 +657,28 @@ final class HashJoinProcessorTest extends FlowTestCase
         $batches = iterator_to_array($processor->process($generator, flow_context()), false);
 
         static::assertSame([['id' => 1, 'r_id' => 1, 'r_name' => 'Alice']], $batches[0]->toArray());
+    }
+
+    public function test_join_output_builds_with_the_configured_backend(): void
+    {
+        $backend = new SpyBackend();
+        $processor = HashJoinProcessorMother::grace(
+            PhysicalPlanMother::reading(from_rows(array_to_rows(
+                [['user_id' => 1, 'name' => 'Alice']],
+                schema(int_schema('user_id'), str_schema('name')),
+            ))),
+            Expression::on(['id' => 'user_id']),
+            Join::inner,
+        );
+        $generator = (static function () {
+            yield array_to_rows([['id' => 1, 'amount' => 100]], schema(int_schema('id'), int_schema('amount')));
+        })();
+
+        iterator_to_array(
+            $processor->process($generator, flow_context(config_builder()->backend($backend)->build())),
+            false,
+        );
+
+        static::assertGreaterThan(0, $backend->builders());
     }
 }

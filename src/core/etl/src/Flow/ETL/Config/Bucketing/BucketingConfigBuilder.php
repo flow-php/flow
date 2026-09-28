@@ -6,6 +6,7 @@ namespace Flow\ETL\Config\Bucketing;
 
 use Flow\ETL\Bucketing\BucketsStorage;
 use Flow\ETL\Bucketing\Storage\FilesystemBuckets;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
@@ -49,12 +50,13 @@ final class BucketingConfigBuilder
         return $this;
     }
 
-    public function build(Path $spillRoot): BucketingConfig
+    public function build(Path $spillRoot, Backend $backend): BucketingConfig
     {
         return new BucketingConfig(
             $this->storage ?? new FilesystemBuckets(
                 new NativeLocalFilesystem(),
                 $spillRoot->suffix($this->spillDirectory),
+                $backend,
                 $this->batchSize,
             ),
             $this->bucketsCount,

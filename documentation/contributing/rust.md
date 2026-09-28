@@ -8,7 +8,7 @@ This document describes how to develop the two Rust PHP extensions in this monor
 | Extension | Package | What it provides |
 |---|---|---|
 | `arrow-ext` | `flow-php/arrow-ext` | Parquet reader and writer powered by the [Apache Arrow](https://arrow.apache.org/) Rust ecosystem, exposed as `Flow\Arrow\Parquet\Reader` and `Flow\Arrow\Parquet\Writer` |
-| `flow-php-ext` | `flow-php/flow-php-ext` | Native Floe binary frame encoding/decoding and row hydration/casting against a schema |
+| `flow-php-ext` | `flow-php/flow-php-ext` | The native column backend (`Flow\ETL\Column\DefaultBackend`, `NativeColumn`, `NativeColumnBuilder` over Apache Arrow arrays) and the native CSV reader |
 
 Both are optional. The pure-PHP implementations in `flow-php/etl` remain the canonical behaviour reference, and Flow
 routes to the native code automatically when the extension is loaded.
@@ -58,16 +58,24 @@ src/extension/flow-php-ext/
 ├── Makefile                # Build orchestration
 ├── src/                    # Rust source code
 │   ├── lib.rs              # Extension entry point, module registration
-│   ├── encode.rs           # Floe frame body encoder
-│   ├── format.rs           # Floe binary format primitives
-│   ├── hydrate.rs          # Row hydration against a schema
+│   ├── interfaces.rs       # Flow\ETL\Column\{Backend, Column, ColumnBuilder}, registered at MINIT
+│   ├── backend.rs          # DefaultBackend
+│   ├── column.rs           # NativeColumn
+│   ├── builder.rs          # NativeColumnBuilder: native cast lanes, PHP lane for the rest
+│   ├── kind_builder.rs     # Arrow storage appended row by row
+│   ├── physical.rs         # Arrow rows as physical and logical zvals
+│   ├── plan.rs             # Per-type plan, cached by Type object and type JSON
+│   ├── render.rs           # flow-batch-frame refusals as the PHP messages
 │   ├── cast.rs             # Value casting
 │   ├── json_check.rs       # JSON validation shared by casting and CSV inference
-│   ├── csv/                # CSV tokenizer, reader and schema-inference fold
-│   ├── plan.rs             # Per-column plan resolved once per schema
-│   ├── ctx.rs              # Shared module context
+│   ├── csv/                # CSV tokenizer, reader, native columns and schema-inference fold
+│   ├── ctx.rs              # Request-scoped context and engine helpers
+│   ├── globals.rs          # Module globals, RINIT/RSHUTDOWN
+│   ├── alloc.rs            # Counting global allocator (allocatedBytes())
 │   ├── values.rs           # Zval <-> PHP value helpers
 │   └── exception.rs        # Exception mapping
+├── crates/
+│   └── flow-batch-frame/   # Pure-Rust column buffers and BATCH frame bodies (no PHP types)
 ├── php/                    # PHP stubs for static analysis
 │   └── Flow/
 ├── tests/
@@ -133,3 +141,24 @@ Re-enter `nix-shell` to rebuild the derivation, or build and test the extension 
 ```bash
 nix-shell --arg with-rust true --run "cd src/extension/flow-php-ext && make build && make test"
 ```
+
+This covers `crates/flow-batch-frame`, which the flow-php-ext build compiles from the same directory.
+
+## The flow-batch-frame crate
+
+`src/extension/flow-php-ext/crates/flow-batch-frame` holds Flow's batch layout in pure Rust: one column's buffers in the
+canonical form of `Column::encode()` and back, and the BATCH frame body around them. It returns every refusal as a data
+`Error` variant; `flow_php` renders each into the PHP message. flow-php-ext depends on it by `path`:
+
+```bash
+nix-shell --arg with-rust true --run "cd src/extension/flow-php-ext/crates/flow-batch-frame && cargo test"
+```
+
+arrow-ext will hold a copy of the crate; the two copies stay identical, and each is pinned to the PHP reference by its own
+tests.
+
+## Releasing
+
+Cutting a minor tag `X.Y.0` includes bumping `flow-php-ext-version` and `arrow-ext-version` in
+`.nix/pkgs/php-{flow-php,arrow}-ext/package.nix` to `X.(Y+1).0-dev` in the commit right after the tag. Untagged builds
+report `X.(Y+1).0-dev+<commits>.g<sha>`; the CI literal check backstops a missed bump.

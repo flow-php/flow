@@ -8,7 +8,7 @@ use Flow\ETL\Bucketing\Hasher;
 use Flow\ETL\Bucketing\KeyValues;
 use Flow\ETL\Bucketing\NativeHasher;
 use Flow\ETL\Bucketing\SingleBucketHasher;
-use Flow\ETL\Column\DefaultBackend;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Exception\DuplicatedEntriesException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Join\Expression;
@@ -43,6 +43,7 @@ final class Joiner
     public function __construct(
         private readonly Expression $expression,
         private readonly Join $type,
+        private readonly Backend $backend,
         private readonly int $batchSize = 1000,
     ) {
         // @mago-ignore analysis:invalid-operand
@@ -145,7 +146,7 @@ final class Joiner
                 // a later batch can be wider than the side schema the output was derived from, and every arm answers
                 // for the same declared output - the builder ignores the undeclared keys and pads the nulls the join
                 // introduced
-                yield (new RowsBuilder($outputSchema, new DefaultBackend()))
+                yield (new RowsBuilder($outputSchema, $this->backend))
                     ->appendRows($joined)
                     ->finish();
             }
@@ -161,7 +162,7 @@ final class Joiner
                 $pending[] = $this->merge($nullLeftRow, $rightRow);
 
                 if (count($pending) >= $this->batchSize) {
-                    yield (new RowsBuilder($outputSchema, new DefaultBackend()))
+                    yield (new RowsBuilder($outputSchema, $this->backend))
                         ->appendRows($pending)
                         ->finish();
                     $pending = [];
@@ -169,7 +170,7 @@ final class Joiner
             }
 
             if ($pending !== []) {
-                yield (new RowsBuilder($outputSchema, new DefaultBackend()))
+                yield (new RowsBuilder($outputSchema, $this->backend))
                     ->appendRows($pending)
                     ->finish();
             }
@@ -252,7 +253,7 @@ final class Joiner
             }
 
             if ($joined !== []) {
-                yield (new RowsBuilder($outputSchema, new DefaultBackend()))
+                yield (new RowsBuilder($outputSchema, $this->backend))
                     ->appendRows($joined)
                     ->finish();
             }
@@ -269,7 +270,7 @@ final class Joiner
                 $pending[] = $this->type === Join::left ? $this->merge($leftRow, $nullRightRow) : $leftRow->values();
 
                 if (count($pending) >= $this->batchSize) {
-                    yield (new RowsBuilder($outputSchema, new DefaultBackend()))
+                    yield (new RowsBuilder($outputSchema, $this->backend))
                         ->appendRows($pending)
                         ->finish();
                     $pending = [];
@@ -277,7 +278,7 @@ final class Joiner
             }
 
             if ($pending !== []) {
-                yield (new RowsBuilder($outputSchema, new DefaultBackend()))
+                yield (new RowsBuilder($outputSchema, $this->backend))
                     ->appendRows($pending)
                     ->finish();
             }

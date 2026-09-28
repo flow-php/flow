@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Join\HashJoin;
 
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
 use Flow\ETL\Join\Comparison\All;
 use Flow\ETL\Join\Comparison\Any;
@@ -36,6 +37,7 @@ final class JoinerTest extends FlowTestCase
         $joiner = new Joiner(
             Expression::on(new Any(new Equal('id', 'user_id'), new Equal('email', 'contact'))),
             Join::inner,
+            new PhpBackend(),
         );
 
         foreach ($joiner->join(
@@ -87,6 +89,7 @@ final class JoinerTest extends FlowTestCase
                 ),
             ),
             Join::inner,
+            new PhpBackend(),
         );
 
         foreach ($joiner->join(
@@ -133,7 +136,7 @@ final class JoinerTest extends FlowTestCase
 
         $joined = [];
 
-        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::inner);
+        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::inner, new PhpBackend());
 
         foreach ($joiner->join(
             JoinSide::of($batches(array_to_rows([['id' => 1]], schema(int_schema('id'))))),
@@ -158,7 +161,7 @@ final class JoinerTest extends FlowTestCase
 
         $joined = [];
 
-        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::inner);
+        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::inner, new PhpBackend());
 
         foreach ($joiner->join(
             JoinSide::of($batches(array_to_rows(
@@ -196,7 +199,7 @@ final class JoinerTest extends FlowTestCase
 
         $joined = [];
 
-        $joiner = new Joiner(join_on(['id' => 'id']), Join::inner);
+        $joiner = new Joiner(join_on(['id' => 'id']), Join::inner, new PhpBackend());
 
         foreach ($joiner->join(
             JoinSide::of($batches(array_to_rows(
@@ -225,7 +228,7 @@ final class JoinerTest extends FlowTestCase
         $joined = [];
 
         // int 1 and string "1" hash into the same bucket but are not identical
-        $joiner = new Joiner(Expression::on(new Identical('id', 'user_id')), Join::left_anti);
+        $joiner = new Joiner(Expression::on(new Identical('id', 'user_id')), Join::left_anti, new PhpBackend());
 
         $right = static function (): Generator {
             yield array_to_rows([['user_id' => '2']], schema(str_schema('user_id')));
@@ -254,7 +257,7 @@ final class JoinerTest extends FlowTestCase
         $joined = [];
 
         // int 1 and string "1" hash into the same bucket but are not identical
-        $joiner = new Joiner(Expression::on(new Identical('id', 'user_id')), Join::left);
+        $joiner = new Joiner(Expression::on(new Identical('id', 'user_id')), Join::left, new PhpBackend());
 
         foreach ($joiner->join(
             JoinSide::of($batches(array_to_rows(
@@ -282,7 +285,7 @@ final class JoinerTest extends FlowTestCase
 
         $joined = [];
 
-        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left);
+        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left, new PhpBackend());
 
         foreach ($joiner->join(
             JoinSide::of($batches(array_to_rows(
@@ -317,7 +320,7 @@ final class JoinerTest extends FlowTestCase
         $this->expectException(SchemaDefinitionNotUniqueException::class);
         $this->expectExceptionMessage('Entry definitions must be unique, duplicated entries: [left_name]');
 
-        $joiner = new Joiner(join_on(['id' => 'user_id'], join_prefix: 'left_'), Join::inner);
+        $joiner = new Joiner(join_on(['id' => 'user_id'], join_prefix: 'left_'), Join::inner, new PhpBackend());
 
         foreach ($joiner->join(
             JoinSide::of($batches(array_to_rows(
@@ -341,7 +344,7 @@ final class JoinerTest extends FlowTestCase
 
         $joined = [];
 
-        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::inner);
+        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::inner, new PhpBackend());
 
         foreach ($joiner->join(
             JoinSide::of($batches(array_to_rows(
@@ -380,7 +383,7 @@ final class JoinerTest extends FlowTestCase
 
         $joined = [];
 
-        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left_anti);
+        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left_anti, new PhpBackend());
 
         foreach ($joiner->join(
             JoinSide::of($batches(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))))),
@@ -403,7 +406,7 @@ final class JoinerTest extends FlowTestCase
 
         $joined = [];
 
-        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left);
+        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left, new PhpBackend());
 
         foreach ($joiner->join(
             JoinSide::of($batches(array_to_rows(
@@ -442,7 +445,7 @@ final class JoinerTest extends FlowTestCase
 
         $joined = [];
 
-        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left);
+        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left, new PhpBackend());
 
         foreach ($joiner->join(
             JoinSide::of($batches(array_to_rows(
@@ -468,7 +471,7 @@ final class JoinerTest extends FlowTestCase
 
         $joined = [];
 
-        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::right);
+        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::right, new PhpBackend());
 
         foreach ($joiner->join(
             JoinSide::of($batches(array_to_rows(
@@ -503,7 +506,7 @@ final class JoinerTest extends FlowTestCase
 
         $joined = [];
 
-        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::right);
+        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::right, new PhpBackend());
 
         foreach ($joiner->join(
             JoinSide::of($batches(array_to_rows(
@@ -535,7 +538,7 @@ final class JoinerTest extends FlowTestCase
             yield $rows;
         };
 
-        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left);
+        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left, new PhpBackend());
 
         $emitted = iterator_to_array(
             $joiner->join(
@@ -568,7 +571,7 @@ final class JoinerTest extends FlowTestCase
             yield $rows;
         };
 
-        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::right);
+        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::right, new PhpBackend());
 
         $emitted = iterator_to_array(
             $joiner->join(
@@ -597,7 +600,7 @@ final class JoinerTest extends FlowTestCase
 
     public function test_every_batch_of_a_multi_batch_left_side_shares_one_output_schema(): void
     {
-        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left);
+        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left, new PhpBackend());
 
         $emitted = iterator_to_array(
             $joiner->join(
@@ -635,7 +638,7 @@ final class JoinerTest extends FlowTestCase
             yield $rows;
         };
 
-        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left);
+        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left, new PhpBackend());
 
         $joined = [];
 
@@ -670,7 +673,7 @@ final class JoinerTest extends FlowTestCase
             yield $rows;
         };
 
-        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left);
+        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left, new PhpBackend());
 
         $joined = [];
 
@@ -704,7 +707,7 @@ final class JoinerTest extends FlowTestCase
             yield $rows;
         };
 
-        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left);
+        $joiner = new Joiner(join_on(['id' => 'user_id']), Join::left, new PhpBackend());
 
         $joined = [];
 

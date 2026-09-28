@@ -34,7 +34,8 @@ final readonly class TopNRewrite implements Rewrite
         }
 
         $config = $this->context->config;
-        $algorithm = $sort->algorithm?->build($config->cache->localFilesystemCacheDir) ?? $config->sort;
+        $algorithm =
+            $sort->algorithm?->build($config->cache->localFilesystemCacheDir, $config->backend()) ?? $config->sort;
 
         if ($algorithm instanceof ExternalSortConfig && $node->limit > $algorithm->runSize) {
             return $node;

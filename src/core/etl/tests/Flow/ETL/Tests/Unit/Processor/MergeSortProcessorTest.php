@@ -14,6 +14,7 @@ use Flow\ETL\NativePHPRandomValueGenerator;
 use Flow\ETL\Processor\BucketingProcessor;
 use Flow\ETL\Processor\MergeSortProcessor;
 use Flow\ETL\Rows;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\Double\SpyBucketsStorage;
 use Flow\ETL\Tests\Double\ThrowingRemoveBucketsStorage;
 use Flow\ETL\Tests\FlowTestCase;
@@ -23,6 +24,7 @@ use function array_map;
 use function array_merge;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
@@ -299,5 +301,30 @@ final class MergeSortProcessorTest extends FlowTestCase
             0,
             1000,
         );
+    }
+
+    public function test_merge_builds_with_the_configured_backend(): void
+    {
+        $backend = new SpyBackend();
+        $storage = new MemoryBuckets();
+        $buckets = new Buckets($storage);
+        $context = flow_context(config_builder()->backend($backend)->build());
+        $bucketing = new BucketingProcessor(
+            new SortedRunBucketing([ref('id')->asc()], 2, new NativePHPRandomValueGenerator()),
+            $buckets,
+        );
+        $merge = new MergeSortProcessor(
+            refs(ref('id')->asc()),
+            $buckets,
+            new Buckets($storage),
+            new NativePHPRandomValueGenerator(),
+        );
+        $input = (static function () {
+            yield array_to_rows([['id' => 3], ['id' => 1], ['id' => 2]], schema(int_schema('id')));
+        })();
+
+        iterator_to_array($merge->process($bucketing->process($input, $context), $context), false);
+
+        static::assertGreaterThan(0, $backend->builders());
     }
 }

@@ -8,13 +8,18 @@ use Flow\ETL\Column\Php\Buffers;
 use Flow\ETL\Column\Php\CastingColumnBuilder;
 use Flow\ETL\Column\Php\ColumnDecoder;
 use Flow\ETL\Column\Php\ConstantColumn;
+use Flow\ETL\Column\Php\ListColumn;
+use Flow\ETL\Column\Php\MapColumn;
 use Flow\ETL\Column\Php\PhysicalBuilderFor;
 use Flow\ETL\Column\Php\PhysicalFor;
+use Flow\ETL\Column\Php\ScalarColumn;
+use Flow\ETL\Column\Php\StructColumn;
 use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\NullDefinition;
 
+use function range;
 use function sprintf;
 
 final readonly class PhpBackend implements Backend
@@ -62,5 +67,31 @@ final readonly class PhpBackend implements Backend
         }
 
         return $column;
+    }
+
+    public function adopt(Definition $definition, Column $column): Column
+    {
+        if (
+            $column instanceof ScalarColumn
+            || $column instanceof ConstantColumn
+            || $column instanceof ListColumn
+            || $column instanceof MapColumn
+            || $column instanceof StructColumn
+        ) {
+            return $column;
+        }
+
+        $builder = $this->builder($definition);
+
+        if ($column->count() > 0) {
+            $builder->appendTake($column, range(0, $column->count() - 1));
+        }
+
+        return $builder->finish();
+    }
+
+    public function allocatedBytes(): int
+    {
+        return 0;
     }
 }

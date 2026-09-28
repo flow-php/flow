@@ -73,6 +73,9 @@ final readonly class ScalarFunctionFilter implements Filter
         }
 
         // @mago-ignore analysis:mixed-operand
-        return (bool) $this->resolved->eval(array_to_row($values, schema(...$definitions)), $this->context);
+        return (bool) $this->resolved->eval(
+            array_to_row($values, schema(...$definitions), $this->context->backend()),
+            $this->context,
+        );
     }
 }

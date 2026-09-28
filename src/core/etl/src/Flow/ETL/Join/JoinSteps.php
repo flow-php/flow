@@ -26,7 +26,7 @@ final readonly class JoinSteps
         Config $config,
         ?JoinAlgorithmBuilder $algorithm = null,
     ): array {
-        $join = $algorithm?->build($config->cache->localFilesystemCacheDir) ?? $config->join;
+        $join = $algorithm?->build($config->cache->localFilesystemCacheDir, $config->backend()) ?? $config->join;
 
         return [
             new HashJoinProcessor(

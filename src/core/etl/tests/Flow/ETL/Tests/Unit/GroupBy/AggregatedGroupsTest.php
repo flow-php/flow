@@ -38,7 +38,7 @@ final class AggregatedGroupsTest extends FlowTestCase
         $groups->accumulate(array_to_rows([['country' => 'PL', 'amount' => 30]], $input), flow_context(config()));
 
         /** @var list<Rows> $batches */
-        $batches = iterator_to_array($groups->flush(1000));
+        $batches = iterator_to_array($groups->flush(1000, flow_context(config())));
 
         static::assertCount(1, $batches);
         static::assertSame(
@@ -62,7 +62,7 @@ final class AggregatedGroupsTest extends FlowTestCase
         $groups->accumulate(array_to_rows([['country' => 'PL', 'amount' => 10]], $input), flow_context(config()));
 
         /** @var list<Rows> $batches */
-        $batches = iterator_to_array($groups->flush(1000));
+        $batches = iterator_to_array($groups->flush(1000, flow_context(config())));
 
         static::assertEquals($shape->output, $batches[0]->schema());
         static::assertEquals(schema(str_schema('country'), float_schema('amount_sum', nullable: true)), $shape->output);
@@ -84,7 +84,10 @@ final class AggregatedGroupsTest extends FlowTestCase
 
         static::assertSame(
             [2, 1],
-            array_map(static fn(Rows $batch): int => $batch->count(), iterator_to_array($groups->flush(2))),
+            array_map(
+                static fn(Rows $batch): int => $batch->count(),
+                iterator_to_array($groups->flush(2, flow_context(config()))),
+            ),
         );
     }
 
@@ -98,7 +101,7 @@ final class AggregatedGroupsTest extends FlowTestCase
             int_schema('amount'),
         )));
 
-        static::assertSame([], iterator_to_array($groups->flush(1000)));
+        static::assertSame([], iterator_to_array($groups->flush(1000, flow_context(config()))));
     }
 
     public function test_a_row_missing_a_nullable_group_key_lands_in_the_null_group(): void
@@ -116,7 +119,7 @@ final class AggregatedGroupsTest extends FlowTestCase
         ], $input), flow_context(config()));
 
         /** @var list<Rows> $batches */
-        $batches = iterator_to_array($groups->flush(1000));
+        $batches = iterator_to_array($groups->flush(1000, flow_context(config())));
 
         static::assertSame(
             [

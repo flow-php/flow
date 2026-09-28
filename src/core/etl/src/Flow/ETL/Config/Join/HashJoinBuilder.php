@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Config\Join;
 
 use Flow\ETL\Bucketing\BucketsStorage;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Config\Bucketing\BucketingConfigBuilder;
 use Flow\Filesystem\Path;
 
@@ -27,9 +28,9 @@ final class HashJoinBuilder implements JoinAlgorithmBuilder
         return $this;
     }
 
-    public function build(Path $spillRoot): HashJoinConfig
+    public function build(Path $spillRoot, Backend $backend): HashJoinConfig
     {
-        return new HashJoinConfig($this->bucketing->build($spillRoot));
+        return new HashJoinConfig($this->bucketing->build($spillRoot, $backend));
     }
 
     /**

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Double;
 
 use ArrayIterator;
-use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Schema\Inference\ColumnTypes;
 use Flow\ETL\Schema\Inference\SchemaInference;
 use Flow\ETL\Schema\Inference\SniffsColumnTypes;
@@ -17,7 +16,7 @@ use RuntimeException;
  * A sample that sniffs itself: records what SchemaInferrer hands it and answers with a canned fold. Iterating it
  * fails - infer() must never fall back to row-by-row observe() for a unit that sniffs itself.
  *
- * @implements IteratorAggregate<int, RawRowValues>
+ * @implements IteratorAggregate<int, array<array-key, mixed>>
  */
 final class SpySniffingSample implements IteratorAggregate, SniffsColumnTypes
 {
@@ -31,7 +30,7 @@ final class SpySniffingSample implements IteratorAggregate, SniffsColumnTypes
     ) {}
 
     /**
-     * @return ArrayIterator<int, RawRowValues>
+     * @return ArrayIterator<int, array<array-key, mixed>>
      */
     public function getIterator(): ArrayIterator
     {

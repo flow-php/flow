@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
 use Flow\ETL\Adapter\CSV\Tests\Context\CSVFixtureContext;
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use PHPUnit\Framework\Attributes\TestWith;
 
 use function count;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function iterator_to_array;
 
 final class CSVFileReaderTest extends FlowTestCase
@@ -19,7 +23,12 @@ final class CSVFileReaderTest extends FlowTestCase
     {
         $sizes = [];
 
-        foreach (CSVFixtureContext::reader()->batches(CSVFixtureContext::source('five_rows.csv'), 2) as $batch) {
+        foreach (CSVFixtureContext::reader()->batches(
+            CSVFixtureContext::source('five_rows.csv'),
+            schema(int_schema('id'), str_schema('name')),
+            2,
+            new PhpBackend(),
+        ) as $batch) {
             $sizes[] = count($batch);
         }
 
@@ -29,7 +38,12 @@ final class CSVFileReaderTest extends FlowTestCase
     public function test_batches_closes_its_stream_when_abandoned(): void
     {
         $counting = new CountingFilesystem(new NativeLocalFilesystem());
-        $batches = CSVFixtureContext::reader($counting)->batches(CSVFixtureContext::source('five_rows.csv'), 2);
+        $batches = CSVFixtureContext::reader($counting)->batches(
+            CSVFixtureContext::source('five_rows.csv'),
+            schema(int_schema('id'), str_schema('name')),
+            2,
+            new PhpBackend(),
+        );
 
         $batches->current();
         unset($batches);
@@ -43,16 +57,16 @@ final class CSVFileReaderTest extends FlowTestCase
     {
         static::assertSame(
             [],
-            iterator_to_array(CSVFixtureContext::reader()->batches(CSVFixtureContext::source($fixture), 10), false),
+            iterator_to_array(
+                CSVFixtureContext::reader()->batches(
+                    CSVFixtureContext::source($fixture),
+                    schema(int_schema('id'), str_schema('name')),
+                    10,
+                    new PhpBackend(),
+                ),
+                false,
+            ),
         );
-    }
-
-    public function test_batches_return_the_header_of_a_source_without_rows(): void
-    {
-        $batches = CSVFixtureContext::reader()->batches(CSVFixtureContext::source('header_only.csv'), 10);
-
-        static::assertSame([], iterator_to_array($batches, false));
-        static::assertSame(['id', 'name'], $batches->getReturn());
     }
 
     public function test_columns_of_one_source(): void
@@ -133,7 +147,7 @@ final class CSVFileReaderTest extends FlowTestCase
 
         foreach (CSVFixtureContext::globReader('columns_diverge/*.csv')->samples(10) as $unit) {
             foreach ($unit as $values) {
-                $first[] = $values->values;
+                $first[] = $values;
 
                 break;
             }

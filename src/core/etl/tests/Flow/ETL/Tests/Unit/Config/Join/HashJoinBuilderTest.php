@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Config\Join;
 
 use Flow\ETL\Bucketing\Storage\FilesystemBuckets;
 use Flow\ETL\Bucketing\Storage\MemoryBuckets;
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Path;
 
@@ -15,7 +16,7 @@ final class HashJoinBuilderTest extends FlowTestCase
 {
     public function test_bucketing_options_are_set(): void
     {
-        $config = hash_join()->bucketsCount(4)->batchSize(250)->build(Path::realpath(__DIR__));
+        $config = hash_join()->bucketsCount(4)->batchSize(250)->build(Path::realpath(__DIR__), new PhpBackend());
 
         static::assertSame(4, $config->bucketing->bucketsCount);
         static::assertSame(250, $config->bucketing->batchSize);
@@ -23,7 +24,7 @@ final class HashJoinBuilderTest extends FlowTestCase
 
     public function test_default_builds_a_filesystem_buckets_storage(): void
     {
-        $config = hash_join()->build(Path::realpath(__DIR__));
+        $config = hash_join()->build(Path::realpath(__DIR__), new PhpBackend());
 
         static::assertInstanceOf(FilesystemBuckets::class, $config->bucketing->storage);
         static::assertSame(64, $config->bucketing->bucketsCount);
@@ -36,7 +37,7 @@ final class HashJoinBuilderTest extends FlowTestCase
 
         static::assertSame(
             $storage,
-            hash_join()->storage($storage)->build(Path::realpath(__DIR__))->bucketing->storage,
+            hash_join()->storage($storage)->build(Path::realpath(__DIR__), new PhpBackend())->bucketing->storage,
         );
     }
 }

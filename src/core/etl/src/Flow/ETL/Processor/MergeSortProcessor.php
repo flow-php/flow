@@ -69,7 +69,7 @@ final class MergeSortProcessor implements Processor
                 }
             }
 
-            $merger = new KWayMerge($this->refs, $this->batchSize);
+            $merger = new KWayMerge($this->refs, $context->backend(), $this->batchSize);
             $mergedIndex = 0;
 
             while (count($runs) > $this->mergeFanIn) {

@@ -19,9 +19,7 @@ use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
-use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\SchemaInference;
 use Flow\ETL\Schema\Inference\SchemaInferenceBuilder;
@@ -35,8 +33,7 @@ use Flow\Types\Type\Native\String\StringTypeNarrower;
 use Generator;
 
 use function array_diff;
-use function array_keys;
-use function array_map;
+use function array_unique;
 use function array_values;
 use function iterator_to_array;
 use function sprintf;
@@ -132,55 +129,10 @@ final class CSVExtractor implements
         foreach ($sources as $source) {
             // forFile() reads the PARTITION definitions, which only declare() creates - $base is the body
             $constants = $fileColumns->forFile($source, $schema);
-            $columns = null;
 
-            $batches = $reader->batches($source, $batchSize);
-
-            foreach ($batches as $rawBatch) {
-                if ($columns === null) {
-                    $columns = array_map(
-                        strval(...),
-                        array_values(array_diff(array_keys($rawBatch[0]->values), $tail)),
-                    );
-
-                    if (
-                        $this->schema === null
-                        && !$this->inference->unionByName
-                        && (array_diff($columns, $expected) !== [] || array_diff($expected, $columns) !== [])
-                    ) {
-                        throw InferredSchemaException::columnsDiverge(
-                            $source->uri(),
-                            $reader->header()->source ?? '',
-                            $base,
-                            $columns,
-                            $this->inference,
-                        );
-                    }
-                }
-
-                $rows = $constants->fillRows(
-                    (new RowsBuilder($body, $backend))
-                        ->appendRows(array_map(static fn(RawRowValues $r): array => $r->values, $rawBatch))
-                        ->finish(),
-                    $schema,
-                    $backend,
-                );
-
-                $yielded += $rows->count();
-
-                $signal = yield $rows;
-
-                if ($signal === Signal::STOP) {
-                    return;
-                }
-
-                if ($limit !== null && $yielded >= $limit) {
-                    return;
-                }
-            }
-
-            if ($columns === null && $this->schema === null && !$this->inference->unionByName) {
-                $columns = array_values(array_diff($batches->getReturn(), $tail));
+            // before any batch is built: a cell the inferred types refuse must not hide a file whose columns diverge
+            if ($this->schema === null && !$this->inference->unionByName) {
+                $columns = array_values(array_diff(array_unique($reader->columns($source)), $tail));
 
                 if (
                     $columns !== []
@@ -193,6 +145,22 @@ final class CSVExtractor implements
                         $columns,
                         $this->inference,
                     );
+                }
+            }
+
+            foreach ($reader->batches($source, $body, $batchSize, $backend) as $batch) {
+                $rows = $constants->fillRows($batch, $schema, $backend);
+
+                $yielded += $rows->count();
+
+                $signal = yield $rows;
+
+                if ($signal === Signal::STOP) {
+                    return;
+                }
+
+                if ($limit !== null && $yielded >= $limit) {
+                    return;
                 }
             }
         }

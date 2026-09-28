@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Config\Grouping;
 
 use Flow\ETL\Bucketing\BucketsStorage;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Config\Bucketing\BucketingConfigBuilder;
 use Flow\Filesystem\Path;
 
@@ -27,9 +28,9 @@ final class HashGroupByBuilder implements GroupByAlgorithmBuilder
         return $this;
     }
 
-    public function build(Path $spillRoot): HashGroupByConfig
+    public function build(Path $spillRoot, Backend $backend): HashGroupByConfig
     {
-        return new HashGroupByConfig($this->bucketing->build($spillRoot));
+        return new HashGroupByConfig($this->bucketing->build($spillRoot, $backend));
     }
 
     /**

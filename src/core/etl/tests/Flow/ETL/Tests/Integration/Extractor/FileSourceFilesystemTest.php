@@ -248,9 +248,9 @@ final class FileSourceFilesystemTest extends FlowIntegrationTestCase
 
         static::assertSame([1, 2], array_column($rows, 'id'));
         static::assertSame(
-            3,
+            4,
             $counting->readFromCalls,
-            'header() + the sample pass + the read, all through the filesystem it was given',
+            'header() + the sample pass + the divergence check + the read, all through the filesystem it was given',
         );
     }
 

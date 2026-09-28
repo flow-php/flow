@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Processor;
 
 use Flow\ETL\BoundStep;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Processor;
 use Flow\ETL\Rows;
@@ -30,15 +31,15 @@ final readonly class CountingProcessor implements Processor
             $count += $batch->count();
         }
 
-        yield $this->rows($count);
+        yield $this->rows($count, $context->backend());
     }
 
     /**
      * The one row a count hands out, whether it was counted or known upfront.
      */
-    public function rows(int $count): Rows
+    public function rows(int $count, Backend $backend): Rows
     {
-        return array_to_rows([['count' => $count]], $this->schema());
+        return array_to_rows([['count' => $count]], $this->schema(), $backend);
     }
 
     public function schema(): Schema

@@ -24,7 +24,8 @@ final readonly class RepartitionSteps
      */
     public static function of(References $by, Config $config, ?RepartitionAlgorithmBuilder $algorithm = null): array
     {
-        $repartition = $algorithm?->build($config->cache->localFilesystemCacheDir) ?? $config->repartition;
+        $repartition =
+            $algorithm?->build($config->cache->localFilesystemCacheDir, $config->backend()) ?? $config->repartition;
         $buckets = new Buckets($repartition->bucketing->storage);
 
         return [

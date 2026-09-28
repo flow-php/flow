@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Extractor;
 
 use Flow\ETL\Exception\InvalidLogicException;
-use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Schema\Inference\SchemaSampler;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
@@ -143,7 +142,7 @@ final class SpilledRows implements SchemaSampler
      * $rowBudget is IGNORED: every row is written regardless, which is what makes a partially written
      * spill unreachable by construction rather than merely unlikely.
      *
-     * @return iterable<int, iterable<int, RawRowValues>>
+     * @return iterable<int, iterable<int, array<array-key, mixed>>>
      *
      * @throws InvalidLogicException when the source was already read
      */
@@ -192,8 +191,8 @@ final class SpilledRows implements SchemaSampler
             }
         };
 
-        // InMemoryRows owns the raw-row to RawRowValues naming; keeping a second copy here would put the
-        // "same names array_to_rows() gives" invariant in two places.
+        // InMemoryRows owns the raw-row naming; keeping a second copy here would put the "same names array_to_rows()
+        // gives" invariant in two places.
         return (new InMemoryRows($spilling()))->samples($rowBudget);
     }
 

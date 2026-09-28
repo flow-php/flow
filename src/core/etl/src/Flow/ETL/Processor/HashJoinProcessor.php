@@ -119,7 +119,7 @@ final class HashJoinProcessor implements Processor
             }
         }
 
-        $joiner = new Joiner($this->expression, $this->type, $this->batchSize);
+        $joiner = new Joiner($this->expression, $this->type, $context->backend(), $this->batchSize);
         $equalityKeys = $joiner->keys();
         $resident = $this->rightBuckets->storage() instanceof ResidentBucketsStorage;
 

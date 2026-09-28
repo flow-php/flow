@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\JSON\JSONMachine;
 
 use Flow\ETL\Extractor\SourceFile;
-use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Schema\Inference\SchemaSampler;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\SourceStream;
@@ -57,7 +56,7 @@ final readonly class JsonFileReader implements SchemaSampler
      *
      * @param int<1, max> $batchSize
      *
-     * @return Generator<int, non-empty-list<RawRowValues>>
+     * @return Generator<int, non-empty-list<array<array-key, mixed>>>
      */
     public function batches(SourceFile $source, int $batchSize): Generator
     {
@@ -157,7 +156,7 @@ final readonly class JsonFileReader implements SchemaSampler
      * The pointer wrap and the empty-record skip live here and nowhere else, so the sample and the read see the
      * same rows.
      *
-     * @return Generator<int, RawRowValues>
+     * @return Generator<int, array<array-key, mixed>>
      */
     public function sample(SourceFile $source, JsonReadBytes $read = new JsonReadBytes()): Generator
     {
@@ -180,7 +179,7 @@ final readonly class JsonFileReader implements SchemaSampler
                     continue;
                 }
 
-                yield new RawRowValues($row);
+                yield $row;
             }
         } finally {
             $stream->close();

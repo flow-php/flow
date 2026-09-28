@@ -5,7 +5,7 @@
   rustPlatform,
   clang,
   llvmPackages,
-  arrow-ext-version ? "dev",
+  arrow-ext-version ? "0.45.0-dev",
 }:
 
 let

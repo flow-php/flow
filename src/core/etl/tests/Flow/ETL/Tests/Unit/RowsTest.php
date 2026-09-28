@@ -7,7 +7,7 @@ namespace Flow\ETL\Tests\Unit;
 use Closure;
 use DateTimeImmutable;
 use DateTimeZone;
-use Flow\ETL\Column\Php\ScalarColumn;
+use Flow\ETL\Column\DefaultBackend;
 use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -1179,7 +1179,12 @@ final class RowsTest extends FlowTestCase
         $copied = rows($schema, $scalar->row(1), $constant->row(0), $scalar->row(0));
 
         static::assertSame([['id' => 2], ['id' => 7], ['id' => 1]], $copied->toArray());
-        static::assertInstanceOf(ScalarColumn::class, $copied->column('id'));
+        static::assertInstanceOf(
+            (new DefaultBackend())
+                ->builder(int_schema('id'))
+                ->finish()::class,
+            $copied->column('id'),
+        );
     }
 
     public function test_from_rows_reorders_and_hops_into_the_column_zone(): void
@@ -1262,14 +1267,19 @@ final class RowsTest extends FlowTestCase
         static::assertSame($rows->column('id'), $rows->project(schema(int_schema('id')))->column('id'));
     }
 
-    public function test_concat_of_a_constant_and_a_scalar_column_yields_php_columns(): void
+    public function test_concat_of_a_constant_and_a_scalar_column_yields_default_backend_columns(): void
     {
         $schema = schema(int_schema('id'));
         $constant = Rows::fromColumns($schema, ['id' => (new PhpBackend())->constant(int_schema('id'), 7, 2)], 2);
         $concatenated = $constant->concat(array_to_rows([['id' => 1]], $schema));
 
         static::assertSame([['id' => 7], ['id' => 7], ['id' => 1]], $concatenated->toArray());
-        static::assertInstanceOf(ScalarColumn::class, $concatenated->column('id'));
+        static::assertInstanceOf(
+            (new DefaultBackend())
+                ->builder(int_schema('id'))
+                ->finish()::class,
+            $concatenated->column('id'),
+        );
     }
 
     public function test_concat_refuses_a_zero_row_input_with_another_schema(): void

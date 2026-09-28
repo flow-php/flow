@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Schema\Inference;
 
-use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Schema;
-use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\ColumnTypesMother;
 use Flow\Types\Type;
@@ -173,7 +171,7 @@ final class ColumnTypesTest extends FlowTestCase
     public function test_a_name_met_only_in_a_row_is_appended_after_the_header_names(): void
     {
         $columns = ColumnTypesMother::fromStrings(['a', 'b']);
-        $columns->observe(new RawRowValues(['c' => '1']));
+        $columns->observe(['c' => '1']);
 
         static::assertSame(['a', 'b', 'c'], array_keys($columns->schema(ColumnTypesMother::floor())->definitions()));
     }
@@ -181,9 +179,9 @@ final class ColumnTypesTest extends FlowTestCase
     public function test_a_null_first_row_then_free_text_yields_optional_string(): void
     {
         $columns = ColumnTypesMother::fromStrings();
-        $columns->observe(new RawRowValues(['c' => null]));
-        $columns->observe(new RawRowValues(['c' => 'free text']));
-        $columns->observe(new RawRowValues(['c' => '42']));
+        $columns->observe(['c' => null]);
+        $columns->observe(['c' => 'free text']);
+        $columns->observe(['c' => '42']);
 
         static::assertEquals(
             new Schema(definition_from_type('c', type_optional(type_string()), nullable: true)),
@@ -194,9 +192,8 @@ final class ColumnTypesTest extends FlowTestCase
     public function test_a_numeric_key_becomes_a_string_column_name(): void
     {
         $columns = ColumnTypesMother::fromStrings();
-        // PHP re-keys a numeric column name to int; RawRowValues declares array<string, mixed>, which cannot
-        // express that, so the fold has to survive an int key arriving through a documented-string array
-        $columns->observe(new RawRowValues(['1' => 'x']));
+        // PHP re-keys a numeric column name to int, so the fold has to survive an int key
+        $columns->observe(['1' => 'x']);
 
         static::assertSame('1', $columns->schema(ColumnTypesMother::floor())->get('1')->entry()->name());
     }
@@ -204,9 +201,9 @@ final class ColumnTypesTest extends FlowTestCase
     public function test_a_saturated_string_column_widens_to_optional_string_on_a_later_null(): void
     {
         $columns = ColumnTypesMother::fromStrings();
-        $columns->observe(new RawRowValues(['c' => 'free text']));
-        $columns->observe(new RawRowValues(['c' => null]));
-        $columns->observe(new RawRowValues(['c' => 'more text']));
+        $columns->observe(['c' => 'free text']);
+        $columns->observe(['c' => null]);
+        $columns->observe(['c' => 'more text']);
 
         static::assertEquals(
             new Schema(definition_from_type('c', type_optional(type_string()), nullable: true)),
@@ -222,7 +219,7 @@ final class ColumnTypesTest extends FlowTestCase
     public function test_all_strings_floors_every_scalar_column(): void
     {
         $columns = ColumnTypesMother::fromStrings();
-        $columns->observe(new RawRowValues(['a' => '1', 'b' => 'true', 'c' => '2024-01-01']));
+        $columns->observe(['a' => '1', 'b' => 'true', 'c' => '2024-01-01']);
 
         static::assertEquals(
             new Schema(
@@ -237,8 +234,8 @@ final class ColumnTypesTest extends FlowTestCase
     public function test_an_absent_key_is_read_as_null(): void
     {
         $columns = ColumnTypesMother::fromStrings();
-        $columns->observe(new RawRowValues(['a' => '1']));
-        $columns->observe(new RawRowValues(['b' => 'x']));
+        $columns->observe(['a' => '1']);
+        $columns->observe(['b' => 'x']);
 
         static::assertEquals(
             new Schema(
@@ -252,8 +249,8 @@ final class ColumnTypesTest extends FlowTestCase
     public function test_an_integer_column_is_declared_nullable(): void
     {
         $columns = ColumnTypesMother::fromStrings();
-        $columns->observe(new RawRowValues(['c' => '1']));
-        $columns->observe(new RawRowValues(['c' => '2']));
+        $columns->observe(['c' => '1']);
+        $columns->observe(['c' => '2']);
 
         $definition = $columns->schema(ColumnTypesMother::floor())->get('c');
 
@@ -264,9 +261,9 @@ final class ColumnTypesTest extends FlowTestCase
     public function test_an_optional_non_string_column_is_not_saturated(): void
     {
         $columns = ColumnTypesMother::fromStrings();
-        $columns->observe(new RawRowValues(['c' => '1']));
-        $columns->observe(new RawRowValues(['c' => null]));
-        $columns->observe(new RawRowValues(['c' => '1.5']));
+        $columns->observe(['c' => '1']);
+        $columns->observe(['c' => null]);
+        $columns->observe(['c' => '1.5']);
 
         static::assertEquals(
             new Schema(definition_from_type('c', type_optional(type_float()), nullable: true)),
@@ -277,8 +274,8 @@ final class ColumnTypesTest extends FlowTestCase
     public function test_from_column_types_reproduces_an_observed_fold(): void
     {
         $observed = ColumnTypesMother::fromStrings(['id', 'name']);
-        $observed->observe(new RawRowValues(['id' => '1', 'name' => 'a']));
-        $observed->observe(new RawRowValues(['id' => '2', 'name' => null]));
+        $observed->observe(['id' => '1', 'name' => 'a']);
+        $observed->observe(['id' => '2', 'name' => null]);
 
         $computed = ColumnTypesMother::fromColumnTypes([
             'id' => type_optional(type_integer()),
@@ -295,9 +292,9 @@ final class ColumnTypesTest extends FlowTestCase
     public function test_from_column_types_merges_with_an_observed_fold(): void
     {
         $left = ColumnTypesMother::fromStrings(['a']);
-        $left->observe(new RawRowValues(['a' => '1']));
+        $left->observe(['a' => '1']);
         $right = ColumnTypesMother::fromStrings(['a']);
-        $right->observe(new RawRowValues(['a' => '1.5', 'b' => 'x']));
+        $right->observe(['a' => '1.5', 'b' => 'x']);
 
         static::assertEquals(
             $left->merge($right, true)->schema(ColumnTypesMother::floor()),
@@ -311,7 +308,7 @@ final class ColumnTypesTest extends FlowTestCase
     public function test_from_column_types_carries_the_row_count_into_merge(): void
     {
         $observed = ColumnTypesMother::fromStrings();
-        $observed->observe(new RawRowValues(['a' => '1']));
+        $observed->observe(['a' => '1']);
 
         static::assertSame(
             8,
@@ -322,11 +319,11 @@ final class ColumnTypesTest extends FlowTestCase
     public function test_merge_is_associative_over_three_partials(): void
     {
         $left = ColumnTypesMother::fromStrings(['a']);
-        $left->observe(new RawRowValues(['a' => '1']));
+        $left->observe(['a' => '1']);
         $middle = ColumnTypesMother::fromStrings(['b']);
-        $middle->observe(new RawRowValues(['b' => 'x']));
+        $middle->observe(['b' => 'x']);
         $right = ColumnTypesMother::fromStrings(['c']);
-        $right->observe(new RawRowValues(['a' => '1.5', 'c' => 'true']));
+        $right->observe(['a' => '1.5', 'c' => 'true']);
 
         $leftAssociated = $left->merge($middle, true)->merge($right, true)->schema(ColumnTypesMother::floor());
         $rightAssociated = $left->merge($middle->merge($right, true), true)->schema(ColumnTypesMother::floor());
@@ -362,10 +359,10 @@ final class ColumnTypesTest extends FlowTestCase
     public function test_merge_sums_the_row_counts_and_leaves_both_operands_alone(): void
     {
         $left = ColumnTypesMother::fromStrings();
-        $left->observe(new RawRowValues(['a' => '1']));
-        $left->observe(new RawRowValues(['a' => '2']));
+        $left->observe(['a' => '1']);
+        $left->observe(['a' => '2']);
         $right = ColumnTypesMother::fromStrings();
-        $right->observe(new RawRowValues(['a' => '3']));
+        $right->observe(['a' => '3']);
 
         static::assertSame(3, $left->merge($right, true)->rows());
         static::assertSame(2, $left->rows());
@@ -376,7 +373,7 @@ final class ColumnTypesTest extends FlowTestCase
     {
         $seeded = ColumnTypesMother::fromStrings(['a', 'b']);
         $observed = ColumnTypesMother::fromStrings(['a', 'b']);
-        $observed->observe(new RawRowValues(['a' => '1']));
+        $observed->observe(['a' => '1']);
 
         $expected = new Schema(
             definition_from_type('a', type_integer(), nullable: true),
@@ -390,9 +387,9 @@ final class ColumnTypesTest extends FlowTestCase
     public function test_merge_unions_disjoint_name_sets(): void
     {
         $left = ColumnTypesMother::fromStrings();
-        $left->observe(new RawRowValues(['a' => '1']));
+        $left->observe(['a' => '1']);
         $right = ColumnTypesMother::fromStrings();
-        $right->observe(new RawRowValues(['b' => 'x']));
+        $right->observe(['b' => 'x']);
 
         static::assertEquals(
             new Schema(
@@ -413,9 +410,9 @@ final class ColumnTypesTest extends FlowTestCase
         Type $expected,
     ): void {
         $left = ColumnTypesMother::fromStrings();
-        $left->observe(new RawRowValues(['c' => $leftValue]));
+        $left->observe(['c' => $leftValue]);
         $right = ColumnTypesMother::fromStrings();
-        $right->observe(new RawRowValues(['c' => $rightValue]));
+        $right->observe(['c' => $rightValue]);
 
         $leftFirst = $left->merge($right, true)->schema(ColumnTypesMother::floor())->get('c')->type();
         $rightFirst = $right->merge($left, true)->schema(ColumnTypesMother::floor())->get('c')->type();
@@ -433,9 +430,9 @@ final class ColumnTypesTest extends FlowTestCase
     public function test_merged_types_do_not_depend_on_the_order_for_container_partials(): void
     {
         $left = ColumnTypesMother::fromTypedValues();
-        $left->observe(new RawRowValues(['c' => []]));
+        $left->observe(['c' => []]);
         $right = ColumnTypesMother::fromTypedValues();
-        $right->observe(new RawRowValues(['c' => [1]]));
+        $right->observe(['c' => [1]]);
 
         static::assertTrue(type_equals(
             type_list(type_optional(type_integer())),
@@ -447,23 +444,12 @@ final class ColumnTypesTest extends FlowTestCase
         ));
     }
 
-    public function test_metadata_never_reaches_the_schema(): void
-    {
-        $columns = ColumnTypesMother::fromStrings();
-        $columns->observe(new RawRowValues(['a' => '1'], ['a' => Metadata::empty()->add('k', 'v')]));
-
-        static::assertEquals(
-            new Schema(definition_from_type('a', type_integer(), nullable: true)),
-            $columns->schema(ColumnTypesMother::floor()),
-        );
-    }
-
     public function test_null_never_reaches_the_ladder(): void
     {
         $columns = ColumnTypesMother::fromStrings();
-        $columns->observe(new RawRowValues(['c' => '1']));
-        $columns->observe(new RawRowValues(['c' => null]));
-        $columns->observe(new RawRowValues(['c' => '2']));
+        $columns->observe(['c' => '1']);
+        $columns->observe(['c' => null]);
+        $columns->observe(['c' => '2']);
 
         static::assertEquals(
             new Schema(definition_from_type('c', type_optional(type_integer()), nullable: true)),
@@ -474,8 +460,8 @@ final class ColumnTypesTest extends FlowTestCase
     public function test_observing_a_column_name_absent_from_the_header_still_records_its_type(): void
     {
         $columns = ColumnTypesMother::fromStrings(['a']);
-        $columns->observe(new RawRowValues(['a' => 'free text', 'b' => '1']));
-        $columns->observe(new RawRowValues(['a' => 'more text', 'b' => '2']));
+        $columns->observe(['a' => 'free text', 'b' => '1']);
+        $columns->observe(['a' => 'more text', 'b' => '2']);
 
         static::assertEquals(
             new Schema(
@@ -489,12 +475,12 @@ final class ColumnTypesTest extends FlowTestCase
     public function test_padded_cells_are_read_as_text_because_cast_does_not_trim(): void
     {
         $padded = ColumnTypesMother::fromStrings();
-        $padded->observe(new RawRowValues(['c' => ' 12 ']));
-        $padded->observe(new RawRowValues(['c' => '13']));
+        $padded->observe(['c' => ' 12 ']);
+        $padded->observe(['c' => '13']);
 
         $clean = ColumnTypesMother::fromStrings();
-        $clean->observe(new RawRowValues(['c' => '12']));
-        $clean->observe(new RawRowValues(['c' => '13']));
+        $clean->observe(['c' => '12']);
+        $clean->observe(['c' => '13']);
 
         static::assertEquals(
             new Schema(definition_from_type('c', type_string(), nullable: true)),
@@ -512,9 +498,9 @@ final class ColumnTypesTest extends FlowTestCase
 
         static::assertSame(0, $columns->rows());
 
-        $columns->observe(new RawRowValues(['a' => '1', 'b' => '2']));
-        $columns->observe(new RawRowValues(['a' => '3']));
-        $columns->observe(new RawRowValues([]));
+        $columns->observe(['a' => '1', 'b' => '2']);
+        $columns->observe(['a' => '3']);
+        $columns->observe([]);
 
         static::assertSame(3, $columns->rows());
     }
@@ -526,7 +512,7 @@ final class ColumnTypesTest extends FlowTestCase
     public function test_the_declared_type_fits_the_cell_that_produced_it(string $cell): void
     {
         $columns = ColumnTypesMother::fromStrings();
-        $columns->observe(new RawRowValues(['c' => $cell]));
+        $columns->observe(['c' => $cell]);
 
         $definition = $columns->schema(ColumnTypesMother::floor())->get('c');
 
@@ -536,11 +522,11 @@ final class ColumnTypesTest extends FlowTestCase
     public function test_the_null_rung_is_read_as_text_because_the_cell_is_text(): void
     {
         $mixed = ColumnTypesMother::fromStrings();
-        $mixed->observe(new RawRowValues(['c' => 'null']));
-        $mixed->observe(new RawRowValues(['c' => '1']));
+        $mixed->observe(['c' => 'null']);
+        $mixed->observe(['c' => '1']);
 
         $only = ColumnTypesMother::fromStrings();
-        $only->observe(new RawRowValues(['c' => 'nil']));
+        $only->observe(['c' => 'nil']);
 
         static::assertEquals(
             new Schema(definition_from_type('c', type_string(), nullable: true)),
@@ -563,7 +549,7 @@ final class ColumnTypesTest extends FlowTestCase
 
         /** @var mixed $value */
         foreach ($values as $value) {
-            $columns->observe(new RawRowValues(['c' => $value]));
+            $columns->observe(['c' => $value]);
         }
 
         static::assertEquals(
@@ -582,7 +568,7 @@ final class ColumnTypesTest extends FlowTestCase
         $columns = ColumnTypesMother::fromStrings();
 
         foreach ($values as $value) {
-            $columns->observe(new RawRowValues(['c' => $value]));
+            $columns->observe(['c' => $value]);
         }
 
         static::assertEquals(

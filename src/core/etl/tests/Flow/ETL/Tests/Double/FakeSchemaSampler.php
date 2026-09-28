@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Schema\Inference\SchemaSampler;
 
 final class FakeSchemaSampler implements SchemaSampler
@@ -15,14 +14,14 @@ final class FakeSchemaSampler implements SchemaSampler
     public array $askedBudgets = [];
 
     /**
-     * @param list<list<RawRowValues>> $units
+     * @param list<list<array<array-key, mixed>>> $units
      */
     public function __construct(
         private readonly array $units,
     ) {}
 
     /**
-     * @return list<list<RawRowValues>>
+     * @return list<list<array<array-key, mixed>>>
      */
     public function samples(int $rowBudget): iterable
     {

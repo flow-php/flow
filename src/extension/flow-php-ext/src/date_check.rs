@@ -114,3 +114,82 @@ pub fn checkdate(month: i64, day: i64, year: i64) -> bool {
 
     day <= days
 }
+
+/// Epoch microseconds of `YYYY-MM-DDTHH:MM:SS[.f]` (1–6 fraction digits) + `Z` or `±HH:MM`, every field in range - the
+/// instant `DateTimeType::cast` yields, computed without timelib. `None` for every other string, which timelib parses.
+pub fn iso_instant_micros(bytes: &[u8]) -> Option<i64> {
+    let byte_at = |at: usize| bytes.get(at).copied();
+    let number = |at: usize, count: usize| -> Option<i64> {
+        bytes
+            .get(at..at + count)?
+            .iter()
+            .try_fold(0i64, |value, digit| digit.is_ascii_digit().then(|| value * 10 + i64::from(digit - b'0')))
+    };
+
+    if [(4, b'-'), (7, b'-'), (10, b'T'), (13, b':'), (16, b':')]
+        .iter()
+        .any(|(at, separator)| byte_at(*at) != Some(*separator))
+    {
+        return None;
+    }
+
+    let (year, month, day) = (number(0, 4)?, number(5, 2)?, number(8, 2)?);
+    let (hour, minute, second) = (number(11, 2)?, number(14, 2)?, number(17, 2)?);
+
+    if year > 9999 || !checkdate(month, day, year) || hour > 23 || minute > 59 || second > 59 {
+        return None;
+    }
+
+    let mut at = 19;
+    let mut fraction = 0;
+
+    if byte_at(at) == Some(b'.') {
+        let digits = bytes[at + 1..].iter().take_while(|byte| byte.is_ascii_digit()).count();
+
+        if !(1..=6).contains(&digits) {
+            return None;
+        }
+
+        fraction = number(at + 1, digits)? * 10i64.pow(6 - digits as u32);
+        at += 1 + digits;
+    }
+
+    let offset = match byte_at(at) {
+        Some(b'Z') => {
+            at += 1;
+
+            0
+        }
+        Some(sign @ (b'+' | b'-')) if byte_at(at + 3) == Some(b':') => {
+            let (hours, minutes) = (number(at + 1, 2)?, number(at + 4, 2)?);
+
+            if hours > 23 || minutes > 59 {
+                return None;
+            }
+
+            at += 6;
+
+            (hours * 3600 + minutes * 60) * if sign == b'-' { -1 } else { 1 }
+        }
+        _ => return None,
+    };
+
+    if at != bytes.len() {
+        return None;
+    }
+
+    let seconds = days_from_civil(year, month, day)? * 86_400 + hour * 3600 + minute * 60 + second - offset;
+
+    Some(seconds * 1_000_000 + fraction)
+}
+
+/// `DaysFromCivil::of()`: days since 1970-01-01 of a proleptic Gregorian date, `None` on i64 overflow.
+pub(crate) fn days_from_civil(year: i64, month: i64, day: i64) -> Option<i64> {
+    let year = year - i64::from(month <= 2);
+    let era = (if year >= 0 { year } else { year.checked_sub(399)? }) / 400;
+    let year_of_era = year - era * 400;
+    let day_of_year = (153 * (if month > 2 { month - 3 } else { month + 9 }) + 2) / 5 + day - 1;
+    let day_of_era = year_of_era * 365 + year_of_era / 4 - year_of_era / 100 + day_of_year;
+
+    era.checked_mul(146_097)?.checked_add(day_of_era - 719_468)
+}

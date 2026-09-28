@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Config\Telemetry;
 
 use DateTimeImmutable;
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Config\Telemetry\TelemetryContext;
 use Flow\ETL\Config\Telemetry\TelemetryOptions;
 use Flow\ETL\Loader\StreamLoader;
@@ -94,6 +95,7 @@ final class TelemetryContextTest extends FlowTestCase
         );
 
         $telemetryContext = new TelemetryContext(
+            new PhpBackend(),
             $telemetry->logger('flow-php'),
             $telemetry->tracer('flow-php'),
             $telemetry->meter('flow-php'),
@@ -166,6 +168,7 @@ final class TelemetryContextTest extends FlowTestCase
         );
 
         $telemetryContext = new TelemetryContext(
+            new PhpBackend(),
             $telemetry->logger('flow-php'),
             $telemetry->tracer('flow-php'),
             $telemetry->meter('flow-php'),
@@ -242,6 +245,7 @@ final class TelemetryContextTest extends FlowTestCase
         );
 
         $telemetryContext = new TelemetryContext(
+            new PhpBackend(),
             $telemetry->logger('flow-php'),
             $telemetry->tracer('flow-php'),
             $telemetry->meter('flow-php'),
@@ -293,6 +297,7 @@ final class TelemetryContextTest extends FlowTestCase
         );
 
         $telemetryContext = new TelemetryContext(
+            new PhpBackend(),
             $telemetry->logger('flow-php'),
             $telemetry->tracer('flow-php'),
             $telemetry->meter('flow-php'),
@@ -352,6 +357,7 @@ final class TelemetryContextTest extends FlowTestCase
         );
 
         $telemetryContext = new TelemetryContext(
+            new PhpBackend(),
             $telemetry->logger('flow-php'),
             $telemetry->tracer('flow-php'),
             $telemetry->meter('flow-php'),
@@ -418,6 +424,7 @@ final class TelemetryContextTest extends FlowTestCase
         );
 
         $telemetryContext = new TelemetryContext(
+            new PhpBackend(),
             $telemetry->logger('flow-php'),
             $telemetry->tracer('flow-php'),
             $telemetry->meter('flow-php'),
@@ -490,6 +497,7 @@ final class TelemetryContextTest extends FlowTestCase
         );
 
         $telemetryContext = new TelemetryContext(
+            new PhpBackend(),
             $telemetry->logger('flow-php'),
             $telemetry->tracer('flow-php'),
             $telemetry->meter('flow-php'),
@@ -527,6 +535,7 @@ final class TelemetryContextTest extends FlowTestCase
         );
 
         $telemetryContext = new TelemetryContext(
+            new PhpBackend(),
             $telemetry->logger('flow-php'),
             $telemetry->tracer('flow-php'),
             $telemetry->meter('flow-php'),
@@ -563,6 +572,7 @@ final class TelemetryContextTest extends FlowTestCase
         );
 
         $telemetryContext = new TelemetryContext(
+            new PhpBackend(),
             $telemetry->logger('flow-php'),
             $telemetry->tracer('flow-php'),
             $telemetry->meter('flow-php'),
@@ -603,6 +613,7 @@ final class TelemetryContextTest extends FlowTestCase
         );
 
         $telemetryContext = new TelemetryContext(
+            new PhpBackend(),
             $telemetry->logger('flow-php'),
             $telemetry->tracer('flow-php'),
             $telemetry->meter('flow-php'),
@@ -652,6 +663,7 @@ final class TelemetryContextTest extends FlowTestCase
         );
 
         $telemetryContext = new TelemetryContext(
+            new PhpBackend(),
             $telemetry->logger('flow-php'),
             $telemetry->tracer('flow-php'),
             $telemetry->meter('flow-php'),
@@ -735,6 +747,7 @@ final class TelemetryContextTest extends FlowTestCase
         );
 
         $telemetryContext = new TelemetryContext(
+            new PhpBackend(),
             $telemetry->logger('flow-php'),
             $telemetry->tracer('flow-php'),
             $telemetry->meter('flow-php'),
@@ -801,6 +814,7 @@ final class TelemetryContextTest extends FlowTestCase
         );
 
         $telemetryContext = new TelemetryContext(
+            new PhpBackend(),
             $telemetry->logger('flow-php'),
             $telemetry->tracer('flow-php'),
             $telemetry->meter('flow-php'),
@@ -872,6 +886,7 @@ final class TelemetryContextTest extends FlowTestCase
         );
 
         $telemetryContext = new TelemetryContext(
+            new PhpBackend(),
             $telemetry->logger('flow-php'),
             $telemetry->tracer('flow-php'),
             $telemetry->meter('flow-php'),
@@ -909,6 +924,7 @@ final class TelemetryContextTest extends FlowTestCase
         );
 
         $telemetryContext = new TelemetryContext(
+            new PhpBackend(),
             $telemetry->logger('flow-php'),
             $telemetry->tracer('flow-php'),
             $telemetry->meter('flow-php'),
@@ -957,6 +973,7 @@ final class TelemetryContextTest extends FlowTestCase
         );
 
         $telemetryContext = new TelemetryContext(
+            new PhpBackend(),
             $telemetry->logger('flow-php'),
             $telemetry->tracer('flow-php'),
             $telemetry->meter('flow-php'),

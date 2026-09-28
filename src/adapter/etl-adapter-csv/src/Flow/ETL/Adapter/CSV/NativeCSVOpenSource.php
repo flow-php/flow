@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV;
 
+use Flow\ETL\Column\Backend;
+use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\ColumnTypes;
 use Flow\ETL\Schema\Inference\SchemaInference;
 use Flow\ETL\Schema\Inference\SchemaInferrer;
@@ -72,6 +75,37 @@ final class NativeCSVOpenSource implements CSVOpenSource
     public static function isSupported(): bool
     {
         return extension_loaded('flow_php') && class_exists(RustCSVReaderNative::class, false);
+    }
+
+    public function batches(Schema $schema, int $batchSize, Backend $backend): Generator
+    {
+        // every batch goes through the configured backend, which keeps its own columns and copies the native ones
+        $adopted = function (Rows $batch) use ($schema, $backend): Rows {
+            $columns = [];
+            $native = $batch->columns();
+
+            foreach ($schema->definitions() as $name => $definition) {
+                $columns[$name] = $backend->adopt($definition, $native[$name]);
+            }
+
+            $this->producedRows += count($batch);
+
+            return Rows::fromColumns($schema, $columns, $batch->count());
+        };
+
+        foreach ($this->stream->iterate($this->chunkSize) as $chunk) {
+            $this->reader->feed($chunk);
+
+            while (($batch = $this->reader->nextColumns($schema, $batchSize)) !== null) {
+                yield $adopted($batch);
+            }
+        }
+
+        $this->reader->finish();
+
+        while (($batch = $this->reader->nextColumns($schema, $batchSize)) !== null) {
+            yield $adopted($batch);
+        }
     }
 
     public function close(): void

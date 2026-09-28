@@ -235,8 +235,8 @@ final class CSVExtractorTest extends FlowTestCase
         $extractor->schema();
         iterator_to_array($extractor->extract(flow_context(config())));
 
-        static::assertSame(3, $counting->readFromCalls, 'header() + sample + read');
-        static::assertSame(3, $counting->closedStreams());
+        static::assertSame(4, $counting->readFromCalls, 'header() + sample + divergence check + read');
+        static::assertSame(4, $counting->closedStreams());
         static::assertSame(3, $counting->listCalls);
     }
 
@@ -438,6 +438,18 @@ final class CSVExtractorTest extends FlowTestCase
             static::assertStringContainsString('20480 rows', $e->getMessage());
             static::assertStringContainsString('1 sources', $e->getMessage());
         }
+    }
+
+    public function test_divergence_is_reported_before_a_refused_cell(): void
+    {
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessageMatches('/unexpected \[label\]/');
+
+        iterator_to_array(
+            from_csv(CSVFixtureContext::path('columns_diverge_refused/*.csv'))
+                ->inferSchema(infer_schema()->filesToSniff(1))
+                ->extract(flow_context(config())),
+        );
     }
 
     public function test_a_header_only_file_with_a_divergent_header_is_rejected(): void

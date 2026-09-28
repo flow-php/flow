@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\GoogleSheet;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row\RawRowValues;
 
 use function array_combine;
 use function array_keys;
@@ -32,7 +31,7 @@ final class GoogleSheetDecoder
     /**
      * @param list<array<array-key, mixed>> $batch
      *
-     * @return list<RawRowValues>
+     * @return list<array<array-key, mixed>>
      */
     public function decode(array $batch): array
     {
@@ -84,10 +83,10 @@ final class GoogleSheetDecoder
                 }
             }
 
-            $maps[] = new RawRowValues(array_combine(
+            $maps[] = array_combine(
                 $this->withHeader ? $this->headers : $this->generateAutoHeaders(count($rowData)),
                 $rowData,
-            ));
+            );
         }
 
         return $maps;

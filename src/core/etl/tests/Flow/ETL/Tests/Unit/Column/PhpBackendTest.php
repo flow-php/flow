@@ -16,6 +16,7 @@ use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Schema\Definition;
+use Flow\ETL\Tests\Double\ForeignColumnStub;
 use Flow\ETL\Tests\Double\ForeignTypeDefinition;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\Mother\ColumnMother;
@@ -564,5 +565,48 @@ final class PhpBackendTest extends TestCase
         $this->expectExceptionMessage($message);
 
         (new PhpBackend())->decode($definition, $buffers, $count, $nullCount);
+    }
+
+    public function test_adopt_returns_its_own_column(): void
+    {
+        $column = ColumnMother::of(int_schema('a'), [1, 2]);
+
+        static::assertSame($column, (new PhpBackend())->adopt(int_schema('a'), $column));
+    }
+
+    public function test_adopt_copies_a_foreign_column(): void
+    {
+        $foreign = new ForeignColumnStub(ColumnMother::of(str_schema('a', nullable: true), ['x', null, 'z']));
+
+        $adopted = (new PhpBackend())->adopt(str_schema('a', nullable: true), $foreign);
+
+        static::assertNotSame($foreign, $adopted);
+        static::assertSame(['x', null, 'z'], $adopted->values());
+        static::assertSame(1, $adopted->nullCount());
+    }
+
+    public function test_adopt_copies_an_empty_foreign_column(): void
+    {
+        $foreign = new ForeignColumnStub(ColumnMother::of(int_schema('a'), []));
+
+        $adopted = (new PhpBackend())->adopt(int_schema('a'), $foreign);
+
+        static::assertNotSame($foreign, $adopted);
+        static::assertSame(0, $adopted->count());
+    }
+
+    public function test_adopt_refuses_a_null_under_not_null(): void
+    {
+        $foreign = new ForeignColumnStub(ColumnMother::of(int_schema('a', nullable: true), [1, null]));
+
+        $this->expectException(ColumnMismatchException::class);
+        $this->expectExceptionMessage(ColumnMismatchException::valueDoesNotMatch(int_schema('a'), null)->getMessage());
+
+        (new PhpBackend())->adopt(int_schema('a'), $foreign);
+    }
+
+    public function test_allocated_bytes_is_zero(): void
+    {
+        static::assertSame(0, (new PhpBackend())->allocatedBytes());
     }
 }

@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel;
 
-use Flow\ETL\Row\RawRowValues;
 use Generator;
 use IteratorAggregate;
 
 /**
- * @implements IteratorAggregate<int, RawRowValues>
+ * @implements IteratorAggregate<int, array<array-key, mixed>>
  */
 final class WorkbookSheetSample implements IteratorAggregate
 {
@@ -21,14 +20,14 @@ final class WorkbookSheetSample implements IteratorAggregate
     private bool $wholeSheet = false;
 
     /**
-     * @param Generator<int, RawRowValues> $sheetRows
+     * @param Generator<int, array<array-key, mixed>> $sheetRows
      */
     public function __construct(
         private readonly Generator $sheetRows,
     ) {}
 
     /**
-     * @return Generator<int, RawRowValues>
+     * @return Generator<int, array<array-key, mixed>>
      */
     public function getIterator(): Generator
     {

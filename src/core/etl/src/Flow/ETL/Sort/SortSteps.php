@@ -25,7 +25,7 @@ final readonly class SortSteps
      */
     public static function of(References $refs, Config $config, ?SortAlgorithmBuilder $algorithm = null): array
     {
-        $sort = $algorithm?->build($config->cache->localFilesystemCacheDir) ?? $config->sort;
+        $sort = $algorithm?->build($config->cache->localFilesystemCacheDir, $config->backend()) ?? $config->sort;
 
         if ($sort instanceof MemorySortConfig) {
             return [new MemorySortProcessor($refs)];

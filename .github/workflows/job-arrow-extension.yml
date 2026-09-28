@@ -202,7 +202,13 @@ jobs:
 
       - name: Verify extension version
         run: |
-          expected="$(git describe --tags --match '[0-9]*' | sed -E 's/-([0-9]+)-(g[0-9a-f]+)$/+\1.\2/')"
+          describe="$(git describe --tags --match '[0-9]*')"
+          if git describe --exact-match --tags --match '[0-9]*' HEAD >/dev/null 2>&1; then
+            expected="$describe"
+          else
+            # commits past a tag are a pre-release of the next minor: 0.44.1-65-g4525c4adc -> 0.45.0-dev+65.g4525c4adc
+            expected="$(echo "$describe" | awk -F- '{split($1, v, "."); printf "%d.%d.0-dev+%s.%s", v[1], v[2] + 1, $2, $3}')"
+          fi
           actual="$(php -r 'echo phpversion("arrow");')"
           echo "expected: $expected, actual: $actual"
           test "$actual" = "$expected"

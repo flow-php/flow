@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Config\Sort;
 
 use Flow\ETL\Bucketing\BucketsStorage;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Config\Bucketing\BucketingConfigBuilder;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Filesystem\Path;
@@ -35,9 +36,13 @@ final class ExternalSortBuilder implements SortAlgorithmBuilder
         return $this;
     }
 
-    public function build(Path $spillRoot): ExternalSortConfig
+    public function build(Path $spillRoot, Backend $backend): ExternalSortConfig
     {
-        return new ExternalSortConfig($this->bucketing->build($spillRoot), $this->mergeStorage, $this->runSize);
+        return new ExternalSortConfig(
+            $this->bucketing->build($spillRoot, $backend),
+            $this->mergeStorage,
+            $this->runSize,
+        );
     }
 
     /**

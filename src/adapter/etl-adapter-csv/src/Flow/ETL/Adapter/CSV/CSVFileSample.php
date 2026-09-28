@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV;
 
 use Flow\ETL\Extractor\SourceFile;
-use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Schema\Inference\ColumnTypes;
 use Flow\ETL\Schema\Inference\SchemaInference;
 use Flow\ETL\Schema\Inference\SniffsColumnTypes;
@@ -14,7 +13,7 @@ use Generator;
 use IteratorAggregate;
 
 /**
- * @implements IteratorAggregate<int, RawRowValues>
+ * @implements IteratorAggregate<int, array<array-key, ?string>>
  */
 final class CSVFileSample implements IteratorAggregate, SniffsColumnTypes
 {
@@ -28,7 +27,7 @@ final class CSVFileSample implements IteratorAggregate, SniffsColumnTypes
     /**
      * The source is opened on the first advance; abandoning the generator closes it.
      *
-     * @return Generator<int, RawRowValues>
+     * @return Generator<int, array<array-key, ?string>>
      */
     public function getIterator(): Generator
     {

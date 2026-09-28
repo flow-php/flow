@@ -4,31 +4,300 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../../../../vendor/autoload.php';
 
-use Flow\ETL\Row;
+use Flow\ETL\Column\DefaultBackend;
+use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
+use Flow\ETL\Schema;
+use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
+
+use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\date_schema;
+use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\enum_schema;
+use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\html_schema;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\json_schema;
+use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\map_schema;
+use function Flow\ETL\DSL\null_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\structure_schema;
+use function Flow\ETL\DSL\time_schema;
+use function Flow\ETL\DSL\time_zone_schema;
+use function Flow\ETL\DSL\uuid_schema;
+use function Flow\ETL\DSL\xml_schema;
+use function Flow\Types\DSL\structure_element;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 
 /**
- * Byte-identical comparison against the pure-PHP decoder on fresh objects.
- *
- * @param list<Row> $expected
- * @param list<Row> $actual
+ * One column per Definition (html only where \Dom\HTMLDocument exists).
  */
-function assert_rows_identical(array $expected, array $actual): void
+function all_types_schema(string $zone = 'Europe/Warsaw'): Schema
 {
-    if (count($expected) !== count($actual)) {
-        echo 'FAIL: row count ', count($expected), ' !== ', count($actual), "\n";
+    return schema(
+        int_schema('int'),
+        str_schema('string', nullable: true),
+        float_schema('float'),
+        bool_schema('bool'),
+        datetime_schema('datetime', zone: $zone),
+        date_schema('date'),
+        time_schema('time'),
+        uuid_schema('uuid'),
+        json_schema('json'),
+        enum_schema('enum', BasicEnum::class),
+        time_zone_schema('time_zone'),
+        xml_schema('xml'),
+        list_schema('list', type_list(type_optional(type_integer()))),
+        map_schema('map', type_map(type_string(), type_integer())),
+        structure_schema('structure', type_structure([
+            'a' => type_integer(),
+            'b' => structure_element('b', type_optional(type_string()), true),
+        ])),
+        null_schema('null'),
+        ...class_exists('\Dom\HTMLDocument') ? [html_schema('html')] : [],
+    );
+}
 
-        return;
-    }
+/**
+ * Six rows: bytes that are not UTF-8, a pre-1970 datetime with microseconds, a DST pair, a negative time.
+ *
+ * @return list<array<string, mixed>>
+ */
+function all_types_values(): array
+{
+    $negative = (new DateTimeImmutable('2024-01-01 01:02:03'))->diff(new DateTimeImmutable('2024-01-01'));
+    $rows = [
+        [
+            'int' => 1,
+            'string' => "a\xFFb",
+            'float' => 1.5,
+            'bool' => true,
+            'datetime' => '1969-07-20T20:17:40.123456Z',
+            'date' => '1969-12-29',
+            'time' => new DateInterval('PT1H2M3S'),
+            'uuid' => '6c2f1d4e-8b3a-4c5d-9e6f-0a1b2c3d4e5f',
+            'json' => '{"a":1}',
+            'enum' => BasicEnum::one,
+            'time_zone' => new DateTimeZone('Europe/Warsaw'),
+            'xml' => '<a>1</a>',
+            'list' => [1, null, 3],
+            'map' => ['a' => 1],
+            'structure' => ['a' => 1, 'b' => 'x'],
+            'null' => null,
+        ],
+        [
+            'int' => -2,
+            'string' => null,
+            'float' => -0.0,
+            'bool' => false,
+            'datetime' => '2024-10-27T00:30:00Z',
+            'date' => '2024-02-29',
+            'time' => $negative,
+            'uuid' => '00000000-0000-0000-0000-000000000000',
+            'json' => '[1,2]',
+            'enum' => BasicEnum::two,
+            'time_zone' => new DateTimeZone('UTC'),
+            'xml' => '<b/>',
+            'list' => [],
+            'map' => [],
+            'structure' => ['a' => 2],
+            'null' => null,
+        ],
+        [
+            'int' => PHP_INT_MAX,
+            'string' => '',
+            'float' => 1e300,
+            'bool' => true,
+            'datetime' => '2024-10-27T01:30:00Z',
+            'date' => '2000-01-01',
+            'time' => new DateInterval('PT0S'),
+            'uuid' => 'ffffffff-ffff-ffff-ffff-ffffffffffff',
+            'json' => '{}',
+            'enum' => BasicEnum::three,
+            'time_zone' => new DateTimeZone('America/New_York'),
+            'xml' => '<c a="1">t</c>',
+            'list' => [null],
+            'map' => ['b' => 2, 'c' => 3],
+            'structure' => ['a' => 3, 'b' => null],
+            'null' => null,
+        ],
+        [
+            'int' => PHP_INT_MIN,
+            'string' => 'zażółć',
+            'float' => 0.1,
+            'bool' => false,
+            'datetime' => '1970-01-01T00:00:00Z',
+            'date' => '1970-01-01',
+            'time' => new DateInterval('PT49H'),
+            'uuid' => '6c2f1d4e-8b3a-4c5d-9e6f-0a1b2c3d4e5f',
+            'json' => '[true]',
+            'enum' => BasicEnum::one,
+            'time_zone' => new DateTimeZone('Europe/Warsaw'),
+            'xml' => '<d/>',
+            'list' => [4],
+            'map' => ['a' => 4],
+            'structure' => ['a' => 4, 'b' => 'y'],
+            'null' => null,
+        ],
+        [
+            'int' => 0,
+            'string' => 'e',
+            'float' => 2.0,
+            'bool' => true,
+            'datetime' => '2038-01-19T03:14:08.000001Z',
+            'date' => '1900-03-01',
+            'time' => new DateInterval('PT59M59S'),
+            'uuid' => '12345678-1234-1234-1234-123456789abc',
+            'json' => '{"b":[1,{"c":null}]}',
+            'enum' => BasicEnum::two,
+            'time_zone' => new DateTimeZone('Asia/Tokyo'),
+            'xml' => '<e>5</e>',
+            'list' => [5, 6],
+            'map' => ['z' => 0],
+            'structure' => ['a' => 5],
+            'null' => null,
+        ],
+        [
+            'int' => 7,
+            'string' => 'last',
+            'float' => -3.25,
+            'bool' => false,
+            'datetime' => '1900-01-01T12:00:00.5Z',
+            'date' => '2100-12-31',
+            'time' => new DateInterval('PT1S'),
+            'uuid' => 'abcdefab-cdef-abcd-efab-cdefabcdefab',
+            'json' => '[]',
+            'enum' => BasicEnum::three,
+            'time_zone' => new DateTimeZone('UTC'),
+            'xml' => '<f/>',
+            'list' => [7, null],
+            'map' => ['q' => 7],
+            'structure' => ['a' => 7, 'b' => 'z'],
+            'null' => null,
+        ],
+    ];
 
-    foreach ($expected as $i => $row) {
-        if (serialize($row->values()) !== serialize($actual[$i]->values())) {
-            echo "FAIL: row {$i} differs from the PHP decoder output\n";
-
-            return;
+    if (class_exists('\\Dom\\HTMLDocument')) {
+        foreach ($rows as $index => $row) {
+            $rows[$index] = $row + ['html' => '<p>html</p>'];
         }
     }
 
-    echo "identical\n";
+    return $rows;
+}
+
+/**
+ * @param list<array<array-key, mixed>> $values
+ */
+function php_rows(Schema $schema, array $values): Rows
+{
+    return (new RowsBuilder($schema, new PhpBackend()))
+        ->appendRows($values)
+        ->finish();
+}
+
+/**
+ * @param list<array<array-key, mixed>> $values
+ */
+function native_rows(Schema $schema, array $values): Rows
+{
+    return (new RowsBuilder($schema, new DefaultBackend()))
+        ->appendRows($values)
+        ->finish();
+}
+
+/**
+ * `serialize()` with DOM values, which it refuses, replaced by their class and markup.
+ */
+function comparable(mixed $value): string
+{
+    $plain = static function (mixed $value) use (&$plain): mixed {
+        if (is_array($value)) {
+            return array_map($plain, $value);
+        }
+
+        if ($value instanceof DOMDocument) {
+            return [$value::class, $value->saveXML()];
+        }
+
+        if ($value instanceof DOMNode) {
+            return [$value::class, $value->ownerDocument?->saveXML($value)];
+        }
+
+        if (!is_object($value) || !str_starts_with($value::class, 'Dom\\')) {
+            return $value;
+        }
+
+        // @mago-expect analysis:unavailable-method,mixed-method-access,ambiguous-object-property-access
+        return [
+            $value::class,
+            $value instanceof Dom\HTMLDocument ? $value->saveHtml() : $value->ownerDocument->saveHtml($value),
+        ];
+    };
+
+    return serialize($plain($value));
+}
+
+/**
+ * `comparable()` of the result, or `class: message <- previous class: message` of what it threw.
+ */
+function outcome(callable $fn): string
+{
+    try {
+        return comparable($fn());
+    } catch (Throwable $e) {
+        $previous = $e->getPrevious();
+
+        return (
+            get_class($e)
+            . ': '
+            . $e->getMessage()
+            . ($previous === null ? '' : ' <- ' . get_class($previous) . ': ' . $previous->getMessage())
+        );
+    }
+}
+
+function assert_same_outcome(callable $php, callable $native): void
+{
+    $expected = outcome($php);
+    $actual = outcome($native);
+
+    echo $expected === $actual ? "identical\n" : "php:    {$expected}\nnative: {$actual}\n";
+}
+
+/**
+ * JSON of the three column interfaces as reflection sees them: methods, parameters, types, variadics.
+ */
+function interfaces_reflection(): string
+{
+    $interfaces = [];
+
+    foreach (['Backend', 'Column', 'ColumnBuilder'] as $name) {
+        $class = new ReflectionClass('Flow\\ETL\\Column\\' . $name);
+        $interfaces[$name] = [
+            $class->isInterface(),
+            array_map(static fn(ReflectionMethod $method): array => [
+                $method->getName(),
+                (string) $method->getReturnType(),
+                array_map(static fn(ReflectionParameter $parameter): array => [
+                    $parameter->getName(),
+                    (string) $parameter->getType(),
+                    $parameter->isVariadic(),
+                    $parameter->isPassedByReference(),
+                ], $method->getParameters()),
+            ], $class->getMethods()),
+        ];
+    }
+
+    return (string) json_encode($interfaces);
 }
 
 function expect_exception(callable $fn): void
@@ -42,7 +311,7 @@ function expect_exception(callable $fn): void
 }
 
 /**
- * The PHP CSV path - CSVLineReader + CSVDecoder::decode() - as `[headers, list of RawRowValues::$values]`.
+ * The PHP CSV path - CSVLineReader + CSVDecoder::decode() - as `[headers, list of array<array-key, mixed>::$values]`.
  *
  * @return array{list<string>, list<array<array-key, mixed>>}
  */
@@ -69,7 +338,7 @@ function csv_php_rows(
         new Flow\Filesystem\Stream\StringSourceStream(Flow\Filesystem\DSL\path('memory://phpt.csv'), $raw),
     ) as $line) {
         foreach ($decoder->decode([$line]) as $values) {
-            $rows[] = $values->values;
+            $rows[] = $values;
         }
     }
 
@@ -77,7 +346,7 @@ function csv_php_rows(
 }
 
 /**
- * RustCSVReaderNative fed `$raw` in `$chunk`-byte pieces, as `[headers, list of RawRowValues::$values]`.
+ * RustCSVReaderNative fed `$raw` in `$chunk`-byte pieces, as `[headers, list of array<array-key, mixed>::$values]`.
  *
  * @param positive-int $chunk
  *
@@ -105,7 +374,7 @@ function csv_native_rows(
     $drain = static function () use ($reader, &$rows): void {
         while (($batch = $reader->next(3)) !== []) {
             foreach ($batch as $values) {
-                $rows[] = $values->values;
+                $rows[] = $values;
             }
         }
     };
@@ -288,6 +557,24 @@ function csv_narrow_corpus(): array
         '12345678',
         '00000000',
         '2024-01-01 25:00',
+        '1969-12-31T23:59:59.5Z',
+        '2024-02-29T12:00:00+14:00',
+        '2024-02-29T12:00:00-12:00',
+        '2026-01-31T00:00:00+23:59',
+        '9999-12-31T23:59:59.999999-23:59',
+        '0001-01-01T00:00:00+23:59',
+        '2038-01-19T03:14:08Z',
+        '2026-01-02T03:04:05-00:00',
+        '2026-01-02t03:04:05Z',
+        '2026-01-02T03:04:05z',
+        '2026-01-02T03:04:05,5Z',
+        '2026-01-02T03:04:05+0100',
+        '2026-01-02T03:04:05.Z',
+        '2023-02-29T00:00:00Z',
+        '0000-01-01T00:00:00Z',
+        '2026-01-02T03:04:05+24:00',
+        '2026-01-02T03:04:05+01:60',
+        '2026-01-02T03:04:05.1234567+01:00',
     ];
 
     mt_srand(46);

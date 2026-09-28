@@ -17,7 +17,6 @@ use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
 use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
@@ -119,10 +118,7 @@ final class GoogleSheetExtractor implements
 
         foreach ($batches as $batch) {
             if (!$checked) {
-                $columns = array_map(
-                    static fn(int|string $name): string => (string) $name,
-                    array_keys($batch[0]->values),
-                );
+                $columns = array_map(static fn(int|string $name): string => (string) $name, array_keys($batch[0]));
 
                 // a row that carries no columns is not a divergence: withHeader(false) decodes a leading blank
                 // row to one, and the names come from the row after it
@@ -146,20 +142,19 @@ final class GoogleSheetExtractor implements
 
             if ($this->addMetadataColumns) {
                 $batch = array_map(
-                    function (RawRowValues $rowValues): RawRowValues {
+                    function (array $values): array {
                         // assigned, never unpacked: a numeric column name is an int array key and ... renumbers it
-                        $values = $rowValues->values;
                         $values['_spread_sheet_id'] = $this->spreadsheetId;
                         $values['_sheet_name'] = $this->columnRange->sheetName;
 
-                        return new RawRowValues($values);
+                        return $values;
                     },
                     $batch,
                 );
             }
 
             $rows = (new RowsBuilder($schema, $backend))
-                ->appendRows(array_map(static fn(RawRowValues $r): array => $r->values, $batch))
+                ->appendRows($batch)
                 ->finish();
 
             $yielded += $rows->count();

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Config\Repartition;
 
 use Flow\ETL\Bucketing\BucketsStorage;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Config\Bucketing\BucketingConfigBuilder;
 use Flow\Filesystem\Path;
 
@@ -27,9 +28,9 @@ final class HashRepartitionBuilder implements RepartitionAlgorithmBuilder
         return $this;
     }
 
-    public function build(Path $spillRoot): HashRepartitionConfig
+    public function build(Path $spillRoot, Backend $backend): HashRepartitionConfig
     {
-        return new HashRepartitionConfig($this->bucketing->build($spillRoot));
+        return new HashRepartitionConfig($this->bucketing->build($spillRoot, $backend));
     }
 
     /**

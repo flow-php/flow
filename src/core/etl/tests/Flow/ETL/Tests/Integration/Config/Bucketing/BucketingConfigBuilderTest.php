@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Config\Bucketing;
 
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Config\Bucketing\BucketingConfigBuilder;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
@@ -20,7 +21,7 @@ final class BucketingConfigBuilderTest extends FlowIntegrationTestCase
         $spillRoot = $this->cacheDir->suffix('/spill-root');
 
         (new BucketingConfigBuilder('/flow-php-sort/', 64))
-            ->build($spillRoot)
+            ->build($spillRoot, new PhpBackend())
             ->storage->set('bucket-1', array_to_rows([['id' => 1]], schema(int_schema('id'))));
 
         static::assertNotSame(

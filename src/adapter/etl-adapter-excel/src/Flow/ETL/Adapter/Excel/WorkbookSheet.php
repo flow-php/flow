@@ -5,14 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Excel;
 
 use Flow\ETL\Adapter\Excel\Sheet\OpenSheet;
-use Flow\ETL\Row\RawRowValues;
 use Flow\Filesystem\Path;
 use Generator;
 
 final class WorkbookSheet
 {
     /**
-     * @var list<RawRowValues>
+     * @var list<array<array-key, mixed>>
      */
     private array $buffered = [];
 
@@ -58,7 +57,7 @@ final class WorkbookSheet
      * rows() that follows replays the sample and parses on from where the sample stopped, instead of parsing the
      * sample a second time. Closing the sheet stays with its owner.
      *
-     * @return Generator<int, RawRowValues>
+     * @return Generator<int, array<array-key, mixed>>
      */
     public function sample(): Generator
     {
@@ -83,7 +82,7 @@ final class WorkbookSheet
     }
 
     /**
-     * @return Generator<int, RawRowValues>
+     * @return Generator<int, array<array-key, mixed>>
      */
     public function rows(): Generator
     {

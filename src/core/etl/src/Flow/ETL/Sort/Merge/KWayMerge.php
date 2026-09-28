@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Sort\Merge;
 
 use Flow\ETL\Bucketing\BucketRun;
-use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
@@ -20,6 +20,7 @@ final readonly class KWayMerge
      */
     public function __construct(
         private References $refs,
+        private Backend $backend,
         private int $batchSize = 1000,
     ) {
         // @mago-ignore analysis:invalid-operand
@@ -53,7 +54,7 @@ final readonly class KWayMerge
             }
         }
 
-        $buffer = new RowsBuffer($schema ?? new Schema(), new PhpBackend(), $this->batchSize);
+        $buffer = new RowsBuffer($schema ?? new Schema(), $this->backend, $this->batchSize);
 
         while (!$heap->isEmpty()) {
             $top = $heap->extract();

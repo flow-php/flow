@@ -9,7 +9,6 @@ use ArrayIterator;
 use Countable;
 use Flow\ETL\Column\Column;
 use Flow\ETL\Column\DefaultBackend;
-use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
@@ -81,7 +80,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      */
     public function __unserialize(array $data): void
     {
-        $rows = (new FrameDecoder())->decode($data['frame'], $data['schema'], new PhpBackend());
+        $rows = (new FrameDecoder())->decode($data['frame'], $data['schema'], new DefaultBackend());
 
         $this->schema = $rows->schema;
         $this->columns = $rows->columns;
@@ -94,7 +93,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
     public static function of(Schema $schema, Row ...$rows): self
     {
         if ($rows === []) {
-            $backend = new PhpBackend();
+            $backend = new DefaultBackend();
             $columns = [];
 
             foreach ($schema->definitions() as $name => $definition) {
@@ -122,7 +121,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             return new self($schema, $gathered->columns, $gathered->count);
         }
 
-        $builder = new RowsBuilder($schema, new PhpBackend());
+        $builder = new RowsBuilder($schema, new DefaultBackend());
 
         foreach ($rows as $row) {
             $builder->appendFrom($row->rows, $row->index);
@@ -280,7 +279,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             return self::of($this->schema);
         }
 
-        $backend = new PhpBackend();
+        $backend = new DefaultBackend();
         $columns = [];
 
         foreach ($this->schema->definitions() as $name => $definition) {
@@ -543,7 +542,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             }
         }
 
-        $backend = new PhpBackend();
+        $backend = new DefaultBackend();
         $columns = [];
         $changed = [];
 
@@ -976,7 +975,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             yield $rows;
         };
 
-        $joiner = new Joiner($expression, $type);
+        $joiner = new Joiner($expression, $type, new DefaultBackend());
         $joined = [];
 
         foreach ($joiner->join(JoinSide::of($single($this)), JoinSide::of($single($right))) as $batch) {

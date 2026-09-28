@@ -18,7 +18,6 @@ use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
 use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
@@ -33,7 +32,6 @@ use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Flow\Types\Type\Logical\InstanceOfTypeNarrower;
 use Generator;
 
-use function array_map;
 use function iterator_to_array;
 use function sprintf;
 
@@ -137,7 +135,7 @@ final class JsonLinesExtractor implements
             foreach ($reader->batches($source, $batchSize) as $rawBatch) {
                 $rows = $constants->fillRows(
                     (new RowsBuilder($body, $backend))
-                        ->appendRows(array_map(static fn(RawRowValues $r): array => $r->values, $rawBatch))
+                        ->appendRows($rawBatch)
                         ->finish(),
                     $schema,
                     $backend,

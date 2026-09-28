@@ -49,7 +49,7 @@ final readonly class BucketAggregation
         }
 
         if ($groups !== null) {
-            yield from $groups->flush($this->batchSize);
+            yield from $groups->flush($this->batchSize, $context);
         }
     }
 
@@ -70,6 +70,6 @@ final readonly class BucketAggregation
             $groups->accumulate($batch, $context);
         }
 
-        yield from $groups->flush($this->batchSize);
+        yield from $groups->flush($this->batchSize, $context);
     }
 }

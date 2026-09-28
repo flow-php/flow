@@ -61,7 +61,7 @@ final class StatisticsCollector
         }
 
         gc_collect_cycles();
-        $this->memory = new Consumption();
+        $this->memory = new Consumption($this->context->backend());
         $this->startedAt = $this->context->config->clock()->now();
         $this->startTime = HighResolutionTime::now();
     }

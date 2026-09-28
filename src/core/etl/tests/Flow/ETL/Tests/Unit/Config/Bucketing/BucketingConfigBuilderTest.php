@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Config\Bucketing;
 
 use Flow\ETL\Bucketing\Storage\FilesystemBuckets;
 use Flow\ETL\Bucketing\Storage\MemoryBuckets;
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Config\Bucketing\BucketingConfigBuilder;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
@@ -27,7 +28,7 @@ final class BucketingConfigBuilderTest extends FlowTestCase
         $config = (new BucketingConfigBuilder('/flow-php-join/', 64))
             ->bucketsCount(4)
             ->batchSize(250)
-            ->build(Path::realpath(__DIR__));
+            ->build(Path::realpath(__DIR__), new PhpBackend());
 
         static::assertSame(4, $config->bucketsCount);
         static::assertSame(250, $config->batchSize);
@@ -44,7 +45,7 @@ final class BucketingConfigBuilderTest extends FlowTestCase
 
     public function test_default_builds_a_filesystem_buckets_storage(): void
     {
-        $config = (new BucketingConfigBuilder('/flow-php-join/', 64))->build(Path::realpath(__DIR__));
+        $config = (new BucketingConfigBuilder('/flow-php-join/', 64))->build(Path::realpath(__DIR__), new PhpBackend());
 
         static::assertInstanceOf(FilesystemBuckets::class, $config->storage);
         static::assertSame(64, $config->bucketsCount);
@@ -53,7 +54,10 @@ final class BucketingConfigBuilderTest extends FlowTestCase
 
     public function test_default_buckets_count_comes_from_the_constructor(): void
     {
-        $config = (new BucketingConfigBuilder('/flow-php-sort/', 100))->build(Path::realpath(__DIR__));
+        $config = (new BucketingConfigBuilder('/flow-php-sort/', 100))->build(
+            Path::realpath(__DIR__),
+            new PhpBackend(),
+        );
 
         static::assertSame(100, $config->bucketsCount);
     }
@@ -64,7 +68,7 @@ final class BucketingConfigBuilderTest extends FlowTestCase
 
         $config = (new BucketingConfigBuilder('/flow-php-join/', 64))
             ->storage($storage)
-            ->build(Path::realpath(__DIR__));
+            ->build(Path::realpath(__DIR__), new PhpBackend());
 
         static::assertSame($storage, $config->storage);
     }

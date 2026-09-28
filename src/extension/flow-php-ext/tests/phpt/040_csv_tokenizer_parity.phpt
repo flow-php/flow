@@ -26,7 +26,7 @@ foreach ($cases as $case => $hex) {
     $reader->feed($input . "\n");
     $reader->finish();
 
-    $fields = array_values($reader->next(10)[0]->values);
+    $fields = array_values($reader->next(10)[0]);
     $expected = str_getcsv($input, ',', '"', '\\');
 
     echo $case, ': ', $fields === $expected ? 'identical' : 'FAIL ' . json_encode(array_map(static fn(?string $f): ?string => $f === null ? null : bin2hex($f), $fields)), "\n";

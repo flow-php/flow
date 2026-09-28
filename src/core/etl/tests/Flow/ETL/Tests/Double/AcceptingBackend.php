@@ -29,4 +29,14 @@ final readonly class AcceptingBackend implements Backend
     {
         return (new PhpBackend())->decode($definition, $buffers, $count, $nullCount);
     }
+
+    public function adopt(Definition $definition, Column $column): Column
+    {
+        return $column;
+    }
+
+    public function allocatedBytes(): int
+    {
+        return 0;
+    }
 }

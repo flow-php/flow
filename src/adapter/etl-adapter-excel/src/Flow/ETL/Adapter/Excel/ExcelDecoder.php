@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel;
 
-use Flow\ETL\Row\RawRowValues;
-
 use function array_map;
 use function array_values;
 use function count;
@@ -27,7 +25,7 @@ final class ExcelDecoder
     /**
      * @param list<array<int, mixed>> $batch
      *
-     * @return list<RawRowValues>
+     * @return list<array<array-key, mixed>>
      */
     public function decode(array $batch): array
     {
@@ -52,7 +50,7 @@ final class ExcelDecoder
                 $values[$name] = $this->convertEmptyToNull && '' === $cell ? null : $cell;
             }
 
-            $decoded[] = new RawRowValues($values);
+            $decoded[] = $values;
         }
 
         return $decoded;

@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\JSON\JSONMachine;
 
 use Flow\ETL\Extractor\SourceFile;
-use Flow\ETL\Row\RawRowValues;
 use Generator;
 use IteratorAggregate;
 
 /**
- * @implements IteratorAggregate<int, RawRowValues>
+ * @implements IteratorAggregate<int, array<array-key, mixed>>
  */
 final class JsonFileSample implements IteratorAggregate
 {
@@ -24,7 +23,7 @@ final class JsonFileSample implements IteratorAggregate
     /**
      * Records what it read when the consumer stops or the file ends, whichever comes first.
      *
-     * @return Generator<int, RawRowValues>
+     * @return Generator<int, array<array-key, mixed>>
      */
     public function getIterator(): Generator
     {

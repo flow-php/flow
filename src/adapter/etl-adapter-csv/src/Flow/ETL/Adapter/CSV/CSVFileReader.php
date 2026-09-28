@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV;
 
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Extractor\SourceFile;
-use Flow\ETL\Row\RawRowValues;
+use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\SchemaSampler;
 use Generator;
-
-use function count;
 
 final readonly class CSVFileReader implements SchemaSampler
 {
@@ -22,33 +22,18 @@ final readonly class CSVFileReader implements SchemaSampler
     ) {}
 
     /**
-     * Abandoning the generator closes the source. Returns the header the read resolved, so a source without data rows
-     * needs no second open to name its columns.
+     * Abandoning the generator closes the source.
      *
      * @param int<1, max> $batchSize
      *
-     * @return Generator<int, non-empty-list<RawRowValues>, mixed, list<string>>
+     * @return Generator<int, Rows>
      */
-    public function batches(SourceFile $source, int $batchSize): Generator
+    public function batches(SourceFile $source, Schema $schema, int $batchSize, Backend $backend): Generator
     {
         $open = $this->opener->open($source);
-        $batch = [];
 
         try {
-            foreach ($open->records() as $values) {
-                $batch[] = $values;
-
-                if (count($batch) >= $batchSize) {
-                    yield $batch;
-                    $batch = [];
-                }
-            }
-
-            if ($batch !== []) {
-                yield $batch;
-            }
-
-            return $open->headers();
+            yield from $open->batches($schema, $batchSize, $backend);
         } finally {
             $open->close();
         }

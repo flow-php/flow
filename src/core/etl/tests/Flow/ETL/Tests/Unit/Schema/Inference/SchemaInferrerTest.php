@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Schema\Inference;
 
-use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\InferredTypes;
 use Flow\ETL\Schema\Inference\SchemaInference;
@@ -51,7 +50,7 @@ final class SchemaInferrerTest extends FlowTestCase
      * Heterogeneous on purpose: "a" widens integer -> float inside source 1, and source 2 introduces "c", so a
      * budget that stops early and a merge that drops a name are both observable.
      *
-     * @return list<list<RawRowValues>>
+     * @return list<list<array<array-key, mixed>>>
      */
     public static function threeSourcesOfTenRows(): array
     {
@@ -71,7 +70,7 @@ final class SchemaInferrerTest extends FlowTestCase
                     $values['c'] = 'true';
                 }
 
-                $rows[] = new RawRowValues($values);
+                $rows[] = $values;
             }
 
             $sources[] = $rows;
@@ -120,8 +119,8 @@ final class SchemaInferrerTest extends FlowTestCase
     public function test_a_column_that_is_free_text_in_the_first_source_and_numeric_in_the_second_widens_to_string(): void
     {
         $fixture = [
-            [new RawRowValues(['id' => '1', 'v' => 'free text']), new RawRowValues(['id' => '2', 'v' => 'more text'])],
-            [new RawRowValues(['id' => '3', 'v' => '42']), new RawRowValues(['id' => '4', 'v' => '43'])],
+            [['id' => '1', 'v' => 'free text'], ['id' => '2', 'v' => 'more text']],
+            [['id' => '3', 'v' => '42'], ['id' => '4', 'v' => '43']],
         ];
         $inferrer = new SchemaInferrer(
             new SchemaInference(),
@@ -148,8 +147,8 @@ final class SchemaInferrerTest extends FlowTestCase
     {
         $sources = new RecordingSources([
             [],
-            [new RawRowValues(['a' => '1', 'b' => 'x'])],
-            [new RawRowValues(['c' => '1'])],
+            [['a' => '1', 'b' => 'x']],
+            [['c' => '1']],
         ]);
 
         $schema = (new SchemaInferrer(
@@ -163,7 +162,7 @@ final class SchemaInferrerTest extends FlowTestCase
 
     public function test_a_single_generator_source_is_accepted(): void
     {
-        $sources = new RecordingSources([[new RawRowValues(['a' => '1'])]]);
+        $sources = new RecordingSources([[['a' => '1']]]);
 
         static::assertEquals(
             new Schema(definition_from_type('a', type_integer(), nullable: true)),
@@ -332,7 +331,7 @@ final class SchemaInferrerTest extends FlowTestCase
         $partial = (new SchemaInferrer(
             new SchemaInference(),
             new StringTypeNarrower(InferredTypes::default()->toArray()),
-        ))->sniff(['ghost'], [new RawRowValues(['a' => '1'])], -1);
+        ))->sniff(['ghost'], [['a' => '1']], -1);
 
         static::assertSame(['ghost', 'a'], array_keys($partial->schema(ColumnTypesMother::floor())->definitions()));
         static::assertSame('string', $partial->schema(ColumnTypesMother::floor())->get('ghost')->type()->toString());
@@ -340,7 +339,7 @@ final class SchemaInferrerTest extends FlowTestCase
 
     public function test_sniff_observes_nothing_when_the_budget_is_already_spent(): void
     {
-        $sources = new RecordingSources([[new RawRowValues(['a' => '1'])]]);
+        $sources = new RecordingSources([[['a' => '1']]]);
 
         $partial = (new SchemaInferrer(
             new SchemaInference(),
@@ -374,7 +373,7 @@ final class SchemaInferrerTest extends FlowTestCase
         $schema = (new SchemaInferrer(
             new SchemaInference(types: new InferredTypes(type_integer(), type_string())),
             new StringTypeNarrower([type_integer(), type_string()]),
-        ))->infer([], [[new RawRowValues(['i' => '42', 'f' => '1.5', 'd' => '2024-01-01'])]]);
+        ))->infer([], [[['i' => '42', 'f' => '1.5', 'd' => '2024-01-01']]]);
 
         static::assertEquals(
             new Schema(
@@ -389,8 +388,8 @@ final class SchemaInferrerTest extends FlowTestCase
     public function test_union_by_name_over_sources_where_one_column_saturates_to_string(): void
     {
         $sources = new RecordingSources([
-            [new RawRowValues(['id' => '1', 'v' => 'free text'])],
-            [new RawRowValues(['id' => '2', 'v' => '42', 'w' => '2024-01-01'])],
+            [['id' => '1', 'v' => 'free text']],
+            [['id' => '2', 'v' => '42', 'w' => '2024-01-01']],
         ]);
 
         static::assertEquals(

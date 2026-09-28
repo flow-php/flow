@@ -14,14 +14,14 @@ final class ExcelDecoderTest extends FlowTestCase
         $decoder = new ExcelDecoder();
 
         static::assertSame([], $decoder->decode([['id', 'name']]));
-        static::assertSame(['id' => 1, 'name' => 'Norbert'], $decoder->decode([[1, 'Norbert']])[0]->values);
+        static::assertSame(['id' => 1, 'name' => 'Norbert'], $decoder->decode([[1, 'Norbert']])[0]);
     }
 
     public function test_decode_generates_auto_headers_when_header_is_disabled(): void
     {
         static::assertSame(
             ['e00' => 1, 'e01' => 'Norbert'],
-            (new ExcelDecoder(withHeader: false))->decode([[1, 'Norbert']])[0]->values,
+            (new ExcelDecoder(withHeader: false))->decode([[1, 'Norbert']])[0],
         );
     }
 
@@ -58,7 +58,7 @@ final class ExcelDecoderTest extends FlowTestCase
     {
         static::assertSame(
             ['id' => 1, 'name' => ''],
-            (new ExcelDecoder(convertEmptyToNull: false))->decode([['id', 'name'], [1, '']])[0]->values,
+            (new ExcelDecoder(convertEmptyToNull: false))->decode([['id', 'name'], [1, '']])[0],
         );
     }
 
@@ -66,15 +66,12 @@ final class ExcelDecoderTest extends FlowTestCase
     {
         static::assertSame(
             ['id' => 1, 'name' => 'Norbert'],
-            (new ExcelDecoder())->decode([['id', 'name'], [1, 'Norbert']])[0]->values,
+            (new ExcelDecoder())->decode([['id', 'name'], [1, 'Norbert']])[0],
         );
     }
 
     public function test_decode_turns_empty_cells_into_null_by_default(): void
     {
-        static::assertSame(
-            ['id' => 1, 'name' => null],
-            (new ExcelDecoder())->decode([['id', 'name'], [1, '']])[0]->values,
-        );
+        static::assertSame(['id' => 1, 'name' => null], (new ExcelDecoder())->decode([['id', 'name'], [1, '']])[0]);
     }
 }

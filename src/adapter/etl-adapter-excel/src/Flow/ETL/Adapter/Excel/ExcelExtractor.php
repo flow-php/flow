@@ -19,7 +19,6 @@ use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
 use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
@@ -35,7 +34,6 @@ use Generator;
 use Throwable;
 
 use function array_diff;
-use function array_map;
 use function array_values;
 use function count;
 use function iterator_to_array;
@@ -210,7 +208,7 @@ final class ExcelExtractor implements
 
                         $rows = $constants->fillRows(
                             (new RowsBuilder($body, $backend))
-                                ->appendRows(array_map(static fn(RawRowValues $r): array => $r->values, $batch))
+                                ->appendRows($batch)
                                 ->finish(),
                             $schema,
                             $backend,
@@ -236,7 +234,7 @@ final class ExcelExtractor implements
 
                     $rows = $constants->fillRows(
                         (new RowsBuilder($body, $backend))
-                            ->appendRows(array_map(static fn(RawRowValues $r): array => $r->values, $batch))
+                            ->appendRows($batch)
                             ->finish(),
                         $schema,
                         $backend,

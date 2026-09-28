@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV;
 
-use Flow\ETL\Row\RawRowValues;
+use Flow\ETL\Exception\SchemaMismatchException;
+use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use RuntimeException;
 
 use function extension_loaded;
@@ -27,7 +29,7 @@ final class RustCSVReaderNative
     }
 
     /**
-     * The bytes, as read, of every row next() and fold() produced so far - line endings included, the header
+     * The bytes, as read, of every row next(), nextColumns() and fold() produced so far - line endings included, the header
      * record excluded.
      *
      * @return int<0, max>
@@ -68,9 +70,22 @@ final class RustCSVReaderNative
     /**
      * @param int<1, max> $batchSize
      *
-     * @return list<RawRowValues>
+     * @return list<array<array-key, ?string>>
      */
     public function next(int $batchSize): array
+    {
+        throw new RuntimeException('flow_php extension is not loaded');
+    }
+
+    /**
+     * Exactly $batchSize rows keyed and ordered by $schema while that many are buffered, the remainder after finish(),
+     * else null; row indexes in refusals are relative to the batch.
+     *
+     * @param int<1, max> $batchSize
+     *
+     * @throws SchemaMismatchException
+     */
+    public function nextColumns(Schema $schema, int $batchSize): ?Rows
     {
         throw new RuntimeException('flow_php extension is not loaded');
     }

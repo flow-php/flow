@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Extractor;
 
 use Flow\ETL\Extractor\InMemoryRows;
-use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function array_keys;
@@ -17,21 +16,15 @@ final class InMemoryRowsTest extends FlowTestCase
     {
         $rows = new InMemoryRows([['id' => 1], ['id' => 2]]);
 
-        static::assertEquals(
-            [new RawRowValues(['id' => 1]), new RawRowValues(['id' => 2])],
-            iterator_to_array($rows->values(), false),
-        );
-        static::assertEquals(
-            [new RawRowValues(['id' => 1]), new RawRowValues(['id' => 2])],
-            iterator_to_array($rows->values(), false),
-        );
+        static::assertEquals([['id' => 1], ['id' => 2]], iterator_to_array($rows->values(), false));
+        static::assertEquals([['id' => 1], ['id' => 2]], iterator_to_array($rows->values(), false));
     }
 
     public function test_positional_keys_are_named_like_the_hydrator_names_them(): void
     {
         static::assertSame(
             ['e00', 'e01'],
-            array_keys(iterator_to_array((new InMemoryRows([[1, 2]]))->values(), false)[0]->values),
+            array_keys(iterator_to_array((new InMemoryRows([[1, 2]]))->values(), false)[0]),
         );
     }
 

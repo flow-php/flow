@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::types::{ZendHashTable, Zval};
 
-use crate::ctx::{call_handle, zval_str, Ctx};
+use crate::ctx::{self, call_handle, zval_str};
 use crate::csv::php_trim;
 use crate::csv::tokenizer::is_space;
 use crate::date_check::{checkdate, iso_date_gate, iso_date_time_gate};
@@ -129,14 +129,12 @@ impl Candidates {
 /// `StringTypeNarrower::narrow()` for a string cell, without the HTML and XML rungs.
 pub struct Narrower {
     candidates: Candidates,
-    ctx: Ctx,
 }
 
 impl Narrower {
     fn new(candidates: Candidates) -> Result<Self, PhpException> {
         Ok(Self {
             candidates,
-            ctx: Ctx::new()?,
         })
     }
 
@@ -192,7 +190,7 @@ impl Narrower {
         }
 
         // same one-sided rule as the cast: only PHP may say "not JSON"
-        let valid = call_handle(self.ctx.json_validate()?, None, &mut [zval_str(value)], "validate a JSON cell")?;
+        let valid = call_handle(ctx::json_validate()?, None, &mut [zval_str(value)], "validate a JSON cell")?;
 
         Ok(valid.bool().unwrap_or(false))
     }
@@ -208,7 +206,7 @@ impl Narrower {
             return Ok(Some(Leaf::Date));
         }
 
-        let parts_zv = call_handle(self.ctx.date_parse()?, None, &mut [zval_str(value)], "parse a temporal cell")?;
+        let parts_zv = call_handle(ctx::date_parse()?, None, &mut [zval_str(value)], "parse a temporal cell")?;
         let parts = parts_zv
             .array()
             .ok_or_else(|| ext_exception("flow_php expected date_parse() to return an array"))?;
@@ -242,11 +240,11 @@ impl Narrower {
     }
 
     fn is_timezone(&mut self, value: &[u8]) -> Result<bool, PhpException> {
-        if self.ctx.timezone_identifiers()?.contains(value) {
+        if ctx::is_timezone_identifier(value)? {
             return Ok(true);
         }
 
-        Ok(is_offset(value) && self.ctx.timezone_accepts(value)?)
+        Ok(is_offset(value) && ctx::timezone_accepts(value)?)
     }
 }
 

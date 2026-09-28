@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV;
 
-use Flow\ETL\Row\RawRowValues;
-
 use function array_combine;
 use function array_keys;
 use function array_map;
@@ -40,7 +38,7 @@ final class CSVDecoder
     /**
      * @param list<string> $batch
      *
-     * @return list<RawRowValues>
+     * @return list<array<array-key, ?string>>
      */
     public function decode(array $batch): array
     {
@@ -60,10 +58,7 @@ final class CSVDecoder
                 $this->headers = $this->generateAutoHeaders(count($fields));
             }
 
-            $maps[] = new RawRowValues(array_combine(
-                $this->headers,
-                $this->rowNormalizer->normalize($fields, count($this->headers)),
-            ));
+            $maps[] = array_combine($this->headers, $this->rowNormalizer->normalize($fields, count($this->headers)));
         }
 
         return $maps;

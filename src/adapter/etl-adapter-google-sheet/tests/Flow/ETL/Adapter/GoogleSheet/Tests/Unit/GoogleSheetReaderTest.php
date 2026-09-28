@@ -116,7 +116,7 @@ final class GoogleSheetReaderTest extends FlowTestCase
         ))->sample(2);
 
         static::assertSame(['id', 'note'], $sample->names);
-        static::assertSame(['id' => '1', 'note' => null], $sample->rows[0]->values);
+        static::assertSame(['id' => '1', 'note' => null], $sample->rows[0]);
         static::assertCount(2, $sample->rows);
     }
 

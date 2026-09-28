@@ -85,7 +85,7 @@ final class CSVExtractorTest extends FlowTestCase
         static::assertEquals(Cardinality::exact(8), $extractor->statistics()->size);
     }
 
-    public function test_a_header_only_file_is_opened_once_by_extract(): void
+    public function test_extract_opens_an_inferred_file_for_its_header_and_its_rows(): void
     {
         $filesystem = new CountingFilesystem(new NativeLocalFilesystem());
         $extractor = from_csv(CSVFixtureContext::path('header_only.csv'), filesystem: $filesystem);
@@ -93,7 +93,7 @@ final class CSVExtractorTest extends FlowTestCase
         $opened = $filesystem->readFromCalls;
 
         static::assertSame([], iterator_to_array($extractor->extract(flow_context()), false));
-        static::assertSame($opened + 1, $filesystem->readFromCalls);
+        static::assertSame($opened + 2, $filesystem->readFromCalls);
     }
 
     public function test_a_member_without_a_size_makes_both_facts_unknown(): void
@@ -205,6 +205,6 @@ final class CSVExtractorTest extends FlowTestCase
             false,
         );
 
-        static::assertGreaterThanOrEqual(1, $backend->builders());
+        static::assertGreaterThanOrEqual(1, $backend->builders() + $backend->adopts());
     }
 }

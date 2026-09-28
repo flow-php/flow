@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Processor;
 
 use Flow\ETL\Processor\CountingProcessor;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\rows;
@@ -49,5 +51,20 @@ final class CountingProcessorTest extends FlowTestCase
 
         static::assertEquals(schema(int_schema('count')), $bound->output);
         static::assertEquals(new CountingProcessor(), $bound->step);
+    }
+
+    public function test_count_builds_with_the_configured_backend(): void
+    {
+        $backend = new SpyBackend();
+        $batches = (static function () {
+            yield array_to_rows([['id' => 1]], schema(int_schema('id')));
+        })();
+
+        iterator_to_array((new CountingProcessor())->process(
+            $batches,
+            flow_context(config_builder()->backend($backend)->build()),
+        ));
+
+        static::assertGreaterThan(0, $backend->builders());
     }
 }

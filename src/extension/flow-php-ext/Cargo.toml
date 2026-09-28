@@ -7,10 +7,19 @@ publish = false
 crate-type = ["cdylib"]
 
 [dependencies]
+arrow-array = "59"
+arrow-buffer = "59"
+arrow-data = "59"
+arrow-schema = "59"
+arrow-select = "59"
 ext-php-rs = "0.15"
+flow-batch-frame = { path = "crates/flow-batch-frame" }
 memchr = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["raw_value"] }
 
 [build-dependencies]
 ext-php-rs-build = "0.1"
+
+[profile.release]
+strip = true

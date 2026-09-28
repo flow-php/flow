@@ -37,4 +37,5 @@ if (in_array($resolvedCacheDir, ['', '/', __DIR__, getcwd()], true)) {
 }
 
 SebastianBergmann\Comparator\Factory::getInstance()->register(new Flow\ETL\Tests\Comparator\RowsComparator());
+SebastianBergmann\Comparator\Factory::getInstance()->register(new Flow\ETL\Tests\Comparator\ColumnComparator());
 SebastianBergmann\Comparator\Factory::getInstance()->register(new Flow\ETL\Tests\Comparator\RowComparator());

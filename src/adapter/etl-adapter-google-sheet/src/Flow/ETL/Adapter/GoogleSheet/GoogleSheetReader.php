@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\GoogleSheet;
 
-use Flow\ETL\Row\RawRowValues;
 use Generator;
 use Google\Service\Sheets;
 
@@ -22,7 +21,7 @@ final readonly class GoogleSheetReader
     ) {}
 
     /**
-     * @return Generator<int, list<RawRowValues>>
+     * @return Generator<int, list<array<array-key, mixed>>>
      */
     public function batches(int $rowsPerPage, int $batchSize): Generator
     {

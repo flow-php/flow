@@ -11,8 +11,6 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Type\Logical\InstanceOfTypeNarrower;
 use Flow\Types\Type\Native\String\StringTypeNarrower;
 
-use function array_map;
-
 final class GoogleSheetReadOptionsTest extends FlowTestCase
 {
     public function test_defaults(): void
@@ -76,10 +74,10 @@ final class GoogleSheetReadOptionsTest extends FlowTestCase
     {
         static::assertSame(
             [['a' => '']],
-            array_map(static fn($rowValues): array => $rowValues->values, (new GoogleSheetReadOptions())
+            (new GoogleSheetReadOptions())
                 ->withEmptyToNull(false)
                 ->decoder()
-                ->decode([['a'], ['']])),
+                ->decode([['a'], ['']]),
         );
     }
 

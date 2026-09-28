@@ -15,11 +15,13 @@ use Flow\ETL\GroupBy;
 use Flow\ETL\NativePHPRandomValueGenerator;
 use Flow\ETL\Processor\GroupByAggregationProcessor;
 use Flow\ETL\Tests\Context\GroupByContext;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\Double\SpyBucketsStorage;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 
 use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\count;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
@@ -337,5 +339,44 @@ final class GroupByAggregationProcessorTest extends FlowTestCase
 
         static::assertCount(1, $result);
         static::assertSame([['amount_sum' => 30.0, 'amount_count' => 2]], $result[0]->toArray());
+    }
+
+    public function test_output_builds_with_the_configured_backend(): void
+    {
+        $backend = new SpyBackend();
+        $groupBy = new GroupBy(ref('category'));
+        $groupBy->aggregate(sum(ref('amount')));
+        $buckets = new Buckets(new MemoryBuckets());
+        $strategy = new HashBucketing(
+            [ref('category')],
+            2,
+            new NativeHasher(),
+            new NativePHPRandomValueGenerator(),
+            'group-by',
+        );
+        $input = (static function (): Generator {
+            yield array_to_rows(
+                [['category' => 'a', 'amount' => 10], ['category' => 'b', 'amount' => 15]],
+                schema(str_schema('category'), int_schema('amount')),
+            );
+        })();
+        $metadata = [];
+
+        foreach ($strategy->bucketize($input, $buckets->storage()) as $bucket) {
+            $buckets->add($bucket);
+            $metadata[] = rows(Bucket::schema(), $bucket->toRow());
+        }
+
+        iterator_to_array(
+            (new GroupByAggregationProcessor($groupBy, $buckets))->process(
+                (static function () use ($metadata): Generator {
+                    yield from $metadata;
+                })(),
+                flow_context(config_builder()->backend($backend)->build()),
+            ),
+            preserve_keys: false,
+        );
+
+        static::assertGreaterThan(0, $backend->builders());
     }
 }

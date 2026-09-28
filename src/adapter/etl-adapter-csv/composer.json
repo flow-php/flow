@@ -15,6 +15,9 @@
         "flow-php/etl": "self.version",
         "symfony/polyfill-mbstring": "^1.33"
     },
+    "conflict": {
+        "ext-flow_php": "<0.45"
+    },
     "config": {
         "optimize-autoloader": true,
         "sort-packages": true

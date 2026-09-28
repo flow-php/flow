@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV;
 
-use Flow\ETL\Row\RawRowValues;
+use Flow\ETL\Column\Backend;
+use Flow\ETL\Exception\SchemaMismatchException;
+use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\ColumnTypes;
 use Flow\ETL\Schema\Inference\SchemaInference;
 use Flow\Types\Type\TypeNarrower;
@@ -36,6 +39,18 @@ interface CSVOpenSource
     public function columns(): array;
 
     /**
+     * Batches of exactly $batchSize rows (the last may be shorter), keyed and ordered by $schema; row indexes in
+     * refusals are relative to the batch. This instance is consumed afterwards.
+     *
+     * @param int<1, max> $batchSize
+     *
+     * @throws SchemaMismatchException
+     *
+     * @return Generator<int, Rows>
+     */
+    public function batches(Schema $schema, int $batchSize, Backend $backend): Generator;
+
+    /**
      * The header records() resolved; [] before it ran or for a 0-byte source.
      *
      * @return list<string>
@@ -45,7 +60,7 @@ interface CSVOpenSource
     /**
      * This instance is consumed afterwards.
      *
-     * @return Generator<int, RawRowValues>
+     * @return Generator<int, array<array-key, ?string>>
      */
     public function records(): Generator;
 

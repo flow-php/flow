@@ -8,8 +8,6 @@ use Flow\ETL\Adapter\GoogleSheet\GoogleSheetDecoder;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function array_map;
-
 final class GoogleSheetDecoderTest extends FlowTestCase
 {
     public function test_decodes_rows_with_first_row_as_headers(): void
@@ -27,7 +25,7 @@ final class GoogleSheetDecoderTest extends FlowTestCase
                 ['id' => '1', 'name' => 'Norbert'],
                 ['id' => '2', 'name' => 'Tomek'],
             ],
-            array_map(static fn($rowValues): array => $rowValues->values, $decoded),
+            $decoded,
         );
     }
 
@@ -41,10 +39,7 @@ final class GoogleSheetDecoderTest extends FlowTestCase
             ['1', 'Norbert'],
         ]);
 
-        static::assertSame(
-            [['id' => '1', 'name' => 'Norbert']],
-            array_map(static fn($rowValues): array => $rowValues->values, $decoded),
-        );
+        static::assertSame([['id' => '1', 'name' => 'Norbert']], $decoded);
     }
 
     public function test_keeps_headers_between_decode_calls(): void
@@ -53,10 +48,7 @@ final class GoogleSheetDecoderTest extends FlowTestCase
 
         $decoder->decode([['id', 'name'], ['1', 'Norbert']]);
 
-        static::assertSame(
-            [['id' => '2', 'name' => 'Tomek']],
-            array_map(static fn($rowValues): array => $rowValues->values, $decoder->decode([['2', 'Tomek']])),
-        );
+        static::assertSame([['id' => '2', 'name' => 'Tomek']], $decoder->decode([['2', 'Tomek']]));
     }
 
     public function test_pads_shorter_rows_with_nulls(): void
@@ -68,10 +60,7 @@ final class GoogleSheetDecoderTest extends FlowTestCase
             ['1'],
         ]);
 
-        static::assertSame(
-            [['id' => '1', 'name' => null]],
-            array_map(static fn($rowValues): array => $rowValues->values, $decoded),
-        );
+        static::assertSame([['id' => '1', 'name' => null]], $decoded);
     }
 
     public function test_drops_extra_columns(): void
@@ -83,10 +72,7 @@ final class GoogleSheetDecoderTest extends FlowTestCase
             ['1', 'Norbert', 'extra'],
         ]);
 
-        static::assertSame(
-            [['id' => '1', 'name' => 'Norbert']],
-            array_map(static fn($rowValues): array => $rowValues->values, $decoded),
-        );
+        static::assertSame([['id' => '1', 'name' => 'Norbert']], $decoded);
     }
 
     public function test_throws_on_extra_columns_when_drop_is_disabled(): void
@@ -116,7 +102,7 @@ final class GoogleSheetDecoderTest extends FlowTestCase
                 ['e00' => '1', 'e01' => 'Norbert'],
                 ['e00' => '2', 'e01' => 'Tomek'],
             ],
-            array_map(static fn($rowValues): array => $rowValues->values, $decoded),
+            $decoded,
         );
     }
 
@@ -124,36 +110,28 @@ final class GoogleSheetDecoderTest extends FlowTestCase
     {
         $decoder = new GoogleSheetDecoder();
 
-        static::assertSame(
-            [['a' => null, 'b' => 'x']],
-            array_map(static fn($rowValues): array => $rowValues->values, $decoder->decode([['a', 'b'], ['', 'x']])),
-        );
+        static::assertSame([['a' => null, 'b' => 'x']], $decoder->decode([['a', 'b'], ['', 'x']]));
     }
 
     public function test_empty_cells_stay_strings_when_asked(): void
     {
         $decoder = new GoogleSheetDecoder(emptyToNull: false);
 
-        static::assertSame(
-            [['a' => '', 'b' => 'x']],
-            array_map(static fn($rowValues): array => $rowValues->values, $decoder->decode([['a', 'b'], ['', 'x']])),
-        );
+        static::assertSame([['a' => '', 'b' => 'x']], $decoder->decode([['a', 'b'], ['', 'x']]));
     }
 
     public function test_omitted_trailing_cells_are_null_regardless_of_empty_to_null(): void
     {
         static::assertSame(
             [['a' => 'x', 'b' => null]],
-            array_map(static fn($rowValues): array => $rowValues->values, (new GoogleSheetDecoder())->decode([
+            (new GoogleSheetDecoder())->decode([
                 ['a', 'b'],
                 ['x'],
-            ])),
+            ]),
         );
         static::assertSame(
             [['a' => 'x', 'b' => null]],
-            array_map(static fn($rowValues): array => $rowValues->values, (new GoogleSheetDecoder(
-                emptyToNull: false,
-            ))->decode([['a', 'b'], ['x']])),
+            (new GoogleSheetDecoder(emptyToNull: false))->decode([['a', 'b'], ['x']]),
         );
     }
 
@@ -205,6 +183,6 @@ final class GoogleSheetDecoderTest extends FlowTestCase
         $decoded = $decoder->decode([[1, true], ['x', 'y']]);
 
         static::assertSame(['1', '1'], $decoder->headers());
-        static::assertSame(['1' => 'y'], $decoded[0]->values);
+        static::assertSame(['1' => 'y'], $decoded[0]);
     }
 }

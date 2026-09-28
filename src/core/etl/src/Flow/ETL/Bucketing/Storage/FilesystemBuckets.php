@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Bucketing\Storage;
 
 use Flow\ETL\Bucketing\BucketsStorage;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Rows;
@@ -34,6 +35,7 @@ final class FilesystemBuckets implements BucketsStorage
     public function __construct(
         private readonly Filesystem $filesystem,
         Path $cacheDir,
+        Backend $backend,
         private readonly int $batchSize = 1000,
     ) {
         // @mago-ignore analysis:impossible-condition,redundant-comparison
@@ -42,7 +44,7 @@ final class FilesystemBuckets implements BucketsStorage
         }
 
         $this->cacheDir = $cacheDir->suffix('/flow-php-buckets/');
-        $this->reader = new FloeReader($this->filesystem);
+        $this->reader = new FloeReader($this->filesystem, backend: $backend);
     }
 
     /**

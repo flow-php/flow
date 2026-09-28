@@ -9,6 +9,8 @@ require __DIR__ . '/bootstrap.php';
 use Flow\ETL\Adapter\CSV\RustColumnFoldNative;
 use Flow\ETL\Adapter\CSV\RustCSVReaderNative;
 
+use function Flow\ETL\DSL\{int_schema, schema, str_schema};
+
 expect_exception(static fn() => new RustCSVReaderNative(',,', '"', '\\', true, true, true));
 expect_exception(static fn() => new RustCSVReaderNative(',', '', '\\', true, true, true));
 expect_exception(static fn() => new RustCSVReaderNative(',', '"', '\\\\', true, true, true));
@@ -18,6 +20,17 @@ $fold = new RustColumnFoldNative([], ['integer']);
 expect_exception(static fn() => (new RustCSVReaderNative(',', '"', '\\', true, true, true))->fold($fold, -2));
 expect_exception(static fn() => new RustColumnFoldNative([], ['integer', 'html']));
 expect_exception(static fn() => new RustColumnFoldNative([], ['xml']));
+
+$pending = static function (): RustCSVReaderNative {
+    $reader = new RustCSVReaderNative(',', '"', '\\', true, true, true);
+    $reader->feed("id,name\n1,a\n");
+    var_dump($reader->nextColumns(schema(int_schema('id'), str_schema('name')), 10));
+
+    return $reader;
+};
+expect_exception(static fn() => $pending()->nextColumns(schema(int_schema('id')), 10));
+expect_exception(static fn() => $pending()->nextColumns(schema(int_schema('id'), str_schema('name')), 5));
+expect_exception(static fn() => (new RustCSVReaderNative(',', '"', '\\', true, true, true))->nextColumns(schema(int_schema('id')), 0));
 ?>
 --EXPECT--
 Flow\Floe\Exception\ExtensionException: flow_php CSV separator must be exactly one byte
@@ -28,3 +41,8 @@ Flow\Floe\Exception\ExtensionException: flow_php CSV batch size must be greater 
 Flow\Floe\Exception\ExtensionException: flow_php CSV fold limit must be -1 or at least 0
 Flow\Floe\Exception\ExtensionException: flow_php cannot fold html or xml candidates natively
 Flow\Floe\Exception\ExtensionException: flow_php cannot fold html or xml candidates natively
+NULL
+Flow\Floe\Exception\ExtensionException: flow_php cannot change the schema of a pending CSV batch
+NULL
+Flow\Floe\Exception\ExtensionException: flow_php cannot change the batch size of a pending CSV batch
+Flow\Floe\Exception\ExtensionException: flow_php CSV batch size must be greater than 0

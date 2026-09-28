@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Extractor;
 
 use Flow\ETL\Row\ColumnName;
-use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Schema\Inference\SchemaSampler;
 use Generator;
 
@@ -25,7 +24,7 @@ final readonly class InMemoryRows implements SchemaSampler
      * $rowBudget is never rationed: the inner generator is lazy and SchemaInferrer stops advancing it
      * when the budget is spent.
      *
-     * @return iterable<int, iterable<int, RawRowValues>>
+     * @return iterable<int, iterable<int, array<array-key, mixed>>>
      */
     public function samples(int $rowBudget): iterable
     {
@@ -38,7 +37,7 @@ final readonly class InMemoryRows implements SchemaSampler
      * The same ColumnName normalisation array_to_rows() applies, so the fold's names are the
      * batch builder's names.
      *
-     * @return Generator<int, RawRowValues>
+     * @return Generator<int, array<array-key, mixed>>
      */
     public function values(): Generator
     {
@@ -52,7 +51,7 @@ final readonly class InMemoryRows implements SchemaSampler
                 $values[$columnName->of($key)] = $value;
             }
 
-            yield new RawRowValues($values);
+            yield $values;
         }
     }
 }

@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Schema\Inference;
 
-use Flow\ETL\Row\RawRowValues;
 use Flow\Types\Type\TypeNarrower;
 use Traversable;
 
 /**
- * @extends Traversable<int, RawRowValues>
+ * @extends Traversable<int, array<array-key, mixed>>
  */
 interface SniffsColumnTypes extends Traversable
 {

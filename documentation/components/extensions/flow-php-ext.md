@@ -8,7 +8,7 @@ package: flow-php/flow-php-ext
 
 [TOC]
 
-This extension reads CSV and narrows string columns to their types natively in Rust via
+This extension is Flow's native column backend and reads CSV natively in Rust via
 [ext-php-rs](https://github.com/extphprs/ext-php-rs). The pure-PHP implementations in `flow-php/etl` are the canonical
 behaviour reference and work without the extension - loading it is purely an optimization.
 
@@ -42,6 +42,25 @@ df()
     ->run();
 ```
 
-The extension registers `Flow\ETL\Adapter\CSV\RustCSVReaderNative` and
-`Flow\ETL\Adapter\CSV\RustColumnFoldNative`, used by `Flow\ETL\Adapter\CSV\NativeCSVOpenSource` for CSV reading and
-string-type narrowing. The Floe codec and the row hydrator run in PHP until the native column backend lands.
+With the extension loaded, `Flow\ETL\Column\DefaultBackend` - the default of `config_builder()->backend()` - is the
+extension's class and every batch column is a `Flow\ETL\Column\NativeColumn` over an Apache Arrow array:
+
+```php
+<?php
+
+use Flow\ETL\Column\DefaultBackend;
+
+use function Flow\ETL\DSL\int_schema;
+
+$builder = (new DefaultBackend())->builder(int_schema('id'));
+$builder->appendMany([1, '2', 3.0]);
+
+$column = $builder->finish();                        // Flow\ETL\Column\NativeColumn
+$column->values();                                   // [1, 2, 3]
+(new DefaultBackend())->allocatedBytes();            // bytes held outside PHP's memory manager
+```
+
+The extension registers the interfaces `Flow\ETL\Column\{Backend, Column, ColumnBuilder}`, the classes
+`Flow\ETL\Column\{DefaultBackend, NativeColumn, NativeColumnBuilder}`, and `Flow\ETL\Adapter\CSV\RustCSVReaderNative`
+and `Flow\ETL\Adapter\CSV\RustColumnFoldNative`, which read CSV straight into native columns and narrow string
+columns to their types.
