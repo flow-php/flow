@@ -7,6 +7,7 @@ namespace Flow\Parquet\Data;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
 use Flow\Parquet\Exception\InvalidArgumentException;
 
+use function array_pad;
 use function count;
 
 final readonly class DeltaBinaryPackedEncoder
@@ -57,8 +58,9 @@ final readonly class DeltaBinaryPackedEncoder
      */
     private function packMiniblock(array $values, int $bitWidth): string
     {
+        // a zero-width miniblock has no body: its bit width alone says every delta equals the block's minimum
         if ($bitWidth === 0) {
-            return str_repeat("\x00", max(0, (int) ceil($this->miniblockSize / 8)));
+            return '';
         }
 
         $buffer = '';
@@ -181,7 +183,8 @@ final readonly class DeltaBinaryPackedEncoder
             $packedMiniblocks[] = $this->packMiniblock($padded, $bitWidth);
         }
 
-        $writer->writeBytes($bitWidths);
+        // a partial last block still carries every miniblock's bit width, the unused ones zero, without their bodies
+        $writer->writeBytes(array_pad($bitWidths, intdiv($this->blockSize, $this->miniblockSize), 0));
 
         foreach ($packedMiniblocks as $packed) {
             $writer->append($packed);

@@ -858,6 +858,36 @@ public function eval(Rows $rows, FlowContext $context): Column
 | `discover_pivot_values()` over `'9', '10', '100'` - columns `9, 10, 100`                                                  | `10, 100, 9`; integer pivot values stay numeric                                                                                          |
 | `->stringMatch()` / `->stringMatchAll()` turned a PHP `\Error` into an exception `optional()` swallowed                   | an `\Error` propagates; `->jsonDecode()`, `cast()`, `->arrayPathExists()`, `->stringMatch*()` errors keep their cause as `getPrevious()` |
 
+### 79) `flow-php/etl-adapter-parquet` - with `flow_php` loaded and no engine given, `flow_php` reads and writes Parquet
+
+| Before                                                                                                             | After                                                                                                                                                                                                           |
+|--------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `from_parquet($path)` / `to_parquet($path)` - `AdaptiveParquetEngine` (arrow-ext when loaded, else the PHP engine) | with `flow_php` loaded: `flow_php` itself (row groups straight into native columns); without it: unchanged                                                                                                      |
+| `engine: new PhpParquetEngine()` / `new ArrowParquetEngine()`                                                      | honoured as before - an explicit engine opts out of `flow_php`                                                                                                                                                  |
+| a column type arrow-ext could not read failed inside arrow-ext                                                     | refused before the first batch: `Parquet column "<name>" (<type>) is not supported by the flow_php Parquet reader; read the file with from_parquet($path, engine: new \Flow\Parquet\Engine\PhpParquetEngine())` |
+| `flow-php/etl-adapter-parquet` installable with any `flow_php` version                                             | `conflict: ext-flow_php <0.45` - load a `flow_php` of this release or none                                                                                                                                      |
+
+### 80) `flow-php/etl-adapter-parquet` - Flow `float` columns are written as Parquet `DOUBLE`
+
+| Before                                                                                                  | After                                                                                      |
+|---------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
+| `float_schema('amount')` written as Parquet `FLOAT` (32-bit): `0.14` read back as `0.14000000059604645` | written as `DOUBLE` (64-bit), read back exactly; readers of the file see a `DOUBLE` column |
+
+### 81) `flow-php/etl-adapter-parquet` - with `flow_php`, a string that is not valid UTF-8 is refused on write
+
+| Before                                                                                                                             | After                                                                                                                                                    |
+|------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| without arrow-ext, `PhpParquetEngine` wrote `"\xff\xfe"` into a `STRING` column other readers reject (DuckDB: `is not valid UTF8`) | `Parquet column "name" row 0 holds a string that is not valid UTF-8; Parquet STRING columns require UTF-8` - the row is 0-based within the batch written |
+| with arrow-ext: `Column 'name': expected string, got string`                                                                       | the same refusal; `engine: new PhpParquetEngine()` still writes the bytes                                                                                |
+
+### 82) `flow-php/parquet` - `DELTA_BINARY_PACKED` follows the spec; affected files written by `PhpParquetEngine` must be rewritten
+
+| Before                                                                                                                                                                               | After                                                                                                                                               |
+|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| `PhpParquetEngine` wrote `DELTA_BINARY_PACKED` blocks that other readers misread (a partial last block without all miniblock bit widths, zero-width miniblocks with 4 padding bytes) | spec-conformant blocks; DuckDB, arrow-rs and `flow_php` read the values back                                                                        |
+| it read other writers' `DELTA_BINARY_PACKED` `INT64` wrong after an outlier (`9223372036854645807` read as `9223372036788279061`, garbage after)                                     | reads them as DuckDB and arrow-rs do                                                                                                                |
+| affected: `INT32`/`INT64` columns `PhpParquetEngine` wrote with `Option::WRITER_VERSION` `2` or `COLUMNS_ENCODINGS` `DELTA_BINARY_PACKED` (the default is version `1`, `PLAIN`)      | no spec-conformant reader returns their values: read them with the Flow version that wrote them and write them again (or re-export from the source) |
+
 ---
 
 ## Upgrading from 0.43.x to 0.44.x

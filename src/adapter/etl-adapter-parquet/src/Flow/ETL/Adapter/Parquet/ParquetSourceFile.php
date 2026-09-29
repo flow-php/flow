@@ -21,7 +21,7 @@ final readonly class ParquetSourceFile implements SelfDescribingFile
      */
     public function __construct(
         public ParquetFile $file,
-        private SourceStream $stream,
+        public SourceStream $stream,
         private SourceFile $source,
         private SchemaConverter $converter,
         private array $columns,
@@ -30,6 +30,11 @@ final readonly class ParquetSourceFile implements SelfDescribingFile
     public function close(): void
     {
         $this->stream->close();
+    }
+
+    public function open(ParquetOpener $opener): ParquetOpenSource
+    {
+        return $opener->source($this);
     }
 
     /**

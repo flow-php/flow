@@ -63,20 +63,18 @@ final readonly class DeltaBinaryPackedDecoder
             return [$header->firstValue];
         }
 
-        return $this->reconstructValues(
-            $header->firstValue,
-            $this->readBlocks($reader, $valueCount - 1, $header->blockSize),
-        );
+        return $this->reconstructValues($header->firstValue, $this->readBlocks($reader, $valueCount - 1, $header));
     }
 
     /**
      * @return array<int>
      */
-    private function readBlock(BinaryBufferReader $reader, int $blockDeltaCount): array
+    private function readBlock(BinaryBufferReader $reader, int $blockDeltaCount, DeltaHeader $header): array
     {
         $minDelta = $this->readSignedLEB128($reader);
 
-        $miniblockCount = (int) ceil($blockDeltaCount / $this->miniblockSize);
+        // every block carries the header's count of bit widths, even when its last miniblocks hold no deltas
+        $miniblockCount = $header->miniblockCount;
 
         $bitWidths = [];
 
@@ -97,7 +95,7 @@ final readonly class DeltaBinaryPackedDecoder
             if ($bitWidth === null) {
                 throw new RuntimeException('Missing bit width for miniblock index ' . $miniblockIndex);
             }
-            $miniblockSize = $this->miniblockSize;
+            $miniblockSize = intdiv($header->blockSize, $header->miniblockCount);
 
             $remainingDeltas = $blockDeltaCount - $deltasRead;
             $valuesToRead = min($miniblockSize, $remainingDeltas);
@@ -150,16 +148,16 @@ final readonly class DeltaBinaryPackedDecoder
     /**
      * @return array<int>
      */
-    private function readBlocks(BinaryBufferReader $reader, int $deltaCount, int $blockSize): array
+    private function readBlocks(BinaryBufferReader $reader, int $deltaCount, DeltaHeader $header): array
     {
         $deltas = [];
         $deltasRead = 0;
 
         while ($deltasRead < $deltaCount) {
             $remainingDeltas = $deltaCount - $deltasRead;
-            $blockDeltaCount = min($blockSize, $remainingDeltas);
+            $blockDeltaCount = min($header->blockSize, $remainingDeltas);
 
-            $blockDeltas = $this->readBlock($reader, $blockDeltaCount);
+            $blockDeltas = $this->readBlock($reader, $blockDeltaCount, $header);
             $deltas = array_merge($deltas, $blockDeltas);
             $deltasRead += count($blockDeltas);
         }

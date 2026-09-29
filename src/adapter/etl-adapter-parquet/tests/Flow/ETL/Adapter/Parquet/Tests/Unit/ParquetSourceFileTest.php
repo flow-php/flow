@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Unit;
 
+use Flow\ETL\Adapter\Parquet\EngineParquetOpener;
+use Flow\ETL\Adapter\Parquet\EngineParquetOpenSource;
 use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetSourceFileContext;
 use Flow\ETL\Extractor\SourceFile;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
+use Flow\Parquet\Engine\PhpParquetEngine;
 
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
@@ -23,6 +26,16 @@ final class ParquetSourceFileTest extends FlowTestCase
         ParquetSourceFileContext::over($filesystem)->close();
 
         static::assertSame($filesystem->readFromCalls, $filesystem->closedStreams());
+    }
+
+    public function test_open_hands_the_file_to_the_opener(): void
+    {
+        $file = ParquetSourceFileContext::over(new NativeLocalFilesystem());
+
+        static::assertEquals(
+            new EngineParquetOpenSource($file->file),
+            $file->open(new EngineParquetOpener(new PhpParquetEngine())),
+        );
     }
 
     public function test_schema_comes_from_the_file_footer(): void

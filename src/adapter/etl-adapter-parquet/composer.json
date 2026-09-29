@@ -16,6 +16,9 @@
         "flow-php/etl": "self.version",
         "flow-php/parquet": "self.version"
     },
+    "conflict": {
+        "ext-flow_php": "<0.45"
+    },
     "config": {
         "optimize-autoloader": true,
         "sort-packages": true

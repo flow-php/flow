@@ -111,7 +111,7 @@ final class SchemaConverter
         $repetition = $nullable ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED;
 
         return match ($type::class) {
-            FloatType::class => FlatColumn::float($name, $repetition),
+            FloatType::class => FlatColumn::double($name, $repetition),
             IntegerType::class => FlatColumn::int64($name, $repetition),
             HTMLType::class,
             HTMLElementType::class,

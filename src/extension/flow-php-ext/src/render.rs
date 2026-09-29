@@ -1,6 +1,6 @@
 //! flow-batch-frame refusals rendered as the exceptions `PhpBackend::decode()` throws for the same buffers: the
 //! `Flow\ETL\Exception\InvalidArgumentException` (or `OffsetOverflow`) with its exact message, a nested type named by
-//! its PHP `toString()`.
+//! its PHP `toString()`. Parquet core refusals rendered for the reader and the writer of `Flow\ETL\Adapter\Parquet`.
 
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::types::Zval;
@@ -9,11 +9,14 @@ use flow_batch_frame::kind::Kind;
 use flow_batch_frame::layout::node_count;
 use flow_batch_frame::Error;
 
-use crate::ctx::{call_method, expect_object, find_class, read_property};
+use crate::ctx::{call_method, expect_object, find_class, read_property, transparent_exception};
 use crate::exception::ext_exception;
+use crate::parquet::error::Error as ParquetError;
+use crate::parquet::source::PhpStream;
 
 const INVALID_ARGUMENT: &str = "Flow\\ETL\\Exception\\InvalidArgumentException";
 const OFFSET_OVERFLOW: &str = "Flow\\ETL\\Exception\\OffsetOverflow";
+const RUNTIME: &str = "Flow\\ETL\\Exception\\RuntimeException";
 
 pub fn exception(class: &str, message: String) -> PhpException {
     match find_class(class) {
@@ -164,5 +167,53 @@ fn type_at(type_zv: Zval, kind: &Kind, node: usize) -> Result<Zval, PhpException
             Err(ext_exception("flow_php could not find a structure node"))
         }
         _ => Err(ext_exception("flow_php could not find a nested node")),
+    }
+}
+
+/// Which Parquet surface refused: the same core refusal names what to do about it per side.
+pub enum Side {
+    Read,
+    Write,
+}
+
+/// A Parquet core refusal; an exception the stream threw while the core called it surfaces as itself.
+pub fn parquet_exception(error: ParquetError, stream: &PhpStream, side: Side) -> PhpException {
+    if let Some(mut thrown) = stream.thrown() {
+        return transparent_exception(&mut thrown);
+    }
+
+    match (error, side) {
+        (ParquetError::Unsupported { column, parquet }, Side::Read) => exception(
+            RUNTIME,
+            format!(
+                "Parquet column \"{column}\" ({parquet}) is not supported by the flow_php Parquet reader; read the file \
+                 with from_parquet($path, engine: new \\Flow\\Parquet\\Engine\\PhpParquetEngine())"
+            ),
+        ),
+        (ParquetError::Unsupported { column, parquet }, Side::Write) => exception(
+            RUNTIME,
+            format!(
+                "Parquet column \"{column}\" ({parquet}) is not supported by the flow_php Parquet writer; write the file \
+                 with to_parquet($path, engine: new \\Flow\\Parquet\\Engine\\PhpParquetEngine())"
+            ),
+        ),
+        (ParquetError::Overflow { column, row }, _) => exception(
+            RUNTIME,
+            format!("Parquet column \"{column}\" row {row} holds a value out of the range flow_php stores it in"),
+        ),
+        (ParquetError::InvalidUtf8 { column, row }, _) => exception(
+            RUNTIME,
+            format!(
+                "Parquet column \"{column}\" row {row} holds a string that is not valid UTF-8; Parquet STRING columns \
+                 require UTF-8"
+            ),
+        ),
+        (ParquetError::MissingColumn(name), _) => invalid_argument(format!("Parquet file has no column \"{name}\"")),
+        (ParquetError::Options(message), _) => invalid_argument(message),
+        (ParquetError::Stream(message), _) => ext_exception(format!("flow_php Parquet stream {message}")),
+        (ParquetError::Parquet(error), Side::Read) => ext_exception(format!("flow_php failed to read Parquet: {error}")),
+        (ParquetError::Arrow(error), Side::Read) => ext_exception(format!("flow_php failed to read Parquet: {error}")),
+        (ParquetError::Parquet(error), Side::Write) => ext_exception(format!("flow_php failed to write Parquet: {error}")),
+        (ParquetError::Arrow(error), Side::Write) => ext_exception(format!("flow_php failed to write Parquet: {error}")),
     }
 }

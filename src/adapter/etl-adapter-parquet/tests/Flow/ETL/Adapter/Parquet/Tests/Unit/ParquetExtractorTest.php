@@ -185,6 +185,6 @@ final class ParquetExtractorTest extends FlowTestCase
             ->extract(flow_context(config_builder()->backend($backend)->build()))
             ->current();
 
-        static::assertGreaterThanOrEqual(1, $backend->builders());
+        static::assertGreaterThanOrEqual(1, $backend->builders() + $backend->adopts());
     }
 }

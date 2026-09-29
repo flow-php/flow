@@ -11,6 +11,7 @@ mod globals;
 mod interfaces;
 mod json_check;
 mod kind_builder;
+mod parquet;
 mod physical;
 mod plan;
 mod render;
@@ -191,4 +192,6 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .class::<backend::DefaultBackend>()
         .class::<RustCSVReaderNative>()
         .class::<RustColumnFoldNative>()
+        .class::<parquet::etl::NativeParquetReader>()
+        .class::<parquet::etl::NativeParquetWriter>()
 }

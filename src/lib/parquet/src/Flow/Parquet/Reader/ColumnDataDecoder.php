@@ -19,6 +19,7 @@ use Flow\Parquet\ParquetFile\Page\Header\DataPageHeaderV2;
 use Flow\Parquet\ParquetFile\Page\Header\DictionaryPageHeader;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
+use Generator;
 
 use function array_fill;
 use function array_key_exists;
@@ -165,6 +166,23 @@ final readonly class ColumnDataDecoder
             return new ReadFlatColumnValues(
                 $column,
                 (new PlainValueUnpacker($reader, $this->byteOrder))->unpack($column, $nonEmptyValuesCount),
+                $repetitionLevels,
+                $definitionLevels,
+            );
+        }
+
+        if ($pageHeader->encoding() === Encodings::RLE && $column->type() === PhysicalType::BOOLEAN) {
+            // RLE data values, unlike levels in a v2 page, carry their 4-byte length first
+            $reader->seekBytes(4);
+            $values = $this->readRLEBitPackedHybrid($reader, $RLEBitPackedHybrid, 1, $nonEmptyValuesCount);
+
+            return new ReadFlatColumnValues(
+                $column,
+                (static function () use ($values): Generator {
+                    foreach ($values as $value) {
+                        yield $value === 1;
+                    }
+                })(),
                 $repetitionLevels,
                 $definitionLevels,
             );

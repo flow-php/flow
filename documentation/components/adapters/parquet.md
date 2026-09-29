@@ -22,6 +22,27 @@ the robust and adaptable nature of the Flow PHP ecosystem.
 
 For detailed installation instructions, see the [installation page](/documentation/installation/packages/etl-adapter-parquet.md).
 
+## Engines
+
+Without `engine:`, Parquet is read and written by the [`flow_php` extension](/documentation/components/extensions/flow-php-ext.md)
+when it is loaded, else by `AdaptiveParquetEngine`. An explicit engine is always used:
+
+```php
+<?php
+
+use Flow\Parquet\Engine\PhpParquetEngine;
+
+use function Flow\ETL\Adapter\Parquet\{from_parquet, to_parquet};
+use function Flow\ETL\DSL\df;
+
+df()
+    ->read(from_parquet(__DIR__ . '/orders.parquet', engine: new PhpParquetEngine()))
+    ->write(to_parquet(__DIR__ . '/copy.parquet', engine: new PhpParquetEngine()))
+    ->run();
+```
+
+Flow `float` columns are written as Parquet `DOUBLE`.
+
 ## Schema
 
 The file footer is the schema: `from_parquet(...)->withSchema()` throws. Project with `columns:`, change types after

@@ -35,17 +35,6 @@ use function Flow\Types\DSL\type_uuid;
 
 final class ParquetEncoderTest extends FlowTestCase
 {
-    public function test_encode_coerces_values_to_the_column_type(): void
-    {
-        static::assertSame(
-            [['id' => '1', 'name' => 'test']],
-            (new ParquetEncoder(ParquetSchema::with(
-                FlatColumn::string('id'),
-                FlatColumn::string('name'),
-            )))->encode(array_to_rows([['id' => 1, 'name' => 'test']], schema(int_schema('id'), str_schema('name')))),
-        );
-    }
-
     public function test_encode_keeps_datetime_and_scalar_values(): void
     {
         $at = new DateTimeImmutable('2024-01-01 12:00:00 UTC');

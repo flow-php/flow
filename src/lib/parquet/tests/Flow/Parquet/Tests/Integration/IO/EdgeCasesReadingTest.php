@@ -60,25 +60,23 @@ class EdgeCasesReadingTest extends ParquetIntegrationTestCase
         );
     }
 
-    public function test_read_datapage_v2_snappy_list(): void
+    #[DataProvider('engine_provider')]
+    public function test_read_datapage_v2_snappy_list(ParquetEngine $engine): void
     {
-        $this->expectExceptionMessage('Encoding RLE not supported');
-
-        $path = __DIR__ . '/Fixtures/EdgeCases/datapage_v2.snappy.parquet';
-
-        $reader = Reader::php()->read($path);
-
-        $rows = [];
-
-        foreach ($reader->values() as $row) {
-            $rows[] = $row;
-        }
-
         static::assertSame(
             [
-                ['emptylist' => null],
+                ['a' => 'abc', 'b' => 1, 'c' => 2.0, 'd' => true, 'e' => [1, 2, 3]],
+                ['a' => 'abc', 'b' => 2, 'c' => 3.0, 'd' => true, 'e' => null],
+                ['a' => 'abc', 'b' => 3, 'c' => 4.0, 'd' => true, 'e' => null],
+                ['a' => null, 'b' => 4, 'c' => 5.0, 'd' => false, 'e' => [1, 2, 3]],
+                ['a' => 'abc', 'b' => 5, 'c' => 2.0, 'd' => true, 'e' => [1, 2]],
             ],
-            $rows,
+            iterator_to_array(
+                (new Reader(engine: $engine))
+                    ->read(__DIR__ . '/Fixtures/EdgeCases/datapage_v2.snappy.parquet')
+                    ->values(),
+                false,
+            ),
         );
     }
 

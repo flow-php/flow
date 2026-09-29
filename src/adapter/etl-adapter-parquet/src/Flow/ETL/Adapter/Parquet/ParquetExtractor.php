@@ -17,7 +17,6 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
-use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Validator\StrictValidator;
 use Flow\Filesystem\Filesystem;
@@ -109,8 +108,11 @@ final class ParquetExtractor implements
         $target = $this->schema();
 
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
+        $opener = ParquetOpeners::select($this->engine);
 
         foreach ($this->files($pathFilter) as $file) {
+            $source = null;
+
             // finally, not a close() per exit: the limit/STOP returns below and an abandoned
             // generator have to release the handle too (b73)
             try {
@@ -140,21 +142,16 @@ final class ParquetExtractor implements
                 $constants = $fileColumns->forFile($file->source(), $rowsSchema);
                 $matchTo = !$rowsSchema->isSame($target) ? $target : null;
 
-                foreach ($file->file->columns(
+                $source = $file->open($opener);
+
+                foreach ($source->batches(
+                    $body,
                     $batchSize,
-                    $this->columns,
-                    $limit === null ? null : $limit - $yielded,
                     $fileOffset,
-                ) as $chunk) {
-                    $builder = new RowsBuilder($body, $backend);
-
-                    foreach ($body->definitions() as $definition) {
-                        $builder
-                            ->column($definition->entry()->name())
-                            ->appendMany($chunk[$definition->entry()->name()]);
-                    }
-
-                    $rows = $constants->fillRows($builder->finish(), $rowsSchema, $backend);
+                    $limit === null ? null : $limit - $yielded,
+                    $backend,
+                ) as $rows) {
+                    $rows = $constants->fillRows($rows, $rowsSchema, $backend);
 
                     if ($matchTo !== null) {
                         $rows = $rows->matchTo($matchTo);
@@ -175,6 +172,7 @@ final class ParquetExtractor implements
 
                 $fileOffset = max($fileOffset - $fileRows, 0);
             } finally {
+                $source?->close();
                 $file->close();
             }
         }

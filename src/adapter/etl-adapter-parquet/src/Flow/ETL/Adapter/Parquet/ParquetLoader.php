@@ -19,18 +19,16 @@ use Flow\ETL\Loader\PartitioningLoader;
 use Flow\ETL\Loader\PartitionRouter;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
-use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
-use Flow\Parquet\Engine\AdaptiveParquetEngine;
 use Flow\Parquet\Option as ParquetOption;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Compressions;
-use Flow\Parquet\Writer;
+use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
 use Throwable;
 
 use function sprintf;
@@ -45,18 +43,22 @@ final class ParquetLoader implements Closure, Discardable, FileLoader, Loader, P
 
     private ?FilesSink $files = null;
 
-    /** @var array<string, Writer> */
+    /** @var array<string, ParquetOpenSink> */
     private array $writers = [];
 
     private Compressions $compressions = Compressions::SNAPPY;
 
     private readonly SchemaConverter $converter;
 
-    private ?ParquetEncoder $encoder = null;
-
     private ?ParquetEngine $engine = null;
 
     private ?Schema $inferredSchema = null;
+
+    private ?ParquetSchemaConformance $conformance = null;
+
+    private ?ParquetOpener $opener = null;
+
+    private ?ParquetSchema $parquetSchema = null;
 
     private Options $options;
 
@@ -126,13 +128,24 @@ final class ParquetLoader implements Closure, Discardable, FileLoader, Loader, P
                 $this->inferredSchema ??= $rows->schema()->makeNullable();
             }
 
-            foreach ($this->router->route($rows) as [$partitions, $group]) {
+            $opener = $this->opener ??= ParquetOpeners::select($this->engine);
+            $parquetSchema = $this->parquetSchema ??= $this->converter->toParquet($this->schema());
+            $conformed = ($this->conformance ??= new ParquetSchemaConformance($parquetSchema))->conform(
+                $rows,
+                $context->backend(),
+            );
+
+            foreach ($this->router->route($conformed) as [$partitions, $group]) {
                 $stream = ($this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode))->writeTo(
                     $partitions->toArray(),
                 );
 
-                ($this->writers[$stream->path()->uri()] ??=
-                    $this->openWriter($stream))->writeBatch($this->encoder()->encode($group));
+                ($this->writers[$stream->path()->uri()] ??= $opener->sink(
+                    $stream,
+                    $parquetSchema,
+                    $this->compressions,
+                    $this->options,
+                ))->write($group);
             }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
@@ -195,23 +208,6 @@ final class ParquetLoader implements Closure, Discardable, FileLoader, Loader, P
         if ($failure !== null) {
             throw $failure;
         }
-    }
-
-    private function encoder(): ParquetEncoder
-    {
-        return $this->encoder ??= new ParquetEncoder($this->converter->toParquet($this->schema()));
-    }
-
-    private function openWriter(DestinationStream $stream): Writer
-    {
-        $writer = new Writer(
-            compression: $this->compressions,
-            options: $this->options,
-            engine: $this->engine ?? new AdaptiveParquetEngine(),
-        );
-        $writer->openForStream($stream, $this->converter->toParquet($this->schema()));
-
-        return $writer;
     }
 
     private function schema(): Schema

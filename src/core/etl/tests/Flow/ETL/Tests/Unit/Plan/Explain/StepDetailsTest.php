@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Plan\Explain;
 
-use Flow\ETL\Bucketing\Buckets;
-use Flow\ETL\Bucketing\NativeHasher;
 use Flow\ETL\Bucketing\Storage\MemoryBuckets;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Constraint\UniqueConstraint;

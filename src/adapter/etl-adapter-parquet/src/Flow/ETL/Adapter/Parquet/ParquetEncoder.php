@@ -8,24 +8,26 @@ use Flow\ETL\Adapter\Parquet\ValueConverter\ValueConverter;
 use Flow\ETL\Adapter\Parquet\ValueConverter\ValueConverters;
 use Flow\ETL\Rows;
 use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
-use Flow\Types\Type;
 
 use function array_key_exists;
 
 final class ParquetEncoder
 {
     /**
-     * @var array<string, array{Type<mixed>, ?ValueConverter}>
+     * @var array<string, ValueConverter>
      */
     private array $encodePlan;
 
     public function __construct(ParquetSchema $schema)
     {
-        $converter = new SchemaConverter();
         $encodePlan = [];
 
         foreach ($schema->columns() as $column) {
-            $encodePlan[$column->name()] = [$converter->parquetToFlowType($column), ValueConverters::for($column)];
+            $valueConverter = ValueConverters::for($column);
+
+            if ($valueConverter !== null) {
+                $encodePlan[$column->name()] = $valueConverter;
+            }
         }
 
         $this->encodePlan = $encodePlan;
@@ -51,13 +53,9 @@ final class ParquetEncoder
                 $values[$name] = $column[$i];
             }
 
-            foreach ($this->encodePlan as $name => [$type, $valueConverter]) {
+            foreach ($this->encodePlan as $name => $valueConverter) {
                 if (array_key_exists($name, $values) && $values[$name] !== null) {
-                    $values[$name] = $type->cast($values[$name]);
-
-                    if ($valueConverter !== null) {
-                        $values[$name] = $valueConverter->encode($values[$name]);
-                    }
+                    $values[$name] = $valueConverter->encode($values[$name]);
                 }
             }
 

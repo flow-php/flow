@@ -58,7 +58,7 @@ let
     doCheck = false;
 
     meta = with lib; {
-      description = "Flow PHP native extension (Rust) - native column backend and CSV reader";
+      description = "Flow PHP native extension (Rust) - native column backend, CSV reader, Parquet reader and writer";
       license = licenses.mit;
     };
   };

@@ -25,7 +25,7 @@ const COLUMN_MISMATCH: &str = "Flow\\ETL\\Exception\\ColumnMismatchException";
 const MIXED_TYPE: &str = "Flow\\Types\\Type\\Native\\MixedType";
 
 /// A return typed `Flow\ETL\Column\Column`: `adopt()` hands back its argument itself.
-pub struct ColumnValue(Zval);
+pub struct ColumnValue(pub Zval);
 
 impl IntoZval for ColumnValue {
     const TYPE: DataType = DataType::Object(Some("Flow\\ETL\\Column\\Column"));

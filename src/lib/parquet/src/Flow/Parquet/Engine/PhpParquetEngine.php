@@ -7,7 +7,7 @@ namespace Flow\Parquet\Engine;
 use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Binary\ByteOrder;
-use Flow\Parquet\Dremel\ColumnData\ReadFlatColumnValues;
+use Flow\Parquet\Dremel\ColumnData\PagedFlatColumnValues;
 use Flow\Parquet\Dremel\DremelAssembler;
 use Flow\Parquet\Dremel\ReadColumnData;
 use Flow\Parquet\Exception\InvalidArgumentException;
@@ -30,10 +30,8 @@ use Flow\Parquet\Thrift\MemoryBuffer;
 use Flow\Parquet\ThriftModel\FileMetaData;
 use Generator;
 
-use function array_push;
 use function count;
 use function is_array;
-use function iterator_to_array;
 use function min;
 use function unpack;
 
@@ -215,32 +213,17 @@ final class PhpParquetEngine implements ParquetEngine
                     }
                 }
             } elseif ($column instanceof NestedColumn) {
-                $mergedFlatData = [];
+                $flatData = [];
 
                 foreach ($column->childrenFlat() as $child) {
-                    $pages = iterator_to_array($chunkReader->read($rowGroup->getColumnChunk($child), $child, $stream));
-
-                    $allRepetitionLevels = [];
-                    $allDefinitionLevels = [];
-
-                    foreach ($pages as $page) {
-                        array_push($allRepetitionLevels, ...$page->repetitionLevels());
-                        array_push($allDefinitionLevels, ...$page->definitionLevels());
-                    }
-
-                    $mergedFlatData[] = new ReadFlatColumnValues(
+                    $flatData[] = new PagedFlatColumnValues($child, $chunkReader->read(
+                        $rowGroup->getColumnChunk($child),
                         $child,
-                        (static function () use ($pages) {
-                            foreach ($pages as $page) {
-                                yield from $page->rawValues();
-                            }
-                        })(),
-                        $allRepetitionLevels,
-                        $allDefinitionLevels,
-                    );
+                        $stream,
+                    ));
                 }
 
-                $columnData = new ReadColumnData($column, $mergedFlatData);
+                $columnData = new ReadColumnData($column, $flatData);
 
                 $rowsSkipped = 0;
 

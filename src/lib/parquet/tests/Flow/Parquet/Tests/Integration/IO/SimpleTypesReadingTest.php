@@ -12,9 +12,11 @@ use Flow\Parquet\Reader;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function array_filter;
+use function array_map;
 use function array_merge_recursive;
 use function count;
 use function iterator_to_array;
+use function range;
 
 class SimpleTypesReadingTest extends ParquetIntegrationTestCase
 {
@@ -219,6 +221,27 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         static::assertGreaterThan(0, count(array_filter($int32Values, static fn($v) => $v !== 0)));
         static::assertGreaterThan(0, count(array_filter($int64Values, static fn($v) => $v !== 0)));
         static::assertGreaterThan(0, count(array_filter($floatValues, static fn($v) => $v !== 0.0)));
+    }
+
+    #[DataProvider('engine_provider')]
+    public function test_reading_every_delta_binary_packed_value(ParquetEngine $engine): void
+    {
+        static::assertSame(
+            array_map(
+                static fn(int $n): array => [
+                    'int32_column' => $n,
+                    'int64_column' => ($n % 10) === 0 ? PHP_INT_MAX - ($n * 1000) : $n,
+                    'float_column' => ($n % 7) === 0 ? 3.4028234663852886E+38 : $n + 0.5,
+                ],
+                range(1, 1000),
+            ),
+            iterator_to_array(
+                (new Reader(engine: $engine))
+                    ->read(__DIR__ . '/Fixtures/delta_binary_acked_encoded_integers.parquet')
+                    ->values(),
+                false,
+            ),
+        );
     }
 
     #[DataProvider('engine_provider')]

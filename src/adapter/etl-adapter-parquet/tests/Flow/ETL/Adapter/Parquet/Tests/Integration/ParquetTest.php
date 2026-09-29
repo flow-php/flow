@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
 use DateTimeImmutable;
 use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetFilesContext;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Tests\Context\LoaderEndingContext;
 use Flow\ETL\Tests\Context\MemoryTelemetryContext;
 use Flow\ETL\Tests\Double\FakeExtractor;
@@ -18,11 +19,16 @@ use Flow\Parquet\Engine\ArrowParquetEngine;
 use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
+use Flow\Parquet\ParquetEngine;
 use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid as FlowUuid;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use Ramsey\Uuid\Uuid;
 
 use function array_keys;
+use function array_map;
 use function extension_loaded;
 use function file_exists;
 use function Flow\ETL\Adapter\Parquet\from_parquet;
@@ -31,6 +37,7 @@ use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\from_sequence_number;
@@ -59,10 +66,20 @@ use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_uuid;
 use function iterator_to_array;
+use function range;
 use function unlink;
 
 final class ParquetTest extends FlowTestCase
 {
+    /**
+     * @return Generator<string, array{?ParquetEngine}>
+     */
+    public static function engines(): Generator
+    {
+        yield 'default opener' => [null];
+        yield 'php engine' => [new PhpParquetEngine()];
+    }
+
     public function test_writing_and_reading_into_parquet(): void
     {
         $memory = memory_filesystem();
@@ -316,7 +333,8 @@ final class ParquetTest extends FlowTestCase
         static::assertEquals(1000, data_frame($config)->read(from_parquet($path))->count());
     }
 
-    public function test_writing_with_provided_schema(): void
+    #[DataProvider('engines')]
+    public function test_writing_with_provided_schema(?ParquetEngine $engine): void
     {
         $memory = memory_filesystem();
         $path = path('memory://var/file_schema.snappy.parquet');
@@ -340,6 +358,7 @@ final class ParquetTest extends FlowTestCase
                 $path,
                 filesystem: $memory,
                 schema: schema(str_schema('id'), str_schema('name'), str_schema('uuid'), json_schema('json')),
+                engine: $engine,
             ))
             ->run();
 
@@ -358,10 +377,92 @@ final class ParquetTest extends FlowTestCase
                     'json' => [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']],
                 ],
             ],
-            data_frame($config)->read(from_parquet($path, filesystem: $memory))->fetch()->toArray(),
+            data_frame($config)
+                ->read(from_parquet($path, filesystem: $memory, engine: $engine))
+                ->fetch()
+                ->toArray(),
         );
 
         static::assertTrue($memory->status($path)?->isFile());
+    }
+
+    /**
+     * Flow float is written as Parquet DOUBLE: no f32 rounding on the way back.
+     */
+    #[DataProvider('engines')]
+    public function test_a_float_round_trips_exactly(?ParquetEngine $engine): void
+    {
+        $memory = memory_filesystem();
+        $path = path('memory://var/floats.parquet');
+
+        data_frame()
+            ->read(from_rows(array_to_rows([
+                ['amount' => 0.14],
+                ['amount' => 1234567890123456.8],
+            ], schema(float_schema('amount')))))
+            ->write(to_parquet($path, filesystem: $memory, engine: $engine))
+            ->run();
+
+        static::assertSame(
+            [['amount' => 0.14], ['amount' => 1234567890123456.8]],
+            data_frame()
+                ->read(from_parquet($path, filesystem: $memory, engine: $engine))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    #[RequiresPhpExtension('flow_php')]
+    public function test_flow_php_refuses_a_string_that_is_not_valid_utf8(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            'Parquet column "name" row 0 holds a string that is not valid UTF-8; Parquet STRING columns require UTF-8',
+        );
+
+        data_frame()
+            ->read(from_rows(array_to_rows([['name' => "\xff\xfe"]], schema(str_schema('name')))))
+            ->write(to_parquet(path('memory://var/invalid.parquet'), filesystem: memory_filesystem()))
+            ->run();
+    }
+
+    /**
+     * 200 values: a full block and a partial one, both with zero-width miniblocks - read by arrow-rs, not only by PHP.
+     */
+    #[RequiresPhpExtension('flow_php')]
+    public function test_a_php_written_delta_binary_packed_column_reads_back_through_flow_php(): void
+    {
+        $memory = memory_filesystem();
+        $ids = array_map(static fn(int $i): int => $i * 3, range(0, 199));
+        ParquetFilesContext::deltaEncoded($memory, 'memory://var/delta.parquet', $ids);
+
+        static::assertSame(
+            array_map(static fn(int $id): array => ['id' => $id], $ids),
+            data_frame()
+                ->read(from_parquet(path('memory://var/delta.parquet'), filesystem: $memory))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    #[RequiresPhpExtension('flow_php')]
+    public function test_a_given_engine_is_honoured_with_flow_php_loaded(): void
+    {
+        $memory = memory_filesystem();
+        $path = path('memory://var/engine.parquet');
+
+        data_frame()
+            ->read(from_rows(array_to_rows([['name' => "\xff\xfe"]], schema(str_schema('name')))))
+            ->write(to_parquet($path, filesystem: $memory, engine: new PhpParquetEngine()))
+            ->run();
+
+        static::assertSame(
+            [['name' => "\xff\xfe"]],
+            data_frame()
+                ->read(from_parquet($path, filesystem: $memory, engine: new PhpParquetEngine()))
+                ->fetch()
+                ->toArray(),
+        );
     }
 
     public function test_transformation_loader_writes_all_batches_to_parquet(): void
@@ -532,7 +633,51 @@ final class ParquetTest extends FlowTestCase
         static::assertSame([['v' => 4]], ParquetFilesContext::values($memory, 'memory://var/engine/p=c/file.parquet'));
     }
 
-    public function test_write_columns_keeps_the_partition_column_in_the_file(): void
+    #[DataProvider('engines')]
+    public function test_a_zoned_datetime_reads_back_as_the_same_instant(?ParquetEngine $engine): void
+    {
+        $memory = memory_filesystem();
+        $path = path('memory://var/zoned.parquet');
+
+        data_frame()
+            ->read(from_rows(array_to_rows([[
+                'at' => new DateTimeImmutable('2026-09-01 12:30:00.123456 Europe/Warsaw'),
+            ]], schema(datetime_schema('at', zone: 'Europe/Warsaw')))))
+            ->write(to_parquet($path, filesystem: $memory, engine: $engine))
+            ->run();
+
+        static::assertEquals(
+            [['at' => new DateTimeImmutable('2026-09-01 10:30:00.123456 UTC')]],
+            data_frame()
+                ->read(from_parquet($path, filesystem: $memory, engine: $engine))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    #[DataProvider('engines')]
+    public function test_every_partition_is_written_cast_to_the_declared_schema(?ParquetEngine $engine): void
+    {
+        $memory = memory_filesystem();
+
+        data_frame()
+            ->read(from_array([['group' => 'a', 'id' => 1], ['group' => 'b', 'id' => 2], ['group' => 'a', 'id' => 3]]))
+            ->write(to_parquet(
+                path('memory://var/partitioned_cast/file.parquet'),
+                schema: schema(str_schema('group'), str_schema('id')),
+                filesystem: $memory,
+                engine: $engine,
+            )->partitionBy(partition_by('group')))
+            ->run();
+
+        static::assertSame([[['id' => '1'], ['id' => '3']], [['id' => '2']]], [
+            ParquetFilesContext::phpEngineValues($memory, 'memory://var/partitioned_cast/group=a/file.parquet'),
+            ParquetFilesContext::phpEngineValues($memory, 'memory://var/partitioned_cast/group=b/file.parquet'),
+        ]);
+    }
+
+    #[DataProvider('engines')]
+    public function test_write_columns_keeps_the_partition_column_in_the_file(?ParquetEngine $engine): void
     {
         $memory = memory_filesystem();
 
@@ -546,6 +691,7 @@ final class ParquetTest extends FlowTestCase
                     path('memory://var/write_columns/file.parquet'),
                     schema: schema(str_schema('id'), datetime_schema('date'), int_schema('clicks')),
                     filesystem: $memory,
+                    engine: $engine,
                 )->partitionBy(partition_by('date')->writeColumns()),
             )
             ->run();
