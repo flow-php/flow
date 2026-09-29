@@ -16,8 +16,8 @@ $rows = data_frame()
     ->fetch(2);
 
 echo 'fetched ' . $rows->count() . " rows\n";
-echo 'first name: ' . $rows->first()->get('name') . "\n";
+echo 'first name: ' . $rows->column('name')->value(0) . "\n";
 
-foreach ($rows as $row) {
-    echo "  {$row->get('id')}: {$row->get('name')}\n";
+foreach ($rows->toArray() as $row) {
+    echo "  {$row['id']}: {$row['name']}\n";
 }

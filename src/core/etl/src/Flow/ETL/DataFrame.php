@@ -213,8 +213,8 @@ final class DataFrame
                         ->planner()
                         ->plan(Trigger::count->plan($this->root, $this->sinks), $this->context),
                 )
-                ->first()
-                ->get('count'),
+                ->column('count')
+                ->value(0),
         );
     }
 
@@ -415,8 +415,8 @@ final class DataFrame
             ->execute(
                 $this->context->config->planner()->plan(Trigger::rows->plan($this->root, $this->sinks), $this->context),
             ) as $rows) {
-            foreach ($rows as $row) {
-                yield $row->toArray();
+            foreach ($rows->toArray() as $row) {
+                yield $row;
             }
         }
     }

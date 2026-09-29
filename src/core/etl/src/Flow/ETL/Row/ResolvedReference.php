@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
+use Flow\ETL\Column\Column;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\FunctionTree;
 use Flow\ETL\Function\ListFunctions;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Function\ScalarFunctionChain;
 use Flow\ETL\Function\StructureFunctions;
-use Flow\ETL\Row;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 final class ResolvedReference implements Reference
@@ -28,6 +29,7 @@ final class ResolvedReference implements Reference
         private readonly Type $type,
         private readonly ?string $alias = null,
         private readonly SortOrder $sort = SortOrder::ASC,
+        private readonly NullsOrder $nulls = NullsOrder::FIRST,
     ) {}
 
     public function __toString(): string
@@ -37,12 +39,12 @@ final class ResolvedReference implements Reference
 
     public function as(string $alias): self
     {
-        return new self($this->entry, $this->type, $alias, $this->sort);
+        return new self($this->entry, $this->type, $alias, $this->sort, $this->nulls);
     }
 
-    public function asc(): self
+    public function asc(NullsOrder $nulls = NullsOrder::FIRST): self
     {
-        return new self($this->entry, $this->type, $this->alias, SortOrder::ASC);
+        return new self($this->entry, $this->type, $this->alias, SortOrder::ASC, $nulls);
     }
 
     public function base(): string
@@ -66,14 +68,14 @@ final class ResolvedReference implements Reference
         return $this;
     }
 
-    public function desc(): self
+    public function desc(NullsOrder $nulls = NullsOrder::LAST): self
     {
-        return new self($this->entry, $this->type, $this->alias, SortOrder::DESC);
+        return new self($this->entry, $this->type, $this->alias, SortOrder::DESC, $nulls);
     }
 
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        return $row->get($this->entry);
+        return $rows->column($this->base());
     }
 
     public function hasAlias(): bool
@@ -102,6 +104,11 @@ final class ResolvedReference implements Reference
     public function returns(): Type
     {
         return $this->type;
+    }
+
+    public function nulls(): NullsOrder
+    {
+        return $this->nulls;
     }
 
     public function sort(): SortOrder

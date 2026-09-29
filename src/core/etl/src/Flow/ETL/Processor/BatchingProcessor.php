@@ -9,13 +9,9 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Processor;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
-
-use function array_splice;
-use function count;
 
 /**
  * Re-batches rows into fixed-size batches.
@@ -48,37 +44,34 @@ final readonly class BatchingProcessor implements Processor
      */
     public function process(Generator $rows, FlowContext $context): Generator
     {
-        /** @var array<Row> $buffer */
-        $buffer = [];
-
+        $pending = null;
         $schema = null;
 
         while ($rows->valid()) {
             $batch = $rows->current();
             $schema ??= $batch->schema();
 
-            foreach ($batch as $row) {
-                $buffer[] = $row;
+            if (!$batch->isEmpty()) {
+                $pending = $pending === null ? $batch->matchTo($schema) : $pending->concat($batch->matchTo($schema));
 
-                if (count($buffer) >= $this->size) {
-                    $chunk = array_splice($buffer, 0, $this->size);
-                    $signal = yield Rows::of($schema, ...$chunk);
+                while ($pending->count() >= $this->size) {
+                    $signal = yield $pending->slice(0, $this->size);
 
                     if ($signal === Signal::STOP) {
                         $rows->send(Signal::STOP);
 
                         return;
                     }
+
+                    $pending = $pending->drop($this->size);
                 }
             }
 
             $rows->next();
         }
 
-        if ($buffer !== []) {
-            $schema ??= new Schema();
-
-            yield Rows::of($schema, ...$buffer);
+        if ($pending !== null && !$pending->isEmpty()) {
+            yield $pending;
         }
     }
 }

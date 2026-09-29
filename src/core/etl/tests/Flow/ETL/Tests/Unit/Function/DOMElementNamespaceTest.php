@@ -8,10 +8,10 @@ use Dom\Element;
 use Dom\XMLDocument;
 use DOMDocument;
 use DOMElement;
+use Flow\ETL\Tests\Context\FunctionContext;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
@@ -39,11 +39,15 @@ final class DOMElementNamespaceTest extends TestCase
         $element = XMLDocument::createFromString(self::XML, LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR);
 
         static::assertInstanceOf(Element::class, $element->documentElement);
-        static::assertSame('urn:oasis:names:specification:ubl:schema:xsd:Invoice-2', ref('node')
-            ->domElementNamespace()
-            ->eval(array_to_row([
+        static::assertSame('urn:oasis:names:specification:ubl:schema:xsd:Invoice-2', (new FunctionContext(
+            flow_context(),
+        ))->eval(
+            ref('node')->domElementNamespace(),
+            [
                 'node' => $element->documentElement,
-            ], schema(xml_element_schema('node'))), flow_context()));
+            ],
+            schema(xml_element_schema('node')),
+        ));
     }
 
     public function test_xml_getting_element_namespace(): void
@@ -52,11 +56,15 @@ final class DOMElementNamespaceTest extends TestCase
         $xml->loadXML(self::XML);
 
         static::assertInstanceOf(DOMElement::class, $xml->documentElement);
-        static::assertSame('urn:oasis:names:specification:ubl:schema:xsd:Invoice-2', ref('node')
-            ->domElementNamespace()
-            ->eval(array_to_row([
+        static::assertSame('urn:oasis:names:specification:ubl:schema:xsd:Invoice-2', (new FunctionContext(
+            flow_context(),
+        ))->eval(
+            ref('node')->domElementNamespace(),
+            [
                 'node' => $xml->documentElement,
-            ], schema(xml_element_schema('node'))), flow_context()));
+            ],
+            schema(xml_element_schema('node')),
+        ));
     }
 
     public function test_xml_getting_element_non_default_namespace(): void
@@ -65,10 +73,14 @@ final class DOMElementNamespaceTest extends TestCase
         $xml->loadXML(self::XML);
 
         static::assertInstanceOf(DOMElement::class, $xml->documentElement);
-        static::assertSame('http://www.unece.org/cefact/nodes/StandardBusinessDocumentHeader', ref('node')
-            ->domElementNamespace('xmlns:sh')
-            ->eval(array_to_row([
+        static::assertSame('http://www.unece.org/cefact/nodes/StandardBusinessDocumentHeader', (new FunctionContext(
+            flow_context(),
+        ))->eval(
+            ref('node')->domElementNamespace('xmlns:sh'),
+            [
                 'node' => $xml->documentElement,
-            ], schema(xml_element_schema('node'))), flow_context()));
+            ],
+            schema(xml_element_schema('node')),
+        ));
     }
 }

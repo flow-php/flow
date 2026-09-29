@@ -5,17 +5,14 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Bucketing\Storage;
 
 use Flow\ETL\Bucketing\Storage\PSRCacheBuckets;
-use Flow\ETL\Row;
 use Flow\ETL\Tests\Context\BucketsStorageContext;
 use Flow\ETL\Tests\Double\ArrayCache;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function array_map;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
-use function iterator_to_array;
 
 final class PSRCacheBucketsTest extends FlowTestCase
 {
@@ -25,10 +22,7 @@ final class PSRCacheBucketsTest extends FlowTestCase
         $storage->append('bucket', array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))));
         $storage->append('bucket', array_to_rows([['id' => 3]], schema(int_schema('id'))));
 
-        static::assertSame(
-            [1, 2, 3],
-            array_map(static fn(Row $r): mixed => $r->get('id'), BucketsStorageContext::rows($storage->get('bucket'))),
-        );
+        static::assertSame([1, 2, 3], array_column(BucketsStorageContext::rows($storage->get('bucket')), 'id'));
     }
 
     public function test_custom_prefix_is_used_in_keys(): void
@@ -88,10 +82,7 @@ final class PSRCacheBucketsTest extends FlowTestCase
         );
         $storage->append('bucket', $input);
 
-        static::assertSame(
-            array_map(static fn(Row $r): array => $r->toArray(), iterator_to_array($input, false)),
-            array_map(static fn(Row $r): array => $r->toArray(), BucketsStorageContext::rows($storage->get('bucket'))),
-        );
+        static::assertSame($input->toArray(), BucketsStorageContext::rows($storage->get('bucket')));
     }
 
     public function test_set_replaces_previous_content(): void
@@ -100,9 +91,6 @@ final class PSRCacheBucketsTest extends FlowTestCase
         $storage->append('bucket', array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))));
         $storage->set('bucket', array_to_rows([['id' => 42]], schema(int_schema('id'))));
 
-        static::assertSame(
-            [42],
-            array_map(static fn(Row $r): mixed => $r->get('id'), BucketsStorageContext::rows($storage->get('bucket'))),
-        );
+        static::assertSame([42], array_column(BucketsStorageContext::rows($storage->get('bucket')), 'id'));
     }
 }

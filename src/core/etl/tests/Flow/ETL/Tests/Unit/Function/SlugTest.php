@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
@@ -20,9 +20,11 @@ final class SlugTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        ref('value')
-            ->slug(lit(123))
-            ->eval(array_to_row(['value' => 'hello world'], schema(str_schema('value'))), flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            ref('value')->slug(lit(123)),
+            ['value' => 'hello world'],
+            schema(str_schema('value')),
+        );
     }
 
     public function test_ascii_on_null(): void
@@ -30,22 +32,28 @@ final class SlugTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Slug function requires non-null value');
 
-        ref('str')
-            ->slug()
-            ->eval(array_to_row(['str' => null], schema(str_schema('str', nullable: true))), flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            ref('str')->slug(),
+            ['str' => null],
+            schema(str_schema('str', nullable: true)),
+        );
     }
 
     public function test_slug(): void
     {
-        static::assertSame('azcz', ref('str')
-            ->slug()
-            ->eval(array_to_row(['str' => 'ąźćż'], schema(str_schema('str'))), flow_context()));
+        static::assertSame('azcz', (new FunctionContext(flow_context()))->eval(
+            ref('str')->slug(),
+            ['str' => 'ąźćż'],
+            schema(str_schema('str')),
+        ));
     }
 
     public function test_slug_separator(): void
     {
-        static::assertSame('Some_Text', ref('str')
-            ->slug('_')
-            ->eval(array_to_row(['str' => 'Some Text'], schema(str_schema('str'))), flow_context()));
+        static::assertSame('Some_Text', (new FunctionContext(flow_context()))->eval(
+            ref('str')->slug('_'),
+            ['str' => 'Some Text'],
+            schema(str_schema('str')),
+        ));
     }
 }

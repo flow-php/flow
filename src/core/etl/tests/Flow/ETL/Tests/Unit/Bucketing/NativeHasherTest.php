@@ -80,4 +80,11 @@ final class NativeHasherTest extends FlowTestCase
     {
         static::assertNotSame(NativeHasher::normalize(null), NativeHasher::normalize('null'));
     }
+
+    public function test_values_do_not_run_into_the_next_one(): void
+    {
+        [$first, $second] = (new NativeHasher())->hash([['ab', 'c'], ['a', 'bc']]);
+
+        static::assertNotSame($first, $second);
+    }
 }

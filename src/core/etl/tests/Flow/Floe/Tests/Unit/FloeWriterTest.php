@@ -451,7 +451,7 @@ final class FloeWriterTest extends TestCase
         static::assertNotNull($fileSchema->findDefinition('a'));
         static::assertTrue($fileSchema->findDefinition('b')?->isNullable());
         static::assertTrue($fileSchema->findDefinition('c')?->isNullable());
-        static::assertCount(3, FloeStreamReaderContext::readAll($filesystem, $path)->all());
+        static::assertCount(3, FloeStreamReaderContext::readAll($filesystem, $path));
     }
 
     public function test_section_offsets_point_at_frames(): void

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Processor;
 
 use Flow\ETL\Bucketing\Storage\MemoryBuckets;
+use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\Exception\JoinException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Join\Comparison\Any;
@@ -153,6 +154,70 @@ final class HashJoinProcessorTest extends FlowTestCase
             $results[0],
         );
         static::assertSame($results[0], $results[1]);
+    }
+
+    public function test_a_build_side_under_the_memory_limit_joins_in_memory_without_bucket_writes(): void
+    {
+        $storage = new SpyBucketsStorage(new MemoryBuckets());
+        $processor = HashJoinProcessorMother::with(
+            PhysicalPlanMother::reading(from_rows(array_to_rows(
+                [['user_id' => 1, 'name' => 'Alice'], ['user_id' => 2, 'name' => 'Bob']],
+                schema(int_schema('user_id'), str_schema('name')),
+            ))),
+            Expression::on(['id' => 'user_id']),
+            Join::left,
+            $storage,
+            memoryLimit: Unit::fromGb(64),
+        );
+        $generator = (static function () {
+            yield array_to_rows(
+                [['id' => 2, 'amount' => 20], ['id' => 404, 'amount' => 40]],
+                schema(int_schema('id'), int_schema('amount')),
+            );
+        })();
+
+        static::assertSame(
+            [
+                ['id' => 2, 'amount' => 20, 'user_id' => 2, 'name' => 'Bob'],
+                ['id' => 404, 'amount' => 40, 'user_id' => null, 'name' => null],
+            ],
+            iterator_to_array($processor->process($generator, flow_context()), false)[0]->toArray(),
+        );
+        static::assertSame([], $storage->appendedRows());
+    }
+
+    public function test_a_build_side_past_the_memory_limit_spills_what_it_read_and_the_rest(): void
+    {
+        $storage = new SpyBucketsStorage(new MemoryBuckets());
+        $processor = HashJoinProcessorMother::with(
+            PhysicalPlanMother::reading(from_rows(
+                array_to_rows([['user_id' => 1, 'name' => 'Alice']], schema(int_schema('user_id'), str_schema('name'))),
+                array_to_rows([['user_id' => 2, 'name' => 'Bob']], schema(int_schema('user_id'), str_schema('name'))),
+            )),
+            Expression::on(['id' => 'user_id']),
+            Join::inner,
+            $storage,
+            memoryLimit: Unit::fromBytes(1),
+        );
+        $generator = (static function () {
+            yield array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
+        })();
+
+        $joined = [];
+
+        foreach ($processor->process($generator, flow_context()) as $batch) {
+            foreach ($batch->toArray() as $row) {
+                $joined[] = $row;
+            }
+        }
+
+        usort($joined, static fn(array $left, array $right): int => (int) $left['id'] <=> (int) $right['id']);
+
+        static::assertSame(
+            [['id' => 1, 'user_id' => 1, 'name' => 'Alice'], ['id' => 2, 'user_id' => 2, 'name' => 'Bob']],
+            $joined,
+        );
+        static::assertNotSame([], $storage->appendedRows());
     }
 
     public function test_handles_empty_left_side(): void
@@ -578,8 +643,9 @@ final class HashJoinProcessorTest extends FlowTestCase
     {
         $storage = new SpyBucketsStorage(new MemoryBuckets());
 
+        // the right side's only key hashes to a bucket no left row lands in, so no pair has a right bucket
         $processor = HashJoinProcessorMother::grace(
-            PhysicalPlanMother::reading(from_rows(rows(schema()))),
+            PhysicalPlanMother::reading(from_rows(array_to_rows([['user_id' => 3]], schema(int_schema('user_id'))))),
             Expression::on(['id' => 'user_id']),
             Join::left,
             $storage,
@@ -659,7 +725,7 @@ final class HashJoinProcessorTest extends FlowTestCase
         static::assertSame([['id' => 1, 'r_id' => 1, 'r_name' => 'Alice']], $batches[0]->toArray());
     }
 
-    public function test_join_output_builds_with_the_configured_backend(): void
+    public function test_join_output_gathers_the_input_columns_without_building(): void
     {
         $backend = new SpyBackend();
         $processor = HashJoinProcessorMother::grace(
@@ -674,11 +740,12 @@ final class HashJoinProcessorTest extends FlowTestCase
             yield array_to_rows([['id' => 1, 'amount' => 100]], schema(int_schema('id'), int_schema('amount')));
         })();
 
-        iterator_to_array(
+        $joined = iterator_to_array(
             $processor->process($generator, flow_context(config_builder()->backend($backend)->build())),
             false,
         );
 
-        static::assertGreaterThan(0, $backend->builders());
+        static::assertSame([['id' => 1, 'amount' => 100, 'user_id' => 1, 'name' => 'Alice']], $joined[0]->toArray());
+        static::assertSame(0, $backend->builders());
     }
 }

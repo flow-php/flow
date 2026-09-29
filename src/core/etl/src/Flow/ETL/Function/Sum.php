@@ -8,8 +8,8 @@ use Flow\Calculator\RunningSum;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Rows;
 use Flow\ETL\Window;
 use Flow\ETL\Window\Accumulator\SumAccumulator;
 use Flow\ETL\Window\FrameAccumulator;
@@ -19,6 +19,7 @@ use Flow\Types\Type;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_optional;
 use function is_numeric;
+use function sprintf;
 
 final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunction
 {
@@ -30,15 +31,12 @@ final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunctio
 
     private ?RunningSum $runningSum = null;
 
-    private float|int $sum;
-
     public function __construct(
         private readonly Reference $ref,
-        private readonly ScalarFunction|bool $exact = false,
+        private readonly bool $exact = false,
         private readonly ?Window $window = null,
     ) {
         $this->outputName = $ref->hasAlias() ? $ref->name() : $ref->to() . '_sum';
-        $this->sum = 0;
     }
 
     /**
@@ -46,7 +44,7 @@ final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunctio
      */
     public function children(): array
     {
-        return $this->exact instanceof ScalarFunction ? [$this->ref, $this->exact] : [$this->ref];
+        return [$this->ref];
     }
 
     /**
@@ -54,27 +52,39 @@ final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunctio
      */
     public function withChildren(array $children): static
     {
-        /** @var array{0: Reference, 1?: ScalarFunction} $children */
-        return new self($children[0], $children[1] ?? $this->exact, $this->window);
+        /** @var array{0: Reference} $children */
+        return new self($children[0], $this->exact, $this->window);
     }
 
-    public function aggregate(Row $row, FlowContext $context): void
+    public function aggregate(Rows $rows, array $indices, FlowContext $context): void
     {
-        if (!$row->has($this->ref)) {
+        if ($rows->schema()->findDefinition($this->ref->base()) === null) {
             return;
         }
 
-        try {
-            $value = $row->get($this->ref);
-
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($rows->column($this->ref->base())->take($indices)->values() as $value) {
             if (is_int($value) || is_float($value) || is_string($value) && is_numeric($value)) {
                 $this->runningSum ??= new RunningSum($context->calculator());
-                $this->sum = $this->runningSum->add($this->sum, $value, $this->isExact($row, $context));
+                $this->runningSum->add($value, $this->exact);
                 $this->aggregated++;
             }
-        } catch (InvalidArgumentException $e) {
-            throw new InvalidArgumentException('Sum error: ' . $e->getMessage(), 0, $e);
         }
+    }
+
+    public function merge(AggregatingFunction $other, FlowContext $context): void
+    {
+        if (!$other instanceof self) {
+            throw new InvalidArgumentException(sprintf('%s cannot merge %s', self::class, $other::class));
+        }
+
+        if ($other->aggregated === 0 || $other->runningSum === null) {
+            return;
+        }
+
+        $this->runningSum ??= new RunningSum($context->calculator());
+        $this->runningSum->merge($other->runningSum, $this->exact);
+        $this->aggregated += $other->aggregated;
     }
 
     public function accumulator(FlowContext $context): FrameAccumulator
@@ -86,8 +96,10 @@ final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunctio
     {
         $accumulator = $this->accumulator($window->flowContext());
 
-        foreach ($window->frame() as $frameRow) {
-            $accumulator->accumulate($frameRow);
+        $frame = $window->frame();
+
+        for ($index = 0, $count = $frame->count(); $index < $count; $index++) {
+            $accumulator->accumulate($frame, $index);
         }
 
         return $accumulator->value();
@@ -99,12 +111,11 @@ final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunctio
     }
 
     /**
-     * @return null|list<Reference> null when $exact is a ScalarFunction - its entries cannot be
-     *                              statically enumerated, so spill column pruning must be disabled
+     * @return list<Reference>
      */
-    public function references(): ?array
+    public function references(): array
     {
-        return $this->exact instanceof ScalarFunction ? null : [$this->ref];
+        return [$this->ref];
     }
 
     public function outputName(): string
@@ -113,7 +124,7 @@ final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunctio
     }
 
     /**
-     * float, not the argument type - RunningSum::add() promotes to float on int overflow, so integer
+     * float, not the argument type - RunningSum promotes to float on int overflow, so integer
      * would be a declaration the accumulator can violate on ordinary data
      *
      * @return Type<mixed>
@@ -125,11 +136,11 @@ final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunctio
 
     public function value(): ?float
     {
-        if ($this->aggregated === 0) {
+        if ($this->aggregated === 0 || $this->runningSum === null) {
             return null;
         }
 
-        return (float) $this->sum;
+        return (float) $this->runningSum->value();
     }
 
     public function toString(): string
@@ -144,14 +155,5 @@ final class Sum implements AggregatingFunction, FrameAccumulating, WindowFunctio
         }
 
         return $this->window;
-    }
-
-    private function isExact(Row $row, FlowContext $context): bool
-    {
-        if (is_bool($this->exact)) {
-            return $this->exact;
-        }
-
-        return (new Parameter($this->exact))->asBoolean($row, $context) ?? false;
     }
 }

@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
-use function current;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_optional;
 use function in_array;
+use function sprintf;
 
 final class CollectUnique implements AggregatingFunction
 {
@@ -49,22 +50,31 @@ final class CollectUnique implements AggregatingFunction
         return new self($children[0]);
     }
 
-    public function aggregate(Row $row, FlowContext $context): void
+    public function aggregate(Rows $rows, array $indices, FlowContext $context): void
     {
-        if (!$row->has($this->ref)) {
+        if ($rows->schema()->findDefinition($this->ref->base()) === null) {
             return;
         }
 
-        /** @var array<string, mixed> $values */
-        $values = [];
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($rows->column($this->ref->base())->take($indices)->values() as $value) {
+            if (!in_array($value, $this->collection, true)) {
+                $this->collection[] = $value;
+            }
+        }
+    }
 
-        $values[$this->ref->name()] = $row->get($this->ref);
+    public function merge(AggregatingFunction $other, FlowContext $context): void
+    {
+        if (!$other instanceof self) {
+            throw new InvalidArgumentException(sprintf('%s cannot merge %s', self::class, $other::class));
+        }
 
-        /** @var mixed $value */
-        $value = current($values);
-
-        if (!in_array($value, $this->collection, true)) {
-            $this->collection[] = $value;
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($other->collection as $value) {
+            if (!in_array($value, $this->collection, true)) {
+                $this->collection[] = $value;
+            }
         }
     }
 

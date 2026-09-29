@@ -6,9 +6,9 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
@@ -23,11 +23,11 @@ final class ToDateTest extends FlowTestCase
     {
         static::assertEquals(
             new DateTimeImmutable('2020-01-01 00:00:00', new DateTimeZone('UTC')),
-            to_date(ref('date_time'))
-                ->eval(array_to_row(['date_time' => new DateTimeImmutable(
-                    '2020-01-01 12:43:23',
-                    new DateTimeZone('UTC'),
-                )], schema(datetime_schema('date_time'))), flow_context()),
+            (new FunctionContext(flow_context()))->eval(
+                to_date(ref('date_time')),
+                ['date_time' => new DateTimeImmutable('2020-01-01 12:43:23', new DateTimeZone('UTC'))],
+                schema(datetime_schema('date_time')),
+            ),
         );
     }
 
@@ -35,10 +35,13 @@ final class ToDateTest extends FlowTestCase
     {
         static::assertEquals(
             new DateTimeImmutable('2020-01-01 00:00:00', new DateTimeZone('UTC')),
-            to_date(ref('int'))
-                ->eval(array_to_row([
+            (new FunctionContext(flow_context()))->eval(
+                to_date(ref('int')),
+                [
                     'int' => (int) (new DateTimeImmutable('2020-01-01 10:11:11', new DateTimeZone('UTC')))->format('U'),
-                ], schema(int_schema('int'))), flow_context()),
+                ],
+                schema(int_schema('int')),
+            ),
         );
     }
 
@@ -46,9 +49,13 @@ final class ToDateTest extends FlowTestCase
     {
         static::assertEquals(
             new DateTimeImmutable('2020-01-01 00:00:00', new DateTimeZone('UTC')),
-            to_date(ref('string'), 'Y-m-d H:i:s')->eval(array_to_row([
-                'string' => '2020-01-01 10:08:00',
-            ], schema(str_schema('string'))), flow_context()),
+            (new FunctionContext(flow_context()))->eval(
+                to_date(ref('string'), 'Y-m-d H:i:s'),
+                [
+                    'string' => '2020-01-01 10:08:00',
+                ],
+                schema(str_schema('string')),
+            ),
         );
     }
 }

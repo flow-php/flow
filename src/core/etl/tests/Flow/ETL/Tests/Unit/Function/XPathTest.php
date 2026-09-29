@@ -6,9 +6,9 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use DOMDocument;
 use DOMElement;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
@@ -24,9 +24,11 @@ final class XPathTest extends FlowTestCase
         static::assertInstanceOf(DOMElement::class, $xml->documentElement);
         static::assertEquals(
             [$xml->documentElement->firstChild],
-            ref('value')
-                ->xpath('/root/foo')
-                ->eval(array_to_row(['value' => $xml], schema(xml_schema('value'))), flow_context()),
+            (new FunctionContext(flow_context()))->eval(
+                ref('value')->xpath('/root/foo'),
+                ['value' => $xml],
+                schema(xml_schema('value')),
+            ),
         );
     }
 
@@ -41,9 +43,11 @@ final class XPathTest extends FlowTestCase
                 $xml->documentElement->firstChild,
                 $xml->documentElement->lastChild,
             ],
-            ref('value')
-                ->xpath('/root/foo')
-                ->eval(array_to_row(['value' => $xml], schema(xml_schema('value'))), flow_context()),
+            (new FunctionContext(flow_context()))->eval(
+                ref('value')->xpath('/root/foo'),
+                ['value' => $xml],
+                schema(xml_schema('value')),
+            ),
         );
     }
 
@@ -52,11 +56,11 @@ final class XPathTest extends FlowTestCase
         $xml = new DOMDocument();
         $xml->loadXML('<root><foo baz="buz">bar</foo></root>');
 
-        static::assertNull(
-            ref('value')
-                ->xpath('/root/foo/asa')
-                ->eval(array_to_row(['value' => $xml], schema(xml_schema('value'))), flow_context()),
-        );
+        static::assertNull((new FunctionContext(flow_context()))->eval(
+            ref('value')->xpath('/root/foo/asa'),
+            ['value' => $xml],
+            schema(xml_schema('value')),
+        ));
     }
 
     public function test_xpath_with_non_existing_path(): void
@@ -64,11 +68,11 @@ final class XPathTest extends FlowTestCase
         $xml = new DOMDocument();
         $xml->loadXML('<root><foo baz="buz">bar</foo></root>');
 
-        static::assertNull(
-            ref('value')
-                ->xpath('/root/bar')
-                ->eval(array_to_row(['value' => $xml], schema(xml_schema('value'))), flow_context()),
-        );
+        static::assertNull((new FunctionContext(flow_context()))->eval(
+            ref('value')->xpath('/root/bar'),
+            ['value' => $xml],
+            schema(xml_schema('value')),
+        ));
     }
 
     public function test_xpath_selecting_non_element_nodes_returns_null(): void
@@ -76,15 +80,15 @@ final class XPathTest extends FlowTestCase
         $xml = new DOMDocument();
         $xml->loadXML('<root><foo baz="buz">bar</foo></root>');
 
-        static::assertNull(
-            ref('value')
-                ->xpath('/root/foo/text()')
-                ->eval(array_to_row(['value' => $xml], schema(xml_schema('value'))), flow_context()),
-        );
-        static::assertNull(
-            ref('value')
-                ->xpath('/root/foo/@baz')
-                ->eval(array_to_row(['value' => $xml], schema(xml_schema('value'))), flow_context()),
-        );
+        static::assertNull((new FunctionContext(flow_context()))->eval(
+            ref('value')->xpath('/root/foo/text()'),
+            ['value' => $xml],
+            schema(xml_schema('value')),
+        ));
+        static::assertNull((new FunctionContext(flow_context()))->eval(
+            ref('value')->xpath('/root/foo/@baz'),
+            ['value' => $xml],
+            schema(xml_schema('value')),
+        ));
     }
 }

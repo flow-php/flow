@@ -8,11 +8,11 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Function\ArrayExpand\ArrayExpand;
 use Flow\ETL\Function\ReferenceResolver;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\TestWith;
 
 use function Flow\ETL\DSL\array_expand;
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
@@ -33,42 +33,55 @@ final class ArrayExpandTest extends FlowTestCase
 {
     public function test_expand_both(): void
     {
-        $row = array_to_row(['array' => [
-            'a' => 1,
-            'b' => 2,
-            'c' => 3,
-        ]], schema(map_schema('array', type_map(type_string(), type_integer()))));
-
         static::assertSame(
             [
                 ['a' => 1],
                 ['b' => 2],
                 ['c' => 3],
             ],
-            array_expand(ref('array'), ArrayExpand::BOTH)->eval($row, flow_context()),
+            (new FunctionContext(flow_context()))->eval(
+                array_expand(ref('array'), ArrayExpand::BOTH),
+                ['array' => [
+                    'a' => 1,
+                    'b' => 2,
+                    'c' => 3,
+                ]],
+                schema(map_schema('array', type_map(type_string(), type_integer()))),
+            ),
         );
     }
 
     public function test_expand_keys(): void
     {
-        $row = array_to_row(['array' => [
-            'a' => 1,
-            'b' => 2,
-            'c' => 3,
-        ]], schema(map_schema('array', type_map(type_string(), type_integer()))));
-
-        static::assertSame(['a', 'b', 'c'], array_expand(ref('array'), ArrayExpand::KEYS)->eval($row, flow_context()));
+        static::assertSame(
+            ['a', 'b', 'c'],
+            (new FunctionContext(flow_context()))->eval(
+                array_expand(ref('array'), ArrayExpand::KEYS),
+                ['array' => [
+                    'a' => 1,
+                    'b' => 2,
+                    'c' => 3,
+                ]],
+                schema(map_schema('array', type_map(type_string(), type_integer()))),
+            ),
+        );
     }
 
     public function test_expand_values(): void
     {
-        $row = array_to_row(['array' => [
-            'a' => 1,
-            'b' => 2,
-            'c' => 3,
-        ]], schema(map_schema('array', type_map(type_string(), type_integer()))));
-
-        static::assertSame(['a' => 1, 'b' => 2, 'c' => 3], array_expand(ref('array'))->eval($row, flow_context()));
+        // an expand hands the step a list: the keys never reached the exploded column
+        static::assertSame(
+            [1, 2, 3],
+            (new FunctionContext(flow_context()))->eval(
+                array_expand(ref('array')),
+                ['array' => [
+                    'a' => 1,
+                    'b' => 2,
+                    'c' => 3,
+                ]],
+                schema(map_schema('array', type_map(type_string(), type_integer()))),
+            ),
+        );
     }
 
     public function test_for_not_array_entry(): void
@@ -76,8 +89,11 @@ final class ArrayExpandTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected type "array<mixed>", got "integer".');
 
-        array_expand(ref('integer_entry'))
-            ->eval(array_to_row(['integer_entry' => 1], schema(int_schema('integer_entry'))), flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            array_expand(ref('integer_entry')),
+            ['integer_entry' => 1],
+            schema(int_schema('integer_entry')),
+        );
     }
 
     public function test_for_not_array_entry_in_strict_mode(): void
@@ -86,8 +102,11 @@ final class ArrayExpandTest extends FlowTestCase
         $this->expectExceptionMessage('Expected type "array<mixed>", got "integer".');
 
         $context = flow_context(config());
-        array_expand(ref('integer_entry'))
-            ->eval(array_to_row(['integer_entry' => 1], schema(int_schema('integer_entry'))), $context);
+        (new FunctionContext($context))->eval(
+            array_expand(ref('integer_entry')),
+            ['integer_entry' => 1],
+            schema(int_schema('integer_entry')),
+        );
     }
 
     public function test_values_over_a_structure_declare_the_unified_field_type(): void
@@ -195,9 +214,13 @@ final class ArrayExpandTest extends FlowTestCase
     {
         static::assertSame(
             [],
-            array_expand(ref('list'), $expand)->eval(array_to_row([
-                'list' => null,
-            ], schema(str_schema('list', nullable: true))), flow_context()),
+            (new FunctionContext(flow_context()))->eval(
+                array_expand(ref('list'), $expand),
+                [
+                    'list' => null,
+                ],
+                schema(str_schema('list', nullable: true)),
+            ),
         );
     }
 }

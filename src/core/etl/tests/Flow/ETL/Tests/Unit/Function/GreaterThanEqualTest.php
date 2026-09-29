@@ -6,10 +6,10 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use DateInterval;
 use DateTimeImmutable;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Exception\InvalidArgumentException;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
@@ -29,159 +29,165 @@ final class GreaterThanEqualTest extends FlowTestCase
     {
         $context = flow_context();
 
-        static::assertTrue(
-            ref('v')
-                ->greaterThanEqual(lit([1, 0]))
-                ->eval(array_to_row(['v' => [1, 9]], schema(list_schema('v', type_list(type_integer())))), $context),
-        );
-        static::assertTrue(
-            ref('v')
-                ->greaterThanEqual(lit([1, 0]))
-                ->eval(array_to_row(['v' => [1, 0]], schema(list_schema('v', type_list(type_integer())))), $context),
-        );
-        static::assertFalse(
-            ref('v')
-                ->greaterThanEqual(lit([1, 9]))
-                ->eval(array_to_row(['v' => [1, 0]], schema(list_schema('v', type_list(type_integer())))), $context),
-        );
+        static::assertTrue((new FunctionContext($context))->eval(
+            ref('v')->greaterThanEqual(lit([1, 0])),
+            ['v' => [1, 9]],
+            schema(list_schema('v', type_list(type_integer()))),
+        ));
+        static::assertTrue((new FunctionContext($context))->eval(
+            ref('v')->greaterThanEqual(lit([1, 0])),
+            ['v' => [1, 0]],
+            schema(list_schema('v', type_list(type_integer()))),
+        ));
+        static::assertFalse((new FunctionContext($context))->eval(
+            ref('v')->greaterThanEqual(lit([1, 9])),
+            ['v' => [1, 0]],
+            schema(list_schema('v', type_list(type_integer()))),
+        ));
     }
 
     public function test_greater_than_equal_datetimes(): void
     {
         $context = flow_context();
 
-        static::assertTrue(
-            ref('v')
-                ->greaterThanEqual(lit(new DateTimeImmutable('2024-01-01')))
-                ->eval(array_to_row([
-                    'v' => new DateTimeImmutable('2024-06-01'),
-                ], schema(datetime_schema('v'))), $context),
-        );
-        static::assertTrue(
-            ref('v')
-                ->greaterThanEqual(lit(new DateTimeImmutable('2024-01-01')))
-                ->eval(array_to_row([
-                    'v' => new DateTimeImmutable('2024-01-01'),
-                ], schema(datetime_schema('v'))), $context),
-        );
-        static::assertFalse(
-            ref('v')
-                ->greaterThanEqual(lit(new DateTimeImmutable('2024-06-01')))
-                ->eval(array_to_row([
-                    'v' => new DateTimeImmutable('2024-01-01'),
-                ], schema(datetime_schema('v'))), $context),
-        );
+        static::assertTrue((new FunctionContext($context))->eval(
+            ref('v')->greaterThanEqual(lit(new DateTimeImmutable('2024-01-01'))),
+            [
+                'v' => new DateTimeImmutable('2024-06-01'),
+            ],
+            schema(datetime_schema('v')),
+        ));
+        static::assertTrue((new FunctionContext($context))->eval(
+            ref('v')->greaterThanEqual(lit(new DateTimeImmutable('2024-01-01'))),
+            [
+                'v' => new DateTimeImmutable('2024-01-01'),
+            ],
+            schema(datetime_schema('v')),
+        ));
+        static::assertFalse((new FunctionContext($context))->eval(
+            ref('v')->greaterThanEqual(lit(new DateTimeImmutable('2024-06-01'))),
+            [
+                'v' => new DateTimeImmutable('2024-01-01'),
+            ],
+            schema(datetime_schema('v')),
+        ));
     }
 
     public function test_greater_than_equal_floats(): void
     {
         $context = flow_context();
 
-        static::assertTrue(
-            ref('v')->greaterThanEqual(lit(1.5))->eval(array_to_row(['v' => 2.5], schema(float_schema('v'))), $context),
-        );
-        static::assertTrue(
-            ref('v')->greaterThanEqual(lit(1.5))->eval(array_to_row(['v' => 1.5], schema(float_schema('v'))), $context),
-        );
-        static::assertFalse(
-            ref('v')->greaterThanEqual(lit(2.5))->eval(array_to_row(['v' => 1.5], schema(float_schema('v'))), $context),
-        );
+        static::assertTrue((new FunctionContext($context))->eval(
+            ref('v')->greaterThanEqual(lit(1.5)),
+            ['v' => 2.5],
+            schema(float_schema('v')),
+        ));
+        static::assertTrue((new FunctionContext($context))->eval(
+            ref('v')->greaterThanEqual(lit(1.5)),
+            ['v' => 1.5],
+            schema(float_schema('v')),
+        ));
+        static::assertFalse((new FunctionContext($context))->eval(
+            ref('v')->greaterThanEqual(lit(2.5)),
+            ['v' => 1.5],
+            schema(float_schema('v')),
+        ));
     }
 
     public function test_greater_than_equal_integers(): void
     {
         $context = flow_context();
 
-        static::assertTrue(
-            ref('v')->greaterThanEqual(lit(10))->eval(array_to_row(['v' => 20], schema(int_schema('v'))), $context),
-        );
-        static::assertTrue(
-            ref('v')->greaterThanEqual(lit(10))->eval(array_to_row(['v' => 10], schema(int_schema('v'))), $context),
-        );
-        static::assertFalse(
-            ref('v')->greaterThanEqual(lit(20))->eval(array_to_row(['v' => 10], schema(int_schema('v'))), $context),
-        );
+        static::assertTrue((new FunctionContext($context))->eval(
+            ref('v')->greaterThanEqual(lit(10)),
+            ['v' => 20],
+            schema(int_schema('v')),
+        ));
+        static::assertTrue((new FunctionContext($context))->eval(
+            ref('v')->greaterThanEqual(lit(10)),
+            ['v' => 10],
+            schema(int_schema('v')),
+        ));
+        static::assertFalse((new FunctionContext($context))->eval(
+            ref('v')->greaterThanEqual(lit(20)),
+            ['v' => 10],
+            schema(int_schema('v')),
+        ));
     }
 
     public function test_greater_than_equal_returns_null_for_null_array(): void
     {
-        static::assertNull(
-            ref('v')
-                ->greaterThanEqual(lit([1, 0]))
-                ->eval(array_to_row(['v' => null], schema(str_schema('v', nullable: true))), flow_context()),
-        );
+        static::assertNull((new FunctionContext(flow_context()))->eval(
+            ref('v')->greaterThanEqual(lit([1, 0])),
+            ['v' => null],
+            schema(list_schema('v', type_list(type_integer()), nullable: true)),
+        ));
     }
 
     public function test_greater_than_equal_returns_null_for_null_datetime(): void
     {
-        static::assertNull(
-            ref('v')
-                ->greaterThanEqual(lit(new DateTimeImmutable('2024-01-01')))
-                ->eval(array_to_row(['v' => null], schema(str_schema('v', nullable: true))), flow_context()),
-        );
+        static::assertNull((new FunctionContext(flow_context()))->eval(
+            ref('v')->greaterThanEqual(lit(new DateTimeImmutable('2024-01-01'))),
+            ['v' => null],
+            schema(datetime_schema('v', nullable: true)),
+        ));
     }
 
     public function test_greater_than_equal_returns_null_for_null_left(): void
     {
-        static::assertNull(
-            ref('v')
-                ->greaterThanEqual(lit(10))
-                ->eval(array_to_row(['v' => null], schema(str_schema('v', nullable: true))), flow_context()),
-        );
+        static::assertNull((new FunctionContext(flow_context()))->eval(
+            ref('v')->greaterThanEqual(lit(10)),
+            ['v' => null],
+            schema(str_schema('v', nullable: true)),
+        ));
     }
 
     public function test_greater_than_equal_returns_null_for_null_right(): void
     {
-        static::assertNull(
-            ref('v')
-                ->greaterThanEqual(ref('other'))
-                ->eval(
-                    array_to_row(
-                        ['v' => 10, 'other' => null],
-                        schema(int_schema('v'), str_schema('other', nullable: true)),
-                    ),
-                    flow_context(),
-                ),
-        );
+        static::assertNull((new FunctionContext(flow_context()))->eval(
+            ref('v')->greaterThanEqual(ref('other')),
+            ['v' => 10, 'other' => null],
+            schema(int_schema('v'), str_schema('other', nullable: true)),
+        ));
     }
 
     public function test_greater_than_equal_returns_null_for_null_string(): void
     {
-        static::assertNull(
-            ref('v')
-                ->greaterThanEqual(lit('a'))
-                ->eval(array_to_row(['v' => null], schema(str_schema('v', nullable: true))), flow_context()),
-        );
+        static::assertNull((new FunctionContext(flow_context()))->eval(
+            ref('v')->greaterThanEqual(lit('a')),
+            ['v' => null],
+            schema(str_schema('v', nullable: true)),
+        ));
     }
 
     public function test_greater_than_equal_returns_null_for_null_time_interval(): void
     {
-        static::assertNull(
-            ref('v')
-                ->greaterThanEqual(lit(new DateInterval('PT1H')))
-                ->eval(array_to_row(['v' => null], schema(str_schema('v', nullable: true))), flow_context()),
-        );
+        static::assertNull((new FunctionContext(flow_context()))->eval(
+            ref('v')->greaterThanEqual(lit(new DateInterval('PT1H'))),
+            ['v' => null],
+            schema(time_schema('v', nullable: true)),
+        ));
     }
 
     public function test_greater_than_equal_strings(): void
     {
         $context = flow_context();
 
-        static::assertTrue(
-            ref('v')
-                ->greaterThanEqual(lit('apple'))
-                ->eval(array_to_row(['v' => 'banana'], schema(str_schema('v'))), $context),
-        );
-        static::assertTrue(
-            ref('v')
-                ->greaterThanEqual(lit('apple'))
-                ->eval(array_to_row(['v' => 'apple'], schema(str_schema('v'))), $context),
-        );
-        static::assertFalse(
-            ref('v')
-                ->greaterThanEqual(lit('banana'))
-                ->eval(array_to_row(['v' => 'apple'], schema(str_schema('v'))), $context),
-        );
+        static::assertTrue((new FunctionContext($context))->eval(
+            ref('v')->greaterThanEqual(lit('apple')),
+            ['v' => 'banana'],
+            schema(str_schema('v')),
+        ));
+        static::assertTrue((new FunctionContext($context))->eval(
+            ref('v')->greaterThanEqual(lit('apple')),
+            ['v' => 'apple'],
+            schema(str_schema('v')),
+        ));
+        static::assertFalse((new FunctionContext($context))->eval(
+            ref('v')->greaterThanEqual(lit('banana')),
+            ['v' => 'apple'],
+            schema(str_schema('v')),
+        ));
     }
 
     public function test_greater_than_equal_throws_on_incompatible_types(): void
@@ -195,20 +201,20 @@ final class GreaterThanEqualTest extends FlowTestCase
     {
         $context = flow_context();
 
-        static::assertTrue(
-            ref('v')
-                ->greaterThanEqual(lit(new DateInterval('PT1H')))
-                ->eval(array_to_row(['v' => new DateInterval('PT5H')], schema(time_schema('v'))), $context),
-        );
-        static::assertTrue(
-            ref('v')
-                ->greaterThanEqual(lit(new DateInterval('PT1H')))
-                ->eval(array_to_row(['v' => new DateInterval('PT1H')], schema(time_schema('v'))), $context),
-        );
-        static::assertFalse(
-            ref('v')
-                ->greaterThanEqual(lit(new DateInterval('PT5H')))
-                ->eval(array_to_row(['v' => new DateInterval('PT1H')], schema(time_schema('v'))), $context),
-        );
+        static::assertTrue((new FunctionContext($context))->eval(
+            ref('v')->greaterThanEqual(lit(new DateInterval('PT1H'))),
+            ['v' => new DateInterval('PT5H')],
+            schema(time_schema('v')),
+        ));
+        static::assertTrue((new FunctionContext($context))->eval(
+            ref('v')->greaterThanEqual(lit(new DateInterval('PT1H'))),
+            ['v' => new DateInterval('PT1H')],
+            schema(time_schema('v')),
+        ));
+        static::assertFalse((new FunctionContext($context))->eval(
+            ref('v')->greaterThanEqual(lit(new DateInterval('PT5H'))),
+            ['v' => new DateInterval('PT1H')],
+            schema(time_schema('v')),
+        ));
     }
 }

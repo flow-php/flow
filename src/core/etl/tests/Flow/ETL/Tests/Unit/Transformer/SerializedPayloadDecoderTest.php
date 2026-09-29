@@ -9,7 +9,6 @@ use Flow\ETL\Transformer\SerializedPayloadDecoder;
 use Flow\Floe\FloeSerializer;
 use Flow\Serializer\Base64Serializer;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
@@ -27,40 +26,40 @@ final class SerializedPayloadDecoderTest extends FlowTestCase
         ], schema(int_schema('id'))));
 
         static::assertSame(
-            [],
+            [[]],
             SerializedPayloadDecoderTest::decoder()
-                ->decode(array_to_row(['serialized' => $payload], schema(str_schema('serialized'))))
-                ->values(),
+                ->decode(array_to_rows([['serialized' => $payload]], schema(str_schema('serialized'))), 0)
+                ->toArray(),
         );
     }
 
     public function test_a_non_string_value_gives_up(): void
     {
         static::assertSame(
-            [],
+            [[]],
             SerializedPayloadDecoderTest::decoder()
-                ->decode(array_to_row(['serialized' => 123], schema(int_schema('serialized'))))
-                ->values(),
+                ->decode(array_to_rows([['serialized' => 123]], schema(int_schema('serialized'))), 0)
+                ->toArray(),
         );
     }
 
     public function test_a_payload_that_does_not_deserialize_gives_up(): void
     {
         static::assertSame(
-            [],
+            [[]],
             SerializedPayloadDecoderTest::decoder()
-                ->decode(array_to_row(['serialized' => 'not-serialized'], schema(str_schema('serialized'))))
-                ->values(),
+                ->decode(array_to_rows([['serialized' => 'not-serialized']], schema(str_schema('serialized'))), 0)
+                ->toArray(),
         );
     }
 
     public function test_a_row_without_the_source_column_gives_up(): void
     {
         static::assertSame(
-            [],
+            [[]],
             SerializedPayloadDecoderTest::decoder()
-                ->decode(array_to_row(['other' => 1], schema(int_schema('other'))))
-                ->values(),
+                ->decode(array_to_rows([['other' => 1]], schema(int_schema('other'))), 0)
+                ->toArray(),
         );
     }
 
@@ -71,10 +70,13 @@ final class SerializedPayloadDecoderTest extends FlowTestCase
         ]], schema(int_schema('id'))));
 
         static::assertSame(
-            ['id' => 7],
+            [['id' => 7]],
             SerializedPayloadDecoderTest::decoder()
-                ->decode(array_to_row(['serialized' => $payload], schema(str_schema('serialized'))))
-                ->values(),
+                ->decode(array_to_rows([
+                    ['serialized' => 'not-serialized'],
+                    ['serialized' => $payload],
+                ], schema(str_schema('serialized'))), 1)
+                ->toArray(),
         );
     }
 

@@ -8,12 +8,12 @@ use DateTimeInterface;
 use Flow\ETL\Hash\NativePHPHash;
 use Stringable;
 
-use function array_map;
 use function is_bool;
 use function is_numeric;
 use function is_object;
 use function is_string;
 use function serialize;
+use function strlen;
 
 final readonly class NativeHasher implements Hasher
 {
@@ -56,7 +56,16 @@ final readonly class NativeHasher implements Hasher
         $hashes = [];
 
         foreach ($values as $rowValues) {
-            $hashes[] = NativePHPHash::xxh128(serialize(array_map(self::normalize(...), $rowValues)));
+            $key = '';
+
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($rowValues as $value) {
+                $normalized = self::normalize($value);
+                // length-prefixed, so a value cannot run into the next one
+                $key .= strlen($normalized) . ':' . $normalized;
+            }
+
+            $hashes[] = NativePHPHash::xxh128($key);
         }
 
         return $hashes;

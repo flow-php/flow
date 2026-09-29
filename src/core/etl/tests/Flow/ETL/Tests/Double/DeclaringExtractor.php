@@ -19,7 +19,7 @@ final class DeclaringExtractor implements Extractor
 
     public function extract(FlowContext $context, ?int $limit = null): Generator
     {
-        yield Rows::of($this->schema());
+        yield Rows::empty($this->schema());
     }
 
     public function schema(): Schema

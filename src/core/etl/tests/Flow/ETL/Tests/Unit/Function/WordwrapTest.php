@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
@@ -19,35 +19,29 @@ final class WordwrapTest extends FlowTestCase
 {
     public function test_empty_string(): void
     {
-        $result = ref('str')
-            ->wordwrap(10)
-            ->eval(array_to_row(['str' => ''], schema(str_schema('str'))), flow_context());
-
-        static::assertEquals('', $result);
+        static::assertEquals('', (new FunctionContext(flow_context()))->eval(
+            ref('str')->wordwrap(10),
+            ['str' => ''],
+            schema(str_schema('str')),
+        ));
     }
 
     public function test_normal_word_wrapping(): void
     {
-        $result = ref('str')
-            ->wordwrap(10)
-            ->eval(array_to_row(['str' => 'The quick brown fox jumps'], schema(str_schema('str'))), flow_context());
-
-        static::assertEquals("The quick\nbrown fox\njumps", $result);
+        static::assertEquals("The quick\nbrown fox\njumps", (new FunctionContext(flow_context()))->eval(
+            ref('str')->wordwrap(10),
+            ['str' => 'The quick brown fox jumps'],
+            schema(str_schema('str')),
+        ));
     }
 
     public function test_null_break_character(): void
     {
-        $result = ref('str')
-            ->wordwrap(10, ref('break'))
-            ->eval(
-                array_to_row(
-                    ['str' => 'Hello World Test', 'break' => null],
-                    schema(str_schema('str'), str_schema('break', nullable: true)),
-                ),
-                flow_context(),
-            );
-
-        static::assertEquals("Hello\nWorld Test", $result);
+        static::assertEquals("Hello\nWorld Test", (new FunctionContext(flow_context()))->eval(
+            ref('str')->wordwrap(10, ref('break')),
+            ['str' => 'Hello World Test', 'break' => null],
+            schema(str_schema('str'), str_schema('break', nullable: true)),
+        ));
     }
 
     public function test_null_value(): void
@@ -55,70 +49,55 @@ final class WordwrapTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Wordwrap function requires non-null value');
 
-        $result = ref('str')
-            ->wordwrap(10)
-            ->eval(array_to_row(['str' => null], schema(str_schema('str', nullable: true))), flow_context());
-
-        static::assertNull($result);
+        static::assertNull((new FunctionContext(flow_context()))->eval(
+            ref('str')->wordwrap(10),
+            ['str' => null],
+            schema(str_schema('str', nullable: true)),
+        ));
     }
 
     public function test_text_shorter_than_width(): void
     {
-        $result = ref('str')
-            ->wordwrap(20)
-            ->eval(array_to_row(['str' => 'Hello'], schema(str_schema('str'))), flow_context());
-
-        static::assertEquals('Hello', $result);
+        static::assertEquals('Hello', (new FunctionContext(flow_context()))->eval(
+            ref('str')->wordwrap(20),
+            ['str' => 'Hello'],
+            schema(str_schema('str')),
+        ));
     }
 
     public function test_width_zero(): void
     {
-        $result = ref('str')
-            ->wordwrap(0)
-            ->eval(array_to_row(['str' => 'Hello World'], schema(str_schema('str'))), flow_context());
-
-        static::assertEquals('Hello World', $result);
+        static::assertEquals('Hello World', (new FunctionContext(flow_context()))->eval(
+            ref('str')->wordwrap(0),
+            ['str' => 'Hello World'],
+            schema(str_schema('str')),
+        ));
     }
 
     public function test_with_scalar_function_break(): void
     {
-        $result = ref('str')
-            ->wordwrap(10, ref('break'))
-            ->eval(
-                array_to_row(
-                    ['str' => 'Hello World Test', 'break' => ' | '],
-                    schema(str_schema('str'), str_schema('break')),
-                ),
-                flow_context(),
-            );
-
-        static::assertEquals('Hello | World Test', $result);
+        static::assertEquals('Hello | World Test', (new FunctionContext(flow_context()))->eval(
+            ref('str')->wordwrap(10, ref('break')),
+            ['str' => 'Hello World Test', 'break' => ' | '],
+            schema(str_schema('str'), str_schema('break')),
+        ));
     }
 
     public function test_with_scalar_function_cut(): void
     {
-        $result = ref('str')
-            ->wordwrap(3, "\n", ref('cut'))
-            ->eval(
-                array_to_row(['str' => 'Hello', 'cut' => true], schema(str_schema('str'), bool_schema('cut'))),
-                flow_context(),
-            );
-
-        static::assertEquals("Hel\nlo", $result);
+        static::assertEquals("Hel\nlo", (new FunctionContext(flow_context()))->eval(
+            ref('str')->wordwrap(3, "\n", ref('cut')),
+            ['str' => 'Hello', 'cut' => true],
+            schema(str_schema('str'), bool_schema('cut')),
+        ));
     }
 
     public function test_with_scalar_function_width(): void
     {
-        $result = ref('str')
-            ->wordwrap(ref('width'))
-            ->eval(
-                array_to_row(
-                    ['str' => 'Hello World Test', 'width' => 8],
-                    schema(str_schema('str'), int_schema('width')),
-                ),
-                flow_context(),
-            );
-
-        static::assertEquals("Hello\nWorld\nTest", $result);
+        static::assertEquals("Hello\nWorld\nTest", (new FunctionContext(flow_context()))->eval(
+            ref('str')->wordwrap(ref('width')),
+            ['str' => 'Hello World Test', 'width' => 8],
+            schema(str_schema('str'), int_schema('width')),
+        ));
     }
 }

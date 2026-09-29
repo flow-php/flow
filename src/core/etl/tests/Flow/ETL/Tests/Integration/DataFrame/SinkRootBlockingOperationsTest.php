@@ -173,7 +173,7 @@ final class SinkRootBlockingOperationsTest extends FlowIntegrationTestCase
 
     public function test_group_by_aggregate_inside_a_transformation_merges_groups_across_batches(): void
     {
-        // Groups are merged across batches, giving the 2 rows the outer frame gives.
+        // Groups are merged across batches, giving the 2 rows the outer frame gives - in one batch, aggregated in memory.
         $spy = new SpyLoader();
         $sumVByGroup = new CallbackTransformation(static function (DataFrame $df): DataFrame {
             return $df->groupBy([ref('g')])->aggregate(sum(ref('v')));
@@ -184,15 +184,15 @@ final class SinkRootBlockingOperationsTest extends FlowIntegrationTestCase
             ->write(to_transformation($sumVByGroup, $spy))
             ->run();
 
-        static::assertSame([1, 1], $spy->loadedRowCounts());
+        static::assertSame([2], $spy->loadedRowCounts());
         static::assertSame([['g' => 'a', 'v_sum' => 6.0], ['g' => 'b', 'v_sum' => 60.0]], $spy->loadedRowsToArray());
     }
 
     public function test_join_inside_a_transformation_matches_every_row(): void
     {
-        // REGRESSION GUARD - asserts CORRECT behaviour. HashJoinProcessor buffers the RIGHT side, which is a separate
-        // complete frame, and buckets the left side. Under one stream the buckets span the stream, so the output is
-        // grouped by join key in 2 chunks of 3 - byte for byte what the same join gives on the outer frame.
+        // REGRESSION GUARD - asserts CORRECT behaviour. HashJoinProcessor reads the RIGHT side, a separate complete
+        // frame, first; it fits under the memory limit, so the left stream joins batch by batch in its own order -
+        // byte for byte what the same join gives on the outer frame.
         $spy = new SpyLoader();
         $joinNames = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->join(
             data_frame()->process(array_to_rows(
@@ -208,14 +208,14 @@ final class SinkRootBlockingOperationsTest extends FlowIntegrationTestCase
             ->write(to_transformation($joinNames, $spy))
             ->run();
 
-        static::assertSame([3, 3], $spy->loadedRowCounts());
+        static::assertSame([2, 2, 2], $spy->loadedRowCounts());
         static::assertSame(
             [
                 ['g' => 'a', 'v' => 1, 'j_code' => 'a', 'j_n' => 'Alpha'],
-                ['g' => 'a', 'v' => 2, 'j_code' => 'a', 'j_n' => 'Alpha'],
-                ['g' => 'a', 'v' => 3, 'j_code' => 'a', 'j_n' => 'Alpha'],
                 ['g' => 'b', 'v' => 10, 'j_code' => 'b', 'j_n' => 'Bravo'],
+                ['g' => 'a', 'v' => 2, 'j_code' => 'a', 'j_n' => 'Alpha'],
                 ['g' => 'b', 'v' => 20, 'j_code' => 'b', 'j_n' => 'Bravo'],
+                ['g' => 'a', 'v' => 3, 'j_code' => 'a', 'j_n' => 'Alpha'],
                 ['g' => 'b', 'v' => 30, 'j_code' => 'b', 'j_n' => 'Bravo'],
             ],
             $spy->loadedRowsToArray(),

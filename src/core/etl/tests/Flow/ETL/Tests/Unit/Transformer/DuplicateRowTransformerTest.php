@@ -310,7 +310,7 @@ final class DuplicateRowTransformerTest extends FlowTestCase
         );
 
         (new DuplicateRowTransformer(lit(true), with_entry('t', ref('tags')->expand())))->transform(
-            rows(ListColumnsMother::schema(), ListColumnsMother::row()),
+            ListColumnsMother::rows()->matchTo(ListColumnsMother::schema()),
             flow_context(config()),
         );
     }

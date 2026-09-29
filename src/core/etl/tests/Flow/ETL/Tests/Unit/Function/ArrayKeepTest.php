@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
@@ -25,12 +25,14 @@ final class ArrayKeepTest extends FlowTestCase
     {
         static::assertSame(
             [1 => 2],
-            ref('list')
-                ->arrayKeep(lit(2))
-                ->eval(array_to_row(['list' => [
+            (new FunctionContext(flow_context()))->eval(
+                ref('list')->arrayKeep(lit(2)),
+                ['list' => [
                     1,
                     2,
-                ]], schema(list_schema('list', type_list(type_integer())))), flow_context()),
+                ]],
+                schema(list_schema('list', type_list(type_integer()))),
+            ),
         );
     }
 
@@ -38,15 +40,11 @@ final class ArrayKeepTest extends FlowTestCase
     {
         static::assertSame(
             [1 => 2],
-            ref('list')
-                ->arrayKeep(ref('int'))
-                ->eval(
-                    array_to_row(
-                        ['list' => [1, 2], 'int' => 2],
-                        schema(list_schema('list', type_list(type_integer())), int_schema('int')),
-                    ),
-                    flow_context(),
-                ),
+            (new FunctionContext(flow_context()))->eval(
+                ref('list')->arrayKeep(ref('int')),
+                ['list' => [1, 2], 'int' => 2],
+                schema(list_schema('list', type_list(type_integer())), int_schema('int')),
+            ),
         );
     }
 
@@ -56,19 +54,25 @@ final class ArrayKeepTest extends FlowTestCase
         $this->expectExceptionMessage('Expected type "array<mixed>", got "string".');
 
         $context = flow_context(config());
-        ref('map')->arrayKeep(lit(1))->eval(array_to_row(['map' => 'test'], schema(str_schema('map'))), $context);
+        (new FunctionContext($context))->eval(
+            ref('map')->arrayKeep(lit(1)),
+            ['map' => 'test'],
+            schema(str_schema('map')),
+        );
     }
 
     public function test_array_keep_not_existing_value(): void
     {
         static::assertSame(
             [],
-            ref('list')
-                ->arrayKeep(lit(5))
-                ->eval(array_to_row(['list' => [
+            (new FunctionContext(flow_context()))->eval(
+                ref('list')->arrayKeep(lit(5)),
+                ['list' => [
                     1,
                     2,
-                ]], schema(list_schema('list', type_list(type_integer())))), flow_context()),
+                ]],
+                schema(list_schema('list', type_list(type_integer()))),
+            ),
         );
     }
 
@@ -77,6 +81,10 @@ final class ArrayKeepTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected type "array<mixed>", got "string".');
 
-        ref('map')->arrayKeep(lit(1))->eval(array_to_row(['map' => 'test'], schema(str_schema('map'))), flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            ref('map')->arrayKeep(lit(1)),
+            ['map' => 'test'],
+            schema(str_schema('map')),
+        );
     }
 }

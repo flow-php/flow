@@ -13,7 +13,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\Row;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Double\CountingFilesystem;
@@ -79,7 +79,7 @@ final class CSVExtractorTest extends FlowTestCase
 
         $rows = df()->read(from_csv($dir . '/*/*.csv')->withSchema(schema(int_schema('id'))))->fetch();
 
-        $years = array_map(static fn(Row $row): mixed => $row->get('year'), $rows->all());
+        $years = $rows->column('year')->values();
         sort($years);
 
         static::assertSame([null, '2024'], $years);
@@ -93,7 +93,7 @@ final class CSVExtractorTest extends FlowTestCase
 
         foreach ($extractor->extract(flow_context(config())) as $rows) {
             static::assertEquals($extractor->schema(), $rows->schema());
-            static::assertSame(1, $rows->first()->get('group'));
+            static::assertSame(1, $rows->column('group')->value(0));
 
             return;
         }
@@ -108,7 +108,7 @@ final class CSVExtractorTest extends FlowTestCase
         );
 
         foreach ($extractor->extract(flow_context(config())) as $rows) {
-            static::assertSame(1, $rows->first()->get('group'));
+            static::assertSame(1, $rows->column('group')->value(0));
 
             return;
         }
@@ -408,8 +408,8 @@ final class CSVExtractorTest extends FlowTestCase
         $rows = [];
 
         foreach ($extractor->extract(flow_context(config())) as $batch) {
-            foreach ($batch as $row) {
-                $rows[] = $row->toArray();
+            foreach ($batch->toArray() as $row) {
+                $rows[] = $row;
             }
         }
 
@@ -537,7 +537,7 @@ final class CSVExtractorTest extends FlowTestCase
         static::assertSame('string', $extractor->schema()->get('group')->type()->toString());
 
         foreach ($extractor->extract(flow_context(config())) as $rows) {
-            static::assertSame('1', $rows->first()->toArray()['group']);
+            static::assertSame('1', $rows->toArray()[0]['group']);
 
             break;
         }
@@ -601,7 +601,7 @@ final class CSVExtractorTest extends FlowTestCase
 
         static::assertStringEndsWith(
             'metadata_column_collision.csv',
-            type_string()->assert($rows->first()->get('_input_file_uri')),
+            type_string()->assert($rows->column('_input_file_uri')->value(0)),
         );
     }
 
@@ -824,7 +824,7 @@ final class CSVExtractorTest extends FlowTestCase
 
         $rows = df()->read(from_csv($path))->fetch();
 
-        foreach ($rows as $row) {
+        foreach ($rows->toArray() as $row) {
             static::assertSame(
                 [
                     'Year',
@@ -838,7 +838,7 @@ final class CSVExtractorTest extends FlowTestCase
                     'Value',
                     'Industry_code_ANZSIC06',
                 ],
-                array_keys($row->toArray()),
+                array_keys($row),
             );
         }
 
@@ -851,7 +851,7 @@ final class CSVExtractorTest extends FlowTestCase
 
         $rows = df()->read(from_csv($path, schema: $schema = df()->read(from_csv($path))->schema()))->fetch();
 
-        foreach ($rows as $row) {
+        foreach ($rows->toArray() as $row) {
             static::assertSame(
                 [
                     'Year',
@@ -865,7 +865,7 @@ final class CSVExtractorTest extends FlowTestCase
                     'Value',
                     'Industry_code_ANZSIC06',
                 ],
-                array_keys($row->toArray()),
+                array_keys($row),
             );
         }
 
@@ -898,10 +898,10 @@ final class CSVExtractorTest extends FlowTestCase
         $total = 0;
 
         foreach ($extractor->extract(flow_context(config())) as $rows) {
-            foreach ($rows->all() as $row) {
+            foreach ($rows->toArray() as $row) {
                 static::assertSame(
                     ['e00', 'e01', 'e02', 'e03', 'e04', 'e05', 'e06', 'e07', 'e08', 'e09'],
-                    array_keys($row->toArray()),
+                    array_keys($row),
                 );
             }
             $total += $rows->count();
@@ -924,8 +924,8 @@ final class CSVExtractorTest extends FlowTestCase
         $total = 0;
 
         foreach ($extractor->extract(flow_context(config())) as $rows) {
-            foreach ($rows->all() as $row) {
-                static::assertSame(['id', 'name'], array_keys($row->toArray()));
+            foreach ($rows->toArray() as $row) {
+                static::assertSame(['id', 'name'], array_keys($row));
             }
             $total += $rows->count();
         }
@@ -940,8 +940,8 @@ final class CSVExtractorTest extends FlowTestCase
         $total = 0;
 
         foreach ($extractor->extract(flow_context(config())) as $rows) {
-            foreach ($rows->all() as $row) {
-                static::assertSame(['id', 'name', 'active'], array_keys($row->toArray()));
+            foreach ($rows->toArray() as $row) {
+                static::assertSame(['id', 'name', 'active'], array_keys($row));
             }
             $total += $rows->count();
         }
@@ -986,14 +986,13 @@ final class CSVExtractorTest extends FlowTestCase
 
         static::assertSame(1, $rows->count());
 
-        $row = $rows->first();
-        static::assertSame('ABBA', $row->get('artist'));
-        static::assertSame("Ahe's My Kind Of Girl", $row->get('song'));
-        static::assertSame('/a/abba/ahes+my+kind+of+girl_20598417.html', $row->get('link'));
+        static::assertSame('ABBA', $rows->column('artist')->value(0));
+        static::assertSame("Ahe's My Kind Of Girl", $rows->column('song')->value(0));
+        static::assertSame('/a/abba/ahes+my+kind+of+girl_20598417.html', $rows->column('link')->value(0));
 
         $expectedText = "Look at her face, it's a wonderful face  \nAnd it means something special to me  \nLook at the way that she smiles when she sees me  \nHow lucky can one fellow be?  \n  \nShe's just my kind of girl, she makes me feel fine  \nWho could ever believe that she could be mine?  \nShe's just my kind of girl, without her I'm blue  \nAnd if she ever leaves me what could I do, what could I do?  \n  \nAnd when we go for a walk in the park  \nAnd she holds me and squeezes my hand  \nWe'll go on walking for hours and talking  \nAbout all the things that we plan  \n  \nShe's just my kind of girl, she makes me feel fine  \nWho could ever believe that she could be mine?  \nShe's just my kind of girl, without her I'm blue  \nAnd if she ever leaves me what could I do, what could I do?\n\n";
 
-        static::assertSame($expectedText, $row->get('text'));
+        static::assertSame($expectedText, $rows->column('text')->value(0));
     }
 
     public function test_limit(): void
@@ -1018,7 +1017,7 @@ final class CSVExtractorTest extends FlowTestCase
 
         static::assertSame(
             ['id', 'value', 'group'],
-            array_map(static fn(Row\Reference $ref): string => $ref->name(), $extractor->schema()->references()->all()),
+            array_map(static fn(Reference $ref): string => $ref->name(), $extractor->schema()->references()->all()),
         );
 
         foreach ($extractor->extract(flow_context(Config::builder()->build())) as $rows) {
@@ -1036,7 +1035,7 @@ final class CSVExtractorTest extends FlowTestCase
         static::assertEquals($extractor->schema(), $extractor->schema());
         static::assertSame(
             ['id', 'value', 'group'],
-            array_map(static fn(Row\Reference $ref): string => $ref->name(), $extractor->schema()->references()->all()),
+            array_map(static fn(Reference $ref): string => $ref->name(), $extractor->schema()->references()->all()),
         );
     }
 

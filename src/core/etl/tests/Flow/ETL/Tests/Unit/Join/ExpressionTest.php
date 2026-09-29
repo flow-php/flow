@@ -8,7 +8,7 @@ use Flow\ETL\Join\Comparison\Equal;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\array_to_row;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\col;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
@@ -28,9 +28,12 @@ final class ExpressionTest extends FlowTestCase
     {
         $expression = Expression::on(new Equal('id', 'id'), '_');
 
-        static::assertTrue($expression->meet(
-            array_to_row(['id' => 1], schema(int_schema('id'))),
-            array_to_row(['id' => 1], schema(int_schema('id'))),
-        ));
+        static::assertSame(
+            [true],
+            $expression->meet(
+                array_to_rows([['id' => 1]], schema(int_schema('id'))),
+                array_to_rows([['id' => 1]], schema(int_schema('id'))),
+            ),
+        );
     }
 }

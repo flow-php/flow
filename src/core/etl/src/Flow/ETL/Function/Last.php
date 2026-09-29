@@ -4,16 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
+use function count;
 use function Flow\Types\DSL\type_optional;
+use function sprintf;
 
 final class Last implements AggregatingFunction
 {
     use ResolvesFromChildren;
+
+    private bool $found = false;
 
     /**
      * @var null|array<array-key, mixed>|bool|float|int|object|string
@@ -46,13 +51,29 @@ final class Last implements AggregatingFunction
         return new self($children[0]);
     }
 
-    public function aggregate(Row $row, FlowContext $context): void
+    public function aggregate(Rows $rows, array $indices, FlowContext $context): void
     {
-        if (!$row->has($this->ref)) {
+        if ($indices === [] || $rows->schema()->findDefinition($this->ref->base()) === null) {
             return;
         }
 
-        $this->last = $row->get($this->ref);
+        // @mago-ignore analysis:mixed-property-type-coercion
+        $this->last = $rows->column($this->ref->base())->value($indices[count($indices) - 1]);
+        $this->found = true;
+    }
+
+    public function merge(AggregatingFunction $other, FlowContext $context): void
+    {
+        if (!$other instanceof self) {
+            throw new InvalidArgumentException(sprintf('%s cannot merge %s', self::class, $other::class));
+        }
+
+        if (!$other->found) {
+            return;
+        }
+
+        $this->last = $other->last;
+        $this->found = true;
     }
 
     public function outputName(): string

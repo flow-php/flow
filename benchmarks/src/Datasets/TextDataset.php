@@ -31,9 +31,12 @@ final readonly class TextDataset
         $lines = [];
 
         foreach (data_frame()->read(from_parquet($parquetPath)->withColumns(['customer', 'notes']))->get() as $batch) {
-            foreach ($batch->all() as $row) {
-                $customer = $row->get('customer');
-                $notes = $row->get('notes');
+            $allNotes = $batch->column('notes')->values();
+
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($batch->column('customer')->values() as $i => $customer) {
+                // @mago-ignore analysis:mixed-assignment
+                $notes = $allNotes[$i];
 
                 $customerText = is_scalar($customer) || $customer instanceof Stringable ? (string) $customer : '';
                 $notesText = is_array($notes)

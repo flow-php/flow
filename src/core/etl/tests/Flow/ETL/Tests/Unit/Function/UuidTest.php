@@ -7,13 +7,13 @@ namespace Flow\ETL\Tests\Unit\Function;
 use DateTimeImmutable;
 use DateTimeZone;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Value\Uuid as FlowUuid;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\Uid\Uuid as SymfonyUuid;
 
 use function class_exists;
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\schema;
@@ -36,12 +36,13 @@ final class UuidTest extends FlowTestCase
         }
 
         $expression = uuid_v4();
-        $result = $expression->eval(array_to_row([], schema()), flow_context());
+        // @mago-ignore analysis:mixed-assignment
+        $result = (new FunctionContext(flow_context()))->eval($expression, [], schema());
         static::assertInstanceOf(FlowUuid::class, $result);
         static::assertTrue(Uuid::isValid($result->toString()));
         static::assertNotSame(
-            $expression->eval(array_to_row([], schema()), flow_context()),
-            $expression->eval(array_to_row([], schema()), flow_context()),
+            (new FunctionContext(flow_context()))->eval($expression, [], schema()),
+            (new FunctionContext(flow_context()))->eval($expression, [], schema()),
         );
     }
 
@@ -50,8 +51,8 @@ final class UuidTest extends FlowTestCase
         $expression = uuid_v4();
 
         static::assertNotEquals(
-            $expression->eval(array_to_row([], schema()), flow_context()),
-            $expression->eval(array_to_row([], schema()), flow_context()),
+            (new FunctionContext(flow_context()))->eval($expression, [], schema()),
+            (new FunctionContext(flow_context()))->eval($expression, [], schema()),
         );
     }
 
@@ -61,8 +62,12 @@ final class UuidTest extends FlowTestCase
             static::markTestSkipped("Package 'ramsey/uuid' is required for this test.");
         }
 
-        $result = uuid_v7(lit(new DateTimeImmutable('2020-01-01 00:00:00', new DateTimeZone('UTC'))))
-            ->eval(array_to_row([], schema()), flow_context());
+        // @mago-ignore analysis:mixed-assignment
+        $result = (new FunctionContext(flow_context()))->eval(
+            uuid_v7(lit(new DateTimeImmutable('2020-01-01 00:00:00', new DateTimeZone('UTC')))),
+            [],
+            schema(),
+        );
         static::assertInstanceOf(FlowUuid::class, $result);
         static::assertTrue(Uuid::isValid($result->toString()));
     }
@@ -71,8 +76,8 @@ final class UuidTest extends FlowTestCase
     {
         $dateTime = lit(new DateTimeImmutable('2020-01-01 00:00:00', new DateTimeZone('UTC')));
         static::assertNotEquals(
-            uuid_v7($dateTime)->eval(array_to_row([], schema()), flow_context()),
-            uuid_v7($dateTime)->eval(array_to_row([], schema()), flow_context()),
+            (new FunctionContext(flow_context()))->eval(uuid_v7($dateTime), [], schema()),
+            (new FunctionContext(flow_context()))->eval(uuid_v7($dateTime), [], schema()),
         );
     }
 
@@ -81,6 +86,6 @@ final class UuidTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Uuid uuid7 function requires a DateTimeInterface value');
 
-        uuid_v7(lit(''))->eval(array_to_row([], schema()), flow_context());
+        (new FunctionContext(flow_context()))->eval(uuid_v7(lit('')), [], schema());
     }
 }

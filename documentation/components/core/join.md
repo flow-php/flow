@@ -66,8 +66,10 @@ external sort - and the configured implementation decides how the join executes:
 rebuilt per row too.
 
 The join algorithm is configured through `config_builder()->join(hash_join())` - all its options live on the
-`hash_join()` builder; any storage implementing `ResidentBucketsStorage` (like `MemoryBuckets`)
-enables the streaming, order-preserving execution:
+`hash_join()` builder. While the process stays under `memoryLimit()` the right side is held in memory and the left
+side streams through in its own order; past it, both sides are partitioned into buckets of the storage. The limit
+defaults to `FLOW_MAX_MEMORY`, otherwise 70% of PHP's `memory_limit` (1 GiB when it is `-1`), and is compared with the
+whole process, so a join and a sort in one pipeline stay under it together:
 
 ```php
 <?php
@@ -76,9 +78,10 @@ data_frame(
     config_builder()
         ->join(
             hash_join()
-                ->storage(new MemoryBuckets())  // right side fits in memory, keep left row order
-                ->bucketsCount(64)              // number of disk buckets
-                ->batchSize(1000)               // rows per batch when reading buckets back
+                ->memoryLimit(Unit::fromMb(512))  // process memory past which rows go to the storage
+                ->storage(new MemoryBuckets())    // or FilesystemBuckets (default)
+                ->bucketsCount(64)                // number of buckets
+                ->batchSize(1000)                 // rows per bucket frame and per batch read back
         )
 )
     ->read(from_parquet('orders.parquet'))
@@ -89,9 +92,6 @@ data_frame(
     ->run();
 ```
 
-> While rows are partitioned, each spilled bucket is announced downstream as a single metadata row
-> (`BucketShape`: `_bucket_id`, `_bucket_total_rows`). Those rows are an internal pipeline detail consumed
-> by the join processor - they never appear in the joined output.
 
 ## Example
 

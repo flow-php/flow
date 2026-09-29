@@ -170,12 +170,12 @@ final class PostgreSqlLimitOffsetExtractorTest extends FlowTestCase
             ->willCountTotal(1)
             ->willReturnCursors(new StubCursor([['id' => '1', 'amount' => '10.5']]));
 
-        $row = iterator_to_array(
+        $rows = iterator_to_array(
             from_pgsql_limit_offset($client, 'SELECT id, amount FROM t ORDER BY id')->extract(flow_context()),
-        )[0]->first();
+        )[0];
 
-        static::assertSame(1, $row->get('id'));
-        static::assertSame(10.5, $row->get('amount'));
+        static::assertSame(1, $rows->column('id')->value(0));
+        static::assertSame(10.5, $rows->column('amount')->value(0));
     }
 
     public function test_extract_derives_the_schema_once_and_reuses_it_across_batches(): void

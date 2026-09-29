@@ -11,7 +11,6 @@ use Flow\ETL\Tests\Context\BucketsStorageContext;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\BucketMother;
 
-use function array_map;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
@@ -44,15 +43,11 @@ final class BucketRunTest extends FlowTestCase
 
         static::assertSame(
             [1],
-            array_map(static fn($r): mixed => $r->get(
-                'id',
-            ), BucketsStorageContext::rows((new BucketRun('shared-id', $a))->rows())),
+            array_column(BucketsStorageContext::rows((new BucketRun('shared-id', $a))->rows()), 'id'),
         );
         static::assertSame(
             [2],
-            array_map(static fn($r): mixed => $r->get(
-                'id',
-            ), BucketsStorageContext::rows((new BucketRun('shared-id', $b))->rows())),
+            array_column(BucketsStorageContext::rows((new BucketRun('shared-id', $b))->rows()), 'id'),
         );
     }
 }

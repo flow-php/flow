@@ -90,26 +90,29 @@ For fine-grained error handling during row processing operations:
 <?php
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Rows;
 
-function validateAndProcess(Row $row): void { /* your code */ }
-function logInvalidRow(Row $row, string $message): void { /* your code */ }
-function logGeneralError(Row $row, Throwable $error): void { /* your code */ }
+function validateAndProcess(array $row): void { /* your code */ }
+function logInvalidRow(array $row, string $message): void { /* your code */ }
+function logGeneralError(array $row, Throwable $error): void { /* your code */ }
 
 $successCount = 0;
 $errorCount = 0;
 
 data_frame()
     ->read($unreliableDataExtractor)
-    ->forEach(function(Row $row) use (&$successCount, &$errorCount) {
-        try {
-            validateAndProcess($row);
-            $successCount++;
-        } catch (InvalidArgumentException $e) {
-            logInvalidRow($row, $e->getMessage());
-            $errorCount++;
-        } catch (Exception $e) {
-            logGeneralError($row, $e);
-            $errorCount++;
+    ->forEach(function(Rows $rows) use (&$successCount, &$errorCount) {
+        foreach ($rows->toArray() as $row) {
+            try {
+                validateAndProcess($row);
+                $successCount++;
+            } catch (InvalidArgumentException $e) {
+                logInvalidRow($row, $e->getMessage());
+                $errorCount++;
+            } catch (Exception $e) {
+                logGeneralError($row, $e);
+                $errorCount++;
+            }
         }
     });
 

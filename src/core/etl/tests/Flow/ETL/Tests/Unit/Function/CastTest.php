@@ -7,16 +7,18 @@ namespace Flow\ETL\Tests\Unit\Function;
 use DateTimeImmutable;
 use DateTimeZone;
 use DOMDocument;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Schema\Definition;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Exception\CastingException;
 use Flow\Types\Type;
 use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\cast;
 use function Flow\ETL\DSL\datetime_schema;
@@ -43,16 +45,38 @@ final class CastTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Cast function requires non-null value');
 
-        cast(ref('value'), 'int')->eval(array_to_row([
-            'value' => null,
-        ], schema(str_schema('value', nullable: true))), flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            cast(ref('value'), 'int'),
+            [
+                'value' => null,
+            ],
+            schema(str_schema('value', nullable: true)),
+        );
     }
 
     public function test_cast_of_a_null_value_to_an_optional_target_is_null(): void
     {
-        static::assertNull(cast(ref('value'), type_optional(type_integer()))->eval(array_to_row([
-            'value' => null,
-        ], schema(str_schema('value', nullable: true))), flow_context()));
+        static::assertNull((new FunctionContext(flow_context()))->eval(
+            cast(ref('value'), type_optional(type_integer())),
+            [
+                'value' => null,
+            ],
+            schema(str_schema('value', nullable: true)),
+        ));
+    }
+
+    public function test_a_refused_cast_keeps_the_casting_error_as_the_cause(): void
+    {
+        try {
+            (new FunctionContext(flow_context()))->eval(
+                cast(ref('value'), type_optional(type_datetime())),
+                ['value' => 'abc'],
+                schema(str_schema('value')),
+            );
+            static::fail('An unconvertible value must be refused.');
+        } catch (EvaluationException $e) {
+            static::assertInstanceOf(CastingException::class, $e->getPrevious()?->getPrevious());
+        }
     }
 
     public function test_casting_an_unconvertible_value_to_an_optional_target_throws(): void
@@ -60,9 +84,13 @@ final class CastTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Cast function failed: Can\'t cast "string" into "datetime" type');
 
-        cast(ref('value'), type_optional(type_datetime()))->eval(array_to_row([
-            'value' => 'abc',
-        ], schema(str_schema('value'))), flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            cast(ref('value'), type_optional(type_datetime())),
+            [
+                'value' => 'abc',
+            ],
+            schema(str_schema('value')),
+        );
     }
 
     public function test_constructor_rejects_a_non_representable_target(): void
@@ -75,12 +103,20 @@ final class CastTest extends FlowTestCase
 
     public function test_double_and_real_resolve_to_float(): void
     {
-        static::assertSame(1.0, cast(ref('value'), 'double')->eval(array_to_row([
-            'value' => '1',
-        ], schema(str_schema('value'))), flow_context()));
-        static::assertSame(1.0, cast(ref('value'), 'real')->eval(array_to_row([
-            'value' => '1',
-        ], schema(str_schema('value'))), flow_context()));
+        static::assertSame(1.0, (new FunctionContext(flow_context()))->eval(
+            cast(ref('value'), 'double'),
+            [
+                'value' => '1',
+            ],
+            schema(str_schema('value')),
+        ));
+        static::assertSame(1.0, (new FunctionContext(flow_context()))->eval(
+            cast(ref('value'), 'real'),
+            [
+                'value' => '1',
+            ],
+            schema(str_schema('value')),
+        ));
     }
 
     public function test_constructor_rejects_json_pretty(): void
@@ -190,11 +226,18 @@ final class CastTest extends FlowTestCase
     #[DataProvider('cast_provider')]
     public function test_cast(mixed $from, Definition $definition, string $to, mixed $expected): void
     {
-        $row = array_to_row(['value' => $from], schema($definition));
         // @mago-ignore analysis:mixed-assignment
-        $resultRefCast = ref('value')->cast($to)->eval($row, flow_context());
+        $resultRefCast = (new FunctionContext(flow_context()))->eval(
+            ref('value')->cast($to),
+            ['value' => $from],
+            schema($definition),
+        );
         // @mago-ignore analysis:mixed-assignment
-        $resultCastRef = cast(ref('value'), $to)->eval($row, flow_context());
+        $resultCastRef = (new FunctionContext(flow_context()))->eval(
+            cast(ref('value'), $to),
+            ['value' => $from],
+            schema($definition),
+        );
 
         if (is_object($expected) || is_object($from)) {
             static::assertEquals($expected, $resultRefCast);
@@ -212,7 +255,11 @@ final class CastTest extends FlowTestCase
             'Cast function failed: Can\'t cast "string" into "array<mixed>" type: wrap the value first, e.g. type_list(type_string())',
         );
 
-        ref('value')->cast('array')->eval(array_to_row(['value' => '1'], schema(str_schema('value'))), flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            ref('value')->cast('array'),
+            ['value' => '1'],
+            schema(str_schema('value')),
+        );
     }
 
     public function test_casting_integer_to_timezone(): void
@@ -220,9 +267,11 @@ final class CastTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Cast function failed: Can\'t cast "int" into "timezone" type');
 
-        ref('value')
-            ->cast('timezone')
-            ->eval(array_to_row(['value' => 123], schema(int_schema('value'))), flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            ref('value')->cast('timezone'),
+            ['value' => 123],
+            schema(int_schema('value')),
+        );
     }
 
     public function test_casting_integer_to_xml(): void
@@ -230,7 +279,11 @@ final class CastTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Cast function failed: Can\'t cast "int" into "xml" type');
 
-        ref('value')->cast('xml')->eval(array_to_row(['value' => 1], schema(int_schema('value'))), flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            ref('value')->cast('xml'),
+            ['value' => 1],
+            schema(int_schema('value')),
+        );
     }
 
     public function test_casting_invalid_string_to_timezone(): void
@@ -238,9 +291,11 @@ final class CastTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Cast function failed: Can\'t cast "string" into "timezone" type');
 
-        ref('value')
-            ->cast('timezone')
-            ->eval(array_to_row(['value' => 'invalid-timezone'], schema(str_schema('value'))), flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            ref('value')->cast('timezone'),
+            ['value' => 'invalid-timezone'],
+            schema(str_schema('value')),
+        );
     }
 
     public function test_casting_non_xml_string_to_xml(): void
@@ -248,6 +303,10 @@ final class CastTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Cast function failed: Can\'t cast "string" into "xml" type');
 
-        ref('value')->cast('xml')->eval(array_to_row(['value' => 'foo'], schema(str_schema('value'))), flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            ref('value')->cast('xml'),
+            ['value' => 'foo'],
+            schema(str_schema('value')),
+        );
     }
 }

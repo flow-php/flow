@@ -21,14 +21,17 @@ final readonly class ASCIIBody
     {
         $buffer = '';
 
-        foreach ($this->body->rows() as $row) {
+        for ($index = 0, $count = $this->body->count(); $index < $count; $index++) {
             $buffer .= '|';
 
             foreach ($this->headers->names() as $name) {
                 $header = new ASCIIValue(type_string(), $name);
 
                 try {
-                    $value = new ASCIIValue($this->body->schema()->get($name)->type(), $row->get($name));
+                    $value = new ASCIIValue(
+                        $this->body->schema()->get($name)->type(),
+                        $this->body->value($name, $index),
+                    );
                 } catch (InvalidArgumentException) {
                     $value = new ASCIIValue(type_string(), '');
                 }

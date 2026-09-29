@@ -8,7 +8,7 @@ use Flow\ETL\Join\Join;
 use Flow\ETL\Join\JoinShape;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\array_to_row;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\schema;
@@ -105,10 +105,13 @@ final class JoinShapeTest extends FlowTestCase
     {
         static::assertSame(
             ['id' => 1, 'country' => 'PL', 'name' => 'Norbert'],
-            JoinShape::of(join_on(['id' => 'id']), Join::inner)->merger()->merge(
-                array_to_row(['id' => 1, 'country' => 'PL'], schema(int_schema('id'), str_schema('country'))),
-                array_to_row(['id' => 1, 'name' => 'Norbert'], schema(int_schema('id'), str_schema('name'))),
-            ),
+            JoinShape::of(join_on(['id' => 'id']), Join::inner)
+                ->merger()
+                ->merge(
+                    array_to_rows([['id' => 1, 'country' => 'PL']], schema(int_schema('id'), str_schema('country'))),
+                    array_to_rows([['id' => 1, 'name' => 'Norbert']], schema(int_schema('id'), str_schema('name'))),
+                )
+                ->values(0),
         );
     }
 
@@ -116,10 +119,13 @@ final class JoinShapeTest extends FlowTestCase
     {
         static::assertSame(
             ['country' => 'PL', 'id' => 2, 'name' => 'Norbert'],
-            JoinShape::of(join_on(['id' => 'id']), Join::right)->merger()->merge(
-                array_to_row(['id' => 1, 'country' => 'PL'], schema(int_schema('id'), str_schema('country'))),
-                array_to_row(['id' => 2, 'name' => 'Norbert'], schema(int_schema('id'), str_schema('name'))),
-            ),
+            JoinShape::of(join_on(['id' => 'id']), Join::right)
+                ->merger()
+                ->merge(
+                    array_to_rows([['id' => 1, 'country' => 'PL']], schema(int_schema('id'), str_schema('country'))),
+                    array_to_rows([['id' => 2, 'name' => 'Norbert']], schema(int_schema('id'), str_schema('name'))),
+                )
+                ->values(0),
         );
     }
 }

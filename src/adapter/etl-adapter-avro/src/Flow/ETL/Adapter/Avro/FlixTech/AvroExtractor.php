@@ -37,7 +37,7 @@ final class AvroExtractor implements Extractor, FileExtractor
 
     public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
     {
-        yield Rows::of(new Schema());
+        yield Rows::empty(new Schema());
     }
 
     public function schema(): Schema

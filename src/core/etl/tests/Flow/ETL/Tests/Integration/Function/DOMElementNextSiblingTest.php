@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Function;
 
 use DOMDocument;
+use DOMElement;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 
@@ -17,6 +18,7 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\xml_schema;
 use function Flow\Types\DSL\type_html_element;
+use function Flow\Types\DSL\type_instance_of;
 
 final class DOMElementNextSiblingTest extends FlowTestCase
 {
@@ -97,5 +99,21 @@ final class DOMElementNextSiblingTest extends FlowTestCase
             ],
             $rows->toArray(),
         );
+    }
+
+    public function test_storing_the_element_of_an_xpath_chain_keeps_its_markup(): void
+    {
+        $dom = new DOMDocument();
+        $dom->loadXML('<user><name>User Name</name><number>01</number></user>');
+
+        $rows = df()
+            ->read(from_rows(array_to_rows([['xml' => $dom]], schema(xml_schema('xml')))))
+            ->withEntry('sibling', ref('xml')->xpath('/user/name')->arrayGet('0')->domElementNextSibling())
+            ->select('sibling')
+            ->fetch();
+
+        $sibling = type_instance_of(DOMElement::class)->assert($rows->column('sibling')->value(0));
+
+        static::assertSame('<number>01</number>', $sibling->ownerDocument?->saveXML($sibling));
     }
 }

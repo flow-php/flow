@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
+use Flow\ETL\Column\Column;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\FunctionTree;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Function\ScalarFunctionChain;
-use Flow\ETL\Row;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 /**
@@ -46,9 +47,9 @@ final class CountingReturnsFunction implements ScalarFunction
         return new self($children[0], $this->type);
     }
 
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        return $this->value->eval($row, $context);
+        return $this->value->eval($rows, $context);
     }
 
     /**

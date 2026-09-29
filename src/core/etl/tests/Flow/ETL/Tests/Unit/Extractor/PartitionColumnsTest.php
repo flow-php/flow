@@ -10,9 +10,7 @@ use Flow\Filesystem\Local\MemoryFilesystem;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
 
 use function array_keys;
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\array_to_rows;
-use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -41,15 +39,17 @@ final class PartitionColumnsTest extends FlowTestCase
 
     public function test_apply_keeps_the_rows_it_was_given(): void
     {
-        static::assertEquals(
-            [array_to_row(['id' => 1, 'date' => null], schema(int_schema('id'), bool_schema('date', nullable: true)))],
-            (new PartitionColumns(new MemoryFilesystem()))->apply(
-                array_to_rows(
-                    [['id' => 1, 'date' => null]],
-                    schema(int_schema('id'), str_schema('date', nullable: true)),
-                ),
-                ['date' => true],
-            )->all(),
+        static::assertSame(
+            [['id' => 1, 'date' => null]],
+            (new PartitionColumns(new MemoryFilesystem()))
+                ->apply(
+                    array_to_rows(
+                        [['id' => 1, 'date' => null]],
+                        schema(int_schema('id'), str_schema('date', nullable: true)),
+                    ),
+                    ['date' => true],
+                )
+                ->toArray(),
         );
     }
 

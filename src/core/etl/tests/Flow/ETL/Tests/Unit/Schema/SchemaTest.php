@@ -39,15 +39,38 @@ use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\uuid_schema;
+use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function json_encode;
+use function serialize;
+use function unserialize;
 
 final class SchemaTest extends FlowTestCase
 {
+    public function test_a_schema_that_proved_another_the_same_round_trips_through_serialize(): void
+    {
+        $schema = schema(int_schema('id'), str_schema('name'));
+        $schema->isSame(schema(int_schema('id'), str_schema('name')));
+
+        static::assertTrue(type_instance_of(Schema::class)->assert(unserialize(serialize($schema)))->isSame($schema));
+    }
+
+    public function test_a_schema_proved_the_same_stays_the_same_and_another_stays_different(): void
+    {
+        $schema = schema(int_schema('id'), str_schema('name'));
+        $same = schema(int_schema('id'), str_schema('name'));
+        $other = schema(int_schema('id'), str_schema('name', nullable: true));
+
+        static::assertTrue($schema->isSame($same));
+        static::assertTrue($schema->isSame($same));
+        static::assertFalse($schema->isSame($other));
+        static::assertFalse($schema->isSame($other));
+    }
+
     public static function provide_add_after_reference_inputs(): Generator
     {
         yield 'string reference' => ['id'];

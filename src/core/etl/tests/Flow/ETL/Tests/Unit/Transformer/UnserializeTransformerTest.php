@@ -10,13 +10,11 @@ use Flow\ETL\Transformer\UnserializeTransformer;
 use Flow\Floe\FloeSerializer;
 use Flow\Serializer\Base64Serializer;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\list_schema;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Serializer\DSL\serialize_to_string;
@@ -81,34 +79,20 @@ final class UnserializeTransformerTest extends FlowTestCase
 
     public function test_unserializing_row_from_entry(): void
     {
-        $row1 = array_to_row(
-            ['id' => 1, 'name' => 'John', 'active' => true, 'tags' => ['tag1', 'tag2']],
-            schema(
-                int_schema('id'),
-                str_schema('name'),
-                bool_schema('active'),
-                list_schema('tags', type_list(type_string())),
-            ),
-        );
         $rowSchema = schema(
             int_schema('id'),
             str_schema('name'),
             bool_schema('active'),
             list_schema('tags', type_list(type_string())),
         );
-        $row2 = array_to_row(
+        $source = array_to_rows([
+            ['id' => 1, 'name' => 'John', 'active' => true, 'tags' => ['tag1', 'tag2']],
             ['id' => 2, 'name' => 'Jane', 'active' => false, 'tags' => ['tag3', 'tag4']],
-            schema(
-                int_schema('id'),
-                str_schema('name'),
-                bool_schema('active'),
-                list_schema('tags', type_list(type_string())),
-            ),
-        );
+        ], $rowSchema);
 
         $rows = array_to_rows([
-            ['serialized' => serialize_to_string(new Base64Serializer(new FloeSerializer()), rows($rowSchema, $row1))],
-            ['serialized' => serialize_to_string(new Base64Serializer(new FloeSerializer()), rows($rowSchema, $row2))],
+            ['serialized' => serialize_to_string(new Base64Serializer(new FloeSerializer()), $source->slice(0, 1))],
+            ['serialized' => serialize_to_string(new Base64Serializer(new FloeSerializer()), $source->slice(1, 1))],
         ], schema(str_schema('serialized')));
 
         $transformer = new UnserializeTransformer('serialized', $rowSchema);
@@ -120,7 +104,7 @@ final class UnserializeTransformerTest extends FlowTestCase
                 [
                     'serialized' => serialize_to_string(
                         new Base64Serializer(new FloeSerializer()),
-                        rows($rowSchema, $row1),
+                        $source->slice(0, 1),
                     ),
                     'id' => 1,
                     'name' => 'John',
@@ -130,7 +114,7 @@ final class UnserializeTransformerTest extends FlowTestCase
                 [
                     'serialized' => serialize_to_string(
                         new Base64Serializer(new FloeSerializer()),
-                        rows($rowSchema, $row2),
+                        $source->slice(1, 1),
                     ),
                     'id' => 2,
                     'name' => 'Jane',
@@ -211,34 +195,20 @@ final class UnserializeTransformerTest extends FlowTestCase
 
     public function test_unserializing_without_merge(): void
     {
-        $row1 = array_to_row(
-            ['id' => 1, 'name' => 'John', 'active' => true, 'tags' => ['tag1', 'tag2']],
-            schema(
-                int_schema('id'),
-                str_schema('name'),
-                bool_schema('active'),
-                list_schema('tags', type_list(type_string())),
-            ),
-        );
         $rowSchema = schema(
             int_schema('id'),
             str_schema('name'),
             bool_schema('active'),
             list_schema('tags', type_list(type_string())),
         );
-        $row2 = array_to_row(
+        $source = array_to_rows([
+            ['id' => 1, 'name' => 'John', 'active' => true, 'tags' => ['tag1', 'tag2']],
             ['id' => 2, 'name' => 'Jane', 'active' => false, 'tags' => ['tag3', 'tag4']],
-            schema(
-                int_schema('id'),
-                str_schema('name'),
-                bool_schema('active'),
-                list_schema('tags', type_list(type_string())),
-            ),
-        );
+        ], $rowSchema);
 
         $rows = array_to_rows([
-            ['serialized' => serialize_to_string(new Base64Serializer(new FloeSerializer()), rows($rowSchema, $row1))],
-            ['serialized' => serialize_to_string(new Base64Serializer(new FloeSerializer()), rows($rowSchema, $row2))],
+            ['serialized' => serialize_to_string(new Base64Serializer(new FloeSerializer()), $source->slice(0, 1))],
+            ['serialized' => serialize_to_string(new Base64Serializer(new FloeSerializer()), $source->slice(1, 1))],
         ], schema(str_schema('serialized')));
 
         $transformer = new UnserializeTransformer('serialized', $rowSchema, false);

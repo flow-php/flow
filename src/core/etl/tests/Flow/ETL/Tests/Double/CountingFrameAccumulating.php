@@ -54,8 +54,10 @@ final class CountingFrameAccumulating implements FrameAccumulating, WindowFuncti
     {
         $accumulator = $this->accumulator($window->flowContext());
 
-        foreach ($window->frame() as $frameRow) {
-            $accumulator->accumulate($frameRow);
+        $frame = $window->frame();
+
+        for ($index = 0, $count = $frame->count(); $index < $count; $index++) {
+            $accumulator->accumulate($frame, $index);
         }
 
         return $accumulator->value();

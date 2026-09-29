@@ -386,11 +386,11 @@ final class OffsetTest extends FlowIntegrationTestCase
         $data = array_map(static fn(int $id): array => ['id' => $id, 'name' => 'Item ' . $id], range(1, 100));
         $page1 = df()->read(from_array($data))->offset(0)->limit(10)->fetch();
         static::assertCount(10, $page1);
-        static::assertSame(1, $page1->first()->get('id'));
-        static::assertSame(10, $page1->all()[9]->get('id'));
+        static::assertSame(1, $page1->column('id')->value(0));
+        static::assertSame(10, $page1->column('id')->value(9));
         $page3 = df()->read(from_array($data))->offset(20)->limit(10)->fetch();
         static::assertCount(10, $page3);
-        static::assertSame(21, $page3->first()->get('id'));
-        static::assertSame(30, $page3->all()[9]->get('id'));
+        static::assertSame(21, $page3->column('id')->value(0));
+        static::assertSame(30, $page3->column('id')->value(9));
     }
 }

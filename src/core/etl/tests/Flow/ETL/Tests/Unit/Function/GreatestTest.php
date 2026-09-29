@@ -7,9 +7,9 @@ namespace Flow\ETL\Tests\Unit\Function;
 use DateTimeImmutable;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Function\ScalarFunction;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\greatest;
 use function Flow\ETL\DSL\int_schema;
@@ -34,7 +34,11 @@ final class GreatestTest extends FlowTestCase
     {
         $greatest = greatest(10, 20, ref('int'), 40);
 
-        static::assertSame(55, $greatest->eval(array_to_row(['int' => 55], schema(int_schema('int'))), flow_context()));
+        static::assertSame(55, (new FunctionContext(flow_context()))->eval(
+            $greatest,
+            ['int' => 55],
+            schema(int_schema('int')),
+        ));
     }
 
     public function test_greatest_with_non_comparable_values(): void
@@ -53,24 +57,36 @@ final class GreatestTest extends FlowTestCase
 
     public function test_nulls_are_skipped(): void
     {
-        static::assertSame(20, greatest(null, 20, ref('int'))->eval(array_to_row([
-            'int' => 4,
-        ], schema(int_schema('int'))), flow_context()));
+        static::assertSame(20, (new FunctionContext(flow_context()))->eval(
+            greatest(null, 20, ref('int')),
+            [
+                'int' => 4,
+            ],
+            schema(int_schema('int')),
+        ));
     }
 
     public function test_null_only_when_every_argument_is_null(): void
     {
-        static::assertNull(greatest(null, null)->eval(array_to_row([
-            'int' => 4,
-        ], schema(int_schema('int'))), flow_context()));
+        static::assertNull((new FunctionContext(flow_context()))->eval(
+            greatest(null, null),
+            [
+                'int' => 4,
+            ],
+            schema(int_schema('int')),
+        ));
     }
 
     public function test_greatest_with_null(): void
     {
         $greatest = greatest(null, 20, ref('int'), 1257);
 
-        static::assertSame(1257, $greatest->eval(array_to_row([
-            'int' => 55,
-        ], schema(int_schema('int'))), flow_context()));
+        static::assertSame(1257, (new FunctionContext(flow_context()))->eval(
+            $greatest,
+            [
+                'int' => 55,
+            ],
+            schema(int_schema('int')),
+        ));
     }
 }

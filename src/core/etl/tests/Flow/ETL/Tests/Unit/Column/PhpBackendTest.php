@@ -11,6 +11,7 @@ use Dom\HTMLDocument;
 use Dom\HTMLElement;
 use Flow\ETL\Column\Php\HtmlDocumentPhysical;
 use Flow\ETL\Column\Php\HtmlElementPhysical;
+use Flow\ETL\Column\Php\ValueColumn;
 use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -603,6 +604,16 @@ final class PhpBackendTest extends TestCase
         $this->expectExceptionMessage(ColumnMismatchException::valueDoesNotMatch(int_schema('a'), null)->getMessage());
 
         (new PhpBackend())->adopt(int_schema('a'), $foreign);
+    }
+
+    public function test_adopt_refuses_an_untyped_column(): void
+    {
+        $this->expectException(ColumnMismatchException::class);
+        $this->expectExceptionMessage(
+            'column "a": mixed cannot be a batch column, an untyped function result exists only inside function evaluation',
+        );
+
+        (new PhpBackend())->adopt(int_schema('a'), new ValueColumn([1, 2]));
     }
 
     public function test_allocated_bytes_is_zero(): void

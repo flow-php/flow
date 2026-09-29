@@ -6,9 +6,12 @@ namespace Flow\ETL;
 
 interface Constraint
 {
-    public function isSatisfiedBy(Row $row, Schema $schema): bool;
+    /**
+     * Index of the first row that violates; state advances over the rows before it.
+     */
+    public function firstViolation(Rows $rows): ?int;
 
     public function toString(): string;
 
-    public function violation(Row $row, Schema $schema): string;
+    public function violation(Rows $rows, int $index): string;
 }

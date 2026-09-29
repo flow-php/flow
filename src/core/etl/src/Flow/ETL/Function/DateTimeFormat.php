@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use DateTimeInterface;
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function Flow\ETL\DSL\lit;
@@ -51,15 +55,27 @@ final class DateTimeFormat implements ScalarFunction
         return type_string();
     }
 
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $value = (new Parameter($this->dateTime))->asInstanceOf($row, $context, DateTimeInterface::class);
-        $format = (new Parameter($this->format))->asString($row, $context);
+        $values = (new Parameter($this->dateTime))->asInstancesOf($rows, $context, DateTimeInterface::class);
+        $formats = (new Parameter($this->format))->asStrings($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($value === null || $format === null) {
-            throw new InvalidArgumentException('DateTimeFormat function requires non-null values');
+        try {
+            foreach ($values as $i => $value) {
+                $format = $formats[$i];
+
+                if ($value === null || $format === null) {
+                    throw new InvalidArgumentException('DateTimeFormat function requires non-null values');
+                }
+
+                $results[] = $value->format($format);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return $value->format($format);
+        return (new ResultColumn())->of($this, $results);
     }
 }

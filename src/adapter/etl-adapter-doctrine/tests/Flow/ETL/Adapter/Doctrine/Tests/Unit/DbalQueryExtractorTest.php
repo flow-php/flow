@@ -181,8 +181,8 @@ final class DbalQueryExtractorTest extends FlowTestCase
             foreach ((new DbalQueryExtractor(InMemorySqlite::connection(), "SELECT '2026-01-01 14:30:00' AS at"))
                 ->withSchema(schema(datetime_schema('at')))
                 ->extract(flow_context()) as $batch) {
-                foreach ($batch as $row) {
-                    $values[] = type_datetime()->assert($row->get('at'))->format('Y-m-d H:i:s e');
+                foreach ($batch->toArray() as $row) {
+                    $values[] = type_datetime()->assert($row['at'])->format('Y-m-d H:i:s e');
                 }
             }
 

@@ -287,7 +287,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
 
             public function transform(Rows $rows, FlowContext $context): Rows
             {
-                if ($rows->first()->get('id') === 101) {
+                if ($rows->column('id')->value(0) === 101) {
                     throw new RuntimeException('Transformer Exception');
                 }
 

@@ -149,7 +149,6 @@ use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Memory\Memory;
 use Flow\ETL\NativePHPRandomValueGenerator;
 use Flow\ETL\RandomValueGenerator;
-use Flow\ETL\Row;
 use Flow\ETL\Row\ColumnName;
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Reference;
@@ -219,8 +218,6 @@ use Flow\ETL\Window\FrameBoundType;
 use Flow\ETL\WithEntry;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
-use Flow\Filesystem\Partition;
-use Flow\Filesystem\Partitions;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\Mode;
 use Flow\Floe\FloeSerializer;
@@ -573,9 +570,9 @@ function rename_map(array $renames): RenameMapEntryStrategy
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function rows(Schema $schema, Row ...$row): Rows
+function rows(Schema $schema): Rows
 {
-    return Rows::of($schema, ...$row);
+    return Rows::empty($schema);
 }
 
 /**
@@ -1167,26 +1164,6 @@ function number_format(
 
 /**
  * @param array<array<mixed>>|array<mixed|string> $data
- * @param array<Partition>|Partitions $partitions
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function array_to_row(
-    array $data,
-    Schema $schema,
-    Backend $backend = new DefaultBackend(),
-    array|Partitions $partitions = [],
-): Row {
-    foreach ($partitions as $partition) {
-        if (!array_key_exists($partition->name, $data)) {
-            $data[$partition->name] = $partition->value;
-        }
-    }
-
-    return array_to_rows([$data], $schema, $backend)->first();
-}
-
-/**
- * @param array<array<mixed>>|array<mixed|string> $data
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function array_to_rows(array $data, Schema $schema, Backend $backend = new DefaultBackend()): Rows
@@ -1251,9 +1228,13 @@ function dense_rank(): DenseRank
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function average(Reference|string $ref, int $scale = 2, Rounding $rounding = Rounding::HALF_UP): Average
-{
-    return new Average(is_string($ref) ? ref($ref) : $ref, $scale, $rounding);
+function average(
+    Reference|string $ref,
+    int $scale = 2,
+    Rounding $rounding = Rounding::HALF_UP,
+    bool $exact = false,
+): Average {
+    return new Average(is_string($ref) ? ref($ref) : $ref, $scale, $rounding, $exact);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
@@ -1323,7 +1304,7 @@ function unbounded_following(): FrameBound
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function sum(Reference|string $ref, ScalarFunction|bool $exact = false): Sum
+function sum(Reference|string $ref, bool $exact = false): Sum
 {
     return new Sum(is_string($ref) ? ref($ref) : $ref, $exact);
 }

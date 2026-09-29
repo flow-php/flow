@@ -441,11 +441,12 @@ final class RowsBuilderTest extends FlowTestCase
     {
         static::assertSame(
             ['id'],
-            (new RowsBuilder(schema(int_schema('id')), new PhpBackend()))
-                ->append(['id' => 1, 'undeclared' => 'x'])
-                ->finish()
-                ->first()
-                ->names(),
+            array_keys(
+                (new RowsBuilder(schema(int_schema('id')), new PhpBackend()))
+                    ->append(['id' => 1, 'undeclared' => 'x'])
+                    ->finish()
+                    ->values(0),
+            ),
         );
     }
 

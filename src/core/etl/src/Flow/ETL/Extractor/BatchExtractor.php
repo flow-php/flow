@@ -44,7 +44,7 @@ final class BatchExtractor implements BatchableExtractor, Extractor, OverridingE
             while ($pendingCount >= $this->batchSize) {
                 // one variadic concat per window copies each row once; a pairwise concat per child batch would
                 // re-copy everything pending
-                $window = Rows::of($schema)->concat(...$pending);
+                $window = Rows::empty($schema)->concat(...$pending);
                 $signal = yield $window->slice(0, $this->batchSize);
 
                 if ($signal === Signal::STOP) {
@@ -59,7 +59,7 @@ final class BatchExtractor implements BatchableExtractor, Extractor, OverridingE
         }
 
         if ($pendingCount > 0) {
-            yield Rows::of($schema ?? $this->schema())->concat(...$pending);
+            yield Rows::empty($schema ?? $this->schema())->concat(...$pending);
         }
     }
 

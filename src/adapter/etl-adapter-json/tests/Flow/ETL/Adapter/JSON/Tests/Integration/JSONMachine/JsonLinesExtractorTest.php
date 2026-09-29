@@ -56,7 +56,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
             ->read(from_json_lines(__DIR__ . '/../../Fixtures/timezones.jsonl')->withMetadataColumns(true))
             ->fetch();
 
-        foreach ($rows as $row) {
+        foreach ($rows->toArray() as $row) {
             static::assertSame(
                 [
                     'timezones',
@@ -66,7 +66,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
                     'capital',
                     '_input_file_uri',
                 ],
-                array_keys($row->toArray()),
+                array_keys($row),
             );
         }
 
@@ -94,7 +94,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
             ->read(from_json_lines(__DIR__ . '/../../Fixtures/nested_timezones.jsonl')->withPointer('/timezones', true))
             ->fetch();
 
-        foreach ($rows as $row) {
+        foreach ($rows->toArray() as $row) {
             static::assertSame(
                 [
                     'timezones',
@@ -103,7 +103,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
                     'country_code',
                     'capital',
                 ],
-                array_keys(type_array()->assert($row->get('/timezones'))),
+                array_keys(type_array()->assert($row['/timezones'])),
             );
         }
 
@@ -116,7 +116,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
 
         $rows = df()->read(from_json_lines(__DIR__ . '/../../Fixtures/timezones.jsonl')->withSchema($schema))->fetch();
 
-        foreach ($rows as $row) {
+        foreach ($rows->toArray() as $row) {
             static::assertSame(
                 [
                     'timezones',
@@ -125,7 +125,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
                     'country_code',
                     'capital',
                 ],
-                array_keys($row->toArray()),
+                array_keys($row),
             );
         }
 
@@ -149,7 +149,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
         $total = 0;
 
         foreach ($extractor->extract(flow_context(config())) as $rows) {
-            foreach ($rows->all() as $row) {
+            foreach ($rows->toArray() as $row) {
                 static::assertSame(
                     [
                         'timezones',
@@ -158,7 +158,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
                         'country_code',
                         'capital',
                     ],
-                    array_keys($row->toArray()),
+                    array_keys($row),
                 );
             }
             $total += $rows->count();

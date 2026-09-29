@@ -54,19 +54,31 @@ final class ConstrainedProcessor implements Processor
             /** @var Rows $batch */
             $batch = $rows->current();
 
-            foreach ($batch->all() as $row) {
-                foreach ($this->constraints as $constraint) {
-                    if (!$constraint->isSatisfiedBy($row, $batch->schema())) {
-                        throw new ConstraintViolationException(
-                            $constraint->toString(),
-                            $constraint->violation($row, $batch->schema()),
-                            $this->rowIndex,
-                        );
-                    }
-                }
+            $violationIndex = null;
+            $violated = null;
 
-                $this->rowIndex++;
+            // a constraint sees only the rows before the earliest violation found so far - the row-by-row order
+            // in which an earlier constraint's violation stops the later ones
+            foreach ($this->constraints as $constraint) {
+                $index = $constraint->firstViolation(
+                    $violationIndex === null ? $batch : $batch->slice(0, $violationIndex),
+                );
+
+                if ($index !== null) {
+                    $violationIndex = $index;
+                    $violated = $constraint;
+                }
             }
+
+            if ($violated !== null && $violationIndex !== null) {
+                throw new ConstraintViolationException(
+                    $violated->toString(),
+                    $violated->violation($batch, $violationIndex),
+                    $this->rowIndex + $violationIndex,
+                );
+            }
+
+            $this->rowIndex += $batch->count();
 
             $signal = yield $batch;
 

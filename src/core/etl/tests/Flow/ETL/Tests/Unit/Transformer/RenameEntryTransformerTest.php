@@ -29,7 +29,7 @@ final class RenameEntryTransformerTest extends FlowTestCase
             flow_context(config()),
         );
 
-        static::assertSame(['x', 'b'], $renamed->first()->names());
+        static::assertSame(['x', 'b'], array_keys($renamed->values(0)));
         static::assertSame([['x' => 1, 'b' => 2]], $renamed->toArray());
     }
 
@@ -112,7 +112,7 @@ final class RenameEntryTransformerTest extends FlowTestCase
             'old_name' => 'test value',
         ]], schema(string_schema('old_name', metadata: $metadata))), flow_context(config()));
 
-        static::assertSame('test value', $outputRows->first()->get('new_name'));
+        static::assertSame('test value', $outputRows->column('new_name')->value(0));
         static::assertTrue($outputRows->schema()->get('new_name')->metadata()->isEqual($metadata));
     }
 

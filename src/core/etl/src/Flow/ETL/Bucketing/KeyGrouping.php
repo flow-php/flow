@@ -7,7 +7,7 @@ namespace Flow\ETL\Bucketing;
 use Flow\ETL\Rows;
 use Generator;
 
-use function array_values;
+use function array_slice;
 
 /**
  * Collects rows sharing a key into one batch, so a downstream operator sees each key exactly once
@@ -27,30 +27,33 @@ final readonly class KeyGrouping
      */
     public function group(Generator $rows): Generator
     {
-        /** @var array<string, list<\Flow\ETL\Row>> $groups */
+        /** @var array<string, list<Rows>> $groups each key's rows, one gathered part per batch, in batch order */
         $groups = [];
         $schema = null;
 
-        foreach ($rows as $batch) {
-            if (!$batch->count()) {
+        foreach ($rows as $input) {
+            if (!$input->count()) {
                 continue;
             }
 
-            // bound once, like BucketAggregation: every batch out of one bucket shares a schema
-            $schema ??= $batch->schema();
-            $hashes = $this->hasher->hash($this->keys->of($batch));
+            // bound once: every batch out of one bucket shares a schema
+            $schema ??= $input->schema();
+            $batch = $input->matchTo($schema);
 
-            foreach (array_values($batch->all()) as $index => $row) {
-                $groups[$hashes[$index]][] = $row;
+            /** @var array<string, list<int>> $indices */
+            $indices = [];
+
+            foreach ($this->hasher->hash($this->keys->of($batch)) as $i => $hash) {
+                $indices[$hash][] = $i;
+            }
+
+            foreach ($indices as $hash => $rowsOfKey) {
+                $groups[$hash][] = $batch->gather($rowsOfKey);
             }
         }
 
-        if ($schema === null) {
-            return;
-        }
-
-        foreach ($groups as $rowsOfKey) {
-            yield Rows::of($schema, ...$rowsOfKey);
+        foreach ($groups as $parts) {
+            yield $parts[0]->concat(...array_slice($parts, 1));
         }
     }
 }

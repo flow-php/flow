@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\SortOrder;
+use Flow\ETL\Rows;
+use Flow\ETL\Sort\RowOrder;
 use Flow\Types\Type;
 
 use function count;
@@ -17,6 +19,7 @@ use function implode;
 use function is_string;
 use function rsort;
 use function sort;
+use function sprintf;
 
 final class StringAggregate implements AggregatingFunction
 {
@@ -54,17 +57,27 @@ final class StringAggregate implements AggregatingFunction
         return new self($children[0], $this->separator, $this->sort);
     }
 
-    public function aggregate(Row $row, FlowContext $context): void
+    public function aggregate(Rows $rows, array $indices, FlowContext $context): void
     {
-        if (!$row->has($this->ref->to())) {
+        if ($rows->schema()->findDefinition($this->ref->to()) === null) {
             return;
         }
 
-        $stringValue = $row->get($this->ref->to());
-
-        if (is_string($stringValue)) {
-            $this->values[] = $stringValue;
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($rows->column($this->ref->to())->take($indices)->values() as $value) {
+            if (is_string($value)) {
+                $this->values[] = $value;
+            }
         }
+    }
+
+    public function merge(AggregatingFunction $other, FlowContext $context): void
+    {
+        if (!$other instanceof self) {
+            throw new InvalidArgumentException(sprintf('%s cannot merge %s', self::class, $other::class));
+        }
+
+        $this->values = [...$this->values, ...$other->values];
     }
 
     public function outputName(): string
@@ -97,7 +110,8 @@ final class StringAggregate implements AggregatingFunction
         $values = $this->values;
 
         if ($this->sort) {
-            $this->sort === SortOrder::ASC ? sort($values) : rsort($values);
+            $flag = RowOrder::flag(type_string());
+            $this->sort === SortOrder::ASC ? sort($values, $flag) : rsort($values, $flag);
         }
 
         return implode($this->separator, $values);

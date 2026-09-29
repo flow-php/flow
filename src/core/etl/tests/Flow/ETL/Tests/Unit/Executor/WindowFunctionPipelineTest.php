@@ -54,8 +54,8 @@ final class WindowFunctionPipelineTest extends TestCase
         static::assertCount(1, $result);
         static::assertCount(2, $result[0]);
 
-        static::assertEquals(250, $result[0][0]->get('total'));
-        static::assertEquals(250, $result[0][1]->get('total'));
+        static::assertEquals(250, $result[0]->column('total')->value(0));
+        static::assertEquals(250, $result[0]->column('total')->value(1));
     }
 
     public function test_handles_single_row_partition(): void
@@ -98,12 +98,12 @@ final class WindowFunctionPipelineTest extends TestCase
         static::assertCount(2, $result);
 
         static::assertCount(2, $result[0]);
-        static::assertEquals(1, $result[0][0]->get('row_num'));
-        static::assertEquals(2, $result[0][1]->get('row_num'));
+        static::assertEquals(1, $result[0]->column('row_num')->value(0));
+        static::assertEquals(2, $result[0]->column('row_num')->value(1));
 
         static::assertCount(2, $result[1]);
-        static::assertEquals(1, $result[1][0]->get('row_num'));
-        static::assertEquals(2, $result[1][1]->get('row_num'));
+        static::assertEquals(1, $result[1]->column('row_num')->value(0));
+        static::assertEquals(2, $result[1]->column('row_num')->value(1));
     }
 
     public function test_processes_single_partition_without_partition_by(): void
@@ -122,9 +122,9 @@ final class WindowFunctionPipelineTest extends TestCase
         static::assertCount(1, $result);
         static::assertCount(3, $result[0]);
 
-        static::assertEquals(1, $result[0][0]->get('row_num'));
-        static::assertEquals(2, $result[0][1]->get('row_num'));
-        static::assertEquals(3, $result[0][2]->get('row_num'));
+        static::assertEquals(1, $result[0]->column('row_num')->value(0));
+        static::assertEquals(2, $result[0]->column('row_num')->value(1));
+        static::assertEquals(3, $result[0]->column('row_num')->value(2));
     }
 
     public function test_sorts_partition_by_order_by(): void
@@ -145,12 +145,12 @@ final class WindowFunctionPipelineTest extends TestCase
         $context = flow_context(config());
         $result = iterator_to_array(ExecutedSegments::of($segments, $context));
 
-        static::assertEquals(5000, $result[0][0]->get('salary'));
-        static::assertEquals(6000, $result[0][1]->get('salary'));
-        static::assertEquals(7000, $result[0][2]->get('salary'));
+        static::assertEquals(5000, $result[0]->column('salary')->value(0));
+        static::assertEquals(6000, $result[0]->column('salary')->value(1));
+        static::assertEquals(7000, $result[0]->column('salary')->value(2));
 
-        static::assertEquals(1, $result[0][0]->get('row_num'));
-        static::assertEquals(2, $result[0][1]->get('row_num'));
-        static::assertEquals(3, $result[0][2]->get('row_num'));
+        static::assertEquals(1, $result[0]->column('row_num')->value(0));
+        static::assertEquals(2, $result[0]->column('row_num')->value(1));
+        static::assertEquals(3, $result[0]->column('row_num')->value(2));
     }
 }

@@ -11,7 +11,8 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Function\AggregatingFunction;
 use Flow\ETL\Function\ExpandingFunctions;
 use Flow\ETL\Function\ReferenceResolver;
-use Flow\ETL\Row;
+use Flow\ETL\Row\Reference;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use IteratorAggregate;
 use Traversable;
@@ -35,10 +36,13 @@ final readonly class Aggregators implements Countable, IteratorAggregate
         $this->aggregators = $aggregators;
     }
 
-    public function aggregate(Row $row, FlowContext $context): void
+    /**
+     * @param list<int> $indices
+     */
+    public function aggregate(Rows $rows, array $indices, FlowContext $context): void
     {
         foreach ($this->aggregators as $aggregator) {
-            $aggregator->aggregate($row, $context);
+            $aggregator->aggregate($rows, $indices, $context);
         }
     }
 
@@ -53,6 +57,16 @@ final readonly class Aggregators implements Countable, IteratorAggregate
     public function count(): int
     {
         return count($this->aggregators);
+    }
+
+    /**
+     * Folds $other's partial states into these, pairwise; $other aggregated rows that come after these.
+     */
+    public function merge(self $other, FlowContext $context): void
+    {
+        foreach ($this->aggregators as $position => $aggregator) {
+            $aggregator->merge($other->aggregators[$position], $context);
+        }
     }
 
     public function first(): AggregatingFunction
@@ -90,7 +104,7 @@ final readonly class Aggregators implements Countable, IteratorAggregate
     }
 
     /**
-     * @return null|list<Row\Reference> union of references read by all aggregators, or null when any
+     * @return null|list<Reference> union of references read by all aggregators, or null when any
      *                                  aggregator cannot enumerate them (disables spill column pruning)
      */
     public function references(): ?array

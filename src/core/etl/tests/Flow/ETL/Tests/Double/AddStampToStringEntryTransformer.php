@@ -36,12 +36,12 @@ final readonly class AddStampToStringEntryTransformer implements Transformer
     {
         $stamped = [];
 
-        foreach ($rows->all() as $row) {
+        for ($i = 0; $i < $rows->count(); $i++) {
             $stamped[] = [
-                ...$row->values(),
+                ...$rows->values($i),
                 $this->entryName => sprintf(
                     '%s%s%s',
-                    type_string()->assert($row->get($this->entryName)),
+                    type_string()->assert($rows->column($this->entryName)->value($i)),
                     $this->divider,
                     $this->stamp,
                 ),

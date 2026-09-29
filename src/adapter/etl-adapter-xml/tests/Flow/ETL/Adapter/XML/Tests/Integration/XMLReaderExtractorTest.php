@@ -95,7 +95,7 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
             <item item_attribute_01="1">
               <id id_attribute_01="1">1</id>
             </item>
-            XML, type_string()->cast(data_frame()->read($extractor1)->fetch()[0]->get('node')));
+            XML, type_string()->cast(data_frame()->read($extractor1)->fetch()->column('node')->value(0)));
 
         // @mago-ignore analysis:deprecated-class
         $extractor2 = new XMLReaderExtractor(path(__DIR__ . '/../Fixtures/simple_items_flat.xml'), 'root/items/item');
@@ -103,7 +103,7 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
             <item item_attribute_01="5">
               <id id_attribute_01="5">5</id>
             </item>
-            XML, type_string()->cast(data_frame()->read($extractor2)->fetch()[4]->get('node')));
+            XML, type_string()->cast(data_frame()->read($extractor2)->fetch()->column('node')->value(4)));
     }
 
     public function test_reading_xml_from_path(): void
@@ -128,10 +128,14 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
                     </item>
                 </items>
                 XML,
-            type_string()->cast(data_frame()
-                // @mago-ignore analysis:deprecated-class
-                ->read(new XMLReaderExtractor(path(__DIR__ . '/../Fixtures/simple_items.xml'), 'root/items'))
-                ->fetch()[0]->get('node')),
+            type_string()->cast(
+                data_frame()
+                    // @mago-ignore analysis:deprecated-class
+                    ->read(new XMLReaderExtractor(path(__DIR__ . '/../Fixtures/simple_items.xml'), 'root/items'))
+                    ->fetch()
+                    ->column('node')
+                    ->value(0),
+            ),
         );
     }
 

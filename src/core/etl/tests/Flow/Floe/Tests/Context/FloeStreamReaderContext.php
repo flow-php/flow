@@ -107,15 +107,13 @@ final class FloeStreamReaderContext
     public static function reconstruct(Filesystem $filesystem, Path $path): Rows
     {
         $file = (new FloeReader($filesystem))->read($path);
-        $rows = [];
+        $rows = rows($file->footer()->schema());
 
         foreach ($file->rows() as $batch) {
-            foreach ($batch->all() as $row) {
-                $rows[] = $row;
-            }
+            $rows = $rows->concat($batch->matchTo($file->footer()->schema()));
         }
 
-        return rows($file->footer()->schema(), ...$rows);
+        return $rows;
     }
 
     /**

@@ -141,8 +141,8 @@ final class FloeValueRoundTripTest extends TestCase
         ]], schema(html_schema('html')));
 
         static::assertSame(
-            type_string()->cast($rows->first()->get('html')),
-            type_string()->cast(FloeStreamReaderContext::roundTrip($rows)->first()->get('html')),
+            type_string()->cast($rows->column('html')->value(0)),
+            type_string()->cast(FloeStreamReaderContext::roundTrip($rows)->column('html')->value(0)),
         );
     }
 
@@ -346,15 +346,12 @@ final class FloeValueRoundTripTest extends TestCase
 
         $inOrder = array_to_rows([['s' => ['a' => 1, 'b' => 'x']]], schema(structure_schema('s', $type)));
 
-        static::assertSame(
-            $inOrder->first()->values(),
-            FloeStreamReaderContext::roundTrip($inOrder)->first()->values(),
-        );
+        static::assertSame($inOrder->values(0), FloeStreamReaderContext::roundTrip($inOrder)->values(0));
 
         $outOfOrder = array_to_rows([['s' => ['b' => 'x', 'a' => 1]]], schema(structure_schema('s', $type)));
-        $decoded = FloeStreamReaderContext::roundTrip($outOfOrder)->first();
+        $decoded = FloeStreamReaderContext::roundTrip($outOfOrder);
 
-        static::assertSame(['a' => 1, 'b' => 'x'], $decoded->get('s'));
+        static::assertSame(['a' => 1, 'b' => 'x'], $decoded->column('s')->value(0));
     }
 
     public function test_uuid_entries(): void

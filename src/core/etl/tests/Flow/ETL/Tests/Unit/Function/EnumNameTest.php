@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
@@ -12,7 +13,6 @@ use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\TestWith;
 use UnitEnum;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\enum_name;
 use function Flow\ETL\DSL\enum_schema;
@@ -26,7 +26,11 @@ final class EnumNameTest extends FlowTestCase
 {
     public function test_enum_name_accepts_literal_enum(): void
     {
-        static::assertSame('one', enum_name(BackedStringEnum::one)->eval(array_to_row([], schema()), flow_context()));
+        static::assertSame('one', (new FunctionContext(flow_context()))->eval(
+            enum_name(BackedStringEnum::one),
+            [],
+            schema(),
+        ));
     }
 
     public function test_enum_name_carries_string_type(): void
@@ -36,11 +40,13 @@ final class EnumNameTest extends FlowTestCase
 
     public function test_enum_name_from_scalar_function_chain(): void
     {
-        static::assertSame('one', ref('e')
-            ->enumName()
-            ->eval(array_to_row([
+        static::assertSame('one', (new FunctionContext(flow_context()))->eval(
+            ref('e')->enumName(),
+            [
                 'e' => BackedIntEnum::one,
-            ], schema(enum_schema('e', BackedIntEnum::class))), flow_context()));
+            ],
+            schema(enum_schema('e', BackedIntEnum::class)),
+        ));
     }
 
     #[TestWith([BackedStringEnum::one])]
@@ -48,8 +54,11 @@ final class EnumNameTest extends FlowTestCase
     #[TestWith([BasicEnum::one])]
     public function test_enum_name_returns_case_name(UnitEnum $enum): void
     {
-        static::assertSame('one', enum_name(ref('e'))
-            ->eval(array_to_row(['e' => $enum], schema(enum_schema('e', $enum::class))), flow_context()));
+        static::assertSame('one', (new FunctionContext(flow_context()))->eval(
+            enum_name(ref('e')),
+            ['e' => $enum],
+            schema(enum_schema('e', $enum::class)),
+        ));
     }
 
     #[TestWith([null])]
@@ -61,6 +70,6 @@ final class EnumNameTest extends FlowTestCase
         $this->expectExceptionMessage('EnumName function requires a UnitEnum value');
 
         $context = flow_context(config());
-        enum_name($input)->eval(array_to_row([], schema()), $context);
+        (new FunctionContext($context))->eval(enum_name($input), [], schema());
     }
 }

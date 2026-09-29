@@ -6,9 +6,9 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use DateTimeZone;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\now;
 use function Flow\ETL\DSL\ref;
@@ -34,7 +34,11 @@ final class NowTest extends FlowTestCase
         static::assertSame(
             'Europe/Warsaw',
             type_datetime()
-                ->assert(now(new DateTimeZone('Europe/Warsaw'))->eval(array_to_row([], schema()), flow_context()))
+                ->assert((new FunctionContext(flow_context()))->eval(
+                    now(new DateTimeZone('Europe/Warsaw')),
+                    [],
+                    schema(),
+                ))
                 ->getTimezone()
                 ->getName(),
         );
@@ -45,12 +49,13 @@ final class NowTest extends FlowTestCase
         static::assertSame(
             'UTC',
             type_datetime()
-                ->assert(
-                    now(ref('tz'))
-                        ->eval(array_to_row([
-                            'tz' => new DateTimeZone('Europe/Warsaw'),
-                        ], schema(time_zone_schema('tz'))), flow_context()),
-                )
+                ->assert((new FunctionContext(flow_context()))->eval(
+                    now(ref('tz')),
+                    [
+                        'tz' => new DateTimeZone('Europe/Warsaw'),
+                    ],
+                    schema(time_zone_schema('tz')),
+                ))
                 ->getTimezone()
                 ->getName(),
         );
@@ -61,7 +66,11 @@ final class NowTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Now function requires valid DateTimeZone');
 
-        now(ref('tz'))->eval(array_to_row(['tz' => null], schema(str_schema('tz', nullable: true))), flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            now(ref('tz')),
+            ['tz' => null],
+            schema(str_schema('tz', nullable: true)),
+        );
     }
 
     public function test_utc_alias_zone_lands_in_utc(): void
@@ -69,7 +78,7 @@ final class NowTest extends FlowTestCase
         static::assertSame(
             'UTC',
             type_datetime()
-                ->assert(now(new DateTimeZone('GMT'))->eval(array_to_row([], schema()), flow_context()))
+                ->assert((new FunctionContext(flow_context()))->eval(now(new DateTimeZone('GMT')), [], schema()))
                 ->getTimezone()
                 ->getName(),
         );

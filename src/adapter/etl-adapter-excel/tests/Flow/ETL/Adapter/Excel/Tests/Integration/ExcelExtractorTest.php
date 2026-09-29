@@ -348,8 +348,8 @@ final class ExcelExtractorTest extends FlowTestCase
             static::assertEquals($extractor->schema(), $rows->schema());
             $sizes[] = $rows->count();
 
-            foreach ($rows as $row) {
-                $emails[] = $row->get('email');
+            foreach ($rows->toArray() as $row) {
+                $emails[] = $row['email'];
             }
         }
 
@@ -884,13 +884,16 @@ final class ExcelExtractorTest extends FlowTestCase
         static::assertSame(
             '2024-01-03 11:30:00 Europe/Warsaw',
             type_datetime()
-                ->assert(df()
-                    ->extract(
-                        from_excel(ExcelFixtureContext::file('dates_mixed.xlsx'))
-                            ->withSchema(schema(datetime_schema('d', zone: 'Europe/Warsaw'))),
-                    )
-                    ->fetch()
-                    ->all()[2]->get('d'))
+                ->assert(
+                    df()
+                        ->extract(
+                            from_excel(ExcelFixtureContext::file('dates_mixed.xlsx'))
+                                ->withSchema(schema(datetime_schema('d', zone: 'Europe/Warsaw'))),
+                        )
+                        ->fetch()
+                        ->column('d')
+                        ->value(2),
+                )
                 ->format('Y-m-d H:i:s e'),
         );
     }
@@ -904,19 +907,25 @@ final class ExcelExtractorTest extends FlowTestCase
             static::assertSame(
                 '2024-01-03 10:30:00 UTC',
                 type_datetime()
-                    ->assert(df()
-                        ->extract(from_excel(ExcelFixtureContext::file('dates_mixed.xlsx')))
-                        ->fetch()
-                        ->all()[2]->get('d'))
+                    ->assert(
+                        df()
+                            ->extract(from_excel(ExcelFixtureContext::file('dates_mixed.xlsx')))
+                            ->fetch()
+                            ->column('d')
+                            ->value(2),
+                    )
                     ->format('Y-m-d H:i:s e'),
             );
             static::assertSame(
                 '2024-01-03 10:30:00 UTC',
                 type_datetime()
-                    ->assert(df()
-                        ->extract(from_excel(ExcelFixtureContext::file('dates_mixed.ods')))
-                        ->fetch()
-                        ->all()[1]->get('d'))
+                    ->assert(
+                        df()
+                            ->extract(from_excel(ExcelFixtureContext::file('dates_mixed.ods')))
+                            ->fetch()
+                            ->column('d')
+                            ->value(1),
+                    )
                     ->format('Y-m-d H:i:s e'),
             );
         } finally {

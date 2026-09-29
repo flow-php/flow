@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Join\Comparison;
 
 use Flow\ETL\Join\Comparison;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Rows;
 
 use function array_merge;
 use function array_unique;
@@ -23,15 +23,25 @@ final readonly class All implements Comparison
         $this->comparisons = array_merge([$comparison], $comparisons);
     }
 
-    public function compare(Row $left, Row $right): bool
+    public function compare(Rows $left, Rows $right): array
     {
+        $result = null;
+
         foreach ($this->comparisons as $comparison) {
-            if (!$comparison->compare($left, $right)) {
-                return false;
+            $compared = $comparison->compare($left, $right);
+
+            if ($result === null) {
+                $result = $compared;
+
+                continue;
+            }
+
+            foreach ($compared as $i => $met) {
+                $result[$i] = $result[$i] && $met;
             }
         }
 
-        return true;
+        return $result ?? [];
     }
 
     /**

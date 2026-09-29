@@ -87,7 +87,7 @@ final class PsrHttpClientDynamicExtractorTest extends FlowTestCase
         // The row carries the body as raw text, so response_body holds one type whatever the
         // content type is; pagination reads the structured map through HttpDecoder::structuredBody().
         $body = type_array()->assert(json_decode(
-            type_string()->assert($currentRows->first()->get('response_body')),
+            type_string()->assert($currentRows->column('response_body')->value(0)),
             true,
             512,
             JSON_THROW_ON_ERROR,
@@ -97,13 +97,13 @@ final class PsrHttpClientDynamicExtractorTest extends FlowTestCase
         static::assertSame('flow-php', $body['login']);
         static::assertSame(73_495_297, $body['id']);
 
-        $responseHeaders = type_array()->assert($currentRows->first()->get('response_headers'));
+        $responseHeaders = type_array()->assert($currentRows->column('response_headers')->value(0));
         static::assertSame(['GitHub.com'], $responseHeaders['Server']);
-        static::assertSame(200, $currentRows->first()->get('response_status_code'));
-        static::assertSame('1.1', $currentRows->first()->get('response_protocol_version'));
-        static::assertSame('OK', $currentRows->first()->get('response_reason_phrase'));
-        static::assertSame('https://api.github.com/orgs/flow-php', $currentRows->first()->get('request_uri'));
-        static::assertSame('GET', $currentRows->first()->get('request_method'));
+        static::assertSame(200, $currentRows->column('response_status_code')->value(0));
+        static::assertSame('1.1', $currentRows->column('response_protocol_version')->value(0));
+        static::assertSame('OK', $currentRows->column('response_reason_phrase')->value(0));
+        static::assertSame('https://api.github.com/orgs/flow-php', $currentRows->column('request_uri')->value(0));
+        static::assertSame('GET', $currentRows->column('request_method')->value(0));
     }
 
     public function test_schema_is_the_fixed_http_exchange_shape(): void
@@ -178,7 +178,7 @@ final class PsrHttpClientDynamicExtractorTest extends FlowTestCase
             type_structure(['login' => type_string(), 'id' => type_integer()]),
             $rows->schema()->get('response_body')->type(),
         );
-        static::assertSame(['login' => 'flow-php', 'id' => 73_495_297], $rows->first()->get('response_body'));
+        static::assertSame(['login' => 'flow-php', 'id' => 73_495_297], $rows->column('response_body')->value(0));
     }
 
     public function test_extract_builds_through_the_config_backend(): void

@@ -7,9 +7,9 @@ namespace Flow\ETL\Tests\Unit\Function;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Function\ReferenceResolver;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
@@ -25,16 +25,14 @@ final class StructureTest extends FlowTestCase
     {
         static::assertSame(
             ['second' => 'x', 'first' => 1],
-            structure(['second' => ref('b'), 'first' => ref('a')])->eval(
-                array_to_row(
-                    [
-                        'a' => 1,
-                        'b' => 'x',
-                        'q' => null,
-                    ],
-                    schema(int_schema('a'), str_schema('b'), str_schema('q', nullable: true)),
-                ),
-                flow_context(),
+            (new FunctionContext(flow_context()))->eval(
+                structure(['second' => ref('b'), 'first' => ref('a')]),
+                [
+                    'a' => 1,
+                    'b' => 'x',
+                    'q' => null,
+                ],
+                schema(int_schema('a'), str_schema('b'), str_schema('q', nullable: true)),
             ),
         );
     }
@@ -43,16 +41,14 @@ final class StructureTest extends FlowTestCase
     {
         static::assertSame(
             ['id' => 'x', 'quantity' => null],
-            structure(['id' => ref('b'), 'quantity' => ref('q')])->eval(
-                array_to_row(
-                    [
-                        'a' => 1,
-                        'b' => 'x',
-                        'q' => null,
-                    ],
-                    schema(int_schema('a'), str_schema('b'), str_schema('q', nullable: true)),
-                ),
-                flow_context(),
+            (new FunctionContext(flow_context()))->eval(
+                structure(['id' => ref('b'), 'quantity' => ref('q')]),
+                [
+                    'a' => 1,
+                    'b' => 'x',
+                    'q' => null,
+                ],
+                schema(int_schema('a'), str_schema('b'), str_schema('q', nullable: true)),
             ),
         );
     }
@@ -61,12 +57,10 @@ final class StructureTest extends FlowTestCase
     {
         static::assertSame(
             [5 => 1, 7 => 'x'],
-            structure([5 => ref('a'), 7 => ref('b')])->eval(
-                array_to_row(
-                    ['a' => 1, 'b' => 'x', 'q' => null],
-                    schema(int_schema('a'), str_schema('b'), str_schema('q', nullable: true)),
-                ),
-                flow_context(),
+            (new FunctionContext(flow_context()))->eval(
+                structure([5 => ref('a'), 7 => ref('b')]),
+                ['a' => 1, 'b' => 'x', 'q' => null],
+                schema(int_schema('a'), str_schema('b'), str_schema('q', nullable: true)),
             ),
         );
     }
@@ -85,16 +79,14 @@ final class StructureTest extends FlowTestCase
     {
         static::assertSame(
             ['user' => ['id' => 1]],
-            structure(['user' => structure(['id' => ref('a')])])->eval(
-                array_to_row(
-                    [
-                        'a' => 1,
-                        'b' => 'x',
-                        'q' => null,
-                    ],
-                    schema(int_schema('a'), str_schema('b'), str_schema('q', nullable: true)),
-                ),
-                flow_context(),
+            (new FunctionContext(flow_context()))->eval(
+                structure(['user' => structure(['id' => ref('a')])]),
+                [
+                    'a' => 1,
+                    'b' => 'x',
+                    'q' => null,
+                ],
+                schema(int_schema('a'), str_schema('b'), str_schema('q', nullable: true)),
             ),
         );
     }
@@ -149,15 +141,11 @@ final class StructureTest extends FlowTestCase
     {
         static::assertSame(
             ['id' => 1, 'name' => 'x'],
-            structure(['id' => ref('a'), 'name' => ref('b')])
-                ->withChildren([lit(1), lit('x')])
-                ->eval(
-                    array_to_row(
-                        ['a' => 1, 'b' => 'x', 'q' => null],
-                        schema(int_schema('a'), str_schema('b'), str_schema('q', nullable: true)),
-                    ),
-                    flow_context(),
-                ),
+            (new FunctionContext(flow_context()))->eval(
+                structure(['id' => ref('a'), 'name' => ref('b')])->withChildren([lit(1), lit('x')]),
+                ['a' => 1, 'b' => 'x', 'q' => null],
+                schema(int_schema('a'), str_schema('b'), str_schema('q', nullable: true)),
+            ),
         );
     }
 

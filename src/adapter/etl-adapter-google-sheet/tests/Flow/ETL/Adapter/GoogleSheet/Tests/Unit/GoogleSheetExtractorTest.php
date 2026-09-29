@@ -22,7 +22,6 @@ use Google\Service\Sheets;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function array_sum;
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\infer_schema;
@@ -122,19 +121,12 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         $rows = ExtractedRows::of($extractor);
 
         static::assertCount(2, $rows);
-        static::assertEquals(
-            array_to_row(
+        static::assertSame(
+            [
                 ['header' => 'row1', '_spread_sheet_id' => 'spread-id', '_sheet_name' => 'sheet'],
-                schema(str_schema('header'), str_schema('_spread_sheet_id'), str_schema('_sheet_name')),
-            ),
-            $rows->all()[0],
-        );
-        static::assertEquals(
-            array_to_row(
                 ['header' => 'row2', '_spread_sheet_id' => 'spread-id', '_sheet_name' => 'sheet'],
-                schema(str_schema('header'), str_schema('_spread_sheet_id'), str_schema('_sheet_name')),
-            ),
-            $rows->all()[1],
+            ],
+            $rows->toArray(),
         );
     }
 
@@ -317,7 +309,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         foreach ($extractor->withBatchSize(2)->extract(flow_context()) as $rows) {
             static::assertTrue($rows->schema()->isSame($extractor->schema()));
             $sizes[] = $rows->count();
-            $first ??= $rows->first()->toArray();
+            $first ??= $rows->toArray()[0];
         }
 
         static::assertLessThanOrEqual(2, max($sizes));
@@ -417,7 +409,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
 
         static::assertSame(
             ['3' => 'a', '7' => 'b', '_spread_sheet_id' => 'spread-id', '_sheet_name' => 'sheet'],
-            $rowsArray[0]->first()->toArray(),
+            $rowsArray[0]->toArray()[0],
         );
     }
 
@@ -470,7 +462,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
                 ->extract(flow_context()),
         );
 
-        static::assertNull($rowsArray[0]->first()->toArray()['name']);
+        static::assertNull($rowsArray[0]->toArray()[0]['name']);
     }
 
     public function test_empty_cells_stay_strings_when_asked(): void
@@ -488,7 +480,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
                 ->extract(flow_context()),
         );
 
-        static::assertSame('', $rowsArray[0]->first()->toArray()['name']);
+        static::assertSame('', $rowsArray[0]->toArray()[0]['name']);
     }
 
     public function test_a_value_past_the_sample_that_does_not_fit_is_refused(): void

@@ -40,10 +40,7 @@ final class ExcelExtractorTypedColumnsTest extends FlowTestCase
             ->withMetadataColumns(true);
 
         foreach ($extractor->extract(flow_context(Config::builder()->build())) as $rows) {
-            foreach ($rows as $row) {
-                static::assertTrue($row->has('_input_file_uri'));
-                static::assertSame($path->uri(), $row->get('_input_file_uri'));
-            }
+            static::assertSame([$path->uri()], array_values(array_unique($rows->column('_input_file_uri')->values())));
         }
     }
 }

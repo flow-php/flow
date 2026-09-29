@@ -6,8 +6,8 @@ namespace Flow\ETL\Window\Accumulator;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Rows;
 use Flow\ETL\Window\FrameAccumulator;
 
 final class CountAccumulator implements FrameAccumulator
@@ -19,7 +19,7 @@ final class CountAccumulator implements FrameAccumulator
         FlowContext $context,
     ) {}
 
-    public function accumulate(Row $row): void
+    public function accumulate(Rows $rows, int $index): void
     {
         if ($this->ref === null) {
             $this->count++;
@@ -28,7 +28,7 @@ final class CountAccumulator implements FrameAccumulator
         }
 
         try {
-            if ($row->get($this->ref) !== null) {
+            if ($rows->column($this->ref->base())->value($index) !== null) {
                 $this->count++;
             }
         } catch (InvalidArgumentException $e) {

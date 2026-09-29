@@ -260,10 +260,10 @@ final class OffsetPipelineTest extends FlowTestCase
         static::assertCount(1, $result);
         static::assertCount(3, $result[0]);
         $rows = $result[0];
-        static::assertEquals(2, $rows->all()[0]->get('id'));
-        static::assertEquals(4, $rows->all()[0]->get('doubled'));
-        static::assertEquals(3, $rows->all()[1]->get('id'));
-        static::assertEquals(6, $rows->all()[1]->get('doubled'));
+        static::assertEquals(2, $rows->column('id')->value(0));
+        static::assertEquals(4, $rows->column('doubled')->value(0));
+        static::assertEquals(3, $rows->column('id')->value(1));
+        static::assertEquals(6, $rows->column('doubled')->value(1));
     }
 
     #[DataProvider('offset_values_data_provider')]
@@ -280,7 +280,8 @@ final class OffsetPipelineTest extends FlowTestCase
         $totalRows = array_sum(array_map(static fn($batch) => $batch->count(), $result));
         static::assertEquals($expectedCount, $totalRows);
         if ($expectedCount > 0) {
-            $firstRowId = $result[0]->first()->get('id');
+            // @mago-ignore analysis:mixed-assignment
+            $firstRowId = $result[0]->column('id')->value(0);
             static::assertEquals($offset + 1, $firstRowId);
         }
     }

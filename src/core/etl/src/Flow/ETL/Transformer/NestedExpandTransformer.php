@@ -8,13 +8,11 @@ use Flow\ETL\BoundStep;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
-use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Transformer;
 use Throwable;
 
-use function count;
 use function Flow\Types\DSL\type_array;
 
 final readonly class NestedExpandTransformer implements Transformer
@@ -66,19 +64,10 @@ final readonly class NestedExpandTransformer implements Transformer
     {
         $columns = new DerivedColumns();
         $declared = $columns->declare($rows->schema(), $derived);
-        $cast = [];
-        $sources = [];
-
-        foreach ($rows->all() as $index => $r) {
-            // @mago-ignore analysis:mixed-assignment
-            foreach ($this->expansion->eval($r, $context) as $value) {
-                $sources[] = $index;
-                $cast[] = $columns->value($derived, $value, count($cast));
-            }
-        }
+        [$sources, $values] = $this->expansion->eval($rows, $context);
 
         $builder = $context->backend()->builder($derived);
-        $builder->appendMany($cast);
+        $builder->appendMany($values);
 
         return $columns->rows(
             $rows->gather($sources),
@@ -93,29 +82,29 @@ final readonly class NestedExpandTransformer implements Transformer
     {
         $columns = new UnpackedColumns();
         $prefix = $this->entryName . '.';
-        $prefixed = [];
+        [$sources, $payloads] = $this->expansion->eval($rows, $context);
+        $values = [];
 
         foreach ($declared->definitions() as $name => $_) {
-            $prefixed[] = $prefix . $name;
+            $values[$prefix . $name] = [];
         }
 
-        $payloads = [];
-        $sources = [];
-
-        foreach ($rows->all() as $index => $r) {
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($payloads as $payload) {
             // @mago-ignore analysis:mixed-assignment
-            foreach ($this->expansion->eval($r, $context) as $payload) {
-                $sources[] = $index;
-                $payloads[] = $columns->values($prefix, $declared, type_array()->assert($payload));
+            foreach ($columns->values($prefix, $declared, type_array()->assert($payload)) as $name => $value) {
+                $values[$name][] = $value;
             }
         }
 
-        return $rows->gather($sources)->withColumns(
-            $this->output,
-            (new RowsBuilder($this->output->keep(...$prefixed), $context->backend()))
-                ->appendRows($payloads)
-                ->finish()
-                ->columns(),
-        );
+        $unpacked = [];
+
+        foreach ($values as $name => $columnValues) {
+            $builder = $context->backend()->builder($this->output->get((string) $name));
+            $builder->appendMany($columnValues);
+            $unpacked[$name] = $builder->finish();
+        }
+
+        return $rows->gather($sources)->withColumns($this->output, $unpacked);
     }
 }

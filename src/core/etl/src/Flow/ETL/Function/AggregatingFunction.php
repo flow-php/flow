@@ -4,14 +4,25 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 interface AggregatingFunction extends FunctionTree
 {
-    public function aggregate(Row $row, FlowContext $context): void;
+    /**
+     * @param list<int> $indices the rows of $rows that belong to this aggregate, ascending
+     */
+    public function aggregate(Rows $rows, array $indices, FlowContext $context): void;
+
+    /**
+     * Folds $other's partial state into this one; $other aggregated rows that come after this one's.
+     *
+     * @throws InvalidArgumentException $other is not the same class
+     */
+    public function merge(AggregatingFunction $other, FlowContext $context): void;
 
     /**
      * Decided in the constructor, never mutated.

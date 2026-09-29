@@ -6,10 +6,10 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\ReferenceResolver;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\array_merge_collection;
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
@@ -31,9 +31,12 @@ final class ArrayMergeCollectionTest extends FlowTestCase
         $this->expectExceptionMessage('Expected type "array<mixed>", got "integer".');
 
         $context = flow_context(config());
-        $row = array_to_row(['invalid_entry' => 1], schema(int_schema('invalid_entry')));
 
-        array_merge_collection(ref('invalid_entry'))->eval($row, $context);
+        (new FunctionContext($context))->eval(
+            array_merge_collection(ref('invalid_entry')),
+            ['invalid_entry' => 1],
+            schema(int_schema('invalid_entry')),
+        );
     }
 
     public function test_array_merge_collection_in_strict_mode_with_non_array_elements(): void
@@ -42,14 +45,17 @@ final class ArrayMergeCollectionTest extends FlowTestCase
         $this->expectExceptionMessage('ArrayMergeCollection function requires array elements to be arrays');
 
         $context = flow_context(config());
-        $row = array_to_row([
-            'array_entry' => [
-                ['foo' => 'bar'],
-                1,
-            ],
-        ], schema(json_schema('array_entry')));
 
-        array_merge_collection(ref('array_entry'))->eval($row, $context);
+        (new FunctionContext($context))->eval(
+            array_merge_collection(ref('array_entry')),
+            [
+                'array_entry' => [
+                    ['foo' => 'bar'],
+                    1,
+                ],
+            ],
+            schema(json_schema('array_entry')),
+        );
     }
 
     public function test_attempt_of_merging_collection_where_not_every_element_is_array(): void
@@ -57,14 +63,16 @@ final class ArrayMergeCollectionTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('ArrayMergeCollection function requires array elements to be arrays');
 
-        $row = array_to_row([
-            'array_entry' => [
-                ['foo' => 'bar'],
-                1,
+        (new FunctionContext(flow_context()))->eval(
+            array_merge_collection(ref('array_entry')),
+            [
+                'array_entry' => [
+                    ['foo' => 'bar'],
+                    1,
+                ],
             ],
-        ], schema(json_schema('array_entry')));
-
-        array_merge_collection(ref('array_entry'))->eval($row, flow_context());
+            schema(json_schema('array_entry')),
+        );
     }
 
     public function test_for_not_array_entry(): void
@@ -72,26 +80,33 @@ final class ArrayMergeCollectionTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected type "array<mixed>", got "integer".');
 
-        $row = array_to_row(['invalid_entry' => 1], schema(int_schema('invalid_entry')));
-
-        array_merge_collection(ref('invalid_entry'))->eval($row, flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            array_merge_collection(ref('invalid_entry')),
+            ['invalid_entry' => 1],
+            schema(int_schema('invalid_entry')),
+        );
     }
 
     public function test_merging_collection_of_arrays(): void
     {
-        $row = array_to_row([
-            'array_entry' => [
+        static::assertEquals(
+            [1, 2],
+            (new FunctionContext(flow_context()))->eval(
+                array_merge_collection(ref('array_entry')),
                 [
-                    1,
+                    'array_entry' => [
+                        [
+                            1,
+                        ],
+                        [
+                            2,
+                        ],
+                        [],
+                    ],
                 ],
-                [
-                    2,
-                ],
-                [],
-            ],
-        ], schema(list_schema('array_entry', type_list(type_list(type_integer())))));
-
-        static::assertEquals([1, 2], array_merge_collection(ref('array_entry'))->eval($row, flow_context()));
+                schema(list_schema('array_entry', type_list(type_list(type_integer())))),
+            ),
+        );
     }
 
     public function test_a_list_of_structures_declares_the_structure(): void

@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use ArrayAccess;
-use ArrayIterator;
 use Countable;
 use Flow\ETL\Column\Column;
 use Flow\ETL\Column\DefaultBackend;
+use Flow\ETL\Column\Php\ValueColumn;
 use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Hash\Algorithm;
 use Flow\ETL\Hash\NativePHPHash;
@@ -21,42 +19,37 @@ use Flow\ETL\Join\HashJoin\JoinSide;
 use Flow\ETL\Join\HashJoin\RowMerger;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Join\JoinSchema;
-use Flow\ETL\Row\Comparator;
-use Flow\ETL\Row\Comparator\NativeComparator;
 use Flow\ETL\Row\Reference;
-use Flow\ETL\Row\SortOrder;
-use Flow\ETL\Rows\RowsBuilder;
+use Flow\ETL\Row\UnresolvedReference;
+use Flow\ETL\Rows\RowEquality;
+use Flow\ETL\Rows\RowHashes;
 use Flow\ETL\Schema\Formatter\InlineSchemaFormatter;
 use Flow\ETL\Schema\SimilarNames;
-use Flow\ETL\Sort\ValuesSorter;
+use Flow\ETL\Sort\RowOrder;
 use Flow\Floe\FrameDecoder;
 use Flow\Floe\FrameEncoder;
 use Flow\Types\Exception\InvalidTypeException;
+use Flow\Types\Value\Json;
 use Generator;
-use Iterator;
-use IteratorAggregate;
 
 use function array_diff_key;
+use function array_fill;
 use function array_key_exists;
 use function array_keys;
-use function array_map;
-use function array_reverse;
 use function array_shift;
+use function array_slice;
 use function array_values;
 use function count;
 use function Flow\Types\DSL\type_integer;
 use function implode;
-use function is_int;
+use function max;
 use function min;
 use function sprintf;
 
 /**
  * @type RowsPayload = array{schema: Schema, frame: string}
- *
- * @implements \ArrayAccess<int, Row>
- * @implements \IteratorAggregate<int, Row>
  */
-final class Rows implements ArrayAccess, Countable, IteratorAggregate
+final class Rows implements Countable
 {
     /**
      * @param array<array-key, Column> $columns keyed and ordered by $schema
@@ -87,47 +80,16 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
         $this->count = $rows->count;
     }
 
-    /**
-     * @throws SchemaMismatchException
-     */
-    public static function of(Schema $schema, Row ...$rows): self
+    public static function empty(Schema $schema): self
     {
-        if ($rows === []) {
-            $backend = new DefaultBackend();
-            $columns = [];
+        $backend = new DefaultBackend();
+        $columns = [];
 
-            foreach ($schema->definitions() as $name => $definition) {
-                $columns[$name] = $backend->builder($definition)->finish();
-            }
-
-            return new self($schema, $columns, 0);
+        foreach ($schema->definitions() as $name => $definition) {
+            $columns[$name] = $backend->builder($definition)->finish();
         }
 
-        $rows = array_values($rows);
-        $batch = $rows[0]->rows;
-        $single = true;
-
-        foreach ($rows as $row) {
-            if ($row->rows !== $batch) {
-                $single = false;
-
-                break;
-            }
-        }
-
-        if ($single && $batch->schema->isSame($schema)) {
-            $gathered = $batch->gather(array_map(static fn(Row $row): int => $row->index, $rows));
-
-            return new self($schema, $gathered->columns, $gathered->count);
-        }
-
-        $builder = new RowsBuilder($schema, new DefaultBackend());
-
-        foreach ($rows as $row) {
-            $builder->appendFrom($row->rows, $row->index);
-        }
-
-        return $builder->finish();
+        return new self($schema, $columns, 0);
     }
 
     /**
@@ -158,6 +120,10 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
         }
 
         foreach ($schema->definitions() as $name => $definition) {
+            if ($columns[$name] instanceof ValueColumn) {
+                throw ColumnMismatchException::untypedColumn($definition);
+            }
+
             if (!$definition->isNullable() && $columns[$name]->nullCount() > 0) {
                 $index = 0;
 
@@ -173,34 +139,6 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
         }
 
         return new self($schema, $columns, $count);
-    }
-
-    /**
-     * @throws SchemaMismatchException
-     */
-    public function add(Row ...$rows): self
-    {
-        try {
-            $added = self::of($this->schema, ...$rows);
-        } catch (SchemaMismatchException $e) {
-            throw new SchemaMismatchException($e->rowIndex + $this->count, $e->cause);
-        }
-
-        return $this->concat($added);
-    }
-
-    /**
-     * @return list<Row>
-     */
-    public function all(): array
-    {
-        $rows = [];
-
-        for ($i = 0; $i < $this->count; $i++) {
-            $rows[] = new Row($this, $i);
-        }
-
-        return $rows;
     }
 
     /**
@@ -276,7 +214,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
         $head = array_shift($inputs);
 
         if ($head === null) {
-            return self::of($this->schema);
+            return self::empty($this->schema);
         }
 
         $backend = new DefaultBackend();
@@ -318,53 +256,13 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
 
     public function diffLeft(self $rows): self
     {
-        $comparator = new NativeComparator();
-        $others = $rows->all();
-        $kept = [];
-
-        foreach ($this->all() as $row) {
-            $found = false;
-
-            foreach ($others as $otherRow) {
-                if ($comparator->equals($row, $otherRow, $this->schema)) {
-                    $found = true;
-
-                    break;
-                }
-            }
-
-            if (!$found) {
-                $kept[] = $row->index;
-            }
-        }
-
-        return $this->gather($kept);
+        return $this->gather((new RowEquality())->notIn($this, $rows, $this->schema));
     }
 
     public function diffRight(self $rows): self
     {
-        $comparator = new NativeComparator();
-        $own = $this->all();
-        $kept = [];
-
-        foreach ($rows->all() as $row) {
-            $found = false;
-
-            foreach ($own as $otherRow) {
-                if ($comparator->equals($row, $otherRow, $this->schema)) {
-                    $found = true;
-
-                    break;
-                }
-            }
-
-            if (!$found) {
-                $kept[] = $row->index;
-            }
-        }
-
         // the surviving rows come from the right side, so the right side's schema describes them
-        return $rows->gather($kept);
+        return $rows->gather((new RowEquality())->notIn($rows, $this, $this->schema));
     }
 
     public function drop(int $size): self
@@ -393,15 +291,6 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
         return $this->slice(0, $this->count - min($size, $this->count));
     }
 
-    public function first(): Row
-    {
-        if ($this->count === 0) {
-            throw new RuntimeException('First row does not exist in empty collection');
-        }
-
-        return new Row($this, 0);
-    }
-
     /**
      * @param list<int> $indices rows to keep, in the order given
      *
@@ -409,13 +298,15 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      */
     public function gather(array $indices): self
     {
-        foreach ($indices as $index) {
-            if ($index < 0 || $index >= $this->count) {
-                throw new InvalidArgumentException(sprintf(
-                    'Rows::gather() index %d is outside a batch of %d rows',
-                    $index,
-                    $this->count,
-                ));
+        if ($indices !== [] && (min($indices) < 0 || max($indices) >= $this->count)) {
+            foreach ($indices as $index) {
+                if ($index < 0 || $index >= $this->count) {
+                    throw new InvalidArgumentException(sprintf(
+                        'Rows::gather() index %d is outside a batch of %d rows',
+                        $index,
+                        $this->count,
+                    ));
+                }
             }
         }
 
@@ -428,23 +319,9 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
         return new self($this->schema, $columns, count($indices));
     }
 
-    /**
-     * @return \Iterator<int, Row>
-     */
-    public function getIterator(): Iterator
-    {
-        return new ArrayIterator($this->all());
-    }
-
     public function hash(Algorithm $algorithm = new NativePHPHash()): string
     {
-        $hash = '';
-
-        for ($i = 0; $i < $this->count; $i++) {
-            $hash .= (new Row($this, $i))->hash($this->schema, $algorithm);
-        }
-
-        return $algorithm->hash($hash);
+        return $algorithm->hash(implode('', (new RowHashes())->of($this, $algorithm)));
     }
 
     /**
@@ -471,19 +348,19 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
     public function joinCross(self $right, string $joinPrefix = 'joined_'): self
     {
         $schema = (new JoinSchema($joinPrefix))->cross($this->schema, $right->schema);
-        $merger = new RowMerger($joinPrefix);
-        $rightRows = $right->all();
-        $joined = [];
+        $left = [];
+        $rightIndices = [];
 
-        foreach ($this->all() as $leftRow) {
-            foreach ($rightRows as $rightRow) {
-                $joined[] = $merger->merge($leftRow, $rightRow);
+        for ($i = 0; $i < $this->count; $i++) {
+            for ($j = 0; $j < $right->count; $j++) {
+                $left[] = $i;
+                $rightIndices[] = $j;
             }
         }
 
-        return (new RowsBuilder($schema, new DefaultBackend()))
-            ->appendRows($joined)
-            ->finish();
+        return (new RowMerger($joinPrefix))
+            ->merge($this->gather($left), $right->gather($rightIndices))
+            ->project($schema);
     }
 
     /**
@@ -516,11 +393,6 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
     public function joinRight(self $right, Expression $expression): self
     {
         return $this->joinUsing($right, $expression, Join::right);
-    }
-
-    public function last(): ?Row
-    {
-        return $this->count === 0 ? null : new Row($this, $this->count - 1);
     }
 
     /**
@@ -632,50 +504,6 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
     }
 
     /**
-     * @param int $offset
-     *
-     * @throws InvalidArgumentException
-     */
-    public function offsetExists($offset): bool
-    {
-        // @mago-ignore analysis:impossible-condition,redundant-type-comparison
-        if (!is_int($offset)) {
-            throw new InvalidArgumentException('Rows accepts only integer offsets');
-        }
-
-        return $offset >= 0 && $offset < $this->count;
-    }
-
-    /**
-     * @param int $offset
-     *
-     * @throws InvalidArgumentException
-     */
-    public function offsetGet($offset): Row
-    {
-        if ($this->offsetExists($offset)) {
-            return new Row($this, $offset);
-        }
-
-        throw new InvalidArgumentException("Row {$offset} does not exists.");
-    }
-
-    public function offsetSet(mixed $offset, mixed $value): void
-    {
-        throw new RuntimeException('In order to add new rows use Rows::add(Row $row) : self');
-    }
-
-    /**
-     * @param int $offset
-     *
-     * @throws RuntimeException
-     */
-    public function offsetUnset(mixed $offset): void
-    {
-        throw new RuntimeException('In order to remove rows use Rows::remove(int $offset) : self');
-    }
-
-    /**
      * Drops the columns $schema does not declare and adopts it. Widening or retyping the batch is
      * not a projection - that goes through matchTo().
      *
@@ -714,7 +542,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
 
     public function remove(int $offset): self
     {
-        if (!$this->offsetExists($offset)) {
+        if ($offset < 0 || $offset >= $this->count) {
             throw new InvalidArgumentException("Rows does not have {$offset} offset");
         }
 
@@ -730,11 +558,6 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
         }
 
         return $this->gather($indices);
-    }
-
-    public function row(int $i): Row
-    {
-        return new Row($this, $i);
     }
 
     public function schema(): Schema
@@ -770,17 +593,9 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      */
     public function sortAscending(string|Reference $reference): self
     {
-        if ($this->count === 0) {
-            return $this;
-        }
-
-        /** @var list<int> $order */
-        $order = array_keys(ValuesSorter::sort(
-            $this->column($reference instanceof Reference ? $reference->base() : $reference)->values(),
-            SortOrder::ASC,
-        ));
-
-        return $this->gather($order);
+        return $this->sortBy(
+            (new UnresolvedReference($reference instanceof Reference ? $reference->base() : $reference))->asc(),
+        );
     }
 
     /**
@@ -788,13 +603,13 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      */
     public function sortBy(Reference ...$references): self
     {
-        $rows = $this;
-
-        foreach (array_reverse($references) as $ref) {
-            $rows = $ref->sort() === SortOrder::ASC ? $rows->sortAscending($ref) : $rows->sortDescending($ref);
+        if ($this->count === 0) {
+            return $this;
         }
 
-        return $rows;
+        $order = new RowOrder(array_values($references));
+
+        return $this->gather($order->permutation($order->keys($this), $this->count));
     }
 
     /**
@@ -802,17 +617,9 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      */
     public function sortDescending(string|Reference $reference): self
     {
-        if ($this->count === 0) {
-            return $this;
-        }
-
-        /** @var list<int> $order */
-        $order = array_keys(ValuesSorter::sort(
-            $this->column($reference instanceof Reference ? $reference->base() : $reference)->values(),
-            SortOrder::DESC,
-        ));
-
-        return $this->gather($order);
+        return $this->sortBy(
+            (new UnresolvedReference($reference instanceof Reference ? $reference->base() : $reference))->desc(),
+        );
     }
 
     /**
@@ -858,37 +665,39 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      */
     public function toArray(bool $withKeys = true): array
     {
-        $array = [];
+        // @mago-ignore analysis:possibly-invalid-argument
+        $array = $this->count === 0 ? [] : array_fill(0, $this->count, []);
 
-        for ($i = 0; $i < $this->count; $i++) {
-            $array[] = (new Row($this, $i))->toArray($withKeys);
+        foreach ($this->columns as $name => $column) {
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($column->values() as $i => $value) {
+                if ($value instanceof Json) {
+                    $value = $value->toArray();
+                }
+
+                $withKeys ? ($array[$i][$name] = $value) : ($array[$i][] = $value);
+            }
         }
 
         return $array;
     }
 
-    public function unique(Comparator $comparator = new NativeComparator()): self
+    public function unique(): self
     {
-        $unique = [];
-
-        foreach ($this->all() as $row) {
-            foreach ($unique as $uniqueRow) {
-                if ($comparator->equals($row, $uniqueRow, $this->schema)) {
-                    continue 2;
-                }
-            }
-
-            $unique[] = $row;
-        }
-
-        return $this->gather(array_map(static fn(Row $row): int => $row->index, $unique));
+        return $this->gather((new RowEquality())->unique($this));
     }
 
     /**
+     * @throws InvalidArgumentException
+     *
      * @return array<array-key, mixed> the logical row, schema order
      */
     public function values(int $i): array
     {
+        if ($i < 0 || $i >= $this->count) {
+            throw InvalidArgumentException::because('Row %d does not exist in a batch of %d rows', $i, $this->count);
+        }
+
         $values = [];
 
         foreach ($this->columns as $name => $column) {
@@ -975,15 +784,15 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
             yield $rows;
         };
 
-        $joiner = new Joiner($expression, $type, new DefaultBackend());
+        $joiner = new Joiner($expression, $type);
         $joined = [];
 
         foreach ($joiner->join(JoinSide::of($single($this)), JoinSide::of($single($right))) as $batch) {
-            foreach ($batch->all() as $row) {
-                $joined[] = $row;
-            }
+            $joined[] = $batch;
         }
 
-        return self::of($joiner->schema($this->schema, $right->schema), ...$joined);
+        return $joined === []
+            ? self::empty($joiner->schema($this->schema, $right->schema))
+            : $joined[0]->concat(...array_slice($joined, 1));
     }
 }

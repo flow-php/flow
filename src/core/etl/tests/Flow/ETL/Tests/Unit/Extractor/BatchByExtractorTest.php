@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
+use DateTimeImmutable;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
@@ -12,12 +13,14 @@ use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\DeclaringExtractor;
 use Flow\ETL\Tests\Double\VaryingBatchesExtractor;
+use Flow\Types\Value\Uuid;
 use PHPUnit\Framework\TestCase;
 
 use function array_map;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\batched_by;
 use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_memory;
 use function Flow\ETL\DSL\from_rows;
@@ -26,6 +29,7 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\uuid_schema;
 use function iterator_to_array;
 
 final class BatchByExtractorTest extends TestCase
@@ -41,6 +45,71 @@ final class BatchByExtractorTest extends TestCase
 
         static::assertCount(1, $batches);
         static::assertSame([['g' => 1, 'name' => 'a'], ['g' => 1, 'name' => null]], $batches[0]->toArray());
+    }
+
+    public function test_equal_uuids_stay_in_one_batch(): void
+    {
+        $batches = iterator_to_array(
+            batched_by(
+                from_rows(array_to_rows(
+                    [
+                        ['id' => 1, 'u' => new Uuid('00000000-0000-4000-8000-000000000001')],
+                        ['id' => 2, 'u' => new Uuid('00000000-0000-4000-8000-000000000001')],
+                        ['id' => 3, 'u' => new Uuid('00000000-0000-4000-8000-000000000002')],
+                    ],
+                    schema(int_schema('id'), uuid_schema('u')),
+                )),
+                ref('u'),
+            )->extract(flow_context(config())),
+            false,
+        );
+
+        static::assertSame(
+            [[1, 2], [3]],
+            array_map(static fn(Rows $rows): array => $rows->reduceToArray('id'), $batches),
+        );
+    }
+
+    public function test_equal_datetimes_stay_in_one_batch(): void
+    {
+        $batches = iterator_to_array(
+            batched_by(
+                from_rows(array_to_rows(
+                    [
+                        ['id' => 1, 'at' => new DateTimeImmutable('2026-01-01 00:00:00')],
+                        ['id' => 2, 'at' => new DateTimeImmutable('2026-01-01 00:00:00')],
+                        ['id' => 3, 'at' => new DateTimeImmutable('2026-01-02 00:00:00')],
+                    ],
+                    schema(int_schema('id'), datetime_schema('at')),
+                )),
+                ref('at'),
+            )->extract(flow_context(config())),
+            false,
+        );
+
+        static::assertSame(
+            [[1, 2], [3]],
+            array_map(static fn(Rows $rows): array => $rows->reduceToArray('id'), $batches),
+        );
+    }
+
+    public function test_nulls_are_a_group_of_their_own(): void
+    {
+        $batches = iterator_to_array(
+            batched_by(
+                from_rows(array_to_rows(
+                    [['id' => 1, 'g' => null], ['id' => 2, 'g' => null], ['id' => 3, 'g' => 1]],
+                    schema(int_schema('id'), int_schema('g', nullable: true)),
+                )),
+                ref('g'),
+            )->extract(flow_context(config())),
+            false,
+        );
+
+        static::assertSame(
+            [[1, 2], [3]],
+            array_map(static fn(Rows $rows): array => $rows->reduceToArray('id'), $batches),
+        );
     }
 
     public function test_a_group_spanning_two_child_batches_is_one_batch(): void

@@ -20,6 +20,6 @@ final readonly class CombineSortAndLimit implements Rule
 {
     public function apply(LogicalPlan $plan, FlowContext $context): LogicalPlan
     {
-        return $plan->transformUp(new TopNRewrite($context));
+        return $plan->transformUp(new TopNRewrite());
     }
 }

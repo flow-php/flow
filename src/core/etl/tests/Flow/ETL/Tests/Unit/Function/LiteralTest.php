@@ -8,6 +8,12 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\Literal;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\schema;
+
 final class LiteralTest extends FlowTestCase
 {
     public function test_constructor_rejects_a_closure_nested_in_an_array(): void
@@ -28,5 +34,37 @@ final class LiteralTest extends FlowTestCase
         );
 
         new Literal(static fn(): int => 1);
+    }
+
+    public function test_a_batch_of_the_same_size_reuses_the_column(): void
+    {
+        $literal = lit(7);
+        $first = $literal->eval(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))), flow_context());
+
+        static::assertSame($first, $literal->eval(array_to_rows([
+            ['id' => 3],
+            ['id' => 4],
+        ], schema(int_schema('id'))), flow_context()));
+        static::assertSame([7, 7], $first->values());
+    }
+
+    public function test_a_batch_of_another_size_gets_a_column_of_its_size(): void
+    {
+        $literal = lit('x');
+        $two = $literal->eval(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))), flow_context());
+        $three = $literal->eval(array_to_rows([
+            ['id' => 1],
+            ['id' => 2],
+            ['id' => 3],
+        ], schema(int_schema('id'))), flow_context());
+
+        static::assertSame(['x', 'x'], $two->values());
+        static::assertSame(['x', 'x', 'x'], $three->values());
+        static::assertSame(
+            ['x', 'x'],
+            $literal
+                ->eval(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))), flow_context())
+                ->values(),
+        );
     }
 }

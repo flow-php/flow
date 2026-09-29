@@ -6,9 +6,9 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use DateTimeImmutable;
 use Flow\ETL\Hash\NativePHPHash;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\concat;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\flow_context;
@@ -25,45 +25,55 @@ final class HashTest extends FlowTestCase
 {
     public function test_hashing_array_value(): void
     {
-        static::assertSame('4450cf82dc53848e2bbe9798b70b0a6a', ref('value')
-            ->hash()
-            ->eval(array_to_row(['value' => [
+        static::assertSame('4450cf82dc53848e2bbe9798b70b0a6a', (new FunctionContext(flow_context()))->eval(
+            ref('value')->hash(),
+            ['value' => [
                 'test',
-            ]], schema(list_schema('value', type_list(type_string())))), flow_context()));
+            ]],
+            schema(list_schema('value', type_list(type_string()))),
+        ));
     }
 
     public function test_hashing_concat(): void
     {
         static::assertSame(
             NativePHPHash::xxh128('test_test'),
-            hash(concat(ref('value'), lit('_'), ref('value')), new NativePHPHash('xxh128'))->eval(array_to_row([
-                'value' => 'test',
-            ], schema(str_schema('value'))), flow_context()),
+            (new FunctionContext(flow_context()))->eval(
+                hash(concat(ref('value'), lit('_'), ref('value')), new NativePHPHash('xxh128')),
+                [
+                    'value' => 'test',
+                ],
+                schema(str_schema('value')),
+            ),
         );
     }
 
     public function test_hashing_datetime(): void
     {
-        static::assertSame('5347d10de38eb5570c044eb710a5120a', ref('value')
-            ->hash()
-            ->eval(array_to_row([
+        static::assertSame('5347d10de38eb5570c044eb710a5120a', (new FunctionContext(flow_context()))->eval(
+            ref('value')->hash(),
+            [
                 'value' => new DateTimeImmutable('2021-01-01'),
-            ], schema(datetime_schema('value'))), flow_context()));
+            ],
+            schema(datetime_schema('value')),
+        ));
     }
 
     public function test_hashing_null_value(): void
     {
-        static::assertNull(
-            ref('value')
-                ->hash()
-                ->eval(array_to_row(['value' => null], schema(str_schema('value', nullable: true))), flow_context()),
-        );
+        static::assertNull((new FunctionContext(flow_context()))->eval(
+            ref('value')->hash(),
+            ['value' => null],
+            schema(str_schema('value', nullable: true)),
+        ));
     }
 
     public function test_hashing_string_value(): void
     {
-        static::assertSame('6c78e0e3bd51d358d01e758642b85fb8', ref('value')
-            ->hash()
-            ->eval(array_to_row(['value' => 'test'], schema(str_schema('value'))), flow_context()));
+        static::assertSame('6c78e0e3bd51d358d01e758642b85fb8', (new FunctionContext(flow_context()))->eval(
+            ref('value')->hash(),
+            ['value' => 'test'],
+            schema(str_schema('value')),
+        ));
     }
 }

@@ -7,23 +7,70 @@ namespace Flow\ETL\Tests\Unit\Sort\Merge;
 use Flow\ETL\Bucketing\BucketRun;
 use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\Bucketing\Storage\MemoryBuckets;
-use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Constraint\SortedByConstraint;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row;
 use Flow\ETL\Sort\Merge\KWayMerge;
 use Flow\ETL\Tests\Context\BucketsStorageContext;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\SortDatasetMother;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 
-use function array_map;
+use function array_chunk;
+use function array_merge;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
+use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function serialize;
 
 final class KWayMergeTest extends FlowTestCase
 {
+    public static function random_datasets(): Generator
+    {
+        for ($seed = 1; $seed <= 200; $seed++) {
+            yield "seed {$seed}" => [$seed];
+        }
+    }
+
+    #[DataProvider('random_datasets')]
+    public function test_merging_sorted_runs_equals_one_in_memory_sort(int $seed): void
+    {
+        $dataset = SortDatasetMother::random($seed);
+        $buckets = new Buckets(new MemoryBuckets());
+        $runs = [];
+
+        foreach ($dataset['runs'] as $run => $rows) {
+            foreach (array_to_rows($rows, $dataset['schema'])
+                ->sortBy(...$dataset['references'])
+                ->chunks($dataset['storedBatchSize']) as $batch) {
+                $buckets->storage()->append("run-{$run}", $batch);
+            }
+
+            $runs[] = new BucketRun("run-{$run}", $buckets);
+        }
+
+        $merged = rows($dataset['schema']);
+
+        foreach ((new KWayMerge(refs(...$dataset['references']), $dataset['mergeBatchSize']))->merge($runs) as $batch) {
+            $merged = $merged->concat($batch->matchTo($dataset['schema']));
+        }
+
+        // serialized, so NaN and -0.0 compare by what they are
+        static::assertSame(
+            serialize(
+                array_to_rows(array_merge(...$dataset['runs']), $dataset['schema'])
+                    ->sortBy(...$dataset['references'])
+                    ->toArray(),
+            ),
+            serialize($merged->toArray()),
+        );
+        static::assertNull((new SortedByConstraint(...$dataset['references']))->firstViolation($merged));
+    }
+
     public function test_merges_multiple_sorted_runs_ascending(): void
     {
         $buckets = new Buckets(new MemoryBuckets());
@@ -43,13 +90,18 @@ final class KWayMergeTest extends FlowTestCase
             ['id' => 9],
         ], schema(int_schema('id'))));
 
-        $merge = new KWayMerge(refs(ref('id')->asc()), new PhpBackend());
+        $merge = new KWayMerge(refs(ref('id')->asc()));
 
         static::assertSame(
             [1, 2, 3, 4, 5, 6, 7, 8, 9],
-            array_map(static fn(Row $r): mixed => $r->get(
+            array_column(
+                BucketsStorageContext::rows($merge->merge([
+                    new BucketRun('a', $buckets),
+                    new BucketRun('b', $buckets),
+                    new BucketRun('c', $buckets),
+                ])),
                 'id',
-            ), BucketsStorageContext::rows($merge->merge([new BucketRun('a', $buckets), new BucketRun('b', $buckets), new BucketRun('c', $buckets)]))),
+            ),
         );
     }
 
@@ -65,16 +117,17 @@ final class KWayMergeTest extends FlowTestCase
         static::assertSame([], BucketsStorageContext::rows($spill->storage()->get('sort-merge-0')));
         static::assertSame([], BucketsStorageContext::rows($merged->storage()->get('sort-run-0')));
 
-        $merge = new KWayMerge(refs(ref('id')->asc()), new PhpBackend());
+        $merge = new KWayMerge(refs(ref('id')->asc()));
 
         static::assertSame(
             [1, 2, 3, 4],
-            array_map(static fn(Row $r): mixed => $r->get(
+            array_column(
+                BucketsStorageContext::rows($merge->merge([
+                    new BucketRun('sort-run-0', $spill),
+                    new BucketRun('sort-merge-0', $merged),
+                ])),
                 'id',
-            ), BucketsStorageContext::rows($merge->merge([
-                new BucketRun('sort-run-0', $spill),
-                new BucketRun('sort-merge-0', $merged),
-            ]))),
+            ),
         );
     }
 
@@ -92,13 +145,17 @@ final class KWayMergeTest extends FlowTestCase
             ['id' => 2],
         ], schema(int_schema('id'))));
 
-        $merge = new KWayMerge(refs(ref('id')->desc()), new PhpBackend());
+        $merge = new KWayMerge(refs(ref('id')->desc()));
 
         static::assertSame(
             [8, 7, 5, 4, 2, 1],
-            array_map(static fn(Row $r): mixed => $r->get(
+            array_column(
+                BucketsStorageContext::rows($merge->merge([
+                    new BucketRun('a', $buckets),
+                    new BucketRun('b', $buckets),
+                ])),
                 'id',
-            ), BucketsStorageContext::rows($merge->merge([new BucketRun('a', $buckets), new BucketRun('b', $buckets)]))),
+            ),
         );
     }
 
@@ -112,13 +169,17 @@ final class KWayMergeTest extends FlowTestCase
         ], schema(int_schema('id'))));
         $buckets->storage()->append('b', array_to_rows([['id' => 4]], schema(int_schema('id'))));
 
-        $merge = new KWayMerge(refs(ref('id')->asc()), new PhpBackend());
+        $merge = new KWayMerge(refs(ref('id')->asc()));
 
         static::assertSame(
             [1, 2, 3, 4],
-            array_map(static fn(Row $r): mixed => $r->get(
+            array_column(
+                BucketsStorageContext::rows($merge->merge([
+                    new BucketRun('a', $buckets),
+                    new BucketRun('b', $buckets),
+                ])),
                 'id',
-            ), BucketsStorageContext::rows($merge->merge([new BucketRun('a', $buckets), new BucketRun('b', $buckets)]))),
+            ),
         );
     }
 
@@ -128,13 +189,17 @@ final class KWayMergeTest extends FlowTestCase
         $buckets->storage()->append('a', array_to_rows([['id' => 'a'], ['id' => 'c']], schema(str_schema('id'))));
         $buckets->storage()->append('b', array_to_rows([['id' => 'b'], ['id' => 'd']], schema(str_schema('id'))));
 
-        $merge = new KWayMerge(refs(ref('id')->asc()), new PhpBackend());
+        $merge = new KWayMerge(refs(ref('id')->asc()));
 
         static::assertSame(
             ['a', 'b', 'c', 'd'],
-            array_map(static fn(Row $r): mixed => $r->get(
+            array_column(
+                BucketsStorageContext::rows($merge->merge([
+                    new BucketRun('a', $buckets),
+                    new BucketRun('b', $buckets),
+                ])),
                 'id',
-            ), BucketsStorageContext::rows($merge->merge([new BucketRun('a', $buckets), new BucketRun('b', $buckets)]))),
+            ),
         );
     }
 
@@ -147,17 +212,14 @@ final class KWayMergeTest extends FlowTestCase
         ));
         $buckets->storage()->append('b', array_to_rows([['id' => 2]], schema(int_schema('id'))));
 
-        $merge = new KWayMerge(refs(ref('id')->asc()), new PhpBackend());
+        $merge = new KWayMerge(refs(ref('id')->asc()));
 
         static::assertSame(
             [['id' => 1, 'name' => 'a'], ['id' => 2, 'name' => null]],
-            array_map(
-                static fn(Row $r): array => $r->toArray(),
-                BucketsStorageContext::rows($merge->merge([
-                    new BucketRun('a', $buckets),
-                    new BucketRun('b', $buckets),
-                ])),
-            ),
+            BucketsStorageContext::rows($merge->merge([
+                new BucketRun('a', $buckets),
+                new BucketRun('b', $buckets),
+            ])),
         );
     }
 
@@ -166,19 +228,17 @@ final class KWayMergeTest extends FlowTestCase
         $buckets = new Buckets(new MemoryBuckets());
         $buckets->storage()->append('a', array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))));
 
-        $merge = new KWayMerge(refs(ref('id')->asc()), new PhpBackend());
+        $merge = new KWayMerge(refs(ref('id')->asc()));
 
         static::assertSame(
             [1, 2],
-            array_map(static fn(Row $r): mixed => $r->get(
-                'id',
-            ), BucketsStorageContext::rows($merge->merge([new BucketRun('a', $buckets)]))),
+            array_column(BucketsStorageContext::rows($merge->merge([new BucketRun('a', $buckets)])), 'id'),
         );
     }
 
     public function test_empty_bucket_set_yields_nothing(): void
     {
-        $merge = new KWayMerge(refs(ref('id')->asc()), new PhpBackend());
+        $merge = new KWayMerge(refs(ref('id')->asc()));
 
         static::assertSame([], BucketsStorageContext::rows($merge->merge([])));
     }
@@ -193,7 +253,7 @@ final class KWayMergeTest extends FlowTestCase
         ], schema(int_schema('id'))));
         $buckets->storage()->append('b', array_to_rows([['id' => 2], ['id' => 4]], schema(int_schema('id'))));
 
-        $merge = new KWayMerge(refs(ref('id')->asc()), new PhpBackend(), batchSize: 2);
+        $merge = new KWayMerge(refs(ref('id')->asc()), batchSize: 2);
 
         $sizes = [];
 
@@ -210,6 +270,42 @@ final class KWayMergeTest extends FlowTestCase
         $this->expectExceptionMessage('Batch size must be greater than 0, given: 0');
 
         // @mago-ignore analysis:invalid-argument
-        new KWayMerge(refs(ref('id')->asc()), new PhpBackend(), batchSize: 0);
+        new KWayMerge(refs(ref('id')->asc()), batchSize: 0);
+    }
+
+    public function test_interleaves_runs_across_batch_boundaries_like_one_sort(): void
+    {
+        $buckets = new Buckets(new MemoryBuckets());
+        $all = [];
+
+        foreach (['a' => [2, 0], 'b' => [3, 1], 'c' => [5, 2]] as $run => [$batchSize, $offset]) {
+            $rows = [];
+
+            for ($i = 0; $i < 10; $i++) {
+                $rows[] = ['id' => ($i * 3) + $offset, 'run' => $run];
+            }
+
+            $all = [...$all, ...$rows];
+
+            foreach (array_chunk($rows, $batchSize) as $chunk) {
+                $buckets->storage()->append($run, array_to_rows($chunk, schema(int_schema('id'), str_schema('run'))));
+            }
+        }
+
+        $merged = [];
+
+        foreach ((new KWayMerge(refs(ref('id')->asc()), batchSize: 4))->merge([
+            new BucketRun('a', $buckets),
+            new BucketRun('b', $buckets),
+            new BucketRun('c', $buckets),
+        ]) as $batch) {
+            static::assertLessThanOrEqual(4, $batch->count());
+            $merged = [...$merged, ...$batch->toArray()];
+        }
+
+        static::assertSame(
+            array_to_rows($all, schema(int_schema('id'), str_schema('run')))->sortBy(ref('id')->asc())->toArray(),
+            $merged,
+        );
     }
 }

@@ -14,6 +14,7 @@ use Flow\ETL\Column\Php\PhysicalBuilderFor;
 use Flow\ETL\Column\Php\PhysicalFor;
 use Flow\ETL\Column\Php\ScalarColumn;
 use Flow\ETL\Column\Php\StructColumn;
+use Flow\ETL\Column\Php\ValueColumn;
 use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Schema\Definition;
@@ -71,6 +72,10 @@ final readonly class PhpBackend implements Backend
 
     public function adopt(Definition $definition, Column $column): Column
     {
+        if ($column instanceof ValueColumn) {
+            throw ColumnMismatchException::untypedColumn($definition);
+        }
+
         if (
             $column instanceof ScalarColumn
             || $column instanceof ConstantColumn

@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\array_to_row;
+use function array_map;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\collect;
+use function Flow\ETL\DSL\count;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
@@ -26,10 +29,10 @@ final class CollectTest extends FlowTestCase
     {
         $aggregator = collect(ref('data'));
 
-        $aggregator->aggregate(array_to_row(['data' => 'a'], schema(str_schema('data'))), flow_context());
-        $aggregator->aggregate(array_to_row(['data' => 'b'], schema(str_schema('data'))), flow_context());
-        $aggregator->aggregate(array_to_row(['data' => 'b'], schema(str_schema('data'))), flow_context());
-        $aggregator->aggregate(array_to_row(['data' => 'c'], schema(str_schema('data'))), flow_context());
+        $aggregator->aggregate(array_to_rows([['data' => 'a']], schema(str_schema('data'))), [0], flow_context());
+        $aggregator->aggregate(array_to_rows([['data' => 'b']], schema(str_schema('data'))), [0], flow_context());
+        $aggregator->aggregate(array_to_rows([['data' => 'b']], schema(str_schema('data'))), [0], flow_context());
+        $aggregator->aggregate(array_to_rows([['data' => 'c']], schema(str_schema('data'))), [0], flow_context());
 
         static::assertSame(
             [
@@ -64,5 +67,49 @@ final class CollectTest extends FlowTestCase
         $resolved = (new ReferenceResolver())->resolve(collect(ref('v')), schema(int_schema('v', true)));
 
         static::assertSame('?list<?integer>', $resolved->returns()->toString());
+    }
+
+    public function test_aggregate_reads_only_given_indices(): void
+    {
+        $aggregator = collect(ref('v'));
+        $aggregator->aggregate(
+            array_to_rows(array_map(static fn(mixed $v): array => ['v' => $v], [
+                'a',
+                'b',
+                'c',
+                'd',
+            ]), schema(str_schema('v'))),
+            [1, 3],
+            flow_context(),
+        );
+
+        static::assertSame(['b', 'd'], $aggregator->value());
+    }
+
+    public function test_merge_of_two_halves_equals_one_pass(): void
+    {
+        $rows = array_to_rows(array_map(static fn(mixed $v): array => ['v' => $v], [
+            'a',
+            'b',
+            'c',
+            'd',
+        ]), schema(str_schema('v')));
+        $onePass = collect(ref('v'));
+        $onePass->aggregate($rows, [0, 1, 2, 3], flow_context());
+        $left = collect(ref('v'));
+        $left->aggregate($rows, [0, 1], flow_context());
+        $right = collect(ref('v'));
+        $right->aggregate($rows, [2, 3], flow_context());
+
+        $left->merge($right, flow_context());
+
+        static::assertSame($onePass->value(), $left->value());
+    }
+
+    public function test_merge_refuses_another_class(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        collect(ref('v'))->merge(count(ref('v')), flow_context());
     }
 }

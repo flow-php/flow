@@ -9,10 +9,10 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Exception\InvalidArgumentException as TypesInvalidArgumentException;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
@@ -35,10 +35,14 @@ final class ToTimeZoneTest extends FlowTestCase
     public function test_casting_date_time_pst_to_utc_time_zone(): void
     {
         // @mago-ignore analysis:mixed-assignment
-        $result = to_timezone(
-            lit(new DateTimeImmutable('2020-01-01 00:00:00', new DateTimeZone('PST'))),
-            new DateTimeZone('UTC'),
-        )->eval(array_to_row([], schema()), flow_context());
+        $result = (new FunctionContext(flow_context()))->eval(
+            to_timezone(
+                lit(new DateTimeImmutable('2020-01-01 00:00:00', new DateTimeZone('PST'))),
+                new DateTimeZone('UTC'),
+            ),
+            [],
+            schema(),
+        );
         static::assertInstanceOf(DateTimeInterface::class, $result);
         static::assertSame('2020-01-01 08:00:00.000000', $result->format('Y-m-d H:i:s.u'));
     }
@@ -46,9 +50,10 @@ final class ToTimeZoneTest extends FlowTestCase
     public function test_casting_date_time_pst_to_utc_time_zone_from_string_tz(): void
     {
         // @mago-ignore analysis:mixed-assignment
-        $result = to_timezone(lit(new DateTimeImmutable('2020-01-01 00:00:00', new DateTimeZone('PST'))), 'UTC')->eval(
-            array_to_row([], schema()),
-            flow_context(),
+        $result = (new FunctionContext(flow_context()))->eval(
+            to_timezone(lit(new DateTimeImmutable('2020-01-01 00:00:00', new DateTimeZone('PST'))), 'UTC'),
+            [],
+            schema(),
         );
         static::assertInstanceOf(DateTimeInterface::class, $result);
         static::assertSame('2020-01-01 08:00:00.000000', $result->format('Y-m-d H:i:s.u'));
@@ -58,7 +63,7 @@ final class ToTimeZoneTest extends FlowTestCase
     {
         $value = new DateTime('2020-01-01 00:00:00 UTC');
 
-        to_timezone(lit($value), 'Europe/Warsaw')->eval(array_to_row([], schema()), flow_context());
+        (new FunctionContext(flow_context()))->eval(to_timezone(lit($value), 'Europe/Warsaw'), [], schema());
 
         static::assertSame('UTC', $value->getTimezone()->getName());
     }
@@ -78,8 +83,12 @@ final class ToTimeZoneTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('ToTimeZone function requires non-null values');
 
-        to_timezone(ref('at'), 'UTC')->eval(array_to_row([
-            'at' => null,
-        ], schema(str_schema('at', nullable: true))), flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            to_timezone(ref('at'), 'UTC'),
+            [
+                'at' => null,
+            ],
+            schema(str_schema('at', nullable: true)),
+        );
     }
 }

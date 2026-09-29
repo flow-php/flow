@@ -60,9 +60,9 @@ final class FloeStreamReaderTest extends FlowIntegrationTestCase
         $read = [];
 
         foreach ($reader->rows() as $batch) {
-            foreach ($batch->all() as $row) {
-                static::assertSame(['id', 'email'], $row->names());
-                $read[] = [$row->get('id'), $row->get('email')];
+            foreach ($batch->toArray() as $row) {
+                static::assertSame(['id', 'email'], array_keys($row));
+                $read[] = [$row['id'], $row['email']];
             }
         }
 
@@ -100,8 +100,8 @@ final class FloeStreamReaderTest extends FlowIntegrationTestCase
         foreach ((new FloeReader($this->fs(), chunkSize: 4096))
             ->read($path)
             ->rows(500) as $batch) {
-            foreach ($batch->all() as $row) {
-                static::assertSame($read, $row->get('id'));
+            foreach ($batch->toArray() as $row) {
+                static::assertSame($read, $row['id']);
                 $read++;
             }
         }
@@ -126,7 +126,7 @@ final class FloeStreamReaderTest extends FlowIntegrationTestCase
         );
 
         static::assertCount(1, $batches);
-        static::assertEquals($rows->all(), $batches[0]->all());
+        static::assertEquals($rows->toArray(), $batches[0]->toArray());
     }
 
     public function test_round_trip_of_heterogeneous_rows_through_local_filesystem(): void

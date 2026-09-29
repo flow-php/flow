@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Flow\ETL\Sort\Merge;
 
 use Flow\ETL\Bucketing\BucketRun;
-use Flow\ETL\Column\Backend;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
-use Flow\ETL\Rows\RowsBuffer;
 use Flow\ETL\Schema;
+use Flow\ETL\Sort\RowOrder;
 use Generator;
+
+use function array_filter;
+use function array_slice;
+use function array_values;
 
 final readonly class KWayMerge
 {
@@ -20,7 +23,6 @@ final readonly class KWayMerge
      */
     public function __construct(
         private References $refs,
-        private Backend $backend,
         private int $batchSize = 1000,
     ) {
         // @mago-ignore analysis:invalid-operand
@@ -31,48 +33,86 @@ final readonly class KWayMerge
     }
 
     /**
+     * Merges block by block: every loaded row that sorts at or before the smallest last loaded row (the frontier) is
+     * final, because a run's unloaded rows sort after its loaded ones. Ties sort by run, then by position, so equal
+     * rows keep their input order.
+     *
      * @param list<BucketRun> $runs
      *
      * @return Generator<Rows>
      */
     public function merge(array $runs): Generator
     {
-        $heap = new RowsMinHeap(...$this->refs->all());
+        $order = new RowOrder($this->refs->all());
 
-        /** @var array<string, BucketCursor> $cursors */
+        /** @var list<BucketCursor> $cursors */
         $cursors = [];
         $schema = null;
 
         foreach ($runs as $run) {
-            $cursor = new BucketCursor($run->rows());
+            $cursor = new BucketCursor($run->rows(), $order);
 
             if ($cursor->valid()) {
                 $schema ??= $cursor->schema();
-                $heap->push($cursor->current(), $run->id);
-                $cursor->next();
-                $cursors[$run->id] = $cursor;
+                $cursors[] = $cursor;
             }
         }
 
-        $buffer = new RowsBuffer($schema ?? new Schema(), $this->backend, $this->batchSize);
+        $schema ??= new Schema();
+        $pending = Rows::empty($schema);
 
-        while (!$heap->isEmpty()) {
-            $top = $heap->extract();
+        while ($cursors !== []) {
+            $frontier = 0;
 
-            if (null !== ($batch = $buffer->appendFrom($top->row->rows, $top->row->index))) {
-                yield $batch;
+            foreach ($cursors as $position => $cursor) {
+                if (
+                    $order->compare(
+                        $cursor->keys(),
+                        $cursor->batch()->count() - 1,
+                        $cursors[$frontier]->keys(),
+                        $cursors[$frontier]->batch()->count() - 1,
+                    ) < 0
+                ) {
+                    $frontier = $position;
+                }
             }
 
-            $cursor = $cursors[$top->bucketId];
+            $bound = $cursors[$frontier]->keys();
+            $boundIndex = $cursors[$frontier]->batch()->count() - 1;
+            $slices = [];
 
-            if ($cursor->valid()) {
-                $heap->push($cursor->current(), $top->bucketId);
-                $cursor->next();
+            foreach ($cursors as $position => $cursor) {
+                $from = $cursor->index();
+                $to = $order->firstAfter(
+                    $cursor->keys(),
+                    $from,
+                    $cursor->batch()->count(),
+                    $bound,
+                    $boundIndex,
+                    $position <= $frontier,
+                );
+
+                if ($to > $from) {
+                    $slices[] = $cursor
+                        ->batch()
+                        ->slice($from, $to - $from)
+                        ->matchTo($schema);
+                    $cursor->advance($to);
+                }
+            }
+
+            $cursors = array_values(array_filter($cursors, static fn(BucketCursor $cursor): bool => $cursor->valid()));
+            $block = $slices[0]->concat(...array_slice($slices, 1));
+            $pending = $pending->concat($block->gather($order->permutation($order->keys($block), $block->count())));
+
+            while ($pending->count() >= $this->batchSize) {
+                yield $pending->slice(0, $this->batchSize);
+                $pending = $pending->slice($this->batchSize, $pending->count() - $this->batchSize);
             }
         }
 
-        if (null !== ($batch = $buffer->flush())) {
-            yield $batch;
+        if (!$pending->isEmpty()) {
+            yield $pending;
         }
     }
 }

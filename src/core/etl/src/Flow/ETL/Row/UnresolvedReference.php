@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
+use Flow\ETL\Column\Column;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\FunctionTree;
@@ -11,7 +12,7 @@ use Flow\ETL\Function\ListFunctions;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Function\ScalarFunctionChain;
 use Flow\ETL\Function\StructureFunctions;
-use Flow\ETL\Row;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema\Definition;
 use Flow\Types\Type;
 
@@ -30,6 +31,7 @@ final class UnresolvedReference implements Reference
         private readonly string $entry,
         private readonly ?string $alias = null,
         private readonly SortOrder $sort = SortOrder::ASC,
+        private readonly NullsOrder $nulls = NullsOrder::FIRST,
     ) {}
 
     public static function init(string|Reference $ref): Reference
@@ -48,12 +50,12 @@ final class UnresolvedReference implements Reference
 
     public function as(string $alias): self
     {
-        return new self($this->entry, $alias, $this->sort);
+        return new self($this->entry, $alias, $this->sort, $this->nulls);
     }
 
-    public function asc(): self
+    public function asc(NullsOrder $nulls = NullsOrder::FIRST): self
     {
-        return new self($this->entry, $this->alias, SortOrder::ASC);
+        return new self($this->entry, $this->alias, SortOrder::ASC, $nulls);
     }
 
     public function base(): string
@@ -90,14 +92,14 @@ final class UnresolvedReference implements Reference
         throw InvalidLogicException::because(self::UNRESOLVED, 'returns', $this->entry);
     }
 
-    public function desc(): self
+    public function desc(NullsOrder $nulls = NullsOrder::LAST): self
     {
-        return new self($this->entry, $this->alias, SortOrder::DESC);
+        return new self($this->entry, $this->alias, SortOrder::DESC, $nulls);
     }
 
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        return $row->get($this->entry);
+        throw InvalidLogicException::because(self::UNRESOLVED, 'eval', $this->entry);
     }
 
     public function hasAlias(): bool
@@ -135,7 +137,13 @@ final class UnresolvedReference implements Reference
             $definition->isNullable() ? type_optional($type) : $type,
             $this->alias,
             $this->sort,
+            $this->nulls,
         );
+    }
+
+    public function nulls(): NullsOrder
+    {
+        return $this->nulls;
     }
 
     public function sort(): SortOrder

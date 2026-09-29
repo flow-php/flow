@@ -4,12 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Join\HashJoin;
 
-use Flow\ETL\Row;
-use Generator;
-
 use function array_key_exists;
 use function array_keys;
-use function count;
 
 final class HashTable
 {
@@ -18,10 +14,7 @@ final class HashTable
      */
     private array $buckets = [];
 
-    /**
-     * @var list<Row>
-     */
-    private array $rows = [];
+    private int $count = 0;
 
     /**
      * @var array<int, true>
@@ -32,11 +25,10 @@ final class HashTable
         private readonly bool $trackUnmatched = false,
     ) {}
 
-    public function add(string $hash, Row $row): void
+    public function add(string $hash, int $index): void
     {
-        $index = count($this->rows);
-        $this->rows[] = $row;
         $this->buckets[$hash][] = $index;
+        $this->count++;
 
         if ($this->trackUnmatched) {
             $this->unmatched[$index] = true;
@@ -44,26 +36,16 @@ final class HashTable
     }
 
     /**
-     * @return array<int, Row>
+     * @return list<int> the build-side rows under $hash, in the order they were added
      */
     public function candidatesFor(string $hash): array
     {
-        if (!array_key_exists($hash, $this->buckets)) {
-            return [];
-        }
-
-        $candidates = [];
-
-        foreach ($this->buckets[$hash] as $index) {
-            $candidates[$index] = $this->rows[$index];
-        }
-
-        return $candidates;
+        return array_key_exists($hash, $this->buckets) ? $this->buckets[$hash] : [];
     }
 
     public function count(): int
     {
-        return count($this->rows);
+        return $this->count;
     }
 
     public function matched(int $index): void
@@ -72,12 +54,10 @@ final class HashTable
     }
 
     /**
-     * @return Generator<Row>
+     * @return list<int> the build-side rows never matched, in the order they were added
      */
-    public function unmatchedRows(): Generator
+    public function unmatched(): array
     {
-        foreach (array_keys($this->unmatched) as $index) {
-            yield $this->rows[$index];
-        }
+        return array_keys($this->unmatched);
     }
 }

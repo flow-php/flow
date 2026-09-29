@@ -55,18 +55,15 @@ final class DenseRank implements PartitionRanking, WindowFunction
             throw new BaseRuntimeException('Dens Rank window function requires to be ordered by one column');
         }
 
-        $comparator = new PeerComparator($orderBy);
         $ranks = [];
         $rank = 1;
-        $previous = null;
 
-        foreach ($partition as $row) {
-            if ($previous !== null && !$comparator->arePeers($previous, $row, $partition->schema())) {
+        foreach ((new PeerComparator($orderBy))->peersOfPrevious($partition) as $index => $peer) {
+            if ($index > 0 && !$peer) {
                 $rank++;
             }
 
             $ranks[] = $rank;
-            $previous = $row;
         }
 
         return $ranks;

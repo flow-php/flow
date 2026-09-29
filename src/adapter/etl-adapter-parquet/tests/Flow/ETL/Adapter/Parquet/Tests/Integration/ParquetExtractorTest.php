@@ -203,8 +203,8 @@ final class ParquetExtractorTest extends FlowTestCase
         $extractor = from_parquet(path(__DIR__ . '/Fixtures/Pagination/partitioned/date=2024-01-01/*.parquet'));
 
         foreach ($extractor->extract(flow_context(config())) as $rows) {
-            static::assertSame(['id', 'name', 'date'], array_keys($rows->first()->toArray()));
-            static::assertSame('2024-01-01', $rows->first()->get('date'));
+            static::assertSame(['id', 'name', 'date'], array_keys($rows->toArray()[0]));
+            static::assertSame('2024-01-01', $rows->column('date')->value(0));
             static::assertEquals($extractor->schema(), $rows->schema());
 
             return;
@@ -263,7 +263,7 @@ final class ParquetExtractorTest extends FlowTestCase
 
         foreach ($extractor->extract(flow_context(config())) as $rows) {
             static::assertEquals($extractor->schema(), $rows->schema());
-            static::assertEquals(new DateTimeImmutable('2024-01-01 00:00:00 UTC'), $rows->first()->get('date'));
+            static::assertEquals(new DateTimeImmutable('2024-01-01 00:00:00 UTC'), $rows->column('date')->value(0));
 
             return;
         }

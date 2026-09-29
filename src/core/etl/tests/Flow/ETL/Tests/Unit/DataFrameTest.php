@@ -543,8 +543,8 @@ final class DataFrameTest extends FlowTestCase
             {
                 $stamped = [];
 
-                foreach ($rows->all() as $row) {
-                    $stamped[] = [...$row->values(), 'stamp' => 'zero'];
+                for ($i = 0; $i < $rows->count(); $i++) {
+                    $stamped[] = [...$rows->values($i), 'stamp' => 'zero'];
                 }
 
                 return array_to_rows($stamped, $rows->schema()->add(str_schema('stamp')));

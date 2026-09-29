@@ -370,6 +370,6 @@ final class PartitioningTest extends FlowIntegrationTestCase
             ->fetch();
 
         static::assertCount(1, $rows);
-        static::assertSame(2023, $rows->first()->get('year'));
+        static::assertSame(2023, $rows->column('year')->value(0));
     }
 }

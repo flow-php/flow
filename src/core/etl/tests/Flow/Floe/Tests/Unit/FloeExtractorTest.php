@@ -142,7 +142,7 @@ final class FloeExtractorTest extends FlowTestCase
         $extractor = from_floe($path, filesystem: $memory)->withMetadataColumns(true);
         $batches = iterator_to_array($extractor->extract($context));
 
-        static::assertSame($path->uri(), $batches[0]->first()->get('_input_file_uri'));
+        static::assertSame($path->uri(), $batches[0]->column('_input_file_uri')->value(0));
     }
 
     public function test_extract_applies_offset_within_a_file(): void
@@ -158,8 +158,8 @@ final class FloeExtractorTest extends FlowTestCase
         $ids = [];
 
         foreach (from_floe($path, filesystem: $memory)->withOffset(1)->extract($context) as $batch) {
-            foreach ($batch->all() as $extractedRow) {
-                $ids[] = $extractedRow->get('id');
+            foreach ($batch->toArray() as $extractedRow) {
+                $ids[] = $extractedRow['id'];
             }
         }
 
@@ -181,8 +181,8 @@ final class FloeExtractorTest extends FlowTestCase
         $ids = [];
 
         foreach ($extractor->extract($context, limit: 2) as $batch) {
-            foreach ($batch->all() as $extractedRow) {
-                $ids[] = $extractedRow->get('id');
+            foreach ($batch->toArray() as $extractedRow) {
+                $ids[] = $extractedRow['id'];
             }
         }
 
@@ -201,7 +201,7 @@ final class FloeExtractorTest extends FlowTestCase
 
         $batches = iterator_to_array(from_floe($path, filesystem: $memory)->extract($context));
 
-        static::assertSame(['id'], $batches[0]->first()->names());
+        static::assertSame(['id'], array_keys($batches[0]->values(0)));
     }
 
     public function test_extract_reads_rows(): void
@@ -217,8 +217,8 @@ final class FloeExtractorTest extends FlowTestCase
         $ids = [];
 
         foreach (from_floe($path, filesystem: $memory)->extract($context) as $batch) {
-            foreach ($batch->all() as $extractedRow) {
-                $ids[] = $extractedRow->get('id');
+            foreach ($batch->toArray() as $extractedRow) {
+                $ids[] = $extractedRow['id'];
             }
         }
 
@@ -244,8 +244,8 @@ final class FloeExtractorTest extends FlowTestCase
         foreach (from_floe(path('memory://skip-files/*.floe'), filesystem: $memory)
             ->withOffset(2)
             ->extract($context) as $batch) {
-            foreach ($batch->all() as $extractedRow) {
-                $ids[] = $extractedRow->get('id');
+            foreach ($batch->toArray() as $extractedRow) {
+                $ids[] = $extractedRow['id'];
             }
         }
 
@@ -287,8 +287,8 @@ final class FloeExtractorTest extends FlowTestCase
 
         $batches = iterator_to_array($extractor->extract($context));
 
-        static::assertSame($extractor->schema()->references()->names(), $batches[0]->first()->names());
-        static::assertSame($path->uri(), $batches[0]->first()->get('_input_file_uri'));
+        static::assertSame($extractor->schema()->references()->names(), array_keys($batches[0]->values(0)));
+        static::assertSame($path->uri(), $batches[0]->column('_input_file_uri')->value(0));
     }
 
     public function test_with_schema_is_refused(): void
@@ -362,8 +362,8 @@ final class FloeExtractorTest extends FlowTestCase
         $values = [];
 
         foreach ($extractor->extract(flow_context(config())) as $rows) {
-            foreach ($rows as $row) {
-                $values[] = $row->toArray();
+            foreach ($rows->toArray() as $row) {
+                $values[] = $row;
             }
         }
 
@@ -422,7 +422,7 @@ final class FloeExtractorTest extends FlowTestCase
 
         foreach ($extractor->extract(flow_context(config())) as $rows) {
             static::assertEquals($extractor->schema(), $rows->schema());
-            static::assertSame(2024, $rows->first()->get('year'));
+            static::assertSame(2024, $rows->column('year')->value(0));
 
             return;
         }

@@ -37,11 +37,7 @@ final readonly class ListColumn implements Column
             return null;
         }
 
-        return array_slice(
-            $this->element->physicals(),
-            $this->offsets[$i],
-            $this->offsets[$i + 1] - $this->offsets[$i],
-        );
+        return $this->element->slice($this->offsets[$i], $this->offsets[$i + 1] - $this->offsets[$i])->physicals();
     }
 
     public function concat(Column ...$others): Column
@@ -148,13 +144,7 @@ final readonly class ListColumn implements Column
             return null;
         }
 
-        $value = [];
-
-        for ($j = $this->offsets[$i], $end = $this->offsets[$i + 1]; $j < $end; $j++) {
-            $value[] = $this->element->value($j);
-        }
-
-        return $value;
+        return $this->element->slice($this->offsets[$i], $this->offsets[$i + 1] - $this->offsets[$i])->values();
     }
 
     public function values(): array

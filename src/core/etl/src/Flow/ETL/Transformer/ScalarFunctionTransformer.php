@@ -16,14 +16,12 @@ use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Function\ScalarFunction\ExpandResults;
 use Flow\ETL\Function\ScalarFunction\UnpackResults;
 use Flow\ETL\Rows;
-use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Transformer;
 use Flow\Types\Type\Logical\StructureType;
 use Throwable;
 
-use function count;
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\Types\DSL\type_array;
 use function sprintf;
@@ -143,32 +141,39 @@ final readonly class ScalarFunctionTransformer implements Transformer
         $derived = $this->derived ?? $this->derived($function);
         $declared = $columns->declare($rows->schema(), $derived);
         $output = $this->output ?? $declared;
-        $cast = [];
-        $sources = [];
+        $column = $function->eval($rows, $context);
 
-        foreach ($rows->all() as $index => $r) {
-            if ($function instanceof ExpandResults) {
+        if ($function instanceof ExpandResults) {
+            $sources = [];
+            $values = [];
+
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($column->values() as $index => $list) {
                 // @mago-ignore analysis:mixed-assignment
-                foreach (type_array()->assert($function->eval($r, $context)) as $val) {
+                foreach (type_array()->assert($list) as $value) {
                     $sources[] = $index;
-                    $cast[] = $columns->value($derived, $val, count($cast));
+                    $values[] = $value;
                 }
-
-                continue;
             }
 
-            $cast[] = $columns->value($derived, $function->eval($r, $context), $index);
+            $builder = $context->backend()->builder($derived);
+            $builder->appendMany($values);
+
+            return $columns->rows(
+                $rows->gather($sources),
+                $declared,
+                $output,
+                $derived->entry()->name(),
+                $builder->finish(),
+            );
         }
 
-        $builder = $context->backend()->builder($derived);
-        $builder->appendMany($cast);
-
         return $columns->rows(
-            $function instanceof ExpandResults ? $rows->gather($sources) : $rows,
+            $rows,
             $declared,
             $output,
             $derived->entry()->name(),
-            $builder->finish(),
+            $columns->stored($derived, $column, $context->backend()),
         );
     }
 
@@ -206,24 +211,28 @@ final readonly class ScalarFunctionTransformer implements Transformer
         $columns = new UnpackedColumns();
         $output = $this->output ?? $columns->of($rows->schema(), $this->entryName() . '.', $declared);
         $prefix = $this->entryName() . '.';
-        $prefixed = [];
+        $values = [];
 
         foreach ($declared->definitions() as $name => $_) {
-            $prefixed[] = $prefix . $name;
+            $values[$prefix . $name] = [];
         }
 
-        $payloads = [];
-
-        foreach ($rows->all() as $r) {
-            $payloads[] = $columns->values($prefix, $declared, $function->eval($r, $context));
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($function->eval($rows, $context)->values() as $payload) {
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($columns->values($prefix, $declared, type_array()->assert($payload)) as $name => $value) {
+                $values[$name][] = $value;
+            }
         }
 
-        return $rows->withColumns(
-            $output,
-            (new RowsBuilder($output->keep(...$prefixed), $context->backend()))
-                ->appendRows($payloads)
-                ->finish()
-                ->columns(),
-        );
+        $unpacked = [];
+
+        foreach ($values as $name => $columnValues) {
+            $builder = $context->backend()->builder($output->get((string) $name));
+            $builder->appendMany($columnValues);
+            $unpacked[$name] = $builder->finish();
+        }
+
+        return $rows->withColumns($output, $unpacked);
     }
 }

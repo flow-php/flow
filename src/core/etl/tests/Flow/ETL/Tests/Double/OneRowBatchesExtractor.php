@@ -15,8 +15,6 @@ use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
 
-use function Flow\ETL\DSL\rows;
-
 /**
  * Breaks exactly one clause of the batch contract: whatever its batch size, it never puts more than
  * one row in a batch.
@@ -31,8 +29,8 @@ final class OneRowBatchesExtractor implements BatchableExtractor, Extractor, Rew
 
     public function extract(FlowContext $context, ?int $limit = null): Generator
     {
-        foreach ($this->rows->all() as $row) {
-            $signal = yield rows($this->rows->schema(), $row);
+        for ($i = 0; $i < $this->rows->count(); $i++) {
+            $signal = yield $this->rows->slice($i, 1);
 
             if ($signal === Signal::STOP) {
                 return;

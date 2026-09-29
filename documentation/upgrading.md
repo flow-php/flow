@@ -709,6 +709,155 @@ Project with `from_parquet(..., columns: [...])`. Change a type after reading, e
 | `CSVFileReader::batches(SourceFile, int): Generator<list<RawRowValues>>` returning the header                             | `batches(SourceFile, Schema, int, Backend): Generator<Rows>`, no return value |
 | `RustCSVReaderNative::next(): list<RawRowValues>`                                                                         | `list<array<array-key, ?string>>`                                             |
 | -                                                                                                                         | `RustCSVReaderNative::nextColumns(Schema, int): ?Rows`                        |
+
+### 69) `flow-php/etl` - `Row` removed, `Rows` is a columnar batch
+
+| Before                                                                                                        | After                                                                         |
+|---------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| `foreach ($df->fetch() as $row) { $row->get('x'); }`                                                          | `foreach ($df->fetch()->toArray() as $row) { $row['x']; }`                    |
+| `$rows->first()->get('x')`, `$rows[0]->get('x')`                                                              | `$rows->column('x')->value(0)`, `$rows->values(0)['x']`                       |
+| `$rows->first()->toArray()`                                                                                   | `$rows->toArray()[0]`                                                         |
+| `Rows::of($schema)`                                                                                           | `Rows::empty($schema)`                                                        |
+| `Rows::of($schema, ...$row)`, `rows($schema, ...$row)`, `$rows->add(...$row)`                                 | `$rows->gather([...])`, `$rows->concat($other->matchTo($rows->schema()))`     |
+| `Rows` implements `ArrayAccess`, `IteratorAggregate`                                                          | `Countable` only                                                              |
+| `Rows::all()`, `first()`, `last()`, `row()`, `offsetGet()`                                                    | removed - `toArray()`, `values(int)`, `column(string)`, `slice()`, `gather()` |
+| `Rows::values(int)` outside the batch - a PHP warning and nulls, or the extension's `row N is outside [0, M)` | `InvalidArgumentException`: `Row N does not exist in a batch of M rows`       |
+| `Rows::unique(Comparator)`, `Row\Comparator`, `NativeComparator`                                              | `Rows::unique()` - value equality per column                                  |
+| `array_to_row(array $data, Schema, Backend, $partitions)`                                                     | `array_to_rows([$data], Schema, Backend)`                                     |
+| `SerializedPayloadDecoder::decode(Row): Row`                                                                  | `decode(Rows, int): Rows` - no payload is a one-row batch without columns     |
+| `Formatter\ASCII\Body::rows()`                                                                                | `count()`, `value(string, int)`                                               |
+
+### 70) `flow-php/etl` - `ScalarFunction` evaluates a batch
+
+| Before                                                                              | After                                                                                                             |
+|-------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|
+| `ScalarFunction::eval(Row, FlowContext): mixed`                                     | `eval(Rows, FlowContext): Column` - one value per row, built by `ResultColumn`                                    |
+| `ExpandResults::eval(Row): array`, `UnpackResults::eval(Row): array`                | marker interfaces - `eval(Rows): Column` returns a list (expand) or structure (unpack) column                     |
+| `Parameter::{as, asArray, asBoolean, asEnum, asFloat, asInstanceOf, asInt}(Row, …)` | `{asTypes, asArrays, asBooleans, asEnums, asFloats, asInstancesOf, asInts}(Rows, …)` - one list per batch         |
+| `Parameter::{asListOfObjects, asNumber, asObject, asString}(Row, …)`                | `{asListsOfObjects, asNumbers, asObjects, asStrings}(Rows, …)`                                                    |
+| `Parameter::eval(Row)`, `asValue(Row)`                                              | `values(Rows, FlowContext)`, `column(Rows, FlowContext)`                                                          |
+| `$function->eval($rows, $context)` on an unresolved tree                            | `InvalidLogicException` - `(new ReferenceResolver())->resolve($function, $rows->schema())->eval($rows, $context)` |
+
+Before:
+
+```php
+public function eval(Row $row, FlowContext $context): ?string
+{
+    $value = (new Parameter($this->value))->asString($row, $context);
+
+    return $value === null ? null : strtoupper($value);
+}
+```
+
+After:
+
+```php
+public function eval(Rows $rows, FlowContext $context): Column
+{
+    $results = [];
+
+    foreach ((new Parameter($this->value))->asStrings($rows, $context) as $value) {
+        $results[] = $value === null ? null : strtoupper($value);
+    }
+
+    return (new ResultColumn())->of($this, $results);
+}
+```
+
+### 71) `flow-php/etl` - float arithmetic follows IEEE 754
+
+| Before                                                                                                     | After                                                                                                                    |
+|------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
+| `ref('a')->multiply(lit(3))` with `a = 0.1` - `0.3`                                                        | `0.30000000000000004`; `ref('a')->multiply(lit(3), exact: true)` - `0.3`                                                 |
+| `plus()`, `minus()`, `power()` - decimal arithmetic                                                        | IEEE 754; `exact: true` keeps decimal arithmetic                                                                         |
+| an integer result past `PHP_INT_MAX` - `Brick\Math\Exception\IntegerOverflowException`                     | `EvaluationException`: `Plus function integer overflow (row N)`                                                          |
+| `power()` of an integer with a negative exponent                                                           | `EvaluationException`: `Power function of an integer requires a non-negative exponent (row N)`                           |
+| `average(ref('amount'))` - decimal sum (`Calculator` per value), then rounded to `scale`                   | IEEE sum with Neumaier compensation, then the same rounding; `average(ref('amount'), exact: true)` keeps the decimal sum |
+| `sum(ref('amount'))` (default `exact: false`) - plain IEEE addition, `0.1` ten times: `0.9999999999999999` | compensated IEEE addition: `1.0`                                                                                         |
+| `RunningSum::add(float\|int $sum, $value, bool $exact): float\|int`                                        | stateful: `add($value, bool $exact): void`, `value(): float\|int`, `merge(RunningSum, bool $exact)`                      |
+
+### 72) `flow-php/etl` - function errors carry the batch row
+
+| Before                                                               | After                                                                                                                               |
+|----------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
+| an exception thrown by a function reaches the caller as-is           | `Flow\ETL\Exception\EvaluationException` (extends `InvalidArgumentException`), message `… (row N)`, the original as `getPrevious()` |
+| `catch (SomeSpecificException $e)` around `withEntry()` / `filter()` | `catch (EvaluationException $e)` and read `$e->getPrevious()`                                                                       |
+
+### 73) `flow-php/etl` - uuid, json, enum, xml, html and date/time values compare by value
+
+| Before                                                                                                            | After                                                                            |
+|-------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
+| `equals()`, `same()`, `isIn()`, join `Identical`, `batchBy()` over these types - always false / one batch per row | value equality                                                                   |
+| json values                                                                                                       | compare by their stored text - `{"a":1,"b":2}` and `{"b":2,"a":1}` are not equal |
+
+### 74) `flow-php/etl` - `array_keys_style_convert()` declares the converted nested shape
+
+| Before                                                                                            | After                                                                                                                    |
+|---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
+| `returns()` renames the top-level keys only; a nested conversion stored with `withEntry()` failed | `returns()` renames structure fields at every level (structures, lists, maps); key collisions are refused at every level |
+
+### 75) `flow-php/etl` - extension points take a batch
+
+| Before                                                                                  | After                                                                                                             |
+|-----------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|
+| `AggregatingFunction::aggregate(Row, FlowContext)`                                      | `aggregate(Rows, list<int> $indices, FlowContext)` + `merge(AggregatingFunction, FlowContext)`                    |
+| `Join\Comparison::compare(Row, Row): bool`                                              | `compare(Rows $left, Rows $right): list<bool>` - pairwise                                                         |
+| `Constraint::isSatisfiedBy(Row, Schema)`, `violation(Row, Schema)`                      | `firstViolation(Rows): ?int`, `violation(Rows, int)`                                                              |
+| `FrameAccumulator::accumulate(Row)`                                                     | `accumulate(Rows, int)`                                                                                           |
+| `WindowContext::row()`                                                                  | removed - `WindowContext(int, Rows, WindowFrame, FlowContext)`                                                    |
+| `PeerComparator::arePeers(Row, Row, Schema)`                                            | `arePeers(Rows, int, int)`                                                                                        |
+| `Dataset\Statistics\Columns::add(Definition, mixed)`                                    | `add(Definition, Column)`                                                                                         |
+| `new KWayMerge(References, Backend, int)`, `new Joiner(Expression, Join, Backend, int)` | `new KWayMerge(References, int)`, `new Joiner(Expression, Join, int)` - output is gathered from the input columns |
+
+### 76) `flow-php/etl` - one sort order: nulls smallest, strings by bytes
+
+| Before                                                                                                              | After                                                                                               |
+|---------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
+| `sortBy(ref('code')->asc())` over `'9', '10', '100'` - `'9', '10', '100'` (numeric when every value looked numeric) | `'10', '100', '9'` - strings always compare by bytes                                                |
+| `sortBy(ref('v')->asc())` over `3, null, 1` - unsorted (a null compared equal to every value)                       | `null, 1, 3` - nulls first ascending, last descending; descending is the exact reverse of ascending |
+| NaN - no defined position                                                                                           | after every other value, equal to NaN; `-0.0` equals `0.0`                                          |
+| external sort (spilled runs) could order differently from the in-memory sort                                        | both, `constraint_sorted_by()` and window peers use the same order                                  |
+| `Flow\ETL\Sort\ValuesSorter`, `Sort\Merge\RowsMinHeap`, `Sort\Merge\ComparableBucketRow`                            | removed - `Flow\ETL\Sort\RowOrder`                                                                  |
+| `new BucketCursor(Generator, References)`, `keys(): list<mixed>`, `next()`                                          | `new BucketCursor(Generator, RowOrder)`, `keys(): list<SortKey>`, `advance(int)`                    |
+| -                                                                                                                   | `ref('x')->asc(NullsOrder::LAST)`, `ref('x')->desc(NullsOrder::FIRST)` move nulls to the other end  |
+| a custom `Reference` implementation                                                                                 | adds `nulls(): NullsOrder`                                                                          |
+
+### 77) `flow-php/etl` - spilling steps stop at a memory limit, not a row count
+
+| Before                                                                                                                                                   | After                                                                                                                                                                                                                         |
+|----------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `external_sort()->runSize(int)` - rows per sorted run, default `10000`                                                                                   | `external_sort()->memoryLimit(Unit)`; data under it sorts in memory without spilling                                                                                                                                          |
+| -                                                                                                                                                        | `hash_join()->memoryLimit(Unit)`, `hash_group_by()->memoryLimit(Unit)`, `hash_repartition()->memoryLimit(Unit)`                                                                                                               |
+| -                                                                                                                                                        | every limit defaults to `Config\MemoryLimit::default()`: `FLOW_MAX_MEMORY`, otherwise 70% of `memory_limit`, 1 GiB when `memory_limit` is `-1`                                                                                |
+| -                                                                                                                                                        | a limit is compared with the whole process (`memory_get_usage()` + the backend's native memory), not with the step's own buffer - a sort and a join in one pipeline stay under it together                                    |
+| `hash_join()` with a disk storage partitioned both sides into buckets                                                                                    | the right side stays in memory under the limit and the left side streams in its own order; past it both sides are partitioned                                                                                                 |
+| `groupBy()` / window partitions always hash-partitioned their input into buckets                                                                         | under the limit a group-by aggregates in one pass and a window groups its partitions in memory - no bucket is written; past it the rest of the stream is partitioned (group-by merges the groups aggregated before the limit) |
+| group-by / repartition / join wrote one bucket frame per bucket per input batch                                                                          | buckets stay in memory under the limit; past it every frame holds `batchSize` rows                                                                                                                                            |
+| `GroupBySteps::of()` / `RepartitionSteps::of()` - `[BucketingProcessor, GroupByAggregationProcessor]` / `[BucketingProcessor, RepartitionProcessor]`     | `[GroupByAggregationProcessor]` / `[RepartitionProcessor]`; both take `HashBucketing` and `Unit $memoryLimit`; `GroupBy\BucketAggregation` removed                                                                            |
+| `new ExternalSortConfig($bucketing, ?BucketsStorage $merge = null, int $runSize)`                                                                        | `new ExternalSortConfig($bucketing, Unit $memoryLimit, ?BucketsStorage $merge = null)`                                                                                                                                        |
+| `new HashJoinConfig($bucketing)`, `new HashGroupByConfig($bucketing)`, `new HashRepartitionConfig($bucketing)`                                           | `new …Config($bucketing, Unit $memoryLimit)`                                                                                                                                                                                  |
+| `new HashJoinProcessor($right, $executor, $on, $type, $left, $right, $random, $bucketsCount, $batchSize)`                                                | `new HashJoinProcessor($right, $executor, $on, $type, $left, $right, $random, Unit $memoryLimit, $bucketsCount, $batchSize)`                                                                                                  |
+| `new MergeSortProcessor(References, Buckets, Buckets, RandomValueGenerator, int, int)`                                                                   | `new MergeSortProcessor(ExternalSort)`                                                                                                                                                                                        |
+| `SortSteps::of()` - `[BucketingProcessor, MergeSortProcessor]` for the external sort                                                                     | `[MergeSortProcessor]`; `SortSteps::external(): ?ExternalSort`                                                                                                                                                                |
+| `Flow\ETL\Bucketing\SortedRunBucketing`                                                                                                                  | removed - `Flow\ETL\Sort\ExternalSort`                                                                                                                                                                                        |
+| `Flow\ETL\Processor\BucketingProcessor`, `Flow\ETL\Bucketing\BucketingStrategy`, `Flow\ETL\Bucketing\BucketShape`, `Bucket::schema()`, `Bucket::toRow()` | removed - sort, join, group-by and repartition partition inside their own step                                                                                                                                                |
+| `sortBy()->limit(n)` over the external sort became a top-n only when `n <= runSize`                                                                      | always a top-n; past the memory limit it hands its kept rows and the rest of the stream to the external sort, whose merge stops after `n` rows                                                                                |
+| `new TopNRewrite(FlowContext)`                                                                                                                           | `new TopNRewrite()`                                                                                                                                                                                                           |
+| `new TopNProcessor(References, int, ?Schema)`                                                                                                            | `new TopNProcessor(References, int, ?ExternalSort $fallback = null, ?Schema)`                                                                                                                                                 |
+| `new Plan\Node\TopN(Node, References, int)`                                                                                                              | `new TopN(Node, References, int, ?SortAlgorithmBuilder $algorithm = null)`                                                                                                                                                    |
+| explain: `Storage: FilesystemBuckets`                                                                                                                    | adds `Memory: N MB` under the storage of a sort, join, group-by and repartition step                                                                                                                                          |
+
+### 78) `flow-php/etl` - `sum(exact:)` is a bool; `batched_by()`, `string_agg()` and `pivot()` follow the one order
+
+| Before                                                                                                                    | After                                                                                                                                    |
+|---------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| `sum(ref('a'), exact: ref('is_exact'))` - exactness chosen per row                                                        | `sum(ref('a'), exact: true)` - one `bool` for the aggregate, as `average()` and `plus/minus/multiply/power`                              |
+| `sum(…, exact: ScalarFunction)` disabled spill column pruning (`references()` was `null`)                                 | `sum()` always enumerates its reference; a custom `AggregatingFunction` may still return `null`                                          |
+| `batched_by(from_…, 'at')` - equal datetimes / uuids split into one batch per row, a `null` value joined the next group   | value equality, as `batchBy()`; nulls are a group of their own                                                                           |
+| `string_agg(ref('code'), ',', SortOrder::ASC)` over `'9', '10', '100'` - `9,10,100` (numeric-looking strings numerically) | `10,100,9` - strings by bytes, as `sortBy()`                                                                                             |
+| `discover_pivot_values()` over `'9', '10', '100'` - columns `9, 10, 100`                                                  | `10, 100, 9`; integer pivot values stay numeric                                                                                          |
+| `->stringMatch()` / `->stringMatchAll()` turned a PHP `\Error` into an exception `optional()` swallowed                   | an `\Error` propagates; `->jsonDecode()`, `cast()`, `->arrayPathExists()`, `->stringMatch*()` errors keep their cause as `getPrevious()` |
+
 ---
 
 ## Upgrading from 0.43.x to 0.44.x

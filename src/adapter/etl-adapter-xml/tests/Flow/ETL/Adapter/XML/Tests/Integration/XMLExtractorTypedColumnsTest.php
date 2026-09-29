@@ -23,9 +23,7 @@ final class XMLExtractorTypedColumnsTest extends FlowTestCase
         foreach ($extractor->extract(flow_context(Config::builder()->build())) as $batch) {
             static::assertEquals(type_xml(), $batch->schema()->get('node')->type());
 
-            foreach ($batch as $row) {
-                $rows[] = $row;
-            }
+            $rows = [...$rows, ...$batch->toArray()];
         }
 
         static::assertCount(5, $rows);
@@ -38,10 +36,7 @@ final class XMLExtractorTypedColumnsTest extends FlowTestCase
             ->withMetadataColumns(true);
 
         foreach ($extractor->extract(flow_context(Config::builder()->build())) as $batch) {
-            foreach ($batch as $row) {
-                static::assertTrue($row->has('_input_file_uri'));
-                static::assertSame($path->uri(), $row->get('_input_file_uri'));
-            }
+            static::assertSame([$path->uri()], array_values(array_unique($batch->column('_input_file_uri')->values())));
         }
     }
 }

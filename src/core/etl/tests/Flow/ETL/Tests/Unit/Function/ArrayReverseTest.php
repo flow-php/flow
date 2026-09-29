@@ -6,9 +6,9 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\ReferenceResolver;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
@@ -28,14 +28,16 @@ final class ArrayReverseTest extends FlowTestCase
     {
         static::assertSame(
             [5, 3, 10, 4],
-            ref('a')
-                ->arrayReverse()
-                ->eval(array_to_row(['a' => [
+            (new FunctionContext(flow_context()))->eval(
+                ref('a')->arrayReverse(),
+                ['a' => [
                     4,
                     10,
                     3,
                     5,
-                ]], schema(list_schema('a', type_list(type_integer())))), flow_context()),
+                ]],
+                schema(list_schema('a', type_list(type_integer()))),
+            ),
         );
     }
 
@@ -45,7 +47,7 @@ final class ArrayReverseTest extends FlowTestCase
         $this->expectExceptionMessage('Expected type "array<mixed>", got "integer".');
 
         $context = flow_context(config());
-        ref('a')->arrayReverse()->eval(array_to_row(['a' => 123], schema(int_schema('a'))), $context);
+        (new FunctionContext($context))->eval(ref('a')->arrayReverse(), ['a' => 123], schema(int_schema('a')));
     }
 
     public function test_array_reverse_non_array_entry(): void
@@ -53,7 +55,7 @@ final class ArrayReverseTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected type "array<mixed>", got "integer".');
 
-        ref('a')->arrayReverse()->eval(array_to_row(['a' => 123], schema(int_schema('a'))), flow_context());
+        (new FunctionContext(flow_context()))->eval(ref('a')->arrayReverse(), ['a' => 123], schema(int_schema('a')));
     }
 
     public function test_a_structure_operand_declares_reversed_fields(): void

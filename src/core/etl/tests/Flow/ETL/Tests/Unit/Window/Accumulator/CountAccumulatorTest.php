@@ -8,7 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Window\Accumulator\CountAccumulator;
 
-use function Flow\ETL\DSL\array_to_row;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
@@ -21,8 +21,8 @@ final class CountAccumulatorTest extends FlowTestCase
     {
         $accumulator = new CountAccumulator(null, flow_context());
 
-        $accumulator->accumulate(array_to_row(['value' => 1], schema(int_schema('value'))));
-        $accumulator->accumulate(array_to_row(['other' => 'x'], schema(str_schema('other'))));
+        $accumulator->accumulate(array_to_rows([['value' => 1]], schema(int_schema('value'))), 0);
+        $accumulator->accumulate(array_to_rows([['other' => 'x']], schema(str_schema('other'))), 0);
 
         static::assertSame(2, $accumulator->value());
     }
@@ -31,9 +31,9 @@ final class CountAccumulatorTest extends FlowTestCase
     {
         $accumulator = new CountAccumulator(ref('value'), flow_context());
 
-        $accumulator->accumulate(array_to_row(['value' => 1], schema(int_schema('value'))));
-        $accumulator->accumulate(array_to_row(['value' => null], schema(int_schema('value', nullable: true))));
-        $accumulator->accumulate(array_to_row(['value' => 3], schema(int_schema('value'))));
+        $accumulator->accumulate(array_to_rows([['value' => 1]], schema(int_schema('value'))), 0);
+        $accumulator->accumulate(array_to_rows([['value' => null]], schema(int_schema('value', nullable: true))), 0);
+        $accumulator->accumulate(array_to_rows([['value' => 3]], schema(int_schema('value'))), 0);
 
         static::assertSame(2, $accumulator->value());
     }
@@ -54,20 +54,20 @@ final class CountAccumulatorTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessageMatches('/^Count window function error: /');
 
-        (new CountAccumulator(ref('value'), $context))->accumulate(array_to_row([
+        (new CountAccumulator(ref('value'), $context))->accumulate(array_to_rows([[
             'other' => 'x',
-        ], schema(str_schema('other'))));
+        ]], schema(str_schema('other'))), 0);
     }
 
     public function test_value_is_idempotent(): void
     {
         $accumulator = new CountAccumulator(ref('value'), flow_context());
-        $accumulator->accumulate(array_to_row(['value' => 1], schema(int_schema('value'))));
+        $accumulator->accumulate(array_to_rows([['value' => 1]], schema(int_schema('value'))), 0);
 
         static::assertSame(1, $accumulator->value());
         static::assertSame(1, $accumulator->value());
 
-        $accumulator->accumulate(array_to_row(['value' => 2], schema(int_schema('value'))));
+        $accumulator->accumulate(array_to_rows([['value' => 2]], schema(int_schema('value'))), 0);
 
         static::assertSame(2, $accumulator->value());
     }

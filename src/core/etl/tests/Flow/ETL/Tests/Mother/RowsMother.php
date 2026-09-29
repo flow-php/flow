@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Mother;
 
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
@@ -77,11 +75,11 @@ final class RowsMother
     /**
      * One row whose "array_entry" structure nests a structure: {id, status, enabled, array: {foo}}.
      */
-    public static function arrayEntry(): Row
+    public static function arrayEntry(): Rows
     {
-        return array_to_row([
+        return array_to_rows([[
             'array_entry' => ['id' => 1, 'status' => 'PENDING', 'enabled' => true, 'array' => ['foo' => 'bar']],
-        ], schema(structure_schema('array_entry', type_structure([
+        ]], schema(structure_schema('array_entry', type_structure([
             'id' => type_integer(),
             'status' => type_string(),
             'enabled' => type_boolean(),

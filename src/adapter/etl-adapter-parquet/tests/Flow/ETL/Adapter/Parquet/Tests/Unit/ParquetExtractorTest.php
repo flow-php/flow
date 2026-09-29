@@ -181,11 +181,9 @@ final class ParquetExtractorTest extends FlowTestCase
     {
         $backend = new SpyBackend();
 
-        foreach (from_parquet(__DIR__ . '/../Integration/Fixtures/Pagination/01_1000.parquet')->extract(
-            flow_context(config_builder()->backend($backend)->build()),
-        ) as $rows) {
-            break;
-        }
+        from_parquet(__DIR__ . '/../Integration/Fixtures/Pagination/01_1000.parquet')
+            ->extract(flow_context(config_builder()->backend($backend)->build()))
+            ->current();
 
         static::assertGreaterThanOrEqual(1, $backend->builders());
     }

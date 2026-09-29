@@ -86,8 +86,8 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
 
         $names = [];
 
-        foreach ($read as $row) {
-            $names[] = type_instance_of(DateTimeZone::class)->assert($row->get('tz'))->getName();
+        foreach ($read->toArray() as $row) {
+            $names[] = type_instance_of(DateTimeZone::class)->assert($row['tz'])->getName();
         }
 
         static::assertSame(['Europe/Warsaw', 'UTC'], $names);
@@ -113,12 +113,14 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
         // column nullable - NOT NULL is a declaration, never an inference.
         static::assertTrue($rows->schema()->get('body')->isNullable());
 
-        $first = $rows[0]->get('body');
+        // @mago-ignore analysis:mixed-assignment
+        $first = $rows->column('body')->value(0);
         static::assertIsArray($first);
         static::assertInstanceOf(Json::class, $first['data']);
         static::assertSame([1, 'a'], $first['data']->toArray());
 
-        $second = $rows[1]->get('body');
+        // @mago-ignore analysis:mixed-assignment
+        $second = $rows->column('body')->value(1);
         static::assertIsArray($second);
         static::assertInstanceOf(Json::class, $second['data']);
         static::assertSame([], $second['data']->toArray());
@@ -140,7 +142,8 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
 
         static::assertSame('list<json>', $rows->schema()->get('json_list')->type()->toString());
 
-        $list = $rows[0]->get('json_list');
+        // @mago-ignore analysis:mixed-assignment
+        $list = $rows->column('json_list')->value(0);
         static::assertIsArray($list);
         static::assertInstanceOf(Json::class, $list[0]);
         static::assertSame(['a' => 1], $list[0]->toArray());
@@ -165,7 +168,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
 
             static::assertSame(
                 array_keys($extractor->schema()->definitions()),
-                array_keys(data_frame()->read($extractor)->fetch()->first()->toArray()),
+                array_keys(data_frame()->read($extractor)->fetch()->toArray()[0]),
             );
         }
     }
@@ -181,7 +184,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
 
         $rows = data_frame()->read(from_floe($path)->withMetadataColumns(true))->fetch();
 
-        static::assertTrue($rows->first()->has('_input_file_uri'));
+        static::assertNotNull($rows->schema()->findDefinition('_input_file_uri'));
     }
 
     public function test_offset_and_limit_pushdown(): void
@@ -263,7 +266,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
         $result = data_frame()->read(from_floe($path))->fetch();
 
         static::assertSame(2, $result->count());
-        static::assertSame(['id', 'name'], $result->first()->names());
+        static::assertSame(['id', 'name'], array_keys($result->values(0)));
     }
 
     public function test_a_close_that_fails_during_closure_leaves_no_file(): void

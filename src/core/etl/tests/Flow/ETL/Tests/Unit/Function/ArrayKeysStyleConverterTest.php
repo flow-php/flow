@@ -8,10 +8,10 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\String\StringStyles;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\array_keys_style_convert;
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\json_schema;
@@ -31,9 +31,11 @@ final class ArrayKeysStyleConverterTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Unrecognized style invalid, please use one of following:');
 
-        $row = array_to_row(['invalid_entry' => []], schema(json_schema('invalid_entry')));
-
-        array_keys_style_convert(ref('invalid_entry'), 'invalid')->eval($row, flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            array_keys_style_convert(ref('invalid_entry'), 'invalid'),
+            ['invalid_entry' => []],
+            schema(json_schema('invalid_entry')),
+        );
     }
 
     public function test_for_not_array_entry(): void
@@ -41,45 +43,15 @@ final class ArrayKeysStyleConverterTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected type "array<mixed>", got "integer".');
 
-        $row = array_to_row(['invalid_entry' => 1], schema(int_schema('invalid_entry')));
-
-        array_keys_style_convert(ref('invalid_entry'), 'snake')->eval($row, flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            array_keys_style_convert(ref('invalid_entry'), 'snake'),
+            ['invalid_entry' => 1],
+            schema(int_schema('invalid_entry')),
+        );
     }
 
     public function test_transforms_case_style_for_all_keys_in_array_entry(): void
     {
-        $row = array_to_row([
-            'arrayEntry' => [
-                'itemId' => 1,
-                'itemStatus' => 'PENDING',
-                'itemEnabled' => true,
-                'itemVariants' => [
-                    'variantStatuses' => [
-                        [
-                            'statusId' => 1000,
-                            'statusName' => 'NEW',
-                        ],
-                        [
-                            'statusId' => 2000,
-                            'statusName' => 'ACTIVE',
-                        ],
-                    ],
-                    'variantName' => 'Variant Name',
-                ],
-            ],
-        ], schema(structure_schema('arrayEntry', type_structure([
-            'itemId' => type_integer(),
-            'itemStatus' => type_string(),
-            'itemEnabled' => type_boolean(),
-            'itemVariants' => type_structure([
-                'variantStatuses' => type_list(type_structure([
-                    'statusId' => type_integer(),
-                    'statusName' => type_string(),
-                ])),
-                'variantName' => type_string(),
-            ]),
-        ]))));
-
         static::assertEquals(
             [
                 'item_id' => 1,
@@ -99,7 +71,41 @@ final class ArrayKeysStyleConverterTest extends FlowTestCase
                     'variant_name' => 'Variant Name',
                 ],
             ],
-            array_keys_style_convert(ref('arrayEntry'), 'snake')->eval($row, flow_context()),
+            (new FunctionContext(flow_context()))->eval(
+                array_keys_style_convert(ref('arrayEntry'), 'snake'),
+                [
+                    'arrayEntry' => [
+                        'itemId' => 1,
+                        'itemStatus' => 'PENDING',
+                        'itemEnabled' => true,
+                        'itemVariants' => [
+                            'variantStatuses' => [
+                                [
+                                    'statusId' => 1000,
+                                    'statusName' => 'NEW',
+                                ],
+                                [
+                                    'statusId' => 2000,
+                                    'statusName' => 'ACTIVE',
+                                ],
+                            ],
+                            'variantName' => 'Variant Name',
+                        ],
+                    ],
+                ],
+                schema(structure_schema('arrayEntry', type_structure([
+                    'itemId' => type_integer(),
+                    'itemStatus' => type_string(),
+                    'itemEnabled' => type_boolean(),
+                    'itemVariants' => type_structure([
+                        'variantStatuses' => type_list(type_structure([
+                            'statusId' => type_integer(),
+                            'statusName' => type_string(),
+                        ])),
+                        'variantName' => type_string(),
+                    ]),
+                ]))),
+            ),
         );
     }
 

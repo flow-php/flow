@@ -36,9 +36,16 @@ final class CacheIndex
     {
         $index = new self($key);
 
-        foreach ($rows->all() as $row) {
-            $value = $row->get('key');
+        if ($rows->isEmpty()) {
+            return $index;
+        }
 
+        $keys = $rows->column('key')->values();
+        // an index written by 0.44.x has no "rows" column
+        $counts = $rows->schema()->findDefinition('rows') === null ? [] : $rows->column('rows')->values();
+
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($keys as $i => $value) {
             if (!is_string($value)) {
                 throw new InvalidArgumentException(sprintf(
                     'CacheIndex expects rows with a string "key" entry, got: %s',
@@ -46,8 +53,8 @@ final class CacheIndex
                 ));
             }
 
-            // an index written by 0.44.x has no "rows" column
-            $chunkRows = $row->has('rows') ? $row->get('rows') : null;
+            // @mago-ignore analysis:mixed-assignment
+            $chunkRows = $counts[$i] ?? null;
 
             if ($chunkRows !== null && !is_int($chunkRows)) {
                 throw new InvalidArgumentException(sprintf(

@@ -6,9 +6,11 @@ namespace Flow\ETL\Tests\Unit\Column\Php;
 
 use DateTimeZone;
 use Flow\ETL\Column\Php\MapColumn;
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Tests\Mother\ColumnMother;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\ETL\DSL\definition_from_type;
 use function Flow\ETL\DSL\map_schema;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
@@ -48,6 +50,27 @@ final class MapColumnTest extends TestCase
         );
         static::assertTrue($column->isNull(1));
         static::assertEquals(type_map(type_string(), type_time_zone()), $column->type());
+    }
+
+    public function test_reads_cells_over_constant_keys_and_values(): void
+    {
+        $backend = new PhpBackend();
+        $keys = $backend->builder(definition_from_type('key', type_string()));
+        $keys->appendMany(['x', 'y']);
+        $column = new MapColumn(
+            type_map(type_string(), type_time_zone()),
+            [0, 1, 1, 2],
+            $keys->finish(),
+            $backend->constant(definition_from_type('value', type_time_zone()), 'UTC', 2),
+            [1 => true],
+        );
+
+        static::assertSame(['x' => 'UTC'], $column->at(0));
+        static::assertNull($column->at(1));
+        static::assertSame(['y' => 'UTC'], $column->at(2));
+        static::assertEquals(['x' => new DateTimeZone('UTC')], $column->value(0));
+        static::assertNull($column->value(1));
+        static::assertEquals(['y' => new DateTimeZone('UTC')], $column->value(2));
     }
 
     public function test_slice_and_take_rebuild_offsets_from_zero(): void

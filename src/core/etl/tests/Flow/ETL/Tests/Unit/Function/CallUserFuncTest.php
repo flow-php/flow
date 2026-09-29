@@ -6,11 +6,11 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\CallUserFunc;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Unit\Function\Fixtures\CallUserFunc\StaticCalculator;
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\call;
 use function Flow\ETL\DSL\flow_context;
@@ -40,15 +40,19 @@ final class CallUserFuncTest extends FlowTestCase
         $rebuilt = $function->withChildren($function->children());
 
         static::assertEquals(
-            $function->eval(array_to_row([], schema()), flow_context()),
-            $rebuilt->eval(array_to_row([], schema()), flow_context()),
+            (new FunctionContext(flow_context()))->eval($function, [], schema()),
+            (new FunctionContext(flow_context()))->eval($rebuilt, [], schema()),
         );
-        static::assertEquals(['1', '2', '3'], $rebuilt->eval(array_to_row([], schema()), flow_context()));
+        static::assertEquals(['1', '2', '3'], (new FunctionContext(flow_context()))->eval($rebuilt, [], schema()));
     }
 
     public function test_call_user_func_as_dsl(): void
     {
-        static::assertIsInt(call(lit('time'), type_integer())->eval(array_to_row([], schema()), flow_context()));
+        static::assertIsInt((new FunctionContext(flow_context()))->eval(
+            call(lit('time'), type_integer()),
+            [],
+            schema(),
+        ));
     }
 
     public function test_a_non_scalar_function_cannot_replace_the_callable_child(): void
@@ -63,53 +67,67 @@ final class CallUserFuncTest extends FlowTestCase
 
     public function test_call_user_func_with_array_callable(): void
     {
-        static::assertSame(3, ref('list')
-            ->call(lit([new StaticCalculator(), 'count']), type_integer())
-            ->eval(array_to_row(['list' => [
+        static::assertSame(3, (new FunctionContext(flow_context()))->eval(
+            ref('list')->call(lit([new StaticCalculator(), 'count']), type_integer()),
+            ['list' => [
                 1,
                 2,
                 3,
-            ]], schema(list_schema('list', type_list(type_integer())))), flow_context()));
+            ]],
+            schema(list_schema('list', type_list(type_integer()))),
+        ));
     }
 
     public function test_call_user_func_with_native_function(): void
     {
-        $row = array_to_row(['list' => [1, 2, 3]], schema(list_schema('list', type_list(type_integer()))));
-
-        static::assertSame(3, ref('list')->call(lit('count'), type_integer())->eval($row, flow_context()));
+        static::assertSame(3, (new FunctionContext(flow_context()))->eval(
+            ref('list')->call(lit('count'), type_integer()),
+            ['list' => [1, 2, 3]],
+            schema(list_schema('list', type_list(type_integer()))),
+        ));
     }
 
     public function test_call_user_func_with_ref_alias_and_optional_arguments(): void
     {
-        $row = array_to_row(['item_ids' => '1,2,3'], schema(str_schema('item_ids')));
-
         static::assertEquals(
             ['1', '2', '3'],
-            ref('item_ids')
-                ->call(lit('explode'), type_list(type_string()), ['separator' => ','], refAlias: 'string')
-                ->eval($row, flow_context()),
+            (new FunctionContext(flow_context()))->eval(
+                ref('item_ids')->call(
+                    lit('explode'),
+                    type_list(type_string()),
+                    ['separator' => ','],
+                    refAlias: 'string',
+                ),
+                ['item_ids' => '1,2,3'],
+                schema(str_schema('item_ids')),
+            ),
         );
     }
 
     public function test_call_user_func_with_ref_alias_and_optional_arguments_and_return_type(): void
     {
-        $row = array_to_row(['item_ids' => '1,2,3'], schema(str_schema('item_ids')));
-
         static::assertEquals(
             [1, 2, 3],
-            ref('item_ids')
-                ->call(lit('explode'), type_list(type_integer()), ['separator' => ','], refAlias: 'string')
-                ->eval($row, flow_context()),
+            (new FunctionContext(flow_context()))->eval(
+                ref('item_ids')->call(
+                    lit('explode'),
+                    type_list(type_integer()),
+                    ['separator' => ','],
+                    refAlias: 'string',
+                ),
+                ['item_ids' => '1,2,3'],
+                schema(str_schema('item_ids')),
+            ),
         );
     }
 
     public function test_call_user_func_with_static_method(): void
     {
-        $row = array_to_row(['list' => [1, 2, 3]], schema(list_schema('list', type_list(type_integer()))));
-
-        static::assertSame(3, ref('list')
-            ->call(lit(StaticCalculator::class . '::count'), type_integer())
-            ->eval($row, flow_context()));
+        static::assertSame(3, (new FunctionContext(flow_context()))->eval(
+            ref('list')->call(lit(StaticCalculator::class . '::count'), type_integer()),
+            ['list' => [1, 2, 3]],
+            schema(list_schema('list', type_list(type_integer()))),
+        ));
     }
 
     public function test_a_callable_that_can_return_null_declares_a_nullable_column(): void
@@ -127,6 +145,6 @@ final class CallUserFuncTest extends FlowTestCase
         ))->transform(array_to_rows([['name' => 'a']], schema(str_schema('name'))), flow_context());
 
         static::assertTrue($result->schema()->get('out')->isNullable());
-        static::assertNull($result->first()->get('out'));
+        static::assertNull($result->column('out')->value(0));
     }
 }

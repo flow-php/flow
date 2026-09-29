@@ -15,7 +15,6 @@ use Flow\Serializer\Base64Serializer;
 use Throwable;
 
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Serializer\DSL\serialize_to_string;
@@ -63,8 +62,8 @@ final readonly class SerializeTransformer implements Transformer
 
             $serialized = $context->backend()->builder($column);
 
-            foreach ($rows->all() as $row) {
-                $serialized->append(serialize_to_string($serializer, rows($inputSchema, $row)));
+            for ($i = 0, $count = $rows->count(); $i < $count; $i++) {
+                $serialized->append(serialize_to_string($serializer, $rows->slice($i, 1)));
             }
 
             $result = $this->standalone

@@ -6,9 +6,9 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\ArrayUnpack;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
@@ -29,32 +29,30 @@ final class ArrayUnpackTest extends FlowTestCase
 {
     public function test_array_unpack(): void
     {
+        // the StructureType column returns() declares: the undeclared "array" field is not unpacked
         static::assertSame(
             [
                 'status' => 'PENDING',
                 'enabled' => true,
-                'array' => ['foo' => 'bar'],
             ],
-            (new ArrayUnpack(ref('array_entry'), schema(str_schema('status'), bool_schema('enabled'))))->eval(
-                array_to_row(
-                    [
-                        'id' => 1,
-                        'array_entry' => [
-                            'status' => 'PENDING',
-                            'enabled' => true,
-                            'array' => ['foo' => 'bar'],
-                        ],
+            (new FunctionContext(flow_context()))->eval(
+                new ArrayUnpack(ref('array_entry'), schema(str_schema('status'), bool_schema('enabled'))),
+                [
+                    'id' => 1,
+                    'array_entry' => [
+                        'status' => 'PENDING',
+                        'enabled' => true,
+                        'array' => ['foo' => 'bar'],
                     ],
-                    schema(
-                        int_schema('id'),
-                        structure_schema('array_entry', type_structure([
-                            'status' => type_string(),
-                            'enabled' => type_boolean(),
-                            'array' => type_structure(['foo' => type_string()]),
-                        ])),
-                    ),
+                ],
+                schema(
+                    int_schema('id'),
+                    structure_schema('array_entry', type_structure([
+                        'status' => type_string(),
+                        'enabled' => type_boolean(),
+                        'array' => type_structure(['foo' => type_string()]),
+                    ])),
                 ),
-                flow_context(),
             ),
         );
     }
@@ -64,15 +62,13 @@ final class ArrayUnpackTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('array_unpack() requires a non-null array');
 
-        (new ArrayUnpack(ref('array_entry'), schema(str_schema('status'))))->eval(
-            array_to_row(
-                [
-                    'id' => 1,
-                    'array_entry' => null,
-                ],
-                schema(int_schema('id'), str_schema('array_entry', nullable: true)),
-            ),
-            flow_context(config()),
+        (new FunctionContext(flow_context(config())))->eval(
+            new ArrayUnpack(ref('array_entry'), schema(str_schema('status'))),
+            [
+                'id' => 1,
+                'array_entry' => null,
+            ],
+            schema(int_schema('id'), str_schema('array_entry', nullable: true)),
         );
     }
 

@@ -361,7 +361,7 @@ final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
         $extractor = from_pgsql_cursor($this->client, sprintf('SELECT id, name FROM %s ORDER BY id', $this->tableName));
         $batch = df()->read($extractor)->fetch();
 
-        static::assertSame($extractor->schema()->references()->names(), $batch->first()->names());
+        static::assertSame($extractor->schema()->references()->names(), array_keys($batch->values(0)));
         static::assertTrue($batch->schema()->isSame($extractor->schema()));
     }
 

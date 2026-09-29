@@ -13,7 +13,7 @@ use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Path\Filter;
 use Throwable;
 
-use function Flow\ETL\DSL\array_to_row;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function sprintf;
@@ -72,10 +72,13 @@ final readonly class ScalarFunctionFilter implements Filter
             }
         }
 
+        $schema = schema(...$definitions);
+
+        // an undeclared partition column resolves against the file's own path value (a str column)
         // @mago-ignore analysis:mixed-operand
-        return (bool) $this->resolved->eval(
-            array_to_row($values, schema(...$definitions), $this->context->backend()),
-            $this->context,
-        );
+        return (bool) (new ReferenceResolver())
+            ->resolve($this->resolved, $schema)
+            ->eval(array_to_rows([$values], $schema, $this->context->backend()), $this->context)
+            ->value(0);
     }
 }

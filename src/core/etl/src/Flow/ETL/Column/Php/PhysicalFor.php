@@ -46,7 +46,9 @@ use Flow\Types\Type\Logical\TimeZoneType;
 use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLElementType;
 use Flow\Types\Type\Logical\XMLType;
+use Flow\Types\Type\Native\ArrayType;
 use Flow\Types\Type\Native\BooleanType;
+use Flow\Types\Type\Native\EmptyArrayType;
 use Flow\Types\Type\Native\EnumType;
 use Flow\Types\Type\Native\FloatType;
 use Flow\Types\Type\Native\IntegerType;
@@ -55,6 +57,7 @@ use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\StringType;
 use UnitEnum;
 
+use function Flow\Types\DSL\type_bare;
 use function in_array;
 use function sprintf;
 
@@ -101,6 +104,81 @@ final readonly class PhysicalFor
         } catch (InvalidArgumentException $e) {
             throw ColumnMismatchException::unsupportedType($definition, $e->getMessage());
         }
+    }
+
+    /**
+     * A column of $type exists: definition_from_type() accepts it and definition() gives it a Physical.
+     *
+     * @param Type<mixed> $type
+     */
+    public function supports(Type $type): bool
+    {
+        $base = type_bare($type);
+
+        return match (true) {
+            $base instanceof ArrayType => true,
+            $base instanceof EmptyArrayType,
+            $base instanceof PositiveIntegerType,
+            $base instanceof NonEmptyStringType,
+            $base instanceof NumericStringType,
+            $base instanceof ClassStringType,
+                => false,
+            default => $this->supportsChild($base),
+        };
+    }
+
+    /**
+     * A child (list element, map value, structure element) of $type exists once TypeProjection stored it as json
+     * (an array) or as optional (a nullable union): type() gives it a Physical.
+     *
+     * @param Type<mixed> $type
+     */
+    public function supportsChild(Type $type): bool
+    {
+        $base = type_bare($type);
+
+        return match (true) {
+            $base instanceof ArrayType, $base instanceof EmptyArrayType => true,
+            $base instanceof IntegerType,
+            $base instanceof PositiveIntegerType,
+            $base instanceof FloatType,
+            $base instanceof BooleanType,
+            $base instanceof StringType,
+            $base instanceof NonEmptyStringType,
+            $base instanceof NumericStringType,
+            $base instanceof ClassStringType,
+            $base instanceof DateTimeType,
+            $base instanceof DateType,
+            $base instanceof TimeType,
+            $base instanceof UuidType,
+            $base instanceof TimeZoneType,
+            $base instanceof JsonType,
+            $base instanceof XMLType,
+            $base instanceof XMLElementType,
+            $base instanceof HTMLType,
+            $base instanceof HTMLElementType,
+            $base instanceof NullType,
+                => true,
+            $base instanceof EnumType => $base->class !== UnitEnum::class && $base->class !== BackedEnum::class,
+            $base instanceof ListType => $this->supportsChild($base->element()),
+            $base instanceof MapType => $this->supportsChild($base->value()),
+            $base instanceof StructureType => $this->supportsElements($base),
+            default => false,
+        };
+    }
+
+    /**
+     * @param StructureType<mixed> $type
+     */
+    public function supportsElements(StructureType $type): bool
+    {
+        foreach ($type->elements() as $element) {
+            if (!$this->supportsChild($element->type)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

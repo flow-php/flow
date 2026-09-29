@@ -69,6 +69,17 @@ final class ColumnMismatchException extends InvalidArgumentException
     /**
      * @param Definition<mixed> $definition
      */
+    public static function untypedColumn(Definition $definition): self
+    {
+        return new self(
+            $definition->entry()->name(),
+            ': mixed cannot be a batch column, an untyped function result exists only inside function evaluation',
+        );
+    }
+
+    /**
+     * @param Definition<mixed> $definition
+     */
     public static function valueDoesNotMatch(Definition $definition, mixed $value, ?TypesException $reason = null): self
     {
         return new self(

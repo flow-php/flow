@@ -23,7 +23,7 @@ $dataFrame = data_frame()->read(from_array($largeDataset));
 foreach ($dataFrame->get() as $rows) {
     echo "Processing batch of " . $rows->count() . " rows\n";
     // Process each batch
-    foreach ($rows as $row) {
+    foreach ($rows->toArray() as $row) {
         // Process individual row
     }
 }

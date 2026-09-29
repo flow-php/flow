@@ -22,7 +22,6 @@ use PHPUnit\Framework\TestCase;
 use function array_map;
 use function array_merge;
 use function array_slice;
-use function count;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
@@ -53,7 +52,7 @@ final class FloeReaderTest extends TestCase
         );
 
         static::assertCount(1, $batches);
-        static::assertEquals($rows->all(), $batches[0]->all());
+        static::assertEquals($rows->toArray(), $batches[0]->toArray());
     }
 
     public function test_batches_follow_requested_size(): void
@@ -108,8 +107,8 @@ final class FloeReaderTest extends TestCase
         foreach ((new FloeReader($filesystem))
             ->read($path)
             ->rows(batchSize: 100, offset: 0, limit: 2) as $batch) {
-            foreach ($batch->all() as $row) {
-                $ids[] = $row->get('id');
+            foreach ($batch->toArray() as $row) {
+                $ids[] = $row['id'];
             }
         }
 
@@ -134,7 +133,7 @@ final class FloeReaderTest extends TestCase
         );
 
         static::assertCount(1, $batches);
-        static::assertCount(2, $batches[0]->all());
+        static::assertCount(2, $batches[0]);
     }
 
     public function test_negative_offset_throws(): void
@@ -189,8 +188,8 @@ final class FloeReaderTest extends TestCase
         foreach ((new FloeReader($filesystem))
             ->read($path)
             ->rows(offset: 2) as $batch) {
-            foreach ($batch->all() as $row) {
-                $ids[] = $row->get('id');
+            foreach ($batch->toArray() as $row) {
+                $ids[] = $row['id'];
             }
         }
 
@@ -226,10 +225,10 @@ final class FloeReaderTest extends TestCase
         foreach ((new FloeReader($filesystem))
             ->read($path)
             ->rows(offset: 4) as $batch) {
-            foreach ($batch->all() as $row) {
-                $ids[] = $row->get('id');
-                $names[] = $row->names();
-                $emails[] = $row->get('email');
+            foreach ($batch->toArray() as $row) {
+                $ids[] = $row['id'];
+                $names[] = array_keys($row);
+                $emails[] = $row['email'];
             }
         }
 
@@ -313,8 +312,8 @@ final class FloeReaderTest extends TestCase
         foreach ((new FloeReader($filesystem))
             ->read($path)
             ->rows(batchSize: 100, offset: 1, limit: 2) as $batch) {
-            foreach ($batch->all() as $row) {
-                $ids[] = $row->get('id');
+            foreach ($batch->toArray() as $row) {
+                $ids[] = $row['id'];
             }
         }
 
@@ -347,8 +346,8 @@ final class FloeReaderTest extends TestCase
         $full = [];
 
         foreach ($reader->rows() as $batch) {
-            foreach ($batch->all() as $row) {
-                $full[] = $row->get('id');
+            foreach ($batch->toArray() as $row) {
+                $full[] = $row['id'];
             }
         }
 
@@ -356,8 +355,8 @@ final class FloeReaderTest extends TestCase
             $tail = [];
 
             foreach ($reader->rows(offset: $offset) as $batch) {
-                foreach ($batch->all() as $row) {
-                    $tail[] = $row->get('id');
+                foreach ($batch->toArray() as $row) {
+                    $tail[] = $row['id'];
                 }
             }
 
@@ -381,8 +380,8 @@ final class FloeReaderTest extends TestCase
         foreach ((new FloeReader($filesystem, new CodecStub(0x00)))
             ->read($path)
             ->rows(offset: 1) as $batch) {
-            foreach ($batch->all() as $extractedRow) {
-                $ids[] = $extractedRow->get('id');
+            foreach ($batch->toArray() as $extractedRow) {
+                $ids[] = $extractedRow['id'];
             }
         }
 
@@ -645,7 +644,7 @@ final class FloeReaderTest extends TestCase
         );
 
         static::assertCount(1, $batches);
-        static::assertCount(2, $batches[0]->all());
+        static::assertCount(2, $batches[0]);
     }
 
     public function test_torn_file_without_footer_throws_in_strict_mode(): void
@@ -711,8 +710,8 @@ final class FloeReaderTest extends TestCase
         foreach ((new FloeReader($filesystem))
             ->read($path)
             ->head(3) as $batch) {
-            foreach ($batch->all() as $row) {
-                $ids[] = $row->get('id');
+            foreach ($batch->toArray() as $row) {
+                $ids[] = $row['id'];
             }
         }
 
@@ -735,8 +734,8 @@ final class FloeReaderTest extends TestCase
         foreach ((new FloeReader($filesystem))
             ->read($path)
             ->head(5) as $batch) {
-            foreach ($batch->all() as $row) {
-                $ids[] = $row->get('id');
+            foreach ($batch->toArray() as $row) {
+                $ids[] = $row['id'];
             }
         }
 
@@ -755,7 +754,7 @@ final class FloeReaderTest extends TestCase
         $writer->close();
 
         $sizes = array_map(
-            static fn(Rows $batch): int => count($batch->all()),
+            static fn(Rows $batch): int => $batch->count(),
             iterator_to_array(
                 (new FloeReader($filesystem))
                     ->read($path)
@@ -812,9 +811,9 @@ final class FloeReaderTest extends TestCase
         foreach ((new FloeReader($filesystem))
             ->read($path)
             ->tail(3) as $batch) {
-            foreach ($batch->all() as $row) {
-                $ids[] = $row->get('id');
-                $names[] = $row->names();
+            foreach ($batch->toArray() as $row) {
+                $ids[] = $row['id'];
+                $names[] = array_keys($row);
             }
         }
 
@@ -838,8 +837,8 @@ final class FloeReaderTest extends TestCase
         foreach ((new FloeReader($filesystem))
             ->read($path)
             ->tail(5) as $batch) {
-            foreach ($batch->all() as $row) {
-                $ids[] = $row->get('id');
+            foreach ($batch->toArray() as $row) {
+                $ids[] = $row['id'];
             }
         }
 
@@ -858,7 +857,7 @@ final class FloeReaderTest extends TestCase
         $writer->close();
 
         $sizes = array_map(
-            static fn(Rows $batch): int => count($batch->all()),
+            static fn(Rows $batch): int => $batch->count(),
             iterator_to_array(
                 (new FloeReader($filesystem))
                     ->read($path)
@@ -893,8 +892,8 @@ final class FloeReaderTest extends TestCase
         $full = [];
 
         foreach ($reader->rows() as $batch) {
-            foreach ($batch->all() as $row) {
-                $full[] = $row->get('id');
+            foreach ($batch->toArray() as $row) {
+                $full[] = $row['id'];
             }
         }
 
@@ -902,8 +901,8 @@ final class FloeReaderTest extends TestCase
             $tail = [];
 
             foreach ($reader->tail($count) as $batch) {
-                foreach ($batch->all() as $row) {
-                    $tail[] = $row->get('id');
+                foreach ($batch->toArray() as $row) {
+                    $tail[] = $row['id'];
                 }
             }
 

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\regex_all;
@@ -22,14 +22,14 @@ final class RegexAllTest extends FlowTestCase
 
         $pregMatch = regex_all(lit('/\d+/'), lit(2));
 
-        $pregMatch->eval(array_to_row([], schema()), flow_context());
+        (new FunctionContext(flow_context()))->eval($pregMatch, [], schema());
     }
 
     public function test_regex_all_expression_on_no_match(): void
     {
         $pregMatch = regex_all(lit('/\d+/'), lit('apples and oranges'));
 
-        static::assertNull($pregMatch->eval(array_to_row([], schema()), flow_context()));
+        static::assertNull((new FunctionContext(flow_context()))->eval($pregMatch, [], schema()));
     }
 
     public function test_regex_all_expression_on_valid_strings(): void
@@ -42,7 +42,7 @@ final class RegexAllTest extends FlowTestCase
                 ['124.23',     '12',     '45'],
                 ['EUR',        'USD',    'PLN'],
             ],
-            $pregMatch->eval(array_to_row([], schema()), flow_context()),
+            (new FunctionContext(flow_context()))->eval($pregMatch, [], schema()),
         );
     }
 
@@ -53,6 +53,6 @@ final class RegexAllTest extends FlowTestCase
 
         $pregMatch = regex_all(lit(1), lit('12 apples and 45 oranges'));
 
-        $pregMatch->eval(array_to_row([], schema()), flow_context());
+        (new FunctionContext(flow_context()))->eval($pregMatch, [], schema());
     }
 }

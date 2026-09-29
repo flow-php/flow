@@ -6,10 +6,10 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\String\StringStyles;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
@@ -22,9 +22,11 @@ final class StringStyleTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('StringStyle function requires non-null value');
 
-        ref('value')
-            ->stringStyle(StringStyles::LOWER)
-            ->eval(array_to_row(['value' => null], schema(str_schema('value', nullable: true))), flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            ref('value')->stringStyle(StringStyles::LOWER),
+            ['value' => null],
+            schema(str_schema('value', nullable: true)),
+        );
     }
 
     /**
@@ -59,36 +61,38 @@ final class StringStyleTest extends FlowTestCase
 
     public function test_string_style_camel(): void
     {
-        static::assertSame('fooBarBaz', ref('str')
-            ->stringStyle(ref('style'))
-            ->eval(
-                array_to_row(
-                    ['str' => 'Foo: Bar-baz.', 'style' => 'camel'],
-                    schema(str_schema('str'), str_schema('style')),
-                ),
-                flow_context(),
-            ));
+        static::assertSame('fooBarBaz', (new FunctionContext(flow_context()))->eval(
+            ref('str')->stringStyle(ref('style')),
+            ['str' => 'Foo: Bar-baz.', 'style' => 'camel'],
+            schema(str_schema('str'), str_schema('style')),
+        ));
     }
 
     public function test_string_style_kebab(): void
     {
-        static::assertSame('foo-bar-baz', ref('str')
-            ->stringStyle('kebab')
-            ->eval(array_to_row(['str' => 'Foo: Bar-baz.'], schema(str_schema('str'))), flow_context()));
+        static::assertSame('foo-bar-baz', (new FunctionContext(flow_context()))->eval(
+            ref('str')->stringStyle('kebab'),
+            ['str' => 'Foo: Bar-baz.'],
+            schema(str_schema('str')),
+        ));
     }
 
     public function test_string_style_lower(): void
     {
-        static::assertSame('foo bar bri̇an', ref('str')
-            ->stringStyle('lower')
-            ->eval(array_to_row(['str' => 'FOO Bar Brİan'], schema(str_schema('str'))), flow_context()));
+        static::assertSame('foo bar bri̇an', (new FunctionContext(flow_context()))->eval(
+            ref('str')->stringStyle('lower'),
+            ['str' => 'FOO Bar Brİan'],
+            schema(str_schema('str')),
+        ));
     }
 
     #[DataProvider('provideStringStyles')]
     public function test_string_styles(StringStyles $style, ?string $value, ?string $expected): void
     {
-        static::assertSame($expected, ref('str')
-            ->stringStyle($style)
-            ->eval(array_to_row(['str' => $value], schema(str_schema('str', nullable: true))), flow_context()));
+        static::assertSame($expected, (new FunctionContext(flow_context()))->eval(
+            ref('str')->stringStyle($style),
+            ['str' => $value],
+            schema(str_schema('str', nullable: true)),
+        ));
     }
 }

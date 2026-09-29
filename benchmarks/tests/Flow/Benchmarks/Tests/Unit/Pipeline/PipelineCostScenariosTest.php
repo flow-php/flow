@@ -92,7 +92,7 @@ final class PipelineCostScenariosTest extends TestCase
         $rows = (new FetchScenario(Source::csv, self::ROWS))->run();
 
         static::assertCount(self::ROWS, $rows);
-        static::assertSame(['order_id', 'customer'], $rows->first()->names());
+        static::assertSame(['order_id', 'customer'], array_keys($rows->values(0)));
     }
 
     #[DataProvider('limits')]

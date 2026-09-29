@@ -4,12 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Sort\Merge;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use Flow\ETL\Sort\Merge\BucketCursor;
+use Flow\ETL\Sort\RowOrder;
+use Flow\ETL\Sort\SortKey;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 
+use function array_map;
 use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 
@@ -22,13 +29,13 @@ final class BucketCursorTest extends FlowTestCase
             yield array_to_rows([['id' => 3]], schema(int_schema('id')));
         };
 
-        $cursor = new BucketCursor($batches());
+        $cursor = new BucketCursor($batches(), new RowOrder([ref('id')]));
 
         $ids = [];
 
         while ($cursor->valid()) {
-            $ids[] = $cursor->current()->get('id');
-            $cursor->next();
+            $ids[] = $cursor->batch()->column('id')->value($cursor->index());
+            $cursor->advance($cursor->index() + 1);
         }
 
         static::assertSame([1, 2, 3], $ids);
@@ -40,7 +47,7 @@ final class BucketCursorTest extends FlowTestCase
             yield from [];
         };
 
-        static::assertFalse((new BucketCursor($batches()))->valid());
+        static::assertFalse((new BucketCursor($batches(), new RowOrder([ref('id')])))->valid());
     }
 
     public function test_skips_empty_batches(): void
@@ -52,13 +59,13 @@ final class BucketCursorTest extends FlowTestCase
             yield array_to_rows([['id' => 2]], schema(int_schema('id')));
         };
 
-        $cursor = new BucketCursor($batches());
+        $cursor = new BucketCursor($batches(), new RowOrder([ref('id')]));
 
         $ids = [];
 
         while ($cursor->valid()) {
-            $ids[] = $cursor->current()->get('id');
-            $cursor->next();
+            $ids[] = $cursor->batch()->column('id')->value($cursor->index());
+            $cursor->advance($cursor->index() + 1);
         }
 
         static::assertSame([1, 2], $ids);
@@ -72,18 +79,19 @@ final class BucketCursorTest extends FlowTestCase
         };
 
         $generator = $batches();
-        $cursor = new BucketCursor($generator);
+        $cursor = new BucketCursor($generator, new RowOrder([ref('id')]));
 
         static::assertSame(0, $generator->key());
 
-        $cursor->next();
+        $cursor->advance(1);
 
         static::assertSame(0, $generator->key());
 
-        $cursor->next();
+        $cursor->advance(2);
 
         static::assertSame(1, $generator->key());
-        static::assertSame(3, $cursor->current()->get('id'));
+        static::assertSame(0, $cursor->index());
+        static::assertSame([['id' => 3]], $cursor->batch()->toArray());
     }
 
     public function test_stream_of_only_empty_batches_is_invalid(): void
@@ -93,6 +101,33 @@ final class BucketCursorTest extends FlowTestCase
             yield rows(schema());
         };
 
-        static::assertFalse((new BucketCursor($batches()))->valid());
+        static::assertFalse((new BucketCursor($batches(), new RowOrder([ref('id')])))->valid());
+    }
+
+    public function test_keys_are_the_sort_keys_of_every_ref_in_order(): void
+    {
+        $batches = static function (): Generator {
+            yield array_to_rows(
+                [['id' => 2, 'at' => new DateTimeImmutable('1970-01-01 00:00:01', new DateTimeZone('UTC'))]],
+                schema(int_schema('id'), datetime_schema('at')),
+            );
+        };
+
+        $cursor = new BucketCursor($batches(), new RowOrder([ref('at'), ref('id')]));
+
+        static::assertSame(
+            [[1_000_000], [2]],
+            array_map(static fn(SortKey $key): array => $key->values, $cursor->keys()),
+        );
+        static::assertEquals(schema(int_schema('id'), datetime_schema('at')), $cursor->schema());
+    }
+
+    public function test_schema_of_an_empty_stream_is_empty(): void
+    {
+        $batches = static function (): Generator {
+            yield from [];
+        };
+
+        static::assertEquals(schema(), (new BucketCursor($batches(), new RowOrder([ref('id')])))->schema());
     }
 }

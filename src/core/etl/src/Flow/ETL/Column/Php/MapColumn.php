@@ -42,9 +42,9 @@ final readonly class MapColumn implements Column
         $length = $this->offsets[$i + 1] - $this->offsets[$i];
 
         /** @var list<int|string> $keys */
-        $keys = array_slice($this->keys->physicals(), $this->offsets[$i], $length);
+        $keys = $this->keys->slice($this->offsets[$i], $length)->physicals();
 
-        return array_combine($keys, array_slice($this->values->physicals(), $this->offsets[$i], $length));
+        return array_combine($keys, $this->values->slice($this->offsets[$i], $length)->physicals());
     }
 
     public function concat(Column ...$others): Column
@@ -176,15 +176,12 @@ final readonly class MapColumn implements Column
             return null;
         }
 
-        $value = [];
+        $length = $this->offsets[$i + 1] - $this->offsets[$i];
 
-        for ($j = $this->offsets[$i], $end = $this->offsets[$i + 1]; $j < $end; $j++) {
-            /** @var int|string $key */
-            $key = $this->keys->value($j);
-            $value[$key] = $this->values->value($j);
-        }
+        /** @var list<int|string> $keys */
+        $keys = $this->keys->slice($this->offsets[$i], $length)->values();
 
-        return $value;
+        return array_combine($keys, $this->values->slice($this->offsets[$i], $length)->values());
     }
 
     public function values(): array

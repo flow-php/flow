@@ -100,46 +100,67 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
 
     public function test_reading_xml_each_collection_item(): void
     {
-        static::assertXmlStringEqualsXmlString(<<<'XML'
-            <item item_attribute_01="1">
-              <id id_attribute_01="1">1</id>
-            </item>
-            XML, type_string()->cast(df()
-            ->read(from_xml(__DIR__ . '/../Fixtures/simple_items_flat.xml', 'root/items/item'))
-            ->fetch()[0]->get('node')));
+        static::assertXmlStringEqualsXmlString(
+            <<<'XML'
+                <item item_attribute_01="1">
+                  <id id_attribute_01="1">1</id>
+                </item>
+                XML,
+            type_string()->cast(
+                df()
+                    ->read(from_xml(__DIR__ . '/../Fixtures/simple_items_flat.xml', 'root/items/item'))
+                    ->fetch()
+                    ->column('node')
+                    ->value(0),
+            ),
+        );
 
-        static::assertXmlStringEqualsXmlString(<<<'XML'
-            <item item_attribute_01="5">
-              <id id_attribute_01="5">5</id>
-            </item>
-            XML, type_string()->cast(df()
-            ->read(from_xml(__DIR__ . '/../Fixtures/simple_items_flat.xml', 'root/items/item'))
-            ->fetch()[4]->get('node')));
+        static::assertXmlStringEqualsXmlString(
+            <<<'XML'
+                <item item_attribute_01="5">
+                  <id id_attribute_01="5">5</id>
+                </item>
+                XML,
+            type_string()->cast(
+                df()
+                    ->read(from_xml(__DIR__ . '/../Fixtures/simple_items_flat.xml', 'root/items/item'))
+                    ->fetch()
+                    ->column('node')
+                    ->value(4),
+            ),
+        );
     }
 
     public function test_reading_xml_from_path(): void
     {
-        static::assertXmlStringEqualsXmlString(<<<'XML'
-            <items items_attribute_01="1" items_attribute_02="2">
-                <item item_attribute_01="1">
-                    <id id_attribute_01="1">1</id>
-                </item>
-                <item item_attribute_01="2">
-                    <id id_attribute_01="2">2</id>
-                </item>
-                <item item_attribute_01="3">
-                    <id id_attribute_01="3">3</id>
-                </item>
-                <item item_attribute_01="4">
-                    <id id_attribute_01="4">4</id>
-                </item>
-                <item item_attribute_01="5">
-                    <id id_attribute_01="5">5</id>
-                </item>
-            </items>
-            XML, type_string()->cast(df()
-            ->read(from_xml(__DIR__ . '/../Fixtures/simple_items.xml', 'root/items'))
-            ->fetch()[0]->get('node')));
+        static::assertXmlStringEqualsXmlString(
+            <<<'XML'
+                <items items_attribute_01="1" items_attribute_02="2">
+                    <item item_attribute_01="1">
+                        <id id_attribute_01="1">1</id>
+                    </item>
+                    <item item_attribute_01="2">
+                        <id id_attribute_01="2">2</id>
+                    </item>
+                    <item item_attribute_01="3">
+                        <id id_attribute_01="3">3</id>
+                    </item>
+                    <item item_attribute_01="4">
+                        <id id_attribute_01="4">4</id>
+                    </item>
+                    <item item_attribute_01="5">
+                        <id id_attribute_01="5">5</id>
+                    </item>
+                </items>
+                XML,
+            type_string()->cast(
+                df()
+                    ->read(from_xml(__DIR__ . '/../Fixtures/simple_items.xml', 'root/items'))
+                    ->fetch()
+                    ->column('node')
+                    ->value(0),
+            ),
+        );
     }
 
     public function test_reading_xml_with_ancestor_namespace_declaration(): void
@@ -149,9 +170,12 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
             ->withEntry('title', ref('node')->xpath('/entry/g:title')->domElementValue())
             ->fetch();
 
-        static::assertSame(['Product 1', 'Product 2'], [$rows[0]->get('title'), $rows[1]->get('title')]);
+        static::assertSame(['Product 1', 'Product 2'], [
+            $rows->column('title')->value(0),
+            $rows->column('title')->value(1),
+        ]);
 
-        $node = type_string()->cast($rows[0]->get('node'));
+        $node = type_string()->cast($rows->column('node')->value(0));
 
         static::assertStringContainsString('xmlns:g="http://base.google.com/ns/1.0"', $node);
         static::assertStringContainsString('xmlns:c="http://example.com/custom"', $node);
@@ -159,18 +183,26 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
 
     public function test_reading_xml_with_default_namespace_declaration(): void
     {
-        $node = type_string()->cast(df()
-            ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_default.xml', 'feed/entry'))
-            ->fetch()[0]->get('node'));
+        $node = type_string()->cast(
+            df()
+                ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_default.xml', 'feed/entry'))
+                ->fetch()
+                ->column('node')
+                ->value(0),
+        );
 
         static::assertStringContainsString('xmlns="http://example.com/default"', $node);
     }
 
     public function test_reading_xml_with_multi_ancestor_namespace_merge(): void
     {
-        $node = type_string()->cast(df()
-            ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_multi_ancestor.xml', 'feed/group/entry'))
-            ->fetch()[0]->get('node'));
+        $node = type_string()->cast(
+            df()
+                ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_multi_ancestor.xml', 'feed/group/entry'))
+                ->fetch()
+                ->column('node')
+                ->value(0),
+        );
 
         static::assertStringContainsString('xmlns:a="http://example.com/a"', $node);
         static::assertStringContainsString('xmlns:b="http://example.com/b"', $node);
@@ -183,18 +215,22 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
             ->withEntry('title', ref('node')->xpath('/entry/g:title')->domElementValue())
             ->fetch();
 
-        static::assertSame('Product 1', $rows[0]->get('title'));
+        static::assertSame('Product 1', $rows->column('title')->value(0));
         static::assertStringContainsString(
             'xmlns:g="http://base.google.com/ns/1.0"',
-            type_string()->cast($rows[0]->get('node')),
+            type_string()->cast($rows->column('node')->value(0)),
         );
     }
 
     public function test_reading_xml_with_prefixed_attribute(): void
     {
-        $node = type_string()->cast(df()
-            ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_prefixed_attribute.xml', 'feed/entry'))
-            ->fetch()[0]->get('node'));
+        $node = type_string()->cast(
+            df()
+                ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_prefixed_attribute.xml', 'feed/entry'))
+                ->fetch()
+                ->column('node')
+                ->value(0),
+        );
 
         static::assertStringContainsString('xmlns:g="http://base.google.com/ns/1.0"', $node);
         static::assertStringContainsString('xml:lang="en"', $node);
@@ -237,9 +273,13 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
 
     public function test_reading_xml_with_shadowed_namespace_declaration(): void
     {
-        $node = type_string()->cast(df()
-            ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_nested.xml', 'feed/group/entry'))
-            ->fetch()[0]->get('node'));
+        $node = type_string()->cast(
+            df()
+                ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_nested.xml', 'feed/group/entry'))
+                ->fetch()
+                ->column('node')
+                ->value(0),
+        );
 
         static::assertStringContainsString('xmlns:g="http://example.com/override"', $node);
         static::assertStringContainsString('xmlns:x="http://example.com/extra"', $node);
@@ -263,13 +303,20 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
 
     public function test_reading_xml_without_namespaces_is_unchanged(): void
     {
-        static::assertXmlStringEqualsXmlString(<<<'XML'
-            <item item_attribute_01="1">
-              <id id_attribute_01="1">1</id>
-            </item>
-            XML, type_string()->cast(df()
-            ->read(from_xml(__DIR__ . '/../Fixtures/simple_items_flat.xml', 'root/items/item'))
-            ->fetch()[0]->get('node')));
+        static::assertXmlStringEqualsXmlString(
+            <<<'XML'
+                <item item_attribute_01="1">
+                  <id id_attribute_01="1">1</id>
+                </item>
+                XML,
+            type_string()->cast(
+                df()
+                    ->read(from_xml(__DIR__ . '/../Fixtures/simple_items_flat.xml', 'root/items/item'))
+                    ->fetch()
+                    ->column('node')
+                    ->value(0),
+            ),
+        );
     }
 
     public function test_schema_appends_the_metadata_column(): void

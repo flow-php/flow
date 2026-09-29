@@ -38,8 +38,8 @@ final class FloeLoaderTest extends TestCase
         $ids = [];
 
         foreach (from_floe($path, filesystem: $memory)->extract($context) as $batch) {
-            foreach ($batch->all() as $extractedRow) {
-                $ids[] = $extractedRow->get('id');
+            foreach ($batch->toArray() as $extractedRow) {
+                $ids[] = $extractedRow['id'];
             }
         }
 
@@ -109,8 +109,8 @@ final class FloeLoaderTest extends TestCase
         $ids = [];
 
         foreach (from_floe(path('memory://parts/**/*.floe'), filesystem: $memory)->extract($context) as $batch) {
-            foreach ($batch->all() as $extractedRow) {
-                $ids[] = $extractedRow->get('id');
+            foreach ($batch->toArray() as $extractedRow) {
+                $ids[] = $extractedRow['id'];
             }
         }
 
@@ -134,8 +134,8 @@ final class FloeLoaderTest extends TestCase
 
         // reading the concrete (non-pattern) path proves all rows landed in one file
         foreach (from_floe($path, filesystem: $memory)->extract($context) as $batch) {
-            foreach ($batch->all() as $extractedRow) {
-                $ids[] = $extractedRow->get('id');
+            foreach ($batch->toArray() as $extractedRow) {
+                $ids[] = $extractedRow['id'];
             }
         }
 

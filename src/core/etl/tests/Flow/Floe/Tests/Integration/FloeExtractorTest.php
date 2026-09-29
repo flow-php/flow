@@ -159,8 +159,8 @@ final class FloeExtractorTest extends FlowIntegrationTestCase
                         ->read(from_floe($path, filesystem: $this->fs()))
                         ->withEntry('at', to_timezone(ref('at'), 'Europe/Warsaw'))
                         ->fetch()
-                        ->first()
-                        ->get('at'),
+                        ->column('at')
+                        ->value(0),
                 )
                 ->format('Y-m-d H:i:s e'),
         );
@@ -189,8 +189,9 @@ final class FloeExtractorTest extends FlowIntegrationTestCase
 
         foreach (df()
             ->read(from_floe($this->cacheDir->suffix('zones/*.floe'), filesystem: $this->fs()))
-            ->fetch() as $row) {
-            $zones[] = type_datetime()->assert($row->get('at'))->getTimezone()->getName();
+            ->fetch()
+            ->toArray() as $row) {
+            $zones[] = type_datetime()->assert($row['at'])->getTimezone()->getName();
         }
 
         static::assertSame(['Europe/Warsaw', 'Europe/Warsaw'], $zones);

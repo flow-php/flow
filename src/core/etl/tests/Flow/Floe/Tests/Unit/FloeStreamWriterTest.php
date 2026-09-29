@@ -201,7 +201,7 @@ final class FloeStreamWriterTest extends TestCase
         $footer = FloeStreamReaderContext::footer($filesystem, $path);
         static::assertSame(2, $footer->statistics->rows);
         static::assertNotSame([], $footer->schema);
-        static::assertCount(2, FloeStreamReaderContext::readAll($filesystem, $path)->all());
+        static::assertCount(2, FloeStreamReaderContext::readAll($filesystem, $path));
     }
 
     /**

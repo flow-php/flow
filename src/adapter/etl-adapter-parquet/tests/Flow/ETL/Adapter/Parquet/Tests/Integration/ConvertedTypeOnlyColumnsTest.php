@@ -76,11 +76,14 @@ final class ConvertedTypeOnlyColumnsTest extends FlowTestCase
             $rows->schema(),
         );
 
-        $row = $rows[0];
-        $tsMs = $row->get('ts_ms');
-        $tsUs = $row->get('ts_us');
-        $tMs = $row->get('t_ms');
-        $tUs = $row->get('t_us');
+        // @mago-ignore analysis:mixed-assignment
+        $tsMs = $rows->column('ts_ms')->value(0);
+        // @mago-ignore analysis:mixed-assignment
+        $tsUs = $rows->column('ts_us')->value(0);
+        // @mago-ignore analysis:mixed-assignment
+        $tMs = $rows->column('t_ms')->value(0);
+        // @mago-ignore analysis:mixed-assignment
+        $tUs = $rows->column('t_us')->value(0);
 
         static::assertInstanceOf(DateTimeInterface::class, $tsMs);
         static::assertInstanceOf(DateTimeInterface::class, $tsUs);
@@ -90,6 +93,6 @@ final class ConvertedTypeOnlyColumnsTest extends FlowTestCase
         static::assertSame('2020-01-02 03:04:05.678901 +00:00', $tsUs->format('Y-m-d H:i:s.u P'));
         static::assertSame('03:04:05.678000', $tMs->format('%H:%I:%S.%F'));
         static::assertSame('03:04:05.678901', $tUs->format('%H:%I:%S.%F'));
-        static::assertSame(12345.67, $row->get('dec9'));
+        static::assertSame(12345.67, $rows->column('dec9')->value(0));
     }
 }

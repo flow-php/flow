@@ -13,6 +13,7 @@ use Flow\ETL\Row\References;
 use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Metadata;
+use Flow\ETL\Schema\SameSchemas;
 use Flow\ETL\Schema\SortingStrategy;
 use Flow\ETL\Schema\SortingStrategy\AlphabeticalStrategy;
 
@@ -240,6 +241,10 @@ final readonly class Schema implements Countable
      */
     public function isSame(self $schema): bool
     {
+        if ($this === $schema || SameSchemas::proved($this, $schema)) {
+            return true;
+        }
+
         if (array_keys($this->definitions) !== array_keys($schema->definitions)) {
             return false;
         }
@@ -249,6 +254,8 @@ final readonly class Schema implements Countable
                 return false;
             }
         }
+
+        SameSchemas::remember($this, $schema);
 
         return true;
     }

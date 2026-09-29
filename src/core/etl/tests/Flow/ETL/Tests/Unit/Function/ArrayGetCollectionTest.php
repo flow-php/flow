@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\RowsMother;
 use PHPUnit\Framework\Attributes\TestWith;
 
 use function Flow\ETL\DSL\array_get_collection;
 use function Flow\ETL\DSL\array_get_collection_first;
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
@@ -37,9 +37,12 @@ final class ArrayGetCollectionTest extends FlowTestCase
         $this->expectExceptionMessage('ArrayGetCollection function failed to evaluate parameters');
 
         $context = flow_context(config());
-        $row = array_to_row(['invalid_entry' => 1], schema(int_schema('invalid_entry')));
 
-        array_get_collection(ref('invalid_entry'), ['id'])->eval($row, $context);
+        (new FunctionContext($context))->eval(
+            array_get_collection(ref('invalid_entry'), ['id']),
+            ['invalid_entry' => 1],
+            schema(int_schema('invalid_entry')),
+        );
     }
 
     public function test_for_not_array_entry(): void
@@ -47,9 +50,11 @@ final class ArrayGetCollectionTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('ArrayGetCollection function failed to evaluate parameters.');
 
-        $row = array_to_row(['invalid_entry' => 1], schema(int_schema('invalid_entry')));
-
-        array_get_collection(ref('invalid_entry'), ['id'])->eval($row, flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            array_get_collection(ref('invalid_entry'), ['id']),
+            ['invalid_entry' => 1],
+            schema(int_schema('invalid_entry')),
+        );
     }
 
     public function test_getting_keys_from_simple_array(): void
@@ -57,111 +62,127 @@ final class ArrayGetCollectionTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('ArrayGetCollection function failed to evaluate parameters.');
 
-        $row = RowsMother::arrayEntry();
+        $rows = RowsMother::arrayEntry();
 
-        array_get_collection(ref('array_entry'), ['id'])->eval($row, flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            array_get_collection(ref('array_entry'), ['id']),
+            $rows->values(0),
+            $rows->schema(),
+        );
     }
 
     public function test_getting_specific_keys_from_collection_of_array(): void
     {
-        $row = array_to_row([
-            'array_entry' => [
-                [
-                    'id' => 1,
-                    'status' => 'PENDING',
-                    'enabled' => true,
-                    'array' => ['foo' => 'bar'],
-                ],
-                [
-                    'id' => 2,
-                    'status' => 'NEW',
-                    'enabled' => true,
-                    'array' => ['foo' => 'bar'],
-                ],
-            ],
-        ], schema(list_schema('array_entry', type_list(type_structure([
-            'id' => type_integer(),
-            'status' => type_string(),
-            'enabled' => type_boolean(),
-            'array' => type_structure(['foo' => type_string()]),
-        ])))));
-
         static::assertEquals(
             [
                 ['id' => 1, 'status' => 'PENDING'],
                 ['id' => 2, 'status' => 'NEW'],
             ],
-            array_get_collection(ref('array_entry'), ['id', 'status'])->eval($row, flow_context()),
+            (new FunctionContext(flow_context()))->eval(
+                array_get_collection(ref('array_entry'), ['id', 'status']),
+                [
+                    'array_entry' => [
+                        [
+                            'id' => 1,
+                            'status' => 'PENDING',
+                            'enabled' => true,
+                            'array' => ['foo' => 'bar'],
+                        ],
+                        [
+                            'id' => 2,
+                            'status' => 'NEW',
+                            'enabled' => true,
+                            'array' => ['foo' => 'bar'],
+                        ],
+                    ],
+                ],
+                schema(list_schema(
+                    'array_entry',
+                    type_list(type_structure([
+                        'id' => type_integer(),
+                        'status' => type_string(),
+                        'enabled' => type_boolean(),
+                        'array' => type_structure(['foo' => type_string()]),
+                    ])),
+                )),
+            ),
         );
     }
 
     public function test_getting_specific_keys_from_first_element_in_collection_of_array(): void
     {
-        $row = array_to_row([
-            'array_entry' => [
-                [
-                    'parent_id' => 1,
-                    'id' => 1,
-                    'status' => 'PENDING',
-                    'enabled' => true,
-                    'array' => ['foo' => 'bar'],
-                ],
-                [
-                    'parent_id' => 1,
-                    'id' => 2,
-                    'status' => 'NEW',
-                    'enabled' => true,
-                    'array' => ['foo' => 'bar'],
-                ],
-            ],
-        ], schema(list_schema('array_entry', type_list(type_structure([
-            'parent_id' => type_integer(),
-            'id' => type_integer(),
-            'status' => type_string(),
-            'enabled' => type_boolean(),
-            'array' => type_structure(['foo' => type_string()]),
-        ])))));
-
         static::assertEquals(
             [
                 'parent_id' => 1,
             ],
-            ref('array_entry')->arrayGetCollectionFirst('parent_id')->eval($row, flow_context()),
+            (new FunctionContext(flow_context()))->eval(
+                ref('array_entry')->arrayGetCollectionFirst('parent_id'),
+                [
+                    'array_entry' => [
+                        [
+                            'parent_id' => 1,
+                            'id' => 1,
+                            'status' => 'PENDING',
+                            'enabled' => true,
+                            'array' => ['foo' => 'bar'],
+                        ],
+                        [
+                            'parent_id' => 1,
+                            'id' => 2,
+                            'status' => 'NEW',
+                            'enabled' => true,
+                            'array' => ['foo' => 'bar'],
+                        ],
+                    ],
+                ],
+                schema(list_schema(
+                    'array_entry',
+                    type_list(type_structure([
+                        'parent_id' => type_integer(),
+                        'id' => type_integer(),
+                        'status' => type_string(),
+                        'enabled' => type_boolean(),
+                        'array' => type_structure(['foo' => type_string()]),
+                    ])),
+                )),
+            ),
         );
     }
 
     public function test_getting_specific_keys_from_first_element_in_collection_of_array_when_first_index_does_not_exists(): void
     {
-        $row = array_to_row([
-            'array_entry' => [
-                2 => [
-                    'parent_id' => 1,
-                    'id' => 1,
-                    'status' => 'PENDING',
-                    'enabled' => true,
-                    'array' => ['foo' => 'bar'],
-                ],
-                3 => [
-                    'parent_id' => 1,
-                    'id' => 2,
-                    'status' => 'NEW',
-                    'enabled' => true,
-                    'array' => ['foo' => 'bar'],
-                ],
-            ],
-        ], schema(map_schema('array_entry', type_map(type_integer(), type_structure([
-            'parent_id' => type_integer(),
-            'id' => type_integer(),
-            'status' => type_string(),
-            'enabled' => type_boolean(),
-            'array' => type_structure(['foo' => type_string()]),
-        ])))));
-
         static::assertEquals(
             [
                 'parent_id' => 1,
             ],
-            array_get_collection_first(ref('array_entry'), 'parent_id')->eval($row, flow_context()),
+            (new FunctionContext(flow_context()))->eval(
+                array_get_collection_first(ref('array_entry'), 'parent_id'),
+                [
+                    'array_entry' => [
+                        2 => [
+                            'parent_id' => 1,
+                            'id' => 1,
+                            'status' => 'PENDING',
+                            'enabled' => true,
+                            'array' => ['foo' => 'bar'],
+                        ],
+                        3 => [
+                            'parent_id' => 1,
+                            'id' => 2,
+                            'status' => 'NEW',
+                            'enabled' => true,
+                            'array' => ['foo' => 'bar'],
+                        ],
+                    ],
+                ],
+                schema(map_schema('array_entry', type_map(type_integer(), type_structure([
+                    'parent_id' => type_integer(),
+                    'id' => type_integer(),
+                    'status' => type_string(),
+                    'enabled' => type_boolean(),
+                    'array' => type_structure(['foo' => type_string()]),
+                ])))),
+            ),
         );
     }
 
@@ -175,9 +196,13 @@ final class ArrayGetCollectionTest extends FlowTestCase
     #[TestWith([['a.b'], [['a' => ['b' => 1]]], [['a.b' => null]]])]
     public function test_keys_are_literal_keys(array $keys, array $collection, array $expected): void
     {
-        static::assertSame($expected, array_get_collection(ref('array_entry'), $keys)->eval(array_to_row([
-            'array_entry' => $collection,
-        ], schema(json_schema('array_entry'))), flow_context()));
+        static::assertSame($expected, (new FunctionContext(flow_context()))->eval(
+            array_get_collection(ref('array_entry'), $keys),
+            [
+                'array_entry' => $collection,
+            ],
+            schema(json_schema('array_entry')),
+        ));
     }
 
     public function test_a_non_scalar_key_fails(): void
@@ -185,18 +210,22 @@ final class ArrayGetCollectionTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('ArrayGetCollection function failed to evaluate parameters.');
 
-        array_get_collection(ref('array_entry'), [[
+        (new FunctionContext(flow_context()))->eval(array_get_collection(ref('array_entry'), [[
             'x',
-        ]])->eval(array_to_row(['array_entry' => [['x' => 1]]], schema(list_schema('array_entry', type_list(type_structure(['x' => type_integer()]))))), flow_context());
+        ]]), ['array_entry' => [['x' => 1]]], schema(list_schema('array_entry', type_list(type_structure(['x' => type_integer()])))));
     }
 
     public function test_an_empty_element_reads_null_keys(): void
     {
         static::assertSame(
             [['id' => null], ['id' => null]],
-            array_get_collection(ref('array_entry'), ['id'])->eval(array_to_row([
-                'array_entry' => [['name' => 'a'], []],
-            ], schema(json_schema('array_entry'))), flow_context()),
+            (new FunctionContext(flow_context()))->eval(
+                array_get_collection(ref('array_entry'), ['id']),
+                [
+                    'array_entry' => [['name' => 'a'], []],
+                ],
+                schema(json_schema('array_entry')),
+            ),
         );
     }
 

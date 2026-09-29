@@ -252,11 +252,11 @@ final class GroupByTest extends FlowIntegrationTestCase
 
         static::assertSame(
             [
+                ['country' => 'US', 'gender' => null, 'age_avg' => 45.0],
                 ['country' => 'PL', 'gender' => 'female', 'age_avg' => 30.0],
                 ['country' => 'US', 'gender' => 'female', 'age_avg' => 40.0],
                 ['country' => 'PL', 'gender' => 'male', 'age_avg' => 21.67],
                 ['country' => 'US', 'gender' => 'male', 'age_avg' => 45.0],
-                ['country' => 'US', 'gender' => null, 'age_avg' => 45.0],
             ],
             $rows->sortBy(ref('gender'), ref('country'))->toArray(),
         );

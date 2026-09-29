@@ -7,12 +7,11 @@ namespace Flow\ETL\Extractor;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Processor\BatchingByProcessor;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
-
-use function array_shift;
 
 final class BatchByExtractor implements Extractor, OverridingExtractor, RewindableExtractor
 {
@@ -44,61 +43,27 @@ final class BatchByExtractor implements Extractor, OverridingExtractor, Rewindab
      */
     public function extract(FlowContext $context, ?int $limit = null): Generator
     {
-        // pinned from the declaration or the first child batch, then every later batch is matched to
-        // it - a buffer spans child batches, so its rows must all answer to one schema before trusted()
-        $schema = $this->schema;
+        return (new BatchingByProcessor($this->column, $this->minSize))->process(
+            $this->declared($this->extractor->extract($context)),
+            $context,
+        );
+    }
 
-        /** @var list<Rows> $pending */
-        $pending = [];
-        $pendingCount = 0;
-        $currentGroupValue = null;
+    /**
+     * @param Generator<Rows> $batches
+     *
+     * @return Generator<Rows>
+     */
+    public function declared(Generator $batches): Generator
+    {
+        if ($this->schema === null) {
+            yield from $batches;
 
-        foreach ($this->extractor->extract($context) as $rows) {
-            $schema ??= $rows->schema();
-            $rows = $rows->matchTo($schema);
-
-            if ($rows->count() === 0) {
-                continue;
-            }
-
-            $column = $rows->column($this->column->base());
-            $start = 0;
-
-            for ($i = 0; $i < $rows->count(); $i++) {
-                // @mago-ignore analysis:mixed-assignment
-                $groupValue = $column->value($i);
-
-                if ($currentGroupValue === null) {
-                    // @mago-ignore analysis:mixed-assignment
-                    $currentGroupValue = $groupValue;
-                } elseif ($currentGroupValue !== $groupValue) {
-                    if ($this->minSize === null || ($pendingCount + $i - $start) >= $this->minSize) {
-                        $pending[] = $rows->slice($start, $i - $start);
-                        $first = array_shift($pending);
-                        $signal = yield $first->concat(...$pending);
-
-                        if ($signal === Signal::STOP) {
-                            return;
-                        }
-
-                        $pending = [];
-                        $pendingCount = 0;
-                        $start = $i;
-                    }
-
-                    // @mago-ignore analysis:mixed-assignment
-                    $currentGroupValue = $groupValue;
-                }
-            }
-
-            $pending[] = $rows->slice($start, $rows->count() - $start);
-            $pendingCount += $rows->count() - $start;
+            return;
         }
 
-        $first = array_shift($pending);
-
-        if ($first !== null && $pendingCount > 0) {
-            yield $first->concat(...$pending);
+        foreach ($batches as $batch) {
+            yield $batch->matchTo($this->schema);
         }
     }
 

@@ -12,6 +12,7 @@ use Flow\ETL\Processor\WindowProcessor;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Context\WindowProcessorContext;
 use Flow\ETL\Tests\Double\CountingFrameAccumulating;
+use Flow\ETL\Tests\Double\WindowFunctionOverOperand;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\ListColumnsMother;
 use Generator;
@@ -186,8 +187,8 @@ final class WindowProcessorTest extends FlowTestCase
         static::assertCount(1, $batches);
         static::assertEquals(int_schema('total')->addMetadata('origin', 'window'), $batches[0]->schema()->get('total'));
 
-        foreach ($batches[0] as $row) {
-            static::assertSame(100, $row->get('total'));
+        foreach ($batches[0]->toArray() as $row) {
+            static::assertSame(100, $row['total']);
         }
     }
 
@@ -403,8 +404,8 @@ final class WindowProcessorTest extends FlowTestCase
         foreach ($batches as $batch) {
             $definitions[] = $batch->schema()->get('total');
 
-            foreach ($batch as $row) {
-                $values[] = $row->get('total');
+            foreach ($batch->toArray() as $row) {
+                $values[] = $row['total'];
             }
         }
 
@@ -461,8 +462,8 @@ final class WindowProcessorTest extends FlowTestCase
         $batches = iterator_to_array($processor->process($generator, flow_context()), preserve_keys: false);
         $values = [];
 
-        foreach ($batches[1] as $row) {
-            $values[] = $row->get('row_number');
+        foreach ($batches[1]->toArray() as $row) {
+            $values[] = $row['row_number'];
         }
 
         static::assertCount(2, $batches);
@@ -480,7 +481,9 @@ final class WindowProcessorTest extends FlowTestCase
 
         (new WindowProcessor(
             's',
-            sum(ref('n'), ref('flags')->expand()->equals(lit(true)))->over(window()->partitionBy(ref('n'))),
+            (new WindowFunctionOverOperand(ref('flags')->expand()->equals(lit(true))))->over(window()->partitionBy(ref(
+                'n',
+            ))),
         ))->bind(ListColumnsMother::numberAndFlagsSchema());
     }
 }

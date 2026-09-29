@@ -8,9 +8,9 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Function\ScalarFunction;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\json_schema;
@@ -65,12 +65,14 @@ final class ArrayKeysTest extends FlowTestCase
     {
         static::assertSame(
             ['a', 'b'],
-            ref('map')
-                ->arrayKeys()
-                ->eval(array_to_row(['map' => [
+            (new FunctionContext(flow_context()))->eval(
+                ref('map')->arrayKeys(),
+                ['map' => [
                     'a' => 1,
                     'b' => 2,
-                ]], schema(map_schema('map', type_map(type_string(), type_integer())))), flow_context()),
+                ]],
+                schema(map_schema('map', type_map(type_string(), type_integer()))),
+            ),
         );
     }
 
@@ -80,7 +82,7 @@ final class ArrayKeysTest extends FlowTestCase
         $this->expectExceptionMessage('Expected type "array<mixed>", got "string".');
 
         $context = flow_context(config());
-        ref('map')->arrayKeys()->eval(array_to_row(['map' => 'test'], schema(str_schema('map'))), $context);
+        (new FunctionContext($context))->eval(ref('map')->arrayKeys(), ['map' => 'test'], schema(str_schema('map')));
     }
 
     public function test_array_keys_on_non_array(): void
@@ -88,6 +90,10 @@ final class ArrayKeysTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected type "array<mixed>", got "string".');
 
-        ref('map')->arrayKeys()->eval(array_to_row(['map' => 'test'], schema(str_schema('map'))), flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            ref('map')->arrayKeys(),
+            ['map' => 'test'],
+            schema(str_schema('map')),
+        );
     }
 }

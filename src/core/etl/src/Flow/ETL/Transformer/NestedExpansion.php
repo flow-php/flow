@@ -7,22 +7,23 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ExpandingFunctions;
 use Flow\ETL\Function\FunctionTree;
+use Flow\ETL\Function\Parameter;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Function\ScalarFunction\ExpandResults;
-use Flow\ETL\Row;
 use Flow\ETL\Row\ResolvedReference;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\TypeWidener;
 
-use function array_fill;
 use function array_key_exists;
 use function array_map;
 use function array_values;
 use function count;
 use function Flow\ETL\DSL\definition_from_type;
+use function is_array;
 use function max;
 use function spl_object_id;
 
@@ -96,43 +97,56 @@ final readonly class NestedExpansion
     }
 
     /**
-     * @return list<mixed>
+     * @return array{list<int>, list<mixed>} [$sources, $values]
      */
-    public function eval(Row $row, FlowContext $context): array
+    public function eval(Rows $rows, FlowContext $context): array
     {
         $lists = [];
 
         foreach ($this->expands as $name => $expand) {
-            $lists[$name] = array_values($expand->eval($row, $context));
+            $lists[$name] = (new Parameter($expand))->values($rows, $context);
         }
 
-        $length = max(array_map(count(...), $lists));
-        $elements = $row->rows->gather(array_fill(0, $length, $row->index));
+        $sources = [];
+        $cells = [];
+
+        foreach ($lists as $name => $_) {
+            $cells[$name] = [];
+        }
+
+        for ($index = 0, $count = $rows->count(); $index < $count; $index++) {
+            $length = 0;
+
+            foreach ($lists as $list) {
+                $length = max($length, is_array($list[$index]) ? count($list[$index]) : 0);
+            }
+
+            foreach ($lists as $name => $list) {
+                $elements = is_array($list[$index]) ? array_values($list[$index]) : [];
+
+                for ($position = 0; $position < $length; $position++) {
+                    $cells[$name][] = $elements[$position] ?? null;
+                }
+            }
+
+            for ($position = 0; $position < $length; $position++) {
+                $sources[] = $index;
+            }
+        }
+
+        $elements = $rows->gather($sources);
         $schema = $elements->schema()->isSame($this->input)
             ? $this->elementSchema
             : $elements->schema()->add(...array_values($this->expandDefinitions));
         $columns = [];
 
-        foreach ($lists as $name => $list) {
+        foreach ($cells as $name => $values) {
             $builder = $context->backend()->builder($this->expandDefinitions[$name]);
-            $cells = [];
-
-            for ($position = 0; $position < $length; $position++) {
-                $cells[] = $list[$position] ?? null;
-            }
-
-            $builder->appendMany($cells);
+            $builder->appendMany($values);
             $columns[$name] = $builder->finish();
         }
 
-        $batch = $elements->withColumns($schema, $columns);
-        $values = [];
-
-        for ($position = 0; $position < $length; $position++) {
-            $values[] = $this->root->eval($batch->row($position), $context);
-        }
-
-        return $values;
+        return [$sources, (new Parameter($this->root))->values($elements->withColumns($schema, $columns), $context)];
     }
 
     /**

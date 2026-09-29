@@ -6,10 +6,12 @@ namespace Flow\ETL\Function;
 
 use Flow\Calculator\Calculator;
 use Flow\Calculator\Rounding;
+use Flow\Calculator\RunningSum;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Rows;
 use Flow\ETL\Window;
 use Flow\ETL\Window\Accumulator\AverageAccumulator;
 use Flow\ETL\Window\FrameAccumulator;
@@ -19,26 +21,26 @@ use Flow\Types\Type;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_optional;
 use function is_numeric;
+use function sprintf;
 
 final class Average implements AggregatingFunction, FrameAccumulating, WindowFunction
 {
     use ResolvesFromChildren;
 
-    private int $count;
+    private int $count = 0;
 
     private readonly string $outputName;
 
-    private float $sum;
+    private ?RunningSum $runningSum = null;
 
     public function __construct(
         private readonly Reference $ref,
         private readonly int $scale = 2,
         private readonly Rounding $rounding = Rounding::HALF_UP,
+        private readonly bool $exact = false,
         private readonly ?Window $window = null,
     ) {
         $this->outputName = $ref->hasAlias() ? $ref->name() : $ref->to() . '_avg';
-        $this->count = 0;
-        $this->sum = 0;
     }
 
     /**
@@ -55,36 +57,54 @@ final class Average implements AggregatingFunction, FrameAccumulating, WindowFun
     public function withChildren(array $children): static
     {
         /** @var list<Reference> $children */
-        return new self($children[0], $this->scale, $this->rounding, $this->window);
+        return new self($children[0], $this->scale, $this->rounding, $this->exact, $this->window);
     }
 
-    public function aggregate(Row $row, FlowContext $context): void
+    public function aggregate(Rows $rows, array $indices, FlowContext $context): void
     {
-        if (!$row->has($this->ref)) {
+        if ($rows->schema()->findDefinition($this->ref->base()) === null) {
             return;
         }
 
-        /** @var mixed $value */
-        $value = $row->get($this->ref);
-
-        if (is_numeric($value)) {
-            // @mago-ignore analysis:possibly-invalid-argument
-            $this->sum = $context->calculator()->add($this->sum, $value);
-            $this->count++;
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($rows->column($this->ref->base())->take($indices)->values() as $value) {
+            if (is_numeric($value)) {
+                $this->runningSum ??= new RunningSum($context->calculator());
+                // @mago-ignore analysis:possibly-invalid-argument
+                $this->runningSum->add($value, $this->exact);
+                $this->count++;
+            }
         }
+    }
+
+    public function merge(AggregatingFunction $other, FlowContext $context): void
+    {
+        if (!$other instanceof self) {
+            throw new InvalidArgumentException(sprintf('%s cannot merge %s', self::class, $other::class));
+        }
+
+        if ($other->runningSum === null) {
+            return;
+        }
+
+        $this->runningSum ??= new RunningSum($context->calculator());
+        $this->runningSum->merge($other->runningSum, $this->exact);
+        $this->count += $other->count;
     }
 
     public function accumulator(FlowContext $context): FrameAccumulator
     {
-        return new AverageAccumulator($this->ref, $this->scale, $this->rounding, $context);
+        return new AverageAccumulator($this->ref, $this->scale, $this->rounding, $this->exact, $context);
     }
 
     public function apply(WindowContext $window): mixed
     {
         $accumulator = $this->accumulator($window->flowContext());
 
-        foreach ($window->frame() as $frameRow) {
-            $accumulator->accumulate($frameRow);
+        $frame = $window->frame();
+
+        for ($index = 0, $count = $frame->count(); $index < $count; $index++) {
+            $accumulator->accumulate($frame, $index);
         }
 
         return $accumulator->value();
@@ -92,7 +112,7 @@ final class Average implements AggregatingFunction, FrameAccumulating, WindowFun
 
     public function over(Window $window): static
     {
-        return new self($this->ref, $this->scale, $this->rounding, $window);
+        return new self($this->ref, $this->scale, $this->rounding, $this->exact, $window);
     }
 
     public function outputName(): string
@@ -118,11 +138,11 @@ final class Average implements AggregatingFunction, FrameAccumulating, WindowFun
 
     public function value(): ?float
     {
-        if (0 === $this->count) {
+        if (0 === $this->count || $this->runningSum === null) {
             return null;
         }
 
-        return (new Calculator())->divide($this->sum, $this->count, $this->scale, $this->rounding);
+        return (new Calculator())->divide($this->runningSum->value(), $this->count, $this->scale, $this->rounding);
     }
 
     public function toString(): string

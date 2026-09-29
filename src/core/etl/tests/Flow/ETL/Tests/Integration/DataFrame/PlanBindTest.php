@@ -50,8 +50,8 @@ final class PlanBindTest extends FlowTestCase
     ];
 
     /**
-     * One plan per bind class of the step table. The two exclusions the plan names - a refused bind
-     * (joinEach) and the BucketingProcessor metadata hop - are covered by their own tests.
+     * One plan per bind class of the step table. The exclusion the plan names - a refused bind (joinEach) - is
+     * covered by its own tests.
      *
      * @return Generator<string, array{callable(): DataFrame}>
      */

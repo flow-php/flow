@@ -23,18 +23,23 @@ use Flow\ETL\Tests\Double\PlanDrainingTransformer;
 use Flow\ETL\Tests\Double\RecordingExtractor;
 use Flow\ETL\Tests\Double\RecordingFileExtractor;
 use Flow\ETL\Tests\Double\RecordingRule;
+use Flow\ETL\Tests\Double\SpyColumn;
 use Flow\ETL\Tests\Double\SpyLoader;
 use Flow\ETL\Tests\Double\ThrowingTransformer;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\NodeMother;
+use Flow\ETL\Tests\Mother\PhysicalPlanMother;
 use Flow\ETL\Tests\Mother\RowsMother;
 use Flow\ETL\Transformer\LimitTransformer;
 use Flow\ETL\Transformer\RenameEntryTransformer;
 use Flow\Filesystem\Tests\Double\RejectingFilter;
 use RuntimeException;
 
+use function array_filter;
+use function array_keys;
 use function array_map;
 use function array_sum;
+use function array_values;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
@@ -47,6 +52,45 @@ use function iterator_to_array;
 
 final class ExecutorTest extends FlowTestCase
 {
+    public function test_merge_concatenates_the_batches_once(): void
+    {
+        $calls = new ArrayObject();
+        $schema = schema(int_schema('id'));
+        $batches = (static function () use ($schema, $calls) {
+            foreach ([[1], [2], [3], [4], [5]] as $ids) {
+                $column = array_to_rows([['id' => $ids[0]]], $schema)->column('id');
+
+                yield Rows::fromColumns($schema, ['id' => new SpyColumn($column, $calls)], 1);
+            }
+        })();
+
+        $merged = (new Executor())->merge($batches, PhysicalPlanMother::reading(from_array([])));
+
+        static::assertSame([1, 2, 3, 4, 5], $merged->reduceToArray('id'));
+        static::assertSame(
+            ['concat'],
+            array_values(array_filter($calls->getArrayCopy(), static fn(string $call): bool => $call === 'concat')),
+        );
+    }
+
+    public function test_merge_of_empty_batches_keeps_the_last_batch(): void
+    {
+        $batches = (static function () {
+            yield array_to_rows([], schema(int_schema('id')));
+            yield array_to_rows([], schema(int_schema('other')));
+        })();
+
+        static::assertSame(
+            ['other'],
+            array_keys(
+                (new Executor())
+                    ->merge($batches, PhysicalPlanMother::reading(from_array([])))
+                    ->schema()
+                    ->definitions(),
+            ),
+        );
+    }
+
     public function test_a_single_pipeline_runs_its_segments_in_order(): void
     {
         $segments = new Segments(from_rows(RowsMother::sequentialIds(3)));

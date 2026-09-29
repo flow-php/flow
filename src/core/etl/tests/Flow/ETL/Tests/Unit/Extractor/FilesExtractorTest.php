@@ -68,7 +68,7 @@ final class FilesExtractorTest extends FlowTestCase
     {
         $batches = iterator_to_array(files(__DIR__ . '/Fixtures/ZeroExtension/*')->extract(flow_context()));
 
-        static::assertSame('0', $batches[0]->first()->get('extension'));
+        static::assertSame('0', $batches[0]->column('extension')->value(0));
     }
 
     public function test_partition_directories_become_string_columns(): void
@@ -77,14 +77,14 @@ final class FilesExtractorTest extends FlowTestCase
         . '/../../Integration/DataFrame/Fixtures/Partitioning/multi_partition_pruning_test/**/*.txt');
         $partitions = schema(str_schema('day'), str_schema('month'), str_schema('year'));
 
-        $first = iterator_to_array($extractor->extract(flow_context()), false)[0]->first();
+        $first = iterator_to_array($extractor->extract(flow_context()), false)[0]->toArray()[0];
 
         static::assertEquals($partitions, $extractor->partitionSchema());
         static::assertEquals($partitions, $extractor->schema()->keep('day', 'month', 'year'));
         static::assertSame(['day' => '30', 'month' => '12', 'year' => '2022'], [
-            'day' => $first->get('day'),
-            'month' => $first->get('month'),
-            'year' => $first->get('year'),
+            'day' => $first['day'],
+            'month' => $first['month'],
+            'year' => $first['year'],
         ]);
     }
 

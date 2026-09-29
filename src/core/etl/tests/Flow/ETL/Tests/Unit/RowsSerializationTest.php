@@ -68,7 +68,8 @@ final class RowsSerializationTest extends FlowTestCase
 
         /** @var Rows $restored */
         $restored = unserialize(serialize($rows));
-        $restoredDocument = $restored->first()->get('x');
+        // @mago-ignore analysis:mixed-assignment
+        $restoredDocument = $restored->column('x')->value(0);
         assert($restoredDocument instanceof DOMDocument);
 
         static::assertSame(['src' => 'file.xml'], $restored->schema()->get('x')->metadata()->normalize());
@@ -81,9 +82,13 @@ final class RowsSerializationTest extends FlowTestCase
         $document = new DOMDocument();
         $document->loadXML('<a><b>1</b></a>');
 
-        $restored = type_instance_of(DOMDocument::class)->assert(RowsSerializationContext::roundTrip(array_to_rows([[
-            'x' => $document,
-        ]], schema(xml_schema('x'))))->first()->get('x'));
+        $restored = type_instance_of(DOMDocument::class)->assert(
+            RowsSerializationContext::roundTrip(array_to_rows([[
+                'x' => $document,
+            ]], schema(xml_schema('x'))))
+                ->column('x')
+                ->value(0),
+        );
 
         static::assertSame($document->C14N(), $restored->C14N());
     }
@@ -93,9 +98,13 @@ final class RowsSerializationTest extends FlowTestCase
         $document = new DOMDocument();
         $document->loadXML('<a><b>1</b></a>');
 
-        $restored = type_instance_of(DOMElement::class)->assert(RowsSerializationContext::roundTrip(array_to_rows([[
-            'x' => $document->documentElement,
-        ]], schema(xml_element_schema('x'))))->first()->get('x'));
+        $restored = type_instance_of(DOMElement::class)->assert(
+            RowsSerializationContext::roundTrip(array_to_rows([[
+                'x' => $document->documentElement,
+            ]], schema(xml_element_schema('x'))))
+                ->column('x')
+                ->value(0),
+        );
 
         static::assertSame('<a><b>1</b></a>', $restored->C14N());
     }
@@ -111,8 +120,8 @@ final class RowsSerializationTest extends FlowTestCase
             ['x' => $left->documentElement],
             ['x' => $right->documentElement],
         ], schema(xml_element_schema('x'))));
-        $restoredLeft = type_instance_of(DOMElement::class)->assert($restored->first()->get('x'));
-        $restoredRight = type_instance_of(DOMElement::class)->assert($restored->row(1)->get('x'));
+        $restoredLeft = type_instance_of(DOMElement::class)->assert($restored->column('x')->value(0));
+        $restoredRight = type_instance_of(DOMElement::class)->assert($restored->column('x')->value(1));
 
         static::assertNotSame('', $restoredLeft->C14N());
         static::assertNotSame($restoredLeft->C14N(), $restoredRight->C14N());
@@ -125,9 +134,13 @@ final class RowsSerializationTest extends FlowTestCase
 
         static::assertSame(
             type_string()->cast($document),
-            type_string()->cast(RowsSerializationContext::roundTrip(array_to_rows([[
-                'x' => $document,
-            ]], schema(html_schema('x'))))->first()->get('x')),
+            type_string()->cast(
+                RowsSerializationContext::roundTrip(array_to_rows([[
+                    'x' => $document,
+                ]], schema(html_schema('x'))))
+                    ->column('x')
+                    ->value(0),
+            ),
         );
     }
 
@@ -138,9 +151,13 @@ final class RowsSerializationTest extends FlowTestCase
 
         static::assertSame(
             type_string()->cast($element),
-            type_string()->cast(RowsSerializationContext::roundTrip(array_to_rows([[
-                'x' => $element,
-            ]], schema(html_element_schema('x'))))->first()->get('x')),
+            type_string()->cast(
+                RowsSerializationContext::roundTrip(array_to_rows([[
+                    'x' => $element,
+                ]], schema(html_element_schema('x'))))
+                    ->column('x')
+                    ->value(0),
+            ),
         );
     }
 

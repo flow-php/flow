@@ -70,8 +70,8 @@ final class MathTest extends FlowTestCase
                 ],
                 schema(integer_schema('id'), float_schema('price'), integer_schema('quantity'), float_schema('weight')),
             )))
-            ->withEntry('discount', ref('price')->multiply(-0.1))
-            ->withEntry('total_weight', ref('weight')->multiply(ref('quantity')))
+            ->withEntry('discount', ref('price')->multiply(-0.1, exact: true))
+            ->withEntry('total_weight', ref('weight')->multiply(ref('quantity'), exact: true))
             ->forEach(static function (Rows $r) use (&$rows): void {
                 $rows = $rows->merge($r);
             });

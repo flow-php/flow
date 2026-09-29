@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Column;
 
 use Flow\ETL\Column\DefaultBackend;
+use Flow\ETL\Column\Php\ValueColumn;
 use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Tests\Double\ForeignColumnStub;
 use Flow\ETL\Tests\Mother\ColumnMother;
 use PHPUnit\Framework\TestCase;
@@ -33,6 +35,14 @@ final class DefaultBackendTest extends TestCase
             (new PhpBackend())->adopt(int_schema('a'), $foreign),
             (new DefaultBackend())->adopt(int_schema('a'), $foreign),
         );
+    }
+
+    public function test_adopt_refuses_an_untyped_column(): void
+    {
+        $this->expectException(ColumnMismatchException::class);
+        $this->expectExceptionMessage('column "a": mixed cannot be a batch column');
+
+        (new DefaultBackend())->adopt(int_schema('a'), new ValueColumn([1]));
     }
 
     public function test_allocated_bytes_is_what_the_php_backend_allocates(): void

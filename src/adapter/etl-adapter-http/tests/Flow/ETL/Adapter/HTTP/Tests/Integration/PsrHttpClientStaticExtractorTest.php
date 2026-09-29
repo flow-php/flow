@@ -86,13 +86,15 @@ final class PsrHttpClientStaticExtractorTest extends FlowTestCase
             static::fail('Expected Rows instance for tomaszhanc');
         }
 
-        $norbertResponseBodyValue = $norbertRows->first()->get('response_body');
+        // @mago-ignore analysis:mixed-assignment
+        $norbertResponseBodyValue = $norbertRows->column('response_body')->value(0);
         $norbertBodyJson = is_scalar($norbertResponseBodyValue) || $norbertResponseBodyValue instanceof Stringable
             ? (string) $norbertResponseBodyValue
             : '';
         $norbertResponseBody = type_array()->assert(json_decode($norbertBodyJson, true, 512, JSON_THROW_ON_ERROR));
 
-        $tomekResponseBodyValue = $tomekRows->first()->get('response_body');
+        // @mago-ignore analysis:mixed-assignment
+        $tomekResponseBodyValue = $tomekRows->column('response_body')->value(0);
         $tomekBodyJson = is_scalar($tomekResponseBodyValue) || $tomekResponseBodyValue instanceof Stringable
             ? (string) $tomekResponseBodyValue
             : '';
@@ -205,7 +207,7 @@ final class PsrHttpClientStaticExtractorTest extends FlowTestCase
             type_structure(['login' => type_string(), 'id' => type_integer()]),
             $rows->schema()->get('response_body')->type(),
         );
-        static::assertSame(['login' => 'norberttech', 'id' => 1], $rows->first()->get('response_body'));
+        static::assertSame(['login' => 'norberttech', 'id' => 1], $rows->column('response_body')->value(0));
     }
 
     public function test_extract_builds_through_the_config_backend(): void

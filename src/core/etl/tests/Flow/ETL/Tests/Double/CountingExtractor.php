@@ -16,7 +16,6 @@ use Flow\ETL\Schema;
 use Generator;
 
 use function array_values;
-use function count;
 use function Flow\ETL\DSL\rows;
 
 /**
@@ -55,30 +54,30 @@ final class CountingExtractor implements BatchableExtractor, Extractor, Rewindab
         $this->extractCalls++;
         $this->contexts[] = $context;
 
-        $buffer = [];
+        $buffer = rows($this->schema);
 
         foreach ($this->batches as $rows) {
-            foreach ($rows->all() as $row) {
-                $buffer[] = $row;
+            for ($i = 0; $i < $rows->count(); $i++) {
+                $buffer = $buffer->concat($rows->slice($i, 1)->matchTo($this->schema));
 
-                if (count($buffer) === $this->batchSize()) {
+                if ($buffer->count() === $this->batchSize()) {
                     $this->batchesYielded++;
 
-                    $signal = yield rows($this->schema, ...$buffer);
+                    $signal = yield $buffer;
 
                     if ($signal === Signal::STOP) {
                         return;
                     }
 
-                    $buffer = [];
+                    $buffer = rows($this->schema);
                 }
             }
         }
 
-        if ($buffer !== []) {
+        if (!$buffer->isEmpty()) {
             $this->batchesYielded++;
 
-            yield rows($this->schema, ...$buffer);
+            yield $buffer;
         }
     }
 

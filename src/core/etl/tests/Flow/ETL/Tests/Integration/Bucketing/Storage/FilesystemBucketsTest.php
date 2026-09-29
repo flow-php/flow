@@ -7,7 +7,6 @@ namespace Flow\ETL\Tests\Integration\Bucketing\Storage;
 use DateTimeImmutable;
 use Flow\ETL\Bucketing\Storage\FilesystemBuckets;
 use Flow\ETL\Column\PhpBackend;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Context\BucketsStorageContext;
 use Flow\ETL\Tests\Double\SpyBackend;
@@ -16,7 +15,6 @@ use Flow\Floe\Exception\IncompatibleSchemaException;
 use Flow\Floe\FloeWriter;
 
 use function array_map;
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\float_schema;
@@ -92,10 +90,7 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $storage->append('bucket', array_to_rows([['id' => 3]], schema(int_schema('id'))));
         $storage->append('bucket', array_to_rows([['id' => 4], ['id' => 5]], schema(int_schema('id'))));
 
-        static::assertSame(
-            [1, 2, 3, 4, 5],
-            array_map(static fn(Row $r): mixed => $r->get('id'), BucketsStorageContext::rows($storage->get('bucket'))),
-        );
+        static::assertSame([1, 2, 3, 4, 5], array_column(BucketsStorageContext::rows($storage->get('bucket')), 'id'));
 
         $this->fs()->rm($cacheDir);
     }
@@ -193,10 +188,7 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
 
         $storage->append('bucket', array_to_rows($input, schema(int_schema('id'))));
 
-        static::assertSame($input, array_map(
-            static fn(Row $r): array => $r->toArray(),
-            BucketsStorageContext::rows($storage->get('bucket')),
-        ));
+        static::assertSame($input, BucketsStorageContext::rows($storage->get('bucket')));
 
         $this->fs()->rm($cacheDir);
     }
@@ -210,10 +202,7 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $storage->append('bucket', array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))));
         $storage->set('bucket', array_to_rows([['id' => 3]], schema(int_schema('id'))));
 
-        static::assertSame(
-            [3],
-            array_map(static fn(Row $r): mixed => $r->get('id'), BucketsStorageContext::rows($storage->get('bucket'))),
-        );
+        static::assertSame([3], array_column(BucketsStorageContext::rows($storage->get('bucket')), 'id'));
 
         $this->fs()->rm($cacheDir);
     }
@@ -238,15 +227,9 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
 
         $storage = new FilesystemBuckets($this->fs(), cacheDir: $cacheDir, backend: new PhpBackend());
 
-        $input = [
-            array_to_row(['id' => 1], schema(int_schema('id'))),
-            array_to_row(['id' => 2, 'name' => 'John'], schema(int_schema('id'), str_schema('name'))),
-            array_to_row(['name' => 'Jane'], schema(str_schema('name'))),
-        ];
-
-        $storage->append('bucket', rows(
+        $storage->append('bucket', array_to_rows(
+            [['id' => 1], ['id' => 2, 'name' => 'John'], ['name' => 'Jane']],
             schema(int_schema('id', nullable: true), str_schema('name', nullable: true)),
-            ...$input,
         ));
 
         // one write session = one schema, and every row now carries every column the schema declares -
@@ -257,7 +240,7 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
                 ['id' => 2, 'name' => 'John'],
                 ['id' => null, 'name' => 'Jane'],
             ],
-            array_map(static fn(Row $r): array => $r->toArray(), BucketsStorageContext::rows($storage->get('bucket'))),
+            BucketsStorageContext::rows($storage->get('bucket')),
         );
 
         $this->fs()->rm($cacheDir);
@@ -293,8 +276,8 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $read = BucketsStorageContext::rows($storage->get('bucket'));
 
         static::assertCount(2, $read);
-        static::assertSame(['a' => 1, 'b' => 'x'], $read[0]->get('s'));
-        static::assertSame(['a' => 2, 'b' => 'y'], $read[1]->get('s'));
+        static::assertSame(['a' => 1, 'b' => 'x'], $read[0]['s']);
+        static::assertSame(['a' => 2, 'b' => 'y'], $read[1]['s']);
 
         $this->fs()->rm($cacheDir);
     }
@@ -318,8 +301,8 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
 
         static::assertCount(2, $read);
         static::assertSame([['id' => 1, 'name' => 'x'], ['id' => 2, 'name' => 'y']], [
-            $read[0]->toArray(),
-            $read[1]->toArray(),
+            $read[0],
+            $read[1],
         ]);
 
         $this->fs()->rm($cacheDir);
@@ -358,7 +341,7 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $rows = array_to_rows([[
             'at' => new DateTimeImmutable('2026-01-02 03:04:05+05:00'),
         ]], schema(datetime_schema('at', zone: 'Europe/Warsaw')));
-        $admitted = type_datetime()->assert($rows->first()->get('at'))->format('c');
+        $admitted = type_datetime()->assert($rows->column('at')->value(0))->format('c');
 
         $storage = new FilesystemBuckets($this->fs(), cacheDir: $cacheDir, backend: new PhpBackend());
         $storage->set('b', $rows);
@@ -366,7 +349,7 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         static::assertSame('2026-01-01T23:04:05+01:00', $admitted);
         static::assertSame(
             $admitted,
-            type_datetime()->assert(BucketsStorageContext::rows($storage->get('b'))[0]->get('at'))->format('c'),
+            type_datetime()->assert(BucketsStorageContext::rows($storage->get('b'))[0]['at'])->format('c'),
         );
 
         $this->fs()->rm($cacheDir);

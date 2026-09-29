@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row;
 
+use Flow\ETL\Row\NullsOrder;
 use Flow\ETL\Row\SortOrder;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
@@ -42,9 +43,10 @@ final class UnresolvedReferenceTest extends FlowTestCase
     {
         $ref = ref('a')->equals(ref('b'));
 
-        static::assertTrue($ref->eval(
-            array_to_row(['a' => 1, 'b' => 1], schema(int_schema('a'), int_schema('b'))),
-            flow_context(),
+        static::assertTrue((new FunctionContext(flow_context()))->eval(
+            $ref,
+            ['a' => 1, 'b' => 1],
+            schema(int_schema('a'), int_schema('b')),
         ));
     }
 
@@ -52,24 +54,34 @@ final class UnresolvedReferenceTest extends FlowTestCase
     {
         $ref = ref('b')->literal(100);
 
-        static::assertSame(100, $ref->eval(array_to_row(['a' => 1], schema(int_schema('a'))), flow_context()));
+        static::assertSame(100, (new FunctionContext(flow_context()))->eval($ref, ['a' => 1], schema(int_schema('a'))));
     }
 
     public function test_is_even(): void
     {
         $ref = ref('a')->isEven();
 
-        static::assertFalse($ref->eval(array_to_row(['a' => 1], schema(int_schema('a'))), flow_context()));
+        static::assertFalse((new FunctionContext(flow_context()))->eval($ref, ['a' => 1], schema(int_schema('a'))));
 
-        static::assertTrue($ref->eval(array_to_row(['a' => 2], schema(int_schema('a'))), flow_context()));
+        static::assertTrue((new FunctionContext(flow_context()))->eval($ref, ['a' => 2], schema(int_schema('a'))));
     }
 
     public function test_is_odd(): void
     {
         $ref = ref('a')->isOdd();
 
-        static::assertTrue($ref->eval(array_to_row(['a' => 1], schema(int_schema('a'))), flow_context()));
+        static::assertTrue((new FunctionContext(flow_context()))->eval($ref, ['a' => 1], schema(int_schema('a'))));
 
-        static::assertFalse($ref->eval(array_to_row(['a' => 2], schema(int_schema('a'))), flow_context()));
+        static::assertFalse((new FunctionContext(flow_context()))->eval($ref, ['a' => 2], schema(int_schema('a'))));
+    }
+
+    public function test_nulls_default_to_the_smallest_value_and_can_be_moved(): void
+    {
+        static::assertSame(NullsOrder::FIRST, ref('a')->nulls());
+        static::assertSame(NullsOrder::FIRST, ref('a')->asc()->nulls());
+        static::assertSame(NullsOrder::LAST, ref('a')->desc()->nulls());
+        static::assertSame(NullsOrder::LAST, ref('a')->asc(NullsOrder::LAST)->nulls());
+        static::assertSame(NullsOrder::FIRST, ref('a')->desc(NullsOrder::FIRST)->nulls());
+        static::assertSame(NullsOrder::LAST, ref('a')->asc(NullsOrder::LAST)->as('b')->nulls());
     }
 }

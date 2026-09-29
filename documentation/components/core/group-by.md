@@ -60,7 +60,9 @@ algorithm:
 ```
 
 The algorithm is configured through `config_builder()->groupBy(hash_group_by())` - all its options
-live on the `hash_group_by()` builder:
+live on the `hash_group_by()` builder. While the process is under `memoryLimit()` (the same default as the join and
+the sort) the input aggregates in one pass and nothing is written; past it the rest of the stream is partitioned into
+buckets of the storage, in frames of `batchSize` rows:
 
 ```php
 <?php
@@ -69,9 +71,10 @@ data_frame(
     config_builder()
         ->groupBy(
             hash_group_by()
-                ->bucketsCount(64)              // number of buckets (default 64)
-                ->batchSize(1000)               // rows per batch when reading buckets back (default 1000)
-                ->storage(new MemoryBuckets())  // keep buckets in memory instead of on disk
+                ->memoryLimit(Unit::fromMb(512))  // process memory past which buckets go to the storage
+                ->bucketsCount(64)                // number of buckets (default 64)
+                ->batchSize(1000)                 // rows per bucket frame and per batch read back (default 1000)
+                ->storage(new MemoryBuckets())    // keep buckets in memory instead of on disk
         )
 )
     ->read(from_parquet('orders.parquet'))
@@ -80,9 +83,6 @@ data_frame(
     ->run();
 ```
 
-> While rows are partitioned, each spilled bucket is announced downstream as a single metadata row
-> (`BucketShape`: `_bucket_id`, `_bucket_total_rows`). Those rows are an internal pipeline detail consumed
-> by the aggregation processor - they never appear in the grouped output.
 
 ### Spill column pruning
 

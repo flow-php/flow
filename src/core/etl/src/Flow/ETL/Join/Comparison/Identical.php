@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Join\Comparison;
 
+use Flow\ETL\Column\ComparableValues;
 use Flow\ETL\Join\Comparison;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\UnresolvedReference;
+use Flow\ETL\Rows;
 
+use function Flow\Types\DSL\type_bare;
 use function is_string;
 
 final readonly class Identical implements Comparison
@@ -18,17 +20,22 @@ final readonly class Identical implements Comparison
         private string|Reference $entryRight,
     ) {}
 
-    public function compare(Row $left, Row $right): bool
+    public function compare(Rows $left, Rows $right): array
     {
-        $leftValue = $left->get($this->entryLeft);
-        $rightValue = $right->get($this->entryRight);
+        $leftColumn = $left->column($this->left()[0]->base());
+        $rightColumn = $right->column($this->right()[0]->base());
+        $comparable = new ComparableValues();
+        $sameType = type_bare($leftColumn->type())::class === type_bare($rightColumn->type())::class;
+        $rightValues = $sameType ? $comparable->equality($rightColumn) : $rightColumn->values();
+        $result = [];
 
-        // SQL semantics - null never equals anything, including null
-        if ($leftValue === null || $rightValue === null) {
-            return false;
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($sameType ? $comparable->equality($leftColumn) : $leftColumn->values() as $i => $leftValue) {
+            // SQL semantics - null never equals anything, including null
+            $result[] = $leftValue !== null && $rightValues[$i] !== null && $leftValue === $rightValues[$i];
         }
 
-        return $leftValue === $rightValue;
+        return $result;
     }
 
     /**

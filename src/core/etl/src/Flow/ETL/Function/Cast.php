@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\UnsupportedUnionTypeException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidArgumentException as TypesInvalidArgumentException;
 use Flow\Types\Type;
@@ -79,18 +83,28 @@ final class Cast implements ScalarFunction
         return $this->type;
     }
 
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $value = (new Parameter($this->value))->eval($row, $context);
-
-        if (null === $value && !type_is_nullable($this->type)) {
-            throw new InvalidArgumentException('Cast function requires non-null value');
-        }
+        $results = [];
+        $i = 0;
 
         try {
-            return $this->type->cast($value);
-        } catch (CastingException $e) {
-            throw new InvalidArgumentException('Cast function failed: ' . $e->getMessage());
+            // @mago-ignore analysis:mixed-assignment
+            foreach ((new Parameter($this->value))->values($rows, $context) as $i => $value) {
+                if (null === $value && !type_is_nullable($this->type)) {
+                    throw new InvalidArgumentException('Cast function requires non-null value');
+                }
+
+                try {
+                    $results[] = $this->type->cast($value);
+                } catch (CastingException $e) {
+                    throw new InvalidArgumentException('Cast function failed: ' . $e->getMessage(), 0, $e);
+                }
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
+
+        return (new ResultColumn())->of($this, $results);
     }
 }

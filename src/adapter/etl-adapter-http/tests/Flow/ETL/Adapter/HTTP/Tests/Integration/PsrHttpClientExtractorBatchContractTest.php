@@ -95,7 +95,7 @@ final class PsrHttpClientExtractorBatchContractTest extends FlowTestCase
         static::assertSame([1, 1], array_map(static fn(Rows $rows): int => $rows->count(), $batches));
         static::assertSame(
             ['https://api.example.com/1', 'https://api.example.com/2'],
-            array_map(static fn(Rows $rows): mixed => $rows->first()->get('request_uri'), $batches),
+            array_map(static fn(Rows $rows): mixed => $rows->column('request_uri')->value(0), $batches),
         );
     }
 
@@ -122,7 +122,7 @@ final class PsrHttpClientExtractorBatchContractTest extends FlowTestCase
                 'https://api.example.com/items?cursor=c2',
                 'https://api.example.com/items?cursor=c3',
             ],
-            array_map(static fn(Rows $rows): mixed => $rows->first()->get('request_uri'), $batches),
+            array_map(static fn(Rows $rows): mixed => $rows->column('request_uri')->value(0), $batches),
         );
     }
 
@@ -144,7 +144,7 @@ final class PsrHttpClientExtractorBatchContractTest extends FlowTestCase
         static::assertSame([1, 1], array_map(static fn(Rows $rows): int => $rows->count(), $batches));
         static::assertSame(
             ['https://api.example.com/1', 'https://api.example.com/2'],
-            array_map(static fn(Rows $rows): mixed => $rows->first()->get('request_uri'), $batches),
+            array_map(static fn(Rows $rows): mixed => $rows->column('request_uri')->value(0), $batches),
         );
     }
 }

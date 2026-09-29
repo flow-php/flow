@@ -497,9 +497,9 @@ trait ScalarFunctionChain
         return new ToLower($this);
     }
 
-    public function minus(ScalarFunction|int|float $ref): Minus
+    public function minus(ScalarFunction|int|float $ref, bool $exact = false): Minus
     {
-        return new Minus($this, $ref);
+        return new Minus($this, $ref, $exact);
     }
 
     public function mod(ScalarFunction|int $value): Mod
@@ -512,9 +512,9 @@ trait ScalarFunctionChain
         return new ModifyDateTime($this, $modifier);
     }
 
-    public function multiply(ScalarFunction|int|float $value): Multiply
+    public function multiply(ScalarFunction|int|float $value, bool $exact = false): Multiply
     {
-        return new Multiply($this, $value);
+        return new Multiply($this, $value, $exact);
     }
 
     public function notEquals(mixed $value): NotEquals
@@ -556,14 +556,14 @@ trait ScalarFunctionChain
         return new Any($this, new Not($function));
     }
 
-    public function plus(ScalarFunction|int|float $ref): Plus
+    public function plus(ScalarFunction|int|float $ref, bool $exact = false): Plus
     {
-        return new Plus($this, $ref);
+        return new Plus($this, $ref, $exact);
     }
 
-    public function power(ScalarFunction|int $value): Power
+    public function power(ScalarFunction|int $value, bool $exact = false): Power
     {
-        return new Power($this, $value);
+        return new Power($this, $value, $exact);
     }
 
     public function prepend(ScalarFunction|string $prefix): Prepend

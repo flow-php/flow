@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Repartition;
 
 use Flow\ETL\Bucketing\Storage\MemoryBuckets;
-use Flow\ETL\Processor\BucketingProcessor;
 use Flow\ETL\Processor\RepartitionProcessor;
 use Flow\ETL\Repartition\RepartitionSteps;
 use Flow\ETL\Tests\FlowTestCase;
@@ -25,9 +24,8 @@ final class RepartitionStepsTest extends FlowTestCase
             hash_repartition()->storage(new MemoryBuckets())->bucketsCount(8),
         );
 
-        static::assertCount(2, $steps);
-        static::assertInstanceOf(BucketingProcessor::class, $steps[0]);
-        static::assertInstanceOf(RepartitionProcessor::class, $steps[1]);
+        static::assertCount(1, $steps);
+        static::assertInstanceOf(RepartitionProcessor::class, $steps[0]);
     }
 
     public function test_config_supplies_the_algorithm_when_none_is_pinned(): void
@@ -37,8 +35,7 @@ final class RepartitionStepsTest extends FlowTestCase
             config_builder()->repartition(hash_repartition()->storage(new MemoryBuckets()))->build(),
         );
 
-        static::assertCount(2, $steps);
-        static::assertInstanceOf(BucketingProcessor::class, $steps[0]);
-        static::assertInstanceOf(RepartitionProcessor::class, $steps[1]);
+        static::assertCount(1, $steps);
+        static::assertInstanceOf(RepartitionProcessor::class, $steps[0]);
     }
 }

@@ -7,12 +7,12 @@ namespace Flow\ETL\Processor;
 use Flow\ETL\BoundStep;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Processor;
-use Flow\ETL\Row;
 use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
 
+use function array_slice;
 use function max;
 
 /**
@@ -28,7 +28,7 @@ final readonly class MemorySortProcessor implements Processor
 
     public function process(Generator $rows, FlowContext $context): Generator
     {
-        /** @var array<Row> $buffer */
+        /** @var list<Rows> $buffer */
         $buffer = [];
         $maxSize = 1;
 
@@ -41,15 +41,14 @@ final readonly class MemorySortProcessor implements Processor
             }
 
             $maxSize = max($batch->count(), $maxSize);
-
-            foreach ($batch->all() as $row) {
-                $buffer[] = $row;
-            }
+            $buffer[] = $batch->matchTo($this->declared ?? $schema);
         }
 
-        yield from Rows::of($this->declared ?? $schema ?? new Schema(), ...$buffer)->sortBy(
-            ...$this->refs->all(),
-        )->chunks($maxSize);
+        $all = $buffer === []
+            ? Rows::empty($this->declared ?? $schema ?? new Schema())
+            : $buffer[0]->concat(...array_slice($buffer, 1));
+
+        yield from $all->sortBy(...$this->refs->all())->chunks($maxSize);
     }
 
     public function bind(Schema $input): BoundStep

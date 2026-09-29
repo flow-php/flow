@@ -11,7 +11,6 @@ use PHPUnit\Framework\TestCase;
 use SebastianBergmann\Comparator\ComparisonFailure;
 use SebastianBergmann\Comparator\Factory;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
@@ -25,7 +24,7 @@ final class RowsComparatorTest extends TestCase
         $rows = array_to_rows([['id' => 1]], schema(int_schema('id')));
 
         static::assertTrue($comparator->accepts($rows, $rows));
-        static::assertFalse($comparator->accepts($rows, array_to_row(['id' => 1], schema(int_schema('id')))));
+        static::assertFalse($comparator->accepts($rows, ['id' => 1]));
         static::assertFalse($comparator->accepts([], $rows));
     }
 

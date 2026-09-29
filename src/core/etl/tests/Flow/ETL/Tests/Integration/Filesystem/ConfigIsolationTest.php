@@ -37,7 +37,7 @@ final class ConfigIsolationTest extends FlowIntegrationTestCase
                 ->batchSize(10)
                 ->write(to_floe($destination, options: floe_options(buffer_size: 64)))
                 ->write(new InlineLoader(static function (Rows $rows, FlowContext $context): void {
-                    if ($rows->first()->get('id') === 101) {
+                    if ($rows->column('id')->value(0) === 101) {
                         throw new RuntimeException('aborted mid run');
                     }
                 }))
@@ -91,8 +91,8 @@ final class ConfigIsolationTest extends FlowIntegrationTestCase
         $ids = [];
 
         foreach (data_frame($config)->read(from_floe($destination))->get() as $batch) {
-            foreach ($batch as $row) {
-                $ids[] = $row->get('id');
+            foreach ($batch->toArray() as $row) {
+                $ids[] = $row['id'];
             }
         }
 

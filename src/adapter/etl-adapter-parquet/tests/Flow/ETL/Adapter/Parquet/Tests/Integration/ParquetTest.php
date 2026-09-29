@@ -143,12 +143,14 @@ final class ParquetTest extends FlowTestCase
 
         static::assertSame('structure{data: json, id: integer}', $rows->schema()->get('body')->type()->toString());
 
-        $first = $rows[0]->get('body');
+        // @mago-ignore analysis:mixed-assignment
+        $first = $rows->column('body')->value(0);
         static::assertIsArray($first);
         static::assertInstanceOf(Json::class, $first['data']);
         static::assertSame([1, 'a'], $first['data']->toArray());
 
-        $second = $rows[1]->get('body');
+        // @mago-ignore analysis:mixed-assignment
+        $second = $rows->column('body')->value(1);
         static::assertIsArray($second);
         static::assertInstanceOf(Json::class, $second['data']);
         static::assertSame([], $second['data']->toArray());
@@ -181,20 +183,23 @@ final class ParquetTest extends FlowTestCase
             ->write(to_parquet($path, filesystem: $memory))
             ->run();
 
-        $row = data_frame($config)->read(from_parquet($path, filesystem: $memory))->fetch()[0];
+        $rows = data_frame($config)->read(from_parquet($path, filesystem: $memory))->fetch();
 
-        $body = $row->get('body');
+        // @mago-ignore analysis:mixed-assignment
+        $body = $rows->column('body')->value(0);
         static::assertIsArray($body);
         static::assertInstanceOf(Json::class, $body['data']);
         static::assertSame(['a' => 1], $body['data']->toArray());
         static::assertSame(1, $body['n']);
 
-        $jsonList = $row->get('json_list');
+        // @mago-ignore analysis:mixed-assignment
+        $jsonList = $rows->column('json_list')->value(0);
         static::assertIsArray($jsonList);
         static::assertInstanceOf(Json::class, $jsonList[0]);
         static::assertSame(['c' => 3], $jsonList[0]->toArray());
 
-        $outer = $row->get('outer');
+        // @mago-ignore analysis:mixed-assignment
+        $outer = $rows->column('outer')->value(0);
         static::assertIsArray($outer);
         // @mago-ignore analysis:mixed-assignment
         $inner = $outer['inner'];
@@ -231,18 +236,21 @@ final class ParquetTest extends FlowTestCase
             ->write(to_parquet($path, filesystem: $memory))
             ->run();
 
-        $row = data_frame($config)->read(from_parquet($path, filesystem: $memory))->fetch()[0];
+        $rows = data_frame($config)->read(from_parquet($path, filesystem: $memory))->fetch();
 
-        $body = $row->get('body');
+        // @mago-ignore analysis:mixed-assignment
+        $body = $rows->column('body')->value(0);
         static::assertIsArray($body);
         static::assertInstanceOf(FlowUuid::class, $body['id']);
         static::assertSame($uuid, $body['id']->toString());
 
-        $uuidList = $row->get('uuid_list');
+        // @mago-ignore analysis:mixed-assignment
+        $uuidList = $rows->column('uuid_list')->value(0);
         static::assertIsArray($uuidList);
         static::assertInstanceOf(FlowUuid::class, $uuidList[0]);
 
-        $outer = $row->get('outer');
+        // @mago-ignore analysis:mixed-assignment
+        $outer = $rows->column('outer')->value(0);
         static::assertIsArray($outer);
         // @mago-ignore analysis:mixed-assignment
         $inner = $outer['inner'];
@@ -272,15 +280,17 @@ final class ParquetTest extends FlowTestCase
             ->write(to_parquet($path, filesystem: $memory))
             ->run();
 
-        $row = data_frame($config)->read(from_parquet($path, filesystem: $memory))->fetch()[0];
+        $rows = data_frame($config)->read(from_parquet($path, filesystem: $memory))->fetch();
 
-        $uuidMap = $row->get('uuid_map');
+        // @mago-ignore analysis:mixed-assignment
+        $uuidMap = $rows->column('uuid_map')->value(0);
         static::assertIsArray($uuidMap);
         static::assertSame(['k'], array_keys($uuidMap));
         static::assertInstanceOf(FlowUuid::class, $uuidMap['k']);
         static::assertSame($uuid, $uuidMap['k']->toString());
 
-        $jsonMap = $row->get('json_map');
+        // @mago-ignore analysis:mixed-assignment
+        $jsonMap = $rows->column('json_map')->value(0);
         static::assertIsArray($jsonMap);
         static::assertSame(['k'], array_keys($jsonMap));
         static::assertInstanceOf(Json::class, $jsonMap['k']);

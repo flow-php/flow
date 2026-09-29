@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Plan\Explain;
 
+use Flow\ETL\Bucketing\BucketsStorage;
+use Flow\ETL\Bucketing\Storage\SpillingBuckets;
 use Flow\ETL\Extractor;
 use Flow\ETL\Loader;
 use Flow\ETL\Processor;
 use Flow\ETL\Processor\BatchingByProcessor;
 use Flow\ETL\Processor\BatchingProcessor;
-use Flow\ETL\Processor\BucketingProcessor;
 use Flow\ETL\Processor\CachingProcessor;
 use Flow\ETL\Processor\CollectingProcessor;
 use Flow\ETL\Processor\ConstrainedProcessor;
@@ -22,6 +23,7 @@ use Flow\ETL\Processor\PivotProcessor;
 use Flow\ETL\Processor\RepartitionProcessor;
 use Flow\ETL\Processor\TopNProcessor;
 use Flow\ETL\Processor\WindowProcessor;
+use Flow\ETL\Row\NullsOrder;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\SortOrder;
@@ -31,6 +33,7 @@ use Flow\ETL\Transformer\CrossJoinRowsTransformer;
 
 use function array_map;
 use function implode;
+use function strtolower;
 
 final readonly class StepDetails
 {
@@ -74,17 +77,19 @@ final readonly class StepDetails
                 ? ['Join: cross']
                 : ['Join: cross', 'Prefix: ' . $step->prefix],
             $step instanceof MergeSortProcessor => [
-                'Sort: ' . $this->sort($step->refs),
-                'Spill: ' . $this->details->name($step->spill->storage()),
-                'Merge: ' . $step->mergeFanIn . ' ways',
-                'Batch: ' . $step->batchSize,
+                'Sort: ' . $this->sort($step->sort->refs),
+                'Memory: ' . $step->sort->memoryLimit->inMb() . ' MB',
+                'Spill: ' . $this->details->name($step->sort->spill->storage()),
+                'Merge: ' . $step->sort->mergeFanIn . ' ways',
+                'Batch: ' . $step->sort->batchSize,
             ],
             $step instanceof MemorySortProcessor => ['Sort: ' . $this->sort($step->refs)],
             $step instanceof TopNProcessor => ['Top: ' . $step->limit, 'Sort: ' . $this->sort($step->refs)],
             $step instanceof GroupByAggregationProcessor => [
                 'Group by: ' . $this->columns($step->groupBy->refs()),
                 'Aggregations: ' . $this->aggregations($step),
-                'Storage: ' . $this->details->name($step->buckets->storage()),
+                'Memory: ' . $step->memoryLimit->inMb() . ' MB',
+                'Storage: ' . $this->storageName($step->buckets->storage()),
                 'Batch: ' . $step->batchSize,
             ],
             $step instanceof PivotProcessor => $this->pivot($step),
@@ -92,11 +97,8 @@ final readonly class StepDetails
             $step instanceof RepartitionProcessor => [
                 'By: ' . $this->columns($step->by),
                 'Hasher: ' . $this->details->name($step->hasher),
-                'Storage: ' . $this->details->name($step->buckets->storage()),
-            ],
-            $step instanceof BucketingProcessor => [
-                'Strategy: ' . $this->details->name($step->strategy),
-                'Storage: ' . $this->details->name($step->buckets->storage()),
+                'Memory: ' . $step->memoryLimit->inMb() . ' MB',
+                'Storage: ' . $this->storageName($step->buckets->storage()),
             ],
             $step instanceof BatchingProcessor => ['Batch: ' . $step->size],
             $step instanceof BatchingByProcessor => $this->batchingBy($step),
@@ -138,7 +140,7 @@ final readonly class StepDetails
 
         return [
             ...$lines,
-            'Storage: ' . $this->details->name($join->rightBuckets->storage()),
+            ...$this->storage($join->rightBuckets->storage()),
             'Buckets: ' . $join->bucketsCount,
             'Batch: ' . $join->batchSize,
         ];
@@ -215,11 +217,35 @@ final readonly class StepDetails
         return implode(', ', array_map(static fn(Reference $ref): string => $ref->name(), $refs->all()));
     }
 
+    /**
+     * @return list<string> the configured storage, and the memory limit it stands behind
+     */
+    public function storage(BucketsStorage $storage): array
+    {
+        return (
+            $storage instanceof SpillingBuckets
+                ? ['Storage: ' . $this->storageName($storage), 'Memory: ' . $storage->memoryLimit->inMb() . ' MB']
+                : ['Storage: ' . $this->storageName($storage)]
+        );
+    }
+
+    public function storageName(BucketsStorage $storage): string
+    {
+        return $this->details->name($storage instanceof SpillingBuckets ? $storage->disk : $storage);
+    }
+
     public function sort(References $refs): string
     {
         return implode(', ', array_map(
             static fn(Reference $ref): string => (
-                $ref->name() . ' ' . ($ref->sort() === SortOrder::ASC ? 'asc' : 'desc')
+                $ref->name()
+                . ' '
+                . ($ref->sort() === SortOrder::ASC ? 'asc' : 'desc')
+                . (
+                    $ref->nulls() === NullsOrder::defaultFor($ref->sort())
+                        ? ''
+                        : ' nulls ' . strtolower($ref->nulls()->name)
+                )
             ),
             $refs->all(),
         ));

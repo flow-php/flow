@@ -4,9 +4,8 @@
 
 Columns of the [Data Frame](/documentation/components/core/core.md) are described by the
 [Schema](/src/core/etl/src/Flow/ETL/Schema.php) - it owns their names, order, types and nullability.
-A [Row](/src/core/etl/src/Flow/ETL/Row.php) carries the values for one record, keyed by column name.
-A group of Rows is called `Rows`, represented by the [Rows](/src/core/etl/src/Flow/ETL/Rows.php)
-class, and every `Rows` carries the one `Schema` that describes it.
+A batch of records is represented by the [Rows](/src/core/etl/src/Flow/ETL/Rows.php) class: one column per
+schema definition, and every `Rows` carries the one `Schema` that describes it.
 
 Let's look at the following example:
 

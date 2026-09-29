@@ -311,9 +311,7 @@ final class FloeMergerTest extends TestCase
         foreach ((new FloeReader($fs))
             ->read(path('memory://out.floe'))
             ->rows(batchSize: 100, offset: 3) as $batch) {
-            foreach ($batch as $r) {
-                $read[] = $r->get('id');
-            }
+            $read = [...$read, ...$batch->column('id')->values()];
         }
 
         static::assertSame([4], $read);
@@ -488,8 +486,8 @@ final class FloeMergerTest extends TestCase
             FloeStreamReaderContext::footer($fs, path('memory://merged.floe'))->schema()->get('at')->type()->toString(),
         );
         static::assertSame([$warsaw->getTimestamp(), $utc->getTimestamp()], [
-            type_datetime()->assert($merged->all()[0]->get('at'))->getTimestamp(),
-            type_datetime()->assert($merged->all()[1]->get('at'))->getTimestamp(),
+            type_datetime()->assert($merged->column('at')->value(0))->getTimestamp(),
+            type_datetime()->assert($merged->column('at')->value(1))->getTimestamp(),
         ]);
     }
 }

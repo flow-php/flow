@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
-use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
@@ -24,7 +23,7 @@ final readonly class SerializedPayloadDecoder
         private Serializer $serializer,
         private array $names,
         private string $prefix,
-        private Row $nothing,
+        private Rows $nothing,
     ) {}
 
     /**
@@ -32,20 +31,17 @@ final readonly class SerializedPayloadDecoder
      */
     public static function of(Reference $source, Serializer $serializer, array $names, string $prefix = ''): self
     {
-        return new self($source, $serializer, $names, $prefix, Rows::fromColumns(new Schema(), [], 1)->row(0));
+        return new self($source, $serializer, $names, $prefix, Rows::fromColumns(new Schema(), [], 1));
     }
 
-    /**
-     * A view of the payload's declared columns under their output names; a payload that cannot be read is a view with
-     * no columns at all.
-     */
-    public function decode(Row $row): Row
+    public function decode(Rows $rows, int $index): Rows
     {
-        if (!$row->has($this->source->name())) {
+        if ($rows->schema()->findDefinition($this->source->name()) === null) {
             return $this->nothing;
         }
 
-        $serialized = $row->get($this->source->name());
+        // @mago-ignore analysis:mixed-assignment
+        $serialized = $rows->column($this->source->name())->value($index);
 
         if (!is_string($serialized)) {
             return $this->nothing;
@@ -75,6 +71,6 @@ final readonly class SerializedPayloadDecoder
             $columns[$this->prefix . $name] = $decoded->column($name);
         }
 
-        return Rows::fromColumns(new Schema(...$definitions), $columns, 1)->row(0);
+        return Rows::fromColumns(new Schema(...$definitions), $columns, 1);
     }
 }

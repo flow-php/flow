@@ -6,9 +6,9 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\NumberFormat;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
@@ -29,22 +29,20 @@ final class NumberFormatTest extends FlowTestCase
             ref('thousands_separator'),
         );
 
-        static::assertSame('1,234.57', $expression->eval(
-            array_to_row(
-                [
-                    'value' => 1234.5678,
-                    'decimals' => 2,
-                    'decimal_separator' => '.',
-                    'thousands_separator' => ',',
-                ],
-                schema(
-                    float_schema('value'),
-                    int_schema('decimals'),
-                    str_schema('decimal_separator'),
-                    str_schema('thousands_separator'),
-                ),
+        static::assertSame('1,234.57', (new FunctionContext(flow_context()))->eval(
+            $expression,
+            [
+                'value' => 1234.5678,
+                'decimals' => 2,
+                'decimal_separator' => '.',
+                'thousands_separator' => ',',
+            ],
+            schema(
+                float_schema('value'),
+                int_schema('decimals'),
+                str_schema('decimal_separator'),
+                str_schema('thousands_separator'),
             ),
-            flow_context(),
         ));
     }
 
@@ -52,9 +50,13 @@ final class NumberFormatTest extends FlowTestCase
     {
         $expression = number_format(ref('value'), lit(2), lit('.'), lit(','));
 
-        static::assertSame('1,234.57', $expression->eval(array_to_row([
-            'value' => 1234.5678,
-        ], schema(float_schema('value'))), flow_context()));
+        static::assertSame('1,234.57', (new FunctionContext(flow_context()))->eval(
+            $expression,
+            [
+                'value' => 1234.5678,
+            ],
+            schema(float_schema('value')),
+        ));
     }
 
     public function test_number_format_on_decimals_that_are_not_integer(): void
@@ -69,22 +71,20 @@ final class NumberFormatTest extends FlowTestCase
             ref('thousands_separator'),
         );
 
-        $expression->eval(
-            array_to_row(
-                [
-                    'value' => 1234.5678,
-                    'decimals' => 2.5,
-                    'decimal_separator' => '.',
-                    'thousands_separator' => ',',
-                ],
-                schema(
-                    float_schema('value'),
-                    float_schema('decimals'),
-                    str_schema('decimal_separator'),
-                    str_schema('thousands_separator'),
-                ),
+        (new FunctionContext(flow_context()))->eval(
+            $expression,
+            [
+                'value' => 1234.5678,
+                'decimals' => 2.5,
+                'decimal_separator' => '.',
+                'thousands_separator' => ',',
+            ],
+            schema(
+                float_schema('value'),
+                float_schema('decimals'),
+                str_schema('decimal_separator'),
+                str_schema('thousands_separator'),
             ),
-            flow_context(),
         );
     }
 
@@ -100,22 +100,20 @@ final class NumberFormatTest extends FlowTestCase
             ref('thousands_separator'),
         );
 
-        $expression->eval(
-            array_to_row(
-                [
-                    'value' => 'test',
-                    'decimals' => 2,
-                    'decimal_separator' => '.',
-                    'thousands_separator' => ',',
-                ],
-                schema(
-                    str_schema('value'),
-                    int_schema('decimals'),
-                    str_schema('decimal_separator'),
-                    str_schema('thousands_separator'),
-                ),
+        (new FunctionContext(flow_context()))->eval(
+            $expression,
+            [
+                'value' => 'test',
+                'decimals' => 2,
+                'decimal_separator' => '.',
+                'thousands_separator' => ',',
+            ],
+            schema(
+                str_schema('value'),
+                int_schema('decimals'),
+                str_schema('decimal_separator'),
+                str_schema('thousands_separator'),
             ),
-            flow_context(),
         );
     }
 }

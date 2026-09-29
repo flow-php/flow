@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
+use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
@@ -47,15 +48,15 @@ final class SortTest extends FlowIntegrationTestCase
 
     public function test_etl_sort_by_external_sort(): void
     {
-        $config = config_builder()->sort(external_sort()->runSize(100));
+        $config = config_builder()->sort(external_sort()->memoryLimit(Unit::fromBytes(1)));
 
         $rows = df($config->build())
-            ->read(new FakeExtractor(2500))
-            ->batchSize(50)
+            ->read(new FakeExtractor(100))
+            ->batchSize(20)
             ->sortBy([ref('int')])
             ->fetch();
 
-        static::assertSame(range(0, 2499), $rows->reduceToArray('int'));
+        static::assertSame(range(0, 99), $rows->reduceToArray('int'));
     }
 
     public function test_etl_sort_by_in_memory(): void

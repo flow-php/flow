@@ -312,7 +312,7 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
         );
         $batch = df()->read($extractor)->fetch();
 
-        static::assertSame($extractor->schema()->references()->names(), $batch->first()->names());
+        static::assertSame($extractor->schema()->references()->names(), array_keys($batch->values(0)));
         static::assertTrue($batch->schema()->isSame($extractor->schema()));
     }
 

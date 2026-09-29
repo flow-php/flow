@@ -62,9 +62,8 @@ final readonly class UnserializeTransformer implements Transformer
             $decoder = SerializedPayloadDecoder::of($source, $serializer, $names, $prefix);
             $builder = new RowsBuilder($outputSchema->keep(...$outputNames), $context->backend());
 
-            foreach ($rows->all() as $row) {
-                $payload = $decoder->decode($row);
-                $builder->appendFrom($payload->rows, $payload->index);
+            for ($i = 0, $count = $rows->count(); $i < $count; $i++) {
+                $builder->appendFrom($decoder->decode($rows, $i), 0);
             }
 
             $decoded = $builder->finish();

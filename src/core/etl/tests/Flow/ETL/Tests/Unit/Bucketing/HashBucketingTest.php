@@ -201,4 +201,27 @@ final class HashBucketingTest extends FlowTestCase
         // @mago-ignore analysis:invalid-argument
         new HashBucketing([ref('id')], 0, new NativeHasher(), new NativePHPRandomValueGenerator());
     }
+
+    public function test_rows_of_one_key_across_batches_stay_in_batch_order(): void
+    {
+        $strategy = new HashBucketing([ref('k')], 1, new NativeHasher(), new NativePHPRandomValueGenerator());
+        $storage = new MemoryBuckets();
+
+        $generator = (static function () {
+            yield array_to_rows(
+                [['k' => 1, 'v' => 1], ['k' => 2, 'v' => 2], ['k' => 1, 'v' => 3]],
+                schema(int_schema('k'), int_schema('v')),
+            );
+            yield array_to_rows([['k' => 1, 'v' => 4]], schema(int_schema('k'), int_schema('v')));
+        })();
+
+        $buckets = iterator_to_array($strategy->bucketize($generator, $storage));
+        $values = [];
+
+        foreach ($storage->get($buckets[0]->id) as $batch) {
+            $values = [...$values, ...$batch->column('v')->values()];
+        }
+
+        static::assertSame([1, 2, 3, 4], $values);
+    }
 }

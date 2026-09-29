@@ -195,7 +195,7 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
             'xml' => type_xml()->cast($xml),
         ]], schema(xml_schema('xml'))), flow_context(config()));
 
-        static::assertEquals($expected, $result->first()->get('xpath'));
+        static::assertEquals($expected, $result->column('xpath')->value(0));
         static::assertEquals(type_list(type_xml_element()), $result->schema()->get('xpath')->type());
         static::assertTrue($result->schema()->get('xpath')->isNullable());
     }
@@ -421,7 +421,7 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
         );
 
         (new ScalarFunctionTransformer('v', ref('lists')->expand()->expand()))->transform(
-            rows(ListColumnsMother::schema(), ListColumnsMother::row()),
+            ListColumnsMother::rows()->matchTo(ListColumnsMother::schema()),
             flow_context(config()),
         );
     }
@@ -433,5 +433,37 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
         . ' unpacks into N columns, so returns() must be a StructureType, got "string".');
 
         (new ScalarFunctionTransformer('u', new NonStructureUnpackStub()))->bind(schema());
+    }
+
+    public function test_an_expand_explodes_every_row_of_the_batch_in_order(): void
+    {
+        $rows = array_to_rows(
+            [['id' => 1, 'list' => [1, 2]], ['id' => 2, 'list' => []], ['id' => 3, 'list' => [3]]],
+            schema(int_schema('id'), list_schema('list', type_list(type_integer()))),
+        );
+
+        static::assertSame(
+            [['id' => 1, 'value' => 1], ['id' => 1, 'value' => 2], ['id' => 3, 'value' => 3]],
+            (new ScalarFunctionTransformer('value', ref('list')->expand()))
+                ->transform($rows, flow_context())
+                ->project(schema(int_schema('id'), int_schema('value')))
+                ->toArray(),
+        );
+    }
+
+    public function test_an_unpack_fills_one_column_per_declared_element_for_every_row(): void
+    {
+        $rows = array_to_rows([
+            ['s' => ['a' => 1, 'b' => 'x']],
+            ['s' => ['a' => 2, 'b' => null]],
+        ], schema(structure_schema('s', type_structure(['a' => type_integer(), 'b' => type_optional(type_string())]))));
+
+        static::assertSame(
+            [['s.a' => 1, 's.b' => 'x'], ['s.a' => 2, 's.b' => null]],
+            (new ScalarFunctionTransformer('s', ref('s')->unpack(schema(int_schema('a'), str_schema('b')))))
+                ->transform($rows, flow_context())
+                ->project(schema(int_schema('s.a', nullable: true), str_schema('s.b', nullable: true)))
+                ->toArray(),
+        );
     }
 }

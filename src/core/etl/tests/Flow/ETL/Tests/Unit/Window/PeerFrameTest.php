@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Window;
 
+use ArrayObject;
 use DateTimeImmutable;
+use Flow\ETL\Rows;
+use Flow\ETL\Tests\Double\SpyColumn;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Window\PeerFrame;
 
+use function array_map;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\int_schema;
@@ -15,6 +19,8 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function intdiv;
+use function range;
 
 final class PeerFrameTest extends FlowTestCase
 {
@@ -27,6 +33,26 @@ final class PeerFrameTest extends FlowTestCase
         static::assertSame([0, 2], $frame->bounds(0, $partition));
         static::assertSame([0, 2], $frame->bounds(1, $partition));
         static::assertSame([0, 2], $frame->bounds(2, $partition));
+    }
+
+    public function test_the_partition_is_read_once_for_every_row_of_it(): void
+    {
+        $calls = new ArrayObject();
+        $schema = schema(int_schema('v'));
+        $column = array_to_rows(
+            array_map(static fn(int $i): array => ['v' => intdiv($i, 10)], range(0, 49)),
+            $schema,
+        )->column('v');
+        $partition = Rows::fromColumns($schema, ['v' => new SpyColumn($column, $calls)], 50);
+        $frame = new PeerFrame([ref('v')]);
+        $ends = [];
+
+        for ($index = 0; $index < 50; $index++) {
+            $ends[] = $frame->bounds($index, $partition)[1];
+        }
+
+        static::assertSame(array_map(static fn(int $i): int => (intdiv($i, 10) * 10) + 9, range(0, 49)), $ends);
+        static::assertCount(1, $calls);
     }
 
     public function test_datetime_peers_are_matched_by_value_not_identity(): void

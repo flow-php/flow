@@ -12,10 +12,18 @@ use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\NullDefinition;
 use Flow\Types\Exception\Exception as TypesException;
 use Flow\Types\Type;
+use Flow\Types\Type\Native\BooleanType;
+use Flow\Types\Type\Native\FloatType;
+use Flow\Types\Type\Native\IntegerType;
+use Flow\Types\Type\Native\StringType;
+
+use function get_debug_type;
 
 final class CastingColumnBuilder implements ColumnBuilder
 {
     private readonly bool $identity;
+
+    private readonly ?string $native;
 
     private readonly bool $nullable;
 
@@ -35,6 +43,15 @@ final class CastingColumnBuilder implements ColumnBuilder
         $this->identity = $physical instanceof IdentityPhysical;
         $this->nullable = $definition->isNullable() || $definition instanceof NullDefinition;
         $this->type = $definition->type();
+        $this->native = $this->identity
+            ? match ($this->type::class) {
+                BooleanType::class => 'bool',
+                IntegerType::class => 'int',
+                FloatType::class => 'float',
+                StringType::class => 'string',
+                default => null,
+            }
+            : null;
     }
 
     public function append(mixed $value): void
@@ -77,6 +94,12 @@ final class CastingColumnBuilder implements ColumnBuilder
 
                     $physicals[] = null;
                     $nulls++;
+
+                    continue;
+                }
+
+                if (get_debug_type($value) === $this->native) {
+                    $physicals[] = $value;
 
                     continue;
                 }

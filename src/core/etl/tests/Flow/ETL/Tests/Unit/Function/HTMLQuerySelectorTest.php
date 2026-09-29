@@ -8,10 +8,10 @@ use Dom\Element;
 use Dom\HTMLDocument;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RequiredPHPVersionException;
+use Flow\ETL\Tests\Context\FunctionContext;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\html_schema;
 use function Flow\ETL\DSL\ref;
@@ -24,9 +24,11 @@ final class HTMLQuerySelectorTest extends TestCase
     public function test_getting_element_for_older_versions(): void
     {
         $this->expectException(RequiredPHPVersionException::class);
-        ref('value')
-            ->htmlQuerySelector('body div p')
-            ->eval(array_to_row(['value' => ''], schema(str_schema('value'))), flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            ref('value')->htmlQuerySelector('body div p'),
+            ['value' => ''],
+            schema(str_schema('value')),
+        );
     }
 
     #[RequiresPhp('>= 8.4.0')]
@@ -36,10 +38,11 @@ final class HTMLQuerySelectorTest extends TestCase
         $html = HTMLDocument::createFromString(
             '<!DOCTYPE html><html><head></head><body><div><span>foobar</span></div></body></html>',
         );
-        $result = ref('value')
-            ->htmlQuerySelector('body div span')
-            ->eval(array_to_row(['value' => $html], schema(html_schema('value'))), flow_context());
-        static::assertInstanceOf(Element::class, $result);
+        static::assertInstanceOf(Element::class, (new FunctionContext(flow_context()))->eval(
+            ref('value')->htmlQuerySelector('body div span'),
+            ['value' => $html],
+            schema(html_schema('value')),
+        ));
     }
 
     #[RequiresPhp('>= 8.4.0')]
@@ -49,10 +52,11 @@ final class HTMLQuerySelectorTest extends TestCase
         $html = HTMLDocument::createFromString(
             '<!DOCTYPE html><html><head></head><body><div><span>foobar</span></div></body></html>',
         );
-        $result = ref('value')
-            ->htmlQuerySelector('body div p')
-            ->eval(array_to_row(['value' => $html], schema(html_schema('value'))), flow_context());
-        static::assertNull($result);
+        static::assertNull((new FunctionContext(flow_context()))->eval(
+            ref('value')->htmlQuerySelector('body div p'),
+            ['value' => $html],
+            schema(html_schema('value')),
+        ));
     }
 
     #[RequiresPhp('>= 8.4.0')]
@@ -61,8 +65,10 @@ final class HTMLQuerySelectorTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected one of');
 
-        ref('value')
-            ->htmlQuerySelector('body div span')
-            ->eval(array_to_row(['value' => ''], schema(str_schema('value'))), flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            ref('value')->htmlQuerySelector('body div span'),
+            ['value' => ''],
+            schema(str_schema('value')),
+        );
     }
 }

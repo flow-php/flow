@@ -44,7 +44,6 @@ use Flow\ETL\Plan\Node\Write;
 use Flow\ETL\Planner\NodeTranslator;
 use Flow\ETL\Processor\BatchingByProcessor;
 use Flow\ETL\Processor\BatchingProcessor;
-use Flow\ETL\Processor\BucketingProcessor;
 use Flow\ETL\Processor\CachingProcessor;
 use Flow\ETL\Processor\CollectingProcessor;
 use Flow\ETL\Processor\ConstrainedProcessor;
@@ -107,7 +106,7 @@ final class NodeTranslatorTest extends FlowTestCase
     public function test_aggregate_steps_are_the_exact_list_in_order(): void
     {
         static::assertSame(
-            [PruneEntriesTransformer::class, BucketingProcessor::class, GroupByAggregationProcessor::class],
+            [PruneEntriesTransformer::class, GroupByAggregationProcessor::class],
             array_map(
                 static fn($step) => $step::class,
                 NodeTranslator::toSteps(
@@ -375,7 +374,7 @@ final class NodeTranslatorTest extends FlowTestCase
     public function test_repartition_steps_are_the_exact_list_in_order(): void
     {
         static::assertSame(
-            [BucketingProcessor::class, RepartitionProcessor::class],
+            [RepartitionProcessor::class],
             array_map(
                 static fn($step) => $step::class,
                 NodeTranslator::toSteps(new Repartition(NodeMother::read(), refs('id')), NodeMother::context(), []),
@@ -498,7 +497,7 @@ final class NodeTranslatorTest extends FlowTestCase
     public function test_window_column_a_partitioned_window_translates_to_repartition_steps_then_the_window_processor(): void
     {
         static::assertSame(
-            [BucketingProcessor::class, RepartitionProcessor::class, WindowProcessor::class],
+            [RepartitionProcessor::class, WindowProcessor::class],
             array_map(
                 static fn($step) => $step::class,
                 NodeTranslator::toSteps(

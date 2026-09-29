@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
@@ -52,45 +52,44 @@ final class NotTest extends FlowTestCase
 
     public function test_not_expression_on_array_true_value(): void
     {
-        static::assertFalse(not(lit([1, 2, 3]))->eval(array_to_row([], schema()), flow_context()));
+        static::assertFalse((new FunctionContext(flow_context()))->eval(not(lit([1, 2, 3])), [], schema()));
     }
 
     public function test_not_expression_on_boolean_true_value(): void
     {
-        static::assertFalse(not(lit(true))->eval(array_to_row([], schema()), flow_context()));
+        static::assertFalse((new FunctionContext(flow_context()))->eval(not(lit(true)), [], schema()));
     }
 
     public function test_not_expression_on_is_in_expression(): void
     {
-        static::assertTrue(
-            not(ref('value')->isIn(ref('array')))
-                ->eval(
-                    array_to_row(
-                        ['array' => [1, 2, 3], 'value' => 10],
-                        schema(list_schema('array', type_list(type_integer())), int_schema('value')),
-                    ),
-                    flow_context(),
-                ),
-        );
+        static::assertTrue((new FunctionContext(flow_context()))->eval(
+            not(ref('value')->isIn(ref('array'))),
+            ['array' => [1, 2, 3], 'value' => 10],
+            schema(list_schema('array', type_list(type_integer())), int_schema('value')),
+        ));
     }
 
     public function test_not_expression_with_and_operator(): void
     {
-        static::assertTrue(
-            not(ref('value')->isNull()->or(ref('value')->isType(type_integer())))
-                ->eval(array_to_row(['value' => '10'], schema(str_schema('value'))), flow_context()),
-        );
-        static::assertFalse(
-            not(ref('value')->isNull()->or(ref('value')->isType(type_integer())))
-                ->eval(array_to_row(['value' => null], schema(str_schema('value', nullable: true))), flow_context()),
-        );
-        static::assertTrue(
-            not(ref('value')->isNull()->and(ref('value')->size()->between(1, 10)))
-                ->eval(array_to_row(['value' => 'abcd'], schema(str_schema('value'))), flow_context()),
-        );
-        static::assertTrue(
-            not(ref('value')->isNull()->or(ref('value')->size()->equals(1)))
-                ->eval(array_to_row(['value' => 'abcd'], schema(str_schema('value'))), flow_context()),
-        );
+        static::assertTrue((new FunctionContext(flow_context()))->eval(
+            not(ref('value')->isNull()->or(ref('value')->isType(type_integer()))),
+            ['value' => '10'],
+            schema(str_schema('value')),
+        ));
+        static::assertFalse((new FunctionContext(flow_context()))->eval(
+            not(ref('value')->isNull()->or(ref('value')->isType(type_integer()))),
+            ['value' => null],
+            schema(str_schema('value', nullable: true)),
+        ));
+        static::assertTrue((new FunctionContext(flow_context()))->eval(
+            not(ref('value')->isNull()->and(ref('value')->size()->between(1, 10))),
+            ['value' => 'abcd'],
+            schema(str_schema('value')),
+        ));
+        static::assertTrue((new FunctionContext(flow_context()))->eval(
+            not(ref('value')->isNull()->or(ref('value')->size()->equals(1))),
+            ['value' => 'abcd'],
+            schema(str_schema('value')),
+        ));
     }
 }

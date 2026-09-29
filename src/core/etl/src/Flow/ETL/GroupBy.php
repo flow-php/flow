@@ -15,6 +15,7 @@ use Flow\ETL\GroupBy\Pivot;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 
+use function array_fill;
 use function array_unique;
 use function count;
 use function Flow\ETL\DSL\definition_from_type;
@@ -120,17 +121,40 @@ final class GroupBy
         return new Schema(...$definitions);
     }
 
-    public function keyValues(Row $row, Schema $input): GroupKey
+    /**
+     * @return list<GroupKey> one per row of $rows
+     */
+    public function keys(Rows $rows, Schema $input): array
     {
-        $values = [];
+        if ($rows->isEmpty()) {
+            return [];
+        }
+
+        $columns = [];
 
         foreach ($this->refs as $ref) {
             // absent under a nullable declaration is a legitimate null; absent under NOT NULL is a
-            // row-shape violation, and Row::get() already names it and lists the available columns.
-            $values[$ref->name()] = !$row->has($ref) && $input->get($ref)->isNullable() ? null : $row->get($ref);
+            // row-shape violation, and Rows::column() names it and lists the available columns.
+            $columns[$ref->name()] = $rows->schema()->findDefinition($ref->base()) === null
+            && $input->get($ref)->isNullable()
+                // @mago-ignore analysis:possibly-invalid-argument
+                ? array_fill(0, $rows->count(), null)
+                : $rows->column($ref->base())->values();
         }
 
-        return new GroupKey($values);
+        $keys = [];
+
+        for ($i = 0, $count = $rows->count(); $i < $count; $i++) {
+            $values = [];
+
+            foreach ($columns as $name => $column) {
+                $values[$name] = $column[$i];
+            }
+
+            $keys[] = new GroupKey($values);
+        }
+
+        return $keys;
     }
 
     public function pivot(Reference $ref, DeclaredPivotValues $values): void

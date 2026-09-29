@@ -8,13 +8,14 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\GroupBy;
+use Flow\ETL\GroupBy\GroupKey;
 use Flow\ETL\GroupBy\PivotAggregation;
 use Flow\ETL\GroupBy\PivotShape;
 use Flow\ETL\Tests\Context\GroupByContext;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 
-use function Flow\ETL\DSL\array_to_row;
+use function array_map;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\count;
@@ -24,9 +25,11 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\min;
 use function Flow\ETL\DSL\pivot_values;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\sum;
+use function iterator_to_array;
 
 final class GroupByTest extends FlowTestCase
 {
@@ -366,25 +369,51 @@ final class GroupByTest extends FlowTestCase
         );
     }
 
-    public function test_key_values_throws_when_a_row_lacks_a_not_null_key(): void
+    public function test_keys_throws_when_a_row_lacks_a_not_null_key(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Column "country" does not exist.');
 
-        (new GroupBy('country'))->keyValues(
-            array_to_row(['age' => 20], schema(int_schema('age'))),
+        (new GroupBy('country'))->keys(
+            array_to_rows([['age' => 20]], schema(int_schema('age'))),
             schema(str_schema('country'), int_schema('age')),
         );
     }
 
-    public function test_key_values_substitutes_null_when_a_row_lacks_a_nullable_key(): void
+    public function test_keys_substitutes_null_when_a_row_lacks_a_nullable_key(): void
+    {
+        $keys = (new GroupBy('country'))->keys(
+            array_to_rows([['age' => 20], ['age' => 30]], schema(int_schema('age'))),
+            schema(str_schema('country', nullable: true), int_schema('age')),
+        );
+
+        static::assertSame(
+            [['country' => null], ['country' => null]],
+            array_map(static fn(GroupKey $key): array => iterator_to_array($key), $keys),
+        );
+    }
+
+    public function test_keys_reads_one_key_per_row(): void
+    {
+        $keys = (new GroupBy('country', 'age'))->keys(
+            array_to_rows(
+                [['country' => 'PL', 'age' => 20], ['country' => 'DE', 'age' => 30]],
+                schema(str_schema('country'), int_schema('age')),
+            ),
+            schema(str_schema('country'), int_schema('age')),
+        );
+
+        static::assertSame(
+            [['country' => 'PL', 'age' => 20], ['country' => 'DE', 'age' => 30]],
+            array_map(static fn(GroupKey $key): array => iterator_to_array($key), $keys),
+        );
+    }
+
+    public function test_keys_of_an_empty_batch_are_empty(): void
     {
         static::assertSame(
-            ['country' => null],
-            iterator_to_array((new GroupBy('country'))->keyValues(
-                array_to_row(['age' => 20], schema(int_schema('age'))),
-                schema(str_schema('country', nullable: true), int_schema('age')),
-            )),
+            [],
+            (new GroupBy('country'))->keys(rows(schema(int_schema('age'))), schema(str_schema('country'))),
         );
     }
 }

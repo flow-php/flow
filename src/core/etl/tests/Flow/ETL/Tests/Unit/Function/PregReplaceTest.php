@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\regex_replace;
@@ -22,7 +22,7 @@ final class PregReplaceTest extends FlowTestCase
 
         $pregReplace = regex_replace(lit(1), lit('bar'), lit('foo is awesome'));
 
-        $pregReplace->eval(array_to_row([], schema()), flow_context());
+        (new FunctionContext(flow_context()))->eval($pregReplace, [], schema());
     }
 
     public function test_preg_replace_expression_on_invalid_replacement(): void
@@ -32,7 +32,7 @@ final class PregReplaceTest extends FlowTestCase
 
         $pregReplace = regex_replace(lit('/(foo)/'), lit(2), lit('foo is awesome'));
 
-        $pregReplace->eval(array_to_row([], schema()), flow_context());
+        (new FunctionContext(flow_context()))->eval($pregReplace, [], schema());
     }
 
     public function test_preg_replace_expression_on_invalid_subject(): void
@@ -42,13 +42,13 @@ final class PregReplaceTest extends FlowTestCase
 
         $pregReplace = regex_replace(lit('/(foo)/'), lit('bar'), lit(3));
 
-        $pregReplace->eval(array_to_row([], schema()), flow_context());
+        (new FunctionContext(flow_context()))->eval($pregReplace, [], schema());
     }
 
     public function test_preg_replace_expression_on_valid_strings(): void
     {
         $pregReplace = regex_replace(lit('/(foo)/'), lit('bar'), lit('foo is awesome'));
 
-        static::assertSame('bar is awesome', $pregReplace->eval(array_to_row([], schema()), flow_context()));
+        static::assertSame('bar is awesome', (new FunctionContext(flow_context()))->eval($pregReplace, [], schema()));
     }
 }

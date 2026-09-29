@@ -280,10 +280,7 @@ final class ArrayExtractorTest extends FlowTestCase
     public function test_positional_rows_are_named_like_the_hydrator_names_them(array $dataset, array $expected): void
     {
         static::assertSame($expected, array_keys(from_array($dataset)->schema()->definitions()));
-        static::assertSame(
-            $expected,
-            array_keys(data_frame()->read(from_array($dataset))->fetch()->first()->toArray()),
-        );
+        static::assertSame($expected, array_keys(data_frame()->read(from_array($dataset))->fetch()->toArray()[0]));
     }
 
     public function test_a_bounded_sample_types_only_its_prefix(): void

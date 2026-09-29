@@ -385,7 +385,7 @@ final class PsrHttpClientPaginatedExtractorTest extends FlowTestCase
             type_structure(['login' => type_string(), 'id' => type_integer()]),
             $rows[0]->schema()->get('response_body')->type(),
         );
-        static::assertSame(['login' => 'flow-php', 'id' => 73_495_297], $rows[0]->first()->get('response_body'));
+        static::assertSame(['login' => 'flow-php', 'id' => 73_495_297], $rows[0]->column('response_body')->value(0));
     }
 
     public function test_schema_typed_response_body_with_missing_field(): void
@@ -427,7 +427,7 @@ final class PsrHttpClientPaginatedExtractorTest extends FlowTestCase
             type_structure(['login' => type_string(), 'id' => type_integer()]),
             $rows[0]->schema()->get('response_body')->type(),
         );
-        static::assertSame(['login' => 'flow-php', 'id' => 73_495_297], $rows[0]->first()->get('response_body'));
+        static::assertSame(['login' => 'flow-php', 'id' => 73_495_297], $rows[0]->column('response_body')->value(0));
     }
 
     public function test_stops_on_client_error_but_yields_its_row(): void
@@ -444,7 +444,7 @@ final class PsrHttpClientPaginatedExtractorTest extends FlowTestCase
 
         static::assertCount(2, $client->getRequests());
         static::assertCount(2, $rows);
-        static::assertSame(500, $rows[1]->first()->get('response_status_code'));
+        static::assertSame(500, $rows[1]->column('response_status_code')->value(0));
     }
 
     public function test_extract_builds_through_the_config_backend(): void

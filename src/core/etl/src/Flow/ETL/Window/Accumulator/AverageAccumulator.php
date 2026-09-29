@@ -6,10 +6,11 @@ namespace Flow\ETL\Window\Accumulator;
 
 use Flow\Calculator\Calculator;
 use Flow\Calculator\Rounding;
+use Flow\Calculator\RunningSum;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Rows;
 use Flow\ETL\Window\FrameAccumulator;
 
 use function is_numeric;
@@ -20,26 +21,28 @@ final class AverageAccumulator implements FrameAccumulator
 
     private int $count = 0;
 
-    private float|int $sum = 0;
+    private readonly RunningSum $runningSum;
 
     public function __construct(
         private readonly Reference $ref,
         private readonly int $scale,
         private readonly Rounding $rounding,
+        private readonly bool $exact,
         FlowContext $context,
     ) {
         $this->calculator = $context->calculator();
+        $this->runningSum = new RunningSum($this->calculator);
     }
 
-    public function accumulate(Row $row): void
+    public function accumulate(Rows $rows, int $index): void
     {
         try {
             /** @var mixed $value */
-            $value = $row->get($this->ref);
+            $value = $rows->column($this->ref->base())->value($index);
 
             if (is_numeric($value)) {
                 // @mago-ignore analysis:possibly-invalid-argument
-                $this->sum = $this->calculator->add($this->sum, $value);
+                $this->runningSum->add($value, $this->exact);
                 $this->count++;
             }
         } catch (InvalidArgumentException $e) {
@@ -53,6 +56,6 @@ final class AverageAccumulator implements FrameAccumulator
             return null;
         }
 
-        return $this->calculator->divide($this->sum, $this->count, $this->scale, $this->rounding);
+        return $this->calculator->divide($this->runningSum->value(), $this->count, $this->scale, $this->rounding);
     }
 }

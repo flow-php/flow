@@ -13,13 +13,16 @@ use ext_php_rs::types::{ZendHashTable, Zval};
 use flow_batch_frame::column::decode;
 use flow_batch_frame::layout::buffer_count;
 
-use crate::builder::NativeColumnBuilder;
+use crate::builder::{throw, NativeColumnBuilder};
 use crate::column::NativeColumn;
-use crate::ctx::{call_method, zval_long};
+use crate::ctx::{call_method, call_static, expect_object, find_class, zval_long};
 use crate::exception::ext_exception;
 use crate::interfaces::backend_ce;
 use crate::plan::{physical_for_definition, type_plan, TypePlan};
 use crate::render::{decode_exception, invalid_argument};
+
+const COLUMN_MISMATCH: &str = "Flow\\ETL\\Exception\\ColumnMismatchException";
+const MIXED_TYPE: &str = "Flow\\Types\\Type\\Native\\MixedType";
 
 /// A return typed `Flow\ETL\Column\Column`: `adopt()` hands back its argument itself.
 pub struct ColumnValue(Zval);
@@ -104,6 +107,10 @@ impl DefaultBackend {
     pub fn adopt(&self, definition: &Zval, column: &Zval) -> PhpResult<ColumnValue> {
         if column.extract::<&NativeColumn>().is_some() {
             return Ok(ColumnValue(column.shallow_clone()));
+        }
+
+        if expect_object(&call_method(column, "type", &mut [])?, "a Type")?.instance_of(find_class(MIXED_TYPE)?) {
+            return Err(throw(call_static(COLUMN_MISMATCH, "untypedColumn", &mut [definition.shallow_clone()])?));
         }
 
         let mut builder = self.builder(definition)?;

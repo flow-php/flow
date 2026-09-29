@@ -1,5 +1,5 @@
 --TEST--
-native and PHP columns build into each other: appendFrom/appendTake, Rows::concat, Rows::of, adopt() both ways
+native and PHP columns build into each other: appendFrom/appendTake, Rows::concat, Rows::gather, adopt() both ways
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 --FILE--
@@ -42,7 +42,7 @@ $same('native appendFrom of a PHP column', $php->gather([5, 0, 3, 3]), $rebuilt(
 $same('PHP appendTake of a native column', $php->gather([5, 0, 3, 3]), $rebuilt($native, new PhpBackend(), true));
 $same('Rows::concat PHP + native', $php->concat($php), $php->concat($native));
 $same('Rows::concat native + PHP', $php->concat($php), $native->concat($php));
-$same('Rows::of over both', Rows::of($schema, $php->row(1), $php->row(4)), Rows::of($schema, $native->row(1), $php->row(4)));
+$same('Rows::gather over both', $php->gather([1, 4]), $native->gather([1, 4]));
 
 foreach ($schema->definitions() as $name => $definition) {
     $phpColumn = $php->column((string) $name);
@@ -66,5 +66,5 @@ native appendFrom of a PHP column: identical
 PHP appendTake of a native column: identical
 Rows::concat PHP + native: identical
 Rows::concat native + PHP: identical
-Rows::of over both: identical
+Rows::gather over both: identical
 adopt identical

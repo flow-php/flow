@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
@@ -17,26 +17,20 @@ final class EnsureEndTest extends FlowTestCase
 {
     public function test_empty_string_with_suffix(): void
     {
-        $result = ref('str')
-            ->ensureEnd('_suffix')
-            ->eval(array_to_row(['str' => ''], schema(str_schema('str'))), flow_context());
-
-        static::assertEquals('_suffix', $result);
+        static::assertEquals('_suffix', (new FunctionContext(flow_context()))->eval(
+            ref('str')->ensureEnd('_suffix'),
+            ['str' => ''],
+            schema(str_schema('str')),
+        ));
     }
 
     public function test_null_suffix(): void
     {
-        $result = ref('str')
-            ->ensureEnd(ref('suffix'))
-            ->eval(
-                array_to_row(
-                    ['str' => 'hello', 'suffix' => null],
-                    schema(str_schema('str'), str_schema('suffix', nullable: true)),
-                ),
-                flow_context(),
-            );
-
-        static::assertEquals('hello', $result);
+        static::assertEquals('hello', (new FunctionContext(flow_context()))->eval(
+            ref('str')->ensureEnd(ref('suffix')),
+            ['str' => 'hello', 'suffix' => null],
+            schema(str_schema('str'), str_schema('suffix', nullable: true)),
+        ));
     }
 
     public function test_null_value(): void
@@ -44,52 +38,46 @@ final class EnsureEndTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('EnsureEnd function requires non-null value');
 
-        $result = ref('str')
-            ->ensureEnd('_suffix')
-            ->eval(array_to_row(['str' => null], schema(str_schema('str', nullable: true))), flow_context());
-
-        static::assertNull($result);
+        static::assertNull((new FunctionContext(flow_context()))->eval(
+            ref('str')->ensureEnd('_suffix'),
+            ['str' => null],
+            schema(str_schema('str', nullable: true)),
+        ));
     }
 
     public function test_string_already_ends_with_suffix(): void
     {
-        $result = ref('str')
-            ->ensureEnd('.txt')
-            ->eval(array_to_row(['str' => 'document.txt'], schema(str_schema('str'))), flow_context());
-
-        static::assertEquals('document.txt', $result);
+        static::assertEquals('document.txt', (new FunctionContext(flow_context()))->eval(
+            ref('str')->ensureEnd('.txt'),
+            ['str' => 'document.txt'],
+            schema(str_schema('str')),
+        ));
     }
 
     public function test_string_doesnt_end_with_suffix(): void
     {
-        $result = ref('str')
-            ->ensureEnd('.txt')
-            ->eval(array_to_row(['str' => 'document'], schema(str_schema('str'))), flow_context());
-
-        static::assertEquals('document.txt', $result);
+        static::assertEquals('document.txt', (new FunctionContext(flow_context()))->eval(
+            ref('str')->ensureEnd('.txt'),
+            ['str' => 'document'],
+            schema(str_schema('str')),
+        ));
     }
 
     public function test_string_with_empty_suffix(): void
     {
-        $result = ref('str')
-            ->ensureEnd('')
-            ->eval(array_to_row(['str' => 'hello'], schema(str_schema('str'))), flow_context());
-
-        static::assertEquals('hello', $result);
+        static::assertEquals('hello', (new FunctionContext(flow_context()))->eval(
+            ref('str')->ensureEnd(''),
+            ['str' => 'hello'],
+            schema(str_schema('str')),
+        ));
     }
 
     public function test_with_scalar_function_parameter(): void
     {
-        $result = ref('str')
-            ->ensureEnd(ref('suffix'))
-            ->eval(
-                array_to_row(
-                    ['str' => 'document', 'suffix' => '.pdf'],
-                    schema(str_schema('str'), str_schema('suffix')),
-                ),
-                flow_context(),
-            );
-
-        static::assertEquals('document.pdf', $result);
+        static::assertEquals('document.pdf', (new FunctionContext(flow_context()))->eval(
+            ref('str')->ensureEnd(ref('suffix')),
+            ['str' => 'document', 'suffix' => '.pdf'],
+            schema(str_schema('str'), str_schema('suffix')),
+        ));
     }
 }

@@ -130,7 +130,7 @@ final readonly class Segment
                     } catch (LimitReachedException $limit) {
                         $context->telemetry()->limitReached(['limit' => $limit->limit]);
                         // the remaining steps still run, on the trimmed batch
-                        $rows = $limit->rows ?? Rows::of($rows->schema());
+                        $rows = $limit->rows ?? Rows::empty($rows->schema());
                         $stop = true;
                     } catch (Throwable $failure) {
                         if ($failure instanceof SinkFailure) {
