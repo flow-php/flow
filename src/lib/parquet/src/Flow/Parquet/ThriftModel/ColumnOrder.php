@@ -33,7 +33,7 @@ class ColumnOrder
             'var' => 'TYPE_ORDER',
             'isRequired' => false,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\TypeDefinedOrder',
+            'class' => '\Flow\Parquet\ThriftModel\TypeDefinedOrder',
         ],
     ];
 

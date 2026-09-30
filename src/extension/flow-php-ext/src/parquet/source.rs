@@ -92,6 +92,7 @@ impl ReadAt for PhpStream {
     }
 }
 
+#[derive(Clone)]
 pub struct PhpSource {
     stream: Arc<PhpStream>,
     size: u64,
@@ -109,11 +110,6 @@ impl PhpSource {
             stream,
             size: u64::try_from(size).map_err(|_| Error::Stream(format!("size() returned {size}")))?,
         })
-    }
-
-    /// The footer, without the page index.
-    pub fn metadata(&self) -> Result<parquet::file::metadata::ParquetMetaData, Error> {
-        Ok(parquet::file::metadata::ParquetMetaDataReader::new().parse_and_finish(self)?)
     }
 }
 
@@ -189,30 +185,34 @@ impl<R: ReadAt> Read for WindowedRead<R> {
     }
 }
 
+/// A `ReadAt` over bytes in memory that counts the reads made through it and the bytes they returned.
 #[cfg(test)]
-mod tests {
-    use std::io::Read;
+pub mod fake {
     use std::sync::atomic::{AtomicUsize, Ordering};
-    use std::sync::Arc;
 
     use bytes::Bytes;
     use parquet::errors::ParquetError;
 
-    use super::{exact, ReadAt, WindowedRead, WINDOW};
+    use super::ReadAt;
 
-    struct Counting {
-        data: Vec<u8>,
+    pub struct Counting {
+        pub data: Bytes,
         reads: AtomicUsize,
         bytes: AtomicUsize,
     }
 
     impl Counting {
-        fn new(size: usize) -> Self {
+        pub fn new(data: Vec<u8>) -> Self {
             Self {
-                data: (0..size).map(|i| i as u8).collect(),
+                data: Bytes::from(data),
                 reads: AtomicUsize::new(0),
                 bytes: AtomicUsize::new(0),
             }
+        }
+
+        /// (reads, bytes) so far.
+        pub fn counted(&self) -> (usize, usize) {
+            (self.reads.load(Ordering::Relaxed), self.bytes.load(Ordering::Relaxed))
         }
     }
 
@@ -223,68 +223,83 @@ mod tests {
             self.reads.fetch_add(1, Ordering::Relaxed);
             self.bytes.fetch_add(end - start, Ordering::Relaxed);
 
-            Ok(Bytes::copy_from_slice(&self.data[start..end]))
+            Ok(self.data.slice(start..end))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::io::Read;
+    use std::sync::Arc;
+
+    use parquet::errors::ParquetError;
+
+    use super::fake::Counting;
+    use super::{exact, WindowedRead, WINDOW};
+
+    fn sized(size: usize) -> Counting {
+        Counting::new((0..size).map(|i| i as u8).collect())
     }
 
     #[test]
     fn windowed_read_pulls_one_window_for_a_small_read() {
-        let source = Arc::new(Counting::new(10 * WINDOW));
+        let source = Arc::new(sized(10 * WINDOW));
         let mut read = WindowedRead::new(Arc::clone(&source), 100, source.data.len() as u64);
         let mut header = [0u8; 32];
 
         read.read_exact(&mut header).unwrap();
 
         assert_eq!(header.to_vec(), source.data[100..132].to_vec());
-        assert_eq!((source.reads.load(Ordering::Relaxed), source.bytes.load(Ordering::Relaxed)), (1, WINDOW));
+        assert_eq!(source.counted(), (1, WINDOW));
     }
 
     #[test]
     fn windowed_read_pulls_the_next_window_only_when_the_first_is_used_up() {
-        let source = Arc::new(Counting::new(10 * WINDOW));
+        let source = Arc::new(sized(10 * WINDOW));
         let mut read = WindowedRead::new(Arc::clone(&source), 0, source.data.len() as u64);
         let mut buffer = vec![0u8; WINDOW + 1];
 
         read.read_exact(&mut buffer[..WINDOW]).unwrap();
-        assert_eq!((source.reads.load(Ordering::Relaxed), source.bytes.load(Ordering::Relaxed)), (1, WINDOW));
+        assert_eq!(source.counted(), (1, WINDOW));
 
         read.read_exact(&mut buffer[WINDOW..]).unwrap();
         assert_eq!(buffer, source.data[..WINDOW + 1].to_vec());
-        assert_eq!((source.reads.load(Ordering::Relaxed), source.bytes.load(Ordering::Relaxed)), (2, 2 * WINDOW));
+        assert_eq!(source.counted(), (2, 2 * WINDOW));
     }
 
     #[test]
     fn windowed_read_never_reads_past_the_end() {
-        let source = Arc::new(Counting::new(3 * WINDOW));
+        let source = Arc::new(sized(3 * WINDOW));
         let mut read = WindowedRead::new(Arc::clone(&source), 3 * WINDOW as u64 - 10, 3 * WINDOW as u64);
         let mut rest = Vec::new();
 
         read.read_to_end(&mut rest).unwrap();
 
         assert_eq!(rest, source.data[3 * WINDOW - 10..].to_vec());
-        assert_eq!((source.reads.load(Ordering::Relaxed), source.bytes.load(Ordering::Relaxed)), (1, 10));
+        assert_eq!(source.counted(), (1, 10));
     }
 
     #[test]
     fn exact_reads_the_length_asked_in_one_read() {
-        let source = Counting::new(10 * WINDOW);
+        let source = sized(10 * WINDOW);
 
         assert_eq!(exact(&source, 5, 3 * WINDOW).unwrap().to_vec(), source.data[5..5 + 3 * WINDOW].to_vec());
-        assert_eq!((source.reads.load(Ordering::Relaxed), source.bytes.load(Ordering::Relaxed)), (1, 3 * WINDOW));
+        assert_eq!(source.counted(), (1, 3 * WINDOW));
     }
 
     #[test]
     fn exact_refuses_a_short_read() {
-        let source = Counting::new(100);
+        let source = sized(100);
 
         assert!(matches!(exact(&source, 90, 20), Err(ParquetError::EOF(_))));
     }
 
     #[test]
     fn exact_reads_nothing_for_zero_bytes() {
-        let source = Counting::new(100);
+        let source = sized(100);
 
         assert!(exact(&source, 0, 0).unwrap().is_empty());
-        assert_eq!(source.reads.load(Ordering::Relaxed), 0);
+        assert_eq!(source.counted().0, 0);
     }
 }

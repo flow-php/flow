@@ -15,6 +15,7 @@ mod parquet;
 mod physical;
 mod plan;
 mod render;
+mod thrift;
 mod uuid_check;
 mod values;
 
@@ -194,4 +195,7 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .class::<RustColumnFoldNative>()
         .class::<parquet::etl::NativeParquetReader>()
         .class::<parquet::etl::NativeParquetWriter>()
+        .class::<parquet::library::NativeParquetFile>()
+        .class::<parquet::library::NativeParquetColumnsReader>()
+        .class::<parquet::library::NativeParquetRowsWriter>()
 }

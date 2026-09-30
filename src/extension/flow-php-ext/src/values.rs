@@ -224,8 +224,8 @@ pub fn interval_from_micros(micros: i64) -> Result<Zval, PhpException> {
     Ok(zv)
 }
 
-/// `Uuid::fromBytes()`: the constructor-less instance holding the lowercase 36-char form.
-pub fn uuid_from_bytes(bytes: &[u8]) -> Result<Zval, PhpException> {
+/// The lowercase 36-char form of 16 uuid bytes.
+pub fn uuid_text(bytes: &[u8]) -> Vec<u8> {
     const HEX: &[u8; 16] = b"0123456789abcdef";
 
     let mut text = Vec::with_capacity(36);
@@ -239,9 +239,14 @@ pub fn uuid_from_bytes(bytes: &[u8]) -> Result<Zval, PhpException> {
         text.push(HEX[usize::from(byte & 0x0f)]);
     }
 
+    text
+}
+
+/// `Uuid::fromBytes()`: the constructor-less instance holding the lowercase 36-char form.
+pub fn uuid_from_bytes(bytes: &[u8]) -> Result<Zval, PhpException> {
     let (uuid_ce, value_slot) = ctx::uuid()?;
     let mut uuid = ZendObject::new(uuid_ce);
-    write_slot(&mut uuid, value_slot, zval_str(&text));
+    write_slot(&mut uuid, value_slot, zval_str(&uuid_text(bytes)));
 
     let mut zv = Zval::new();
     zv.set_object(&mut uuid);

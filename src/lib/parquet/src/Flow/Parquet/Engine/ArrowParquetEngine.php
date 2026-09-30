@@ -4,39 +4,45 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Engine;
 
-use Flow\Arrow\Parquet\Reader;
 use Flow\Arrow\Parquet\Writer;
 use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\SourceStream;
+use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Engine\Arrow\DestinationStreamAdapter;
 use Flow\Parquet\Engine\Arrow\OptionsConverter;
 use Flow\Parquet\Engine\Arrow\SchemaConverter;
-use Flow\Parquet\Engine\Arrow\SourceStreamAdapter;
+use Flow\Parquet\Engine\Native\NativeParquetFile;
+use Flow\Parquet\Engine\Native\NativeParquetRowsWriter;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFileReader;
 use Flow\Parquet\ParquetFileWriter;
-use Generator;
 
 use function array_column;
-use function array_keys;
-use function array_push;
-use function array_slice;
-use function count;
 use function extension_loaded;
-use function min;
+use function trigger_error;
+
+use const E_USER_DEPRECATED;
 
 final class ArrowParquetEngine implements ParquetEngine
 {
     public function __construct(
         private readonly Options $options = new Options(),
     ) {
-        if (!extension_loaded('arrow')) {
-            throw new RuntimeException('The arrow extension is required for ArrowParquetEngine. '
-            . 'Install it from flow-php/arrow-ext.');
+        if (!extension_loaded('flow_php') && !extension_loaded('arrow')) {
+            throw new RuntimeException('ArrowParquetEngine requires the flow_php extension (flow-php/flow-php-ext).');
+        }
+
+        if (!extension_loaded('flow_php')) {
+            @trigger_error(
+                'Parquet through the arrow extension is deprecated and will be removed; install the flow_php '
+                . 'extension (flow-php/flow-php-ext), which ArrowParquetEngine uses when it is loaded.',
+                E_USER_DEPRECATED,
+            );
         }
     }
 
@@ -53,6 +59,17 @@ final class ArrowParquetEngine implements ParquetEngine
         };
     }
 
+    public function openForRead(SourceStream $stream): ParquetFileReader
+    {
+        return extension_loaded('flow_php')
+            ? new NativeParquetFileReader(new NativeParquetFile($stream), $this->options)
+            : new ArrowParquetFileReader(
+                new PhpParquetFileReader($stream, ByteOrder::LITTLE_ENDIAN, $this->options),
+                $stream,
+                $this->options,
+            );
+    }
+
     public function openForWrite(
         DestinationStream $stream,
         Schema $schema,
@@ -60,6 +77,18 @@ final class ArrowParquetEngine implements ParquetEngine
         Options $options,
     ): ParquetFileWriter {
         $extensionSchema = SchemaConverter::toExtension($schema);
+
+        if (extension_loaded('flow_php')) {
+            return new NativeParquetFileWriter(
+                new NativeParquetRowsWriter(
+                    $stream,
+                    $extensionSchema,
+                    self::mapCompression($compression),
+                    OptionsConverter::toExtension($options),
+                    $this->options->getInt(Option::ARROW_WRITE_BATCH_SIZE),
+                ),
+            );
+        }
 
         /** @var list<string> $columnNames */
         $columnNames = array_column($extensionSchema, 'name');
@@ -78,73 +107,6 @@ final class ArrowParquetEngine implements ParquetEngine
             // write batching is an engine option, not a per-file one
             $this->options->getInt(Option::ARROW_WRITE_BATCH_SIZE),
         );
-    }
-
-    public function readColumns(
-        SourceStream $stream,
-        Schema $schema,
-        array $columns,
-        int $batchSize,
-        ?int $limit,
-        ?int $offset,
-    ): Generator {
-        $adapter = new SourceStreamAdapter($stream);
-        $extensionOptions = OptionsConverter::toExtension($this->options);
-        $reader = new Reader($adapter, $extensionOptions);
-
-        try {
-            $toSkip = $offset ?? 0;
-            $remaining = $limit;
-            /** @var array<string, list<mixed>> $carry */
-            $carry = [];
-            $carryCount = 0;
-
-            while (($remaining === null || $remaining > 0) && null !== ($got = $reader->readRowGroup($columns))) {
-                $names = array_keys($got);
-
-                if ($names === []) {
-                    continue;
-                }
-
-                $available = count($got[$names[0]]);
-                $cursor = min($toSkip, $available);
-                $toSkip -= $cursor;
-
-                while ($cursor < $available && ($remaining === null || $remaining > 0)) {
-                    $take = min($batchSize - $carryCount, $available - $cursor, $remaining ?? $available);
-
-                    foreach ($names as $name) {
-                        /** @var list<mixed> $slice */
-                        $slice = array_slice($got[$name], $cursor, $take);
-
-                        if ($carryCount === 0) {
-                            $carry[$name] = $slice;
-                        } else {
-                            array_push($carry[$name], ...$slice);
-                        }
-                    }
-
-                    $carryCount += $take;
-                    $cursor += $take;
-
-                    if ($remaining !== null) {
-                        $remaining -= $take;
-                    }
-
-                    if ($carryCount === $batchSize) {
-                        yield $carry;
-                        $carry = [];
-                        $carryCount = 0;
-                    }
-                }
-            }
-
-            if ($carryCount > 0) {
-                yield $carry;
-            }
-        } finally {
-            $reader->close();
-        }
     }
 
     public function writeRows(

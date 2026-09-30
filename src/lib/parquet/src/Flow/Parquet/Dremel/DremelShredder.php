@@ -14,6 +14,7 @@ use Flow\Parquet\ParquetFile\Schema\Column;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 
+use function array_values;
 use function count;
 use function gettype;
 use function is_array;
@@ -29,10 +30,11 @@ final readonly class DremelShredder
 
     /**
      * @param array<array<array-key, mixed>> $rows
+     * @param int $firstRow the writer's 0-based index of the first of $rows, which validation refusals name
      *
      * @return array<string, WriteFlatColumnValues> keyed by flatPath
      */
-    public function shred(Schema $schema, array $rows): array
+    public function shred(Schema $schema, array $rows, int $firstRow): array
     {
         /** @var array<string, WriteFlatColumnValues> $targets */
         $targets = [];
@@ -60,12 +62,13 @@ final readonly class DremelShredder
         }
 
         foreach ($plans as $plan) {
-            foreach ($rows as $row) {
+            foreach (array_values($rows) as $offset => $row) {
+                $rowIndex = $firstRow + $offset;
                 // @mago-ignore analysis:mixed-assignment
                 $value = $row[$plan->childName] ?? null;
 
                 if ($shouldValidate) {
-                    $this->validator->validate($schema->get($plan->childName), $value);
+                    $this->validator->validate($schema->get($plan->childName), $value, $rowIndex);
                 }
 
                 /** @var array<string, bool> $rowFirstWrite */
@@ -90,11 +93,29 @@ final readonly class DremelShredder
                         );
                     }
                 } elseif ($plan instanceof ListPlan) {
-                    $this->execList($plan, $this->narrowArrayOrNull($value), 0, 0, 0, $shouldValidate, $rowFirstWrite);
+                    $this->execList(
+                        $plan,
+                        $this->narrowArrayOrNull($value),
+                        0,
+                        0,
+                        0,
+                        $shouldValidate,
+                        $rowIndex,
+                        $rowFirstWrite,
+                    );
                 } elseif ($plan instanceof MapPlan) {
-                    $this->execMap($plan, $this->narrowArrayOrNull($value), 0, 0, 0, $shouldValidate, $rowFirstWrite);
+                    $this->execMap(
+                        $plan,
+                        $this->narrowArrayOrNull($value),
+                        0,
+                        0,
+                        0,
+                        $shouldValidate,
+                        $rowIndex,
+                        $rowFirstWrite,
+                    );
                 } else {
-                    $this->execStruct($plan, $value, 0, 0, 0, $shouldValidate, $rowFirstWrite);
+                    $this->execStruct($plan, $value, 0, 0, 0, $shouldValidate, $rowIndex, $rowFirstWrite);
                 }
             }
         }
@@ -191,6 +212,7 @@ final readonly class DremelShredder
         int $repetitionLevel,
         int $depth,
         bool $shouldValidate,
+        int $rowIndex,
         array &$rowFirstWrite,
     ): void {
         $repetitionLevel++;
@@ -273,6 +295,7 @@ final readonly class DremelShredder
                     $repetitionLevel - 1,
                     $depth,
                     $shouldValidate,
+                    $rowIndex,
                     $rowFirstWrite,
                 );
 
@@ -285,7 +308,7 @@ final readonly class DremelShredder
 
             if (!count($listValue)) {
                 if ($shouldValidate && $plan->elementColumn !== null) {
-                    $this->validator->validate($plan->elementColumn, null);
+                    $this->validator->validate($plan->elementColumn, null, $rowIndex);
                 }
                 $this->execList(
                     $element,
@@ -294,6 +317,7 @@ final readonly class DremelShredder
                     $repetitionLevel - 1,
                     $depth,
                     $shouldValidate,
+                    $rowIndex,
                     $rowFirstWrite,
                 );
 
@@ -311,6 +335,7 @@ final readonly class DremelShredder
                     $i === 0 ? $repetitionLevel - 1 : $depth,
                     $depth,
                     $shouldValidate,
+                    $rowIndex,
                     $rowFirstWrite,
                 );
             }
@@ -327,6 +352,7 @@ final readonly class DremelShredder
                     $repetitionLevel - 1,
                     $depth,
                     $shouldValidate,
+                    $rowIndex,
                     $rowFirstWrite,
                 );
 
@@ -339,7 +365,7 @@ final readonly class DremelShredder
 
             if (!count($listValue)) {
                 if ($shouldValidate && $plan->elementColumn !== null) {
-                    $this->validator->validate($plan->elementColumn, null);
+                    $this->validator->validate($plan->elementColumn, null, $rowIndex);
                 }
                 $this->execMap(
                     $element,
@@ -348,6 +374,7 @@ final readonly class DremelShredder
                     $repetitionLevel - 1,
                     $depth,
                     $shouldValidate,
+                    $rowIndex,
                     $rowFirstWrite,
                 );
 
@@ -365,6 +392,7 @@ final readonly class DremelShredder
                     $i === 0 ? $repetitionLevel - 1 : $depth,
                     $depth,
                     $shouldValidate,
+                    $rowIndex,
                     $rowFirstWrite,
                 );
             }
@@ -380,6 +408,7 @@ final readonly class DremelShredder
                 $repetitionLevel - 1,
                 $depth,
                 $shouldValidate,
+                $rowIndex,
                 $rowFirstWrite,
             );
 
@@ -392,7 +421,7 @@ final readonly class DremelShredder
 
         if (!count($listValue)) {
             if ($shouldValidate && $plan->elementColumn !== null) {
-                $this->validator->validate($plan->elementColumn, null);
+                $this->validator->validate($plan->elementColumn, null, $rowIndex);
             }
             $this->execStruct(
                 $element,
@@ -401,6 +430,7 @@ final readonly class DremelShredder
                 $repetitionLevel - 1,
                 $depth,
                 $shouldValidate,
+                $rowIndex,
                 $rowFirstWrite,
             );
 
@@ -418,6 +448,7 @@ final readonly class DremelShredder
                 $i === 0 ? $repetitionLevel - 1 : $depth,
                 $depth,
                 $shouldValidate,
+                $rowIndex,
                 $rowFirstWrite,
             );
         }
@@ -434,6 +465,7 @@ final readonly class DremelShredder
         int $repetitionLevel,
         int $depth,
         bool $shouldValidate,
+        int $rowIndex,
         array &$rowFirstWrite,
     ): void {
         $repetitionLevel++;
@@ -631,6 +663,7 @@ final readonly class DremelShredder
                     $repetitionLevel - 1,
                     $depth,
                     $shouldValidate,
+                    $rowIndex,
                     $rowFirstWrite,
                 );
 
@@ -643,7 +676,7 @@ final readonly class DremelShredder
 
             if (!count($mapValue)) {
                 if ($shouldValidate && $plan->valueColumn !== null) {
-                    $this->validator->validate($plan->valueColumn, null);
+                    $this->validator->validate($plan->valueColumn, null, $rowIndex);
                 }
 
                 $repLvl = $repetitionLevel - 1;
@@ -662,6 +695,7 @@ final readonly class DremelShredder
                     $repetitionLevel - 1,
                     $depth,
                     $shouldValidate,
+                    $rowIndex,
                     $rowFirstWrite,
                 );
 
@@ -704,6 +738,7 @@ final readonly class DremelShredder
                     $repLevel,
                     $depth,
                     $shouldValidate,
+                    $rowIndex,
                     $rowFirstWrite,
                 );
                 $index++;
@@ -730,6 +765,7 @@ final readonly class DremelShredder
                     $repetitionLevel - 1,
                     $depth,
                     $shouldValidate,
+                    $rowIndex,
                     $rowFirstWrite,
                 );
 
@@ -742,7 +778,7 @@ final readonly class DremelShredder
 
             if (!count($mapValue)) {
                 if ($shouldValidate && $plan->valueColumn !== null) {
-                    $this->validator->validate($plan->valueColumn, null);
+                    $this->validator->validate($plan->valueColumn, null, $rowIndex);
                 }
 
                 $repLvl = $repetitionLevel - 1;
@@ -761,6 +797,7 @@ final readonly class DremelShredder
                     $repetitionLevel - 1,
                     $depth,
                     $shouldValidate,
+                    $rowIndex,
                     $rowFirstWrite,
                 );
 
@@ -803,6 +840,7 @@ final readonly class DremelShredder
                     $repLevel,
                     $depth,
                     $shouldValidate,
+                    $rowIndex,
                     $rowFirstWrite,
                 );
                 $index++;
@@ -828,6 +866,7 @@ final readonly class DremelShredder
                 $repetitionLevel - 1,
                 $depth,
                 $shouldValidate,
+                $rowIndex,
                 $rowFirstWrite,
             );
 
@@ -840,7 +879,7 @@ final readonly class DremelShredder
 
         if (!count($mapValue)) {
             if ($shouldValidate && $plan->valueColumn !== null) {
-                $this->validator->validate($plan->valueColumn, null);
+                $this->validator->validate($plan->valueColumn, null, $rowIndex);
             }
 
             $repLvl = $repetitionLevel - 1;
@@ -859,6 +898,7 @@ final readonly class DremelShredder
                 $repetitionLevel - 1,
                 $depth,
                 $shouldValidate,
+                $rowIndex,
                 $rowFirstWrite,
             );
 
@@ -894,7 +934,16 @@ final readonly class DremelShredder
             $keyTarget->values[] = $this->narrowFlatValue(
                 $keyConverter !== null ? $keyConverter->toParquetType($key) : $key,
             );
-            $this->execStruct($valuePlan, $value, $definitionLevel, $repLevel, $depth, $shouldValidate, $rowFirstWrite);
+            $this->execStruct(
+                $valuePlan,
+                $value,
+                $definitionLevel,
+                $repLevel,
+                $depth,
+                $shouldValidate,
+                $rowIndex,
+                $rowFirstWrite,
+            );
             $index++;
         }
     }
@@ -909,6 +958,7 @@ final readonly class DremelShredder
         int $repetitionLevel,
         int $depth,
         bool $shouldValidate,
+        int $rowIndex,
         array &$rowFirstWrite,
     ): void {
         if ($structureData === null) {
@@ -938,6 +988,7 @@ final readonly class DremelShredder
                         $repetitionLevel,
                         $depth,
                         $shouldValidate,
+                        $rowIndex,
                         $rowFirstWrite,
                     );
 
@@ -952,6 +1003,7 @@ final readonly class DremelShredder
                         $repetitionLevel,
                         $depth,
                         $shouldValidate,
+                        $rowIndex,
                         $rowFirstWrite,
                     );
 
@@ -965,6 +1017,7 @@ final readonly class DremelShredder
                     $repetitionLevel,
                     $depth,
                     $shouldValidate,
+                    $rowIndex,
                     $rowFirstWrite,
                 );
             }
@@ -1003,6 +1056,7 @@ final readonly class DremelShredder
                         $repetitionLevel,
                         $depth,
                         $shouldValidate,
+                        $rowIndex,
                         $rowFirstWrite,
                     );
 
@@ -1017,6 +1071,7 @@ final readonly class DremelShredder
                         $repetitionLevel,
                         $depth,
                         $shouldValidate,
+                        $rowIndex,
                         $rowFirstWrite,
                     );
 
@@ -1030,6 +1085,7 @@ final readonly class DremelShredder
                     $repetitionLevel,
                     $depth,
                     $shouldValidate,
+                    $rowIndex,
                     $rowFirstWrite,
                 );
             }
@@ -1077,6 +1133,7 @@ final readonly class DremelShredder
                     $repetitionLevel,
                     $depth,
                     $shouldValidate,
+                    $rowIndex,
                     $rowFirstWrite,
                 );
 
@@ -1091,6 +1148,7 @@ final readonly class DremelShredder
                     $repetitionLevel,
                     $depth,
                     $shouldValidate,
+                    $rowIndex,
                     $rowFirstWrite,
                 );
 
@@ -1104,6 +1162,7 @@ final readonly class DremelShredder
                 $repetitionLevel,
                 $depth,
                 $shouldValidate,
+                $rowIndex,
                 $rowFirstWrite,
             );
         }

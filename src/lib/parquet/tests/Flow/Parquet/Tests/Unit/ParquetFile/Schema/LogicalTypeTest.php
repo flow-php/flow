@@ -6,7 +6,9 @@ namespace Flow\Parquet\Tests\Unit\ParquetFile\Schema;
 
 use Flow\Parquet\ParquetFile\Schema\ConvertedType;
 use Flow\Parquet\ParquetFile\Schema\LogicalType;
+use Flow\Parquet\ParquetFile\Schema\LogicalType\Integer;
 use Flow\Parquet\ParquetFile\Schema\TimeUnit;
+use Flow\Parquet\ThriftModel\IntType;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestWith;
@@ -95,5 +97,17 @@ final class LogicalTypeTest extends TestCase
     {
         static::assertTrue(LogicalType::timestamp()->timestampData()?->isAdjustedToUTC());
         static::assertSame(TimeUnit::MICROSECONDS, LogicalType::timestamp()->timestampData()?->unit());
+    }
+
+    #[TestWith([8, true])]
+    #[TestWith([64, true])]
+    #[TestWith([32, false])]
+    #[TestWith([64, false])]
+    public function test_integer_keeps_its_width_and_sign_through_thrift(int $bitWidth, bool $isSigned): void
+    {
+        $thrift = LogicalType::integer($bitWidth, $isSigned)->toThrift();
+
+        static::assertEquals(new IntType(['bitWidth' => $bitWidth, 'isSigned' => $isSigned]), $thrift->INTEGER);
+        static::assertEquals(new Integer($bitWidth, $isSigned), LogicalType::fromThrift($thrift)?->integerData());
     }
 }

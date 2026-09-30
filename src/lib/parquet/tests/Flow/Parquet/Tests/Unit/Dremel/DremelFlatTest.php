@@ -52,7 +52,7 @@ final class DremelFlatTest extends TestCase
         static::assertEquals(0, $schema->get('int32')->repetitions()->maxRepetitionLevel());
 
         $shredder = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
-        $shredResult = $shredder->shred($schema, [$row]);
+        $shredResult = $shredder->shred($schema, [$row], 0);
 
         $normalized = [];
 
@@ -118,9 +118,9 @@ final class DremelFlatTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $shredder->shred($schema, [$row]);
+            $shredder->shred($schema, [$row], 0);
         } else {
-            $shredResult = $shredder->shred($schema, [$row]);
+            $shredResult = $shredder->shred($schema, [$row], 0);
 
             $normalized = [];
 

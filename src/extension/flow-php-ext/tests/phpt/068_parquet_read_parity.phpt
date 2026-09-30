@@ -1,10 +1,12 @@
 --TEST--
-NativeParquetReader reads every lib Parquet fixture as PhpParquetEngine does, or refuses it naming the engine that reads it
+NativeParquetReader reads every lib Parquet fixture as PhpParquetEngine does, both refuse it, or it refuses naming the engine that reads it
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 --FILE--
 <?php
 require __DIR__ . '/bootstrap.php';
+
+use Flow\Parquet\Engine\Native\NativeParquetFile;
 
 use Flow\ETL\Adapter\Parquet\{NativeParquetReader, SchemaConverter};
 use Flow\ETL\Column\PhpBackend;
@@ -34,7 +36,7 @@ foreach ([...glob($fixtures . '/*.parquet'), ...glob($fixtures . '/EdgeCases/*.p
         });
         $native = outcome(static function () use ($file, $batchSize, $filesystem): array {
             $reader = new NativeParquetReader(
-                $filesystem->readFrom(path($file)),
+                new NativeParquetFile($filesystem->readFrom(path($file))),
                 (new SchemaConverter())->toFlow((new Reader(engine: new PhpParquetEngine()))->read($file)->schema()),
                 $batchSize,
                 null,
@@ -51,7 +53,9 @@ foreach ([...glob($fixtures . '/*.parquet'), ...glob($fixtures . '/EdgeCases/*.p
         $name = substr($file, strlen($fixtures) + 1) . ' ' . $batchSize;
 
         echo match (true) {
+            $php === $native && refused($php) => "{$name}: both refuse\n",
             $php === $native => "{$name}: identical\n",
+            refused($php) && refused($native) => "{$name}: both refuse\n",
             str_contains($native, 'is not supported by the flow_php Parquet reader') => "{$name}: {$native}\n",
             default => "{$name}: DIFFER\n    php:    " . substr($php, 0, 300) . "\n    native: " . substr($native, 0, 300) . "\n",
         };
@@ -60,21 +64,21 @@ foreach ([...glob($fixtures . '/*.parquet'), ...glob($fixtures . '/EdgeCases/*.p
 
 $emptylist = realpath($fixtures . '/EdgeCases/null_list.parquet');
 echo outcome(static fn() => new NativeParquetReader(
-    $filesystem->readFrom(path($emptylist)),
+    new NativeParquetFile($filesystem->readFrom(path($emptylist))),
     schema(list_schema('emptylist', type_list(type_integer()))),
     100,
     null,
     null,
 )), "\n";
 echo outcome(static fn() => new NativeParquetReader(
-    $filesystem->readFrom(path($fixtures . '/multiple_pages.parquet')),
+    new NativeParquetFile($filesystem->readFrom(path($fixtures . '/multiple_pages.parquet'))),
     schema(str_schema('int64')),
     100,
     null,
     null,
 )), "\n";
 echo outcome(static fn() => new NativeParquetReader(
-    $filesystem->readFrom(path($fixtures . '/multiple_pages.parquet')),
+    new NativeParquetFile($filesystem->readFrom(path($fixtures . '/multiple_pages.parquet'))),
     schema(str_schema('missing')),
     100,
     null,
@@ -104,10 +108,20 @@ structs.parquet 100: identical
 structs.parquet 10000: identical
 EdgeCases/datapage_v2.snappy.parquet 100: identical
 EdgeCases/datapage_v2.snappy.parquet 10000: identical
+EdgeCases/int96.parquet 100: both refuse
+EdgeCases/int96.parquet 10000: both refuse
+EdgeCases/interval.parquet 100: both refuse
+EdgeCases/interval.parquet 10000: both refuse
+EdgeCases/map_keys.parquet 100: both refuse
+EdgeCases/map_keys.parquet 10000: both refuse
 EdgeCases/nonnullable.impala.parquet 100: identical
 EdgeCases/nonnullable.impala.parquet 10000: identical
-EdgeCases/null_list.parquet 100: identical
-EdgeCases/null_list.parquet 10000: identical
-Flow\ETL\Exception\RuntimeException: Parquet column "emptylist" (Null) is not supported by the flow_php Parquet reader; read the file with from_parquet($path, engine: new \Flow\Parquet\Engine\PhpParquetEngine())
+EdgeCases/null_list.parquet 100: both refuse
+EdgeCases/null_list.parquet 10000: both refuse
+EdgeCases/uint64_overflow.parquet 100: both refuse
+EdgeCases/uint64_overflow.parquet 10000: both refuse
+EdgeCases/unsigned.parquet 100: identical
+EdgeCases/unsigned.parquet 10000: identical
+Flow\ETL\Exception\InvalidArgumentException: Parquet column "emptylist" (List(Null)) is read as List(Null), its schema type list<integer> stores List(Int64)
 Flow\ETL\Exception\InvalidArgumentException: Parquet column "int64" (Int64) is read as Int64, its schema type string stores Binary
 Flow\ETL\Exception\InvalidArgumentException: Parquet file has no column "missing"

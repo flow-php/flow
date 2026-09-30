@@ -21,7 +21,7 @@ class BloomFilterCompression
             'var' => 'UNCOMPRESSED',
             'isRequired' => false,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\Uncompressed',
+            'class' => '\Flow\Parquet\ThriftModel\Uncompressed',
         ],
     ];
 

@@ -29,8 +29,8 @@ final class CrossEngineTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!extension_loaded('arrow')) {
-            self::markTestSkipped('Arrow extension is not loaded');
+        if (!extension_loaded('flow_php') && !extension_loaded('arrow')) {
+            self::markTestSkipped('Neither flow_php nor arrow is loaded');
         }
     }
 
@@ -58,13 +58,9 @@ final class CrossEngineTest extends TestCase
 
         $writeStream = NativeLocalDestinationStream::openBlank(path($path));
         $engine->writeRows($writeStream, $schema, Compressions::SNAPPY, new Options(), $inputData);
-
-        $parquetFile = (new Reader())->read($path);
         $readStream = NativeLocalSourceStream::open(path_real($path));
         $chunks = iterator_to_array(
-            $engine->readColumns(
-                $readStream,
-                $parquetFile->schema(),
+            $engine->openForRead($readStream)->readColumns(
                 ['id', 'label', 'big_number'],
                 batchSize: 2,
                 limit: null,
@@ -156,11 +152,8 @@ final class CrossEngineTest extends TestCase
         (new Writer(engine: new PhpParquetEngine()))->write($path, $schema, $inputData);
 
         $engine = new ArrowParquetEngine();
-        $parquetFile = (new Reader())->read($path);
         $chunks = iterator_to_array(
-            $engine->readColumns(
-                NativeLocalSourceStream::open(path_real($path)),
-                $parquetFile->schema(),
+            $engine->openForRead(NativeLocalSourceStream::open(path_real($path)))->readColumns(
                 ['id', 'name', 'value'],
                 batchSize: 2,
                 limit: null,

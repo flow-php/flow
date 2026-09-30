@@ -6,6 +6,8 @@ NativeParquetReader reads offset/limit windows of an 8-row-group file, and refus
 <?php
 require __DIR__ . '/bootstrap.php';
 
+use Flow\Parquet\Engine\Native\NativeParquetFile;
+
 use Flow\ETL\Adapter\Parquet\{NativeParquetReader, NativeParquetWriter, SchemaConverter};
 use Flow\Parquet\Engine\Arrow\{OptionsConverter, SchemaConverter as ArrowSchemaConverter};
 use Flow\Parquet\{Option, Options, Reader};
@@ -34,7 +36,7 @@ echo 'row groups: ', implode(',', array_map(
 )), "\n";
 
 foreach ([[0, 10], [5399, 3], [20000, 15000], [65000, 100], [65046, 1], [65536, 10], [65530, null]] as [$offset, $limit]) {
-    $reader = new NativeParquetReader($filesystem->readFrom(path('memory://groups.parquet')), $schema, 1000, $offset, $limit);
+    $reader = new NativeParquetReader(new NativeParquetFile($filesystem->readFrom(path('memory://groups.parquet'))), $schema, 1000, $offset, $limit);
     $ids = [];
 
     while (($batch = $reader->next()) !== null) {
@@ -46,7 +48,7 @@ foreach ([[0, 10], [5399, 3], [20000, 15000], [65000, 100], [65046, 1], [65536, 
 }
 
 foreach ([[0, null, null], [-1, null, null], [10, -1, null], [10, null, -1]] as [$batchSize, $offset, $limit]) {
-    echo outcome(static fn() => new NativeParquetReader($filesystem->readFrom(path('memory://groups.parquet')), $schema, $batchSize, $offset, $limit)), "\n";
+    echo outcome(static fn() => new NativeParquetReader(new NativeParquetFile($filesystem->readFrom(path('memory://groups.parquet'))), $schema, $batchSize, $offset, $limit)), "\n";
 }
 ?>
 --EXPECT--

@@ -20,8 +20,8 @@ final class EngineParityTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!extension_loaded('arrow')) {
-            self::markTestSkipped('Arrow extension is not loaded');
+        if (!extension_loaded('flow_php') && !extension_loaded('arrow')) {
+            self::markTestSkipped('Neither flow_php nor arrow is loaded');
         }
     }
 

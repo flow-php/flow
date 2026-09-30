@@ -265,6 +265,14 @@ function outcome(callable $fn): string
     }
 }
 
+/**
+ * Whether an outcome() is a refusal: the class and message of what the callable threw.
+ */
+function refused(string $outcome): bool
+{
+    return (bool) preg_match('/^[A-Za-z\\\\]+(Exception|Error|Overflow): /', $outcome);
+}
+
 function assert_same_outcome(callable $php, callable $native): void
 {
     $expected = outcome($php);

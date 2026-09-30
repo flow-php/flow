@@ -27,7 +27,7 @@ final class EngineParquetOpenerTest extends FlowTestCase
     {
         $filesystem = memory_filesystem();
         $schema = schema(int_schema('id'));
-        $sink = (new EngineParquetOpener(new PhpParquetEngine()))->sink(
+        $sink = (new EngineParquetOpener(new PhpParquetEngine(), Options::default()))->sink(
             $filesystem->writeTo(path('memory://out.parquet')),
             (new SchemaConverter())->toParquet($schema),
             Compressions::SNAPPY,
@@ -49,7 +49,7 @@ final class EngineParquetOpenerTest extends FlowTestCase
 
         static::assertEquals(
             new EngineParquetOpenSource($file->file),
-            (new EngineParquetOpener(new PhpParquetEngine()))->source($file),
+            (new EngineParquetOpener(new PhpParquetEngine(), Options::default()))->source($file),
         );
     }
 }

@@ -24,8 +24,8 @@ final class ArrowParquetFileWriterTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!extension_loaded('arrow')) {
-            static::markTestSkipped('arrow extension is not loaded');
+        if (!extension_loaded('arrow') || extension_loaded('flow_php')) {
+            static::markTestSkipped('ArrowParquetEngine writes through arrow-ext only without flow_php');
         }
     }
 

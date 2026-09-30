@@ -38,10 +38,8 @@ final class ReadDDLCommand extends Command
 
             return Command::FAILURE;
         }
-        $reader = new Reader();
-        $parquetFile = $reader->read($filePath);
-
         try {
+            $parquetFile = (new Reader())->read($filePath);
             $parquetFile->metadata();
         } catch (InvalidArgumentException) {
             $style->error(sprintf('File "%s" is not a valid parquet file', $filePath));

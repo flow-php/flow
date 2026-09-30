@@ -23,13 +23,13 @@ class PageEncodingStats
             'var' => 'page_type',
             'isRequired' => true,
             'type' => TType::I32,
-            'class' => '\Flow\Parquet\Thrift\PageType',
+            'class' => '\Flow\Parquet\ThriftModel\PageType',
         ],
         2 => [
             'var' => 'encoding',
             'isRequired' => true,
             'type' => TType::I32,
-            'class' => '\Flow\Parquet\Thrift\Encoding',
+            'class' => '\Flow\Parquet\ThriftModel\Encoding',
         ],
         3 => [
             'var' => 'count',

@@ -14,13 +14,14 @@ use crate::column::NativeColumn;
 use crate::ctx::{call_method, call_static, ht_for_each, ht_get, ht_insert, null_zval, zval_long, zval_str};
 use crate::exception::ext_exception;
 use crate::parquet::error::Error;
+use crate::parquet::library::NativeParquetFile;
 use crate::parquet::options;
 use crate::parquet::read::{ParquetReader, ReadPlan};
 use crate::parquet::sink::PhpSink;
-use crate::parquet::source::{PhpSource, PhpStream};
+use crate::parquet::source::PhpStream;
 use crate::parquet::write::ParquetWriter;
 use crate::plan::{type_plan, TypePlan};
-use crate::render::{invalid_argument, parquet_exception, Side};
+use crate::render::{invalid_argument, parquet_exception, Side, Surface};
 
 fn rows(value: Option<i64>, name: &str) -> PhpResult<Option<u64>> {
     value
@@ -62,8 +63,9 @@ pub struct NativeParquetReader {
 
 #[php_impl]
 impl NativeParquetReader {
+    /// `$file`'s footer plans the read; no footer is read here.
     pub fn __construct(
-        stream: &Zval,
+        file: &NativeParquetFile,
         schema: &Zval,
         batch_size: i64,
         offset: Option<i64>,
@@ -74,11 +76,10 @@ impl NativeParquetReader {
             .filter(|size| *size > 0)
             .ok_or_else(|| invalid_argument("flow_php Parquet batch size must be greater than 0".to_string()))?;
         let (offset, limit) = (rows(offset, "offset")?.unwrap_or(0), rows(limit, "limit")?);
-        let stream = Arc::new(PhpStream::new(stream)?);
-        let refused = |error| parquet_exception(error, &stream, Side::Read);
-        let source = PhpSource::new(Arc::clone(&stream)).map_err(refused)?;
-        let meta = source.metadata().map_err(refused)?;
-        let plan = ReadPlan::new(&meta, offset, limit);
+        let (stream, size, meta) = file.read()?;
+        let stream = Arc::clone(stream);
+        let refused = |error| parquet_exception(error, &stream, Side::Read, Surface::Etl);
+        let plan = ReadPlan::new(meta, offset, limit);
         let mut columns = Vec::new();
         let mut names = Vec::new();
 
@@ -87,7 +88,7 @@ impl NativeParquetReader {
             columns.push((name, type_plan(&call_method(&definition, "type", &mut [])?)?));
         }
 
-        let reader = ParquetReader::open(source, meta, &names, plan, batch_size).map_err(refused)?;
+        let reader = ParquetReader::open(Arc::clone(&stream), size, meta, &names, plan, batch_size).map_err(refused)?;
 
         for ((field, canonical), (name, plan)) in reader.fields().iter().zip(reader.types()).zip(&columns) {
             let stored = data_type(&plan.kind);
@@ -124,7 +125,7 @@ impl NativeParquetReader {
 
                 return Ok(null_zval());
             }
-            Some(batch) => batch.map_err(|error| parquet_exception(error, &self.stream, Side::Read))?,
+            Some(batch) => batch.map_err(|error| parquet_exception(error, &self.stream, Side::Read, Surface::Etl))?,
         };
 
         let mut columns = ZendHashTable::with_capacity(self.columns.len() as u32);
@@ -168,7 +169,7 @@ impl NativeParquetWriter {
     /// `$schema`: `Flow\Parquet\Engine\Arrow\SchemaConverter::toExtension()`, `$options`: `OptionsConverter::toExtension()`.
     pub fn __construct(stream: &Zval, schema: &ZendHashTable, compression: String, options: &ZendHashTable) -> PhpResult<Self> {
         let stream = Arc::new(PhpStream::new(stream)?);
-        let refused = |error| parquet_exception(error, &stream, Side::Write);
+        let refused = |error| parquet_exception(error, &stream, Side::Write, Surface::Etl);
         let writer = ParquetWriter::open(
             PhpSink::new(Arc::clone(&stream)),
             options::schema(schema).map_err(refused)?,
@@ -220,7 +221,7 @@ impl NativeParquetWriter {
 
         writer
             .write(count, &arrays)
-            .map_err(|error| parquet_exception(error, &self.stream, Side::Write))
+            .map_err(|error| parquet_exception(error, &self.stream, Side::Write, Surface::Etl))
     }
 
     /// The footer, then the stream closed - as the lib's Parquet writers close theirs.
@@ -229,7 +230,7 @@ impl NativeParquetWriter {
             .take()
             .ok_or_else(|| ext_exception("flow_php Parquet writer is already closed"))?
             .close()
-            .map_err(|error| parquet_exception(error, &self.stream, Side::Write))?;
+            .map_err(|error| parquet_exception(error, &self.stream, Side::Write, Surface::Etl))?;
 
         match self.stream.call("close", &mut []) {
             Some(_) => Ok(()),
@@ -237,6 +238,7 @@ impl NativeParquetWriter {
                 Error::Stream("close() threw".to_string()),
                 &self.stream,
                 Side::Write,
+                Surface::Etl,
             )),
         }
     }

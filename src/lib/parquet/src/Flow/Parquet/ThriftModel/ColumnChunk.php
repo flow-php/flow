@@ -31,7 +31,7 @@ class ColumnChunk
             'var' => 'meta_data',
             'isRequired' => false,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\ColumnMetaData',
+            'class' => '\Flow\Parquet\ThriftModel\ColumnMetaData',
         ],
         4 => [
             'var' => 'offset_index_offset',
@@ -57,7 +57,7 @@ class ColumnChunk
             'var' => 'crypto_metadata',
             'isRequired' => false,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\ColumnCryptoMetaData',
+            'class' => '\Flow\Parquet\ThriftModel\ColumnCryptoMetaData',
         ],
         9 => [
             'var' => 'encrypted_column_metadata',

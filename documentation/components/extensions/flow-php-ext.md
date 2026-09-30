@@ -84,15 +84,16 @@ df()
     ->run();
 
 df()
-    ->read(from_parquet(__DIR__ . '/orders.parquet', engine: new PhpParquetEngine())) // an explicit engine opts out
+    ->read(from_parquet(__DIR__ . '/orders.parquet', engine: new PhpParquetEngine())) // PhpParquetEngine opts out
     ->write(to_parquet(__DIR__ . '/copy.parquet', engine: new PhpParquetEngine()))
     ->run();
 ```
 
-A column type the extension has no cast for is refused before the first batch, naming the engine that reads it:
+`engine: new ArrowParquetEngine()` and `new AdaptiveParquetEngine()` read and write through the extension too. A column
+type the extension has no cast for is refused before the first batch, naming the engine that reads it:
 
 ```
-Parquet column "emptylist" (Null) is not supported by the flow_php Parquet reader; read the file with
+Parquet column "iv" (Interval(DayTime)) is not supported by the flow_php Parquet reader; read the file with
 from_parquet($path, engine: new \Flow\Parquet\Engine\PhpParquetEngine())
 ```
 
@@ -102,3 +103,23 @@ A string that is not valid UTF-8 is refused on write, naming the column and its 
 
 The extension also registers `Flow\ETL\Adapter\Parquet\{NativeParquetReader, NativeParquetWriter}`, the reader and
 writer `from_parquet()` and `to_parquet()` use.
+
+### The parquet library
+
+`Flow\Parquet\Reader::arrow()` / `Writer::arrow()` (`ArrowParquetEngine`) read and write through the extension: the
+values are the ones `Reader::php()` returns, and writes accept and refuse what `Writer::php()` does. The footer is read
+once and decoded in Rust; `schema()`, `rowsNumber()` and `totalByteSize()` never build the PHP metadata graph.
+
+```php
+<?php
+
+use Flow\Parquet\Reader;
+
+$file = Reader::arrow()->read(__DIR__ . '/orders.parquet');
+
+$file->reader()->rowsNumber();                            // from the footer, no PHP metadata graph
+$file->values(['address.city'], limit: 10, offset: 5_000); // a struct path; only the row groups from row 5 000
+```
+
+The classes behind it are `Flow\Parquet\Engine\Native\{NativeParquetFile, NativeParquetColumnsReader,
+NativeParquetRowsWriter}`.

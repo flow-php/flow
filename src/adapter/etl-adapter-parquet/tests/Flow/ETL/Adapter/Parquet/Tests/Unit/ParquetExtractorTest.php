@@ -22,6 +22,7 @@ use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
+use function gc_collect_cycles;
 
 final class ParquetExtractorTest extends FlowTestCase
 {
@@ -95,6 +96,11 @@ final class ParquetExtractorTest extends FlowTestCase
 
         static::assertSame($extractor->statistics(), $extractor->statistics());
         static::assertSame(1, $filesystem->readFromCalls);
+        static::assertSame(0, $filesystem->closedStreams());
+
+        unset($extractor);
+        gc_collect_cycles();
+
         static::assertSame(1, $filesystem->closedStreams());
     }
 

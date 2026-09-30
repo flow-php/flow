@@ -7,7 +7,7 @@ namespace Flow\ETL\Adapter\Parquet;
 use Flow\ETL\Column\Backend;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
-use Flow\Filesystem\SourceStream;
+use Flow\Parquet\Engine\Native\NativeParquetFile;
 use Generator;
 
 final class NativeParquetOpenSource implements ParquetOpenSource
@@ -15,13 +15,13 @@ final class NativeParquetOpenSource implements ParquetOpenSource
     private ?NativeParquetReader $reader = null;
 
     public function __construct(
-        private readonly SourceStream $stream,
+        private readonly NativeParquetFile $file,
     ) {}
 
     public function batches(Schema $schema, int $batchSize, ?int $offset, ?int $limit, Backend $backend): Generator
     {
         $this->reader?->close();
-        $reader = $this->reader = new NativeParquetReader($this->stream, $schema, $batchSize, $offset, $limit);
+        $reader = $this->reader = new NativeParquetReader($this->file, $schema, $batchSize, $offset, $limit);
 
         while (($batch = $reader->next()) !== null) {
             $columns = [];

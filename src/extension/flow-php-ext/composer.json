@@ -11,6 +11,7 @@
         "psr-4": {
             "Flow\\ETL\\Adapter\\CSV\\": "php/Flow/ETL/Adapter/CSV/",
             "Flow\\ETL\\Adapter\\Parquet\\": "php/Flow/ETL/Adapter/Parquet/",
+            "Flow\\Parquet\\Engine\\Native\\": "php/Flow/Parquet/Engine/Native/",
             "Flow\\Floe\\": "php/Flow/Floe/"
         }
     },

@@ -24,7 +24,7 @@ class BloomFilterAlgorithm
             'var' => 'BLOCK',
             'isRequired' => false,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\SplitBlockAlgorithm',
+            'class' => '\Flow\Parquet\ThriftModel\SplitBlockAlgorithm',
         ],
     ];
 

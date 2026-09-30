@@ -24,7 +24,7 @@ class RowGroup
             'etype' => TType::STRUCT,
             'elem' => [
                 'type' => TType::STRUCT,
-                'class' => '\Flow\Parquet\Thrift\ColumnChunk',
+                'class' => '\Flow\Parquet\ThriftModel\ColumnChunk',
             ],
         ],
         2 => [
@@ -44,7 +44,7 @@ class RowGroup
             'etype' => TType::STRUCT,
             'elem' => [
                 'type' => TType::STRUCT,
-                'class' => '\Flow\Parquet\Thrift\SortingColumn',
+                'class' => '\Flow\Parquet\ThriftModel\SortingColumn',
             ],
         ],
         5 => [

@@ -10,7 +10,9 @@ use Flow\ETL\Adapter\Parquet\SchemaConverter;
 use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetFilesContext;
 use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetSourceFileContext;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
+use Flow\Filesystem\Tests\Double\FailingReadSourceStream;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
@@ -28,7 +30,7 @@ final class NativeParquetOpenerTest extends FlowTestCase
     {
         $filesystem = memory_filesystem();
         $schema = schema(int_schema('id'));
-        $sink = (new NativeParquetOpener())->sink(
+        $sink = (new NativeParquetOpener(Options::default()))->sink(
             $filesystem->writeTo(path('memory://out.parquet')),
             (new SchemaConverter())->toParquet($schema),
             Compressions::ZSTD,
@@ -44,10 +46,24 @@ final class NativeParquetOpenerTest extends FlowTestCase
         );
     }
 
-    public function test_source_reads_the_stream_the_file_holds(): void
+    public function test_source_reads_the_native_file_the_file_was_opened_with(): void
     {
-        $file = ParquetSourceFileContext::over(new NativeLocalFilesystem());
+        $opener = new NativeParquetOpener(Options::default());
+        $file = ParquetSourceFileContext::over(new NativeLocalFilesystem(), opener: $opener);
 
-        static::assertEquals(new NativeParquetOpenSource($file->stream), (new NativeParquetOpener())->source($file));
+        static::assertEquals(new NativeParquetOpenSource($file->file->reader()->file()), $opener->source($file));
+    }
+
+    public function test_an_exception_the_stream_throws_while_opening_surfaces_as_itself(): void
+    {
+        $filesystem = memory_filesystem();
+        ParquetFilesContext::rowGroups($filesystem, 'memory://groups.parquet', 10, 4);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Reading "memory://groups.parquet" failed');
+
+        (new NativeParquetOpener(Options::default()))->file(new FailingReadSourceStream($filesystem->readFrom(path(
+            'memory://groups.parquet',
+        ))));
     }
 }

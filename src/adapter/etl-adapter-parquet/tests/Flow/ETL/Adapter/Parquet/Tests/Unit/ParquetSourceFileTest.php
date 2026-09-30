@@ -12,6 +12,7 @@ use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Parquet\Engine\PhpParquetEngine;
+use Flow\Parquet\Options;
 
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
@@ -34,7 +35,7 @@ final class ParquetSourceFileTest extends FlowTestCase
 
         static::assertEquals(
             new EngineParquetOpenSource($file->file),
-            $file->open(new EngineParquetOpener(new PhpParquetEngine())),
+            $file->open(new EngineParquetOpener(new PhpParquetEngine(), Options::default())),
         );
     }
 

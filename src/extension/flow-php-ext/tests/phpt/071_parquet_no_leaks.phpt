@@ -6,6 +6,8 @@ NativeParquetReader and NativeParquetWriter leak neither PHP memory nor native a
 <?php
 require __DIR__ . '/bootstrap.php';
 
+use Flow\Parquet\Engine\Native\NativeParquetFile;
+
 use Flow\ETL\Adapter\Parquet\{NativeParquetReader, NativeParquetWriter, SchemaConverter};
 use Flow\ETL\Column\DefaultBackend;
 use Flow\Parquet\Engine\Arrow\{OptionsConverter, SchemaConverter as ArrowSchemaConverter};
@@ -30,7 +32,7 @@ $cycle = static function () use ($schema, $values, $extension, $options, $mismat
     $writer->write(php_rows($schema, $values));
     $writer->close();
 
-    $reader = new NativeParquetReader($filesystem->readFrom(path('memory://leaks.parquet')), $schema, 30, 10, 150);
+    $reader = new NativeParquetReader(new NativeParquetFile($filesystem->readFrom(path('memory://leaks.parquet'))), $schema, 30, 10, 150);
 
     while ($reader->next() !== null) {
     }
@@ -44,7 +46,7 @@ $cycle = static function () use ($schema, $values, $extension, $options, $mismat
     }
 
     try {
-        new NativeParquetReader($filesystem->readFrom(path('memory://leaks.parquet')), $mismatched, 30, null, null);
+        new NativeParquetReader(new NativeParquetFile($filesystem->readFrom(path('memory://leaks.parquet'))), $mismatched, 30, null, null);
         throw new LogicException('a mismatched schema was accepted');
     } catch (Flow\ETL\Exception\InvalidArgumentException) {
     }

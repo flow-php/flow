@@ -10,6 +10,7 @@ use Flow\Parquet\ParquetFile\Schema\Column;
 use Flow\Parquet\ParquetFile\Schema\ConvertedType;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\LogicalType;
+use Flow\Parquet\ParquetFile\Schema\LogicalType\Integer;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\ParquetFile\Schema\Repetition;
@@ -157,14 +158,15 @@ final class SchemaConverter
                 ConvertedType::JSON => 'JSON',
                 ConvertedType::ENUM => 'STRING',
                 ConvertedType::BSON => 'BINARY',
-                ConvertedType::INT_8 => 'INT8',
-                ConvertedType::INT_16 => 'INT16',
-                ConvertedType::INT_32 => 'INT32',
-                ConvertedType::INT_64 => 'INT64',
-                ConvertedType::UINT_8 => 'UINT8',
-                ConvertedType::UINT_16 => 'UINT16',
-                ConvertedType::UINT_32 => 'UINT32',
-                ConvertedType::UINT_64 => 'UINT64',
+                ConvertedType::INT_8,
+                ConvertedType::INT_16,
+                ConvertedType::INT_32,
+                ConvertedType::INT_64,
+                ConvertedType::UINT_8,
+                ConvertedType::UINT_16,
+                ConvertedType::UINT_32,
+                ConvertedType::UINT_64,
+                    => self::resolveIntegerType($column),
                 default => self::resolveFromPhysicalType($column),
             };
         }
@@ -188,20 +190,12 @@ final class SchemaConverter
 
     private static function resolveIntegerType(FlatColumn $column): string
     {
-        return match ($column->convertedType()) {
-            ConvertedType::INT_8 => 'INT8',
-            ConvertedType::INT_16 => 'INT16',
-            ConvertedType::INT_32 => 'INT32',
-            ConvertedType::INT_64 => 'INT64',
-            ConvertedType::UINT_8 => 'UINT8',
-            ConvertedType::UINT_16 => 'UINT16',
-            ConvertedType::UINT_32 => 'UINT32',
-            ConvertedType::UINT_64 => 'UINT64',
-            default => match ($column->type()) {
-                PhysicalType::INT32 => 'INT32',
-                PhysicalType::INT64 => 'INT64',
-                default => 'INT64',
-            },
-        };
+        $integer = Integer::forColumn($column);
+
+        if ($integer === null) {
+            return self::resolveFromPhysicalType($column);
+        }
+
+        return ($integer->isSigned() ? 'INT' : 'UINT') . $integer->bitWidth();
     }
 }

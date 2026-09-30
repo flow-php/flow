@@ -14,19 +14,13 @@ For detailed installation instructions, see the [installation page](/documentati
 
 ## Engine System
 
-The parquet library supports a pluggable engine system with two implementations:
-
-- **PHP Engine** (`PhpParquetEngine`) - Pure PHP implementation. Works everywhere with no extra dependencies beyond
-  optional compression extensions.
-- **Arrow Engine** (`ArrowParquetEngine`) - Uses
-  the [arrow PHP extension](/documentation/components/extensions/arrow-ext.md) for native Rust-powered performance. All
-  compression codecs are built into the extension.
-- **Adaptive Engine** (`AdaptiveParquetEngine`) - Default. Automatically selects Arrow if the `arrow` extension is
-  loaded, otherwise falls back to PHP.
-
-### Engine Selection
-
-By default, `new Reader()` and `new Writer()` use the adaptive engine:
+- **PHP Engine** (`PhpParquetEngine`) - pure PHP, no extra dependencies beyond optional compression extensions.
+- **Arrow Engine** (`ArrowParquetEngine`) - native Rust through the
+  [flow_php extension](/documentation/components/extensions/flow-php-ext.md); every compression codec is built in.
+  Without `flow_php` it falls back to the deprecated [arrow extension](/documentation/components/extensions/arrow-ext.md)
+  and raises `E_USER_DEPRECATED`.
+- **Adaptive Engine** (`AdaptiveParquetEngine`) - the default: `ArrowParquetEngine` when `flow_php` or `arrow` is
+  loaded, `PhpParquetEngine` otherwise.
 
 ```php
 <?php
@@ -34,41 +28,19 @@ By default, `new Reader()` and `new Writer()` use the adaptive engine:
 use Flow\Parquet\Reader;
 use Flow\Parquet\Writer;
 
-// Adaptive engine: uses Arrow if ext-arrow is loaded, otherwise PHP
-$reader = new Reader();
+$reader = new Reader();   // adaptive
 $writer = new Writer();
-```
 
-To explicitly choose an engine:
-
-```php
-<?php
-
-use Flow\Parquet\Reader;
-use Flow\Parquet\Writer;
-
-// Force Arrow engine (throws if ext-arrow is not loaded)
-$reader = Reader::arrow();
+$reader = Reader::arrow(); // flow_php (arrow-ext, deprecated, without it; throws without both)
 $writer = Writer::arrow();
 
-// Force PHP engine
 $reader = Reader::php();
 $writer = Writer::php();
 ```
 
-### Cross-Engine Compatibility
-
-Files written by one engine can be read by the other. Both produce standard Apache Parquet files.
-
-### When to Use Each Engine
-
-| Consideration       | PHP Engine                        | Arrow Engine                                                            |
-|---------------------|-----------------------------------|-------------------------------------------------------------------------|
-| **Setup**           | No extra requirements             | Requires [ext-arrow](/documentation/components/extensions/arrow-ext.md) |
-| **Performance**     | Good for small/medium datasets    | Significantly faster for large datasets                                 |
-| **Compression**     | Requires PHP extensions per codec | All codecs built-in                                                     |
-| **Nested types**    | Full Dremel support               | Full support via Arrow                                                  |
-| **Recommended for** | Environments without Rust         | Production workloads                                                    |
+Both engines read the same values and accept and refuse the same writes. The Arrow engine refuses, before the first
+batch and naming `\Flow\Parquet\Reader::php()`, what it cannot read: `INTERVAL`, dictionary and view types, `LZO`, a
+path into a `LIST` / `MAP`, and `INT96` under `Option::INT_96_AS_DATETIME = false`.
 
 ## What is Parquet
 
@@ -384,8 +356,8 @@ You will need to play a bit with those values to find the best one for your use 
 ## Compressions
 
 > [!NOTE]
-> When using the Arrow engine, all compression codecs are built into the native extension. The PHP compression
-> extensions listed below are only required when using the PHP engine.
+> With the Arrow engine every compression codec is built into the extension. The PHP compression extensions listed below
+> are only required by the PHP engine.
 
 Parquet supports several compression algorithms.
 

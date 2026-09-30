@@ -70,6 +70,7 @@ final class FlatColumnPages
         return (new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default())))->shred(
             $schema,
             $rows,
+            0,
         );
     }
 

@@ -26,6 +26,11 @@ final class RowGroupBuilder
 
     private int $rowsCount = 0;
 
+    /**
+     * Rows of the row groups flushed before this one: the writer's index of this group's first row.
+     */
+    private int $flushedRows = 0;
+
     public function __construct(
         private readonly Schema $schema,
         private readonly Compressions $compression,
@@ -62,7 +67,7 @@ final class RowGroupBuilder
         $this->flushBuffer();
 
         foreach (array_chunk($rows, $interval) as $chunk) {
-            $flatColumnsData = $this->shredder->shred($this->schema, $chunk);
+            $flatColumnsData = $this->shredder->shred($this->schema, $chunk, $this->flushedRows + $this->rowsCount);
 
             foreach ($flatColumnsData as $flatPath => $columnValues) {
                 $this->columnChunkBuilders->addColumnByFlatPath($flatPath, $columnValues);
@@ -84,6 +89,7 @@ final class RowGroupBuilder
         $offset = $fileOffset;
         $buffer = '';
         $chunks = [];
+        $this->flushedRows += $rowsCount;
         $this->rowsCount = 0;
 
         foreach ($this->columnChunkBuilders->flush($offset) as $container) {
@@ -115,7 +121,11 @@ final class RowGroupBuilder
             return;
         }
 
-        $flatColumnsData = $this->shredder->shred($this->schema, $this->rowBuffer);
+        $flatColumnsData = $this->shredder->shred(
+            $this->schema,
+            $this->rowBuffer,
+            $this->flushedRows + $this->rowsCount - count($this->rowBuffer),
+        );
 
         foreach ($flatColumnsData as $flatPath => $columnValues) {
             $this->columnChunkBuilders->addColumnByFlatPath($flatPath, $columnValues);

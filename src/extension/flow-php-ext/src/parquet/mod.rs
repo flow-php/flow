@@ -2,8 +2,12 @@
 //! below `etl`, the `Flow\ETL\Adapter\Parquet` surface.
 
 pub mod canonical;
+pub mod cells;
 pub mod error;
 pub mod etl;
+pub mod fetch;
+pub mod footer;
+pub mod library;
 pub mod options;
 pub mod read;
 pub mod sink;

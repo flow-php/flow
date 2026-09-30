@@ -32,7 +32,7 @@ class FileMetaData
             'etype' => TType::STRUCT,
             'elem' => [
                 'type' => TType::STRUCT,
-                'class' => '\Flow\Parquet\Thrift\SchemaElement',
+                'class' => '\Flow\Parquet\ThriftModel\SchemaElement',
             ],
         ],
         3 => [
@@ -47,7 +47,7 @@ class FileMetaData
             'etype' => TType::STRUCT,
             'elem' => [
                 'type' => TType::STRUCT,
-                'class' => '\Flow\Parquet\Thrift\RowGroup',
+                'class' => '\Flow\Parquet\ThriftModel\RowGroup',
             ],
         ],
         5 => [
@@ -57,7 +57,7 @@ class FileMetaData
             'etype' => TType::STRUCT,
             'elem' => [
                 'type' => TType::STRUCT,
-                'class' => '\Flow\Parquet\Thrift\KeyValue',
+                'class' => '\Flow\Parquet\ThriftModel\KeyValue',
             ],
         ],
         6 => [
@@ -72,14 +72,14 @@ class FileMetaData
             'etype' => TType::STRUCT,
             'elem' => [
                 'type' => TType::STRUCT,
-                'class' => '\Flow\Parquet\Thrift\ColumnOrder',
+                'class' => '\Flow\Parquet\ThriftModel\ColumnOrder',
             ],
         ],
         8 => [
             'var' => 'encryption_algorithm',
             'isRequired' => false,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\EncryptionAlgorithm',
+            'class' => '\Flow\Parquet\ThriftModel\EncryptionAlgorithm',
         ],
         9 => [
             'var' => 'footer_signing_key_metadata',

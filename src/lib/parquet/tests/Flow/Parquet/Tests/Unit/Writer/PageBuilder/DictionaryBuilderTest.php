@@ -320,7 +320,7 @@ final class DictionaryBuilderTest extends TestCase
 
     public function test_unsupported_byte_array_logical_type_throws_exception(): void
     {
-        $column = new FlatColumn('test_column', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::integer());
+        $column = new FlatColumn('test_column', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::integer(32, true));
         $data = new WriteFlatColumnValues($column, values: [1, 2, 3]);
 
         $this->expectException(RuntimeException::class);

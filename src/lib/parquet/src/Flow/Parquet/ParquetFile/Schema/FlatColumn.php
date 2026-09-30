@@ -110,7 +110,7 @@ final class FlatColumn implements Column
 
     public static function enum(string $string, Repetition $repetition = Repetition::OPTIONAL): self
     {
-        return new self($string, PhysicalType::BYTE_ARRAY, ConvertedType::ENUM, LogicalType::string(), $repetition);
+        return new self($string, PhysicalType::BYTE_ARRAY, ConvertedType::ENUM, LogicalType::enum(), $repetition);
     }
 
     public static function fixedSizeByteArray(

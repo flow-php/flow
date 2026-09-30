@@ -13,7 +13,6 @@ use Flow\Parquet\ParquetFile\Schema\MapKey;
 use Flow\Parquet\ParquetFile\Schema\MapValue;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\ParquetFile\Schema\Repetition;
-use Flow\Parquet\Reader;
 use Flow\Parquet\Tests\Context\TestParquetFile;
 use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\Group;
@@ -30,8 +29,8 @@ final class ArrowParquetEngineReadTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!extension_loaded('arrow')) {
-            self::markTestSkipped('Arrow extension is not loaded');
+        if (!extension_loaded('flow_php') && !extension_loaded('arrow')) {
+            self::markTestSkipped('Neither flow_php nor arrow is loaded');
         }
     }
 
@@ -60,11 +59,8 @@ final class ArrowParquetEngineReadTest extends TestCase
         (new Writer())->write($path, $schema, $inputData);
 
         $engine = new ArrowParquetEngine();
-        $parquetFile = (new Reader())->read($path);
         $chunks = iterator_to_array(
-            $engine->readColumns(
-                NativeLocalSourceStream::open(path_real($path)),
-                $parquetFile->schema(),
+            $engine->openForRead(NativeLocalSourceStream::open(path_real($path)))->readColumns(
                 ['id', 'name', 'active', 'score'],
                 batchSize: 2,
                 limit: null,
@@ -99,11 +95,8 @@ final class ArrowParquetEngineReadTest extends TestCase
         (new Writer())->write($path, $schema, $inputData);
 
         $engine = new ArrowParquetEngine();
-        $parquetFile = (new Reader())->read($path);
         $chunks = iterator_to_array(
-            $engine->readColumns(
-                NativeLocalSourceStream::open(path_real($path)),
-                $parquetFile->schema(),
+            $engine->openForRead(NativeLocalSourceStream::open(path_real($path)))->readColumns(
                 ['id', 'tags'],
                 batchSize: 2,
                 limit: null,
@@ -132,11 +125,8 @@ final class ArrowParquetEngineReadTest extends TestCase
         (new Writer())->write($path, $schema, $inputData);
 
         $engine = new ArrowParquetEngine();
-        $parquetFile = (new Reader())->read($path);
         $chunks = iterator_to_array(
-            $engine->readColumns(
-                NativeLocalSourceStream::open(path_real($path)),
-                $parquetFile->schema(),
+            $engine->openForRead(NativeLocalSourceStream::open(path_real($path)))->readColumns(
                 ['id', 'metadata'],
                 batchSize: 2,
                 limit: null,
@@ -171,11 +161,8 @@ final class ArrowParquetEngineReadTest extends TestCase
         (new Writer())->write($path, $schema, $inputData);
 
         $engine = new ArrowParquetEngine();
-        $parquetFile = (new Reader())->read($path);
         $chunks = iterator_to_array(
-            $engine->readColumns(
-                NativeLocalSourceStream::open(path_real($path)),
-                $parquetFile->schema(),
+            $engine->openForRead(NativeLocalSourceStream::open(path_real($path)))->readColumns(
                 ['id', 'address'],
                 batchSize: 2,
                 limit: null,
@@ -208,11 +195,8 @@ final class ArrowParquetEngineReadTest extends TestCase
         ]]);
 
         $engine = new ArrowParquetEngine();
-        $parquetFile = (new Reader())->read($path);
         $chunks = iterator_to_array(
-            $engine->readColumns(
-                NativeLocalSourceStream::open(path_real($path)),
-                $parquetFile->schema(),
+            $engine->openForRead(NativeLocalSourceStream::open(path_real($path)))->readColumns(
                 ['top_uuid', 'body', 'uuid_list'],
                 batchSize: 2,
                 limit: null,
@@ -249,11 +233,8 @@ final class ArrowParquetEngineReadTest extends TestCase
         (new Writer())->write($path, $schema, $inputData);
 
         $engine = new ArrowParquetEngine();
-        $parquetFile = (new Reader())->read($path);
         $chunks = iterator_to_array(
-            $engine->readColumns(
-                NativeLocalSourceStream::open(path_real($path)),
-                $parquetFile->schema(),
+            $engine->openForRead(NativeLocalSourceStream::open(path_real($path)))->readColumns(
                 ['id', 'name'],
                 batchSize: 2,
                 limit: null,
@@ -276,11 +257,8 @@ final class ArrowParquetEngineReadTest extends TestCase
         (new Writer())->write($path, $schema, $inputData);
 
         $engine = new ArrowParquetEngine();
-        $parquetFile = (new Reader())->read($path);
         $chunks = iterator_to_array(
-            $engine->readColumns(
-                NativeLocalSourceStream::open(path_real($path)),
-                $parquetFile->schema(),
+            $engine->openForRead(NativeLocalSourceStream::open(path_real($path)))->readColumns(
                 ['id'],
                 batchSize: 2,
                 limit: 5,
@@ -303,11 +281,8 @@ final class ArrowParquetEngineReadTest extends TestCase
         (new Writer())->write($path, $schema, $inputData);
 
         $engine = new ArrowParquetEngine();
-        $parquetFile = (new Reader())->read($path);
         $chunks = iterator_to_array(
-            $engine->readColumns(
-                NativeLocalSourceStream::open(path_real($path)),
-                $parquetFile->schema(),
+            $engine->openForRead(NativeLocalSourceStream::open(path_real($path)))->readColumns(
                 ['id'],
                 batchSize: 2,
                 limit: 5,
@@ -330,11 +305,8 @@ final class ArrowParquetEngineReadTest extends TestCase
         (new Writer())->write($path, $schema, $inputData);
 
         $engine = new ArrowParquetEngine();
-        $parquetFile = (new Reader())->read($path);
         $chunks = iterator_to_array(
-            $engine->readColumns(
-                NativeLocalSourceStream::open(path_real($path)),
-                $parquetFile->schema(),
+            $engine->openForRead(NativeLocalSourceStream::open(path_real($path)))->readColumns(
                 ['id'],
                 batchSize: 2,
                 limit: null,

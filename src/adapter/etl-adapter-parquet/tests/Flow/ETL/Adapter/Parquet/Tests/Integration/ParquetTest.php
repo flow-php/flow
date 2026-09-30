@@ -20,6 +20,9 @@ use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
+use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\Writer;
 use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid as FlowUuid;
 use Generator;
@@ -27,6 +30,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use Ramsey\Uuid\Uuid;
 
+use function array_column;
 use function array_keys;
 use function array_map;
 use function extension_loaded;
@@ -97,8 +101,8 @@ final class ParquetTest extends FlowTestCase
 
     public function test_writing_and_reading_with_explicit_arrow_engine(): void
     {
-        if (!extension_loaded('arrow')) {
-            static::markTestSkipped('arrow extension is not loaded');
+        if (!extension_loaded('flow_php') && !extension_loaded('arrow')) {
+            static::markTestSkipped('neither flow_php nor arrow is loaded');
         }
 
         $memory = memory_filesystem();
@@ -453,13 +457,74 @@ final class ParquetTest extends FlowTestCase
 
         data_frame()
             ->read(from_rows(array_to_rows([['name' => "\xff\xfe"]], schema(str_schema('name')))))
-            ->write(to_parquet($path, filesystem: $memory, engine: new PhpParquetEngine()))
+            ->write(to_parquet(
+                $path,
+                options: (new Options())->set(Option::VALIDATE_DATA, false),
+                engine: new PhpParquetEngine(),
+                filesystem: $memory,
+            ))
             ->run();
 
         static::assertSame(
             [['name' => "\xff\xfe"]],
             data_frame()
                 ->read(from_parquet($path, filesystem: $memory, engine: new PhpParquetEngine()))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    /**
+     * @return Generator<string, array{?ParquetEngine}>
+     */
+    public static function reading_engines(): Generator
+    {
+        yield 'default engine' => [null];
+        yield 'php engine' => [new PhpParquetEngine()];
+    }
+
+    #[DataProvider('reading_engines')]
+    public function test_a_column_outside_the_projection_never_needs_a_flow_type(?ParquetEngine $engine): void
+    {
+        static::assertSame(
+            [['id' => 1], ['id' => 2]],
+            data_frame()
+                ->read(from_parquet(__DIR__ . '/Fixtures/EdgeCases/interval.parquet', ['id'], engine: $engine))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    #[DataProvider('reading_engines')]
+    public function test_an_unsigned_integer_reads_as_itself(?ParquetEngine $engine): void
+    {
+        static::assertSame(
+            [4_000_000_000, 1],
+            array_column(
+                data_frame()
+                    ->read(from_parquet(__DIR__ . '/Fixtures/EdgeCases/unsigned.parquet', ['u32'], engine: $engine))
+                    ->fetch()
+                    ->toArray(),
+                'u32',
+            ),
+        );
+    }
+
+    #[DataProvider('reading_engines')]
+    public function test_an_enum_column_reads_as_strings(?ParquetEngine $engine): void
+    {
+        $memory = memory_filesystem();
+        $path = path('memory://var/enum.parquet');
+        Writer::php()->writeStream($memory->writeTo($path), ParquetSchema::with(FlatColumn::enum('color')), [
+            ['color' => 'RED'],
+            ['color' => null],
+            ['color' => 'GREEN'],
+        ]);
+
+        static::assertSame(
+            [['color' => 'RED'], ['color' => null], ['color' => 'GREEN']],
+            data_frame()
+                ->read(from_parquet($path, engine: $engine, filesystem: $memory))
                 ->fetch()
                 ->toArray(),
         );
@@ -579,8 +644,8 @@ final class ParquetTest extends FlowTestCase
 
     public function test_partitions_written_with_an_explicit_arrow_engine_each_get_their_own_file(): void
     {
-        if (!extension_loaded('arrow')) {
-            static::markTestSkipped('arrow extension is not loaded');
+        if (!extension_loaded('flow_php') && !extension_loaded('arrow')) {
+            static::markTestSkipped('neither flow_php nor arrow is loaded');
         }
 
         $memory = memory_filesystem();

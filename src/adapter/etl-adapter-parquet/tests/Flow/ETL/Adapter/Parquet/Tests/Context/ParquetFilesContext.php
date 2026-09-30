@@ -9,7 +9,9 @@ use Flow\ETL\Adapter\Parquet\NativeParquetWriter;
 use Flow\ETL\Adapter\Parquet\SchemaConverter;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema as FlowSchema;
+use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\Filesystem\Filesystem;
+use Flow\Floe\Tests\Double\ClosingSpySourceStream;
 use Flow\Parquet\Engine\Arrow\OptionsConverter;
 use Flow\Parquet\Engine\Arrow\SchemaConverter as ArrowSchemaConverter;
 use Flow\Parquet\Engine\PhpParquetEngine;
@@ -22,6 +24,7 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Writer;
 
+use function array_count_values;
 use function array_map;
 use function Flow\ETL\Adapter\Parquet\to_parquet;
 use function Flow\ETL\DSL\data_frame;
@@ -130,5 +133,17 @@ final class ParquetFilesContext
         $writer->openForStream($filesystem->writeTo(path($uri)), Schema::with(FlatColumn::int64('id')));
         $writer->writeBatch(array_map(static fn(int $id): array => ['id' => $id], $ids));
         $writer->close();
+    }
+
+    /**
+     * How often each path was opened through the filesystem, by path.
+     *
+     * @return array<string, int>
+     */
+    public static function opensPerFile(CountingFilesystem $filesystem): array
+    {
+        return array_count_values(array_map(static fn(ClosingSpySourceStream $stream): string => $stream
+            ->path()
+            ->path(), $filesystem->openedStreams));
     }
 }

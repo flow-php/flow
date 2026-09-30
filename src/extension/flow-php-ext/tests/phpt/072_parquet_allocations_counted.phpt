@@ -6,6 +6,8 @@ Batches NativeParquetReader holds are counted by DefaultBackend::allocatedBytes(
 <?php
 require __DIR__ . '/bootstrap.php';
 
+use Flow\Parquet\Engine\Native\NativeParquetFile;
+
 use Flow\ETL\Adapter\Parquet\{NativeParquetReader, NativeParquetWriter, SchemaConverter};
 use Flow\ETL\Column\DefaultBackend;
 use Flow\Parquet\Engine\Arrow\{OptionsConverter, SchemaConverter as ArrowSchemaConverter};
@@ -31,7 +33,7 @@ $writer->close();
 gc_collect_cycles();
 
 $before = (new DefaultBackend())->allocatedBytes();
-$reader = new NativeParquetReader($filesystem->readFrom(path('memory://held.parquet')), $schema, 1_000, null, null);
+$reader = new NativeParquetReader(new NativeParquetFile($filesystem->readFrom(path('memory://held.parquet'))), $schema, 1_000, null, null);
 $held = [];
 
 while (($batch = $reader->next()) !== null) {

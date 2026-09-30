@@ -7,33 +7,13 @@ namespace Flow\Parquet\Engine;
 use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Binary\ByteOrder;
-use Flow\Parquet\Dremel\ColumnData\PagedFlatColumnValues;
-use Flow\Parquet\Dremel\DremelAssembler;
-use Flow\Parquet\Dremel\ReadColumnData;
-use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
-use Flow\Parquet\ParquetFile;
 use Flow\Parquet\ParquetFile\Compressions;
-use Flow\Parquet\ParquetFile\Data\DataConverter;
-use Flow\Parquet\ParquetFile\Metadata;
 use Flow\Parquet\ParquetFile\Schema;
-use Flow\Parquet\ParquetFile\Schema\Column;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Flow\Parquet\ParquetFileReader;
 use Flow\Parquet\ParquetFileWriter;
-use Flow\Parquet\Reader\ColumnChunkReader;
-use Flow\Parquet\Reader\PageReader;
-use Flow\Parquet\Thrift\CompactProtocol;
-use Flow\Parquet\Thrift\MemoryBuffer;
-use Flow\Parquet\ThriftModel\FileMetaData;
-use Generator;
-
-use function count;
-use function is_array;
-use function min;
-use function unpack;
 
 final class PhpParquetEngine implements ParquetEngine
 {
@@ -41,6 +21,11 @@ final class PhpParquetEngine implements ParquetEngine
         private readonly ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN,
         private readonly Options $options = new Options(),
     ) {}
+
+    public function openForRead(SourceStream $stream): ParquetFileReader
+    {
+        return new PhpParquetFileReader($stream, $this->byteOrder, $this->options);
+    }
 
     public function openForWrite(
         DestinationStream $stream,
@@ -55,91 +40,6 @@ final class PhpParquetEngine implements ParquetEngine
             $options,
             $this->options->getInt(Option::ROW_GROUP_SIZE_CHECK_INTERVAL),
         );
-    }
-
-    public function readColumns(
-        SourceStream $stream,
-        Schema $schema,
-        array $columns,
-        int $batchSize,
-        ?int $limit,
-        ?int $offset,
-    ): Generator {
-        $dataConverter = DataConverter::initialize($this->options);
-        $dremelAssembler = new DremelAssembler($dataConverter);
-        $chunkReader = new ColumnChunkReader(new PageReader($this->byteOrder, $this->options), $this->options);
-
-        $metadata = $this->readMetadata($stream);
-
-        $totalRows = $metadata->rowsNumber();
-
-        if ($offset !== null && $offset > $totalRows) {
-            return;
-        }
-
-        if ($offset !== null) {
-            if ($totalRows > $offset) {
-                $totalRows -= $offset;
-            } else {
-                $totalRows = 0;
-            }
-        }
-
-        $totalRows = min($totalRows, $limit ?? $totalRows);
-
-        if ($totalRows === 0) {
-            return;
-        }
-
-        $generators = [];
-
-        foreach ($columns as $columnName) {
-            $generators[$columnName] = $this->readColumn(
-                $schema->get($columnName),
-                $metadata,
-                $stream,
-                $chunkReader,
-                $dremelAssembler,
-                $limit,
-                $offset,
-            );
-        }
-
-        $remaining = $totalRows;
-
-        while ($remaining > 0) {
-            $take = min($batchSize, $remaining);
-            $chunk = [];
-            $read = 0;
-
-            foreach ($generators as $name => $generator) {
-                $values = [];
-
-                while (count($values) < $take && $generator->valid()) {
-                    // @mago-ignore analysis:mixed-assignment
-                    $entry = $generator->current();
-
-                    if (is_array($entry)) {
-                        // @mago-ignore analysis:mixed-assignment
-                        foreach ($entry as $value) {
-                            $values[] = $value;
-                        }
-                    }
-
-                    $generator->next();
-                }
-
-                $chunk[$name] = $values;
-                $read = count($values);
-            }
-
-            if ($read === 0) {
-                return;
-            }
-
-            yield $chunk;
-            $remaining -= $read;
-        }
     }
 
     public function writeRows(
@@ -163,121 +63,5 @@ final class PhpParquetEngine implements ParquetEngine
         }
 
         $file->close();
-    }
-
-    private function readColumn(
-        Column $column,
-        Metadata $metadata,
-        SourceStream $stream,
-        ColumnChunkReader $chunkReader,
-        DremelAssembler $dremelAssembler,
-        ?int $limit,
-        ?int $offset,
-    ): Generator {
-        $yieldedRows = 0;
-        $rowGroupOffset = 0;
-
-        foreach ($metadata->rowGroups()->all() as $rowGroup) {
-            if ($offset !== null) {
-                if (($rowGroupOffset + $rowGroup->rowsCount()) <= $offset) {
-                    $rowGroupOffset += $rowGroup->rowsCount();
-
-                    continue;
-                }
-            }
-            $skipRows = $offset !== null ? $offset - $rowGroupOffset : 0;
-
-            if ($column instanceof FlatColumn) {
-                $rowsSkipped = 0;
-
-                foreach ($chunkReader->read(
-                    $rowGroup->getColumnChunk($column),
-                    $column,
-                    $stream,
-                ) as $flatColumnValues) {
-                    $columnData = new ReadColumnData($column, [$flatColumnValues->flatPath() => $flatColumnValues]);
-
-                    // @mago-ignore analysis:mixed-assignment
-                    foreach ($dremelAssembler->assemble($column, $columnData) as $row) {
-                        if ($skipRows > 0 && $rowsSkipped < $skipRows) {
-                            $rowsSkipped++;
-
-                            continue;
-                        }
-
-                        if ($limit !== null && $yieldedRows >= $limit) {
-                            return;
-                        }
-                        yield $row;
-                        $yieldedRows++;
-                    }
-                }
-            } elseif ($column instanceof NestedColumn) {
-                $flatData = [];
-
-                foreach ($column->childrenFlat() as $child) {
-                    $flatData[] = new PagedFlatColumnValues($child, $chunkReader->read(
-                        $rowGroup->getColumnChunk($child),
-                        $child,
-                        $stream,
-                    ));
-                }
-
-                $columnData = new ReadColumnData($column, $flatData);
-
-                $rowsSkipped = 0;
-
-                // @mago-ignore analysis:mixed-assignment
-                foreach ($dremelAssembler->assemble($column, $columnData) as $row) {
-                    if ($skipRows > 0 && $rowsSkipped < $skipRows) {
-                        $rowsSkipped++;
-
-                        continue;
-                    }
-
-                    if ($limit !== null && $yieldedRows >= $limit) {
-                        return;
-                    }
-                    yield $row;
-                    $yieldedRows++;
-                }
-            } else {
-                throw new InvalidArgumentException('Column must be instance of FlatColumn or NestedColumn');
-            }
-
-            $rowGroupOffset += $rowGroup->rowsCount();
-        }
-    }
-
-    private function readMetadata(SourceStream $stream): Metadata
-    {
-        $fileTotalSize = $stream->size();
-
-        if ($fileTotalSize === null) {
-            throw new InvalidArgumentException('Cannot determine Parquet file size');
-        }
-
-        if ($stream->read(4, $fileTotalSize - 4) !== ParquetFile::PARQUET_MAGIC_NUMBER) {
-            throw new InvalidArgumentException('Given file is not valid Parquet file');
-        }
-
-        $unpacked = unpack($this->byteOrder->value, $stream->read(4, $fileTotalSize - 8));
-
-        if ($unpacked === false) {
-            throw new InvalidArgumentException('Failed to read Parquet metadata length');
-        }
-
-        $metadataLength = $unpacked[1];
-
-        if ($metadataLength <= 0) {
-            throw new InvalidArgumentException('Parquet metadata length must be positive, got ' . $metadataLength);
-        }
-
-        $metadata = $stream->read($metadataLength, $fileTotalSize - ($metadataLength + 8));
-
-        $thriftMetadata = new FileMetaData();
-        $thriftMetadata->read(new CompactProtocol(new MemoryBuffer($metadata)));
-
-        return Metadata::fromThrift($thriftMetadata);
     }
 }

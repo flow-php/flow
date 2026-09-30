@@ -30,19 +30,19 @@ class BloomFilterHeader
             'var' => 'algorithm',
             'isRequired' => true,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\BloomFilterAlgorithm',
+            'class' => '\Flow\Parquet\ThriftModel\BloomFilterAlgorithm',
         ],
         3 => [
             'var' => 'hash',
             'isRequired' => true,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\BloomFilterHash',
+            'class' => '\Flow\Parquet\ThriftModel\BloomFilterHash',
         ],
         4 => [
             'var' => 'compression',
             'isRequired' => true,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\BloomFilterCompression',
+            'class' => '\Flow\Parquet\ThriftModel\BloomFilterCompression',
         ],
     ];
 

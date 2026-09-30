@@ -13,6 +13,7 @@ use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\FileReading;
 use Flow\ETL\Extractor\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\RewindableExtractor;
+use Flow\ETL\Extractor\SelfDescribingFile;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
@@ -27,7 +28,7 @@ use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
-use Flow\Parquet\Reader;
+use Flow\Parquet\ParquetFileReader;
 use Generator;
 
 use function array_values;
@@ -56,7 +57,16 @@ final class ParquetExtractor implements
 
     private ?ParquetEngine $engine = null;
 
+    /**
+     * The first file the schema pass opened, kept for the read that follows.
+     *
+     * @var null|ParquetSourceFile<ParquetFileReader>
+     */
+    private ?ParquetSourceFile $firstFile = null;
+
     private ?int $offset = null;
+
+    private ?ParquetOpener $opener = null;
 
     private Options $options;
 
@@ -88,6 +98,11 @@ final class ParquetExtractor implements
         $this->options = Options::default();
     }
 
+    public function __destruct()
+    {
+        $this->closeFirstFile();
+    }
+
     public function isRepeatable(): bool
     {
         return true;
@@ -104,11 +119,10 @@ final class ParquetExtractor implements
 
         $fileOffset = $this->offset ?? 0;
         // every file is read under the first file's schema, or the union of all of them
-        $expected = $this->derivedSchema($this->files(), $this->unionByName);
+        $expected = $this->derivedSchema($this->schemaFiles(), $this->unionByName);
         $target = $this->schema();
 
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
-        $opener = ParquetOpeners::select($this->engine);
 
         foreach ($this->files($pathFilter) as $file) {
             $source = null;
@@ -116,7 +130,7 @@ final class ParquetExtractor implements
             // finally, not a close() per exit: the limit/STOP returns below and an abandoned
             // generator have to release the handle too (b73)
             try {
-                $fileRows = $file->file->metadata()->rowsNumber();
+                $fileRows = $file->file->reader()->rowsNumber();
 
                 if ($fileOffset > $fileRows) {
                     $fileOffset -= $fileRows;
@@ -142,7 +156,7 @@ final class ParquetExtractor implements
                 $constants = $fileColumns->forFile($file->source(), $rowsSchema);
                 $matchTo = !$rowsSchema->isSame($target) ? $target : null;
 
-                $source = $file->open($opener);
+                $source = $file->open($this->opener());
 
                 foreach ($source->batches(
                     $body,
@@ -181,7 +195,7 @@ final class ParquetExtractor implements
     public function schema(): Schema
     {
         return $this->fileColumns($this->filesystem, $this->path)->declare($this->derivedSchema(
-            $this->files(),
+            $this->schemaFiles(),
             $this->unionByName,
         ));
     }
@@ -198,6 +212,7 @@ final class ParquetExtractor implements
     {
         $this->unionByName = $union;
         $this->derivedSchema = null;
+        $this->closeFirstFile();
         $this->statistics = null;
 
         return $this;
@@ -217,6 +232,8 @@ final class ParquetExtractor implements
     {
         $this->byteOrder = $byteOrder;
         $this->derivedSchema = null;
+        $this->opener = null;
+        $this->closeFirstFile();
         $this->statistics = null;
 
         return $this;
@@ -229,6 +246,7 @@ final class ParquetExtractor implements
     {
         $this->columns = $columns;
         $this->derivedSchema = null;
+        $this->closeFirstFile();
         $this->statistics = null;
 
         return $this;
@@ -238,6 +256,8 @@ final class ParquetExtractor implements
     {
         $this->engine = $engine;
         $this->derivedSchema = null;
+        $this->opener = null;
+        $this->closeFirstFile();
         $this->statistics = null;
 
         return $this;
@@ -259,6 +279,8 @@ final class ParquetExtractor implements
     {
         $this->options = $options;
         $this->derivedSchema = null;
+        $this->opener = null;
+        $this->closeFirstFile();
         $this->statistics = null;
 
         return $this;
@@ -270,30 +292,76 @@ final class ParquetExtractor implements
      */
     private function declare(): Statistics
     {
-        return $this->derivedFooters($this->files(), $this->unionByName)->of(
+        return $this->derivedFooters($this->schemaFiles(), $this->unionByName)->of(
             iterator_count($this->sourceFiles($this->filesystem, $this->path)),
             $this->offset ?? 0,
         );
     }
 
-    /**
-     * @return Generator<int, ParquetSourceFile>
-     */
-    private function files(Filter $pathFilter = new OnlyFiles()): Generator
+    private function closeFirstFile(): void
     {
-        foreach ($this->sourceFiles($this->filesystem, $this->path, $pathFilter) as $source) {
-            $stream = $this->filesystem->readFrom($source->path);
+        $this->firstFile?->close();
+        $this->firstFile = null;
+    }
 
-            yield new ParquetSourceFile(
-                (new Reader(byteOrder: $this->byteOrder, options: $this->options, engine: $this->engine))->readStream(
-                    $stream,
-                ),
-                $stream,
+    /**
+     * One open per file: with $keepFirst the first file stays open for the read that follows, which takes it for that
+     * path instead of opening it again - or closes it when the read starts at another path.
+     *
+     * @return Generator<int, ParquetSourceFile<ParquetFileReader>>
+     */
+    private function files(Filter $pathFilter = new OnlyFiles(), bool $keepFirst = false): Generator
+    {
+        $kept = $this->firstFile;
+        $this->firstFile = null;
+        $first = true;
+
+        foreach ($this->sourceFiles($this->filesystem, $this->path, $pathFilter) as $source) {
+            if ($first && $kept !== null && $kept->source()->uri() !== $source->uri()) {
+                $kept->close();
+                $kept = null;
+            }
+
+            $file = ($first ? $kept : null) ?? new ParquetSourceFile(
+                $this->opener()->file($this->filesystem->readFrom($source->path)),
                 $source,
                 $this->schemaConverter,
                 array_values($this->columns),
             );
+
+            if ($keepFirst && $first) {
+                $this->firstFile = $file;
+            }
+
+            $first = false;
+
+            yield $file;
         }
+
+        if ($first) {
+            $kept?->close();
+        }
+    }
+
+    /**
+     * The files the schema fold reads: the first one through a ParquetSchemaPassFile, which the fold's close() leaves
+     * open for the read that follows.
+     *
+     * @return Generator<int, SelfDescribingFile>
+     */
+    private function schemaFiles(): Generator
+    {
+        $first = true;
+
+        foreach ($this->files(keepFirst: true) as $file) {
+            yield $first ? new ParquetSchemaPassFile($file) : $file;
+            $first = false;
+        }
+    }
+
+    private function opener(): ParquetOpener
+    {
+        return $this->opener ??= ParquetOpeners::select($this->engine, $this->byteOrder, $this->options);
     }
 
     public function withSchema(Schema $schema): static

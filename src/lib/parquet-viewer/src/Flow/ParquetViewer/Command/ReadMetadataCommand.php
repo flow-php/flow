@@ -62,10 +62,8 @@ final class ReadMetadataCommand extends Command
         $displayColumnChunks = type_boolean()->cast($input->getOption('column-chunks'));
         $displayPageHeaders = type_boolean()->cast($input->getOption('page-headers'));
 
-        $reader = new Reader();
-        $parquetFile = $reader->read($filePath);
-
         try {
+            $parquetFile = (new Reader())->read($filePath);
             $metadata = $parquetFile->metadata();
         } catch (InvalidArgumentException $_e) {
             $style->error(sprintf('File "%s" is not a valid parquet file', $filePath));

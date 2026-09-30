@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\Parquet;
 
 use Flow\Filesystem\SourceStream;
-use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Metadata;
 use Flow\Parquet\ParquetFile\Page\ColumnPageHeader;
@@ -13,73 +12,51 @@ use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\Column;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\Reader\ColumnChunkViewer;
-use Flow\Parquet\Thrift\CompactProtocol;
-use Flow\Parquet\Thrift\MemoryBuffer;
-use Flow\Parquet\ThriftModel\FileMetaData;
 use Generator;
 
 use function array_keys;
 use function array_map;
 use function array_values;
 use function count;
-use function unpack;
 
+/**
+ * @template-covariant R of ParquetFileReader
+ */
 final class ParquetFile
 {
     public const string PARQUET_MAGIC_NUMBER = 'PAR1';
 
     private const int VALUES_BATCH_SIZE = 1024;
 
-    private ?Metadata $metadata = null;
+    private bool $closed = false;
 
+    /**
+     * @param R $reader opened on $stream
+     */
     public function __construct(
         private readonly SourceStream $stream,
-        private readonly ByteOrder $byteOrder,
         private readonly Options $options,
-        private readonly ParquetEngine $engine,
+        private readonly ParquetFileReader $reader,
     ) {}
 
     public function __destruct()
     {
-        $this->stream->close();
+        $this->close();
+    }
+
+    public function close(): void
+    {
+        if ($this->closed) {
+            return;
+        }
+
+        $this->closed = true;
+        $this->reader->close();
     }
 
     public function metadata(): Metadata
     {
-        if ($this->metadata !== null) {
-            return $this->metadata;
-        }
-
-        $fileTotalSize = $this->stream->size();
-
-        if ($fileTotalSize === null) {
-            throw new InvalidArgumentException('Cannot determine Parquet file size');
-        }
-
-        if ($this->stream->read(4, $fileTotalSize - 4) !== self::PARQUET_MAGIC_NUMBER) {
-            throw new InvalidArgumentException('Given file is not valid Parquet file');
-        }
-
-        $unpacked = unpack($this->byteOrder->value, $this->stream->read(4, $fileTotalSize - 8));
-
-        if ($unpacked === false) {
-            throw new InvalidArgumentException('Failed to read Parquet metadata length');
-        }
-
-        $metadataLength = $unpacked[1];
-
-        if ($metadataLength <= 0) {
-            throw new InvalidArgumentException('Parquet metadata length must be positive, got ' . $metadataLength);
-        }
-
-        $metadata = $this->stream->read($metadataLength, $fileTotalSize - ($metadataLength + 8));
-
-        $thriftMetadata = new FileMetaData();
-        $thriftMetadata->read(new CompactProtocol(new MemoryBuffer($metadata)));
-
-        $this->metadata = Metadata::fromThrift($thriftMetadata);
-
-        return $this->metadata;
+        return $this->reader->metadata();
     }
 
     /**
@@ -94,9 +71,17 @@ final class ParquetFile
         }
     }
 
+    /**
+     * @return R
+     */
+    public function reader(): ParquetFileReader
+    {
+        return $this->reader;
+    }
+
     public function schema(): Schema
     {
-        return $this->metadata()->schema();
+        return $this->reader->schema();
     }
 
     /**
@@ -123,19 +108,12 @@ final class ParquetFile
         }
 
         foreach ($columns as $columnName) {
-            if (!$this->metadata()->schema()->has($columnName)) {
+            if (!$this->schema()->has($columnName)) {
                 throw new InvalidArgumentException("Column \"{$columnName}\" does not exist");
             }
         }
 
-        yield from $this->engine->readColumns(
-            $this->stream,
-            $this->schema(),
-            array_values($columns),
-            $batchSize,
-            $limit,
-            $offset,
-        );
+        yield from $this->reader->readColumns(array_values($columns), $batchSize, $limit, $offset);
     }
 
     /**

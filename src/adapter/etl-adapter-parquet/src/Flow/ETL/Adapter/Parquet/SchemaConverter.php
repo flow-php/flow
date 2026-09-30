@@ -187,7 +187,10 @@ final class SchemaConverter
             }
 
             return match ($logicalType->name()) {
-                ParquetSchema\LogicalType::STRING => str_schema($column->name(), $nullable),
+                ParquetSchema\LogicalType::STRING, ParquetSchema\LogicalType::ENUM => str_schema(
+                    $column->name(),
+                    $nullable,
+                ),
                 ParquetSchema\LogicalType::TIME => time_schema($column->name(), $nullable),
                 ParquetSchema\LogicalType::DATE => date_schema($column->name(), $nullable),
                 ParquetSchema\LogicalType::TIMESTAMP => datetime_schema($column->name(), $nullable),
@@ -262,7 +265,7 @@ final class SchemaConverter
             }
 
             $type = match ($logicalType->name()) {
-                ParquetSchema\LogicalType::STRING => type_string(),
+                ParquetSchema\LogicalType::STRING, ParquetSchema\LogicalType::ENUM => type_string(),
                 ParquetSchema\LogicalType::TIME => type_time(),
                 ParquetSchema\LogicalType::DATE => type_date(),
                 ParquetSchema\LogicalType::TIMESTAMP => type_datetime(),

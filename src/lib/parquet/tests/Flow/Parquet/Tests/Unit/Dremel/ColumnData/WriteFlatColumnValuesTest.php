@@ -92,7 +92,7 @@ final class WriteFlatColumnValuesTest extends TestCase
         ));
 
         $shredder = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
-        $result = $shredder->shred($schema, $rows);
+        $result = $shredder->shred($schema, $rows, 0);
         $flatColumnValues = $result['struct.list_of_string.list.element'];
 
         static::assertSame(10, $flatColumnValues->rowsCount());
@@ -203,7 +203,7 @@ final class WriteFlatColumnValuesTest extends TestCase
         ));
 
         $shredder = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
-        $result = $shredder->shred($schema, $rows);
+        $result = $shredder->shred($schema, $rows, 0);
         $flatColumnValues = $result['struct.list_of_string.list.element'];
 
         $splitResult = $flatColumnValues->splitByRows(20);

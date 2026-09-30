@@ -10,8 +10,7 @@ use Flow\ETL\Column\DefaultBackend;
 use Flow\ETL\Column\Php\ScalarColumn;
 use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\Filesystem\Exception\RuntimeException;
-use Flow\Filesystem\Tests\Double\FailingReadSourceStream;
+use Flow\Parquet\Engine\Native\NativeParquetFile;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\Attributes\TestWith;
 
@@ -40,13 +39,9 @@ final class NativeParquetOpenSourceTest extends FlowTestCase
 
         $read = [];
 
-        foreach ((new NativeParquetOpenSource($filesystem->readFrom(path('memory://groups.parquet'))))->batches(
-            schema(int_schema('id')),
-            3,
-            $offset,
-            $limit,
-            new DefaultBackend(),
-        ) as $rows) {
+        foreach ((new NativeParquetOpenSource(new NativeParquetFile($filesystem->readFrom(path(
+            'memory://groups.parquet',
+        )))))->batches(schema(int_schema('id')), 3, $offset, $limit, new DefaultBackend()) as $rows) {
             static::assertLessThanOrEqual(3, $rows->count());
             $read = [...$read, ...$rows->column('id')->values()];
         }
@@ -58,7 +53,9 @@ final class NativeParquetOpenSourceTest extends FlowTestCase
     {
         $filesystem = memory_filesystem();
         ParquetFilesContext::rowGroups($filesystem, 'memory://groups.parquet', 10, 4);
-        $source = new NativeParquetOpenSource($filesystem->readFrom(path('memory://groups.parquet')));
+        $source = new NativeParquetOpenSource(new NativeParquetFile($filesystem->readFrom(path(
+            'memory://groups.parquet',
+        ))));
 
         $names = [];
 
@@ -77,7 +74,9 @@ final class NativeParquetOpenSourceTest extends FlowTestCase
     {
         $filesystem = memory_filesystem();
         ParquetFilesContext::rowGroups($filesystem, 'memory://groups.parquet', 10, 4);
-        $source = new NativeParquetOpenSource($filesystem->readFrom(path('memory://groups.parquet')));
+        $source = new NativeParquetOpenSource(new NativeParquetFile($filesystem->readFrom(path(
+            'memory://groups.parquet',
+        ))));
         $first = $source->batches(schema(int_schema('id')), 3, null, null, new DefaultBackend());
         static::assertSame([0, 1, 2], $first->current()->column('id')->values());
 
@@ -93,27 +92,14 @@ final class NativeParquetOpenSourceTest extends FlowTestCase
         static::assertSame(range(0, 9), $second);
     }
 
-    public function test_an_exception_the_stream_throws_surfaces_as_itself(): void
-    {
-        $filesystem = memory_filesystem();
-        ParquetFilesContext::rowGroups($filesystem, 'memory://groups.parquet', 10, 4);
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Reading "memory://groups.parquet" failed');
-
-        (new NativeParquetOpenSource(new FailingReadSourceStream($filesystem->readFrom(path(
-            'memory://groups.parquet',
-        )))))
-            ->batches(schema(int_schema('id')), 3, null, null, new DefaultBackend())
-            ->current();
-    }
-
     public function test_close_before_batches_is_harmless(): void
     {
         $filesystem = memory_filesystem();
         ParquetFilesContext::rowGroups($filesystem, 'memory://groups.parquet', 10, 4);
 
-        (new NativeParquetOpenSource($filesystem->readFrom(path('memory://groups.parquet'))))->close();
+        (new NativeParquetOpenSource(new NativeParquetFile($filesystem->readFrom(path(
+            'memory://groups.parquet',
+        )))))->close();
 
         $this->expectNotToPerformAssertions();
     }

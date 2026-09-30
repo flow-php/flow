@@ -11,7 +11,6 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\ListElement;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\ParquetFile\Schema\Repetition;
-use Flow\Parquet\Reader;
 use Flow\Parquet\Tests\Context\TestParquetFile;
 use Flow\Parquet\Tests\Integration\IO\ParquetIntegrationTestCase;
 use Flow\Parquet\Writer;
@@ -65,11 +64,7 @@ final class ReadColumnsTest extends ParquetIntegrationTestCase
         );
 
         $chunks = iterator_to_array(
-            $engine->readColumns(
-                NativeLocalSourceStream::open(path_real($path)),
-                (new Reader())
-                    ->read($path)
-                    ->schema(),
+            $engine->openForRead(NativeLocalSourceStream::open(path_real($path)))->readColumns(
                 ['id', 'tags'],
                 $batchSize,
                 $limit,

@@ -4,6 +4,7 @@
     "description": "Apache Arrow PHP extension powered by Rust",
     "keywords": ["arrow", "parquet", "extension", "rust", "native"],
     "license": "MIT",
+    "abandoned": "flow-php/flow-php-ext",
     "require": {
         "php": "~8.3.0 || ~8.4.0 || ~8.5.0"
     },

@@ -17,6 +17,7 @@ use ext_php_rs::zend::{ClassEntry, ExecutorGlobals, Function};
 use crate::exception::ext_exception;
 use crate::globals::with_ctx;
 use crate::plan::TypePlan;
+use crate::thrift::Specs;
 
 /// PHP array-key coercion (`_zend_handle_numeric_str`): parse + canonical
 /// re-format equality rejects "+5", "-0", leading zeros and whitespace exactly
@@ -404,6 +405,8 @@ pub struct Ctx {
     plans: HashMap<Vec<u8>, Rc<TypePlan>>,
     /// `plans` by Type object handle; each entry holds its object, so the handle is not reused while cached.
     type_plans: HashMap<u32, (Zval, Rc<TypePlan>)>,
+    /// The `$_TSPEC`s reachable from a root thrift class, by that class.
+    thrift_specs: HashMap<String, Rc<Specs>>,
 }
 
 /// Type objects `type_plans` holds before it starts over.
@@ -495,6 +498,17 @@ pub fn store_type_plan(type_zv: &Zval, plan: &Rc<TypePlan>) -> Result<(), PhpExc
     })?;
 
     Ok(())
+}
+
+pub fn thrift_specs(class: &str) -> Result<Option<Rc<Specs>>, PhpException> {
+    with_ctx(|ctx| Ok(ctx.thrift_specs.get(class).cloned()))
+}
+
+pub fn store_thrift_specs(class: &str, specs: &Rc<Specs>) -> Result<(), PhpException> {
+    with_ctx(|ctx| {
+        ctx.thrift_specs.insert(class.to_string(), Rc::clone(specs));
+        Ok(())
+    })
 }
 
 /// A cached handle: read inside the context, resolved outside it on a miss, then stored.

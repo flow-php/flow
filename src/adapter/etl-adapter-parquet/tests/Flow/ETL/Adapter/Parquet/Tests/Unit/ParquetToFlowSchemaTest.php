@@ -54,6 +54,7 @@ final class ParquetToFlowSchemaTest extends FlowTestCase
             FlatColumn::dateTime('datetime'),
             FlatColumn::uuid('uuid'),
             FlatColumn::json('json'),
+            FlatColumn::enum('enum'),
         ));
 
         static::assertEquals(
@@ -70,6 +71,7 @@ final class ParquetToFlowSchemaTest extends FlowTestCase
                 datetime_schema('datetime', true),
                 uuid_schema('uuid', true),
                 json_schema('json', true),
+                str_schema('enum', true),
             ),
             $flowSchema,
         );
@@ -104,6 +106,7 @@ final class ParquetToFlowSchemaTest extends FlowTestCase
             FlatColumn::uuid('uuid'),
             FlatColumn::string('name'),
             FlatColumn::boolean('active'),
+            FlatColumn::enum('color'),
         ])));
 
         static::assertEquals(
@@ -113,6 +116,7 @@ final class ParquetToFlowSchemaTest extends FlowTestCase
                     'uuid' => type_optional(type_uuid()),
                     'name' => type_optional(type_string()),
                     'active' => type_optional(type_boolean()),
+                    'color' => type_optional(type_string()),
                 ]),
                 true,
             )),

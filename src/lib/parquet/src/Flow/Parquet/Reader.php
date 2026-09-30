@@ -35,18 +35,19 @@ final readonly class Reader
         return new self(options: $options, engine: new PhpParquetEngine(options: $options));
     }
 
+    /**
+     * @return ParquetFile<ParquetFileReader>
+     */
     public function read(string $path): ParquetFile
     {
-        return new ParquetFile(
-            NativeLocalSourceStream::open(path_real($path)),
-            $this->byteOrder,
-            $this->options,
-            $this->engine,
-        );
+        return $this->readStream(NativeLocalSourceStream::open(path_real($path)));
     }
 
+    /**
+     * @return ParquetFile<ParquetFileReader>
+     */
     public function readStream(SourceStream $stream): ParquetFile
     {
-        return new ParquetFile($stream, $this->byteOrder, $this->options, $this->engine);
+        return new ParquetFile($stream, $this->options, $this->engine->openForRead($stream));
     }
 }

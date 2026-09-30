@@ -16,8 +16,8 @@ final class WriterTest extends TestCase
 {
     public function test_arrow_factory_throws_when_extension_not_loaded(): void
     {
-        if (extension_loaded('arrow')) {
-            static::markTestSkipped('This test requires the arrow extension to NOT be loaded');
+        if (extension_loaded('flow_php') || extension_loaded('arrow')) {
+            static::markTestSkipped('This test requires neither flow_php nor arrow to be loaded');
         }
 
         $this->expectException(RuntimeException::class);

@@ -12,6 +12,14 @@ pub enum Error {
     Unsupported { column: String, parquet: String },
     Overflow { column: String, row: usize },
     InvalidUtf8 { column: String, row: usize },
+    /// A fixed-length target the value's byte length does not match.
+    Length { column: String, row: usize, expected: usize },
+    /// MAP keys of a type a PHP array does not key by (int or string), named by the PHP type they would read as.
+    MapKey { column: String, key: &'static str },
+    /// A value the target type does not accept: what it expects and what it got.
+    Value { column: String, row: usize, expected: &'static str, got: String },
+    /// Bytes that are not a Parquet file: no footer where it must be.
+    NotParquet(String),
     Options(String),
     Stream(String),
 }
@@ -23,6 +31,9 @@ impl Error {
             Error::Unsupported { parquet, .. } => Error::Unsupported { column: name.to_string(), parquet },
             Error::Overflow { row, .. } => Error::Overflow { column: name.to_string(), row },
             Error::InvalidUtf8 { row, .. } => Error::InvalidUtf8 { column: name.to_string(), row },
+            Error::Length { row, expected, .. } => Error::Length { column: name.to_string(), row, expected },
+            Error::MapKey { key, .. } => Error::MapKey { column: name.to_string(), key },
+            Error::Value { row, expected, got, .. } => Error::Value { column: name.to_string(), row, expected, got },
             error => error,
         }
     }
@@ -32,6 +43,8 @@ impl Error {
         match self {
             Error::Overflow { column, row } => Error::Overflow { column, row: parent(row) },
             Error::InvalidUtf8 { column, row } => Error::InvalidUtf8 { column, row: parent(row) },
+            Error::Length { column, row, expected } => Error::Length { column, row: parent(row), expected },
+            Error::Value { column, row, expected, got } => Error::Value { column, row: parent(row), expected, got },
             error => error,
         }
     }

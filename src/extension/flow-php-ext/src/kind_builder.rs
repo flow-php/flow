@@ -218,6 +218,45 @@ impl KindBuilder {
         validity.append_non_null();
     }
 
+    /// Drops every row past the first `len`: a row refused half-appended leaves no trace.
+    pub fn truncate(&mut self, len: usize) {
+        match self {
+            KindBuilder::Null { len: rows } => *rows = len,
+            KindBuilder::Fixed { width, values, validity } => {
+                values.truncate(len * *width);
+                validity.truncate(len);
+            }
+            KindBuilder::Boolean { values, validity } => {
+                values.truncate(len);
+                validity.truncate(len);
+            }
+            KindBuilder::Bytes { offsets, data, validity } => {
+                offsets.truncate(len + 1);
+                data.truncate(offsets[len] as usize);
+                validity.truncate(len);
+            }
+            KindBuilder::List { offsets, validity, element } => {
+                offsets.truncate(len + 1);
+                element.truncate(offsets[len] as usize);
+                validity.truncate(len);
+            }
+            KindBuilder::Map { offsets, validity, keys, values } => {
+                offsets.truncate(len + 1);
+                keys.truncate(offsets[len] as usize);
+                values.truncate(offsets[len] as usize);
+                validity.truncate(len);
+            }
+            KindBuilder::Struct { len: rows, validity, children } => {
+                *rows = len;
+                validity.truncate(len);
+
+                for child in children {
+                    child.truncate(len);
+                }
+            }
+        }
+    }
+
     /// Row `i` of `array`, whose data type is `data_type(kind)`.
     pub fn append_from(&mut self, array: &dyn Array, kind: &Kind, i: usize) -> Result<(), OffsetOverflow> {
         if matches!(kind, Kind::Null) || array.is_null(i) {
@@ -320,5 +359,68 @@ impl KindBuilder {
         };
 
         builder.build()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use arrow_array::cast::AsArray;
+    use arrow_array::types::Int64Type;
+    use arrow_array::{make_array, Array};
+    use flow_batch_frame::kind::{Field, Kind};
+
+    use super::KindBuilder;
+
+    fn field(kind: Kind) -> Box<Field> {
+        Box::new(Field {
+            name: "item".into(),
+            kind,
+            optional: true,
+        })
+    }
+
+    #[test]
+    fn truncate_drops_the_rows_past_the_length_in_every_nested_builder() {
+        let kind = Kind::Struct(vec![
+            Field {
+                name: "id".into(),
+                kind: Kind::Int64,
+                optional: true,
+            },
+            Field {
+                name: "tags".into(),
+                kind: Kind::List(field(Kind::Bytes)),
+                optional: true,
+            },
+            Field {
+                name: "flags".into(),
+                kind: Kind::Map(field(Kind::Bytes), field(Kind::Boolean)),
+                optional: true,
+            },
+        ]);
+        let mut builder = KindBuilder::new(&kind);
+        let mut row = |id: i64, tag: &[u8]| {
+            let children = builder.struct_children();
+            children[0].append_fixed(&id.to_le_bytes());
+            children[1].list_element().append_bytes(tag).ok();
+            children[1].end_entries().ok();
+            let (keys, values) = children[2].map_entries();
+            keys.append_bytes(tag).ok();
+            values.append_bool(true);
+            children[2].end_entries().ok();
+            builder.end_struct();
+        };
+
+        row(1, b"kept");
+        row(2, b"dropped");
+        builder.truncate(1);
+        let array = make_array(builder.finish(&kind).unwrap());
+        let structure = array.as_struct();
+
+        assert_eq!(array.len(), 1);
+        assert_eq!(structure.column(0).as_primitive::<Int64Type>().values().to_vec(), vec![1]);
+        assert_eq!(structure.column(1).as_list::<i32>().values().as_binary::<i32>().value(0), b"kept");
+        assert_eq!(structure.column(1).as_list::<i32>().values().len(), 1);
+        assert_eq!(structure.column(2).as_map().keys().len(), 1);
     }
 }

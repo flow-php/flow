@@ -10,7 +10,9 @@ use Flow\Parquet\ParquetFile\Schema\Column;
 interface Validator
 {
     /**
+     * @param int $row the 0-based index of the row within the writer
+     *
      * @throws ValidationException
      */
-    public function validate(Column $column, mixed $data): void;
+    public function validate(Column $column, mixed $data, int $row): void;
 }
