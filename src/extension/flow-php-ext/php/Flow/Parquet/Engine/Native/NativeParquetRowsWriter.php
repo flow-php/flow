@@ -39,6 +39,15 @@ final class NativeParquetRowsWriter
     }
 
     /**
+     * @param array<string, list<mixed>> $columns by top-level column name, every list of one length; a writer column
+     *                                            the array lacks is nulls, a key the writer lacks is ignored
+     */
+    public function writeColumns(array $columns): void
+    {
+        throw new RuntimeException('flow_php extension is not loaded');
+    }
+
+    /**
      * @param array<array-key, mixed> $row a writer column the row lacks is null
      */
     public function writeRow(array $row): void

@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\Engine;
 
+use Flow\Parquet\Engine\ArrowParquetEngine;
+use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Exception\ValidationException;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\Reader;
+use Flow\Parquet\Tests\Context\ColumnDoor;
 use Flow\Parquet\Tests\Context\EveryType;
 use Flow\Parquet\Tests\Context\MemoryParquetFile;
 use Flow\Parquet\Tests\Context\ParquetRows;
@@ -61,6 +64,31 @@ final class NativeLibWriteParityTest extends TestCase
                 var_export(ParquetRows::read(MemoryParquetFile::read(Reader::php(), $written['php']), 1), true),
                 var_export(ParquetRows::read(MemoryParquetFile::read(Reader::php(), $written['native']), 1), true),
             );
+        }
+    }
+
+    #[DataProvider('cells')]
+    public function test_the_column_door_accepts_and_refuses_what_the_row_door_does(string $target, string $input): void
+    {
+        foreach ([new PhpParquetEngine(), new ArrowParquetEngine()] as $engine) {
+            $outcomes = [];
+
+            foreach (['batch', 'columns'] as $door) {
+                $stream = ColumnDoor::stream();
+
+                try {
+                    $file = ColumnDoor::open($engine, $stream, Schema::with(WriteAcceptance::target($target)));
+                    $door === 'batch'
+                        ? $file->writeBatch([['c' => WriteAcceptance::input($input)]])
+                        : $file->writeColumns(['c' => [WriteAcceptance::input($input)]]);
+                    $file->close();
+                    $outcomes[$door] = var_export(ColumnDoor::read($stream), true);
+                } catch (Throwable $refusal) {
+                    $outcomes[$door] = $refusal::class . ': ' . $refusal->getMessage();
+                }
+            }
+
+            static::assertSame($outcomes['batch'], $outcomes['columns'], $engine::class);
         }
     }
 

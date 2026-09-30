@@ -227,6 +227,8 @@ final class XMLLoader implements Closure, Discardable, FileLoader, Loader, Parti
         $opening = !$files->touched($partitions);
         $stream = $files->writeTo($partitions);
 
+        $head = '';
+
         if ($opening) {
             $attributes = '';
 
@@ -234,12 +236,10 @@ final class XMLLoader implements Closure, Discardable, FileLoader, Loader, Parti
                 $attributes .= $name . '="' . $value . '" ';
             }
 
-            $stream->append('<?xml ' . trim($attributes) . "?>\n<" . $this->rootElementName . ">\n");
+            $head = '<?xml ' . trim($attributes) . "?>\n<" . $this->rootElementName . ">\n";
         }
 
-        foreach ($this->encoder()->encode($nextRows) as $node) {
-            $stream->append($node . "\n");
-        }
+        $stream->append($head . $this->encoder()->encode($nextRows));
     }
 
     private function encoder(): XMLEncoder

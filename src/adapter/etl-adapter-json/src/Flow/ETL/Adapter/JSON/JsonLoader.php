@@ -7,7 +7,6 @@ namespace Flow\ETL\Adapter\JSON;
 use DateTimeInterface;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\FilesSink;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\FlowContext;
@@ -21,11 +20,9 @@ use Flow\ETL\Loader\PartitionRouter;
 use Flow\ETL\Rows;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
-use Flow\Filesystem\Partition;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
-use JsonException;
 use Throwable;
 
 use function sprintf;
@@ -38,19 +35,24 @@ final class JsonLoader implements Closure, Discardable, FileLoader, Loader, Part
 
     private SaveMode $saveMode = SaveMode::ExceptionIfExists;
 
-    private ?JsonDocuments $documents = null;
+    private ?FilesSink $files = null;
 
     private string $dateFormat = 'Y-m-d';
 
     private string $dateTimeFormat = DateTimeInterface::ATOM;
 
-    private ?JSONEncoder $encoder = null;
-
     private int $flags = JSON_THROW_ON_ERROR;
+
+    private ?JsonSinkOpener $opener = null;
 
     private readonly Path $path;
 
     private bool $putRowsInNewLines = false;
+
+    /**
+     * @var array<string, JsonOpenSink> by stream URI
+     */
+    private array $sinks = [];
 
     public function __construct(Path $path, Filesystem $filesystem = new NativeLocalFilesystem())
     {
@@ -78,14 +80,20 @@ final class JsonLoader implements Closure, Discardable, FileLoader, Loader, Part
 
     public function closure(FlowContext $context): void
     {
-        $this->documents?->publish();
-        $this->documents = null;
+        foreach ($this->sinks as $sink) {
+            $sink->close();
+        }
+
+        $this->files?->publish();
+        $this->files = null;
+        $this->sinks = [];
     }
 
     public function discard(FlowContext $context): void
     {
-        $this->documents?->abandon();
-        $this->documents = null;
+        $this->files?->abandon();
+        $this->files = null;
+        $this->sinks = [];
     }
 
     public function destination(): Path
@@ -101,7 +109,10 @@ final class JsonLoader implements Closure, Discardable, FileLoader, Loader, Part
 
         try {
             foreach ($this->router->route($rows) as [$partitions, $group]) {
-                $this->write($group, $partitions->toArray());
+                $stream = ($this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode))->writeTo(
+                    $partitions->toArray(),
+                );
+                ($this->sinks[$stream->path()->uri()] ??= $this->opener()->open($stream))->write($group);
             }
 
             $context->telemetry()->loadingCompleted($this, [
@@ -149,48 +160,13 @@ final class JsonLoader implements Closure, Discardable, FileLoader, Loader, Part
         return $this;
     }
 
-    /**
-     * @param array<Partition> $partitions
-     */
-    public function write(Rows $nextRows, array $partitions): void
+    private function opener(): JsonSinkOpener
     {
-        ($this->documents ??= new JsonDocuments(
-            new FilesSink($this->filesystem, $this->path, $this->saveMode),
-            $this->putRowsInNewLines,
-        ))->append($this->encodeJSON($this->encoder()->encode($nextRows)), $partitions);
-    }
-
-    /**
-     * @param list<array<string, mixed>> $normalizedRows
-     *
-     * @throws RuntimeException
-     * @throws \JsonException
-     *
-     * @return list<string>
-     */
-    private function encodeJSON(array $normalizedRows): array
-    {
-        $documents = [];
-
-        foreach ($normalizedRows as $normalizedRow) {
-            try {
-                $json = json_encode($normalizedRow, $this->flags);
-
-                if ($json === false) {
-                    throw new RuntimeException('Failed to encode JSON: ' . json_last_error_msg());
-                }
-            } catch (JsonException $e) {
-                throw new RuntimeException('Failed to encode JSON: ' . $e->getMessage(), 0, $e);
-            }
-
-            $documents[] = $json;
-        }
-
-        return $documents;
-    }
-
-    private function encoder(): JSONEncoder
-    {
-        return $this->encoder ??= new JSONEncoder($this->dateTimeFormat, $this->dateFormat);
+        return $this->opener ??= new JsonSinkOpener(
+            $this->flags,
+            $this->dateTimeFormat,
+            $this->dateFormat,
+            $this->putRowsInNewLines ? JsonFraming::ARRAY_LINES : JsonFraming::ARRAY,
+        );
     }
 }

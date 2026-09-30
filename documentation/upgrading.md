@@ -935,6 +935,121 @@ public function eval(Rows $rows, FlowContext $context): Column
 |----------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
 | `flow-php/arrow-ext` - the arrow extension, `ArrowParquetEngine`'s backend | `abandoned` in favour of `flow-php/flow-php-ext`: install the `flow_php` extension, which `ArrowParquetEngine` uses when it is loaded |
 
+### 87) `flow-php/etl-adapter-csv` - `to_csv()` writes a boolean as `true` / `false`
+
+| Before                                                           | After                                                              |
+|------------------------------------------------------------------|--------------------------------------------------------------------|
+| `true` → `1`, `false` → an empty field, the same bytes as `null` | `true` / `false`; `null` stays an empty field                      |
+| a NOT NULL boolean column could not be read back by `from_csv()` | reads back equal; a nullable column keeps `false` and `null` apart |
+
+### 88) `flow-php/etl-adapter-csv`, `-xml`, `-text`, `-json` - a float is written as the shortest text that reads back as the same float
+
+| Before                                                                                        | After                                                         |
+|-----------------------------------------------------------------------------------------------|---------------------------------------------------------------|
+| CSV / XML / Text: `(string) $float`, 14 digits under the `precision` ini: `0.1 + 0.2` → `0.3` | `0.30000000000000004`                                         |
+| `1 / 3` → `0.33333333333333`, `123456789012345.678` → `1.2345678901235E+14`                   | `0.3333333333333333`, `123456789012345.67`                    |
+| `1.0` → `1`, `1e25` → `1.0E+25`, `-0.0` → `-0`                                                | `1.0`, `1.0e+25`, `-0.0` - always a fraction or an exponent   |
+| `NAN`, `INF`, `-INF`                                                                          | unchanged; refused inside a nested CSV cell (`JsonException`) |
+| JSON: the digits followed the `serialize_precision` ini (`17` → `0.10000000000000001`)        | the shortest digits under any ini value                       |
+
+Writing a float column forces `serialize_precision = -1` for the render and restores the ini afterwards. When the ini
+holds another value, `ini_set()` must be allowed; otherwise the writers throw
+`RuntimeException('Writing floats requires serialize_precision = -1 and ini_set() cannot change it')`.
+
+### 89) `flow-php/etl-adapter-csv`, `-json`, `-xml`, `-text` - a nested value is written by its type, as a column of that type is
+
+| Before                                                                                                  | After                                                          |
+|---------------------------------------------------------------------------------------------------------|----------------------------------------------------------------|
+| CSV `list<datetime>`: `[{"date":"2026-01-02 03:04:05.000000","timezone_type":3,"timezone":"UTC"}]`      | `["2026-01-02T03:04:05+00:00"]` (the loader's datetime format) |
+| CSV `list<uuid>`: `[{}]`; `list<time>`: a `DateInterval` property dump; `list<enum>`: the backing value | `["00000001-…"]`, `[3600000000]`, `["Hearts"]` (the case name) |
+| JSON `list<date>` / `structure{d: date}`: `"2026-01-02T00:00:00+00:00"` (the datetime format)           | `"2026-01-02"` (the date format)                               |
+| XML `list<?T>` / `map<K, ?V>`: threw `Given type can't be converted to node`                            | the element of `T`, a null is an empty element                 |
+| `html` / `html_element`: CSV and JSON wrote an empty string, XML refused the column                     | the markup                                                     |
+| XML `xml_element` and a non-backed `enum`: an empty element                                             | the canonical XML text; the case name                          |
+| XML attribute column (`_name`) of a `datetime`: RFC 3339, whatever the loader's format                  | the loader's datetime format                                   |
+| Text: a `datetime` / `date` / `time` column threw `Text data loader supports only scalar values`        | `DATE_ATOM`, `Y-m-d`, microseconds                             |
+
+### 90) `flow-php/etl-adapter-csv` - `CSVEncoder` is a contract; `PhpCSVEncoder` takes `CSVWriteOptions` and returns one string per batch
+
+| Before                                                                                                | After                                                                                                                                         |
+|-------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
+| `final class CSVEncoder`                                                                              | `interface CSVEncoder { encode(Rows): string; encodeHeader(array $headers): string; }`, implemented by `PhpCSVEncoder` and `NativeCSVEncoder` |
+| `new CSVEncoder($separator, $enclosure, $escape, $dateTimeFormat, $dateFormat, $newLineSeparator)`    | `new PhpCSVEncoder(new CSVWriteOptions($separator, $enclosure, $escape, $newLineSeparator, $dateTimeFormat, $dateFormat))`                    |
+| `CSVEncoder::encode(Rows): list<string>`                                                              | `encode(Rows): string`                                                                                                                        |
+| `CSVLoader::write(Rows, array $headers, array $partitions)`                                           | removed - `load()` is the only entry                                                                                                          |
+| a separator or enclosure that is not one byte, an escape longer than one byte - failed in `fputcsv()` | `InvalidArgumentException` from `CSVWriteOptions`                                                                                             |
+
+### 91) `flow-php/etl-adapter-json` - `JSONEncoder` is a contract; `PhpJSONEncoder` returns JSON text; `JsonDocuments` and the loaders' `write()` are removed
+
+| Before                                                             | After                                                                                                                         |
+|--------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| `final class JSONEncoder`                                          | `interface JSONEncoder { encode(Rows, string $separator): string; }`, implemented by `PhpJSONEncoder` and `NativeJSONEncoder` |
+| `new JSONEncoder($dateTimeFormat, $dateFormat)`                    | `new PhpJSONEncoder($flags, $dateTimeFormat, $dateFormat)`                                                                    |
+| `JSONEncoder::encode(Rows): list<array<string, mixed>>`            | `encode(Rows, string $separator): string` - one object per row, joined by `$separator`                                        |
+| `JsonDocuments`, `JsonLoader::write()`, `JsonLinesLoader::write()` | removed - `load()` is the only entry                                                                                          |
+| no constraint on the extension                                     | `"conflict": {"ext-flow_php": "<0.45"}` - upgrade the `flow_php` extension with the package                                   |
+
+### 92) `flow-php/etl-adapter-xml` - `XMLWriter` renders columns; `XMLEncoder::encode()` returns one string per batch
+
+| Before                                   | After                                                                                              |
+|------------------------------------------|----------------------------------------------------------------------------------------------------|
+| `XMLWriter::write(XMLNode): string`      | + `elements(string $name, array $values): array`, `attributes(string $name, array $values): array` |
+| `XMLEncoder::encode(Rows): list<string>` | `encode(Rows): string` - every row followed by `"\n"`                                              |
+
+A custom `XMLWriter` adds both methods; the smallest implementation delegates to `write()`:
+
+```php
+public function elements(string $name, array $values): array
+{
+    return array_map(fn (?string $value): string => $this->write(XMLNode::flatNode($name, $value ?? '')), $values);
+}
+
+public function attributes(string $name, array $values): array
+{
+    return array_map(
+        fn (?string $value): string => substr($this->write(XMLNode::nested('x', new XMLAttribute($name, type_string()->cast($value)))), 2, -2),
+        $values,
+    );
+}
+```
+
+### 93) `flow-php/etl-adapter-text` - `TextEncoder::encode()` returns one string per batch
+
+| Before                                    | After                  |
+|-------------------------------------------|------------------------|
+| `TextEncoder::encode(Rows): list<string>` | `encode(Rows): string` |
+
+### 94) `flow-php/parquet`, `flow-php/etl-adapter-parquet` - `ParquetFileWriter::writeColumns()`
+
+| Before                                             | After                                                                               |
+|----------------------------------------------------|-------------------------------------------------------------------------------------|
+| `ParquetFileWriter::{writeBatch, writeRow, close}` | + `writeColumns(array $columns): void` - a custom `ParquetFileWriter` implements it |
+| `ParquetEncoder::encode(Rows): list<array>`        | `ParquetEncoder::columns(Rows): array<string, list<mixed>>`                         |
+
+`$columns` holds one list per top-level column, every list of one length; a schema column it lacks is written as nulls,
+a key the schema lacks is ignored. `Writer::writeColumns()` is the public door.
+
+### 95) `flow-php/etl-adapter-json`, `-csv` - the JSON shape follows the column type, never the data
+
+| Before                                                  | After               |
+|---------------------------------------------------------|---------------------|
+| `map<int, string>` holding the keys `0, 1`: `["a","b"]` | `{"0":"a","1":"b"}` |
+| an empty `map`: `[]`                                    | `{}`                |
+| a `json` column holding `{}`: `[]`                      | `{}`                |
+| a row whose column names are `0, 1, …`: a list          | an object           |
+| a `list`                                                | `[…]`, unchanged    |
+
+Applies to `to_json()`, `to_json_lines()` and to a `list` / `map` / `structure` cell of `to_csv()`.
+
+### 96) `flow-php/types` - `type_float()->cast()` accepts `'NAN'`, `'INF'`, `'-INF'`
+
+| Before                                               | After                                                  |
+|------------------------------------------------------|--------------------------------------------------------|
+| `type_float()->cast('NAN')` threw `CastingException` | `NAN`; `'INF'` → `INF`, `'-INF'` → `-INF`              |
+| `'nan'`, `'Inf'`, `'+INF'`                           | still refused - exactly these three spellings are read |
+
+`from_csv()` with a `float` column reads what `to_csv()` writes for a float that is not finite.
+
 ---
 
 ## Upgrading from 0.43.x to 0.44.x

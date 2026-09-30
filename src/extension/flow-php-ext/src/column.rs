@@ -58,6 +58,10 @@ impl NativeColumn {
         &self.data
     }
 
+    pub fn plan(&self) -> &Rc<TypePlan> {
+        &self.plan
+    }
+
     fn kind(&self) -> &Kind {
         &self.plan.kind
     }

@@ -46,6 +46,11 @@ final class NativeParquetFileWriter implements ParquetFileWriter
         }
     }
 
+    public function writeColumns(array $columns): void
+    {
+        ($this->writer ?? throw new RuntimeException('Writer is not open'))->writeColumns($columns);
+    }
+
     public function writeRow(array $row): void
     {
         ($this->writer ?? throw new RuntimeException('Writer is not open'))->writeRow($row);

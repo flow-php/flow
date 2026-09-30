@@ -226,20 +226,25 @@ pub fn interval_from_micros(micros: i64) -> Result<Zval, PhpException> {
 
 /// The lowercase 36-char form of 16 uuid bytes.
 pub fn uuid_text(bytes: &[u8]) -> Vec<u8> {
-    const HEX: &[u8; 16] = b"0123456789abcdef";
-
     let mut text = Vec::with_capacity(36);
+
+    push_uuid_text(&mut text, bytes);
+
+    text
+}
+
+/// [`uuid_text`] appended to `out`.
+pub fn push_uuid_text(out: &mut Vec<u8>, bytes: &[u8]) {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
 
     for (index, byte) in bytes.iter().enumerate() {
         if matches!(index, 4 | 6 | 8 | 10) {
-            text.push(b'-');
+            out.push(b'-');
         }
 
-        text.push(HEX[usize::from(byte >> 4)]);
-        text.push(HEX[usize::from(byte & 0x0f)]);
+        out.push(HEX[usize::from(byte >> 4)]);
+        out.push(HEX[usize::from(byte & 0x0f)]);
     }
-
-    text
 }
 
 /// `Uuid::fromBytes()`: the constructor-less instance holding the lowercase 36-char form.

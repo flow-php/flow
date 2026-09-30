@@ -323,9 +323,23 @@ pub(crate) fn integer_from_str(bytes: &[u8]) -> Option<i64> {
     }
 }
 
+/// The three non-finite spellings the text writers produce and `FloatType::cast` reads back, case-sensitive.
+fn named_float(bytes: &[u8]) -> Option<f64> {
+    match bytes {
+        b"NAN" => Some(f64::NAN),
+        b"INF" => Some(f64::INFINITY),
+        b"-INF" => Some(f64::NEG_INFINITY),
+        _ => None,
+    }
+}
+
 /// `FloatType::cast` of a numeric string: the engine's `(float)` of it, which `is_numeric()` already computed; an integer
 /// zero keeps the sign of its text, as `(float) '-0'` is `-0.0`.
 pub(crate) fn float_from_str(bytes: &[u8]) -> Option<f64> {
+    if let Some(named) = named_float(bytes) {
+        return Some(named);
+    }
+
     match is_numeric_str(bytes) {
         (IS_LONG, 0, _) if bytes.iter().find(|byte| !byte.is_ascii_whitespace() && **byte != 0x0B) == Some(&b'-') => {
             Some(-0.0)
@@ -406,6 +420,10 @@ pub(crate) fn cast_value(kind: &CastKind, value: &Zval) -> Result<Option<Zval>, 
         CastKind::Float => {
             if value.is_double() {
                 Some(value.shallow_clone())
+            } else if let Some(named) = value.zend_str().and_then(|string| named_float(string.as_bytes())) {
+                let mut zv = Zval::new();
+                zv.set_double(named);
+                Some(zv)
             } else if value.is_long() || numeric_scalar(value) {
                 let mut zv = Zval::new();
                 zv.set_double(engine_double(value));

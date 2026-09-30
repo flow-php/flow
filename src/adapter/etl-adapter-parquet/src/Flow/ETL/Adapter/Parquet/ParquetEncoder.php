@@ -34,34 +34,30 @@ final class ParquetEncoder
     }
 
     /**
-     * @return list<array<array-key, mixed>>
+     * @return array<string, list<mixed>> the values of every column as the Parquet writer takes them
      */
-    public function encode(Rows $rows): array
+    public function columns(Rows $rows): array
     {
         $columns = [];
 
         foreach ($rows->schema()->definitions() as $definition) {
-            $columns[$definition->entry()->name()] = $rows->column($definition->entry()->name())->values();
-        }
+            $name = $definition->entry()->name();
+            $values = $rows->column($name)->values();
 
-        $encoded = [];
+            if (array_key_exists($name, $this->encodePlan)) {
+                $valueConverter = $this->encodePlan[$name];
 
-        for ($i = 0, $count = $rows->count(); $i < $count; $i++) {
-            $values = [];
-
-            foreach ($columns as $name => $column) {
-                $values[$name] = $column[$i];
-            }
-
-            foreach ($this->encodePlan as $name => $valueConverter) {
-                if (array_key_exists($name, $values) && $values[$name] !== null) {
-                    $values[$name] = $valueConverter->encode($values[$name]);
+                // @mago-ignore analysis:mixed-assignment
+                foreach ($values as $i => $value) {
+                    if ($value !== null) {
+                        $values[$i] = $valueConverter->encode($value);
+                    }
                 }
             }
 
-            $encoded[] = $values;
+            $columns[$name] = $values;
         }
 
-        return $encoded;
+        return $columns;
     }
 }

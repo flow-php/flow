@@ -724,3 +724,286 @@ function json_leak_cells(): array
         '{"a":}',
     ];
 }
+
+/**
+ * A random value of the text writers' fuzz alphabet: separators, enclosures, escapes, line breaks, slashes, controls,
+ * multi-byte characters; `mt_srand()` first.
+ */
+function write_random_string(): string
+{
+    static $alphabet = [
+        'a',
+        'b',
+        'Z',
+        '0',
+        '7',
+        ',',
+        ';',
+        '|',
+        '.',
+        '-',
+        '"',
+        "'",
+        '\\',
+        "\n",
+        "\r",
+        "\t",
+        ' ',
+        '/',
+        '<',
+        '&',
+        "\x01",
+        "\x7f",
+        'ż',
+        '😀',
+        "\u{2028}",
+        '',
+    ];
+    $text = '';
+
+    for ($i = mt_rand(0, 6); $i > 0; $i--) {
+        $text .= $alphabet[mt_rand(0, count($alphabet) - 1)];
+    }
+
+    return $text;
+}
+
+/**
+ * A random type of nesting depth <= $depth that a column can hold, and a generator of its values.
+ *
+ * @return array{Flow\Types\Type<mixed>, Closure(): mixed}
+ */
+function write_random_type(int $depth): array
+{
+    static $zones = ['UTC', 'Europe/Warsaw', 'America/New_York', '+02:30', '-05:00'];
+    static $floats = [
+        0.1 + 0.2,
+        1.0,
+        -0.0,
+        1.0e25,
+        1.0e-7,
+        123456789012345.67,
+        -2.5,
+        1 / 3,
+        PHP_FLOAT_MAX,
+        PHP_FLOAT_MIN,
+        5.0e-324,
+    ];
+    static $documents = [
+        '{"a":1}',
+        '[]',
+        '{}',
+        '{"a":{}}',
+        '[1,{"0":"x"}]',
+        '["s/t"]',
+        '[5, 1.0]',
+        '{"k":[1500.0,true,null]}',
+        '{"a": "b c"}',
+    ];
+    static $markup = ['<a b="1"><c/></a>', '<root><a>1</a></root>', '<x>a &amp; b</x>'];
+    static $keys = ['a', 'b c', 'k/1', 'ż', '"q"', 'x,y'];
+    static $fields = ['a', 'b', 'c d', 'e"f', 'g/h'];
+
+    $kind = mt_rand(0, $depth > 0 ? 15 : 11);
+
+    [$type, $value] = match ($kind) {
+        0 => [
+            Flow\Types\DSL\type_integer(),
+            static fn(): int => mt_rand(0, 3) === 0 ? mt_rand(-5, 5) : mt_rand() * (mt_rand(0, 1) ? 1 : -1),
+        ],
+        1 => [
+            Flow\Types\DSL\type_float(),
+            static fn(): float => mt_rand(0, 2) === 0
+                ? $floats[mt_rand(0, count($floats) - 1)]
+                : mt_rand(-100000, 100000) / 1000,
+        ],
+        2 => [Flow\Types\DSL\type_boolean(), static fn(): bool => mt_rand(0, 1) === 1],
+        3 => [Flow\Types\DSL\type_string(), write_random_string(...)],
+        4 => (static function () use ($zones): array {
+            $zone = $zones[mt_rand(0, count($zones) - 1)];
+
+            return [
+                Flow\Types\DSL\type_datetime($zone),
+                static fn(): DateTimeImmutable => (new DateTimeImmutable(
+                    '@' . mt_rand(-3_000_000_000, 5_000_000_000),
+                ))->modify('+' . mt_rand(0, 999_999) . ' usec'),
+            ];
+        })(),
+        5 => [
+            Flow\Types\DSL\type_date(),
+            static fn(): DateTimeImmutable => new DateTimeImmutable('@' . (mt_rand(-50_000, 50_000) * 86_400)),
+        ],
+        6 => [
+            Flow\Types\DSL\type_time(),
+            static fn(): DateInterval => (new DateTimeImmutable('@0'))->diff(
+                new DateTimeImmutable('@' . mt_rand(-200_000, 200_000)),
+            ),
+        ],
+        7 => [
+            Flow\Types\DSL\type_uuid(),
+            static fn(): string => sprintf(
+                '%08x-%04x-4%03x-%04x-%012x',
+                mt_rand(0, 0xffffffff),
+                mt_rand(0, 0xffff),
+                mt_rand(0, 0xfff),
+                mt_rand(0x8000, 0xbfff),
+                mt_rand(0, 0xffffffffffff),
+            ),
+        ],
+        8 => [Flow\Types\DSL\type_json(), static fn(): string => $documents[mt_rand(0, count($documents) - 1)]],
+        9 => [Flow\Types\DSL\type_enum(BasicEnum::class), static fn(): BasicEnum => BasicEnum::cases()[mt_rand(0, 2)]],
+        10 => [
+            Flow\Types\DSL\type_time_zone(),
+            static fn(): DateTimeZone => new DateTimeZone($zones[mt_rand(0, count($zones) - 1)]),
+        ],
+        11 => [Flow\Types\DSL\type_xml(), static fn(): string => $markup[mt_rand(0, count($markup) - 1)]],
+        12 => (static function () use ($depth): array {
+            [$element, $value] = write_random_type($depth - 1);
+
+            return [
+                type_list($element),
+                static function () use ($value): array {
+                    $list = [];
+
+                    for ($i = mt_rand(0, 3); $i > 0; $i--) {
+                        $list[] = $value();
+                    }
+
+                    return $list;
+                },
+            ];
+        })(),
+        13 => (static function () use ($depth, $keys): array {
+            [$element, $value] = write_random_type($depth - 1);
+
+            return [
+                type_map(type_string(), $element),
+                static function () use ($value, $keys): array {
+                    $map = [];
+
+                    for ($i = mt_rand(0, 3); $i > 0; $i--) {
+                        $map[$keys[mt_rand(0, count($keys) - 1)]] = $value();
+                    }
+
+                    return $map;
+                },
+            ];
+        })(),
+        14 => (static function () use ($depth): array {
+            [$element, $value] = write_random_type($depth - 1);
+
+            return [
+                type_map(type_integer(), $element),
+                static function () use ($value): array {
+                    $map = [];
+
+                    for ($i = mt_rand(0, 3); $i > 0; $i--) {
+                        $map[mt_rand(-3, 40)] = $value();
+                    }
+
+                    return $map;
+                },
+            ];
+        })(),
+        15 => (static function () use ($depth, $fields): array {
+            $elements = [];
+            $values = [];
+
+            foreach (array_rand(array_flip($fields), mt_rand(2, 3)) as $name) {
+                [$element, $value] = write_random_type($depth - 1);
+                $optional = mt_rand(0, 3) === 0;
+                // an optional element is present or absent, never an explicit null
+                $elements[$name] = structure_element(
+                    $name,
+                    $optional && $element instanceof Flow\Types\Type\Logical\OptionalType ? $element->base() : $element,
+                    $optional,
+                );
+                $values[$name] = [
+                    $optional,
+                    $optional && $element instanceof Flow\Types\Type\Logical\OptionalType
+                        ? static function () use ($value): mixed {
+                            do {
+                                // @mago-ignore analysis:mixed-assignment
+                                $generated = $value();
+                            } while ($generated === null);
+
+                            return $generated;
+                        } : $value,
+                ];
+            }
+
+            return [
+                type_structure($elements),
+                static function () use ($values): array {
+                    $structure = [];
+
+                    foreach ($values as $name => [$optional, $value]) {
+                        if (!$optional || mt_rand(0, 1) === 1) {
+                            $structure[$name] = $value();
+                        }
+                    }
+
+                    return $structure;
+                },
+            ];
+        })(),
+        default => throw new LogicException('no such kind'),
+    };
+
+    if (mt_rand(0, 3) > 0) {
+        return [$type, $value];
+    }
+
+    return [type_optional($type), static fn(): mixed => mt_rand(0, 5) === 0 ? null : $value()];
+}
+
+/**
+ * A random batch for the text writers: 1-6 columns of random types (nesting <= 3) under plain and awkward names, 0-40
+ * rows.
+ *
+ * @return array{Schema, list<array<array-key, mixed>>}
+ */
+function write_random_batch(): array
+{
+    static $names = ['id', 'first name', 'a"b', 'ż', 'x/y', 'name', 'value', 'at', '0', '7', 'a,b'];
+    $definitions = [];
+    $values = [];
+
+    foreach ((array) array_rand(array_flip($names), mt_rand(1, 6)) as $name) {
+        [$type, $value] = write_random_type(3);
+        $definitions[] = Flow\ETL\DSL\definition_from_type((string) $name, $type);
+        $values[(string) $name] = $value;
+    }
+
+    $rows = [];
+
+    for ($i = [0, 1, mt_rand(2, 40), mt_rand(2, 40)][mt_rand(0, 3)]; $i > 0; $i--) {
+        $row = [];
+
+        foreach ($values as $name => $value) {
+            $row[$name] = $value();
+        }
+
+        $rows[] = $row;
+    }
+
+    return [schema(...$definitions), $rows];
+}
+
+/**
+ * The bytes a text sink wrote, or the class and message of what it threw.
+ *
+ * @param callable(Flow\Filesystem\Stream\StringDestinationStream): void $write
+ */
+function written(callable $write): string
+{
+    $stream = new Flow\Filesystem\Stream\StringDestinationStream(Flow\Filesystem\DSL\path('memory://out'));
+
+    try {
+        $write($stream);
+    } catch (Throwable $e) {
+        return $e::class . ': ' . $e->getMessage();
+    }
+
+    return $stream->content();
+}

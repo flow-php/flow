@@ -333,6 +333,60 @@ impl NativeParquetRowsWriter {
 
         Ok(())
     }
+
+    /// `rows` values of every column from `first` on, column by column; a refused cell lowers the row limit of the
+    /// columns after it, so the refusal raised and the rows kept are those of `append()` row by row.
+    fn append_columns(&mut self, lists: &[Option<Vec<&Zval>>], first: usize, rows: usize) -> PhpResult<()> {
+        let null = Zval::new();
+        let mut limit = rows;
+        let mut refused = None;
+
+        for (index, column) in self.columns.iter_mut().enumerate() {
+            let refusal = (0..limit).find_map(|row| {
+                let value = lists[index].as_ref().map_or(&null, |values| values[first + row]);
+
+                column
+                    .cell
+                    .append(&mut column.builder, value, column.nullable, &self.classes)
+                    .err()
+                    .map(|refusal| (row, refusal))
+            });
+
+            if let Some((row, refusal)) = refusal {
+                limit = row;
+                refused = Some((column.name.clone(), refusal));
+            }
+        }
+
+        let kept = self.buffered + limit;
+
+        if let Some((name, refusal)) = refused {
+            for column in &mut self.columns {
+                column.builder.truncate(kept);
+            }
+
+            self.buffered = kept;
+
+            return Err(match refusal {
+                Refusal::Value { expected, got } => self.refused(Error::Value {
+                    column: name,
+                    row: kept,
+                    expected,
+                    got,
+                }),
+                Refusal::Overflow => self.refused(Error::Overflow { column: name, row: kept }),
+                Refusal::Php(exception) => exception,
+            });
+        }
+
+        self.buffered = kept;
+
+        if self.buffered >= self.batch_size {
+            self.flush()?;
+        }
+
+        Ok(())
+    }
 }
 
 #[php_impl]
@@ -383,6 +437,56 @@ impl NativeParquetRowsWriter {
     pub fn write_rows(&mut self, rows: &ZendHashTable) -> PhpResult<()> {
         for row in rows.values() {
             self.append(row)?;
+        }
+
+        Ok(())
+    }
+
+    /// Every list of one length; a writer column `$columns` lacks is nulls, a key the writer lacks is ignored.
+    #[php(name = "writeColumns")]
+    pub fn write_columns(&mut self, columns: &ZendHashTable) -> PhpResult<()> {
+        if self.writer.is_none() {
+            return Err(exception(RUNTIME, "Writer is not open".to_string()));
+        }
+
+        let mut lengths = Vec::with_capacity(columns.len());
+
+        for (key, values) in columns.iter() {
+            let values = values.array().ok_or_else(|| {
+                exception(INVALID_ARGUMENT, "flow_php Parquet writer columns must be arrays".to_string())
+            })?;
+
+            lengths.push((key.to_string(), values.len()));
+        }
+
+        let count = lengths.first().map_or(0, |(_, length)| *length);
+
+        if lengths.iter().any(|(_, length)| *length != count) {
+            let described = lengths.iter().map(|(name, length)| format!("\"{name}\": {length}")).collect::<Vec<_>>();
+
+            return Err(exception(
+                INVALID_ARGUMENT,
+                format!("writeColumns() takes lists of one length, got {}", described.join(", ")),
+            ));
+        }
+
+        let lists = self
+            .columns
+            .iter()
+            .map(|column| {
+                ht_get(columns, column.name.as_bytes())
+                    .and_then(Zval::array)
+                    .map(|values| values.values().collect::<Vec<_>>())
+            })
+            .collect::<Vec<_>>();
+        let mut first = 0;
+
+        // in the row door's flush steps, so a refusal names the row index append() names
+        while first < count {
+            let rows = (count - first).min(self.batch_size - self.buffered);
+
+            self.append_columns(&lists, first, rows)?;
+            first += rows;
         }
 
         Ok(())

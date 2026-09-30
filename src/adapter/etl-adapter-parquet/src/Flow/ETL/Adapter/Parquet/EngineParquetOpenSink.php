@@ -21,6 +21,6 @@ final readonly class EngineParquetOpenSink implements ParquetOpenSink
 
     public function write(Rows $rows): void
     {
-        $this->writer->writeBatch($this->encoder->encode($rows));
+        $this->writer->writeColumns($this->encoder->columns($rows));
     }
 }

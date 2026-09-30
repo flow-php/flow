@@ -6,12 +6,31 @@ namespace Flow\ETL\Adapter\XML\XMLWriter;
 
 use DOMDocument;
 use DOMElement;
+use Flow\ETL\Adapter\XML\Abstraction\XMLAttribute;
 use Flow\ETL\Adapter\XML\Abstraction\XMLNode;
 use Flow\ETL\Adapter\XML\XMLWriter;
 use Flow\ETL\Exception\RuntimeException;
 
+use function array_map;
+use function Flow\Types\DSL\type_string;
+use function substr;
+
 final class DOMDocumentWriter implements XMLWriter
 {
+    public function attributes(string $name, array $values): array
+    {
+        return array_map(fn(?string $value): string => substr(
+            $this->write(XMLNode::nested('x', new XMLAttribute($name, type_string()->cast($value)))),
+            2,
+            -2,
+        ), $values);
+    }
+
+    public function elements(string $name, array $values): array
+    {
+        return array_map(fn(?string $value): string => $this->write(XMLNode::flatNode($name, $value ?? '')), $values);
+    }
+
     public function write(XMLNode $node): string
     {
         $dom = new DOMDocument();

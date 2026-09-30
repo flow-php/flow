@@ -88,6 +88,51 @@ data_frame()
     ->run();
 ```
 
+## What the loaders write
+
+```php
+<?php
+
+use function Flow\ETL\Adapter\JSON\to_json_lines;
+use function Flow\ETL\DSL\{bool_schema, data_frame, datetime_schema, float_schema, from_array, int_schema, json_schema, list_schema, map_schema, schema, structure_schema};
+use function Flow\Types\DSL\{type_date, type_integer, type_list, type_map, type_string, type_structure};
+
+data_frame()
+    ->read(from_array(
+        [
+            ['id' => 1, 'active' => true, 'price' => 0.1 + 0.2, 'at' => new DateTimeImmutable('2026-01-02 03:04:05 UTC'), 'days' => [new DateTimeImmutable('2026-01-02')], 'labels' => [0 => 'a', 1 => 'b'], 'size' => ['w' => 1, 'h' => 2], 'meta' => '{"tags": []}'],
+            ['id' => 2, 'active' => false, 'price' => 1.0, 'at' => null, 'days' => [], 'labels' => [], 'size' => ['w' => 3, 'h' => 4], 'meta' => '{}'],
+        ],
+        schema(
+            int_schema('id'), bool_schema('active'), float_schema('price'), datetime_schema('at', nullable: true),
+            list_schema('days', type_list(type_date())), map_schema('labels', type_map(type_integer(), type_string())),
+            structure_schema('size', type_structure(['w' => type_integer(), 'h' => type_integer()])), json_schema('meta'),
+        ),
+    ))
+    ->write(to_json_lines($path))
+    ->run();
+```
+
+```json
+{"id":1,"active":true,"price":0.30000000000000004,"at":"2026-01-02T03:04:05+00:00","days":["2026-01-02"],"labels":{"0":"a","1":"b"},"size":{"w":1,"h":2},"meta":{"tags":[]}}
+{"id":2,"active":false,"price":1,"at":null,"days":[],"labels":{},"size":{"w":3,"h":4},"meta":{}}
+```
+
+The shape follows the column type, never the data: a `list` is always `[…]`, a `map`, a `structure` and a row are
+always `{…}` (an empty map is `{}`, a map keyed `0, 1` is `{"0":…,"1":…}`), a `json` column keeps its objects and
+lists. A `datetime` / `date` is written with `withDateTimeFormat()` / `withDateFormat()` at every depth, a `time` as
+microseconds. A float has the shortest digits that read back as the same float (`1.0` is `1`, or `1.0` under
+`JSON_PRESERVE_ZERO_FRACTION`); `NAN` and the infinities are refused:
+`RuntimeException('Failed to encode JSON: Inf and NaN cannot be JSON encoded')`.
+
+Floats are rendered under `serialize_precision = -1`. When the ini holds another value the writer sets it for the
+render and restores it, so `ini_set()` must be allowed; otherwise it throws
+`RuntimeException('Writing floats requires serialize_precision = -1 and ini_set() cannot change it')`.
+
+With the [`flow_php`](/documentation/components/extensions/flow-php-ext.md) extension loaded and no flags beyond
+`JSON_THROW_ON_ERROR`, `JSON_UNESCAPED_SLASHES`, `JSON_UNESCAPED_UNICODE` and `JSON_PRESERVE_ZERO_FRACTION`, the same
+bytes are rendered natively.
+
 ## JSON Schema conversion
 
 The adapter can convert [JSON Schema](https://json-schema.org) documents into Flow schemas and back.

@@ -9,12 +9,14 @@ mod date_check;
 mod exception;
 mod globals;
 mod interfaces;
+mod json;
 mod json_check;
 mod kind_builder;
 mod parquet;
 mod physical;
 mod plan;
 mod render;
+mod text;
 mod thrift;
 mod uuid_check;
 mod values;
@@ -193,6 +195,8 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .class::<backend::DefaultBackend>()
         .class::<RustCSVReaderNative>()
         .class::<RustColumnFoldNative>()
+        .class::<csv::write::NativeCSVWriter>()
+        .class::<json::write::NativeJsonWriter>()
         .class::<parquet::etl::NativeParquetReader>()
         .class::<parquet::etl::NativeParquetWriter>()
         .class::<parquet::library::NativeParquetFile>()

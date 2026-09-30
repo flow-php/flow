@@ -1,7 +1,7 @@
 {
     "name": "flow-php/flow-php-ext",
     "type": "php-ext",
-    "description": "Flow PHP native extension (Rust) - native column backend, CSV reader, Parquet reader and writer",
+    "description": "Flow PHP native extension (Rust) - native column backend, CSV reader, CSV and JSON writers, Parquet reader and writer",
     "keywords": ["serializer", "binary", "extension", "rust", "native", "dataframe"],
     "license": "MIT",
     "require": {
@@ -10,6 +10,7 @@
     "autoload": {
         "psr-4": {
             "Flow\\ETL\\Adapter\\CSV\\": "php/Flow/ETL/Adapter/CSV/",
+            "Flow\\ETL\\Adapter\\JSON\\": "php/Flow/ETL/Adapter/JSON/",
             "Flow\\ETL\\Adapter\\Parquet\\": "php/Flow/ETL/Adapter/Parquet/",
             "Flow\\Parquet\\Engine\\Native\\": "php/Flow/Parquet/Engine/Native/",
             "Flow\\Floe\\": "php/Flow/Floe/"

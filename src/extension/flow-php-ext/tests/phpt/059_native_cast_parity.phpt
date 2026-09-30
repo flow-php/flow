@@ -55,6 +55,8 @@ foreach ([
     [new ForeignTypeDefinition('a', new ThrowingType(new LogicException('stub type refuses everything'))), [[1, 2]]],
     [datetime_schema('at'), ['+292278994-08-17T07:12:55Z']],
     [int_schema('id'), ["\f5"]], [int_schema('id'), ["5\f"]], [float_schema('p'), ['-0']],
+    [float_schema('p'), ['NAN']], [float_schema('p'), ['INF']], [float_schema('p'), ['-INF']],
+    [float_schema('p'), ['nan']], [float_schema('p'), ['Inf']], [float_schema('p'), ['+INF']],
 ] as $case) {
     $cases[] = $case;
 }
@@ -94,6 +96,6 @@ foreach (['UTC', 'Europe/Warsaw', 'America/Santiago'] as $timezone) {
 }
 ?>
 --EXPECT--
-date.timezone UTC: 434 of 434 identical
-date.timezone Europe/Warsaw: 434 of 434 identical
-date.timezone America/Santiago: 434 of 434 identical
+date.timezone UTC: 446 of 446 identical
+date.timezone Europe/Warsaw: 446 of 446 identical
+date.timezone America/Santiago: 446 of 446 identical

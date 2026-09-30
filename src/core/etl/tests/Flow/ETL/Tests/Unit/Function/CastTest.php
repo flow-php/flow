@@ -21,6 +21,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\cast;
+use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
@@ -52,6 +53,56 @@ final class CastTest extends FlowTestCase
             ],
             schema(str_schema('value', nullable: true)),
         );
+    }
+
+    public function test_casting_a_datetime_column_to_string_equals_casting_each_value(): void
+    {
+        $rows = [
+            ['at' => new DateTimeImmutable('2026-03-29T00:59:59.123456Z')],
+            ['at' => new DateTimeImmutable('2026-03-29T01:00:00Z')],
+        ];
+
+        foreach (['UTC', 'Europe/Warsaw'] as $zone) {
+            static::assertSame(
+                [
+                    type_string()->cast($rows[0]['at']->setTimezone(new DateTimeZone($zone))),
+                    type_string()->cast($rows[1]['at']->setTimezone(new DateTimeZone($zone))),
+                ],
+                (new FunctionContext(flow_context()))
+                    ->column(cast(ref('at'), 'string'), $rows, schema(datetime_schema('at', zone: $zone)))
+                    ->values(),
+            );
+        }
+    }
+
+    public function test_casting_a_date_column_to_string(): void
+    {
+        static::assertSame(
+            ['2026-01-02T00:00:00+00:00', null],
+            (new FunctionContext(flow_context()))
+                ->column(
+                    cast(ref('on'), type_optional(type_string())),
+                    [['on' => new DateTimeImmutable('2026-01-02')], ['on' => null]],
+                    schema(date_schema('on', nullable: true)),
+                )
+                ->values(),
+        );
+    }
+
+    public function test_casting_a_null_datetime_to_string_is_refused_with_its_row_index(): void
+    {
+        try {
+            (new FunctionContext(flow_context()))->column(
+                cast(ref('at'), 'string'),
+                [['at' => new DateTimeImmutable('2026-01-02')], ['at' => null]],
+                schema(datetime_schema('at', nullable: true)),
+            );
+            static::fail('a null datetime was cast to a non-nullable string');
+        } catch (EvaluationException $e) {
+            static::assertSame(1, $e->rowIndex);
+            static::assertInstanceOf(InvalidArgumentException::class, $e->getPrevious());
+            static::assertSame('Cast function requires non-null value', $e->getPrevious()->getMessage());
+        }
     }
 
     public function test_cast_of_a_null_value_to_an_optional_target_is_null(): void

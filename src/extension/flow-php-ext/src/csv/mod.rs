@@ -4,6 +4,7 @@
 pub mod columns;
 pub mod fold;
 pub mod tokenizer;
+pub mod write;
 
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::exception::PhpException;

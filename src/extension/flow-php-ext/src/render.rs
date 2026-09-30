@@ -29,6 +29,10 @@ pub fn invalid_argument(message: String) -> PhpException {
     exception(INVALID_ARGUMENT, message)
 }
 
+pub fn runtime(message: String) -> PhpException {
+    exception(RUNTIME, message)
+}
+
 pub fn offset_overflow(last: u64) -> PhpException {
     exception(OFFSET_OVERFLOW, format!("Offsets exceed the i32 range of a batch buffer: the last offset is {last}"))
 }

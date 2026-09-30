@@ -7,15 +7,21 @@ namespace Flow\ETL\Function;
 use DateTimeInterface;
 use Exception;
 use Flow\ETL\Column\Column;
+use Flow\ETL\Column\TextValues;
 use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\Evaluation\ResultColumn;
 use Flow\ETL\Rows;
 use Flow\Types\Type;
+use Flow\Types\Type\Logical\DateTimeType;
+use Flow\Types\Type\Logical\DateType;
 
+use function array_search;
 use function Flow\ETL\DSL\lit;
+use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_string;
+use function is_string;
 
 final class DateTimeFormat implements ScalarFunction
 {
@@ -57,6 +63,28 @@ final class DateTimeFormat implements ScalarFunction
 
     public function eval(Rows $rows, FlowContext $context): Column
     {
+        // @mago-ignore analysis:mixed-assignment
+        $format = $this->format instanceof Literal ? $this->format->value() : null;
+
+        if (is_string($format)) {
+            $column = (new Parameter($this->dateTime))->column($rows, $context);
+            $type = type_bare($column->type());
+
+            if ($type instanceof DateTimeType || $type instanceof DateType) {
+                /** @var list<?int> $physicals */
+                $physicals = $column->physicals();
+
+                if ($column->nullCount() > 0) {
+                    throw EvaluationException::at(
+                        (int) array_search(null, $physicals, true),
+                        new InvalidArgumentException('DateTimeFormat function requires non-null values'),
+                    );
+                }
+
+                return (new ResultColumn())->of($this, (new TextValues())->dateTimes($type, $physicals, $format));
+            }
+        }
+
         $values = (new Parameter($this->dateTime))->asInstancesOf($rows, $context, DateTimeInterface::class);
         $formats = (new Parameter($this->format))->asStrings($rows, $context);
         $results = [];

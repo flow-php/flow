@@ -24,7 +24,6 @@ use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
 use Throwable;
 
-use function implode;
 use function sprintf;
 
 final class TextLoader implements Closure, Discardable, FileLoader, Loader, PartitioningLoader
@@ -98,7 +97,7 @@ final class TextLoader implements Closure, Discardable, FileLoader, Loader, Part
             foreach ($this->router->route($rows) as [$partitions, $group]) {
                 ($this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode))
                     ->writeTo($partitions->toArray())
-                    ->append(implode('', $this->encoder()->encode($group)));
+                    ->append($this->encoder()->encode($group));
             }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);

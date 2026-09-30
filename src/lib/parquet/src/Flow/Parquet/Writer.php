@@ -126,6 +126,15 @@ final class Writer
     }
 
     /**
+     * @param array<string, list<mixed>> $columns by top-level column name, every list of one length; a schema column
+     *                                            the array lacks is written as nulls, a key the schema lacks is ignored
+     */
+    public function writeColumns(array $columns): void
+    {
+        ($this->file ?? throw new RuntimeException('Writer is not open'))->writeColumns($columns);
+    }
+
+    /**
      * @param array<array-key, mixed> $row
      */
     public function writeRow(array $row): void

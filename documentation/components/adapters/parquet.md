@@ -43,6 +43,9 @@ df()
 
 Flow `float` columns are written as Parquet `DOUBLE`.
 
+With an engine of the `flow-php/parquet` library (`PhpParquetEngine`, or `ArrowParquetEngine` without `flow_php`) a
+batch reaches the writer column by column, through `Writer::writeColumns()`.
+
 ## Schema
 
 The file footer is the schema: `from_parquet(...)->withSchema()` throws. Project with `columns:`, change types after

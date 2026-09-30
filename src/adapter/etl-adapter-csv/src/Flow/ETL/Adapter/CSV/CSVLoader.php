@@ -20,14 +20,11 @@ use Flow\ETL\Loader\PartitionRouter;
 use Flow\ETL\Rows;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
-use Flow\Filesystem\Partition;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
 use Throwable;
 
-use function array_values;
-use function implode;
 use function sprintf;
 
 final class CSVLoader implements Closure, Discardable, FileLoader, Loader, PartitioningLoader
@@ -44,13 +41,18 @@ final class CSVLoader implements Closure, Discardable, FileLoader, Loader, Parti
 
     private string $dateTimeFormat = DateTimeInterface::ATOM;
 
-    private ?CSVEncoder $encoder = null;
-
     private string $enclosure = '"';
 
     private string $escape = '\\';
 
     private bool $header = true;
+
+    private ?CSVSinkOpener $opener = null;
+
+    /**
+     * @var array<string, CSVOpenSink> by stream URI
+     */
+    private array $sinks = [];
 
     private string $newLineSeparator = PHP_EOL;
 
@@ -86,12 +88,14 @@ final class CSVLoader implements Closure, Discardable, FileLoader, Loader, Parti
     {
         $this->files?->publish();
         $this->files = null;
+        $this->sinks = [];
     }
 
     public function discard(FlowContext $context): void
     {
         $this->files?->abandon();
         $this->files = null;
+        $this->sinks = [];
     }
 
     public function destination(): Path
@@ -111,7 +115,13 @@ final class CSVLoader implements Closure, Discardable, FileLoader, Loader, Parti
 
         try {
             foreach ($this->router->route($rows) as [$partitions, $group]) {
-                $this->write($group, array_values($group->schema()->references()->names()), $partitions->toArray());
+                $files = $this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode);
+                $fresh = !$files->touched($partitions->toArray());
+                $stream = $files->writeTo($partitions->toArray());
+                ($this->sinks[$stream->path()->uri()] ??= $this->opener()->open(
+                    $stream,
+                    $this->header && $fresh,
+                ))->write($group);
             }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
@@ -178,35 +188,15 @@ final class CSVLoader implements Closure, Discardable, FileLoader, Loader, Parti
         return $this;
     }
 
-    /**
-     * @param list<string> $headers
-     * @param array<Partition> $partitions
-     */
-    public function write(Rows $nextRows, array $headers, array $partitions): void
+    private function opener(): CSVSinkOpener
     {
-        $files = $this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode);
-
-        $encoder = $this->encoder();
-
-        $writeHeader = $this->header && !$files->touched($partitions);
-        $stream = $files->writeTo($partitions);
-
-        if ($writeHeader) {
-            $stream->append($encoder->encodeHeader($headers));
-        }
-
-        $stream->append(implode('', $encoder->encode($nextRows)));
-    }
-
-    private function encoder(): CSVEncoder
-    {
-        return $this->encoder ??= new CSVEncoder(
+        return $this->opener ??= new CSVSinkOpener(new CSVWriteOptions(
             separator: $this->separator,
             enclosure: $this->enclosure,
             escape: $this->escape,
+            newLineSeparator: $this->newLineSeparator,
             dateTimeFormat: $this->dateTimeFormat,
             dateFormat: $this->dateFormat,
-            newLineSeparator: $this->newLineSeparator,
-        );
+        ));
     }
 }

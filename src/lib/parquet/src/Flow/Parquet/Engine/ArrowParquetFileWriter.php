@@ -8,6 +8,7 @@ use Flow\Arrow\Parquet\Writer;
 use Flow\Filesystem\DestinationStream;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFileWriter;
+use Flow\Parquet\Writer\ColumnLists;
 
 use function array_fill_keys;
 
@@ -56,6 +57,24 @@ final class ArrowParquetFileWriter implements ParquetFileWriter
         foreach ($rows as $row) {
             $this->writeRow($row);
         }
+    }
+
+    public function writeColumns(array $columns): void
+    {
+        $count = (new ColumnLists())->length($columns);
+        $rows = [];
+
+        for ($i = 0; $i < $count; $i++) {
+            $row = [];
+
+            foreach ($columns as $name => $values) {
+                $row[$name] = $values[$i];
+            }
+
+            $rows[] = $row;
+        }
+
+        $this->writeBatch($rows);
     }
 
     public function writeRow(array $row): void

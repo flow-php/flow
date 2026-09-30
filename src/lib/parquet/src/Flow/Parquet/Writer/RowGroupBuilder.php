@@ -13,7 +13,9 @@ use Flow\Parquet\ParquetFile\RowGroup;
 use Flow\Parquet\ParquetFile\Schema;
 
 use function array_chunk;
+use function array_slice;
 use function count;
+use function min;
 
 final class RowGroupBuilder
 {
@@ -74,6 +76,44 @@ final class RowGroupBuilder
             }
 
             $this->rowsCount += count($chunk);
+
+            if ($this->columnChunkBuilders->isAnyPageFull()) {
+                $this->columnChunkBuilders->closePages();
+            }
+        }
+    }
+
+    /**
+     * @param array<string, list<mixed>> $columns by top-level column name
+     * @param int $count rows in every list
+     */
+    public function addColumns(array $columns, int $count): void
+    {
+        /** @var int<1, max> $interval */
+        $interval = $this->options->getInt(Option::PAGE_SIZE_CHECK_INTERVAL);
+        // rows still buffered by addRow() came first - parquet identifies a row by its position
+        $this->flushBuffer();
+
+        for ($offset = 0; $offset < $count; $offset += $interval) {
+            $length = min($interval, $count - $offset);
+            $slices = [];
+
+            foreach ($columns as $name => $values) {
+                $slices[$name] = array_slice($values, $offset, $length);
+            }
+
+            $flatColumnsData = $this->shredder->shredColumns(
+                $this->schema,
+                $slices,
+                $length,
+                $this->flushedRows + $this->rowsCount,
+            );
+
+            foreach ($flatColumnsData as $flatPath => $columnValues) {
+                $this->columnChunkBuilders->addColumnByFlatPath($flatPath, $columnValues);
+            }
+
+            $this->rowsCount += $length;
 
             if ($this->columnChunkBuilders->isAnyPageFull()) {
                 $this->columnChunkBuilders->closePages();

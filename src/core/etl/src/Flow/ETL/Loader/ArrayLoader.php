@@ -10,8 +10,6 @@ use Flow\ETL\Loader;
 use Flow\ETL\Rows;
 use Throwable;
 
-use function array_merge;
-
 final class ArrayLoader implements Loader
 {
     /**
@@ -26,7 +24,9 @@ final class ArrayLoader implements Loader
         $context->telemetry()->loadingStarted($this);
 
         try {
-            $this->array = array_merge($this->array, $rows->toArray());
+            foreach ($rows->toArray() as $row) {
+                $this->array[] = $row;
+            }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
         } catch (Throwable $e) {

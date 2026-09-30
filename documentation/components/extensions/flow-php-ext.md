@@ -8,7 +8,7 @@ package: flow-php/flow-php-ext
 
 [TOC]
 
-This extension is Flow's native column backend and reads CSV and Parquet and writes Parquet natively in Rust via
+This extension is Flow's native column backend and reads CSV and Parquet and writes CSV, JSON and Parquet natively in Rust via
 [ext-php-rs](https://github.com/extphprs/ext-php-rs). The pure-PHP implementations in `flow-php/etl` are the canonical
 behaviour reference and work without the extension - loading it is purely an optimization.
 
@@ -64,6 +64,34 @@ The extension registers the interfaces `Flow\ETL\Column\{Backend, Column, Column
 `Flow\ETL\Column\{DefaultBackend, NativeColumn, NativeColumnBuilder}`, and `Flow\ETL\Adapter\CSV\RustCSVReaderNative`
 and `Flow\ETL\Adapter\CSV\RustColumnFoldNative`, which read CSV straight into native columns and narrow string
 columns to their types.
+
+## CSV and JSON writers
+
+With the extension loaded, `to_csv()`, `to_json()` and `to_json_lines()` render a batch from the arrow buffers, without
+a PHP value per cell. The bytes are the ones the PHP writers produce.
+
+```php
+<?php
+
+use function Flow\ETL\Adapter\CSV\{from_csv, to_csv};
+use function Flow\ETL\Adapter\JSON\to_json_lines;
+use function Flow\ETL\DSL\df;
+
+df()
+    ->read(from_csv(__DIR__ . '/input.csv'))
+    ->write(to_csv(__DIR__ . '/output.csv')->withDateTimeFormat('Y-m-d H:i:s.u P')) // rendered natively
+    ->write(to_json_lines(__DIR__ . '/output.jsonl')->withDateTimeFormat('D, d M Y'))  // `D` and `M`: this column renders in PHP
+    ->run();
+```
+
+A datetime or date format is rendered natively when its letters are among `Y y m n d j H G i s u v e T P p O Z U c`
+(and `\` escapes); any other letter renders that column in PHP. `xml`, `xml_element`, `html` and `html_element` columns,
+a `json` column written to JSON, and a `list` / `map` / `structure` holding one of those also render in PHP - only
+those columns, the rest of the batch stays native. `to_json()` and `to_json_lines()` render natively under the flags
+`JSON_THROW_ON_ERROR`, `JSON_UNESCAPED_SLASHES`, `JSON_UNESCAPED_UNICODE` and `JSON_PRESERVE_ZERO_FRACTION`; any other
+flag (`JSON_PRETTY_PRINT`, ...) writes through PHP.
+
+The classes are `Flow\ETL\Adapter\CSV\NativeCSVWriter` and `Flow\ETL\Adapter\JSON\NativeJsonWriter`.
 
 ## Parquet
 
@@ -122,4 +150,4 @@ $file->values(['address.city'], limit: 10, offset: 5_000); // a struct path; onl
 ```
 
 The classes behind it are `Flow\Parquet\Engine\Native\{NativeParquetFile, NativeParquetColumnsReader,
-NativeParquetRowsWriter}`.
+NativeParquetRowsWriter}`. `Writer::writeColumns()` appends each list straight to its column.

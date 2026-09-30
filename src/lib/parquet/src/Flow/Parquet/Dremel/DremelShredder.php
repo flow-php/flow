@@ -14,7 +14,7 @@ use Flow\Parquet\ParquetFile\Schema\Column;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 
-use function array_values;
+use function array_fill;
 use function count;
 use function gettype;
 use function is_array;
@@ -35,6 +35,31 @@ final readonly class DremelShredder
      * @return array<string, WriteFlatColumnValues> keyed by flatPath
      */
     public function shred(Schema $schema, array $rows, int $firstRow): array
+    {
+        $columns = [];
+
+        foreach ($schema->columns() as $column) {
+            $name = $column->name();
+            $values = [];
+
+            foreach ($rows as $row) {
+                $values[] = $row[$name] ?? null;
+            }
+
+            $columns[$name] = $values;
+        }
+
+        return $this->shredColumns($schema, $columns, count($rows), $firstRow);
+    }
+
+    /**
+     * @param array<string, list<mixed>> $columns by top-level column name; a column the array lacks is nulls
+     * @param int $count rows in every list
+     * @param int $firstRow the writer's 0-based index of the first row, which validation refusals name
+     *
+     * @return array<string, WriteFlatColumnValues> keyed by flatPath
+     */
+    public function shredColumns(Schema $schema, array $columns, int $count, int $firstRow): array
     {
         /** @var array<string, WriteFlatColumnValues> $targets */
         $targets = [];
@@ -62,37 +87,48 @@ final readonly class DremelShredder
         }
 
         foreach ($plans as $plan) {
-            foreach (array_values($rows) as $offset => $row) {
-                $rowIndex = $firstRow + $offset;
-                // @mago-ignore analysis:mixed-assignment
-                $value = $row[$plan->childName] ?? null;
+            $values = $columns[$plan->childName] ?? [];
+            $column = $schema->get($plan->childName);
 
-                if ($shouldValidate) {
-                    $this->validator->validate($schema->get($plan->childName), $value, $rowIndex);
-                }
+            if ($plan instanceof FlatPlan) {
+                $target = $plan->target;
+                $converter = $plan->converter;
+                $optional = !$plan->isRequired;
+                $target->repetitionLevels = $count > 0 ? array_fill(0, $count, 0) : [];
 
-                /** @var array<string, bool> $rowFirstWrite */
-                $rowFirstWrite = [];
+                for ($offset = 0; $offset < $count; $offset++) {
+                    // @mago-ignore analysis:mixed-assignment
+                    $value = $values[$offset] ?? null;
 
-                if ($plan instanceof FlatPlan) {
-                    $target = $plan->target;
-                    $converter = $plan->converter;
-
-                    $defLvl = 0;
-
-                    if (!$plan->isRequired && $value !== null) {
-                        $defLvl = 1;
+                    if ($shouldValidate) {
+                        $this->validator->validate($column, $value, $firstRow + $offset);
                     }
 
-                    $target->repetitionLevels[] = 0;
-                    $target->definitionLevels[] = $defLvl;
+                    $target->definitionLevels[] = $optional && $value !== null ? 1 : 0;
 
                     if ($value !== null) {
                         $target->values[] = $this->narrowFlatValue(
                             $converter !== null ? $converter->toParquetType($value) : $value,
                         );
                     }
-                } elseif ($plan instanceof ListPlan) {
+                }
+
+                continue;
+            }
+
+            for ($offset = 0; $offset < $count; $offset++) {
+                $rowIndex = $firstRow + $offset;
+                // @mago-ignore analysis:mixed-assignment
+                $value = $values[$offset] ?? null;
+
+                if ($shouldValidate) {
+                    $this->validator->validate($column, $value, $rowIndex);
+                }
+
+                /** @var array<string, bool> $rowFirstWrite */
+                $rowFirstWrite = [];
+
+                if ($plan instanceof ListPlan) {
                     $this->execList(
                         $plan,
                         $this->narrowArrayOrNull($value),

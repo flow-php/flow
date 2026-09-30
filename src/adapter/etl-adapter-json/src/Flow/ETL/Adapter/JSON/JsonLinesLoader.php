@@ -7,7 +7,6 @@ namespace Flow\ETL\Adapter\JSON;
 use DateTimeInterface;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\FilesSink;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\FlowContext;
@@ -21,11 +20,9 @@ use Flow\ETL\Loader\PartitionRouter;
 use Flow\ETL\Rows;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
-use Flow\Filesystem\Partition;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
-use JsonException;
 use Throwable;
 
 use function sprintf;
@@ -44,11 +41,16 @@ final class JsonLinesLoader implements Closure, Discardable, FileLoader, Loader,
 
     private string $dateTimeFormat = DateTimeInterface::ATOM;
 
-    private ?JSONEncoder $encoder = null;
-
     private int $flags = JSON_THROW_ON_ERROR;
 
+    private ?JsonSinkOpener $opener = null;
+
     private readonly Path $path;
+
+    /**
+     * @var array<string, JsonOpenSink> by stream URI
+     */
+    private array $sinks = [];
 
     public function __construct(Path $path, Filesystem $filesystem = new NativeLocalFilesystem())
     {
@@ -76,14 +78,20 @@ final class JsonLinesLoader implements Closure, Discardable, FileLoader, Loader,
 
     public function closure(FlowContext $context): void
     {
+        foreach ($this->sinks as $sink) {
+            $sink->close();
+        }
+
         $this->files?->publish();
         $this->files = null;
+        $this->sinks = [];
     }
 
     public function discard(FlowContext $context): void
     {
         $this->files?->abandon();
         $this->files = null;
+        $this->sinks = [];
     }
 
     public function destination(): Path
@@ -99,7 +107,10 @@ final class JsonLinesLoader implements Closure, Discardable, FileLoader, Loader,
 
         try {
             foreach ($this->router->route($rows) as [$partitions, $group]) {
-                $this->write($group, $partitions->toArray());
+                $stream = ($this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode))->writeTo(
+                    $partitions->toArray(),
+                );
+                ($this->sinks[$stream->path()->uri()] ??= $this->opener()->open($stream))->write($group);
             }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
@@ -138,32 +149,13 @@ final class JsonLinesLoader implements Closure, Discardable, FileLoader, Loader,
         return $this;
     }
 
-    /**
-     * @param array<Partition> $partitions
-     */
-    public function write(Rows $nextRows, array $partitions): void
+    private function opener(): JsonSinkOpener
     {
-        $stream = ($this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode))->writeTo(
-            $partitions,
+        return $this->opener ??= new JsonSinkOpener(
+            $this->flags,
+            $this->dateTimeFormat,
+            $this->dateFormat,
+            JsonFraming::LINES,
         );
-
-        foreach ($this->encoder()->encode($nextRows) as $normalizedRow) {
-            try {
-                $json = json_encode($normalizedRow, $this->flags);
-
-                if ($json === false) {
-                    throw new RuntimeException('Failed to encode JSON: ' . json_last_error_msg());
-                }
-            } catch (JsonException $e) {
-                throw new RuntimeException('Failed to encode JSON: ' . $e->getMessage(), 0, $e);
-            }
-
-            $stream->append($json . "\n");
-        }
-    }
-
-    private function encoder(): JSONEncoder
-    {
-        return $this->encoder ??= new JSONEncoder($this->dateTimeFormat, $this->dateFormat);
     }
 }

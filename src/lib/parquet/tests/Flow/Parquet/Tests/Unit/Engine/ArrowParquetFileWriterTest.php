@@ -8,13 +8,18 @@ use Flow\Filesystem\Exception\RuntimeException as FilesystemRuntimeException;
 use Flow\Filesystem\Tests\Double\FailingCloseDestinationStream;
 use Flow\Parquet\Engine\ArrowParquetEngine;
 use Flow\Parquet\Engine\PhpParquetEngine;
+use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\Reader;
+use Flow\Parquet\Tests\Context\ColumnDoor;
 use Flow\Parquet\Tests\Mother\ParquetFileWriterMother;
 use PHPUnit\Framework\TestCase;
 
+use function array_slice;
 use function extension_loaded;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
@@ -136,5 +141,77 @@ final class ArrowParquetFileWriterTest extends TestCase
                 false,
             ),
         );
+    }
+
+    public function test_columns_of_different_lengths_are_refused(): void
+    {
+        $file = ColumnDoor::open(new ArrowParquetEngine(), ColumnDoor::stream(), Schema::with(FlatColumn::int32('id')));
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('writeColumns() takes lists of one length, got "id": 2, "other": 1');
+
+        $file->writeColumns(['id' => [1, 2], 'other' => [1]]);
+    }
+
+    public function test_a_column_the_array_lacks_is_written_as_nulls_and_an_unknown_key_is_ignored(): void
+    {
+        $stream = ColumnDoor::stream();
+        $file = ColumnDoor::open(
+            new ArrowParquetEngine(),
+            $stream,
+            Schema::with(FlatColumn::int32('id'), FlatColumn::string('name')),
+        );
+
+        $file->writeColumns(['id' => [1, 2], 'unknown' => ['a', 'b']]);
+        $file->writeColumns([]);
+        $file->close();
+
+        static::assertSame([['id' => 1, 'name' => null], ['id' => 2, 'name' => null]], ColumnDoor::read($stream));
+    }
+
+    public function test_writing_columns_after_close_throws(): void
+    {
+        $file = ColumnDoor::open(new ArrowParquetEngine(), ColumnDoor::stream(), Schema::with(FlatColumn::int32('id')));
+        $file->close();
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Writer is not open');
+
+        $file->writeColumns(['id' => [1]]);
+    }
+
+    public function test_columns_write_the_bytes_a_batch_writes(): void
+    {
+        $options = Options::default()
+            ->set(Option::ROW_GROUP_SIZE_BYTES, 2 * 1024)
+            ->set(Option::ROW_GROUP_SIZE_CHECK_INTERVAL, 140)
+            ->set(Option::PAGE_SIZE_BYTES, 256)
+            ->set(Option::PAGE_SIZE_CHECK_INTERVAL, 26);
+        $rows = ColumnDoor::rows(600);
+        $batch = ColumnDoor::stream();
+        $columns = ColumnDoor::stream();
+
+        $file = ColumnDoor::open(
+            new ArrowParquetEngine($options->set(Option::ARROW_WRITE_BATCH_SIZE, 200)),
+            $batch,
+            ColumnDoor::schema(),
+            $options,
+        );
+        $file->writeRow($rows[0]);
+        $file->writeBatch(array_slice($rows, 1));
+        $file->close();
+
+        $file = ColumnDoor::open(
+            new ArrowParquetEngine($options->set(Option::ARROW_WRITE_BATCH_SIZE, 200)),
+            $columns,
+            ColumnDoor::schema(),
+            $options,
+        );
+        $file->writeRow($rows[0]);
+        $file->writeColumns(ColumnDoor::columns(array_slice($rows, 1)));
+        $file->close();
+
+        static::assertTrue($batch->content() === $columns->content());
+        static::assertSame($rows, ColumnDoor::read($columns));
     }
 }

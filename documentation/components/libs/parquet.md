@@ -295,6 +295,24 @@ We can also open a file for a resource:
 $writer->openForStream($stream, $schema);
 ```
 
+### Writing columns
+
+A batch that is already held by column is written without building rows: one list per top-level column, every list of
+the same length. A schema column the array lacks is written as nulls, a key the schema lacks is ignored.
+
+```php
+$writer->open($path, $schema);
+$writer->writeColumns(['id' => [1, 2, 3], 'name' => ['a', 'b', null]]);
+$writer->writeColumns(['id' => [4], 'tags' => [['x', 'y']]]);
+$writer->close();
+```
+
+The file is the one `writeBatch()` writes for the same rows, and a value is accepted or refused as `writeBatch()`
+accepts or refuses it. Lists of different lengths are refused:
+`InvalidArgumentException('writeColumns() takes lists of one length, got "id": 3, "name": 2')`.
+
+A custom `ParquetFileWriter` implements `writeColumns(array $columns): void`.
+
 ### Writing a single row
 
 ```php

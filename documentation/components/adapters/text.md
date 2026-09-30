@@ -56,3 +56,37 @@ use function Flow\ETL\DSL\{array_to_rows, schema, str_schema};
     ->load(to_text($path))
     ->run();
 ```
+
+Every value of the single column is one line:
+
+```php
+<?php
+
+use function Flow\ETL\Adapter\Text\to_text;
+use function Flow\ETL\DSL\{data_frame, float_schema, from_array, schema};
+
+data_frame()
+    ->read(from_array([['price' => 0.1 + 0.2], ['price' => 1.0], ['price' => INF]], schema(float_schema('price'))))
+    ->write(to_text($path))
+    ->run();
+```
+
+```
+0.30000000000000004
+1.0
+INF
+```
+
+| Column                     | Line                                                                                                                               |
+|----------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| `boolean`                  | `true` / `false`                                                                                                                   |
+| `float`                    | the shortest text that reads back as the same float, always with a fraction or an exponent: `1.0`, `1.0e+25`; `NAN`, `INF`, `-INF` |
+| `null`                     | an empty line                                                                                                                      |
+| `datetime`, `date`         | `DATE_ATOM` in the column zone, `Y-m-d`                                                                                            |
+| `time`                     | microseconds                                                                                                                       |
+| `json`                     | the stored text                                                                                                                    |
+| `list`, `map`, `structure` | refused: `Text data loader supports only scalar values, got array`                                                                 |
+
+Floats are rendered under `serialize_precision = -1`. When the ini holds another value the writer sets it for the
+render and restores it, so `ini_set()` must be allowed; otherwise it throws
+`RuntimeException('Writing floats requires serialize_precision = -1 and ini_set() cannot change it')`.

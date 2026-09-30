@@ -56,6 +56,18 @@ final readonly class FloatType implements Type
             return ((float) $endTime->format('Uu') - (float) $reference->format('Uu')) / 1e6;
         }
 
+        if ($value === 'NAN') {
+            return NAN;
+        }
+
+        if ($value === 'INF') {
+            return INF;
+        }
+
+        if ($value === '-INF') {
+            return -INF;
+        }
+
         if (is_numeric($value)) {
             return (float) $value;
         }
