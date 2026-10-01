@@ -11,7 +11,7 @@ use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Tests\Double\ForeignTypeDefinition;
 use Flow\ETL\Tests\Double\ThrowingType;
 
-use function Flow\ETL\DSL\{bool_schema, date_schema, datetime_schema, float_schema, int_schema, json_schema, list_schema, map_schema, uuid_schema};
+use function Flow\ETL\DSL\{bool_schema, date_schema, datetime_schema, float_schema, int_schema, json_schema, list_schema, map_schema, str_schema, uuid_schema};
 use function Flow\Types\DSL\{type_integer, type_list, type_map, type_positive_integer, type_string};
 
 $datetimes = [
@@ -61,6 +61,12 @@ foreach ([
     $cases[] = $case;
 }
 
+foreach ([bool_schema('a'), str_schema('s'), date_schema('d'), datetime_schema('at')] as $definition) {
+    foreach ([NAN, INF, -INF] as $value) {
+        $cases[] = [$definition, [$value]];
+    }
+}
+
 $build = static fn(object $backend, object $definition, array $values, bool $many): Closure => static function () use ($backend, $definition, $values, $many): array {
     $builder = $backend->builder($definition);
 
@@ -96,6 +102,6 @@ foreach (['UTC', 'Europe/Warsaw', 'America/Santiago'] as $timezone) {
 }
 ?>
 --EXPECT--
-date.timezone UTC: 446 of 446 identical
-date.timezone Europe/Warsaw: 446 of 446 identical
-date.timezone America/Santiago: 446 of 446 identical
+date.timezone UTC: 470 of 470 identical
+date.timezone Europe/Warsaw: 470 of 470 identical
+date.timezone America/Santiago: 470 of 470 identical

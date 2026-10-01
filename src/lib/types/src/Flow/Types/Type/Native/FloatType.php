@@ -10,10 +10,12 @@ use DOMElement;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
+use Flow\Types\Type\NonFiniteFloat;
 
 use function is_bool;
 use function is_float;
 use function is_numeric;
+use function is_string;
 
 /**
  * @template T of float
@@ -56,16 +58,10 @@ final readonly class FloatType implements Type
             return ((float) $endTime->format('Uu') - (float) $reference->format('Uu')) / 1e6;
         }
 
-        if ($value === 'NAN') {
-            return NAN;
-        }
+        $nonFinite = is_string($value) ? NonFiniteFloat::fromText($value) : null;
 
-        if ($value === 'INF') {
-            return INF;
-        }
-
-        if ($value === '-INF') {
-            return -INF;
+        if ($nonFinite !== null) {
+            return $nonFinite;
         }
 
         if (is_numeric($value)) {

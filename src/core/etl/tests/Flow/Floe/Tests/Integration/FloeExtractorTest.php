@@ -19,7 +19,9 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\to_timezone;
 use function Flow\Floe\DSL\from_floe;
+use function Flow\Floe\DSL\to_floe;
 use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_string;
 
 final class FloeExtractorTest extends FlowIntegrationTestCase
 {
@@ -195,5 +197,28 @@ final class FloeExtractorTest extends FlowIntegrationTestCase
         }
 
         static::assertSame(['Europe/Warsaw', 'Europe/Warsaw'], $zones);
+    }
+
+    public function test_xml_nodes_written_before_utf8_node_documents_read_back_and_load_as_their_text(): void
+    {
+        $loaded = $this->cacheDir->suffix('xml-node-utf8.floe');
+
+        df()
+            ->read(from_floe(__DIR__ . '/../Fixtures/xml-node-before-utf8.floe'))
+            ->write(to_floe($loaded, filesystem: $this->fs()))
+            ->run();
+
+        static::assertSame(
+            [
+                ['node' => '<row><a>zażółć ☃ 😀</a></row>'],
+                ['node' => '<row a="żółć"/>'],
+                ['node' => '<row><b>&lt;p&gt; &amp; ©</b></row>'],
+            ],
+            df()
+                ->read(from_floe($loaded, filesystem: $this->fs()))
+                ->withEntry('node', ref('node')->cast(type_string()))
+                ->fetch()
+                ->toArray(),
+        );
     }
 }

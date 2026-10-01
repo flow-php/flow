@@ -51,9 +51,24 @@ final class StructColumnBuilder implements PhpColumnBuilder
 
     public function appendPhysicalMany(array $physicals, ?int $nullCount = null): void
     {
+        $names = array_keys($this->children);
+        $columns = array_fill_keys($names, []);
+
         // @mago-ignore analysis:mixed-assignment
         foreach ($physicals as $physical) {
-            $this->appendPhysical($physical);
+            if ($physical === null) {
+                $this->nulls[$this->count] = true;
+            }
+
+            $this->count++;
+
+            foreach ($names as $name) {
+                $columns[$name][] = $physical[$name] ?? null;
+            }
+        }
+
+        foreach ($this->children as $name => $child) {
+            $child->appendPhysicalMany($columns[$name]);
         }
     }
 

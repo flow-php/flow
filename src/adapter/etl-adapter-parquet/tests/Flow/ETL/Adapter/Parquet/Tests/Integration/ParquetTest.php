@@ -766,4 +766,28 @@ final class ParquetTest extends FlowTestCase
             ParquetFilesContext::columnNames($memory, 'memory://var/write_columns/date=2026-09-01/file.parquet'),
         );
     }
+
+    public function test_xml_nodes_written_before_utf8_node_documents_read_back_and_load_as_their_text(): void
+    {
+        $memory = memory_filesystem();
+        $loaded = path('memory://var/xml-node-utf8.parquet');
+
+        data_frame()
+            ->read(from_parquet(__DIR__ . '/Fixtures/xml-node-before-utf8.parquet'))
+            ->write(to_parquet($loaded, filesystem: $memory))
+            ->run();
+
+        static::assertSame(
+            [
+                ['node' => '<row><a>zażółć ☃ 😀</a></row>'],
+                ['node' => '<row a="żółć"/>'],
+                ['node' => '<row><b>&lt;p&gt; &amp; ©</b></row>'],
+            ],
+            data_frame()
+                ->read(from_parquet($loaded, filesystem: $memory))
+                ->withEntry('node', ref('node')->cast(type_string()))
+                ->fetch()
+                ->toArray(),
+        );
+    }
 }

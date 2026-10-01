@@ -1181,10 +1181,18 @@ function array_to_rows(array $data, Schema $schema, Backend $backend = new Defau
 
     $rawRows = $isRows ? $data : [$data];
     $maps = [];
+    $definitions = $schema->definitions();
 
     // @mago-ignore analysis:mixed-assignment
     foreach (array_values($rawRows) as $index => $row) {
         $row = type_array()->assert($row);
+
+        if (array_diff_key($row, $definitions) === []) {
+            $maps[] = $row;
+
+            continue;
+        }
+
         $map = [];
 
         // @mago-ignore analysis:mixed-assignment

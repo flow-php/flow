@@ -284,4 +284,25 @@ final class DateTypeTest extends TestCase
             date_default_timezone_set($previous);
         }
     }
+
+    #[TestWith(['2026-01-02 00:30:00', 'Europe/Warsaw'])]
+    #[TestWith(['2026-01-02 23:30:00', 'America/New_York'])]
+    public function test_a_zoned_datetime_casts_to_midnight_utc_of_its_calendar_day(
+        string $datetime,
+        string $zone,
+    ): void {
+        $date = type_date()->cast(new DateTimeImmutable($datetime, new DateTimeZone($zone)));
+
+        static::assertSame('2026-01-02 00:00:00 UTC', $date->format('Y-m-d H:i:s e'));
+    }
+
+    #[TestWith([NAN])]
+    #[TestWith([INF])]
+    #[TestWith([-INF])]
+    public function test_a_non_finite_float_is_refused(float $value): void
+    {
+        $this->expectException(CastingException::class);
+
+        type_date()->cast($value);
+    }
 }

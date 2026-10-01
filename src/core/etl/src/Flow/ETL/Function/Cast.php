@@ -7,6 +7,7 @@ namespace Flow\ETL\Function;
 use DateTimeInterface;
 use Exception;
 use Flow\ETL\Column\Column;
+use Flow\ETL\Column\Php\XmlDocumentPhysical;
 use Flow\ETL\Column\TextValues;
 use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -20,6 +21,7 @@ use Flow\Types\Exception\InvalidArgumentException as TypesInvalidArgumentExcepti
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateTimeType;
 use Flow\Types\Type\Logical\DateType;
+use Flow\Types\Type\Logical\XMLType;
 use Flow\Types\Type\Native\StringType;
 use Flow\Types\Type\TypeFactory;
 
@@ -28,6 +30,7 @@ use function Flow\ETL\DSL\definition_from_type;
 use function Flow\ETL\DSL\lit;
 use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_is_nullable;
+use function is_string;
 use function sprintf;
 
 final class Cast implements ScalarFunction
@@ -92,6 +95,9 @@ final class Cast implements ScalarFunction
 
     public function eval(Rows $rows, FlowContext $context): Column
     {
+        $values = null;
+        $documents = null;
+
         if (type_bare($this->type) instanceof StringType) {
             $column = (new Parameter($this->value))->column($rows, $context);
             $type = type_bare($column->type());
@@ -113,6 +119,11 @@ final class Cast implements ScalarFunction
                     DateTimeInterface::RFC3339,
                 ));
             }
+
+            if ($type instanceof XMLType) {
+                $values = $column->physicals();
+                $documents = new XmlDocumentPhysical();
+            }
         }
 
         $results = [];
@@ -120,7 +131,12 @@ final class Cast implements ScalarFunction
 
         try {
             // @mago-ignore analysis:mixed-assignment
-            foreach ((new Parameter($this->value))->values($rows, $context) as $i => $value) {
+            foreach ($values ?? (new Parameter($this->value))->values($rows, $context) as $i => $value) {
+                if ($documents !== null && is_string($value)) {
+                    // @mago-ignore analysis:mixed-assignment
+                    $value = $documents->text($value) ?? $documents->fromPhysical($value);
+                }
+
                 if (null === $value && !type_is_nullable($this->type)) {
                     throw new InvalidArgumentException('Cast function requires non-null value');
                 }

@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Column;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Flow\ETL\Column\Php\XmlDocumentPhysical;
 use Flow\ETL\Column\TextValues;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
 use Flow\Types\Type;
@@ -79,6 +80,15 @@ final class TextValuesTest extends TestCase
             type_xml(),
             ['<?xml version="1.0"?>' . "\n" . '<a b="1"><c/></a>' . "\n", null],
             ['<a b="1"><c/></a>', null],
+        ];
+        yield 'xml node documents' => [
+            type_xml(),
+            [
+                XmlDocumentPhysical::DECLARATION . '<row a="żółć"><!-- c --></row>' . "\n",
+                XmlDocumentPhysical::DECLARATION . "<a/>\n<!-- after the root -->\n",
+                null,
+            ],
+            ['<row a="żółć"><!-- c --></row>', '<a/>', null],
         ];
         yield 'xml_element' => [type_xml_element(), ['<a b="1"><c/></a>', null], ['<a b="1"><c></c></a>', null]];
         yield 'html' => [type_html(), ['<html><body>x</body></html>', null], ['<html><body>x</body></html>', null]];

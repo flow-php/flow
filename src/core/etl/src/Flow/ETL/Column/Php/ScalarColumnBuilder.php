@@ -43,23 +43,8 @@ final class ScalarColumnBuilder implements PhpColumnBuilder
 
     public function appendPhysicalMany(array $physicals, ?int $nullCount = null): void
     {
-        if ($nullCount !== null) {
-            $this->nullCount += $nullCount;
-            array_push($this->values, ...$physicals);
-
-            return;
-        }
-
-        // @mago-ignore analysis:mixed-assignment
-        foreach ($physicals as $physical) {
-            assert(!is_array($physical) && !is_object($physical));
-
-            if ($physical === null) {
-                $this->nullCount++;
-            }
-
-            $this->values[] = $physical;
-        }
+        $this->nullCount += $nullCount ?? count(array_keys($physicals, null, true));
+        array_push($this->values, ...$physicals);
     }
 
     public function count(): int

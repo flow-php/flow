@@ -105,7 +105,12 @@ final readonly class ListType implements Type
                 $castedList[$key] = $this->element()->cast($item);
             }
 
-            return $this->assert($castedList);
+            if ($castedList !== [] && !array_is_list($castedList)) {
+                throw InvalidTypeException::value($castedList, $this);
+            }
+
+            /** @var T $castedList */
+            return $castedList;
         } catch (Throwable $e) {
             throw new CastingException($value, $this, $e);
         }

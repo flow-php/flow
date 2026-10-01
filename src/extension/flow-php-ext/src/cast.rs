@@ -2,13 +2,11 @@ use std::os::raw::{c_char, c_int};
 
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::exception::PhpException;
-use ext_php_rs::flags::DataType;
-use ext_php_rs::types::{ZendHashTable, ZendObject, ZendStr, Zval};
+use ext_php_rs::types::{ZendObject, ZendStr, Zval};
 use ext_php_rs::zend::{ClassEntry, Function};
 
 use crate::ctx::{
-    self, array_key_index, call_handle_on, call_handle_transparent, expect_object, ht_insert, ht_insert_key, null_zval,
-    write_slot, zval_long, HtKey, HASH_FLAG_PACKED,
+    self, array_key_index, call_handle_on, call_handle_transparent, expect_object, null_zval, write_slot, zval_long,
 };
 use crate::date_check::{iso_date_gate, iso_date_time_gate, IsoSuffix};
 use crate::exception::ext_exception;
@@ -38,9 +36,9 @@ pub enum MapKeyKind {
 }
 
 pub struct StructureElement {
-    name: String,
-    kind: CastKind,
-    required: bool,
+    pub name: String,
+    pub kind: CastKind,
+    pub required: bool,
 }
 
 pub enum CastKind {
@@ -118,53 +116,6 @@ pub(crate) fn build_cast_kind(type_json: &TypeJson) -> CastKind {
             None => CastKind::Fallback,
         },
         _ => CastKind::Fallback,
-    }
-}
-
-/// In-order hashtable walk yielding `(string key, numeric key, value)` - the
-/// early-exit sibling of `encode::ht_for_each` for the container cast checks.
-struct HtEntries<'a> {
-    ht: &'a ZendHashTable,
-    packed: bool,
-    index: u32,
-}
-
-fn ht_entries(ht: &ZendHashTable) -> HtEntries<'_> {
-    HtEntries {
-        ht,
-        packed: unsafe { ht.u.v.flags } & HASH_FLAG_PACKED != 0,
-        index: 0,
-    }
-}
-
-impl<'a> Iterator for HtEntries<'a> {
-    type Item = (Option<&'a ZendStr>, u64, &'a Zval);
-
-    fn next(&mut self) -> Option<Self::Item> {
-        while self.index < self.ht.nNumUsed {
-            let position = self.index as usize;
-            self.index += 1;
-
-            if self.packed {
-                let value = unsafe { &*self.ht.__bindgen_anon_1.arPacked.add(position) };
-
-                if value.get_type() == DataType::Undef {
-                    continue;
-                }
-
-                return Some((None, position as u64, value));
-            }
-
-            let bucket = unsafe { &*self.ht.__bindgen_anon_1.arData.add(position) };
-
-            if bucket.val.get_type() == DataType::Undef {
-                continue;
-            }
-
-            return Some((unsafe { bucket.key.as_ref() }, bucket.h, &bucket.val));
-        }
-
-        None
     }
 }
 
@@ -323,6 +274,17 @@ pub(crate) fn integer_from_str(bytes: &[u8]) -> Option<i64> {
     }
 }
 
+/// `StringType::cast` of a non-finite float: the spelling the text writers produce, built without PHP's `(string)`,
+/// which warns on NAN.
+fn non_finite_text(value: f64) -> Option<&'static [u8]> {
+    match value {
+        value if value.is_nan() => Some(b"NAN"),
+        f64::INFINITY => Some(b"INF"),
+        f64::NEG_INFINITY => Some(b"-INF"),
+        _ => None,
+    }
+}
+
 /// The three non-finite spellings the text writers produce and `FloatType::cast` reads back, case-sensitive.
 fn named_float(bytes: &[u8]) -> Option<f64> {
     match bytes {
@@ -383,7 +345,7 @@ pub(crate) fn parse_iso_date(bytes: &[u8]) -> Result<Option<Zval>, PhpException>
     date_from_free_form(bytes, Some(&mut utc))
 }
 
-/// Casts one value natively; `Ok(None)` bails the WHOLE column value to the
+/// Casts one leaf value natively (containers: `builder.rs` `append_cast`); `Ok(None)` bails the WHOLE column value to the
 /// PHP fallback (`Type::cast`), which reproduces results, exception classes,
 /// messages and `previous` chains by re-running the canonical implementation.
 /// PHP calls made inside a branch discard their own thrown exceptions and bail
@@ -442,6 +404,8 @@ pub(crate) fn cast_value(kind: &CastKind, value: &Zval) -> Result<Option<Zval>, 
                     zv.set_bool(parsed);
                     zv
                 })
+            } else if value.double().is_some_and(|double| !double.is_finite()) {
+                None
             } else if value.is_long() || value.is_double() || value.is_null() {
                 let mut zv = Zval::new();
                 zv.set_bool(value.coerce_to_bool());
@@ -453,6 +417,8 @@ pub(crate) fn cast_value(kind: &CastKind, value: &Zval) -> Result<Option<Zval>, 
         CastKind::String => {
             if value.is_string() {
                 Some(value.shallow_clone())
+            } else if let Some(text) = value.double().and_then(non_finite_text) {
+                Some(ctx::zval_str(text))
             } else if value.is_long() || value.is_double() {
                 let mut zv = Zval::new();
                 zv.set_zend_string(engine_string(value)?);
@@ -466,6 +432,8 @@ pub(crate) fn cast_value(kind: &CastKind, value: &Zval) -> Result<Option<Zval>, 
         CastKind::NonEmptyString => {
             if value.zend_str().is_some_and(|s| !s.as_bytes().is_empty()) {
                 Some(value.shallow_clone())
+            } else if let Some(text) = value.double().and_then(non_finite_text) {
+                Some(ctx::zval_str(text))
             } else if value.is_long() || value.is_double() {
                 // engine string form of a number is never empty
                 let mut zv = Zval::new();
@@ -495,7 +463,7 @@ pub(crate) fn cast_value(kind: &CastKind, value: &Zval) -> Result<Option<Zval>, 
                     Some((_, instant)) => Some(instant),
                     None => None,
                 }
-            } else if value.is_long() || value.is_double() {
+            } else if value.is_long() || value.double().is_some_and(f64::is_finite) {
                 date_from_free_form(&timestamp_string(value)?, None)?
                     .map(|instant| in_zone(&instant, zone))
                     .transpose()?
@@ -530,97 +498,6 @@ pub(crate) fn cast_value(kind: &CastKind, value: &Zval) -> Result<Option<Zval>, 
             }
         }
         CastKind::Json => cast_json(value)?,
-        CastKind::List(inner) => {
-            let Some(values) = value.array() else {
-                return Ok(None);
-            };
-
-            let mut out = ZendHashTable::with_capacity(values.len() as u32);
-
-            for (expected, (string_key, index, item)) in ht_entries(values).enumerate() {
-                if string_key.is_some() || index != expected as u64 {
-                    return Ok(None);
-                }
-
-                let Some(casted) = cast_value(inner, item)? else {
-                    return Ok(None);
-                };
-
-                out.push(casted).map_err(|e| {
-                    ext_exception(format!("flow_php failed to collect list values: {e:?}"))
-                })?;
-            }
-
-            let mut zv = Zval::new();
-            zv.set_hashtable(out);
-            Some(zv)
-        }
-        CastKind::Map(key_kind, value_kind) => {
-            let Some(values) = value.array() else {
-                return Ok(None);
-            };
-
-            let mut out = ZendHashTable::with_capacity(values.len() as u32);
-
-            for (string_key, index, item) in ht_entries(values) {
-                let key = match (key_kind, string_key) {
-                    (MapKeyKind::Int, None) => HtKey::Index(index as i64),
-                    (MapKeyKind::Str, Some(name)) => HtKey::Str(name),
-                    _ => return Ok(None),
-                };
-
-                let Some(casted) = cast_value(value_kind, item)? else {
-                    return Ok(None);
-                };
-
-                ht_insert_key(&mut out, &key, casted);
-            }
-
-            let mut zv = Zval::new();
-            zv.set_hashtable(out);
-            Some(zv)
-        }
-        CastKind::Structure(elements) => {
-            let Some(values) = value.array() else {
-                return Ok(None);
-            };
-
-            let mut out = ZendHashTable::with_capacity(elements.len() as u32);
-            let mut matched = 0usize;
-
-            for element in elements {
-                let Some(item) = values.get(element.name.as_str()) else {
-                    if element.required {
-                        // PHP throws MissingElementCastingException for absent required elements
-                        return Ok(None);
-                    }
-
-                    continue;
-                };
-
-                if item.is_null() && !matches!(element.kind, CastKind::Optional(_)) {
-                    // PHP throws MissingElementCastingException for present-null elements
-                    // whose type rejects null - required and structure-level optional alike
-                    return Ok(None);
-                }
-
-                let Some(casted) = cast_value(&element.kind, item)? else {
-                    return Ok(None);
-                };
-
-                ht_insert(&mut out, element.name.as_bytes(), casted);
-                matched += 1;
-            }
-
-            if matched == 0 {
-                // an all-optional structure with no matched keys fails PHP's assert
-                return Ok(None);
-            }
-
-            let mut zv = Zval::new();
-            zv.set_hashtable(out);
-            Some(zv)
-        }
         CastKind::Optional(inner) => {
             if value.is_null() {
                 Some(null_zval())
@@ -628,7 +505,7 @@ pub(crate) fn cast_value(kind: &CastKind, value: &Zval) -> Result<Option<Zval>, 
                 cast_value(inner, value)?
             }
         }
-        CastKind::Fallback => None,
+        CastKind::List(_) | CastKind::Map(..) | CastKind::Structure(_) | CastKind::Fallback => None,
     })
 }
 
@@ -703,7 +580,7 @@ fn cast_date(value: &Zval) -> Result<Option<Zval>, PhpException> {
         return parse_iso_date(string.as_bytes());
     }
 
-    let parsed = if value.is_long() || value.is_double() {
+    let parsed = if value.is_long() || value.double().is_some_and(f64::is_finite) {
         date_from_free_form(&timestamp_string(value)?, None)?
     } else {
         None

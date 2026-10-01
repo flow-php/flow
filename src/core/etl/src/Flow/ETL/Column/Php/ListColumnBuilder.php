@@ -48,10 +48,30 @@ final class ListColumnBuilder implements PhpColumnBuilder
 
     public function appendPhysicalMany(array $physicals, ?int $nullCount = null): void
     {
+        $elements = [];
+        $end = $this->offsets[count($this->offsets) - 1];
+
         // @mago-ignore analysis:mixed-assignment
         foreach ($physicals as $physical) {
-            $this->appendPhysical($physical);
+            if ($physical === null) {
+                $this->nulls[count($this->offsets) - 1] = true;
+                $this->offsets[] = $end;
+
+                continue;
+            }
+
+            assert(is_array($physical));
+
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($physical as $element) {
+                $elements[] = $element;
+            }
+
+            $end += count($physical);
+            $this->offsets[] = $end;
         }
+
+        $this->element->appendPhysicalMany($elements);
     }
 
     public function count(): int

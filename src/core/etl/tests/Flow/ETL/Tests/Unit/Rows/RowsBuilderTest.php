@@ -711,4 +711,27 @@ final class RowsBuilderTest extends FlowTestCase
             (new RowsBuilder($schema, new PhpBackend()))->appendRows([$rows->values(0)])->finish(),
         );
     }
+
+    public function test_a_present_null_and_an_absent_key_are_both_null(): void
+    {
+        static::assertSame(
+            [['id' => 1, 'name' => null], ['id' => 2, 'name' => null], ['id' => 3, 'name' => 'c']],
+            (new RowsBuilder(schema(int_schema('id'), str_schema('name', nullable: true)), new PhpBackend()))
+                ->appendRows([['id' => 1, 'name' => null], ['id' => 2], ['id' => 3, 'name' => 'c']])
+                ->finish()
+                ->toArray(),
+        );
+    }
+
+    public function test_a_refused_value_in_a_column_every_row_carries_is_placed_at_its_row(): void
+    {
+        $this->expectException(SchemaMismatchException::class);
+        $this->expectExceptionMessage('column "id" (row 3): could not convert \'x\' (string) to integer');
+
+        (new RowsBuilder(schema(int_schema('id')), new PhpBackend()))->appendRows([['id' => 1]])->appendRows([
+            ['id' => 2],
+            ['id' => 3],
+            ['id' => 'x'],
+        ]);
+    }
 }

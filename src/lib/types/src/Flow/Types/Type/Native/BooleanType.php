@@ -8,6 +8,7 @@ use DOMElement;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
+use Flow\Types\Type\NonFiniteFloat;
 use Throwable;
 
 use function in_array;
@@ -51,6 +52,10 @@ final readonly class BooleanType implements Type
                     return false;
                 }
 
+                throw new CastingException($value, $this);
+            }
+
+            if (NonFiniteFloat::is($value)) {
                 throw new CastingException($value, $this);
             }
 

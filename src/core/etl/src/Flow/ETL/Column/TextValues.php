@@ -8,6 +8,7 @@ use DateTimeInterface;
 use DOMDocument;
 use DOMElement;
 use Flow\ETL\Column\Php\PhysicalFor;
+use Flow\ETL\Column\Php\XmlDocumentPhysical;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateTimeType;
@@ -23,6 +24,7 @@ use Flow\Types\Type\Logical\XMLType;
 use Flow\Types\Type\Native\BooleanType;
 use Flow\Types\Type\Native\FloatType;
 use Flow\Types\Type\Native\IntegerType;
+use Flow\Types\Type\NonFiniteFloat;
 use JsonException;
 
 use function array_keys;
@@ -30,12 +32,11 @@ use function bin2hex;
 use function explode;
 use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_instance_of;
+use function Flow\Types\DSL\type_string;
 use function gmdate;
 use function implode;
 use function in_array;
 use function intdiv;
-use function is_infinite;
-use function is_nan;
 use function json_decode;
 use function json_encode;
 use function sprintf;
@@ -102,6 +103,7 @@ final readonly class TextValues
 
         if ($bare instanceof XMLType || $bare instanceof XMLElementType) {
             $nodes = (new PhysicalFor())->type($bare);
+            $documents = new XmlDocumentPhysical();
             $values = [];
 
             // @mago-ignore analysis:mixed-assignment
@@ -113,8 +115,12 @@ final readonly class TextValues
                 }
 
                 if ($bare instanceof XMLType) {
-                    $document = type_instance_of(DOMDocument::class)->assert($nodes->fromPhysical($physical));
-                    $text = $document->saveXML($document->documentElement);
+                    $text = $documents->text(type_string()->assert($physical));
+
+                    if ($text === null) {
+                        $document = type_instance_of(DOMDocument::class)->assert($nodes->fromPhysical($physical));
+                        $text = $document->saveXML($document->documentElement);
+                    }
                 } else {
                     $text = type_instance_of(DOMElement::class)->assert($nodes->fromPhysical($physical))->C14N();
                 }
@@ -403,9 +409,10 @@ final readonly class TextValues
                 foreach ($physicals as $physical) {
                     $texts[] = match (true) {
                         $physical === null => null,
-                        is_nan($physical) => 'NAN',
-                        is_infinite($physical) => $physical > 0 ? 'INF' : '-INF',
-                        default => json_encode($physical, JSON_PRESERVE_ZERO_FRACTION | JSON_THROW_ON_ERROR),
+                        default => NonFiniteFloat::text($physical) ?? json_encode(
+                            $physical,
+                            JSON_PRESERVE_ZERO_FRACTION | JSON_THROW_ON_ERROR,
+                        ),
                     };
                 }
 

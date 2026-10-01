@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Function;
 use DateTimeImmutable;
 use DateTimeZone;
 use DOMDocument;
+use DOMElement;
 use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Schema\Definition;
@@ -210,6 +211,9 @@ final class CastTest extends FlowTestCase
         $xml = new DOMDocument();
         $xml->loadXML($xmlString = '<root><foo baz="buz">bar</foo></root>');
 
+        $node = new DOMDocument('1.0', 'UTF-8');
+        $node->appendChild(new DOMElement('row', 'zażółć'));
+
         $fullXMLString = <<<'XML'
             <?xml version="1.0"?>
             <root><foo baz="buz">bar</foo></root>
@@ -234,6 +238,7 @@ final class CastTest extends FlowTestCase
             ],
             'string_to_xml' => [$xmlString, str_schema('value'), 'xml', $xml],
             'xml_to_string' => [$xml, xml_schema('value'), 'string', '<root><foo baz="buz">bar</foo></root>'],
+            'xml_node_document_to_string' => [$node, xml_schema('value'), 'string', '<row>zażółć</row>'],
             'full_xml_to_string' => [$fullXMLString, str_schema('value'), 'string', $fullXMLString],
             'datetime' => [
                 new DateTimeImmutable('2023-01-01 00:00:00 UTC'),

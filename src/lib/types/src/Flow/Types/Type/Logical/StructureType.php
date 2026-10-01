@@ -199,7 +199,12 @@ final readonly class StructureType implements Type
                 $castedStructure[$element->name] = $element->type->cast($value[$element->name] ?? null);
             }
 
-            return $this->assert($castedStructure);
+            if ($castedStructure !== [] && array_is_list($castedStructure)) {
+                throw InvalidTypeException::value($castedStructure, $this);
+            }
+
+            /** @var T $castedStructure */
+            return $castedStructure;
         } catch (Throwable $e) {
             throw new CastingException($value, $this, $e);
         }

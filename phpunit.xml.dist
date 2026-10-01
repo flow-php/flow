@@ -366,5 +366,6 @@
             <parameter name="emit_test_case_spans" value="false"/>
         </bootstrap>
         <bootstrap class="Flow\Bridge\PHPUnit\PostgreSQL\PostgreSQLExtension"/>
+        <bootstrap class="Flow\ETL\Tests\Comparator\ComparatorExtension"/>
     </extensions>
 </phpunit>

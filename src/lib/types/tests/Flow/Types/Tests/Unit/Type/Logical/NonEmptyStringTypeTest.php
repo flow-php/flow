@@ -12,6 +12,7 @@ use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\Types\DSL\type_from_array;
@@ -159,5 +160,13 @@ final class NonEmptyStringTypeTest extends TestCase
     public function test_to_string(): void
     {
         static::assertSame('non_empty_string', type_non_empty_string()->toString());
+    }
+
+    #[TestWith([NAN, 'NAN'])]
+    #[TestWith([INF, 'INF'])]
+    #[TestWith([-INF, '-INF'])]
+    public function test_a_non_finite_float_is_spelled_as_the_float_cast_reads_it(float $value, string $text): void
+    {
+        static::assertSame($text, type_non_empty_string()->cast($value));
     }
 }

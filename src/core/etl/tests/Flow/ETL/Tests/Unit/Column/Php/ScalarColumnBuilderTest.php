@@ -39,4 +39,15 @@ final class ScalarColumnBuilderTest extends TestCase
         static::assertSame([1, null, null, null, 5], $column->physicals());
         static::assertSame(3, $column->nullCount());
     }
+
+    public function test_a_bulk_append_counts_only_nulls(): void
+    {
+        $builder = new ScalarColumnBuilder(type_optional(type_integer()), new IdentityPhysical());
+        $builder->appendPhysicalMany([0, '', false, null, '0']);
+
+        $column = $builder->finish();
+
+        static::assertSame([0, '', false, null, '0'], $column->physicals());
+        static::assertSame(1, $column->nullCount());
+    }
 }

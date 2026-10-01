@@ -213,9 +213,18 @@ final readonly class PhysicalFor
             $base instanceof XMLElementType => new XmlElementPhysical(),
             $base instanceof HTMLType => new HtmlDocumentPhysical(),
             $base instanceof HTMLElementType => new HtmlElementPhysical(),
-            $base instanceof ListType => new ListPhysical($this->type($base->element())),
-            $base instanceof MapType => new MapPhysical($this->type($base->value())),
-            $base instanceof StructureType => new StructPhysical($this->elements($base)),
+            $base instanceof ListType => ($element = $this->type($base->element())) instanceof IdentityPhysical
+                ? $element
+                : new ListPhysical($element),
+            $base instanceof MapType => ($value = $this->type($base->value())) instanceof IdentityPhysical
+                ? $value
+                : new MapPhysical($value),
+            $base instanceof StructureType => array_filter(
+                $elements = $this->elements($base),
+                static fn(Physical $element): bool => !$element instanceof IdentityPhysical,
+            ) === []
+                    ? new IdentityPhysical()
+                    : new StructPhysical($elements),
             $base instanceof NullType => new NullPhysical(),
             $base instanceof MixedType => throw new InvalidArgumentException(
                 'a mixed element has no column kind, declare it or use json',

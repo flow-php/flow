@@ -95,9 +95,17 @@ final class PhysicalForTest extends TestCase
         yield 'xml element' => [type_xml_element(), XmlElementPhysical::class];
         yield 'html' => [type_html(), HtmlDocumentPhysical::class];
         yield 'html element' => [type_html_element(), HtmlElementPhysical::class];
-        yield 'list' => [type_list(type_integer()), ListPhysical::class];
-        yield 'map' => [type_map(type_string(), type_integer()), MapPhysical::class];
-        yield 'structure' => [type_structure(['a' => type_integer()]), StructPhysical::class];
+        yield 'list of identities' => [type_list(type_optional(type_integer())), IdentityPhysical::class];
+        yield 'list of lists of identities' => [type_list(type_list(type_string())), IdentityPhysical::class];
+        yield 'list' => [type_list(type_date()), ListPhysical::class];
+        yield 'map of identities' => [type_map(type_string(), type_integer()), IdentityPhysical::class];
+        yield 'map' => [type_map(type_string(), type_uuid()), MapPhysical::class];
+        yield 'structure of identities' => [
+            type_structure(['a' => type_integer(), 'b' => type_list(type_string())]),
+            IdentityPhysical::class,
+        ];
+        yield 'structure' => [type_structure(['a' => type_integer(), 'b' => type_date()]), StructPhysical::class];
+        yield 'structure of a list' => [type_structure(['a' => type_list(type_date())]), StructPhysical::class];
         yield 'null' => [type_null(), NullPhysical::class];
     }
 

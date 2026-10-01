@@ -149,4 +149,26 @@ final class ArrayToRowsTest extends FlowTestCase
             $rows,
         );
     }
+
+    public function test_a_numeric_key_is_the_declared_column_of_that_name(): void
+    {
+        static::assertSame(
+            [['0' => 'x', 'e07' => 'y']],
+            array_to_rows(
+                [[0 => 'x', 7 => 'y']],
+                schema(str_schema('0'), str_schema('e07')),
+                flow_context(config())->backend(),
+            )->toArray(),
+        );
+    }
+
+    public function test_refuses_an_undeclared_numeric_key_under_its_positional_name(): void
+    {
+        $this->expectException(SchemaMismatchException::class);
+        $this->expectExceptionMessage(
+            'Rows do not match their schema: column "e07" (row 0) is not declared by the schema',
+        );
+
+        array_to_rows([[0 => 'x', 7 => 'y']], schema(str_schema('0')), flow_context(config())->backend());
+    }
 }

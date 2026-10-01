@@ -67,6 +67,9 @@ To report a stored run without re-running (e.g. `phpbench report`, `phpbench log
 
 Stored runs live in `var/phpbench/` (gitignored).
 
+Compare only runs of shells with the same `php -m`. The Blackfire probe alone (`nix-shell --arg with-blackfire true`)
+moves call-heavy subjects by up to 50 %: time without it, profile with `blackfire run`.
+
 ## Profiling a scenario without phpbench
 
 Every benchmark is a thin phpbench wrapper (`benchmarks/suites/`) around a plain, phpbench-free scenario class

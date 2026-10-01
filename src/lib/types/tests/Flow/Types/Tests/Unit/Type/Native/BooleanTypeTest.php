@@ -12,6 +12,7 @@ use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\Types\DSL\type_boolean;
@@ -244,5 +245,15 @@ final class BooleanTypeTest extends TestCase
     public function test_to_string(): void
     {
         static::assertSame('boolean', type_boolean()->toString());
+    }
+
+    #[TestWith([NAN])]
+    #[TestWith([INF])]
+    #[TestWith([-INF])]
+    public function test_a_non_finite_float_is_refused(float $value): void
+    {
+        $this->expectException(CastingException::class);
+
+        type_boolean()->cast($value);
     }
 }

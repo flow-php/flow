@@ -156,4 +156,12 @@ final class ObjectTypeTest extends TestCase
     {
         static::assertSame('object', type_object()->toString());
     }
+
+    public function test_a_nan_is_wrapped_as_its_scalar(): void
+    {
+        $object = type_object()->cast(NAN);
+
+        static::assertInstanceOf(stdClass::class, $object);
+        static::assertNan($object->scalar);
+    }
 }

@@ -14,6 +14,7 @@ use Flow\Types\Value\Json;
 use Throwable;
 
 use function array_key_exists;
+use function array_keys;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_from_array;
 use function Flow\Types\DSL\type_literal;
@@ -103,6 +104,7 @@ final readonly class MapType implements Type
             }
 
             $castedMap = [];
+            $castedKeys = [];
 
             // @mago-ignore analysis:mixed-assignment
             foreach ($value as $key => $item) {
@@ -113,9 +115,16 @@ final readonly class MapType implements Type
                 }
 
                 $castedMap[$castedKey] = $this->value->cast($item);
+                $castedKeys[] = $castedKey;
             }
 
-            return $this->assert($castedMap);
+            // PHP turns a numeric string key back into an integer
+            if (array_keys($castedMap) !== $castedKeys) {
+                throw InvalidTypeException::value($castedMap, $this);
+            }
+
+            /** @var T $castedMap */
+            return $castedMap;
         } catch (Throwable $e) {
             throw new CastingException($value, $this, $e);
         }

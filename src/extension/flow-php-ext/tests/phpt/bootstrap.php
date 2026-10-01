@@ -958,6 +958,104 @@ function write_random_type(int $depth): array
 }
 
 /**
+ * A value of `$type` (from write_random_type()) in a random input form: as generated, in a raw form a reader hands over
+ * (numeric and ISO strings, Uuid and Json objects, a datetime in another zone), in a form the cast refuses (a wrong
+ * scalar, a scalar for a container, non-list keys, integer keys for string keys, a missing required element, a present
+ * null, an extra key), or null; containers recurse into their elements. `mt_srand()` first.
+ *
+ * @param Flow\Types\Type<mixed> $type
+ */
+function cast_random_input(Flow\Types\Type $type, mixed $value): mixed
+{
+    static $zones = ['UTC', 'Europe/Warsaw', 'America/New_York', '+02:30', '-05:00'];
+
+    $roll = mt_rand(0, 19);
+
+    if ($value === null || $roll === 0) {
+        return null;
+    }
+
+    $type = $type instanceof Flow\Types\Type\Logical\OptionalType ? $type->base() : $type;
+
+    if ($roll === 1) {
+        return $type instanceof Flow\Types\Type\Logical\ListType
+        || $type instanceof Flow\Types\Type\Logical\MapType
+        || $type instanceof Flow\Types\Type\Logical\StructureType
+            ? [5, 'x', true][mt_rand(0, 2)]
+            : ['not a value', [1], -1.5][mt_rand(0, 2)];
+    }
+
+    $raw = $roll < 10;
+
+    return match (true) {
+        $type instanceof Flow\Types\Type\Logical\ListType => (static function () use ($type, $value, $roll): array {
+            $list = array_map(static fn(mixed $item): mixed => cast_random_input(
+                $type->element(),
+                $item,
+            ), Flow\Types\DSL\type_list(Flow\Types\DSL\type_mixed())->assert($value));
+
+            return $roll === 2 && $list !== [] ? array_combine(range(1, count($list)), $list) : $list;
+        })(),
+        $type instanceof Flow\Types\Type\Logical\MapType => (static function () use ($type, $value, $roll): array {
+            $map = array_map(static fn(mixed $item): mixed => cast_random_input(
+                $type->value(),
+                $item,
+            ), Flow\Types\DSL\type_array()->assert($value));
+
+            if ($roll === 2 && $map !== []) {
+                $map[mt_rand(100, 200)] = reset($map);
+            }
+
+            return $map;
+        })(),
+        $type instanceof Flow\Types\Type\Logical\StructureType => (static function () use (
+            $type,
+            $value,
+            $roll,
+        ): array {
+            $structure = [];
+
+            // @mago-ignore analysis:mixed-assignment
+            foreach (Flow\Types\DSL\type_array()->assert($value) as $name => $item) {
+                $structure[$name] = cast_random_input(
+                    $type->element($name)->type ?? throw new LogicException('no such element'),
+                    $item,
+                );
+            }
+
+            $names = array_keys($structure);
+            $name = $names === [] ? 'a' : $names[mt_rand(0, count($names) - 1)];
+
+            return match ($roll) {
+                2 => array_diff_key($structure, [$name => true]),
+                3 => array_replace($structure, [$name => null]),
+                4 => $structure + ['extra key' => 1],
+                default => $structure,
+            };
+        })(),
+        !$raw => $value,
+        $type instanceof Flow\Types\Type\Native\IntegerType,
+        $type instanceof Flow\Types\Type\Native\FloatType,
+            => Flow\Types\DSL\type_string()->cast($value),
+        $type instanceof Flow\Types\Type\Native\BooleanType => ['true', 'false', '1', '0', 'yes', 'off'][mt_rand(0, 5)],
+        $type instanceof Flow\Types\Type\Logical\DateTimeType,
+        $type instanceof Flow\Types\Type\Logical\DateType,
+            => mt_rand(0, 1) === 0
+            ? Flow\Types\DSL\type_instance_of(DateTimeImmutable::class)
+                ->assert($value)
+                ->format($type instanceof Flow\Types\Type\Logical\DateType ? 'Y-m-d' : 'Y-m-d\\TH:i:s.uP')
+            : Flow\Types\DSL\type_instance_of(DateTimeImmutable::class)
+                ->assert($value)
+                ->setTimezone(new DateTimeZone($zones[mt_rand(0, count($zones) - 1)])),
+        $type instanceof Flow\Types\Type\Logical\UuidType
+            => new Flow\Types\Value\Uuid(Flow\Types\DSL\type_string()->assert($value)),
+        $type instanceof Flow\Types\Type\Logical\JsonType
+            => new Flow\Types\Value\Json(Flow\Types\DSL\type_string()->assert($value)),
+        default => $value,
+    };
+}
+
+/**
  * A random batch for the text writers: 1-6 columns of random types (nesting <= 3) under plain and awkward names, 0-40
  * rows.
  *

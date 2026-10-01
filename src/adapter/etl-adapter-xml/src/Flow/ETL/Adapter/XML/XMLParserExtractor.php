@@ -17,8 +17,9 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
-use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
+use Flow\ETL\Schema\Definition\StringDefinition;
+use Flow\ETL\Schema\Definition\XMLDefinition;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
@@ -97,60 +98,34 @@ final class XMLParserExtractor implements
     public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
     {
         $backend = $context->backend();
-        $batchSize = $this->batchSize();
         $yielded = 0;
-        $nodes = new XMLNodes($this->xmlNodePath);
+        $batches = new XMLNodeBatches(new XMLNodes($this->xmlNodePath), $this->batchSize(), $this->bufferSize);
 
         $baseSchema = $this->schema ?? schema(xml_schema('node'));
 
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
         $schema = $fileColumns->declare($baseSchema);
         $body = $fileColumns->withoutTail($schema);
+        $node = $body->findDefinition('node');
 
         foreach ($this->sourceFiles($this->filesystem, $this->path, $pathFilter) as $source) {
             $stream = $this->filesystem->readFrom($source->path);
 
             try {
                 $constants = $fileColumns->forFile($source, $schema);
-
-                $batch = [];
-
-                foreach ($nodes->of($stream, $this->bufferSize) as $node) {
-                    $batch[] = ['node' => $node];
-
-                    if (count($batch) >= $batchSize) {
-                        $rows = $constants->fillRows(
-                            (new RowsBuilder($body, $backend))
-                                ->appendRows($batch)
-                                ->finish(),
-                            $schema,
-                            $backend,
-                        );
-
-                        $batch = [];
-
-                        $yielded += $rows->count();
-
-                        $signal = yield $rows;
-
-                        if ($signal === Signal::STOP) {
-                            return;
-                        }
-
-                        if ($limit !== null && $yielded >= $limit) {
-                            return;
-                        }
-                    }
-                }
-
-                if ($batch !== []) {
-                    $rows = $constants->fillRows(
-                        (new RowsBuilder($body, $backend))
-                            ->appendRows($batch)
-                            ->finish(),
-                        $schema,
+                $lane = match (true) {
+                    $node instanceof XMLDefinition && count($body->definitions()) === 1 => $batches->physicals(
+                        $stream,
+                        $node,
+                        $body,
                         $backend,
-                    );
+                    ),
+                    $node instanceof StringDefinition => $batches->strings($stream, $body, $backend),
+                    default => $batches->documents($stream, $body, $backend),
+                };
+
+                foreach ($lane as $batch) {
+                    $rows = $constants->fillRows($batch, $schema, $backend);
 
                     $yielded += $rows->count();
 

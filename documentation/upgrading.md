@@ -1050,6 +1050,48 @@ Applies to `to_json()`, `to_json_lines()` and to a `list` / `map` / `structure` 
 
 `from_csv()` with a `float` column reads what `to_csv()` writes for a float that is not finite.
 
+### 97) `flow-php/etl`, `flow-php/etl-adapter-xml` - XML node documents are UTF-8
+
+|                                                          | Before                                         | After                                                     |
+|----------------------------------------------------------|------------------------------------------------|-----------------------------------------------------------|
+| a `from_xml()` node                                      | `DOMDocument` without an encoding              | `DOMDocument('1.0', 'UTF-8')`                             |
+| `$node->saveXML()` of `<row>ż</row>`                     | `<?xml version="1.0"?>` + `<row>&#x17C;</row>` | `<?xml version="1.0" encoding="UTF-8"?>` + `<row>ż</row>` |
+| the bytes an `xml` column stores (Floe, Parquet, spill)  | the `saveXML()` above                          | the `saveXML()` above                                     |
+| `cast(type_string())`, `to_json()`, `to_csv()` of a node | `<row>ż</row>`                                 | unchanged                                                 |
+
+Files written before still read, cast and write the same text.
+
+### 98) `flow-php/types` - `type_date()->cast()` of a datetime outside UTC is midnight UTC of its calendar day
+
+|                                                                                                   | Before                           | After                    |
+|---------------------------------------------------------------------------------------------------|----------------------------------|--------------------------|
+| `type_date()->cast(new DateTimeImmutable('2026-01-02 00:30', new DateTimeZone('Europe/Warsaw')))` | `2026-01-02 00:00 Europe/Warsaw` | `2026-01-02 00:00 UTC`   |
+| `type_list(type_date())->cast([...])` of the same value                                           | `CastingException`               | `[2026-01-02 00:00 UTC]` |
+
+A `date` column stored that calendar day before, and still does.
+
+### 99) `flow-php/types` - `type_numeric_string()->cast()` refuses `NAN` and `INF`
+
+|                                    | Before                             | After              |
+|------------------------------------|------------------------------------|--------------------|
+| `type_numeric_string()->cast(NAN)` | `'NAN'`, which `isValid()` refuses | `CastingException` |
+| `INF`, `-INF`                      | `'INF'`, `'-INF'`                  | `CastingException` |
+
+### 100) `flow-php/types` - `type_xml_element()->cast()` of a string that is not XML
+
+|                                       | Before                                                                                                           | After                                                    |
+|---------------------------------------|------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------|
+| `type_xml_element()->cast('not xml')` | `DOMDocument::loadXML()` warnings, then `InvalidTypeException` `Expected type "object<DOMElement>", got "null".` | `CastingException`, no warning - as `type_xml()->cast()` |
+
+
+### 101) `flow-php/types` - `NAN` and `INF` are cast without PHP's coercion
+
+|                                                                         | Before                                                  | After                                                     |
+|-------------------------------------------------------------------------|---------------------------------------------------------|-----------------------------------------------------------|
+| `type_boolean()->cast(NAN)`, `INF`, `-INF`                              | `true`                                                  | `CastingException`                                        |
+| `type_date()`, `type_datetime()` `->cast(NAN)`, `INF`, `-INF`           | `CastingException` from `new DateTimeImmutable('@NAN')` | `CastingException`, reason `value is not a point in time` |
+| `type_string()`, `type_non_empty_string()` `->cast(NAN)`, `INF`, `-INF` | `'NAN'`, `'INF'`, `'-INF'`, a PHP 8.5 warning for `NAN` | the same text, no warning                                 |
+
 ---
 
 ## Upgrading from 0.43.x to 0.44.x

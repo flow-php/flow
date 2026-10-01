@@ -33,4 +33,26 @@ final class ListColumnBuilderTest extends TestCase
         static::assertSame([1 => true], $column->nulls);
         static::assertSame([[1, 2], null, [], [3]], $column->physicals());
     }
+
+    public function test_a_bulk_append_builds_the_column_row_by_row_appends_build(): void
+    {
+        $physicals = [[[1, 2], []], null, [], [null, [3]], [5 => [4]]];
+        $builder = static fn(): ListColumnBuilder => new ListColumnBuilder(
+            type_list(type_list(type_integer())),
+            new ListColumnBuilder(
+                type_list(type_integer()),
+                new ScalarColumnBuilder(type_integer(), new IdentityPhysical()),
+            ),
+        );
+        $bulk = $builder();
+        $bulk->appendPhysicalMany($physicals);
+        $rowByRow = $builder();
+
+        foreach ($physicals as $physical) {
+            $rowByRow->appendPhysical($physical);
+        }
+
+        static::assertEquals($rowByRow->finish(), $bulk->finish());
+        static::assertSame([[[1, 2], []], null, [], [null, [3]], [[4]]], $bulk->finish()->physicals());
+    }
 }

@@ -8,6 +8,7 @@ use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 
 use function is_object;
+use function is_scalar;
 
 /**
  * @template T of object
@@ -36,7 +37,8 @@ final class ObjectType implements Type
             return $value;
         }
 
-        return (object) $value;
+        // an explicit wrapper: PHP 8.5 warns on (object) NAN
+        return is_scalar($value) ? (object) ['scalar' => $value] : (object) $value;
     }
 
     public function isValid(mixed $value): bool

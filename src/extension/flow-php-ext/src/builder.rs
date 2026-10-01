@@ -12,11 +12,11 @@ use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, ZendObject, Zval};
 use flow_batch_frame::kind::Kind;
 
-use crate::cast::{cast_value, CastKind};
+use crate::cast::{cast_value, CastKind, MapKeyKind};
 use crate::column::NativeColumn;
 use crate::ctx::{
     self, call_handle_catching, call_method, call_static, construct_with_zvals, expect_object, find_class,
-    ht_for_each, null_zval, read_slot, transparent_exception, zval_long,
+    ht_for_each, ht_get, null_zval, read_slot, transparent_exception, zval_long,
 };
 use crate::date_check::iso_instant_micros;
 use crate::exception::ext_exception;
@@ -41,7 +41,7 @@ pub enum Native {
     Bytes(Zval),
 }
 
-/// One value ready to append: `appendMany()` builds all of them before appending any.
+/// One value ready to append, for `DefaultBackend::constant()`.
 pub enum Pending {
     Null,
     Native(Native),
@@ -62,17 +62,25 @@ fn string_slot(object: &ZendObject, slot: u32) -> Option<Zval> {
 
 /// The physical form of `value` for `plan`, when `cast.rs` casts it natively; `None` hands it to the PHP lane.
 pub fn native_lane(plan: &TypePlan, value: &Zval) -> Result<Option<Native>, PhpException> {
-    if let (Kind::Timestamp, CastKind::DateTime(_)) = (&plan.kind, &plan.cast) {
+    native_leaf(&plan.kind, &plan.cast, value)
+}
+
+fn native_leaf(kind: &Kind, cast_kind: &CastKind, value: &Zval) -> Result<Option<Native>, PhpException> {
+    if let (Kind::Timestamp, CastKind::DateTime(_)) = (kind, cast_kind) {
         if let Some(micros) = value.zend_str().and_then(|string| iso_instant_micros(string.as_bytes())) {
             return Ok(Some(Native::Fixed(micros.to_le_bytes())));
         }
     }
 
-    let Some(cast) = cast_value(&plan.cast, value)? else {
+    if nested(kind) {
+        return Ok(None);
+    }
+
+    let Some(cast) = cast_value(cast_kind, value)? else {
         return Ok(None);
     };
 
-    Ok(match (&plan.kind, &plan.cast) {
+    Ok(match (kind, cast_kind) {
         (Kind::Int64, CastKind::Integer | CastKind::PositiveInteger) => {
             cast.long().map(|long| Native::Fixed(long.to_le_bytes()))
         }
@@ -106,6 +114,119 @@ pub fn native_lane(plan: &TypePlan, value: &Zval) -> Result<Option<Native>, PhpE
     })
 }
 
+fn nested(kind: &Kind) -> bool {
+    matches!(kind, Kind::List(_) | Kind::Map(..) | Kind::Struct(_))
+}
+
+/// Casts `value` straight into `builder`, element by element. `Ok(false)`: Rust does not cast this value, and the row
+/// is left half-appended for the caller to truncate before the PHP lane casts the whole value.
+fn append_cast(builder: &mut KindBuilder, kind: &Kind, cast_kind: &CastKind, value: &Zval) -> Result<bool, PhpException> {
+    let value = value.dereference();
+
+    match (kind, cast_kind) {
+        (_, CastKind::Optional(inner)) => {
+            if value.is_null() {
+                builder.append_null();
+
+                return Ok(true);
+            }
+
+            append_cast(builder, kind, inner, value)
+        }
+        (Kind::List(element), CastKind::List(inner)) => {
+            let Some(values) = value.array() else {
+                return Ok(false);
+            };
+            let mut expected = 0;
+            let mut cast = true;
+
+            ht_for_each(values, |string_key, index, item| {
+                cast = cast
+                    && string_key.is_none()
+                    && index == expected
+                    && append_cast(builder.list_element(), &element.kind, inner, item)?;
+                expected += 1;
+
+                Ok(())
+            })?;
+
+            if cast {
+                builder.end_entries().map_err(overflow)?;
+            }
+
+            Ok(cast)
+        }
+        (Kind::Map(key, item_kind), CastKind::Map(key_cast, inner)) => {
+            let Some(values) = value.array() else {
+                return Ok(false);
+            };
+            let mut cast = true;
+
+            ht_for_each(values, |string_key, index, item| {
+                if !cast {
+                    return Ok(());
+                }
+
+                let (keys, items) = builder.map_entries();
+
+                cast = match (key_cast, string_key, &key.kind) {
+                    (MapKeyKind::Int, None, Kind::Int64) => {
+                        keys.append_fixed(&(index as i64).to_le_bytes());
+
+                        true
+                    }
+                    (MapKeyKind::Str, Some(name), Kind::Bytes) => {
+                        keys.append_bytes(name.as_bytes()).map_err(overflow)?;
+
+                        true
+                    }
+                    _ => false,
+                } && append_cast(items, &item_kind.kind, inner, item)?;
+
+                Ok(())
+            })?;
+
+            if cast {
+                builder.end_entries().map_err(overflow)?;
+            }
+
+            Ok(cast)
+        }
+        (Kind::Struct(fields), CastKind::Structure(elements)) => {
+            let Some(values) = value.array() else {
+                return Ok(false);
+            };
+
+            for ((child, field), element) in builder.struct_children().iter_mut().zip(fields).zip(elements) {
+                match ht_get(values, field.name.as_bytes()) {
+                    None if element.required => return Ok(false),
+                    None => child.append_null(),
+                    Some(item) if item.dereference().is_null() && !matches!(element.kind, CastKind::Optional(_)) => {
+                        return Ok(false);
+                    }
+                    Some(item) => {
+                        if !append_cast(child, &field.kind, &element.kind, item)? {
+                            return Ok(false);
+                        }
+                    }
+                }
+            }
+
+            builder.end_struct();
+
+            Ok(true)
+        }
+        _ => match native_leaf(kind, cast_kind, value)? {
+            Some(native) => {
+                append_native(builder, native)?;
+
+                Ok(true)
+            }
+            None => Ok(false),
+        },
+    }
+}
+
 /// `$type->cast($value)`, then `$physical->toPhysical($cast)` unless the physical is the identity.
 pub fn php_lane(plan: &TypePlan, value: &Zval) -> Result<Zval, Refusal> {
     let type_obj = plan.type_zv.object().expect("a plan's type is an object");
@@ -132,17 +253,6 @@ fn append_native(builder: &mut KindBuilder, native: Native) -> Result<(), PhpExc
     }
 
     Ok(())
-}
-
-fn append_pending(builder: &mut KindBuilder, kind: &Kind, pending: Pending) -> Result<(), PhpException> {
-    match pending {
-        Pending::Null => {
-            builder.append_null();
-            Ok(())
-        }
-        Pending::Native(native) => append_native(builder, native),
-        Pending::Physical(physical) => append_physical(builder, kind, &physical),
-    }
 }
 
 /// `ColumnMismatchException::valueDoesNotMatch($definition, $value[, $reason])`.
@@ -204,7 +314,7 @@ impl NativeColumnBuilder {
         })
     }
 
-    /// One value for `append()`/`DefaultBackend::constant()`: refusals escape as PHP threw them.
+    /// One value for `DefaultBackend::constant()`: refusals escape as PHP threw them.
     pub fn pending(&self, value: &Zval) -> Result<Pending, PhpException> {
         let value = value.dereference();
 
@@ -228,8 +338,54 @@ impl NativeColumnBuilder {
         }
     }
 
-    pub fn append_pending(&mut self, pending: Pending) -> Result<(), PhpException> {
-        append_pending(&mut self.values, &self.plan.kind, pending)
+    /// One value cast and appended. With a `position`, refusals are `appendMany()`'s `SchemaMismatchException` at it;
+    /// without, they escape as PHP threw them, as `append()` lets them.
+    fn append_value(&mut self, value: &Zval, position: Option<&dyn Fn() -> Zval>) -> Result<(), PhpException> {
+        let value = value.dereference();
+        let refuse = |cause: Zval| match position {
+            Some(position) => schema_mismatch(position(), cause),
+            None => throw(cause),
+        };
+
+        if value.is_null() {
+            if !self.nullable {
+                return Err(refuse(value_does_not_match(&self.definition, null_zval(), None)?));
+            }
+
+            self.values.append_null();
+
+            return Ok(());
+        }
+
+        if nested(&self.plan.kind) {
+            let row = self.values.len();
+
+            if append_cast(&mut self.values, &self.plan.kind, &self.plan.cast, value)? {
+                return Ok(());
+            }
+
+            self.values.truncate(row);
+        } else if let Some(native) = native_lane(&self.plan, value)? {
+            return append_native(&mut self.values, native);
+        }
+
+        match php_lane(&self.plan, value) {
+            Ok(physical) => append_physical(&mut self.values, &self.plan.kind, &physical),
+            Err(Refusal::Cast(mut exception) | Refusal::Physical(mut exception))
+                if position.is_none() || !is_types_exception(&exception)? =>
+            {
+                Err(transparent_exception(&mut exception))
+            }
+            // the cast's own reason is dropped, as CastingColumnBuilder::appendMany drops it
+            Err(Refusal::Cast(_)) => Err(refuse(value_does_not_match(&self.definition, value.shallow_clone(), None)?)),
+            Err(Refusal::Physical(mut exception)) => {
+                let mut reason = Zval::new();
+                reason.set_object(&mut exception);
+
+                // the value cast, so only the physical form's reason (a range) tells the user why it was refused
+                Err(refuse(value_does_not_match(&self.definition, value.shallow_clone(), Some(reason))?))
+            }
+        }
     }
 
     fn not_null(&self, is_null: bool) -> Result<(), PhpException> {
@@ -297,80 +453,31 @@ impl NativeColumnBuilder {
     }
 
     pub fn append(&mut self, value: &Zval) -> PhpResult<()> {
-        let pending = self.pending(value)?;
+        let start = self.values.len();
+        let result = self.append_value(value, None);
 
-        self.append_pending(pending)
+        if result.is_err() {
+            self.values.truncate(start);
+        }
+
+        result
     }
 
     #[php(name = "appendMany")]
     pub fn append_many(&mut self, values: &ZendHashTable) -> PhpResult<()> {
-        let mut pendings = Vec::with_capacity(values.len());
-
-        ht_for_each(values, |string_key, index, value| {
-            let value = value.dereference();
-            let position = || match string_key {
+        let start = self.values.len();
+        let result = ht_for_each(values, |string_key, index, value| {
+            self.append_value(value, Some(&|| match string_key {
                 Some(name) => crate::ctx::zval_str(name.as_bytes()),
                 None => zval_long(index as i64),
-            };
+            }))
+        });
 
-            if value.is_null() {
-                if !self.nullable {
-                    return Err(schema_mismatch(
-                        position(),
-                        value_does_not_match(&self.definition, null_zval(), None)?,
-                    ));
-                }
-
-                pendings.push(Pending::Null);
-
-                return Ok(());
-            }
-
-            if let Some(native) = native_lane(&self.plan, value)? {
-                pendings.push(Pending::Native(native));
-
-                return Ok(());
-            }
-
-            match php_lane(&self.plan, value) {
-                Ok(physical) => {
-                    pendings.push(Pending::Physical(physical));
-
-                    Ok(())
-                }
-                Err(Refusal::Cast(mut exception)) => {
-                    if !is_types_exception(&exception)? {
-                        return Err(transparent_exception(&mut exception));
-                    }
-
-                    // the cast's own reason is dropped, as CastingColumnBuilder::appendMany drops it
-                    Err(schema_mismatch(
-                        position(),
-                        value_does_not_match(&self.definition, value.shallow_clone(), None)?,
-                    ))
-                }
-                Err(Refusal::Physical(mut exception)) => {
-                    if !is_types_exception(&exception)? {
-                        return Err(transparent_exception(&mut exception));
-                    }
-
-                    let mut reason = Zval::new();
-                    reason.set_object(&mut exception);
-
-                    // the value cast, so only the physical form's reason (a range) tells the user why it was refused
-                    Err(schema_mismatch(
-                        position(),
-                        value_does_not_match(&self.definition, value.shallow_clone(), Some(reason))?,
-                    ))
-                }
-            }
-        })?;
-
-        for pending in pendings {
-            self.append_pending(pending)?;
+        if result.is_err() {
+            self.values.truncate(start);
         }
 
-        Ok(())
+        result
     }
 
     #[php(name = "appendFrom")]

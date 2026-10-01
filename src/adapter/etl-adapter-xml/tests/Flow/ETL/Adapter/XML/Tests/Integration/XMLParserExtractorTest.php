@@ -504,6 +504,6 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
             false,
         );
 
-        static::assertGreaterThanOrEqual(1, $backend->builders());
+        static::assertGreaterThanOrEqual(1, $backend->adopts());
     }
 }

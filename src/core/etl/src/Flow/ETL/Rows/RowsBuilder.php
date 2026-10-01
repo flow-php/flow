@@ -210,40 +210,44 @@ final class RowsBuilder
 
         foreach ($this->definitions as $position => $definition) {
             $name = $this->names[$position];
-            $values = [];
-            $absent = null;
-
-            foreach ($rows as $index => $row) {
-                if (array_key_exists($name, $row)) {
-                    $values[] = $row[$name];
-
-                    continue;
-                }
-
-                if (!$definition->isNullable()) {
-                    $absent ??= $index;
-                }
-
-                $values[] = null;
-            }
-
-            // an absence under NOT NULL is refused below; the values the rows do carry are still checked, because a
-            // refused value wins over an absence
+            /** @var list<mixed> $values */
+            $values = array_column($rows, $name);
             $present = null;
 
-            if ($absent !== null) {
-                if ($absence === null || ($this->count + $absent) < $absence->rowIndex) {
-                    $absence = new SchemaMismatchException(
-                        $this->count + $absent,
-                        ColumnMismatchException::missingColumn($definition),
-                    );
+            if (count($values) !== count($rows)) {
+                $values = [];
+                $absent = null;
+
+                foreach ($rows as $index => $row) {
+                    if (array_key_exists($name, $row)) {
+                        $values[] = $row[$name];
+
+                        continue;
+                    }
+
+                    if (!$definition->isNullable()) {
+                        $absent ??= $index;
+                    }
+
+                    $values[] = null;
                 }
 
-                $present = array_keys(array_filter($rows, static fn(array $row): bool => array_key_exists(
-                    $name,
-                    $row,
-                )));
-                $values = array_map(static fn(int $index): mixed => $rows[$index][$name], $present);
+                // an absence under NOT NULL is refused below; the values the rows do carry are still checked, because
+                // a refused value wins over an absence
+                if ($absent !== null) {
+                    if ($absence === null || ($this->count + $absent) < $absence->rowIndex) {
+                        $absence = new SchemaMismatchException(
+                            $this->count + $absent,
+                            ColumnMismatchException::missingColumn($definition),
+                        );
+                    }
+
+                    $present = array_keys(array_filter($rows, static fn(array $row): bool => array_key_exists(
+                        $name,
+                        $row,
+                    )));
+                    $values = array_map(static fn(int $index): mixed => $rows[$index][$name], $present);
+                }
             }
 
             try {

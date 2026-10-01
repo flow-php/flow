@@ -161,4 +161,9 @@ final class InstanceOfTypeTest extends TestCase
     {
         static::assertSame('object<DateTimeImmutable>', type_instance_of(DateTimeImmutable::class)->toString());
     }
+
+    public function test_a_nan_is_wrapped_as_its_scalar(): void
+    {
+        static::assertNan(type_instance_of(stdClass::class)->cast(NAN)->scalar);
+    }
 }

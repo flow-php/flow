@@ -15,6 +15,7 @@ use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 use Flow\Types\Type\Native\String\StringTemporalParts;
+use Flow\Types\Type\NonFiniteFloat;
 use Throwable;
 
 use function array_combine;
@@ -195,6 +196,10 @@ final readonly class DateTimeType implements Type
                 }
 
                 return (new DateTimeImmutable($value, $this->zone))->setTimezone($this->zone);
+            }
+
+            if (NonFiniteFloat::is($value)) {
+                throw new CastingException($value, $this, reason: 'value is not a point in time');
             }
 
             if (is_numeric($value)) {
