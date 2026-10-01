@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\JSONMachine;
 
+use Flow\ETL\Adapter\JSON\JsonSourceOpener;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
@@ -19,7 +20,6 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
-use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\SchemaInference;
 use Flow\ETL\Schema\Inference\SchemaInferenceBuilder;
@@ -127,19 +127,14 @@ final class JsonLinesExtractor implements
 
         $schema = $fileColumns->declare($base);
         $body = $fileColumns->withoutTail($schema);
+        $opener = new JsonSourceOpener($this->filesystem, $reader, JsonFormat::Lines, $this->pointer);
 
         foreach ($sources as $source) {
             // forFile() reads the PARTITION definitions, which only declare() creates - $base is the body
             $constants = $fileColumns->forFile($source, $schema);
 
-            foreach ($reader->batches($source, $batchSize) as $rawBatch) {
-                $rows = $constants->fillRows(
-                    (new RowsBuilder($body, $backend))
-                        ->appendRows($rawBatch)
-                        ->finish(),
-                    $schema,
-                    $backend,
-                );
+            foreach ($opener->batches($source, $body, $batchSize, $backend) as $batch) {
+                $rows = $constants->fillRows($batch, $schema, $backend);
 
                 $yielded += $rows->count();
 

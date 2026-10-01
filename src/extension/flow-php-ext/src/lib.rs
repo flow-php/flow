@@ -1,5 +1,6 @@
 mod alloc;
 mod backend;
+mod batch_columns;
 mod builder;
 mod cast;
 mod column;
@@ -53,20 +54,13 @@ pub unsafe extern "C" fn module_startup(_type: i32, _module_number: i32) -> i32 
     0
 }
 
-fn csv_batch_size(batch_size: i64) -> PhpResult<usize> {
-    usize::try_from(batch_size)
-        .ok()
-        .filter(|size| *size > 0)
-        .ok_or_else(|| ext_exception("flow_php CSV batch size must be greater than 0"))
-}
-
 /// Native counterpart of `CSVLineReader` + `CSVEncoder::decode()`: bytes in, rows or native columns out,
 /// byte-identical to the PHP path. Resumable - `feed` any chunk size, `finish` at EOF.
 #[php_class]
 #[php(name = "Flow\\ETL\\Adapter\\CSV\\RustCSVReaderNative")]
 pub struct RustCSVReaderNative {
     reader: csv::CsvReader,
-    columns: Option<csv::columns::CsvColumns>,
+    columns: csv::columns::CsvColumns,
 }
 
 #[php_impl]
@@ -81,7 +75,7 @@ impl RustCSVReaderNative {
     ) -> PhpResult<Self> {
         Ok(Self {
             reader: csv::CsvReader::new(&separator, &enclosure, &escape, with_header, empty_to_null, remove_bom)?,
-            columns: None,
+            columns: csv::columns::CsvColumns::default(),
         })
     }
 
@@ -127,7 +121,7 @@ impl RustCSVReaderNative {
 
     pub fn next(&mut self, batch_size: i64) -> PhpResult<Zval> {
         let mut zv = Zval::new();
-        zv.set_hashtable(self.reader.next(csv_batch_size(batch_size)?)?);
+        zv.set_hashtable(self.reader.next(batch_columns::batch_size_of(batch_size, "CSV")?)?);
 
         Ok(zv)
     }
@@ -136,7 +130,7 @@ impl RustCSVReaderNative {
     /// `finish()`, else null. Refusals are `RowsBuilder::appendRows()`'s, row indexes relative to the batch.
     #[php(name = "nextColumns")]
     pub fn next_columns(&mut self, schema: &Zval, batch_size: i64) -> PhpResult<Zval> {
-        csv::columns::next_columns(&mut self.reader, &mut self.columns, schema, csv_batch_size(batch_size)?)
+        csv::columns::next_columns(&mut self.reader, &mut self.columns, schema, batch_columns::batch_size_of(batch_size, "CSV")?)
     }
 }
 
@@ -196,6 +190,7 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .class::<RustCSVReaderNative>()
         .class::<RustColumnFoldNative>()
         .class::<csv::write::NativeCSVWriter>()
+        .class::<json::read::NativeJsonReader>()
         .class::<json::write::NativeJsonWriter>()
         .class::<parquet::etl::NativeParquetReader>()
         .class::<parquet::etl::NativeParquetWriter>()

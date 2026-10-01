@@ -7,6 +7,9 @@ namespace Flow\ETL\Adapter\JSON\Tests\Integration\JSONMachine;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonFileSample;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonFormat;
 use Flow\ETL\Adapter\JSON\Tests\Context\JsonFixtureContext;
+use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Extractor\SourceFile;
+use Flow\ETL\Tests\Context\MemoryFiles;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
@@ -19,6 +22,7 @@ use function array_keys;
 use function array_map;
 use function array_slice;
 use function count;
+use function Flow\Filesystem\DSL\path;
 use function Flow\Types\DSL\type_array;
 use function implode;
 use function iterator_to_array;
@@ -312,6 +316,22 @@ final class JsonFileReaderTest extends FlowTestCase
         $rows = iterator_to_array($reader->sample(JsonFixtureContext::source('pointer_blank_line.jsonl')), false);
 
         static::assertSame([1, 2], array_map(static fn(array $v): mixed => $v['a'], $rows));
+    }
+
+    #[TestWith(['[1, {"id":1}]', null])]
+    #[TestWith(['{"id":1}', null])]
+    #[TestWith(['{"items":[1]}', '/items'])]
+    public function test_a_scalar_record_is_refused(string $content, ?string $pointer): void
+    {
+        $filesystem = MemoryFiles::with(['memory://scalar.json' => $content]);
+        $reader = JsonFixtureContext::reader(JsonFormat::Document, $filesystem, pointer: $pointer);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            'A JSON record must be an object or an array, int given in "memory://scalar.json".',
+        );
+
+        iterator_to_array($reader->sample(new SourceFile(path('memory://scalar.json'))), false);
     }
 
     public function test_a_nul_only_line_is_refused(): void

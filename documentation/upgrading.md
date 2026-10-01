@@ -1103,6 +1103,31 @@ A `date` column stored that calendar day before, and still does.
 An element column now stores its whole owner document per value: its size grows with the document.
 Files written before still read.
 
+### 103) `flow-php/etl-adapter-json` - a scalar JSON record throws `RuntimeException`
+
+|                                                                     | Before                     | After                                 |
+|---------------------------------------------------------------------|----------------------------|---------------------------------------|
+| `from_json()` over `[1, {"id":1}]`                                  | `TypeError` from `count()` | `Flow\ETL\Exception\RuntimeException` |
+| `from_json()` over a JSON-lines file (`{"id":1}`)                   | `TypeError` from `count()` | `Flow\ETL\Exception\RuntimeException` |
+| a pointer at scalars (`withPointer('/items')` over `{"items":[1]}`) | `TypeError` from `count()` | `Flow\ETL\Exception\RuntimeException` |
+
+The message is `A JSON record must be an object or an array, int given in "<uri>".`, the type being the scalar's
+`get_debug_type()`.
+
+### 104) `flow-php/etl-adapter-json` - with `flow_php` loaded, `from_json()` / `from_json_lines()` read strict JSON
+
+JSON lines and a document holding a top-level array are read by the extension, which refuses what the PHP reader
+tolerated, with `Flow\ETL\Exception\RuntimeException`. A pointer, or a document that is not an array, is read as
+before.
+
+|                                                                  | Before                                       | After                                                                |
+|------------------------------------------------------------------|----------------------------------------------|----------------------------------------------------------------------|
+| `\v`, `\f` or BOM bytes between tokens (`[{"id":1}\v,{"id":2}]`) | read                                         | `Malformed JSON in "<uri>" at element 0: …`                          |
+| a BOM at the start of a later line                               | read                                         | `Malformed JSON in "<uri>" at line N: …`                             |
+| content after a line's record (`{"id":1}{"id":9}`)               | the first record, the rest ignored           | `Malformed JSON in "<uri>" at line N: …`                             |
+| content after the closing `]` (`[{"id":1}] x`)                   | ignored                                      | `Malformed JSON in "<uri>" at element N: …`                          |
+| a scalar JSON line (`5`)                                         | `JsonMachine\Exception\SyntaxErrorException` | `A JSON record must be an object or an array, int given in "<uri>".` |
+
 ---
 
 ## Upgrading from 0.43.x to 0.44.x

@@ -46,6 +46,11 @@ data_frame()
 In JSON lines, a line holding only whitespace (space, tab, CR, LF, VT, FF) is skipped, as DuckDB does; this is not
 configurable.
 
+With the [`flow_php`](/documentation/components/extensions/flow-php-ext.md) extension loaded, JSON lines and a document
+holding a top-level array are read natively, as strict JSON: malformed input throws
+`RuntimeException('Malformed JSON in "<uri>" at line N: …')` (`at element N` in a document). A pointer, or a document
+that is not an array, is read by the PHP reader.
+
 ## Loader - JsonLoader
 
 ```php

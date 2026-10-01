@@ -701,6 +701,6 @@ final class JsonExtractorTest extends FlowTestCase
             false,
         );
 
-        static::assertGreaterThanOrEqual(1, $backend->builders());
+        static::assertGreaterThanOrEqual(1, $backend->builders() + $backend->adopts());
     }
 }

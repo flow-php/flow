@@ -54,6 +54,14 @@ pub enum Refusal {
     Physical(ZBox<ZendObject>),
 }
 
+/// What `append_one()` did with a value.
+pub enum Append {
+    Done,
+    /// `cause` is the `ColumnMismatchException` a positioned append wraps; `raised` the `Flow\Types` exception an
+    /// unpositioned append rethrows (`None` for a NOT NULL null).
+    Refused { cause: Zval, raised: Option<ZBox<ZendObject>> },
+}
+
 fn string_slot(object: &ZendObject, slot: u32) -> Option<Zval> {
     let value = read_slot(object, slot);
 
@@ -65,7 +73,7 @@ pub fn native_lane(plan: &TypePlan, value: &Zval) -> Result<Option<Native>, PhpE
     native_leaf(&plan.kind, &plan.cast, value)
 }
 
-fn native_leaf(kind: &Kind, cast_kind: &CastKind, value: &Zval) -> Result<Option<Native>, PhpException> {
+pub(crate) fn native_leaf(kind: &Kind, cast_kind: &CastKind, value: &Zval) -> Result<Option<Native>, PhpException> {
     if let (Kind::Timestamp, CastKind::DateTime(_)) = (kind, cast_kind) {
         if let Some(micros) = value.zend_str().and_then(|string| iso_instant_micros(string.as_bytes())) {
             return Ok(Some(Native::Fixed(micros.to_le_bytes())));
@@ -227,6 +235,72 @@ fn append_cast(builder: &mut KindBuilder, kind: &Kind, cast_kind: &CastKind, val
     }
 }
 
+/// One value, as `NativeColumnBuilder::appendMany()` appends it: a null is refused under NOT NULL; a nested value
+/// takes `append_cast()`, a leaf the native lane, and what neither casts the PHP lane. Exceptions other than
+/// `Flow\Types` ones escape as thrown.
+pub fn append_one(
+    values: &mut KindBuilder,
+    plan: &TypePlan,
+    definition: &Zval,
+    nullable: bool,
+    value: &Zval,
+) -> Result<Append, PhpException> {
+    let value = value.dereference();
+
+    if value.is_null() {
+        if !nullable {
+            return Ok(Append::Refused {
+                cause: value_does_not_match(definition, null_zval(), None)?,
+                raised: None,
+            });
+        }
+
+        values.append_null();
+
+        return Ok(Append::Done);
+    }
+
+    if nested(&plan.kind) {
+        let row = values.len();
+
+        if append_cast(values, &plan.kind, &plan.cast, value)? {
+            return Ok(Append::Done);
+        }
+
+        values.truncate(row);
+    } else if let Some(native) = native_lane(plan, value)? {
+        append_native(values, native)?;
+
+        return Ok(Append::Done);
+    }
+
+    match php_lane(plan, value) {
+        Ok(physical) => {
+            append_physical(values, &plan.kind, &physical)?;
+
+            Ok(Append::Done)
+        }
+        Err(Refusal::Cast(mut exception) | Refusal::Physical(mut exception)) if !is_types_exception(&exception)? => {
+            Err(transparent_exception(&mut exception))
+        }
+        // the cast's own reason is dropped, as CastingColumnBuilder::appendMany drops it
+        Err(Refusal::Cast(exception)) => Ok(Append::Refused {
+            cause: value_does_not_match(definition, value.shallow_clone(), None)?,
+            raised: Some(exception),
+        }),
+        Err(Refusal::Physical(mut exception)) => {
+            let mut reason = Zval::new();
+            reason.set_object(&mut exception);
+
+            // the value cast, so only the physical form's reason (a range) tells the user why it was refused
+            Ok(Append::Refused {
+                cause: value_does_not_match(definition, value.shallow_clone(), Some(reason))?,
+                raised: Some(exception),
+            })
+        }
+    }
+}
+
 /// `$type->cast($value)`, then `$physical->toPhysical($cast)` unless the physical is the identity.
 pub fn php_lane(plan: &TypePlan, value: &Zval) -> Result<Zval, Refusal> {
     let type_obj = plan.type_zv.object().expect("a plan's type is an object");
@@ -241,7 +315,7 @@ pub fn php_lane(plan: &TypePlan, value: &Zval) -> Result<Zval, Refusal> {
     call_handle_catching(plan.to_physical, Some(physical), &mut [cast]).map_err(Refusal::Physical)
 }
 
-fn append_native(builder: &mut KindBuilder, native: Native) -> Result<(), PhpException> {
+pub(crate) fn append_native(builder: &mut KindBuilder, native: Native) -> Result<(), PhpException> {
     match native {
         Native::Fixed(bytes) => builder.append_fixed(&bytes),
         Native::Days(days) => builder.append_fixed(&days.to_le_bytes()),
@@ -341,50 +415,13 @@ impl NativeColumnBuilder {
     /// One value cast and appended. With a `position`, refusals are `appendMany()`'s `SchemaMismatchException` at it;
     /// without, they escape as PHP threw them, as `append()` lets them.
     fn append_value(&mut self, value: &Zval, position: Option<&dyn Fn() -> Zval>) -> Result<(), PhpException> {
-        let value = value.dereference();
-        let refuse = |cause: Zval| match position {
-            Some(position) => schema_mismatch(position(), cause),
-            None => throw(cause),
-        };
-
-        if value.is_null() {
-            if !self.nullable {
-                return Err(refuse(value_does_not_match(&self.definition, null_zval(), None)?));
-            }
-
-            self.values.append_null();
-
-            return Ok(());
-        }
-
-        if nested(&self.plan.kind) {
-            let row = self.values.len();
-
-            if append_cast(&mut self.values, &self.plan.kind, &self.plan.cast, value)? {
-                return Ok(());
-            }
-
-            self.values.truncate(row);
-        } else if let Some(native) = native_lane(&self.plan, value)? {
-            return append_native(&mut self.values, native);
-        }
-
-        match php_lane(&self.plan, value) {
-            Ok(physical) => append_physical(&mut self.values, &self.plan.kind, &physical),
-            Err(Refusal::Cast(mut exception) | Refusal::Physical(mut exception))
-                if position.is_none() || !is_types_exception(&exception)? =>
-            {
-                Err(transparent_exception(&mut exception))
-            }
-            // the cast's own reason is dropped, as CastingColumnBuilder::appendMany drops it
-            Err(Refusal::Cast(_)) => Err(refuse(value_does_not_match(&self.definition, value.shallow_clone(), None)?)),
-            Err(Refusal::Physical(mut exception)) => {
-                let mut reason = Zval::new();
-                reason.set_object(&mut exception);
-
-                // the value cast, so only the physical form's reason (a range) tells the user why it was refused
-                Err(refuse(value_does_not_match(&self.definition, value.shallow_clone(), Some(reason))?))
-            }
+        match append_one(&mut self.values, &self.plan, &self.definition, self.nullable, value)? {
+            Append::Done => Ok(()),
+            Append::Refused { cause, raised } => Err(match (position, raised) {
+                (Some(position), _) => schema_mismatch(position(), cause),
+                (None, Some(mut raised)) => transparent_exception(&mut raised),
+                (None, None) => throw(cause),
+            }),
         }
     }
 

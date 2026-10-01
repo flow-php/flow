@@ -18,7 +18,7 @@ flow-batch-frame = { path = "crates/flow-batch-frame" }
 memchr = "2"
 parquet = { version = "59", default-features = false, features = ["arrow", "arrow_canonical_extension_types", "snap", "flate2", "flate2-zlib-rs", "zstd", "lz4", "brotli", "simdutf8"] }
 serde = { version = "1", features = ["derive"] }
-serde_json = { version = "1", features = ["raw_value"] }
+serde_json = { version = "1", features = ["raw_value", "unbounded_depth"] }
 
 [build-dependencies]
 ext-php-rs-build = "0.1"

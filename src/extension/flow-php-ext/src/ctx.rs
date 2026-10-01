@@ -553,6 +553,10 @@ pub fn json_encode() -> Result<&'static Function, PhpException> {
     function("json_encode")
 }
 
+pub fn json_decode() -> Result<&'static Function, PhpException> {
+    function("json_decode")
+}
+
 pub fn json_validate() -> Result<&'static Function, PhpException> {
     function("json_validate")
 }
