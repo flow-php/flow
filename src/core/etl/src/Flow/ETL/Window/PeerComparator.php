@@ -60,7 +60,7 @@ final readonly class PeerComparator
 
             if ($comparable->equalByPhysical($type)) {
                 // === on physicals is value equality; NaN is the one physical that is not === to itself
-                $physicals = $column->physicals();
+                $physicals = $comparable->equality($column);
 
                 for ($i = 1; $i < $count; $i++) {
                     // @mago-ignore analysis:mixed-assignment

@@ -6,13 +6,15 @@ namespace Flow\ETL\Column;
 
 use DateTimeInterface;
 use DOMDocument;
-use DOMElement;
+use Flow\ETL\Column\Php\HtmlElementPhysical;
 use Flow\ETL\Column\Php\PhysicalFor;
 use Flow\ETL\Column\Php\XmlDocumentPhysical;
+use Flow\ETL\Column\Php\XmlElementPhysical;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateTimeType;
 use Flow\Types\Type\Logical\DateType;
+use Flow\Types\Type\Logical\HTMLElementType;
 use Flow\Types\Type\Logical\JsonType;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
@@ -101,7 +103,19 @@ final readonly class TextValues
             return $values;
         }
 
-        if ($bare instanceof XMLType || $bare instanceof XMLElementType) {
+        if ($bare instanceof HTMLElementType || $bare instanceof XMLElementType) {
+            $elements = $bare instanceof HTMLElementType ? new HtmlElementPhysical() : new XmlElementPhysical();
+            $values = [];
+
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($physicals as $physical) {
+                $values[] = $physical === null ? null : $elements->markup(type_string()->assert($physical));
+            }
+
+            return $values;
+        }
+
+        if ($bare instanceof XMLType) {
             $nodes = (new PhysicalFor())->type($bare);
             $documents = new XmlDocumentPhysical();
             $values = [];
@@ -114,15 +128,11 @@ final readonly class TextValues
                     continue;
                 }
 
-                if ($bare instanceof XMLType) {
-                    $text = $documents->text(type_string()->assert($physical));
+                $text = $documents->text(type_string()->assert($physical));
 
-                    if ($text === null) {
-                        $document = type_instance_of(DOMDocument::class)->assert($nodes->fromPhysical($physical));
-                        $text = $document->saveXML($document->documentElement);
-                    }
-                } else {
-                    $text = type_instance_of(DOMElement::class)->assert($nodes->fromPhysical($physical))->C14N();
+                if ($text === null) {
+                    $document = type_instance_of(DOMDocument::class)->assert($nodes->fromPhysical($physical));
+                    $text = $document->saveXML($document->documentElement);
                 }
 
                 if ($text === false) {
@@ -182,6 +192,7 @@ final readonly class TextValues
             $bare instanceof JsonType,
             $bare instanceof XMLType,
             $bare instanceof XMLElementType,
+            $bare instanceof HTMLElementType,
             $bare instanceof MapType,
             $bare instanceof StructureType,
                 => false,

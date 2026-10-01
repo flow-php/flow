@@ -10,6 +10,7 @@ use Flow\Types\Type\Logical\DateType;
 use Flow\Types\Type\Logical\HTMLElementType;
 use Flow\Types\Type\Logical\HTMLType;
 use Flow\Types\Type\Logical\JsonType;
+use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\TimeType;
 use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Type\Logical\XMLElementType;
@@ -48,7 +49,27 @@ final readonly class ComparableValues
      */
     public function equality(Column $column): array
     {
-        return $this->equalByPhysical($column->type()) ? $column->physicals() : $column->values();
+        return $this->equalByPhysical($column->type())
+            ? $this->equalities($column->type(), $column->physicals())
+            : $column->values();
+    }
+
+    /**
+     * Element physicals carry their owner document, so elements, and lists of them, compare by their own markup.
+     *
+     * @param Type<mixed> $type
+     * @param list<mixed> $physicals
+     *
+     * @return list<mixed> === on these is value equality
+     */
+    public function equalities(Type $type, array $physicals): array
+    {
+        $bare = type_bare($type);
+        $element = $bare instanceof ListType ? type_bare($bare->element()) : $bare;
+
+        return $element instanceof HTMLElementType || $element instanceof XMLElementType
+            ? (new TextValues())->of($type, $physicals)
+            : $physicals;
     }
 
     /**

@@ -1092,6 +1092,17 @@ A `date` column stored that calendar day before, and still does.
 | `type_date()`, `type_datetime()` `->cast(NAN)`, `INF`, `-INF`           | `CastingException` from `new DateTimeImmutable('@NAN')` | `CastingException`, reason `value is not a point in time` |
 | `type_string()`, `type_non_empty_string()` `->cast(NAN)`, `INF`, `-INF` | `'NAN'`, `'INF'`, `'-INF'`, a PHP 8.5 warning for `NAN` | the same text, no warning                                 |
 
+### 102) `flow-php/etl` - `html_element` and `xml_element` bytes carry the owner document
+
+|                                                           | Before                                  | After                                                                             |
+|-----------------------------------------------------------|-----------------------------------------|-----------------------------------------------------------------------------------|
+| the bytes an element column stores (Floe, Parquet, spill) | the element's markup                    | `"\x01" . <path> . "\0" . <markup length> . "\0" . <markup> . <owner document>`   |
+| `domElementParent()` of an element read from a column     | `<body>` or nothing, from a re-parse    | the element's parent                                                              |
+| `cast(type_string())`, `to_json()`, `to_csv()`            | the element's markup                    | unchanged                                                                         |
+
+An element column now stores its whole owner document per value: its size grows with the document.
+Files written before still read.
+
 ---
 
 ## Upgrading from 0.43.x to 0.44.x

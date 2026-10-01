@@ -100,8 +100,8 @@ final class IsIn implements ScalarFunction
             && $comparable->equalByPhysical($needleColumn->type())
         ) {
             /** @var list<?array<array-key, mixed>> $haystacks */
-            $haystacks = $haystackColumn->physicals();
-            $needles = $needleColumn->physicals();
+            $haystacks = $comparable->equalities($haystackColumn->type(), $haystackColumn->physicals());
+            $needles = $comparable->equality($needleColumn);
             $physical = null;
         } else {
             $haystacks = $haystackParameter->arraysOf($haystackColumn);
@@ -140,7 +140,9 @@ final class IsIn implements ScalarFunction
                         $needle instanceof DateTimeInterface && $candidate instanceof DateTimeInterface => $needle
                             == $candidate,
                         $physical !== null && get_debug_type($needle) === get_debug_type($candidate)
-                            => $physical->toPhysical($needle) === $physical->toPhysical($candidate),
+                            => $comparable->equalities($needleColumn->type(), [$physical->toPhysical(
+                            $needle,
+                        )]) === $comparable->equalities($needleColumn->type(), [$physical->toPhysical($candidate)]),
                         default => $needle === $candidate,
                     }) {
                         $results[] = true;

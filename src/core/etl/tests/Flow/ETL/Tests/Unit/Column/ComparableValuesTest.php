@@ -30,8 +30,10 @@ use function Flow\ETL\DSL\time_zone_schema;
 use function Flow\ETL\DSL\uuid_schema;
 use function Flow\ETL\DSL\xml_element_schema;
 use function Flow\ETL\DSL\xml_schema;
+use function Flow\Types\DSL\type_html_element;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_xml_element;
 
 final class ComparableValuesTest extends TestCase
 {
@@ -61,7 +63,6 @@ final class ComparableValuesTest extends TestCase
         yield 'json' => [json_schema('a'), ['{"a":1}']];
         yield 'enum' => [enum_schema('a', BackedStringEnum::class), [BackedStringEnum::one]];
         yield 'xml' => [xml_schema('a'), ['<a>1</a>']];
-        yield 'xml element' => [xml_element_schema('a'), ['<a>1</a>']];
     }
 
     /**
@@ -80,10 +81,29 @@ final class ComparableValuesTest extends TestCase
             html_schema('a'),
             ['<!DOCTYPE html><html><head></head><body><p>a</p></body></html>'],
         );
-        $element = ColumnMother::of(html_element_schema('a'), ['<p>a</p>']);
+        $element = ColumnMother::of(html_element_schema('a'), [
+            type_html_element()->cast('<div><p>a</p></div>')->firstElementChild,
+            type_html_element()->cast('<section><p>a</p></section>')->firstElementChild,
+        ]);
 
         static::assertSame($document->physicals(), (new ComparableValues())->equality($document));
-        static::assertSame($element->physicals(), (new ComparableValues())->equality($element));
+        static::assertSame(['<p>a</p>', '<p>a</p>'], (new ComparableValues())->equality($element));
+    }
+
+    public function test_xml_elements_of_different_documents_compare_by_their_markup(): void
+    {
+        $first = type_xml_element()->cast('<div><p>a</p></div>')->firstElementChild;
+        $second = type_xml_element()->cast('<section><p>a</p></section>')->firstElementChild;
+        $elements = ColumnMother::of(xml_element_schema('a', nullable: true), [$first, $second, null]);
+        $lists = ColumnMother::of(list_schema('a', type_list(type_xml_element())), [[$first], [$second]]);
+
+        static::assertTrue((new ComparableValues())->equalByPhysical($elements->type()));
+        static::assertEquals($elements->values(), (new ComparableValues())->ordering($elements));
+        static::assertSame(['<p>a</p>', '<p>a</p>', null], (new ComparableValues())->equality($elements));
+        static::assertSame(
+            [['<p>a</p>'], ['<p>a</p>']],
+            (new ComparableValues())->equalities($lists->type(), $lists->physicals()),
+        );
     }
 
     /**

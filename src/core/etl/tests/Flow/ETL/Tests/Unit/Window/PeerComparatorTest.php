@@ -16,8 +16,10 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\xml_element_schema;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_xml_element;
 
 use const NAN;
 
@@ -87,6 +89,18 @@ final class PeerComparatorTest extends FlowTestCase
                 ['l' => [1, 2]],
                 ['l' => [2]],
             ], schema(list_schema('l', type_list(type_integer()))))),
+        );
+    }
+
+    public function test_xml_elements_of_different_documents_are_peers_by_their_markup(): void
+    {
+        static::assertSame(
+            [false, true, false],
+            (new PeerComparator([ref('e')]))->peersOfPrevious(array_to_rows([
+                ['e' => type_xml_element()->cast('<div><p>a</p></div>')->firstElementChild],
+                ['e' => type_xml_element()->cast('<section><p>a</p></section>')->firstElementChild],
+                ['e' => type_xml_element()->cast('<div><p>b</p></div>')->firstElementChild],
+            ], schema(xml_element_schema('e')))),
         );
     }
 }

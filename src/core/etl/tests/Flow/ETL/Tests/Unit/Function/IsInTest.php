@@ -30,6 +30,7 @@ use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_time;
 use function Flow\Types\DSL\type_uuid;
+use function Flow\Types\DSL\type_xml_element;
 
 final class IsInTest extends FlowTestCase
 {
@@ -156,6 +157,18 @@ final class IsInTest extends FlowTestCase
         ];
         yield 'date' => [type_date(), new DateTimeImmutable('2024-01-01'), new DateTimeImmutable('2024-01-01'), true];
         yield 'time' => [type_time(), new DateInterval('PT60M'), new DateInterval('PT1H'), true];
+        yield 'xml elements of different documents' => [
+            type_xml_element(),
+            type_xml_element()->cast('<div><p>a</p></div>')->firstElementChild,
+            type_xml_element()->cast('<section><p>a</p></section>')->firstElementChild,
+            true,
+        ];
+        yield 'other xml elements' => [
+            type_xml_element(),
+            type_xml_element()->cast('<div><p>a</p></div>')->firstElementChild,
+            type_xml_element()->cast('<div><p>b</p></div>')->firstElementChild,
+            false,
+        ];
     }
 
     /**

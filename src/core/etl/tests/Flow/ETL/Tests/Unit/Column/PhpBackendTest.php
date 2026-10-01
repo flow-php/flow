@@ -316,7 +316,12 @@ final class PhpBackendTest extends TestCase
             '<p>a</p>',
             type_string()->assert((new HtmlDocumentPhysical())->toPhysical($document)),
         );
-        static::assertSame('<p>a</p>', (new HtmlElementPhysical())->toPhysical($element));
+        static::assertSame(
+            '<p>a</p>',
+            (new HtmlElementPhysical())->markup(type_string()->assert((new HtmlElementPhysical())->toPhysical(
+                $element,
+            ))),
+        );
     }
 
     public function test_the_null_definition_holds_nulls_only(): void
