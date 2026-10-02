@@ -83,7 +83,10 @@ impl<R: ReadAt> ChunkFetch<R> {
     /// `planned`: per planned group, its projected chunks, by projected column; `unplanned`: every other chunk.
     fn from_ranges(source: Arc<R>, size: u64, planned: Vec<Vec<Range<u64>>>, unplanned: Vec<Range<u64>>) -> Self {
         let columns = planned.first().map_or(0, Vec::len);
-        let reads = planned.iter().map(|chunks| coalesced(chunks.clone())).collect::<Vec<_>>();
+        let reads = planned
+            .iter()
+            .map(|chunks| coalesced(chunks.clone()))
+            .collect::<Vec<_>>();
         let mut chunks = unplanned
             .into_iter()
             .map(|range| Chunk { range, planned: None })
@@ -94,7 +97,9 @@ impl<R: ReadAt> ChunkFetch<R> {
                     .into_iter()
                     .enumerate()
                     .map(move |(column, range)| {
-                        let read = reads.iter().position(|read| read.start <= range.start && range.end <= read.end);
+                        let read = reads
+                            .iter()
+                            .position(|read| read.start <= range.start && range.end <= read.end);
 
                         Chunk {
                             planned: read.map(|read| (group, column, read)),
@@ -122,7 +127,10 @@ impl<R: ReadAt> ChunkFetch<R> {
     fn chunk_at(&self, offset: u64) -> Option<&Chunk> {
         let after = self.chunks.partition_point(|chunk| chunk.range.start <= offset);
 
-        after.checked_sub(1).map(|index| &self.chunks[index]).filter(|chunk| offset < chunk.range.end)
+        after
+            .checked_sub(1)
+            .map(|index| &self.chunks[index])
+            .filter(|chunk| offset < chunk.range.end)
     }
 
     /// The fetched bytes of [start, end) when a planned column chunk holds it, fetching its row group first.
@@ -136,7 +144,10 @@ impl<R: ReadAt> ChunkFetch<R> {
             return Ok(None);
         }
 
-        let mut fetched = self.fetched.lock().map_err(|_| ParquetError::General("chunk fetch poisoned".into()))?;
+        let mut fetched = self
+            .fetched
+            .lock()
+            .map_err(|_| ParquetError::General("chunk fetch poisoned".into()))?;
 
         if let Entry::Vacant(entry) = fetched.buffers.entry(group) {
             entry.insert(
@@ -220,7 +231,11 @@ mod tests {
         assert!(coalesced(vec![]).is_empty());
     }
 
-    fn fetch(source: &Arc<Counting>, planned: Vec<Vec<Range<u64>>>, unplanned: Vec<Range<u64>>) -> ChunkFetch<Counting> {
+    fn fetch(
+        source: &Arc<Counting>,
+        planned: Vec<Vec<Range<u64>>>,
+        unplanned: Vec<Range<u64>>,
+    ) -> ChunkFetch<Counting> {
         ChunkFetch::from_ranges(Arc::clone(source), source.data.len() as u64, planned, unplanned)
     }
 
@@ -261,7 +276,16 @@ mod tests {
     fn a_group_is_dropped_once_every_column_moved_past_it() {
         let source = Arc::new(Counting::new((0..100).collect()));
         let fetch = fetch(&source, vec![vec![0..10, 20..30], vec![50..60, 70..80]], vec![]);
-        let groups = |fetch: &ChunkFetch<Counting>| fetch.fetched.lock().unwrap().buffers.keys().copied().collect::<Vec<_>>();
+        let groups = |fetch: &ChunkFetch<Counting>| {
+            fetch
+                .fetched
+                .lock()
+                .unwrap()
+                .buffers
+                .keys()
+                .copied()
+                .collect::<Vec<_>>()
+        };
 
         fetch.get_bytes(0, 1).unwrap();
         fetch.get_bytes(50, 1).unwrap();
@@ -279,13 +303,24 @@ mod tests {
     fn page_requests_find_their_chunk_among_many() {
         let source = Arc::new(Counting::new((0..=255).cycle().take(40_000).collect()));
         let planned = (0..100).map(|group| vec![group * 400..group * 400 + 100, group * 400 + 200..group * 400 + 300]);
-        let fetch = fetch(&source, planned.collect(), (0..100).map(|group| group * 400 + 100..group * 400 + 200).collect());
+        let fetch = fetch(
+            &source,
+            planned.collect(),
+            (0..100).map(|group| group * 400 + 100..group * 400 + 200).collect(),
+        );
 
-        assert_eq!(fetch.get_bytes(99 * 400 + 250, 2).unwrap().to_vec(), source.data[39_850..39_852].to_vec());
+        assert_eq!(
+            fetch.get_bytes(99 * 400 + 250, 2).unwrap().to_vec(),
+            source.data[39_850..39_852].to_vec()
+        );
         assert_eq!(source.counted(), (2, 200));
 
         let mut header = Vec::new();
-        fetch.get_read(50 * 400 + 150).unwrap().read_to_end(&mut header).unwrap();
+        fetch
+            .get_read(50 * 400 + 150)
+            .unwrap()
+            .read_to_end(&mut header)
+            .unwrap();
 
         assert_eq!(header, source.data[20_150..20_200].to_vec());
         assert_eq!(source.counted(), (3, 250));

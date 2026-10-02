@@ -11,8 +11,7 @@ use crate::date_check::days_from_civil;
 use crate::exception::ext_exception;
 
 extern "C" {
-    fn php_date_instantiate(pce: *mut ext_php_rs::zend::ClassEntry, object: *mut Zval)
-        -> *mut Zval;
+    fn php_date_instantiate(pce: *mut ext_php_rs::zend::ClassEntry, object: *mut Zval) -> *mut Zval;
 
     #[cfg(php84)]
     fn php_date_initialize_from_ts_long(dateobj: *mut c_void, sec: i64, usec: c_int);
@@ -114,7 +113,11 @@ pub fn datetime_days(datetime: &ZendObject) -> Option<i64> {
 }
 
 /// A fresh `DateTimeImmutable` initialised by `init` over its `php_date_obj`, then moved into `zone`.
-fn datetime_in(zone: &[u8], init: impl FnOnce(*mut c_void) -> bool, failure: impl FnOnce() -> PhpException) -> Result<Zval, PhpException> {
+fn datetime_in(
+    zone: &[u8],
+    init: impl FnOnce(*mut c_void) -> bool,
+    failure: impl FnOnce() -> PhpException,
+) -> Result<Zval, PhpException> {
     let fns = ctx::datetime_immutable()?;
     let mut datetime = Zval::new();
 
@@ -132,10 +135,17 @@ fn datetime_in(zone: &[u8], init: impl FnOnce(*mut c_void) -> bool, failure: imp
         return Err(failure());
     }
 
-    let datetime = call_handle(fns.set_timezone, Some(datetime_obj), &mut [ctx::timezone(zone)?], "restore a datetime timezone")?;
+    let datetime = call_handle(
+        fns.set_timezone,
+        Some(datetime_obj),
+        &mut [ctx::timezone(zone)?],
+        "restore a datetime timezone",
+    )?;
 
     if !datetime.is_object() {
-        return Err(ext_exception("flow_php expected setTimezone to return a datetime object"));
+        return Err(ext_exception(
+            "flow_php expected setTimezone to return a datetime object",
+        ));
     }
 
     Ok(datetime)
@@ -176,7 +186,11 @@ pub fn datetime_from_micros(micros: i64, zone: &[u8]) -> Result<Zval, PhpExcepti
                 }
             }
         },
-        || ext_exception(format!("flow_php failed to restore datetime from \"{micros}\" microseconds")),
+        || {
+            ext_exception(format!(
+                "flow_php failed to restore datetime from \"{micros}\" microseconds"
+            ))
+        },
     )
 }
 
@@ -211,12 +225,21 @@ pub fn interval_from_micros(micros: i64) -> Result<Zval, PhpException> {
     );
     let fns = ctx::interval()?;
     let mut interval = ZendObject::new(fns.ce);
-    call_handle(fns.construct, Some(&mut interval), &mut [zval_str(spec.as_bytes())], "construct DateInterval")?;
+    call_handle(
+        fns.construct,
+        Some(&mut interval),
+        &mut [zval_str(spec.as_bytes())],
+        "construct DateInterval",
+    )?;
 
     let mut fraction = Zval::new();
     fraction.set_double((magnitude % 1_000_000) as f64 / 1_000_000.0);
     write_property_raw(&mut interval, &mut ZendStr::new("f", false), fraction)?;
-    write_property_raw(&mut interval, &mut ZendStr::new("invert", false), zval_long(i64::from(micros < 0)))?;
+    write_property_raw(
+        &mut interval,
+        &mut ZendStr::new("invert", false),
+        zval_long(i64::from(micros < 0)),
+    )?;
 
     let mut zv = Zval::new();
     zv.set_object(&mut interval);
@@ -278,7 +301,10 @@ pub fn json_from_bytes(bytes: &[u8]) -> Result<Zval, PhpException> {
 /// `hex2bin()` of a 36-char uuid with its dashes removed.
 pub fn uuid_bytes(text: &[u8]) -> Option<[u8; 16]> {
     let mut bytes = [0u8; 16];
-    let mut digits = text.iter().filter(|byte| **byte != b'-').map(|byte| (*byte as char).to_digit(16));
+    let mut digits = text
+        .iter()
+        .filter(|byte| **byte != b'-')
+        .map(|byte| (*byte as char).to_digit(16));
 
     for byte in &mut bytes {
         let high = digits.next()??;
@@ -291,18 +317,12 @@ pub fn uuid_bytes(text: &[u8]) -> Option<[u8; 16]> {
 
 /// `new DateTimeImmutable($str, $timezone)` through the same C-level timelib parser, in its
 /// non-throwing `date_create()` flavor: `Ok(None)` on parse failure, no exception.
-pub(crate) fn date_from_free_form(
-    bytes: &[u8],
-    timezone: Option<&mut Zval>,
-) -> Result<Option<Zval>, PhpException> {
+pub(crate) fn date_from_free_form(bytes: &[u8], timezone: Option<&mut Zval>) -> Result<Option<Zval>, PhpException> {
     let ce = ctx::datetime_immutable()?.ce;
 
     let mut datetime = Zval::new();
     unsafe {
-        php_date_instantiate(
-            std::ptr::from_ref(ce).cast_mut(),
-            std::ptr::from_mut(&mut datetime),
-        );
+        php_date_instantiate(std::ptr::from_ref(ce).cast_mut(), std::ptr::from_mut(&mut datetime));
     }
 
     let datetime_obj = datetime

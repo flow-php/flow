@@ -1,4 +1,4 @@
-//! `Flow\ETL\Adapter\JSON\NativeJsonReader`: JSON lines or a top-level JSON array, fed in chunks, read into native
+//! The reader behind `RustJsonOpenSource`: JSON lines or a top-level JSON array, fed in chunks, read into native
 //! columns by a schema with `RowsBuilder::appendRows()`'s results and refusals. This file frames records and maps their
 //! members to columns; serde_json parses and validates.
 
@@ -7,9 +7,7 @@ use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 
-use ext_php_rs::binary_slice::BinarySlice;
 use ext_php_rs::exception::PhpException;
-use ext_php_rs::flags::ClassFlags;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::Zval;
 use flow_batch_frame::kind::{Field, Kind};
@@ -19,7 +17,7 @@ use serde_json::de::{SliceRead, StrRead};
 use serde_json::value::RawValue;
 use serde_json::Deserializer;
 
-use crate::batch_columns::{batch_size_of, native_text, BatchColumns, Key};
+use crate::batch_columns::{native_text, BatchColumns, HeldBatch, Key};
 use crate::builder::{append_native, append_one, native_leaf, Append};
 use crate::cast::{CastKind, MapKeyKind};
 use crate::ctx::{self, array_key_index, null_zval, zval_str};
@@ -119,8 +117,14 @@ const LONE_SURROGATE: &str = "Single unpaired UTF-16 surrogate in unicode escape
 
 /// `{}` or `[]`: a record with no fields, skipped as `JsonFileReader::sample()` skips it.
 fn empty_record(bytes: &[u8]) -> bool {
-    let start = bytes.iter().position(|byte| !is_whitespace(byte)).unwrap_or(bytes.len());
-    let end = bytes.iter().rposition(|byte| !is_whitespace(byte)).map_or(start, |end| end + 1);
+    let start = bytes
+        .iter()
+        .position(|byte| !is_whitespace(byte))
+        .unwrap_or(bytes.len());
+    let end = bytes
+        .iter()
+        .rposition(|byte| !is_whitespace(byte))
+        .map_or(start, |end| end + 1);
     let trimmed = &bytes[start..end];
 
     matches!(
@@ -275,7 +279,10 @@ impl Framing {
                 }
                 Document::Elements => {
                     let pending = &self.input[self.start..];
-                    let found = self.scan.run(pending, self.scanned).map_err(|TooDeep| self.malformed(TOO_DEEP.to_string()))?;
+                    let found = self
+                        .scan
+                        .run(pending, self.scanned)
+                        .map_err(|TooDeep| self.malformed(TOO_DEEP.to_string()))?;
 
                     let Some(found) = found else {
                         self.scanned = pending.len();
@@ -480,7 +487,9 @@ impl MemberColumns {
         for (column, key) in keys.enumerate() {
             if let Key::Index(index) = key {
                 if let Ok(position) = usize::try_from(*index) {
-                    columns.positions.resize(columns.positions.len().max(position + 1), None);
+                    columns
+                        .positions
+                        .resize(columns.positions.len().max(position + 1), None);
                     columns.positions[position] = Some(column);
                 }
             }
@@ -549,7 +558,9 @@ pub fn map_record(
 
     if let Some(b'{' | b'[') = record.iter().find(|byte| !is_whitespace(byte)) {
         let mut deserializer = deserializer(record);
-        deserializer.deserialize_any(Members { columns, slots, base }).map_err(malformed)?;
+        deserializer
+            .deserialize_any(Members { columns, slots, base })
+            .map_err(malformed)?;
 
         return deserializer.end().map_err(malformed);
     }
@@ -662,8 +673,12 @@ fn into_column(values: &mut KindBuilder, kind: &Kind, cast: &CastKind, text: &st
             (Kind::Struct(fields), CastKind::Structure(elements)) => {
                 let members = str_deserializer(text).deserialize_map(Fields(fields)).map_err(reread)?;
 
-                for (((child, field), element), member) in
-                    values.struct_children().iter_mut().zip(fields).zip(elements).zip(members)
+                for (((child, field), element), member) in values
+                    .struct_children()
+                    .iter_mut()
+                    .zip(fields)
+                    .zip(elements)
+                    .zip(members)
                 {
                     match member.map(RawValue::get) {
                         None if element.required => return Ok(false),
@@ -703,7 +718,12 @@ impl<'de> Visitor<'de> for Elements<'_> {
     }
 
     fn visit_seq<A: SeqAccess<'de>>(self, mut seq: A) -> Result<bool, A::Error> {
-        let Elements { values, kind, cast, failure } = self;
+        let Elements {
+            values,
+            kind,
+            cast,
+            failure,
+        } = self;
 
         while let Some(value) = seq.next_element::<&'de RawValue>()? {
             match into_column(values, kind, cast, value.get()) {
@@ -802,7 +822,9 @@ fn last_wins<'a>(entries: Vec<(Cow<'a, str>, &'a RawValue)>) -> Vec<(Cow<'a, str
         }
     }
 
-    kept.into_iter().map(|(key, value)| (entries[key].0.clone(), entries[value].1)).collect()
+    kept.into_iter()
+        .map(|(key, value)| (entries[key].0.clone(), entries[value].1))
+        .collect()
 }
 
 /// The batch being built and the column each member feeds.
@@ -812,9 +834,7 @@ struct JsonColumns {
     members: MemberColumns,
 }
 
-#[php_class]
-#[php(name = "Flow\\ETL\\Adapter\\JSON\\NativeJsonReader", flags = ClassFlags::Final)]
-pub struct NativeJsonReader {
+pub struct JsonReader {
     uri: String,
     framing: Framing,
     /// The framed records of the pending batch, copied out of the input.
@@ -832,7 +852,7 @@ fn malformed(uri: &str, lines: bool, ordinal: usize, message: &str) -> PhpExcept
     ))
 }
 
-impl NativeJsonReader {
+impl JsonReader {
     fn clear(&mut self) {
         self.records.clear();
         self.bounds.clear();
@@ -842,7 +862,7 @@ impl NativeJsonReader {
         }
     }
 
-    fn read(&mut self, schema: &Zval, batch_size: usize) -> PhpResult<Zval> {
+    fn read(&mut self, schema: &Zval, batch_size: usize) -> PhpResult<Option<HeldBatch>> {
         let (state, rebuilt) = BatchColumns::prepare(&mut self.columns.batch, schema, batch_size, "JSON")?;
 
         if rebuilt {
@@ -872,7 +892,7 @@ impl NativeJsonReader {
         state.rows = self.bounds.len();
 
         if self.bounds.is_empty() || (self.bounds.len() < state.batch_size && !self.framing.finished) {
-            return Ok(null_zval());
+            return Ok(None);
         }
 
         let width = state.columns.len();
@@ -884,9 +904,16 @@ impl NativeJsonReader {
         for (row, record) in self.bounds.iter().enumerate() {
             let slots = &mut self.slots[row * width..(row + 1) * width];
 
-            match map_record(&self.records[record.start..record.end], &self.columns.members, slots, base) {
+            match map_record(
+                &self.records[record.start..record.end],
+                &self.columns.members,
+                slots,
+                base,
+            ) {
                 Ok(()) => {}
-                Err(RecordError::Malformed(message)) => return Err(malformed(&self.uri, lines, record.ordinal, &message)),
+                Err(RecordError::Malformed(message)) => {
+                    return Err(malformed(&self.uri, lines, record.ordinal, &message))
+                }
                 Err(RecordError::Scalar(given)) => {
                     return Err(runtime(format!(
                         "A JSON record must be an object or an array, {given} given in \"{}\".",
@@ -929,9 +956,13 @@ impl NativeJsonReader {
                     decode(text)?
                 };
 
-                if let Append::Refused { cause, .. } =
-                    append_one(&mut column.values, &column.plan, &column.definition, column.nullable, &value)?
-                {
+                if let Append::Refused { cause, .. } = append_one(
+                    &mut column.values,
+                    &column.plan,
+                    &column.definition,
+                    column.nullable,
+                    &value,
+                )? {
                     column.refusal = Some((row, cause));
                 }
             }
@@ -940,7 +971,7 @@ impl NativeJsonReader {
         self.records.clear();
         self.bounds.clear();
 
-        state.finish()
+        state.finish().map(Some)
     }
 }
 
@@ -948,7 +979,12 @@ impl NativeJsonReader {
 fn decode(text: &str) -> Result<Zval, PhpException> {
     let mut associative = Zval::new();
     associative.set_bool(true);
-    let value = ctx::call_handle(ctx::json_decode()?, None, &mut [zval_str(text.as_bytes()), associative], "decode JSON")?;
+    let value = ctx::call_handle(
+        ctx::json_decode()?,
+        None,
+        &mut [zval_str(text.as_bytes()), associative],
+        "decode JSON",
+    )?;
 
     if value.is_null() {
         return Err(ext_exception("flow_php expected json_decode() to read validated JSON"));
@@ -957,12 +993,11 @@ fn decode(text: &str) -> Result<Zval, PhpException> {
     Ok(value)
 }
 
-#[php_impl]
-impl NativeJsonReader {
-    /// `$uri` names the file in refusals.
-    pub fn __construct(lines: bool, uri: BinarySlice<u8>) -> Self {
+impl JsonReader {
+    /// `uri` names the file in refusals.
+    pub fn new(lines: bool, uri: &[u8]) -> Self {
         Self {
-            uri: String::from_utf8_lossy(&uri).into_owned(),
+            uri: String::from_utf8_lossy(uri).into_owned(),
             framing: Framing::new(lines),
             records: Vec::new(),
             bounds: Vec::new(),
@@ -971,8 +1006,8 @@ impl NativeJsonReader {
         }
     }
 
-    pub fn feed(&mut self, chunk: BinarySlice<u8>) {
-        self.framing.feed(&chunk);
+    pub fn feed(&mut self, chunk: &[u8]) {
+        self.framing.feed(chunk);
     }
 
     /// Malformed input left in the buffer (a truncated record, a missing `]`) is refused by the next `nextColumns()`.
@@ -980,11 +1015,10 @@ impl NativeJsonReader {
         self.framing.finish();
     }
 
-    /// Exactly `$batchSize` rows keyed and ordered by `$schema` while that many are buffered, the remainder after
-    /// `finish()`, else null. Refusals are `RowsBuilder::appendRows()`'s, row indexes relative to the batch.
-    #[php(name = "nextColumns")]
-    pub fn next_columns(&mut self, schema: &Zval, batch_size: i64) -> PhpResult<Zval> {
-        let batch = self.read(schema, batch_size_of(batch_size, "JSON")?);
+    /// Exactly `batch_size` rows keyed and ordered by `schema` while that many are buffered, the remainder after
+    /// `finish()`, else none. Refusals are `RowsBuilder::appendRows()`'s, row indexes relative to the batch.
+    pub fn next_columns(&mut self, schema: &Zval, batch_size: usize) -> PhpResult<Option<HeldBatch>> {
+        let batch = self.read(schema, batch_size);
 
         if batch.is_err() {
             self.clear();
@@ -999,8 +1033,8 @@ mod tests {
     use serde::de::Deserializer as _;
 
     use super::{
-        last_wins, map_record, number, str_deserializer, Entries, Framing, Key, Malformed, MemberColumns, Number, Record,
-        RecordError,
+        last_wins, map_record, number, str_deserializer, Entries, Framing, Key, Malformed, MemberColumns, Number,
+        Record, RecordError,
     };
     use crate::ctx::array_key_index;
 
@@ -1021,7 +1055,12 @@ mod tests {
 
         Ok(bounds
             .iter()
-            .map(|record| (String::from_utf8(records[record.start..record.end].to_vec()).unwrap(), record.ordinal))
+            .map(|record| {
+                (
+                    String::from_utf8(records[record.start..record.end].to_vec()).unwrap(),
+                    record.ordinal,
+                )
+            })
             .collect())
     }
 
@@ -1046,9 +1085,15 @@ mod tests {
 
         assert_eq!(
             framed(false, &bytes(document)).unwrap(),
-            vec![(r#"{"a":{"b":[1,"x]\"",{"c":2}]}}"#.to_string(), 0), (r#"{"d":3}"#.to_string(), 1)],
+            vec![
+                (r#"{"a":{"b":[1,"x]\"",{"c":2}]}}"#.to_string(), 0),
+                (r#"{"d":3}"#.to_string(), 1)
+            ],
         );
-        assert_eq!(framed(true, &bytes("{\"a\":[1,\n")).unwrap(), vec![(r#"{"a":[1,"#.to_string(), 1)]);
+        assert_eq!(
+            framed(true, &bytes("{\"a\":[1,\n")).unwrap(),
+            vec![(r#"{"a":[1,"#.to_string(), 1)]
+        );
     }
 
     #[test]
@@ -1061,8 +1106,14 @@ mod tests {
 
     #[test]
     fn one_leading_bom_is_skipped() {
-        assert_eq!(framed(false, &[b"\xEF\xBB", b"\xBF [1]"]).unwrap(), vec![("1".to_string(), 0)]);
-        assert_eq!(framed(true, &[b"\xEF\xBB\xBF{\"a\":1}\n"]).unwrap(), vec![(r#"{"a":1}"#.to_string(), 1)]);
+        assert_eq!(
+            framed(false, &[b"\xEF\xBB", b"\xBF [1]"]).unwrap(),
+            vec![("1".to_string(), 0)]
+        );
+        assert_eq!(
+            framed(true, &[b"\xEF\xBB\xBF{\"a\":1}\n"]).unwrap(),
+            vec![(r#"{"a":1}"#.to_string(), 1)]
+        );
         assert_eq!(
             framed(true, &[b"{\"a\":1}\n\xEF\xBB\xBF{\"a\":2}"]).unwrap(),
             vec![(r#"{"a":1}"#.to_string(), 1), ("\u{FEFF}{\"a\":2}".to_string(), 2)],
@@ -1075,7 +1126,10 @@ mod tests {
             framed(true, &[b"\n \t\x0B\x0C\r\n{}\n[ ]\n{\"a\":1}\r\n\n"]).unwrap(),
             vec![("{\"a\":1}\r".to_string(), 5)],
         );
-        assert_eq!(framed(false, &[b"[{}, [], {\"a\":1}]"]).unwrap(), vec![(r#" {"a":1}"#.to_string(), 2)]);
+        assert_eq!(
+            framed(false, &[b"[{}, [], {\"a\":1}]"]).unwrap(),
+            vec![(r#" {"a":1}"#.to_string(), 2)]
+        );
     }
 
     #[test]
@@ -1091,15 +1145,24 @@ mod tests {
 
     #[test]
     fn a_truncated_document_is_malformed() {
-        assert_eq!(framed(false, &[b"[{\"id\":1}"]), malformed(0, "EOF while parsing a list"));
-        assert_eq!(framed(false, &[b"[{\"id\":"]), malformed(0, "EOF while parsing a value at line 1 column 6"));
+        assert_eq!(
+            framed(false, &[b"[{\"id\":1}"]),
+            malformed(0, "EOF while parsing a list")
+        );
+        assert_eq!(
+            framed(false, &[b"[{\"id\":"]),
+            malformed(0, "EOF while parsing a value at line 1 column 6")
+        );
         assert_eq!(framed(false, &[b""]), malformed(0, "EOF while parsing a value"));
         assert_eq!(framed(false, &[b"{}"]), malformed(0, "expected `[`"));
     }
 
     #[test]
     fn nesting_deeper_than_json_decode_reads_is_refused() {
-        assert_eq!(framed(false, &[format!("[{}]", nested(511)).as_bytes()]).unwrap().len(), 1);
+        assert_eq!(
+            framed(false, &[format!("[{}]", nested(511)).as_bytes()]).unwrap().len(),
+            1
+        );
         assert_eq!(
             framed(false, &[format!("[{}]", nested(512)).as_bytes()]),
             malformed(0, "Maximum stack depth exceeded"),
@@ -1114,8 +1177,14 @@ mod tests {
         assert_eq!(number("-0"), Number::Long(0));
         assert_eq!(number("9223372036854775807"), Number::Long(i64::MAX));
         assert_eq!(number("-9223372036854775808"), Number::Long(i64::MIN));
-        assert_eq!(number("9223372036854775808"), Number::Double(9_223_372_036_854_775_808.0));
-        assert_eq!(number("-9223372036854775809"), Number::Double(-9_223_372_036_854_775_809.0));
+        assert_eq!(
+            number("9223372036854775808"),
+            Number::Double(9_223_372_036_854_775_808.0)
+        );
+        assert_eq!(
+            number("-9223372036854775809"),
+            Number::Double(-9_223_372_036_854_775_809.0)
+        );
         assert_eq!(number("1E2"), Number::Double(100.0));
         assert_eq!(number("1e400"), Number::Double(f64::INFINITY));
         assert_eq!(number("1e-400"), Number::Double(0.0));
@@ -1145,13 +1214,20 @@ mod tests {
 
         map_record(record.as_bytes(), &columns(names), &mut slots, record.as_ptr() as usize)?;
 
-        Ok(slots.iter().map(|slot| slot.map(|(start, end)| record[start..end].to_string())).collect())
+        Ok(slots
+            .iter()
+            .map(|slot| slot.map(|(start, end)| record[start..end].to_string()))
+            .collect())
     }
 
     #[test]
     fn members_map_to_columns_by_name_and_the_last_duplicate_wins() {
         assert_eq!(
-            mapped(r#" {"b": [1, {"x":2}], "zz": 0, "a": "1", "a": null} "#, &["a", "b", "c"]).unwrap(),
+            mapped(
+                r#" {"b": [1, {"x":2}], "zz": 0, "a": "1", "a": null} "#,
+                &["a", "b", "c"]
+            )
+            .unwrap(),
             vec![Some("null".to_string()), Some(r#"[1, {"x":2}]"#.to_string()), None],
         );
         assert_eq!(
@@ -1162,7 +1238,10 @@ mod tests {
 
     #[test]
     fn an_array_record_maps_elements_to_numeric_names() {
-        assert_eq!(mapped(r#"[10, "x", true]"#, &["2", "0"]).unwrap(), vec![Some("true".to_string()), Some("10".to_string())]);
+        assert_eq!(
+            mapped(r#"[10, "x", true]"#, &["2", "0"]).unwrap(),
+            vec![Some("true".to_string()), Some("10".to_string())]
+        );
     }
 
     #[test]
@@ -1187,7 +1266,10 @@ mod tests {
             "True",
             "{\"skipped\":\"\u{0}\"}",
         ] {
-            assert!(matches!(mapped(record, &["id"]), Err(RecordError::Malformed(_))), "{record:?}");
+            assert!(
+                matches!(mapped(record, &["id"]), Err(RecordError::Malformed(_))),
+                "{record:?}"
+            );
         }
 
         let invalid_utf8 = b"{\"skipped\":\"\xFF\"}";
@@ -1216,7 +1298,9 @@ mod tests {
         }
 
         assert_eq!(
-            framed(true, &[r#"{"a":"\ud83d\ude00","b":"\\","c":"\\ud800"}"#.as_bytes()]).unwrap().len(),
+            framed(true, &[r#"{"a":"\ud83d\ude00","b":"\\","c":"\\ud800"}"#.as_bytes()])
+                .unwrap()
+                .len(),
             1,
             "a pair, an escaped backslash, and an escaped backslash before u are no lone surrogates",
         );
@@ -1225,11 +1309,21 @@ mod tests {
     fn deduplicated(object: &str) -> Vec<(String, String)> {
         let entries = str_deserializer(object).deserialize_map(Entries).unwrap();
 
-        last_wins(entries).into_iter().map(|(name, value)| (name.into_owned(), value.get().to_string())).collect()
+        last_wins(entries)
+            .into_iter()
+            .map(|(name, value)| (name.into_owned(), value.get().to_string()))
+            .collect()
     }
 
     fn object(members: &[(String, usize)]) -> String {
-        format!("{{{}}}", members.iter().map(|(name, value)| format!("\"{name}\":{value}")).collect::<Vec<_>>().join(","))
+        format!(
+            "{{{}}}",
+            members
+                .iter()
+                .map(|(name, value)| format!("\"{name}\":{value}"))
+                .collect::<Vec<_>>()
+                .join(",")
+        )
     }
 
     #[test]
@@ -1239,13 +1333,18 @@ mod tests {
 
             assert_eq!(
                 deduplicated(&object(&members)),
-                members.iter().map(|(name, value)| (name.clone(), value.to_string())).collect::<Vec<_>>(),
+                members
+                    .iter()
+                    .map(|(name, value)| (name.clone(), value.to_string()))
+                    .collect::<Vec<_>>(),
                 "{size} unique keys stay as read",
             );
 
             members.push(("k1".to_string(), 99));
-            let mut expected: Vec<(String, String)> =
-                members[..size].iter().map(|(name, value)| (name.clone(), value.to_string())).collect();
+            let mut expected: Vec<(String, String)> = members[..size]
+                .iter()
+                .map(|(name, value)| (name.clone(), value.to_string()))
+                .collect();
             expected[1].1 = "99".to_string();
 
             assert_eq!(deduplicated(&object(&members)), expected, "{size} keys and k1 again");

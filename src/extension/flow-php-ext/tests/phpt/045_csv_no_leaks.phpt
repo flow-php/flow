@@ -6,32 +6,27 @@ repeated native CSV reading does not leak memory
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\CSV\RustCSVReaderNative;
+use Flow\ETL\Adapter\CSV\RustCSVOpenSource;
+use Flow\Filesystem\Stream\MemorySourceStream;
 
 $raw = "\xEF\xBB\xBFid,name,5,id\n1,\"multi\nline\",x,\n2,,\"a\"\"b\",y\n\n3\n";
 
 $cycle = static function () use ($raw): void {
-    $reader = new RustCSVReaderNative(',', '"', '\\', true, true, true);
+    $source = new RustCSVOpenSource(new MemorySourceStream($raw), ',', '"', '\\', true, true, true, 5);
 
-    foreach (str_split($raw, 5) as $chunk) {
-        $reader->feed($chunk);
-        $reader->next(2);
+    foreach ($source->records() as $record) {
     }
 
-    $reader->finish();
-    $reader->headers();
+    $source->headers();
 
-    while ($reader->next(2) !== []) {
-    }
-
-    $unfinished = new RustCSVReaderNative(';', "'", '', false, false, false);
-    $unfinished->feed("a;'open\n");
-    $unfinished->next(10);
+    // abandoned after the first record
+    $unfinished = (new RustCSVOpenSource(new MemorySourceStream("a;'open\nb;c\n"), ';', "'", '', false, false, false, 4))->records();
+    $unfinished->rewind();
 
     try {
-        new RustCSVReaderNative(',,', '"', '\\', true, true, true);
+        new RustCSVOpenSource(new MemorySourceStream($raw), ',,', '"', '\\', true, true, true);
         throw new LogicException('an invalid separator was accepted');
-    } catch (Flow\Floe\Exception\ExtensionException) {
+    } catch (Flow\ETL\Exception\RuntimeException) {
     }
 };
 

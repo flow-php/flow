@@ -15,6 +15,7 @@ use Flow\ETL\Extractor\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\SelfDescribingFile;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Extractor\SourceFile;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
@@ -26,10 +27,12 @@ use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Flow\Parquet\Binary\ByteOrder;
+use Flow\Parquet\Engine\AdaptiveParquetEngine;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
-use Flow\Parquet\ParquetFileReader;
+use Flow\Parquet\ParquetFile;
 use Generator;
+use Throwable;
 
 use function array_values;
 use function iterator_count;
@@ -59,14 +62,12 @@ final class ParquetExtractor implements
 
     /**
      * The first file the schema pass opened, kept for the read that follows.
-     *
-     * @var null|ParquetSourceFile<ParquetFileReader>
      */
     private ?ParquetSourceFile $firstFile = null;
 
     private ?int $offset = null;
 
-    private ?ParquetOpener $opener = null;
+    private ?ParquetEngine $openedWith = null;
 
     private Options $options;
 
@@ -156,7 +157,7 @@ final class ParquetExtractor implements
                 $constants = $fileColumns->forFile($file->source(), $rowsSchema);
                 $matchTo = !$rowsSchema->isSame($target) ? $target : null;
 
-                $source = $file->open($this->opener());
+                $source = $file->open();
 
                 foreach ($source->batches(
                     $body,
@@ -232,7 +233,7 @@ final class ParquetExtractor implements
     {
         $this->byteOrder = $byteOrder;
         $this->derivedSchema = null;
-        $this->opener = null;
+        $this->openedWith = null;
         $this->closeFirstFile();
         $this->statistics = null;
 
@@ -256,7 +257,7 @@ final class ParquetExtractor implements
     {
         $this->engine = $engine;
         $this->derivedSchema = null;
-        $this->opener = null;
+        $this->openedWith = null;
         $this->closeFirstFile();
         $this->statistics = null;
 
@@ -279,7 +280,7 @@ final class ParquetExtractor implements
     {
         $this->options = $options;
         $this->derivedSchema = null;
-        $this->opener = null;
+        $this->openedWith = null;
         $this->closeFirstFile();
         $this->statistics = null;
 
@@ -308,7 +309,7 @@ final class ParquetExtractor implements
      * One open per file: with $keepFirst the first file stays open for the read that follows, which takes it for that
      * path instead of opening it again - or closes it when the read starts at another path.
      *
-     * @return Generator<int, ParquetSourceFile<ParquetFileReader>>
+     * @return Generator<int, ParquetSourceFile>
      */
     private function files(Filter $pathFilter = new OnlyFiles(), bool $keepFirst = false): Generator
     {
@@ -322,12 +323,7 @@ final class ParquetExtractor implements
                 $kept = null;
             }
 
-            $file = ($first ? $kept : null) ?? new ParquetSourceFile(
-                $this->opener()->file($this->filesystem->readFrom($source->path)),
-                $source,
-                $this->schemaConverter,
-                array_values($this->columns),
-            );
+            $file = ($first ? $kept : null) ?? $this->open($source);
 
             if ($keepFirst && $first) {
                 $this->firstFile = $file;
@@ -359,9 +355,25 @@ final class ParquetExtractor implements
         }
     }
 
-    private function opener(): ParquetOpener
+    private function open(SourceFile $source): ParquetSourceFile
     {
-        return $this->opener ??= ParquetOpeners::select($this->engine, $this->byteOrder, $this->options);
+        $stream = $this->filesystem->readFrom($source->path);
+        $engine = $this->openedWith ??= $this->engine ?? new AdaptiveParquetEngine($this->byteOrder, $this->options);
+
+        try {
+            $reader = $engine->openForRead($stream);
+        } catch (Throwable $e) {
+            $stream->close();
+
+            throw $e;
+        }
+
+        return new ParquetSourceFile(
+            new ParquetFile($stream, $this->options, $reader),
+            $source,
+            $this->schemaConverter,
+            array_values($this->columns),
+        );
     }
 
     public function withSchema(Schema $schema): static

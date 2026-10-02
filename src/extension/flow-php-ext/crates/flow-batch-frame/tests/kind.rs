@@ -21,10 +21,7 @@ fn parses_a_golden_footer_schema() {
     assert_eq!(26, definitions.len());
     assert_eq!("string_null", definitions[8].name);
     assert!(definitions[8].nullable);
-    assert_eq!(
-        Some(b"Europe/Warsaw".as_ref()),
-        definitions[10].type_.zone()
-    );
+    assert_eq!(Some(b"Europe/Warsaw".as_ref()), definitions[10].type_.zone());
     assert_eq!(
         Some(br"Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum".as_ref()),
         definitions[18].type_.class()
@@ -41,10 +38,7 @@ fn parses_a_golden_footer_schema() {
 
 #[test]
 fn refuses_schema_and_type_json_it_cannot_read() {
-    assert!(matches!(
-        parse_schema(b"[\xFF]"),
-        Err(Error::SchemaJsonUtf8)
-    ));
+    assert!(matches!(parse_schema(b"[\xFF]"), Err(Error::SchemaJsonUtf8)));
     assert!(matches!(parse_schema(b"[{"), Err(Error::SchemaJson(_))));
     assert!(matches!(parse_type(b"\xFF"), Err(Error::TypeJsonUtf8)));
     assert!(matches!(parse_type(b"{}"), Err(Error::TypeJson(_))));
@@ -62,17 +56,11 @@ fn refuses_a_type_without_a_column_kind() {
     ));
     assert!(matches!(
         kind(br#"{"type":"map","key":{"type":"string"}}"#),
-        Err(Error::MissingPart {
-            part: Part::Value,
-            ..
-        }),
+        Err(Error::MissingPart { part: Part::Value, .. }),
     ));
     assert!(matches!(
         kind(br#"{"type":"optional"}"#),
-        Err(Error::MissingPart {
-            part: Part::Base,
-            ..
-        })
+        Err(Error::MissingPart { part: Part::Base, .. })
     ));
 }
 
@@ -120,11 +108,7 @@ fn definitions() -> Vec<(&'static str, Kind)> {
 #[test]
 fn every_definition_has_its_kind() {
     for (type_json, expected) in definitions() {
-        assert_eq!(
-            expected,
-            kind(type_json.as_bytes()).expect(type_json),
-            "{type_json}"
-        );
+        assert_eq!(expected, kind(type_json.as_bytes()).expect(type_json), "{type_json}");
     }
 }
 

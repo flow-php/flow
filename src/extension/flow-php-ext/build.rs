@@ -12,7 +12,9 @@ fn main() {
 /// The `php84`/`php85` cfgs ext-php-rs sets for itself, for the same PHP (`PHP` first, then `PATH`): the extension
 /// binary is bound to the PHP minor it is built against, so version gates are compile-time.
 fn emit_php_version_cfg() {
-    use ext_php_rs_build::{emit_check_cfg, emit_php_cfg_flags, emit_rerun_if_env_changed, find_php, ApiVersion, PHPInfo};
+    use ext_php_rs_build::{
+        emit_check_cfg, emit_php_cfg_flags, emit_rerun_if_env_changed, find_php, ApiVersion, PHPInfo,
+    };
 
     emit_rerun_if_env_changed();
     emit_check_cfg();
@@ -95,7 +97,9 @@ fn as_semver(describe: &str) -> String {
             let mut numbers = tag.split('.').map(|number| number.parse::<u64>().ok());
 
             match (numbers.next().flatten(), numbers.next().flatten()) {
-                (Some(major), Some(minor)) => format!("{major}.{}.0-dev+{distance}.{hash}", minor + 1),
+                (Some(major), Some(minor)) => {
+                    format!("{major}.{}.0-dev+{distance}.{hash}", minor + 1)
+                }
                 _ => describe.to_string(),
             }
         }

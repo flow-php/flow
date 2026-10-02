@@ -131,9 +131,8 @@ final class ColumnWithTypeTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('are different column kinds');
 
-        ColumnMother::of(
-            enum_schema('a', BackedStringEnum::class),
-            [BackedStringEnum::one],
-        )->withType(type_enum(BackedIntEnum::class));
+        ColumnMother::of(enum_schema('a', BackedStringEnum::class), [BackedStringEnum::one])->withType(type_enum(
+            BackedIntEnum::class,
+        ));
     }
 }

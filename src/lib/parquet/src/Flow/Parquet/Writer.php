@@ -7,7 +7,6 @@ namespace Flow\Parquet;
 use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\Stream\NativeLocalDestinationStream;
 use Flow\Parquet\Engine\AdaptiveParquetEngine;
-use Flow\Parquet\Engine\ArrowParquetEngine;
 use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Exception\RuntimeException;
@@ -39,13 +38,6 @@ final class Writer
                 "Compression \"{$this->compression->name}\" is not supported yet",
             ),
         };
-    }
-
-    public static function arrow(
-        Compressions $compression = Compressions::SNAPPY,
-        Options $options = new Options(),
-    ): self {
-        return new self($compression, $options, new ArrowParquetEngine());
     }
 
     public static function php(Compressions $compression = Compressions::SNAPPY, Options $options = new Options()): self

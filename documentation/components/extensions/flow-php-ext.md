@@ -43,28 +43,39 @@ df()
     ->run();
 ```
 
-With the extension loaded, `Flow\ETL\Column\DefaultBackend` - the default of `config_builder()->backend()` - is the
-extension's class and every batch column is a `Flow\ETL\Column\NativeColumn` over an Apache Arrow array:
+With the extension loaded, `Flow\ETL\Column\AdaptiveBackend` - the default of `config_builder()->backend()` - picks the
+extension's `RustBackend` and every batch column is a `Flow\ETL\Column\RustColumn` over an Apache Arrow array:
 
 ```php
 <?php
 
-use Flow\ETL\Column\DefaultBackend;
+use Flow\ETL\Column\RustBackend;
 
 use function Flow\ETL\DSL\int_schema;
 
-$builder = (new DefaultBackend())->builder(int_schema('id'));
+$builder = (new RustBackend())->builder(int_schema('id'));
 $builder->appendMany([1, '2', 3.0]);
 
-$column = $builder->finish();                        // Flow\ETL\Column\NativeColumn
+$column = $builder->finish();                        // Flow\ETL\Column\RustColumn
 $column->values();                                   // [1, 2, 3]
-(new DefaultBackend())->allocatedBytes();            // bytes held outside PHP's memory manager
+(new RustBackend())->allocatedBytes();               // bytes held outside PHP's memory manager
 ```
 
-The extension registers the interfaces `Flow\ETL\Column\{Backend, Column, ColumnBuilder}`, the classes
-`Flow\ETL\Column\{DefaultBackend, NativeColumn, NativeColumnBuilder}`, and `Flow\ETL\Adapter\CSV\RustCSVReaderNative`
-and `Flow\ETL\Adapter\CSV\RustColumnFoldNative`, which read CSV straight into native columns and narrow string
-columns to their types.
+Every contract with a Rust and a PHP implementation follows one pattern: the extension registers the interface, the
+`Rust*` class implements it, `Php*` is the PHP implementation and `Adaptive*` picks one by `extension_loaded()`.
+
+| contract                                     | Rust                    | PHP                    | picked by                   |
+|----------------------------------------------|-------------------------|------------------------|-----------------------------|
+| `Flow\ETL\Column\Backend`                    | `RustBackend`           | `PhpBackend`           | `AdaptiveBackend`           |
+| `Flow\ETL\Adapter\CSV\CSVOpenSource`         | `RustCSVOpenSource`     | `PhpCSVOpenSource`     | `AdaptiveCSVOpenSource`     |
+| `Flow\ETL\Adapter\CSV\CSVEncoder`            | `RustCSVEncoder`        | `PhpCSVEncoder`        | `AdaptiveCSVEncoder`        |
+| `Flow\ETL\Adapter\JSON\JsonOpenSource`       | `RustJsonOpenSource`    | `PhpJsonOpenSource`    | `AdaptiveJsonOpenSource`    |
+| `Flow\ETL\Adapter\JSON\JSONEncoder`          | `RustJSONEncoder`       | `PhpJSONEncoder`       | `AdaptiveJSONEncoder`       |
+| `Flow\ETL\Adapter\Parquet\ParquetOpenSource` | `RustParquetOpenSource` | `PhpParquetOpenSource` | `AdaptiveParquetOpenSource` |
+| `Flow\ETL\Adapter\Parquet\ParquetOpenSink`   | `RustParquetOpenSink`   | `PhpParquetOpenSink`   | `AdaptiveParquetOpenSink`   |
+
+The extension also registers `Flow\ETL\Column\{Column, ColumnBuilder}` (`RustColumn`, `RustColumnBuilder`) and
+`Flow\ETL\RustIterator`, the iterator its sources return.
 
 ## CSV and JSON writers
 
@@ -92,20 +103,20 @@ those columns, the rest of the batch stays native. `to_json()` and `to_json_line
 `JSON_THROW_ON_ERROR`, `JSON_UNESCAPED_SLASHES`, `JSON_UNESCAPED_UNICODE` and `JSON_PRESERVE_ZERO_FRACTION`; any other
 flag (`JSON_PRETTY_PRINT`, ...) writes through PHP.
 
-The classes are `Flow\ETL\Adapter\CSV\NativeCSVWriter` and `Flow\ETL\Adapter\JSON\NativeJsonWriter`.
+`RustCSVEncoder` / `RustJSONEncoder` hold the PHP encoder they render the PHP columns with.
 
 ## Parquet
 
 With both this extension and the [arrow extension](/documentation/components/extensions/arrow-ext.md) loaded,
 `from_parquet()` and `to_parquet()` without an `engine:` read and write native columns: arrow-ext reads and writes the
-file, and its batches cross into `NativeColumn`s (and back) through the Arrow C Data Interface, without a copy and
+file, and its batches cross into `RustColumn`s (and back) through the Arrow C Data Interface, without a copy and
 without a PHP value per cell.
 
 | loaded          | `from_parquet()` / `to_parquet()`                                          |
 |-----------------|----------------------------------------------------------------------------|
 | flow_php, arrow | native columns through the Arrow C Data Interface                          |
-| arrow           | `ArrowParquetEngine`, PHP values                                           |
-| flow_php        | `PhpParquetEngine`; `DefaultBackend` adopts the values into native columns |
+| arrow           | `RustParquetEngine` (arrow-ext), PHP values                                |
+| flow_php        | `PhpParquetEngine`; `RustBackend` adopts the values into native columns    |
 | neither         | `PhpParquetEngine`                                                         |
 
 ```php
@@ -128,10 +139,10 @@ df()
 ```
 
 A schema type that stores another arrow type than the file column reads as is refused before the first batch. The
-imported batches are counted by `DefaultBackend::allocatedBytes()` for as long as they live; arrow-ext's own read
+imported batches are counted by `RustBackend::allocatedBytes()` for as long as they live; arrow-ext's own read
 buffers (a row group's projected column chunks, decode buffers) are not, so a `MemoryBudget` does not see them. Read and
-write refusals are arrow-ext's `Flow\Parquet\Exception\*`, as with `ArrowParquetEngine`.
+write refusals are arrow-ext's `Flow\Parquet\Exception\*`, as with `RustParquetEngine`.
 
-The extension registers `Flow\ETL\Adapter\Parquet\{NativeParquetReader, NativeParquetWriter}` (over
-`Flow\Arrow\Parquet\BatchReader` / `RowsWriter`) and `Flow\ETL\Column\NativeArrowBatch`, the batch it exports.
+`RustParquetOpenSource` reads through arrow-ext's `Flow\Arrow\Parquet\RustBatchReader`, `RustParquetOpenSink` writes
+through its `Flow\Parquet\Engine\RustParquetFileWriter`.
 

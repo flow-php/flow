@@ -74,6 +74,7 @@ final class PhpJSONEncoder implements JSONEncoder
         return implode($separator, $documents);
     }
 
+    // called by name from flow_php RustJSONEncoder::encode(), pinned by phpt 082
     /**
      * @param Type<mixed> $type
      *

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Join\HashJoin;
 
-use Flow\ETL\Column\DefaultBackend;
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 
@@ -15,7 +15,7 @@ final readonly class NullRowBuilder
     public function __construct(Schema $schema)
     {
         $nullable = $schema->makeNullable();
-        $backend = new DefaultBackend();
+        $backend = new AdaptiveBackend();
         $columns = [];
 
         foreach ($nullable->definitions() as $name => $definition) {

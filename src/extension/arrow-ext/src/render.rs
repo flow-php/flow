@@ -61,18 +61,30 @@ pub fn parquet_exception(error: Error, stream: &PhpStream, side: Side) -> PhpExc
             RUNTIME,
             format!("Parquet column \"{column}\" row {row} holds a value that is not {expected} bytes long"),
         ),
-        (Error::Value { column, row, expected, got }, _) => {
-            exception(VALIDATION, format!("Column \"{column}\" row {row}: expected {expected}, got {got}"))
-        }
+        (
+            Error::Value {
+                column,
+                row,
+                expected,
+                got,
+            },
+            _,
+        ) => exception(
+            VALIDATION,
+            format!("Column \"{column}\" row {row}: expected {expected}, got {got}"),
+        ),
         (Error::MapKey { column, key }, _) => exception(
             INVALID_ARGUMENT,
             format!("Map key of Parquet column \"{column}\" must be int or string, got {key}"),
         ),
-        (Error::MissingColumn(name), _) => exception(INVALID_ARGUMENT, format!("Parquet file has no column \"{name}\"")),
-        (Error::Options(message), _) => exception(INVALID_ARGUMENT, message),
-        (Error::NotParquet(message), _) => {
-            exception(INVALID_ARGUMENT, format!("Given file is not valid Parquet file: {message}"))
+        (Error::MissingColumn(name), _) => {
+            exception(INVALID_ARGUMENT, format!("Parquet file has no column \"{name}\""))
         }
+        (Error::Options(message), _) => exception(INVALID_ARGUMENT, message),
+        (Error::NotParquet(message), _) => exception(
+            INVALID_ARGUMENT,
+            format!("Given file is not valid Parquet file: {message}"),
+        ),
         (Error::Stream(message), _) => failure(format!("arrow Parquet stream {message}")),
         (Error::Parquet(error), Side::Read) => failure(format!("arrow failed to read Parquet: {error}")),
         (Error::Arrow(error), Side::Read) => failure(format!("arrow failed to read Parquet: {error}")),

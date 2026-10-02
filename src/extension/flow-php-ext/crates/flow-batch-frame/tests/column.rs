@@ -5,8 +5,8 @@ use std::sync::Arc;
 use arrow_array::builder::{BinaryBuilder, Int64Builder, MapBuilder, MapFieldNames};
 use arrow_array::types::Int64Type;
 use arrow_array::{
-    Array, ArrayRef, BinaryArray, BooleanArray, Date32Array, FixedSizeBinaryArray, Float64Array,
-    Int64Array, ListArray, NullArray, StructArray, TimestampMicrosecondArray,
+    Array, ArrayRef, BinaryArray, BooleanArray, Date32Array, FixedSizeBinaryArray, Float64Array, Int64Array, ListArray,
+    NullArray, StructArray, TimestampMicrosecondArray,
 };
 use arrow_buffer::NullBuffer;
 use arrow_data::ArrayData;
@@ -41,13 +41,7 @@ fn raw(kind: &Kind, buffers: &[&[u8]], len: u32, null_count: u32) -> Error {
 fn structure(fields: Vec<(&str, ArrayRef)>, nulls: Option<Vec<bool>>) -> ArrayData {
     let arrow_fields = fields
         .iter()
-        .map(|(name, array)| {
-            Arc::new(arrow_schema::Field::new(
-                *name,
-                array.data_type().clone(),
-                true,
-            ))
-        })
+        .map(|(name, array)| Arc::new(arrow_schema::Field::new(*name, array.data_type().clone(), true)))
         .collect::<Vec<_>>();
 
     StructArray::try_new(
@@ -211,11 +205,7 @@ fn a_selection_under_a_null_list_slot_is_compacted() {
     let kind = kind_of("{\"type\":\"list\",\"element\":{\"type\":\"string\"}}");
     let strings = BinaryArray::from(vec![b"a".as_ref(), b"bc", b"d"]);
     let offsets = arrow_buffer::OffsetBuffer::new(vec![0, 1, 2, 3].into());
-    let field = Arc::new(arrow_schema::Field::new(
-        "item",
-        arrow_schema::DataType::Binary,
-        true,
-    ));
+    let field = Arc::new(arrow_schema::Field::new("item", arrow_schema::DataType::Binary, true));
     let list = ListArray::new(
         field,
         offsets,
@@ -245,10 +235,7 @@ fn bytes_that_are_not_utf8_round_trip() {
     assert_eq!(vec!["", "0000000003000000", "61ff62"], buffers);
     assert_eq!(
         b"a\xFFb",
-        decoded(&kind, &buffers, 1, 0)
-            .expect("a binary column")
-            .buffers()[1]
-            .as_slice(),
+        decoded(&kind, &buffers, 1, 0).expect("a binary column").buffers()[1].as_slice(),
     );
 }
 
@@ -267,9 +254,7 @@ fn encode_refuses_a_foreign_data_type() {
 fn decode_refuses_corrupt_buffers() {
     let int = kind_of("{\"type\":\"integer\"}");
     let string = kind_of("{\"type\":\"string\"}");
-    let map = kind_of(
-        "{\"type\":\"map\",\"key\":{\"type\":\"string\"},\"value\":{\"type\":\"integer\"}}",
-    );
+    let map = kind_of("{\"type\":\"map\",\"key\":{\"type\":\"string\"},\"value\":{\"type\":\"integer\"}}");
     let null = kind_of("{\"type\":\"null\"}");
 
     assert!(matches!(raw(&int, &[b""], 1, 0), Error::BuffersExhausted));
@@ -283,25 +268,13 @@ fn decode_refuses_corrupt_buffers() {
         },
     ));
     assert!(matches!(
-        raw(
-            &string,
-            &[b"", b"\x01\x00\x00\x00\x02\x00\x00\x00", b"ab"],
-            1,
-            0
-        ),
-        Error::OffsetsStart {
-            of: Of::Utf8,
-            first: 1
-        },
+        raw(&string, &[b"", b"\x01\x00\x00\x00\x02\x00\x00\x00", b"ab"], 1, 0),
+        Error::OffsetsStart { of: Of::Utf8, first: 1 },
     ));
     assert!(matches!(
         raw(
             &string,
-            &[
-                b"",
-                b"\x00\x00\x00\x00\x02\x00\x00\x00\x01\x00\x00\x00",
-                b"ab"
-            ],
+            &[b"", b"\x00\x00\x00\x00\x02\x00\x00\x00\x01\x00\x00\x00", b"ab"],
             2,
             0
         ),
@@ -313,12 +286,7 @@ fn decode_refuses_corrupt_buffers() {
         },
     ));
     assert!(matches!(
-        raw(
-            &string,
-            &[b"", b"\x00\x00\x00\x00\x03\x00\x00\x00", b"ab"],
-            1,
-            0
-        ),
+        raw(&string, &[b"", b"\x00\x00\x00\x00\x03\x00\x00\x00", b"ab"], 1, 0),
         Error::Utf8DataLength {
             bytes: 2,
             last_offset: 3
@@ -361,10 +329,7 @@ fn decode_refuses_corrupt_buffers() {
     ));
     assert!(matches!(
         raw(&null, &[], 2, 1),
-        Error::NullKindNullCount {
-            rows: 2,
-            null_count: 1
-        }
+        Error::NullKindNullCount { rows: 2, null_count: 1 }
     ));
     assert!(matches!(
         raw(&int, &[b"", b"\x01\x00\x00\x00\x00\x00\x00\x00", b""], 1, 0),
@@ -389,12 +354,7 @@ fn decode_refuses_corrupt_buffers() {
 /// never, a structure child always may.
 #[test]
 fn decode_refuses_nested_nulls_where_the_type_forbids_them() {
-    let one_null_child = [
-        b"".as_ref(),
-        b"\x00\x00\x00\x00\x01\x00\x00\x00",
-        b"\x00",
-        &[0; 8],
-    ];
+    let one_null_child = [b"".as_ref(), b"\x00\x00\x00\x00\x01\x00\x00\x00", b"\x00", &[0; 8]];
 
     assert!(matches!(
         raw(
@@ -424,21 +384,18 @@ fn decode_refuses_nested_nulls_where_the_type_forbids_them() {
     )
     .is_ok());
 
-    let entries =
-        |key_validity: &'static [u8], value_validity: &'static [u8]| -> [&'static [u8]; 7] {
-            [
-                b"",
-                b"\x00\x00\x00\x00\x01\x00\x00\x00",
-                b"",
-                key_validity,
-                &[0; 8],
-                value_validity,
-                &[0; 8],
-            ]
-        };
-    let map = kind_of(
-        "{\"type\":\"map\",\"key\":{\"type\":\"integer\"},\"value\":{\"type\":\"integer\"}}",
-    );
+    let entries = |key_validity: &'static [u8], value_validity: &'static [u8]| -> [&'static [u8]; 7] {
+        [
+            b"",
+            b"\x00\x00\x00\x00\x01\x00\x00\x00",
+            b"",
+            key_validity,
+            &[0; 8],
+            value_validity,
+            &[0; 8],
+        ]
+    };
+    let map = kind_of("{\"type\":\"map\",\"key\":{\"type\":\"integer\"},\"value\":{\"type\":\"integer\"}}");
     let optional_values =
         kind_of("{\"type\":\"map\",\"key\":{\"type\":\"integer\"},\"value\":{\"type\":\"optional\",\"base\":{\"type\":\"integer\"}}}");
 
@@ -460,9 +417,8 @@ fn decode_refuses_nested_nulls_where_the_type_forbids_them() {
     ));
     assert!(decode(&optional_values, &entries(b"", b"\x00"), 1, 0).is_ok());
 
-    let structure = kind_of(
-        "{\"type\":\"structure_v2\",\"fields\":[{\"name\":\"x\",\"type\":{\"type\":\"integer\"}}]}",
-    );
+    let structure =
+        kind_of("{\"type\":\"structure_v2\",\"fields\":[{\"name\":\"x\",\"type\":{\"type\":\"integer\"}}]}");
 
     assert!(decode(&structure, &[b"".as_ref(), b"\x00", &[0; 8]], 1, 0).is_ok());
 }

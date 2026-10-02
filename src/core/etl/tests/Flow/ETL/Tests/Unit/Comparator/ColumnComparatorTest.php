@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Comparator;
 
-use Flow\ETL\Column\DefaultBackend;
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Tests\Comparator\ColumnComparator;
 use Flow\ETL\Tests\Mother\ColumnMother;
@@ -30,7 +30,7 @@ final class ColumnComparatorTest extends TestCase
     {
         $comparator = new ColumnComparator();
         $comparator->setFactory(Factory::getInstance());
-        $default = (new DefaultBackend())->builder(int_schema('a', nullable: true));
+        $default = (new AdaptiveBackend())->builder(int_schema('a', nullable: true));
         $default->appendMany([1, null]);
 
         $comparator->assertEquals(ColumnMother::of(int_schema('a', nullable: true), [1, null]), $default->finish());

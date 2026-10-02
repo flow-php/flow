@@ -7,8 +7,8 @@ namespace Flow\ETL\Config;
 use Flow\Clock\SystemClock;
 use Flow\ETL\Analyze;
 use Flow\ETL\Cache;
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Column\Backend;
-use Flow\ETL\Column\DefaultBackend;
 use Flow\ETL\Config;
 use Flow\ETL\Config\Cache\CacheConfigBuilder;
 use Flow\ETL\Config\Grouping\GroupByAlgorithmBuilder;
@@ -71,7 +71,7 @@ final class ConfigBuilder
         $this->id = null;
         $this->name = null;
         $this->serializer = null;
-        $this->backend = new DefaultBackend();
+        $this->backend = new AdaptiveBackend();
         $this->optimizer = null;
         $this->executor = null;
         $this->clock = null;

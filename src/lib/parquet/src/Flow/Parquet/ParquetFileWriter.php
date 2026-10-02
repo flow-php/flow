@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Parquet;
 
+use function extension_loaded;
+
+if (extension_loaded('arrow')) {
+    return;
+}
+
 interface ParquetFileWriter
 {
     /**

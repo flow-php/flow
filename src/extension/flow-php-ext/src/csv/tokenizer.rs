@@ -156,7 +156,11 @@ impl Tokenizer {
 
     /// Advances the scan over unseen bytes; returns the position of the `\n` that ends the record.
     fn scan_to_record_end(&mut self) -> Option<usize> {
-        let Dialect { separator, enclosure, escape } = self.dialect;
+        let Dialect {
+            separator,
+            enclosure,
+            escape,
+        } = self.dialect;
         let bytes = &self.buffer;
         let mut position = self.scanned;
         let mut scan = self.scan;
@@ -234,7 +238,11 @@ impl Tokenizer {
 
     /// `str_getcsv($record, ...)` into `record`.
     fn split(&self, range: Range<usize>, record: &mut Record) {
-        let Dialect { separator, enclosure, escape } = self.dialect;
+        let Dialect {
+            separator,
+            enclosure,
+            escape,
+        } = self.dialect;
         let escape = escape.filter(|escape| *escape != enclosure);
         let line = &self.buffer[range];
         // next_record() already stripped every trailing \r and \n, so php_fgetcsv()'s line end is always empty here
@@ -320,7 +328,9 @@ impl Tokenizer {
             } else {
                 let delimiter = memchr(separator, &line[position..limit]).map(|offset| position + offset);
 
-                record.bytes.extend_from_slice(&line[position..delimiter.unwrap_or(limit)]);
+                record
+                    .bytes
+                    .extend_from_slice(&line[position..delimiter.unwrap_or(limit)]);
 
                 let trimmed = field_start + trailing_line_end(&record.bytes[field_start..]);
                 record.bytes.truncate(trimmed);

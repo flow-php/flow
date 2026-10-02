@@ -1,5 +1,5 @@
 --TEST--
-ParquetFile, ColumnsReader and RowsWriter leak no PHP memory, refusals included
+RustParquetFileReader, RustColumnsReader and RustParquetFileWriter leak no PHP memory, refusals and Traversable batches included
 --SKIPIF--
 <?php if (!extension_loaded("arrow")) die("skip arrow extension not loaded"); ?>
 --FILE--
@@ -7,9 +7,11 @@ ParquetFile, ColumnsReader and RowsWriter leak no PHP memory, refusals included
 require __DIR__ . '/bootstrap.php';
 
 use Flow\Parquet\Engine\Arrow\{OptionsConverter, SchemaConverter};
-use Flow\Arrow\Parquet\{ColumnsReader, ParquetFile, RowsWriter};
+use Flow\Arrow\Parquet\RustColumnsReader;
+use Flow\Parquet\Engine\{RustParquetFileReader, RustParquetFileWriter};
 use Flow\Parquet\Options;
 use Flow\Parquet\Tests\Context\EveryType;
+use Flow\Parquet\ParquetFile\Compressions;
 
 use function Flow\Filesystem\DSL\{memory_filesystem, path};
 
@@ -20,9 +22,13 @@ $columns = array_map(static fn($column) => $column->name(), EveryType::schema()-
 
 $cycle = static function () use ($schema, $options, $rows, $columns): void {
     $filesystem = memory_filesystem();
-    $writer = new RowsWriter($filesystem->writeTo(path('memory://leaks.parquet')), $schema, 'SNAPPY', $options, 2);
+    $writer = new RustParquetFileWriter($filesystem->writeTo(path('memory://leaks.parquet')), $schema, Compressions::SNAPPY, $options, 2);
     $writer->writeRows($rows);
     $writer->writeRow($rows[0]);
+    $writer->writeBatch((static function () use ($rows): Generator {
+        yield from $rows;
+    })());
+    $writer->writeBatch(new ArrayIterator($rows));
 
     try {
         $writer->writeRow(['int32' => 'not an int']);
@@ -32,27 +38,31 @@ $cycle = static function () use ($schema, $options, $rows, $columns): void {
 
     $writer->close();
 
-    $file = new ParquetFile($filesystem->readFrom(path('memory://leaks.parquet')));
+    $file = new RustParquetFileReader($filesystem->readFrom(path('memory://leaks.parquet')));
     $file->thrift();
     $file->schema();
-    $reader = new ColumnsReader($file, $columns, 2, 1, 3);
+    $file->metadata();
 
-    while ($reader->next() !== null) {
+    foreach (new RustColumnsReader($file, $columns, 2, 1, 3) as $chunk) {
+    }
+
+    foreach ($file->readColumns($columns, 2, 3, 1) as $chunk) {
     }
 
     try {
-        new ColumnsReader($file, ['missing'], 2, null, null);
+        new RustColumnsReader($file, ['missing'], 2, null, null);
         throw new LogicException('a missing column was read');
     } catch (Flow\Parquet\Exception\InvalidArgumentException) {
     }
 
     $file->close();
 
-    $abandoned = new RowsWriter($filesystem->writeTo(path('memory://abandoned.parquet')), $schema, 'SNAPPY', $options, 2);
+    $abandoned = new RustParquetFileWriter($filesystem->writeTo(path('memory://abandoned.parquet')), $schema, Compressions::SNAPPY, $options, 2);
     $abandoned->writeRows($rows);
 };
 
-for ($i = 0; $i < 10; $i++) {
+// Schema::fromThrift() / Metadata::fromThrift() warm the allocator up once, whoever calls them
+for ($i = 0; $i < 100; $i++) {
     $cycle();
 }
 gc_collect_cycles();

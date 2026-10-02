@@ -30,7 +30,10 @@ pub fn string(out: &mut Vec<u8>, text: &[u8], flags: &Flags) -> Result<(), Error
         let mut rest = text;
 
         // runs of bytes written as they are, then the one that is escaped
-        while let Some(at) = rest.iter().position(|byte| matches!(byte, 0..=0x1f | b'"' | b'\\' | b'/')) {
+        while let Some(at) = rest
+            .iter()
+            .position(|byte| matches!(byte, 0..=0x1f | b'"' | b'\\' | b'/'))
+        {
             out.extend_from_slice(&rest[..at]);
             ascii(out, rest[at], flags);
             rest = &rest[at + 1..];
@@ -100,31 +103,59 @@ mod tests {
 
         assert_eq!(escaped(b"", &flags).unwrap(), r#""""#);
         assert_eq!(escaped(b"a\"b\\c/d", &flags).unwrap(), r#""a\"b\\c\/d""#);
-        assert_eq!(escaped(b"\x08\x0c\n\r\t\x00\x1f\x7f", &flags).unwrap(), "\"\\b\\f\\n\\r\\t\\u0000\\u001f\x7f\"");
+        assert_eq!(
+            escaped(b"\x08\x0c\n\r\t\x00\x1f\x7f", &flags).unwrap(),
+            "\"\\b\\f\\n\\r\\t\\u0000\\u001f\x7f\""
+        );
         assert_eq!(escaped("<>&'".as_bytes(), &flags).unwrap(), r#""<>&'""#);
-        assert_eq!(escaped("zażółć".as_bytes(), &flags).unwrap(), r#""za\u017c\u00f3\u0142\u0107""#);
+        assert_eq!(
+            escaped("zażółć".as_bytes(), &flags).unwrap(),
+            r#""za\u017c\u00f3\u0142\u0107""#
+        );
     }
 
     #[test]
     fn a_character_beyond_the_basic_plane_is_a_surrogate_pair() {
-        assert_eq!(escaped("😀".as_bytes(), &Flags::default()).unwrap(), r#""\ud83d\ude00""#);
-        assert_eq!(escaped("\u{10000}\u{10ffff}".as_bytes(), &Flags::default()).unwrap(), r#""\ud800\udc00\udbff\udfff""#);
+        assert_eq!(
+            escaped("😀".as_bytes(), &Flags::default()).unwrap(),
+            r#""\ud83d\ude00""#
+        );
+        assert_eq!(
+            escaped("\u{10000}\u{10ffff}".as_bytes(), &Flags::default()).unwrap(),
+            r#""\ud800\udc00\udbff\udfff""#
+        );
     }
 
     #[test]
     fn unescaped_slashes_and_unicode() {
-        let slashes = Flags { unescaped_slashes: true, ..Flags::default() };
-        let unicode = Flags { unescaped_unicode: true, ..Flags::default() };
+        let slashes = Flags {
+            unescaped_slashes: true,
+            ..Flags::default()
+        };
+        let unicode = Flags {
+            unescaped_unicode: true,
+            ..Flags::default()
+        };
 
         assert_eq!(escaped("a/ż".as_bytes(), &slashes).unwrap(), r#""a/\u017c""#);
         assert_eq!(escaped("a/ż😀".as_bytes(), &unicode).unwrap(), "\"a\\/ż😀\"");
         // the line terminators stay escaped without JSON_UNESCAPED_LINE_TERMINATORS
-        assert_eq!(escaped("\u{2027}\u{2028}\u{2029}\u{202a}".as_bytes(), &unicode).unwrap(), "\"\u{2027}\\u2028\\u2029\u{202a}\"");
+        assert_eq!(
+            escaped("\u{2027}\u{2028}\u{2029}\u{202a}".as_bytes(), &unicode).unwrap(),
+            "\"\u{2027}\\u2028\\u2029\u{202a}\""
+        );
     }
 
     #[test]
     fn invalid_utf8_is_refused_and_appends_nothing() {
-        for text in [&b"\xff"[..], b"a\xc3\x28", b"\xed\xa0\x80", b"\xc0\xaf", b"\xf4\x90\x80\x80", b"abc\xe2\x82"] {
+        for text in [
+            &b"\xff"[..],
+            b"a\xc3\x28",
+            b"\xed\xa0\x80",
+            b"\xc0\xaf",
+            b"\xf4\x90\x80\x80",
+            b"abc\xe2\x82",
+        ] {
             let mut out = b"kept".to_vec();
 
             assert_eq!(string(&mut out, text, &Flags::default()), Err(Error::Utf8));

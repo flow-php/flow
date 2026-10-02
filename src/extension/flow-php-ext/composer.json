@@ -9,11 +9,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Flow\\ETL\\Adapter\\CSV\\": "php/Flow/ETL/Adapter/CSV/",
-            "Flow\\ETL\\Adapter\\JSON\\": "php/Flow/ETL/Adapter/JSON/",
-            "Flow\\ETL\\Adapter\\Parquet\\": "php/Flow/ETL/Adapter/Parquet/",
-            "Flow\\Parquet\\Engine\\Native\\": "php/Flow/Parquet/Engine/Native/",
-            "Flow\\Floe\\": "php/Flow/Floe/"
+            "Flow\\ETL\\": "php/Flow/ETL/"
         }
     },
     "scripts": {

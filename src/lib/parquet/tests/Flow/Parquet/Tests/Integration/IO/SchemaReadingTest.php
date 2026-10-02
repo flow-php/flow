@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
-use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\RowGroup\StatisticsReader;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
@@ -13,13 +12,15 @@ use Flow\Parquet\ParquetFile\Schema\MapKey;
 use Flow\Parquet\ParquetFile\Schema\MapValue;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Reader;
+use Flow\Parquet\Tests\Mother\ParquetEngineMother;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 class SchemaReadingTest extends ParquetIntegrationTestCase
 {
     #[DataProvider('engine_provider')]
-    public function test_reading_lists_schema_ddl(ParquetEngine $engine): void
+    public function test_reading_lists_schema_ddl(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
 
         $schema = new Schema(NestedColumn::create('schema', [
@@ -52,8 +53,9 @@ class SchemaReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_maps_schema_ddl(ParquetEngine $engine): void
+    public function test_reading_maps_schema_ddl(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
 
         $schema = Schema::with(
@@ -108,8 +110,9 @@ class SchemaReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_primitives_schema_ddl(ParquetEngine $engine): void
+    public function test_reading_primitives_schema_ddl(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
 
         $schema = Schema::with(
@@ -152,8 +155,9 @@ class SchemaReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_statistics(ParquetEngine $engine): void
+    public function test_reading_statistics(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $metadata = (new Reader(engine: $engine))
             ->read(__DIR__ . '/Fixtures/primitives.parquet')
             ->metadata();
@@ -164,8 +168,9 @@ class SchemaReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_structs_schema_ddl(ParquetEngine $engine): void
+    public function test_reading_structs_schema_ddl(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
 
         $schema = Schema::with(

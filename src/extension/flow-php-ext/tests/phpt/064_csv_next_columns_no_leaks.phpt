@@ -1,13 +1,14 @@
 --TEST--
-RustCSVReaderNative::nextColumns() leaks neither PHP memory nor native allocations
+RustCSVOpenSource::batches() leaks neither PHP memory nor native allocations
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 --FILE--
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\CSV\RustCSVReaderNative;
-use Flow\ETL\Column\DefaultBackend;
+use Flow\ETL\Adapter\CSV\RustCSVOpenSource;
+use Flow\ETL\Column\RustBackend;
+use Flow\Filesystem\Stream\MemorySourceStream;
 
 use function Flow\ETL\DSL\{datetime_schema, int_schema, schema, str_schema};
 
@@ -16,24 +17,13 @@ $schema = schema(int_schema('id', nullable: true), str_schema('name', nullable: 
 $refusing = schema(int_schema('name'));
 
 $cycle = static function () use ($raw, $schema, $refusing): void {
-    $reader = new RustCSVReaderNative(',', '"', '\\', true, true, true);
-
-    foreach (str_split($raw, 5) as $chunk) {
-        $reader->feed($chunk);
-        $reader->nextColumns($schema, 2);
+    foreach ((new RustCSVOpenSource(new MemorySourceStream($raw), ',', '"', '\\', true, true, true, 5))->batches($schema, 2, new RustBackend()) as $batch) {
     }
-
-    $reader->finish();
-
-    while ($reader->nextColumns($schema, 2) !== null) {
-    }
-
-    $refused = new RustCSVReaderNative(',', '"', '\\', true, true, true);
-    $refused->feed("name\nx\n");
-    $refused->finish();
 
     try {
-        $refused->nextColumns($refusing, 2);
+        foreach ((new RustCSVOpenSource(new MemorySourceStream("name\nx\n"), ',', '"', '\\', true, true, true))->batches($refusing, 2, new RustBackend()) as $batch) {
+        }
+
         throw new LogicException('a refused cell was accepted');
     } catch (Flow\ETL\Exception\SchemaMismatchException) {
     }
@@ -44,7 +34,7 @@ for ($i = 0; $i < 10; $i++) {
 }
 gc_collect_cycles();
 $baseline = memory_get_usage(false);
-$baselineRust = (new DefaultBackend())->allocatedBytes();
+$baselineRust = (new RustBackend())->allocatedBytes();
 
 for ($i = 0; $i < 1000; $i++) {
     $cycle();
@@ -52,7 +42,7 @@ for ($i = 0; $i < 1000; $i++) {
 gc_collect_cycles();
 
 var_dump(memory_get_usage(false) <= $baseline);
-var_dump((new DefaultBackend())->allocatedBytes() === $baselineRust);
+var_dump((new RustBackend())->allocatedBytes() === $baselineRust);
 ?>
 --EXPECT--
 bool(true)

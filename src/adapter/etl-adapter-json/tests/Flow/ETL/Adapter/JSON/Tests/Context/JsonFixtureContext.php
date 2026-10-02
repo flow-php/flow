@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\Tests\Context;
 
+use Flow\ETL\Adapter\JSON\AdaptiveJsonOpenSource;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonFileReader;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonFormat;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonLinesExtractor;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonSamples;
 use Flow\ETL\Adapter\JSON\JsonOpenSource;
-use Flow\ETL\Adapter\JSON\JsonSourceOpener;
 use Flow\ETL\Column\Backend;
 use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Exception\SchemaMismatchException;
@@ -124,18 +124,20 @@ final class JsonFixtureContext
     }
 
     /**
-     * The opener JsonExtractor (Document) or JsonLinesExtractor (Lines) builds, over a reader of the same filesystem.
+     * The source JsonExtractor (Document) or JsonLinesExtractor (Lines) opens, over a reader of the same filesystem.
      */
-    public static function opener(
+    public static function open(
         JsonFormat $format,
+        SourceFile $source,
         Filesystem $filesystem = new NativeLocalFilesystem(),
         ?string $pointer = null,
-    ): JsonSourceOpener {
-        return new JsonSourceOpener(
+    ): AdaptiveJsonOpenSource {
+        return new AdaptiveJsonOpenSource(
             $filesystem,
             self::reader($format, $filesystem, pointer: $pointer),
             $format,
             $pointer,
+            $source,
         );
     }
 

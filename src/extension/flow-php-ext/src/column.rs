@@ -1,4 +1,4 @@
-//! `Flow\ETL\Column\NativeColumn`: one arrow array of the column's kind, read as the PHP columns read.
+//! `Flow\ETL\Column\RustColumn`: one arrow array of the column's kind, read as the PHP columns read.
 
 use std::rc::Rc;
 
@@ -26,7 +26,7 @@ use crate::render::{invalid_argument, offset_overflow};
 pub struct TypeObject(Zval);
 
 impl IntoZval for TypeObject {
-    const TYPE: DataType = DataType::Object(Some("Flow\\Types\\Type"));
+    const TYPE: DataType = DataType::object("Flow\\Types\\Type");
     const NULLABLE: bool = false;
 
     fn set_zval(self, zv: &mut Zval, _persistent: bool) -> ZvalResult<()> {
@@ -38,16 +38,16 @@ impl IntoZval for TypeObject {
 
 #[php_class]
 #[php(
-    name = "Flow\\ETL\\Column\\NativeColumn",
+    name = "Flow\\ETL\\Column\\RustColumn",
     flags = ClassFlags::Final,
     implements(ce = column_ce, stub = "Flow\\ETL\\Column\\Column")
 )]
-pub struct NativeColumn {
+pub struct RustColumn {
     data: ArrayRef,
     plan: Rc<TypePlan>,
 }
 
-impl NativeColumn {
+impl RustColumn {
     pub fn new(data: ArrayRef, plan: Rc<TypePlan>) -> Self {
         debug_assert_eq!(data.data_type(), &data_type(&plan.kind));
 
@@ -113,7 +113,11 @@ fn retype(from: Zval, to: Zval, array: &ArrayRef, kind: &Kind) -> Result<(), Php
     call_method(
         &instance("Flow\\ETL\\Column\\Php\\Retype")?,
         "assert",
-        &mut [from.shallow_clone(), to.shallow_clone(), zval_long(null_count(array.as_ref(), kind) as i64)],
+        &mut [
+            from.shallow_clone(),
+            to.shallow_clone(),
+            zval_long(null_count(array.as_ref(), kind) as i64),
+        ],
     )?;
 
     match kind {
@@ -151,8 +155,11 @@ fn retype(from: Zval, to: Zval, array: &ArrayRef, kind: &Kind) -> Result<(), Php
             let from_elements: Vec<&Zval> = from_elements.array().map(|a| a.values().collect()).unwrap_or_default();
             let to_elements: Vec<&Zval> = to_elements.array().map(|a| a.values().collect()).unwrap_or_default();
 
-            for (((field, child), from_element), to_element) in
-                fields.iter().zip(structure.columns()).zip(from_elements).zip(to_elements)
+            for (((field, child), from_element), to_element) in fields
+                .iter()
+                .zip(structure.columns())
+                .zip(from_elements)
+                .zip(to_elements)
             {
                 let from_element = expect_object(from_element, "a StructureElement")?;
                 let to_element = expect_object(to_element, "a StructureElement")?;
@@ -194,9 +201,9 @@ fn class_name(zv: &Zval) -> String {
 }
 
 #[php_impl]
-impl NativeColumn {
+impl RustColumn {
     pub fn __construct() -> PhpResult<Self> {
-        Err(ext_exception("Flow\\ETL\\Column\\NativeColumn is built by DefaultBackend"))
+        Err(ext_exception("Flow\\ETL\\Column\\RustColumn is built by RustBackend"))
     }
 
     #[php(name = "type")]
@@ -236,9 +243,11 @@ impl NativeColumn {
         self.rows(|i| value_at(self.data.as_ref(), self.kind(), &self.plan.values, i))
     }
 
-    pub fn slice(&self, offset: i64, length: i64) -> PhpResult<NativeColumn> {
+    pub fn slice(&self, offset: i64, length: i64) -> PhpResult<RustColumn> {
         let (Ok(offset), Ok(length)) = (usize::try_from(offset), usize::try_from(length)) else {
-            return Err(invalid_argument(format!("flow_php cannot slice {length} rows from row {offset}")));
+            return Err(invalid_argument(format!(
+                "flow_php cannot slice {length} rows from row {offset}"
+            )));
         };
 
         if offset.checked_add(length).is_none_or(|end| end > self.data.len()) {
@@ -248,10 +257,10 @@ impl NativeColumn {
             )));
         }
 
-        Ok(NativeColumn::new(self.data.slice(offset, length), Rc::clone(&self.plan)))
+        Ok(RustColumn::new(self.data.slice(offset, length), Rc::clone(&self.plan)))
     }
 
-    pub fn take(&self, indices: &ZendHashTable) -> PhpResult<NativeColumn> {
+    pub fn take(&self, indices: &ZendHashTable) -> PhpResult<RustColumn> {
         let mut rows = Vec::with_capacity(indices.len());
 
         ht_for_each(indices, |_, _, index| {
@@ -266,12 +275,17 @@ impl NativeColumn {
         let data = arrow_select::take::take(self.data.as_ref(), &UInt32Array::from(rows), None)
             .map_err(|e| invalid_argument(format!("flow_php failed to take column rows: {e}")))?;
 
-        Ok(NativeColumn::new(data, Rc::clone(&self.plan)))
+        Ok(RustColumn::new(data, Rc::clone(&self.plan)))
     }
 
     #[php(name = "withType")]
-    pub fn with_type(&self, r#type: &Zval) -> PhpResult<NativeColumn> {
-        retype(self.plan.type_zv.shallow_clone(), r#type.shallow_clone(), &self.data, self.kind())?;
+    pub fn with_type(&self, r#type: &Zval) -> PhpResult<RustColumn> {
+        retype(
+            self.plan.type_zv.shallow_clone(),
+            r#type.shallow_clone(),
+            &self.data,
+            self.kind(),
+        )?;
         let plan = type_plan(r#type)?;
 
         if data_type(&plan.kind) != data_type(self.kind()) {
@@ -282,19 +296,19 @@ impl NativeColumn {
             )));
         }
 
-        Ok(NativeColumn::new(self.data.clone(), plan))
+        Ok(RustColumn::new(self.data.clone(), plan))
     }
 
-    pub fn concat(&self, others: &[&Zval]) -> PhpResult<NativeColumn> {
+    pub fn concat(&self, others: &[&Zval]) -> PhpResult<RustColumn> {
         let mut arrays: Vec<&dyn Array> = vec![self.data.as_ref()];
 
         for other in others {
             let native = other
-                .extract::<&NativeColumn>()
+                .extract::<&RustColumn>()
                 .filter(|native| native.data.data_type() == self.data.data_type())
                 .ok_or_else(|| {
                     invalid_argument(format!(
-                        "Flow\\ETL\\Column\\NativeColumn cannot concat {}",
+                        "Flow\\ETL\\Column\\RustColumn cannot concat {}",
                         class_name(other)
                     ))
                 })?;
@@ -306,7 +320,7 @@ impl NativeColumn {
             e => invalid_argument(format!("flow_php failed to concat columns: {e}")),
         })?;
 
-        Ok(NativeColumn::new(data, Rc::clone(&self.plan)))
+        Ok(RustColumn::new(data, Rc::clone(&self.plan)))
     }
 
     pub fn encode(&self) -> PhpResult<ZBox<ZendHashTable>> {

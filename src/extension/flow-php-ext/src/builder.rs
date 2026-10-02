@@ -1,4 +1,4 @@
-//! `Flow\ETL\Column\NativeColumnBuilder`: `CastingColumnBuilder` over arrow storage. A value takes the native lane
+//! `Flow\ETL\Column\RustColumnBuilder`: `CastingColumnBuilder` over arrow storage. A value takes the native lane
 //! where `cast.rs` casts it natively; every other value, and every value the native lane refuses, runs PHP's
 //! `$type->cast()` then `$physical->toPhysical()`, so results and refusals are PHP's own.
 
@@ -13,10 +13,10 @@ use ext_php_rs::types::{ZendHashTable, ZendObject, Zval};
 use flow_batch_frame::kind::Kind;
 
 use crate::cast::{cast_value, CastKind, MapKeyKind};
-use crate::column::NativeColumn;
+use crate::column::RustColumn;
 use crate::ctx::{
-    self, call_handle_catching, call_method, call_static, construct_with_zvals, expect_object, find_class,
-    ht_for_each, ht_get, null_zval, read_slot, transparent_exception, zval_long,
+    self, call_handle_catching, call_method, call_static, construct, expect_object, find_class, ht_for_each, ht_get,
+    null_zval, read_slot, transparent_exception, zval_long,
 };
 use crate::date_check::iso_instant_micros;
 use crate::exception::ext_exception;
@@ -41,7 +41,7 @@ pub enum Native {
     Bytes(Zval),
 }
 
-/// One value ready to append, for `DefaultBackend::constant()`.
+/// One value ready to append, for `RustBackend::constant()`.
 pub enum Pending {
     Null,
     Native(Native),
@@ -59,7 +59,10 @@ pub enum Append {
     Done,
     /// `cause` is the `ColumnMismatchException` a positioned append wraps; `raised` the `Flow\Types` exception an
     /// unpositioned append rethrows (`None` for a NOT NULL null).
-    Refused { cause: Zval, raised: Option<ZBox<ZendObject>> },
+    Refused {
+        cause: Zval,
+        raised: Option<ZBox<ZendObject>>,
+    },
 }
 
 fn string_slot(object: &ZendObject, slot: u32) -> Option<Zval> {
@@ -75,7 +78,10 @@ pub fn native_lane(plan: &TypePlan, value: &Zval) -> Result<Option<Native>, PhpE
 
 pub(crate) fn native_leaf(kind: &Kind, cast_kind: &CastKind, value: &Zval) -> Result<Option<Native>, PhpException> {
     if let (Kind::Timestamp, CastKind::DateTime(_)) = (kind, cast_kind) {
-        if let Some(micros) = value.zend_str().and_then(|string| iso_instant_micros(string.as_bytes())) {
+        if let Some(micros) = value
+            .zend_str()
+            .and_then(|string| iso_instant_micros(string.as_bytes()))
+        {
             return Ok(Some(Native::Fixed(micros.to_le_bytes())));
         }
     }
@@ -128,7 +134,12 @@ fn nested(kind: &Kind) -> bool {
 
 /// Casts `value` straight into `builder`, element by element. `Ok(false)`: Rust does not cast this value, and the row
 /// is left half-appended for the caller to truncate before the PHP lane casts the whole value.
-fn append_cast(builder: &mut KindBuilder, kind: &Kind, cast_kind: &CastKind, value: &Zval) -> Result<bool, PhpException> {
+fn append_cast(
+    builder: &mut KindBuilder,
+    kind: &Kind,
+    cast_kind: &CastKind,
+    value: &Zval,
+) -> Result<bool, PhpException> {
     let value = value.dereference();
 
     match (kind, cast_kind) {
@@ -235,7 +246,7 @@ fn append_cast(builder: &mut KindBuilder, kind: &Kind, cast_kind: &CastKind, val
     }
 }
 
-/// One value, as `NativeColumnBuilder::appendMany()` appends it: a null is refused under NOT NULL; a nested value
+/// One value, as `RustColumnBuilder::appendMany()` appends it: a null is refused under NOT NULL; a nested value
 /// takes `append_cast()`, a leaf the native lane, and what neither casts the PHP lane. Exceptions other than
 /// `Flow\Types` ones escape as thrown.
 pub fn append_one(
@@ -304,7 +315,8 @@ pub fn append_one(
 /// `$type->cast($value)`, then `$physical->toPhysical($cast)` unless the physical is the identity.
 pub fn php_lane(plan: &TypePlan, value: &Zval) -> Result<Zval, Refusal> {
     let type_obj = plan.type_zv.object().expect("a plan's type is an object");
-    let cast = call_handle_catching(plan.cast_fn, Some(type_obj), &mut [value.shallow_clone()]).map_err(Refusal::Cast)?;
+    let cast =
+        call_handle_catching(plan.cast_fn, Some(type_obj), &mut [value.shallow_clone()]).map_err(Refusal::Cast)?;
 
     if plan.identity {
         return Ok(cast);
@@ -346,8 +358,7 @@ pub fn throw(mut exception: Zval) -> PhpException {
 
 /// `new SchemaMismatchException($position, $cause)`.
 pub fn schema_mismatch(position: Zval, cause: Zval) -> PhpException {
-    let built = find_class(SCHEMA_MISMATCH)
-        .and_then(|ce| construct_with_zvals(ce, &mut [position, cause], "a SchemaMismatchException"));
+    let built = find_class(SCHEMA_MISMATCH).and_then(|ce| construct(ce, &mut [position, cause]));
 
     match built {
         Ok(mut exception) => transparent_exception(&mut exception),
@@ -367,18 +378,18 @@ pub fn is_types_exception(exception: &ZendObject) -> Result<bool, PhpException> 
 
 #[php_class]
 #[php(
-    name = "Flow\\ETL\\Column\\NativeColumnBuilder",
+    name = "Flow\\ETL\\Column\\RustColumnBuilder",
     flags = ClassFlags::Final,
     implements(ce = column_builder_ce, stub = "Flow\\ETL\\Column\\ColumnBuilder")
 )]
-pub struct NativeColumnBuilder {
+pub struct RustColumnBuilder {
     definition: Zval,
     nullable: bool,
     plan: Rc<TypePlan>,
     values: KindBuilder,
 }
 
-impl NativeColumnBuilder {
+impl RustColumnBuilder {
     pub fn for_definition(definition: &Zval, plan: Rc<TypePlan>) -> Result<Self, PhpException> {
         Ok(Self {
             definition: definition.shallow_clone(),
@@ -388,7 +399,7 @@ impl NativeColumnBuilder {
         })
     }
 
-    /// One value for `DefaultBackend::constant()`: refusals escape as PHP threw them.
+    /// One value for `RustBackend::constant()`: refusals escape as PHP threw them.
     pub fn pending(&self, value: &Zval) -> Result<Pending, PhpException> {
         let value = value.dereference();
 
@@ -433,13 +444,13 @@ impl NativeColumnBuilder {
         Ok(())
     }
 
-    fn same_kind<'a>(&self, column: &'a Zval) -> Option<&'a NativeColumn> {
+    fn same_kind<'a>(&self, column: &'a Zval) -> Option<&'a RustColumn> {
         column
-            .extract::<&NativeColumn>()
+            .extract::<&RustColumn>()
             .filter(|native| native.data().data_type() == &flow_batch_frame::kind::data_type(&self.plan.kind))
     }
 
-    /// `count` copies of one value, for `DefaultBackend::constant()`.
+    /// `count` copies of one value, for `RustBackend::constant()`.
     pub fn append_repeated(&mut self, pending: Pending, count: u32) -> Result<(), PhpException> {
         match pending {
             Pending::Null => (0..count).for_each(|_| self.values.append_null()),
@@ -458,7 +469,9 @@ impl NativeColumnBuilder {
                 );
 
                 for _ in 0..count {
-                    self.values.append_from(one.as_ref(), &self.plan.kind, 0).map_err(overflow)?;
+                    self.values
+                        .append_from(one.as_ref(), &self.plan.kind, 0)
+                        .map_err(overflow)?;
                 }
             }
         }
@@ -466,13 +479,13 @@ impl NativeColumnBuilder {
         Ok(())
     }
 
-    pub fn finish_column(&self) -> Result<NativeColumn, PhpException> {
+    pub fn finish_column(&self) -> Result<RustColumn, PhpException> {
         let data = self
             .values
             .finish(&self.plan.kind)
             .map_err(|e| invalid_argument(format!("flow_php built an invalid column: {e}")))?;
 
-        Ok(NativeColumn::new(arrow_array::make_array(data), Rc::clone(&self.plan)))
+        Ok(RustColumn::new(arrow_array::make_array(data), Rc::clone(&self.plan)))
     }
 }
 
@@ -484,9 +497,11 @@ fn index(i: i64, count: usize) -> Result<usize, PhpException> {
 }
 
 #[php_impl]
-impl NativeColumnBuilder {
+impl RustColumnBuilder {
     pub fn __construct() -> PhpResult<Self> {
-        Err(ext_exception("Flow\\ETL\\Column\\NativeColumnBuilder is built by DefaultBackend"))
+        Err(ext_exception(
+            "Flow\\ETL\\Column\\RustColumnBuilder is built by RustBackend",
+        ))
     }
 
     pub fn append(&mut self, value: &Zval) -> PhpResult<()> {
@@ -504,10 +519,13 @@ impl NativeColumnBuilder {
     pub fn append_many(&mut self, values: &ZendHashTable) -> PhpResult<()> {
         let start = self.values.len();
         let result = ht_for_each(values, |string_key, index, value| {
-            self.append_value(value, Some(&|| match string_key {
-                Some(name) => crate::ctx::zval_str(name.as_bytes()),
-                None => zval_long(index as i64),
-            }))
+            self.append_value(
+                value,
+                Some(&|| match string_key {
+                    Some(name) => crate::ctx::zval_str(name.as_bytes()),
+                    None => zval_long(index as i64),
+                }),
+            )
         });
 
         if result.is_err() {
@@ -529,7 +547,11 @@ impl NativeColumnBuilder {
                 .map_err(overflow);
         }
 
-        self.not_null(call_method(column, "isNull", &mut [zval_long(i)])?.bool().unwrap_or(false))?;
+        self.not_null(
+            call_method(column, "isNull", &mut [zval_long(i)])?
+                .bool()
+                .unwrap_or(false),
+        )?;
         let physical = call_method(column, "at", &mut [zval_long(i)])?;
 
         append_physical(&mut self.values, &self.plan.kind, &physical)
@@ -542,7 +564,11 @@ impl NativeColumnBuilder {
             let mut rows = Vec::with_capacity(indices.len());
 
             ht_for_each(indices, |_, _, i| {
-                let row = index(i.long().ok_or_else(|| invalid_argument("flow_php column indices must be ints".into()))?, data.len())?;
+                let row = index(
+                    i.long()
+                        .ok_or_else(|| invalid_argument("flow_php column indices must be ints".into()))?,
+                    data.len(),
+                )?;
                 self.not_null(matches!(self.plan.kind, Kind::Null) || data.is_null(row))?;
                 rows.push(row);
 
@@ -550,14 +576,18 @@ impl NativeColumnBuilder {
             })?;
 
             for row in rows {
-                self.values.append_from(data.as_ref(), &self.plan.kind, row).map_err(overflow)?;
+                self.values
+                    .append_from(data.as_ref(), &self.plan.kind, row)
+                    .map_err(overflow)?;
             }
 
             return Ok(());
         }
 
         let all = call_method(column, "physicals", &mut [])?;
-        let all = all.array().ok_or_else(|| ext_exception("flow_php expected Column::physicals() to return an array"))?;
+        let all = all
+            .array()
+            .ok_or_else(|| ext_exception("flow_php expected Column::physicals() to return an array"))?;
         let mut physicals = Vec::with_capacity(indices.len());
 
         ht_for_each(indices, |_, _, i| {
@@ -582,7 +612,7 @@ impl NativeColumnBuilder {
         self.values.len() as i64
     }
 
-    pub fn finish(&self) -> PhpResult<NativeColumn> {
+    pub fn finish(&self) -> PhpResult<RustColumn> {
         self.finish_column()
     }
 }

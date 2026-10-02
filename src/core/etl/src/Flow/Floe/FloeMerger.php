@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Column\Backend;
-use Flow\ETL\Column\DefaultBackend;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Schema\Validator\EvolvingValidator;
@@ -23,7 +23,7 @@ final readonly class FloeMerger
 
     public function __construct(
         private Filesystem $filesystem,
-        private Backend $backend = new DefaultBackend(),
+        private Backend $backend = new AdaptiveBackend(),
         private Codec $codec = new NoopCodec(),
     ) {
         Format::validateCodecId($this->codec->id());

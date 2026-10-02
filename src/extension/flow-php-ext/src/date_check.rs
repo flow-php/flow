@@ -120,10 +120,9 @@ pub fn checkdate(month: i64, day: i64, year: i64) -> bool {
 pub fn iso_instant_micros(bytes: &[u8]) -> Option<i64> {
     let byte_at = |at: usize| bytes.get(at).copied();
     let number = |at: usize, count: usize| -> Option<i64> {
-        bytes
-            .get(at..at + count)?
-            .iter()
-            .try_fold(0i64, |value, digit| digit.is_ascii_digit().then(|| value * 10 + i64::from(digit - b'0')))
+        bytes.get(at..at + count)?.iter().try_fold(0i64, |value, digit| {
+            digit.is_ascii_digit().then(|| value * 10 + i64::from(digit - b'0'))
+        })
     };
 
     if [(4, b'-'), (7, b'-'), (10, b'T'), (13, b':'), (16, b':')]

@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod alloc;
 mod exception;
+mod interfaces;
 mod parquet;
 mod php;
 mod render;
@@ -33,6 +34,10 @@ pub extern "C" fn php_module_info(_module: *mut ModuleEntry) {
 /// Invoked by the PHP/Zend engine during module startup. Must only be called by
 /// the engine through the registered startup hook, never directly.
 pub unsafe extern "C" fn module_startup(_type: i32, _module_number: i32) -> i32 {
+    if let Err(e) = interfaces::register() {
+        eprintln!("arrow: failed to register the Flow\\Parquet interfaces: {e}");
+        return -1;
+    }
     if let Err(e) = stream::output_stream::register() {
         eprintln!("arrow: failed to register Flow\\Arrow\\OutputStream: {e}");
         return -1;
@@ -53,10 +58,11 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .globals(&php::GLOBALS)
         .request_startup_function(php::request_startup)
         .request_shutdown_function(php::request_shutdown)
-        .class::<parquet::library::ParquetFile>()
-        .class::<parquet::library::ColumnsReader>()
-        .class::<parquet::library::RowsWriter>()
-        .class::<parquet::batch::BatchReader>()
-        .class::<parquet::batch::ArrowBatch>()
-        .class::<parquet::batch::ArrowSchema>()
+        .class::<parquet::library::RustColumnsReader>()
+        .class::<parquet::library::RustParquetFileReader>()
+        .class::<parquet::library::RustParquetFileWriter>()
+        .class::<parquet::engine::RustParquetEngine>()
+        .class::<parquet::batch::RustBatchReader>()
+        .class::<parquet::batch::RustParquetBatch>()
+        .class::<parquet::batch::RustArrowSchema>()
 }

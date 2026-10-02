@@ -1,13 +1,13 @@
 --TEST--
-NativeJsonReader reads, cast refusals and malformed refusals leak neither PHP memory nor native allocations
+RustJsonOpenSource reads, cast refusals and malformed refusals leak neither PHP memory nor native allocations
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 --FILE--
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\JSON\{NativeJsonOpenSource, NativeJsonReader};
-use Flow\ETL\Column\DefaultBackend;
+use Flow\ETL\Adapter\JSON\RustJsonOpenSource;
+use Flow\ETL\Column\RustBackend;
 use Flow\ETL\Exception\{RuntimeException, SchemaMismatchException};
 use Flow\Filesystem\Stream\StringSourceStream;
 
@@ -15,7 +15,7 @@ use function Flow\ETL\DSL\{int_schema, list_schema, map_schema, schema, str_sche
 use function Flow\Filesystem\DSL\path;
 use function Flow\Types\DSL\{structure_element, type_integer, type_list, type_map, type_optional, type_string, type_structure};
 
-$backend = new DefaultBackend();
+$backend = new RustBackend();
 $schema = schema(
     int_schema('id'),
     str_schema('name', nullable: true),
@@ -28,7 +28,7 @@ $schema = schema(
 );
 $valid = '{"id":1,"name":"aé","tags":["x","y"],"scores":{"a":1,"a":2},"owner":{"id":1}}';
 $read = static function (string $raw, bool $lines) use ($backend, $schema): void {
-    $open = new NativeJsonOpenSource(new StringSourceStream(path('memory://leak.json'), $raw), new NativeJsonReader($lines, 'memory://leak.json'));
+    $open = new RustJsonOpenSource(new StringSourceStream(path('memory://leak.json'), $raw), $lines, 'memory://leak.json', '', 0);
 
     try {
         foreach ($open->batches($schema, 2, $backend) as $batch) {

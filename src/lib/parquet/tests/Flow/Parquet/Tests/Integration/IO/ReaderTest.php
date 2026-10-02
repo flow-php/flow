@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
-use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Page\ColumnPageHeader;
 use Flow\Parquet\Reader;
+use Flow\Parquet\Tests\Mother\ParquetEngineMother;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function array_map;
@@ -16,8 +16,9 @@ use function iterator_to_array;
 class ReaderTest extends ParquetIntegrationTestCase
 {
     #[DataProvider('engine_provider')]
-    public function test_reading_columns_with_multiple_data_pages(ParquetEngine $engine): void
+    public function test_reading_columns_with_multiple_data_pages(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         // File generated with  https://gist.github.com/norberttech/325df9166bbdb33e18dffa94c1a033c4
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/multiple_pages.parquet');
@@ -48,8 +49,9 @@ class ReaderTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_required_columns(ParquetEngine $engine): void
+    public function test_reading_required_columns(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         // File generated with https://gist.github.com/norberttech/01322f61dca77cfde5161e31e94463ef
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/columns.required.parquet');

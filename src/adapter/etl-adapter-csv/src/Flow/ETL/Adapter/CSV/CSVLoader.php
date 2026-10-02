@@ -47,7 +47,7 @@ final class CSVLoader implements Closure, Discardable, FileLoader, Loader, Parti
 
     private bool $header = true;
 
-    private ?CSVSinkOpener $opener = null;
+    private ?CSVWriteOptions $options = null;
 
     /**
      * @var array<string, CSVOpenSink> by stream URI
@@ -118,8 +118,9 @@ final class CSVLoader implements Closure, Discardable, FileLoader, Loader, Parti
                 $files = $this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode);
                 $fresh = !$files->touched($partitions->toArray());
                 $stream = $files->writeTo($partitions->toArray());
-                ($this->sinks[$stream->path()->uri()] ??= $this->opener()->open(
+                ($this->sinks[$stream->path()->uri()] ??= new CSVOpenSink(
                     $stream,
+                    new AdaptiveCSVEncoder($this->options()),
                     $this->header && $fresh,
                 ))->write($group);
             }
@@ -188,15 +189,15 @@ final class CSVLoader implements Closure, Discardable, FileLoader, Loader, Parti
         return $this;
     }
 
-    private function opener(): CSVSinkOpener
+    private function options(): CSVWriteOptions
     {
-        return $this->opener ??= new CSVSinkOpener(new CSVWriteOptions(
+        return $this->options ??= new CSVWriteOptions(
             separator: $this->separator,
             enclosure: $this->enclosure,
             escape: $this->escape,
             newLineSeparator: $this->newLineSeparator,
             dateTimeFormat: $this->dateTimeFormat,
             dateFormat: $this->dateFormat,
-        ));
+        );
     }
 }

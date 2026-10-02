@@ -1,12 +1,12 @@
 --TEST--
-RowsWriter::writeColumns() accepts, refuses and keeps what writeRows() does, for every write-acceptance cell and across flushed batches
+RustParquetFileWriter::writeColumns() accepts, refuses and keeps what writeRows() does, for every write-acceptance cell and across flushed batches
 --SKIPIF--
 <?php if (!extension_loaded("arrow")) die("skip arrow extension not loaded"); ?>
 --FILE--
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\Parquet\Engine\ArrowParquetEngine;
+use Flow\Parquet\Engine\RustParquetEngine;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Schema;
@@ -16,7 +16,7 @@ use Flow\Parquet\Tests\Context\WriteAcceptance;
 
 $outcome = static function (Schema $schema, array $rows, string $door, int $batchSize = 1_000): string {
     $stream = ColumnDoor::stream();
-    $file = ColumnDoor::open(new ArrowParquetEngine(Options::default()->set(Option::ARROW_WRITE_BATCH_SIZE, $batchSize)), $stream, $schema);
+    $file = ColumnDoor::open(new RustParquetEngine(Options::default()->set(Option::ARROW_WRITE_BATCH_SIZE, $batchSize)), $stream, $schema);
     $refusal = 'written';
 
     try {
@@ -74,18 +74,18 @@ foreach ([1_000, 3, 2, 1] as $batchSize) {
 
 $columns = ColumnDoor::columns(ColumnDoor::rows(50));
 $batch = ColumnDoor::stream();
-$file = ColumnDoor::open(new ArrowParquetEngine(Options::default()->set(Option::ARROW_WRITE_BATCH_SIZE, 7)), $batch, ColumnDoor::schema());
+$file = ColumnDoor::open(new RustParquetEngine(Options::default()->set(Option::ARROW_WRITE_BATCH_SIZE, 7)), $batch, ColumnDoor::schema());
 $file->writeBatch(ColumnDoor::rows(50));
 $file->close();
 $door = ColumnDoor::stream();
-$file = ColumnDoor::open(new ArrowParquetEngine(Options::default()->set(Option::ARROW_WRITE_BATCH_SIZE, 7)), $door, ColumnDoor::schema());
+$file = ColumnDoor::open(new RustParquetEngine(Options::default()->set(Option::ARROW_WRITE_BATCH_SIZE, 7)), $door, ColumnDoor::schema());
 $file->writeColumns($columns);
 $file->close();
 var_dump($batch->content() === $door->content());
 
 foreach ([['a' => [1, 2], 'b' => [1]], ['a' => 'no list']] as $columns) {
     try {
-        ColumnDoor::open(new ArrowParquetEngine(), ColumnDoor::stream(), $schema)->writeColumns($columns);
+        ColumnDoor::open(new RustParquetEngine(), ColumnDoor::stream(), $schema)->writeColumns($columns);
     } catch (Throwable $e) {
         echo $e::class, ': ', $e->getMessage(), "\n";
     }

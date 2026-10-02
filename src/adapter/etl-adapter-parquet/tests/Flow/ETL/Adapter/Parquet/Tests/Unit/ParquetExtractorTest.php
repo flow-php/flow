@@ -13,6 +13,7 @@ use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Parquet\Binary\ByteOrder;
+use Flow\Parquet\Exception\InvalidArgumentException as NotParquet;
 use Flow\Parquet\Options;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -22,6 +23,8 @@ use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
+use function Flow\Filesystem\DSL\memory_filesystem;
+use function Flow\Filesystem\DSL\path;
 use function gc_collect_cycles;
 
 final class ParquetExtractorTest extends FlowTestCase
@@ -101,6 +104,21 @@ final class ParquetExtractorTest extends FlowTestCase
         unset($extractor);
         gc_collect_cycles();
 
+        static::assertSame(1, $filesystem->closedStreams());
+    }
+
+    public function test_a_file_that_is_not_parquet_closes_the_stream_it_opened(): void
+    {
+        $filesystem = new CountingFilesystem(memory_filesystem());
+        $filesystem->writeTo(path('memory://not.parquet'))->append('id,name')->close();
+
+        try {
+            from_parquet(path('memory://not.parquet'), filesystem: $filesystem)->statistics();
+            static::fail('a CSV file was read as Parquet');
+        } catch (NotParquet) {
+        }
+
+        static::assertSame(1, $filesystem->readFromCalls);
         static::assertSame(1, $filesystem->closedStreams());
     }
 

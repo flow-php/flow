@@ -67,9 +67,9 @@ final readonly class XmlElementPhysical implements Physical
     public function markup(string $physical): string
     {
         return (
-            $this->position->markupOf(
-                $physical,
-            ) ?? $this->canonical(type_instance_of(DOMElement::class)->assert($this->fromPhysical($physical)))
+            $this->position->markupOf($physical) ?? $this->canonical(type_instance_of(
+                DOMElement::class,
+            )->assert($this->fromPhysical($physical)))
         );
     }
 

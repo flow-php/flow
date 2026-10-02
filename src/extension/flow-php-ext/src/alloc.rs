@@ -1,4 +1,4 @@
-//! The global allocator: `System`, counting the bytes it holds for `DefaultBackend::allocatedBytes()`, plus the bytes
+//! The global allocator: `System`, counting the bytes it holds for `RustBackend::allocatedBytes()`, plus the bytes
 //! of the Arrow C Data batches imported from another extension's allocator while they live.
 
 use std::alloc::{GlobalAlloc, Layout, System};

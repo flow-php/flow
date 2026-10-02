@@ -241,7 +241,9 @@ final class AttributeFilteringLogMiddlewareTest extends TestCase
 
             static::assertSame($entry, $processed);
             static::assertFalse($processed->record->attributes->has(AttributeFilteringLogMiddleware::SEVERITY_KEY));
-            static::assertFalse($processed->record->attributes->has(AttributeFilteringLogMiddleware::SEVERITY_NAME_KEY));
+            static::assertFalse($processed->record->attributes->has(
+                AttributeFilteringLogMiddleware::SEVERITY_NAME_KEY,
+            ));
         } finally {
             $tmp->remove();
         }

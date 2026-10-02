@@ -5,14 +5,16 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use ext_php_rs::boxed::ZBox;
+use ext_php_rs::convert::FromZval;
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::ffi::{
     _zend_property_info, zend_call_known_function, zend_hash_index_update, zend_hash_str_find, zend_hash_str_update,
     zend_ulong,
 };
+use ext_php_rs::flags::DataType;
 use ext_php_rs::prelude::PhpResult;
 use ext_php_rs::types::{ZendHashTable, ZendObject, ZendStr, Zval};
-use ext_php_rs::zend::{ClassEntry, ExecutorGlobals, Function, ModuleGlobal, ModuleGlobals};
+use ext_php_rs::zend::{ce, ClassEntry, ExecutorGlobals, Function, ModuleGlobal, ModuleGlobals};
 
 use crate::exception::ext_exception;
 use crate::thrift::Specs;
@@ -73,7 +75,8 @@ pub fn zval_long(value: i64) -> Zval {
 }
 
 pub fn find_class(name: &str) -> Result<&'static ClassEntry, PhpException> {
-    ClassEntry::try_find(name).ok_or_else(|| ext_exception(format!("arrow requires class \"{name}\" to be autoloadable")))
+    ClassEntry::try_find(name)
+        .ok_or_else(|| ext_exception(format!("arrow requires class \"{name}\" to be autoloadable")))
 }
 
 /// Fails when the last engine call left an exception pending, so PHP-level
@@ -138,8 +141,19 @@ pub fn ce_method_ref(ce: &ClassEntry, method: &str) -> Result<&'static Function,
     };
 
     function.ok_or_else(|| {
-        ext_exception(format!("arrow failed to resolve method {}::{method}", ce.name().unwrap_or_default()))
+        ext_exception(format!(
+            "arrow failed to resolve method {}::{method}",
+            ce.name().unwrap_or_default()
+        ))
     })
+}
+
+/// `$object->$method(...$args)`; an exception the method throws surfaces as itself.
+pub fn call_method(object: &Zval, method: &str, args: &mut [Zval]) -> Result<Zval, PhpException> {
+    let object = expect_object(object, "a method receiver")?;
+    let ce = unsafe { object.ce.as_ref() }.ok_or_else(|| ext_exception("arrow failed to resolve an object class"))?;
+
+    call_handle_transparent(ce_method_ref(ce, method)?, Some(object), args)
 }
 
 /// Calls a pre-resolved function handle and hands a PHP exception thrown by the callee back to the caller as the
@@ -181,7 +195,7 @@ pub fn transparent_exception(exception: &mut ZendObject) -> PhpException {
     let mut zv = Zval::new();
     zv.set_object(exception);
 
-    PhpException::default(String::new()).with_object(zv)
+    PhpException::from_message(String::new()).with_object(zv)
 }
 
 /// [`call_handle_catching`] with the exception object already re-raised as itself.
@@ -264,7 +278,8 @@ pub fn ht_for_each<'a>(
 }
 
 pub fn expect_object<'a>(zv: &'a Zval, context: &str) -> Result<&'a ZendObject, PhpException> {
-    zv.object().ok_or_else(|| ext_exception(format!("arrow expected {context} to be an object")))
+    zv.object()
+        .ok_or_else(|| ext_exception(format!("arrow expected {context} to be an object")))
 }
 
 /// Request-scoped caches of class entries, function handles and value zvals, reached only through [`with_ctx`]:
@@ -345,7 +360,12 @@ pub fn timezone(name: &[u8]) -> Result<Zval, PhpException> {
         || {
             let fns = timezone_fns()?;
             let mut timezone = ZendObject::new(fns.ce);
-            call_handle(fns.construct, Some(&mut timezone), &mut [zval_str(name)], "construct DateTimeZone")?;
+            call_handle(
+                fns.construct,
+                Some(&mut timezone),
+                &mut [zval_str(name)],
+                "construct DateTimeZone",
+            )?;
 
             let mut zv = Zval::new();
             zv.set_object(&mut timezone);
@@ -393,4 +413,53 @@ pub fn with_ctx<R>(f: impl FnOnce(&mut Ctx) -> PhpResult<R>) -> PhpResult<R> {
     }
 
     f(globals.ctx.get_or_insert_with(Ctx::default))
+}
+
+/// An `iterable` argument kept as its zval. ext-php-rs's `Iterable` opens a `zend_object_iterator` for a `Traversable`
+/// and 0.16 never frees it (no `zend_iterator_dtor`): the iterator and its generator lived until the request ended.
+pub struct IterableArg<'a>(pub &'a Zval);
+
+impl<'a> FromZval<'a> for IterableArg<'a> {
+    const TYPE: DataType = DataType::Iterable;
+
+    fn from_zval(zval: &'a Zval) -> Option<Self> {
+        (zval.is_array() || zval.is_traversable()).then_some(Self(zval))
+    }
+}
+
+/// Every value of `$iterable` in order, keys ignored: an `Iterator` through `rewind()` / `valid()` / `current()` /
+/// `next()` as `foreach` does, an `IteratorAggregate` through `getIterator()`.
+pub fn for_each_value(iterable: &Zval, mut f: impl FnMut(&Zval) -> PhpResult<()>) -> PhpResult<()> {
+    if let Some(array) = iterable.array() {
+        for value in array.values() {
+            f(value)?;
+        }
+
+        return Ok(());
+    }
+
+    let mut iterator = iterable.shallow_clone();
+
+    while iterator
+        .object()
+        .is_some_and(|object| object.instance_of(ce::aggregate()))
+    {
+        iterator = call_method(&iterator, "getIterator", &mut [])?;
+    }
+
+    if !iterator
+        .object()
+        .is_some_and(|object| object.instance_of(ce::iterator()))
+    {
+        return Err(ext_exception("arrow expected getIterator() to return a Traversable"));
+    }
+
+    call_method(&iterator, "rewind", &mut [])?;
+
+    while call_method(&iterator, "valid", &mut [])?.bool().unwrap_or(false) {
+        f(&call_method(&iterator, "current", &mut [])?)?;
+        call_method(&iterator, "next", &mut [])?;
+    }
+
+    Ok(())
 }

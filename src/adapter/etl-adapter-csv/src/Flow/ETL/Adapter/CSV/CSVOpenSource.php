@@ -11,7 +11,13 @@ use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\ColumnTypes;
 use Flow\ETL\Schema\Inference\SchemaInference;
 use Flow\Types\Type\TypeNarrower;
-use Generator;
+use Iterator;
+
+use function extension_loaded;
+
+if (extension_loaded('flow_php')) {
+    return;
+}
 
 interface CSVOpenSource
 {
@@ -46,9 +52,9 @@ interface CSVOpenSource
      *
      * @throws SchemaMismatchException
      *
-     * @return Generator<int, Rows>
+     * @return Iterator<int, Rows>
      */
-    public function batches(Schema $schema, int $batchSize, Backend $backend): Generator;
+    public function batches(Schema $schema, int $batchSize, Backend $backend): Iterator;
 
     /**
      * The header records() resolved; [] before it ran or for a 0-byte source.
@@ -60,9 +66,9 @@ interface CSVOpenSource
     /**
      * This instance is consumed afterwards.
      *
-     * @return Generator<int, array<array-key, ?string>>
+     * @return Iterator<int, array<array-key, ?string>>
      */
-    public function records(): Generator;
+    public function records(): Iterator;
 
     /**
      * SchemaInferrer::sniff() over records(). This instance is consumed afterwards.

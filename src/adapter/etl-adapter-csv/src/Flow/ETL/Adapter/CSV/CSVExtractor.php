@@ -100,7 +100,7 @@ final class CSVExtractor implements
         $yielded = 0;
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
         $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $pathFilter), false);
-        $reader = new CSVFileReader(new CSVSourceOpener($this->filesystem, $this->readOptions), $sources);
+        $reader = new CSVFileReader($this->filesystem, $this->readOptions, $sources);
 
         if ($this->schema !== null) {
             $base = $this->schema;
@@ -189,7 +189,8 @@ final class CSVExtractor implements
 
         if ($derived === null) {
             $reader = new CSVFileReader(
-                new CSVSourceOpener($this->filesystem, $this->readOptions),
+                $this->filesystem,
+                $this->readOptions,
                 iterator_to_array($this->sourceFiles($this->filesystem, $this->path), false),
             );
 

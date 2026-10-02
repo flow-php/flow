@@ -1,12 +1,12 @@
 --TEST--
-NativeColumnBuilder casts random nested values, raw and refused forms, as the PHP builder does through append() and appendMany()
+RustColumnBuilder casts random nested values, raw and refused forms, as the PHP builder does through append() and appendMany()
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 --FILE--
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Column\DefaultBackend;
+use Flow\ETL\Column\RustBackend;
 use Flow\ETL\Column\PhpBackend;
 
 use function Flow\ETL\DSL\definition_from_type;
@@ -44,7 +44,7 @@ for ($t = 0; $t < 400; $t++) {
         foreach (['values', 'physicals', 'encode'] as $read) {
             $cases++;
             $php = outcome(static fn(): mixed => $column(new PhpBackend())()->{$read}());
-            $native = outcome(static fn(): mixed => $column(new DefaultBackend())()->{$read}());
+            $native = outcome(static fn(): mixed => $column(new RustBackend())()->{$read}());
 
             if ($php !== $native) {
                 echo ($many ? 'appendMany ' : 'append ') . "{$read} {$type->toString()} " . var_export($values, true) . "\n  php:    {$php}\n  native: {$native}\n";

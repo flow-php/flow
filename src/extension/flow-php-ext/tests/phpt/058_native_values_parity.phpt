@@ -6,7 +6,7 @@ native columns read every row as the PHP columns read it: at(), value(), Rows::v
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Column\DefaultBackend;
+use Flow\ETL\Column\RustBackend;
 use Flow\ETL\Column\PhpBackend;
 use Flow\Floe\FrameDecoder;
 
@@ -77,7 +77,7 @@ $frame = php_rows(schema(datetime_schema('at')), $instants)->encodeFrame();
 foreach (['UTC', 'Europe/Warsaw', '+05:30'] as $zone) {
     $zoned = schema(datetime_schema('at', zone: $zone));
     $expected = array_map($observe, (new FrameDecoder())->decode($frame, $zoned, new PhpBackend())->column('at')->values());
-    $actual = array_map($observe, (new FrameDecoder())->decode($frame, $zoned, new DefaultBackend())->column('at')->values());
+    $actual = array_map($observe, (new FrameDecoder())->decode($frame, $zoned, new RustBackend())->column('at')->values());
 
     echo "zone {$zone}: ", serialize($expected) === serialize($actual) ? 'identical' : 'DIFF', "\n";
 }

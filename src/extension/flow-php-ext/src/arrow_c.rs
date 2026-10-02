@@ -30,15 +30,15 @@ const ZEND_INTERNAL_CLASS: c_char = 1;
 
 /// One exported batch, until its consumer moves the array out.
 #[php_class]
-#[php(name = "Flow\\ETL\\Column\\NativeArrowBatch", flags = ClassFlags::Final)]
-pub struct NativeArrowBatch {
+#[php(name = "Flow\\ETL\\Column\\RustColumnsBatch", flags = ClassFlags::Final)]
+pub struct RustColumnsBatch {
     schema: FFI_ArrowSchema,
     array: FFI_ArrowArray,
     rows: usize,
 }
 
 #[php_impl]
-impl NativeArrowBatch {
+impl RustColumnsBatch {
     pub fn count(&self) -> i64 {
         self.rows as i64
     }
@@ -58,13 +58,25 @@ impl NativeArrowBatch {
 #[derive(Debug)]
 enum Refusal {
     NotStruct,
-    Count { children: i64, columns: usize },
-    Name { child: String, column: usize },
+    Count {
+        children: i64,
+        columns: usize,
+    },
+    Name {
+        child: String,
+        column: usize,
+    },
     /// Column `column` arrives as `child`, which its plan does not store.
-    Type { column: usize, child: Field },
+    Type {
+        column: usize,
+        child: Field,
+    },
     Schema(ArrowError),
     Released,
-    Length { children: i64, schema: i64 },
+    Length {
+        children: i64,
+        schema: i64,
+    },
     Invalid(ArrowError),
 }
 
@@ -202,7 +214,9 @@ fn refused(refusal: Refusal, columns: &[(Vec<u8>, Rc<TypePlan>)]) -> PhpExceptio
         Refusal::Length { children, schema } => {
             format!("Arrow C Data batch of {children} children does not match its schema of {schema}")
         }
-        Refusal::Invalid(error) => format!("Arrow C Data batch is not a valid struct array: {error}"),
+        Refusal::Invalid(error) => {
+            format!("Arrow C Data batch is not a valid struct array: {error}")
+        }
     };
 
     invalid_argument(message)
@@ -238,7 +252,10 @@ fn address(object: &ZendObject, ce: &ClassEntry, method: &str) -> PhpResult<usiz
 }
 
 fn stored(columns: &[(Vec<u8>, Rc<TypePlan>)]) -> Vec<(&[u8], DataType)> {
-    columns.iter().map(|(name, plan)| (name.as_slice(), data_type(&plan.kind))).collect()
+    columns
+        .iter()
+        .map(|(name, plan)| (name.as_slice(), data_type(&plan.kind)))
+        .collect()
 }
 
 /// Refuses a schema carrier (`arrowSchemaAddress()`) whose struct children are not `columns`, by name and stored type.
@@ -260,7 +277,7 @@ pub fn import(batch: &Zval, columns: &[(Vec<u8>, Rc<TypePlan>)]) -> PhpResult<(u
 }
 
 /// `columns` as one struct batch of `rows` rows, every child nullable.
-pub fn export(rows: usize, columns: Vec<(String, ArrayRef)>) -> PhpResult<NativeArrowBatch> {
+pub fn export(rows: usize, columns: Vec<(String, ArrayRef)>) -> PhpResult<RustColumnsBatch> {
     let fields = columns
         .iter()
         .map(|(name, array)| Field::new(name, array.data_type().clone(), true))
@@ -270,7 +287,7 @@ pub fn export(rows: usize, columns: Vec<(String, ArrayRef)>) -> PhpResult<Native
         .and_then(|batch| to_ffi(&batch.to_data()))
         .map_err(|error| invalid_argument(format!("flow_php failed to export an Arrow C Data batch: {error}")))?;
 
-    Ok(NativeArrowBatch { schema, array, rows })
+    Ok(RustColumnsBatch { schema, array, rows })
 }
 
 #[cfg(test)]
@@ -363,7 +380,10 @@ mod tests {
         assert_eq!(arrays[1].as_ref(), columns()[1].1.as_ref());
         assert_eq!(
             imported(),
-            arrays.iter().map(|array| array.to_data().get_buffer_memory_size() as i64).sum::<i64>()
+            arrays
+                .iter()
+                .map(|array| array.to_data().get_buffer_memory_size() as i64)
+                .sum::<i64>()
         );
 
         let first = arrays.into_iter().next().unwrap();
@@ -395,21 +415,31 @@ mod tests {
 
     #[test]
     fn a_child_of_another_type_is_refused_before_the_move() {
-        refused(&[(b"id", DataType::Float64), (b"list", expected()[1].1.clone())], |refusal| {
-            matches!(refusal, Refusal::Type { column: 0, .. })
-        });
+        refused(
+            &[(b"id", DataType::Float64), (b"list", expected()[1].1.clone())],
+            |refusal| matches!(refusal, Refusal::Type { column: 0, .. }),
+        );
     }
 
     #[test]
     fn a_child_of_another_name_is_refused_before_the_move() {
-        refused(&[(b"id", DataType::Int64), (b"other", expected()[1].1.clone())], |refusal| {
-            matches!(refusal, Refusal::Name { column: 1, .. })
-        });
+        refused(
+            &[(b"id", DataType::Int64), (b"other", expected()[1].1.clone())],
+            |refusal| matches!(refusal, Refusal::Name { column: 1, .. }),
+        );
     }
 
     #[test]
     fn another_child_count_is_refused_before_the_move() {
-        refused(&[(b"id", DataType::Int64)], |refusal| matches!(refusal, Refusal::Count { children: 2, columns: 1 }));
+        refused(&[(b"id", DataType::Int64)], |refusal| {
+            matches!(
+                refusal,
+                Refusal::Count {
+                    children: 2,
+                    columns: 1
+                }
+            )
+        });
     }
 
     #[test]
@@ -420,7 +450,10 @@ mod tests {
         let (_, arrays) = take(&schema, &mut array, &expected()).unwrap();
         let counted = imported();
 
-        assert!(matches!(take(&schema, &mut array, &expected()).unwrap_err(), Refusal::Released));
+        assert!(matches!(
+            take(&schema, &mut array, &expected()).unwrap_err(),
+            Refusal::Released
+        ));
         assert_eq!(imported(), counted);
 
         drop(arrays);

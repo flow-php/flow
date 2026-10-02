@@ -6,9 +6,10 @@ ISO date-times with a Z or ±HH:MM suffix become the micros DateTimeType::cast()
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\CSV\RustCSVReaderNative;
-use Flow\ETL\Column\DefaultBackend;
+use Flow\ETL\Adapter\CSV\RustCSVOpenSource;
+use Flow\ETL\Column\RustBackend;
 use Flow\ETL\Column\PhpBackend;
+use Flow\Filesystem\Stream\MemorySourceStream;
 
 use function Flow\ETL\DSL\{datetime_schema, schema};
 
@@ -84,17 +85,15 @@ $physicals = static function (object $backend, object $definition, array $values
     return $builder->finish()->physicals();
 };
 $csv = static function (object $definition, array $values): array {
-    $reader = new RustCSVReaderNative(',', '"', '', true, true, true);
-    $reader->feed("v\n" . implode("\n", $values) . "\n");
-    $reader->finish();
+    $source = new RustCSVOpenSource(new MemorySourceStream("v\n" . implode("\n", $values) . "\n"), ',', '"', '', true, true, true);
 
-    return $reader->nextColumns(schema($definition), count($values) + 1)->column('v')->physicals();
+    return iterator_to_array($source->batches(schema($definition), count($values) + 1, new RustBackend()), false)[0]->column('v')->physicals();
 };
 
 foreach (['UTC', 'Europe/Warsaw', 'Pacific/Kiritimati'] as $zone) {
     $definition = datetime_schema('v', zone: $zone);
     $expected = $physicals(new PhpBackend(), $definition, $strings);
-    $appended = $physicals(new DefaultBackend(), $definition, $strings);
+    $appended = $physicals(new RustBackend(), $definition, $strings);
     $read = $csv($definition, $strings);
     $differ = static fn(array $actual): array => array_keys(array_filter(
         $expected,
@@ -113,7 +112,7 @@ foreach (['UTC', 'Europe/Warsaw', 'Pacific/Kiritimati'] as $zone) {
 
     foreach ($nearMisses as $value) {
         $php = outcome(static fn(): array => $physicals(new PhpBackend(), $definition, [$value]));
-        $native = outcome(static fn(): array => $physicals(new DefaultBackend(), $definition, [$value]));
+        $native = outcome(static fn(): array => $physicals(new RustBackend(), $definition, [$value]));
 
         $php === $native ? $identical++ : print(json_encode($value) . "\n  php:    {$php}\n  native: {$native}\n");
     }

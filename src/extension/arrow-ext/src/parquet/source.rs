@@ -12,8 +12,8 @@ use ext_php_rs::types::{ZendObject, Zval};
 use parquet::errors::ParquetError;
 use parquet::file::reader::{ChunkReader, Length};
 
-use crate::php::{call_handle_catching, ce_method_ref, expect_object, zval_long};
 use crate::parquet::error::Error;
+use crate::php::{call_handle_catching, ce_method_ref, expect_object, zval_long};
 
 /// What `get_read()` pulls from the stream per `read()` call.
 pub const WINDOW: usize = 64 * 1024;
@@ -140,7 +140,10 @@ pub fn exact<R: ReadAt>(source: &R, start: u64, length: usize) -> Result<Bytes, 
     let bytes = source.read_at(start, length)?;
 
     if bytes.len() != length {
-        return Err(ParquetError::EOF(format!("expected {length} bytes at offset {start}, read {}", bytes.len())));
+        return Err(ParquetError::EOF(format!(
+            "expected {length} bytes at offset {start}, read {}",
+            bytes.len()
+        )));
     }
 
     Ok(bytes)
@@ -284,7 +287,10 @@ mod tests {
     fn exact_reads_the_length_asked_in_one_read() {
         let source = sized(10 * WINDOW);
 
-        assert_eq!(exact(&source, 5, 3 * WINDOW).unwrap().to_vec(), source.data[5..5 + 3 * WINDOW].to_vec());
+        assert_eq!(
+            exact(&source, 5, 3 * WINDOW).unwrap().to_vec(),
+            source.data[5..5 + 3 * WINDOW].to_vec()
+        );
         assert_eq!(source.counted(), (1, 3 * WINDOW));
     }
 

@@ -100,7 +100,11 @@ impl Zone {
             return Ok(());
         };
 
-        let listed = call_method(&ctx::timezone(id)?, "getTransitions", &mut [zval_long(min_second), zval_long(max_second)])?;
+        let listed = call_method(
+            &ctx::timezone(id)?,
+            "getTransitions",
+            &mut [zval_long(min_second), zval_long(max_second)],
+        )?;
         let listed = listed
             .array()
             .ok_or_else(|| ext_exception("flow_php expected DateTimeZone::getTransitions() to return an array"))?;
@@ -118,12 +122,17 @@ impl Zone {
             transitions.push(Transition {
                 from: field(b"ts")?.long().unwrap_or(min_second),
                 offset: field(b"offset")?.long().unwrap_or(0) as i32,
-                abbreviation: field(b"abbr")?.zend_str().map(|abbr| abbr.as_bytes().to_vec()).unwrap_or_default(),
+                abbreviation: field(b"abbr")?
+                    .zend_str()
+                    .map(|abbr| abbr.as_bytes().to_vec())
+                    .unwrap_or_default(),
             });
         }
 
         if transitions.is_empty() {
-            return Err(ext_exception("flow_php expected DateTimeZone::getTransitions() to list the offset in force"));
+            return Err(ext_exception(
+                "flow_php expected DateTimeZone::getTransitions() to list the offset in force",
+            ));
         }
 
         Ok(())
@@ -135,9 +144,13 @@ impl Zone {
             Zone::Utc => (0, b"UTC"),
             Zone::Offset { seconds, abbreviation } => (*seconds, abbreviation),
             Zone::Named { transitions, .. } => {
-                let index = transitions.partition_point(|transition| transition.from <= second).saturating_sub(1);
+                let index = transitions
+                    .partition_point(|transition| transition.from <= second)
+                    .saturating_sub(1);
 
-                transitions.get(index).map_or((0, b"UTC"), |transition| (transition.offset, &transition.abbreviation))
+                transitions
+                    .get(index)
+                    .map_or((0, b"UTC"), |transition| (transition.offset, &transition.abbreviation))
             }
         }
     }
@@ -207,7 +220,11 @@ fn civil(days: i64) -> (i64, i64, i64) {
     let day_of_year = day_of_era - (365 * year_of_era + year_of_era / 4 - year_of_era / 100);
     let month_index = (5 * day_of_year + 2) / 153;
     let day = day_of_year - (153 * month_index + 2) / 5 + 1;
-    let month = if month_index < 10 { month_index + 3 } else { month_index - 9 };
+    let month = if month_index < 10 {
+        month_index + 3
+    } else {
+        month_index - 9
+    };
 
     (year_of_era + era * 400 + i64::from(month <= 2), month, day)
 }
@@ -321,8 +338,14 @@ mod tests {
 
     #[test]
     fn micros_before_the_epoch_floor_to_the_second_below() {
-        assert_eq!(formatted("Y-m-d H:i:s.u v U", -500_000, &Zone::Utc), "1969-12-31 23:59:59.500000 500 -1");
-        assert_eq!(formatted("Y-m-d\\TH:i:s.u G\\h", 1_767_323_045_123_456, &Zone::Utc), "2026-01-02T03:04:05.123456 3h");
+        assert_eq!(
+            formatted("Y-m-d H:i:s.u v U", -500_000, &Zone::Utc),
+            "1969-12-31 23:59:59.500000 500 -1"
+        );
+        assert_eq!(
+            formatted("Y-m-d\\TH:i:s.u G\\h", 1_767_323_045_123_456, &Zone::Utc),
+            "2026-01-02T03:04:05.123456 3h"
+        );
     }
 
     /// `edge-facts.log`: Europe/Warsaw across the 2026 gap and overlap, one transition list for the whole call.
@@ -331,19 +354,43 @@ mod tests {
         let warsaw = Zone::Named {
             id: b"Europe/Warsaw".to_vec(),
             transitions: vec![
-                Transition { from: 1_774_745_999, offset: 3_600, abbreviation: b"CET".to_vec() },
-                Transition { from: 1_774_746_000, offset: 7_200, abbreviation: b"CEST".to_vec() },
-                Transition { from: 1_792_890_000, offset: 3_600, abbreviation: b"CET".to_vec() },
+                Transition {
+                    from: 1_774_745_999,
+                    offset: 3_600,
+                    abbreviation: b"CET".to_vec(),
+                },
+                Transition {
+                    from: 1_774_746_000,
+                    offset: 7_200,
+                    abbreviation: b"CEST".to_vec(),
+                },
+                Transition {
+                    from: 1_792_890_000,
+                    offset: 3_600,
+                    abbreviation: b"CET".to_vec(),
+                },
             ],
         };
 
         for (second, expected) in [
-            (1_774_745_999_i64, "2026-03-29T01:59:59+01:00 CET Europe/Warsaw +01:00 3600"),
-            (1_774_746_000, "2026-03-29T03:00:00+02:00 CEST Europe/Warsaw +02:00 7200"),
-            (1_792_889_999, "2026-10-25T02:59:59+02:00 CEST Europe/Warsaw +02:00 7200"),
+            (
+                1_774_745_999_i64,
+                "2026-03-29T01:59:59+01:00 CET Europe/Warsaw +01:00 3600",
+            ),
+            (
+                1_774_746_000,
+                "2026-03-29T03:00:00+02:00 CEST Europe/Warsaw +02:00 7200",
+            ),
+            (
+                1_792_889_999,
+                "2026-10-25T02:59:59+02:00 CEST Europe/Warsaw +02:00 7200",
+            ),
             (1_792_890_000, "2026-10-25T02:00:00+01:00 CET Europe/Warsaw +01:00 3600"),
         ] {
-            assert_eq!(formatted("Y-m-d\\TH:i:sP T e p Z", second * 1_000_000, &warsaw), expected);
+            assert_eq!(
+                formatted("Y-m-d\\TH:i:sP T e p Z", second * 1_000_000, &warsaw),
+                expected
+            );
         }
     }
 
@@ -354,7 +401,10 @@ mod tests {
             formatted("e|T|P|p|O|Z|c", 0, &Zone::of(b"+02:30")),
             "+02:30|GMT+0230|+02:30|+02:30|+0230|9000|1970-01-01T02:30:00+02:30"
         );
-        assert_eq!(formatted("e|T|P|O|Z H:i", 0, &Zone::of(b"-05:00")), "-05:00|GMT-0500|-05:00|-0500|-18000 19:00");
+        assert_eq!(
+            formatted("e|T|P|O|Z H:i", 0, &Zone::of(b"-05:00")),
+            "-05:00|GMT-0500|-05:00|-0500|-18000 19:00"
+        );
     }
 
     #[test]

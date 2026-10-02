@@ -8,7 +8,6 @@ use DateTimeImmutable;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
-use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\ListElement;
@@ -17,6 +16,7 @@ use Flow\Parquet\ParquetFile\Schema\MapValue;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Tests\Context\TestParquetFile;
+use Flow\Parquet\Tests\Mother\ParquetEngineMother;
 use Flow\Parquet\Writer;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -54,8 +54,9 @@ class PaginationTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_offset_past_first_page_of_multi_page_column(ParquetEngine $engine): void
+    public function test_offset_past_first_page_of_multi_page_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         Writer::php(options: Options::default()->set(Option::PAGE_SIZE_BYTES, 100)->set(
@@ -78,8 +79,9 @@ class PaginationTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_last_100_rows(ParquetEngine $engine): void
+    public function test_reading_last_100_rows(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = __DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet';
 
         $totalRows = (new Reader(engine: $engine))
@@ -102,11 +104,12 @@ class PaginationTest extends ParquetIntegrationTestCase
 
     #[DataProvider('engine_with_offset_provider')]
     public function test_setting_offset_larger_than_file(
-        ParquetEngine $engine,
+        string $engineClass,
         int $offset,
         ?int $limit,
         int $results,
     ): void {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = __DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet';
 
         static::assertCount(
@@ -120,8 +123,9 @@ class PaginationTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_setting_setting_limit_to_negative(ParquetEngine $engine): void
+    public function test_setting_setting_limit_to_negative(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = __DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet';
 
         $this->expectException(InvalidArgumentException::class);
@@ -135,8 +139,9 @@ class PaginationTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_setting_setting_offset_to_negative(ParquetEngine $engine): void
+    public function test_setting_setting_offset_to_negative(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = __DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet';
 
         $this->expectException(InvalidArgumentException::class);
@@ -150,8 +155,9 @@ class PaginationTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_columns_refuses_a_batch_size_below_one(ParquetEngine $engine): void
+    public function test_columns_refuses_a_batch_size_below_one(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Batch size must be greater than 0');
 
@@ -163,8 +169,9 @@ class PaginationTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_columns_refuses_a_limit_of_zero(ParquetEngine $engine): void
+    public function test_columns_refuses_a_limit_of_zero(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Limit must be greater than 0');
 
@@ -176,8 +183,9 @@ class PaginationTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_columns_refuses_a_negative_offset_without_a_limit(ParquetEngine $engine): void
+    public function test_columns_refuses_a_negative_offset_without_a_limit(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Offset must be greater than or equal to 0');
 
@@ -189,8 +197,9 @@ class PaginationTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_columns_refuses_an_unknown_column(ParquetEngine $engine): void
+    public function test_columns_refuses_an_unknown_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Column "nope" does not exist');
 
@@ -202,8 +211,9 @@ class PaginationTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_values_equal_the_zip_of_columns(ParquetEngine $engine): void
+    public function test_values_equal_the_zip_of_columns(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $file = (new Reader(engine: $engine))->read(__DIR__
         . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet');
 
@@ -221,8 +231,9 @@ class PaginationTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_simple_pagination_on_small_row_group_size(ParquetEngine $engine): void
+    public function test_simple_pagination_on_small_row_group_size(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = __DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet';
 
         // Uncomment only to apply changes to the dataset

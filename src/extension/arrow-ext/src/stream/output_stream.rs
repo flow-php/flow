@@ -1,19 +1,23 @@
-use ext_php_rs::args::Arg;
+use ext_php_rs::args::{Arg, ArgInfoTables};
 use ext_php_rs::builders::{ClassBuilder, FunctionBuilder};
 use ext_php_rs::error::Result;
 use ext_php_rs::flags::{ClassFlags, DataType, MethodFlags};
 use ext_php_rs::zend::ClassEntry;
 
-fn noop(_ce: &'static mut ClassEntry) {}
+use crate::interfaces::keep;
+
+fn store(_ce: &'static mut ClassEntry, arg_info: ArgInfoTables) {
+    keep(arg_info);
+}
 
 pub fn register() -> Result<()> {
     ClassBuilder::new("Flow\\Arrow\\OutputStream")
         .flags(ClassFlags::Interface)
-        .registration(noop)
+        .registration(store)
         .method(
             FunctionBuilder::new_abstract("append")
                 .arg(Arg::new("data", DataType::String))
-                .returns(DataType::Object(Some("self")), false, false),
+                .returns(DataType::object("self"), false, false),
             MethodFlags::Public | MethodFlags::Abstract,
         )
         .register()?;

@@ -8,6 +8,7 @@ use Flow\ETL\Extractor\SourceFile;
 use Flow\ETL\Schema\Inference\ColumnTypes;
 use Flow\ETL\Schema\Inference\SchemaInference;
 use Flow\ETL\Schema\Inference\SniffsColumnTypes;
+use Flow\Filesystem\Filesystem;
 use Flow\Types\Type\TypeNarrower;
 use Generator;
 use IteratorAggregate;
@@ -20,7 +21,8 @@ final class CSVFileSample implements IteratorAggregate, SniffsColumnTypes
     private ?CSVSampledRows $sampled = null;
 
     public function __construct(
-        private readonly CSVSourceOpener $opener,
+        private readonly Filesystem $filesystem,
+        private readonly CSVReadOptions $options,
         private readonly SourceFile $source,
     ) {}
 
@@ -31,7 +33,7 @@ final class CSVFileSample implements IteratorAggregate, SniffsColumnTypes
      */
     public function getIterator(): Generator
     {
-        $open = $this->opener->open($this->source);
+        $open = new AdaptiveCSVOpenSource($this->filesystem, $this->source, $this->options);
 
         try {
             yield from $open->records();
@@ -46,7 +48,7 @@ final class CSVFileSample implements IteratorAggregate, SniffsColumnTypes
         SchemaInference $inference,
         TypeNarrower $typer,
     ): ColumnTypes {
-        $open = $this->opener->open($this->source);
+        $open = new AdaptiveCSVOpenSource($this->filesystem, $this->source, $this->options);
 
         try {
             $columnTypes = $open->sniff($names, $rowBudget, $inference, $typer);

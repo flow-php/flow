@@ -112,7 +112,11 @@ impl KindBuilder {
     pub fn append_null(&mut self) {
         match self {
             KindBuilder::Null { len } => *len += 1,
-            KindBuilder::Fixed { width, values, validity } => {
+            KindBuilder::Fixed {
+                width,
+                values,
+                validity,
+            } => {
                 values.resize(values.len() + *width, 0);
                 validity.append_null();
             }
@@ -126,7 +130,11 @@ impl KindBuilder {
                 offsets.push(*offsets.last().expect("offsets start at 0"));
                 validity.append_null();
             }
-            KindBuilder::Struct { len, validity, children } => {
+            KindBuilder::Struct {
+                len,
+                validity,
+                children,
+            } => {
                 *len += 1;
                 validity.append_null();
 
@@ -157,7 +165,12 @@ impl KindBuilder {
     }
 
     pub fn append_bytes(&mut self, bytes: &[u8]) -> Result<(), OffsetOverflow> {
-        let KindBuilder::Bytes { offsets, data, validity } = self else {
+        let KindBuilder::Bytes {
+            offsets,
+            data,
+            validity,
+        } = self
+        else {
             unreachable!("append_bytes on a non bytes kind");
         };
 
@@ -189,8 +202,17 @@ impl KindBuilder {
     /// Closes a valid list or map row over the elements appended since the previous row.
     pub fn end_entries(&mut self) -> Result<(), OffsetOverflow> {
         let (offsets, validity, len) = match self {
-            KindBuilder::List { offsets, validity, element } => (offsets, validity, element.len()),
-            KindBuilder::Map { offsets, validity, keys, .. } => (offsets, validity, keys.len()),
+            KindBuilder::List {
+                offsets,
+                validity,
+                element,
+            } => (offsets, validity, element.len()),
+            KindBuilder::Map {
+                offsets,
+                validity,
+                keys,
+                ..
+            } => (offsets, validity, keys.len()),
             _ => unreachable!("end_entries on a non list/map kind"),
         };
 
@@ -222,7 +244,11 @@ impl KindBuilder {
     pub fn truncate(&mut self, len: usize) {
         match self {
             KindBuilder::Null { len: rows } => *rows = len,
-            KindBuilder::Fixed { width, values, validity } => {
+            KindBuilder::Fixed {
+                width,
+                values,
+                validity,
+            } => {
                 values.truncate(len * *width);
                 validity.truncate(len);
             }
@@ -230,23 +256,40 @@ impl KindBuilder {
                 values.truncate(len);
                 validity.truncate(len);
             }
-            KindBuilder::Bytes { offsets, data, validity } => {
+            KindBuilder::Bytes {
+                offsets,
+                data,
+                validity,
+            } => {
                 offsets.truncate(len + 1);
                 data.truncate(offsets[len] as usize);
                 validity.truncate(len);
             }
-            KindBuilder::List { offsets, validity, element } => {
+            KindBuilder::List {
+                offsets,
+                validity,
+                element,
+            } => {
                 offsets.truncate(len + 1);
                 element.truncate(offsets[len] as usize);
                 validity.truncate(len);
             }
-            KindBuilder::Map { offsets, validity, keys, values } => {
+            KindBuilder::Map {
+                offsets,
+                validity,
+                keys,
+                values,
+            } => {
                 offsets.truncate(len + 1);
                 keys.truncate(offsets[len] as usize);
                 values.truncate(offsets[len] as usize);
                 validity.truncate(len);
             }
-            KindBuilder::Struct { len: rows, validity, children } => {
+            KindBuilder::Struct {
+                len: rows,
+                validity,
+                children,
+            } => {
                 *rows = len;
                 validity.truncate(len);
 
@@ -268,8 +311,12 @@ impl KindBuilder {
         match kind {
             Kind::Null => unreachable!("appended above"),
             Kind::Int64 => self.append_fixed(&array.as_primitive::<Int64Type>().value(i).to_le_bytes()),
-            Kind::Timestamp => self.append_fixed(&array.as_primitive::<TimestampMicrosecondType>().value(i).to_le_bytes()),
-            Kind::Duration => self.append_fixed(&array.as_primitive::<DurationMicrosecondType>().value(i).to_le_bytes()),
+            Kind::Timestamp => {
+                self.append_fixed(&array.as_primitive::<TimestampMicrosecondType>().value(i).to_le_bytes())
+            }
+            Kind::Duration => {
+                self.append_fixed(&array.as_primitive::<DurationMicrosecondType>().value(i).to_le_bytes())
+            }
             Kind::Int32 => self.append_fixed(&array.as_primitive::<Date32Type>().value(i).to_le_bytes()),
             Kind::Float64 => self.append_fixed(&array.as_primitive::<Float64Type>().value(i).to_le_bytes()),
             Kind::Uuid => self.append_fixed(array.as_fixed_size_binary().value(i)),
@@ -280,7 +327,8 @@ impl KindBuilder {
                 let offsets = list.value_offsets();
 
                 for j in offsets[i] as usize..offsets[i + 1] as usize {
-                    self.list_element().append_from(list.values().as_ref(), &element.kind, j)?;
+                    self.list_element()
+                        .append_from(list.values().as_ref(), &element.kind, j)?;
                 }
 
                 self.end_entries()?;
@@ -323,15 +371,37 @@ impl KindBuilder {
             (KindBuilder::Boolean { values, validity }, _) => builder
                 .nulls(validity.finish_cloned())
                 .add_buffer(values.finish_cloned().into_inner()),
-            (KindBuilder::Bytes { offsets, data, validity }, _) => builder
+            (
+                KindBuilder::Bytes {
+                    offsets,
+                    data,
+                    validity,
+                },
+                _,
+            ) => builder
                 .nulls(validity.finish_cloned())
                 .add_buffer(Buffer::from_slice_ref(offsets))
                 .add_buffer(Buffer::from_slice_ref(data)),
-            (KindBuilder::List { offsets, validity, element }, Kind::List(field)) => builder
+            (
+                KindBuilder::List {
+                    offsets,
+                    validity,
+                    element,
+                },
+                Kind::List(field),
+            ) => builder
                 .nulls(validity.finish_cloned())
                 .add_buffer(Buffer::from_slice_ref(offsets))
                 .add_child_data(element.finish(&field.kind)?),
-            (KindBuilder::Map { offsets, validity, keys, values }, Kind::Map(key, value)) => {
+            (
+                KindBuilder::Map {
+                    offsets,
+                    validity,
+                    keys,
+                    values,
+                },
+                Kind::Map(key, value),
+            ) => {
                 let arrow_schema::DataType::Map(entries, _) = data_type(kind) else {
                     unreachable!("a map kind has a map data type")
                 };
@@ -346,15 +416,15 @@ impl KindBuilder {
                     .add_buffer(Buffer::from_slice_ref(offsets))
                     .add_child_data(entries)
             }
-            (KindBuilder::Struct { validity, children, .. }, Kind::Struct(fields)) => builder
-                .nulls(validity.finish_cloned())
-                .child_data(
+            (KindBuilder::Struct { validity, children, .. }, Kind::Struct(fields)) => {
+                builder.nulls(validity.finish_cloned()).child_data(
                     children
                         .iter()
                         .zip(fields)
                         .map(|(child, field)| child.finish(&field.kind))
                         .collect::<Result<_, _>>()?,
-                ),
+                )
+            }
             _ => unreachable!("a builder is finished with the kind it was built for"),
         };
 
@@ -418,8 +488,19 @@ mod tests {
         let structure = array.as_struct();
 
         assert_eq!(array.len(), 1);
-        assert_eq!(structure.column(0).as_primitive::<Int64Type>().values().to_vec(), vec![1]);
-        assert_eq!(structure.column(1).as_list::<i32>().values().as_binary::<i32>().value(0), b"kept");
+        assert_eq!(
+            structure.column(0).as_primitive::<Int64Type>().values().to_vec(),
+            vec![1]
+        );
+        assert_eq!(
+            structure
+                .column(1)
+                .as_list::<i32>()
+                .values()
+                .as_binary::<i32>()
+                .value(0),
+            b"kept"
+        );
         assert_eq!(structure.column(1).as_list::<i32>().values().len(), 1);
         assert_eq!(structure.column(2).as_map().keys().len(), 1);
     }

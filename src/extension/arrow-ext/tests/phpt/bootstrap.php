@@ -30,3 +30,37 @@ function arrow_refused(string $outcome): bool
 {
     return (bool) preg_match('/^[A-Za-z\\\\]+(Exception|Error|Overflow): /', $outcome);
 }
+
+/**
+ * JSON of the interfaces arrow registers as reflection sees them: methods, parameters, types, optional, variadic, by-ref.
+ */
+function arrow_interfaces_reflection(): string
+{
+    $interfaces = [];
+
+    foreach ([
+        'Flow\\Parquet\\ParquetEngine',
+        'Flow\\Parquet\\ParquetFileReader',
+        'Flow\\Parquet\\ParquetFileWriter',
+        'Flow\\Arrow\\OutputStream',
+        'Flow\\Arrow\\RandomAccessFile',
+    ] as $name) {
+        $class = new ReflectionClass($name);
+        $interfaces[$name] = [
+            $class->isInterface(),
+            array_map(static fn(ReflectionMethod $method): array => [
+                $method->getName(),
+                (string) $method->getReturnType(),
+                array_map(static fn(ReflectionParameter $parameter): array => [
+                    $parameter->getName(),
+                    (string) $parameter->getType(),
+                    $parameter->isOptional(),
+                    $parameter->isVariadic(),
+                    $parameter->isPassedByReference(),
+                ], $method->getParameters()),
+            ], $class->getMethods()),
+        ];
+    }
+
+    return (string) json_encode($interfaces);
+}

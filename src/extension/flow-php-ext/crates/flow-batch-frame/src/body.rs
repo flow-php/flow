@@ -116,9 +116,7 @@ pub fn decode_body(body: &[u8], kinds: &[Kind]) -> Result<(u32, Vec<ArrayData>),
         return Err(Error::DirectoryTruncated);
     }
 
-    let words: Vec<u32> = (0..words_len)
-        .map(|_| directory.u32())
-        .collect::<Result<_, _>>()?;
+    let words: Vec<u32> = (0..words_len).map(|_| directory.u32()).collect::<Result<_, _>>()?;
     let area = &body[area_start..];
     let mut node = 0;
     let mut extent = 2 * expected_nodes;
@@ -163,8 +161,7 @@ pub fn decode_body(body: &[u8], kinds: &[Kind]) -> Result<(u32, Vec<ArrayData>),
                     return Err(Error::BufferShorterThanPrefix { buffer });
                 }
 
-                let prefix =
-                    i64::from_le_bytes(area[offset..offset + 8].try_into().expect("8-byte slice"));
+                let prefix = i64::from_le_bytes(area[offset..offset + 8].try_into().expect("8-byte slice"));
 
                 if prefix != RAW {
                     return Err(Error::CompressedBuffer { buffer, prefix });
@@ -187,9 +184,7 @@ pub fn decode_body(body: &[u8], kinds: &[Kind]) -> Result<(u32, Vec<ArrayData>),
         if node_count(kind) == 1 {
             node += 1;
         } else {
-            for (derived_length, derived_nulls) in
-                nodes(kind, length, null_count, &buffers).map_err(malformed)?
-            {
+            for (derived_length, derived_nulls) in nodes(kind, length, null_count, &buffers).map_err(malformed)? {
                 if words[2 * node] != derived_length || words[2 * node + 1] != derived_nulls {
                     return Err(Error::NodesDisagree { column: index });
                 }

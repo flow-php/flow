@@ -8,16 +8,12 @@ use Flow\ETL\Extractor\SelfDescribingFile;
 use Flow\ETL\Extractor\SourceFile;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\Schema;
-use Flow\Parquet\ParquetFileReader;
 
 /**
  * The schema pass's first file: close() leaves it open for the read that follows; the extractor closes it.
  */
 final readonly class ParquetSchemaPassFile implements SelfDescribingFile
 {
-    /**
-     * @param ParquetSourceFile<ParquetFileReader> $file
-     */
     public function __construct(
         private ParquetSourceFile $file,
     ) {}

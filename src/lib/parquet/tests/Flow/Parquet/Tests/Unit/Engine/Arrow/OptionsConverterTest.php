@@ -13,6 +13,28 @@ use PHPUnit\Framework\TestCase;
 
 final class OptionsConverterTest extends TestCase
 {
+    public function test_engine_options_default_without_options(): void
+    {
+        static::assertSame(
+            [
+                'INT_96_AS_DATETIME' => true,
+                'ARROW_WRITE_BATCH_SIZE' => (new Options())->getInt(Option::ARROW_WRITE_BATCH_SIZE),
+            ],
+            OptionsConverter::toEngine(null),
+        );
+    }
+
+    public function test_engine_options_are_read_from_the_options(): void
+    {
+        static::assertSame(
+            ['INT_96_AS_DATETIME' => false, 'ARROW_WRITE_BATCH_SIZE' => 7],
+            OptionsConverter::toEngine((new Options())->set(Option::INT_96_AS_DATETIME, false)->set(
+                Option::ARROW_WRITE_BATCH_SIZE,
+                7,
+            )),
+        );
+    }
+
     public function test_arrow_batch_size_is_excluded_when_null(): void
     {
         $options = new Options();

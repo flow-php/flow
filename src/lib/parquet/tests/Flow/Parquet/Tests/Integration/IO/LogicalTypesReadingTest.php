@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Integration\IO;
 
 use Flow\Parquet\Engine\PhpParquetEngine;
-use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\ConvertedType;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
@@ -14,6 +13,7 @@ use Flow\Parquet\ParquetFile\Schema\Repetition;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Tests\Context\TemporalValues;
 use Flow\Parquet\Tests\Context\TestParquetFile;
+use Flow\Parquet\Tests\Mother\ParquetEngineMother;
 use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -22,8 +22,9 @@ use function iterator_to_array;
 final class LogicalTypesReadingTest extends ParquetIntegrationTestCase
 {
     #[DataProvider('engine_provider')]
-    public function test_reading_converted_type_only_columns(ParquetEngine $engine): void
+    public function test_reading_converted_type_only_columns(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         (new Writer(engine: new PhpParquetEngine()))->write(
@@ -72,8 +73,9 @@ final class LogicalTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_dates(ParquetEngine $engine): void
+    public function test_reading_dates(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         static::assertSame(
             [
                 ['d' => '2020-01-02 00:00:00.000000 +00:00'],
@@ -89,8 +91,9 @@ final class LogicalTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_fixed_len_decimals(ParquetEngine $engine): void
+    public function test_reading_fixed_len_decimals(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         static::assertSame(
             [
                 [
@@ -111,8 +114,9 @@ final class LogicalTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_int_backed_decimals(ParquetEngine $engine): void
+    public function test_reading_int_backed_decimals(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         static::assertSame(
             [
                 ['dec9' => 12345.67, 'dec18' => 1234567890123456.8],
@@ -128,8 +132,9 @@ final class LogicalTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_times_in_every_unit(ParquetEngine $engine): void
+    public function test_reading_times_in_every_unit(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         static::assertSame(
             [
                 ['t_ms' => '03:04:05.678000', 't_us' => '03:04:05.678901', 't_ns' => '03:04:05.678901'],
@@ -145,8 +150,9 @@ final class LogicalTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_timestamps_in_every_unit(ParquetEngine $engine): void
+    public function test_reading_timestamps_in_every_unit(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         static::assertSame(
             [
                 [

@@ -20,8 +20,8 @@ use ext_php_rs::zend::{ClassEntry, Function};
 use crate::exception::ext_exception;
 use crate::parquet::error::Error;
 use crate::php::{
-    call_handle_transparent, ce_method_ref, find_class, ht_for_each, ht_get, ht_insert, ht_insert_long,
-    read_property, zval_long, zval_str,
+    call_handle_transparent, ce_method_ref, find_class, ht_for_each, ht_get, ht_insert, ht_insert_long, read_property,
+    zval_long, zval_str,
 };
 use crate::values::{date_from_days, datetime_days, datetime_from_micros, datetime_micros, uuid_bytes, uuid_text};
 
@@ -99,7 +99,10 @@ impl ReadCell {
                     .iter()
                     .enumerate()
                     .map(|(index, field)| {
-                        Ok((field.name().as_bytes().to_vec(), Self::new(field.data_type(), child(parquet, index)?)?))
+                        Ok((
+                            field.name().as_bytes().to_vec(),
+                            Self::new(field.data_type(), child(parquet, index)?)?,
+                        ))
                     })
                     .collect::<Result<_, Error>>()?,
             ),
@@ -179,7 +182,9 @@ impl ReadCell {
                 let mut values = ZendHashTable::with_capacity((offsets[row + 1] - offsets[row]) as u32);
 
                 for index in offsets[row] as usize..offsets[row + 1] as usize {
-                    values.push(element.value(list.values().as_ref(), index, times)?).map_err(collected)?;
+                    values
+                        .push(element.value(list.values().as_ref(), index, times)?)
+                        .map_err(collected)?;
                 }
 
                 zv.set_hashtable(values);
@@ -258,7 +263,10 @@ impl Times {
             return self.time_of_day(micros);
         }
 
-        let base = self.base.object().ok_or_else(|| ext_exception("arrow expected a TIME base datetime"))?;
+        let base = self
+            .base
+            .object()
+            .ok_or_else(|| ext_exception("arrow expected a TIME base datetime"))?;
         let target = call_handle_transparent(
             self.modify,
             Some(base),
@@ -290,7 +298,11 @@ impl Times {
 
         // __set_state() stores `f` as (int) (f * 1e6): the half microsecond keeps the truncation on the exact value
         // (0.519488 * 1e6 = 519487.99…), and `f` reads back as that value / 1e6, as diff()'s does
-        ht_insert(&mut state, b"f", double(((micros % 1_000_000) as f64 + 0.5) / 1_000_000.0));
+        ht_insert(
+            &mut state,
+            b"f",
+            double(((micros % 1_000_000) as f64 + 0.5) / 1_000_000.0),
+        );
         ht_insert(&mut state, b"invert", zval_long(0));
         ht_insert(&mut state, b"days", zval_long(0));
         let mut from_string = Zval::new();
@@ -303,7 +315,6 @@ impl Times {
         call_handle_transparent(self.set_state, None, &mut [array])
     }
 }
-
 
 /// A value `WriteCell::check` refuses.
 pub enum Refusal {
@@ -437,7 +448,9 @@ impl<'a> Checked<'a> for Scalar<'a> {
 
     fn fits(&self, _: &WriteCell, builder: &mut ColumnBuilder) -> bool {
         match (self, builder) {
-            (Scalar::Bytes(bytes), ColumnBuilder::Bytes(builder)) => offsets_fit(builder.values_slice().len(), bytes.len()),
+            (Scalar::Bytes(bytes), ColumnBuilder::Bytes(builder)) => {
+                offsets_fit(builder.values_slice().len(), bytes.len())
+            }
             _ => true,
         }
     }
@@ -502,8 +515,13 @@ impl StructColumnBuilder {
         let children = self.children.iter().map(ArrayBuilder::finish_cloned).collect();
 
         Arc::new(
-            StructArray::try_new_with_length(self.fields.clone(), children, self.nulls.finish_cloned(), self.nulls.len())
-                .expect("every child appends a slot per struct slot"),
+            StructArray::try_new_with_length(
+                self.fields.clone(),
+                children,
+                self.nulls.finish_cloned(),
+                self.nulls.len(),
+            )
+            .expect("every child appends a slot per struct slot"),
         )
     }
 }
@@ -516,14 +534,17 @@ impl ColumnBuilder {
             DataType::Int64 => ColumnBuilder::Int(Int64Builder::with_capacity(capacity)),
             DataType::Float64 => ColumnBuilder::Float(Float64Builder::with_capacity(capacity)),
             DataType::Binary => ColumnBuilder::Bytes(BinaryBuilder::with_capacity(capacity, 1024)),
-            DataType::FixedSizeBinary(size) => ColumnBuilder::Uuid(FixedSizeBinaryBuilder::with_capacity(capacity, *size)),
+            DataType::FixedSizeBinary(size) => {
+                ColumnBuilder::Uuid(FixedSizeBinaryBuilder::with_capacity(capacity, *size))
+            }
             DataType::Date32 => ColumnBuilder::Date(Date32Builder::with_capacity(capacity)),
             DataType::Timestamp(_, _) => ColumnBuilder::Timestamp(
                 TimestampMicrosecondBuilder::with_capacity(capacity).with_data_type(canonical.clone()),
             ),
             DataType::Duration(_) => ColumnBuilder::Time(DurationMicrosecondBuilder::with_capacity(capacity)),
             DataType::List(element) => ColumnBuilder::List(Box::new(
-                ListBuilder::with_capacity(Self::new(element.data_type(), capacity), capacity).with_field(Arc::clone(element)),
+                ListBuilder::with_capacity(Self::new(element.data_type(), capacity), capacity)
+                    .with_field(Arc::clone(element)),
             )),
             DataType::Map(entries, _) => {
                 let DataType::Struct(fields) = entries.data_type() else {
@@ -547,7 +568,10 @@ impl ColumnBuilder {
             }
             DataType::Struct(fields) => ColumnBuilder::Struct(Box::new(StructColumnBuilder {
                 fields: fields.clone(),
-                children: fields.iter().map(|field| Self::new(field.data_type(), capacity)).collect(),
+                children: fields
+                    .iter()
+                    .map(|field| Self::new(field.data_type(), capacity))
+                    .collect(),
                 nulls: NullBufferBuilder::new(capacity),
             })),
             other => unreachable!("WriteCell::new() builds no {other} column"),
@@ -619,7 +643,9 @@ impl ArrayBuilder for ColumnBuilder {
 
 /// Offsets stay i32: `current` entries plus `added` must not pass `i32::MAX`.
 fn offsets_fit(current: usize, added: usize) -> bool {
-    current.checked_add(added).is_some_and(|total| total <= i32::MAX as usize)
+    current
+        .checked_add(added)
+        .is_some_and(|total| total <= i32::MAX as usize)
 }
 
 /// What a writer column accepts per `PhpParquetEngine`'s target type, appended to its canonical type's builder; the
@@ -661,9 +687,10 @@ impl WriteCell {
             DataType::FixedSizeBinary(16) if is_uuid(target) => (WriteCell::Uuid, DataType::FixedSizeBinary(16)),
             DataType::FixedSizeBinary(_) => (WriteCell::Bytes, DataType::Binary),
             DataType::Date32 => (WriteCell::Date, DataType::Date32),
-            DataType::Timestamp(_, _) => {
-                (WriteCell::Timestamp, DataType::Timestamp(TimeUnit::Microsecond, Some("UTC".into())))
-            }
+            DataType::Timestamp(_, _) => (
+                WriteCell::Timestamp,
+                DataType::Timestamp(TimeUnit::Microsecond, Some("UTC".into())),
+            ),
             DataType::Time32(_) | DataType::Time64(_) => (WriteCell::Time, DataType::Duration(TimeUnit::Microsecond)),
             DataType::List(element) => {
                 let (cell, canonical) = Self::new(element)?;
@@ -717,7 +744,11 @@ impl WriteCell {
         let value = value.dereference();
 
         if value.is_null() {
-            return if nullable { Ok(Scalar::Null) } else { Err(refused("a value", value)) };
+            return if nullable {
+                Ok(Scalar::Null)
+            } else {
+                Err(refused("a value", value))
+            };
         }
 
         Ok(match self {
@@ -729,9 +760,7 @@ impl WriteCell {
                 (_, Some(int)) => int as f64,
                 _ => return Err(refused("float or int", value)),
             }),
-            WriteCell::Bytes => {
-                Scalar::Bytes(value.zend_str().ok_or_else(|| refused("string", value))?.as_bytes())
-            }
+            WriteCell::Bytes => Scalar::Bytes(value.zend_str().ok_or_else(|| refused("string", value))?.as_bytes()),
             WriteCell::Uuid => {
                 let text = match value.object() {
                     Some(object) => uuid_text_of(object)?.ok_or_else(|| refused("uuid string or object", value))?,
@@ -769,7 +798,9 @@ impl WriteCell {
 
                 Scalar::Micros(interval_micros(interval, value)?)
             }
-            WriteCell::List(_, _) | WriteCell::Map(_, _, _) | WriteCell::Struct(_) => return Err(refused("array", value)),
+            WriteCell::List(_, _) | WriteCell::Map(_, _, _) | WriteCell::Struct(_) => {
+                return Err(refused("array", value))
+            }
         })
     }
 
@@ -778,7 +809,11 @@ impl WriteCell {
         let value = value.dereference();
 
         if value.is_null() {
-            return if nullable { Ok(Validated::Scalar(Scalar::Null)) } else { Err(refused("a value", value)) };
+            return if nullable {
+                Ok(Validated::Scalar(Scalar::Null))
+            } else {
+                Err(refused("a value", value))
+            };
         }
 
         Ok(match self {
@@ -895,8 +930,11 @@ impl WriteCell {
                     && key.fits(key_builder, &keys)
                     && value.fits(value_builder, &items)
             }
-            (WriteCell::Struct(children), ColumnBuilder::Struct(structure)) => {
-                children.iter().zip(&mut structure.children).enumerate().all(|(index, ((_, cell, _), child))| {
+            (WriteCell::Struct(children), ColumnBuilder::Struct(structure)) => children
+                .iter()
+                .zip(&mut structure.children)
+                .enumerate()
+                .all(|(index, ((_, cell, _), child))| {
                     let values = values
                         .iter()
                         .filter_map(|value| match value {
@@ -906,8 +944,7 @@ impl WriteCell {
                         .collect::<Vec<_>>();
 
                     cell.fits(child, &values)
-                })
-            }
+                }),
             _ => true,
         }
     }
@@ -967,7 +1004,10 @@ impl WriteCell {
 
     /// Whether this cell holds one value per row: no list, map or struct.
     pub fn is_scalar(&self) -> bool {
-        !matches!(self, WriteCell::List(_, _) | WriteCell::Map(_, _, _) | WriteCell::Struct(_))
+        !matches!(
+            self,
+            WriteCell::List(_, _) | WriteCell::Map(_, _, _) | WriteCell::Struct(_)
+        )
     }
 
     /// A null slot; a struct's children get one too.
@@ -990,7 +1030,9 @@ impl WriteCell {
             (_, ColumnBuilder::Time(builder)) => builder.append_null(),
             (_, ColumnBuilder::List(builder)) => builder.append_null(),
             (_, ColumnBuilder::Map(builder)) => builder.append(false).expect("a null map appends no entries"),
-            (_, ColumnBuilder::Struct(_)) => unreachable!("only a struct cell builds a struct column"),
+            (_, ColumnBuilder::Struct(_)) => {
+                unreachable!("only a struct cell builds a struct column")
+            }
         }
     }
 }
@@ -1018,7 +1060,11 @@ fn method_long(object: &ZendObject, method: &str, args: &mut [Zval]) -> Result<i
 
     result
         .long()
-        .or_else(|| result.zend_str().and_then(|text| std::str::from_utf8(text.as_bytes()).ok()?.parse().ok()))
+        .or_else(|| {
+            result
+                .zend_str()
+                .and_then(|text| std::str::from_utf8(text.as_bytes()).ok()?.parse().ok())
+        })
         .ok_or_else(|| ext_exception(format!("arrow expected {method}() to return an int")))
 }
 
@@ -1027,7 +1073,10 @@ fn fallback_micros(datetime: &ZendObject) -> Result<i64, Refusal> {
     let seconds = method_long(datetime, "getTimestamp", &mut [])?;
     let micros = method_long(datetime, "format", &mut [zval_str(b"u")])?;
 
-    seconds.checked_mul(1_000_000).and_then(|us| us.checked_add(micros)).ok_or(Refusal::Overflow)
+    seconds
+        .checked_mul(1_000_000)
+        .and_then(|us| us.checked_add(micros))
+        .ok_or(Refusal::Overflow)
 }
 
 /// `(getTimestamp() + getOffset())` floored to days, for a datetime timelib has not brought up to date.
@@ -1052,8 +1101,8 @@ fn interval_micros(interval: &ZendObject, value: &Zval) -> Result<i64, Refusal> 
     let seconds = ((interval_part(interval, "d")? * 24 + interval_part(interval, "h")?) * 3_600
         + interval_part(interval, "i")? * 60
         + interval_part(interval, "s")?)
-        .checked_mul(1_000_000)
-        .ok_or(Refusal::Overflow)?;
+    .checked_mul(1_000_000)
+    .ok_or(Refusal::Overflow)?;
     let fraction = (read_property(interval, "f")?.double().unwrap_or_default() * 1_000_000.0) as i64;
 
     seconds.checked_add(fraction).ok_or(Refusal::Overflow)

@@ -4,15 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Unit;
 
-use Flow\ETL\Adapter\Parquet\EngineParquetOpener;
-use Flow\ETL\Adapter\Parquet\EngineParquetOpenSource;
 use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetSourceFileContext;
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Extractor\SourceFile;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
-use Flow\Parquet\Engine\PhpParquetEngine;
-use Flow\Parquet\Options;
 
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
@@ -29,14 +26,19 @@ final class ParquetSourceFileTest extends FlowTestCase
         static::assertSame($filesystem->readFromCalls, $filesystem->closedStreams());
     }
 
-    public function test_open_hands_the_file_to_the_opener(): void
+    public function test_open_reads_the_batches_of_the_file(): void
     {
         $file = ParquetSourceFileContext::over(new NativeLocalFilesystem());
+        $source = $file->open();
+        $counts = [];
 
-        static::assertEquals(
-            new EngineParquetOpenSource($file->file),
-            $file->open(new EngineParquetOpener(new PhpParquetEngine(), Options::default())),
-        );
+        foreach ($source->batches(schema(int_schema('id')), 400, 100, 850, new PhpBackend()) as $rows) {
+            $counts[] = $rows->count();
+        }
+
+        $source->close();
+
+        static::assertSame([400, 400, 50], $counts);
     }
 
     public function test_schema_comes_from_the_file_footer(): void

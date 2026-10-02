@@ -6,12 +6,12 @@ nested values cast natively, handed to the PHP lane half-appended, and refused l
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Column\DefaultBackend;
+use Flow\ETL\Column\RustBackend;
 
 use function Flow\ETL\DSL\{list_schema, map_schema, structure_schema};
 use function Flow\Types\DSL\{structure_element, type_datetime, type_integer, type_list, type_map, type_optional, type_string, type_structure};
 
-$backend = new DefaultBackend();
+$backend = new RustBackend();
 $orders = structure_schema('order', type_structure([
     'id' => structure_element('id', type_integer()),
     'tags' => structure_element('tags', type_list(type_string())),

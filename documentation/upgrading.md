@@ -230,15 +230,17 @@ after it shift by one. `Stage::physical` is new - see the core documentation.
 | `a,b` / `"x\"y",1` / `"p",2` | 1 row: `{"a":"x\\\"y","b":"1\n\"p\""}` | 2 rows: `{"a":"x\\\"y","b":1}`, `{"a":"p","b":2}` |
 | `a,b` / `x"y,1` / `"p",2`    | 1 row: `{"a":"x\"y","b":"1\n\"p\""}`   | 2 rows: `{"a":"x\"y","b":1}`, `{"a":"p","b":2}`   |
 
-### 23) `flow-php/etl-adapter-csv` - `CSVOpenSource` is an interface, `CSVLineReader` takes the separator and escape
+### 23) `flow-php/etl-adapter-csv` - `CSVOpenSource` is an interface, `CSVSourceOpener` removed, `CSVLineReader` takes the separator and escape
 
-| Before                                                                     | After                                                                                          |
-|----------------------------------------------------------------------------|------------------------------------------------------------------------------------------------|
-| `new CSVLineReader($enclosure, $charactersReadInLine, $removeBOM)`         | `new CSVLineReader($enclosure, $separator, $escape, $charactersReadInLine, $removeBOM)`        |
-| `new CSVOpenSource($stream, $dialect, $encoder, $lineReader)`              | `new PhpCSVOpenSource($stream, $encoder, $lineReader)`; `CSVOpenSource` is its interface       |
-| `$open->stream`, `$open->dialect`, `$open->encoder`, `$open->lineReader`   | removed                                                                                        |
-| `CSVFileReader::samples()` yields `Generator`s                             | yields `CSVFileSample` (`IteratorAggregate`); `$unit->getIterator()` for the generator         |
-| `CSVFileReader::sample($source)`                                           | `new CSVFileSample($opener, $source)`                                                          |
+| Before                                                                                     | After                                                                                                                                                                                             |
+|--------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `new CSVLineReader($enclosure, $charactersReadInLine, $removeBOM)`                         | `new CSVLineReader($enclosure, $separator, $escape, $charactersReadInLine, $removeBOM)`                                                                                                           |
+| `final class CSVOpenSource`, `new CSVOpenSource($stream, $dialect, $encoder, $lineReader)` | `interface CSVOpenSource`, implemented by `PhpCSVOpenSource` (`new PhpCSVOpenSource($stream, $decoder, $lineReader)`, a `CSVDecoder`), `RustCSVOpenSource` (flow_php) and `AdaptiveCSVOpenSource` |
+| `$open->stream`, `$open->dialect`, `$open->encoder`, `$open->lineReader`                   | removed                                                                                                                                                                                           |
+| `(new CSVSourceOpener($filesystem, $options))->open($source)`                              | `new AdaptiveCSVOpenSource($filesystem, $source, $options)`                                                                                                                                       |
+| `new CSVFileReader($opener, $sources)`                                                     | `new CSVFileReader($filesystem, $options, $sources)`                                                                                                                                              |
+| `CSVFileReader::samples()` yields `Generator`s                                             | yields `CSVFileSample` (`IteratorAggregate`); `$unit->getIterator()` for the generator                                                                                                            |
+| `CSVFileReader::sample($source)`                                                           | `new CSVFileSample($filesystem, $options, $source)`                                                                                                                                               |
 
 ### 24) `flow-php/etl` - Floe footer carries a statistics block, existing `.floe` files must be rewritten
 
@@ -609,11 +611,11 @@ different instant; it now stays a `datetime` unless it is cast to a date explici
 
 ### 61) `flow-php/etl` - Floe takes a `Backend`
 
-| Before                                                                                    | After                                     |
-|-------------------------------------------------------------------------------------------|-------------------------------------------|
-| `?Hydrator $hydrator` on `FloeReader`, `FloeStreamReader`, `FloeSerializer`, `FloeMerger` | `Backend $backend = new DefaultBackend()` |
-| `?Hydrator $hydrator` on `FloeWriter`, `FloeStreamWriter`                                 | removed                                   |
-| `FloeMerger(Filesystem, ?Hydrator, Codec)`                                                | `FloeMerger(Filesystem, Backend, Codec)`  |
+| Before                                                                                    | After                                      |
+|-------------------------------------------------------------------------------------------|--------------------------------------------|
+| `?Hydrator $hydrator` on `FloeReader`, `FloeStreamReader`, `FloeSerializer`, `FloeMerger` | `Backend $backend = new AdaptiveBackend()` |
+| `?Hydrator $hydrator` on `FloeWriter`, `FloeStreamWriter`                                 | removed                                    |
+| `FloeMerger(Filesystem, ?Hydrator, Codec)`                                                | `FloeMerger(Filesystem, Backend, Codec)`   |
 
 ### 62) adapters - encoders split into decoders and encoders
 
@@ -621,7 +623,6 @@ different instant; it now stays a `datetime` unless it is cast to a date explici
 |--------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
 | `CSVEncoder::decode()`, `CSVEncoder::headers()`                                                                                      | `CSVDecoder::decode()`, `CSVDecoder::headers()`                                                                |
 | `new CSVEncoder(withHeader:, emptyToNull:, ...)`                                                                                     | `new CSVDecoder(withHeader:, emptyToNull:, ...)` - `CSVEncoder` keeps only the write options                   |
-| `PhpCSVOpenSource(..., CSVEncoder $encoder, ...)`                                                                                    | `PhpCSVOpenSource(..., CSVDecoder $decoder, ...)`                                                              |
 | `TextEncoder::decode()`                                                                                                              | removed - `TextExtractor` builds `['text' => $line]` rows itself                                               |
 | `XMLEncoder::decode()`                                                                                                               | removed - `XMLReaderExtractor` builds `['node' => $xml]` rows itself                                           |
 | `ExcelEncoder(withHeader:, convertEmptyToNull:, timeFormat:)`, `decode()`, `headers()`                                               | `ExcelDecoder(withHeader:, convertEmptyToNull:)` with `decode()`, `headers()`; `ExcelEncoder(timeFormat:)`     |
@@ -678,37 +679,35 @@ Project with `from_parquet(..., columns: [...])`. Change a type after reading, e
 | an XML/HTML value that cannot be converted to or from its string while building a column throws `FloeException`                                                                                            | throws `Flow\ETL\Exception\InvalidArgumentException`, same message                                                              |
 ### 67) `flow-php/flow-php-ext`, `flow-php/etl`, `flow-php/etl-adapter-csv` - the extension is the column backend
 
-| Before                                                                                                                                                                                  | After                                                                                                                                   |
-|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
-| `Flow\Floe\RustFloeEncoderNative`, `Flow\ETL\Row\RustRowHydratorNative`                                                                                                                 | removed                                                                                                                                 |
-| -                                                                                                                                                                                       | `flow_php` registers `Flow\ETL\Column\{Backend, Column, ColumnBuilder, DefaultBackend, NativeColumn, NativeColumnBuilder}`              |
-| any `flow_php` installs beside `flow-php/etl`                                                                                                                                           | Composer refuses `ext-flow_php` < 0.45 (`conflict`); forced past it: `Class "Flow\ETL\Column\DefaultBackend" not found`                 |
-| untagged builds report `0.44.1+65.g…`                                                                                                                                                   | `0.45.0-dev+65.g…` (next minor, pre-release)                                                                                            |
-| `Backend` has `builder`, `constant`, `decode`                                                                                                                                           | also `adopt(Definition, Column): Column` and `allocatedBytes(): int`; custom backends implement both                                    |
-| `Consumption` / `analyze()` / telemetry memory = `memory_get_usage()`                                                                                                                   | plus the configured backend's `allocatedBytes()` (native columns are not bound by `memory_limit`)                                       |
-| `new Consumption()`                                                                                                                                                                     | `new Consumption(Backend)`                                                                                                              |
-| `new TelemetryContext(Logger, Tracer, Meter, TelemetryOptions)`                                                                                                                         | `new TelemetryContext(Backend, Logger, Tracer, Meter, TelemetryOptions)`                                                                |
-| `new KWayMerge(References, int)`                                                                                                                                                        | `new KWayMerge(References, Backend, int)`                                                                                               |
-| `new Joiner(Expression, Join, int)`                                                                                                                                                     | `new Joiner(Expression, Join, Backend, int)`                                                                                            |
-| `AggregatedGroups::flush(int)`                                                                                                                                                          | `flush(int, FlowContext)`                                                                                                               |
-| `CountingProcessor::rows(int)`                                                                                                                                                          | `rows(int, Backend)`                                                                                                                    |
-| `BucketingConfigBuilder::build(Path)`, `SortAlgorithmBuilder`, `GroupByAlgorithmBuilder`, `JoinAlgorithmBuilder`, `RepartitionAlgorithmBuilder` and their implementations `build(Path)` | `build(Path, Backend)` - custom algorithm builders implement the new signature                                                          |
-| `new FilesystemBuckets(Filesystem, Path, int)`                                                                                                                                          | `new FilesystemBuckets(Filesystem, Path, Backend, int)` (required)                                                                      |
-| sort merges, joins, group-by, `count()`, spilled bucket reads and partition filters build with `DefaultBackend` or `PhpBackend`                                                         | the configured backend                                                                                                                  |
-| `Rows` rebuilds (`of`, the `concat` mixed lane, `matchTo` null fills, `unserialize()`), `Rows::join()`, `Rows::joinCross()` build with `PhpBackend`                                     | `DefaultBackend`: native columns with the extension loaded, even under a configured `PhpBackend`, and `Consumption` does not count them |
-| a CSV read with the extension and a configured `PhpBackend`                                                                                                                             | PHP columns (`Backend::adopt()`)                                                                                                        |
-| a native string/list column past 2 GiB of offsets                                                                                                                                       | `OffsetOverflow` at `concat()` / `appendMany()`, as at `encode()`                                                                       |
+| Before                                                                                                                                                                                  | After                                                                                                                                    |
+|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| `Flow\Floe\RustFloeEncoderNative`, `Flow\ETL\Row\RustRowHydratorNative`                                                                                                                 | removed                                                                                                                                  |
+| -                                                                                                                                                                                       | `flow_php` registers `Flow\ETL\Column\{Backend, Column, ColumnBuilder, RustBackend, RustColumn, RustColumnBuilder}`                      |
+| any `flow_php` installs beside `flow-php/etl`                                                                                                                                           | Composer refuses `ext-flow_php` < 0.45 (`conflict`); forced past it: `Class "Flow\ETL\Column\RustBackend" not found`                     |
+| untagged builds report `0.44.1+65.g…`                                                                                                                                                   | `0.45.0-dev+65.g…` (next minor, pre-release)                                                                                             |
+| `Backend` has `builder`, `constant`, `decode`                                                                                                                                           | also `adopt(Definition, Column): Column` and `allocatedBytes(): int`; custom backends implement both                                     |
+| `Consumption` / `analyze()` / telemetry memory = `memory_get_usage()`                                                                                                                   | plus the configured backend's `allocatedBytes()` (native columns are not bound by `memory_limit`)                                        |
+| `new Consumption()`                                                                                                                                                                     | `new Consumption(Backend)`                                                                                                               |
+| `new TelemetryContext(Logger, Tracer, Meter, TelemetryOptions)`                                                                                                                         | `new TelemetryContext(Backend, Logger, Tracer, Meter, TelemetryOptions)`                                                                 |
+| `new KWayMerge(References, int)`                                                                                                                                                        | `new KWayMerge(References, Backend, int)`                                                                                                |
+| `new Joiner(Expression, Join, int)`                                                                                                                                                     | `new Joiner(Expression, Join, Backend, int)`                                                                                             |
+| `AggregatedGroups::flush(int)`                                                                                                                                                          | `flush(int, FlowContext)`                                                                                                                |
+| `CountingProcessor::rows(int)`                                                                                                                                                          | `rows(int, Backend)`                                                                                                                     |
+| `BucketingConfigBuilder::build(Path)`, `SortAlgorithmBuilder`, `GroupByAlgorithmBuilder`, `JoinAlgorithmBuilder`, `RepartitionAlgorithmBuilder` and their implementations `build(Path)` | `build(Path, Backend)` - custom algorithm builders implement the new signature                                                           |
+| `new FilesystemBuckets(Filesystem, Path, int)`                                                                                                                                          | `new FilesystemBuckets(Filesystem, Path, Backend, int)` (required)                                                                       |
+| sort merges, joins, group-by, `count()`, spilled bucket reads and partition filters build with `AdaptiveBackend` or `PhpBackend`                                                        | the configured backend                                                                                                                   |
+| `Rows` rebuilds (`of`, the `concat` mixed lane, `matchTo` null fills, `unserialize()`), `Rows::join()`, `Rows::joinCross()` build with `PhpBackend`                                     | `AdaptiveBackend`: native columns with the extension loaded, even under a configured `PhpBackend`, and `Consumption` does not count them |
+| a CSV read with the extension and a configured `PhpBackend`                                                                                                                             | PHP columns (`Backend::adopt()`)                                                                                                         |
+| a native string/list column past 2 GiB of offsets                                                                                                                                       | `OffsetOverflow` at `concat()` / `appendMany()`, as at `encode()`                                                                        |
 
 ### 68) `flow-php/etl`, adapters - `RawRowValues` removed, CSV sources yield batches
 
 | Before                                                                                                                    | After                                                                         |
 |---------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
 | `RawRowValues`; `SchemaSampler`, `SniffsColumnTypes`, `SchemaInferrer::infer()/sniff()`, `ColumnTypes::observe()` over it | plain `array<array-key, mixed>` rows                                          |
-| `CSVOpenSource::records(): Generator<RawRowValues>`                                                                       | `Generator<array<array-key, ?string>>`                                        |
-| -                                                                                                                         | `CSVOpenSource::batches(Schema, int, Backend): Generator<Rows>`               |
+| `CSVOpenSource::records(): Generator<RawRowValues>`                                                                       | `Iterator<array<array-key, ?string>>`                                         |
+| -                                                                                                                         | `CSVOpenSource::batches(Schema, int, Backend): Iterator<Rows>`                |
 | `CSVFileReader::batches(SourceFile, int): Generator<list<RawRowValues>>` returning the header                             | `batches(SourceFile, Schema, int, Backend): Generator<Rows>`, no return value |
-| `RustCSVReaderNative::next(): list<RawRowValues>`                                                                         | `list<array<array-key, ?string>>`                                             |
-| -                                                                                                                         | `RustCSVReaderNative::nextColumns(Schema, int): ?Rows`                        |
 
 ### 69) `flow-php/etl` - `Row` removed, `Rows` is a columnar batch
 
@@ -863,7 +862,7 @@ public function eval(Rows $rows, FlowContext $context): Column
 | Before                                                                                                             | After                                                                                                                                                                                                                             |
 |--------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `from_parquet($path)` / `to_parquet($path)` - `AdaptiveParquetEngine` (arrow-ext when loaded, else the PHP engine) | with `flow_php` and arrow-ext loaded: arrow-ext's batches straight into native columns and back (Arrow C Data Interface); `flow_php` alone: the PHP engine, its values adopted into native columns; without `flow_php`: unchanged |
-| `engine: new PhpParquetEngine()` / `new ArrowParquetEngine()`                                                      | `engine: new PhpParquetEngine()` opts out; `new ArrowParquetEngine()` / `new AdaptiveParquetEngine()` read and write native columns when both extensions are loaded                                                               |
+| `engine: new PhpParquetEngine()` / `new ArrowParquetEngine()`                                                      | `engine: new PhpParquetEngine()` opts out; `new AdaptiveParquetEngine()` reads and writes native columns when both extensions are loaded, `new RustParquetEngine()` reads them                                                    |
 | a column type arrow-ext could not read failed inside arrow-ext                                                     | refused before the first batch: `Flow\Parquet\Exception\RuntimeException` `Parquet column "<name>" (<type>) is not supported by the arrow Parquet reader; read the file with \Flow\Parquet\Reader::php()`                         |
 | `flow-php/etl-adapter-parquet` installable with any `flow_php` or arrow-ext version                                | `conflict: ext-flow_php <0.45`, `ext-arrow <0.45` - load extensions of this release or none                                                                                                                                       |
 
@@ -897,7 +896,7 @@ public function eval(Rows $rows, FlowContext $context): Column
 | `new ParquetFile($stream, $byteOrder, $options, $engine)`                       | `new ParquetFile($stream, $options, $engine->openForRead($stream))`                                                                                                              |
 | a `ParquetFile` closed its stream only when destroyed                           | `ParquetFile::close()` closes its reader (once); `ParquetFile::reader()` returns it                                                                                              |
 
-### 84) `flow-php/parquet` - `ArrowParquetEngine` reads and writes through arrow-ext's new Parquet core
+### 84) `flow-php/parquet` - the arrow engine (`RustParquetEngine`, was `ArrowParquetEngine`) reads and writes through arrow-ext's new Parquet core
 
 | Before                                                                                                                           | After                                                                                                                                                                                      |
 |----------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -910,7 +909,7 @@ public function eval(Rows $rows, FlowContext $context): Column
 | an offset read decoded every row group before the offset; page headers were read to the end of the file                          | only the row groups a read needs, each column chunk read once                                                                                                                              |
 | an `INTERVAL`, a path into a `LIST` / `MAP`, `LZO` or `INT96` under `Option::INT_96_AS_DATETIME = false` failed inside arrow-ext | refused before the first batch naming the column and `\Flow\Parquet\Reader::php()`                                                                                                         |
 | `Reader::read()` returned without touching the file; an invalid file failed at `metadata()`                                      | the footer is read when the file is opened: `Reader::read()` / `readStream()` throw `InvalidArgumentException` `Given file is not valid Parquet file: …`                                   |
-| `Flow\Arrow\Parquet\Reader` / `Writer` / `Exception`                                                                             | removed: `Flow\Arrow\Parquet\{ParquetFile, ColumnsReader, RowsWriter, BatchReader}`; refusals are `Flow\Parquet\Exception\*`                                                               |
+| `Flow\Arrow\Parquet\Reader` / `Writer` / `Exception`                                                                             | removed: `Flow\Parquet\Engine\{RustParquetFileReader, RustParquetFileWriter}`, `Flow\Arrow\Parquet\{RustColumnsReader, RustBatchReader}`; refusals are `Flow\Parquet\Exception\*`          |
 | `flow-php/parquet` installable with any arrow-ext version                                                                        | `conflict: ext-arrow <0.45`                                                                                                                                                                |
 
 ### 85) `flow-php/parquet` - `PhpParquetEngine` reads unsigned integers and INT96 exactly; `FlatColumn::enum()` writes the ENUM logical type; values it wrote wrongly are refused
@@ -930,9 +929,9 @@ public function eval(Rows $rows, FlowContext $context): Column
 
 ### 86) `flow-php/arrow-ext` - Parquet core replaced
 
-| Before                                                                                          | After                                                                                                                                                                                                                                          |
-|-------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `Flow\Arrow\Parquet\Reader` / `Writer` - PHP values per call (`readRowGroup()`, `writeBatch()`) | `Flow\Arrow\Parquet\{ParquetFile, ColumnsReader, RowsWriter, BatchReader}` - the values `PhpParquetEngine` reads and accepts; `BatchReader` and `RowsWriter::writeBatch()` hand batches to other extensions through the Arrow C Data Interface |
+| Before                                                                                          | After                                                                                                                                                                                                                                                                                                                                                                  |
+|-------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `Flow\Arrow\Parquet\Reader` / `Writer` - PHP values per call (`readRowGroup()`, `writeBatch()`) | `Flow\Parquet\Engine\{RustParquetEngine, RustParquetFileReader, RustParquetFileWriter}` implement `ParquetEngine`, `ParquetFileReader`, `ParquetFileWriter` - the values `PhpParquetEngine` reads and accepts; `Flow\Arrow\Parquet\RustBatchReader` and `RustParquetFileWriter::writeArrowBatch()` hand batches to other extensions through the Arrow C Data Interface |
 
 ### 87) `flow-php/etl-adapter-csv` - `to_csv()` writes a boolean as `true` / `false`
 
@@ -970,23 +969,23 @@ holds another value, `ini_set()` must be allowed; otherwise the writers throw
 
 ### 90) `flow-php/etl-adapter-csv` - `CSVEncoder` is a contract; `PhpCSVEncoder` takes `CSVWriteOptions` and returns one string per batch
 
-| Before                                                                                                | After                                                                                                                                         |
-|-------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
-| `final class CSVEncoder`                                                                              | `interface CSVEncoder { encode(Rows): string; encodeHeader(array $headers): string; }`, implemented by `PhpCSVEncoder` and `NativeCSVEncoder` |
-| `new CSVEncoder($separator, $enclosure, $escape, $dateTimeFormat, $dateFormat, $newLineSeparator)`    | `new PhpCSVEncoder(new CSVWriteOptions($separator, $enclosure, $escape, $newLineSeparator, $dateTimeFormat, $dateFormat))`                    |
-| `CSVEncoder::encode(Rows): list<string>`                                                              | `encode(Rows): string`                                                                                                                        |
-| `CSVLoader::write(Rows, array $headers, array $partitions)`                                           | removed - `load()` is the only entry                                                                                                          |
-| a separator or enclosure that is not one byte, an escape longer than one byte - failed in `fputcsv()` | `InvalidArgumentException` from `CSVWriteOptions`                                                                                             |
+| Before                                                                                                | After                                                                                                                                                                        |
+|-------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `final class CSVEncoder`                                                                              | `interface CSVEncoder { encode(Rows): string; encodeHeader(array $headers): string; }`, implemented by `PhpCSVEncoder`, `RustCSVEncoder` (flow_php) and `AdaptiveCSVEncoder` |
+| `new CSVEncoder($separator, $enclosure, $escape, $dateTimeFormat, $dateFormat, $newLineSeparator)`    | `new PhpCSVEncoder(new CSVWriteOptions($separator, $enclosure, $escape, $newLineSeparator, $dateTimeFormat, $dateFormat))`                                                   |
+| `CSVEncoder::encode(Rows): list<string>`                                                              | `encode(Rows): string`                                                                                                                                                       |
+| `CSVLoader::write(Rows, array $headers, array $partitions)`                                           | removed - `load()` is the only entry                                                                                                                                         |
+| a separator or enclosure that is not one byte, an escape longer than one byte - failed in `fputcsv()` | `InvalidArgumentException` from `CSVWriteOptions`                                                                                                                            |
 
 ### 91) `flow-php/etl-adapter-json` - `JSONEncoder` is a contract; `PhpJSONEncoder` returns JSON text; `JsonDocuments` and the loaders' `write()` are removed
 
-| Before                                                             | After                                                                                                                         |
-|--------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
-| `final class JSONEncoder`                                          | `interface JSONEncoder { encode(Rows, string $separator): string; }`, implemented by `PhpJSONEncoder` and `NativeJSONEncoder` |
-| `new JSONEncoder($dateTimeFormat, $dateFormat)`                    | `new PhpJSONEncoder($flags, $dateTimeFormat, $dateFormat)`                                                                    |
-| `JSONEncoder::encode(Rows): list<array<string, mixed>>`            | `encode(Rows, string $separator): string` - one object per row, joined by `$separator`                                        |
-| `JsonDocuments`, `JsonLoader::write()`, `JsonLinesLoader::write()` | removed - `load()` is the only entry                                                                                          |
-| no constraint on the extension                                     | `"conflict": {"ext-flow_php": "<0.45"}` - upgrade the `flow_php` extension with the package                                   |
+| Before                                                             | After                                                                                                                                                         |
+|--------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `final class JSONEncoder`                                          | `interface JSONEncoder { encode(Rows, string $separator): string; }`, implemented by `PhpJSONEncoder`, `RustJSONEncoder` (flow_php) and `AdaptiveJSONEncoder` |
+| `new JSONEncoder($dateTimeFormat, $dateFormat)`                    | `new PhpJSONEncoder($flags, $dateTimeFormat, $dateFormat)`                                                                                                    |
+| `JSONEncoder::encode(Rows): list<array<string, mixed>>`            | `encode(Rows, string $separator): string` - one object per row, joined by `$separator`                                                                        |
+| `JsonDocuments`, `JsonLoader::write()`, `JsonLinesLoader::write()` | removed - `load()` is the only entry                                                                                                                          |
+| no constraint on the extension                                     | `"conflict": {"ext-flow_php": "<0.45"}` - upgrade the `flow_php` extension with the package                                                                   |
 
 ### 92) `flow-php/etl-adapter-xml` - `XMLWriter` renders columns; `XMLEncoder::encode()` returns one string per batch
 
@@ -1126,6 +1125,30 @@ before.
 | content after a line's record (`{"id":1}{"id":9}`)               | the first record, the rest ignored           | `Malformed JSON in "<uri>" at line N: …`                             |
 | content after the closing `]` (`[{"id":1}] x`)                   | ignored                                      | `Malformed JSON in "<uri>" at element N: …`                          |
 | a scalar JSON line (`5`)                                         | `JsonMachine\Exception\SyntaxErrorException` | `A JSON record must be an object or an array, int given in "<uri>".` |
+
+### 105) `flow-php/parquet` - `ArrowParquetEngine`, `ArrowParquetFileWriter` and the `arrow()` factories removed
+
+| Before                                                                     | After                                                                    |
+|----------------------------------------------------------------------------|--------------------------------------------------------------------------|
+| `new ArrowParquetEngine($options)`                                         | `new RustParquetEngine($options)` - arrow-ext's class                    |
+| `Reader::arrow($options)`                                                  | `new Reader(options: $options, engine: new RustParquetEngine($options))` |
+| `Writer::arrow($compression, $options)`                                    | `new Writer($compression, $options, new RustParquetEngine())`            |
+| `ArrowParquetEngine::mapCompression($compression)`                         | removed - `RustParquetFileWriter` takes the `Compressions` case          |
+| `new ArrowParquetFileWriter(...)`                                          | `RustParquetEngine::openForWrite(...)`, a `RustParquetFileWriter`        |
+| `new Reader(ByteOrder::BIG_ENDIAN)` with `arrow` loaded read through arrow | reads through `PhpParquetEngine`                                         |
+
+`AdaptiveParquetEngine` stays the default of `Reader` and `Writer`. `Reader::php()` / `Writer::php()` stay.
+
+### 106) `flow-php/etl` - `Flow\Floe\Exception\ExtensionException` removed
+
+| Before                                              | After                                            |
+|-----------------------------------------------------|--------------------------------------------------|
+| `catch (Flow\Floe\Exception\ExtensionException $e)` | `catch (Flow\ETL\Exception\RuntimeException $e)` |
+
+flow_php throws `Flow\ETL\Exception\RuntimeException`, plain `\Exception` when `flow-php/etl` is not autoloadable.
+`FloeStreamReader` wraps it as `FloeException`, `FloeSerializer` as `SerializationException`, both with the original
+as `previous`; `FloeStreamWriter` lets it through. Both catch the base `Flow\ETL\Exception\RuntimeException` now, so
+its subclasses thrown while decoding are wrapped as well.
 
 ---
 

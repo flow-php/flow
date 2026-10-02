@@ -1,4 +1,4 @@
-//! `Flow\Arrow\Parquet\BatchReader` and the Arrow C Data carriers: one batch = one struct-typed `FFI_ArrowSchema` (one
+//! `Flow\Arrow\Parquet\RustBatchReader` and the Arrow C Data carriers: one batch = one struct-typed `FFI_ArrowSchema` (one
 //! child per column) plus one struct-typed `FFI_ArrowArray`. The carrier owns both until a consumer moves the array
 //! out; any extension's internal class exposing the two addresses is accepted.
 
@@ -15,7 +15,7 @@ use ext_php_rs::types::{ZendObject, Zval};
 use ext_php_rs::zend::ClassEntry;
 
 use crate::parquet::error::Error;
-use crate::parquet::library::{batch_size, rows, ParquetFile, INVALID_ARGUMENT};
+use crate::parquet::library::{batch_size, rows, RustParquetFileReader, INVALID_ARGUMENT};
 use crate::parquet::read::{ParquetReader, ReadPlan};
 use crate::parquet::source::PhpStream;
 use crate::php::{call_handle_transparent, ce_method_ref};
@@ -29,15 +29,15 @@ pub const SOURCE_TYPE: &str = "parquet.source_type";
 const ZEND_INTERNAL_CLASS: c_char = 1;
 
 #[php_class]
-#[php(name = "Flow\\Arrow\\ArrowBatch", flags = ClassFlags::Final)]
-pub struct ArrowBatch {
+#[php(name = "Flow\\Arrow\\RustParquetBatch", flags = ClassFlags::Final)]
+pub struct RustParquetBatch {
     schema: FFI_ArrowSchema,
     array: FFI_ArrowArray,
     rows: usize,
 }
 
 #[php_impl]
-impl ArrowBatch {
+impl RustParquetBatch {
     pub fn count(&self) -> i64 {
         self.rows as i64
     }
@@ -54,13 +54,13 @@ impl ArrowBatch {
 }
 
 #[php_class]
-#[php(name = "Flow\\Arrow\\ArrowSchema", flags = ClassFlags::Final)]
-pub struct ArrowSchema {
+#[php(name = "Flow\\Arrow\\RustArrowSchema", flags = ClassFlags::Final)]
+pub struct RustArrowSchema {
     schema: FFI_ArrowSchema,
 }
 
 #[php_impl]
-impl ArrowSchema {
+impl RustArrowSchema {
     #[php(name = "arrowSchemaAddress")]
     pub fn arrow_schema_address(&self) -> i64 {
         std::ptr::from_ref(&self.schema) as i64
@@ -68,8 +68,8 @@ impl ArrowSchema {
 }
 
 #[php_class]
-#[php(name = "Flow\\Arrow\\Parquet\\BatchReader", flags = ClassFlags::Final)]
-pub struct BatchReader {
+#[php(name = "Flow\\Arrow\\Parquet\\RustBatchReader", flags = ClassFlags::Final)]
+pub struct RustBatchReader {
     reader: Option<ParquetReader>,
     stream: Arc<PhpStream>,
     /// The projection: canonical children named by column, each with its `SOURCE_TYPE`.
@@ -77,10 +77,10 @@ pub struct BatchReader {
 }
 
 #[php_impl]
-impl BatchReader {
+impl RustBatchReader {
     /// `$columns`: root names; `$batchSize` rows at most per `next()`.
     pub fn __construct(
-        file: &ParquetFile,
+        file: &RustParquetFileReader,
         columns: Vec<String>,
         batch_size: i64,
         offset: Option<i64>,
@@ -90,16 +90,24 @@ impl BatchReader {
         let (offset, limit) = (rows(offset, "offset")?.unwrap_or(0), rows(limit, "limit")?);
         let (stream, size, meta) = file.read()?;
         let stream = Arc::clone(stream);
-        let reader =
-            ParquetReader::open(Arc::clone(&stream), size, meta, &columns, ReadPlan::new(meta, offset, limit), batch_size)
-                .map_err(|error| parquet_exception(error, &stream, Side::Read))?;
+        let reader = ParquetReader::open(
+            Arc::clone(&stream),
+            size,
+            meta,
+            &columns,
+            ReadPlan::new(meta, offset, limit),
+            batch_size,
+        )
+        .map_err(|error| parquet_exception(error, &stream, Side::Read))?;
         let fields = columns
             .iter()
             .zip(reader.fields())
             .zip(reader.types())
             .map(|((name, field), canonical)| {
-                Field::new(name, canonical.clone(), true)
-                    .with_metadata(HashMap::from([(SOURCE_TYPE.to_string(), field.data_type().to_string())]))
+                Field::new(name, canonical.clone(), true).with_metadata(HashMap::from([(
+                    SOURCE_TYPE.to_string(),
+                    field.data_type().to_string(),
+                )]))
             })
             .collect();
 
@@ -111,15 +119,15 @@ impl BatchReader {
     }
 
     /// The struct schema of every batch, known before the first.
-    pub fn schema(&self) -> PhpResult<ArrowSchema> {
-        Ok(ArrowSchema {
+    pub fn schema(&self) -> PhpResult<RustArrowSchema> {
+        Ok(RustArrowSchema {
             schema: FFI_ArrowSchema::try_from(&DataType::Struct(self.fields.clone()))
                 .map_err(|error| parquet_exception(Error::Arrow(error), &self.stream, Side::Read))?,
         })
     }
 
     /// At most `$batchSize` rows as one struct batch, null after the last.
-    pub fn next(&mut self) -> PhpResult<Option<ArrowBatch>> {
+    pub fn next(&mut self) -> PhpResult<Option<RustParquetBatch>> {
         let Some(reader) = self.reader.as_mut() else {
             return Ok(None);
         };
@@ -137,7 +145,7 @@ impl BatchReader {
             .and_then(|array| to_ffi(&array.to_data()))
             .map_err(|error| parquet_exception(Error::Arrow(error), &self.stream, Side::Read))?;
 
-        Ok(Some(ArrowBatch {
+        Ok(Some(RustParquetBatch {
             array: exported.0,
             schema: exported.1,
             rows,
@@ -168,7 +176,9 @@ fn address(object: &ZendObject, ce: &ClassEntry, method: &str) -> PhpResult<usiz
 /// and `arrowArrayAddress()` (moved, its release left NULL), refused before the move unless the schema is a struct
 /// of as many children as the array and the array was not imported before.
 pub fn import(batch: &Zval) -> PhpResult<StructArray> {
-    let object = batch.object().ok_or_else(|| refused("Arrow C Data batch must be an object".to_string()))?;
+    let object = batch
+        .object()
+        .ok_or_else(|| refused("Arrow C Data batch must be an object".to_string()))?;
     let ce = unsafe { object.ce.as_ref() }.ok_or_else(|| refused("Arrow C Data batch has no class".to_string()))?;
 
     if ce.type_ != ZEND_INTERNAL_CLASS {
@@ -211,8 +221,8 @@ mod tests {
     use std::sync::Arc;
 
     use arrow_array::ffi::{from_ffi, to_ffi};
-    use arrow_array::{Array, ArrayRef, Int64Array, ListArray, StructArray};
     use arrow_array::types::Int64Type;
+    use arrow_array::{Array, ArrayRef, Int64Array, ListArray, StructArray};
     use arrow_schema::{DataType, Field, Fields};
 
     use crate::alloc::allocated_bytes;

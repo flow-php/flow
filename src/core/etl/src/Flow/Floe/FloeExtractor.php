@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Column\Backend;
-use Flow\ETL\Column\DefaultBackend;
 use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
@@ -211,7 +211,7 @@ final class FloeExtractor implements
     /**
      * @return Generator<int, FloeSourceFile>
      */
-    private function files(Backend $backend = new DefaultBackend(), Filter $pathFilter = new OnlyFiles()): Generator
+    private function files(Backend $backend = new AdaptiveBackend(), Filter $pathFilter = new OnlyFiles()): Generator
     {
         foreach ($this->sourceFiles($this->filesystem, $this->path, $pathFilter) as $source) {
             yield new FloeSourceFile(

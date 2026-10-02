@@ -7,8 +7,8 @@ use std::collections::HashMap;
 use arrow_array::cast::AsArray;
 use arrow_array::types::{Date32Type, DurationMicrosecondType, Float64Type, Int64Type, TimestampMicrosecondType};
 use arrow_array::{
-    Array, BinaryArray, BooleanArray, Date32Array, DurationMicrosecondArray, FixedSizeBinaryArray, Float64Array, Int64Array,
-    ListArray, MapArray, TimestampMicrosecondArray,
+    Array, BinaryArray, BooleanArray, Date32Array, DurationMicrosecondArray, FixedSizeBinaryArray, Float64Array,
+    Int64Array, ListArray, MapArray, TimestampMicrosecondArray,
 };
 use arrow_buffer::NullBuffer;
 use ext_php_rs::exception::PhpException;
@@ -94,7 +94,12 @@ pub fn renders(node: &ValueNode, formats: &Formats, json_column_is_text: bool) -
 
 fn renders_nested(node: &ValueNode, formats: &Formats) -> bool {
     match node {
-        ValueNode::Plain | ValueNode::Null | ValueNode::Time | ValueNode::Uuid | ValueNode::Enum(_) | ValueNode::TimeZone => true,
+        ValueNode::Plain
+        | ValueNode::Null
+        | ValueNode::Time
+        | ValueNode::Uuid
+        | ValueNode::Enum(_)
+        | ValueNode::TimeZone => true,
         ValueNode::DateTime(_) => formats.date_time.is_some(),
         ValueNode::Date => formats.date.is_some(),
         ValueNode::Json | ValueNode::Markup(_) => false,
@@ -130,7 +135,12 @@ impl<'a> Renderer<'a> {
 
                 Values::List {
                     list,
-                    element: Box::new(Renderer::new(element_node, &element.kind, list.values().as_ref(), formats)?),
+                    element: Box::new(Renderer::new(
+                        element_node,
+                        &element.kind,
+                        list.values().as_ref(),
+                        formats,
+                    )?),
                 }
             }
             (ValueNode::Map(value_node), Kind::Map(key, value)) => {
@@ -152,7 +162,11 @@ impl<'a> Renderer<'a> {
                     .zip(fields)
                     .zip(array.as_struct().columns())
                     .map(|((node, field), child)| {
-                        Some((field.name.as_bytes(), field.optional, Renderer::new(node, &field.kind, child.as_ref(), formats)?))
+                        Some((
+                            field.name.as_bytes(),
+                            field.optional,
+                            Renderer::new(node, &field.kind, child.as_ref(), formats)?,
+                        ))
                     })
                     .collect::<Option<_>>()?,
             ),
@@ -214,7 +228,9 @@ impl<'a> Renderer<'a> {
             Values::Bytes(array) => out.extend_from_slice(array.value(i)),
             Values::Uuid(array) => push_uuid_text(out, array.value(i)),
             Values::Instant { array, format, zone } => date::write(out, format, array.value(i), zone),
-            Values::Days { array, format } => date::write(out, format, i64::from(array.value(i)) * 86_400_000_000, &Zone::Utc),
+            Values::Days { array, format } => {
+                date::write(out, format, i64::from(array.value(i)) * 86_400_000_000, &Zone::Utc)
+            }
             Values::List { .. } | Values::Map { .. } | Values::Struct(_) => {
                 let mut non_finite = false;
 
@@ -262,7 +278,10 @@ impl<'a> Renderer<'a> {
                 self.text(out, i)?;
 
                 // a format of digits, dashes and colons needs no escaping; anything else is escaped as a string
-                if out[start + 1..].iter().all(|byte| matches!(byte, b' ' | b'+'..=b'.' | b'0'..=b':' | b'A'..=b'Z' | b'_' | b'a'..=b'z')) {
+                if out[start + 1..]
+                    .iter()
+                    .all(|byte| matches!(byte, b' ' | b'+'..=b'.' | b'0'..=b':' | b'A'..=b'Z' | b'_' | b'a'..=b'z'))
+                {
                     out.push(b'"');
                 } else {
                     let text = out.split_off(start + 1);
@@ -290,7 +309,10 @@ impl<'a> Renderer<'a> {
                 let offsets = map.value_offsets();
                 out.push(b'{');
 
-                for (written, (j, last)) in entries(keys, offsets[i] as usize, offsets[i + 1] as usize).into_iter().enumerate() {
+                for (written, (j, last)) in entries(keys, offsets[i] as usize, offsets[i + 1] as usize)
+                    .into_iter()
+                    .enumerate()
+                {
                     if written > 0 {
                         out.push(b',');
                     }
@@ -380,8 +402,8 @@ mod tests {
     use std::sync::Arc;
 
     use arrow_array::builder::{BinaryBuilder, Int64Builder, MapBuilder};
-    use arrow_array::{Array, ArrayRef, Int64Array, ListArray, StructArray};
     use arrow_array::types::Int64Type;
+    use arrow_array::{Array, ArrayRef, Int64Array, ListArray, StructArray};
     use arrow_schema::{DataType, Field as ArrowField};
     use flow_batch_frame::kind::{Field, Kind};
 
@@ -403,7 +425,11 @@ mod tests {
     }
 
     fn field(name: &str, kind: Kind, optional: bool) -> Box<Field> {
-        Box::new(Field { name: name.to_owned(), kind, optional })
+        Box::new(Field {
+            name: name.to_owned(),
+            kind,
+            optional,
+        })
     }
 
     fn string_map(rows: &[&[(&[u8], i64)]]) -> ArrayRef {
@@ -460,7 +486,8 @@ mod tests {
 
     #[test]
     fn a_list_is_always_a_list_and_a_null_is_null() {
-        let list = ListArray::from_iter_primitive::<Int64Type, _, _>([Some(vec![Some(1), None, Some(3)]), Some(vec![]), None]);
+        let list =
+            ListArray::from_iter_primitive::<Int64Type, _, _>([Some(vec![Some(1), None, Some(3)]), Some(vec![]), None]);
         let node = ValueNode::List(Box::new(ValueNode::Plain));
         let kind = Kind::List(field("element", Kind::Int64, true));
 

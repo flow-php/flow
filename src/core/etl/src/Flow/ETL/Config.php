@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use Flow\Calculator\Calculator;
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Column\Backend;
-use Flow\ETL\Column\DefaultBackend;
 use Flow\ETL\Config\Cache\CacheConfig;
 use Flow\ETL\Config\ConfigBuilder;
 use Flow\ETL\Config\Grouping\HashGroupByConfig;
@@ -43,7 +43,7 @@ final readonly class Config
         public HashRepartitionConfig $repartition,
         private Calculator $calculator = new Calculator(),
         private RandomValueGenerator $randomValueGenerator = new NativePHPRandomValueGenerator(),
-        private Backend $backend = new DefaultBackend(),
+        private Backend $backend = new AdaptiveBackend(),
     ) {
         $this->planner = new Planner($optimizer);
     }

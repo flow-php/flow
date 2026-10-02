@@ -8,12 +8,7 @@ pub fn node_count(kind: &Kind) -> usize {
     match kind {
         Kind::List(element) => 1 + node_count(&element.kind),
         Kind::Map(key, value) => 2 + node_count(&key.kind) + node_count(&value.kind),
-        Kind::Struct(fields) => {
-            1 + fields
-                .iter()
-                .map(|field| node_count(&field.kind))
-                .sum::<usize>()
-        }
+        Kind::Struct(fields) => 1 + fields.iter().map(|field| node_count(&field.kind)).sum::<usize>(),
         _ => 1,
     }
 }
@@ -23,12 +18,7 @@ pub fn buffer_count(kind: &Kind) -> usize {
         Kind::Null => 0,
         Kind::List(element) => 2 + buffer_count(&element.kind),
         Kind::Map(key, value) => 3 + buffer_count(&key.kind) + buffer_count(&value.kind),
-        Kind::Struct(fields) => {
-            1 + fields
-                .iter()
-                .map(|field| buffer_count(&field.kind))
-                .sum::<usize>()
-        }
+        Kind::Struct(fields) => 1 + fields.iter().map(|field| buffer_count(&field.kind)).sum::<usize>(),
         Kind::Bytes => 3,
         _ => 2,
     }
@@ -37,12 +27,7 @@ pub fn buffer_count(kind: &Kind) -> usize {
 /// Pre-order `(length, null count)` of one column's tree: the first node as given, every child derived from the
 /// buffers - a null kind is `(length, length)`, list and map children span the last offset, a map entries node holds
 /// no nulls and structure children span their parent.
-pub fn nodes(
-    kind: &Kind,
-    len: u32,
-    null_count: u32,
-    buffers: &[&[u8]],
-) -> Result<Vec<(u32, u32)>, Error> {
+pub fn nodes(kind: &Kind, len: u32, null_count: u32, buffers: &[&[u8]]) -> Result<Vec<(u32, u32)>, Error> {
     nodes_at(kind, 0, len, null_count, buffers)
 }
 

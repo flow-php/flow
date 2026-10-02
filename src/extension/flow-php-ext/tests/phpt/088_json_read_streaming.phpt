@@ -1,20 +1,20 @@
 --TEST--
-NativeJsonOpenSource reads a JSON array and JSON lines in memory independent of the record count: one chunk, the largest record and one batch
+RustJsonOpenSource reads a JSON array and JSON lines in memory independent of the record count: one chunk, the largest record and one batch
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 --FILE--
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\JSON\{NativeJsonOpenSource, NativeJsonReader};
-use Flow\ETL\Column\DefaultBackend;
+use Flow\ETL\Adapter\JSON\RustJsonOpenSource;
+use Flow\ETL\Column\RustBackend;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 
 use function Flow\ETL\DSL\{float_schema, int_schema, list_schema, schema, str_schema};
 use function Flow\Filesystem\DSL\path;
 use function Flow\Types\DSL\{type_list, type_string};
 
-$backend = new DefaultBackend();
+$backend = new RustBackend();
 $schema = schema(int_schema('id'), str_schema('name'), list_schema('tags', type_list(type_string())), float_schema('score'));
 $write = static function (string $file, int $records, bool $lines): void {
     $handle = fopen($file, 'wb');
@@ -41,7 +41,7 @@ $read = static function (string $file, bool $lines) use ($backend, $schema): arr
     $rust = $backend->allocatedBytes();
     $held = 0;
     $rows = 0;
-    $open = new NativeJsonOpenSource((new NativeLocalFilesystem())->readFrom(path($file)), new NativeJsonReader($lines, $file));
+    $open = new RustJsonOpenSource((new NativeLocalFilesystem())->readFrom(path($file)), $lines, $file, '', 0);
 
     foreach ($open->batches($schema, 1000, $backend) as $batch) {
         $rows += $batch->count();
@@ -71,8 +71,8 @@ foreach (['array' => false, 'lines' => true] as $label => $lines) {
     [$rows20, $php20, $rust20] = $measured[20_000];
     [$rows200, $php200, $rust200] = $measured[200_000];
 
-    echo "{$label}: {$rows20} and {$rows200} rows, PHP peak ", $php200 <= $php20 + NativeJsonOpenSource::CHUNK ? 'bounded' : "{$php20} -> {$php200}",
-        ', native held ', $rust200 <= $rust20 + NativeJsonOpenSource::CHUNK ? 'bounded' : "{$rust20} -> {$rust200}", "\n";
+    echo "{$label}: {$rows20} and {$rows200} rows, PHP peak ", $php200 <= $php20 + (1 << 15) ? 'bounded' : "{$php20} -> {$php200}",
+        ', native held ', $rust200 <= $rust20 + (1 << 15) ? 'bounded' : "{$rust20} -> {$rust200}", "\n";
 }
 ?>
 --EXPECT--

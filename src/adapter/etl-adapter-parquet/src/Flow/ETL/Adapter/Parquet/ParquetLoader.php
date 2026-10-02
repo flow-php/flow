@@ -24,7 +24,6 @@ use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
-use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Option as ParquetOption;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
@@ -56,8 +55,6 @@ final class ParquetLoader implements Closure, Discardable, FileLoader, Loader, P
     private ?Schema $inferredSchema = null;
 
     private ?ParquetSchemaConformance $conformance = null;
-
-    private ?ParquetOpener $opener = null;
 
     private ?ParquetSchema $parquetSchema = null;
 
@@ -129,7 +126,6 @@ final class ParquetLoader implements Closure, Discardable, FileLoader, Loader, P
                 $this->inferredSchema ??= $rows->schema()->makeNullable();
             }
 
-            $opener = $this->opener ??= ParquetOpeners::select($this->engine, ByteOrder::LITTLE_ENDIAN, $this->options);
             $parquetSchema = $this->parquetSchema ??= $this->converter->toParquet($this->schema());
             $conformed = ($this->conformance ??= new ParquetSchemaConformance($parquetSchema))->conform(
                 $rows,
@@ -141,11 +137,12 @@ final class ParquetLoader implements Closure, Discardable, FileLoader, Loader, P
                     $partitions->toArray(),
                 );
 
-                ($this->writers[$stream->path()->uri()] ??= $opener->sink(
+                ($this->writers[$stream->path()->uri()] ??= new AdaptiveParquetOpenSink(
                     $stream,
                     $parquetSchema,
                     $this->compressions,
                     $this->options,
+                    $this->engine,
                 ))->write($group);
             }
 

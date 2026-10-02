@@ -1,5 +1,5 @@
 --TEST--
-NativeJsonReader reads random valid JSON, whole or a byte at a time, into the frames or refusals of PhpJsonOpenSource, through either backend
+RustJsonOpenSource reads random valid JSON, whole or a byte at a time, into the frames or refusals of PhpJsonOpenSource, through either backend
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 --FILE--
@@ -7,8 +7,8 @@ NativeJsonReader reads random valid JSON, whole or a byte at a time, into the fr
 require __DIR__ . '/bootstrap.php';
 
 use Flow\ETL\Adapter\JSON\JSONMachine\{JsonFileReader, JsonFormat};
-use Flow\ETL\Adapter\JSON\{NativeJsonOpenSource, NativeJsonReader, PhpJsonOpenSource};
-use Flow\ETL\Column\{DefaultBackend, NativeColumn, PhpBackend};
+use Flow\ETL\Adapter\JSON\{PhpJsonOpenSource, RustJsonOpenSource};
+use Flow\ETL\Column\{RustBackend, RustColumn, PhpBackend};
 use Flow\ETL\Extractor\SourceFile;
 use Flow\ETL\{Rows, Schema};
 use Flow\Filesystem\Stream\StringSourceStream;
@@ -115,8 +115,8 @@ $frames = static function (iterable $batches, object $backend): array {
 
     foreach ($batches as $batch) {
         foreach ($batch->columns() as $column) {
-            if ($backend instanceof PhpBackend && $column instanceof NativeColumn) {
-                return ['a NativeColumn survived PhpBackend'];
+            if ($backend instanceof PhpBackend && $column instanceof RustColumn) {
+                return ['a RustColumn survived PhpBackend'];
             }
         }
 
@@ -125,33 +125,14 @@ $frames = static function (iterable $batches, object $backend): array {
 
     return $frames;
 };
-// NativeJsonOpenSource::batches() over chunks of $chunk bytes
-$bytes = static function (string $raw, bool $lines, Schema $schema, object $backend, int $chunk): Generator {
-    $reader = new NativeJsonReader($lines, 'memory://phpt.json');
-    $adopted = static function (Rows $batch) use ($schema, $backend): Rows {
-        $columns = [];
-
-        foreach ($schema->definitions() as $name => $definition) {
-            $columns[$name] = $backend->adopt($definition, $batch->columns()[$name]);
-        }
-
-        return Rows::fromColumns($schema, $columns, $batch->count());
-    };
-
-    foreach (str_split($raw, $chunk) as $piece) {
-        $reader->feed($piece);
-
-        while (($batch = $reader->nextColumns($schema, 2)) !== null) {
-            yield $adopted($batch);
-        }
-    }
-
-    $reader->finish();
-
-    while (($batch = $reader->nextColumns($schema, 2)) !== null) {
-        yield $adopted($batch);
-    }
-};
+// RustJsonOpenSource::batches() over reads of $chunk bytes
+$bytes = static fn(string $raw, bool $lines, Schema $schema, object $backend, int $chunk): Iterator => (new RustJsonOpenSource(
+    chunked_source_stream($raw, $chunk),
+    $lines,
+    'memory://phpt.json',
+    '',
+    0,
+))->batches($schema, 2, $backend);
 
 mt_srand(10);
 $pool = json_read_pool();
@@ -192,9 +173,9 @@ for ($t = 0; $t < 400; $t++) {
         $reader = new JsonFileReader($filesystem, $lines ? JsonFormat::Lines : JsonFormat::Document, null, false, [$source]);
         $php = outcome(static fn(): array => $frames((new PhpJsonOpenSource($reader, $source))->batches($schema, 2, new PhpBackend()), new PhpBackend()));
 
-        foreach ([new DefaultBackend(), new PhpBackend()] as $backend) {
+        foreach ([new RustBackend(), new PhpBackend()] as $backend) {
             $natives = [
-                'whole' => outcome(static fn(): array => $frames((new NativeJsonOpenSource(new StringSourceStream(path('memory://phpt.json'), $raw), new NativeJsonReader($lines, 'memory://phpt.json')))->batches($schema, 2, $backend), $backend)),
+                'whole' => outcome(static fn(): array => $frames((new RustJsonOpenSource(new StringSourceStream(path('memory://phpt.json'), $raw), $lines, 'memory://phpt.json', '', 0))->batches($schema, 2, $backend), $backend)),
                 'by byte' => outcome(static fn(): array => $frames($bytes($raw, $lines, $schema, $backend, 1), $backend)),
             ];
 

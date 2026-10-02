@@ -7,7 +7,7 @@ publish = false
 crate-type = ["cdylib"]
 
 [dependencies]
-ext-php-rs = "0.15"
+ext-php-rs = "0.16"
 parquet = { version = "59", default-features = false, features = ["arrow", "arrow_canonical_extension_types", "snap", "flate2", "flate2-zlib-rs", "zstd", "lz4", "brotli", "simdutf8"] }
 arrow-array = { version = "59", features = ["ffi"] }
 arrow-buffer = "59"

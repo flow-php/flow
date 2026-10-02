@@ -65,7 +65,9 @@ final class InferredTypesTest extends FlowTestCase
 
     public function test_a_parameterised_type_admits_its_whole_family(): void
     {
-        static::assertTrue((new InferredTypes(type_enum(BackedStringEnum::class)))->allows(type_enum(BackedStringEnum::class)));
+        static::assertTrue((new InferredTypes(type_enum(BackedStringEnum::class)))->allows(type_enum(
+            BackedStringEnum::class,
+        )));
     }
 
     public function test_default_is_every_rung_but_markup(): void

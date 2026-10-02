@@ -6,6 +6,12 @@ namespace Flow\ETL\Column;
 
 use Flow\ETL\Exception\SchemaMismatchException;
 
+use function extension_loaded;
+
+if (extension_loaded('flow_php')) {
+    return;
+}
+
 interface ColumnBuilder
 {
     /**

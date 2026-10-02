@@ -1,13 +1,13 @@
 --TEST--
-NativeCSVOpenSource::batches() yields the frames or refusals of PhpCSVOpenSource::batches(), through either backend
+RustCSVOpenSource::batches() yields the frames or refusals of PhpCSVOpenSource::batches(), through either backend
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 --FILE--
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\CSV\{CSVDecoder, CSVLineReader, NativeCSVOpenSource, PhpCSVOpenSource, RustCSVReaderNative};
-use Flow\ETL\Column\{DefaultBackend, NativeColumn, PhpBackend};
+use Flow\ETL\Adapter\CSV\{CSVDecoder, CSVLineReader, PhpCSVOpenSource, RustCSVOpenSource};
+use Flow\ETL\Column\{RustBackend, RustColumn, PhpBackend};
 use Flow\ETL\Schema;
 use Flow\Filesystem\Stream\StringSourceStream;
 
@@ -20,8 +20,8 @@ $batches = static fn(object $open, Schema $schema, object $backend): string => o
 
     foreach ($open->batches($schema, 2, $backend) as $batch) {
         foreach ($batch->columns() as $column) {
-            if ($backend instanceof PhpBackend && $column instanceof NativeColumn) {
-                return ['a NativeColumn survived PhpBackend'];
+            if ($backend instanceof PhpBackend && $column instanceof RustColumn) {
+                return ['a RustColumn survived PhpBackend'];
             }
         }
 
@@ -61,8 +61,8 @@ $identical = 0;
 foreach ($cases as [$raw, $schema]) {
     $php = $batches(new PhpCSVOpenSource($stream($raw), new CSVDecoder(), new CSVLineReader('"', ',', '\\')), $schema, new PhpBackend());
 
-    foreach ([new DefaultBackend(), new PhpBackend()] as $backend) {
-        $native = $batches(new NativeCSVOpenSource($stream($raw), new RustCSVReaderNative(',', '"', '\\', true, true, true)), $schema, $backend);
+    foreach ([new RustBackend(), new PhpBackend()] as $backend) {
+        $native = $batches(new RustCSVOpenSource($stream($raw), ',', '"', '\\', true, true, true), $schema, $backend);
 
         if ($native === $php) {
             $identical++;

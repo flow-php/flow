@@ -7,7 +7,7 @@ namespace Flow\ETL\Tests\Unit;
 use Closure;
 use DateTimeImmutable;
 use DateTimeZone;
-use Flow\ETL\Column\DefaultBackend;
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Column\Php\ValueColumn;
 use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Exception\ColumnMismatchException;
@@ -1212,7 +1212,7 @@ final class RowsTest extends FlowTestCase
 
         static::assertSame([['id' => 7], ['id' => 7], ['id' => 1]], $concatenated->toArray());
         static::assertInstanceOf(
-            (new DefaultBackend())
+            (new AdaptiveBackend())
                 ->builder(int_schema('id'))
                 ->finish()::class,
             $concatenated->column('id'),

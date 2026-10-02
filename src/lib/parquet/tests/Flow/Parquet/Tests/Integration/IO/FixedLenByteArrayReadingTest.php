@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
-use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\Repetition;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Tests\Context\TestParquetFile;
+use Flow\Parquet\Tests\Mother\ParquetEngineMother;
 use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -20,8 +20,9 @@ use function str_repeat;
 class FixedLenByteArrayReadingTest extends ParquetIntegrationTestCase
 {
     #[DataProvider('engine_provider')]
-    public function test_reading_and_writing_fixed_len_byte_array_without_logical_type(ParquetEngine $engine): void
+    public function test_reading_and_writing_fixed_len_byte_array_without_logical_type(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $schema = Schema::with(FlatColumn::fixedSizeByteArray('raw_bytes', 8, Repetition::REQUIRED));
@@ -55,8 +56,9 @@ class FixedLenByteArrayReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_fixed_len_byte_array_returns_raw_string(ParquetEngine $engine): void
+    public function test_reading_fixed_len_byte_array_returns_raw_string(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $schema = Schema::with(FlatColumn::fixedSizeByteArray('data', 16, Repetition::REQUIRED));

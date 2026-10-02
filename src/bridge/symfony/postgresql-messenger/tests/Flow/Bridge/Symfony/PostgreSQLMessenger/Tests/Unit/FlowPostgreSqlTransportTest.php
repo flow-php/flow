@@ -47,7 +47,9 @@ final class FlowPostgreSqlTransportTest extends TestCase
 
     public function test_does_not_implement_setupable_transport_interface(): void
     {
-        static::assertFalse((new ReflectionClass(FlowPostgreSqlTransport::class))->implementsInterface(SetupableTransportInterface::class));
+        static::assertFalse((new ReflectionClass(FlowPostgreSqlTransport::class))->implementsInterface(
+            SetupableTransportInterface::class,
+        ));
     }
 
     public function test_find_delegates_to_receiver(): void

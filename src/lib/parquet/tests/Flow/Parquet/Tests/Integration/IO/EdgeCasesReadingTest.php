@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
-use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\Reader;
+use Flow\Parquet\Tests\Mother\ParquetEngineMother;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function iterator_to_array;
@@ -13,8 +13,9 @@ use function iterator_to_array;
 class EdgeCasesReadingTest extends ParquetIntegrationTestCase
 {
     #[DataProvider('engine_provider')]
-    public function test_nonullable_impala(ParquetEngine $engine): void
+    public function test_nonullable_impala(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = __DIR__ . '/Fixtures/EdgeCases/nonnullable.impala.parquet';
 
         $reader = (new Reader(engine: $engine))->read($path);
@@ -61,8 +62,9 @@ class EdgeCasesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_read_datapage_v2_snappy_list(ParquetEngine $engine): void
+    public function test_read_datapage_v2_snappy_list(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         static::assertSame(
             [
                 ['a' => 'abc', 'b' => 1, 'c' => 2.0, 'd' => true, 'e' => [1, 2, 3]],
@@ -81,8 +83,9 @@ class EdgeCasesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_read_null_list(ParquetEngine $engine): void
+    public function test_read_null_list(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = __DIR__ . '/Fixtures/EdgeCases/null_list.parquet';
 
         $reader = (new Reader(engine: $engine))->read($path);

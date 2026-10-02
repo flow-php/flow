@@ -1,5 +1,5 @@
 --TEST--
-NativeParquetReader reads offset/limit windows of an 8-row-group file, and refuses a batch size, offset or limit out of range
+RustParquetOpenSource reads offset/limit windows of an 8-row-group file, and refuses a batch size, offset or limit out of range
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 <?php extension_loaded('arrow') || die('skip arrow'); ?>
@@ -7,21 +7,22 @@ NativeParquetReader reads offset/limit windows of an 8-row-group file, and refus
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\Arrow\Parquet\RowsWriter;
+use Flow\Parquet\Engine\RustParquetFileWriter;
 
-use Flow\ETL\Adapter\Parquet\{NativeParquetReader, NativeParquetWriter, SchemaConverter};
+use Flow\ETL\Adapter\Parquet\{RustParquetOpenSink, SchemaConverter};
 use Flow\Parquet\Engine\Arrow\{OptionsConverter, SchemaConverter as ArrowSchemaConverter};
 use Flow\Parquet\{Option, Options, Reader};
+use Flow\Parquet\ParquetFile\Compressions;
 
 use function Flow\ETL\DSL\{array_to_rows, int_schema, schema};
 use function Flow\Filesystem\DSL\{memory_filesystem, path};
 
 $filesystem = memory_filesystem();
 $schema = schema(int_schema('id'));
-$writer = new NativeParquetWriter(new RowsWriter(
+$writer = new RustParquetOpenSink(new RustParquetFileWriter(
     $filesystem->writeTo(path('memory://groups.parquet')),
     ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquet($schema)),
-    'SNAPPY',
+    Compressions::SNAPPY,
     OptionsConverter::toExtension(Options::default()->set(Option::ROW_GROUP_SIZE_BYTES, 1)),
     1_000,
 ));
@@ -38,10 +39,10 @@ echo 'row groups: ', implode(',', array_map(
 )), "\n";
 
 foreach ([[0, 10], [5399, 3], [20000, 15000], [65000, 100], [65046, 1], [65536, 10], [65530, null]] as [$offset, $limit]) {
-    $reader = native_parquet_reader($filesystem->readFrom(path('memory://groups.parquet')), $schema, 1000, $offset, $limit);
+    $reader = rust_parquet_batches($filesystem->readFrom(path('memory://groups.parquet')), $schema, 1000, $offset, $limit);
     $ids = [];
 
-    while (($batch = $reader->next()) !== null) {
+    foreach ($reader as $batch) {
         array_push($ids, ...$batch->column('id')->values());
     }
 
@@ -50,7 +51,7 @@ foreach ([[0, 10], [5399, 3], [20000, 15000], [65000, 100], [65046, 1], [65536, 
 }
 
 foreach ([[0, null, null], [-1, null, null], [10, -1, null], [10, null, -1]] as [$batchSize, $offset, $limit]) {
-    echo outcome(static fn() => native_parquet_reader($filesystem->readFrom(path('memory://groups.parquet')), $schema, $batchSize, $offset, $limit)), "\n";
+    echo outcome(static fn() => rust_parquet_batches($filesystem->readFrom(path('memory://groups.parquet')), $schema, $batchSize, $offset, $limit)), "\n";
 }
 ?>
 --EXPECT--

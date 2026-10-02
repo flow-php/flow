@@ -4,9 +4,15 @@
 pub mod batch;
 pub mod canonical;
 pub mod cells;
+pub mod engine;
 pub mod error;
 pub mod fetch;
 pub mod footer;
+pub mod lib_calls;
+#[allow(
+    non_snake_case,
+    reason = "PHP takes a parameter name from its Rust identifier: the contracts' are camelCase"
+)]
 pub mod library;
 pub mod options;
 pub mod read;

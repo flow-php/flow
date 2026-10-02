@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
-use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\Reader;
+use Flow\Parquet\Tests\Mother\ParquetEngineMother;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 class StructsReadingTest extends ParquetIntegrationTestCase
 {
     #[DataProvider('engine_provider')]
-    public function test_reading_struct_deeply_nested_column(ParquetEngine $engine): void
+    public function test_reading_struct_deeply_nested_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/structs.parquet');
 
@@ -58,8 +59,9 @@ class StructsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_struct_deeply_nested_column_with_limit(ParquetEngine $engine): void
+    public function test_reading_struct_deeply_nested_column_with_limit(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/structs.parquet');
 
@@ -104,8 +106,9 @@ class StructsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_struct_flat_column(ParquetEngine $engine): void
+    public function test_reading_struct_flat_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/structs.parquet');
 
@@ -129,8 +132,9 @@ class StructsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_struct_flat_nullable_column(ParquetEngine $engine): void
+    public function test_reading_struct_flat_nullable_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/structs.parquet');
 
@@ -158,8 +162,9 @@ class StructsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_struct_nested_column(ParquetEngine $engine): void
+    public function test_reading_struct_nested_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/structs.parquet');
 
@@ -187,8 +192,9 @@ class StructsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_struct_nested_with_list_of_lists_column(ParquetEngine $engine): void
+    public function test_reading_struct_nested_with_list_of_lists_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/structs.parquet');
 
@@ -215,8 +221,9 @@ class StructsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_struct_nested_with_list_of_maps_column(ParquetEngine $engine): void
+    public function test_reading_struct_nested_with_list_of_maps_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/structs.parquet');
 
@@ -243,8 +250,9 @@ class StructsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_struct_nested_with_map_of_list_of_ints_column(ParquetEngine $engine): void
+    public function test_reading_struct_nested_with_map_of_list_of_ints_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/structs.parquet');
 
@@ -275,8 +283,9 @@ class StructsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_struct_nested_with_map_of_string_map_of_string_string_column(ParquetEngine $engine): void
+    public function test_reading_struct_nested_with_map_of_string_map_of_string_string_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/structs.parquet');
 
@@ -315,8 +324,9 @@ class StructsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_struct_nested_with_map_of_string_map_of_string_string_column_with_limit(ParquetEngine $engine): void
+    public function test_reading_struct_nested_with_map_of_string_map_of_string_string_column_with_limit(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/structs.parquet');
 
@@ -354,8 +364,9 @@ class StructsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_struct_with_list_and_map_of_structs_column(ParquetEngine $engine): void
+    public function test_reading_struct_with_list_and_map_of_structs_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/structs.parquet');
 

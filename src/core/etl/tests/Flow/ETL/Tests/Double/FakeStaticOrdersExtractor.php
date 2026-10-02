@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Double;
 
 use DateTimeImmutable;
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Column\Backend;
-use Flow\ETL\Column\DefaultBackend;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
@@ -138,7 +138,7 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
         }
     }
 
-    public function toRows(Backend $backend = new DefaultBackend()): Rows
+    public function toRows(Backend $backend = new AdaptiveBackend()): Rows
     {
         $rows = rows(schema());
         $schema = self::schema();

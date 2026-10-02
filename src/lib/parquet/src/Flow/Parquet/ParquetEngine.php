@@ -9,6 +9,12 @@ use Flow\Filesystem\SourceStream;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Schema;
 
+use function extension_loaded;
+
+if (extension_loaded('arrow')) {
+    return;
+}
+
 interface ParquetEngine
 {
     /**

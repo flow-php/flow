@@ -88,6 +88,12 @@ final class PhpParquetFileReader implements ParquetFileReader
         return $this->metadata;
     }
 
+    /**
+     * @param list<string> $columns
+     * @param int<1, max> $batchSize
+     *
+     * @return Generator<int, array<string, list<mixed>>>
+     */
     public function readColumns(array $columns, int $batchSize, ?int $limit, ?int $offset): Generator
     {
         $this->open || throw new RuntimeException('Reader is not open');

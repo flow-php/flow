@@ -18,17 +18,14 @@ use function array_filter;
 use function count;
 use function in_array;
 
-/**
- * @template R of ParquetFileReader
- */
 final readonly class ParquetSourceFile implements SelfDescribingFile
 {
     /**
-     * @param ParquetFile<R> $file
+     * @param ParquetFile<ParquetFileReader> $file
      * @param list<string> $columns
      */
     public function __construct(
-        /** @var ParquetFile<R> */
+        /** @var ParquetFile<ParquetFileReader> */
         public ParquetFile $file,
         private SourceFile $source,
         private SchemaConverter $converter,
@@ -40,12 +37,9 @@ final readonly class ParquetSourceFile implements SelfDescribingFile
         $this->file->close();
     }
 
-    /**
-     * @param ParquetOpener<R> $opener
-     */
-    public function open(ParquetOpener $opener): ParquetOpenSource
+    public function open(): ParquetOpenSource
     {
-        return $opener->source($this);
+        return new AdaptiveParquetOpenSource($this->file);
     }
 
     /**

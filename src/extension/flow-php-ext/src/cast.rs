@@ -315,23 +315,25 @@ pub(crate) fn float_from_str(bytes: &[u8]) -> Option<f64> {
 /// The instant an ISO string names, parsed as `DateTimeType::cast` parses it (before moving it into the column zone);
 /// any other string is gated on StringTemporalParts, a PHP class, so it bails.
 pub(crate) fn parse_iso_datetime(bytes: &[u8], zone: &[u8]) -> Result<Option<(IsoSuffix, Zval)>, PhpException> {
-    Ok(match iso_date_time_gate(bytes).or_else(|| iso_date_gate(bytes).then_some(IsoSuffix::Naive)) {
-        Some(IsoSuffix::Zulu) => {
-            // mirrors DateTimeType::cast's Z branch
-            let local = bytes.strip_suffix(b"\n").unwrap_or(bytes);
-            let local = local.strip_suffix(b"Z").unwrap_or(local);
-            let mut utc = ctx::timezone(b"UTC")?;
+    Ok(
+        match iso_date_time_gate(bytes).or_else(|| iso_date_gate(bytes).then_some(IsoSuffix::Naive)) {
+            Some(IsoSuffix::Zulu) => {
+                // mirrors DateTimeType::cast's Z branch
+                let local = bytes.strip_suffix(b"\n").unwrap_or(bytes);
+                let local = local.strip_suffix(b"Z").unwrap_or(local);
+                let mut utc = ctx::timezone(b"UTC")?;
 
-            date_from_free_form(local, Some(&mut utc))?.map(|instant| (IsoSuffix::Zulu, instant))
-        }
-        Some(IsoSuffix::Offset) => date_from_free_form(bytes, None)?.map(|instant| (IsoSuffix::Offset, instant)),
-        Some(IsoSuffix::Naive) => {
-            let mut column = ctx::timezone(zone)?;
+                date_from_free_form(local, Some(&mut utc))?.map(|instant| (IsoSuffix::Zulu, instant))
+            }
+            Some(IsoSuffix::Offset) => date_from_free_form(bytes, None)?.map(|instant| (IsoSuffix::Offset, instant)),
+            Some(IsoSuffix::Naive) => {
+                let mut column = ctx::timezone(zone)?;
 
-            date_from_free_form(bytes, Some(&mut column))?.map(|instant| (IsoSuffix::Naive, instant))
-        }
-        None => None,
-    })
+                date_from_free_form(bytes, Some(&mut column))?.map(|instant| (IsoSuffix::Naive, instant))
+            }
+            None => None,
+        },
+    )
 }
 
 /// `DateType::cast` of an ISO date string: midnight UTC.
@@ -598,10 +600,7 @@ fn cast_date(value: &Zval) -> Result<Option<Zval>, PhpException> {
     set_midnight(set_time, object)
 }
 
-fn set_midnight(
-    set_time: &'static Function,
-    object: &ZendObject,
-) -> Result<Option<Zval>, PhpException> {
+fn set_midnight(set_time: &'static Function, object: &ZendObject) -> Result<Option<Zval>, PhpException> {
     let mut args = [zval_long(0), zval_long(0), zval_long(0), zval_long(0)];
 
     let Ok(result) = call_handle_transparent(set_time, Some(object), &mut args) else {
@@ -642,8 +641,7 @@ fn cast_json(value: &Zval) -> Result<Option<Zval>, PhpException> {
     if value.is_array() {
         // Json::fromArray's json_encode, in its non-throwing flavor: `false`
         // (or a thrown JsonSerializable) bails to the PHP cast
-        let Ok(encoded) = call_handle_transparent(ctx::json_encode()?, None, &mut [value.shallow_clone()])
-        else {
+        let Ok(encoded) = call_handle_transparent(ctx::json_encode()?, None, &mut [value.shallow_clone()]) else {
             return Ok(None);
         };
 

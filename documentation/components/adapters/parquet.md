@@ -25,7 +25,7 @@ For detailed installation instructions, see the [installation page](/documentati
 ## Engines
 
 Without `engine:`, Parquet is read and written by the [`flow_php` extension](/documentation/components/extensions/flow-php-ext.md)
-when it is loaded, else by `AdaptiveParquetEngine`. An explicit engine is always used:
+and arrow-ext when both are loaded, else by `AdaptiveParquetEngine`. An explicit engine is always used:
 
 ```php
 <?php
@@ -43,7 +43,7 @@ df()
 
 Flow `float` columns are written as Parquet `DOUBLE`.
 
-With an engine of the `flow-php/parquet` library (`PhpParquetEngine`, or `ArrowParquetEngine` without `flow_php`) a
+With an engine of the `flow-php/parquet` library (`PhpParquetEngine`, or `AdaptiveParquetEngine` without both extensions) a
 batch reaches the writer column by column, through `Writer::writeColumns()`.
 
 ## Schema

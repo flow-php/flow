@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Column\Backend;
-use Flow\ETL\Column\DefaultBackend;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
 use Flow\Floe\Codec\NoopCodec;
@@ -17,7 +17,7 @@ final readonly class FloeReader
         private Filesystem $filesystem,
         private Codec $codec = new NoopCodec(),
         private int $chunkSize = 65536,
-        private Backend $backend = new DefaultBackend(),
+        private Backend $backend = new AdaptiveBackend(),
     ) {}
 
     /**

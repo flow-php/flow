@@ -110,7 +110,11 @@ pub fn physical_at(array: &dyn Array, kind: &Kind, i: usize) -> Result<Zval, Php
                     continue;
                 }
 
-                ht_insert(&mut ht, field.name.as_bytes(), physical_at(child.as_ref(), &field.kind, i)?);
+                ht_insert(
+                    &mut ht,
+                    field.name.as_bytes(),
+                    physical_at(child.as_ref(), &field.kind, i)?,
+                );
             }
 
             array_zval(ht)
@@ -143,7 +147,10 @@ pub fn value_at(array: &dyn Array, kind: &Kind, node: &ValueNode, i: usize) -> R
             let mut ht = ZendHashTable::with_capacity((offsets[i + 1] - offsets[i]) as u32);
 
             for j in offsets[i] as usize..offsets[i + 1] as usize {
-                push(&mut ht, value_at(list.values().as_ref(), &element.kind, element_node, j)?)?;
+                push(
+                    &mut ht,
+                    value_at(list.values().as_ref(), &element.kind, element_node, j)?,
+                )?;
             }
 
             Ok(array_zval(ht))
@@ -173,7 +180,11 @@ pub fn value_at(array: &dyn Array, kind: &Kind, node: &ValueNode, i: usize) -> R
                     continue;
                 }
 
-                ht_insert(&mut ht, field.name.as_bytes(), value_at(child.as_ref(), &field.kind, child_node, i)?);
+                ht_insert(
+                    &mut ht,
+                    field.name.as_bytes(),
+                    value_at(child.as_ref(), &field.kind, child_node, i)?,
+                );
             }
 
             Ok(array_zval(ht))
@@ -230,12 +241,19 @@ pub fn append_physical(builder: &mut KindBuilder, kind: &Kind, physical: &Zval) 
             builder.append_fixed(bytes);
         }
         Kind::Bytes => builder
-            .append_bytes(physical.zend_str().ok_or_else(|| wrong_physical(kind, physical))?.as_bytes())
+            .append_bytes(
+                physical
+                    .zend_str()
+                    .ok_or_else(|| wrong_physical(kind, physical))?
+                    .as_bytes(),
+            )
             .map_err(overflow)?,
         Kind::List(element) => {
             let values = physical.array().ok_or_else(|| wrong_physical(kind, physical))?;
 
-            ht_for_each(values, |_, _, value| append_physical(builder.list_element(), &element.kind, value))?;
+            ht_for_each(values, |_, _, value| {
+                append_physical(builder.list_element(), &element.kind, value)
+            })?;
             builder.end_entries().map_err(overflow)?;
         }
         Kind::Map(key, value) => {

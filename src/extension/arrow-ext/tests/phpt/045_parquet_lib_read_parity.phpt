@@ -1,11 +1,12 @@
 --TEST--
-Reader::arrow() on arrow reads every lib Parquet fixture as Reader::php() does, both refuse it, or it refuses naming Reader::php()
+new Reader(engine: new RustParquetEngine()) on arrow reads every lib Parquet fixture as Reader::php() does, both refuse it, or it refuses naming Reader::php()
 --SKIPIF--
 <?php if (!extension_loaded("arrow")) die("skip arrow extension not loaded"); ?>
 --FILE--
 <?php
 require __DIR__ . '/bootstrap.php';
 
+use Flow\Parquet\Engine\RustParquetEngine;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn};
 use Flow\Parquet\Reader;
@@ -19,7 +20,7 @@ $fixtures = realpath(__DIR__ . '/../../../../lib/parquet/tests/Flow/Parquet/Test
 foreach ([...glob($fixtures . '/*.parquet'), ...glob($fixtures . '/EdgeCases/*.parquet')] as $file) {
     foreach ([100, 10_000] as $batchSize) {
         $php = arrow_outcome(static fn() => ParquetRows::read(Reader::php()->read($file), $batchSize));
-        $native = arrow_outcome(static fn() => ParquetRows::read(Reader::arrow()->read($file), $batchSize));
+        $native = arrow_outcome(static fn() => ParquetRows::read((new Reader(engine: new RustParquetEngine()))->read($file), $batchSize));
         $name = substr($file, strlen($fixtures) + 1) . ' ' . $batchSize;
 
         echo match (true) {
@@ -32,10 +33,10 @@ foreach ([...glob($fixtures . '/*.parquet'), ...glob($fixtures . '/EdgeCases/*.p
 }
 
 $interval = $fixtures . '/EdgeCases/interval.parquet';
-echo 'interval.parquet [id]: ', arrow_outcome(static fn() => ParquetRows::read(Reader::php()->read($interval), 10, ['id'])) === arrow_outcome(static fn() => ParquetRows::read(Reader::arrow()->read($interval), 10, ['id'])) ? 'identical' : 'DIFFER', "\n";
+echo 'interval.parquet [id]: ', arrow_outcome(static fn() => ParquetRows::read(Reader::php()->read($interval), 10, ['id'])) === arrow_outcome(static fn() => ParquetRows::read((new Reader(engine: new RustParquetEngine()))->read($interval), 10, ['id'])) ? 'identical' : 'DIFFER', "\n";
 
 $everyType = MemoryParquetFile::written(Writer::php(), EveryType::schema(), EveryType::rows());
-echo 'every type: ', arrow_outcome(static fn() => ParquetRows::read(MemoryParquetFile::read(Reader::php(), $everyType), 2)) === arrow_outcome(static fn() => ParquetRows::read(MemoryParquetFile::read(Reader::arrow(), $everyType), 2)) ? 'identical' : 'DIFFER', "\n";
+echo 'every type: ', arrow_outcome(static fn() => ParquetRows::read(MemoryParquetFile::read(Reader::php(), $everyType), 2)) === arrow_outcome(static fn() => ParquetRows::read(MemoryParquetFile::read(new Reader(engine: new RustParquetEngine()), $everyType), 2)) ? 'identical' : 'DIFFER', "\n";
 
 // pre-epoch timestamps with a sub-second fraction are floored, flat and inside a list
 $preEpoch = MemoryParquetFile::written(
@@ -46,9 +47,9 @@ $preEpoch = MemoryParquetFile::written(
         [(new DateTimeImmutable('@0'))->modify('-1500000 microseconds'), (new DateTimeImmutable('@0'))->modify('-1 microsecond'), new DateTimeImmutable('2020-01-02 03:04:05.678901 UTC')],
     ),
 );
-echo 'pre-epoch timestamps: ', arrow_outcome(static fn() => ParquetRows::read(MemoryParquetFile::read(Reader::php(), $preEpoch), 3)) === arrow_outcome(static fn() => ParquetRows::read(MemoryParquetFile::read(Reader::arrow(), $preEpoch), 3)) ? 'identical' : 'DIFFER', "\n";
+echo 'pre-epoch timestamps: ', arrow_outcome(static fn() => ParquetRows::read(MemoryParquetFile::read(Reader::php(), $preEpoch), 3)) === arrow_outcome(static fn() => ParquetRows::read(MemoryParquetFile::read(new Reader(engine: new RustParquetEngine()), $preEpoch), 3)) ? 'identical' : 'DIFFER', "\n";
 
-foreach (ParquetRows::read(MemoryParquetFile::read(Reader::arrow(), $preEpoch), 3) as $row) {
+foreach (ParquetRows::read(MemoryParquetFile::read(new Reader(engine: new RustParquetEngine()), $preEpoch), 3) as $row) {
     echo $row['ts']->format('Y-m-d H:i:s.u'), ' ', $row['ts_list'][0]->format('Y-m-d H:i:s.u'), "\n";
 }
 ?>

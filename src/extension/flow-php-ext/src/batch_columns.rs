@@ -4,13 +4,16 @@
 
 use std::rc::Rc;
 
+use ext_php_rs::boxed::ZBox;
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::types::{ZendHashTable, Zval};
 use flow_batch_frame::kind::Kind;
 
 use crate::builder::{definition_nullable, schema_mismatch};
-use crate::cast::{bool_from_str, float_from_str, integer_from_str, json_gate, parse_iso_date, parse_iso_datetime, CastKind};
-use crate::column::NativeColumn;
+use crate::cast::{
+    bool_from_str, float_from_str, integer_from_str, json_gate, parse_iso_date, parse_iso_datetime, CastKind,
+};
+use crate::column::RustColumn;
 use crate::ctx::{self, call_method, call_static, ht_for_each, ht_insert, ht_insert_long, zval_long};
 use crate::date_check::iso_instant_micros;
 use crate::exception::ext_exception;
@@ -132,7 +135,9 @@ impl BatchColumns {
             match pending {
                 Some(state) if state.schema_json == json => state.schema = schema.shallow_clone(),
                 Some(state) if state.rows > 0 => {
-                    return Err(ext_exception(format!("flow_php cannot change the schema of a pending {what} batch")));
+                    return Err(ext_exception(format!(
+                        "flow_php cannot change the schema of a pending {what} batch"
+                    )));
                 }
                 _ => {
                     *pending = Some(Self::new(schema, json, batch_size)?);
@@ -145,7 +150,9 @@ impl BatchColumns {
 
         if state.batch_size != batch_size {
             if state.rows > 0 {
-                return Err(ext_exception(format!("flow_php cannot change the batch size of a pending {what} batch")));
+                return Err(ext_exception(format!(
+                    "flow_php cannot change the batch size of a pending {what} batch"
+                )));
             }
 
             state.batch_size = batch_size;
@@ -164,16 +171,16 @@ impl BatchColumns {
         }
     }
 
-    /// The batch as `Rows::fromColumns()`, or its refusal: the lowest refused row (ties: the earliest definition),
-    /// else the lowest absent row (ties: the earliest definition) as `missingColumn`. The state is reset either way.
-    pub fn finish(&mut self) -> Result<Zval, PhpException> {
+    /// The batch's columns, or its refusal: the lowest refused row (ties: the earliest definition), else the lowest
+    /// absent row (ties: the earliest definition) as `missingColumn`. The state is reset either way.
+    pub fn finish(&mut self) -> Result<HeldBatch, PhpException> {
         let batch = self.build();
         self.reset();
 
         batch
     }
 
-    fn build(&self) -> Result<Zval, PhpException> {
+    fn build(&self) -> Result<HeldBatch, PhpException> {
         // min_by_key() keeps the first of equal rows: the earliest definition
         if let Some((row, cause)) = self
             .columns
@@ -208,7 +215,7 @@ impl BatchColumns {
                 .map_err(|e| invalid_argument(format!("flow_php built an invalid column: {e}")))?;
             let mut native = Zval::new();
             ext_php_rs::convert::IntoZval::set_zval(
-                NativeColumn::new(arrow_array::make_array(data), Rc::clone(&column.plan)),
+                RustColumn::new(arrow_array::make_array(data), Rc::clone(&column.plan)),
                 &mut native,
                 false,
             )?;
@@ -219,25 +226,33 @@ impl BatchColumns {
             }
         }
 
-        let mut columns_zv = Zval::new();
-        columns_zv.set_hashtable(columns);
-
-        call_static(
-            "Flow\\ETL\\Rows",
-            "fromColumns",
-            &mut [self.schema.shallow_clone(), columns_zv, zval_long(self.rows as i64)],
-        )
+        Ok(HeldBatch {
+            columns,
+            count: self.rows,
+        })
     }
+}
+
+/// A batch's native columns keyed as its schema's definitions, before the configured backend adopts them.
+pub struct HeldBatch {
+    pub columns: ZBox<ZendHashTable>,
+    pub count: usize,
 }
 
 /// A text value `cast.rs` casts natively, appended in its physical form; `false` hands it to the PHP lane.
 pub fn native_text(values: &mut KindBuilder, kind: &Kind, cast: &CastKind, bytes: &[u8]) -> Result<bool, PhpException> {
     match (kind, cast) {
-        (Kind::Int64, CastKind::Integer) => Ok(integer_from_str(bytes).map(|value| values.append_fixed(&value.to_le_bytes())).is_some()),
-        (Kind::Float64, CastKind::Float) => Ok(float_from_str(bytes).map(|value| values.append_fixed(&value.to_le_bytes())).is_some()),
+        (Kind::Int64, CastKind::Integer) => Ok(integer_from_str(bytes)
+            .map(|value| values.append_fixed(&value.to_le_bytes()))
+            .is_some()),
+        (Kind::Float64, CastKind::Float) => Ok(float_from_str(bytes)
+            .map(|value| values.append_fixed(&value.to_le_bytes()))
+            .is_some()),
         (Kind::Boolean, CastKind::Boolean) => Ok(bool_from_str(bytes).map(|value| values.append_bool(value)).is_some()),
         (Kind::Bytes, CastKind::String) => values.append_bytes(bytes).map(|()| true).map_err(overflow),
-        (Kind::Bytes, CastKind::NonEmptyString) if !bytes.is_empty() => values.append_bytes(bytes).map(|()| true).map_err(overflow),
+        (Kind::Bytes, CastKind::NonEmptyString) if !bytes.is_empty() => {
+            values.append_bytes(bytes).map(|()| true).map_err(overflow)
+        }
         (Kind::Bytes, CastKind::Json) if json_gate(bytes) && json_valid(bytes) => {
             values.append_bytes(bytes).map(|()| true).map_err(overflow)
         }
@@ -246,7 +261,9 @@ pub fn native_text(values: &mut KindBuilder, kind: &Kind, cast: &CastKind, bytes
         }
         (Kind::Timestamp, CastKind::DateTime(zone)) => Ok(match iso_instant_micros(bytes) {
             Some(micros) => Some(micros),
-            None => parse_iso_datetime(bytes, zone)?.and_then(|(_, instant)| instant.object().and_then(datetime_micros)),
+            None => {
+                parse_iso_datetime(bytes, zone)?.and_then(|(_, instant)| instant.object().and_then(datetime_micros))
+            }
         }
         .map(|micros| values.append_fixed(&micros.to_le_bytes()))
         .is_some()),

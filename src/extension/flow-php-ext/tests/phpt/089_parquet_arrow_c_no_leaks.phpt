@@ -7,11 +7,13 @@ Batches crossing to and from arrow-ext through the Arrow C Data Interface leak n
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\Arrow\Parquet\{BatchReader, ParquetFile, RowsWriter};
-use Flow\ETL\Adapter\Parquet\{NativeParquetWriter, SchemaConverter};
-use Flow\ETL\Column\DefaultBackend;
+use Flow\Arrow\Parquet\RustBatchReader;
+use Flow\Parquet\Engine\{RustParquetFileReader, RustParquetFileWriter};
+use Flow\ETL\Adapter\Parquet\{RustParquetOpenSink, SchemaConverter};
+use Flow\ETL\Column\RustBackend;
 use Flow\Parquet\Engine\Arrow\{OptionsConverter, SchemaConverter as ArrowSchemaConverter};
 use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Compressions;
 
 use function Flow\ETL\DSL\{int_schema, list_schema, schema, str_schema};
 use function Flow\Filesystem\DSL\{memory_filesystem, path};
@@ -28,28 +30,28 @@ $mismatched = schema(str_schema('id'));
 
 $cycle = static function () use ($schema, $extension, $options, $rows, $invalid, $mismatched): void {
     $filesystem = memory_filesystem();
-    $writer = new NativeParquetWriter(new RowsWriter($filesystem->writeTo(path('memory://leaks.parquet')), $extension, 'SNAPPY', $options, 30));
+    $writer = new RustParquetOpenSink(new RustParquetFileWriter($filesystem->writeTo(path('memory://leaks.parquet')), $extension, Compressions::SNAPPY, $options, 30));
     $writer->write($rows);
     $writer->write($rows);
     $writer->close();
 
-    $reader = native_parquet_reader($filesystem->readFrom(path('memory://leaks.parquet')), $schema, 30, null, null);
+    $reader = rust_parquet_batches($filesystem->readFrom(path('memory://leaks.parquet')), $schema, 30, null, null);
 
-    while ($reader->next() !== null) {
+    foreach ($reader as $_) {
     }
 
-    $abandoned = native_parquet_reader($filesystem->readFrom(path('memory://leaks.parquet')), $schema, 30, null, null);
-    $abandoned->next();
+    $abandoned = rust_parquet_batches($filesystem->readFrom(path('memory://leaks.parquet')), $schema, 30, null, null);
+    $abandoned->rewind();
     unset($abandoned);
 
-    $batches = new BatchReader(new ParquetFile($filesystem->readFrom(path('memory://leaks.parquet'))), ['id', 'name', 'tags'], 30, null, null);
+    $batches = new RustBatchReader(new RustParquetFileReader($filesystem->readFrom(path('memory://leaks.parquet'))), ['id', 'name', 'tags'], 30, null, null);
     $batches->next();
     $twice = $batches->next();
-    $copy = new RowsWriter($filesystem->writeTo(path('memory://copy.parquet')), $extension, 'SNAPPY', $options, 30);
-    $copy->writeBatch($twice);
+    $copy = new RustParquetFileWriter($filesystem->writeTo(path('memory://copy.parquet')), $extension, Compressions::SNAPPY, $options, 30);
+    $copy->writeArrowBatch($twice);
 
     try {
-        $copy->writeBatch($twice);
+        $copy->writeArrowBatch($twice);
         throw new LogicException('a batch was imported twice');
     } catch (Flow\Parquet\Exception\InvalidArgumentException) {
     }
@@ -57,12 +59,12 @@ $cycle = static function () use ($schema, $extension, $options, $rows, $invalid,
     $copy->close();
 
     try {
-        native_parquet_reader($filesystem->readFrom(path('memory://leaks.parquet')), $mismatched, 30, null, null);
+        rust_parquet_batches($filesystem->readFrom(path('memory://leaks.parquet')), $mismatched, 30, null, null);
         throw new LogicException('a string schema read an int column');
     } catch (Flow\ETL\Exception\InvalidArgumentException) {
     }
 
-    $refused = new NativeParquetWriter(new RowsWriter($filesystem->writeTo(path('memory://refused.parquet')), $extension, 'SNAPPY', $options, 30));
+    $refused = new RustParquetOpenSink(new RustParquetFileWriter($filesystem->writeTo(path('memory://refused.parquet')), $extension, Compressions::SNAPPY, $options, 30));
 
     try {
         $refused->write($invalid);
@@ -70,7 +72,7 @@ $cycle = static function () use ($schema, $extension, $options, $rows, $invalid,
     } catch (Flow\Parquet\Exception\RuntimeException) {
     }
 
-    $unclosed = new NativeParquetWriter(new RowsWriter($filesystem->writeTo(path('memory://unclosed.parquet')), $extension, 'SNAPPY', $options, 30));
+    $unclosed = new RustParquetOpenSink(new RustParquetFileWriter($filesystem->writeTo(path('memory://unclosed.parquet')), $extension, Compressions::SNAPPY, $options, 30));
     $unclosed->write($rows);
 };
 
@@ -79,7 +81,7 @@ for ($i = 0; $i < 10; $i++) {
 }
 gc_collect_cycles();
 $baseline = memory_get_usage(false);
-$baselineRust = (new DefaultBackend())->allocatedBytes();
+$baselineRust = (new RustBackend())->allocatedBytes();
 
 for ($i = 0; $i < 200; $i++) {
     $cycle();
@@ -87,7 +89,7 @@ for ($i = 0; $i < 200; $i++) {
 gc_collect_cycles();
 
 var_dump(memory_get_usage(false) <= $baseline);
-var_dump((new DefaultBackend())->allocatedBytes() === $baselineRust);
+var_dump((new RustBackend())->allocatedBytes() === $baselineRust);
 ?>
 --EXPECT--
 bool(true)

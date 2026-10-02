@@ -5,9 +5,7 @@
 //! from 0 over exactly the rows' bytes and children, whatever slice or selection the array is.
 
 use arrow_array::cast::AsArray;
-use arrow_array::types::{
-    Date32Type, DurationMicrosecondType, Float64Type, Int64Type, TimestampMicrosecondType,
-};
+use arrow_array::types::{Date32Type, DurationMicrosecondType, Float64Type, Int64Type, TimestampMicrosecondType};
 use arrow_array::{make_array, Array, ArrowPrimitiveType};
 use arrow_buffer::{Buffer, ToByteSlice};
 use arrow_data::ArrayData;
@@ -45,12 +43,7 @@ pub fn encode(data: &ArrayData, kind: &Kind) -> Result<Vec<Vec<u8>>, Error> {
 
 /// `ColumnDecoder::decode()` + `PhpBackend::decode()`: the same refusals in the same order. The result's data type is
 /// `data_type(kind)`. A top-level null under NOT NULL is not refused here (`Rows::fromColumns` does).
-pub fn decode(
-    kind: &Kind,
-    buffers: &[&[u8]],
-    len: u32,
-    null_count: u32,
-) -> Result<ArrayData, Error> {
+pub fn decode(kind: &Kind, buffers: &[&[u8]], len: u32, null_count: u32) -> Result<ArrayData, Error> {
     let mut cursor = Cursor::new(buffers);
     let data = decode_node(kind, 0, &mut cursor, len, null_count)?;
 
@@ -86,13 +79,7 @@ impl Rows {
     }
 }
 
-fn encode_node(
-    array: &dyn Array,
-    kind: &Kind,
-    rows: &Rows,
-    parent: Option<&[bool]>,
-    out: &mut Vec<Vec<u8>>,
-) {
+fn encode_node(array: &dyn Array, kind: &Kind, rows: &Rows, parent: Option<&[bool]>, out: &mut Vec<Vec<u8>>) {
     if let Kind::Null = kind {
         return;
     }
@@ -150,8 +137,7 @@ fn encode_node(
                 for j in 0..rows.len() {
                     if is_valid(valid, j) {
                         let i = rows.at(j);
-                        bytes
-                            .extend_from_slice(&data[offsets[i] as usize..offsets[i + 1] as usize]);
+                        bytes.extend_from_slice(&data[offsets[i] as usize..offsets[i + 1] as usize]);
                     }
 
                     packed.extend_from_slice(&(bytes.len() as u32).to_le_bytes());
@@ -186,11 +172,7 @@ fn encode_node(
 }
 
 /// The null of a row is its own or its parent structure's; `None` when every row is valid.
-fn effective_validity(
-    array: &dyn Array,
-    rows: &Rows,
-    parent: Option<&[bool]>,
-) -> Option<Vec<bool>> {
+fn effective_validity(array: &dyn Array, rows: &Rows, parent: Option<&[bool]>) -> Option<Vec<bool>> {
     let nulls = array.nulls();
 
     if nulls.is_none() && parent.is_none() {
@@ -286,17 +268,11 @@ struct Cursor<'b, 'a> {
 
 impl<'b, 'a> Cursor<'b, 'a> {
     fn new(buffers: &'b [&'a [u8]]) -> Self {
-        Self {
-            buffers,
-            position: 0,
-        }
+        Self { buffers, position: 0 }
     }
 
     fn next(&mut self) -> Result<&'a [u8], Error> {
-        let buffer = self
-            .buffers
-            .get(self.position)
-            .ok_or(Error::BuffersExhausted)?;
+        let buffer = self.buffers.get(self.position).ok_or(Error::BuffersExhausted)?;
         self.position += 1;
 
         Ok(buffer)
@@ -323,14 +299,7 @@ fn decode_node(
 
         let nodes = nodes_at(kind, node, len, null_count, &subtree)?;
 
-        return decode_nested(
-            kind,
-            node,
-            &mut Cursor::new(&subtree),
-            len,
-            null_count,
-            &nodes,
-        );
+        return decode_nested(kind, node, &mut Cursor::new(&subtree), len, null_count, &nodes);
     }
 
     if let Kind::Null = kind {
@@ -354,12 +323,7 @@ fn decode_node(
         }
         Kind::Int32 => builder.add_buffer(fixed_values(cursor.next()?, 4, len, Values::Int32)?),
         Kind::Float64 => builder.add_buffer(fixed_values(cursor.next()?, 8, len, Values::Float64)?),
-        Kind::Uuid => builder.add_buffer(fixed_values(
-            cursor.next()?,
-            16,
-            len,
-            Values::FixedBinary16,
-        )?),
+        Kind::Uuid => builder.add_buffer(fixed_values(cursor.next()?, 16, len, Values::FixedBinary16)?),
         Kind::Boolean => {
             let buffer = cursor.next()?;
             let expected = (len as u64).div_ceil(8);
@@ -538,8 +502,7 @@ fn check_offsets(buffer: &[u8], len: u32, of: Of) -> Result<u32, Error> {
         });
     }
 
-    let offset =
-        |i: usize| u32::from_le_bytes(buffer[i * 4..i * 4 + 4].try_into().expect("4-byte slice"));
+    let offset = |i: usize| u32::from_le_bytes(buffer[i * 4..i * 4 + 4].try_into().expect("4-byte slice"));
 
     if offset(0) != 0 {
         return Err(Error::OffsetsStart {

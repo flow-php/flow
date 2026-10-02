@@ -33,7 +33,9 @@ final readonly class MemoryLimit
         }
 
         return (
-            (new Configuration(100 - self::PERCENTAGE_OF_MEMORY_LIMIT))->limit() ?? Unit::fromGb(self::WITHOUT_MEMORY_LIMIT_GB)
+            (new Configuration(100 - self::PERCENTAGE_OF_MEMORY_LIMIT))->limit() ?? Unit::fromGb(
+                self::WITHOUT_MEMORY_LIMIT_GB,
+            )
         );
     }
 }

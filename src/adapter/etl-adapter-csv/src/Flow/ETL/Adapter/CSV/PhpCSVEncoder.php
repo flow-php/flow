@@ -49,6 +49,7 @@ final class PhpCSVEncoder implements CSVEncoder
         $this->text = new TextValues($options->dateTimeFormat, $options->dateFormat);
     }
 
+    // called by name from flow_php RustCSVEncoder::encode(), pinned by phpt 082
     /**
      * @param Type<mixed> $type
      *

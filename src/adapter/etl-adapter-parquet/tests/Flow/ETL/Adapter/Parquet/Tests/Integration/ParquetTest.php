@@ -14,8 +14,8 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Exception\RuntimeException as FilesystemRuntimeException;
 use Flow\Filesystem\SizeUnits;
 use Flow\Filesystem\Tests\Double\FailingCloseFilesystem;
-use Flow\Parquet\Engine\ArrowParquetEngine;
 use Flow\Parquet\Engine\PhpParquetEngine;
+use Flow\Parquet\Engine\RustParquetEngine;
 use Flow\Parquet\Exception\RuntimeException as ParquetRuntimeException;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
@@ -111,14 +111,14 @@ final class ParquetTest extends FlowTestCase
 
         data_frame($config)
             ->read(from_array([['id' => 1], ['id' => 2]]))
-            ->write(to_parquet($path, engine: new ArrowParquetEngine(), filesystem: $memory))
+            ->write(to_parquet($path, engine: new RustParquetEngine(), filesystem: $memory))
             ->run();
 
         static::assertSame(
             2,
             data_frame($config)->read(from_parquet(
                 $path,
-                engine: new ArrowParquetEngine(),
+                engine: new RustParquetEngine(),
                 filesystem: $memory,
             ))->count(),
         );
@@ -660,7 +660,7 @@ final class ParquetTest extends FlowTestCase
             ]))
             ->write(to_parquet(
                 path('memory://var/engine/file.parquet'),
-                engine: new ArrowParquetEngine(),
+                engine: new RustParquetEngine(),
                 filesystem: $memory,
             )->partitionBy(partition_by('p')))
             ->run();

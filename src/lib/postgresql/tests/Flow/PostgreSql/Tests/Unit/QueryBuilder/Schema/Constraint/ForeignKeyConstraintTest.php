@@ -134,11 +134,9 @@ final class ForeignKeyConstraintTest extends TestCase
 
     public function test_on_delete_set_default(): void
     {
-        $constraint = ForeignKeyConstraint::create(
-            ['user_id'],
-            'users',
-            ['id'],
-        )->onDelete(ReferentialAction::SET_DEFAULT);
+        $constraint = ForeignKeyConstraint::create(['user_id'], 'users', ['id'])->onDelete(
+            ReferentialAction::SET_DEFAULT,
+        );
 
         $ast = $constraint->toAst();
 
@@ -168,11 +166,9 @@ final class ForeignKeyConstraintTest extends TestCase
 
     public function test_on_update_no_action(): void
     {
-        $constraint = ForeignKeyConstraint::create(
-            ['user_id'],
-            'users',
-            ['id'],
-        )->onUpdate(ReferentialAction::NO_ACTION);
+        $constraint = ForeignKeyConstraint::create(['user_id'], 'users', ['id'])->onUpdate(
+            ReferentialAction::NO_ACTION,
+        );
 
         $ast = $constraint->toAst();
 

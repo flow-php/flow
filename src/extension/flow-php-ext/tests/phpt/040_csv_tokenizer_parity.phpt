@@ -6,8 +6,6 @@ native CSV fields match str_getcsv() byte for byte on every tokenizer edge case
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\CSV\RustCSVReaderNative;
-
 $cases = [
     'plain' => '612c622c63',
     'quoted' => '2261222c226222',
@@ -22,11 +20,7 @@ $cases = [
 
 foreach ($cases as $case => $hex) {
     $input = hex2bin($hex);
-    $reader = new RustCSVReaderNative(',', '"', '\\', false, false, false);
-    $reader->feed($input . "\n");
-    $reader->finish();
-
-    $fields = array_values($reader->next(10)[0]);
+    $fields = array_values(csv_native_rows($input . "\n", ',', '"', '\\', false, false, false)[1][0]);
     $expected = str_getcsv($input, ',', '"', '\\');
 
     echo $case, ': ', $fields === $expected ? 'identical' : 'FAIL ' . json_encode(array_map(static fn(?string $f): ?string => $f === null ? null : bin2hex($f), $fields)), "\n";

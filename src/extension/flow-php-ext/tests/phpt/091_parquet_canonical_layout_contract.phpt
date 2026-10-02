@@ -1,5 +1,5 @@
 --TEST--
-arrow-ext's canonical Arrow layout (parquet/canonical.rs) is the layout flow_php's columns store (flow-batch-frame kind::data_type()): every Flow type, nested included, crosses BatchReader → NativeParquetReader with its values intact
+arrow-ext's canonical Arrow layout (parquet/canonical.rs) is the layout flow_php's columns store (flow-batch-frame kind::data_type()): every Flow type, nested included, crosses RustBatchReader → RustParquetOpenSource with its values intact
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 <?php extension_loaded('arrow') || die('skip arrow'); ?>
@@ -7,11 +7,12 @@ arrow-ext's canonical Arrow layout (parquet/canonical.rs) is the layout flow_php
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\Arrow\Parquet\RowsWriter;
-use Flow\ETL\Adapter\Parquet\{NativeParquetWriter, SchemaConverter};
+use Flow\Parquet\Engine\RustParquetFileWriter;
+use Flow\ETL\Adapter\Parquet\{RustParquetOpenSink, SchemaConverter};
 use Flow\Parquet\Engine\Arrow\{OptionsConverter, SchemaConverter as ArrowSchemaConverter};
 use Flow\Parquet\Options;
 use Flow\Types\Value\Uuid;
+use Flow\Parquet\ParquetFile\Compressions;
 
 use function Flow\ETL\DSL\{bool_schema, date_schema, datetime_schema, float_schema, int_schema, json_schema, list_schema, map_schema, schema, str_schema, structure_schema, time_schema, uuid_schema};
 use function Flow\Filesystem\DSL\{memory_filesystem, path};
@@ -46,10 +47,10 @@ $values = [
 ];
 
 $filesystem = memory_filesystem();
-$writer = new NativeParquetWriter(new RowsWriter(
+$writer = new RustParquetOpenSink(new RustParquetFileWriter(
     $filesystem->writeTo(path('memory://layout.parquet')),
     ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquet($schema)),
-    'SNAPPY',
+    Compressions::SNAPPY,
     OptionsConverter::toExtension(Options::default()),
     1_000,
 ));
@@ -57,9 +58,9 @@ $writer->write(php_rows($schema, $values));
 $writer->close();
 
 $read = [];
-$reader = native_parquet_reader($filesystem->readFrom(path('memory://layout.parquet')), $schema, 10, null, null);
+$reader = rust_parquet_batches($filesystem->readFrom(path('memory://layout.parquet')), $schema, 10, null, null);
 
-while (($batch = $reader->next()) !== null) {
+foreach ($reader as $batch) {
     array_push($read, ...$batch->toArray());
 }
 

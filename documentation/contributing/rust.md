@@ -7,8 +7,8 @@ This document describes how to develop the two Rust PHP extensions in this monor
 
 | Extension | Package | What it provides |
 |---|---|---|
-| `arrow-ext` | `flow-php/arrow-ext` | Parquet reader and writer powered by the [Apache Arrow](https://arrow.apache.org/) Rust ecosystem, exposed as `Flow\Arrow\Parquet\Reader` and `Flow\Arrow\Parquet\Writer` |
-| `flow-php-ext` | `flow-php/flow-php-ext` | The native column backend (`Flow\ETL\Column\DefaultBackend`, `NativeColumn`, `NativeColumnBuilder` over Apache Arrow arrays) and the native CSV reader |
+| `arrow-ext` | `flow-php/arrow-ext` | Parquet reader and writer powered by the [Apache Arrow](https://arrow.apache.org/) Rust ecosystem, exposed as `Flow\Parquet\Engine\RustParquetEngine` |
+| `flow-php-ext` | `flow-php/flow-php-ext` | The native column backend (`Flow\ETL\Column\RustBackend`, `RustColumn`, `RustColumnBuilder` over Apache Arrow arrays) and the Rust CSV / JSON / Parquet sources and encoders |
 
 Both are optional. The pure-PHP implementations in `flow-php/etl` remain the canonical behaviour reference, and Flow
 routes to the native code automatically when the extension is loaded.
@@ -58,17 +58,20 @@ src/extension/flow-php-ext/
 ├── Makefile                # Build orchestration
 ├── src/                    # Rust source code
 │   ├── lib.rs              # Extension entry point, module registration
-│   ├── interfaces.rs       # Flow\ETL\Column\{Backend, Column, ColumnBuilder}, registered at MINIT
-│   ├── backend.rs          # DefaultBackend
-│   ├── column.rs           # NativeColumn
-│   ├── builder.rs          # NativeColumnBuilder: native cast lanes, PHP lane for the rest
+│   ├── interfaces.rs       # the package interfaces the Rust classes implement, registered at MINIT
+│   ├── iterator.rs         # RustIterator, the iterator the Rust sources return
+│   ├── backend.rs          # RustBackend
+│   ├── column.rs           # RustColumn
+│   ├── builder.rs          # RustColumnBuilder: native cast lanes, PHP lane for the rest
 │   ├── kind_builder.rs     # Arrow storage appended row by row
 │   ├── physical.rs         # Arrow rows as physical and logical zvals
 │   ├── plan.rs             # Per-type plan, cached by Type object and type JSON
 │   ├── render.rs           # flow-batch-frame refusals as the PHP messages
 │   ├── cast.rs             # Value casting
 │   ├── json_check.rs       # JSON validation shared by casting and CSV inference
-│   ├── csv/                # CSV tokenizer, reader, native columns and schema-inference fold
+│   ├── csv/                # CSV tokenizer, RustCSVOpenSource, RustCSVEncoder, schema-inference fold
+│   ├── json/               # RustJsonOpenSource, RustJSONEncoder
+│   ├── parquet/            # RustParquetOpenSource, RustParquetOpenSink
 │   ├── ctx.rs              # Request-scoped context and engine helpers
 │   ├── globals.rs          # Module globals, RINIT/RSHUTDOWN
 │   ├── alloc.rs            # Counting global allocator (allocatedBytes())

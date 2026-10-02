@@ -17,6 +17,7 @@ use Flow\Parquet\ParquetFile\Schema\Repetition;
 
 final class SchemaConverter
 {
+    // called by name from arrow-ext RustParquetEngine::openForWrite(), pinned by phpts 047, 052
     /**
      * @return array<array<string, mixed>>
      */

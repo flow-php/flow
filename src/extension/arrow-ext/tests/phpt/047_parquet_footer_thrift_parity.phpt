@@ -1,5 +1,5 @@
 --TEST--
-ParquetFile decodes the footer to the FileMetaData and schema the PHP thrift reader builds, from one footer read
+RustParquetFileReader decodes the footer to the FileMetaData and schema the PHP thrift reader builds, from one footer read
 --SKIPIF--
 <?php if (!extension_loaded("arrow")) die("skip arrow extension not loaded"); ?>
 --FILE--
@@ -13,7 +13,7 @@ use Flow\Parquet\ParquetFile\Schema\LogicalType\{Time, Timestamp};
 use Flow\Parquet\ParquetFile\Schema\TimeUnit;
 use Flow\Parquet\Tests\Context\MemoryParquetFile;
 use Flow\Parquet\Writer;
-use Flow\Arrow\Parquet\ParquetFile;
+use Flow\Parquet\Engine\RustParquetFileReader;
 use Flow\Parquet\Tests\Double\ReadCountingSourceStream;
 use Flow\Parquet\Thrift\{CompactProtocol, MemoryBuffer};
 use Flow\Parquet\ThriftModel\FileMetaData;
@@ -29,14 +29,14 @@ foreach ([...glob($fixtures . '/*.parquet'), ...glob($fixtures . '/EdgeCases/*.p
     $php->read(new CompactProtocol(new MemoryBuffer(substr($bytes, -8 - $length, $length))));
 
     $stream = new ReadCountingSourceStream(NativeLocalSourceStream::open(path_real($path)));
-    $file = new ParquetFile($stream);
+    $file = new RustParquetFileReader($stream);
     $reads = $stream->reads;
 
     printf(
         "%s: thrift %s, schema %s, footer reads %d\n",
         substr($path, strlen($fixtures) + 1),
         serialize($file->thrift()) === serialize($php) ? 'identical' : 'DIFFER',
-        serialize($file->schema()) === serialize($php->schema) ? 'identical' : 'DIFFER',
+        serialize($file->schema()) === serialize(Schema::fromThrift($php->schema)) ? 'identical' : 'DIFFER',
         $reads,
     );
     $file->close();
@@ -53,12 +53,12 @@ $units = MemoryParquetFile::written(Writer::php(), Schema::with(
 $length = unpack('V', substr($units, -8, 4))[1];
 $php = new FileMetaData();
 $php->read(new CompactProtocol(new MemoryBuffer(substr($units, -8 - $length, $length))));
-$file = new ParquetFile(new MemorySourceStream($units));
+$file = new RustParquetFileReader(new MemorySourceStream($units));
 
 printf(
     "temporal units: thrift %s, schema %s\n",
     serialize($file->thrift()) === serialize($php) ? 'identical' : 'DIFFER',
-    serialize($file->schema()) === serialize($php->schema) ? 'identical' : 'DIFFER',
+    serialize($file->schema()) === serialize(Schema::fromThrift($php->schema)) ? 'identical' : 'DIFFER',
 );
 $file->close();
 ?>

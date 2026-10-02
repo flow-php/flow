@@ -25,6 +25,7 @@ final class Schema
         private readonly NestedColumn $schemaRoot,
     ) {}
 
+    // called by name from arrow-ext RustParquetFileReader::schema(), pinned by phpts 047, 052
     /**
      * @param array<SchemaElement> $schemaElements
      */

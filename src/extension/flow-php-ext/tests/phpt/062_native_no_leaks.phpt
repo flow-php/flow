@@ -6,12 +6,12 @@ decode, value reads, take, encode and a refused appendMany leak neither PHP memo
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Column\DefaultBackend;
+use Flow\ETL\Column\RustBackend;
 use Flow\Floe\FrameDecoder;
 
 $schema = all_types_schema();
 $frame = php_rows($schema, all_types_values())->encodeFrame();
-$backend = new DefaultBackend();
+$backend = new RustBackend();
 
 $cycle = static function () use ($schema, $frame, $backend): void {
     $rows = (new FrameDecoder())->decode($frame, $schema, $backend);

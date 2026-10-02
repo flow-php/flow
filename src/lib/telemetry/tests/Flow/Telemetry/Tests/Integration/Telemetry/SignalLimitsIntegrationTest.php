@@ -129,7 +129,9 @@ final class SignalLimitsIntegrationTest extends TestCase
 
         static::assertCount(4, $metrics);
 
-        $overflowMetrics = array_values(array_filter($metrics, static fn($m) => $m->attributes->has(MetricLimits::OVERFLOW_ATTRIBUTE)));
+        $overflowMetrics = array_values(array_filter($metrics, static fn($m) => $m->attributes->has(
+            MetricLimits::OVERFLOW_ATTRIBUTE,
+        )));
         static::assertCount(1, $overflowMetrics);
 
         static::assertTrue($overflowMetrics[0]->attributes->get(MetricLimits::OVERFLOW_ATTRIBUTE));
@@ -154,7 +156,9 @@ final class SignalLimitsIntegrationTest extends TestCase
 
         static::assertCount(3, $metrics);
 
-        $overflowMetrics = array_values(array_filter($metrics, static fn($m) => $m->attributes->has(MetricLimits::OVERFLOW_ATTRIBUTE)));
+        $overflowMetrics = array_values(array_filter($metrics, static fn($m) => $m->attributes->has(
+            MetricLimits::OVERFLOW_ATTRIBUTE,
+        )));
         static::assertCount(1, $overflowMetrics);
     }
 
@@ -175,7 +179,9 @@ final class SignalLimitsIntegrationTest extends TestCase
 
         $metrics = $counter->collect();
 
-        $overflowMetrics = array_values(array_filter($metrics, static fn($m) => $m->attributes->has(MetricLimits::OVERFLOW_ATTRIBUTE)));
+        $overflowMetrics = array_values(array_filter($metrics, static fn($m) => $m->attributes->has(
+            MetricLimits::OVERFLOW_ATTRIBUTE,
+        )));
 
         static::assertSame(12, $overflowMetrics[0]->value);
     }
@@ -196,7 +202,9 @@ final class SignalLimitsIntegrationTest extends TestCase
 
         static::assertCount(2, $metrics);
 
-        $overflowMetrics = array_values(array_filter($metrics, static fn($m) => $m->attributes->has(MetricLimits::OVERFLOW_ATTRIBUTE)));
+        $overflowMetrics = array_values(array_filter($metrics, static fn($m) => $m->attributes->has(
+            MetricLimits::OVERFLOW_ATTRIBUTE,
+        )));
 
         static::assertTrue($overflowMetrics[0]->attributes->get(MetricLimits::OVERFLOW_ATTRIBUTE));
         static::assertCount(1, $overflowMetrics[0]->attributes->normalize());

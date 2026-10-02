@@ -6,7 +6,6 @@ namespace Flow\Parquet\Tests\Integration\IO;
 
 use Faker\Factory;
 use Flow\Parquet\Consts;
-use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
@@ -14,6 +13,7 @@ use Flow\Parquet\ParquetFile\Schema\ListElement;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Tests\Context\TestParquetFile;
+use Flow\Parquet\Tests\Mother\ParquetEngineMother;
 use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -29,8 +29,9 @@ class CompressionTest extends ParquetIntegrationTestCase
 {
     #[Group('brotli-extension')]
     #[DataProvider('engine_provider')]
-    public function test_writing_and_reading_file_with_brotli_compression(ParquetEngine $engine): void
+    public function test_writing_and_reading_file_with_brotli_compression(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         if (!extension_loaded('brotli')) {
             static::markTestSkipped('The Brotli extension is not available');
         }
@@ -85,8 +86,9 @@ class CompressionTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_and_reading_file_with_gzip_compression(ParquetEngine $engine): void
+    public function test_writing_and_reading_file_with_gzip_compression(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(compression: Compressions::GZIP, engine: $engine);
@@ -138,8 +140,9 @@ class CompressionTest extends ParquetIntegrationTestCase
 
     #[Group('lz4-extension')]
     #[DataProvider('engine_provider')]
-    public function test_writing_and_reading_file_with_lz4_compression(ParquetEngine $engine): void
+    public function test_writing_and_reading_file_with_lz4_compression(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         if (!extension_loaded('lz4')) {
             static::markTestSkipped('The lz4 extension is not available');
         }
@@ -195,8 +198,9 @@ class CompressionTest extends ParquetIntegrationTestCase
 
     #[Group('lz4-extension')]
     #[DataProvider('engine_provider')]
-    public function test_writing_and_reading_file_with_lz4_raw_compression(ParquetEngine $engine): void
+    public function test_writing_and_reading_file_with_lz4_raw_compression(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         if (!extension_loaded('lz4')) {
             static::markTestSkipped('The lz4 extension is not available');
         }
@@ -252,8 +256,9 @@ class CompressionTest extends ParquetIntegrationTestCase
 
     #[Group('snappy-extension')]
     #[DataProvider('engine_provider')]
-    public function test_writing_and_reading_file_with_snappy_compression(ParquetEngine $engine): void
+    public function test_writing_and_reading_file_with_snappy_compression(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         if (!extension_loaded('snappy')) {
             static::markTestSkipped('The snappy extension is not available');
         }
@@ -308,8 +313,9 @@ class CompressionTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_and_reading_file_with_snappy_polyfill(ParquetEngine $engine): void
+    public function test_writing_and_reading_file_with_snappy_polyfill(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         if (extension_loaded('snappy')) {
             static::markTestSkipped('The snappy extension is available');
         }
@@ -364,8 +370,9 @@ class CompressionTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_and_reading_file_with_uncompressed_compression(ParquetEngine $engine): void
+    public function test_writing_and_reading_file_with_uncompressed_compression(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(compression: Compressions::UNCOMPRESSED, engine: $engine);
@@ -417,8 +424,9 @@ class CompressionTest extends ParquetIntegrationTestCase
 
     #[Group('zstd-extension')]
     #[DataProvider('engine_provider')]
-    public function test_writing_and_reading_file_with_zstd_compression(ParquetEngine $engine): void
+    public function test_writing_and_reading_file_with_zstd_compression(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         if (!extension_loaded('zstd')) {
             static::markTestSkipped('The Zstd extension is not available');
         }

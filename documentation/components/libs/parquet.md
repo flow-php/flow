@@ -15,10 +15,10 @@ For detailed installation instructions, see the [installation page](/documentati
 ## Engine System
 
 - **PHP Engine** (`PhpParquetEngine`) - pure PHP, no extra dependencies beyond optional compression extensions.
-- **Arrow Engine** (`ArrowParquetEngine`) - native Rust through the
-  [arrow extension](/documentation/components/extensions/arrow-ext.md); every compression codec is built in.
-- **Adaptive Engine** (`AdaptiveParquetEngine`) - the default: `ArrowParquetEngine` when `arrow` is loaded,
-  `PhpParquetEngine` otherwise.
+- **Rust Engine** (`RustParquetEngine`) - registered by the
+  [arrow extension](/documentation/components/extensions/arrow-ext.md), every compression codec built in.
+- **Adaptive Engine** (`AdaptiveParquetEngine`) - the default: `RustParquetEngine` when the arrow extension is loaded,
+  `PhpParquetEngine` otherwise. A big-endian `Reader` uses `PhpParquetEngine`.
 
 ```php
 <?php
@@ -26,11 +26,8 @@ For detailed installation instructions, see the [installation page](/documentati
 use Flow\Parquet\Reader;
 use Flow\Parquet\Writer;
 
-$reader = new Reader();   // adaptive
+$reader = new Reader();   // AdaptiveParquetEngine
 $writer = new Writer();
-
-$reader = Reader::arrow(); // throws without the arrow extension
-$writer = Writer::arrow();
 
 $reader = Reader::php();
 $writer = Writer::php();
@@ -251,7 +248,7 @@ $writer = new Writer();
 ```
 
 > [!TIP]
-> `new Writer()` uses the adaptive engine. Use `Writer::arrow()` or `Writer::php()` to explicitly select an engine.
+> `new Writer()` uses `AdaptiveParquetEngine`. Use `Writer::php()` to select the PHP engine.
 > See [Engine System](#engine-system).
 
 and write our data:

@@ -67,16 +67,19 @@ php -d extension=./ext/modules/arrow.so your_script.php
 
 ## Usage
 
-`ArrowParquetEngine` of the [parquet library](/documentation/components/libs/parquet.md) is this extension:
+The extension registers the [parquet library](/documentation/components/libs/parquet.md)'s
+`Flow\Parquet\{ParquetEngine, ParquetFileReader, ParquetFileWriter}` and implements them with
+`Flow\Parquet\Engine\{RustParquetEngine, RustParquetFileReader, RustParquetFileWriter}`. `AdaptiveParquetEngine` - the
+default of `Reader` and `Writer` - picks `RustParquetEngine` while the extension is loaded, `PhpParquetEngine`
+otherwise.
 
 ```php
 <?php
 
-use Flow\Parquet\Reader;
-use Flow\Parquet\Writer;
+use Flow\Parquet\{Reader, Writer};
 
-$reader = Reader::arrow();
-$writer = Writer::arrow();
+$reader = new Reader(); // Flow\Parquet\Engine\AdaptiveParquetEngine
+$writer = new Writer();
 ```
 
 ### Classes
@@ -84,47 +87,49 @@ $writer = Writer::arrow();
 ```php
 <?php
 
-use Flow\Arrow\Parquet\{BatchReader, ColumnsReader, ParquetFile, RowsWriter};
+use Flow\Arrow\Parquet\RustBatchReader;
+use Flow\Parquet\Engine\{RustParquetFileReader, RustParquetFileWriter};
 use Flow\Parquet\Engine\Arrow\{OptionsConverter, SchemaConverter};
 use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Compressions;
 
 use function Flow\Filesystem\DSL\{native_local_filesystem, path};
 
 $filesystem = native_local_filesystem();
 
-$file = new ParquetFile($filesystem->readFrom(path('data.parquet'))); // one footer read
+$file = new RustParquetFileReader($filesystem->readFrom(path('data.parquet'))); // Flow\Parquet\ParquetFileReader, one footer read
 $file->rowsNumber();
+$file->schema();                                                      // Flow\Parquet\ParquetFile\Schema
+$file->metadata();                                                    // Flow\Parquet\ParquetFile\Metadata
 $file->thrift();                                                      // Flow\Parquet\ThriftModel\FileMetaData
 
-$columns = new ColumnsReader($file, ['id', 'name'], batchSize: 1_000, offset: null, limit: null);
-
-while (($chunk = $columns->next()) !== null) {
+foreach ($file->readColumns(['id', 'name'], 1_000, null, null) as $chunk) { // RustColumnsReader, an Iterator that streams once
     // ['id' => [1, 2, ...], 'name' => ['a', 'b', ...]]
 }
 
-$writer = new RowsWriter(
+$writer = new RustParquetFileWriter(                      // Flow\Parquet\ParquetFileWriter
     $filesystem->writeTo(path('out.parquet')),
     SchemaConverter::toExtension($schema),     // Flow\Parquet\ParquetFile\Schema
-    'SNAPPY',
+    Compressions::SNAPPY,                      // LZO is refused
     OptionsConverter::toExtension(Options::default()),
     batchSize: 1_000,
 );
-$writer->writeRows([['id' => 1, 'name' => 'a']]);
+$writer->writeBatch([['id' => 1, 'name' => 'a']]);   // an array or any Traversable of rows
 $writer->writeColumns(['id' => [2, 3], 'name' => ['b', null]]);
 $writer->close();                              // footer, then the stream closed
 
-$batches = new BatchReader($file, ['id', 'name'], batchSize: 1_000, offset: null, limit: null);
-$batches->schema();                            // Flow\Arrow\ArrowSchema
-$batches->next();                              // Flow\Arrow\ArrowBatch, null after the last
+$batches = new RustBatchReader($file, ['id', 'name'], batchSize: 1_000, offset: null, limit: null);
+$batches->schema();                            // Flow\Arrow\RustArrowSchema
+$batches->next();                              // Flow\Arrow\RustParquetBatch, null after the last
 ```
 
 Refusals are the `Flow\Parquet\Exception\*` the PHP engine throws; an exception the stream throws surfaces as itself.
 
 ### Arrow C Data Interface
 
-`ArrowBatch` (`BatchReader::next()`) carries one struct array: `arrowSchemaAddress()` (`FFI_ArrowSchema*`) and
+`RustParquetBatch` (`RustBatchReader::next()`) carries one struct array: `arrowSchemaAddress()` (`FFI_ArrowSchema*`) and
 `arrowArrayAddress()` (`FFI_ArrowArray*`). Its consumer, another extension, reads the schema by reference and moves the
-array out. `RowsWriter::writeBatch()` takes the same pair from any extension's final internal class exposing both
+array out. `RustParquetFileWriter::writeArrowBatch()` takes the same pair from any extension's final internal class exposing both
 methods, its children by writer column name. Userland cannot build either: the classes are final and their
 constructors throw.
 

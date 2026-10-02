@@ -7,7 +7,7 @@ namespace Flow\ETL\Adapter\Parquet\Tests\Unit;
 use DateTimeImmutable;
 use Flow\ETL\Adapter\Parquet\ParquetSchemaConformance;
 use Flow\ETL\Adapter\Parquet\SchemaConverter;
-use Flow\ETL\Column\DefaultBackend;
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\array_to_rows;
@@ -33,7 +33,7 @@ final class ParquetSchemaConformanceTest extends FlowTestCase
                 [['id' => 1, 'name' => 'a'], ['id' => 2, 'name' => 'b']],
                 schema(int_schema('id'), str_schema('name')),
             ),
-            new DefaultBackend(),
+            new AdaptiveBackend(),
         );
 
         static::assertEquals(schema(str_schema('id'), str_schema('name')), $conformed->schema());
@@ -46,7 +46,7 @@ final class ParquetSchemaConformanceTest extends FlowTestCase
             'at',
         )))))->conform(array_to_rows([[
             'at' => new DateTimeImmutable('2026-09-01'),
-        ]], schema(date_schema('at'))), new DefaultBackend());
+        ]], schema(date_schema('at'))), new AdaptiveBackend());
 
         static::assertEquals(schema(datetime_schema('at')), $conformed->schema());
         static::assertEquals([new DateTimeImmutable('2026-09-01 00:00:00 UTC')], $conformed->column('at')->values());
@@ -56,7 +56,7 @@ final class ParquetSchemaConformanceTest extends FlowTestCase
     {
         $conformed = (new ParquetSchemaConformance((new SchemaConverter())->toParquet(schema(null_schema(
             'nothing',
-        )))))->conform(array_to_rows([['nothing' => null]], schema(null_schema('nothing'))), new DefaultBackend());
+        )))))->conform(array_to_rows([['nothing' => null]], schema(null_schema('nothing'))), new AdaptiveBackend());
 
         static::assertEquals(schema(str_schema('nothing', nullable: true)), $conformed->schema());
         static::assertSame([null], $conformed->column('nothing')->values());
@@ -69,7 +69,7 @@ final class ParquetSchemaConformanceTest extends FlowTestCase
         $conformed = (new ParquetSchemaConformance((new SchemaConverter())->toParquet(schema(
             str_schema('id'),
             str_schema('name'),
-        ))))->conform($rows, new DefaultBackend());
+        ))))->conform($rows, new AdaptiveBackend());
 
         static::assertSame($rows->column('name'), $conformed->column('name'));
     }
@@ -87,7 +87,7 @@ final class ParquetSchemaConformanceTest extends FlowTestCase
 
         static::assertSame($rows, (new ParquetSchemaConformance((new SchemaConverter())->toParquet($schema)))->conform(
             $rows,
-            new DefaultBackend(),
+            new AdaptiveBackend(),
         ));
     }
 
@@ -97,7 +97,7 @@ final class ParquetSchemaConformanceTest extends FlowTestCase
 
         static::assertSame($rows, (new ParquetSchemaConformance((new SchemaConverter())->toParquet(schema(int_schema(
             'id',
-        )))))->conform($rows, new DefaultBackend()));
+        )))))->conform($rows, new AdaptiveBackend()));
     }
 
     public function test_a_column_the_writer_does_not_know_is_passed_on_as_it_is(): void
@@ -106,6 +106,6 @@ final class ParquetSchemaConformanceTest extends FlowTestCase
 
         static::assertSame($rows, (new ParquetSchemaConformance((new SchemaConverter())->toParquet(schema(int_schema(
             'id',
-        )))))->conform($rows, new DefaultBackend()));
+        )))))->conform($rows, new AdaptiveBackend()));
     }
 }

@@ -1,15 +1,17 @@
-//! `Flow\ETL\Adapter\JSON\NativeJsonWriter`: a `Rows` batch as the text `JSONEncoder::encode()` returns, rendered from
-//! the arrow arrays; the columns it does not render arrive as the fragments `JSONEncoder::fragments()` produced.
+//! `Flow\ETL\Adapter\JSON\RustJSONEncoder`: a `Rows` batch as the text `PhpJSONEncoder::encode()` returns, rendered
+//! from the arrow arrays; the columns it does not render are the fragments the held `PhpJSONEncoder::fragments()`
+//! produces.
 
+use ext_php_rs::binary::Binary;
 use ext_php_rs::binary_slice::BinarySlice;
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::flags::ClassFlags;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, Zval};
 
-use crate::ctx::zval_str;
+use crate::interfaces::json_encoder_ce;
 use crate::render::{invalid_argument, runtime};
-use crate::text::batch::{batch, cells, renderer, unrendered};
+use crate::text::batch::{batch, cells, renderer, Unrendered};
 use crate::text::json::{self, Flags};
 use crate::text::value::{Formats, Renderer};
 use crate::text::Error;
@@ -29,16 +31,31 @@ enum Cells<'a> {
 }
 
 #[php_class]
-#[php(name = "Flow\\ETL\\Adapter\\JSON\\NativeJsonWriter", flags = ClassFlags::Final)]
-pub struct NativeJsonWriter {
+#[php(
+    name = "Flow\\ETL\\Adapter\\JSON\\RustJSONEncoder",
+    flags = ClassFlags::Final,
+    implements(ce = json_encoder_ce, stub = "Flow\\ETL\\Adapter\\JSON\\JSONEncoder")
+)]
+pub struct RustJSONEncoder {
     flags: Flags,
     formats: Formats,
+    /// The `PhpJSONEncoder` that renders the unrendered columns.
+    php: Zval,
+    unrendered: Unrendered,
 }
 
 #[php_impl]
-impl NativeJsonWriter {
-    pub fn __construct(flags: i64, date_time_format: BinarySlice<u8>, date_format: BinarySlice<u8>) -> PhpResult<Self> {
-        if flags & !(JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION) != 0 {
+impl RustJSONEncoder {
+    pub fn __construct(
+        flags: i64,
+        date_time_format: BinarySlice<u8>,
+        date_format: BinarySlice<u8>,
+        php: &Zval,
+    ) -> PhpResult<Self> {
+        if flags
+            & !(JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION)
+            != 0
+        {
             return Err(invalid_argument(
                 "flow_php JSON writer supports only the JSON_THROW_ON_ERROR, JSON_UNESCAPED_SLASHES, JSON_UNESCAPED_UNICODE and JSON_PRESERVE_ZERO_FRACTION flags"
                     .to_string(),
@@ -52,16 +69,24 @@ impl NativeJsonWriter {
                 preserve_zero_fraction: flags & JSON_PRESERVE_ZERO_FRACTION != 0,
             },
             formats: Formats::parse(&date_time_format, &date_format),
+            php: php.shallow_clone(),
+            unrendered: Unrendered::default(),
         })
     }
 
-    /// The columns of `$schema` this writer does not render itself.
-    pub fn unrendered(&self, schema: &Zval) -> PhpResult<Zval> {
-        unrendered(schema, &self.formats, false)
-    }
+    /// One object per row, joined by `$separator`; the unrendered columns through the held encoder's `fragments()`.
+    pub fn encode(&mut self, rows: &Zval, separator: BinarySlice<u8>) -> PhpResult<Binary<u8>> {
+        let fragments = self
+            .unrendered
+            .render(rows, &self.php, "fragments", &self.formats, false)?;
 
-    /// `$fragments`: `JSONEncoder::fragments()` of the unrendered columns; one object per row, joined by `$separator`.
-    pub fn encode(&self, rows: &Zval, fragments: &ZendHashTable, separator: BinarySlice<u8>) -> PhpResult<Zval> {
+        self.render_rows(rows, &fragments, &separator)
+    }
+}
+
+impl RustJSONEncoder {
+    /// `$fragments`: `PhpJSONEncoder::fragments()` of the unrendered columns.
+    fn render_rows(&self, rows: &Zval, fragments: &ZendHashTable, separator: &[u8]) -> PhpResult<Binary<u8>> {
         let batch = batch(rows, &self.formats, false)?;
         let mut keys = Vec::with_capacity(batch.columns.len());
         let mut columns = Vec::with_capacity(batch.columns.len());
@@ -84,7 +109,7 @@ impl NativeJsonWriter {
             let mut non_finite = false;
 
             if i > 0 {
-                out.extend_from_slice(&separator);
+                out.extend_from_slice(separator);
             }
 
             if columns.is_empty() {
@@ -95,7 +120,9 @@ impl NativeJsonWriter {
                 out.extend_from_slice(key);
 
                 match column {
-                    Cells::Native(renderer) => renderer.json(&mut out, i, &self.flags, &mut non_finite).map_err(refused)?,
+                    Cells::Native(renderer) => renderer
+                        .json(&mut out, i, &self.flags, &mut non_finite)
+                        .map_err(refused)?,
                     Cells::Fragments(fragments) => out.extend_from_slice(fragments[i].ok_or_else(|| {
                         invalid_argument("flow_php expected a JSON fragment of every row, got null".to_string())
                     })?),
@@ -109,6 +136,6 @@ impl NativeJsonWriter {
             }
         }
 
-        Ok(zval_str(&out))
+        Ok(Binary::new(out))
     }
 }

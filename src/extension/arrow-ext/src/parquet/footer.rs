@@ -26,7 +26,9 @@ impl Footer {
         let size = source.len();
 
         if size < 8 {
-            return Err(corrupt(format!("Invalid Parquet file. Size is {size} bytes, smaller than the footer")));
+            return Err(corrupt(format!(
+                "Invalid Parquet file. Size is {size} bytes, smaller than the footer"
+            )));
         }
 
         let read = size.min(TAIL);
@@ -151,7 +153,10 @@ mod tests {
         assert_eq!(counting.counted().0, 2);
         assert_eq!(footer.meta().file_metadata().num_rows(), 3);
         assert_eq!(
-            footer.meta().file_metadata().key_value_metadata().unwrap()[0].value.as_ref().map(String::len),
+            footer.meta().file_metadata().key_value_metadata().unwrap()[0]
+                .value
+                .as_ref()
+                .map(String::len),
             Some(100 * 1024)
         );
     }
@@ -166,6 +171,9 @@ mod tests {
             Footer::read(&Source(Arc::new(Counting::new(data)))),
             Err(Error::NotParquet(message)) if message.contains("Corrupt footer")
         ));
-        assert!(matches!(Footer::read(&Source(Arc::new(Counting::new(vec![1, 2, 3])))), Err(Error::NotParquet(_))));
+        assert!(matches!(
+            Footer::read(&Source(Arc::new(Counting::new(vec![1, 2, 3])))),
+            Err(Error::NotParquet(_))
+        ));
     }
 }

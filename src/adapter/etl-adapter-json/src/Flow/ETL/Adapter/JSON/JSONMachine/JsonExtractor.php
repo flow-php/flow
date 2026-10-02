@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\JSONMachine;
 
-use Flow\ETL\Adapter\JSON\JsonSourceOpener;
+use Flow\ETL\Adapter\JSON\AdaptiveJsonOpenSource;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
@@ -127,26 +127,37 @@ final class JsonExtractor implements
 
         $schema = $fileColumns->declare($base);
         $body = $fileColumns->withoutTail($schema);
-        $opener = new JsonSourceOpener($this->filesystem, $reader, JsonFormat::Document, $this->pointer);
 
         foreach ($sources as $source) {
             // forFile() reads the PARTITION definitions, which only declare() creates - $base is the body
             $constants = $fileColumns->forFile($source, $schema);
 
-            foreach ($opener->batches($source, $body, $batchSize, $backend) as $batch) {
-                $rows = $constants->fillRows($batch, $schema, $backend);
+            $open = new AdaptiveJsonOpenSource(
+                $this->filesystem,
+                $reader,
+                JsonFormat::Document,
+                $this->pointer,
+                $source,
+            );
 
-                $yielded += $rows->count();
+            try {
+                foreach ($open->batches($body, $batchSize, $backend) as $batch) {
+                    $rows = $constants->fillRows($batch, $schema, $backend);
 
-                $signal = yield $rows;
+                    $yielded += $rows->count();
 
-                if ($signal === Signal::STOP) {
-                    return;
+                    $signal = yield $rows;
+
+                    if ($signal === Signal::STOP) {
+                        return;
+                    }
+
+                    if ($limit !== null && $yielded >= $limit) {
+                        return;
+                    }
                 }
-
-                if ($limit !== null && $yielded >= $limit) {
-                    return;
-                }
+            } finally {
+                $open->close();
             }
         }
     }

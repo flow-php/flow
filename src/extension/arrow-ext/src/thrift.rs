@@ -9,8 +9,8 @@ use ext_php_rs::exception::PhpException;
 use ext_php_rs::types::{ArrayKey, ZendHashTable, ZendObject, Zval};
 use ext_php_rs::zend::ClassEntry;
 
-use crate::php::{find_class, property_offset, with_ctx, zval_long, zval_str};
 use crate::exception::ext_exception;
+use crate::php::{find_class, property_offset, with_ctx, zval_long, zval_str};
 
 /// Nesting deeper than this is refused instead of recursing further.
 const DEPTH: usize = 64;
@@ -98,7 +98,9 @@ impl Specs {
 
         for (key, entry) in spec.iter() {
             let ArrayKey::Long(id) = key else {
-                return Err(ext_exception(format!("arrow requires {name}::$_TSPEC to be keyed by field id")));
+                return Err(ext_exception(format!(
+                    "arrow requires {name}::$_TSPEC to be keyed by field id"
+                )));
             };
             let entry = entry
                 .array()
@@ -127,7 +129,12 @@ impl Specs {
     }
 
     /// A `$_TSPEC` entry's type (`'type'`, with `'class'` for a struct and `'elem'` for a list's element).
-    fn value(&mut self, entry: &ZendHashTable, class: &str, seen: &mut HashMap<String, usize>) -> Result<Value, PhpException> {
+    fn value(
+        &mut self,
+        entry: &ZendHashTable,
+        class: &str,
+        seen: &mut HashMap<String, usize>,
+    ) -> Result<Value, PhpException> {
         let unsupported = |what: String| ext_exception(format!("arrow cannot decode {class}::$_TSPEC {what}"));
 
         // Thrift\Type\TType
@@ -139,13 +146,15 @@ impl Specs {
             Some(8) => Value::I32,
             Some(10) => Value::I64,
             Some(11) => Value::String,
-            Some(12) => Value::Struct(self.class(
-                entry
-                    .get("class")
-                    .and_then(Zval::str)
-                    .ok_or_else(|| unsupported("struct without a class".to_string()))?,
-                seen,
-            )?),
+            Some(12) => Value::Struct(
+                self.class(
+                    entry
+                        .get("class")
+                        .and_then(Zval::str)
+                        .ok_or_else(|| unsupported("struct without a class".to_string()))?,
+                    seen,
+                )?,
+            ),
             Some(15) => Value::List(Box::new(
                 self.value(
                     entry
@@ -211,7 +220,11 @@ impl Reader<'_> {
     }
 
     fn take(&mut self, length: usize) -> Result<&[u8], PhpException> {
-        let end = self.position.checked_add(length).filter(|end| *end <= self.bytes.len()).ok_or_else(truncated)?;
+        let end = self
+            .position
+            .checked_add(length)
+            .filter(|end| *end <= self.bytes.len())
+            .ok_or_else(truncated)?;
         let taken = &self.bytes[self.position..end];
         self.position = end;
 
@@ -230,7 +243,9 @@ impl Reader<'_> {
             }
         }
 
-        Err(ext_exception("arrow failed to decode thrift: a varint longer than 10 bytes"))
+        Err(ext_exception(
+            "arrow failed to decode thrift: a varint longer than 10 bytes",
+        ))
     }
 
     fn zigzag(&mut self) -> Result<i64, PhpException> {
@@ -314,7 +329,11 @@ impl Reader<'_> {
                     self.skip(wire, depth + 1)?;
                 }
             }
-            other => return Err(ext_exception(format!("arrow failed to decode thrift: compact type {other}"))),
+            other => {
+                return Err(ext_exception(format!(
+                    "arrow failed to decode thrift: compact type {other}"
+                )))
+            }
         }
 
         Ok(())
@@ -329,11 +348,22 @@ impl Reader<'_> {
     }
 
     /// A value of type `value` that arrived as `wire`; `element`: inside a list, where a bool is a byte.
-    fn value(&mut self, specs: &Specs, value: &Value, wire: u8, element: bool, depth: usize) -> Result<Option<Zval>, PhpException> {
+    fn value(
+        &mut self,
+        specs: &Specs,
+        value: &Value,
+        wire: u8,
+        element: bool,
+        depth: usize,
+    ) -> Result<Option<Zval>, PhpException> {
         let mut zv = Zval::new();
 
         match value {
-            Value::Bool => zv.set_bool(if element { self.byte()? == BOOLEAN_TRUE } else { wire == BOOLEAN_TRUE }),
+            Value::Bool => zv.set_bool(if element {
+                self.byte()? == BOOLEAN_TRUE
+            } else {
+                wire == BOOLEAN_TRUE
+            }),
             Value::Byte => zv = zval_long(i64::from(self.byte()? as i8)),
             Value::I16 | Value::I32 | Value::I64 => zv = zval_long(self.zigzag()?),
             Value::Double => {
@@ -419,13 +449,21 @@ impl Reader<'_> {
 }
 
 fn field_of(class: &Class, id: i16) -> Option<&(u32, Value)> {
-    usize::try_from(id).ok().and_then(|id| class.fields.get(id)).and_then(Option::as_ref)
+    usize::try_from(id)
+        .ok()
+        .and_then(|id| class.fields.get(id))
+        .and_then(Option::as_ref)
 }
 
 /// Moves `value` into a declared-property slot, releasing what the slot held (null on a fresh object, an earlier
 /// value when a field id repeats).
 fn replace_slot(object: &mut ZendObject, offset: u32, value: Zval) {
-    let slot = unsafe { std::ptr::from_mut(object).cast::<u8>().add(offset as usize).cast::<Zval>() };
+    let slot = unsafe {
+        std::ptr::from_mut(object)
+            .cast::<u8>()
+            .add(offset as usize)
+            .cast::<Zval>()
+    };
 
     drop(unsafe { std::ptr::replace(slot, value) });
 }

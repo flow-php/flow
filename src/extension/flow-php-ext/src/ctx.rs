@@ -7,8 +7,8 @@ use std::rc::Rc;
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::ffi::{
-    _zend_property_info, zend_call_known_function, zend_hash_index_update, zend_hash_str_find,
-    zend_hash_str_update, zend_hash_update, zend_ulong,
+    _zend_property_info, zend_call_known_function, zend_hash_index_update, zend_hash_str_find, zend_hash_str_update,
+    zend_hash_update, zend_ulong,
 };
 use ext_php_rs::flags::ClassFlags;
 use ext_php_rs::types::{ZendHashTable, ZendObject, ZendStr, Zval};
@@ -37,12 +37,7 @@ pub fn ht_insert(ht: &mut ZendHashTable, key: &[u8], mut value: Zval) {
                 zend_hash_index_update(ht, index as u64, std::ptr::from_mut(&mut value));
             }
             None => {
-                zend_hash_str_update(
-                    ht,
-                    key.as_ptr().cast(),
-                    key.len(),
-                    std::ptr::from_mut(&mut value),
-                );
+                zend_hash_str_update(ht, key.as_ptr().cast(), key.len(), std::ptr::from_mut(&mut value));
             }
         }
     }
@@ -68,11 +63,7 @@ pub fn ht_insert_key(ht: &mut ZendHashTable, key: &HtKey<'_>, mut value: Zval) {
                 zend_hash_index_update(ht, *index as u64, std::ptr::from_mut(&mut value));
             }
             HtKey::Str(name) => {
-                zend_hash_update(
-                    ht,
-                    std::ptr::from_ref(*name).cast_mut(),
-                    std::ptr::from_mut(&mut value),
-                );
+                zend_hash_update(ht, std::ptr::from_ref(*name).cast_mut(), std::ptr::from_mut(&mut value));
             }
         }
     }
@@ -115,11 +106,8 @@ pub fn null_zval() -> Zval {
 }
 
 pub fn find_class(name: &str) -> Result<&'static ClassEntry, PhpException> {
-    ClassEntry::try_find(name).ok_or_else(|| {
-        ext_exception(format!(
-            "flow_php requires class \"{name}\" to be autoloadable"
-        ))
-    })
+    ClassEntry::try_find(name)
+        .ok_or_else(|| ext_exception(format!("flow_php requires class \"{name}\" to be autoloadable")))
 }
 
 /// Fails when the last engine call left an exception pending, so PHP-level
@@ -134,11 +122,7 @@ pub fn ensure_no_pending_exception(context: &str) -> Result<(), PhpException> {
 
 /// Writes one property through the object's write handler, which copies the
 /// value with assign semantics - the caller keeps ownership of `value`.
-pub fn write_property_raw(
-    obj: &mut ZendObject,
-    name: &mut ZendStr,
-    mut value: Zval,
-) -> Result<(), PhpException> {
+pub fn write_property_raw(obj: &mut ZendObject, name: &mut ZendStr, mut value: Zval) -> Result<(), PhpException> {
     let handler = unsafe { obj.handlers.as_ref() }
         .and_then(|handlers| handlers.write_property)
         .ok_or_else(|| ext_exception("flow_php failed to resolve a property write handler"))?;
@@ -178,10 +162,7 @@ pub fn property_offset(ce: &ClassEntry, name: &str) -> Result<u32, PhpException>
 /// a plain userland class when the zval matches the declared type exactly.
 pub fn write_slot(obj: &mut ZendObject, offset: u32, value: Zval) {
     unsafe {
-        let slot = std::ptr::from_mut(obj)
-            .cast::<u8>()
-            .add(offset as usize)
-            .cast::<Zval>();
+        let slot = std::ptr::from_mut(obj).cast::<u8>().add(offset as usize).cast::<Zval>();
         std::ptr::write(slot, value);
     }
 }
@@ -215,7 +196,8 @@ pub fn read_property(obj: &ZendObject, name: &str) -> Result<Zval, PhpException>
 /// `$object->$method(...$args)`; an exception the method throws surfaces as itself.
 pub fn call_method(object: &Zval, method: &str, args: &mut [Zval]) -> Result<Zval, PhpException> {
     let object = expect_object(object, "a method receiver")?;
-    let ce = unsafe { object.ce.as_ref() }.ok_or_else(|| ext_exception("flow_php failed to resolve an object class"))?;
+    let ce =
+        unsafe { object.ce.as_ref() }.ok_or_else(|| ext_exception("flow_php failed to resolve an object class"))?;
 
     call_handle_transparent(ce_method_ref(ce, method)?, Some(object), args)
 }
@@ -225,36 +207,24 @@ pub fn call_static(class: &str, method: &str, args: &mut [Zval]) -> Result<Zval,
     call_handle_transparent(ce_method_ref(find_class(class)?, method)?, None, args)
 }
 
-/// Constructs a fresh object and calls its `__construct` with already-owned
-/// zvals (what `construct_object` can't express - it takes `IntoZvalDyn`). Used
-/// to call the canonical `Row`/`Rows` constructors from row-object graphs.
-pub fn construct_with_zvals(
-    ce: &'static ClassEntry,
-    args: &mut [Zval],
-    context: &str,
-) -> Result<ZBox<ZendObject>, PhpException> {
-    let mut obj = ZendObject::new(ce);
-    let constructor = ce_method_ref(ce, "__construct")?;
+/// `new $ce(...$args)` with already-owned zvals; an exception the constructor throws surfaces as itself.
+pub fn construct(ce: &'static ClassEntry, args: &mut [Zval]) -> Result<ZBox<ZendObject>, PhpException> {
+    let object = ZendObject::new(ce);
+    call_handle_transparent(ce_method_ref(ce, "__construct")?, Some(&object), args)?;
 
-    call_handle(
-        constructor,
-        Some(&mut obj),
-        args,
-        &format!("construct {context}"),
-    )?;
+    Ok(object)
+}
 
-    Ok(obj)
+/// A hashtable key as a column name: an int key is a numeric column name.
+pub fn column_key(name: Option<&ZendStr>, index: zend_ulong) -> Vec<u8> {
+    name.map_or_else(|| index.to_string().into_bytes(), |name| name.as_bytes().to_vec())
 }
 
 pub fn ce_method_ref(ce: &ClassEntry, method: &str) -> Result<&'static Function, PhpException> {
     let function = unsafe {
-        ext_php_rs::ffi::zend_hash_str_find_ptr_lc(
-            &raw const ce.function_table,
-            method.as_ptr().cast(),
-            method.len(),
-        )
-        .cast::<Function>()
-        .as_ref()
+        ext_php_rs::ffi::zend_hash_str_find_ptr_lc(&raw const ce.function_table, method.as_ptr().cast(), method.len())
+            .cast::<Function>()
+            .as_ref()
     };
 
     function.ok_or_else(|| {
@@ -326,13 +296,13 @@ pub fn call_handle_catching(
     }
 }
 
-/// Surfaces a PHP exception object as ITSELF rather than wrapped in an
-/// `ExtensionException`, so the class and message PHP sees are the ones thrown.
+/// Surfaces a PHP exception object as ITSELF rather than wrapped in a
+/// `RuntimeException`, so the class and message PHP sees are the ones thrown.
 pub fn transparent_exception(exception: &mut ZendObject) -> PhpException {
     let mut zv = Zval::new();
     zv.set_object(exception);
 
-    PhpException::default(String::new()).with_object(zv)
+    PhpException::from_message(String::new()).with_object(zv)
 }
 
 /// [`call_handle_catching`] with the exception object already re-raised as
@@ -344,8 +314,7 @@ pub fn call_handle_transparent(
     object: Option<&ZendObject>,
     args: &mut [Zval],
 ) -> Result<Zval, PhpException> {
-    call_handle_catching(func, object, args)
-        .map_err(|mut exception| transparent_exception(&mut exception))
+    call_handle_catching(func, object, args).map_err(|mut exception| transparent_exception(&mut exception))
 }
 
 /// Calls a pre-resolved function handle. Argument zvals stay caller-owned
@@ -489,7 +458,8 @@ pub fn store_type_plan(type_zv: &Zval, plan: &Rc<TypePlan>) -> Result<(), PhpExc
         } else {
             HashMap::new()
         };
-        ctx.type_plans.insert(handle, (type_zv.shallow_clone(), Rc::clone(plan)));
+        ctx.type_plans
+            .insert(handle, (type_zv.shallow_clone(), Rc::clone(plan)));
 
         Ok(evicted)
     })?;
@@ -533,6 +503,11 @@ fn function(name: &'static str) -> Result<&'static Function, PhpException> {
             ctx.functions.insert(name, function);
         },
     )
+}
+
+/// `$name(...$args)` of a PHP function; an exception it throws surfaces as itself.
+pub fn call_function(name: &'static str, args: &mut [Zval]) -> Result<Zval, PhpException> {
+    call_handle_transparent(function(name)?, None, args)
 }
 
 pub fn json_encode() -> Result<&'static Function, PhpException> {
@@ -674,7 +649,12 @@ pub fn timezone(name: &[u8]) -> Result<Zval, PhpException> {
         || {
             let fns = timezone_fns()?;
             let mut timezone = ZendObject::new(fns.ce);
-            call_handle(fns.construct, Some(&mut timezone), &mut [zval_str(name)], "construct DateTimeZone")?;
+            call_handle(
+                fns.construct,
+                Some(&mut timezone),
+                &mut [zval_str(name)],
+                "construct DateTimeZone",
+            )?;
 
             let mut zv = Zval::new();
             zv.set_object(&mut timezone);
@@ -754,7 +734,12 @@ pub fn enum_case(class: &[u8], case: &[u8]) -> Result<Zval, PhpException> {
                 "check an enum case",
             )?;
             let case_zv = if defined.bool().unwrap_or(false) {
-                call_handle(function("constant")?, None, &mut [constant_name_zv], "restore an enum case")?
+                call_handle(
+                    function("constant")?,
+                    None,
+                    &mut [constant_name_zv],
+                    "restore an enum case",
+                )?
             } else {
                 null_zval()
             };
@@ -809,18 +794,10 @@ pub fn ht_for_each(
 }
 
 pub fn read_slot(obj: &ZendObject, offset: u32) -> &Zval {
-    unsafe {
-        &*std::ptr::from_ref(obj)
-            .cast::<u8>()
-            .add(offset as usize)
-            .cast::<Zval>()
-    }
+    unsafe { &*std::ptr::from_ref(obj).cast::<u8>().add(offset as usize).cast::<Zval>() }
 }
 
-pub fn expect_object<'a>(
-    zv: &'a Zval,
-    context: &str,
-) -> Result<&'a ZendObject, PhpException> {
+pub fn expect_object<'a>(zv: &'a Zval, context: &str) -> Result<&'a ZendObject, PhpException> {
     zv.object()
         .ok_or_else(|| ext_exception(format!("flow_php expected {context} to be an object")))
 }

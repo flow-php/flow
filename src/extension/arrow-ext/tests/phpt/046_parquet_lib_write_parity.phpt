@@ -1,11 +1,12 @@
 --TEST--
-Writer::arrow() on arrow accepts and refuses what Writer::php() does per target type, and what both accept reads back the same
+new Writer(engine: new RustParquetEngine()) on arrow accepts and refuses what Writer::php() does per target type, and what both accept reads back the same
 --SKIPIF--
 <?php if (!extension_loaded("arrow")) die("skip arrow extension not loaded"); ?>
 --FILE--
 <?php
 require __DIR__ . '/bootstrap.php';
 
+use Flow\Parquet\Engine\RustParquetEngine;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Tests\Context\EveryType;
@@ -23,7 +24,7 @@ foreach (WriteAcceptance::targets() as $target) {
             MemoryParquetFile::written($writer, Schema::with(WriteAcceptance::target($target)), [['c' => WriteAcceptance::input($input)]]),
         ), 1));
         $php = $read(Writer::php());
-        $native = $read(Writer::arrow());
+        $native = $read(new Writer(engine: new RustParquetEngine()));
         $cells++;
 
         match (true) {
@@ -35,7 +36,7 @@ foreach (WriteAcceptance::targets() as $target) {
 }
 
 echo "{$cells} cells: {$accepted} accepted by both, {$refused} refused by both\n";
-echo 'every type: ', arrow_outcome(static fn() => ParquetRows::read(MemoryParquetFile::read(Reader::php(), MemoryParquetFile::written(Writer::php(), EveryType::schema(), EveryType::rows())), 3)) === arrow_outcome(static fn() => ParquetRows::read(MemoryParquetFile::read(Reader::php(), MemoryParquetFile::written(Writer::arrow(), EveryType::schema(), EveryType::rows())), 3)) ? 'identical' : 'DIFFER', "\n";
+echo 'every type: ', arrow_outcome(static fn() => ParquetRows::read(MemoryParquetFile::read(Reader::php(), MemoryParquetFile::written(Writer::php(), EveryType::schema(), EveryType::rows())), 3)) === arrow_outcome(static fn() => ParquetRows::read(MemoryParquetFile::read(Reader::php(), MemoryParquetFile::written(new Writer(engine: new RustParquetEngine()), EveryType::schema(), EveryType::rows())), 3)) ? 'identical' : 'DIFFER', "\n";
 ?>
 --EXPECT--
 624 cells: 102 accepted by both, 522 refused by both

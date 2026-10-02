@@ -138,17 +138,14 @@ pub fn kind_of(parsed: &TypeJson) -> Result<Kind, Error> {
         "integer" | "positive_integer" => Kind::Int64,
         "float" => Kind::Float64,
         "boolean" => Kind::Boolean,
-        "string" | "non_empty_string" | "numeric-string" | "class_string" | "json" | "enum"
-        | "timezone" | "xml" | "xml_element" | "html" | "html_element" => Kind::Bytes,
+        "string" | "non_empty_string" | "numeric-string" | "class_string" | "json" | "enum" | "timezone" | "xml"
+        | "xml_element" | "html" | "html_element" => Kind::Bytes,
         "datetime" => Kind::Timestamp,
         "date" => Kind::Int32,
         "time" => Kind::Duration,
         "uuid" => Kind::Uuid,
         "null" => Kind::Null,
-        "list" => Kind::List(child(
-            "item",
-            parsed.element().ok_or_else(|| missing(Part::Element))?,
-        )?),
+        "list" => Kind::List(child("item", parsed.element().ok_or_else(|| missing(Part::Element))?)?),
         "map" => Kind::Map(
             child("key", parsed.key().ok_or_else(|| missing(Part::Key))?)?,
             child("value", parsed.value().ok_or_else(|| missing(Part::Value))?)?,
@@ -199,12 +196,7 @@ pub fn data_type(kind: &Kind) -> DataType {
             )),
             false,
         ),
-        Kind::Struct(fields) => DataType::Struct(
-            fields
-                .iter()
-                .map(|child| field(&child.name, &child.kind))
-                .collect(),
-        ),
+        Kind::Struct(fields) => DataType::Struct(fields.iter().map(|child| field(&child.name, &child.kind)).collect()),
     }
 }
 

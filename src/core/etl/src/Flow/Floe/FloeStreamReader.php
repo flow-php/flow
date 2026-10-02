@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Column\Backend;
-use Flow\ETL\Column\DefaultBackend;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
 use Flow\Filesystem\SourceStream;
-use Flow\Floe\Exception\ExtensionException;
 use Flow\Floe\Exception\FloeException;
 use Flow\Serializer\Exception\SerializationException;
 use Generator;
@@ -37,7 +37,7 @@ final class FloeStreamReader
         private readonly SourceStream $source,
         private readonly Codec $codec,
         private readonly int $chunkSize,
-        private readonly Backend $backend = new DefaultBackend(),
+        private readonly Backend $backend = new AdaptiveBackend(),
     ) {
         Format::validateCodecId($this->codec->id());
         $this->frameDecoder = new FrameDecoder($this->codec);
@@ -257,7 +257,7 @@ final class FloeStreamReader
                     $position = 0;
                 }
             }
-        } catch (SerializationException|ExtensionException $e) {
+        } catch (SerializationException|RuntimeException $e) {
             throw new FloeException($e->getMessage(), 0, $e);
         }
     }

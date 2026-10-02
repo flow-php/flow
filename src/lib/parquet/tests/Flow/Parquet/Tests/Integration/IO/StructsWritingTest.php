@@ -6,13 +6,13 @@ namespace Flow\Parquet\Tests\Integration\IO;
 
 use Faker\Factory;
 use Flow\Parquet\Consts;
-use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\ListElement;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Tests\Context\TestParquetFile;
+use Flow\Parquet\Tests\Mother\ParquetEngineMother;
 use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -25,8 +25,9 @@ use function range;
 class StructsWritingTest extends ParquetIntegrationTestCase
 {
     #[DataProvider('engine_provider')]
-    public function test_writing_flat_nullable_structure(ParquetEngine $engine): void
+    public function test_writing_flat_nullable_structure(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -77,8 +78,9 @@ class StructsWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_flat_structure(ParquetEngine $engine): void
+    public function test_writing_flat_structure(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -127,8 +129,9 @@ class StructsWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_flat_structure_with_nullable_elements(ParquetEngine $engine): void
+    public function test_writing_flat_structure_with_nullable_elements(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);

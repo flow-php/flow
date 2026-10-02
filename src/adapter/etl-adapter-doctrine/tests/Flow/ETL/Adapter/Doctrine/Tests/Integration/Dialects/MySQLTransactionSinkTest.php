@@ -172,9 +172,9 @@ final class MySQLTransactionSinkTest extends IntegrationTestCase
             )))
             ->write(
                 new Transactional(
-                    DbalTransaction::fromConnection(
-                        $connection,
-                    )->withIsolationLevel(TransactionIsolationLevel::SERIALIZABLE),
+                    DbalTransaction::fromConnection($connection)->withIsolationLevel(
+                        TransactionIsolationLevel::SERIALIZABLE,
+                    ),
                     to_dbal_table_insert($connection, 'test_table'),
                 ),
             )

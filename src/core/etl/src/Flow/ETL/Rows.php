@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use Countable;
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Column\Column;
-use Flow\ETL\Column\DefaultBackend;
 use Flow\ETL\Column\Php\ValueColumn;
 use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -73,7 +73,7 @@ final class Rows implements Countable
      */
     public function __unserialize(array $data): void
     {
-        $rows = (new FrameDecoder())->decode($data['frame'], $data['schema'], new DefaultBackend());
+        $rows = (new FrameDecoder())->decode($data['frame'], $data['schema'], new AdaptiveBackend());
 
         $this->schema = $rows->schema;
         $this->columns = $rows->columns;
@@ -82,7 +82,7 @@ final class Rows implements Countable
 
     public static function empty(Schema $schema): self
     {
-        $backend = new DefaultBackend();
+        $backend = new AdaptiveBackend();
         $columns = [];
 
         foreach ($schema->definitions() as $name => $definition) {
@@ -217,7 +217,7 @@ final class Rows implements Countable
             return self::empty($this->schema);
         }
 
-        $backend = new DefaultBackend();
+        $backend = new AdaptiveBackend();
         $columns = [];
 
         foreach ($this->schema->definitions() as $name => $definition) {
@@ -414,7 +414,7 @@ final class Rows implements Countable
             }
         }
 
-        $backend = new DefaultBackend();
+        $backend = new AdaptiveBackend();
         $columns = [];
         $changed = [];
 

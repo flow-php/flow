@@ -1,10 +1,10 @@
-//! `RustCSVReaderNative::nextColumns()`: CSV cells straight into native columns through `BatchColumns`; a NOT NULL
+//! `RustCSVOpenSource::batches()`: CSV cells straight into native columns through `BatchColumns`; a NOT NULL
 //! column absent from the header is absent from every row.
 
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::types::Zval;
 
-use crate::batch_columns::{native_text, BatchColumn, BatchColumns};
+use crate::batch_columns::{native_text, BatchColumn, BatchColumns, HeldBatch};
 use crate::builder::{is_types_exception, php_lane, value_does_not_match, Refusal};
 use crate::csv::CsvReader;
 use crate::ctx::{null_zval, transparent_exception, zval_str};
@@ -69,15 +69,19 @@ pub fn next_columns(
     pending: &mut CsvColumns,
     schema: &Zval,
     batch_size: usize,
-) -> Result<Zval, PhpException> {
+) -> Result<Option<HeldBatch>, PhpException> {
     if reader.headers().is_empty() {
-        return Ok(null_zval());
+        return Ok(None);
     }
 
     let (state, rebuilt) = BatchColumns::prepare(&mut pending.batch, schema, batch_size, "CSV")?;
 
     if rebuilt {
-        pending.fields = state.columns.iter().map(|column| reader.field_of(&column.key.name())).collect();
+        pending.fields = state
+            .columns
+            .iter()
+            .map(|column| reader.field_of(&column.key.name()))
+            .collect();
     }
 
     while state.rows < state.batch_size && reader.next_record() {
@@ -109,8 +113,8 @@ pub fn next_columns(
     }
 
     if state.rows == 0 || (state.rows < state.batch_size && !reader.is_finished()) {
-        return Ok(null_zval());
+        return Ok(None);
     }
 
-    state.finish()
+    state.finish().map(Some)
 }

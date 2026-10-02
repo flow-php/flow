@@ -1,12 +1,12 @@
 --TEST--
-DefaultBackend::decode() refuses every corrupt buffer set PhpBackend::decode() refuses, with its class and message
+RustBackend::decode() refuses every corrupt buffer set PhpBackend::decode() refuses, with its class and message
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 --FILE--
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Column\DefaultBackend;
+use Flow\ETL\Column\RustBackend;
 use Flow\ETL\Column\PhpBackend;
 
 use function Flow\ETL\DSL\{int_schema, list_schema, map_schema, null_schema, str_schema, structure_schema};
@@ -36,7 +36,7 @@ $cases = [
 
 foreach ($cases as $label => [$definition, $buffers, $count, $nullCount]) {
     $php = outcome(static fn() => (new PhpBackend())->decode($definition, $buffers, $count, $nullCount)->values());
-    $native = outcome(static fn() => (new DefaultBackend())->decode($definition, $buffers, $count, $nullCount)->values());
+    $native = outcome(static fn() => (new RustBackend())->decode($definition, $buffers, $count, $nullCount)->values());
 
     echo $label, ': ', $php === $native ? $native : "DIFF\n  php:    {$php}\n  native: {$native}", "\n";
 }

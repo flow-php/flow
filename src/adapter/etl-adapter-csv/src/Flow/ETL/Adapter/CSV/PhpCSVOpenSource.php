@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV;
 
 use Flow\ETL\Column\Backend;
+use Flow\ETL\Rows;
 use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\ColumnTypes;
@@ -34,6 +35,9 @@ final class PhpCSVOpenSource implements CSVOpenSource
         private readonly CSVLineReader $lineReader,
     ) {}
 
+    /**
+     * @return Generator<int, Rows>
+     */
     public function batches(Schema $schema, int $batchSize, Backend $backend): Generator
     {
         $rows = [];

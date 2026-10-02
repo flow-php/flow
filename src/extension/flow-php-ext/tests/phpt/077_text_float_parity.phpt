@@ -8,9 +8,9 @@ require __DIR__ . '/bootstrap.php';
 
 use Flow\ETL\Adapter\CSV\PhpCSVEncoder;
 use Flow\ETL\Adapter\CSV\CSVWriteOptions;
-use Flow\ETL\Adapter\CSV\NativeCSVWriter;
+use Flow\ETL\Adapter\CSV\RustCSVEncoder;
 use Flow\ETL\Adapter\JSON\PhpJSONEncoder;
-use Flow\ETL\Adapter\JSON\NativeJsonWriter;
+use Flow\ETL\Adapter\JSON\RustJSONEncoder;
 
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\schema;
@@ -26,7 +26,7 @@ while (count($floats) < 100_020) {
 $finite = array_values(array_filter($floats, is_finite(...)));
 $schema = schema(float_schema('f'));
 $options = new CSVWriteOptions(newLineSeparator: "\n");
-$csv = new NativeCSVWriter(',', '"', '\\', "\n", DATE_ATOM, 'Y-m-d');
+$csv = new RustCSVEncoder(',', '"', '\\', "\n", DATE_ATOM, 'Y-m-d', new PhpCSVEncoder($options));
 $rows = static fn(callable $build, array $values): array => array_map(
     static fn(array $chunk): Flow\ETL\Rows => $build($schema, array_map(static fn(float $f): array => ['f' => $f], $chunk)),
     array_chunk($values, 10_000),
@@ -37,20 +37,20 @@ foreach (['-1', '17'] as $precision) {
     ini_set('precision', $precision === '17' ? '5' : '14');
 
     $php = implode('', array_map((new PhpCSVEncoder($options))->encode(...), $rows(php_rows(...), $floats)));
-    $native = implode('', array_map(static fn(Flow\ETL\Rows $batch): string => $csv->encode($batch, []), $rows(native_rows(...), $floats)));
+    $native = implode('', array_map(static fn(Flow\ETL\Rows $batch): string => $csv->encode($batch), $rows(native_rows(...), $floats)));
     printf("serialize_precision %s: csv %s, %d values\n", $precision, $php === $native ? 'identical' : 'DIFFERENT', substr_count($native, "\n"));
 
     foreach ([JSON_THROW_ON_ERROR, JSON_THROW_ON_ERROR | JSON_PRESERVE_ZERO_FRACTION] as $flags) {
-        $json = new NativeJsonWriter($flags, DATE_ATOM, 'Y-m-d');
+        $json = new RustJSONEncoder($flags, DATE_ATOM, 'Y-m-d', new PhpJSONEncoder($flags));
         $php = implode("\n", array_map(static fn(Flow\ETL\Rows $batch): string => (new PhpJSONEncoder($flags))->encode($batch, "\n"), $rows(php_rows(...), $finite)));
-        $native = implode("\n", array_map(static fn(Flow\ETL\Rows $batch): string => $json->encode($batch, [], "\n"), $rows(native_rows(...), $finite)));
+        $native = implode("\n", array_map(static fn(Flow\ETL\Rows $batch): string => $json->encode($batch, "\n"), $rows(native_rows(...), $finite)));
         printf("serialize_precision %s: json flags %d %s, %d values\n", $precision, $flags, $php === $native ? 'identical' : 'DIFFERENT', substr_count($native, "\n") + 1);
     }
 
     foreach ([NAN, INF, -INF] as $float) {
         $values = [['f' => 1.5], ['f' => $float]];
         $php = written(static fn() => (new PhpJSONEncoder())->encode(php_rows($schema, $values), "\n"));
-        $native = written(static fn() => (new NativeJsonWriter(JSON_THROW_ON_ERROR, DATE_ATOM, 'Y-m-d'))->encode(native_rows($schema, $values), [], "\n"));
+        $native = written(static fn() => (new RustJSONEncoder(JSON_THROW_ON_ERROR, DATE_ATOM, 'Y-m-d', new PhpJSONEncoder()))->encode(native_rows($schema, $values), "\n"));
         printf("json %s: %s\n", var_export($float, true), $php === $native ? $php : 'DIFFERENT');
     }
 

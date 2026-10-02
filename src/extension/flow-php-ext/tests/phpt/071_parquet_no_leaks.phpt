@@ -1,5 +1,5 @@
 --TEST--
-NativeParquetReader and NativeParquetWriter leak neither PHP memory nor native allocations, refusals included
+RustParquetOpenSource and RustParquetOpenSink leak neither PHP memory nor native allocations, refusals included
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 <?php extension_loaded('arrow') || die('skip arrow'); ?>
@@ -7,12 +7,13 @@ NativeParquetReader and NativeParquetWriter leak neither PHP memory nor native a
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\Arrow\Parquet\RowsWriter;
+use Flow\Parquet\Engine\RustParquetFileWriter;
 
-use Flow\ETL\Adapter\Parquet\{NativeParquetReader, NativeParquetWriter, SchemaConverter};
-use Flow\ETL\Column\DefaultBackend;
+use Flow\ETL\Adapter\Parquet\{RustParquetOpenSink, SchemaConverter};
+use Flow\ETL\Column\RustBackend;
 use Flow\Parquet\Engine\Arrow\{OptionsConverter, SchemaConverter as ArrowSchemaConverter};
 use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Compressions;
 
 use function Flow\ETL\DSL\{int_schema, list_schema, schema, str_schema};
 use function Flow\Filesystem\DSL\{memory_filesystem, path};
@@ -28,17 +29,17 @@ $invalid = [['id' => 1, 'name' => "\xff", 'tags' => []]];
 
 $cycle = static function () use ($schema, $values, $extension, $options, $mismatched, $invalid): void {
     $filesystem = memory_filesystem();
-    $writer = new NativeParquetWriter(new RowsWriter($filesystem->writeTo(path('memory://leaks.parquet')), $extension, 'SNAPPY', $options, 1_000));
+    $writer = new RustParquetOpenSink(new RustParquetFileWriter($filesystem->writeTo(path('memory://leaks.parquet')), $extension, Compressions::SNAPPY, $options, 1_000));
     $writer->write(native_rows($schema, $values));
     $writer->write(php_rows($schema, $values));
     $writer->close();
 
-    $reader = native_parquet_reader($filesystem->readFrom(path('memory://leaks.parquet')), $schema, 30, 10, 150);
+    $reader = rust_parquet_batches($filesystem->readFrom(path('memory://leaks.parquet')), $schema, 30, 10, 150);
 
-    while ($reader->next() !== null) {
+    foreach ($reader as $_) {
     }
 
-    $refused = new NativeParquetWriter(new RowsWriter($filesystem->writeTo(path('memory://refused.parquet')), $extension, 'SNAPPY', $options, 1_000));
+    $refused = new RustParquetOpenSink(new RustParquetFileWriter($filesystem->writeTo(path('memory://refused.parquet')), $extension, Compressions::SNAPPY, $options, 1_000));
 
     try {
         $refused->write(native_rows($schema, $invalid));
@@ -47,7 +48,7 @@ $cycle = static function () use ($schema, $values, $extension, $options, $mismat
     }
 
     try {
-        native_parquet_reader($filesystem->readFrom(path('memory://leaks.parquet')), $mismatched, 30, null, null);
+        rust_parquet_batches($filesystem->readFrom(path('memory://leaks.parquet')), $mismatched, 30, null, null);
         throw new LogicException('a mismatched schema was accepted');
     } catch (Flow\ETL\Exception\InvalidArgumentException) {
     }
@@ -58,7 +59,7 @@ for ($i = 0; $i < 10; $i++) {
 }
 gc_collect_cycles();
 $baseline = memory_get_usage(false);
-$baselineRust = (new DefaultBackend())->allocatedBytes();
+$baselineRust = (new RustBackend())->allocatedBytes();
 
 for ($i = 0; $i < 300; $i++) {
     $cycle();
@@ -66,7 +67,7 @@ for ($i = 0; $i < 300; $i++) {
 gc_collect_cycles();
 
 var_dump(memory_get_usage(false) <= $baseline);
-var_dump((new DefaultBackend())->allocatedBytes() === $baselineRust);
+var_dump((new RustBackend())->allocatedBytes() === $baselineRust);
 ?>
 --EXPECT--
 bool(true)

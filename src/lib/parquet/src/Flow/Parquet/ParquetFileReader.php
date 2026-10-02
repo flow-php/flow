@@ -6,7 +6,13 @@ namespace Flow\Parquet;
 
 use Flow\Parquet\ParquetFile\Metadata;
 use Flow\Parquet\ParquetFile\Schema;
-use Generator;
+use Iterator;
+
+use function extension_loaded;
+
+if (extension_loaded('arrow')) {
+    return;
+}
 
 interface ParquetFileReader
 {
@@ -24,9 +30,9 @@ interface ParquetFileReader
      * @param list<string> $columns resolved names, never empty
      * @param int<1, max> $batchSize upper bound of rows per chunk
      *
-     * @return Generator<int, array<string, list<mixed>>> chunks keyed by column, every list the same length (>0)
+     * @return Iterator<int, array<string, list<mixed>>> chunks keyed by column, every list the same length (>0)
      */
-    public function readColumns(array $columns, int $batchSize, ?int $limit, ?int $offset): Generator;
+    public function readColumns(array $columns, int $batchSize, ?int $limit, ?int $offset): Iterator;
 
     public function rowsNumber(): int;
 

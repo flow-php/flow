@@ -3,6 +3,11 @@
 
 pub mod columns;
 pub mod fold;
+#[allow(
+    non_snake_case,
+    reason = "PHP takes a parameter name from its Rust identifier: the contracts' are camelCase"
+)]
+pub mod source;
 pub mod tokenizer;
 pub mod write;
 
@@ -133,7 +138,12 @@ impl CsvReader {
         self.resolve_headers();
 
         self.headers.is_some()
-            && next_row(&mut self.first_row_pending, &mut self.tokenizer, &mut self.record, &mut self.consumed_bytes)
+            && next_row(
+                &mut self.first_row_pending,
+                &mut self.tokenizer,
+                &mut self.record,
+                &mut self.consumed_bytes,
+            )
     }
 
     /// The current row's cell of `field`, as `CSVRowNormalizer::normalize()` shapes it; `None` is null.
@@ -168,7 +178,12 @@ impl CsvReader {
         };
 
         while batch.len() < batch_size {
-            if !next_row(&mut self.first_row_pending, &mut self.tokenizer, &mut self.record, &mut self.consumed_bytes) {
+            if !next_row(
+                &mut self.first_row_pending,
+                &mut self.tokenizer,
+                &mut self.record,
+                &mut self.consumed_bytes,
+            ) {
                 break;
             }
 
@@ -193,7 +208,12 @@ impl CsvReader {
         let mut positions = vec![None; self.cells.len()];
 
         while limit.is_none_or(|limit| folded < limit) {
-            if !next_row(&mut self.first_row_pending, &mut self.tokenizer, &mut self.record, &mut self.consumed_bytes) {
+            if !next_row(
+                &mut self.first_row_pending,
+                &mut self.tokenizer,
+                &mut self.record,
+                &mut self.consumed_bytes,
+            ) {
                 break;
             }
 
@@ -239,13 +259,19 @@ impl CsvReader {
         } else {
             self.first_row_pending = true;
 
-            (0..record.len()).map(|index| Header::new(format!("e{index:02}").into_bytes())).collect()
+            (0..record.len())
+                .map(|index| Header::new(format!("e{index:02}").into_bytes()))
+                .collect()
         });
 
         let headers = self.headers.as_ref().expect("resolved above");
 
         for (index, header) in headers.iter().enumerate() {
-            match self.cells.iter_mut().find(|cell| headers[cell.header_index].name == header.name) {
+            match self
+                .cells
+                .iter_mut()
+                .find(|cell| headers[cell.header_index].name == header.name)
+            {
                 Some(cell) => cell.field_index = index,
                 None => self.cells.push(Cell {
                     header_index: index,
@@ -303,7 +329,10 @@ fn row_values(headers: &[Header], record: &Record, empty_to_null: bool) -> Zval 
 pub fn php_trim(bytes: &[u8]) -> &[u8] {
     let is_trimmed = |byte: &u8| matches!(byte, b' ' | b'\t' | b'\n' | b'\r' | b'\0' | 0x0B);
     let start = bytes.iter().position(|byte| !is_trimmed(byte)).unwrap_or(bytes.len());
-    let end = bytes.iter().rposition(|byte| !is_trimmed(byte)).map_or(start, |end| end + 1);
+    let end = bytes
+        .iter()
+        .rposition(|byte| !is_trimmed(byte))
+        .map_or(start, |end| end + 1);
 
     &bytes[start..end]
 }

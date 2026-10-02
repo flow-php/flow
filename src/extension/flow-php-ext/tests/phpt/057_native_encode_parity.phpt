@@ -6,7 +6,7 @@ native columns encode byte-identical frames to PHP columns, after every Rows res
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Column\DefaultBackend;
+use Flow\ETL\Column\RustBackend;
 use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Rows;
 use Flow\Floe\FrameDecoder;
@@ -31,7 +31,7 @@ $frame('mixed', $php, $php->concat($native)->slice(0, $php->count()));
 
 $body = $php->encodeFrame();
 $decodedPhp = (new FrameDecoder())->decode($body, $schema, new PhpBackend());
-$decodedNative = (new FrameDecoder())->decode($body, $schema, new DefaultBackend());
+$decodedNative = (new FrameDecoder())->decode($body, $schema, new RustBackend());
 echo get_class($decodedNative->column('int')), "\n";
 echo comparable($decodedPhp->toArray()) === comparable($decodedNative->toArray()) ? 'decoded rows identical' : 'DIFF', "\n";
 ?>
@@ -43,5 +43,5 @@ concat: identical
 project: identical
 withSchema: identical
 mixed: identical
-Flow\ETL\Column\NativeColumn
+Flow\ETL\Column\RustColumn
 decoded rows identical

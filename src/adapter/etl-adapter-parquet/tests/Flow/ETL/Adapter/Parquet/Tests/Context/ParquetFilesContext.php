@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Context;
 
-use Flow\Arrow\Parquet\RowsWriter;
-use Flow\ETL\Adapter\Parquet\NativeParquetOpenSink;
-use Flow\ETL\Adapter\Parquet\NativeParquetWriter;
+use Flow\ETL\Adapter\Parquet\ParquetOpenSink;
+use Flow\ETL\Adapter\Parquet\RustParquetOpenSink;
 use Flow\ETL\Adapter\Parquet\SchemaConverter;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema as FlowSchema;
@@ -16,8 +15,10 @@ use Flow\Floe\Tests\Double\ClosingSpySourceStream;
 use Flow\Parquet\Engine\Arrow\OptionsConverter;
 use Flow\Parquet\Engine\Arrow\SchemaConverter as ArrowSchemaConverter;
 use Flow\Parquet\Engine\PhpParquetEngine;
+use Flow\Parquet\Engine\RustParquetFileWriter;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\Column;
@@ -110,17 +111,17 @@ final class ParquetFilesContext
         );
     }
 
-    public static function nativeSink(Filesystem $filesystem, string $uri, FlowSchema $schema): NativeParquetOpenSink
+    public static function nativeSink(Filesystem $filesystem, string $uri, FlowSchema $schema): ParquetOpenSink
     {
-        return new NativeParquetOpenSink(new NativeParquetWriter(
-            new RowsWriter(
+        return new RustParquetOpenSink(
+            new RustParquetFileWriter(
                 $filesystem->writeTo(path($uri)),
                 ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquet($schema)),
-                'SNAPPY',
+                Compressions::SNAPPY,
                 OptionsConverter::toExtension(Options::default()),
                 Options::default()->getInt(Option::ARROW_WRITE_BATCH_SIZE),
             ),
-        ));
+        );
     }
 
     /**

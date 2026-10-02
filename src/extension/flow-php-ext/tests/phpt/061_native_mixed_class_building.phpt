@@ -6,8 +6,8 @@ native and PHP columns build into each other: appendFrom/appendTake, Rows::conca
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Column\DefaultBackend;
-use Flow\ETL\Column\NativeColumn;
+use Flow\ETL\Column\RustBackend;
+use Flow\ETL\Column\RustColumn;
 use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Rows;
 
@@ -37,8 +37,8 @@ $rebuilt = static function (Rows $from, object $backend, bool $take) use ($schem
     return Rows::fromColumns($schema, $columns, 4);
 };
 
-$same('native appendTake of a PHP column', $php->gather([5, 0, 3, 3]), $rebuilt($php, new DefaultBackend(), true));
-$same('native appendFrom of a PHP column', $php->gather([5, 0, 3, 3]), $rebuilt($php, new DefaultBackend(), false));
+$same('native appendTake of a PHP column', $php->gather([5, 0, 3, 3]), $rebuilt($php, new RustBackend(), true));
+$same('native appendFrom of a PHP column', $php->gather([5, 0, 3, 3]), $rebuilt($php, new RustBackend(), false));
 $same('PHP appendTake of a native column', $php->gather([5, 0, 3, 3]), $rebuilt($native, new PhpBackend(), true));
 $same('Rows::concat PHP + native', $php->concat($php), $php->concat($native));
 $same('Rows::concat native + PHP', $php->concat($php), $native->concat($php));
@@ -47,13 +47,13 @@ $same('Rows::gather over both', $php->gather([1, 4]), $native->gather([1, 4]));
 foreach ($schema->definitions() as $name => $definition) {
     $phpColumn = $php->column((string) $name);
     $nativeColumn = $native->column((string) $name);
-    $adopted = (new DefaultBackend())->adopt($definition, $phpColumn);
-    $empty = (new DefaultBackend())->adopt($definition, $phpColumn->slice(0, 0));
+    $adopted = (new RustBackend())->adopt($definition, $phpColumn);
+    $empty = (new RustBackend())->adopt($definition, $phpColumn->slice(0, 0));
     $back = (new PhpBackend())->adopt($definition, $nativeColumn);
 
-    if (!$adopted instanceof NativeColumn || $adopted->encode() !== $phpColumn->encode() || $empty->count() !== 0
-        || $back instanceof NativeColumn || $back->encode() !== $phpColumn->encode()
-        || (new DefaultBackend())->adopt($definition, $nativeColumn) !== $nativeColumn) {
+    if (!$adopted instanceof RustColumn || $adopted->encode() !== $phpColumn->encode() || $empty->count() !== 0
+        || $back instanceof RustColumn || $back->encode() !== $phpColumn->encode()
+        || (new RustBackend())->adopt($definition, $nativeColumn) !== $nativeColumn) {
         echo "adopt DIFF {$name}\n";
     }
 }

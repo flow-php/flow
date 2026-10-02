@@ -122,7 +122,11 @@ fn days_from_civil(year: i64, month: i64, day: i64) -> Option<i64> {
 }
 
 /// A fresh `DateTimeImmutable` initialised by `init` over its `php_date_obj`, then moved into `zone`.
-fn datetime_in(zone: &[u8], init: impl FnOnce(*mut c_void) -> bool, failure: impl FnOnce() -> PhpException) -> Result<Zval, PhpException> {
+fn datetime_in(
+    zone: &[u8],
+    init: impl FnOnce(*mut c_void) -> bool,
+    failure: impl FnOnce() -> PhpException,
+) -> Result<Zval, PhpException> {
     let fns = php::datetime_immutable()?;
     let mut datetime = Zval::new();
 
@@ -141,7 +145,12 @@ fn datetime_in(zone: &[u8], init: impl FnOnce(*mut c_void) -> bool, failure: imp
         return Err(failure());
     }
 
-    let datetime = call_handle(fns.set_timezone, Some(datetime_obj), &mut [php::timezone(zone)?], "restore a datetime timezone")?;
+    let datetime = call_handle(
+        fns.set_timezone,
+        Some(datetime_obj),
+        &mut [php::timezone(zone)?],
+        "restore a datetime timezone",
+    )?;
 
     if !datetime.is_object() {
         return Err(ext_exception("arrow expected setTimezone to return a datetime object"));
@@ -185,7 +194,11 @@ pub fn datetime_from_micros(micros: i64, zone: &[u8]) -> Result<Zval, PhpExcepti
                 }
             }
         },
-        || ext_exception(format!("arrow failed to restore datetime from \"{micros}\" microseconds")),
+        || {
+            ext_exception(format!(
+                "arrow failed to restore datetime from \"{micros}\" microseconds"
+            ))
+        },
     )
 }
 
@@ -229,7 +242,10 @@ pub fn uuid_text(bytes: &[u8]) -> Vec<u8> {
 /// `hex2bin()` of a 36-char uuid with its dashes removed.
 pub fn uuid_bytes(text: &[u8]) -> Option<[u8; 16]> {
     let mut bytes = [0u8; 16];
-    let mut digits = text.iter().filter(|byte| **byte != b'-').map(|byte| (*byte as char).to_digit(16));
+    let mut digits = text
+        .iter()
+        .filter(|byte| **byte != b'-')
+        .map(|byte| (*byte as char).to_digit(16));
 
     for byte in &mut bytes {
         let high = digits.next()??;

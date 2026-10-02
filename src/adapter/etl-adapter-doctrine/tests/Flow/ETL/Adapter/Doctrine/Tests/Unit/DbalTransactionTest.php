@@ -43,9 +43,9 @@ final class DbalTransactionTest extends TestCase
             ->willReturnCallback(static function (TransactionIsolationLevel $level) use (&$levels): void {
                 $levels[] = $level;
             });
-        $transaction = DbalTransaction::fromConnection(
-            $connection,
-        )->withIsolationLevel(TransactionIsolationLevel::SERIALIZABLE);
+        $transaction = DbalTransaction::fromConnection($connection)->withIsolationLevel(
+            TransactionIsolationLevel::SERIALIZABLE,
+        );
 
         $transaction->begin();
         $transaction->commit();
@@ -97,9 +97,9 @@ final class DbalTransactionTest extends TestCase
             ->willReturnCallback(static function (TransactionIsolationLevel $level) use (&$levels): void {
                 $levels[] = $level;
             });
-        $transaction = DbalTransaction::fromConnection(
-            $connection,
-        )->withIsolationLevel(TransactionIsolationLevel::SERIALIZABLE);
+        $transaction = DbalTransaction::fromConnection($connection)->withIsolationLevel(
+            TransactionIsolationLevel::SERIALIZABLE,
+        );
         $transaction->begin();
 
         try {

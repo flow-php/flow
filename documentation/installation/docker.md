@@ -76,7 +76,7 @@ that Flow detects and uses automatically:
 | Extension  | Package                                                                       | Effect when loaded                                                                                                                                     |
 |------------|-------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `flow_php` | [flow-php/flow-php-ext](/documentation/components/extensions/flow-php-ext.md) | the CSV reader and the schema narrower run native                                                                                                      |
-| `arrow`    | [flow-php/arrow-ext](/documentation/components/extensions/arrow-ext.md)       | `AdaptiveParquetEngine` selects `ArrowParquetEngine`, so Parquet reads and writes run native                                                           |
+| `arrow`    | [flow-php/arrow-ext](/documentation/components/extensions/arrow-ext.md)       | `AdaptiveParquetEngine` picks arrow-ext's `RustParquetEngine`, so Parquet reads and writes run native                                                 |
 | `pg_query` | [flow-php/pg-query-ext](/documentation/components/extensions/pg-query-ext.md) | `Flow\PostgreSql\Parser` becomes usable at all - SQL parsing, normalization and AST manipulation                                                       |
 | `protobuf` | `pecl/protobuf`                                                               | `Flow\PostgreSql\Parser` decodes the parse tree in C instead of pure PHP - measured ~69x faster end to end                                             |
 
@@ -114,5 +114,5 @@ $ docker run --rm -v /dev/null:/usr/local/etc/php/conf.d/docker-php-ext-flow_php
 ```
 
 Once a native engine is selected it does **not** silently degrade. Extension failures surface as
-`Flow\Floe\Exception\ExtensionException`, which `FloeReader` and `FloeWriter` wrap as
+`Flow\ETL\Exception\RuntimeException`, which `FloeReader` and `FloeWriter` wrap as
 `Flow\Floe\Exception\FloeException`.

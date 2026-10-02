@@ -1,5 +1,5 @@
 --TEST--
-flow_php registers the column interfaces reflection-identical to the library files
+flow_php registers the flow-php/etl and adapter interfaces reflection-identical to the package files
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 --FILE--

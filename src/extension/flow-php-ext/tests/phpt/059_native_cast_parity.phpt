@@ -1,12 +1,12 @@
 --TEST--
-NativeColumnBuilder casts and refuses exactly as the PHP builder through append() and appendMany(), in every default zone
+RustColumnBuilder casts and refuses exactly as the PHP builder through append() and appendMany(), in every default zone
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 --FILE--
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Column\DefaultBackend;
+use Flow\ETL\Column\RustBackend;
 use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Tests\Double\ForeignTypeDefinition;
 use Flow\ETL\Tests\Double\ThrowingType;
@@ -88,7 +88,7 @@ foreach (['UTC', 'Europe/Warsaw', 'America/Santiago'] as $timezone) {
     foreach ($cases as [$definition, $values]) {
         foreach ([false, true] as $many) {
             $php = outcome($build(new PhpBackend(), $definition, $values, $many));
-            $native = outcome($build(new DefaultBackend(), $definition, $values, $many));
+            $native = outcome($build(new RustBackend(), $definition, $values, $many));
 
             if ($php === $native) {
                 $identical++;

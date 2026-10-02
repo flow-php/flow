@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV\Tests\Context;
 
+use Flow\ETL\Adapter\CSV\AdaptiveCSVOpenSource;
 use Flow\ETL\Adapter\CSV\CSVDecoder;
 use Flow\ETL\Adapter\CSV\CSVDialect;
 use Flow\ETL\Adapter\CSV\CSVFileReader;
@@ -11,10 +12,8 @@ use Flow\ETL\Adapter\CSV\CSVFileSample;
 use Flow\ETL\Adapter\CSV\CSVLineReader;
 use Flow\ETL\Adapter\CSV\CSVOpenSource;
 use Flow\ETL\Adapter\CSV\CSVReadOptions;
-use Flow\ETL\Adapter\CSV\CSVSourceOpener;
-use Flow\ETL\Adapter\CSV\NativeCSVOpenSource;
 use Flow\ETL\Adapter\CSV\PhpCSVOpenSource;
-use Flow\ETL\Adapter\CSV\RustCSVReaderNative;
+use Flow\ETL\Adapter\CSV\RustCSVOpenSource;
 use Flow\ETL\Column\Backend;
 use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Exception\SchemaMismatchException;
@@ -67,7 +66,7 @@ final class CSVFixtureContext
             $sources[] = new SourceFile($status->path);
         }
 
-        return new CSVFileReader(new CSVSourceOpener($filesystem, $options), $sources);
+        return new CSVFileReader($filesystem, $options, $sources);
     }
 
     public static function open(
@@ -75,7 +74,7 @@ final class CSVFixtureContext
         Filesystem $filesystem = new NativeLocalFilesystem(),
         CSVReadOptions $options = new CSVReadOptions(),
     ): CSVOpenSource {
-        return (new CSVSourceOpener($filesystem, $options))->open(self::source($fixture));
+        return new AdaptiveCSVOpenSource($filesystem, self::source($fixture), $options);
     }
 
     /**
@@ -101,7 +100,7 @@ final class CSVFixtureContext
     }
 
     /**
-     * The dialect CSVSourceOpener would resolve: pinned options first, detection for the rest.
+     * The dialect AdaptiveCSVOpenSource resolves: pinned options first, detection for the rest.
      */
     public static function dialect(SourceStream $stream, CSVReadOptions $options = new CSVReadOptions()): CSVDialect
     {
@@ -121,7 +120,7 @@ final class CSVFixtureContext
         string $fixture,
         Filesystem $filesystem = new NativeLocalFilesystem(),
         CSVReadOptions $options = new CSVReadOptions(),
-    ): NativeCSVOpenSource {
+    ): RustCSVOpenSource {
         return self::openNativeStream($filesystem->readFrom(path_real(self::path($fixture))), $options);
     }
 
@@ -131,19 +130,17 @@ final class CSVFixtureContext
     public static function openNativeStream(
         SourceStream $stream,
         CSVReadOptions $options = new CSVReadOptions(),
-    ): NativeCSVOpenSource {
+    ): RustCSVOpenSource {
         $dialect = self::dialect($stream, $options);
 
-        return new NativeCSVOpenSource(
+        return new RustCSVOpenSource(
             $stream,
-            new RustCSVReaderNative(
-                $dialect->separator,
-                $dialect->enclosure,
-                $dialect->escape,
-                $options->withHeader,
-                $options->emptyToNull,
-                $options->removeBOM,
-            ),
+            $dialect->separator,
+            $dialect->enclosure,
+            $dialect->escape,
+            $options->withHeader,
+            $options->emptyToNull,
+            $options->removeBOM,
             $options->charactersReadInLine,
         );
     }
@@ -378,7 +375,7 @@ final class CSVFixtureContext
         array $sources = [],
         CSVReadOptions $options = new CSVReadOptions(),
     ): CSVFileReader {
-        return new CSVFileReader(new CSVSourceOpener($filesystem, $options), $sources);
+        return new CSVFileReader($filesystem, $options, $sources);
     }
 
     public static function sample(
@@ -386,7 +383,7 @@ final class CSVFixtureContext
         Filesystem $filesystem = new NativeLocalFilesystem(),
         CSVReadOptions $options = new CSVReadOptions(),
     ): CSVFileSample {
-        return new CSVFileSample(new CSVSourceOpener($filesystem, $options), self::source($fixture));
+        return new CSVFileSample($filesystem, $options, self::source($fixture));
     }
 
     /**

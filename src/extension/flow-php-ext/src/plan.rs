@@ -75,7 +75,8 @@ fn json_plan(type_zv: &Zval) -> Result<Rc<TypePlan>, PhpException> {
 
     let parsed = parse_type(&json).map_err(json_exception)?;
     let type_obj = expect_object(type_zv, "a Type")?;
-    let type_ce = unsafe { type_obj.ce.as_ref() }.ok_or_else(|| ext_exception("flow_php failed to resolve a Type class"))?;
+    let type_ce =
+        unsafe { type_obj.ce.as_ref() }.ok_or_else(|| ext_exception("flow_php failed to resolve a Type class"))?;
     let physical = call_method(&instance(PHYSICAL_FOR)?, "type", &mut [type_zv.shallow_clone()])?;
     let plan = Rc::new(TypePlan {
         kind: kind_of(&parsed).map_err(json_exception)?,
@@ -98,12 +99,18 @@ fn json_plan(type_zv: &Zval) -> Result<Rc<TypePlan>, PhpException> {
 
 /// `PhysicalFor::definition($definition)`: its refusals (wildcard enum, mixed, a foreign definition) are PHP's.
 pub fn physical_for_definition(definition: &Zval) -> Result<Zval, PhpException> {
-    call_method(&instance(PHYSICAL_FOR)?, "definition", &mut [definition.shallow_clone()])
+    call_method(
+        &instance(PHYSICAL_FOR)?,
+        "definition",
+        &mut [definition.shallow_clone()],
+    )
 }
 
 fn value_node(parsed: &TypeJson) -> Result<ValueNode, PhpException> {
     let child = |part: Option<&TypeJson>| -> Result<Box<ValueNode>, PhpException> {
-        Ok(Box::new(value_node(part.ok_or_else(|| ext_exception("flow_php type JSON is missing a nested type"))?)?))
+        Ok(Box::new(value_node(part.ok_or_else(|| {
+            ext_exception("flow_php type JSON is missing a nested type")
+        })?)?))
     };
 
     Ok(match parsed.type_.as_str() {

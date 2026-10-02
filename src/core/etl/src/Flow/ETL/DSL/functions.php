@@ -17,8 +17,8 @@ use Flow\Documentation\Attribute\Type as DSLType;
 use Flow\ETL\Analyze;
 use Flow\ETL\Cache;
 use Flow\ETL\Cache\Implementation\FilesystemCache;
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Column\Backend;
-use Flow\ETL\Column\DefaultBackend;
 use Flow\ETL\Config;
 use Flow\ETL\Config\ConfigBuilder;
 use Flow\ETL\Config\Grouping\HashGroupByBuilder;
@@ -1166,7 +1166,7 @@ function number_format(
  * @param array<array<mixed>>|array<mixed|string> $data
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function array_to_rows(array $data, Schema $schema, Backend $backend = new DefaultBackend()): Rows
+function array_to_rows(array $data, Schema $schema, Backend $backend = new AdaptiveBackend()): Rows
 {
     $isRows = true;
 

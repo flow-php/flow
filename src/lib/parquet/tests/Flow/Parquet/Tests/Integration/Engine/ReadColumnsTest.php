@@ -13,6 +13,7 @@ use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\ParquetFile\Schema\Repetition;
 use Flow\Parquet\Tests\Context\TestParquetFile;
 use Flow\Parquet\Tests\Integration\IO\ParquetIntegrationTestCase;
+use Flow\Parquet\Tests\Mother\ParquetEngineMother;
 use Flow\Parquet\Writer;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -25,7 +26,7 @@ use function iterator_to_array;
 final class ReadColumnsTest extends ParquetIntegrationTestCase
 {
     /**
-     * @return Generator<string, array{ParquetEngine, int, ?int, ?int, list<int>, list<list<int>>}>
+     * @return Generator<string, array{class-string<ParquetEngine>, int, ?int, ?int, list<int>, list<list<int>>}>
      */
     public static function chunkings(): Generator
     {
@@ -45,13 +46,14 @@ final class ReadColumnsTest extends ParquetIntegrationTestCase
      */
     #[DataProvider('chunkings')]
     public function test_chunks_follow_batch_size_limit_and_offset(
-        ParquetEngine $engine,
+        string $engineClass,
         int $batchSize,
         ?int $limit,
         ?int $offset,
         array $sizes,
         array $ids,
     ): void {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         (new Writer())->write(

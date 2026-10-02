@@ -6,9 +6,12 @@ The native CSV and JSON writers leak neither PHP memory nor native allocations o
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\CSV\NativeCSVWriter;
-use Flow\ETL\Adapter\JSON\NativeJsonWriter;
-use Flow\ETL\Column\DefaultBackend;
+use Flow\ETL\Adapter\CSV\CSVWriteOptions;
+use Flow\ETL\Adapter\CSV\RustCSVEncoder;
+use Flow\ETL\Adapter\CSV\PhpCSVEncoder;
+use Flow\ETL\Adapter\JSON\RustJSONEncoder;
+use Flow\ETL\Adapter\JSON\PhpJSONEncoder;
+use Flow\ETL\Column\RustBackend;
 
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\list_schema;
@@ -24,27 +27,49 @@ $php = php_rows($schema, all_types_values());
 $jsonSchema = schema(...array_filter($schema->definitions(), static fn($definition): bool => $definition->entry()->name() !== 'string'));
 $refusedSchema = schema(str_schema('s'), float_schema('f'), list_schema('l', type_list(type_float())));
 $refused = native_rows($refusedSchema, [['s' => "\xff", 'f' => NAN, 'l' => [INF]]]);
-$csv = new NativeCSVWriter(',', '"', '\\', "\n", 'Y-m-d\TH:i:s.uP T', 'Y-m-d');
-$json = new NativeJsonWriter(JSON_THROW_ON_ERROR, 'Y-m-d\TH:i:s.uP T', 'Y-m-d');
-$backend = new DefaultBackend();
-$count = $native->count();
-$cells = static function (array $names, string $cell) use ($count): array {
-    return array_fill_keys($names, array_fill(0, $count, $cell));
-};
+$dateTimeFormat = 'Y-m-d\TH:i:s.uP T';
+$csv = new RustCSVEncoder(',', '"', '\\', "\n", $dateTimeFormat, 'Y-m-d', new PhpCSVEncoder(new CSVWriteOptions(newLineSeparator: "\n", dateTimeFormat: $dateTimeFormat)));
+$json = new RustJSONEncoder(JSON_THROW_ON_ERROR, $dateTimeFormat, 'Y-m-d', new PhpJSONEncoder(JSON_THROW_ON_ERROR, $dateTimeFormat));
+// stand-ins for the held encoder: a cell list of the wrong length, and an encoder that throws
+$short = new class {
+    public function cells(): array
+    {
+        return ['too', 'few'];
+    }
 
-$cycle = static function () use ($schema, $jsonSchema, $native, $php, $refused, $csv, $json, $cells): void {
-    $csv->encode($native, $cells($csv->unrendered($schema), 'cell'));
+    public function fragments(): array
+    {
+        return ['"too"', '"few"'];
+    }
+};
+$throwing = new class {
+    public function cells(): array
+    {
+        throw new Flow\ETL\Exception\RuntimeException('cells refused');
+    }
+
+    public function fragments(): array
+    {
+        throw new Flow\ETL\Exception\RuntimeException('fragments refused');
+    }
+};
+$backend = new RustBackend();
+
+$cycle = static function () use ($schema, $jsonSchema, $native, $php, $refused, $csv, $json, $short, $throwing, $dateTimeFormat): void {
+    $csv->encode($native);
     // PHP columns are adopted for the encode and freed after it
-    $csv->encode($php, $cells($csv->unrendered($schema), 'cell'));
-    $json->encode($native->project($jsonSchema), $cells($json->unrendered($jsonSchema), '"fragment"'), "\n");
-    $json->encode($php->project($jsonSchema), $cells($json->unrendered($jsonSchema), '"fragment"'), ',');
+    $csv->encode($php);
+    $json->encode($native->project($jsonSchema), "\n");
+    $json->encode($php->project($jsonSchema), ',');
 
     foreach ([
-        static fn() => $csv->encode($refused, []),
-        static fn() => $json->encode($refused, [], "\n"),
-        static fn() => $csv->encode($native, []),
-        static fn() => $json->encode($native, $cells($json->unrendered($schema), '"fragment"'), "\n"),
-        static fn() => $json->encode($native->project($jsonSchema), ['json' => ['too', 'few']], "\n"),
+        static fn() => $csv->encode($refused),
+        static fn() => $json->encode($refused, "\n"),
+        static fn() => $json->encode($native, "\n"),
+        static fn() => (new RustCSVEncoder(',', '"', '\\', "\n", $dateTimeFormat, 'Y-m-d', $short))->encode($native),
+        static fn() => (new RustJSONEncoder(JSON_THROW_ON_ERROR, $dateTimeFormat, 'Y-m-d', $short))->encode($native->project($jsonSchema), "\n"),
+        static fn() => (new RustCSVEncoder(',', '"', '\\', "\n", $dateTimeFormat, 'Y-m-d', $throwing))->encode($native),
+        static fn() => (new RustJSONEncoder(JSON_THROW_ON_ERROR, $dateTimeFormat, 'Y-m-d', $throwing))->encode($native->project($jsonSchema), "\n"),
     ] as $refusal) {
         try {
             $refusal();

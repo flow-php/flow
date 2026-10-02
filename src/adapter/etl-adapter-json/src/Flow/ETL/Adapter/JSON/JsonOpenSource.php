@@ -8,7 +8,13 @@ use Flow\ETL\Column\Backend;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
-use Generator;
+use Iterator;
+
+use function extension_loaded;
+
+if (extension_loaded('flow_php')) {
+    return;
+}
 
 interface JsonOpenSource
 {
@@ -22,7 +28,7 @@ interface JsonOpenSource
      *
      * @throws SchemaMismatchException
      *
-     * @return Generator<int, Rows>
+     * @return Iterator<int, Rows>
      */
-    public function batches(Schema $schema, int $batchSize, Backend $backend): Generator;
+    public function batches(Schema $schema, int $batchSize, Backend $backend): Iterator;
 }

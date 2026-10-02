@@ -6,7 +6,9 @@ The native writers format a datetime and a date as DateTimeInterface::format() d
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\CSV\NativeCSVWriter;
+use Flow\ETL\Adapter\CSV\CSVWriteOptions;
+use Flow\ETL\Adapter\CSV\RustCSVEncoder;
+use Flow\ETL\Adapter\CSV\PhpCSVEncoder;
 
 use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
@@ -60,12 +62,8 @@ foreach (['UTC', '+02:30', 'Europe/Warsaw', 'America/New_York', 'Australia/Lord_
         $rows = native_rows($schema, $values);
 
         foreach ($formats as $format) {
-            $writer = new NativeCSVWriter("\x01", "\x02", '', "\n", $format, 'Y-m-d');
-
-            if ($writer->unrendered($schema) !== []) {
-                throw new LogicException("the format {$format} is not rendered natively");
-            }
-
+            $recorder = new RecordingPhpCSVEncoder(new PhpCSVEncoder(new CSVWriteOptions("\x01", "\x02", '', "\n", $format, 'Y-m-d')));
+            $writer = new RustCSVEncoder("\x01", "\x02", '', "\n", $format, 'Y-m-d', $recorder);
             $expected = '';
 
             foreach ($values as $value) {
@@ -74,7 +72,11 @@ foreach (['UTC', '+02:30', 'Europe/Warsaw', 'America/New_York', 'Australia/Lord_
 
             $compared++;
             // a field holding a space is enclosed: the enclosure is dropped, no format writes that byte
-            $written = str_replace("\x02", '', $writer->encode($rows, []));
+            $written = str_replace("\x02", '', $writer->encode($rows));
+
+            if ($recorder->columns !== []) {
+                throw new LogicException("the format {$format} is not rendered natively");
+            }
 
             if ($written !== $expected && ++$different <= 5) {
                 echo "{$zone} {$format}\n  php:    ", substr(json_encode($expected), 0, 300), "\n  native: ", substr(json_encode($written), 0, 300), "\n";
@@ -90,14 +92,14 @@ $days = [0, -1, 1, 20_455, -25_567, -719_528, -719_893, 2_932_896, 35_804_721];
 $different = 0;
 
 foreach ($formats as $format) {
-    $writer = new NativeCSVWriter("\x01", "\x02", '', "\n", DATE_ATOM, $format);
+    $writer = new RustCSVEncoder("\x01", "\x02", '', "\n", DATE_ATOM, $format, new PhpCSVEncoder(new CSVWriteOptions("\x01", "\x02", '', "\n", DATE_ATOM, $format)));
     $expected = '';
 
     foreach ($days as $day) {
         $expected .= (new DateTimeImmutable('@' . ($day * 86_400)))->setTimezone(new DateTimeZone('UTC'))->format($format) . "\n";
     }
 
-    $written = str_replace("\x02", '', $writer->encode(native_rows($schema, array_map(static fn(int $day): array => ['on' => new DateTimeImmutable('@' . ($day * 86_400))], $days)), []));
+    $written = str_replace("\x02", '', $writer->encode(native_rows($schema, array_map(static fn(int $day): array => ['on' => new DateTimeImmutable('@' . ($day * 86_400))], $days))));
 
     if ($written !== $expected && ++$different <= 5) {
         echo "date {$format}\n  php:    ", substr(json_encode($expected), 0, 300), "\n  native: ", substr(json_encode($written), 0, 300), "\n";
@@ -107,7 +109,10 @@ foreach ($formats as $format) {
 echo "date: {$different} of " . count($formats) . " differ\n";
 
 foreach (['D, d M Y', 'Y-m-d I', 'N', 'Y\\'] as $format) {
-    printf("%s: %s\n", $format, json_encode((new NativeCSVWriter(',', '"', '\\', "\n", $format, $format))->unrendered(schema(datetime_schema('at'), date_schema('on')))));
+    $recorder = new RecordingPhpCSVEncoder(new PhpCSVEncoder(new CSVWriteOptions(',', '"', '\\', "\n", $format, $format)));
+    $rows = native_rows(schema(datetime_schema('at'), date_schema('on')), [['at' => new DateTimeImmutable('2024-01-02 03:04:05'), 'on' => new DateTimeImmutable('2024-01-02')]]);
+    (new RustCSVEncoder(',', '"', '\\', "\n", $format, $format, $recorder))->encode($rows);
+    printf("%s: %s\n", $format, json_encode(recorded_names($recorder->columns, $rows)));
 }
 ?>
 --EXPECT--

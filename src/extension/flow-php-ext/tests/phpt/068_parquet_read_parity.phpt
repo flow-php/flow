@@ -1,5 +1,5 @@
 --TEST--
-NativeParquetReader reads every lib Parquet fixture as PhpParquetEngine does, both refuse it, or it refuses naming the engine that reads it
+RustParquetOpenSource reads every lib Parquet fixture as PhpParquetEngine does, both refuse it, or it refuses naming the engine that reads it
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 <?php extension_loaded('arrow') || die('skip arrow'); ?>
@@ -7,7 +7,7 @@ NativeParquetReader reads every lib Parquet fixture as PhpParquetEngine does, bo
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\Parquet\{NativeParquetReader, SchemaConverter};
+use Flow\ETL\Adapter\Parquet\SchemaConverter;
 use Flow\ETL\Column\PhpBackend;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Parquet\Engine\PhpParquetEngine;
@@ -34,7 +34,7 @@ foreach ([...glob($fixtures . '/*.parquet'), ...glob($fixtures . '/EdgeCases/*.p
             return $rows;
         });
         $native = outcome(static function () use ($file, $batchSize, $filesystem): array {
-            $reader = native_parquet_reader(
+            $reader = rust_parquet_batches(
                 $filesystem->readFrom(path($file)),
                 (new SchemaConverter())->toFlow((new Reader(engine: new PhpParquetEngine()))->read($file)->schema()),
                 $batchSize,
@@ -43,7 +43,7 @@ foreach ([...glob($fixtures . '/*.parquet'), ...glob($fixtures . '/EdgeCases/*.p
             );
             $rows = [];
 
-            while (($batch = $reader->next()) !== null) {
+            foreach ($reader as $batch) {
                 array_push($rows, ...$batch->toArray());
             }
 
@@ -62,21 +62,21 @@ foreach ([...glob($fixtures . '/*.parquet'), ...glob($fixtures . '/EdgeCases/*.p
 }
 
 $emptylist = realpath($fixtures . '/EdgeCases/null_list.parquet');
-echo outcome(static fn() => native_parquet_reader(
+echo outcome(static fn() => rust_parquet_batches(
     $filesystem->readFrom(path($emptylist)),
     schema(list_schema('emptylist', type_list(type_integer()))),
     100,
     null,
     null,
 )), "\n";
-echo outcome(static fn() => native_parquet_reader(
+echo outcome(static fn() => rust_parquet_batches(
     $filesystem->readFrom(path($fixtures . '/multiple_pages.parquet')),
     schema(str_schema('int64')),
     100,
     null,
     null,
 )), "\n";
-echo outcome(static fn() => native_parquet_reader(
+echo outcome(static fn() => rust_parquet_batches(
     $filesystem->readFrom(path($fixtures . '/multiple_pages.parquet')),
     schema(str_schema('missing')),
     100,

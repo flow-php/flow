@@ -34,9 +34,9 @@ final class ElementPositionTest extends TestCase
         $document = new DOMDocument();
         $document->loadXML('<root/>');
 
-        static::assertNull((new ElementPosition())->path(type_instance_of(DOMElement::class)->assert($document->createElement(
-            'detached',
-        ))));
+        static::assertNull((new ElementPosition())->path(type_instance_of(
+            DOMElement::class,
+        )->assert($document->createElement('detached'))));
     }
 
     public function test_the_physical_splits_into_the_path_the_markup_and_the_document(): void

@@ -7,6 +7,12 @@ namespace Flow\ETL\Column;
 use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Schema\Definition;
 
+use function extension_loaded;
+
+if (extension_loaded('flow_php')) {
+    return;
+}
+
 interface Backend
 {
     /**

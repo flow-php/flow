@@ -1,15 +1,18 @@
-//! `Flow\ETL\Adapter\CSV\NativeCSVWriter`: a `Rows` batch as the bytes `CSVEncoder::encode()` returns, rendered from
-//! the arrow arrays; the columns it does not render arrive as the cells `CSVEncoder::cells()` produced.
+//! `Flow\ETL\Adapter\CSV\RustCSVEncoder`: a `Rows` batch as the bytes `PhpCSVEncoder::encode()` returns, rendered
+//! from the arrow arrays; the columns it does not render are the cells the held `PhpCSVEncoder::cells()` produces.
 
+use ext_php_rs::binary::Binary;
 use ext_php_rs::binary_slice::BinarySlice;
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::flags::ClassFlags;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, Zval};
 
-use crate::ctx::{find_class, zval_str};
+use crate::ctx::{call_method, find_class};
+use crate::exception::ext_exception;
+use crate::interfaces::csv_encoder_ce;
 use crate::render::invalid_argument;
-use crate::text::batch::{batch, cells, renderer, unrendered};
+use crate::text::batch::{batch, cells, renderer, Unrendered};
 use crate::text::value::Formats;
 use crate::text::Error;
 
@@ -22,8 +25,12 @@ fn json_exception(error: Error) -> PhpException {
 }
 
 #[php_class]
-#[php(name = "Flow\\ETL\\Adapter\\CSV\\NativeCSVWriter", flags = ClassFlags::Final)]
-pub struct NativeCSVWriter {
+#[php(
+    name = "Flow\\ETL\\Adapter\\CSV\\RustCSVEncoder",
+    flags = ClassFlags::Final,
+    implements(ce = csv_encoder_ce, stub = "Flow\\ETL\\Adapter\\CSV\\CSVEncoder")
+)]
+pub struct RustCSVEncoder {
     separator: u8,
     enclosure: u8,
     escape: Option<u8>,
@@ -33,9 +40,12 @@ pub struct NativeCSVWriter {
     /// The separator, the enclosure and the escape character cannot occur in a number, a boolean or a uuid.
     plain_kinds: bool,
     formats: Formats,
+    /// The `PhpCSVEncoder` that renders the unrendered columns and the header.
+    php: Zval,
+    unrendered: Unrendered,
 }
 
-impl NativeCSVWriter {
+impl RustCSVEncoder {
     /// One field as `fputcsv()` writes it (ext/standard/file.c `php_fputcsv()`).
     fn field(&self, out: &mut Vec<u8>, text: &[u8]) {
         if !text.iter().any(|byte| self.enclosing[usize::from(*byte)]) {
@@ -65,7 +75,7 @@ impl NativeCSVWriter {
 }
 
 #[php_impl]
-impl NativeCSVWriter {
+impl RustCSVEncoder {
     pub fn __construct(
         separator: BinarySlice<u8>,
         enclosure: BinarySlice<u8>,
@@ -73,6 +83,7 @@ impl NativeCSVWriter {
         new_line_separator: BinarySlice<u8>,
         date_time_format: BinarySlice<u8>,
         date_format: BinarySlice<u8>,
+        php: &Zval,
     ) -> PhpResult<Self> {
         if separator.len() != 1 {
             return Err(invalid_argument("Separator must be a single character".to_string()));
@@ -83,15 +94,25 @@ impl NativeCSVWriter {
         }
 
         if escape.len() > 1 {
-            return Err(invalid_argument("Escape must be empty or a single character".to_string()));
+            return Err(invalid_argument(
+                "Escape must be empty or a single character".to_string(),
+            ));
         }
 
         let (separator, enclosure, escape) = (separator[0], enclosure[0], escape.first().copied());
         let mut enclosing = [false; 256];
 
-        for byte in [Some(separator), Some(enclosure), escape, Some(b'\n'), Some(b'\r'), Some(b'\t'), Some(b' ')]
-            .into_iter()
-            .flatten()
+        for byte in [
+            Some(separator),
+            Some(enclosure),
+            escape,
+            Some(b'\n'),
+            Some(b'\r'),
+            Some(b'\t'),
+            Some(b' '),
+        ]
+        .into_iter()
+        .flatten()
         {
             enclosing[usize::from(byte)] = true;
         }
@@ -107,16 +128,30 @@ impl NativeCSVWriter {
                 .flatten()
                 .any(|byte| byte.is_ascii_alphanumeric() || b"_+./:-".contains(&byte) || byte >= 0x80),
             formats: Formats::parse(&date_time_format, &date_format),
+            php: php.shallow_clone(),
+            unrendered: Unrendered::default(),
         })
     }
 
-    /// The columns of `$schema` this writer does not render itself.
-    pub fn unrendered(&self, schema: &Zval) -> PhpResult<Zval> {
-        unrendered(schema, &self.formats, true)
+    /// The rows as `PhpCSVEncoder::encode()` writes them; the unrendered columns through the held encoder's `cells()`.
+    pub fn encode(&mut self, rows: &Zval) -> PhpResult<Binary<u8>> {
+        let cells = self.unrendered.render(rows, &self.php, "cells", &self.formats, true)?;
+
+        self.render_rows(rows, &cells)
     }
 
-    /// `$cells`: `CSVEncoder::cells()` of the unrendered columns, each of `$rows->count()` values.
-    pub fn encode(&self, rows: &Zval, cells_of: &ZendHashTable) -> PhpResult<Zval> {
+    #[php(name = "encodeHeader")]
+    pub fn encode_header(&self, headers: &Zval) -> PhpResult<Binary<u8>> {
+        call_method(&self.php, "encodeHeader", &mut [headers.shallow_clone()])?
+            .zend_str()
+            .map(|header| Binary::new(header.as_bytes()))
+            .ok_or_else(|| ext_exception("flow_php expected PhpCSVEncoder::encodeHeader() to return a string"))
+    }
+}
+
+impl RustCSVEncoder {
+    /// `$cells_of`: `PhpCSVEncoder::cells()` of the unrendered columns, each of `$rows->count()` values.
+    fn render_rows(&self, rows: &Zval, cells_of: &ZendHashTable) -> PhpResult<Binary<u8>> {
         let batch = batch(rows, &self.formats, true)?;
         let mut fields = Vec::with_capacity(batch.columns.len());
         let mut scratch = Vec::new();
@@ -161,7 +196,8 @@ impl NativeCSVWriter {
         }
 
         let mut out = Vec::with_capacity(
-            fields.iter().map(|(arena, _)| arena.len()).sum::<usize>() + batch.count * (fields.len() + self.new_line.len()),
+            fields.iter().map(|(arena, _)| arena.len()).sum::<usize>()
+                + batch.count * (fields.len() + self.new_line.len()),
         );
 
         for i in 0..batch.count {
@@ -176,6 +212,6 @@ impl NativeCSVWriter {
             out.extend_from_slice(&self.new_line);
         }
 
-        Ok(zval_str(&out))
+        Ok(Binary::new(out))
     }
 }

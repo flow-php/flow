@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Formatter;
 
-use Flow\ETL\Column\DefaultBackend;
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Rows;
 use Flow\ETL\Rows\RowsBuilder;
@@ -78,7 +78,7 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
             $columns[] = str_schema('metadata');
         }
 
-        return (new RowsBuilder(schema(...$columns), new DefaultBackend()))
+        return (new RowsBuilder(schema(...$columns), new AdaptiveBackend()))
             ->appendRows($rows)
             ->finish();
     }

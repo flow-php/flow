@@ -4,16 +4,15 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../../../../vendor/autoload.php';
 
-use Flow\Arrow\Parquet\BatchReader;
-use Flow\Arrow\Parquet\ParquetFile;
-use Flow\ETL\Adapter\Parquet\NativeParquetReader;
-use Flow\ETL\Column\DefaultBackend;
+use Flow\ETL\Adapter\Parquet\RustParquetOpenSource;
 use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Column\RustBackend;
 use Flow\ETL\Rows;
 use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
 use Flow\Filesystem\SourceStream;
+use Flow\Parquet\Engine\RustParquetFileReader;
 
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\date_schema;
@@ -213,7 +212,7 @@ function php_rows(Schema $schema, array $values): Rows
  */
 function native_rows(Schema $schema, array $values): Rows
 {
-    return (new RowsBuilder($schema, new DefaultBackend()))
+    return (new RowsBuilder($schema, new RustBackend()))
         ->appendRows($values)
         ->finish();
 }
@@ -251,26 +250,18 @@ function comparable(mixed $value): string
 }
 
 /**
- * `NativeParquetReader` over arrow-ext's batches of `$schema`'s columns of the Parquet file in `$stream`.
+ * `RustParquetOpenSource::batches()` of `$schema`'s columns of the Parquet file in `$stream`, adopted by `RustBackend`.
  *
  * @param int<1, max> $batchSize
  */
-function native_parquet_reader(
-    SourceStream $stream,
-    Schema $schema,
-    int $batchSize,
-    ?int $offset,
-    ?int $limit,
-): NativeParquetReader {
-    return new NativeParquetReader(
-        new BatchReader(
-            new ParquetFile($stream),
-            array_map('strval', array_keys($schema->definitions())),
-            $batchSize,
-            $offset,
-            $limit,
-        ),
+function rust_parquet_batches(SourceStream $stream, Schema $schema, int $batchSize, ?int $offset, ?int $limit): Iterator
+{
+    return (new RustParquetOpenSource(new RustParquetFileReader($stream)))->batches(
         $schema,
+        $batchSize,
+        $offset,
+        $limit,
+        new RustBackend(),
     );
 }
 
@@ -310,14 +301,24 @@ function assert_same_outcome(callable $php, callable $native): void
 }
 
 /**
- * JSON of the three column interfaces as reflection sees them: methods, parameters, types, variadics.
+ * JSON of the interfaces flow_php registers as reflection sees them: methods, parameters, types, optional, variadic, by-ref.
  */
 function interfaces_reflection(): string
 {
     $interfaces = [];
 
-    foreach (['Backend', 'Column', 'ColumnBuilder'] as $name) {
-        $class = new ReflectionClass('Flow\\ETL\\Column\\' . $name);
+    foreach ([
+        'Flow\\ETL\\Column\\Backend',
+        'Flow\\ETL\\Column\\Column',
+        'Flow\\ETL\\Column\\ColumnBuilder',
+        'Flow\\ETL\\Adapter\\Parquet\\ParquetOpenSink',
+        'Flow\\ETL\\Adapter\\CSV\\CSVEncoder',
+        'Flow\\ETL\\Adapter\\JSON\\JSONEncoder',
+        'Flow\\ETL\\Adapter\\CSV\\CSVOpenSource',
+        'Flow\\ETL\\Adapter\\JSON\\JsonOpenSource',
+        'Flow\\ETL\\Adapter\\Parquet\\ParquetOpenSource',
+    ] as $name) {
+        $class = new ReflectionClass($name);
         $interfaces[$name] = [
             $class->isInterface(),
             array_map(static fn(ReflectionMethod $method): array => [
@@ -326,6 +327,7 @@ function interfaces_reflection(): string
                 array_map(static fn(ReflectionParameter $parameter): array => [
                     $parameter->getName(),
                     (string) $parameter->getType(),
+                    $parameter->isOptional(),
                     $parameter->isVariadic(),
                     $parameter->isPassedByReference(),
                 ], $method->getParameters()),
@@ -341,7 +343,7 @@ function expect_exception(callable $fn): void
     try {
         $fn();
         echo "FAIL: no exception thrown\n";
-    } catch (Flow\Floe\Exception\ExtensionException $e) {
+    } catch (Flow\ETL\Exception\RuntimeException $e) {
         echo get_class($e), ': ', $e->getMessage(), "\n";
     }
 }
@@ -382,7 +384,7 @@ function csv_php_rows(
 }
 
 /**
- * RustCSVReaderNative fed `$raw` in `$chunk`-byte pieces, as `[headers, list of array<array-key, mixed>::$values]`.
+ * RustCSVOpenSource over `$raw`, read in `$chunk`-byte pieces, as `[headers, list of array<array-key, mixed>::$values]`.
  *
  * @param positive-int $chunk
  *
@@ -398,32 +400,19 @@ function csv_native_rows(
     bool $removeBOM = true,
     int $chunk = 4096,
 ): array {
-    $reader = new Flow\ETL\Adapter\CSV\RustCSVReaderNative(
+    $source = new Flow\ETL\Adapter\CSV\RustCSVOpenSource(
+        new Flow\Filesystem\Stream\StringSourceStream(Flow\Filesystem\DSL\path('memory://phpt.csv'), $raw),
         $separator,
         $enclosure,
         $escape,
         $withHeader,
         $emptyToNull,
         $removeBOM,
+        $chunk,
     );
-    $rows = [];
-    $drain = static function () use ($reader, &$rows): void {
-        while (($batch = $reader->next(3)) !== []) {
-            foreach ($batch as $values) {
-                $rows[] = $values;
-            }
-        }
-    };
+    $rows = iterator_to_array($source->records(), false);
 
-    foreach ($raw === '' ? [] : str_split($raw, $chunk) as $piece) {
-        $reader->feed($piece);
-        $drain();
-    }
-
-    $reader->finish();
-    $drain();
-
-    return [$reader->headers(), $rows];
+    return [$source->headers(), $rows];
 }
 
 /**
@@ -631,27 +620,52 @@ function csv_narrow_corpus(): array
 }
 
 /**
- * Prints every value where RustColumnFoldNative::narrowOne() and StringTypeNarrower::narrow() disagree.
+ * RustCSVOpenSource::sniff() of one CSV column "v" (no names seeded), one row per value - a null value is an empty cell,
+ * read as null with $emptyToNull.
+ *
+ * @param list<?string> $values
+ */
+function rust_sniff_column(
+    array $values,
+    Flow\Types\Type\TypeNarrower $typer,
+    bool $emptyToNull = true,
+): Flow\ETL\Schema\Inference\ColumnTypes {
+    $csv = "v\n";
+
+    foreach ($values as $value) {
+        $csv .= ($value === null ? '' : '"' . str_replace('"', '""', $value) . '"') . "\n";
+    }
+
+    return (new Flow\ETL\Adapter\CSV\RustCSVOpenSource(
+        new Flow\Filesystem\Stream\MemorySourceStream($csv),
+        ',',
+        '"',
+        '',
+        true,
+        $emptyToNull,
+        false,
+    ))->sniff([], -1, new Flow\ETL\Schema\Inference\SchemaInference(), $typer);
+}
+
+/**
+ * Prints every value whose one-row RustCSVOpenSource::sniff() differs from the PHP ColumnTypes::observe() fold of it -
+ * StringTypeNarrower::narrow() of the value.
  *
  * @param list<Flow\Types\Type<mixed>> $candidates
  * @param list<string> $corpus
  */
 function assert_narrow_parity(string $label, array $candidates, array $corpus): void
 {
-    $php = new Flow\Types\Type\Native\String\StringTypeNarrower($candidates);
-    $native = new Flow\ETL\Adapter\CSV\RustColumnFoldNative([], array_map(
-        static fn(Flow\Types\Type $type): string => $type->toString(),
-        $candidates,
-    ));
+    $typer = new Flow\Types\Type\Native\String\StringTypeNarrower($candidates);
     $mismatches = 0;
 
     foreach ($corpus as $value) {
-        $expected = $php->narrow($value)->toString();
-        $actual = $native->narrowOne($value);
+        $php = new Flow\ETL\Schema\Inference\ColumnTypes([], $typer);
+        $php->observe(['v' => $value]);
 
-        if ($expected !== $actual) {
+        if ($php != rust_sniff_column([$value], $typer, false)) {
             $mismatches++;
-            echo '  ', bin2hex($value), ' ', var_export($value, true), ": php={$expected} native={$actual}\n";
+            echo '  ', bin2hex($value), ' ', var_export($value, true), "\n";
         }
     }
 
@@ -1132,4 +1146,148 @@ function written(callable $write): string
     }
 
     return $stream->content();
+}
+
+/**
+ * A stream over `$raw` whose read() returns at most `$chunk` bytes - a reader fed in pieces of that size.
+ *
+ * @param positive-int $chunk
+ */
+function chunked_source_stream(string $raw, int $chunk): Flow\Filesystem\SourceStream
+{
+    return new class(
+        new Flow\Filesystem\Stream\StringSourceStream(Flow\Filesystem\DSL\path('memory://phpt.json'), $raw),
+        $chunk,
+    ) implements Flow\Filesystem\SourceStream {
+        /**
+         * @param positive-int $chunk
+         */
+        public function __construct(
+            private readonly Flow\Filesystem\Stream\StringSourceStream $stream,
+            private readonly int $chunk,
+        ) {}
+
+        public function close(): void
+        {
+            $this->stream->close();
+        }
+
+        public function content(): string
+        {
+            return $this->stream->content();
+        }
+
+        public function isOpen(): bool
+        {
+            return $this->stream->isOpen();
+        }
+
+        /**
+         * @param positive-int $length
+         */
+        public function iterate(int $length = 1): Generator
+        {
+            return $this->stream->iterate(min($length, $this->chunk));
+        }
+
+        public function path(): Flow\Filesystem\Path
+        {
+            return $this->stream->path();
+        }
+
+        /**
+         * @param positive-int $length
+         */
+        public function read(int $length, int $offset): string
+        {
+            return $this->stream->read(min($length, $this->chunk), $offset);
+        }
+
+        public function readLines(string $separator = "\n", ?int $length = null): Generator
+        {
+            return $this->stream->readLines($separator, $length);
+        }
+
+        public function size(): ?int
+        {
+            return $this->stream->size();
+        }
+    };
+}
+
+/**
+ * Stands in for the PhpCSVEncoder a RustCSVEncoder holds: renders through it and records every column left to it.
+ */
+final class RecordingPhpCSVEncoder
+{
+    /**
+     * @var list<Flow\ETL\Column\Column>
+     */
+    public array $columns = [];
+
+    public function __construct(
+        private readonly Flow\ETL\Adapter\CSV\PhpCSVEncoder $php,
+    ) {}
+
+    /**
+     * @return list<?string>
+     */
+    public function cells(Flow\Types\Type $type, Flow\ETL\Column\Column $column): array
+    {
+        $this->columns[] = $column;
+
+        return $this->php->cells($type, $column);
+    }
+
+    /**
+     * @param list<string> $headers
+     */
+    public function encodeHeader(array $headers): string
+    {
+        return $this->php->encodeHeader($headers);
+    }
+}
+
+/**
+ * Stands in for the PhpJSONEncoder a RustJSONEncoder holds: renders through it and records every column left to it.
+ */
+final class RecordingPhpJSONEncoder
+{
+    /**
+     * @var list<Flow\ETL\Column\Column>
+     */
+    public array $columns = [];
+
+    public function __construct(
+        private readonly Flow\ETL\Adapter\JSON\PhpJSONEncoder $php,
+    ) {}
+
+    /**
+     * @return list<string>
+     */
+    public function fragments(Flow\Types\Type $type, Flow\ETL\Column\Column $column): array
+    {
+        $this->columns[] = $column;
+
+        return $this->php->fragments($type, $column);
+    }
+}
+
+/**
+ * The names of the columns of `$rows` among `$recorded`.
+ *
+ * @param list<Flow\ETL\Column\Column> $recorded
+ *
+ * @return list<string>
+ */
+function recorded_names(array $recorded, Rows $rows): array
+{
+    return array_map(
+        'strval',
+        array_keys(array_filter($rows->columns(), static fn(Flow\ETL\Column\Column $column): bool => in_array(
+            $column,
+            $recorded,
+            true,
+        ))),
+    );
 }

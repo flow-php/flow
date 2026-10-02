@@ -9,7 +9,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Flow\\Arrow\\": "php/Flow/Arrow/"
+            "Flow\\Arrow\\": "php/Flow/Arrow/",
+            "Flow\\Parquet\\Engine\\": "php/Flow/Parquet/Engine/"
         }
     },
     "scripts": {

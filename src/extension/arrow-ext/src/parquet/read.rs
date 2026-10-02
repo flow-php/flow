@@ -131,13 +131,21 @@ impl ParquetReader {
             Some(hint) => ArrowReaderOptions::new().with_schema(hint),
             None => ArrowReaderOptions::new(),
         };
-        let schema = ArrowReaderMetadata::try_new(Arc::clone(meta), options.clone())?.schema().clone();
+        let schema = ArrowReaderMetadata::try_new(Arc::clone(meta), options.clone())?
+            .schema()
+            .clone();
         let projected = columns
             .iter()
             .map(|name| Projected::resolve(&schema, name))
             .collect::<Result<Vec<_>, _>>()?;
-        let fields = projected.iter().map(|column| Arc::clone(&column.field)).collect::<Vec<_>>();
-        let types = fields.iter().map(|field| canonical_type(field)).collect::<Result<Vec<_>, _>>()?;
+        let fields = projected
+            .iter()
+            .map(|column| Arc::clone(&column.field))
+            .collect::<Vec<_>>();
+        let types = fields
+            .iter()
+            .map(|field| canonical_type(field))
+            .collect::<Result<Vec<_>, _>>()?;
 
         if let Some(codec) = unsupported_codec(meta, &plan.row_groups, &projected) {
             return Err(codec);
@@ -145,7 +153,11 @@ impl ParquetReader {
 
         let descr = meta.file_metadata().schema_descr();
         let leaves = (0..descr.num_columns())
-            .filter(|leaf| projected.iter().any(|column| column.reads_leaf(descr.column(*leaf).path().parts())))
+            .filter(|leaf| {
+                projected
+                    .iter()
+                    .any(|column| column.reads_leaf(descr.column(*leaf).path().parts()))
+            })
             .collect::<Vec<_>>();
         let fetch = ChunkFetch::new(source, size, meta, &plan.row_groups, &leaves);
         let meta = if plan.skip > 0 {
@@ -175,7 +187,9 @@ impl ParquetReader {
         let positions = projected
             .into_iter()
             .map(|mut column| {
-                let root = schema.index_of(&column.path[0]).map_err(|_| Error::MissingColumn(column.field.name().clone()))?;
+                let root = schema
+                    .index_of(&column.path[0])
+                    .map_err(|_| Error::MissingColumn(column.field.name().clone()))?;
                 column.path.remove(0);
 
                 Ok((root, column.path))
@@ -280,7 +294,9 @@ fn int96_hinted(field: &FieldRef, descr: &SchemaDescriptor, leaf: &mut usize, hi
 fn unsupported_codec(meta: &ParquetMetaData, row_groups: &[usize], columns: &[Projected]) -> Option<Error> {
     row_groups.iter().find_map(|group| {
         meta.row_group(*group).columns().iter().find_map(|chunk| {
-            let column = columns.iter().find(|column| column.reads_leaf(chunk.column_path().parts()))?;
+            let column = columns
+                .iter()
+                .find(|column| column.reads_leaf(chunk.column_path().parts()))?;
 
             (chunk.compression() == Compression::LZO).then(|| Error::Unsupported {
                 column: column.field.name().clone(),
@@ -321,7 +337,11 @@ mod tests {
         let mut writer = ArrowWriter::try_new(
             &mut file,
             Arc::clone(&schema),
-            Some(WriterProperties::builder().set_max_row_group_row_count(Some(8_192)).build()),
+            Some(
+                WriterProperties::builder()
+                    .set_max_row_group_row_count(Some(8_192))
+                    .build(),
+            ),
         )
         .unwrap();
         writer
@@ -329,7 +349,9 @@ mod tests {
             .unwrap();
         writer.close().unwrap();
 
-        ParquetMetaDataReader::new().parse_and_finish(&Bytes::from(file)).unwrap()
+        ParquetMetaDataReader::new()
+            .parse_and_finish(&Bytes::from(file))
+            .unwrap()
     }
 
     fn plan(offset: u64, limit: u64) -> (Vec<usize>, usize) {
@@ -375,14 +397,20 @@ mod tests {
             .write(
                 &RecordBatch::try_new(
                     schema,
-                    vec![Arc::new(Int64Array::from(vec![1])), Arc::new(StringArray::from(vec!["a"]))],
+                    vec![
+                        Arc::new(Int64Array::from(vec![1])),
+                        Arc::new(StringArray::from(vec!["a"])),
+                    ],
                 )
                 .unwrap(),
             )
             .unwrap();
         writer.close().unwrap();
 
-        let mut builder = ParquetMetaDataReader::new().parse_and_finish(&Bytes::from(file)).unwrap().into_builder();
+        let mut builder = ParquetMetaDataReader::new()
+            .parse_and_finish(&Bytes::from(file))
+            .unwrap()
+            .into_builder();
         let row_groups = builder
             .take_row_groups()
             .into_iter()
@@ -391,7 +419,12 @@ mod tests {
                     .columns()
                     .iter()
                     .map(|chunk| match chunk.column_path().string().as_str() {
-                        "name" => chunk.clone().into_builder().set_compression(Compression::LZO).build().unwrap(),
+                        "name" => chunk
+                            .clone()
+                            .into_builder()
+                            .set_compression(Compression::LZO)
+                            .build()
+                            .unwrap(),
                         _ => chunk.clone(),
                     })
                     .collect();
@@ -419,14 +452,22 @@ mod tests {
         assert!(unsupported_codec(&meta, &[0], &[column("id")]).is_none());
     }
 
-    fn open(file: Vec<u8>, columns: &[&str], offset: u64, limit: Option<u64>) -> Result<(ParquetReader, Arc<Counting>), Error> {
+    fn open(
+        file: Vec<u8>,
+        columns: &[&str],
+        offset: u64,
+        limit: Option<u64>,
+    ) -> Result<(ParquetReader, Arc<Counting>), Error> {
         let footer = Footer::read(&Bytes::from(file.clone()))?;
         let source = Arc::new(Counting::new(file));
         let size = source.data.len() as u64;
         let columns = columns.iter().map(|column| column.to_string()).collect::<Vec<_>>();
         let plan = ReadPlan::new(footer.meta(), offset, limit);
 
-        Ok((ParquetReader::open(Arc::clone(&source), size, footer.meta(), &columns, plan, 1_024)?, source))
+        Ok((
+            ParquetReader::open(Arc::clone(&source), size, footer.meta(), &columns, plan, 1_024)?,
+            source,
+        ))
     }
 
     fn read(file: Vec<u8>, columns: &[&str]) -> Result<Vec<ArrayRef>, Error> {
@@ -440,7 +481,11 @@ mod tests {
 
     fn int96(days_since_epoch: i64, nanos_of_day: i64) -> Int96 {
         let mut value = Int96::new();
-        value.set_data(nanos_of_day as u32, (nanos_of_day >> 32) as u32, (days_since_epoch + 2_440_588) as u32);
+        value.set_data(
+            nanos_of_day as u32,
+            (nanos_of_day >> 32) as u32,
+            (days_since_epoch + 2_440_588) as u32,
+        );
 
         value
     }
@@ -456,22 +501,35 @@ mod tests {
             .unwrap(),
         );
         let mut file = Vec::new();
-        let mut writer = SerializedFileWriter::new(&mut file, schema, Arc::new(WriterProperties::builder().build())).unwrap();
+        let mut writer =
+            SerializedFileWriter::new(&mut file, schema, Arc::new(WriterProperties::builder().build())).unwrap();
         let mut group = writer.next_row_group().unwrap();
         let first = int96(-719_162, 1_000);
         let last = int96(-3_653, 86_399_999_999_999);
 
         let mut column = group.next_column().unwrap().unwrap();
-        column.typed::<Int96Type>().write_batch(&[first, last], Some(&[1, 1]), None).unwrap();
+        column
+            .typed::<Int96Type>()
+            .write_batch(&[first, last], Some(&[1, 1]), None)
+            .unwrap();
         column.close().unwrap();
         let mut column = group.next_column().unwrap().unwrap();
-        column.typed::<Int64Type>().write_batch(&[1_500, -1_500], Some(&[1, 1]), None).unwrap();
+        column
+            .typed::<Int64Type>()
+            .write_batch(&[1_500, -1_500], Some(&[1, 1]), None)
+            .unwrap();
         column.close().unwrap();
         let mut column = group.next_column().unwrap().unwrap();
-        column.typed::<Int96Type>().write_batch(&[first, last], Some(&[2, 2]), None).unwrap();
+        column
+            .typed::<Int96Type>()
+            .write_batch(&[first, last], Some(&[2, 2]), None)
+            .unwrap();
         column.close().unwrap();
         let mut column = group.next_column().unwrap().unwrap();
-        column.typed::<Int96Type>().write_batch(&[first, last], Some(&[3, 3]), Some(&[0, 0])).unwrap();
+        column
+            .typed::<Int96Type>()
+            .write_batch(&[first, last], Some(&[3, 3]), Some(&[0, 0]))
+            .unwrap();
         column.close().unwrap();
         group.close().unwrap();
         writer.close().unwrap();
@@ -548,7 +606,10 @@ mod tests {
         let arrays = read(struct_file(), &["structure.int64", "structure.name"]).unwrap();
 
         assert_eq!(
-            arrays[0].as_primitive::<arrow_array::types::Int64Type>().iter().collect::<Vec<_>>(),
+            arrays[0]
+                .as_primitive::<arrow_array::types::Int64Type>()
+                .iter()
+                .collect::<Vec<_>>(),
             vec![Some(1), None, None]
         );
         assert_eq!(
@@ -595,10 +656,16 @@ mod tests {
         let mut writer = ArrowWriter::try_new(
             &mut file,
             Arc::clone(&schema),
-            Some(WriterProperties::builder().set_max_row_group_row_count(Some(100)).build()),
+            Some(
+                WriterProperties::builder()
+                    .set_max_row_group_row_count(Some(100))
+                    .build(),
+            ),
         )
         .unwrap();
-        writer.write(&RecordBatch::try_new(schema, vec![column(), column(), column()]).unwrap()).unwrap();
+        writer
+            .write(&RecordBatch::try_new(schema, vec![column(), column(), column()]).unwrap())
+            .unwrap();
         writer.close().unwrap();
 
         file

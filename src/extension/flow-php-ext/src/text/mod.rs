@@ -1,11 +1,11 @@
 //! The text of column values as the PHP writers render it (`Flow\ETL\Column\TextValues` plus each encoder's syntax),
 //! read straight from the arrow arrays.
 
+pub mod batch;
 pub mod date;
 pub mod float;
 pub mod json;
 pub mod value;
-pub mod batch;
 
 /// What `json_encode()` refuses; `message()` and `code()` are `json_last_error_msg()` and `json_last_error()`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

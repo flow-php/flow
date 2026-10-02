@@ -43,8 +43,6 @@ final class JsonLoader implements Closure, Discardable, FileLoader, Loader, Part
 
     private int $flags = JSON_THROW_ON_ERROR;
 
-    private ?JsonSinkOpener $opener = null;
-
     private readonly Path $path;
 
     private bool $putRowsInNewLines = false;
@@ -112,7 +110,11 @@ final class JsonLoader implements Closure, Discardable, FileLoader, Loader, Part
                 $stream = ($this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode))->writeTo(
                     $partitions->toArray(),
                 );
-                ($this->sinks[$stream->path()->uri()] ??= $this->opener()->open($stream))->write($group);
+                ($this->sinks[$stream->path()->uri()] ??= new JsonOpenSink(
+                    $stream,
+                    new AdaptiveJSONEncoder($this->flags, $this->dateTimeFormat, $this->dateFormat),
+                    $this->putRowsInNewLines ? JsonFraming::ARRAY_LINES : JsonFraming::ARRAY,
+                ))->write($group);
             }
 
             $context->telemetry()->loadingCompleted($this, [
@@ -158,15 +160,5 @@ final class JsonLoader implements Closure, Discardable, FileLoader, Loader, Part
         $this->putRowsInNewLines = $putRowsInNewLines;
 
         return $this;
-    }
-
-    private function opener(): JsonSinkOpener
-    {
-        return $this->opener ??= new JsonSinkOpener(
-            $this->flags,
-            $this->dateTimeFormat,
-            $this->dateFormat,
-            $this->putRowsInNewLines ? JsonFraming::ARRAY_LINES : JsonFraming::ARRAY,
-        );
     }
 }

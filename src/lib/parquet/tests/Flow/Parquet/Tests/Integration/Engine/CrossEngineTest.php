@@ -6,8 +6,8 @@ namespace Flow\Parquet\Tests\Integration\Engine;
 
 use Flow\Filesystem\Stream\NativeLocalDestinationStream;
 use Flow\Filesystem\Stream\NativeLocalSourceStream;
-use Flow\Parquet\Engine\ArrowParquetEngine;
 use Flow\Parquet\Engine\PhpParquetEngine;
+use Flow\Parquet\Engine\RustParquetEngine;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Schema;
@@ -54,7 +54,7 @@ final class CrossEngineTest extends TestCase
             ['id' => 2, 'label' => 'second', 'big_number' => 2_000_000_000_000],
         ];
 
-        $engine = new ArrowParquetEngine();
+        $engine = new RustParquetEngine();
 
         $writeStream = NativeLocalDestinationStream::openBlank(path($path));
         $engine->writeRows($writeStream, $schema, Compressions::SNAPPY, new Options(), $inputData);
@@ -90,7 +90,7 @@ final class CrossEngineTest extends TestCase
             ['id' => 20, 'name' => 'beta', 'active' => false],
         ];
 
-        $engine = new ArrowParquetEngine();
+        $engine = new RustParquetEngine();
         $stream = NativeLocalDestinationStream::openBlank(path($path));
         $engine->writeRows($stream, $schema, Compressions::SNAPPY, new Options(), $inputData);
 
@@ -151,7 +151,7 @@ final class CrossEngineTest extends TestCase
 
         (new Writer(engine: new PhpParquetEngine()))->write($path, $schema, $inputData);
 
-        $engine = new ArrowParquetEngine();
+        $engine = new RustParquetEngine();
         $chunks = iterator_to_array(
             $engine->openForRead(NativeLocalSourceStream::open(path_real($path)))->readColumns(
                 ['id', 'name', 'value'],

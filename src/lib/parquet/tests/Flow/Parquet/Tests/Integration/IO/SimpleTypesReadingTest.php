@@ -6,9 +6,9 @@ namespace Flow\Parquet\Tests\Integration\IO;
 
 use DateInterval;
 use DateTimeImmutable;
-use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Reader;
+use Flow\Parquet\Tests\Mother\ParquetEngineMother;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function array_filter;
@@ -21,8 +21,9 @@ use function range;
 class SimpleTypesReadingTest extends ParquetIntegrationTestCase
 {
     #[DataProvider('engine_provider')]
-    public function test_reading_bool_column(ParquetEngine $engine): void
+    public function test_reading_bool_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
@@ -38,8 +39,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_bool_column_with_limit(ParquetEngine $engine): void
+    public function test_reading_bool_column_with_limit(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
@@ -54,8 +56,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_bool_nullable_column(ParquetEngine $engine): void
+    public function test_reading_bool_nullable_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
@@ -72,8 +75,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_bool_nullable_column_with_limit(ParquetEngine $engine): void
+    public function test_reading_bool_nullable_column_with_limit(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
@@ -92,8 +96,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_date_column(ParquetEngine $engine): void
+    public function test_reading_date_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
@@ -111,8 +116,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_date_nullable_column(ParquetEngine $engine): void
+    public function test_reading_date_nullable_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
@@ -134,8 +140,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_decimal_column(ParquetEngine $engine): void
+    public function test_reading_decimal_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
@@ -152,8 +159,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_decimal_nullable_column(ParquetEngine $engine): void
+    public function test_reading_decimal_nullable_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
@@ -177,8 +185,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_delta_binary_packed_encoded_integers(ParquetEngine $engine): void
+    public function test_reading_delta_binary_packed_encoded_integers(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/delta_binary_acked_encoded_integers.parquet');
 
@@ -224,8 +233,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_every_delta_binary_packed_value(ParquetEngine $engine): void
+    public function test_reading_every_delta_binary_packed_value(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         static::assertSame(
             array_map(
                 static fn(int $n): array => [
@@ -245,8 +255,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_double_column(ParquetEngine $engine): void
+    public function test_reading_double_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
@@ -263,8 +274,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_double_nullable_column(ParquetEngine $engine): void
+    public function test_reading_double_nullable_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
@@ -285,8 +297,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_enum_column(ParquetEngine $engine): void
+    public function test_reading_enum_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
@@ -304,8 +317,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_float_column(ParquetEngine $engine): void
+    public function test_reading_float_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
@@ -322,8 +336,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_float_nullable_column(ParquetEngine $engine): void
+    public function test_reading_float_nullable_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
@@ -344,8 +359,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_int32_column(ParquetEngine $engine): void
+    public function test_reading_int32_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
@@ -363,8 +379,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_int32_nullable_column(ParquetEngine $engine): void
+    public function test_reading_int32_nullable_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
@@ -386,8 +403,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_int64(ParquetEngine $engine): void
+    public function test_reading_int64(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
@@ -406,8 +424,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_int64_nullable_column(ParquetEngine $engine): void
+    public function test_reading_int64_nullable_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
@@ -429,8 +448,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_json_column(ParquetEngine $engine): void
+    public function test_reading_json_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
@@ -448,8 +468,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_json_nullable_column(ParquetEngine $engine): void
+    public function test_reading_json_nullable_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
@@ -471,8 +492,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_string_column(ParquetEngine $engine): void
+    public function test_reading_string_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
@@ -490,8 +512,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_string_nullable_column(ParquetEngine $engine): void
+    public function test_reading_string_nullable_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
@@ -513,8 +536,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_time_column(ParquetEngine $engine): void
+    public function test_reading_time_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
@@ -532,8 +556,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_time_nullable_column(ParquetEngine $engine): void
+    public function test_reading_time_nullable_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
@@ -555,8 +580,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_timestamp_column(ParquetEngine $engine): void
+    public function test_reading_timestamp_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
@@ -574,8 +600,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_timestamp_nullable_column(ParquetEngine $engine): void
+    public function test_reading_timestamp_nullable_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
@@ -600,8 +627,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_uuid_column(ParquetEngine $engine): void
+    public function test_reading_uuid_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
@@ -619,8 +647,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_uuid_nullable_column(ParquetEngine $engine): void
+    public function test_reading_uuid_nullable_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 

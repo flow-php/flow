@@ -13,7 +13,6 @@ use Flow\Parquet\Consts;
 use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
-use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\ListElement;
@@ -22,6 +21,7 @@ use Flow\Parquet\ParquetFile\Schema\MapValue;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Tests\Context\TestParquetFile;
+use Flow\Parquet\Tests\Mother\ParquetEngineMother;
 use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
@@ -37,8 +37,9 @@ use function range;
 class WriterTest extends ParquetIntegrationTestCase
 {
     #[DataProvider('engine_provider')]
-    public function test_a_close_that_throws_leaves_the_writer_closed(ParquetEngine $engine): void
+    public function test_a_close_that_throws_leaves_the_writer_closed(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $writer = new Writer(engine: $engine);
         $writer->openForStream(
             new FailingCloseDestinationStream(memory_filesystem()->writeTo(path('memory://file.parquet'))),
@@ -62,8 +63,9 @@ class WriterTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_closing_not_open_writer(ParquetEngine $engine): void
+    public function test_closing_not_open_writer(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $writer = new Writer(engine: $engine);
 
         $this->expectException(RuntimeException::class);
@@ -91,8 +93,9 @@ class WriterTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_opening_already_open_writer(ParquetEngine $engine): void
+    public function test_opening_already_open_writer(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $writer = new Writer(engine: $engine);
 
         $path = TestParquetFile::path($this);
@@ -108,8 +111,9 @@ class WriterTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writers_sharing_one_engine_write_independent_files(ParquetEngine $engine): void
+    public function test_writers_sharing_one_engine_write_independent_files(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $memory = memory_filesystem();
         $schema = Schema::with(FlatColumn::int32('id'));
         $first = new Writer(engine: $engine);
@@ -144,8 +148,9 @@ class WriterTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_all_column_types(ParquetEngine $engine): void
+    public function test_writing_all_column_types(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $schema = Schema::with(
             FlatColumn::int32('int32_col'),
             FlatColumn::int64('int64_col'),
@@ -212,8 +217,9 @@ class WriterTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_batch_to_not_open_stream(ParquetEngine $engine): void
+    public function test_writing_batch_to_not_open_stream(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $writer = new Writer(engine: $engine);
 
         $this->expectException(RuntimeException::class);
@@ -223,8 +229,9 @@ class WriterTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_column_statistics(ParquetEngine $engine): void
+    public function test_writing_column_statistics(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $writer = new Writer(options: Options::default()->set(Option::WRITER_VERSION, 1), engine: $engine);
 
         $path = TestParquetFile::path($this);
@@ -250,8 +257,9 @@ class WriterTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_column_statistics_with_null_values(ParquetEngine $engine): void
+    public function test_writing_column_statistics_with_null_values(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $schema = Schema::with(
             FlatColumn::string('all_null'),
             FlatColumn::string('all_string'),
@@ -311,8 +319,9 @@ class WriterTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_in_batches_to_file(ParquetEngine $engine): void
+    public function test_writing_in_batches_to_file(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $writer = new Writer(engine: $engine);
 
         $path = TestParquetFile::path($this);
@@ -342,8 +351,9 @@ class WriterTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_in_batches_to_file_without_explicit_close(ParquetEngine $engine): void
+    public function test_writing_in_batches_to_file_without_explicit_close(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $writer = new Writer(engine: $engine);
 
         $path = TestParquetFile::path($this);
@@ -372,8 +382,9 @@ class WriterTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_in_batches_to_stream(ParquetEngine $engine): void
+    public function test_writing_in_batches_to_stream(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $writer = new Writer(engine: $engine);
 
         $path = TestParquetFile::path($this);
@@ -404,8 +415,9 @@ class WriterTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_one_row_that_is_nullable(ParquetEngine $engine): void
+    public function test_writing_one_row_that_is_nullable(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $writer = new Writer(engine: $engine);
 
         $schema = Schema::with($column = FlatColumn::int32('id'));
@@ -447,8 +459,9 @@ class WriterTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_row_to_not_open_stream(ParquetEngine $engine): void
+    public function test_writing_row_to_not_open_stream(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $writer = new Writer(engine: $engine);
 
         $this->expectException(RuntimeException::class);
@@ -458,8 +471,9 @@ class WriterTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_to_file(ParquetEngine $engine): void
+    public function test_writing_to_file(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $writer = new Writer(engine: $engine);
 
         $path = TestParquetFile::path($this);
@@ -481,8 +495,9 @@ class WriterTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_to_file_v2(ParquetEngine $engine): void
+    public function test_writing_to_file_v2(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $writer = new Writer(options: Options::default()->set(Option::WRITER_VERSION, 2), engine: $engine);
 
         $path = TestParquetFile::path($this);
@@ -511,8 +526,9 @@ class WriterTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_to_stream(ParquetEngine $engine): void
+    public function test_writing_to_stream(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $writer = new Writer(engine: $engine);
 
         $path = TestParquetFile::path($this);
@@ -547,8 +563,9 @@ class WriterTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_with_all_nullable_columns(ParquetEngine $engine): void
+    public function test_writing_with_all_nullable_columns(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $schema = Schema::with(FlatColumn::int32('a'), FlatColumn::string('b'), FlatColumn::boolean('c'));
 
         $rows = [
@@ -573,8 +590,9 @@ class WriterTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_with_dictionary_encoding(ParquetEngine $engine): void
+    public function test_writing_with_dictionary_encoding(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $schema = Schema::with(FlatColumn::int32('id')->makeRequired(), FlatColumn::string('category'));
 
         $rows = [];
@@ -598,8 +616,9 @@ class WriterTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_with_empty_lists_and_maps(ParquetEngine $engine): void
+    public function test_writing_with_empty_lists_and_maps(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $schema = Schema::with(
             FlatColumn::int32('id')->makeRequired(),
             NestedColumn::list('items', ListElement::string()),

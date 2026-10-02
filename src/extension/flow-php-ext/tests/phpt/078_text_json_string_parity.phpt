@@ -7,7 +7,7 @@ The native JSON writer escapes a string as json_encode() does: random valid and 
 require __DIR__ . '/bootstrap.php';
 
 use Flow\ETL\Adapter\JSON\PhpJSONEncoder;
-use Flow\ETL\Adapter\JSON\NativeJsonWriter;
+use Flow\ETL\Adapter\JSON\RustJSONEncoder;
 
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -68,7 +68,7 @@ for ($combination = 0; $combination < 16; $combination++) {
         | ($combination & 4 ? JSON_UNESCAPED_UNICODE : 0)
         | ($combination & 8 ? JSON_PRESERVE_ZERO_FRACTION : 0);
     $encoder = new PhpJSONEncoder($flags);
-    $writer = new NativeJsonWriter($flags, DATE_ATOM, 'Y-m-d');
+    $writer = new RustJSONEncoder($flags, DATE_ATOM, 'Y-m-d', $encoder);
     $different = 0;
     $refused = 0;
 
@@ -76,7 +76,7 @@ for ($combination = 0; $combination < 16; $combination++) {
         $expected = $encoded(static fn(): string => $encoder->encode($php[$i], "\n"));
         $refused += (int) refused($expected);
 
-        if ($expected !== $encoded(static fn(): string => $writer->encode($native[$i], [], "\n")) && ++$different <= 3) {
+        if ($expected !== $encoded(static fn(): string => $writer->encode($native[$i], "\n")) && ++$different <= 3) {
             echo bin2hex($text), ': ', $expected, "\n";
         }
     }

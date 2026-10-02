@@ -1,5 +1,5 @@
 --TEST--
-JsonOpenSink writes the same bytes through NativeJSONEncoder and PhpJSONEncoder: seeded random batches over every kind, nesting <= 3, random flags and framings
+JsonOpenSink writes the same bytes through RustJSONEncoder and PhpJSONEncoder: seeded random batches over every kind, nesting <= 3, random flags and framings
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 --FILE--
@@ -8,8 +8,7 @@ require __DIR__ . '/bootstrap.php';
 
 use Flow\ETL\Adapter\JSON\JsonFraming;
 use Flow\ETL\Adapter\JSON\JsonOpenSink;
-use Flow\ETL\Adapter\JSON\NativeJSONEncoder;
-use Flow\ETL\Adapter\JSON\NativeJsonWriter;
+use Flow\ETL\Adapter\JSON\RustJSONEncoder;
 use Flow\ETL\Adapter\JSON\PhpJSONEncoder;
 use Flow\Filesystem\DestinationStream;
 
@@ -31,8 +30,8 @@ for ($i = 0; $i < 2_000; $i++) {
     $framing = JsonFraming::cases()[mt_rand(0, 2)];
     $dateTimeFormat = $dateTimeFormats[mt_rand(0, count($dateTimeFormats) - 1)];
     $dateFormat = $dateFormats[mt_rand(0, count($dateFormats) - 1)];
-    $writer = new NativeJsonWriter($flags, $dateTimeFormat, $dateFormat);
-    $unrendered += count($writer->unrendered($schema));
+    $recorder = new RecordingPhpJSONEncoder(new PhpJSONEncoder($flags, $dateTimeFormat, $dateFormat));
+    $writer = new RustJSONEncoder($flags, $dateTimeFormat, $dateFormat, $recorder);
     $half = intdiv(count($rows), 2);
 
     $php = written(static function (DestinationStream $stream) use ($schema, $rows, $flags, $dateTimeFormat, $dateFormat, $framing, $half): void {
@@ -42,7 +41,7 @@ for ($i = 0; $i < 2_000; $i++) {
         $sink->close();
     });
     $native = written(static function (DestinationStream $stream) use ($schema, $rows, $flags, $dateTimeFormat, $dateFormat, $framing, $half, $writer): void {
-        $sink = new JsonOpenSink($stream, new NativeJSONEncoder($writer, new PhpJSONEncoder($flags, $dateTimeFormat, $dateFormat)), $framing);
+        $sink = new JsonOpenSink($stream, $writer, $framing);
         $sink->write(native_rows($schema, array_slice($rows, 0, $half)));
         // a PHP column inside the batch is adopted
         $sink->write(php_rows($schema, array_slice($rows, $half)));
@@ -50,6 +49,7 @@ for ($i = 0; $i < 2_000; $i++) {
     });
 
     $refused += (int) refused($php);
+    $unrendered += count($recorder->columns);
 
     if ($php === $native) {
         $identical++;

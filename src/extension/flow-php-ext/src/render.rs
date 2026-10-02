@@ -14,7 +14,7 @@ use crate::exception::ext_exception;
 
 const INVALID_ARGUMENT: &str = "Flow\\ETL\\Exception\\InvalidArgumentException";
 const OFFSET_OVERFLOW: &str = "Flow\\ETL\\Exception\\OffsetOverflow";
-const RUNTIME: &str = "Flow\\ETL\\Exception\\RuntimeException";
+pub const RUNTIME: &str = "Flow\\ETL\\Exception\\RuntimeException";
 
 pub fn exception(class: &str, message: String) -> PhpException {
     match find_class(class) {
@@ -32,7 +32,10 @@ pub fn runtime(message: String) -> PhpException {
 }
 
 pub fn offset_overflow(last: u64) -> PhpException {
-    exception(OFFSET_OVERFLOW, format!("Offsets exceed the i32 range of a batch buffer: the last offset is {last}"))
+    exception(
+        OFFSET_OVERFLOW,
+        format!("Offsets exceed the i32 range of a batch buffer: the last offset is {last}"),
+    )
 }
 
 fn of(of: Of) -> &'static str {
@@ -58,18 +61,31 @@ pub fn decode_exception(error: Error, type_zv: &Zval, kind: &Kind) -> PhpExcepti
     let message = match error {
         Error::OffsetOverflow { last } => return offset_overflow(last),
         Error::BuffersExhausted => "Column buffers exhausted: the column needs more buffers than given".to_string(),
-        Error::OffsetsLength { of: layout, bytes, expected, rows } => format!(
-            "{} offsets buffer of {bytes} bytes, expected {expected} for {rows} rows",
-            of(layout)
-        ),
+        Error::OffsetsLength {
+            of: layout,
+            bytes,
+            expected,
+            rows,
+        } => {
+            format!(
+                "{} offsets buffer of {bytes} bytes, expected {expected} for {rows} rows",
+                of(layout)
+            )
+        }
         Error::MapEntriesValidity { bytes } => format!("Map entries validity must be omitted, got {bytes} bytes"),
-        Error::ValidityTooShort { bytes, rows } => format!("Validity bitmap of {bytes} bytes is too short for {rows} rows"),
+        Error::ValidityTooShort { bytes, rows } => {
+            format!("Validity bitmap of {bytes} bytes is too short for {rows} rows")
+        }
         Error::NullKindNullCount { rows, null_count } => {
             format!("Null column of {rows} rows carries a null count of {null_count}")
         }
-        Error::NullCountMismatch { declared, derived, rows } => format!(
-            "Column null count {declared} disagrees with its validity bitmap ({derived} nulls in {rows} rows)"
-        ),
+        Error::NullCountMismatch {
+            declared,
+            derived,
+            rows,
+        } => {
+            format!("Column null count {declared} disagrees with its validity bitmap ({derived} nulls in {rows} rows)")
+        }
         Error::NestedNulls { node, role, nulls } => {
             let name = match type_name_at(type_zv, kind, node) {
                 Ok(name) => name,
@@ -85,7 +101,11 @@ pub fn decode_exception(error: Error, type_zv: &Zval, kind: &Kind) -> PhpExcepti
                 }
             )
         }
-        Error::BufferCount { node, buffers, expected } => {
+        Error::BufferCount {
+            node,
+            buffers,
+            expected,
+        } => {
             let name = match type_name_at(type_zv, kind, node) {
                 Ok(name) => name,
                 Err(e) => return e,
@@ -94,15 +114,27 @@ pub fn decode_exception(error: Error, type_zv: &Zval, kind: &Kind) -> PhpExcepti
             format!("Column of type {name} holds {buffers} buffers, its layout needs {expected}")
         }
         Error::OffsetsStart { of: layout, first } => format!("{} offsets start at {first}, not 0", of(layout)),
-        Error::OffsetsNotMonotonic { of: layout, index, previous, current } => format!(
+        Error::OffsetsNotMonotonic {
+            of: layout,
+            index,
+            previous,
+            current,
+        } => format!(
             "{} offsets are not monotonic: offset {} is {previous}, offset {index} is {current}",
             of(layout),
             index - 1
         ),
-        Error::ValuesLength { values: layout, bytes, expected, rows } => format!(
-            "{} values buffer of {bytes} bytes, expected {expected} for {rows} rows",
-            values(layout)
-        ),
+        Error::ValuesLength {
+            values: layout,
+            bytes,
+            expected,
+            rows,
+        } => {
+            format!(
+                "{} values buffer of {bytes} bytes, expected {expected} for {rows} rows",
+                values(layout)
+            )
+        }
         Error::Utf8DataLength { bytes, last_offset } => {
             format!("Utf8 data buffer of {bytes} bytes, the last offset is {last_offset}")
         }
