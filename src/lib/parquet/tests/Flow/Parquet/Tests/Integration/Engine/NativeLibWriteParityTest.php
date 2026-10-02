@@ -25,7 +25,7 @@ use Throwable;
 use function var_export;
 
 #[Group('native-extension')]
-#[RequiresPhpExtension('flow_php')]
+#[RequiresPhpExtension('arrow')]
 final class NativeLibWriteParityTest extends TestCase
 {
     /**

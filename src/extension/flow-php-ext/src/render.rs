@@ -1,6 +1,6 @@
 //! flow-batch-frame refusals rendered as the exceptions `PhpBackend::decode()` throws for the same buffers: the
 //! `Flow\ETL\Exception\InvalidArgumentException` (or `OffsetOverflow`) with its exact message, a nested type named by
-//! its PHP `toString()`. Parquet core refusals rendered for the reader and the writer of `Flow\ETL\Adapter\Parquet`.
+//! its PHP `toString()`.
 
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::types::Zval;
@@ -9,10 +9,8 @@ use flow_batch_frame::kind::Kind;
 use flow_batch_frame::layout::node_count;
 use flow_batch_frame::Error;
 
-use crate::ctx::{call_method, expect_object, find_class, read_property, transparent_exception};
+use crate::ctx::{call_method, expect_object, find_class, read_property};
 use crate::exception::ext_exception;
-use crate::parquet::error::Error as ParquetError;
-use crate::parquet::source::PhpStream;
 
 const INVALID_ARGUMENT: &str = "Flow\\ETL\\Exception\\InvalidArgumentException";
 const OFFSET_OVERFLOW: &str = "Flow\\ETL\\Exception\\OffsetOverflow";
@@ -171,98 +169,5 @@ fn type_at(type_zv: Zval, kind: &Kind, node: usize) -> Result<Zval, PhpException
             Err(ext_exception("flow_php could not find a structure node"))
         }
         _ => Err(ext_exception("flow_php could not find a nested node")),
-    }
-}
-
-/// Which Parquet surface refused: the same core refusal names what to do about it per side.
-pub enum Side {
-    Read,
-    Write,
-}
-
-/// Which API the refusal surfaces through: `Flow\ETL\Adapter\Parquet` or `Flow\Parquet`.
-#[derive(Clone, Copy)]
-pub enum Surface {
-    Etl,
-    Lib,
-}
-
-const LIB_RUNTIME: &str = "Flow\\Parquet\\Exception\\RuntimeException";
-const LIB_VALIDATION: &str = "Flow\\Parquet\\Exception\\ValidationException";
-const LIB_INVALID_ARGUMENT: &str = "Flow\\Parquet\\Exception\\InvalidArgumentException";
-
-/// A Parquet core refusal; an exception the stream threw while the core called it surfaces as itself.
-pub fn parquet_exception(error: ParquetError, stream: &PhpStream, side: Side, surface: Surface) -> PhpException {
-    if let Some(mut thrown) = stream.thrown() {
-        return transparent_exception(&mut thrown);
-    }
-
-    let (runtime, validation, arguments) = match surface {
-        Surface::Etl => (RUNTIME, RUNTIME, INVALID_ARGUMENT),
-        Surface::Lib => (LIB_RUNTIME, LIB_VALIDATION, LIB_INVALID_ARGUMENT),
-    };
-    let failure = |message: String| match surface {
-        Surface::Etl => ext_exception(message),
-        Surface::Lib => exception(LIB_RUNTIME, message),
-    };
-
-    match (error, side) {
-        (ParquetError::Unsupported { column, parquet }, Side::Read) => exception(
-            runtime,
-            format!(
-                "Parquet column \"{column}\" ({parquet}) is not supported by the flow_php Parquet reader; {}",
-                match surface {
-                    Surface::Etl => {
-                        "read the file with from_parquet($path, engine: new \\Flow\\Parquet\\Engine\\PhpParquetEngine())"
-                    }
-                    Surface::Lib => "read the file with \\Flow\\Parquet\\Reader::php()",
-                }
-            ),
-        ),
-        (ParquetError::Unsupported { column, parquet }, Side::Write) => exception(
-            runtime,
-            format!(
-                "Parquet column \"{column}\" ({parquet}) is not supported by the flow_php Parquet writer; {}",
-                match surface {
-                    Surface::Etl => {
-                        "write the file with to_parquet($path, engine: new \\Flow\\Parquet\\Engine\\PhpParquetEngine())"
-                    }
-                    Surface::Lib => "write it with \\Flow\\Parquet\\Writer::php()",
-                }
-            ),
-        ),
-        (ParquetError::Overflow { column, row }, _) => exception(
-            runtime,
-            format!("Parquet column \"{column}\" row {row} holds a value out of the range flow_php stores it in"),
-        ),
-        (ParquetError::InvalidUtf8 { column, row }, _) => exception(
-            runtime,
-            format!(
-                "Parquet column \"{column}\" row {row} holds a string that is not valid UTF-8; Parquet STRING columns \
-                 require UTF-8"
-            ),
-        ),
-        (ParquetError::Length { column, row, expected }, _) => exception(
-            runtime,
-            format!("Parquet column \"{column}\" row {row} holds a value that is not {expected} bytes long"),
-        ),
-        (ParquetError::Value { column, row, expected, got }, _) => {
-            exception(validation, format!("Column \"{column}\" row {row}: expected {expected}, got {got}"))
-        }
-        (ParquetError::MapKey { column, key }, _) => exception(
-            arguments,
-            format!("Map key of Parquet column \"{column}\" must be int or string, got {key}"),
-        ),
-        (ParquetError::MissingColumn(name), _) => exception(arguments, format!("Parquet file has no column \"{name}\"")),
-        (ParquetError::Options(message), _) => exception(arguments, message),
-        (ParquetError::NotParquet(message), _) => match surface {
-            Surface::Etl => failure(format!("flow_php failed to read Parquet: {message}")),
-            Surface::Lib => exception(arguments, format!("Given file is not valid Parquet file: {message}")),
-        },
-        (ParquetError::Stream(message), _) => failure(format!("flow_php Parquet stream {message}")),
-        (ParquetError::Parquet(error), Side::Read) => failure(format!("flow_php failed to read Parquet: {error}")),
-        (ParquetError::Arrow(error), Side::Read) => failure(format!("flow_php failed to read Parquet: {error}")),
-        (ParquetError::Parquet(error), Side::Write) => failure(format!("flow_php failed to write Parquet: {error}")),
-        (ParquetError::Arrow(error), Side::Write) => failure(format!("flow_php failed to write Parquet: {error}")),
     }
 }

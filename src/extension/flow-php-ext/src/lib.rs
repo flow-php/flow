@@ -1,4 +1,5 @@
 mod alloc;
+mod arrow_c;
 mod backend;
 mod batch_columns;
 mod builder;
@@ -18,7 +19,6 @@ mod physical;
 mod plan;
 mod render;
 mod text;
-mod thrift;
 mod uuid_check;
 mod values;
 
@@ -194,7 +194,5 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .class::<json::write::NativeJsonWriter>()
         .class::<parquet::etl::NativeParquetReader>()
         .class::<parquet::etl::NativeParquetWriter>()
-        .class::<parquet::library::NativeParquetFile>()
-        .class::<parquet::library::NativeParquetColumnsReader>()
-        .class::<parquet::library::NativeParquetRowsWriter>()
+        .class::<arrow_c::NativeArrowBatch>()
 }

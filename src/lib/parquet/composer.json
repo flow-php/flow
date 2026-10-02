@@ -21,10 +21,10 @@
         "symfony/polyfill-mbstring": "^1.33"
     },
     "conflict": {
-        "ext-flow_php": "<0.45"
+        "ext-arrow": "<0.45"
     },
     "suggest": {
-        "ext-flow_php": "Native Parquet reading and writing (flow-php/flow-php-ext)"
+        "ext-arrow": "Native Parquet reading and writing (flow-php/arrow-ext)"
     },
     "config": {
         "optimize-autoloader": true,

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet;
 
+use Flow\Arrow\Parquet\RowsWriter;
 use Flow\ETL\Rows;
-use Flow\Filesystem\DestinationStream;
 use RuntimeException;
 
 use function extension_loaded;
@@ -17,21 +17,23 @@ if (extension_loaded('flow_php')) {
 final class NativeParquetWriter
 {
     /**
-     * @param array<array-key, mixed> $schema Flow\Parquet\Engine\Arrow\SchemaConverter::toExtension()
-     * @param array<string, mixed> $options Flow\Parquet\Engine\Arrow\OptionsConverter::toExtension()
+     * @param RowsWriter $writer arrow-ext's writer, which owns the stream
      */
-    public function __construct(DestinationStream $stream, array $schema, string $compression, array $options)
+    public function __construct(RowsWriter $writer)
     {
         throw new RuntimeException('flow_php extension is not loaded');
     }
 
+    /**
+     * The writer's buffered rows, the footer, then the stream closed.
+     */
     public function close(): void
     {
         throw new RuntimeException('flow_php extension is not loaded');
     }
 
     /**
-     * The writer schema's columns by name; a column the rows lack is written as nulls.
+     * Every column of the rows as one Arrow C Data batch; a writer column the rows lack is written as nulls.
      */
     public function write(Rows $rows): void
     {

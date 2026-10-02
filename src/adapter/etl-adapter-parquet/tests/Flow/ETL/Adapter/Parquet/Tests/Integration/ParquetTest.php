@@ -6,7 +6,6 @@ namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
 use DateTimeImmutable;
 use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetFilesContext;
-use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Tests\Context\LoaderEndingContext;
 use Flow\ETL\Tests\Context\MemoryTelemetryContext;
 use Flow\ETL\Tests\Double\FakeExtractor;
@@ -17,6 +16,7 @@ use Flow\Filesystem\SizeUnits;
 use Flow\Filesystem\Tests\Double\FailingCloseFilesystem;
 use Flow\Parquet\Engine\ArrowParquetEngine;
 use Flow\Parquet\Engine\PhpParquetEngine;
+use Flow\Parquet\Exception\RuntimeException as ParquetRuntimeException;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
@@ -101,8 +101,8 @@ final class ParquetTest extends FlowTestCase
 
     public function test_writing_and_reading_with_explicit_arrow_engine(): void
     {
-        if (!extension_loaded('flow_php') && !extension_loaded('arrow')) {
-            static::markTestSkipped('neither flow_php nor arrow is loaded');
+        if (!extension_loaded('arrow')) {
+            static::markTestSkipped('arrow is not loaded');
         }
 
         $memory = memory_filesystem();
@@ -416,10 +416,10 @@ final class ParquetTest extends FlowTestCase
         );
     }
 
-    #[RequiresPhpExtension('flow_php')]
-    public function test_flow_php_refuses_a_string_that_is_not_valid_utf8(): void
+    #[RequiresPhpExtension('arrow')]
+    public function test_arrow_refuses_a_string_that_is_not_valid_utf8(): void
     {
-        $this->expectException(RuntimeException::class);
+        $this->expectException(ParquetRuntimeException::class);
         $this->expectExceptionMessage(
             'Parquet column "name" row 0 holds a string that is not valid UTF-8; Parquet STRING columns require UTF-8',
         );
@@ -433,8 +433,8 @@ final class ParquetTest extends FlowTestCase
     /**
      * 200 values: a full block and a partial one, both with zero-width miniblocks - read by arrow-rs, not only by PHP.
      */
-    #[RequiresPhpExtension('flow_php')]
-    public function test_a_php_written_delta_binary_packed_column_reads_back_through_flow_php(): void
+    #[RequiresPhpExtension('arrow')]
+    public function test_a_php_written_delta_binary_packed_column_reads_back_through_arrow(): void
     {
         $memory = memory_filesystem();
         $ids = array_map(static fn(int $i): int => $i * 3, range(0, 199));
@@ -450,7 +450,8 @@ final class ParquetTest extends FlowTestCase
     }
 
     #[RequiresPhpExtension('flow_php')]
-    public function test_a_given_engine_is_honoured_with_flow_php_loaded(): void
+    #[RequiresPhpExtension('arrow')]
+    public function test_a_given_engine_is_honoured_with_both_extensions_loaded(): void
     {
         $memory = memory_filesystem();
         $path = path('memory://var/engine.parquet');
@@ -644,8 +645,8 @@ final class ParquetTest extends FlowTestCase
 
     public function test_partitions_written_with_an_explicit_arrow_engine_each_get_their_own_file(): void
     {
-        if (!extension_loaded('flow_php') && !extension_loaded('arrow')) {
-            static::markTestSkipped('neither flow_php nor arrow is loaded');
+        if (!extension_loaded('arrow')) {
+            static::markTestSkipped('arrow is not loaded');
         }
 
         $memory = memory_filesystem();

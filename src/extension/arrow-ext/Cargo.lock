@@ -81,6 +81,7 @@ dependencies = [
  "arrow-schema",
  "bytes",
  "ext-php-rs",
+ "ext-php-rs-build",
  "parquet",
 ]
 
@@ -97,6 +98,7 @@ dependencies = [
  "chrono",
  "half",
  "hashbrown 0.17.1",
+ "libc",
  "num-complex",
  "num-integer",
  "num-traits",
@@ -147,6 +149,7 @@ version = "59.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "10fab8d4563491417ba801fab29d205104d20d4bdf37bda6cd1cf425cff598cd"
 dependencies = [
+ "bitflags",
  "serde_core",
  "serde_json",
 ]

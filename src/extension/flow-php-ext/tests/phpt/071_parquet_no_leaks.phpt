@@ -2,11 +2,12 @@
 NativeParquetReader and NativeParquetWriter leak neither PHP memory nor native allocations, refusals included
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
+<?php extension_loaded('arrow') || die('skip arrow'); ?>
 --FILE--
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\Parquet\Engine\Native\NativeParquetFile;
+use Flow\Arrow\Parquet\RowsWriter;
 
 use Flow\ETL\Adapter\Parquet\{NativeParquetReader, NativeParquetWriter, SchemaConverter};
 use Flow\ETL\Column\DefaultBackend;
@@ -27,26 +28,26 @@ $invalid = [['id' => 1, 'name' => "\xff", 'tags' => []]];
 
 $cycle = static function () use ($schema, $values, $extension, $options, $mismatched, $invalid): void {
     $filesystem = memory_filesystem();
-    $writer = new NativeParquetWriter($filesystem->writeTo(path('memory://leaks.parquet')), $extension, 'SNAPPY', $options);
+    $writer = new NativeParquetWriter(new RowsWriter($filesystem->writeTo(path('memory://leaks.parquet')), $extension, 'SNAPPY', $options, 1_000));
     $writer->write(native_rows($schema, $values));
     $writer->write(php_rows($schema, $values));
     $writer->close();
 
-    $reader = new NativeParquetReader(new NativeParquetFile($filesystem->readFrom(path('memory://leaks.parquet'))), $schema, 30, 10, 150);
+    $reader = native_parquet_reader($filesystem->readFrom(path('memory://leaks.parquet')), $schema, 30, 10, 150);
 
     while ($reader->next() !== null) {
     }
 
-    $refused = new NativeParquetWriter($filesystem->writeTo(path('memory://refused.parquet')), $extension, 'SNAPPY', $options);
+    $refused = new NativeParquetWriter(new RowsWriter($filesystem->writeTo(path('memory://refused.parquet')), $extension, 'SNAPPY', $options, 1_000));
 
     try {
         $refused->write(native_rows($schema, $invalid));
         throw new LogicException('invalid UTF-8 was written');
-    } catch (Flow\ETL\Exception\RuntimeException) {
+    } catch (Flow\Parquet\Exception\RuntimeException) {
     }
 
     try {
-        new NativeParquetReader(new NativeParquetFile($filesystem->readFrom(path('memory://leaks.parquet'))), $mismatched, 30, null, null);
+        native_parquet_reader($filesystem->readFrom(path('memory://leaks.parquet')), $mismatched, 30, null, null);
         throw new LogicException('a mismatched schema was accepted');
     } catch (Flow\ETL\Exception\InvalidArgumentException) {
     }

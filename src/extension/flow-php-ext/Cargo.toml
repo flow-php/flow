@@ -7,7 +7,7 @@ publish = false
 crate-type = ["cdylib"]
 
 [dependencies]
-arrow-array = "59"
+arrow-array = { version = "59", features = ["ffi"] }
 arrow-buffer = "59"
 arrow-data = "59"
 arrow-schema = { version = "59", features = ["canonical_extension_types"] }
@@ -16,7 +16,6 @@ bytes = "1"
 ext-php-rs = "0.15"
 flow-batch-frame = { path = "crates/flow-batch-frame" }
 memchr = "2"
-parquet = { version = "59", default-features = false, features = ["arrow", "arrow_canonical_extension_types", "snap", "flate2", "flate2-zlib-rs", "zstd", "lz4", "brotli", "simdutf8"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["raw_value", "unbounded_depth"] }
 

@@ -45,7 +45,8 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             src/extension/flow-php-ext/target
-          key: ${{ runner.os }}-php${{ matrix.php }}-cargo-${{ hashFiles('src/extension/flow-php-ext/Cargo.lock') }}
+            src/extension/arrow-ext/target
+          key: ${{ runner.os }}-php${{ matrix.php }}-cargo-${{ hashFiles('src/extension/flow-php-ext/Cargo.lock', 'src/extension/arrow-ext/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-php${{ matrix.php }}-cargo-
 
@@ -87,6 +88,10 @@ jobs:
             grep -q "version ? \"$expected\"" "$f" || { echo "$f: version literal must be $expected"; exit 1; }
           done
 
+      - name: Build arrow extension
+        working-directory: src/extension/arrow-ext
+        run: make build
+
       - name: Build extension
         working-directory: src/extension/flow-php-ext
         run: make build
@@ -103,7 +108,7 @@ jobs:
 
       - name: Run PHPT tests
         working-directory: src/extension/flow-php-ext
-        run: make test
+        run: make test ARROW_SO=../arrow-ext/ext/modules/arrow.so
 
       - name: Install extension and verify
         working-directory: src/extension/flow-php-ext

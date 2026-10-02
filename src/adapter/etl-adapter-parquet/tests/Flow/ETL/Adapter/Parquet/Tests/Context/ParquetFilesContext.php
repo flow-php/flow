@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Context;
 
+use Flow\Arrow\Parquet\RowsWriter;
 use Flow\ETL\Adapter\Parquet\NativeParquetOpenSink;
 use Flow\ETL\Adapter\Parquet\NativeParquetWriter;
 use Flow\ETL\Adapter\Parquet\SchemaConverter;
@@ -111,14 +112,15 @@ final class ParquetFilesContext
 
     public static function nativeSink(Filesystem $filesystem, string $uri, FlowSchema $schema): NativeParquetOpenSink
     {
-        return new NativeParquetOpenSink(
-            new NativeParquetWriter(
+        return new NativeParquetOpenSink(new NativeParquetWriter(
+            new RowsWriter(
                 $filesystem->writeTo(path($uri)),
                 ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquet($schema)),
                 'SNAPPY',
                 OptionsConverter::toExtension(Options::default()),
+                Options::default()->getInt(Option::ARROW_WRITE_BATCH_SIZE),
             ),
-        );
+        ));
     }
 
     /**

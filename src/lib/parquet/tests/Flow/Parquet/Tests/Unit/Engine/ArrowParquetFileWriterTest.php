@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\Engine;
 
+use ArrayIterator;
 use Flow\Filesystem\Exception\RuntimeException as FilesystemRuntimeException;
 use Flow\Filesystem\Tests\Double\FailingCloseDestinationStream;
 use Flow\Parquet\Engine\ArrowParquetEngine;
+use Flow\Parquet\Engine\ArrowParquetFileWriter;
 use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Exception\RuntimeException;
+use Flow\Parquet\Exception\ValidationException;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Schema;
@@ -17,23 +20,19 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Tests\Context\ColumnDoor;
 use Flow\Parquet\Tests\Mother\ParquetFileWriterMother;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
 use function array_slice;
-use function extension_loaded;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function iterator_to_array;
+use function range;
 
+#[RequiresPhpExtension('arrow')]
 final class ArrowParquetFileWriterTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        if (!extension_loaded('arrow') || extension_loaded('flow_php')) {
-            static::markTestSkipped('ArrowParquetEngine writes through arrow-ext only without flow_php');
-        }
-    }
-
     public function test_a_close_that_throws_leaves_the_writer_closed(): void
     {
         $file = ParquetFileWriterMother::open(
@@ -143,6 +142,45 @@ final class ArrowParquetFileWriterTest extends TestCase
         );
     }
 
+    public function test_it_is_the_writer_the_arrow_engine_opens(): void
+    {
+        static::assertInstanceOf(ArrowParquetFileWriter::class, ParquetFileWriterMother::open(
+            new ArrowParquetEngine(),
+            memory_filesystem()->writeTo(path('memory://file.parquet')),
+        ));
+    }
+
+    public function test_a_refused_row_leaves_the_rows_before_it_written(): void
+    {
+        $memory = memory_filesystem();
+        $file = ParquetFileWriterMother::open(
+            new ArrowParquetEngine(),
+            $memory->writeTo(path('memory://file.parquet')),
+        );
+
+        $file->writeRow(['id' => 1]);
+
+        try {
+            $file->writeRow(['id' => 'two']);
+            static::fail('a string was written into INT32');
+        } catch (ValidationException $refusal) {
+            static::assertSame('Column "id" row 1: expected int, got string', $refusal->getMessage());
+        }
+
+        $file->writeBatch(new ArrayIterator([['id' => 3]]));
+        $file->close();
+
+        static::assertSame(
+            [['id' => 1], ['id' => 3]],
+            iterator_to_array(
+                (new Reader(engine: new PhpParquetEngine()))
+                    ->readStream($memory->readFrom(path('memory://file.parquet')))
+                    ->values(),
+                false,
+            ),
+        );
+    }
+
     public function test_columns_of_different_lengths_are_refused(): void
     {
         $file = ColumnDoor::open(new ArrowParquetEngine(), ColumnDoor::stream(), Schema::with(FlatColumn::int32('id')));
@@ -213,5 +251,61 @@ final class ArrowParquetFileWriterTest extends TestCase
 
         static::assertTrue($batch->content() === $columns->content());
         static::assertSame($rows, ColumnDoor::read($columns));
+    }
+
+    public function test_columns_refuse_the_first_cell_of_the_first_refused_row_and_keep_the_rows_before_it(): void
+    {
+        $schema = Schema::with(FlatColumn::int32('a'), FlatColumn::int32('b'), FlatColumn::int32('c'));
+        $rows = array_map(static fn(int $i): array => ['a' => $i, 'b' => $i, 'c' => $i], range(0, 7));
+        $rows[5]['a'] = 'five';
+        $rows[2]['c'] = 'two';
+        $outcomes = [];
+
+        foreach (['batch', 'columns'] as $door) {
+            $stream = ColumnDoor::stream();
+            $file = ColumnDoor::open(new ArrowParquetEngine(), $stream, $schema);
+
+            try {
+                $door === 'batch' ? $file->writeBatch($rows) : $file->writeColumns(ColumnDoor::columns($rows));
+                static::fail('a string was written into INT32');
+            } catch (ValidationException $refusal) {
+                $file->close();
+                $outcomes[$door] = [$refusal->getMessage(), ColumnDoor::read($stream)];
+            }
+        }
+
+        static::assertSame($outcomes['batch'], $outcomes['columns']);
+        static::assertSame(
+            [
+                'Column "c" row 2: expected int, got string',
+                [['a' => 0, 'b' => 0, 'c' => 0], ['a' => 1, 'b' => 1, 'c' => 1]],
+            ],
+            $outcomes['columns'],
+        );
+    }
+
+    public function test_a_refusal_past_a_flushed_batch_names_the_row_the_row_door_names(): void
+    {
+        $schema = Schema::with(FlatColumn::int32('a'));
+        $rows = array_map(static fn(int $i): array => ['a' => $i], range(0, 6));
+        $rows[5]['a'] = 'five';
+        $messages = [];
+
+        foreach (['batch', 'columns'] as $door) {
+            $file = ColumnDoor::open(
+                new ArrowParquetEngine(Options::default()->set(Option::ARROW_WRITE_BATCH_SIZE, 2)),
+                ColumnDoor::stream(),
+                $schema,
+            );
+
+            try {
+                $door === 'batch' ? $file->writeBatch($rows) : $file->writeColumns(ColumnDoor::columns($rows));
+                static::fail('a string was written into INT32');
+            } catch (ValidationException $refusal) {
+                $messages[$door] = $refusal->getMessage();
+            }
+        }
+
+        static::assertSame($messages['batch'], $messages['columns']);
     }
 }

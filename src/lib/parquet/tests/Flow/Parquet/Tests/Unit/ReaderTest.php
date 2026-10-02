@@ -19,7 +19,7 @@ final class ReaderTest extends TestCase
 {
     public function test_arrow_factory_creates_reader_with_arrow_engine(): void
     {
-        if (!extension_loaded('flow_php') && !extension_loaded('arrow')) {
+        if (!extension_loaded('arrow')) {
             $this->expectException(RuntimeException::class);
             Reader::arrow();
 

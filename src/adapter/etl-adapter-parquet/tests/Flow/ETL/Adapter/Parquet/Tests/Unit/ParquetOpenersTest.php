@@ -13,7 +13,7 @@ use Flow\Filesystem\Stream\NativeLocalSourceStream;
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Engine\AdaptiveParquetEngine;
 use Flow\Parquet\Engine\ArrowParquetEngine;
-use Flow\Parquet\Engine\NativeParquetFileReader;
+use Flow\Parquet\Engine\ArrowParquetFileReader;
 use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Engine\PhpParquetFileReader;
 use Flow\Parquet\Options;
@@ -34,7 +34,8 @@ final class ParquetOpenersTest extends FlowTestCase
     }
 
     #[RequiresPhpExtension('flow_php')]
-    public function test_with_flow_php_an_adaptive_engine_reads_through_flow_php(): void
+    #[RequiresPhpExtension('arrow')]
+    public function test_with_both_extensions_an_adaptive_engine_reads_native_columns(): void
     {
         static::assertEquals(
             new NativeParquetOpener(Options::default()),
@@ -43,7 +44,8 @@ final class ParquetOpenersTest extends FlowTestCase
     }
 
     #[RequiresPhpExtension('flow_php')]
-    public function test_with_flow_php_an_arrow_engine_reads_through_flow_php(): void
+    #[RequiresPhpExtension('arrow')]
+    public function test_with_both_extensions_an_arrow_engine_reads_native_columns(): void
     {
         static::assertEquals(
             new NativeParquetOpener(Options::default()),
@@ -52,7 +54,8 @@ final class ParquetOpenersTest extends FlowTestCase
     }
 
     #[RequiresPhpExtension('flow_php')]
-    public function test_with_flow_php_no_engine_reads_through_flow_php(): void
+    #[RequiresPhpExtension('arrow')]
+    public function test_with_both_extensions_no_engine_reads_native_columns(): void
     {
         static::assertEquals(
             new NativeParquetOpener(Options::default()),
@@ -60,10 +63,10 @@ final class ParquetOpenersTest extends FlowTestCase
         );
     }
 
-    public function test_without_flow_php_an_adaptive_engine_is_honoured(): void
+    public function test_without_both_extensions_an_adaptive_engine_is_honoured(): void
     {
-        if (extension_loaded('flow_php')) {
-            static::markTestSkipped('flow_php is loaded');
+        if (extension_loaded('flow_php') && extension_loaded('arrow')) {
+            static::markTestSkipped('flow_php and arrow are loaded');
         }
 
         $engine = new AdaptiveParquetEngine();
@@ -75,7 +78,7 @@ final class ParquetOpenersTest extends FlowTestCase
     }
 
     #[RequiresPhpExtension('arrow')]
-    public function test_without_flow_php_an_arrow_engine_is_honoured(): void
+    public function test_with_arrow_alone_an_arrow_engine_is_honoured(): void
     {
         if (extension_loaded('flow_php')) {
             static::markTestSkipped('flow_php is loaded');
@@ -89,10 +92,10 @@ final class ParquetOpenersTest extends FlowTestCase
         );
     }
 
-    public function test_without_flow_php_no_engine_opens_through_an_adaptive_engine(): void
+    public function test_without_both_extensions_no_engine_opens_through_an_adaptive_engine(): void
     {
-        if (extension_loaded('flow_php')) {
-            static::markTestSkipped('flow_php is loaded');
+        if (extension_loaded('flow_php') && extension_loaded('arrow')) {
+            static::markTestSkipped('flow_php and arrow are loaded');
         }
 
         static::assertEquals(
@@ -114,12 +117,13 @@ final class ParquetOpenersTest extends FlowTestCase
     }
 
     #[RequiresPhpExtension('flow_php')]
-    public function test_a_native_opener_opens_files_with_a_native_reader(): void
+    #[RequiresPhpExtension('arrow')]
+    public function test_a_native_opener_opens_files_with_an_arrow_reader(): void
     {
         $file = (new NativeParquetOpener(Options::default()))->file(
             NativeLocalSourceStream::open(ParquetSourceFileContext::fixture()),
         );
 
-        static::assertInstanceOf(NativeParquetFileReader::class, $file->reader());
+        static::assertInstanceOf(ArrowParquetFileReader::class, $file->reader());
     }
 }

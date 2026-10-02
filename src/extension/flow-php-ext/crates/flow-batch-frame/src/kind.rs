@@ -175,6 +175,7 @@ pub fn kind_of(parsed: &TypeJson) -> Result<Kind, Error> {
     })
 }
 
+// Must equal arrow-ext's parquet/canonical.rs canonical_type(), nested names and nullability included - pinned by phpt 091.
 pub fn data_type(kind: &Kind) -> DataType {
     match kind {
         Kind::Null => DataType::Null,

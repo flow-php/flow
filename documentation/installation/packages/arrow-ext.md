@@ -11,12 +11,6 @@ seo_description: >
 
 [TOC]
 
-> [!WARNING]
-> **Deprecated.** Parquet through this extension is deprecated and will be removed; `flow-php/arrow-ext` is abandoned in
-> favour of [flow-php/flow-php-ext](/documentation/components/extensions/flow-php-ext.md). Install the `flow_php`
-> extension: `ArrowParquetEngine` uses it when it is loaded, and falls back to this extension with an
-> `E_USER_DEPRECATED` notice otherwise.
-
 ## Precompiled Binaries
 
 Precompiled binaries are available for download from the [GitHub Releases](https://github.com/flow-php/arrow-ext/releases/latest) page.

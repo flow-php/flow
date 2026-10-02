@@ -18,6 +18,7 @@ final class ParquetOpeners
     {
         if (
             extension_loaded('flow_php')
+            && extension_loaded('arrow')
             && ($engine === null || $engine instanceof AdaptiveParquetEngine || $engine instanceof ArrowParquetEngine)
         ) {
             return new NativeParquetOpener($options);

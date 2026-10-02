@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Unit;
 
+use Flow\Arrow\Parquet\ParquetFile;
 use Flow\ETL\Adapter\Parquet\NativeParquetOpenSource;
 use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetFilesContext;
 use Flow\ETL\Column\DefaultBackend;
 use Flow\ETL\Column\Php\ScalarColumn;
 use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\Parquet\Engine\Native\NativeParquetFile;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\Attributes\TestWith;
 
@@ -23,6 +23,7 @@ use function Flow\Filesystem\DSL\path;
 use function range;
 
 #[RequiresPhpExtension('flow_php')]
+#[RequiresPhpExtension('arrow')]
 final class NativeParquetOpenSourceTest extends FlowTestCase
 {
     /**
@@ -39,7 +40,7 @@ final class NativeParquetOpenSourceTest extends FlowTestCase
 
         $read = [];
 
-        foreach ((new NativeParquetOpenSource(new NativeParquetFile($filesystem->readFrom(path(
+        foreach ((new NativeParquetOpenSource(new ParquetFile($filesystem->readFrom(path(
             'memory://groups.parquet',
         )))))->batches(schema(int_schema('id')), 3, $offset, $limit, new DefaultBackend()) as $rows) {
             static::assertLessThanOrEqual(3, $rows->count());
@@ -53,9 +54,7 @@ final class NativeParquetOpenSourceTest extends FlowTestCase
     {
         $filesystem = memory_filesystem();
         ParquetFilesContext::rowGroups($filesystem, 'memory://groups.parquet', 10, 4);
-        $source = new NativeParquetOpenSource(new NativeParquetFile($filesystem->readFrom(path(
-            'memory://groups.parquet',
-        ))));
+        $source = new NativeParquetOpenSource(new ParquetFile($filesystem->readFrom(path('memory://groups.parquet'))));
 
         $names = [];
 
@@ -74,9 +73,7 @@ final class NativeParquetOpenSourceTest extends FlowTestCase
     {
         $filesystem = memory_filesystem();
         ParquetFilesContext::rowGroups($filesystem, 'memory://groups.parquet', 10, 4);
-        $source = new NativeParquetOpenSource(new NativeParquetFile($filesystem->readFrom(path(
-            'memory://groups.parquet',
-        ))));
+        $source = new NativeParquetOpenSource(new ParquetFile($filesystem->readFrom(path('memory://groups.parquet'))));
         $first = $source->batches(schema(int_schema('id')), 3, null, null, new DefaultBackend());
         static::assertSame([0, 1, 2], $first->current()->column('id')->values());
 
@@ -97,9 +94,7 @@ final class NativeParquetOpenSourceTest extends FlowTestCase
         $filesystem = memory_filesystem();
         ParquetFilesContext::rowGroups($filesystem, 'memory://groups.parquet', 10, 4);
 
-        (new NativeParquetOpenSource(new NativeParquetFile($filesystem->readFrom(path(
-            'memory://groups.parquet',
-        )))))->close();
+        (new NativeParquetOpenSource(new ParquetFile($filesystem->readFrom(path('memory://groups.parquet')))))->close();
 
         $this->expectNotToPerformAssertions();
     }

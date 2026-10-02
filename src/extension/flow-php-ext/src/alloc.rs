@@ -1,9 +1,11 @@
-//! The global allocator: `System`, counting the bytes it holds for `DefaultBackend::allocatedBytes()`.
+//! The global allocator: `System`, counting the bytes it holds for `DefaultBackend::allocatedBytes()`, plus the bytes
+//! of the Arrow C Data batches imported from another extension's allocator while they live.
 
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::sync::atomic::{AtomicI64, Ordering};
 
 static ALLOCATED: AtomicI64 = AtomicI64::new(0);
+static IMPORTED: AtomicI64 = AtomicI64::new(0);
 
 struct Counting;
 
@@ -47,7 +49,17 @@ unsafe impl GlobalAlloc for Counting {
 #[global_allocator]
 static GLOBAL: Counting = Counting;
 
+/// Bytes of imported batches: added on import, subtracted when the batch is released.
+pub fn imported(delta: i64) {
+    IMPORTED.fetch_add(delta, Ordering::Relaxed);
+}
+
+#[cfg(test)]
+pub fn imported_bytes() -> i64 {
+    IMPORTED.load(Ordering::Relaxed)
+}
+
 /// Process-wide: on ZTS every thread's allocations.
 pub fn allocated_bytes() -> i64 {
-    ALLOCATED.load(Ordering::Relaxed)
+    ALLOCATED.load(Ordering::Relaxed) + IMPORTED.load(Ordering::Relaxed)
 }

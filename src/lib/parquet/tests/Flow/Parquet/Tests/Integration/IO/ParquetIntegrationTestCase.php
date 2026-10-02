@@ -20,7 +20,7 @@ abstract class ParquetIntegrationTestCase extends TestCase
     {
         $engines = ['php' => [new PhpParquetEngine()]];
 
-        if (extension_loaded('flow_php') || extension_loaded('arrow')) {
+        if (extension_loaded('arrow')) {
             $engines['arrow'] = [new ArrowParquetEngine()];
         }
 
@@ -34,7 +34,7 @@ abstract class ParquetIntegrationTestCase extends TestCase
     {
         $pairs = ['php/php' => [new PhpParquetEngine(), new PhpParquetEngine()]];
 
-        if (extension_loaded('flow_php') || extension_loaded('arrow')) {
+        if (extension_loaded('arrow')) {
             $pairs['php/arrow'] = [new PhpParquetEngine(), new ArrowParquetEngine()];
             $pairs['arrow/php'] = [new ArrowParquetEngine(), new PhpParquetEngine()];
             $pairs['arrow/arrow'] = [new ArrowParquetEngine(), new ArrowParquetEngine()];

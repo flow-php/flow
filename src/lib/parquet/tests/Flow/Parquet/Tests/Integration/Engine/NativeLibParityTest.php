@@ -26,7 +26,7 @@ use function str_starts_with;
 use function var_export;
 
 #[Group('native-extension')]
-#[RequiresPhpExtension('flow_php')]
+#[RequiresPhpExtension('arrow')]
 final class NativeLibParityTest extends TestCase
 {
     /**
@@ -91,7 +91,7 @@ final class NativeLibParityTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            'Parquet column "iv" (Interval(DayTime)) is not supported by the flow_php Parquet reader; read the file '
+            'Parquet column "iv" (Interval(DayTime)) is not supported by the arrow Parquet reader; read the file '
             . 'with \Flow\Parquet\Reader::php()',
         );
 
@@ -110,9 +110,7 @@ final class NativeLibParityTest extends TestCase
         }
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage(
-            'Parquet column "u64" row 0 holds a value out of the range flow_php stores it in',
-        );
+        $this->expectExceptionMessage('Parquet column "u64" row 0 holds a value out of the range arrow stores it in');
 
         ParquetRows::read(Reader::arrow()->read($path), 100);
     }

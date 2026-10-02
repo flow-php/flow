@@ -22,7 +22,7 @@ final readonly class AdaptiveParquetEngine implements ParquetEngine
 
     public function __construct(ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN, Options $options = new Options())
     {
-        $this->delegate = extension_loaded('flow_php') || extension_loaded('arrow')
+        $this->delegate = extension_loaded('arrow')
             ? new ArrowParquetEngine($options)
             : new PhpParquetEngine($byteOrder, $options);
     }

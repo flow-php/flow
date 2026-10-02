@@ -9,11 +9,10 @@ crate-type = ["cdylib"]
 [dependencies]
 ext-php-rs = "0.15"
 parquet = { version = "59", default-features = false, features = ["arrow", "arrow_canonical_extension_types", "snap", "flate2", "flate2-zlib-rs", "zstd", "lz4", "brotli", "simdutf8"] }
-arrow-array = "59"
+arrow-array = { version = "59", features = ["ffi"] }
 arrow-buffer = "59"
 arrow-schema = { version = "59", features = ["canonical_extension_types"] }
 bytes = "1"
 
-[[example]]
-name = "generate_fixtures"
-path = "examples/generate_fixtures.rs"
+[build-dependencies]
+ext-php-rs-build = "0.1"

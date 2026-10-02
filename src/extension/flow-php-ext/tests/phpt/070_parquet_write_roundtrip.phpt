@@ -2,9 +2,12 @@
 NativeParquetWriter writes native and PHP columns that PhpParquetEngine reads back equal, and refuses a string that is not valid UTF-8
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
+<?php extension_loaded('arrow') || die('skip arrow'); ?>
 --FILE--
 <?php
 require __DIR__ . '/bootstrap.php';
+
+use Flow\Arrow\Parquet\RowsWriter;
 
 use Flow\ETL\Adapter\Parquet\{NativeParquetWriter, SchemaConverter};
 use Flow\ETL\Column\PhpBackend;
@@ -49,12 +52,13 @@ $values = [
 ];
 $context = flow_context(config_builder()->backend(new PhpBackend())->build());
 $write = static function (Schema $schema, array $batches): void {
-    $writer = new NativeParquetWriter(
+    $writer = new NativeParquetWriter(new RowsWriter(
         memory_filesystem()->writeTo(path('memory://unused.parquet')),
         ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquet($schema)),
         'ZSTD',
         OptionsConverter::toExtension(Options::default()),
-    );
+        1_000,
+    ));
 
     foreach ($batches as $batch) {
         $writer->write($batch);
@@ -64,12 +68,13 @@ $write = static function (Schema $schema, array $batches): void {
 };
 
 $filesystem = memory_filesystem();
-$writer = new NativeParquetWriter(
+$writer = new NativeParquetWriter(new RowsWriter(
     $filesystem->writeTo(path('memory://roundtrip.parquet')),
     ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquet($schema)),
     'ZSTD',
     OptionsConverter::toExtension(Options::default()),
-);
+    1_000,
+));
 $writer->write(native_rows($schema, $values));
 $writer->write(php_rows($schema, $values));
 $writer->close();
@@ -83,12 +88,13 @@ foreach (from_parquet(path('memory://roundtrip.parquet'), filesystem: $filesyste
 var_dump(comparable($read) === comparable([...php_rows($schema, $values)->toArray(), ...php_rows($schema, $values)->toArray()]));
 
 $partial = memory_filesystem();
-$partialWriter = new NativeParquetWriter(
+$partialWriter = new NativeParquetWriter(new RowsWriter(
     $partial->writeTo(path('memory://partial.parquet')),
     ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquet(schema(int_schema('id'), str_schema('name', nullable: true)))),
     'SNAPPY',
     OptionsConverter::toExtension(Options::default()),
-);
+    1_000,
+));
 $partialWriter->write(native_rows(schema(int_schema('id')), [['id' => 1], ['id' => 2]]));
 $partialWriter->close();
 $partialRead = [];
@@ -109,6 +115,6 @@ echo outcome(static fn() => $write($nested, [native_rows($nested, [['tags' => ['
 --EXPECT--
 bool(true)
 [{"id":1,"name":null},{"id":2,"name":null}]
-Flow\ETL\Exception\RuntimeException: Parquet column "name" row 1 holds a string that is not valid UTF-8; Parquet STRING columns require UTF-8
-Flow\ETL\Exception\RuntimeException: Parquet column "name" row 0 holds a string that is not valid UTF-8; Parquet STRING columns require UTF-8
-Flow\ETL\Exception\RuntimeException: Parquet column "tags" row 1 holds a string that is not valid UTF-8; Parquet STRING columns require UTF-8
+Flow\Parquet\Exception\RuntimeException: Parquet column "name" row 1 holds a string that is not valid UTF-8; Parquet STRING columns require UTF-8
+Flow\Parquet\Exception\RuntimeException: Parquet column "name" row 0 holds a string that is not valid UTF-8; Parquet STRING columns require UTF-8
+Flow\Parquet\Exception\RuntimeException: Parquet column "tags" row 1 holds a string that is not valid UTF-8; Parquet STRING columns require UTF-8

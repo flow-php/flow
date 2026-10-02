@@ -2,11 +2,12 @@
 NativeParquetReader reads offset/limit windows of an 8-row-group file, and refuses a batch size, offset or limit out of range
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
+<?php extension_loaded('arrow') || die('skip arrow'); ?>
 --FILE--
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\Parquet\Engine\Native\NativeParquetFile;
+use Flow\Arrow\Parquet\RowsWriter;
 
 use Flow\ETL\Adapter\Parquet\{NativeParquetReader, NativeParquetWriter, SchemaConverter};
 use Flow\Parquet\Engine\Arrow\{OptionsConverter, SchemaConverter as ArrowSchemaConverter};
@@ -17,12 +18,13 @@ use function Flow\Filesystem\DSL\{memory_filesystem, path};
 
 $filesystem = memory_filesystem();
 $schema = schema(int_schema('id'));
-$writer = new NativeParquetWriter(
+$writer = new NativeParquetWriter(new RowsWriter(
     $filesystem->writeTo(path('memory://groups.parquet')),
     ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquet($schema)),
     'SNAPPY',
     OptionsConverter::toExtension(Options::default()->set(Option::ROW_GROUP_SIZE_BYTES, 1)),
-);
+    1_000,
+));
 
 for ($group = 0; $group < 8; $group++) {
     $writer->write(array_to_rows(array_map(static fn(int $id): array => ['id' => $id], range($group * 8192, $group * 8192 + 8191)), $schema));
@@ -36,7 +38,7 @@ echo 'row groups: ', implode(',', array_map(
 )), "\n";
 
 foreach ([[0, 10], [5399, 3], [20000, 15000], [65000, 100], [65046, 1], [65536, 10], [65530, null]] as [$offset, $limit]) {
-    $reader = new NativeParquetReader(new NativeParquetFile($filesystem->readFrom(path('memory://groups.parquet'))), $schema, 1000, $offset, $limit);
+    $reader = native_parquet_reader($filesystem->readFrom(path('memory://groups.parquet')), $schema, 1000, $offset, $limit);
     $ids = [];
 
     while (($batch = $reader->next()) !== null) {
@@ -48,7 +50,7 @@ foreach ([[0, 10], [5399, 3], [20000, 15000], [65000, 100], [65046, 1], [65536, 
 }
 
 foreach ([[0, null, null], [-1, null, null], [10, -1, null], [10, null, -1]] as [$batchSize, $offset, $limit]) {
-    echo outcome(static fn() => new NativeParquetReader(new NativeParquetFile($filesystem->readFrom(path('memory://groups.parquet'))), $schema, $batchSize, $offset, $limit)), "\n";
+    echo outcome(static fn() => native_parquet_reader($filesystem->readFrom(path('memory://groups.parquet')), $schema, $batchSize, $offset, $limit)), "\n";
 }
 ?>
 --EXPECT--
@@ -67,7 +69,7 @@ bool(true)
 bool(true)
 65530 null: 6 rows, 65530..65535
 bool(true)
-Flow\ETL\Exception\InvalidArgumentException: flow_php Parquet batch size must be greater than 0
-Flow\ETL\Exception\InvalidArgumentException: flow_php Parquet batch size must be greater than 0
-Flow\ETL\Exception\InvalidArgumentException: flow_php Parquet offset must be greater or equal to 0
-Flow\ETL\Exception\InvalidArgumentException: flow_php Parquet limit must be greater or equal to 0
+Flow\Parquet\Exception\InvalidArgumentException: arrow Parquet batch size must be greater than 0
+Flow\Parquet\Exception\InvalidArgumentException: arrow Parquet batch size must be greater than 0
+Flow\Parquet\Exception\InvalidArgumentException: arrow Parquet offset must be greater or equal to 0
+Flow\Parquet\Exception\InvalidArgumentException: arrow Parquet limit must be greater or equal to 0

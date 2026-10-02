@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet;
 
+use Flow\Arrow\Parquet\BatchReader;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
-use Flow\Parquet\Engine\Native\NativeParquetFile;
 use RuntimeException;
 
 use function extension_loaded;
@@ -18,14 +18,13 @@ if (extension_loaded('flow_php')) {
 final class NativeParquetReader
 {
     /**
-     * @param NativeParquetFile $file the open file, whose footer plans the read
-     * @param Schema $schema the columns to read, in file order or a projection; every definition's type must store
-     *                       what the file's column reads as
-     * @param int<1, max> $batchSize
+     * @param BatchReader $batches arrow-ext's batches of the schema's columns
+     * @param Schema $schema the columns to read; every definition's type must store what the file's column reads as,
+     *                       checked here, before any batch
      *
-     * @throws \Flow\ETL\Exception\InvalidArgumentException for a negative $offset or $limit
+     * @throws \Flow\ETL\Exception\InvalidArgumentException for a column whose type stores something else
      */
-    public function __construct(NativeParquetFile $file, Schema $schema, int $batchSize, ?int $offset, ?int $limit)
+    public function __construct(BatchReader $batches, Schema $schema)
     {
         throw new RuntimeException('flow_php extension is not loaded');
     }
@@ -36,7 +35,7 @@ final class NativeParquetReader
     }
 
     /**
-     * The next batch of at most $batchSize rows under the schema, null after the last.
+     * The next batch under the schema, null after the last.
      */
     public function next(): ?Rows
     {

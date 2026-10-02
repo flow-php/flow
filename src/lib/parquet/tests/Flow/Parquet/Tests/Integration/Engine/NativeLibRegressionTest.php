@@ -35,7 +35,7 @@ use function unpack;
 use function var_export;
 
 #[Group('native-extension')]
-#[RequiresPhpExtension('flow_php')]
+#[RequiresPhpExtension('arrow')]
 final class NativeLibRegressionTest extends TestCase
 {
     public const string PAGINATION = __DIR__ . '/../IO/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet';
@@ -136,7 +136,7 @@ final class NativeLibRegressionTest extends TestCase
         );
     }
 
-    public function test_a_schema_read_from_an_arrow_rs_file_rewritten_by_the_php_engine_opens_in_flow_php(): void
+    public function test_a_schema_read_from_an_arrow_rs_file_rewritten_by_the_php_engine_opens_in_arrow(): void
     {
         $arrow = MemoryParquetFile::written(
             Writer::arrow(),

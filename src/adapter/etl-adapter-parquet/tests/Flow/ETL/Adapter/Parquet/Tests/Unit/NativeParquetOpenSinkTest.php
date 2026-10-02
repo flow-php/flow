@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Unit;
 
+use Flow\Arrow\Parquet\RowsWriter;
 use Flow\ETL\Adapter\Parquet\NativeParquetOpenSink;
 use Flow\ETL\Adapter\Parquet\NativeParquetWriter;
 use Flow\ETL\Adapter\Parquet\SchemaConverter;
 use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetFilesContext;
 use Flow\ETL\Column\PhpBackend;
-use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Exception\RuntimeException as FilesystemRuntimeException;
 use Flow\Filesystem\Tests\Double\FailingAppendDestinationStream;
 use Flow\Parquet\Engine\Arrow\OptionsConverter;
 use Flow\Parquet\Engine\Arrow\SchemaConverter as ArrowSchemaConverter;
+use Flow\Parquet\Exception\RuntimeException;
+use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 
@@ -27,6 +29,7 @@ use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 
 #[RequiresPhpExtension('flow_php')]
+#[RequiresPhpExtension('arrow')]
 final class NativeParquetOpenSinkTest extends FlowTestCase
 {
     public function test_a_batch_of_php_columns_reads_back_equal(): void
@@ -65,14 +68,15 @@ final class NativeParquetOpenSinkTest extends FlowTestCase
     {
         $filesystem = memory_filesystem();
         $schema = schema(int_schema('id'));
-        $sink = new NativeParquetOpenSink(
-            new NativeParquetWriter(
+        $sink = new NativeParquetOpenSink(new NativeParquetWriter(
+            new RowsWriter(
                 new FailingAppendDestinationStream($filesystem->writeTo(path('memory://out.parquet'))),
                 ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquet($schema)),
                 'SNAPPY',
                 OptionsConverter::toExtension(Options::default()),
+                Options::default()->getInt(Option::ARROW_WRITE_BATCH_SIZE),
             ),
-        );
+        ));
         $sink->write(array_to_rows([['id' => 1]], $schema));
 
         $this->expectException(FilesystemRuntimeException::class);

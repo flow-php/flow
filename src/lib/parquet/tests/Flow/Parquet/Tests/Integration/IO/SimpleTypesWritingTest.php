@@ -75,7 +75,7 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 
         $engines = ['php' => new PhpParquetEngine()];
 
-        if (extension_loaded('flow_php') || extension_loaded('arrow')) {
+        if (extension_loaded('arrow')) {
             $engines['arrow'] = new ArrowParquetEngine();
         }
 

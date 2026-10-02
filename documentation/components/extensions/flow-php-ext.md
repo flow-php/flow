@@ -8,7 +8,8 @@ package: flow-php/flow-php-ext
 
 [TOC]
 
-This extension is Flow's native column backend and reads CSV and Parquet and writes CSV, JSON and Parquet natively in Rust via
+This extension is Flow's native column backend and reads CSV and JSON and writes CSV and JSON natively in Rust - Parquet
+through the [arrow extension](/documentation/components/extensions/arrow-ext.md) - via
 [ext-php-rs](https://github.com/extphprs/ext-php-rs). The pure-PHP implementations in `flow-php/etl` are the canonical
 behaviour reference and work without the extension - loading it is purely an optimization.
 
@@ -95,8 +96,17 @@ The classes are `Flow\ETL\Adapter\CSV\NativeCSVWriter` and `Flow\ETL\Adapter\JSO
 
 ## Parquet
 
-With the extension loaded, `from_parquet()` and `to_parquet()` without an `engine:` read and write Parquet inside the
-extension: row groups become `NativeColumn`s, and `Rows` are written without a PHP value per cell.
+With both this extension and the [arrow extension](/documentation/components/extensions/arrow-ext.md) loaded,
+`from_parquet()` and `to_parquet()` without an `engine:` read and write native columns: arrow-ext reads and writes the
+file, and its batches cross into `NativeColumn`s (and back) through the Arrow C Data Interface, without a copy and
+without a PHP value per cell.
+
+| loaded          | `from_parquet()` / `to_parquet()`                                          |
+|-----------------|----------------------------------------------------------------------------|
+| flow_php, arrow | native columns through the Arrow C Data Interface                          |
+| arrow           | `ArrowParquetEngine`, PHP values                                           |
+| flow_php        | `PhpParquetEngine`; `DefaultBackend` adopts the values into native columns |
+| neither         | `PhpParquetEngine`                                                         |
 
 ```php
 <?php
@@ -117,37 +127,11 @@ df()
     ->run();
 ```
 
-`engine: new ArrowParquetEngine()` and `new AdaptiveParquetEngine()` read and write through the extension too. A column
-type the extension has no cast for is refused before the first batch, naming the engine that reads it:
+A schema type that stores another arrow type than the file column reads as is refused before the first batch. The
+imported batches are counted by `DefaultBackend::allocatedBytes()` for as long as they live; arrow-ext's own read
+buffers (a row group's projected column chunks, decode buffers) are not, so a `MemoryBudget` does not see them. Read and
+write refusals are arrow-ext's `Flow\Parquet\Exception\*`, as with `ArrowParquetEngine`.
 
-```
-Parquet column "iv" (Interval(DayTime)) is not supported by the flow_php Parquet reader; read the file with
-from_parquet($path, engine: new \Flow\Parquet\Engine\PhpParquetEngine())
-```
+The extension registers `Flow\ETL\Adapter\Parquet\{NativeParquetReader, NativeParquetWriter}` (over
+`Flow\Arrow\Parquet\BatchReader` / `RowsWriter`) and `Flow\ETL\Column\NativeArrowBatch`, the batch it exports.
 
-A string that is not valid UTF-8 is refused on write, naming the column and its 0-based row in the batch
-(`Parquet column "name" row 0 holds a string that is not valid UTF-8; Parquet STRING columns require UTF-8`). Everything the reader and writer allocate is counted by
-`DefaultBackend::allocatedBytes()`.
-
-The extension also registers `Flow\ETL\Adapter\Parquet\{NativeParquetReader, NativeParquetWriter}`, the reader and
-writer `from_parquet()` and `to_parquet()` use.
-
-### The parquet library
-
-`Flow\Parquet\Reader::arrow()` / `Writer::arrow()` (`ArrowParquetEngine`) read and write through the extension: the
-values are the ones `Reader::php()` returns, and writes accept and refuse what `Writer::php()` does. The footer is read
-once and decoded in Rust; `schema()`, `rowsNumber()` and `totalByteSize()` never build the PHP metadata graph.
-
-```php
-<?php
-
-use Flow\Parquet\Reader;
-
-$file = Reader::arrow()->read(__DIR__ . '/orders.parquet');
-
-$file->reader()->rowsNumber();                            // from the footer, no PHP metadata graph
-$file->values(['address.city'], limit: 10, offset: 5_000); // a struct path; only the row groups from row 5 000
-```
-
-The classes behind it are `Flow\Parquet\Engine\Native\{NativeParquetFile, NativeParquetColumnsReader,
-NativeParquetRowsWriter}`. `Writer::writeColumns()` appends each list straight to its column.

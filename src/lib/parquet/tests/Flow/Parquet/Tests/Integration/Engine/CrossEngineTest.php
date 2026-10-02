@@ -29,8 +29,8 @@ final class CrossEngineTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!extension_loaded('flow_php') && !extension_loaded('arrow')) {
-            self::markTestSkipped('Neither flow_php nor arrow is loaded');
+        if (!extension_loaded('arrow')) {
+            self::markTestSkipped('arrow is not loaded');
         }
     }
 

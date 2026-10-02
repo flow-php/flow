@@ -8,12 +8,6 @@ package: flow-php/arrow-ext
 
 [TOC]
 
-> [!WARNING]
-> **Deprecated.** Parquet through this extension is deprecated and will be removed; `flow-php/arrow-ext` is abandoned in
-> favour of [flow-php/flow-php-ext](/documentation/components/extensions/flow-php-ext.md). Install the `flow_php`
-> extension: `ArrowParquetEngine` uses it when it is loaded, and falls back to this extension with an
-> `E_USER_DEPRECATED` notice otherwise.
-
 [Apache Arrow](https://arrow.apache.org/) is a language-independent columnar memory format for flat and hierarchical data.
 The Arrow ecosystem provides high-performance implementations for common data operations - including I/O for formats like
 Parquet, CSV, JSON, and Arrow IPC - in C++, Rust, Java, Python, and other languages.
@@ -40,13 +34,11 @@ The Arrow Rust crates offer additional I/O capabilities that are candidates for 
 
 ## Features
 
-- Read and write Apache Parquet files through PHP streaming interfaces
-- Flat types: INT32, INT64, FLOAT, DOUBLE, BOOLEAN, STRING, BINARY, DATE, TIMESTAMP, TIME, DECIMAL
+- Read and write Apache Parquet files over `flow-php/filesystem` streams, value for value as `PhpParquetEngine`
 - Nested types: LIST, STRUCT, MAP (arbitrarily nested)
 - Compression codecs: UNCOMPRESSED, SNAPPY, GZIP, ZSTD, LZ4_RAW, BROTLI
-- Column projection for selective reads
-- Configurable row group size, compression level, and writer version
-- Columnar batch I/O for maximum throughput
+- Column projection, offset and limit, read from one footer read
+- Batches handed to other extensions through the [Arrow C Data Interface](https://arrow.apache.org/docs/format/CDataInterface.html)
 
 ## Requirements
 
@@ -75,233 +67,71 @@ php -d extension=./ext/modules/arrow.so your_script.php
 
 ## Usage
 
-### Implementing the Streaming Interfaces
-
-The extension operates on two PHP interfaces for I/O. You must provide implementations for your storage backend.
-
-**Source (reading):**
+`ArrowParquetEngine` of the [parquet library](/documentation/components/libs/parquet.md) is this extension:
 
 ```php
 <?php
 
-use Flow\Arrow\RandomAccessFile;
+use Flow\Parquet\Reader;
+use Flow\Parquet\Writer;
 
-class FileSource implements RandomAccessFile
-{
-    private readonly string $data;
-
-    public function __construct(string $path)
-    {
-        $this->data = file_get_contents($path);
-    }
-
-    public function read(int $length, int $offset): string
-    {
-        return substr($this->data, $offset, $length);
-    }
-
-    public function size(): ?int
-    {
-        return strlen($this->data);
-    }
-}
+$reader = Reader::arrow();
+$writer = Writer::arrow();
 ```
-
-**Destination (writing):**
-
-```php
-<?php
-
-use Flow\Arrow\OutputStream;
-
-class FileDestination implements OutputStream
-{
-    /** @var resource */
-    private $fh;
-
-    public function __construct(string $path)
-    {
-        $this->fh = fopen($path, 'wb');
-    }
-
-    public function append(string $data): self
-    {
-        fwrite($this->fh, $data);
-        return $this;
-    }
-
-    public function __destruct()
-    {
-        fclose($this->fh);
-    }
-}
-```
-
-### Reading Parquet Files
-
-```php
-<?php
-
-use Flow\Arrow\Parquet\Reader;
-
-$reader = new Reader(new FileSource('data.parquet'));
-
-// Get schema and metadata
-$schema = $reader->schema();
-$metadata = $reader->metadata();
-
-// Read row groups (with optional column projection)
-while ($batch = $reader->readRowGroup(['id', 'name'])) {
-    // $batch is ['column_name' => [values...], ...]
-    foreach ($batch['id'] as $i => $id) {
-        echo "$id: {$batch['name'][$i]}\n";
-    }
-}
-
-$reader->close();
-```
-
-### Writing Parquet Files
-
-```php
-<?php
-
-use Flow\Arrow\Parquet\Writer;
-
-$schema = [
-    ['name' => 'id', 'type' => 'INT64', 'optional' => false],
-    ['name' => 'name', 'type' => 'STRING', 'optional' => true],
-];
-
-$writer = new Writer(new FileDestination('output.parquet'), $schema, 'SNAPPY');
-$writer->writeBatch([
-    'id' => [1, 2, 3],
-    'name' => ['Alice', 'Bob', null],
-]);
-$writer->close();
-```
-
-### Schema Definition
-
-The schema is an array of column definitions. Each column has a `name`, `type`, and optional `optional` flag.
-
-| Type        | PHP Read Value        | Notes                                                                                                             |
-|-------------|-----------------------|-------------------------------------------------------------------------------------------------------------------|
-| `BOOLEAN`   | `bool`                |                                                                                                                   |
-| `INT32`     | `int`                 |                                                                                                                   |
-| `INT64`     | `int`                 |                                                                                                                   |
-| `FLOAT`     | `float`               |                                                                                                                   |
-| `DOUBLE`    | `float`               |                                                                                                                   |
-| `STRING`    | `string`              |                                                                                                                   |
-| `BINARY`    | `string` (raw bytes)  |                                                                                                                   |
-| `DATE`      | `DateTimeImmutable`   | `int` lane: days since epoch                                                                                      |
-| `TIMESTAMP` | `DateTimeImmutable`   | Keys `unit` (`MILLIS\|MICROS\|NANOS`, default `MICROS`) and `utc` (default `true`); `int` lane in the column unit |
-| `TIME`      | `DateInterval`        | Key `unit` (`MILLIS\|MICROS\|NANOS`, default `MICROS`)                                                            |
-| `DECIMAL`   | `float`               | Keys `precision`, `scale`                                                                                         |
-| `UUID`      | `string`              |                                                                                                                   |
-| `LIST`      | `array`               | Requires `children` key with 1 element                                                                            |
-| `STRUCT`    | `array` (associative) | Requires `children` key with N elements                                                                           |
-| `MAP`       | `array` (associative) | Requires `children` key with 2 elements (key + value)                                                             |
-
-**Nested schema example:**
-
-```php
-<?php
-
-$schema = [
-    ['name' => 'id', 'type' => 'INT64', 'optional' => false],
-    ['name' => 'tags', 'type' => 'LIST', 'optional' => true, 'children' => [
-        ['name' => 'element', 'type' => 'STRING', 'optional' => true],
-    ]],
-    ['name' => 'address', 'type' => 'STRUCT', 'optional' => true, 'children' => [
-        ['name' => 'street', 'type' => 'STRING', 'optional' => true],
-        ['name' => 'city', 'type' => 'STRING', 'optional' => true],
-    ]],
-    ['name' => 'metadata', 'type' => 'MAP', 'optional' => true, 'children' => [
-        ['name' => 'key', 'type' => 'STRING', 'optional' => false],
-        ['name' => 'value', 'type' => 'STRING', 'optional' => true],
-    ]],
-];
-```
-
-### Writer Options
-
-Options are passed as the fourth argument to the `Writer` constructor:
-
-```php
-<?php
-
-$writer = new Writer($stream, $schema, 'SNAPPY', [
-    'ROW_GROUP_SIZE_BYTES' => 128 * 1024 * 1024,
-    'WRITER_VERSION' => '2.0',
-]);
-```
-
-| Option Key | Type | Description |
-|---|---|---|
-| `ROW_GROUP_SIZE_BYTES` | `int` | Maximum row group size in bytes |
-| `COMPRESSION_LEVEL` | `int` | Compression level (codec-specific) |
-| `WRITER_VERSION` | `string` | `"1.0"` or `"2.0"` |
-
-## API Reference
-
-### Interfaces
-
-**`Flow\Arrow\RandomAccessFile`**
-
-| Method | Parameters | Returns | Description |
-|---|---|---|---|
-| `read` | `int $length, int $offset` | `string` | Read `$length` bytes starting at `$offset` |
-| `size` | - | `?int` | Return total size in bytes, or `null` if unknown |
-
-**`Flow\Arrow\OutputStream`**
-
-| Method | Parameters | Returns | Description |
-|---|---|---|---|
-| `append` | `string $data` | `self` | Append data to the output stream |
 
 ### Classes
 
-**`Flow\Arrow\Parquet\Reader`**
-
-| Method | Parameters | Returns | Description |
-|---|---|---|---|
-| `__construct` | `RandomAccessFile $source, array $options = []` | - | Open a Parquet source for reading |
-| `schema` | - | `array` | Return the file schema as nested arrays |
-| `metadata` | - | `array` | Return file-level metadata (row count, row groups, key-value metadata) |
-| `readRowGroup` | `?array $columns = null` | `?array` | Read next row group as columnar batch, or `null` when exhausted |
-| `close` | - | `void` | Release resources |
-
-**`Flow\Arrow\Parquet\Writer`**
-
-| Method | Parameters | Returns | Description |
-|---|---|---|---|
-| `__construct` | `OutputStream $stream, array $schema, string $compression = 'SNAPPY', array $options = []` | - | Open a Parquet destination for writing |
-| `writeBatch` | `array $batch` | `void` | Write a columnar batch (`['col' => [values...]]`) |
-| `close` | - | `void` | Flush and finalize the Parquet file |
-
-**`Flow\Arrow\Parquet\Exception`**
-
-Extends `\RuntimeException`. Thrown on all Parquet read/write errors originating from the Rust layer.
-
-## Error Handling
-
 ```php
 <?php
 
-use Flow\Arrow\Parquet\Exception;
-use Flow\Arrow\Parquet\Reader;
+use Flow\Arrow\Parquet\{BatchReader, ColumnsReader, ParquetFile, RowsWriter};
+use Flow\Parquet\Engine\Arrow\{OptionsConverter, SchemaConverter};
+use Flow\Parquet\Options;
 
-try {
-    $reader = new Reader(new FileSource('data.parquet'));
-    while ($batch = $reader->readRowGroup()) {
-        // process batch
-    }
-    $reader->close();
-} catch (Exception $e) {
-    echo "Parquet error: " . $e->getMessage();
+use function Flow\Filesystem\DSL\{native_local_filesystem, path};
+
+$filesystem = native_local_filesystem();
+
+$file = new ParquetFile($filesystem->readFrom(path('data.parquet'))); // one footer read
+$file->rowsNumber();
+$file->thrift();                                                      // Flow\Parquet\ThriftModel\FileMetaData
+
+$columns = new ColumnsReader($file, ['id', 'name'], batchSize: 1_000, offset: null, limit: null);
+
+while (($chunk = $columns->next()) !== null) {
+    // ['id' => [1, 2, ...], 'name' => ['a', 'b', ...]]
 }
+
+$writer = new RowsWriter(
+    $filesystem->writeTo(path('out.parquet')),
+    SchemaConverter::toExtension($schema),     // Flow\Parquet\ParquetFile\Schema
+    'SNAPPY',
+    OptionsConverter::toExtension(Options::default()),
+    batchSize: 1_000,
+);
+$writer->writeRows([['id' => 1, 'name' => 'a']]);
+$writer->writeColumns(['id' => [2, 3], 'name' => ['b', null]]);
+$writer->close();                              // footer, then the stream closed
+
+$batches = new BatchReader($file, ['id', 'name'], batchSize: 1_000, offset: null, limit: null);
+$batches->schema();                            // Flow\Arrow\ArrowSchema
+$batches->next();                              // Flow\Arrow\ArrowBatch, null after the last
 ```
+
+Refusals are the `Flow\Parquet\Exception\*` the PHP engine throws; an exception the stream throws surfaces as itself.
+
+### Arrow C Data Interface
+
+`ArrowBatch` (`BatchReader::next()`) carries one struct array: `arrowSchemaAddress()` (`FFI_ArrowSchema*`) and
+`arrowArrayAddress()` (`FFI_ArrowArray*`). Its consumer, another extension, reads the schema by reference and moves the
+array out. `RowsWriter::writeBatch()` takes the same pair from any extension's final internal class exposing both
+methods, its children by writer column name. Userland cannot build either: the classes are final and their
+constructors throw.
+
+### Interfaces
+
+`Flow\Arrow\RandomAccessFile` (`read(int $length, int $offset): string`, `size(): ?int`) and
+`Flow\Arrow\OutputStream` (`append(string $data): self`) are registered for stream implementations.
 
 ## Development
 
@@ -328,8 +158,7 @@ make test
 - Built with [ext-php-rs](https://github.com/extphprs/ext-php-rs), which generates PHP bindings from Rust code
 - Uses Apache Arrow and Parquet Rust crates from the [Arrow ecosystem](https://github.com/apache/arrow-rs)
 - All compression codecs compiled into the extension - no external PHP compression extensions needed
-- PHP streaming interfaces (`RandomAccessFile`, `OutputStream`) called from Rust via ext-php-rs callbacks
-- Columnar batch format aligns with Parquet's native columnar storage
+- Stream methods (`read`, `size`, `append`, `close`) called from Rust via ext-php-rs
 - PIE-compatible via `ext/config.m4` that delegates to `cargo build`
 
 ## See Also

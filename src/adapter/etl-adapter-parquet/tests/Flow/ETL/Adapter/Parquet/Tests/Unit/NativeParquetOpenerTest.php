@@ -24,9 +24,10 @@ use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 
 #[RequiresPhpExtension('flow_php')]
+#[RequiresPhpExtension('arrow')]
 final class NativeParquetOpenerTest extends FlowTestCase
 {
-    public function test_sink_writes_through_flow_php(): void
+    public function test_sink_writes_native_columns(): void
     {
         $filesystem = memory_filesystem();
         $schema = schema(int_schema('id'));

@@ -16,11 +16,9 @@ For detailed installation instructions, see the [installation page](/documentati
 
 - **PHP Engine** (`PhpParquetEngine`) - pure PHP, no extra dependencies beyond optional compression extensions.
 - **Arrow Engine** (`ArrowParquetEngine`) - native Rust through the
-  [flow_php extension](/documentation/components/extensions/flow-php-ext.md); every compression codec is built in.
-  Without `flow_php` it falls back to the deprecated [arrow extension](/documentation/components/extensions/arrow-ext.md)
-  and raises `E_USER_DEPRECATED`.
-- **Adaptive Engine** (`AdaptiveParquetEngine`) - the default: `ArrowParquetEngine` when `flow_php` or `arrow` is
-  loaded, `PhpParquetEngine` otherwise.
+  [arrow extension](/documentation/components/extensions/arrow-ext.md); every compression codec is built in.
+- **Adaptive Engine** (`AdaptiveParquetEngine`) - the default: `ArrowParquetEngine` when `arrow` is loaded,
+  `PhpParquetEngine` otherwise.
 
 ```php
 <?php
@@ -31,7 +29,7 @@ use Flow\Parquet\Writer;
 $reader = new Reader();   // adaptive
 $writer = new Writer();
 
-$reader = Reader::arrow(); // flow_php (arrow-ext, deprecated, without it; throws without both)
+$reader = Reader::arrow(); // throws without the arrow extension
 $writer = Writer::arrow();
 
 $reader = Reader::php();

@@ -1,14 +1,21 @@
+#[cfg(test)]
+mod alloc;
+mod exception;
 mod parquet;
+mod php;
+mod render;
 mod stream;
+mod thrift;
+mod values;
 
+#[cfg(not(test))]
 use std::alloc::System;
 
 use ext_php_rs::prelude::*;
 use ext_php_rs::zend::ModuleEntry;
 use ext_php_rs::{info_table_end, info_table_row, info_table_start};
-use parquet::reader::Reader;
-use parquet::writer::Writer;
 
+#[cfg(not(test))]
 #[global_allocator]
 static GLOBAL: System = System;
 
@@ -34,10 +41,6 @@ pub unsafe extern "C" fn module_startup(_type: i32, _module_number: i32) -> i32 
         eprintln!("arrow: failed to register Flow\\Arrow\\RandomAccessFile: {e}");
         return -1;
     }
-    if let Err(e) = parquet::exception::register() {
-        eprintln!("arrow: failed to register Flow\\Arrow\\Parquet\\Exception: {e}");
-        return -1;
-    }
     0
 }
 
@@ -47,6 +50,13 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     module
         .version(env!("ARROW_VERSION"))
         .info_function(php_module_info)
-        .class::<Reader>()
-        .class::<Writer>()
+        .globals(&php::GLOBALS)
+        .request_startup_function(php::request_startup)
+        .request_shutdown_function(php::request_shutdown)
+        .class::<parquet::library::ParquetFile>()
+        .class::<parquet::library::ColumnsReader>()
+        .class::<parquet::library::RowsWriter>()
+        .class::<parquet::batch::BatchReader>()
+        .class::<parquet::batch::ArrowBatch>()
+        .class::<parquet::batch::ArrowSchema>()
 }

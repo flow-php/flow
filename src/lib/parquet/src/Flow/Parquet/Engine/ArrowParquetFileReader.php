@@ -4,95 +4,82 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Engine;
 
-use Flow\Arrow\Parquet\Reader;
-use Flow\Filesystem\SourceStream;
-use Flow\Parquet\Engine\Arrow\OptionsConverter;
-use Flow\Parquet\Engine\Arrow\SourceStreamAdapter;
+use Flow\Arrow\Parquet\ColumnsReader;
+use Flow\Arrow\Parquet\ParquetFile;
+use Flow\Parquet\Exception\InvalidArgumentException;
+use Flow\Parquet\Exception\RuntimeException;
+use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Metadata;
 use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\ParquetFileReader;
 use Generator;
 
-use function array_keys;
-use function array_push;
-use function array_slice;
-use function count;
-use function min;
+use function sprintf;
+use function str_starts_with;
 
-final readonly class ArrowParquetFileReader implements ParquetFileReader
+final class ArrowParquetFileReader implements ParquetFileReader
 {
+    private ?Metadata $metadata = null;
+
+    private bool $open = true;
+
+    private ?Schema $schema = null;
+
     public function __construct(
-        private PhpParquetFileReader $footer,
-        private SourceStream $stream,
-        private Options $options,
+        private readonly ParquetFile $file,
+        private readonly Options $options,
     ) {}
 
     public function close(): void
     {
-        $this->footer->close();
+        $this->open || throw new RuntimeException('Reader is not open');
+
+        $this->open = false;
+        $this->file->close();
+    }
+
+    public function file(): ParquetFile
+    {
+        $this->open || throw new RuntimeException('Reader is not open');
+
+        return $this->file;
     }
 
     public function metadata(): Metadata
     {
-        return $this->footer->metadata();
+        $this->open || throw new RuntimeException('Reader is not open');
+
+        return $this->metadata ??= Metadata::fromThrift($this->file->thrift());
     }
 
     public function readColumns(array $columns, int $batchSize, ?int $limit, ?int $offset): Generator
     {
-        $adapter = new SourceStreamAdapter($this->stream);
-        $extensionOptions = OptionsConverter::toExtension($this->options);
-        $reader = new Reader($adapter, $extensionOptions);
+        $this->open || throw new RuntimeException('Reader is not open');
 
-        try {
-            $toSkip = $offset ?? 0;
-            $remaining = $limit;
-            /** @var array<string, list<mixed>> $carry */
-            $carry = [];
-            $carryCount = 0;
-
-            while (($remaining === null || $remaining > 0) && null !== ($got = $reader->readRowGroup($columns))) {
-                $names = array_keys($got);
-
-                if ($names === []) {
-                    continue;
-                }
-
-                $available = count($got[$names[0]]);
-                $cursor = min($toSkip, $available);
-                $toSkip -= $cursor;
-
-                while ($cursor < $available && ($remaining === null || $remaining > 0)) {
-                    $take = min($batchSize - $carryCount, $available - $cursor, $remaining ?? $available);
-
-                    foreach ($names as $name) {
-                        /** @var list<mixed> $slice */
-                        $slice = array_slice($got[$name], $cursor, $take);
-
-                        if ($carryCount === 0) {
-                            $carry[$name] = $slice;
-                        } else {
-                            array_push($carry[$name], ...$slice);
-                        }
-                    }
-
-                    $carryCount += $take;
-                    $cursor += $take;
-
-                    if ($remaining !== null) {
-                        $remaining -= $take;
-                    }
-
-                    if ($carryCount === $batchSize) {
-                        yield $carry;
-                        $carry = [];
-                        $carryCount = 0;
+        if (!$this->options->getBool(Option::INT_96_AS_DATETIME)) {
+            foreach ($columns as $column) {
+                foreach ($this->schema()->columnsFlat() as $leaf) {
+                    if (
+                        $leaf->type() === PhysicalType::INT96
+                        && ($leaf->flatPath() === $column || str_starts_with($leaf->flatPath(), $column . '.'))
+                    ) {
+                        throw new InvalidArgumentException(sprintf(
+                            'Parquet column "%s" holds INT96, which arrow reads only as a datetime '
+                            . '(Option::INT_96_AS_DATETIME = true); read the file with \Flow\Parquet\Reader::php()',
+                            $column,
+                        ));
                     }
                 }
             }
+        }
 
-            if ($carryCount > 0) {
-                yield $carry;
+        $reader = new ColumnsReader($this->file, $columns, $batchSize, $offset, $limit);
+
+        try {
+            while (($chunk = $reader->next()) !== null) {
+                yield $chunk;
             }
         } finally {
             $reader->close();
@@ -101,16 +88,22 @@ final readonly class ArrowParquetFileReader implements ParquetFileReader
 
     public function rowsNumber(): int
     {
-        return $this->footer->rowsNumber();
+        $this->open || throw new RuntimeException('Reader is not open');
+
+        return $this->file->rowsNumber();
     }
 
     public function schema(): Schema
     {
-        return $this->footer->schema();
+        $this->open || throw new RuntimeException('Reader is not open');
+
+        return $this->metadata?->schema() ?? ($this->schema ??= Schema::fromThrift($this->file->schema()));
     }
 
     public function totalByteSize(): int
     {
-        return $this->footer->totalByteSize();
+        $this->open || throw new RuntimeException('Reader is not open');
+
+        return $this->file->totalByteSize();
     }
 }

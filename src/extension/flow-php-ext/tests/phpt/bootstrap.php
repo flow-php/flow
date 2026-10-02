@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../../../../vendor/autoload.php';
 
+use Flow\Arrow\Parquet\BatchReader;
+use Flow\Arrow\Parquet\ParquetFile;
+use Flow\ETL\Adapter\Parquet\NativeParquetReader;
 use Flow\ETL\Column\DefaultBackend;
 use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Rows;
 use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
+use Flow\Filesystem\SourceStream;
 
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\date_schema;
@@ -244,6 +248,30 @@ function comparable(mixed $value): string
     };
 
     return serialize($plain($value));
+}
+
+/**
+ * `NativeParquetReader` over arrow-ext's batches of `$schema`'s columns of the Parquet file in `$stream`.
+ *
+ * @param int<1, max> $batchSize
+ */
+function native_parquet_reader(
+    SourceStream $stream,
+    Schema $schema,
+    int $batchSize,
+    ?int $offset,
+    ?int $limit,
+): NativeParquetReader {
+    return new NativeParquetReader(
+        new BatchReader(
+            new ParquetFile($stream),
+            array_map('strval', array_keys($schema->definitions())),
+            $batchSize,
+            $offset,
+            $limit,
+        ),
+        $schema,
+    );
 }
 
 /**

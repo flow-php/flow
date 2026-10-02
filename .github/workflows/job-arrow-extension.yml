@@ -86,6 +86,12 @@ jobs:
         working-directory: src/extension/arrow-ext
         run: make build
 
+      - name: Install Composer Dependencies
+        uses: ./.github/actions/composer-install
+        with:
+          php-version: ${{ matrix.php }}
+          dependencies: locked
+
       - name: Run PHPT tests
         working-directory: src/extension/arrow-ext
         run: make test
@@ -97,12 +103,6 @@ jobs:
           sudo cp ext/modules/arrow.so "$EXT_DIR/"
           echo "extension=arrow.so" | sudo tee -a "$(php -r 'echo php_ini_loaded_file();')"
           php -m | grep arrow
-
-      - name: Install Composer Dependencies
-        uses: ./.github/actions/composer-install
-        with:
-          php-version: ${{ matrix.php }}
-          dependencies: locked
 
       - name: Run Parquet Integration Tests with Arrow
         run: just test --testsuite=lib-parquet-integration ${{ (matrix.php == '8.3' && runner.os == 'Linux') && '--coverage-clover=./var/phpunit/coverage/clover/coverage.xml' || '' }}
