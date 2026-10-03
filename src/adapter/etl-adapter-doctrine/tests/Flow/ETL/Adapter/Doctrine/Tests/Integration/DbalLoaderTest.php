@@ -26,11 +26,16 @@ final class DbalLoaderTest extends IntegrationTestCase
 {
     public function test_create_loader_with_invalid_operation(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->pgsqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Operation can be insert, update, or delete, invalid given.');
@@ -40,11 +45,16 @@ final class DbalLoaderTest extends IntegrationTestCase
 
     public function test_create_loader_with_invalid_operation_from_connection(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->pgsqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Operation can be insert, update, or delete, invalid given.');
@@ -59,11 +69,16 @@ final class DbalLoaderTest extends IntegrationTestCase
 
     public function test_loader_with_custom_types_map(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('description', Type::getType(Types::TEXT), ['notnull' => false]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->pgsqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::TEXT), ['notnull' => false]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
 
         $customTypesMap = new TypesMap([
             StringType::class => TextType::class,

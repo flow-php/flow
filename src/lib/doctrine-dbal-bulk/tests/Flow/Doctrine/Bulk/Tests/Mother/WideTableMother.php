@@ -66,6 +66,8 @@ final class WideTableMother
     public static function tableWithPrimaryKey(string $name, int $columns): Table
     {
         return self::table($name, $columns)
-            ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('c1')->create());
+            ->edit()
+            ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('c1')->create())
+            ->create();
     }
 }

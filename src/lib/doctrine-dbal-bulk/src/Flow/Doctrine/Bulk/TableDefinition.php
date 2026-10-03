@@ -7,7 +7,6 @@ namespace Flow\Doctrine\Bulk;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Schema\Column;
-use Doctrine\DBAL\Types\Type;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 
 use function array_filter;
@@ -69,7 +68,7 @@ final class TableDefinition
         for ($i = 0; $i < $bulkData->count(); $i++) {
             foreach ($bulkData->columns()->all() as $columnName) {
                 $dbColumn = $this->dbalColumn($columnName);
-                $types[] = Type::getTypeRegistry()->lookupName($dbColumn->getType());
+                $types[] = $dbColumn->getTypeName();
             }
         }
 
@@ -91,7 +90,7 @@ final class TableDefinition
             $dbColumn = $this->dbalColumn($columnName);
 
             for ($i = 0; $i < $bulkData->count(); $i++) {
-                $types[$columnName . '_' . $i] = Type::getTypeRegistry()->lookupName($dbColumn->getType());
+                $types[$columnName . '_' . $i] = $dbColumn->getTypeName();
             }
         }
 

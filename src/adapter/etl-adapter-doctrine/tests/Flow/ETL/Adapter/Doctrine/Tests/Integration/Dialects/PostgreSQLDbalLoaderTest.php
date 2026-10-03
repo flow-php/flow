@@ -25,10 +25,15 @@ final class PostgreSQLDbalLoaderTest extends IntegrationTestCase
 {
     public function test_delete_non_existent_rows(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->pgsqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
 
         data_frame()
             ->read(from_array([
@@ -60,10 +65,15 @@ final class PostgreSQLDbalLoaderTest extends IntegrationTestCase
 
     public function test_delete_rows_using_existing_connection(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->pgsqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
 
         data_frame()
             ->read(from_array([
@@ -95,11 +105,18 @@ final class PostgreSQLDbalLoaderTest extends IntegrationTestCase
 
     public function test_delete_with_composite_keys(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('group_id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id', 'group_id')->create()));
+        $this->pgsqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('group_id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(
+                    PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id', 'group_id')->create(),
+                )
+                ->create(),
+        );
 
         data_frame()
             ->read(from_array([
@@ -133,11 +150,16 @@ final class PostgreSQLDbalLoaderTest extends IntegrationTestCase
 
     public function test_deletes_rows_by_single_key(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->pgsqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
 
         data_frame()
             ->read(from_array([
@@ -171,11 +193,16 @@ final class PostgreSQLDbalLoaderTest extends IntegrationTestCase
 
     public function test_inserts_empty_rows(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->pgsqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
 
         $loader = to_dbal_table_insert($this->postgresqlConnectionParams(), $table);
 
@@ -195,11 +222,16 @@ final class PostgreSQLDbalLoaderTest extends IntegrationTestCase
 
     public function test_inserts_multiple_rows_at_once(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->pgsqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
 
         $loader = to_dbal_table_insert($this->postgresqlConnectionParams(), $table);
 
@@ -217,11 +249,16 @@ final class PostgreSQLDbalLoaderTest extends IntegrationTestCase
 
     public function test_inserts_multiple_rows_at_once_using_existing_connection(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->pgsqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
 
         $loader = to_dbal_table_insert($this->pgsqlDatabaseContext->connection(), $table);
 
@@ -240,11 +277,16 @@ final class PostgreSQLDbalLoaderTest extends IntegrationTestCase
 
     public function test_inserts_multiple_rows_in_two_insert_queries(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->pgsqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
 
         data_frame()
             ->read(from_array([
@@ -260,11 +302,16 @@ final class PostgreSQLDbalLoaderTest extends IntegrationTestCase
 
     public function test_inserts_new_rows_and_skip_already_existed(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->pgsqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
         data_frame()
             ->read(from_array([
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
@@ -301,11 +348,16 @@ final class PostgreSQLDbalLoaderTest extends IntegrationTestCase
 
     public function test_inserts_new_rows_or_updates_already_existed_based_on_primary_key(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->pgsqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
 
         data_frame()
             ->read(from_array([
@@ -343,11 +395,16 @@ final class PostgreSQLDbalLoaderTest extends IntegrationTestCase
 
     public function test_inserts_xml_element_entry(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->pgsqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
 
         $loader = to_dbal_table_insert($this->postgresqlConnectionParams(), $table);
 
@@ -382,11 +439,16 @@ final class PostgreSQLDbalLoaderTest extends IntegrationTestCase
 
     public function test_inserts_xml_entry(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->pgsqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
 
         $loader = to_dbal_table_insert($this->postgresqlConnectionParams(), $table);
 
@@ -421,11 +483,16 @@ final class PostgreSQLDbalLoaderTest extends IntegrationTestCase
 
     public function test_update_multiple_rows_at_once(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->pgsqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
 
         $insertLoader = to_dbal_table_insert($this->postgresqlConnectionParams(), $table);
         $updateLoader = to_dbal_table_update(

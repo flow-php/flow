@@ -30,11 +30,16 @@ final class MySQLDbalQueryExtractorTest extends IntegrationTestCase
 {
     public function test_extracting_multiple_rows_at_once(): void
     {
-        $this->mysqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->mysqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
 
         data_frame()
             ->extract(from_array([
@@ -61,11 +66,16 @@ final class MySQLDbalQueryExtractorTest extends IntegrationTestCase
 
     public function test_extracting_multiple_rows_multiple_times(): void
     {
-        $this->mysqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->mysqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
 
         data_frame()
             ->extract(from_array([
@@ -117,11 +127,16 @@ final class MySQLDbalQueryExtractorTest extends IntegrationTestCase
 
     public function test_extracting_multiple_rows_with_schema(): void
     {
-        $this->mysqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->mysqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
 
         data_frame()
             ->extract(from_array([

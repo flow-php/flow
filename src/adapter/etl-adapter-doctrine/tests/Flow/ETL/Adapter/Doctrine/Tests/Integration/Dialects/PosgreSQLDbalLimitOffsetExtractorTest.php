@@ -32,11 +32,16 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
 {
     public function test_extracting_entire_table(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->pgsqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
 
         for ($i = 1; $i <= 8; $i++) {
             $this->pgsqlDatabaseContext->insert($table, [
@@ -72,11 +77,16 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
 
     public function test_extracting_entire_table_using_qb(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->pgsqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
 
         for ($i = 1; $i <= 8; $i++) {
             $this->pgsqlDatabaseContext->insert($table, [
@@ -116,11 +126,16 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
 
     public function test_extracting_entire_table_using_qb_with_maximum_and_offset_set_on_extractor(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->pgsqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
 
         for ($i = 1; $i <= 25; $i++) {
             $this->pgsqlDatabaseContext->insert($table, [
@@ -162,11 +177,16 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
 
     public function test_extracting_entire_table_using_qb_with_maximum_and_offset_set_on_query(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->pgsqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
 
         for ($i = 1; $i <= 25; $i++) {
             $this->pgsqlDatabaseContext->insert($table, [
@@ -201,11 +221,16 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
 
     public function test_extracting_entire_table_using_qb_with_maximum_set_on_query(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->pgsqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
 
         for ($i = 1; $i <= 25; $i++) {
             $this->pgsqlDatabaseContext->insert($table, [
@@ -242,11 +267,16 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
 
     public function test_extracting_entire_table_using_qb_with_schema(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->pgsqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
 
         for ($i = 1; $i <= 8; $i++) {
             $this->pgsqlDatabaseContext->insert($table, [
@@ -312,12 +342,17 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
 
     public function test_extracting_entire_table_with_group_by(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('type', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->pgsqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('type', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
 
         for ($i = 1; $i <= 10; $i++) {
             $this->pgsqlDatabaseContext->insert($table, [
@@ -361,11 +396,16 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
 
     public function test_extracting_limited_number_of_rows_from_table(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->pgsqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
 
         for ($i = 1; $i <= 8; $i++) {
             $this->pgsqlDatabaseContext->insert($table, [
@@ -401,11 +441,16 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
 
     public function test_extracting_selected_columns(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->pgsqlDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
 
         for ($i = 1; $i <= 8; $i++) {
             $this->pgsqlDatabaseContext->insert($table, [

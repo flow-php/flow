@@ -33,7 +33,10 @@ final class DbalDataFrameFactoryTest extends IntegrationTestCase
                 new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
                 new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
                 new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
         );
 
         $this->pgsqlDatabaseContext->insert('flow_doctrine_data_factory_test', [
@@ -87,7 +90,10 @@ final class DbalDataFrameFactoryTest extends IntegrationTestCase
                 new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
                 new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
                 new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'length' => 255]),
-            ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
         );
 
         $this->pgsqlDatabaseContext->insert('flow_doctrine_data_factory_test', [

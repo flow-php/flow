@@ -53,10 +53,7 @@ final class TableDefinitionTest extends TestCase
         // @mago-expect analysis:deprecated-method
         // @mago-expect analysis:deprecated-method
         static::assertSame($column1->getName(), $column2->getName());
-        static::assertSame(
-            Type::getTypeRegistry()->lookupName($column1->getType()),
-            Type::getTypeRegistry()->lookupName($column2->getType()),
-        );
+        static::assertSame($column1->getTypeName(), $column2->getTypeName());
     }
 
     public function test_column_retrieval_from_non_existent_table(): void
@@ -99,7 +96,7 @@ final class TableDefinitionTest extends TestCase
 
         // @mago-expect analysis:deprecated-method
         static::assertSame('name', $nameColumn->getName());
-        static::assertSame(Types::STRING, Type::getTypeRegistry()->lookupName($nameColumn->getType()));
+        static::assertSame(Types::STRING, $nameColumn->getTypeName());
     }
 
     public function test_dbal_column_returns_existing_column(): void

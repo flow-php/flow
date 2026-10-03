@@ -49,7 +49,10 @@ final class PostgreSQLSchemaDerivationTest extends IntegrationTestCase
                     'scale' => 2,
                 ]),
                 new Column('placed_at', Type::getType(Types::DATETIME_MUTABLE), ['notnull' => false]),
-            ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
         );
 
         for ($i = 1; $i <= 3; $i++) {

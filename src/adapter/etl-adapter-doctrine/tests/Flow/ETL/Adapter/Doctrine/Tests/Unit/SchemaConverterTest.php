@@ -76,9 +76,15 @@ final class SchemaConverterTest extends FlowTestCase
                 new Index('idx_str_unique', ['str_unique'], true, false),
             ],
         );
-        $expectedTable->addPrimaryKeyConstraint(
-            PrimaryKeyConstraint::editor()->setUnquotedName('pk_test')->setUnquotedColumnNames('int', 'str')->create(),
-        );
+        $expectedTable = $expectedTable
+            ->edit()
+            ->addPrimaryKeyConstraint(
+                PrimaryKeyConstraint::editor()
+                    ->setUnquotedName('pk_test')
+                    ->setUnquotedColumnNames('int', 'str')
+                    ->create(),
+            )
+            ->create();
 
         static::assertEquals($expectedTable, to_dbal_schema_table($flowSchema, 'test'));
     }
@@ -94,9 +100,10 @@ final class SchemaConverterTest extends FlowTestCase
             new Column('int', Type::getType('integer'), ['notnull' => true]),
             new Column('str', Type::getType('string'), ['notnull' => true]),
         ]);
-        $expectedTable->addPrimaryKeyConstraint(
-            PrimaryKeyConstraint::editor()->setUnquotedColumnNames('int', 'str')->create(),
-        );
+        $expectedTable = $expectedTable
+            ->edit()
+            ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('int', 'str')->create())
+            ->create();
 
         static::assertEquals($expectedTable, to_dbal_schema_table($flowSchema, 'test'));
     }
@@ -142,9 +149,15 @@ final class SchemaConverterTest extends FlowTestCase
                 new Index('idx_str_unique', ['str_unique'], true, false),
             ],
         );
-        $inputTable->addPrimaryKeyConstraint(
-            PrimaryKeyConstraint::editor()->setUnquotedName('pk_test')->setUnquotedColumnNames('int', 'str')->create(),
-        );
+        $inputTable = $inputTable
+            ->edit()
+            ->addPrimaryKeyConstraint(
+                PrimaryKeyConstraint::editor()
+                    ->setUnquotedName('pk_test')
+                    ->setUnquotedColumnNames('int', 'str')
+                    ->create(),
+            )
+            ->create();
 
         static::assertEquals(
             schema(
@@ -242,9 +255,15 @@ final class SchemaConverterTest extends FlowTestCase
                 new Index('idx_str_unique', ['str_unique'], true, false),
             ],
         );
-        $inputTable->addPrimaryKeyConstraint(
-            PrimaryKeyConstraint::editor()->setUnquotedName('pk_test')->setUnquotedColumnNames('int', 'str')->create(),
-        );
+        $inputTable = $inputTable
+            ->edit()
+            ->addPrimaryKeyConstraint(
+                PrimaryKeyConstraint::editor()
+                    ->setUnquotedName('pk_test')
+                    ->setUnquotedColumnNames('int', 'str')
+                    ->create(),
+            )
+            ->create();
 
         static::assertEquals(
             schema(

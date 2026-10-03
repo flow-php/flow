@@ -39,7 +39,10 @@ final class PostgreSQLTransactionSinkTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('value', Type::getType(Types::INTEGER), ['notnull' => true]),
         ]);
-        $table->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create());
+        $table = $table
+            ->edit()
+            ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+            ->create();
 
         $this->pgsqlDatabaseContext->createTable($table);
 
@@ -75,7 +78,10 @@ final class PostgreSQLTransactionSinkTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
         ]);
-        $table->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create());
+        $table = $table
+            ->edit()
+            ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+            ->create();
 
         $this->pgsqlDatabaseContext->createTable($table);
         $this->pgsqlDatabaseContext->insert('test_table', ['id' => 1, 'name' => 'Initial']);
@@ -122,7 +128,10 @@ final class PostgreSQLTransactionSinkTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
         ]);
-        $table->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create());
+        $table = $table
+            ->edit()
+            ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+            ->create();
 
         $this->pgsqlDatabaseContext->createTable($table);
 
@@ -159,7 +168,10 @@ final class PostgreSQLTransactionSinkTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
         ]);
-        $table->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create());
+        $table = $table
+            ->edit()
+            ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+            ->create();
 
         $this->pgsqlDatabaseContext->createTable($table);
 

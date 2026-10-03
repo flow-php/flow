@@ -59,10 +59,7 @@ final readonly class SchemaConverter
             $columns[$column->getObjectName()->getIdentifier()->getValue()] = $column;
         }
 
-        $table = new Table($tableName, $columns, options: $tableOptions);
-        $this->updateIndexes($schema, $table);
-
-        return $table;
+        return $this->withIndexes($schema, new Table($tableName, $columns, options: $tableOptions));
     }
 
     public function toFlowSchema(Table $table): Schema
@@ -81,7 +78,7 @@ final readonly class SchemaConverter
      */
     private function columnToFlow(Column $column, Table $table): Definition
     {
-        $type = $this->typesMap->toFlowType($column->getType()::class);
+        $type = $this->typesMap->toFlowType(DbalType::getType($column->getTypeName())::class);
 
         $nullable = !$column->getNotnull();
 
@@ -252,10 +249,7 @@ final readonly class SchemaConverter
         return new Column($name, $dbalType, $options);
     }
 
-    /**
-     * @return array<Index>
-     */
-    private function updateIndexes(Schema $schema, Table $table): array
+    private function withIndexes(Schema $schema, Table $table): Table
     {
         $indexesData = [];
         $uniqueIndexesData = [];
@@ -300,28 +294,38 @@ final readonly class SchemaConverter
             }
         }
 
-        $indexes = [];
+        $editor = $table->edit();
 
         foreach ($indexesData as $name => $columns) {
-            $table->addIndex($columns, $name);
+            /** @var non-empty-list<non-empty-string> $columns */
+            $indexEditor = Index::editor()->setUnquotedColumnNames($columns[0], ...array_slice($columns, 1));
+
+            $editor->addIndex($name === '' ? $indexEditor : $indexEditor->setUnquotedName($name));
         }
 
         foreach ($uniqueIndexesData as $name => $columns) {
-            $indexes[] = new Index($name, $columns, isUnique: true);
-            $table->addUniqueIndex($columns, $name);
+            /** @var non-empty-list<non-empty-string> $columns */
+            $indexEditor = Index::editor()
+                ->setType(IndexType::UNIQUE)
+                ->setUnquotedColumnNames($columns[0], ...array_slice($columns, 1));
+
+            $editor->addIndex($name === '' ? $indexEditor : $indexEditor->setUnquotedName($name));
         }
 
         foreach ($primaryKey as $name => $columns) {
             /** @var non-empty-list<non-empty-string> $columns */
-            $editor = PrimaryKeyConstraint::editor()->setUnquotedColumnNames($columns[0], ...array_slice($columns, 1));
+            $primaryKeyEditor = PrimaryKeyConstraint::editor()->setUnquotedColumnNames($columns[0], ...array_slice(
+                $columns,
+                1,
+            ));
 
             if ($name !== '') {
-                $editor = $editor->setUnquotedName($name);
+                $primaryKeyEditor = $primaryKeyEditor->setUnquotedName($name);
             }
 
-            $table->addPrimaryKeyConstraint($editor->create());
+            $editor->addPrimaryKeyConstraint($primaryKeyEditor->create());
         }
 
-        return $indexes;
+        return $editor->create();
     }
 }
