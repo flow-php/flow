@@ -8,6 +8,8 @@ use DateTimeImmutable;
 use Flow\ETL\Adapter\JSON\AdaptiveJsonEncoder;
 use Flow\ETL\Adapter\JSON\JsonFraming;
 use Flow\ETL\Adapter\JSON\JsonOpenSink;
+use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\FlowPhpExtension;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Stream\StringDestinationStream;
 
@@ -55,5 +57,13 @@ final class AdaptiveJsonEncoderTest extends FlowTestCase
         $sink->close();
 
         static::assertSame("{\n    \"id\": 1\n}\n", $stream->content());
+    }
+
+    public function test_a_flow_php_of_another_abi_is_refused(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('does not match flow-php/etl');
+
+        new AdaptiveJsonEncoder(extension: new FlowPhpExtension(true, FlowPhpExtension::ABI + 1, '0.46.0'));
     }
 }

@@ -1,1 +1,2 @@
-Skip entire partitions without reading their data: when a filter() predicate touches only partition columns, the planner prunes automatically - partition metadata is evaluated first and only matching partitions are read - dramatically improving performance for large datasets.
+A `filter()` that reads only partition columns is pushed into the reader: directories whose path
+fails the predicate (`color=green`) are never opened.

@@ -19,7 +19,7 @@ data_frame()
     ))
     ->withEntry(
         'value',
-        when(ref('value')->isNull(), then: lit(0))
+        when(ref('value')->isNull(), then: lit(0), else: ref('value'))
     )
     ->write(to_output(truncate: false))
     ->run();

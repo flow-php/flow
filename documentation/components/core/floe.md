@@ -4,9 +4,10 @@
 
 [TOC]
 
-Floe is Flow's native, self-describing binary file format for `Rows`. It stores the schema inside
-the file, evolves seamlessly across appended sections, and reads back through the DataFrame API with
-`from_floe()` / `to_floe()`. Files use the `.floe` extension.
+Floe is Flow's native, self-describing, columnar binary file format. Each batch is written as one BATCH frame holding
+every column in the Arrow buffer layout, the schema lives in the file's footer, and `from_floe()` reads the batches
+back into the configured [column backend](/documentation/components/core/column-backend.md). Files use the `.floe`
+extension.
 
 ## Writing
 
@@ -69,8 +70,7 @@ machinery as other file loaders:
 ```php
 <?php
 
-use Flow\ETL\Filesystem\SaveMode;
-use function Flow\ETL\DSL\{data_frame, from_array};
+use function Flow\ETL\DSL\{append, data_frame, from_array};
 use function Flow\Floe\DSL\{from_floe, to_floe};
 
 data_frame()
@@ -144,10 +144,9 @@ schema is available without scanning any rows:
 ```php
 <?php
 
-use function Flow\ETL\DSL\{data_frame, flow_context, config};
 use function Flow\Floe\DSL\from_floe;
 
-$schema = from_floe(__DIR__ . '/output.floe')->schema(flow_context(config()));
+$schema = from_floe(__DIR__ . '/output.floe')->schema();
 ```
 
 ## Reading the First or Last Rows
@@ -207,58 +206,45 @@ thrown before anything is written. `merge_floe()` works on the local filesystem;
 The whole-value serialization paths - the [cache](/documentation/components/core/caching.md) and
 `Flow\Floe\FloeSerializer` (the config default serializer) - stream: `serialize(Rows, DestinationStream)`
 goes through `FloeStreamWriter`, which writes one BATCH frame, and `unserialize(SourceStream)` through the
-strict `FloeStreamReader::rows()`, read in frame-sized batches of at most `batchSize` rows (default 1000). String payloads round-trip through the
-`Flow\Serializer\DSL` helpers `serialize_to_string()` / `unserialize_from_string()`. A whole-value
-`unserialize()` verifies the decoded row count against the footer and rejects torn payloads. Numbers and
-guidance live in the [caching documentation](/documentation/components/core/caching.md).
+strict `FloeStreamReader::rows()`, read in frame-sized batches of at most `batchSize` rows (default 1000) and
+returned as one `Rows` in the serializer's backend. String payloads round-trip through the `Flow\Serializer\DSL`
+helpers `serialize_to_string()` / `unserialize_from_string()`. A whole-value `unserialize()` verifies the decoded row
+count against the footer and rejects torn payloads.
 
 ## Validation
 
-Floe asserts, it never casts. A value that does not match its column type is rejected - it is never
-converted to fit.
+Floe never casts. Values are checked when a batch is built - a value that does not fit its column throws
+`SchemaMismatchException` before anything reaches the writer. The writer then checks each batch's schema against
+the file's schema, fixed when the write session starts: `FloeWriter` takes it as an argument, `to_floe()` takes
+`withSchema()` or else the first batch's schema:
 
-Two checks run when a batch is written:
-
-- **Column set** - a row carrying a column the file's schema does not declare is rejected. Always on.
-- **Per value** - every value must satisfy its column type. Gated by `validateData`, on by default.
+| Batch schema                                                  | Result                        |
+|---------------------------------------------------------------|-------------------------------|
+| a column the file does not declare                            | `IncompatibleSchemaException` |
+| lacks a column the file declares nullable                     | written, reads back as null   |
+| lacks a column the file declares not nullable                 | `IncompatibleSchemaException` |
+| a column of another type, or nullable where the file's is not | `IncompatibleSchemaException` |
 
 ```php
 <?php
 
-use function Flow\ETL\DSL\{data_frame, from_array};
-use function Flow\Floe\DSL\to_floe;
+use Flow\ETL\Column\PhpBackend;
+use Flow\Floe\FloeWriter;
+use function Flow\ETL\DSL\{array_to_rows, int_schema, schema, str_schema};
+use function Flow\Filesystem\DSL\{native_local_filesystem, path};
 
-data_frame()
-    ->read(from_array([['id' => 1], ['id' => 'AB-1']]))
-    ->write(to_floe(__DIR__ . '/orders.floe'))
-    ->run();
+$writer = new FloeWriter(native_local_filesystem(), schema(int_schema('id')), new PhpBackend());
+$writer->create(path(__DIR__ . '/orders.floe'));
+$writer->write(array_to_rows([['id' => 1]], schema(int_schema('id')), new PhpBackend()));
+$writer->write(array_to_rows([['id' => 'AB-1']], schema(str_schema('id')), new PhpBackend()));
 ```
 
-The first batch fixes the file's schema to `integer`, so the second one throws:
-
 ```
-Floe write session schema is fixed and this batch does not fit it: column "id" (row 0):
-could not convert 'AB-1' (string) to integer.
+Floe write session schema is fixed and this batch does not fit it:   Mismatched Definitions:
+    |-- expected: id<integer>, given: id<string>
 ```
 
-Both checks throw `IncompatibleSchemaException` before any bytes reach the destination, so a rejected
-batch leaves the file readable. Other messages take the same shape:
-
-```
-column "amount" (row 0): could not convert null to string, column is not nullable
-new column "email"
-```
-
-`validate_data: false` skips the per-value check only. The column-set check still runs, so silent
-column loss cannot be unlocked. This mirrors parquet-java's `ParquetWriter::withValidation()`.
-
-Two behaviours differ from other columnar formats on purpose:
-
-- **Absent is not null.** A row that omits a column writes an absent flag and reads back as null;
-  a row that carries an explicit `null` in a non-nullable column is rejected. Parquet turns a missing
-  optional field into a null and rejects a missing required one; Arrow cannot omit a column at all.
-- **An int is not a float.** An integer value in a `float` column is rejected. pyarrow, parquet-java
-  and Avro all widen it silently.
+The check runs before any bytes reach the destination, so a rejected batch leaves the file readable.
 
 ## On-Disk Layout
 

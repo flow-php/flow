@@ -1,1 +1,2 @@
-Extract data from Parquet files. Parquet is a columnar storage format optimized for analytical workloads, offering efficient compression and fast read performance for large datasets.
+`from_parquet()` reads a columnar Parquet file. The schema comes from the file itself; `columns:`
+limits which columns are decoded at all.

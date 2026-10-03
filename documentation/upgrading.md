@@ -1397,6 +1397,30 @@ config_builder()->cacheDir($dir);
 Build a cache yourself only for a custom serializer or filesystem; it has no default serializer any more and takes it
 from its caller, e.g. `filesystem_cache(new FloeSerializer(new AdaptiveBackend()), $dir)`.
 
+### 127) `flow-php/filesystem` - `Path::uri()` of a local file keeps the root slash
+
+|                                                                | Before                   | After                     |
+|----------------------------------------------------------------|--------------------------|---------------------------|
+| `path('/data/orders.csv')->uri()`                              | `file://data/orders.csv` | `file:///data/orders.csv` |
+| `path('/')->uri()`                                             | `file://`                | `file:///`                |
+| `_input_file_uri`, `explain()` `Source:` of a local file       | `file://data/orders.csv` | `file:///data/orders.csv` |
+
+Other protocols are unchanged (`memory://path`, `s3://bucket/key`). Windows drive paths stay `file://C:/...`.
+
+### 128) `flow-php/parquet` - `Option::BYTE_ARRAY_TO_STRING` removed
+
+| Before                                                | After   |
+|-------------------------------------------------------|---------|
+| `$options->set(Option::BYTE_ARRAY_TO_STRING, $value)` | removed |
+
+### 129) `flow-php/etl`, `flow-php/parquet`, adapters - a mismatched `flow_php` or arrow extension is refused
+
+| Before                                                                              | After                                                                                      |
+|-------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
+| an extension built for another package version: `Class "...\RustBackend" not found` | `RuntimeException` `The loaded flow_php extension (<version>, ABI <n>) does not match ...` |
+
+Rebuild or upgrade the extension with the package, or stop loading it.
+
 ---
 
 ## Upgrading from 0.43.x to 0.44.x

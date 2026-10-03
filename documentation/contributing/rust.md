@@ -5,13 +5,14 @@
 This document describes how to develop the two Rust PHP extensions in this monorepo, both written with the
 [ext-php-rs](https://github.com/extphprs/ext-php-rs) framework.
 
-| Extension | Package | What it provides |
-|---|---|---|
-| `arrow-ext` | `flow-php/arrow-ext` | Parquet reader and writer powered by the [Apache Arrow](https://arrow.apache.org/) Rust ecosystem, exposed as `Flow\Parquet\Engine\RustParquetEngine` |
+| Extension      | Package                 | What it provides                                                                                                                                                             |
+|----------------|-------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `arrow-ext`    | `flow-php/arrow-ext`    | Parquet reader and writer powered by the [Apache Arrow](https://arrow.apache.org/) Rust ecosystem, exposed as `Flow\Parquet\Engine\RustParquetEngine`                        |
 | `flow-php-ext` | `flow-php/flow-php-ext` | The native column backend (`Flow\ETL\Column\RustBackend`, `RustColumn`, `RustColumnBuilder` over Apache Arrow arrays) and the Rust CSV / JSON / Parquet sources and encoders |
 
-Both are optional. The pure-PHP implementations in `flow-php/etl` remain the canonical behaviour reference, and Flow
-routes to the native code automatically when the extension is loaded.
+Both are optional. The pure-PHP implementations in `flow-php/etl` and `flow-php/parquet` remain the behaviour
+reference; every contract has a `Php*`, a `Rust*` and an `Adaptive*` class that picks the Rust one when the extension
+is loaded.
 
 For usage documentation, see [Arrow Extension](/documentation/components/extensions/arrow-ext.md) and
 [Flow PHP Extension](/documentation/components/extensions/flow-php-ext.md).
@@ -42,13 +43,20 @@ src/extension/arrow-ext/
 ├── Makefile                # Build orchestration
 ├── src/                    # Rust source code
 │   ├── lib.rs              # Extension entry point, module registration
-│   ├── parquet/            # Parquet reader, writer, type conversion
-│   └── stream/             # PHP stream adapters (Read/Write traits)
+│   ├── interfaces.rs       # Flow\Parquet\{ParquetEngine, ParquetFileReader, ParquetFileWriter}, registered at MINIT
+│   ├── parquet/            # RustParquetEngine, readers, writer, canonical Arrow types, Arrow C Data batches
+│   ├── thrift.rs           # Footer bytes as the PHP ThriftModel objects
+│   ├── render.rs           # Parquet refusals as the Flow\Parquet exceptions
+│   ├── php.rs              # PHP engine helpers (class entries, hashtables, calls)
+│   ├── values.rs           # PHP values through the engine's C date API
+│   ├── alloc.rs            # Counting global allocator
+│   └── exception.rs        # Exception mapping
 ├── php/                    # PHP stubs for static analysis (used when extension is not loaded)
-│   └── Flow/Arrow/
+│   └── Flow/
+│       ├── Arrow/
+│       └── Parquet/Engine/
 ├── tests/
-│   ├── phpt/               # PHPT test files
-│   └── fixtures/           # Test parquet files
+│   └── phpt/               # PHPT test files
 └── ext/
     └── config.m4           # PIE compatibility
 
@@ -69,9 +77,13 @@ src/extension/flow-php-ext/
 │   ├── render.rs           # flow-batch-frame refusals as the PHP messages
 │   ├── cast.rs             # Value casting
 │   ├── json_check.rs       # JSON validation shared by casting and CSV inference
+│   ├── batch_columns.rs    # BatchColumns: one native builder per definition, shared by the CSV and JSON sources
+│   ├── source.rs           # Shared stream loop of the Rust open sources
 │   ├── csv/                # CSV tokenizer, RustCSVOpenSource, RustCSVEncoder, schema-inference fold
 │   ├── json/               # RustJsonOpenSource, RustJsonEncoder
+│   ├── text/               # Column values as the writers render them (TextValues)
 │   ├── parquet/            # RustParquetOpenSource, RustParquetOpenSink
+│   ├── arrow_c.rs          # Batches across the Arrow C Data Interface (arrow-ext)
 │   ├── ctx.rs              # Request-scoped context and engine helpers
 │   ├── globals.rs          # Module globals, RINIT/RSHUTDOWN
 │   ├── alloc.rs            # Counting global allocator (allocatedBytes())
@@ -119,13 +131,13 @@ nix-shell --run "just test --testsuite=etl-unit"                     # flow-php-
 
 ## Make Targets
 
-| Target    | Description                        |
-|-----------|------------------------------------|
-| `build`   | Build the extension (cargo + copy) |
-| `test`    | Build, then run PHPT tests         |
+| Target    | Description                                      |
+|-----------|--------------------------------------------------|
+| `build`   | Build the extension (cargo + copy)               |
+| `test`    | Build, then run PHPT tests                       |
 | `install` | Copy the built module into PHP's `extension_dir` |
-| `clean`   | Remove build artifacts             |
-| `rebuild` | Full clean + build                 |
+| `clean`   | Remove build artifacts                           |
+| `rebuild` | Full clean + build                               |
 
 The two PHPT runners differ in two ways:
 
@@ -147,6 +159,23 @@ nix-shell --arg with-rust true --run "cd src/extension/flow-php-ext && make buil
 
 This covers `crates/flow-batch-frame`, which the flow-php-ext build compiles from the same directory.
 
+## Extension ABI
+
+Each extension registers an `int` constant with the version of the contract its PHP package expects. The PHP package
+holds the same number:
+
+| Extension | Constant (Rust `lib.rs`) | PHP side                                  |
+|-----------|--------------------------|-------------------------------------------|
+| flow_php  | `FLOW_PHP_ABI`           | `Flow\ETL\FlowPhpExtension::ABI`          |
+| arrow     | `FLOW_ARROW_ABI`         | `Flow\Parquet\Engine\ArrowExtension::ABI` |
+
+Bump both, in one change, whenever a class or interface the extension registers changes. Every `Adaptive*` pick calls
+`available()`: an extension that is loaded with another ABI, or with none, is refused with a `RuntimeException`
+naming the extension and its version. phpt `099` (flow_php) and `054` (arrow) pin that the two numbers are equal.
+
+The PHP interfaces an extension also registers are guarded by `interface_exists(X::class, false)`, so an extension
+that does not register one still gets the PHP declaration and fails at the ABI check, not with "Class not found".
+
 ## The flow-batch-frame crate
 
 `src/extension/flow-php-ext/crates/flow-batch-frame` holds Flow's batch layout in pure Rust: one column's buffers in the
@@ -157,8 +186,8 @@ canonical form of `Column::encode()` and back, and the BATCH frame body around t
 nix-shell --arg with-rust true --run "cd src/extension/flow-php-ext/crates/flow-batch-frame && cargo test"
 ```
 
-arrow-ext will hold a copy of the crate; the two copies stay identical, and each is pinned to the PHP reference by its own
-tests.
+arrow-ext does not depend on the crate. Its `canonical_type()` (`src/parquet/canonical.rs`) must produce the Arrow
+types of flow-batch-frame's `kind::data_type()`, pinned by flow-php-ext phpt 091.
 
 ## Releasing
 

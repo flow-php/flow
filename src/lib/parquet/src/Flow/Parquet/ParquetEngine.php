@@ -9,9 +9,9 @@ use Flow\Filesystem\SourceStream;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Schema;
 
-use function extension_loaded;
+use function interface_exists;
 
-if (extension_loaded('arrow')) {
+if (interface_exists(ParquetEngine::class, false)) {
     return;
 }
 

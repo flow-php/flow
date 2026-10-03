@@ -1,1 +1,3 @@
-Join datasets that are too large to fit in memory. Unlike regular [join](/joins/join/#example), joinEach fetches only the relevant rows from storage for each batch, making it suitable for large right-side datasets.
+`joinEach()` asks a `DataFrameFactory` for the right side once per left batch, so the right side is
+never loaded whole - here, the rows the database does not know about yet (`Join::left_anti`). Use
+it when the right side is too large for [join()](/joins/join/#example).

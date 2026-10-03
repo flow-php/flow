@@ -8,6 +8,8 @@ use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Column\ValueColumn;
 use Flow\ETL\Exception\ColumnMismatchException;
+use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\FlowPhpExtension;
 use Flow\ETL\Tests\Double\ForeignColumnStub;
 use Flow\ETL\Tests\Mother\ColumnMother;
 use PHPUnit\Framework\TestCase;
@@ -76,5 +78,13 @@ final class AdaptiveBackendTest extends TestCase
             (new PhpBackend())->decode(int_schema('a', nullable: true), $buffers, 2, 1),
             (new AdaptiveBackend())->decode(int_schema('a', nullable: true), $buffers, 2, 1),
         );
+    }
+
+    public function test_a_flow_php_of_another_abi_is_refused(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('does not match flow-php/etl');
+
+        new AdaptiveBackend(new FlowPhpExtension(true, FlowPhpExtension::ABI + 1, '0.46.0'));
     }
 }

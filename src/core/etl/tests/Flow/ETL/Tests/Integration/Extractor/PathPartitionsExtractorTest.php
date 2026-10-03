@@ -103,7 +103,7 @@ final class PathPartitionsExtractorTest extends FlowIntegrationTestCase
                 [
                     'path' =>
                         'file://'
-                            . ltrim(str_replace('\\', '/', __DIR__), '/')
+                            . str_replace('\\', '/', __DIR__)
                             . '/Fixtures/multi_partitioned/year=2022/month=12/day=30/file.txt',
                     'partitions' => ['year' => '2022', 'month' => '12', 'day' => '30'],
                     'day' => '30',
@@ -113,7 +113,7 @@ final class PathPartitionsExtractorTest extends FlowIntegrationTestCase
                 [
                     'path' =>
                         'file://'
-                            . ltrim(str_replace('\\', '/', __DIR__), '/')
+                            . str_replace('\\', '/', __DIR__)
                             . '/Fixtures/multi_partitioned/year=2022/month=12/day=31/file.txt',
                     'partitions' => ['year' => '2022', 'month' => '12', 'day' => '31'],
                     'day' => '31',
@@ -123,7 +123,7 @@ final class PathPartitionsExtractorTest extends FlowIntegrationTestCase
                 [
                     'path' =>
                         'file://'
-                            . ltrim(str_replace('\\', '/', __DIR__), '/')
+                            . str_replace('\\', '/', __DIR__)
                             . '/Fixtures/multi_partitioned/year=2023/month=1/day=1/file.txt',
                     'partitions' => ['year' => '2023', 'month' => '1', 'day' => '1'],
                     'day' => '1',
@@ -133,7 +133,7 @@ final class PathPartitionsExtractorTest extends FlowIntegrationTestCase
                 [
                     'path' =>
                         'file://'
-                            . ltrim(str_replace('\\', '/', __DIR__), '/')
+                            . str_replace('\\', '/', __DIR__)
                             . '/Fixtures/multi_partitioned/year=2023/month=1/day=2/file.txt',
                     'partitions' => ['year' => '2023', 'month' => '1', 'day' => '2'],
                     'day' => '2',
@@ -143,7 +143,7 @@ final class PathPartitionsExtractorTest extends FlowIntegrationTestCase
                 [
                     'path' =>
                         'file://'
-                            . ltrim(str_replace('\\', '/', __DIR__), '/')
+                            . str_replace('\\', '/', __DIR__)
                             . '/Fixtures/multi_partitioned/year=2023/month=1/day=3/file.txt',
                     'partitions' => ['year' => '2023', 'month' => '1', 'day' => '3'],
                     'day' => '3',
@@ -153,7 +153,7 @@ final class PathPartitionsExtractorTest extends FlowIntegrationTestCase
                 [
                     'path' =>
                         'file://'
-                            . ltrim(str_replace('\\', '/', __DIR__), '/')
+                            . str_replace('\\', '/', __DIR__)
                             . '/Fixtures/multi_partitioned/year=2023/month=1/day=4/file.txt',
                     'partitions' => ['year' => '2023', 'month' => '1', 'day' => '4'],
                     'day' => '4',
@@ -163,7 +163,7 @@ final class PathPartitionsExtractorTest extends FlowIntegrationTestCase
                 [
                     'path' =>
                         'file://'
-                            . ltrim(str_replace('\\', '/', __DIR__), '/')
+                            . str_replace('\\', '/', __DIR__)
                             . '/Fixtures/multi_partitioned/year=2023/month=1/day=5/file.txt',
                     'partitions' => ['year' => '2023', 'month' => '1', 'day' => '5'],
                     'day' => '5',

@@ -9,7 +9,7 @@ require __DIR__ . '/vendor/autoload.php';
 
 $path = __DIR__ . '/data/orders.csv';
 
-// no schema given: Flow reads the file's own description of itself
+// no schema given: the reader infers one from a sample of the file
 echo "inferred:\n" . schema_to_ascii(
     data_frame()->read(from_csv($path))->select('order_id', 'discount')->schema(),
 );

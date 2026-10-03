@@ -28,6 +28,10 @@ pub extern "C" fn php_module_info(_module: *mut ModuleEntry) {
     info_table_end!();
 }
 
+/// The contract version flow-php/parquet expects (`Flow\Parquet\Engine\ArrowExtension::ABI`); both change together
+/// whenever a registered class or interface changes.
+const FLOW_ARROW_ABI: i64 = 1;
+
 /// # Safety
 ///
 /// Invoked by the PHP/Zend engine during module startup. Must only be called by
@@ -46,6 +50,7 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     module
         .version(env!("ARROW_VERSION"))
         .info_function(php_module_info)
+        .constant(("FLOW_ARROW_ABI", FLOW_ARROW_ABI, &[]))
         .globals(&php::GLOBALS)
         .request_startup_function(php::request_startup)
         .request_shutdown_function(php::request_shutdown)

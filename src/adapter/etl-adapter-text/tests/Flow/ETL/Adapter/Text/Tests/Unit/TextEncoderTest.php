@@ -86,9 +86,12 @@ final class TextEncoderTest extends FlowTestCase
     public function test_encode_throws_when_a_row_has_more_than_one_column(): void
     {
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Text data loader supports only a single entry rows, and you have 2 rows.');
+        $this->expectExceptionMessage('Text data loader writes at most one column, the batch has 3 columns.');
 
-        (new TextEncoder())->encode(array_to_rows([['a' => 1, 'b' => 2]], schema(int_schema('a'), int_schema('b'))));
+        (new TextEncoder())->encode(array_to_rows(
+            [['a' => 1, 'b' => 2, 'c' => 3], ['a' => 4, 'b' => 5, 'c' => 6]],
+            schema(int_schema('a'), int_schema('b'), int_schema('c')),
+        ));
     }
 
     public function test_encode_of_an_empty_batch_with_more_than_one_column_returns_no_lines(): void

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet;
 
+use Flow\ETL\FlowPhpExtension;
 use Flow\ETL\Loader\File\FileSink;
 use Flow\ETL\Rows;
 use Flow\Filesystem\DestinationStream;
@@ -14,8 +15,6 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
-
-use function extension_loaded;
 
 final readonly class AdaptiveParquetOpenSink implements FileSink, ParquetOpenSink
 {
@@ -31,7 +30,9 @@ final readonly class AdaptiveParquetOpenSink implements FileSink, ParquetOpenSin
         Compressions $compressions,
         Options $options,
         ?ParquetEngine $engine = null,
+        ?FlowPhpExtension $extension = null,
     ) {
+        $native = ($extension ?? FlowPhpExtension::detect())->available();
         $file = ($engine ?? new AdaptiveParquetEngine(ByteOrder::LITTLE_ENDIAN, $options))->openForWrite(
             $stream,
             $schema,
@@ -39,7 +40,7 @@ final readonly class AdaptiveParquetOpenSink implements FileSink, ParquetOpenSin
             $options,
         );
 
-        $this->sink = extension_loaded('flow_php') && $file instanceof RustParquetFileWriter
+        $this->sink = $native && $file instanceof RustParquetFileWriter
             ? new RustParquetOpenSink($file)
             : new PhpParquetOpenSink($file, new ParquetEncoder($schema));
     }

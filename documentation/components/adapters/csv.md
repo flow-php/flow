@@ -37,7 +37,7 @@ $rows = data_frame()
 
 ```
 header row  [' id ', '', 'name']   →  columns ['id', 'e01', 'name']   (trimmed, a blank cell named e + its position)
-record      ['1', 'a']             →  ['id' => '1', 'e01' => 'a', 'name' => null]   (a cell the record lacks is null)
+record      ['1', 'a']             →  ['id' => 1, 'e01' => 'a', 'name' => null]   (a cell the record lacks is null)
 record      ['1', '', 'x']         →  'e01' => null   (a present '' is null; `withEmptyToNull(false)` keeps it '')
 ```
 
@@ -79,7 +79,7 @@ id,active,price,at,days,labels,size,meta
 | `null`, `''`               | an empty field - `from_csv()` reads both back as `null` unless `withEmptyToNull(false)`                                            |
 | `datetime`, `date`         | `withDateTimeFormat()` (default `DATE_ATOM`) in the column zone, `withDateFormat()` (default `Y-m-d`)                              |
 | `time`                     | microseconds                                                                                                                       |
-| `list`, `map`, `structure` | JSON: a list is `[…]`, a map and a structure are always `{…}`; every element is written as a column of its type would be           |
+| `list`, `map`, `structure` | JSON: a list is `[...]`, a map and a structure are always `{...}`; every element is written as a column of its type would be       |
 | `json`                     | the stored text                                                                                                                    |
 
 Floats are rendered under `serialize_precision = -1`. When the ini holds another value the writer sets it for the

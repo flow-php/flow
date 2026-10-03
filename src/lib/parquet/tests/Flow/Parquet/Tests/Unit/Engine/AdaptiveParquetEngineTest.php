@@ -8,10 +8,12 @@ use Flow\Filesystem\Stream\MemorySourceStream;
 use Flow\Filesystem\Stream\StringDestinationStream;
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Engine\AdaptiveParquetEngine;
+use Flow\Parquet\Engine\ArrowExtension;
 use Flow\Parquet\Engine\PhpParquetFileReader;
 use Flow\Parquet\Engine\PhpParquetFileWriter;
 use Flow\Parquet\Engine\RustParquetFileReader;
 use Flow\Parquet\Engine\RustParquetFileWriter;
+use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Schema;
@@ -96,5 +98,28 @@ final class AdaptiveParquetEngineTest extends TestCase
                 new MemorySourceStream(MemoryParquetFile::threeRowGroups()),
             ),
         );
+    }
+
+    public function test_an_arrow_extension_of_another_abi_is_refused(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('does not match flow-php/parquet');
+
+        new AdaptiveParquetEngine(extension: new ArrowExtension(true, ArrowExtension::ABI + 1, '0.46.0'));
+    }
+
+    public function test_without_arrow_files_are_opened_by_the_php_engine_whatever_is_loaded(): void
+    {
+        $filesystem = memory_filesystem();
+
+        static::assertInstanceOf(PhpParquetFileWriter::class, (new AdaptiveParquetEngine(extension: new ArrowExtension(
+            false,
+            null,
+        )))->openForWrite(
+            $filesystem->writeTo(path('memory://out.parquet')),
+            Schema::with(FlatColumn::int32('id')),
+            Compressions::UNCOMPRESSED,
+            new Options(),
+        ));
     }
 }

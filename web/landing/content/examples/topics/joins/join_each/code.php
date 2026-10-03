@@ -36,10 +36,7 @@ $apiExtractor = new class($apiSchema) implements Extractor {
 
     public function withSchema(Schema $schema): static
     {
-        $clone = clone $this;
-        $clone->schema = $schema;
-
-        return $clone;
+        return new static($schema);
     }
 };
 

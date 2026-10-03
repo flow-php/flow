@@ -25,7 +25,6 @@ final class Options
         $this->options = [
             Option::ARROW_BATCH_SIZE->name => 1024,
             Option::ARROW_WRITE_BATCH_SIZE->name => 1000,
-            Option::BYTE_ARRAY_TO_STRING->name => true,
             Option::INT_96_AS_DATETIME->name => true,
             Option::PAGE_MAXIMUM_ROWS_COUNT->name => 1000,
             Option::PAGE_SIZE_BYTES->name => SizeUnits::KiB_SIZE * 128,

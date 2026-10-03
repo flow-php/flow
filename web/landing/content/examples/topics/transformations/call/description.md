@@ -1,1 +1,2 @@
-Apply any PHP callable (function or method) to your data. This is useful when no built-in scalar function exists for your specific transformation needs.
+`call()` applies any PHP callable to a column when no built-in function fits. The callable's result
+type is declared (`type_list(type_integer())`), so the schema knows it before a row is read.

@@ -8,9 +8,9 @@ use Flow\Parquet\ParquetFile\Metadata;
 use Flow\Parquet\ParquetFile\Schema;
 use Iterator;
 
-use function extension_loaded;
+use function interface_exists;
 
-if (extension_loaded('arrow')) {
+if (interface_exists(ParquetFileReader::class, false)) {
     return;
 }
 

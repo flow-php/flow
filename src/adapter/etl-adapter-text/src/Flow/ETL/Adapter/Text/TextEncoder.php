@@ -36,7 +36,7 @@ final class TextEncoder
 
         if (count($definitions) > 1) {
             throw new RuntimeException(sprintf(
-                'Text data loader supports only a single entry rows, and you have %d rows.',
+                'Text data loader writes at most one column, the batch has %d columns.',
                 count($definitions),
             ));
         }

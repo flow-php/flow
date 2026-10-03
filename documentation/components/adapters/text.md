@@ -29,31 +29,29 @@ For detailed installation instructions, see the [installation page](/documentati
 ```php
 <?php
 
-use Flow\ETL\DSL\Text;
-use Flow\ETL\Flow;
+use function Flow\ETL\Adapter\Text\from_text;
+use function Flow\ETL\DSL\data_frame;
 
-$rows = (new Flow())
-    ->read(from_text(path))
+$rows = data_frame()
+    ->read(from_text(__DIR__ . '/file.txt'))
     ->fetch();
 ```
 
+Each line is one row with a single `string` column `text`.
+
 ## Loader
 
-> :warning: Heads up, TextLoader expects rows to have single entry in order to properly write them into file.
+The batch must have at most one column.
 
 ```php
 <?php
 
-use function Flow\ETL\DSL\{array_to_rows, schema, str_schema};
+use function Flow\ETL\Adapter\Text\to_text;
+use function Flow\ETL\DSL\{data_frame, from_array};
 
-(new Flow())
-    ->process(
-        array_to_rows(
-            [['name' => 'Norbert'], ['name' => 'Tomek'], ['name' => 'Dawid']],
-            schema(str_schema('name')),
-        )
-    )
-    ->load(to_text($path))
+data_frame()
+    ->read(from_array([['name' => 'Norbert'], ['name' => 'Tomek'], ['name' => 'Dawid']]))
+    ->write(to_text(__DIR__ . '/names.txt'))
     ->run();
 ```
 

@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\CSV;
 
 use Flow\ETL\Column\Backend;
 use Flow\ETL\Extractor\File\SourceFile;
+use Flow\ETL\FlowPhpExtension;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\ColumnTypes;
 use Flow\ETL\Schema\Inference\SchemaInference;
@@ -14,14 +15,17 @@ use Flow\Types\Type\TypeNarrower;
 use Iterator;
 use Throwable;
 
-use function extension_loaded;
-
 final readonly class AdaptiveCSVOpenSource implements CSVOpenSource
 {
     private CSVOpenSource $source;
 
-    public function __construct(Filesystem $filesystem, SourceFile $source, CSVReadOptions $options)
-    {
+    public function __construct(
+        Filesystem $filesystem,
+        SourceFile $source,
+        CSVReadOptions $options,
+        ?FlowPhpExtension $extension = null,
+    ) {
+        $native = ($extension ?? FlowPhpExtension::detect())->available();
         $stream = $filesystem->readFrom($source->path);
 
         // the callers' try/finally starts only after the constructor returns, and detection reads the stream
@@ -33,7 +37,7 @@ final readonly class AdaptiveCSVOpenSource implements CSVOpenSource
                 $options->escape ?? $detected->escape,
             );
 
-            $this->source = extension_loaded('flow_php')
+            $this->source = $native
                 ? new RustCSVOpenSource(
                     $stream,
                     $dialect->separator,

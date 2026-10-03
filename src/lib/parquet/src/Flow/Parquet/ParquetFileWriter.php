@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Parquet;
 
-use function extension_loaded;
+use function interface_exists;
 
-if (extension_loaded('arrow')) {
+if (interface_exists(ParquetFileWriter::class, false)) {
     return;
 }
 

@@ -292,6 +292,17 @@ df()
     ->run();
 ```
 
+### Bound values
+
+`xml`, `xml_element`, `html` and `html_element` columns are bound as their markup text. An `xml` document is bound as
+its root element only: the declaration, a DOCTYPE, and comments or processing instructions outside the root are
+dropped.
+
+| Column        | Value                                              | Bound                  |
+|---------------|----------------------------------------------------|------------------------|
+| `xml`         | `<?xml version="1.0"?><!-- c --><root><a/></root>` | `<root><a/></root>`    |
+| `xml_element` | `<a b="1"><c/></a>`                                | `<a b="1"><c></c></a>` |
+
 ### Insert with Skip Conflicts (ON CONFLICT DO NOTHING)
 
 Skip rows that would cause a constraint violation:
@@ -425,6 +436,8 @@ use Flow\ETL\Adapter\PostgreSql\PostgreSqlTransaction;
 use Flow\ETL\Sink\Transactional;
 use Flow\PostgreSql\QueryBuilder\Transaction\IsolationLevel;
 
+use function Flow\ETL\Adapter\PostgreSql\to_pgsql_table;
+
 new Transactional(
     (new PostgreSqlTransaction($client))->withIsolationLevel(IsolationLevel::SERIALIZABLE),
     to_pgsql_table($client, 'users'),
@@ -433,13 +446,13 @@ new Transactional(
 
 ## Loader DSL Functions Reference
 
-| Function                                       | Description                                               |
-|------------------------------------------------|-----------------------------------------------------------|
-| `to_pgsql_table($client, $table)`              | Create a PostgreSQL loader for a table                    |
-| `to_pgsql_transaction($client, ...$sinks)`     | Write sinks, every delivery inside a transaction          |
-| `pgsql_insert_options(...)`                    | Configure insert behavior (conflicts, upsert)             |
-| `pgsql_update_options($primaryKeys)`           | Configure update behavior (primary key columns)           |
-| `pgsql_delete_options($primaryKeys)`           | Configure delete behavior (primary key columns)           |
+| Function                                   | Description                                      |
+|--------------------------------------------|--------------------------------------------------|
+| `to_pgsql_table($client, $table)`          | Create a PostgreSQL loader for a table           |
+| `to_pgsql_transaction($client, ...$sinks)` | Write sinks, every delivery inside a transaction |
+| `pgsql_insert_options(...)`                | Configure insert behavior (conflicts, upsert)    |
+| `pgsql_update_options($primaryKeys)`       | Configure update behavior (primary key columns)  |
+| `pgsql_delete_options($primaryKeys)`       | Configure delete behavior (primary key columns)  |
 
 ## Schema Conversion
 
@@ -515,7 +528,7 @@ $schema = schema(
 | `PostgreSqlMetadata::indexUnique($name, $position)` | Include the column in a named `UNIQUE` constraint, optionally at an explicit position |
 | `PostgreSqlMetadata::index($name, $position)`       | Include the column in a named index, optionally at an explicit position               |
 | `PostgreSqlMetadata::identity($generation)`         | Make the column an identity column                                                    |
-| `PostgreSqlMetadata::generated($expr)` | Make the column a generated column                    |
+| `PostgreSqlMetadata::generated($expr)`              | Make the column a generated column                                                    |
 
 Columns sharing the same primary key, unique constraint, or index name are grouped together, so composite keys are
 expressed by attaching the same name to several definitions.
@@ -554,6 +567,10 @@ Because each index is tracked under its own metadata key, a single column can be
 `merge()` to attach more than one:
 
 ```php
+use Flow\ETL\Adapter\PostgreSql\PostgreSqlMetadata;
+
+use function Flow\ETL\DSL\{datetime_schema, int_schema, schema};
+
 $schema = schema(
     int_schema('id', metadata: PostgreSqlMetadata::primaryKey('pk_orders')
         ->merge(PostgreSqlMetadata::index('orders_created_at_id_idx', position: 2))),
@@ -608,7 +625,7 @@ $table = to_pgsql_schema_table(
 
 ### Schema Conversion DSL Functions Reference
 
-| Function                                                              | Description                                            |
-|-----------------------------------------------------------------------|--------------------------------------------------------|
-| `to_pgsql_schema_table($schema, $tableName, $databaseSchema, $typesMap)` | Convert a Flow `Schema` into a PostgreSQL `Table`   |
-| `pgsql_table_to_flow_schema($table, $typesMap)`                       | Convert a PostgreSQL `Table` into a Flow `Schema`      |
+| Function                                                                 | Description                                       |
+|--------------------------------------------------------------------------|---------------------------------------------------|
+| `to_pgsql_schema_table($schema, $tableName, $databaseSchema, $typesMap)` | Convert a Flow `Schema` into a PostgreSQL `Table` |
+| `pgsql_table_to_flow_schema($table, $typesMap)`                          | Convert a PostgreSQL `Table` into a Flow `Schema` |

@@ -23,11 +23,9 @@ aligning perfectly with the robust and adaptable nature of the Flow PHP ecosyste
 
 For detailed installation instructions, see the [installation page](/documentation/installation/packages/etl-adapter-xml.md).
 
-## Extractor - XMLExtractor
+## Extractor
 
-Memory safe XML extractor
-
-`xml/simple_items.xml`
+`simple_items.xml`
 
 ```xml
 <root>
@@ -35,49 +33,37 @@ Memory safe XML extractor
         <item><id>1</id></item>
         <item><id>2</id></item>
         <item><id>3</id></item>
-        <item><id>4</id></item>
-        <item><id>5</id></item>
-        <item><id>6</id></item>
     </items>
 </root>
 ```
 
-```php 
+```php
 <?php
 
-(new Flow())
-    ->read(XML::from(__FLOW_DATA__ . '/simple_items.xml', 'root/items/item'))
-    ->write(To::output(false))
-    ->run()
-;
-```
+use function Flow\ETL\Adapter\XML\from_xml;
+use function Flow\ETL\DSL\{data_frame, ref, to_output};
 
-Above code will generate Rows with 5 entries like the one below:
+data_frame()
+    ->read(from_xml(__DIR__ . '/simple_items.xml')->withXMLNodePath('root/items/item'))
+    ->withEntry('id', ref('node')->xpath('id')->domElementValue())
+    ->write(to_output(truncate: false))
+    ->run();
+```
 
 ```shell
-+----------------------------------------------+
-|                                          row |
-+----------------------------------------------+
-| <?xml version="1.0"?><item><id>1</id></item> |
-| <?xml version="1.0"?><item><id>2</id></item> |
-| <?xml version="1.0"?><item><id>3</id></item> |
-| <?xml version="1.0"?><item><id>4</id></item> |
-| <?xml version="1.0"?><item><id>5</id></item> |
-| <?xml version="1.0"?><item><id>6</id></item> |
-+----------------------------------------------+
++-------------------------+----+
+|                    node | id |
++-------------------------+----+
+| <item><id>1</id></item> |  1 |
+| <item><id>2</id></item> |  2 |
+| <item><id>3</id></item> |  3 |
++-------------------------+----+
+3 rows
 ```
 
-Each entry will be an XMLEntry type.
-From there you can use built in expressions to extract data from XML.
-
-- `ref('row')->xpath('...');`
-- `ref('row')->domNodeAttribute('...');`
-- `ref('row')->domNodeValue('...');`
-
-When working with collections XPath will return an ListEntry with XMLEntries inside.
-From there you can for example unpack or expand them.
-
-For more examples please look into `/examples/topics/xml` directory in [flow monorepo](https://github.com/flow-php/flow)
+The file is streamed. Every node at `withXMLNodePath()` is one row with a single `xml` column `node`. Read it with
+`xpath()` (returns a `list<xml_element>`), `domElementValue()`, `domElementAttributeValue()` and the other
+`domElement*()` functions.
 
 ## Loader
 

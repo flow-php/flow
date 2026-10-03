@@ -8,12 +8,12 @@ use Flow\ETL\Adapter\JSON\JSONMachine\JsonFileReader;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonFormat;
 use Flow\ETL\Column\Backend;
 use Flow\ETL\Extractor\File\SourceFile;
+use Flow\ETL\FlowPhpExtension;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Filesystem;
 use Iterator;
 use Throwable;
 
-use function extension_loaded;
 use function str_starts_with;
 use function strlen;
 use function strspn;
@@ -35,8 +35,9 @@ final readonly class AdaptiveJsonOpenSource implements JsonOpenSource
         JsonFormat $format,
         ?string $pointer,
         SourceFile $source,
+        ?FlowPhpExtension $extension = null,
     ) {
-        if (!extension_loaded('flow_php') || $pointer !== null) {
+        if (!($extension ?? FlowPhpExtension::detect())->available() || $pointer !== null) {
             $this->source = new PhpJsonOpenSource($reader, $source);
 
             return;

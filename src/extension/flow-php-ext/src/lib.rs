@@ -28,6 +28,10 @@ use ext_php_rs::prelude::*;
 use ext_php_rs::zend::ModuleEntry;
 use ext_php_rs::{info_table_end, info_table_row, info_table_start};
 
+/// The contract version flow-php/etl expects (`Flow\ETL\FlowPhpExtension::ABI`); both change together whenever a
+/// registered class or interface changes.
+const FLOW_PHP_ABI: i64 = 1;
+
 pub extern "C" fn php_module_info(_module: *mut ModuleEntry) {
     info_table_start!();
     info_table_row!("flow_php.enabled", "true");
@@ -53,6 +57,7 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     module
         .version(env!("FLOW_PHP_EXT_VERSION"))
         .info_function(php_module_info)
+        .constant(("FLOW_PHP_ABI", FLOW_PHP_ABI, &[]))
         .globals(&globals::GLOBALS)
         .request_startup_function(globals::request_startup)
         .request_shutdown_function(globals::request_shutdown)

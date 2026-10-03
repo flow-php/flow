@@ -51,11 +51,11 @@ Row-based format:
 
 -----------------
 
-| ID | Name  | Age |
-|----|-------|-----|
-| 1  | Alice | 20  |
-| 2  | Bob   | 25  |
-| 3  | Carol | 30  |
+| ID  | Name  | Age |
+|-----|-------|-----|
+| 1   | Alice | 20  |
+| 2   | Bob   | 25  |
+| 3   | Carol | 30  |
 
 Column-based format:
 --------------------
@@ -115,10 +115,11 @@ $reader = new Reader();
 > `new Reader()` uses the adaptive engine. See [Engine System](#engine-system) for how to explicitly choose the Arrow or
 > PHP engine.
 
-The Reader accepts two arguments:
+The Reader accepts three arguments:
 
 - `$byteOrder` - by default set to `ByteOrder::LITTLE_ENDIAN`
 - `$options` - a set of options that can be used to configure the reader.
+- `$engine` - by default `AdaptiveParquetEngine`
 
 All available options are described in [Option](/src/lib/parquet/src/Flow/Parquet/Option.php) enum.
 
@@ -126,7 +127,8 @@ All available options are described in [Option](/src/lib/parquet/src/Flow/Parque
 
 ### Reader Options
 
-- `INT_96_AS_DATETIME` - default: `true` - if set to `true` then `INT96` values will be converted to `DateTime` objects.
+- `INT_96_AS_DATETIME` - default: `true` - if set to `true` then `INT96` values are read as `DateTimeImmutable`,
+  floored to microseconds.
 
 ### Reading a file
 
@@ -141,13 +143,16 @@ $file = $reader->read('path/to/file.parquet');
 $file = $reader->readStream(\fopen('path/to/file.parquet', 'rb'));
 ```
 
-At this point, nothing is read yet. We just created a file object.
+`RustParquetEngine` reads the footer when the file is opened, `PhpParquetEngine` on the first call that needs it. An
+invalid file throws `InvalidArgumentException` `Given file is not valid Parquet file...`.
 
 There are several things we can read from parquet file:
 
 - `ParquetFile::values(array $columns = [], ?int $limit = null, ?int $offset = null) : \Generator`
+- `ParquetFile::columns(int $batchSize, array $columns = [], ?int $limit = null, ?int $offset = null) : \Generator`
 - `ParquetFile::metadata() : Metadata`
 - `ParquetFile::schema() : Schema` - shortcut for `ParquetFile::metadata()->schema()`
+- `ParquetFile::close() : void` - closes the reader and its stream
 
 ### Reading the whole file:
 
@@ -326,15 +331,13 @@ $writer->close();
 
 ### Writer Options
 
-- `BYTE_ARRAY_TO_STRING` - default: `true` - if set to `true` then `BYTE_ARRAY` values will be converted to `string`
-  objects.
 - `DICTIONARY_PAGE_MIN_CARDINALITY_RATION` - default '0.4' - minimum ratio of unique values to total values for a column
   to have dictionary encoding.
 - `DICTIONARY_PAGE_SIZE` - default: `1Mb` - maximum size of dictionary page.
 - `GZIP_COMPRESSION_LEVEL` - default: `9` - compression level for GZIP compression (applied only when GZIP compression
   is enabled).
-- `PAGE_SIZE_BYTES` - default: `8Kb` - maximum size of data page.
-- `ROW_GROUP_SIZE_BYTES` - default: `8Mb` - maximum size of row group.
+- `PAGE_SIZE_BYTES` - default: `128Kb` - maximum size of data page.
+- `ROW_GROUP_SIZE_BYTES` - default: `32Mb` - maximum size of row group.
 - `ROW_GROUP_SIZE_CHECK_INTERVAL` default: `1000` - number of rows to write before checking if row group size limit is
   reached.
 - `VALIDATE_DATA` - default: `true` - if set to `true` then writer will validate data against schema.
@@ -427,7 +430,7 @@ $options = Options::default()->set(Option::COLUMNS_COMPRESSIONS, [
 ]);
 
 // Global compression serves as fallback for unspecified columns
-$writer = new Writer(compressions: Compressions::GZIP, options: $options);
+$writer = new Writer(compression: Compressions::GZIP, options: $options);
 ```
 
 #### Nested Column Compression
@@ -645,7 +648,7 @@ $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
     'description' => Encodings::PLAIN             // High variance text
 ]);
 
-$writer = new Writer(compressions: Compressions::SNAPPY, options: $options);
+$writer = new Writer(compression: Compressions::SNAPPY, options: $options);
 ```
 
 #### Nested Column Encoding (Flat Path Notation)
@@ -762,9 +765,9 @@ $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
 
 | Encoding            | INT32/INT64 | BYTE_ARRAY | BOOLEAN | FLOAT/DOUBLE | FIXED_LEN_BYTE_ARRAY |
 |---------------------|-------------|------------|---------|--------------|----------------------|
-| PLAIN               | yes           | yes          | yes       | yes            | yes                    |
-| RLE_DICTIONARY      | yes           | yes          | yes       | yes            | no                    |
-| DELTA_BINARY_PACKED | yes           | no          | no       | no            | no                    |
+| PLAIN               | yes         | yes        | yes     | yes          | yes                  |
+| RLE_DICTIONARY      | yes         | yes        | yes     | yes          | no                   |
+| DELTA_BINARY_PACKED | yes         | no         | no      | no           | no                   |
 
 ### Performance Guidelines
 

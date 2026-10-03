@@ -25,3 +25,12 @@ composer require flow-php/etl:~--FLOW_PHP_VERSION--
 ## Suggested Extensions
 
 - `ext-bcmath` - for more precise calculations (bundled with PHP, enable via your system package manager)
+
+## Optional Extension
+
+The [flow_php extension](/documentation/components/extensions/flow-php-ext.md) stores columns as Arrow arrays, see
+[Column Backend](/documentation/components/core/column-backend.md). `flow-php/etl` conflicts with `ext-flow_php <0.45`.
+
+```bash
+pie install flow-php/flow-php-ext
+```

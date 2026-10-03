@@ -208,6 +208,11 @@ export PKG_CONFIG_PATH="$LIBZIP_INSTALL_DIR/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
 export LIBZIP_CFLAGS="-I$LIBZIP_INSTALL_DIR/include"
 export LIBZIP_LIBS="-L$LIBZIP_INSTALL_DIR/lib -lzip"
 
+# Without these, pkg-config finds the nix shell's own libxml2 and PHP compiles against its newer headers while linking
+# the libxml2 built above - mismatched signatures, and calls into functions the linked library does not have.
+export LIBXML_CFLAGS="-I$LIBXML2_INSTALL_DIR/include/libxml2"
+export LIBXML_LIBS="-L$LIBXML2_INSTALL_DIR/lib -lxml2"
+
 cd $PHP_PATH
 
 # The extension set and the reason for each is in documentation/contributing/wasm.md.
@@ -287,7 +292,16 @@ mkdir -p out
 echo "Compile pib_eval wrapper"
 emcc $CFLAGS -I . -I Zend -I main -I TSRM/ ../pib_eval.c -c -o pib_eval.o
 
+# --disable-fiber-asm makes Zend/zend_fibers.c switch Fiber stacks with getcontext/makecontext/swapcontext, which
+# Emscripten's libc lacks. The shim implements them over Emscripten fibers (needs -sASYNCIFY below).
+echo "Compile ucontext shim"
+emcc $CFLAGS ../ucontext-emscripten.c -c -o ucontext-emscripten.o
+
+echo "Compile the libc functions Emscripten leaves out"
+emcc $CFLAGS ../libc-emscripten.c -c -o libc-emscripten.o
+
 echo "Link everything together"
+# -s DEFAULT_TO_CXX=1 links libc++/libc++abi for the C++ snappy extension: operator new/delete, __cxxabiv1::__class_type_info / __si_class_type_info vtables
 emcc $CFLAGS $LDFLAGS $WASM64_MODE \
   -s ENVIRONMENT=web \
   -s EXPORTED_FUNCTIONS='["_pib_eval", "_pib_force_exit", "_pib_heap_bytes"]' \
@@ -301,11 +315,12 @@ emcc $CFLAGS $LDFLAGS $WASM64_MODE \
   -s STACK_SIZE=5242880 \
   -s ASSERTIONS=0 \
   -s INVOKE_RUN=0 \
-  -s ERROR_ON_UNDEFINED_SYMBOLS=0 \
+  -s ERROR_ON_UNDEFINED_SYMBOLS=1 \
+  -s DEFAULT_TO_CXX=1 \
   -s ASYNCIFY=1 \
   -s STACK_OVERFLOW_CHECK=0 \
   -s SAFE_HEAP=0 \
-  libs/libphp.a pib_eval.o $LIBXML2_INSTALL_DIR/lib/libxml2.a $LIBPG_QUERY_INSTALL_DIR/libpg_query.a $LIBZIP_INSTALL_DIR/lib/libzip.a -o out/php.js
+  ucontext-emscripten.o libc-emscripten.o libs/libphp.a pib_eval.o $LIBXML2_INSTALL_DIR/lib/libxml2.a $LIBPG_QUERY_INSTALL_DIR/libpg_query.a $LIBZIP_INSTALL_DIR/lib/libzip.a -o out/php.js
 
 echo "Copy outputs to web/landing/assets/wasm"
 OUTPUT_DIR="$PROJECT_ROOT/../web/landing/assets/wasm"

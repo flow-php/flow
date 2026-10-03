@@ -36,14 +36,6 @@ enum Option
     case BROTLI_COMPRESSION_LEVEL;
 
     /**
-     * Some parquet writers might not properly use LogicalTyp for storing Strings or JSON's.
-     * This option would tell the reader to treat all BYTE_ARRAY's as UTF-8 strings.
-     *
-     * Default value is true;
-     */
-    case BYTE_ARRAY_TO_STRING;
-
-    /**
      * Per-column compression configuration using flat path notation.
      * Accepts array<string, Compressions> where key is column flat path and value is compression enum.
      *

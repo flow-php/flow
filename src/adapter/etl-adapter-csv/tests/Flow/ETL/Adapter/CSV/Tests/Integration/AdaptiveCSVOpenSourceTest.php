@@ -8,6 +8,8 @@ use Flow\ETL\Adapter\CSV\AdaptiveCSVOpenSource;
 use Flow\ETL\Adapter\CSV\CSVReadOptions;
 use Flow\ETL\Adapter\CSV\Tests\Context\CSVFixtureContext;
 use Flow\ETL\Adapter\CSV\Tests\Double\LengthCapturingFilesystem;
+use Flow\ETL\Exception\RuntimeException as ETLRuntimeException;
+use Flow\ETL\FlowPhpExtension;
 use Flow\ETL\RustIterator;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
@@ -151,5 +153,24 @@ final class AdaptiveCSVOpenSourceTest extends FlowTestCase
         extension_loaded('flow_php')
             ? static::assertSame([4096], $filesystem->lastStream?->capturedIterateLengths)
             : static::assertSame([null, 4096], $filesystem->lastStream?->capturedLengths);
+    }
+
+    public function test_a_flow_php_of_another_abi_is_refused_before_the_file_is_opened(): void
+    {
+        $filesystem = new CountingFilesystem(new NativeLocalFilesystem());
+
+        try {
+            new AdaptiveCSVOpenSource(
+                $filesystem,
+                CSVFixtureContext::source('header_only.csv'),
+                new CSVReadOptions(),
+                new FlowPhpExtension(true, FlowPhpExtension::ABI + 1, '0.46.0'),
+            );
+            static::fail('a skewed flow_php must be refused');
+        } catch (ETLRuntimeException $e) {
+            static::assertStringContainsString('does not match flow-php/etl', $e->getMessage());
+        }
+
+        static::assertSame(0, $filesystem->readFromCalls);
     }
 }

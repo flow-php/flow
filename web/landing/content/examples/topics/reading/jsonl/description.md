@@ -1,1 +1,2 @@
-Extract data from [JSON Lines](https://jsonlines.org/) formatted files, where each line contains a separate JSON object. This format is ideal for streaming large datasets.
+`from_json_lines()` reads [JSON Lines](https://jsonlines.org/): one JSON object per line, read line
+by line, so the file never has to fit in memory.

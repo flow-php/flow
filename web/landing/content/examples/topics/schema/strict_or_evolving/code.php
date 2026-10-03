@@ -28,5 +28,5 @@ try {
         ->write(to_output(truncate: false))
         ->run();
 } catch (Throwable $e) {
-    echo "\nstrict rejects it: " . explode("\n", $e->getMessage())[0] . "\n";
+    echo "\nstrict rejects it: " . $e->getMessage() . "\n";
 }

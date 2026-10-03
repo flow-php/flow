@@ -40,7 +40,7 @@ final class ConfigBuilder
 
     private ?ClockInterface $clock;
 
-    private Backend $backend;
+    private ?Backend $backend;
 
     private ?GroupByAlgorithmBuilder $groupBy;
 
@@ -71,7 +71,7 @@ final class ConfigBuilder
         $this->id = null;
         $this->name = null;
         $this->serializer = null;
-        $this->backend = new AdaptiveBackend();
+        $this->backend = null;
         $this->optimizer = null;
         $this->executor = null;
         $this->clock = null;
@@ -105,10 +105,12 @@ final class ConfigBuilder
     public function build(): Config
     {
         $id = $this->id ??= 'flow-php-' . $this->randomValueGenerator->string(32);
+        // built here, not in the constructor: a backend() opt-out must not depend on the default's extension check
+        $backend = $this->backend ?? new AdaptiveBackend();
         $this->optimizer ??= Optimizer::default();
         $this->executor ??= new Executor();
         // built per build(), not stored: a later backend() call must reach the next build's serializer
-        $serializer = $this->serializer ?? new FloeSerializer($this->backend);
+        $serializer = $this->serializer ?? new FloeSerializer($backend);
         $optimizer = $this->optimizer;
         $executor = $this->executor;
         $dataframeName = $this->name ?? 'flow_dataframe';
@@ -124,17 +126,17 @@ final class ConfigBuilder
             $optimizer,
             $executor,
             $cacheConfig,
-            ($this->sort ?? new ExternalSortBuilder())->build($cacheConfig->localFilesystemCacheDir, $this->backend),
+            ($this->sort ?? new ExternalSortBuilder())->build($cacheConfig->localFilesystemCacheDir, $backend),
             $this->analyze,
             $this->telemetryConfig ?? TelemetryConfig::default($this->getClock()),
-            ($this->groupBy ?? new HashGroupByBuilder())->build($cacheConfig->localFilesystemCacheDir, $this->backend),
-            ($this->join ?? new HashJoinBuilder())->build($cacheConfig->localFilesystemCacheDir, $this->backend),
+            ($this->groupBy ?? new HashGroupByBuilder())->build($cacheConfig->localFilesystemCacheDir, $backend),
+            ($this->join ?? new HashJoinBuilder())->build($cacheConfig->localFilesystemCacheDir, $backend),
             ($this->repartition ?? new HashRepartitionBuilder())->build(
                 $cacheConfig->localFilesystemCacheDir,
-                $this->backend,
+                $backend,
             ),
             randomValueGenerator: $this->randomValueGenerator,
-            backend: $this->backend,
+            backend: $backend,
         );
     }
 

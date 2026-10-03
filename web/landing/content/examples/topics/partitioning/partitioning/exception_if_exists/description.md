@@ -1,1 +1,2 @@
-Write partitioned data with exception_if_exists mode (default). Throws RuntimeException if any partition path already exists. Prevents accidental data overwrites.
+`exception_if_exists()` is the default save mode: when a partition file already exists, the write
+throws `RuntimeException` instead of touching it.

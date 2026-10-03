@@ -1,24 +1,15 @@
-Divide large datasets into smaller, organized parts based on column values. Flow uses Hive partitioning convention, creating a directory structure where each folder represents a partition value.
+`partitionBy(partition_by(...))` on a file loader writes one directory per value, in the Hive
+`column=value` layout. The partition columns move into the path:
 
-```bash
-output
-├── color=blue
-│   ├── sku=PRODUCT01
-│   │   └── products.csv
-│   └── sku=PRODUCT02
-│       └── products.csv
-├── color=green
-│   ├── sku=PRODUCT01
-│   │   └── products.csv
-│   ├── sku=PRODUCT02
-│   │   └── products.csv
-│   └── sku=PRODUCT03
-│       └── products.csv
-└── color=red
-    ├── sku=PRODUCT01
-    │   └── products.csv
-    ├── sku=PRODUCT02
-    │   └── products.csv
-    └── sku=PRODUCT03
-        └── products.csv
 ```
+output/color=blue/sku=PRODUCT01/products.csv
+output/color=blue/sku=PRODUCT02/products.csv
+output/color=green/sku=PRODUCT01/products.csv
+output/color=green/sku=PRODUCT02/products.csv
+output/color=green/sku=PRODUCT03/products.csv
+output/color=red/sku=PRODUCT01/products.csv
+output/color=red/sku=PRODUCT02/products.csv
+output/color=red/sku=PRODUCT03/products.csv
+```
+
+The save mode decides what happens when a partition file already exists.

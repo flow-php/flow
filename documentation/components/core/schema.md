@@ -17,8 +17,8 @@ A schema consists of column definitions that specify:
 - **Metadata**: Key-value pairs for additional context
 
 Structure field order is part of a structure type's identity: `structure{a, b}` and `structure{b, a}`
-are different types, so `Schema::isSame()` and `Definition::isSame()` distinguish them. Value-level
-comparisons (`Row::isEqual()`, `Rows::unique()`) stay field-order-insensitive.
+are different types, so `Schema::isSame()` and `Definition::isSame()` distinguish them. Comparing two such columns
+(`ref('a')->equals(ref('b'))`) is refused at plan time; cast one of them to the other's type first.
 
 ## Arrays in a Schema
 
@@ -72,8 +72,8 @@ header to check). Every inferred column is nullable, and where narrowing is not 
 sample that does not fit the inferred type fails the read with an `InferredSchemaException` naming that row - infer
 from every row with `->inferSchema(infer_schema()->sampleSize(-1))`, or declare the schema.
 
-**Sources that do not.** For the rest, every value still gets its type detected as rows are created and each batch
-carries its own schema.
+**Sources that do not.** The rest know their schema before the first row: Parquet and Floe read it from the file,
+PostgreSQL and DBAL derive it from the query (below), and the text, XML and HTTP extractors yield fixed columns.
 
 **`DataFrame::schema()` describes the plan, not the data.** It walks the pipeline's steps once, threading each
 step's output schema into the next, starting from the source's own `schema()` - so it may do the I/O that source
@@ -157,8 +157,8 @@ list_schema('tags', type_list(type_union(type_string(), type_integer())));
 ## Declaring the Source Schema
 
 Most extractors accept a schema up front: fluent `withSchema(Schema)`, or the optional `$schema` argument of the
-`from_*` DSL function. Declared types drive row creation instead of inference, and the row keeps only the columns the
-schema mentions.
+`from_*` DSL function. The declared types replace inference, and each batch keeps only the columns the schema
+mentions.
 
 ```php
 <?php
@@ -254,13 +254,13 @@ How the derivation behaves:
 
 A query that cannot be read or described **does not read at all**:
 
-| What is wrong                                                                                              | What you get                                                                     |
-|------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
-| the SQL does not parse                                                                                     | `ParserException`, before any query runs                                         |
-| not exactly one read-only `SELECT` or `VALUES` (`INSERT ... RETURNING`, two statements, a data-modifying `WITH`, `SELECT ... INTO`) | `InvalidArgumentException`, before any query runs |
-| a table, column, function, type or privilege the query names is missing                                    | PostgreSQL's own `QueryException`, positioned in your SQL - what the read throws |
-| any other refusal of the zero-row probe                                                                    | `SchemaNotDerivableException`, `getPrevious()` is PostgreSQL's error             |
-| a column type Flow has no type for (`record`, `point`, `line`, `lseg`, `box`, `path`, `polygon`, `circle`) | `SchemaNotDerivableException`                                                    |
+| What is wrong                                                                                                                       | What you get                                                                     |
+|-------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
+| the SQL does not parse                                                                                                              | `ParserException`, before any query runs                                         |
+| not exactly one read-only `SELECT` or `VALUES` (`INSERT ... RETURNING`, two statements, a data-modifying `WITH`, `SELECT ... INTO`) | `InvalidArgumentException`, before any query runs                                |
+| a table, column, function, type or privilege the query names is missing                                                             | PostgreSQL's own `QueryException`, positioned in your SQL - what the read throws |
+| any other refusal of the zero-row probe                                                                                             | `SchemaNotDerivableException`, `getPrevious()` is PostgreSQL's error             |
+| a column type Flow has no type for (`record`, `point`, `line`, `lseg`, `box`, `path`, `polygon`, `circle`)                          | `SchemaNotDerivableException`                                                    |
 
 `->withSchema(...)` skips the probe; it helps the last row, and the one before it when the query runs as written.
 
@@ -360,24 +360,27 @@ cannot be null.
 Flow PHP provides three built-in validation strategies:
 
 - **[StrictValidator](/src/core/etl/src/Flow/ETL/Schema/Validator/StrictValidator.php)** - Rows must exactly match the
-  schema; extra entries cause validation failure
-- **[SelectiveValidator](/src/core/etl/src/Flow/ETL/Schema/Validator/SelectiveValidator.php)** - Only validates entries
-  defined in schema; ignores extra entries
+  schema; extra columns cause validation failure
+- **[SelectiveValidator](/src/core/etl/src/Flow/ETL/Schema/Validator/SelectiveValidator.php)** - Only validates columns
+  defined in schema; ignores extra columns
 - **[EvolvingValidator](/src/core/etl/src/Flow/ETL/Schema/Validator/EvolvingValidator.php)** - Allows missing and extra
-  entries as long as nullability permits it
+  columns as long as nullability permits it
 
 By default, DataFrame uses `StrictValidator`, but you can specify a different validator as the second parameter to
 `DataFrame::match()`.
 
 ## Basic Schema Matching
 
-Use `DataFrame::match()` to validate data against a schema:
+Use `DataFrame::match()` to validate data against a schema. `from_array()` infers every column as nullable, so the
+expected schema declares them nullable too:
 
 ```php 
 <?php
 
-use function Flow\ETL\DSL\{data_frame, from_array, schema, int_schema, str_schema, bool_schema, to_output};
+use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Schema\Metadata;
+
+use function Flow\ETL\DSL\{data_frame, from_array, schema, int_schema, str_schema, bool_schema, to_output};
 
 data_frame()
     ->read(from_array([
@@ -387,9 +390,9 @@ data_frame()
     ]))
     ->match(
         schema(
-            int_schema('id', $nullable = false),
-            str_schema('name', $nullable = false),
-            bool_schema('active', $nullable = false, Metadata::empty()->add('key', 'value')),
+            int_schema('id', nullable: true),
+            str_schema('name', nullable: true),
+            bool_schema('active', nullable: true, metadata: Metadata::empty()->add('key', 'value')),
         )
     )
     ->write(to_output(false, Output::rows_and_schema))
@@ -409,8 +412,8 @@ data_frame()
     ]))
     ->match(
         schema(
-            int_schema('id'),
-            str_schema('name')
+            int_schema('id', nullable: true),
+            str_schema('name', nullable: true)
         ),
         schema_selective_validator() // Only validate id and name, ignore other fields
     )

@@ -163,7 +163,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
                 [
                     'path' =>
                         'file://'
-                            . ltrim(str_replace('\\', '/', __DIR__), '/')
+                            . str_replace('\\', '/', __DIR__)
                             . '/Fixtures/Partitioning/overwrite/date=2024-04-01/file.txt',
                     'partitions' => ['date' => '2024-04-01'],
                     'date' => '2024-04-01',
@@ -171,7 +171,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
                 [
                     'path' =>
                         'file://'
-                            . ltrim(str_replace('\\', '/', __DIR__), '/')
+                            . str_replace('\\', '/', __DIR__)
                             . '/Fixtures/Partitioning/overwrite/date=2024-04-02/file.txt',
                     'partitions' => ['date' => '2024-04-02'],
                     'date' => '2024-04-02',
@@ -179,7 +179,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
                 [
                     'path' =>
                         'file://'
-                            . ltrim(str_replace('\\', '/', __DIR__), '/')
+                            . str_replace('\\', '/', __DIR__)
                             . '/Fixtures/Partitioning/overwrite/date=2024-04-03/file.txt',
                     'partitions' => ['date' => '2024-04-03'],
                     'date' => '2024-04-03',
@@ -187,7 +187,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
                 [
                     'path' =>
                         'file://'
-                            . ltrim(str_replace('\\', '/', __DIR__), '/')
+                            . str_replace('\\', '/', __DIR__)
                             . '/Fixtures/Partitioning/overwrite/date=2024-04-04/file.txt',
                     'partitions' => ['date' => '2024-04-04'],
                     'date' => '2024-04-04',

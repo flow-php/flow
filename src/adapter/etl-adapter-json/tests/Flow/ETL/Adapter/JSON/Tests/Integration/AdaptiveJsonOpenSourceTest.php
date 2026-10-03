@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\Tests\Integration;
 
+use Flow\ETL\Adapter\JSON\AdaptiveJsonOpenSource;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonFormat;
 use Flow\ETL\Adapter\JSON\Tests\Context\JsonFixtureContext;
 use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Extractor\File\SourceFile;
+use Flow\ETL\FlowPhpExtension;
 use Flow\ETL\RustIterator;
 use Flow\ETL\Tests\Context\MemoryFiles;
 use Flow\ETL\Tests\Double\CountingFilesystem;
@@ -124,5 +127,41 @@ final class AdaptiveJsonOpenSourceTest extends FlowTestCase
 
         static::assertInstanceOf(Generator::class, $open->batches(schema(int_schema('id')), 2, new PhpBackend()));
         static::assertSame(0, $counting->readFromCalls);
+    }
+
+    public function test_a_flow_php_of_another_abi_is_refused_before_the_file_is_opened(): void
+    {
+        $filesystem = new CountingFilesystem(new NativeLocalFilesystem());
+
+        try {
+            new AdaptiveJsonOpenSource(
+                $filesystem,
+                JsonFixtureContext::reader(JsonFormat::Lines, $filesystem),
+                JsonFormat::Lines,
+                null,
+                JsonFixtureContext::source('five_rows.jsonl'),
+                new FlowPhpExtension(true, FlowPhpExtension::ABI + 1, '0.46.0'),
+            );
+            static::fail('a skewed flow_php must be refused');
+        } catch (RuntimeException $e) {
+            static::assertStringContainsString('does not match flow-php/etl', $e->getMessage());
+        }
+
+        static::assertSame(0, $filesystem->readFromCalls);
+    }
+
+    public function test_without_flow_php_a_file_is_read_by_the_php_lane_whatever_is_loaded(): void
+    {
+        $open = new AdaptiveJsonOpenSource(
+            new NativeLocalFilesystem(),
+            JsonFixtureContext::reader(JsonFormat::Lines, new NativeLocalFilesystem()),
+            JsonFormat::Lines,
+            null,
+            JsonFixtureContext::source('five_rows.jsonl'),
+            new FlowPhpExtension(false, null),
+        );
+
+        static::assertInstanceOf(Generator::class, $open->batches(schema(int_schema('id')), 2, new PhpBackend()));
+        $open->close();
     }
 }

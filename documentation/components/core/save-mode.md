@@ -1,6 +1,6 @@
 # Save Mode
 
-[DOC_LINK:/documentation/components/core/core]
+[DOC_LINK:/documentation/components/core/core.md]
 
 [TOC]
 
@@ -73,13 +73,12 @@ Creates additional files in the same directory when destination already exists:
 
 // First run creates: data.csv
 // Second run creates: data_<randomized_suffix>.csv (e.g., data_5f8a3b2c.csv)
-// When reading data.csv, Flow reads all files matching the pattern: data*.csv
+// Read them all with a glob: from_csv(__DIR__ . '/data*.csv')
 ```
 
 **How it works:**
 - If destination file doesn't exist: writes normally
 - If destination file exists: generates a new file with randomized name in the same directory
-- Flow treats file paths as directories that can contain multiple files with the same extension
 
 **File structure after multiple runs:**
 ```
@@ -90,7 +89,7 @@ output/
 └── orders_2140bfc5fd.csv   # Fourth run
 ```
 
-When you read from `orders.csv`, Flow automatically reads all `orders*.csv` files in the directory.
+Reading `orders.csv` reads that one file; read `orders*.csv` to get every run.
 
 **Important:** Flow does not check for duplicates. If you run the same pipeline twice, data will be duplicated across multiple files.
 
@@ -152,8 +151,9 @@ Save modes work with partitioned data:
         ['date' => '2024-01-01', 'value' => 100],
         ['date' => '2024-01-02', 'value' => 200],
     ]))
-    ->partitionBy('date')
-    ->write(to_parquet(__DIR__ . '/data')->saveMode(overwrite()))
+    ->write(to_parquet(__DIR__ . '/data/file.parquet')
+        ->partitionBy(partition_by(ref('date')))
+        ->saveMode(overwrite()))
     ->run();
 
 // Structure:

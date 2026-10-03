@@ -42,7 +42,7 @@ The sort algorithm is configured through `config_builder()->sort()` - all option
   it spills each sorted run as a bucket through a `BucketsStorage` (the same abstraction used by
   [join](/documentation/components/core/join.md) and
   [group by](/documentation/components/core/group-by.md)), then k-way merges the runs back into one sorted stream.
-  The memory limit defaults to `FLOW_MAX_MEMORY` when set, otherwise 70% of PHP's `memory_limit` (1 GiB when
+  The memory limit defaults to `FLOW_MAX_MEMORY` when set, otherwise 70% of PHP's `memory_limit` (1 GB when
   `memory_limit` is `-1`), and is compared with the whole process - a sort and a join in one pipeline stay under it
   together.
 - `memory_sort()` - buffers the whole dataset and sorts it in one pass; fastest, but everything must fit in RAM. It has
@@ -112,9 +112,11 @@ to the spill storage, so `storage()` alone stays sufficient:
 
 ```php
 external_sort()
-    ->storage(new MemoryBuckets())                                   // spill runs
-    ->mergeStorage(new FilesystemBuckets($fs, path('/tmp/merge')));  // merged runs only
+    ->storage(new MemoryBuckets())                                                       // spill runs
+    ->mergeStorage(new FilesystemBuckets($fs, path('/tmp/merge'), new AdaptiveBackend())); // merged runs only
 ```
+
+`FilesystemBuckets` reads runs back into the [column backend](/documentation/components/core/column-backend.md) it is given.
 
 ## Example
 

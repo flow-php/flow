@@ -44,6 +44,15 @@ echo "extension=flow_php" > $(php -r "echo PHP_CONFIG_FILE_SCAN_DIR;")/flow_php.
 php -m | grep flow_php
 ```
 
+## Version
+
+Install the extension of the Flow release you use. `flow-php/etl`, `flow-php/etl-adapter-csv`, `-json` and `-parquet`
+conflict with `ext-flow_php <0.45`.
+
+An extension built for another release is refused with a `RuntimeException` naming its version and ABI, raised by
+the first `Adaptive*` class that picks a lane. A pipeline that reaches none, e.g.
+`config_builder()->backend(new PhpBackend())` with `from_array()`, still runs.
+
 ## PIE
 
 [PIE](https://github.com/php/pie) is the modern PHP extension installer.

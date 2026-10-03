@@ -7,9 +7,9 @@ namespace Flow\ETL\Column;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
 
-use function extension_loaded;
+use function interface_exists;
 
-if (extension_loaded('flow_php')) {
+if (interface_exists(ColumnBuilder::class, false)) {
     return;
 }
 

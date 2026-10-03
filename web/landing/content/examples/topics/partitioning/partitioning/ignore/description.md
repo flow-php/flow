@@ -1,1 +1,2 @@
-Write partitioned data with ignore mode. If a partition path already exists, writing is silently skipped. Useful for idempotent pipelines where re-running should not duplicate data.
+`ignore()` skips the write into any partition file that already exists. Re-running the pipeline
+never duplicates data.

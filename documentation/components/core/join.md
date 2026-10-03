@@ -13,7 +13,7 @@ called, and runs with the left DataFrame's configuration and error handler.
 
 ### join ()
 
-Main join method that partitions the right DataFrame into buckets and probes them with left rows through a hash table.
+Main join method: builds a hash table from the right DataFrame and probes it with left rows.
 
 ### crossJoin () - Cartesian Product
 
@@ -21,7 +21,8 @@ Joins each row from the left side with each row on the right side, creating `cou
 
 ### joinEach () - Streaming Join
 
-Right side is dynamically generated for each left row, useful for large right-side datasets that don't fit in memory.
+The right side is built for each left batch by `DataFrameFactory::from(Rows $rows)`, useful for large right-side
+datasets that don't fit in memory.
 
 ## Join Types
 
@@ -38,38 +39,36 @@ Joins follow SQL semantics - every matching pair of rows produces one output row
 right rows is emitted multiple times. A `null` join key never matches anything, including another `null` - rows with
 `null` keys are dropped by inner joins and null-padded (or kept, for `left_anti`) by outer joins.
 
-> Flow uses hash join implementation where hashes are stored in buckets to optimize memory usage and performance.
-> Rows are bucketed by the values of the join columns and every candidate pair is verified against
+> Rows are hashed by the values of the join columns and every candidate pair is verified against
 > the join expression, so non-equality expressions (like `compare_any()`) are supported as well.
 > Mixed expressions still hash by their equality conditions - in `compare_all(Equal, Any)` rows are
-> bucketed by the `Equal` columns and the `Any` part is verified per candidate pair; only joins with
+> hashed by the `Equal` columns and the `Any` part is verified per candidate pair; only joins with
 > no equality condition at all fall back to comparing every pair.
 
 ## Buckets Storage
 
-`join()` always partitions the right DataFrame into buckets through a `BucketsStorage` - the same abstraction used by
-external sort - and the configured implementation decides how the join executes:
+While the process stays under the memory limit, `join()` holds the right DataFrame in memory and streams the left one
+through its hash table, so left rows keep their order. Past the limit both sides are partitioned by join key into
+buckets of a `BucketsStorage` - the same abstraction used by external sort - and joined bucket pair by bucket pair:
 
-| Buckets storage                   | Behavior                                                                                                                                                                                                                                            |
-|-----------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `FilesystemBuckets` - **Default** | Both sides are partitioned by join key into buckets spilled to disk (Floe files), then joined pair by pair - the hash table is built from the smaller bucket of each pair. Memory usage is bounded by that bucket, left row order is not preserved. |
-| `MemoryBuckets`                   | Right DataFrame is held in memory, left rows are streamed through a hash table and keep their order. Memory usage is bounded by the right side.                                                                                                     |
-| `PSRCacheBuckets`                 | Buckets are spilled into any PSR-16 cache. Executes like `FilesystemBuckets` (left row order is not preserved).                                                                                                                                     |
+| Buckets storage                   | Past the memory limit                                                                                                                       |
+|-----------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| `FilesystemBuckets` - **Default** | Both sides are spilled to disk (Floe files); the hash table is built from the smaller bucket of each pair. Left row order is not preserved. |
+| `PSRCacheBuckets`                 | Like `FilesystemBuckets`, with buckets in any PSR-16 cache.                                                                                 |
+| `MemoryBuckets`                   | Never partitions: the right DataFrame stays in memory whatever its size and left rows keep their order.                                     |
 
 `join()` takes an optional trailing `JoinAlgorithmBuilder`, so one join can override the configured algorithm:
 
 ```php ignore
-->join($right, on(['id' => 'id']), Join::left, hash_join()->storage(new MemoryBuckets()))
+->join($right, join_on(['id' => 'id']), Join::left, hash_join()->storage(new MemoryBuckets()))
 ```
 
-`joinEach()` deliberately does not take one - it builds a DataFrame per row, so a per-call algorithm would be
-rebuilt per row too.
+`joinEach()` does not take one - it builds a DataFrame per left batch, so a per-call algorithm would be rebuilt per
+batch too.
 
 The join algorithm is configured through `config_builder()->join(hash_join())` - all its options live on the
-`hash_join()` builder. While the process stays under `memoryLimit()` the right side is held in memory and the left
-side streams through in its own order; past it, both sides are partitioned into buckets of the storage. The limit
-defaults to `FLOW_MAX_MEMORY`, otherwise 70% of PHP's `memory_limit` (1 GiB when it is `-1`), and is compared with the
-whole process, so a join and a sort in one pipeline stay under it together:
+`hash_join()` builder. `memoryLimit()` defaults to `FLOW_MAX_MEMORY`, otherwise 70% of PHP's `memory_limit` (1 GB
+when it is `-1`), and is compared with the whole process, so a join and a sort in one pipeline stay under it together:
 
 ```php
 <?php
@@ -79,7 +78,6 @@ data_frame(
         ->join(
             hash_join()
                 ->memoryLimit(Unit::fromMb(512))  // process memory past which rows go to the storage
-                ->storage(new MemoryBuckets())    // or FilesystemBuckets (default)
                 ->bucketsCount(64)                // number of buckets
                 ->batchSize(1000)                 // rows per bucket frame and per batch read back
         )
@@ -87,7 +85,7 @@ data_frame(
     ->read(from_parquet('orders.parquet'))
     ->join(
         data_frame()->read(from_parquet('sellers.parquet')),
-        join_on(['seller_id' => 'id'], join_prefix: 'seller_'),
+        join_on(['seller_id' => 'id'], join_prefix: 'joined_'),
     )
     ->run();
 ```

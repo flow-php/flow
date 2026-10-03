@@ -31,11 +31,16 @@ Adapter for [ETL](https://github.com/flow-php/etl) using bulk operations from [D
 ## Loader - DbalLoader
 
 ```php
+use Doctrine\DBAL\Tools\DsnParser;
+
 use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
+use function Flow\ETL\DSL\{data_frame, from_array};
+
+$params = (new DsnParser(['postgresql' => 'pdo_pgsql']))->parse(\getenv('PGSQL_DATABASE_URL'));
 
 data_frame()
     ->read(from_array([['id' => 1, 'name' => 'norbert']]))
-    ->write(to_dbal_table_insert(['url' => \getenv('PGSQL_DATABASE_URL')], 'your-table-name'))
+    ->write(to_dbal_table_insert($params, 'users'))
     ->run();
 ```
 
@@ -48,7 +53,8 @@ All supported DbalLoader operations via DSL functions:
 You can also configure bulk operations with platform-specific options:
 
 ```php
-use function Flow\ETL\Adapter\Doctrine\{to_dbal_table_insert, postgresql_insert_options};
+use function Flow\ETL\Adapter\Doctrine\{postgresql_insert_options, to_dbal_table_insert};
+use function Flow\ETL\DSL\{data_frame, from_array};
 
 data_frame()
     ->read(from_array([['id' => 1, 'name' => 'norbert']]))
@@ -60,36 +66,36 @@ data_frame()
     ->run();
 ```
 
-### Type Detection and Optimization
+### Types
 
-`DbalLoader` now provides advanced type detection capabilities to optimize database operations:
-
-#### Automatic Type Detection from Flow Schema
-
-By default, `DbalLoader` automatically detects column types from the Flow Schema of your data:
+By default, `DbalLoader` binds every column with the DBAL type mapped from its Flow type
+(the default map is listed under [Schema Converter - Types Map](#schema-converter---types-map)):
 
 ```php
 use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
+use function Flow\ETL\DSL\{data_frame, from_array};
 
 data_frame()
     ->read(from_array([['id' => 1, 'name' => 'norbert']]))
     ->write(to_dbal_table_insert($connection, 'users'))
     ->run();
-// Types are automatically detected from the Flow Schema
 ```
 
 #### Custom Types Map
 
-For advanced scenarios, you can provide a custom type mapping to control how Flow types are converted to DBAL types:
+A custom map replaces the default one, so spread `TypesMap::FLOW_TYPES` to keep the other types:
 
 ```php
-use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
+use Doctrine\DBAL\Types\TextType;
 use Flow\ETL\Adapter\Doctrine\TypesMap;
 use Flow\Types\Type\Native\StringType;
-use Doctrine\DBAL\Types\TextType;
+
+use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
+use function Flow\ETL\DSL\{data_frame, from_array};
 
 $customTypesMap = new TypesMap([
-    StringType::class => TextType::class, // Map Flow strings to DBAL text type
+    ...TypesMap::FLOW_TYPES,
+    StringType::class => TextType::class,
 ]);
 
 data_frame()
@@ -99,26 +105,23 @@ data_frame()
     ->run();
 ```
 
-#### Data Normalization
+#### Bound values
 
-`DbalLoader` automatically handles data normalization for database compatibility:
-
-- **XML Entries**: `XMLEntry` and `XMLElementEntry` objects are automatically converted to their string representation
-- **Complex Types**: Lists, Maps, and Structures are serialized as JSON
-- **Type Safety**: All data is normalized while preserving type information for optimal database performance
+A column is bound as its values and converted by its DBAL type: `list`, `map` and `structure` become JSON through
+`JsonType`. `xml`, `xml_element`, `html` and `html_element` are bound as their markup text:
 
 ```php
-use function Flow\ETL\DSL\{data_frame, from_array, xml_entry};
 use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
+use function Flow\ETL\DSL\{data_frame, from_array, int_schema, schema, xml_schema};
 
 data_frame()
-    ->read(from_array([
-        ['id' => 1, 'data' => $domDocument],
-        ['id' => 2, 'data' => $domElement],
-    ]))
+    ->read(from_array(
+        [['id' => 1, 'data' => '<root><item>1</item></root>']],
+        schema(int_schema('id'), xml_schema('data')),
+    ))
     ->write(to_dbal_table_insert($connection, 'xml_table'))
     ->run();
-// XML entries are automatically converted to strings before database insertion
+// data is bound as '<root><item>1</item></root>'
 ```
 
 ## Transactional Loading
@@ -127,11 +130,11 @@ data_frame()
 transaction, and if any sink throws, the open transaction is rolled back:
 
 ```php
-use function Flow\ETL\DSL\{data_frame, from_array};
 use function Flow\ETL\Adapter\Doctrine\{to_dbal_table_insert, to_dbal_transaction};
+use function Flow\ETL\DSL\{data_frame, from_array};
 
 data_frame()
-    ->read(from_array($data))
+    ->read(from_array([['id' => 1, 'name' => 'norbert']]))
     ->write(to_dbal_transaction(
         $connection,
         to_dbal_table_insert($connection, 'users'),
@@ -143,7 +146,7 @@ data_frame()
 A plain loader child is a bare sink root; a `to_transformation(...)` child delivers inside the same transaction.
 Every child's loader must use the same connection as the transaction - pass one live `Connection` to
 `to_dbal_transaction()` and to every child. A loader built from array params (like
-`to_dbal_table_insert(['url' => $url], 'users')`) opens its own connection and escapes the transaction.
+`to_dbal_table_insert($params, 'users')`) opens its own connection and escapes the transaction.
 
 Sinks with blocking operations (`to_transformation()` / `to_branch(...)->withTransformation(...)` with `sortBy()`,
 `aggregate()`, `groupBy()->aggregate()`, `pivot()`, window functions, `collect()`, `join()` - see
@@ -162,6 +165,8 @@ use Doctrine\DBAL\TransactionIsolationLevel;
 use Flow\ETL\Adapter\Doctrine\DbalTransaction;
 use Flow\ETL\Sink\Transactional;
 
+use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
+
 new Transactional(
     DbalTransaction::fromConnection($connection)->withIsolationLevel(TransactionIsolationLevel::SERIALIZABLE),
     to_dbal_table_insert($connection, 'users'),
@@ -170,55 +175,56 @@ new Transactional(
 
 ## Extractor - DbalQuery
 
-This simple but powerful extractor let you extract data from a single or multiple parametrized queries.
-
 `from_dbal_*()` extractors derive their schema from the query unless `->withSchema()` declares it - how that works
 and fails: [Doctrine DBAL sources](../core/schema.md#doctrine-dbal-sources-describe-themselves-and-keep-withschema).
 
 ### Single Query
-```php 
+
+```php
+use function Flow\ETL\Adapter\Doctrine\from_dbal_query;
 use function Flow\ETL\DSL\{data_frame, to_output};
 
 data_frame()
-    ->read(DbalQueryExtractor::singleQuery($connection, "SELECT * FROM {$table} ORDER BY id"))
+    ->read(from_dbal_query($connection, 'SELECT * FROM users ORDER BY id'))
     ->write(to_output())
     ->run();
 ```
 
 ### Single Parametrized Query
 
-```php 
+```php
+use function Flow\ETL\Adapter\Doctrine\from_dbal_query;
 use function Flow\ETL\DSL\{data_frame, to_output};
 
 data_frame()
-    ->read(DbalQueryExtractor::singleQuery($connection, "SELECT * FROM {$table} WHERE id = :id", ['id' => 1]))
+    ->read(from_dbal_query($connection, 'SELECT * FROM users WHERE id = :id', ['id' => 1]))
     ->write(to_output())
     ->run();
 ```
-### Multiple Parametrized Query
 
-```php ignore
+### Multiple Parametrized Queries
+
+```php
+use Flow\ETL\Adapter\Doctrine\ParametersSet;
+
+use function Flow\ETL\Adapter\Doctrine\from_dbal_queries;
 use function Flow\ETL\DSL\{data_frame, to_output};
 
 data_frame()
-    ->read(
-        new DbalQueryExtractor(
-            $connection,
-            "SELECT * FROM {$table} ORDER BY id LIMIT :limit OFFSET :offset",
-            new ParametersSet(
-                ['limit' => 2, 'offset' => 0],
-                ['limit' => 2, 'offset' => 2],
-                ['limit' => 2, 'offset' => 4],
-                ['limit' => 2, 'offset' => 6],
-                ['limit' => 2, 'offset' => 8],
-            )
-        )
-    )
+    ->read(from_dbal_queries(
+        $connection,
+        'SELECT * FROM users ORDER BY id LIMIT :limit OFFSET :offset',
+        new ParametersSet(
+            ['limit' => 2, 'offset' => 0],
+            ['limit' => 2, 'offset' => 2],
+            ['limit' => 2, 'offset' => 4],
+        ),
+    ))
     ->write(to_output())
-    ->run()
+    ->run();
 ```
 
-In this case, query will be executed exactly five times, taking every time next entry of parameters from ParametersSet.
+The query runs once per parameter set, three times here.
 
 ## Schema Converter
 
@@ -230,6 +236,8 @@ like length, primary key, index, precision, etc
 
 
 ```php
+use Flow\ETL\Adapter\Doctrine\DbalMetadata;
+
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\float_schema;
@@ -273,20 +281,21 @@ Will generate:
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Index;
 use Doctrine\DBAL\Schema\Table;
+use Doctrine\DBAL\Types\Type;
 
 new Table(
     'test',
     [
         new Column('int', Type::getType('integer'), ['notnull' => true]),
-        new Column('str', Type::getType('string'), ['notnull' => false]),
+        new Column('str', Type::getType('string'), ['notnull' => true]),
         new Column('str_with_length', Type::getType('string'), ['notnull' => false, 'length' => 255]),
         new Column('str_unique', Type::getType('string'), ['notnull' => false]),
+        new Column('date', Type::getType('date_immutable'), ['notnull' => false]),
         new Column('float', Type::getType('float'), ['notnull' => false, 'precision' => 10, 'scale' => 2]),
         new Column('bool', Type::getType('boolean'), ['notnull' => false, 'default' => true]),
         new Column('json', Type::getType('json'), ['notnull' => false, 'platformOptions' => ['jsonb' => true]]),
         new Column('list', Type::getType('json'), ['notnull' => true, 'columnDefinition' => 'integer[]']),
         new Column('map', Type::getType('json'), ['notnull' => true, 'comment' => 'test comment!']),
-        new Column('date', Type::getType('date_immutable'), ['notnull' => false]),
     ],
     [
         new Index('pk_test', ['int', 'str'], true, true),
@@ -301,7 +310,7 @@ new Table(
 When types map is not provided, the default one will be used:
 
 ```php ignore
-public const FLOW_TYPES = [
+public const array FLOW_TYPES = [
     StringType::class => \Doctrine\DBAL\Types\StringType::class,
     IntegerType::class => \Doctrine\DBAL\Types\IntegerType::class,
     FloatType::class => \Doctrine\DBAL\Types\FloatType::class,
@@ -310,9 +319,13 @@ public const FLOW_TYPES = [
     TimeType::class => \Doctrine\DBAL\Types\TimeImmutableType::class,
     DateTimeType::class => \Doctrine\DBAL\Types\DateTimeImmutableType::class,
     UuidType::class => \Doctrine\DBAL\Types\GuidType::class,
+    TimeZoneType::class => \Doctrine\DBAL\Types\StringType::class,
     JsonType::class => \Doctrine\DBAL\Types\JsonType::class,
     XMLType::class => \Doctrine\DBAL\Types\StringType::class,
     XMLElementType::class => \Doctrine\DBAL\Types\StringType::class,
+    HTMLType::class => \Doctrine\DBAL\Types\StringType::class,
+    HTMLElementType::class => \Doctrine\DBAL\Types\StringType::class,
+    EnumType::class => \Doctrine\DBAL\Types\StringType::class,
     ListType::class => \Doctrine\DBAL\Types\JsonType::class,
     MapType::class => \Doctrine\DBAL\Types\JsonType::class,
     StructureType::class => \Doctrine\DBAL\Types\JsonType::class,

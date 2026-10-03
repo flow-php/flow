@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\JSON;
 
 use DateTimeInterface;
+use Flow\ETL\FlowPhpExtension;
 use Flow\ETL\Rows;
-
-use function extension_loaded;
 
 use const JSON_PRESERVE_ZERO_FRACTION;
 use const JSON_THROW_ON_ERROR;
@@ -22,11 +21,12 @@ final readonly class AdaptiveJsonEncoder implements JsonEncoder
         int $flags = JSON_THROW_ON_ERROR,
         string $dateTimeFormat = DateTimeInterface::ATOM,
         string $dateFormat = 'Y-m-d',
+        ?FlowPhpExtension $extension = null,
     ) {
         $php = new PhpJsonEncoder($flags, $dateTimeFormat, $dateFormat);
 
         // RustJsonEncoder renders only these flags; any other one writes through PHP
-        $this->encoder = extension_loaded('flow_php')
+        $this->encoder = ($extension ?? FlowPhpExtension::detect())->available()
         && (
             $flags
             & ~(JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION)

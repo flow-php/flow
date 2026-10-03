@@ -44,7 +44,8 @@ df()
 ```
 
 With the extension loaded, `Flow\ETL\Column\AdaptiveBackend` - the default of `config_builder()->backend()` - picks the
-extension's `RustBackend` and every batch column is a `Flow\ETL\Column\RustColumn` over an Apache Arrow array:
+extension's `RustBackend` and every batch column is a `Flow\ETL\Column\RustColumn` over an Apache Arrow array. How to
+choose a backend and what it builds: [Column Backend](/documentation/components/core/column-backend.md).
 
 ```php
 <?php
@@ -112,12 +113,12 @@ With both this extension and the [arrow extension](/documentation/components/ext
 file, and its batches cross into `RustColumn`s (and back) through the Arrow C Data Interface, without a copy and
 without a PHP value per cell.
 
-| loaded          | `from_parquet()` / `to_parquet()`                                          |
-|-----------------|----------------------------------------------------------------------------|
-| flow_php, arrow | native columns through the Arrow C Data Interface                          |
-| arrow           | `RustParquetEngine` (arrow-ext), PHP values                                |
-| flow_php        | `PhpParquetEngine`; `RustBackend` adopts the values into native columns    |
-| neither         | `PhpParquetEngine`                                                         |
+| loaded          | `from_parquet()` / `to_parquet()`                                       |
+|-----------------|-------------------------------------------------------------------------|
+| flow_php, arrow | native columns through the Arrow C Data Interface                       |
+| arrow           | `RustParquetEngine` (arrow-ext), PHP values                             |
+| flow_php        | `PhpParquetEngine`; `RustBackend` adopts the values into native columns |
+| neither         | `PhpParquetEngine`                                                      |
 
 ```php
 <?php

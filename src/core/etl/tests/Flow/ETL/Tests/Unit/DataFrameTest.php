@@ -962,11 +962,11 @@ final class DataFrameTest extends FlowTestCase
         static::assertSame(1, $extractor->limits[0]);
         static::assertSame(1, $extractor->limits[1]);
         static::assertStringEndsWith(
-            "#1 Read\n            Extractor: RecordingFileExtractor\n            Source: file://dev/null",
+            "#1 Read\n            Extractor: RecordingFileExtractor\n            Source: file:///dev/null",
             $frame->explain()->toString(Stage::unoptimized),
         );
         static::assertStringEndsWith(
-            "#1 Read\n            Extractor: RecordingFileExtractor\n            Source: file://dev/null"
+            "#1 Read\n            Extractor: RecordingFileExtractor\n            Source: file:///dev/null"
             . "\n            Limit: 1",
             $frame->explain()->toString(),
         );
@@ -1209,7 +1209,7 @@ final class DataFrameTest extends FlowTestCase
                │  Condition: IsNotNull
                └─ #1 Read  source · transparent · streaming
                      Extractor: RecordingFileExtractor
-                     Source: file://dev/null
+                     Source: file:///dev/null
             PLAN, $dataFrame->explain()->toString(format: Format::declarations));
         static::assertSame([], $extractor->limits);
     }

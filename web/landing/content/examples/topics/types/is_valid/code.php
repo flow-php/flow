@@ -11,6 +11,8 @@ foreach ([42, '42', 3.14] as $value) {
     echo var_export($value, true) . ' is integer: ' . (type_integer()->isValid($value) ? 'yes' : 'no') . "\n";
 }
 
-foreach (['{"name":"John"}', 'hello', ['name' => 'John']] as $value) {
-    echo var_export($value, true) . ' is json: ' . (type_json()->isValid($value) ? 'yes' : 'no') . "\n";
-}
+// json is a value object: JSON text is only a string until cast() turns it into one
+$text = '{"name":"John"}';
+
+echo var_export($text, true) . ' is json: ' . (type_json()->isValid($text) ? 'yes' : 'no') . "\n";
+echo 'type_json()->cast(' . var_export($text, true) . ') is json: ' . (type_json()->isValid(type_json()->cast($text)) ? 'yes' : 'no') . "\n";

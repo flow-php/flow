@@ -10,7 +10,8 @@ The concept is that wherever the system receives input data, one of three operat
 - `Type::isValid($value) : bool` - checks if the value is of the correct type
 - `Type::cast($value) : mixed` - casts the value to a specific type, it must throw `\Flow\Types\Exception\CastingException` if the value
   cannot be casted to the expected type
-- `Type::assert($value) : void` - checks if the value is of the correct type, throwing an `Flow\Types\Exception\InvalidTypeException` exception if not
+- `Type::assert($value) : mixed` - returns the value when it is of the correct type, throws
+  `Flow\Types\Exception\InvalidTypeException` if not
 
 Each operation is executed at runtime, not compile time, but their structure provides significant type information for
 static code analysis tools.
@@ -48,7 +49,7 @@ Additionally, all types are divided into:
 
 - Composite Types - those composed of other types, e.g., `type_optional(type_string())` is equivalent to `?string`,
   i.e., a string or null.
-- Simple Types - single types, e.g., `type_string()`, `type_int()`, `type_bool()`, `type_float()`, `type_array()`,
+- Simple Types - single types, e.g., `type_string()`, `type_integer()`, `type_boolean()`, `type_float()`, `type_array()`,
   `type_object()`.
 
 ## Architecture
@@ -154,7 +155,7 @@ final class CustomTypeTest extends TestCase
         // we want to check if for given output method isValid() returns true or false
     }
     
-    public funciton test_to_string() : void
+    public function test_to_string() : void
     {
         // we want to check the output of toString() method for type
     }

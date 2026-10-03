@@ -178,9 +178,9 @@ data_frame()
     ->run();
 ```
 
-### Dynamic Sheet Names from Entry
+### Sheet Name from a Column
 
-Route rows to different sheets based on entry values:
+Write each row to the sheet named by its `category` value:
 
 ```php
 <?php
@@ -223,11 +223,21 @@ data_frame()
     ->run();
 ```
 
+### Cells
+
+| Column                                       | Cell                                                                                   |
+|----------------------------------------------|----------------------------------------------------------------------------------------|
+| `string`, `integer`, `float`, `boolean`      | the value                                                                              |
+| `datetime`, `date`                           | a date cell, displayed with `withDateTimeFormat()` / `withDateFormat()`                |
+| `time`                                       | text, `withTimeFormat()`                                                               |
+| `enum`                                       | a backed enum's value, a unit enum's name                                              |
+| `uuid`, `json`                               | text                                                                                   |
+| `xml`, `xml_element`, `html`, `html_element` | the markup, e.g. `<a b="1"><c></c></a>`                                                |
+| `list`, `map`, `structure`                   | JSON text: a datetime element as `DATE_ATOM`, a time as microseconds, a float as `1.0` |
+
 ### Cell Styling
 
-Apply custom styles to individual cells based on their value and the column they belong to. `$value` is the cell as
-it is written: a backed enum's value or a unit enum's name, a uuid as text, a list / map / structure as JSON text, a
-date or datetime as a `DateTimeInterface`.
+`$value` is the cell as it is written (see [Cells](#cells)), not the column value.
 
 ```php
 <?php

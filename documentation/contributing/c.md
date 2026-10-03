@@ -31,8 +31,8 @@ src/extension/pg-query-ext/
 ├── ext/                    # C source code
 │   ├── config.m4           # PHP extension build config (autoconf)
 │   ├── pg_query.c          # Extension implementation
+│   ├── pg_query.stub.php   # PHP stubs for static analysis
 │   └── php_pg_query.h      # Header file
-├── php/                    # PHP stubs for static analysis
 ├── tests/
 │   └── phpt/               # PHPT test files
 └── vendor/

@@ -1,14 +1,14 @@
-Partition into a flat directory structure using `{column}` placeholders in the destination path instead of Hive-style `column=value` directories. Every partition consumed by a placeholder becomes part of the file or directory name; remaining partitions still create `column=value` directories.
+`{column}` placeholders in the destination path name files and directories after the partition
+values, instead of Hive `column=value` directories. A partition column without a placeholder still
+gets a `column=value` directory.
 
-```bash
-output
-├── blue
-│   └── PRODUCT02.csv
-├── green
-│   └── PRODUCT01.csv
-└── red
-    ├── PRODUCT01.csv
-    └── PRODUCT02.csv
+```
+output/blue/PRODUCT02.csv
+output/green/PRODUCT01.csv
+output/red/PRODUCT01.csv
+output/red/PRODUCT02.csv
 ```
 
-Reading with the same placeholder pattern recreates the partitions from the path, including support for partition pruning through `filter()`. Keep in mind that this layout is not self-describing - a plain glob like `output/**/*.csv` will read the data but won't recognize any partitions.
+Reading with the same pattern restores `color` and `sku` from the path, and `filter()` on them
+prunes files. The layout is not self-describing: a plain glob such as `output/**/*.csv` reads the
+data without the partition columns.

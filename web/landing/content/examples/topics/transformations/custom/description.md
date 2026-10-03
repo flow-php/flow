@@ -1,1 +1,2 @@
-Create reusable transformation blocks that can be applied across multiple pipelines. Custom transformations help organize complex logic and improve code reuse.
+A `Transformation` packs several steps into one reusable class. `with()` hands it the frame, and
+whatever it returns continues the pipeline.

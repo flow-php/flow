@@ -4,19 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV;
 
+use Flow\ETL\FlowPhpExtension;
 use Flow\ETL\Rows;
-
-use function extension_loaded;
 
 final readonly class AdaptiveCSVEncoder implements CSVEncoder
 {
     private CSVEncoder $encoder;
 
-    public function __construct(CSVWriteOptions $options)
+    public function __construct(CSVWriteOptions $options, ?FlowPhpExtension $extension = null)
     {
         $php = new PhpCSVEncoder($options);
 
-        $this->encoder = extension_loaded('flow_php')
+        $this->encoder = ($extension ?? FlowPhpExtension::detect())->available()
             ? new RustCSVEncoder(
                 $options->separator,
                 $options->enclosure,

@@ -9,9 +9,9 @@ use Flow\ETL\Schema\Metadata;
 require __DIR__ . '/vendor/autoload.php';
 
 $schema = schema(
-    int_schema('id', $nullable = false),
-    str_schema('name', $nullable = true),
-    bool_schema('active', $nullable = false, Metadata::empty()->add('key', 'value')),
+    int_schema('id', nullable: false),
+    str_schema('name', nullable: true),
+    bool_schema('active', nullable: false, metadata: Metadata::empty()->add('key', 'value')),
 );
 
 data_frame()

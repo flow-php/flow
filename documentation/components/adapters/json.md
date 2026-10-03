@@ -24,74 +24,53 @@ simplified and efficient task, perfectly aligning with the robust and adaptable 
 For detailed installation instructions, see
 the [installation page](/documentation/installation/packages/etl-adapter-json.md).
 
-
-> Json library is not explicitly required, you need to make sure it is available in your composer.json file.
-> If you are only using Loader, this dependency is optional.
-
-## Extractor - JSONMachine - JsonExtractor
+## Extractor
 
 ```php
 <?php
 
-use function Flow\ETL\Adapter\JSON\from_json;
+use function Flow\ETL\Adapter\JSON\{from_json, from_json_lines};
 use function Flow\ETL\DSL\{data_frame, to_output};
 
 data_frame()
     ->read(from_json(__DIR__ . '/data.json'))
-    ->collect()
+    ->write(to_output())
+    ->run();
+
+data_frame()
+    ->read(from_json_lines(__DIR__ . '/data.jsonl'))
     ->write(to_output())
     ->run();
 ```
+
+Both return a `JsonExtractor`. `from_json()` reads one document: a top-level array, or the subtree selected with
+`withPointer()`.
 
 In JSON lines, a line holding only whitespace (space, tab, CR, LF, VT, FF) is skipped, as DuckDB does; this is not
 configurable.
 
 With the [`flow_php`](/documentation/components/extensions/flow-php-ext.md) extension loaded, JSON lines and a document
 holding a top-level array are read natively, as strict JSON: malformed input throws
-`RuntimeException('Malformed JSON in "<uri>" at line N: …')` (`at element N` in a document). A pointer, or a document
+`RuntimeException('Malformed JSON in "<uri>" at line N: ...')` (`at element N` in a document). A pointer, or a document
 that is not an array, is read by the PHP reader.
 
-## Loader - JsonLoader
+## Loader
 
 ```php
 <?php
 
-use function Flow\ETL\Adapter\JSON\to_json;
+use function Flow\ETL\Adapter\JSON\{to_json, to_json_lines};
 use function Flow\ETL\DSL\{data_frame, from_array};
 
 data_frame()
-    ->read(from_array(
-        \array_map(
-            fn (int $i) : array => ['id' => $i, 'name' => 'name_' . $i],
-            \range(0, 10)
-        )
-    ))
-    ->collect()
+    ->read(from_array([['id' => 1, 'name' => 'name_1'], ['id' => 2, 'name' => 'name_2']]))
     ->write(to_json(\sys_get_temp_dir() . '/file.json'))
-    ->run();
-```
-
-## Loader - JsonLoader - JSON lines
-
-It is also possible to export the rows using the [json lines](https://jsonlines.org/) format
-
-```php
-<?php
-
-use function Flow\ETL\Adapter\JSON\to_json_lines;
-use function Flow\ETL\DSL\{data_frame, from_array};
-
-data_frame()
-    ->read(from_array(
-        \array_map(
-            fn (int $i) : array => ['id' => $i, 'name' => 'name_' . $i],
-            \range(0, 10)
-        )
-    ))
-    ->collect()
     ->write(to_json_lines(\sys_get_temp_dir() . '/file.jsonl'))
     ->run();
 ```
+
+Both return a `JsonLoader`. `to_json()` writes one array document, `to_json_lines()` writes
+[JSON lines](https://jsonlines.org/).
 
 ## What the loaders write
 
@@ -123,8 +102,8 @@ data_frame()
 {"id":2,"active":false,"price":1,"at":null,"days":[],"labels":{},"size":{"w":3,"h":4},"meta":{}}
 ```
 
-The shape follows the column type, never the data: a `list` is always `[…]`, a `map`, a `structure` and a row are
-always `{…}` (an empty map is `{}`, a map keyed `0, 1` is `{"0":…,"1":…}`), a `json` column keeps its objects and
+The shape follows the column type, never the data: a `list` is always `[...]`, a `map`, a `structure` and a row are
+always `{...}` (an empty map is `{}`, a map keyed `0, 1` is `{"0":...,"1":...}`), a `json` column keeps its objects and
 lists. A `datetime` / `date` is written with `withDateTimeFormat()` / `withDateFormat()` at every depth, a `time` as
 microseconds. A float has the shortest digits that read back as the same float (`1.0` is `1`, or `1.0` under
 `JSON_PRESERVE_ZERO_FRACTION`); `NAN` and the infinities are refused:

@@ -112,13 +112,13 @@ $writer = new RustParquetFileWriter(                      // Flow\Parquet\Parque
     SchemaConverter::toExtension($schema),     // Flow\Parquet\ParquetFile\Schema
     Compressions::SNAPPY,                      // LZO is refused
     OptionsConverter::toExtension(Options::default()),
-    batchSize: 1_000,
+    1_000,                                     // rows per written batch
 );
 $writer->writeBatch([['id' => 1, 'name' => 'a']]);   // an array or any Traversable of rows
 $writer->writeColumns(['id' => [2, 3], 'name' => ['b', null]]);
 $writer->close();                              // footer, then the stream closed
 
-$batches = new RustBatchReader($file, ['id', 'name'], batchSize: 1_000, offset: null, limit: null);
+$batches = new RustBatchReader($file, ['id', 'name'], 1_000, null, null); // batch size, offset, limit
 $batches->schema();                            // Flow\Arrow\RustArrowSchema
 $batches->next();                              // Flow\Arrow\RustParquetBatch, null after the last
 ```

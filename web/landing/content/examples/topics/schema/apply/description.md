@@ -1,1 +1,2 @@
-Define explicit column types for data sources that lack strict schema support (like CSV, XML, or JSON). This ensures consistent type handling and avoids issues when early rows contain null or empty values.
+`withSchema()` on a reader declares the column types instead of inferring them. Formats that carry
+no types (CSV, JSON, XML, arrays) then never guess from a sample, and NOT NULL columns stay NOT NULL.

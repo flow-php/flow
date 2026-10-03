@@ -32,7 +32,7 @@ just benchmark
 ```
 
 The `flow-report` columns are: `benchmark`, `subject`, `set`, `mem_peak`, `mode`, `total_time`, `rstdev`.
-The `set` column is the parameter set label - the row count and, for the parquet/floe format benchmarks, the
+The `set` column is the parameter set label - the row count and, for the parquet format benchmarks, the
 engine variant (e.g. `100,000,php` vs `100,000,arrow`).
 
 Defaults (see `phpbench.json.dist`): remote executor (per-iteration process isolation, the only executor that

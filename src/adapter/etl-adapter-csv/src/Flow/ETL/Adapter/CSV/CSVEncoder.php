@@ -6,9 +6,9 @@ namespace Flow\ETL\Adapter\CSV;
 
 use Flow\ETL\Rows;
 
-use function extension_loaded;
+use function interface_exists;
 
-if (extension_loaded('flow_php')) {
+if (interface_exists(CSVEncoder::class, false)) {
     return;
 }
 

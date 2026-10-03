@@ -7,6 +7,8 @@ namespace Flow\ETL\Adapter\Parquet\Tests\Unit;
 use Flow\ETL\Adapter\Parquet\AdaptiveParquetOpenSource;
 use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetSourceFileContext;
 use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\FlowPhpExtension;
 use Flow\ETL\RustIterator;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
@@ -72,5 +74,15 @@ final class AdaptiveParquetOpenSourceTest extends FlowTestCase
             new PhpBackend(),
         ));
         $source->close();
+    }
+
+    public function test_a_flow_php_of_another_abi_is_refused(): void
+    {
+        $file = ParquetSourceFileContext::over(new NativeLocalFilesystem())->file;
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('does not match flow-php/etl');
+
+        new AdaptiveParquetOpenSource($file, new FlowPhpExtension(true, FlowPhpExtension::ABI + 1, '0.46.0'));
     }
 }

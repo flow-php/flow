@@ -24,8 +24,19 @@ For detailed installation instructions, see the [installation page](/documentati
 
 ## Engines
 
-Without `engine:`, Parquet is read and written by the [`flow_php` extension](/documentation/components/extensions/flow-php-ext.md)
-and arrow-ext when both are loaded, else by `AdaptiveParquetEngine`. An explicit engine is always used:
+Without `engine:`, `AdaptiveParquetEngine` opens the file. The loaded extensions, arrow-ext and
+[`flow_php`](/documentation/components/extensions/flow-php-ext.md), pick the lane:
+
+| arrow-ext | `flow_php` | Engine              | Batches                                                             |
+|-----------|------------|---------------------|---------------------------------------------------------------------|
+| no        | no         | `PhpParquetEngine`  | PHP columns                                                         |
+| yes       | no         | `RustParquetEngine` | PHP columns built from arrow-ext's values                           |
+| no        | yes        | `PhpParquetEngine`  | native columns built from the PHP engine's values                   |
+| yes       | yes        | `RustParquetEngine` | arrow-ext's batches straight into native columns, and back on write |
+
+`RustParquetEngine` needs little-endian byte order. Native columns come from the
+[column backend](/documentation/components/core/column-backend.md). An explicit engine is always used;
+`PhpParquetEngine` opts out of arrow-ext:
 
 ```php
 <?php
@@ -42,9 +53,6 @@ df()
 ```
 
 Flow `float` columns are written as Parquet `DOUBLE`.
-
-With an engine of the `flow-php/parquet` library (`PhpParquetEngine`, or `AdaptiveParquetEngine` without both extensions) a
-batch reaches the writer column by column, through `Writer::writeColumns()`.
 
 ## Schema
 

@@ -9,6 +9,8 @@ use Flow\ETL\Adapter\Parquet\AdaptiveParquetOpenSink;
 use Flow\ETL\Adapter\Parquet\SchemaConverter;
 use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetFilesContext;
 use Flow\ETL\Adapter\Parquet\Tests\Double\RecordingParquetEngine;
+use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\FlowPhpExtension;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Engine\AdaptiveParquetEngine;
@@ -127,6 +129,21 @@ final class AdaptiveParquetOpenSinkTest extends FlowTestCase
         static::assertSame(
             [['id' => 1], ['id' => 2]],
             ParquetFilesContext::phpEngineValues($filesystem, 'memory://out.parquet'),
+        );
+    }
+
+    public function test_a_flow_php_of_another_abi_is_refused(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('does not match flow-php/etl');
+
+        new AdaptiveParquetOpenSink(
+            memory_filesystem()->writeTo(path('memory://out.parquet')),
+            (new SchemaConverter())->toParquet(schema(int_schema('id'))),
+            Compressions::SNAPPY,
+            Options::default(),
+            new PhpParquetEngine(),
+            new FlowPhpExtension(true, FlowPhpExtension::ABI + 1, '0.46.0'),
         );
     }
 }

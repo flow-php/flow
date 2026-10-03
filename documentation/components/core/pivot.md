@@ -32,20 +32,21 @@ $salesData = data_frame()
         ['region' => 'South', 'product' => 'Phone', 'month' => 'Jan', 'sales' => 700],
         ['region' => 'South', 'product' => 'Phone', 'month' => 'Feb', 'sales' => 850],
     ]))
-    ->groupBy(['region', 'product'])
+    ->groupBy(['region'])
     ->pivot(col('product'), pivot_values('Laptop', 'Phone')) // creates the 'Laptop' and 'Phone' columns
     ->aggregate(sum(col('sales')->as('total_sales')))
-    ->write(to_output())
+    ->write(to_output(truncate: false))
     ->run();
 ```
 
-**Result Structure:**
-
-```
-| region | Laptop | Phone |
-|--------|--------|-------|
-| North  | 2200   | 1700  |
-| South  | 2400   | 1550  |
+```console
++--------+-------------+-------------+
+| region |      Laptop |       Phone |
++--------+-------------+-------------+
+|  North | 2200.000000 | 1700.000000 |
+|  South | 2400.000000 | 1550.000000 |
++--------+-------------+-------------+
+2 rows
 ```
 
 ## Monthly Sales Pivot
@@ -69,17 +70,20 @@ $monthlySales = data_frame()
     ->groupBy(['region'])
     ->pivot(col('month'), discover_pivot_values()) // reads the month column once at build time
     ->aggregate(average(col('sales')->as('avg_sales')))
-    ->write(to_output())
+    ->write(to_output(truncate: false))
     ->run();
 ```
 
-**Result:**
+Discovered values are sorted, strings by bytes:
 
-```
-| region | Jan  | Feb  | Mar  |
-|--------|------|------|------|
-| North  | 5000 | 5500 | 6000 |
-| South  | 4500 | 4800 | 5200 |
+```console
++--------+-------------+-------------+-------------+
+| region |         Feb |         Jan |         Mar |
++--------+-------------+-------------+-------------+
+|  North | 5500.000000 | 5000.000000 | 6000.000000 |
+|  South | 4800.000000 | 4500.000000 | 5200.000000 |
++--------+-------------+-------------+-------------+
+2 rows
 ```
 
 
@@ -102,7 +106,7 @@ data_frame()
     ->aggregate(sum(col('sales')));
 ```
 
-The scan is `DISTINCT`, skips nulls, sorts, and is bounded - `discover_pivot_values(50)` refuses a column with
+The scan is `DISTINCT`, skips nulls, sorts like [`sortBy()`](/documentation/components/core/sort.md), and is bounded - `discover_pivot_values(50)` refuses a column with
 more than 50 distinct values. Because it reads the frame before the real run, it needs a source it can read
 twice, and refuses one it cannot:
 

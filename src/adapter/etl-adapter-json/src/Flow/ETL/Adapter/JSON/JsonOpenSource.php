@@ -10,9 +10,9 @@ use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Iterator;
 
-use function extension_loaded;
+use function interface_exists;
 
-if (extension_loaded('flow_php')) {
+if (interface_exists(JsonOpenSource::class, false)) {
     return;
 }
 

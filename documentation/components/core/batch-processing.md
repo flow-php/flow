@@ -75,6 +75,7 @@ The `batchBy()` method ensures that all rows with the same column value stay in 
 - When `minSize` is specified: batches accumulate until reaching minimum size, then yield on group boundary
 - When `minSize` is omitted: each unique group value gets its own batch
 - Batches may exceed `minSize` to keep large groups intact
+- Group values compare by value (equal datetimes or uuids are one group); nulls form one group
 
 > **Use Case**: If you're loading orders with line items and using a DELETE+INSERT pattern, `batchBy('order_id')` ensures all line items for an order are in the same batch, preventing foreign key violations.
 
@@ -89,7 +90,6 @@ $dataFrame = data_frame()
     ->read($extractor)
     ->filter($condition)
     ->collect() // Collect all filtered data into single batch
-    ->sortBy([col('name')]) // Now can sort the collected data
     ->write($loader)
     ->run();
 ```
@@ -97,7 +97,7 @@ $dataFrame = data_frame()
 > **Memory Warning**: The `collect()` method loads all data into memory at once. This can cause memory exhaustion
 > with large datasets. Use only when:
 > - You're certain the entire dataset fits comfortably in available memory
-> - You need operations that require all data (like sorting)
+> - The next step needs the whole dataset in one batch
 > - You're working with small to medium datasets
 
 ## Memory Management Strategies
@@ -116,5 +116,5 @@ $report = data_frame()
     ->write($loader)
     ->run(analyze: analyze());
 
-echo "Peak memory usage: " . $report->statistics()->memory->max()->inMb() . " bytes\n";
+echo "Peak memory usage: " . $report->statistics()->memory->max()->inMb() . " MB\n";
 ```

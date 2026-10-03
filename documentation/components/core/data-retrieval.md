@@ -67,8 +67,8 @@ foreach ($dataFrame->getEachAsArray() as $rowArray) {
 
 // Fetch limited results (safe)
 $firstTen = $dataFrame->fetch(10);
-foreach ($firstTen as $row) {
-    // Process row
+foreach ($firstTen->toArray() as $row) {
+    echo "ID: " . $row['id'] . "\n";
 }
 
 // Fetch all results (dangerous for large datasets!)

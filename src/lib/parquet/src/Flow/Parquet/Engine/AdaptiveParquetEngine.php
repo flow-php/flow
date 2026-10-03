@@ -14,15 +14,16 @@ use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFileReader;
 use Flow\Parquet\ParquetFileWriter;
 
-use function extension_loaded;
-
 final readonly class AdaptiveParquetEngine implements ParquetEngine
 {
     private ParquetEngine $engine;
 
-    public function __construct(ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN, Options $options = new Options())
-    {
-        $this->engine = extension_loaded('arrow') && $byteOrder === ByteOrder::LITTLE_ENDIAN
+    public function __construct(
+        ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN,
+        Options $options = new Options(),
+        ?ArrowExtension $extension = null,
+    ) {
+        $this->engine = ($extension ?? ArrowExtension::detect())->available() && $byteOrder === ByteOrder::LITTLE_ENDIAN
             ? new RustParquetEngine($options)
             : new PhpParquetEngine($byteOrder, $options);
     }

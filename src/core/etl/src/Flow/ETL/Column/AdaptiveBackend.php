@@ -4,17 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Column;
 
+use Flow\ETL\FlowPhpExtension;
 use Flow\ETL\Schema\Definition;
-
-use function extension_loaded;
 
 final readonly class AdaptiveBackend implements Backend
 {
     private Backend $backend;
 
-    public function __construct()
+    public function __construct(?FlowPhpExtension $extension = null)
     {
-        $this->backend = extension_loaded('flow_php') ? new RustBackend() : new PhpBackend();
+        $this->backend = ($extension ?? FlowPhpExtension::detect())->available() ? new RustBackend() : new PhpBackend();
     }
 
     public function builder(Definition $definition): ColumnBuilder

@@ -4,11 +4,11 @@
 
 [TOC]
 
-DataFrame provides several methods for renaming entries (columns) in your data. These operations are lazy and don't execute until a trigger operation is called.
+DataFrame provides several methods for renaming columns. These operations are lazy and don't execute until a trigger operation is called.
 
 ## Single Column Rename
 
-To rename a single entry, use `DataFrame::rename()`:
+To rename a single column, use `DataFrame::rename()`:
 
 ```php 
 <?php 
@@ -31,5 +31,5 @@ The `renameEach()` method allows you to rename multiple columns at once using va
 
 ### Available Strategies
 
-- **`rename_style()`** - Changes entry names using string style conventions (camelCase, snake_case, etc.)
-- **`rename_replace()`** - Replaces parts of entry names using search and replace patterns
+- **`rename_style()`** - Changes column names using string style conventions (camelCase, snake_case, etc.)
+- **`rename_replace()`** - Replaces parts of column names using search and replace patterns

@@ -15,9 +15,18 @@ data_frame()
         ['a' => 100, 'b' => 100],
         ['a' => 100, 'b' => 200]
     ]))
-    ->filter(ref('b')->divide(lit(2))->equals(lit('a')))
+    ->filter(ref('b')->divide(lit(2))->equals(ref('a')))
     ->write(to_output(false))
     ->run();
+```
+
+```text
++-----+-----+
+|   a |   b |
++-----+-----+
+| 100 | 200 |
++-----+-----+
+1 rows
 ```
 
 ## Custom Filter Functions
@@ -34,7 +43,7 @@ use Flow\ETL\Function\{Parameter, ScalarFunction, ScalarFunctionChain};
 use Flow\ETL\Rows;
 use Flow\Types\Type;
 
-use function Flow\ETL\DSL\{data_frame, ref};
+use function Flow\ETL\DSL\{data_frame, from_array, ref, to_output};
 use function Flow\Types\DSL\type_boolean;
 
 final class HighValuePurchase implements ScalarFunction
@@ -68,17 +77,21 @@ final class HighValuePurchase implements ScalarFunction
             $results[] = $amount > 1000 && $types[$i] === 'purchase';
         }
 
-        return (new ResultColumn())->of($this, $results);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }
 
 data_frame()
-    ->read($transactionExtractor)
+    ->read(from_array([
+        ['amount' => 1500, 'type' => 'purchase'],
+        ['amount' => 1500, 'type' => 'refund'],
+        ['amount' => 200, 'type' => 'purchase'],
+    ]))
     ->filter(new HighValuePurchase(ref('amount'), ref('type')))
-    ->write($highValueTransactionLoader)
+    ->write(to_output(false))
     ->run();
 ```
 
-> **Performance Note**: Callback-based filtering cannot be optimized by the engine and should be used sparingly. When possible, prefer built-in scalar functions for better performance.
+> **Performance Note**: prefer built-in scalar functions when they cover the logic.
 
 - [Until](/documentation/components/core/until.md)

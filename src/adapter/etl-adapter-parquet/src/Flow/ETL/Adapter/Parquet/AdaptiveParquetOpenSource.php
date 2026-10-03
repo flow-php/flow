@@ -5,22 +5,22 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Parquet;
 
 use Flow\ETL\Column\Backend;
+use Flow\ETL\FlowPhpExtension;
 use Flow\ETL\Schema;
 use Flow\Parquet\Engine\RustParquetFileReader;
 use Flow\Parquet\ParquetFile;
 use Iterator;
 
-use function extension_loaded;
-
 final readonly class AdaptiveParquetOpenSource implements ParquetOpenSource
 {
     private ParquetOpenSource $source;
 
-    public function __construct(ParquetFile $file)
+    public function __construct(ParquetFile $file, ?FlowPhpExtension $extension = null)
     {
         $reader = $file->reader();
 
-        $this->source = extension_loaded('flow_php') && $reader instanceof RustParquetFileReader
+        $this->source = ($extension ?? FlowPhpExtension::detect())->available()
+        && $reader instanceof RustParquetFileReader
             ? new RustParquetOpenSource($reader)
             : new PhpParquetOpenSource($file);
     }

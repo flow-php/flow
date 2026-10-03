@@ -1,1 +1,2 @@
-Write data to [JSON Lines](https://jsonlines.org/) files, where each row becomes a separate JSON object on its own line.
+`to_json_lines()` writes [JSON Lines](https://jsonlines.org/): one JSON object per row, one row per
+line.

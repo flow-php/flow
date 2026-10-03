@@ -1133,12 +1133,12 @@ const scalarFunctionChainMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">minus</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction|int|float</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Minus</span>
+                    <span class=\"fn-name\">minus</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction|int|float</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$exact</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Minus</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("minus(" + "$" + "{" + "1:ref" + "}" + ")"),
+        apply: snippet("minus(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:exact" + "}" + ")"),
         boost: 10
     },                {
         label: "mod",
@@ -1178,12 +1178,12 @@ const scalarFunctionChainMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">multiply</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction|int|float</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Multiply</span>
+                    <span class=\"fn-name\">multiply</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction|int|float</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$exact</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Multiply</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("multiply(" + "$" + "{" + "1:value" + "}" + ")"),
+        apply: snippet("multiply(" + "$" + "{" + "1:value" + "}" + ", " + "$" + "{" + "2:exact" + "}" + ")"),
         boost: 10
     },                {
         label: "notEquals",
@@ -1286,12 +1286,12 @@ const scalarFunctionChainMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">plus</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction|int|float</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Plus</span>
+                    <span class=\"fn-name\">plus</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction|int|float</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$exact</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Plus</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("plus(" + "$" + "{" + "1:ref" + "}" + ")"),
+        apply: snippet("plus(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:exact" + "}" + ")"),
         boost: 10
     },                {
         label: "power",
@@ -1301,12 +1301,12 @@ const scalarFunctionChainMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">power</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction|int</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Power</span>
+                    <span class=\"fn-name\">power</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction|int</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$exact</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Power</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("power(" + "$" + "{" + "1:value" + "}" + ")"),
+        apply: snippet("power(" + "$" + "{" + "1:value" + "}" + ", " + "$" + "{" + "2:exact" + "}" + ")"),
         boost: 10
     },                {
         label: "prepend",
