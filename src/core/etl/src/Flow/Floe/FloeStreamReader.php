@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
-use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Column\Backend;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Rows;
@@ -37,7 +36,7 @@ final class FloeStreamReader
         private readonly SourceStream $source,
         private readonly Codec $codec,
         private readonly int $chunkSize,
-        private readonly Backend $backend = new AdaptiveBackend(),
+        private readonly Backend $backend,
     ) {
         Format::validateCodecId($this->codec->id());
         $this->frameDecoder = new FrameDecoder($this->codec);

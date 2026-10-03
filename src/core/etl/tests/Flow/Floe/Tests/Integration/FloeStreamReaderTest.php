@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Integration;
 
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Floe\FloeMerger;
 use Flow\Floe\FloeReader;
@@ -28,7 +29,7 @@ final class FloeStreamReaderTest extends FlowIntegrationTestCase
         $fileThree = $this->cacheDir->suffix('evolving-3.floe');
 
         $rowsOne = array_to_rows([['id' => 1]], schema(int_schema('id')));
-        $writer = new FloeWriter($this->fs(), $rowsOne->schema());
+        $writer = new FloeWriter($this->fs(), $rowsOne->schema(), new AdaptiveBackend());
         $writer->create($fileOne);
         $writer->write($rowsOne);
         $writer->close();
@@ -37,7 +38,7 @@ final class FloeStreamReaderTest extends FlowIntegrationTestCase
             [['id' => 2, 'email' => null]],
             schema(int_schema('id'), str_schema('email', nullable: true)),
         );
-        $writer = new FloeWriter($this->fs(), $rowsTwo->schema());
+        $writer = new FloeWriter($this->fs(), $rowsTwo->schema(), new AdaptiveBackend());
         $writer->create($fileTwo);
         $writer->write($rowsTwo);
         $writer->close();
@@ -46,14 +47,14 @@ final class FloeStreamReaderTest extends FlowIntegrationTestCase
             [['id' => 3, 'email' => 'third@flow.php']],
             schema(int_schema('id'), str_schema('email')),
         );
-        $writer = new FloeWriter($this->fs(), $rowsThree->schema());
+        $writer = new FloeWriter($this->fs(), $rowsThree->schema(), new AdaptiveBackend());
         $writer->create($fileThree);
         $writer->write($rowsThree);
         $writer->close();
 
-        (new FloeMerger($this->fs()))->merge([$fileOne, $fileTwo, $fileThree], $path);
+        (new FloeMerger($this->fs(), new AdaptiveBackend()))->merge([$fileOne, $fileTwo, $fileThree], $path);
 
-        $reader = (new FloeReader($this->fs()))->read($path);
+        $reader = (new FloeReader($this->fs(), new AdaptiveBackend()))->read($path);
 
         static::assertSame(3, $reader->totalRows());
 
@@ -77,7 +78,7 @@ final class FloeStreamReaderTest extends FlowIntegrationTestCase
             [['id' => 0, 'payload' => str_pad('row_0', 300, 'x')]],
             schema(int_schema('id'), str_schema('payload')),
         )->schema();
-        $writer = new FloeWriter($this->fs(), $schema);
+        $writer = new FloeWriter($this->fs(), $schema, new AdaptiveBackend());
         $writer->create($path);
         $written = 0;
 
@@ -97,7 +98,7 @@ final class FloeStreamReaderTest extends FlowIntegrationTestCase
 
         $read = 0;
 
-        foreach ((new FloeReader($this->fs(), chunkSize: 4096))
+        foreach ((new FloeReader($this->fs(), new AdaptiveBackend(), chunkSize: 4096))
             ->read($path)
             ->rows(500) as $batch) {
             foreach ($batch->toArray() as $row) {
@@ -114,13 +115,13 @@ final class FloeStreamReaderTest extends FlowIntegrationTestCase
         $rows = RowsMother::withAllEntryTypes();
         $path = $this->cacheDir->suffix('all-types.floe');
 
-        $writer = new FloeWriter($this->fs(), $rows->schema());
+        $writer = new FloeWriter($this->fs(), $rows->schema(), new AdaptiveBackend());
         $writer->create($path);
         $writer->write($rows);
         $writer->close();
 
         $batches = iterator_to_array(
-            (new FloeReader($this->fs()))
+            (new FloeReader($this->fs(), new AdaptiveBackend()))
                 ->read($path)
                 ->rows(),
         );
@@ -134,14 +135,14 @@ final class FloeStreamReaderTest extends FlowIntegrationTestCase
         $rows = RowsMother::heterogeneous();
         $path = $this->cacheDir->suffix('heterogeneous.floe');
 
-        $writer = new FloeWriter($this->fs(), $rows->schema());
+        $writer = new FloeWriter($this->fs(), $rows->schema(), new AdaptiveBackend());
         $writer->create($path);
         $writer->write($rows);
         $writer->close();
 
         $read = 0;
 
-        foreach ((new FloeReader($this->fs()))
+        foreach ((new FloeReader($this->fs(), new AdaptiveBackend()))
             ->read($path)
             ->rows() as $batch) {
             $read += $batch->count();

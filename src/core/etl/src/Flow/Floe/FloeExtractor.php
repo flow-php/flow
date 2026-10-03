@@ -4,22 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
-use Flow\ETL\Column\AdaptiveBackend;
-use Flow\ETL\Column\Backend;
-use Flow\ETL\Exception\InferredSchemaException;
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
-use Flow\ETL\Extractor\FileExtractor;
-use Flow\ETL\Extractor\FileReading;
-use Flow\ETL\Extractor\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\File\DerivedSchema;
+use Flow\ETL\Extractor\File\FileExtractor;
+use Flow\ETL\Extractor\File\FileReading;
+use Flow\ETL\Extractor\File\FileReadLoop;
+use Flow\ETL\Extractor\File\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\File\ReadWindow;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema;
-use Flow\ETL\Schema\Validator\StrictValidator;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
@@ -29,6 +30,7 @@ use Flow\Floe\Codec\NoopCodec;
 use Generator;
 
 use function iterator_count;
+use function iterator_to_array;
 use function sprintf;
 
 final class FloeExtractor implements
@@ -74,75 +76,27 @@ final class FloeExtractor implements
     }
 
     /**
-     * @return \Generator<int, \Flow\ETL\Rows, Signal|null, void>
+     * @return Generator<int, Rows, Signal|null, void>
      */
     public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
     {
-        $fileOffset = $this->offset ?? 0;
-        $yielded = 0;
-        // every file is read under the first file's schema, or the union of all of them
-        $expected = $this->derivedSchema($this->files(), $this->unionByName);
-        $target = $this->schema();
-
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
 
-        foreach ($this->files($context->backend(), $pathFilter) as $file) {
-            // finally, not a close() per exit: the offset-skip continue, the STOP/limit return
-            // below and an abandoned generator all have to release the handle (b73)
-            try {
-                $fileRows = $file->reader->totalRows();
-
-                if ($fileOffset >= $fileRows) {
-                    $fileOffset -= $fileRows;
-
-                    continue;
-                }
-
-                if (!$this->unionByName) {
-                    $validation = (new StrictValidator())->validate($expected, $file->schema());
-
-                    if (!$validation->isValid()) {
-                        throw InferredSchemaException::filesDiverge(
-                            $file->source()->uri(),
-                            $this->derivedFrom,
-                            $validation,
-                        );
-                    }
-                }
-
-                // R6: over the FILE's schema, never over schema()'s output
-                $fileSchema = $fileColumns->declare($file->schema());
-                $constants = $fileColumns->forFile($file->source(), $fileSchema);
-                $matchTo = !$fileSchema->isSame($target) ? $target : null;
-                $remaining = $limit === null ? null : $limit - $yielded;
-
-                foreach ($file->reader->rows($this->batchSize(), $fileOffset, $remaining) as $rows) {
-                    // R7: the stamp stays after decoding - FloeStreamReader::rows() yields built Rows and must not
-                    // learn about paths - but the constants are the shared ones, already typed
-                    $rows = $constants->fillRows($rows, $fileSchema, $context->backend());
-
-                    if ($matchTo !== null) {
-                        $rows = $rows->matchTo($matchTo);
-                    }
-
-                    $yielded += $rows->count();
-
-                    $signal = yield $rows;
-
-                    if ($signal === Signal::STOP) {
-                        return;
-                    }
-
-                    if ($limit !== null && $yielded >= $limit) {
-                        return;
-                    }
-                }
-
-                $fileOffset = 0;
-            } finally {
-                $file->close();
-            }
-        }
+        yield from (new FileReadLoop($fileColumns, $this->schema()))->read(
+            iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $pathFilter), false),
+            new FloeFileBatches(
+                $this->filesystem,
+                $this->codec,
+                $this->chunkSize,
+                $fileColumns,
+                $this->unionByName
+                    ? null
+                    : new DerivedSchema($this->derivedSchema($this->files(), $this->unionByName), $this->derivedFrom),
+            ),
+            $this->batchSize(),
+            $context->backend(),
+            new ReadWindow($this->offset ?? 0, $limit),
+        );
     }
 
     /**
@@ -211,15 +165,16 @@ final class FloeExtractor implements
     /**
      * @return Generator<int, FloeSourceFile>
      */
-    private function files(Backend $backend = new AdaptiveBackend(), Filter $pathFilter = new OnlyFiles()): Generator
+    private function files(): Generator
     {
-        foreach ($this->sourceFiles($this->filesystem, $this->path, $pathFilter) as $source) {
+        foreach ($this->sourceFiles($this->filesystem, $this->path) as $source) {
             yield new FloeSourceFile(
+                // only the footers are read here, no column is decoded: any backend would do
                 (new FloeReader(
                     $this->filesystem,
+                    new PhpBackend(),
                     $this->codec,
                     $this->chunkSize,
-                    backend: $backend,
                 ))->read($source->path),
                 $source,
             );

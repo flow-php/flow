@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
-use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Column\Backend;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
@@ -23,7 +22,7 @@ final readonly class FloeMerger
 
     public function __construct(
         private Filesystem $filesystem,
-        private Backend $backend = new AdaptiveBackend(),
+        private Backend $backend,
         private Codec $codec = new NoopCodec(),
     ) {
         Format::validateCodecId($this->codec->id());
@@ -142,10 +141,15 @@ final readonly class FloeMerger
             $mergedMetadata = $mergedMetadata->merge($layout['footer']->metadata);
         }
 
-        $writer = new FloeWriter($this->filesystem, $merged ?? new Schema(), new Options(codec: $this->codec));
+        $writer = new FloeWriter(
+            $this->filesystem,
+            $merged ?? new Schema(),
+            $this->backend,
+            new Options(codec: $this->codec),
+        );
         $writer->create($dest, $mergedMetadata->merge($metadata));
 
-        $reader = new FloeReader($this->filesystem, $this->codec, backend: $this->backend);
+        $reader = new FloeReader($this->filesystem, $this->backend, $this->codec);
 
         foreach ($sources as $source) {
             $streamReader = $reader->read($source);

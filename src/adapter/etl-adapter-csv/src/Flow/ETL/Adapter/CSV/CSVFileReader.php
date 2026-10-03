@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV;
 
 use Flow\ETL\Column\Backend;
-use Flow\ETL\Extractor\SourceFile;
+use Flow\ETL\Extractor\File\SourceFile;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\SchemaSampler;

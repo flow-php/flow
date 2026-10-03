@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Context;
 
-use Flow\ETL\Extractor\FileColumns;
-use Flow\ETL\Extractor\PartitionColumns;
-use Flow\ETL\Extractor\PartitionTypes;
+use Flow\ETL\Extractor\File\FileColumns;
+use Flow\ETL\Extractor\File\PartitionColumns;
+use Flow\ETL\Extractor\File\PartitionTypes;
 
 use function Flow\Filesystem\DSL\memory_filesystem;
 

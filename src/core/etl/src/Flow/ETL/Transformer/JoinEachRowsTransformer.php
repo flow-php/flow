@@ -12,6 +12,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
+use Flow\ETL\Join\RowsJoin;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
@@ -65,11 +66,13 @@ final readonly class JoinEachRowsTransformer implements Transformer
         try {
             $rightRows = $this->factory->from($rows)->fetch();
 
+            $join = new RowsJoin($context->backend());
+
             $result = match ($this->type) {
-                Join::left => $rows->joinLeft($rightRows, $this->expression),
-                Join::left_anti => $rows->joinLeftAnti($rightRows, $this->expression),
-                Join::right => $rows->joinRight($rightRows, $this->expression),
-                default => $rows->joinInner($rightRows, $this->expression),
+                Join::left => $join->left($rows, $rightRows, $this->expression),
+                Join::left_anti => $join->leftAnti($rows, $rightRows, $this->expression),
+                Join::right => $join->right($rows, $rightRows, $this->expression),
+                default => $join->inner($rows, $rightRows, $this->expression),
             };
 
             $context->telemetry()->transformationCompleted($this, [

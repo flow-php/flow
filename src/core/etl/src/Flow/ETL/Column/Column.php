@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Column;
 
+use Flow\ETL\Schema\Definition;
 use Flow\Types\Type;
 
 use function extension_loaded;

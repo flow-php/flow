@@ -1,5 +1,5 @@
 --TEST--
-native CSV rows pad and truncate to the header like CSVRowNormalizer, under both emptyToNull settings
+native CSV rows pad and truncate to the header like Records, under both emptyToNull settings
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 --FILE--

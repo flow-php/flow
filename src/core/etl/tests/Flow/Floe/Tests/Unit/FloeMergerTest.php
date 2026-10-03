@@ -6,6 +6,7 @@ namespace Flow\Floe\Tests\Unit;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Schema\Metadata;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\Exception\IncompatibleSchemaException;
@@ -45,8 +46,11 @@ final class FloeMergerTest extends TestCase
             array_to_rows([['id' => 3]], schema(int_schema('id'))),
         );
 
-        (new FloeMerger($fs))->merge([path('memory://a.floe'), path('memory://b.floe')], path('memory://splice.floe'));
-        (new FloeMerger($fs))->merge(
+        (new FloeMerger($fs, new AdaptiveBackend()))->merge([
+            path('memory://a.floe'),
+            path('memory://b.floe'),
+        ], path('memory://splice.floe'));
+        (new FloeMerger($fs, new AdaptiveBackend()))->merge(
             [path('memory://a.floe'), path('memory://b.floe')],
             path('memory://compact.floe'),
             compact: true,
@@ -72,13 +76,16 @@ final class FloeMergerTest extends TestCase
             array_to_rows([['id' => 2]], schema(int_schema('id'))),
         );
 
-        (new FloeMerger($fs))->merge(
+        (new FloeMerger($fs, new AdaptiveBackend()))->merge(
             [path('memory://a.floe'), path('memory://b.floe')],
             path('memory://compact.floe'),
             compact: true,
         );
 
-        static::assertCount(1, (new FloeReader($fs))->read(path('memory://compact.floe'))->footer()->sections);
+        static::assertCount(
+            1,
+            (new FloeReader($fs, new AdaptiveBackend()))->read(path('memory://compact.floe'))->footer()->sections,
+        );
     }
 
     public function test_merge_of_same_columns_in_different_order_re_encodes_instead_of_splicing(): void
@@ -95,7 +102,10 @@ final class FloeMergerTest extends TestCase
             array_to_rows([['b' => 200, 'a' => 2]], schema(int_schema('b'), int_schema('a'))),
         );
 
-        (new FloeMerger($fs))->merge([path('memory://a.floe'), path('memory://b.floe')], path('memory://out.floe'));
+        (new FloeMerger($fs, new AdaptiveBackend()))->merge([
+            path('memory://a.floe'),
+            path('memory://b.floe'),
+        ], path('memory://out.floe'));
 
         static::assertSame(
             [
@@ -105,7 +115,10 @@ final class FloeMergerTest extends TestCase
             FloeStreamReaderContext::readAll($fs, path('memory://out.floe'))->toArray(),
         );
         // the compact path coalesces sources into one section - splicing would keep one per source
-        static::assertCount(1, (new FloeReader($fs))->read(path('memory://out.floe'))->footer()->sections);
+        static::assertCount(
+            1,
+            (new FloeReader($fs, new AdaptiveBackend()))->read(path('memory://out.floe'))->footer()->sections,
+        );
     }
 
     public function test_merge_of_same_columns_in_different_order_with_mixed_types_round_trips(): void
@@ -122,7 +135,10 @@ final class FloeMergerTest extends TestCase
             array_to_rows([['b' => 'two', 'a' => 2]], schema(str_schema('b'), int_schema('a'))),
         );
 
-        (new FloeMerger($fs))->merge([path('memory://a.floe'), path('memory://b.floe')], path('memory://out.floe'));
+        (new FloeMerger($fs, new AdaptiveBackend()))->merge([
+            path('memory://a.floe'),
+            path('memory://b.floe'),
+        ], path('memory://out.floe'));
 
         static::assertSame(
             [
@@ -148,7 +164,7 @@ final class FloeMergerTest extends TestCase
             array_to_rows([['id' => 2]], schema(int_schema('id'))),
         );
 
-        (new FloeMerger($fs))->merge([
+        (new FloeMerger($fs, new AdaptiveBackend()))->merge([
             path('memory://a.floe'),
             path('memory://empty.floe'),
             path('memory://b.floe'),
@@ -165,7 +181,7 @@ final class FloeMergerTest extends TestCase
         $this->expectException(FloeException::class);
         $this->expectExceptionMessage('at least one source');
 
-        (new FloeMerger(memory_filesystem()))->merge([], path('memory://out.floe'));
+        (new FloeMerger(memory_filesystem(), new AdaptiveBackend()))->merge([], path('memory://out.floe'));
     }
 
     public function test_merging_a_source_that_adds_a_non_nullable_column_throws(): void
@@ -187,7 +203,10 @@ final class FloeMergerTest extends TestCase
         $this->expectException(IncompatibleSchemaException::class);
         $this->expectExceptionMessage('Floe merge cannot reconcile the schema of');
 
-        (new FloeMerger($fs))->merge([path('memory://a.floe'), path('memory://b.floe')], path('memory://out.floe'));
+        (new FloeMerger($fs, new AdaptiveBackend()))->merge([
+            path('memory://a.floe'),
+            path('memory://b.floe'),
+        ], path('memory://out.floe'));
     }
 
     public function test_merging_a_source_that_drops_a_non_nullable_column_throws(): void
@@ -207,7 +226,10 @@ final class FloeMergerTest extends TestCase
         $this->expectException(IncompatibleSchemaException::class);
         $this->expectExceptionMessage('Floe merge cannot reconcile the schema of');
 
-        (new FloeMerger($fs))->merge([path('memory://a.floe'), path('memory://b.floe')], path('memory://out.floe'));
+        (new FloeMerger($fs, new AdaptiveBackend()))->merge([
+            path('memory://a.floe'),
+            path('memory://b.floe'),
+        ], path('memory://out.floe'));
     }
 
     public function test_merging_sources_with_a_nullable_column_pads_missing_rows(): void
@@ -227,7 +249,10 @@ final class FloeMergerTest extends TestCase
             array_to_rows([['id' => 2]], schema(int_schema('id'))),
         );
 
-        (new FloeMerger($fs))->merge([path('memory://a.floe'), path('memory://b.floe')], path('memory://out.floe'));
+        (new FloeMerger($fs, new AdaptiveBackend()))->merge([
+            path('memory://a.floe'),
+            path('memory://b.floe'),
+        ], path('memory://out.floe'));
 
         // "email" is nullable in A, so B's rows are legitimately padded with null on read-back.
         FloeStreamReaderContext::write(
@@ -267,7 +292,7 @@ final class FloeMergerTest extends TestCase
             ],
         );
 
-        (new FloeMerger($fs))->merge(
+        (new FloeMerger($fs, new AdaptiveBackend()))->merge(
             [path('memory://a.floe'), path('memory://b.floe')],
             path('memory://out.floe'),
             metadata: Metadata::fromArray(['shared' => 'override']),
@@ -275,7 +300,7 @@ final class FloeMergerTest extends TestCase
 
         static::assertSame(
             ['a' => '1', 'shared' => 'override', 'b' => '2'],
-            (new FloeReader($fs))
+            (new FloeReader($fs, new AdaptiveBackend()))
                 ->read(path('memory://out.floe'))
                 ->metadata()
                 ->normalize(),
@@ -287,7 +312,9 @@ final class FloeMergerTest extends TestCase
         $this->expectException(FloeException::class);
         $this->expectExceptionMessage('does not exist');
 
-        (new FloeMerger(memory_filesystem()))->merge([path('memory://missing.floe')], path('memory://out.floe'));
+        (new FloeMerger(memory_filesystem(), new AdaptiveBackend()))->merge([path(
+            'memory://missing.floe',
+        )], path('memory://out.floe'));
     }
 
     public function test_offset_read_after_merge_seeks_across_sources(): void
@@ -304,11 +331,14 @@ final class FloeMergerTest extends TestCase
             array_to_rows([['id' => 3], ['id' => 4]], schema(int_schema('id'))),
         );
 
-        (new FloeMerger($fs))->merge([path('memory://a.floe'), path('memory://b.floe')], path('memory://out.floe'));
+        (new FloeMerger($fs, new AdaptiveBackend()))->merge([
+            path('memory://a.floe'),
+            path('memory://b.floe'),
+        ], path('memory://out.floe'));
 
         $read = [];
 
-        foreach ((new FloeReader($fs))
+        foreach ((new FloeReader($fs, new AdaptiveBackend()))
             ->read(path('memory://out.floe'))
             ->rows(batchSize: 100, offset: 3) as $batch) {
             $read = [...$read, ...$batch->column('id')->values()];
@@ -323,7 +353,7 @@ final class FloeMergerTest extends TestCase
         $value = array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
         FloeStreamReaderContext::write($fs, path('memory://a.floe'), $value);
 
-        (new FloeMerger($fs))->merge([path('memory://a.floe')], path('memory://out.floe'));
+        (new FloeMerger($fs, new AdaptiveBackend()))->merge([path('memory://a.floe')], path('memory://out.floe'));
 
         static::assertEquals($value, FloeStreamReaderContext::readAll($fs, path('memory://out.floe')));
     }
@@ -347,7 +377,7 @@ final class FloeMergerTest extends TestCase
             array_to_rows([['id' => 3]], schema(int_schema('id'))),
         );
 
-        (new FloeMerger($fs))->merge([
+        (new FloeMerger($fs, new AdaptiveBackend()))->merge([
             path('memory://a.floe'),
             path('memory://b.floe'),
             path('memory://c.floe'),
@@ -373,7 +403,10 @@ final class FloeMergerTest extends TestCase
             array_to_rows([['id' => 3], ['id' => 4]], schema(int_schema('id'))),
         );
 
-        (new FloeMerger($fs))->merge([path('memory://a.floe'), path('memory://b.floe')], path('memory://out.floe'));
+        (new FloeMerger($fs, new AdaptiveBackend()))->merge([
+            path('memory://a.floe'),
+            path('memory://b.floe'),
+        ], path('memory://out.floe'));
 
         static::assertEquals(
             array_to_rows([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4]], schema(int_schema('id'))),
@@ -398,7 +431,10 @@ final class FloeMergerTest extends TestCase
         $this->expectException(IncompatibleSchemaException::class);
         $this->expectExceptionMessage('Floe merge cannot reconcile the schema of');
 
-        (new FloeMerger($fs))->merge([path('memory://a.floe'), path('memory://b.floe')], path('memory://out.floe'));
+        (new FloeMerger($fs, new AdaptiveBackend()))->merge([
+            path('memory://a.floe'),
+            path('memory://b.floe'),
+        ], path('memory://out.floe'));
     }
 
     public function test_unsized_source_throws(): void
@@ -413,7 +449,9 @@ final class FloeMergerTest extends TestCase
         $this->expectException(FloeException::class);
         $this->expectExceptionMessage('does not report its size');
 
-        (new FloeMerger(new UnsizedFilesystem($fs)))->merge([path('memory://a.floe')], path('memory://out.floe'));
+        (new FloeMerger(new UnsizedFilesystem($fs), new AdaptiveBackend()))->merge([path(
+            'memory://a.floe',
+        )], path('memory://out.floe'));
     }
 
     public function test_source_smaller_than_header_and_trailer_throws(): void
@@ -427,7 +465,7 @@ final class FloeMergerTest extends TestCase
         $this->expectException(FloeException::class);
         $this->expectExceptionMessage('too small');
 
-        (new FloeMerger($fs))->merge([path('memory://tiny.floe')], path('memory://out.floe'));
+        (new FloeMerger($fs, new AdaptiveBackend()))->merge([path('memory://tiny.floe')], path('memory://out.floe'));
     }
 
     public function test_non_noop_codec_source_throws(): void
@@ -441,7 +479,7 @@ final class FloeMergerTest extends TestCase
         $this->expectException(FloeException::class);
         $this->expectExceptionMessage('written with codec 0x05');
 
-        (new FloeMerger($fs))->merge([path('memory://codec.floe')], path('memory://out.floe'));
+        (new FloeMerger($fs, new AdaptiveBackend()))->merge([path('memory://codec.floe')], path('memory://out.floe'));
     }
 
     public function test_source_with_footer_larger_than_file_throws(): void
@@ -455,7 +493,7 @@ final class FloeMergerTest extends TestCase
         $this->expectException(FloeException::class);
         $this->expectExceptionMessage('footer does not fit');
 
-        (new FloeMerger($fs))->merge([path('memory://torn.floe')], path('memory://out.floe'));
+        (new FloeMerger($fs, new AdaptiveBackend()))->merge([path('memory://torn.floe')], path('memory://out.floe'));
     }
 
     public function test_merge_of_different_datetime_zones_widens_to_utc(): void
@@ -474,7 +512,7 @@ final class FloeMergerTest extends TestCase
             array_to_rows([['at' => $utc]], schema(datetime_schema('at'))),
         );
 
-        (new FloeMerger($fs))->merge([
+        (new FloeMerger($fs, new AdaptiveBackend()))->merge([
             path('memory://warsaw.floe'),
             path('memory://utc.floe'),
         ], path('memory://merged.floe'));

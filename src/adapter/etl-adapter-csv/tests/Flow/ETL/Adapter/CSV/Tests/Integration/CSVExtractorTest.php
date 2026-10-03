@@ -17,6 +17,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Double\CountingFilesystem;
+use Flow\ETL\Tests\Double\RecordingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Tests\OperatingSystem;
@@ -524,10 +525,10 @@ final class CSVExtractorTest extends FlowTestCase
         $schema = from_csv(CSVFixtureContext::path('file_with_empty_columns.csv'))->withEmptyToNull(false)->schema();
 
         static::assertSame(['id', 'name', 'active'], array_keys($schema->definitions()));
-
-        foreach ($schema->definitions() as $definition) {
-            static::assertSame('string', $definition->type()->toString());
-        }
+        static::assertSame('string', $schema->get('id')->type()->toString());
+        static::assertSame('string', $schema->get('name')->type()->toString());
+        // the last line has no `active` cell at all: an absent cell is null, not '' evidence
+        static::assertSame('boolean', $schema->get('active')->type()->toString());
     }
 
     public function test_partition_columns_are_not_typed_by_the_sample(): void
@@ -770,13 +771,13 @@ final class CSVExtractorTest extends FlowTestCase
                 [
                     'id' => '',
                     'name' => '',
-                    'active' => 'false',
+                    'active' => false,
                     '_input_file_uri' => $path->uri(),
                 ],
                 [
                     'id' => '1',
                     'name' => 'Norbert',
-                    'active' => '',
+                    'active' => null,
                     '_input_file_uri' => $path->uri(),
                 ],
             ],
@@ -1278,6 +1279,22 @@ final class CSVExtractorTest extends FlowTestCase
         static::assertEquals(
             CSVFixtureContext::inferPhp($inference, 'orders_flow.csv'),
             CSVFixtureContext::infer($inference, 'orders_flow.csv'),
+        );
+    }
+
+    public function test_one_extractor_read_twice_interleaved_gives_each_read_every_row_and_closes_every_stream(): void
+    {
+        $filesystem = new RecordingFilesystem(native_local_filesystem());
+        [$first, $second] = ExtractedRows::interleaved((new CSVExtractor(
+            path_real(__DIR__ . '/../Fixtures/glob_with_empty/*.csv'),
+            $filesystem,
+        ))->withBatchSize(7));
+
+        static::assertGreaterThan(0, $first->count());
+        static::assertSame($first->toArray(), $second->toArray());
+        static::assertSame(
+            count(array_keys($filesystem->calls, 'readFrom', true)),
+            count(array_keys($filesystem->calls, 'closeSource', true)),
         );
     }
 }

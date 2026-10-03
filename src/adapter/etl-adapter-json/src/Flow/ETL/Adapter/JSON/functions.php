@@ -10,7 +10,7 @@ use Flow\Documentation\Attribute\DocumentationExample;
 use Flow\Documentation\Attribute\Module;
 use Flow\Documentation\Attribute\Type;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
-use Flow\ETL\Adapter\JSON\JSONMachine\JsonLinesExtractor;
+use Flow\ETL\Adapter\JSON\JSONMachine\JsonFormat;
 use Flow\ETL\Adapter\JSON\JsonSchema\ReferenceResolver;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Filesystem;
@@ -55,9 +55,9 @@ function from_json(
  */
 #[DocumentationDSL(module: Module::JSON, type: Type::EXTRACTOR)]
 #[DocumentationExample(topic: 'reading', example: 'jsonl')]
-function from_json_lines(string|Path $path, Filesystem $filesystem = new NativeLocalFilesystem()): JsonLinesExtractor
+function from_json_lines(string|Path $path, Filesystem $filesystem = new NativeLocalFilesystem()): JsonExtractor
 {
-    return new JsonLinesExtractor(is_string($path) ? path_real($path) : $path, $filesystem);
+    return new JsonExtractor(is_string($path) ? path_real($path) : $path, $filesystem, JsonFormat::Lines);
 }
 
 /**
@@ -87,12 +87,12 @@ function to_json(
  *
  * @param Path|string $path
  *
- * @return JsonLinesLoader
+ * @return JsonLoader
  */
 #[DocumentationDSL(module: Module::JSON, type: Type::LOADER)]
-function to_json_lines(string|Path $path, Filesystem $filesystem = new NativeLocalFilesystem()): JsonLinesLoader
+function to_json_lines(string|Path $path, Filesystem $filesystem = new NativeLocalFilesystem()): JsonLoader
 {
-    return new JsonLinesLoader(is_string($path) ? path_real($path) : $path, $filesystem);
+    return new JsonLoader(is_string($path) ? path_real($path) : $path, $filesystem, JsonFraming::Lines);
 }
 
 /**

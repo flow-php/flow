@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Extractor;
 
 use Flow\ETL\Cardinality;
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Extractor\PathPartitionsExtractor;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Context\ExtractedRows;
@@ -89,7 +90,7 @@ final class PathPartitionsExtractorTest extends FlowIntegrationTestCase
 
         foreach ($extractedData as $nextRows) {
             static::assertInstanceOf(Rows::class, $nextRows);
-            $rows = $rows->merge($nextRows);
+            $rows = $rows->isEmpty() ? $nextRows : $rows->concat(new PhpBackend(), $nextRows);
         }
 
         static::assertSame(7, $rows->count());
@@ -192,6 +193,44 @@ final class PathPartitionsExtractorTest extends FlowIntegrationTestCase
         }
 
         static::assertSame([2, 2, 2, 1], $sizes);
+    }
+
+    public function test_every_row_of_a_batch_carries_its_own_files_partition_value(): void
+    {
+        $batches = iterator_to_array(
+            from_path_partitions('memory://dir/**/*.txt', MemoryFiles::with([
+                'memory://dir/year=2023/a.txt' => 'a',
+                'memory://dir/year=2024/b.txt' => 'b',
+                'memory://dir/year=2025/c.txt' => 'c',
+            ]))
+                ->withBatchSize(3)
+                ->extract(flow_context()),
+            false,
+        );
+
+        static::assertCount(1, $batches);
+        static::assertSame(['2023', '2024', '2025'], $batches[0]->column('year')->values());
+        static::assertSame(
+            [['year' => '2023'], ['year' => '2024'], ['year' => '2025']],
+            $batches[0]->column('partitions')->values(),
+        );
+    }
+
+    public function test_a_limit_at_the_batch_boundary_keeps_each_rows_partition_value(): void
+    {
+        $batches = iterator_to_array(
+            from_path_partitions('memory://dir/**/*.txt', MemoryFiles::with([
+                'memory://dir/year=2023/a.txt' => 'a',
+                'memory://dir/year=2024/b.txt' => 'b',
+                'memory://dir/year=2025/c.txt' => 'c',
+            ]))
+                ->withBatchSize(2)
+                ->extract(flow_context(), limit: 2),
+            false,
+        );
+
+        static::assertCount(1, $batches);
+        static::assertSame(['2023', '2024'], $batches[0]->column('year')->values());
     }
 
     public function test_path_partitions_extractor_honours_the_batch_contract(): void

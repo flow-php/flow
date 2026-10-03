@@ -4,19 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel;
 
+use DateTimeInterface;
 use Flow\ETL\Adapter\Excel\Sheet\SheetNameAssertion;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Filesystem\FilesSink;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\Loader\Discardable;
-use Flow\ETL\Loader\FileLoader;
+use Flow\ETL\Loader\File\FileLoader;
+use Flow\ETL\Loader\File\FilesSink;
+use Flow\ETL\Loader\File\PartitionRouter;
 use Flow\ETL\Loader\Partitioning;
 use Flow\ETL\Loader\PartitioningLoader;
-use Flow\ETL\Loader\PartitionRouter;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
@@ -164,7 +165,7 @@ final class ExcelLoader implements Closure, Discardable, FileLoader, Loader, Par
                         : null;
                 $written = $sheetColumn === null
                     ? $group
-                    : $group->project($group->schema()->gracefulRemove($sheetColumn));
+                    : $group->project($group->schema()->gracefulRemove($sheetColumn), $context->backend());
                 $sheetValues = $sheetColumn === null ? null : $group->column($sheetColumn)->values();
 
                 /** @var array<array-key, list<int>> $sheets */
@@ -186,19 +187,11 @@ final class ExcelLoader implements Closure, Discardable, FileLoader, Loader, Par
                         );
                     }
 
-                    $values = [];
-
-                    foreach ($sheetRows->schema()->definitions() as $definition) {
-                        $values[$definition->entry()->name()] = $sheetRows
-                            ->column($definition->entry()->name())
-                            ->values();
-                    }
-
                     foreach ($encoder->encode($sheetRows) as $k => $cells) {
                         $manager->writeRow(
                             $sheetName,
                             $cells,
-                            $this->resolveCellStyles($sheetRows->schema(), $values, $k, $indices[$k] + 1, $sheetName),
+                            $this->resolveCellStyles($sheetRows->schema(), $cells, $indices[$k] + 1, $sheetName),
                         );
                     }
                 }
@@ -327,18 +320,18 @@ final class ExcelLoader implements Closure, Discardable, FileLoader, Loader, Par
     }
 
     /**
-     * @param array<array-key, list<mixed>> $values
+     * @param array<int, null|bool|DateTimeInterface|float|int|string> $cells the row as the encoder wrote it
      *
      * @return null|array<int, null|Style>
      */
-    private function resolveCellStyles(Schema $schema, array $values, int $i, int $rowNumber, string $sheetName): ?array
+    private function resolveCellStyles(Schema $schema, array $cells, int $rowNumber, string $sheetName): ?array
     {
         $styles = [];
         $columnIndex = 0;
 
         foreach ($schema->definitions() as $definition) {
             $styles[$columnIndex] = $this->cellStyler?->style(
-                $values[$definition->entry()->name()][$i],
+                $cells[$columnIndex],
                 $definition,
                 $rowNumber,
                 $columnIndex,

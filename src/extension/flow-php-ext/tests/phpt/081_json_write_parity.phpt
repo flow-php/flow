@@ -1,5 +1,5 @@
 --TEST--
-JsonOpenSink writes the same bytes through RustJSONEncoder and PhpJSONEncoder: seeded random batches over every kind, nesting <= 3, random flags and framings
+JsonOpenSink writes the same bytes through RustJsonEncoder and PhpJsonEncoder: seeded random batches over every kind, nesting <= 3, random flags and framings
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 --FILE--
@@ -8,8 +8,8 @@ require __DIR__ . '/bootstrap.php';
 
 use Flow\ETL\Adapter\JSON\JsonFraming;
 use Flow\ETL\Adapter\JSON\JsonOpenSink;
-use Flow\ETL\Adapter\JSON\RustJSONEncoder;
-use Flow\ETL\Adapter\JSON\PhpJSONEncoder;
+use Flow\ETL\Adapter\JSON\RustJsonEncoder;
+use Flow\ETL\Adapter\JSON\PhpJsonEncoder;
 use Flow\Filesystem\DestinationStream;
 
 mt_srand(81);
@@ -30,12 +30,12 @@ for ($i = 0; $i < 2_000; $i++) {
     $framing = JsonFraming::cases()[mt_rand(0, 2)];
     $dateTimeFormat = $dateTimeFormats[mt_rand(0, count($dateTimeFormats) - 1)];
     $dateFormat = $dateFormats[mt_rand(0, count($dateFormats) - 1)];
-    $recorder = new RecordingPhpJSONEncoder(new PhpJSONEncoder($flags, $dateTimeFormat, $dateFormat));
-    $writer = new RustJSONEncoder($flags, $dateTimeFormat, $dateFormat, $recorder);
+    $recorder = new RecordingPhpJsonEncoder(new PhpJsonEncoder($flags, $dateTimeFormat, $dateFormat));
+    $writer = new RustJsonEncoder($flags, $dateTimeFormat, $dateFormat, $recorder);
     $half = intdiv(count($rows), 2);
 
     $php = written(static function (DestinationStream $stream) use ($schema, $rows, $flags, $dateTimeFormat, $dateFormat, $framing, $half): void {
-        $sink = new JsonOpenSink($stream, new PhpJSONEncoder($flags, $dateTimeFormat, $dateFormat), $framing);
+        $sink = new JsonOpenSink($stream, new PhpJsonEncoder($flags, $dateTimeFormat, $dateFormat), $framing);
         $sink->write(php_rows($schema, array_slice($rows, 0, $half)));
         $sink->write(php_rows($schema, array_slice($rows, $half)));
         $sink->close();

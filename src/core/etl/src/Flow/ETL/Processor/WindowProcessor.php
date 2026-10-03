@@ -52,7 +52,7 @@ final class WindowProcessor implements Processor
             $bound ??= $this->boundTo($batch->schema());
 
             if (!$batch->count()) {
-                yield Rows::empty($bound->output);
+                yield Rows::empty($bound->output, $context->backend());
 
                 continue;
             }
@@ -165,7 +165,7 @@ final class WindowProcessor implements Processor
         $window = $resolved->window();
         $orderBy = $window->order();
         $sortBy = $orderBy === [] ? $window->partitions()->all() : $orderBy;
-        $partitionRows = $partition->matchTo($bound->input)->sortBy(...$sortBy);
+        $partitionRows = $partition->matchTo($bound->input, $context->backend())->sortBy(...$sortBy);
 
         $frame = $window->frame();
 

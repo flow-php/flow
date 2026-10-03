@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Processor;
 
 use Flow\ETL\Bucketing\Storage\MemoryBuckets;
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Processor\MemorySortProcessor;
 use Flow\ETL\Processor\TopNProcessor;
@@ -98,7 +99,7 @@ final class TopNProcessorTest extends FlowTestCase
             $limit,
             ExternalSortMother::spilling($refs, $storage, mergeFanIn: 2),
         ))->process($input, flow_context()) as $batch) {
-            $top = $top->concat($batch->matchTo($dataset['schema']));
+            $top = $top->concat(new AdaptiveBackend(), $batch->matchTo($dataset['schema'], new AdaptiveBackend()));
         }
 
         // serialized, so NaN and -0.0 compare by what they are

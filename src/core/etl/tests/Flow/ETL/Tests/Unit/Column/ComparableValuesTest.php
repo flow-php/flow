@@ -50,7 +50,6 @@ final class ComparableValuesTest extends TestCase
             datetime_schema('a'),
             [new DateTimeImmutable('2024-01-02'), new DateTimeImmutable('2024-01-01')],
         ];
-        yield 'date' => [date_schema('a'), [new DateTimeImmutable('2024-01-02'), new DateTimeImmutable('2024-01-01')]];
         yield 'time' => [time_schema('a'), ['PT2H', 'PT1H']];
     }
 
@@ -147,5 +146,19 @@ final class ComparableValuesTest extends TestCase
         static::assertTrue((new ComparableValues())->equalByPhysical($column->type()));
         static::assertSame($column->physicals(), (new ComparableValues())->ordering($column));
         static::assertSame($column->physicals(), (new ComparableValues())->equality($column));
+    }
+
+    public function test_a_date_compares_on_the_datetime_microsecond_scale(): void
+    {
+        $column = ColumnMother::of(date_schema('a', nullable: true), [new DateTimeImmutable('2024-01-02'), null]);
+
+        static::assertSame([1_704_153_600_000_000, null], (new ComparableValues())->ordering($column));
+        static::assertSame([1_704_153_600_000_000, null], (new ComparableValues())->equality($column));
+        static::assertSame(
+            (new ComparableValues())->equality(ColumnMother::of(datetime_schema('a'), [new DateTimeImmutable(
+                '2024-01-02 00:00:00 UTC',
+            )])),
+            [(new ComparableValues())->equality($column)[0]],
+        );
     }
 }

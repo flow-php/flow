@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\{config_builder, data_frame, datetime_schema, filesystem_cache, from_cache, int_schema, ref, rename_replace, schema, str_schema, to_output};
+use function Flow\ETL\DSL\{config_builder, data_frame, datetime_schema, from_cache, int_schema, ref, rename_replace, schema, str_schema, to_output};
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
 use Http\Client\Curl\Client;
@@ -30,7 +30,7 @@ $from_github_api = new PsrHttpClientDynamicExtractor($client, new class implemen
     }
 });
 
-data_frame(config_builder()->cache(filesystem_cache(__DIR__ . '/output/cache')))
+data_frame(config_builder()->cacheDir(__DIR__ . '/output/cache'))
     ->read(
         from_cache(
             id: 'github_api',

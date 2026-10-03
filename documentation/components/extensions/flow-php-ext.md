@@ -70,7 +70,7 @@ Every contract with a Rust and a PHP implementation follows one pattern: the ext
 | `Flow\ETL\Adapter\CSV\CSVOpenSource`         | `RustCSVOpenSource`     | `PhpCSVOpenSource`     | `AdaptiveCSVOpenSource`     |
 | `Flow\ETL\Adapter\CSV\CSVEncoder`            | `RustCSVEncoder`        | `PhpCSVEncoder`        | `AdaptiveCSVEncoder`        |
 | `Flow\ETL\Adapter\JSON\JsonOpenSource`       | `RustJsonOpenSource`    | `PhpJsonOpenSource`    | `AdaptiveJsonOpenSource`    |
-| `Flow\ETL\Adapter\JSON\JSONEncoder`          | `RustJSONEncoder`       | `PhpJSONEncoder`       | `AdaptiveJSONEncoder`       |
+| `Flow\ETL\Adapter\JSON\JsonEncoder`          | `RustJsonEncoder`       | `PhpJsonEncoder`       | `AdaptiveJsonEncoder`       |
 | `Flow\ETL\Adapter\Parquet\ParquetOpenSource` | `RustParquetOpenSource` | `PhpParquetOpenSource` | `AdaptiveParquetOpenSource` |
 | `Flow\ETL\Adapter\Parquet\ParquetOpenSink`   | `RustParquetOpenSink`   | `PhpParquetOpenSink`   | `AdaptiveParquetOpenSink`   |
 
@@ -103,7 +103,7 @@ those columns, the rest of the batch stays native. `to_json()` and `to_json_line
 `JSON_THROW_ON_ERROR`, `JSON_UNESCAPED_SLASHES`, `JSON_UNESCAPED_UNICODE` and `JSON_PRESERVE_ZERO_FRACTION`; any other
 flag (`JSON_PRETTY_PRINT`, ...) writes through PHP.
 
-`RustCSVEncoder` / `RustJSONEncoder` hold the PHP encoder they render the PHP columns with.
+`RustCSVEncoder` / `RustJsonEncoder` hold the PHP encoder they render the PHP columns with.
 
 ## Parquet
 

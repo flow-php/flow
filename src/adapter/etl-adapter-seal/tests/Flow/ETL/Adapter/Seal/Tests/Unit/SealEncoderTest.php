@@ -16,18 +16,24 @@ use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RequiresPhp;
 
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\date_schema;
+use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\definition_from_type;
+use function Flow\ETL\DSL\html_element_schema;
+use function Flow\ETL\DSL\html_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\xml_element_schema;
 use function Flow\ETL\DSL\xml_schema;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_enum;
 use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_html_element;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
@@ -123,6 +129,52 @@ final class SealEncoderTest extends FlowTestCase
                 [['id' => 1, 'name' => 'Alice'], ['id' => 2, 'name' => 'Bob']],
                 schema(int_schema('id'), str_schema('name')),
             )),
+        );
+    }
+
+    public function test_encodes_an_xml_element_as_its_markup(): void
+    {
+        $document = new DOMDocument();
+        $document->loadXML('<root><a b="1"><c/></a></root>');
+
+        static::assertSame(
+            [['e' => '<a b="1"><c></c></a>']],
+            (new SealEncoder())->encode(array_to_rows([[
+                'e' => $document->getElementsByTagName('a')->item(0),
+            ]], schema(xml_element_schema('e')))),
+        );
+    }
+
+    public function test_encodes_a_datetime_column_with_nulls(): void
+    {
+        static::assertSame(
+            [['at' => '2026-01-02T03:04:05+00:00'], ['at' => null]],
+            (new SealEncoder())->encode(array_to_rows([
+                ['at' => new DateTimeImmutable('2026-01-02 03:04:05 UTC')],
+                ['at' => null],
+            ], schema(datetime_schema('at', nullable: true)))),
+        );
+    }
+
+    #[RequiresPhp('>= 8.4.0')]
+    public function test_encodes_an_html_document_as_its_markup(): void
+    {
+        static::assertSame(
+            [['h' => '<!DOCTYPE html><html><head></head><body><p>a</p></body></html>']],
+            (new SealEncoder())->encode(array_to_rows([[
+                'h' => '<!DOCTYPE html><html><head></head><body><p>a</p></body></html>',
+            ]], schema(html_schema('h')))),
+        );
+    }
+
+    #[RequiresPhp('>= 8.4.0')]
+    public function test_encodes_an_html_element_with_a_parent_as_its_markup(): void
+    {
+        static::assertSame(
+            [['e' => '<p>a</p>']],
+            (new SealEncoder())->encode(array_to_rows([[
+                'e' => type_html_element()->cast('<div><p>a</p></div>')->firstElementChild,
+            ]], schema(html_element_schema('e')))),
         );
     }
 }

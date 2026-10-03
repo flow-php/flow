@@ -5,37 +5,39 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\JSON;
 
 use DateTimeInterface;
-use Flow\ETL\Config\Telemetry\TelemetryAttributes;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Filesystem\FilesSink;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\Loader\Discardable;
-use Flow\ETL\Loader\FileLoader;
+use Flow\ETL\Loader\File\FileLoader;
+use Flow\ETL\Loader\File\FileSink;
+use Flow\ETL\Loader\File\FileSinks;
+use Flow\ETL\Loader\File\FileWriteFrame;
+use Flow\ETL\Loader\File\PartitionRouter;
 use Flow\ETL\Loader\Partitioning;
 use Flow\ETL\Loader\PartitioningLoader;
-use Flow\ETL\Loader\PartitionRouter;
 use Flow\ETL\Rows;
+use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
-use Throwable;
 
 use function sprintf;
 
-final class JsonLoader implements Closure, Discardable, FileLoader, Loader, PartitioningLoader
+final class JsonLoader implements Closure, Discardable, FileLoader, FileSinks, Loader, PartitioningLoader
 {
+    private ?FileWriteFrame $frame = null;
+
     private PartitionRouter $router;
 
     private readonly Filesystem $filesystem;
 
     private SaveMode $saveMode = SaveMode::ExceptionIfExists;
-
-    private ?FilesSink $files = null;
 
     private string $dateFormat = 'Y-m-d';
 
@@ -45,22 +47,19 @@ final class JsonLoader implements Closure, Discardable, FileLoader, Loader, Part
 
     private readonly Path $path;
 
-    private bool $putRowsInNewLines = false;
-
-    /**
-     * @var array<string, JsonOpenSink> by stream URI
-     */
-    private array $sinks = [];
-
-    public function __construct(Path $path, Filesystem $filesystem = new NativeLocalFilesystem())
-    {
+    public function __construct(
+        Path $path,
+        Filesystem $filesystem = new NativeLocalFilesystem(),
+        private JsonFraming $framing = JsonFraming::Array,
+    ) {
         if (!$filesystem->supports($path)) {
             throw new InvalidArgumentException(sprintf(
                 'Filesystem %s serves "%s://" paths, given: "%s". Pass the filesystem that handles '
-                . 'this scheme, e.g. to_json($path, filesystem: aws_s3_filesystem(...)).',
+                . 'this scheme, e.g. %s($path, filesystem: aws_s3_filesystem(...)).',
                 $filesystem::class,
                 $filesystem->mount()->protocol,
                 $path->uri(),
+                $framing === JsonFraming::Lines ? 'to_json_lines' : 'to_json',
             ));
         }
 
@@ -78,20 +77,14 @@ final class JsonLoader implements Closure, Discardable, FileLoader, Loader, Part
 
     public function closure(FlowContext $context): void
     {
-        foreach ($this->sinks as $sink) {
-            $sink->close();
-        }
-
-        $this->files?->publish();
-        $this->files = null;
-        $this->sinks = [];
+        $this->frame?->closure();
+        $this->frame = null;
     }
 
     public function discard(FlowContext $context): void
     {
-        $this->files?->abandon();
-        $this->files = null;
-        $this->sinks = [];
+        $this->frame?->discard();
+        $this->frame = null;
     }
 
     public function destination(): Path
@@ -101,30 +94,22 @@ final class JsonLoader implements Closure, Discardable, FileLoader, Loader, Part
 
     public function load(Rows $rows, FlowContext $context): void
     {
-        $context->telemetry()->loadingStarted($this, [
-            TelemetryAttributes::ATTR_LOADER_DESTINATION_URI => $this->path->uri(),
-        ]);
+        ($this->frame ??= new FileWriteFrame(
+            $this->filesystem,
+            $this->path,
+            $this->saveMode,
+            $this->router,
+            $this,
+        ))->write($rows, $context, $this);
+    }
 
-        try {
-            foreach ($this->router->route($rows) as [$partitions, $group]) {
-                $stream = ($this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode))->writeTo(
-                    $partitions->toArray(),
-                );
-                ($this->sinks[$stream->path()->uri()] ??= new JsonOpenSink(
-                    $stream,
-                    new AdaptiveJSONEncoder($this->flags, $this->dateTimeFormat, $this->dateFormat),
-                    $this->putRowsInNewLines ? JsonFraming::ARRAY_LINES : JsonFraming::ARRAY,
-                ))->write($group);
-            }
-
-            $context->telemetry()->loadingCompleted($this, [
-                TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count(),
-            ]);
-        } catch (Throwable $e) {
-            $context->telemetry()->loadingFailed($this, $e);
-
-            throw $e;
-        }
+    public function open(DestinationStream $stream, Backend $backend): FileSink
+    {
+        return new JsonOpenSink(
+            $stream,
+            new AdaptiveJsonEncoder($this->flags, $this->dateTimeFormat, $this->dateFormat),
+            $this->framing,
+        );
     }
 
     public function saveMode(SaveMode $mode): static
@@ -150,14 +135,21 @@ final class JsonLoader implements Closure, Discardable, FileLoader, Loader, Part
 
     public function withFlags(int $flags): self
     {
-        $this->flags = $flags;
+        $this->flags = $this->framing === JsonFraming::Lines ? $flags & ~JSON_PRETTY_PRINT : $flags;
 
         return $this;
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function withRowsInNewLines(bool $putRowsInNewLines): self
     {
-        $this->putRowsInNewLines = $putRowsInNewLines;
+        if ($this->framing === JsonFraming::Lines) {
+            throw new InvalidArgumentException('withRowsInNewLines() applies to to_json(), not to_json_lines()');
+        }
+
+        $this->framing = $putRowsInNewLines ? JsonFraming::ArrayLines : JsonFraming::Array;
 
         return $this;
     }

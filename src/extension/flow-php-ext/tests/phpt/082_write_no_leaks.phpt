@@ -9,8 +9,8 @@ require __DIR__ . '/bootstrap.php';
 use Flow\ETL\Adapter\CSV\CSVWriteOptions;
 use Flow\ETL\Adapter\CSV\RustCSVEncoder;
 use Flow\ETL\Adapter\CSV\PhpCSVEncoder;
-use Flow\ETL\Adapter\JSON\RustJSONEncoder;
-use Flow\ETL\Adapter\JSON\PhpJSONEncoder;
+use Flow\ETL\Adapter\JSON\RustJsonEncoder;
+use Flow\ETL\Adapter\JSON\PhpJsonEncoder;
 use Flow\ETL\Column\RustBackend;
 
 use function Flow\ETL\DSL\float_schema;
@@ -29,7 +29,7 @@ $refusedSchema = schema(str_schema('s'), float_schema('f'), list_schema('l', typ
 $refused = native_rows($refusedSchema, [['s' => "\xff", 'f' => NAN, 'l' => [INF]]]);
 $dateTimeFormat = 'Y-m-d\TH:i:s.uP T';
 $csv = new RustCSVEncoder(',', '"', '\\', "\n", $dateTimeFormat, 'Y-m-d', new PhpCSVEncoder(new CSVWriteOptions(newLineSeparator: "\n", dateTimeFormat: $dateTimeFormat)));
-$json = new RustJSONEncoder(JSON_THROW_ON_ERROR, $dateTimeFormat, 'Y-m-d', new PhpJSONEncoder(JSON_THROW_ON_ERROR, $dateTimeFormat));
+$json = new RustJsonEncoder(JSON_THROW_ON_ERROR, $dateTimeFormat, 'Y-m-d', new PhpJsonEncoder(JSON_THROW_ON_ERROR, $dateTimeFormat));
 // stand-ins for the held encoder: a cell list of the wrong length, and an encoder that throws
 $short = new class {
     public function cells(): array
@@ -59,17 +59,17 @@ $cycle = static function () use ($schema, $jsonSchema, $native, $php, $refused, 
     $csv->encode($native);
     // PHP columns are adopted for the encode and freed after it
     $csv->encode($php);
-    $json->encode($native->project($jsonSchema), "\n");
-    $json->encode($php->project($jsonSchema), ',');
+    $json->encode($native->project($jsonSchema, new Flow\ETL\Column\RustBackend()), "\n");
+    $json->encode($php->project($jsonSchema, new Flow\ETL\Column\PhpBackend()), ',');
 
     foreach ([
         static fn() => $csv->encode($refused),
         static fn() => $json->encode($refused, "\n"),
         static fn() => $json->encode($native, "\n"),
         static fn() => (new RustCSVEncoder(',', '"', '\\', "\n", $dateTimeFormat, 'Y-m-d', $short))->encode($native),
-        static fn() => (new RustJSONEncoder(JSON_THROW_ON_ERROR, $dateTimeFormat, 'Y-m-d', $short))->encode($native->project($jsonSchema), "\n"),
+        static fn() => (new RustJsonEncoder(JSON_THROW_ON_ERROR, $dateTimeFormat, 'Y-m-d', $short))->encode($native->project($jsonSchema, new Flow\ETL\Column\RustBackend()), "\n"),
         static fn() => (new RustCSVEncoder(',', '"', '\\', "\n", $dateTimeFormat, 'Y-m-d', $throwing))->encode($native),
-        static fn() => (new RustJSONEncoder(JSON_THROW_ON_ERROR, $dateTimeFormat, 'Y-m-d', $throwing))->encode($native->project($jsonSchema), "\n"),
+        static fn() => (new RustJsonEncoder(JSON_THROW_ON_ERROR, $dateTimeFormat, 'Y-m-d', $throwing))->encode($native->project($jsonSchema, new Flow\ETL\Column\RustBackend()), "\n"),
     ] as $refusal) {
         try {
             $refusal();

@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function\Evaluation;
 
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Column\Column;
-use Flow\ETL\Column\Php\IdentityPhysical;
-use Flow\ETL\Column\Php\PhysicalFor;
-use Flow\ETL\Column\Php\ScalarColumn;
-use Flow\ETL\Column\Php\ValueColumn;
-use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Column\Physical\PhysicalFor;
+use Flow\ETL\Column\ValueColumn;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\HTMLElementType;
@@ -35,6 +33,10 @@ use function get_debug_type;
 
 final readonly class ResultColumn
 {
+    public function __construct(
+        private Backend $backend,
+    ) {}
+
     /**
      * The `list<returns()>` column of an ExpandResults function: one list per row.
      *
@@ -145,7 +147,10 @@ final readonly class ResultColumn
             }
 
             if ($native !== null) {
-                return new ScalarColumn($bare, new IdentityPhysical(), $values, $nulls);
+                $builder = $this->backend->builder(definition_from_type('value', $type));
+                $builder->appendPhysicals($values, $nulls);
+
+                return $builder->finish();
             }
         }
 
@@ -153,7 +158,7 @@ final readonly class ResultColumn
             return new ValueColumn($values);
         }
 
-        $builder = (new PhpBackend())->builder(definition_from_type('value', $type));
+        $builder = $this->backend->builder(definition_from_type('value', $type));
         $builder->appendMany($values);
 
         return $builder->finish();

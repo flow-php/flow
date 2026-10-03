@@ -10,6 +10,7 @@ use Flow\ETL\Executor;
 use Flow\ETL\Executor\PhysicalPlan;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Join\JoinSchema;
+use Flow\ETL\Join\RowsJoin;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
@@ -35,7 +36,7 @@ final class CrossJoinRowsTransformer implements Transformer
         $context->telemetry()->transformationStarted($this);
 
         try {
-            $result = $rows->joinCross($this->rows(), $this->prefix);
+            $result = (new RowsJoin($context->backend()))->cross($rows, $this->rows(), $this->prefix);
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

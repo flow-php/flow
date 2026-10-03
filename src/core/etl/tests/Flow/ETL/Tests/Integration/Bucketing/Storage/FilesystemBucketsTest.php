@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Integration\Bucketing\Storage;
 
 use DateTimeImmutable;
 use Flow\ETL\Bucketing\Storage\FilesystemBuckets;
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Context\BucketsStorageContext;
@@ -318,6 +319,7 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
                 [['id' => 1, 'name' => 'x']],
                 schema(int_schema('id'), str_schema('name')),
             ))->schema(),
+            new AdaptiveBackend(),
         );
         $writer->create($path);
         $writer->write($first);
@@ -326,6 +328,7 @@ final class FilesystemBucketsTest extends FlowIntegrationTestCase
         $writer = new FloeWriter(
             $this->fs(),
             array_to_rows([['id' => 2, 'city' => 'y']], schema(int_schema('id'), str_schema('city')))->schema(),
+            new AdaptiveBackend(),
         );
 
         $this->expectException(IncompatibleSchemaException::class);

@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Column\Php;
 
 use Flow\ETL\Column\Column;
+use Flow\ETL\Column\Layout\Offsets;
+use Flow\ETL\Column\Layout\Validity;
+use Flow\ETL\Column\Retype;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\MapType;

@@ -71,6 +71,16 @@ $rows = data_frame()
 Row numbers count from 1 and include the header row, so `->withOffset(5)` on a sheet with a header skips rows 2-4
 and starts at row 5.
 
+### Header and missing cells
+
+```
+header row  [' id ', '', 'name']   →  columns ['id', 'e01', 'name']   (trimmed, a blank cell named e + its position)
+record      ['1', 'a']             →  ['id' => '1', 'e01' => 'a', 'name' => null]   (a cell the record lacks is null)
+record      ['1', '', 'x']         →  'e01' => null   (a present '' is null; `withConvertEmptyToNull(false)` keeps it '')
+```
+
+A header cell that is not text (a date, a number) is named like a blank one.
+
 ### Schema
 
 Without a declared schema, `from_excel()` samples the workbook before the first row is read, decides one schema, and
@@ -215,7 +225,9 @@ data_frame()
 
 ### Cell Styling
 
-Apply custom styles to individual cells based on their value and the column they belong to:
+Apply custom styles to individual cells based on their value and the column they belong to. `$value` is the cell as
+it is written: a backed enum's value or a unit enum's name, a uuid as text, a list / map / structure as JSON text, a
+date or datetime as a `DateTimeInterface`.
 
 ```php
 <?php

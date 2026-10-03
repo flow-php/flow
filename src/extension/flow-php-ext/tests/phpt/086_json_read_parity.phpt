@@ -9,7 +9,7 @@ require __DIR__ . '/bootstrap.php';
 use Flow\ETL\Adapter\JSON\JSONMachine\{JsonFileReader, JsonFormat};
 use Flow\ETL\Adapter\JSON\{PhpJsonOpenSource, RustJsonOpenSource};
 use Flow\ETL\Column\{RustBackend, RustColumn, PhpBackend};
-use Flow\ETL\Extractor\SourceFile;
+use Flow\ETL\Extractor\File\SourceFile;
 use Flow\ETL\{Rows, Schema};
 use Flow\Filesystem\Stream\StringSourceStream;
 

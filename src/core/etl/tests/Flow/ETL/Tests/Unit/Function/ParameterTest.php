@@ -52,14 +52,6 @@ final class ParameterTest extends FlowTestCase
         yield 'null propagates' => [null, null];
     }
 
-    public static function float_data_provider(): Generator
-    {
-        yield 'valid float' => [3.14, 3.14];
-        yield 'zero float' => [0.0, 0.0];
-        yield 'negative float' => [-2.5, -2.5];
-        yield 'null propagates' => [null, null];
-    }
-
     public static function int_data_provider(): Generator
     {
         yield 'valid integer' => [42, null, 42];
@@ -220,32 +212,6 @@ final class ParameterTest extends FlowTestCase
             flow_context(),
             StringStyles::class,
         );
-    }
-
-    #[DataProvider('float_data_provider')]
-    public function test_as_float(mixed $input, ?float $expected): void
-    {
-        static::assertSame(
-            [$expected],
-            (new Parameter(lit($input)))->asFloats(RowsMother::sequentialIds(1), flow_context()),
-        );
-    }
-
-    public function test_as_floats_refuses_an_integer_column(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-
-        (new Parameter((new ReferenceResolver())->resolve(
-            ref('id'),
-            RowsMother::sequentialIds(2)->schema(),
-        )))->asFloats(RowsMother::sequentialIds(2), flow_context());
-    }
-
-    public function test_as_float_throws_on_a_malformed_value(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-
-        (new Parameter(lit('3.14')))->asFloats(RowsMother::sequentialIds(1), flow_context());
     }
 
     public function test_as_instance_of_propagates_null(): void
@@ -439,29 +405,6 @@ final class ParameterTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
 
         (new Parameter(lit('not numeric')))->asNumbers(RowsMother::sequentialIds(1), flow_context(), 99);
-    }
-
-    public function test_as_object_propagates_null(): void
-    {
-        static::assertSame([null], (new Parameter(lit(null)))->asObjects(RowsMother::sequentialIds(1), flow_context()));
-    }
-
-    public function test_as_object_throws_on_a_malformed_value(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-
-        (new Parameter(lit('not an object')))->asObjects(RowsMother::sequentialIds(1), flow_context());
-    }
-
-    public function test_as_object_with_valid_object(): void
-    {
-        $object = new stdClass();
-        $object->property = 'value';
-
-        static::assertSame(
-            [$object],
-            (new Parameter(lit($object)))->asObjects(RowsMother::sequentialIds(1), flow_context()),
-        );
     }
 
     #[DataProvider('string_data_provider')]

@@ -508,10 +508,9 @@ final class GoogleSheetExtractorTest extends FlowTestCase
             $rows,
         )], [SheetValuesMother::batch([$rows])]);
 
-        // 3, not 2: the blank row still decodes to a column-less row, as it did before inference existed. What this
-        // pins is that the divergence check no longer reads that row as "every column is missing".
+        // a leading blank row is skipped before the generated header is sized, so the two data rows keep their columns
         self::assertExtractedRowsCount(
-            3,
+            2,
             GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(100, $values))->withHeader(false),
         );
     }

@@ -17,6 +17,7 @@ use Flow\ETL\Tests\Mother\RowsMother;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_rows;
@@ -524,5 +525,21 @@ final class JoinTest extends FlowIntegrationTestCase
             ],
             $rows->toArray(),
         );
+    }
+
+    public function test_a_date_key_meets_an_equal_datetime_key(): void
+    {
+        $rows = df()
+            ->read(from_rows(array_to_rows([['k' => new DateTimeImmutable('2026-01-02')]], schema(date_schema('k')))))
+            ->join(
+                df()->read(from_rows(array_to_rows([[
+                    'r' => new DateTimeImmutable('2026-01-02 00:00:00 UTC'),
+                ]], schema(datetime_schema('r'))))),
+                join_on(['k' => 'r']),
+                Join::inner,
+            )
+            ->fetch();
+
+        static::assertCount(1, $rows);
     }
 }

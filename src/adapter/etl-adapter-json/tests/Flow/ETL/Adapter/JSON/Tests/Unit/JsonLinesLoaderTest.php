@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\JSON\Tests\Unit;
 
 use DateTimeImmutable;
-use Flow\ETL\Adapter\JSON\JsonLinesLoader;
+use Flow\ETL\Adapter\JSON\JsonFraming;
+use Flow\ETL\Adapter\JSON\JsonLoader;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\Double\RecordingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Path\Option;
@@ -32,7 +34,7 @@ final class JsonLinesLoaderTest extends FlowTestCase
 {
     public function test_setting_content_type_on_path(): void
     {
-        $loader = new JsonLinesLoader(path(__DIR__ . '/file.jsonl'));
+        $loader = new JsonLoader(path(__DIR__ . '/file.jsonl'), framing: JsonFraming::Lines);
 
         static::assertEquals($loader->destination()->getOption(Option::CONTENT_TYPE), ContentType::JSON);
     }
@@ -73,6 +75,14 @@ final class JsonLinesLoaderTest extends FlowTestCase
             "{\"at\":\"02/01/2026 03:04\"}\n",
             $filesystem->readFrom(path('memory://out.jsonl'))->content(),
         );
+    }
+
+    public function test_rows_in_new_lines_is_refused_for_json_lines(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('withRowsInNewLines() applies to to_json(), not to_json_lines()');
+
+        to_json_lines(path('memory://out.jsonl'), filesystem: memory_filesystem())->withRowsInNewLines(true);
     }
 
     public function test_every_partition_file_ends_with_a_new_line(): void

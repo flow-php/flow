@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\PostgreSql\Tests\Unit\QueryBuilder;
 use Flow\ETL\Adapter\PostgreSql\EntryTypesMap;
 use Flow\ETL\Adapter\PostgreSql\LoaderOptions\InsertOptions;
 use Flow\ETL\Adapter\PostgreSql\QueryBuilder\InsertQueryBuilder;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\PostgreSql\Client\Types\ValueConverters;
 use PHPUnit\Framework\TestCase;
 
@@ -20,7 +21,8 @@ final class InsertQueryBuilderTest extends TestCase
     public function test_build_converts_each_value_with_its_columns_converter(): void
     {
         [$_query, $params] = (new InsertQueryBuilder('users', new EntryTypesMap()))->build(
-            [['id' => 1, 'name' => 'Alice', 'active' => true], ['id' => 2, 'name' => 'Bob', 'active' => false]],
+            ['id' => [1, 2], 'name' => ['Alice', 'Bob'], 'active' => [true, false]],
+            2,
             schema(int_schema('id'), str_schema('name'), bool_schema('active')),
             ValueConverters::create(),
         );
@@ -31,7 +33,8 @@ final class InsertQueryBuilderTest extends TestCase
     public function test_build_simple_insert(): void
     {
         [$query, $params] = (new InsertQueryBuilder('users', new EntryTypesMap()))->build(
-            [['id' => 1, 'name' => 'Alice'], ['id' => 2, 'name' => 'Bob']],
+            ['id' => [1, 2], 'name' => ['Alice', 'Bob']],
+            2,
             schema(int_schema('id'), str_schema('name')),
             ValueConverters::create(),
         );
@@ -45,7 +48,8 @@ final class InsertQueryBuilderTest extends TestCase
     public function test_build_with_null_values(): void
     {
         [$_query, $params] = (new InsertQueryBuilder('users', new EntryTypesMap()))->build(
-            [['id' => 1, 'name' => null]],
+            ['id' => [1], 'name' => [null]],
+            1,
             schema(int_schema('id'), str_schema('name', nullable: true)),
             ValueConverters::create(),
         );
@@ -56,7 +60,8 @@ final class InsertQueryBuilderTest extends TestCase
     public function test_build_with_skip_conflicts(): void
     {
         [$query, $_params] = (new InsertQueryBuilder('users', new EntryTypesMap()))->build(
-            [['id' => 1, 'name' => 'Alice']],
+            ['id' => [1], 'name' => ['Alice']],
+            1,
             schema(int_schema('id'), str_schema('name')),
             ValueConverters::create(),
             InsertOptions::skipConflicts(),
@@ -68,7 +73,8 @@ final class InsertQueryBuilderTest extends TestCase
     public function test_build_with_upsert_on_columns(): void
     {
         [$query, $_params] = (new InsertQueryBuilder('users', new EntryTypesMap()))->build(
-            [['id' => 1, 'name' => 'Alice']],
+            ['id' => [1], 'name' => ['Alice']],
+            1,
             schema(int_schema('id'), str_schema('name')),
             ValueConverters::create(),
             InsertOptions::upsertOnColumns(['id']),
@@ -82,7 +88,8 @@ final class InsertQueryBuilderTest extends TestCase
     public function test_build_with_upsert_on_constraint(): void
     {
         [$query, $_params] = (new InsertQueryBuilder('users', new EntryTypesMap()))->build(
-            [['id' => 1, 'name' => 'Alice']],
+            ['id' => [1], 'name' => ['Alice']],
+            1,
             schema(int_schema('id'), str_schema('name')),
             ValueConverters::create(),
             InsertOptions::upsertOnConstraint('users_pkey'),
@@ -91,5 +98,18 @@ final class InsertQueryBuilderTest extends TestCase
         $sql = $query->toSql();
         static::assertStringContainsString('ON CONSTRAINT "users_pkey"', $sql);
         static::assertStringContainsString('DO UPDATE SET', $sql);
+    }
+
+    public function test_build_refuses_a_column_of_another_length(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Column "name" holds 1 values, the insert 2 rows');
+
+        (new InsertQueryBuilder('users', new EntryTypesMap()))->build(
+            ['id' => [1, 2], 'name' => ['Alice']],
+            2,
+            schema(int_schema('id'), str_schema('name')),
+            ValueConverters::create(),
+        );
     }
 }

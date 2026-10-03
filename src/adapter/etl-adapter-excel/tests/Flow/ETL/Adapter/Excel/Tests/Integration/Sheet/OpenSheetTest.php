@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel\Tests\Integration\Sheet;
 
-use Flow\ETL\Adapter\Excel\ExcelDecoder;
 use Flow\ETL\Adapter\Excel\Sheet\OpenSheet;
 use Flow\ETL\Adapter\Excel\Sheet\SheetCells;
 use Flow\ETL\Adapter\Excel\Sheet\SheetsManager;
 use Flow\ETL\Adapter\Excel\Tests\Context\ExcelFixtureContext;
+use Flow\ETL\Extractor\Grid\RecordDecoder;
 use Flow\ETL\Tests\FlowTestCase;
 use OpenSpout\Reader\Exception\ReaderNotOpenedException;
 use OpenSpout\Reader\XLSX\Reader as XlsxReader;
@@ -23,7 +23,7 @@ final class OpenSheetTest extends FlowTestCase
         $open = new OpenSheet(
             $reader,
             (new SheetCells((new SheetsManager($reader->getSheetIterator()))->first(), true, 1))->rows(),
-            $decoder = new ExcelDecoder(),
+            $decoder = new RecordDecoder(withHeader: true, emptyToNull: true),
         );
 
         static::assertSame(['id', 'name', 'email'], $open->cells->current());
@@ -40,7 +40,7 @@ final class OpenSheetTest extends FlowTestCase
         (new OpenSheet(
             $reader,
             (new SheetCells((new SheetsManager($reader->getSheetIterator()))->first(), true, 1))->rows(),
-            new ExcelDecoder(),
+            new RecordDecoder(withHeader: true, emptyToNull: true),
         ))->close();
 
         $this->expectException(ReaderNotOpenedException::class);

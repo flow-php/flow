@@ -140,11 +140,11 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
 
     public function toRows(Backend $backend = new AdaptiveBackend()): Rows
     {
-        $rows = rows(schema());
         $schema = self::schema();
+        $rows = rows($schema, $backend);
 
         foreach ($this->rawData() as $row) {
-            $rows = $rows->merge(array_to_rows($row, $schema, $backend));
+            $rows = $rows->concat($backend, array_to_rows($row, $schema, $backend));
         }
 
         return $rows;

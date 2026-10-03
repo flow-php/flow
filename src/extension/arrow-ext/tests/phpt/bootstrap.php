@@ -42,8 +42,6 @@ function arrow_interfaces_reflection(): string
         'Flow\\Parquet\\ParquetEngine',
         'Flow\\Parquet\\ParquetFileReader',
         'Flow\\Parquet\\ParquetFileWriter',
-        'Flow\\Arrow\\OutputStream',
-        'Flow\\Arrow\\RandomAccessFile',
     ] as $name) {
         $class = new ReflectionClass($name);
         $interfaces[$name] = [

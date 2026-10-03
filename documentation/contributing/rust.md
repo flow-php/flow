@@ -70,7 +70,7 @@ src/extension/flow-php-ext/
 │   ├── cast.rs             # Value casting
 │   ├── json_check.rs       # JSON validation shared by casting and CSV inference
 │   ├── csv/                # CSV tokenizer, RustCSVOpenSource, RustCSVEncoder, schema-inference fold
-│   ├── json/               # RustJsonOpenSource, RustJSONEncoder
+│   ├── json/               # RustJsonOpenSource, RustJsonEncoder
 │   ├── parquet/            # RustParquetOpenSource, RustParquetOpenSink
 │   ├── ctx.rs              # Request-scoped context and engine helpers
 │   ├── globals.rs          # Module globals, RINIT/RSHUTDOWN

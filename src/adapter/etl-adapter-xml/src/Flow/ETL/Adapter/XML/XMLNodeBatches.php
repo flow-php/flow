@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\XML;
 
 use Flow\ETL\Column\Backend;
-use Flow\ETL\Column\Php\ScalarColumn;
-use Flow\ETL\Column\Php\XmlDocumentPhysical;
+use Flow\ETL\Column\Physical\XmlDocumentPhysical;
 use Flow\ETL\Rows;
-use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
+use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\XMLDefinition;
 use Flow\Filesystem\SourceStream;
 use Generator;
@@ -33,24 +32,21 @@ final readonly class XMLNodeBatches
      */
     public function documents(SourceStream $stream, Schema $body, Backend $backend): Generator
     {
-        $batch = [];
+        $node = $body->get('node');
+        $nodes = [];
 
         foreach ($this->nodes->documents($stream, $this->bufferSize) as $document) {
-            $batch[] = ['node' => $document];
+            $nodes[] = $document;
 
-            if (count($batch) >= $this->batchSize) {
-                yield (new RowsBuilder($body, $backend))
-                    ->appendRows($batch)
-                    ->finish();
+            if (count($nodes) >= $this->batchSize) {
+                yield $this->batch($node, $nodes, $body, $backend);
 
-                $batch = [];
+                $nodes = [];
             }
         }
 
-        if ($batch !== []) {
-            yield (new RowsBuilder($body, $backend))
-                ->appendRows($batch)
-                ->finish();
+        if ($nodes !== []) {
+            yield $this->batch($node, $nodes, $body, $backend);
         }
     }
 
@@ -66,10 +62,12 @@ final readonly class XMLNodeBatches
             $batch[] = $documents->physical($text);
 
             if (count($batch) >= $this->batchSize) {
-                yield Rows::fromColumns(
+                $builder = $backend->builder($node);
+                $builder->appendPhysicals($batch, 0);
+
+                yield Rows::fromColumns(new Schema($node), ['node' => $builder->finish()], count($batch))->matchTo(
                     $body,
-                    ['node' => $backend->adopt($node, new ScalarColumn($node->type(), $documents, $batch, 0))],
-                    count($batch),
+                    $backend,
                 );
 
                 $batch = [];
@@ -77,10 +75,12 @@ final readonly class XMLNodeBatches
         }
 
         if ($batch !== []) {
-            yield Rows::fromColumns(
+            $builder = $backend->builder($node);
+            $builder->appendPhysicals($batch, 0);
+
+            yield Rows::fromColumns(new Schema($node), ['node' => $builder->finish()], count($batch))->matchTo(
                 $body,
-                ['node' => $backend->adopt($node, new ScalarColumn($node->type(), $documents, $batch, 0))],
-                count($batch),
+                $backend,
             );
         }
     }
@@ -90,24 +90,38 @@ final readonly class XMLNodeBatches
      */
     public function strings(SourceStream $stream, Schema $body, Backend $backend): Generator
     {
-        $batch = [];
+        $node = $body->get('node');
+        $nodes = [];
 
         foreach ($this->nodes->texts($stream, $this->bufferSize) as $text) {
-            $batch[] = ['node' => $text];
+            $nodes[] = $text;
 
-            if (count($batch) >= $this->batchSize) {
-                yield (new RowsBuilder($body, $backend))
-                    ->appendRows($batch)
-                    ->finish();
+            if (count($nodes) >= $this->batchSize) {
+                yield $this->batch($node, $nodes, $body, $backend);
 
-                $batch = [];
+                $nodes = [];
             }
         }
 
-        if ($batch !== []) {
-            yield (new RowsBuilder($body, $backend))
-                ->appendRows($batch)
-                ->finish();
+        if ($nodes !== []) {
+            yield $this->batch($node, $nodes, $body, $backend);
         }
+    }
+
+    /**
+     * The node column built from $nodes; every other column $body declares is padded as matchTo() pads it.
+     *
+     * @param Definition<mixed> $node
+     * @param non-empty-list<mixed> $nodes
+     */
+    public function batch(Definition $node, array $nodes, Schema $body, Backend $backend): Rows
+    {
+        $builder = $backend->builder($node);
+        $builder->appendMany($nodes);
+
+        return Rows::fromColumns(new Schema($node), ['node' => $builder->finish()], count($nodes))->matchTo(
+            $body,
+            $backend,
+        );
     }
 }

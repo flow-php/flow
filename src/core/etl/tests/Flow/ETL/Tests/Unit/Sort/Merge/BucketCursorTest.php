@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Sort\Merge;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Sort\Merge\BucketCursor;
 use Flow\ETL\Sort\RowOrder;
 use Flow\ETL\Sort\SortKey;
@@ -29,7 +30,7 @@ final class BucketCursorTest extends FlowTestCase
             yield array_to_rows([['id' => 3]], schema(int_schema('id')));
         };
 
-        $cursor = new BucketCursor($batches(), new RowOrder([ref('id')]));
+        $cursor = new BucketCursor($batches(), new RowOrder([ref('id')]), new AdaptiveBackend());
 
         $ids = [];
 
@@ -47,7 +48,7 @@ final class BucketCursorTest extends FlowTestCase
             yield from [];
         };
 
-        static::assertFalse((new BucketCursor($batches(), new RowOrder([ref('id')])))->valid());
+        static::assertFalse((new BucketCursor($batches(), new RowOrder([ref('id')]), new AdaptiveBackend()))->valid());
     }
 
     public function test_skips_empty_batches(): void
@@ -59,7 +60,7 @@ final class BucketCursorTest extends FlowTestCase
             yield array_to_rows([['id' => 2]], schema(int_schema('id')));
         };
 
-        $cursor = new BucketCursor($batches(), new RowOrder([ref('id')]));
+        $cursor = new BucketCursor($batches(), new RowOrder([ref('id')]), new AdaptiveBackend());
 
         $ids = [];
 
@@ -79,7 +80,7 @@ final class BucketCursorTest extends FlowTestCase
         };
 
         $generator = $batches();
-        $cursor = new BucketCursor($generator, new RowOrder([ref('id')]));
+        $cursor = new BucketCursor($generator, new RowOrder([ref('id')]), new AdaptiveBackend());
 
         static::assertSame(0, $generator->key());
 
@@ -101,7 +102,7 @@ final class BucketCursorTest extends FlowTestCase
             yield rows(schema());
         };
 
-        static::assertFalse((new BucketCursor($batches(), new RowOrder([ref('id')])))->valid());
+        static::assertFalse((new BucketCursor($batches(), new RowOrder([ref('id')]), new AdaptiveBackend()))->valid());
     }
 
     public function test_keys_are_the_sort_keys_of_every_ref_in_order(): void
@@ -113,7 +114,7 @@ final class BucketCursorTest extends FlowTestCase
             );
         };
 
-        $cursor = new BucketCursor($batches(), new RowOrder([ref('at'), ref('id')]));
+        $cursor = new BucketCursor($batches(), new RowOrder([ref('at'), ref('id')]), new AdaptiveBackend());
 
         static::assertSame(
             [[1_000_000], [2]],
@@ -128,6 +129,9 @@ final class BucketCursorTest extends FlowTestCase
             yield from [];
         };
 
-        static::assertEquals(schema(), (new BucketCursor($batches(), new RowOrder([ref('id')])))->schema());
+        static::assertEquals(
+            schema(),
+            (new BucketCursor($batches(), new RowOrder([ref('id')]), new AdaptiveBackend()))->schema(),
+        );
     }
 }

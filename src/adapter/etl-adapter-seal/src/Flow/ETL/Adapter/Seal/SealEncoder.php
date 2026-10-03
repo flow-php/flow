@@ -4,14 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Seal;
 
-use DateInterval;
 use DateTimeInterface;
-use DateTimeZone;
-use Dom\Element;
-use Dom\XMLDocument;
-use DOMDocument;
-use DOMElement;
-use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Column\Physical\IdentityPhysical;
+use Flow\ETL\Column\Physical\PhysicalFor;
+use Flow\ETL\Column\TextValues;
 use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateTimeType;
@@ -21,18 +18,12 @@ use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
-use Flow\Types\Type\Logical\TimeZoneType;
-use Flow\Types\Type\Logical\UuidType;
-use Flow\Types\Type\Logical\XMLElementType;
-use Flow\Types\Type\Logical\XMLType;
 use Flow\Types\Type\Native\ArrayType;
-use Flow\Types\Type\Native\EnumType;
+use Flow\Types\Type\Native\NullType;
 use Flow\Types\Value\Json;
-use Flow\Types\Value\Uuid;
-use UnitEnum;
 
 use function array_keys;
-use function Flow\ETL\DSL\date_interval_to_microseconds;
+use function Flow\Types\DSL\type_bare;
 use function is_array;
 use function is_bool;
 use function is_float;
@@ -41,10 +32,14 @@ use function is_string;
 
 final class SealEncoder
 {
+    private readonly TextValues $text;
+
     public function __construct(
         private readonly string $dateTimeFormat = DateTimeInterface::ATOM,
         private readonly string $dateFormat = 'Y-m-d',
-    ) {}
+    ) {
+        $this->text = new TextValues($dateTimeFormat, $dateFormat);
+    }
 
     /**
      * @return list<array<string, mixed>>
@@ -52,12 +47,10 @@ final class SealEncoder
     public function encode(Rows $rows): array
     {
         $columns = [];
-        $types = [];
 
         foreach ($rows->schema()->definitions() as $definition) {
             $name = $definition->entry()->name();
-            $columns[$name] = $rows->column($name)->values();
-            $types[$name] = $definition->type();
+            $columns[$name] = $this->column($definition->type(), $rows->column($name));
         }
 
         $documents = [];
@@ -66,7 +59,7 @@ final class SealEncoder
             $document = [];
 
             foreach ($columns as $name => $column) {
-                $document[$name] = $this->renderValue($types[$name], $column[$i]);
+                $document[$name] = $column[$i];
             }
 
             $documents[] = $document;
@@ -75,24 +68,65 @@ final class SealEncoder
         return $documents;
     }
 
-    private function renderValue(Type $type, mixed $value): string|float|int|bool|array|null
+    /**
+     * A column's document fields: datetime / date text from the physicals, json and containers as normalized arrays,
+     * physicals where the physical is the value (scalars, a time's microseconds, null), TextValues for every other type.
+     *
+     * @param Type<mixed> $type
+     *
+     * @return list<mixed>
+     */
+    public function column(Type $type, Column $column): array
     {
-        if ($value === null) {
-            return null;
+        $bare = type_bare($type);
+
+        if ($bare instanceof DateTimeType || $bare instanceof DateType) {
+            /** @var list<?int> $physicals */
+            $physicals = $column->physicals();
+
+            return $this->text->dateTimes(
+                $bare,
+                $physicals,
+                $bare instanceof DateType ? $this->dateFormat : $this->dateTimeFormat,
+            );
         }
 
-        return match ($type::class) {
-            DateType::class => $value instanceof DateTimeInterface ? $value->format($this->dateFormat) : null,
-            DateTimeType::class => $value instanceof DateTimeInterface ? $value->format($this->dateTimeFormat) : null,
-            TimeType::class => $value instanceof DateInterval ? date_interval_to_microseconds($value) : null,
-            UuidType::class => $value instanceof Uuid ? $value->toString() : null,
-            TimeZoneType::class => $value instanceof DateTimeZone ? $value->getName() : null,
-            EnumType::class => $value instanceof UnitEnum ? $value->name : null,
-            XMLType::class, XMLElementType::class => $this->xmlToString($value),
-            JsonType::class => $value instanceof Json ? $this->normalizeArray($value->toArray()) : null,
-            ListType::class, MapType::class, StructureType::class, ArrayType::class => $this->normalizeArray($value),
-            default => $this->normalizeValue($value),
-        };
+        if ($bare instanceof JsonType) {
+            $fields = [];
+
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($column->values() as $value) {
+                $fields[] = $value instanceof Json ? $this->normalizeArray($value->toArray()) : null;
+            }
+
+            return $fields;
+        }
+
+        if (
+            $bare instanceof ListType
+            || $bare instanceof MapType
+            || $bare instanceof StructureType
+            || $bare instanceof ArrayType
+        ) {
+            $fields = [];
+
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($column->values() as $value) {
+                $fields[] = $this->normalizeArray($value);
+            }
+
+            return $fields;
+        }
+
+        if (
+            $bare instanceof TimeType
+            || $bare instanceof NullType
+            || (new PhysicalFor())->type($bare) instanceof IdentityPhysical
+        ) {
+            return $column->physicals();
+        }
+
+        return $this->text->texts($type, $column->physicals());
     }
 
     /**
@@ -128,51 +162,5 @@ final class SealEncoder
         }
 
         return null;
-    }
-
-    private function xmlToString(mixed $value): ?string
-    {
-        if ($value instanceof XMLDocument) {
-            return $this->domString($value->saveXml($value->documentElement));
-        }
-
-        if ($value instanceof DOMDocument) {
-            return $this->domString($value->saveXML($value->documentElement));
-        }
-
-        if ($value instanceof Element || $value instanceof DOMElement) {
-            return $this->elementToString($value);
-        }
-
-        return null;
-    }
-
-    private function elementToString(Element|DOMElement $value): string
-    {
-        $ownerDocument = $value->ownerDocument;
-
-        if ($ownerDocument === null) {
-            return '';
-        }
-
-        if ($ownerDocument instanceof XMLDocument) {
-            // @mago-ignore analysis:possibly-invalid-argument
-            return $this->domString($ownerDocument->saveXml($value));
-        }
-
-        /** @var false|string $serialized */
-        // @mago-ignore analysis:possibly-invalid-argument,non-existent-method
-        $serialized = $ownerDocument->saveXML($value);
-
-        return $this->domString($serialized);
-    }
-
-    private function domString(string|false $serialized): string
-    {
-        if ($serialized === false) {
-            throw new RuntimeException('Failed to serialize XML document.');
-        }
-
-        return $serialized;
     }
 }

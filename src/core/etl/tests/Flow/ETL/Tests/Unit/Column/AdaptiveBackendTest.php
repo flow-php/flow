@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Column;
 
 use Flow\ETL\Column\AdaptiveBackend;
-use Flow\ETL\Column\Php\ValueColumn;
 use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Column\ValueColumn;
 use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Tests\Double\ForeignColumnStub;
 use Flow\ETL\Tests\Mother\ColumnMother;

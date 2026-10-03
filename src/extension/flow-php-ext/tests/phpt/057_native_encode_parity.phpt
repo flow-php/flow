@@ -24,10 +24,10 @@ $projection = schema($schema->get('uuid'), $schema->get('int'), $schema->get('st
 $frame('all types', $php, $native);
 $frame('slice', $php->slice(3, 3), $native->slice(3, 3));
 $frame('gather', $php->gather([5, 0, 3, 3]), $native->gather([5, 0, 3, 3]));
-$frame('concat', $php->concat($php->slice(1, 2)), $native->concat($native->slice(1, 2)));
-$frame('project', $php->project($projection), $native->project($projection));
+$frame('concat', $php->concat(new PhpBackend(), $php->slice(1, 2)), $native->concat(new RustBackend(), $native->slice(1, 2)));
+$frame('project', $php->project($projection, new Flow\ETL\Column\PhpBackend()), $native->project($projection, new Flow\ETL\Column\RustBackend()));
 $frame('withSchema', $php->withSchema(all_types_schema('UTC')), $native->withSchema(all_types_schema('UTC')));
-$frame('mixed', $php, $php->concat($native)->slice(0, $php->count()));
+$frame('mixed', $php, $php->concat(new PhpBackend(), $native)->slice(0, $php->count()));
 
 $body = $php->encodeFrame();
 $decodedPhp = (new FrameDecoder())->decode($body, $schema, new PhpBackend());

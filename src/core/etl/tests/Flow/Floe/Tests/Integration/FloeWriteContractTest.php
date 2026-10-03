@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Integration;
 
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
@@ -59,7 +60,7 @@ final class FloeWriteContractTest extends FlowIntegrationTestCase
         string $expectedMessage,
     ): void {
         $path = $this->cacheDir->suffix('contract-' . md5($expectedMessage) . '.floe');
-        $writer = new FloeWriter($this->fs(), $schema, new Options());
+        $writer = new FloeWriter($this->fs(), $schema, new AdaptiveBackend(), new Options());
         $writer->create($path);
 
         try {
@@ -81,7 +82,7 @@ final class FloeWriteContractTest extends FlowIntegrationTestCase
     public function test_a_rejected_batch_leaves_previously_written_rows_readable(): void
     {
         $path = $this->cacheDir->suffix('contract-survivor.floe');
-        $writer = new FloeWriter($this->fs(), schema(int_schema('id')), new Options());
+        $writer = new FloeWriter($this->fs(), schema(int_schema('id')), new AdaptiveBackend(), new Options());
         $writer->create($path);
         $writer->write(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))));
 
@@ -107,6 +108,7 @@ final class FloeWriteContractTest extends FlowIntegrationTestCase
         $writer = new FloeWriter(
             $this->fs(),
             schema(int_schema('id'), str_schema('name', nullable: true)),
+            new AdaptiveBackend(),
             new Options(),
         );
         $writer->create($path);
@@ -130,7 +132,12 @@ final class FloeWriteContractTest extends FlowIntegrationTestCase
     public function test_a_batch_omitting_a_not_null_column_is_refused(): void
     {
         $path = $this->cacheDir->suffix('contract-absent-not-null.floe');
-        $writer = new FloeWriter($this->fs(), schema(int_schema('id'), str_schema('name')), new Options());
+        $writer = new FloeWriter(
+            $this->fs(),
+            schema(int_schema('id'), str_schema('name')),
+            new AdaptiveBackend(),
+            new Options(),
+        );
         $writer->create($path);
         $writer->write(array_to_rows([['id' => 1, 'name' => 'a']], schema(int_schema('id'), str_schema('name'))));
 

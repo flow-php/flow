@@ -4,17 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Column;
 
-use Flow\ETL\Column\Php\Buffers;
+use Flow\ETL\Column\Layout\Buffers;
 use Flow\ETL\Column\Php\CastingColumnBuilder;
 use Flow\ETL\Column\Php\ColumnDecoder;
 use Flow\ETL\Column\Php\ConstantColumn;
 use Flow\ETL\Column\Php\ListColumn;
 use Flow\ETL\Column\Php\MapColumn;
-use Flow\ETL\Column\Php\PhysicalBuilderFor;
-use Flow\ETL\Column\Php\PhysicalFor;
 use Flow\ETL\Column\Php\ScalarColumn;
 use Flow\ETL\Column\Php\StructColumn;
-use Flow\ETL\Column\Php\ValueColumn;
+use Flow\ETL\Column\Physical\PhysicalBuilderFor;
+use Flow\ETL\Column\Physical\PhysicalFor;
 use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Schema\Definition;

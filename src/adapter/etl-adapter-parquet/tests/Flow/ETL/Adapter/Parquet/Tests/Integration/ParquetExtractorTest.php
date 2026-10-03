@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
 use DateTimeImmutable;
+use Flow\ETL\Adapter\Parquet\ParquetExtractor;
 use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetFilesContext;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InferredSchemaException;
@@ -12,6 +13,7 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Plan\Stage;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Double\CountingFilesystem;
+use Flow\ETL\Tests\Double\RecordingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Tests\Double\RejectingFilter;
@@ -23,6 +25,7 @@ use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid;
 
 use function array_keys;
+use function count;
 use function Flow\ETL\Adapter\Parquet\from_parquet;
 use function Flow\ETL\Adapter\Parquet\to_parquet;
 use function Flow\ETL\DSL\analyze;
@@ -40,6 +43,7 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
+use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_datetime;
@@ -540,6 +544,22 @@ final class ParquetExtractorTest extends FlowTestCase
                 ->read(from_parquet(path('memory://glob/*.parquet'), filesystem: $memory)->unionByName())
                 ->fetch()
                 ->toArray(),
+        );
+    }
+
+    public function test_one_extractor_read_twice_interleaved_gives_each_read_every_row_and_closes_every_stream(): void
+    {
+        $filesystem = new RecordingFilesystem(native_local_filesystem());
+        [$first, $second] = ExtractedRows::interleaved((new ParquetExtractor(
+            path_real(__DIR__ . '/Fixtures/Pagination/*.parquet'),
+            $filesystem,
+        ))->withBatchSize(7));
+
+        static::assertGreaterThan(0, $first->count());
+        static::assertSame($first->toArray(), $second->toArray());
+        static::assertSame(
+            count(array_keys($filesystem->calls, 'readFrom', true)),
+            count(array_keys($filesystem->calls, 'closeSource', true)),
         );
     }
 }

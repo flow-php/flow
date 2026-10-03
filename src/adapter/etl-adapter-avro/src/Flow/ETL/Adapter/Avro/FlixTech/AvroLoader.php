@@ -9,7 +9,7 @@ use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
-use Flow\ETL\Loader\FileLoader;
+use Flow\ETL\Loader\File\FileLoader;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Filesystem;

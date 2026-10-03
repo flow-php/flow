@@ -17,7 +17,7 @@ use Flow\ETL\Adapter\CSV\RustCSVOpenSource;
 use Flow\ETL\Column\Backend;
 use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Exception\SchemaMismatchException;
-use Flow\ETL\Extractor\SourceFile;
+use Flow\ETL\Extractor\File\SourceFile;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\ColumnTypes;
 use Flow\ETL\Schema\Inference\SchemaInference;

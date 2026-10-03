@@ -58,7 +58,10 @@ final class Exists implements ScalarFunction
             $exists = $rows->schema()->findDefinition($this->ref->name()) !== null;
 
             // @mago-ignore analysis:possibly-invalid-argument
-            return (new ResultColumn())->of($this, $rows->isEmpty() ? [] : array_fill(0, $rows->count(), $exists));
+            return (new ResultColumn($context->backend()))->of(
+                $this,
+                $rows->isEmpty() ? [] : array_fill(0, $rows->count(), $exists),
+            );
         }
 
         // the operand is left unresolved by the gate (children() is empty): a reference the batch lacks stays
@@ -74,6 +77,6 @@ final class Exists implements ScalarFunction
             $results[] = !array_key_exists($i, $failed);
         }
 
-        return (new ResultColumn())->of($this, $results);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

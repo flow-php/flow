@@ -7,7 +7,7 @@ namespace Flow\ETL\Adapter\JSON\Tests\Integration;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonFormat;
 use Flow\ETL\Adapter\JSON\Tests\Context\JsonFixtureContext;
 use Flow\ETL\Column\PhpBackend;
-use Flow\ETL\Extractor\SourceFile;
+use Flow\ETL\Extractor\File\SourceFile;
 use Flow\ETL\RustIterator;
 use Flow\ETL\Tests\Context\MemoryFiles;
 use Flow\ETL\Tests\Double\CountingFilesystem;

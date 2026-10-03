@@ -62,7 +62,7 @@ final readonly class BatchingByProcessor implements Processor
 
         while ($rows->valid()) {
             $schema ??= $rows->current()->schema();
-            $batch = $rows->current()->matchTo($schema);
+            $batch = $rows->current()->matchTo($schema, $context->backend());
             $start = 0;
 
             if ($batch->isEmpty()) {
@@ -87,7 +87,7 @@ final readonly class BatchingByProcessor implements Processor
                             $parts[] = $batch->slice($start, $i - $start);
                         }
 
-                        $signal = yield $parts[0]->concat(...array_slice($parts, 1));
+                        $signal = yield $parts[0]->concat($context->backend(), ...array_slice($parts, 1));
 
                         if ($signal === Signal::STOP) {
                             $rows->send(Signal::STOP);
@@ -114,7 +114,7 @@ final readonly class BatchingByProcessor implements Processor
         }
 
         if ($parts !== []) {
-            yield $parts[0]->concat(...array_slice($parts, 1));
+            yield $parts[0]->concat($context->backend(), ...array_slice($parts, 1));
         }
     }
 }

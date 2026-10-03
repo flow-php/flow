@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\PostgreSql\QueryBuilder;
 
 use Flow\ETL\Adapter\PostgreSql\EntryTypesMap;
 use Flow\ETL\Adapter\PostgreSql\LoaderOptions\InsertOptions;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Schema;
 use Flow\PostgreSql\Client\ConvertedParameters;
 use Flow\PostgreSql\Client\Types\ValueConverters;
@@ -19,6 +20,7 @@ use function Flow\ETL\DSL\ref;
 use function Flow\PostgreSql\DSL\bulk_insert;
 use function Flow\PostgreSql\DSL\conflict_columns;
 use function Flow\PostgreSql\DSL\conflict_constraint;
+use function sprintf;
 
 final readonly class InsertQueryBuilder
 {
@@ -29,32 +31,47 @@ final readonly class InsertQueryBuilder
 
     /**
      * Every value already in PostgreSQL's text form. A column's converter is resolved once, on its first non-null
-     * value - so a column of an unmapped type holding only nulls passes.
+     * value - so a column of an unmapped type holding only nulls passes. Parameters are bound row by row, read
+     * straight from the columns.
      *
-     * @param list<array<string, mixed>> $values pre-sorted encoded value maps
+     * @param array<string, list<mixed>> $columns every column's encoded values, $count of them each
+     *
+     * @throws InvalidArgumentException a column that does not hold $count values
      *
      * @return array{Sql, ConvertedParameters}
      */
     public function build(
-        array $values,
+        array $columns,
+        int $count,
         Schema $schema,
         ValueConverters $converters,
         ?InsertOptions $options = null,
     ): array {
-        $columns = $values === [] ? [] : array_keys($values[0]);
+        foreach ($columns as $name => $values) {
+            if (count($values) !== $count) {
+                throw new InvalidArgumentException(sprintf(
+                    'Column "%s" holds %d values, the insert %d rows',
+                    $name,
+                    count($values),
+                    $count,
+                ));
+            }
+        }
 
+        $names = $count === 0 ? [] : array_keys($columns);
         $params = [];
         $types = [];
         $columnConverters = [];
 
-        // every row of a gated batch carries the same columns, so each column's type is resolved once
-        foreach ($columns as $column) {
+        foreach ($names as $column) {
             $types[$column] = $schema->get(ref($column))->type();
         }
 
-        foreach ($values as $row) {
-            /** @var mixed $value */
-            foreach ($row as $column => $value) {
+        for ($i = 0; $i < $count; $i++) {
+            foreach ($names as $column) {
+                // @mago-ignore analysis:mixed-assignment
+                $value = $columns[$column][$i];
+
                 if ($value === null) {
                     $params[] = null;
 
@@ -72,7 +89,7 @@ final readonly class InsertQueryBuilder
             }
         }
 
-        return [$this->query($columns, count($values), $options), new ConvertedParameters($params)];
+        return [$this->query($names, $count, $options), new ConvertedParameters($params)];
     }
 
     /**

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Plan\Explain;
 
-use Flow\ETL\Extractor\FileExtractor;
+use Flow\ETL\Extractor\File\FileExtractor;
 use Flow\ETL\Join\Comparison\Any;
 use Flow\ETL\Plan\Materialization;
 use Flow\ETL\Plan\Node;

@@ -42,11 +42,11 @@ final class ListColumnBuilder implements PhpColumnBuilder
         }
 
         assert(is_array($physical));
-        $this->element->appendPhysicalMany(array_values($physical));
+        $this->element->appendPhysicals(array_values($physical));
         $this->offsets[] = $this->element->count();
     }
 
-    public function appendPhysicalMany(array $physicals, ?int $nullCount = null): void
+    public function appendPhysicals(array $physicals, ?int $nullCount = null): void
     {
         $elements = [];
         $end = $this->offsets[count($this->offsets) - 1];
@@ -71,7 +71,7 @@ final class ListColumnBuilder implements PhpColumnBuilder
             $this->offsets[] = $end;
         }
 
-        $this->element->appendPhysicalMany($elements);
+        $this->element->appendPhysicals($elements);
     }
 
     public function count(): int

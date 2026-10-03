@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Column\Php;
 
 use Flow\ETL\Column\Column;
+use Flow\ETL\Column\Physical\Physical;
 use Flow\Types\Type;
 
 use function array_push;
@@ -41,7 +42,7 @@ final class ScalarColumnBuilder implements PhpColumnBuilder
         $this->values[] = $physical;
     }
 
-    public function appendPhysicalMany(array $physicals, ?int $nullCount = null): void
+    public function appendPhysicals(array $physicals, ?int $nullCount = null): void
     {
         $this->nullCount += $nullCount ?? count(array_keys($physicals, null, true));
         array_push($this->values, ...$physicals);

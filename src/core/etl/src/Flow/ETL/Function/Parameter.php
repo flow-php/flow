@@ -22,10 +22,8 @@ use function array_map;
 use function Flow\ETL\DSL\lit;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_bare;
-use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_integer;
-use function Flow\Types\DSL\type_object;
 use function Flow\Types\DSL\type_string;
 use function get_debug_type;
 use function implode;
@@ -138,22 +136,6 @@ final readonly class Parameter
     {
         /** @var list<?T> */
         return $this->checked($this->values($rows, $context), type_instance_of($enumClass));
-    }
-
-    /**
-     * @return list<?float>
-     */
-    public function asFloats(Rows $rows, FlowContext $context): array
-    {
-        $column = $this->column($rows, $context);
-
-        if (type_bare($column->type()) instanceof FloatType) {
-            /** @var list<?float> */
-            return $column->physicals();
-        }
-
-        /** @var list<?float> */
-        return $this->checked($column->values(), type_float());
     }
 
     /**
@@ -270,15 +252,6 @@ final readonly class Parameter
         }
 
         return $numbers;
-    }
-
-    /**
-     * @return list<?object>
-     */
-    public function asObjects(Rows $rows, FlowContext $context): array
-    {
-        /** @var list<?object> */
-        return $this->checked($this->values($rows, $context), type_object());
     }
 
     /**

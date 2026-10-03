@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Flow\Floe\Tests\Unit;
 
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Filesystem\SaveMode;
 use Flow\Floe\Exception\IncompatibleSchemaException;
+use Flow\Floe\Tests\Context\FloeFilesContext;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\ETL\DSL\array_to_rows;
@@ -21,6 +23,7 @@ use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Floe\DSL\from_floe;
 use function Flow\Floe\DSL\to_floe;
+use function implode;
 use function sort;
 
 final class FloeLoaderTest extends TestCase
@@ -44,6 +47,31 @@ final class FloeLoaderTest extends TestCase
         }
 
         static::assertSame([1, 2], $ids);
+    }
+
+    public function test_a_second_run_writes_under_its_own_schema(): void
+    {
+        $context = flow_context(config());
+        $memory = memory_filesystem();
+        $loader = to_floe(path('memory://runs/data.floe'), filesystem: $memory)->saveMode(SaveMode::Append);
+
+        $loader->load(array_to_rows([['id' => 1]], schema(int_schema('id'))), $context);
+        $loader->closure($context);
+        $loader->load(array_to_rows([['name' => 'a']], schema(str_schema('name'))), $context);
+        $loader->closure($context);
+
+        $schemas = [];
+
+        foreach ($memory->list(path('memory://runs/*.floe')) as $file) {
+            $schemas[] = implode(
+                ',',
+                FloeFilesContext::phpReader($memory)->read($file->path)->schema()->references()->names(),
+            );
+        }
+
+        sort($schemas);
+
+        static::assertSame(['id', 'name'], $schemas);
     }
 
     public function test_destination_returns_path(): void

@@ -95,7 +95,10 @@ final readonly class StructureSelect implements ScalarFunction
     {
         if ($rows->schema()->findDefinition($this->ref->base()) === null) {
             // @mago-ignore analysis:possibly-invalid-argument
-            return (new ResultColumn())->of($this, $rows->isEmpty() ? [] : array_fill(0, $rows->count(), null));
+            return (new ResultColumn($context->backend()))->of(
+                $this,
+                $rows->isEmpty() ? [] : array_fill(0, $rows->count(), null),
+            );
         }
 
         $results = [];
@@ -121,6 +124,6 @@ final readonly class StructureSelect implements ScalarFunction
             $results[] = $output;
         }
 
-        return (new ResultColumn())->of($this, $results);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

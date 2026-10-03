@@ -35,7 +35,7 @@ final class FilesystemBuckets implements BucketsStorage
     public function __construct(
         private readonly Filesystem $filesystem,
         Path $cacheDir,
-        Backend $backend,
+        private readonly Backend $backend,
         private readonly int $batchSize = 1000,
     ) {
         // @mago-ignore analysis:impossible-condition,redundant-comparison
@@ -44,7 +44,7 @@ final class FilesystemBuckets implements BucketsStorage
         }
 
         $this->cacheDir = $cacheDir->suffix('/flow-php-buckets/');
-        $this->reader = new FloeReader($this->filesystem, backend: $backend);
+        $this->reader = new FloeReader($this->filesystem, $backend);
     }
 
     /**
@@ -56,7 +56,7 @@ final class FilesystemBuckets implements BucketsStorage
     public function append(string $bucketId, Rows $rows): void
     {
         if (!isset($this->writers[$bucketId])) {
-            $writer = new FloeWriter($this->filesystem, $rows->schema(), new Options());
+            $writer = new FloeWriter($this->filesystem, $rows->schema(), $this->backend, new Options());
             $writer->append($this->keyPath($bucketId));
             $this->writers[$bucketId] = $writer;
         }
@@ -86,7 +86,7 @@ final class FilesystemBuckets implements BucketsStorage
         try {
             foreach ($reader->rows($this->batchSize) as $batch) {
                 if (($pendingRows + $batch->count()) > $this->batchSize) {
-                    yield $pending[0]->concat(...array_slice($pending, 1));
+                    yield $pending[0]->concat($this->backend, ...array_slice($pending, 1));
                     $pending = [];
                     $pendingRows = 0;
                 }
@@ -96,7 +96,7 @@ final class FilesystemBuckets implements BucketsStorage
             }
 
             if ($pending !== []) {
-                yield $pending[0]->concat(...array_slice($pending, 1));
+                yield $pending[0]->concat($this->backend, ...array_slice($pending, 1));
             }
         } finally {
             $reader->close();
@@ -116,7 +116,7 @@ final class FilesystemBuckets implements BucketsStorage
         $this->closeWriter($bucketId);
 
         // validation stays on until an upstream mechanism guarantees Rows match their schema
-        $writer = new FloeWriter($this->filesystem, $rows->schema(), new Options());
+        $writer = new FloeWriter($this->filesystem, $rows->schema(), $this->backend, new Options());
         $writer->create($this->keyPath($bucketId));
         $writer->write($rows);
         $writer->close();

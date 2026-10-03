@@ -12,6 +12,7 @@ use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
 
 use function array_keys;
+use function array_map;
 use function count;
 use function Flow\ETL\Adapter\XML\to_xml;
 use function Flow\ETL\DSL\array_to_rows;
@@ -74,6 +75,33 @@ final class XMLLoaderTest extends FlowTestCase
         static::assertSame(
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<rows>\n<row><id>2</id></row>\n</rows>",
             $filesystem->readFrom(path('memory://out/group=b/file.xml'))->content(),
+        );
+    }
+
+    public function test_two_runs_through_one_loader_write_independent_files(): void
+    {
+        $filesystem = memory_filesystem();
+        $loader = to_xml(path('memory://out.xml'), filesystem: $filesystem)->partitionBy(partition_by('group'));
+        $read = [];
+
+        foreach (['a' => [1, 2], 'b' => [3]] as $group => $ids) {
+            $loader->load(
+                array_to_rows(
+                    array_map(static fn(int $id): array => ['id' => $id, 'group' => $group], $ids),
+                    schema(int_schema('id'), str_schema('group')),
+                ),
+                flow_context(),
+            );
+            $loader->closure(flow_context());
+            $read[] = $filesystem->readFrom(path('memory://group=' . $group . '/out.xml'))->content();
+        }
+
+        static::assertSame(
+            [
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<rows>\n<row><id>1</id></row>\n<row><id>2</id></row>\n</rows>",
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<rows>\n<row><id>3</id></row>\n</rows>",
+            ],
+            $read,
         );
     }
 }

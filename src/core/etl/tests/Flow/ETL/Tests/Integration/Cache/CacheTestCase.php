@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Integration\Cache;
 
 use Flow\ETL\Cache;
 use Flow\ETL\Cache\CacheIndex;
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Exception\KeyNotInCacheException;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
@@ -44,7 +45,7 @@ abstract class CacheTestCase extends FlowIntegrationTestCase
         $index->add('chunk-1');
         $index->add('chunk-2');
 
-        $cache->set('index', $index->toRows());
+        $cache->set('index', $index->toRows(new PhpBackend()));
 
         static::assertTrue($cache->has('index'));
 
@@ -93,7 +94,7 @@ abstract class CacheTestCase extends FlowIntegrationTestCase
     {
         $cache = $this->cache();
 
-        $cache->set('index', (new CacheIndex('index'))->toRows());
+        $cache->set('index', (new CacheIndex('index'))->toRows(new PhpBackend()));
         $cache->set('row', array_to_rows([['name' => 'John']], schema(str_schema('name'))));
         $cache->set('rows', array_to_rows([['name' => 'John'], ['name' => 'Jane']], schema(str_schema('name'))));
 
@@ -139,7 +140,7 @@ abstract class CacheTestCase extends FlowIntegrationTestCase
     {
         $cache = $this->cache();
 
-        $cache->set('index', (new CacheIndex('index'))->toRows());
+        $cache->set('index', (new CacheIndex('index'))->toRows(new PhpBackend()));
         $cache->set('row', array_to_rows([['name' => 'John']], schema(str_schema('name'))));
         $cache->set('rows', array_to_rows([['name' => 'John'], ['name' => 'Jane']], schema(str_schema('name'))));
 

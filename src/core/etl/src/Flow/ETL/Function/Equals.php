@@ -81,7 +81,7 @@ final class Equals implements ScalarFunction
                 $results[] = $left === null || $rights[$i] === null ? null : $left === $rights[$i];
             }
 
-            return (new ResultColumn())->of($this, $results);
+            return (new ResultColumn($context->backend()))->of($this, $results);
         }
 
         try {
@@ -112,6 +112,6 @@ final class Equals implements ScalarFunction
             throw EvaluationException::at($i, $e);
         }
 
-        return (new ResultColumn())->of($this, $results);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

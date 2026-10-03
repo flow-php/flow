@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function\Evaluation;
 
-use Flow\ETL\Column\Php\ValueColumn;
+use Flow\ETL\Column\ValueColumn;
 use Flow\ETL\Function\Evaluation\ReturnTypes;
 use Flow\ETL\Tests\Double\ReturnsSpyFunction;
 use Flow\ETL\Tests\FlowTestCase;

@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Column\Php;
 
 use Flow\ETL\Column\Column;
+use Flow\ETL\Column\Physical\Physical;
+use Flow\ETL\Column\Physical\PhysicalBuilderFor;
+use Flow\ETL\Column\Physical\PhysicalFor;
+use Flow\ETL\Column\Retype;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Native\NullType;
@@ -64,7 +68,7 @@ final readonly class ConstantColumn implements Column
         }
 
         $builder = (new PhysicalBuilderFor())->type($this->type);
-        $builder->appendPhysicalMany($this->physicals());
+        $builder->appendPhysicals($this->physicals());
 
         return $builder->finish();
     }

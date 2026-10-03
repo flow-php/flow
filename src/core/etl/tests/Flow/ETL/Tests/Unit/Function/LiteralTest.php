@@ -6,9 +6,12 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\Literal;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\RowsMother;
 
 use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
@@ -39,12 +42,13 @@ final class LiteralTest extends FlowTestCase
     public function test_a_batch_of_the_same_size_reuses_the_column(): void
     {
         $literal = lit(7);
-        $first = $literal->eval(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))), flow_context());
+        $context = flow_context();
+        $first = $literal->eval(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))), $context);
 
         static::assertSame($first, $literal->eval(array_to_rows([
             ['id' => 3],
             ['id' => 4],
-        ], schema(int_schema('id'))), flow_context()));
+        ], schema(int_schema('id'))), $context));
         static::assertSame([7, 7], $first->values());
     }
 
@@ -66,5 +70,27 @@ final class LiteralTest extends FlowTestCase
                 ->eval(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))), flow_context())
                 ->values(),
         );
+    }
+
+    public function test_the_column_is_a_constant_of_the_configured_backend(): void
+    {
+        $backend = new SpyBackend();
+
+        lit(5)->eval(RowsMother::sequentialIds(3), flow_context(config_builder()->backend($backend)->build()));
+
+        static::assertSame(1, $backend->constants());
+    }
+
+    public function test_a_batch_of_the_same_size_in_another_backend_gets_a_column_of_that_backend(): void
+    {
+        $literal = lit(5);
+        $first = new SpyBackend();
+        $second = new SpyBackend();
+
+        $literal->eval(RowsMother::sequentialIds(3), flow_context(config_builder()->backend($first)->build()));
+        $literal->eval(RowsMother::sequentialIds(3), flow_context(config_builder()->backend($second)->build()));
+
+        static::assertSame(1, $first->constants());
+        static::assertSame(1, $second->constants());
     }
 }

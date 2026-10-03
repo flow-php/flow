@@ -62,7 +62,7 @@ final readonly class CachingProcessor implements Processor
             }
         }
 
-        $cache->set($id, $index->toRows());
+        $cache->set($id, $index->toRows($context->backend()));
     }
 
     public function bind(Schema $input): BoundStep

@@ -63,7 +63,7 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .class::<csv::source::RustCSVOpenSource>()
         .class::<csv::write::RustCSVEncoder>()
         .class::<json::source::RustJsonOpenSource>()
-        .class::<json::write::RustJSONEncoder>()
+        .class::<json::write::RustJsonEncoder>()
         .class::<parquet::etl::RustParquetOpenSource>()
         .class::<parquet::etl::RustParquetOpenSink>()
         .class::<arrow_c::RustColumnsBatch>()

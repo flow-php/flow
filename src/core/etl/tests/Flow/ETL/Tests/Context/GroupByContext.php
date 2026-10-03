@@ -43,7 +43,7 @@ final class GroupByContext
         $result = null;
 
         foreach (self::aggregate($groupBy, $context, ...$batches) as $batch) {
-            $result = $result === null ? $batch : $result->merge($batch);
+            $result = $result === null ? $batch : $result->concat($context->backend(), $batch);
         }
 
         return $result ?? rows(schema());

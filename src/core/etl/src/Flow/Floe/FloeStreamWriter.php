@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Floe;
 
 use Composer\InstalledVersions;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Exception\OffsetOverflow;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
@@ -64,6 +65,7 @@ final class FloeStreamWriter
      */
     public function __construct(
         Schema $schema,
+        private readonly Backend $backend,
         private readonly Options $options = new Options(),
     ) {
         Format::validateCodecId($this->options->codec->id());
@@ -156,7 +158,7 @@ final class FloeStreamWriter
 
         if (!$rows->schema()->isSame($this->sessionSchema)) {
             $this->assertBatchFitsSession($rows->schema());
-            $matched = $rows->matchTo($this->sessionSchema);
+            $matched = $rows->matchTo($this->sessionSchema, $this->backend);
         }
 
         $bodies = [];

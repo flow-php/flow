@@ -159,10 +159,11 @@ boundary section onward - the leading rows are never read:
 ```php
 <?php
 
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\Floe\FloeReader;
 use function Flow\Filesystem\DSL\{native_local_filesystem, path};
 
-$file = (new FloeReader(native_local_filesystem()))->read(path(__DIR__ . '/output.floe'));
+$file = (new FloeReader(native_local_filesystem(), new AdaptiveBackend()))->read(path(__DIR__ . '/output.floe'));
 
 foreach ($file->head(300) as $rows) {
     // first 300 rows; stops reading once 300 are yielded
@@ -187,11 +188,14 @@ re-reads and re-writes every batch, coalescing same-schema runs into fewer secti
 ```php
 <?php
 
+use Flow\ETL\Column\AdaptiveBackend;
+
 use function Flow\Floe\DSL\merge_floe;
 
 merge_floe(
     [__DIR__ . '/data/part-1.floe', __DIR__ . '/data/part-2.floe'],
     __DIR__ . '/data/merged.floe',
+    new AdaptiveBackend(),
 );
 ```
 

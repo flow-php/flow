@@ -33,10 +33,8 @@ use Flow\ETL\DataFrame;
 use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\ErrorHandler\SkipRows;
 use Flow\ETL\ErrorHandler\ThrowError;
-use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Exception\UnsupportedUnionTypeException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\ArrayExtractor;
@@ -45,9 +43,9 @@ use Flow\ETL\Extractor\BatchExtractor;
 use Flow\ETL\Extractor\CacheExtractor;
 use Flow\ETL\Extractor\ChainExtractor;
 use Flow\ETL\Extractor\DataFrameExtractor;
+use Flow\ETL\Extractor\File\PartitionTypes;
 use Flow\ETL\Extractor\FilesExtractor;
 use Flow\ETL\Extractor\MemoryExtractor;
-use Flow\ETL\Extractor\PartitionTypes;
 use Flow\ETL\Extractor\PathPartitionsExtractor;
 use Flow\ETL\Extractor\RowsExtractor;
 use Flow\ETL\Extractor\SequenceExtractor;
@@ -149,7 +147,6 @@ use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Memory\Memory;
 use Flow\ETL\NativePHPRandomValueGenerator;
 use Flow\ETL\RandomValueGenerator;
-use Flow\ETL\Row\ColumnName;
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
@@ -220,7 +217,6 @@ use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\Mode;
-use Flow\Floe\FloeSerializer;
 use Flow\Serializer\Serializer;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateTimeType;
@@ -253,7 +249,6 @@ use UnitEnum;
 use function array_is_list;
 use function array_key_exists;
 use function array_map;
-use function array_values;
 use function class_exists;
 use function enum_exists;
 use function Flow\Filesystem\DSL\path;
@@ -386,11 +381,11 @@ function files(string|Path $directory, Filesystem $filesystem = new NativeLocalF
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function filesystem_cache(
+    Serializer $serializer,
     Path|string|null $cache_dir = null,
     Filesystem $filesystem = new NativeLocalFilesystem(),
-    Serializer $serializer = new FloeSerializer(),
 ): FilesystemCache {
-    return new FilesystemCache($filesystem, is_string($cache_dir) ? path_real($cache_dir) : $cache_dir, $serializer);
+    return new FilesystemCache($filesystem, $serializer, is_string($cache_dir) ? path_real($cache_dir) : $cache_dir);
 }
 
 /**
@@ -570,9 +565,9 @@ function rename_map(array $renames): RenameMapEntryStrategy
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function rows(Schema $schema): Rows
+function rows(Schema $schema, Backend $backend = new AdaptiveBackend()): Rows
 {
-    return Rows::empty($schema);
+    return Rows::empty($schema, $backend);
 }
 
 /**
@@ -1168,52 +1163,8 @@ function number_format(
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function array_to_rows(array $data, Schema $schema, Backend $backend = new AdaptiveBackend()): Rows
 {
-    $isRows = true;
-
-    // @mago-ignore analysis:mixed-assignment
-    foreach ($data as $v) {
-        if (!is_array($v)) {
-            $isRows = false;
-
-            break;
-        }
-    }
-
-    $rawRows = $isRows ? $data : [$data];
-    $maps = [];
-    $definitions = $schema->definitions();
-
-    // @mago-ignore analysis:mixed-assignment
-    foreach (array_values($rawRows) as $index => $row) {
-        $row = type_array()->assert($row);
-
-        if (array_diff_key($row, $definitions) === []) {
-            $maps[] = $row;
-
-            continue;
-        }
-
-        $map = [];
-
-        // @mago-ignore analysis:mixed-assignment
-        foreach ($row as $key => $value) {
-            // PHP gives back a numeric-string column name as an int key, which the positional rule
-            // would rename to eNN. A declared schema naming that column settles which one it is.
-            $declared = $schema->findDefinition((string) $key);
-            $name = $declared === null ? (new ColumnName())->of($key) : (string) $key;
-
-            if ($declared === null && $schema->findDefinition($name) === null) {
-                throw new SchemaMismatchException($index, ColumnMismatchException::unexpectedColumn($name));
-            }
-
-            $map[$name] = $value;
-        }
-
-        $maps[] = $map;
-    }
-
     return (new RowsBuilder($schema, $backend))
-        ->appendRows($maps)
+        ->appendRecords($data)
         ->finish();
 }
 

@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Processor;
 use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Cache\Implementation\InMemoryCache;
 use Flow\ETL\Cardinality;
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Processor\CachingProcessor;
 use Flow\ETL\Rows;
@@ -105,7 +106,7 @@ final class CachingProcessorTest extends FlowTestCase
         $cache = new InMemoryCache();
         $context = flow_context(config_builder()->cache($cache)->build());
 
-        $cache->set('test-cache', (new CacheIndex('test-cache'))->toRows());
+        $cache->set('test-cache', (new CacheIndex('test-cache'))->toRows(new PhpBackend()));
 
         $processor = new CachingProcessor('test-cache');
 

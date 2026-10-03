@@ -9,8 +9,6 @@ use IteratorAggregate;
 use Stringable;
 use Traversable;
 
-use function serialize;
-
 /**
  * @implements IteratorAggregate<string, mixed>
  */
@@ -18,14 +16,16 @@ final readonly class GroupKey implements IteratorAggregate, Stringable
 {
     /**
      * @param array<string, mixed> $values ref name => key value
+     * @param string $identity what tells two keys apart: the serialized equality forms of the key, in ref order
      */
     public function __construct(
         private array $values,
+        private string $identity,
     ) {}
 
     public function __toString(): string
     {
-        return serialize($this->values);
+        return $this->identity;
     }
 
     public function getIterator(): Traversable

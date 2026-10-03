@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\Double\OneRowBatchesExtractor;
 use Flow\ETL\Tests\Double\StopIgnoringExtractor;
@@ -49,7 +50,7 @@ final class FlowTestCaseBatchContractTest extends FlowTestCase
         $expected = RowsMother::sequentialIds(0);
 
         foreach ($batches as $batch) {
-            $expected = $expected->merge($batch);
+            $expected = $expected->concat(new PhpBackend(), $batch);
         }
 
         self::assertExtractorHonoursBatchContract(

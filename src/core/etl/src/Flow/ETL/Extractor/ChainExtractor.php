@@ -45,7 +45,7 @@ final class ChainExtractor implements Extractor, OverridingExtractor, Rewindable
 
         foreach ($this->extractors as $extractor) {
             foreach ($extractor->extract($context) as $rows) {
-                $signal = yield $rows->matchTo($schema);
+                $signal = yield $rows->matchTo($schema, $context->backend());
 
                 if ($signal === Signal::STOP) {
                     return;

@@ -133,11 +133,6 @@ array out. `RustParquetFileWriter::writeArrowBatch()` takes the same pair from a
 methods, its children by writer column name. Userland cannot build either: the classes are final and their
 constructors throw.
 
-### Interfaces
-
-`Flow\Arrow\RandomAccessFile` (`read(int $length, int $offset): string`, `size(): ?int`) and
-`Flow\Arrow\OutputStream` (`append(string $data): self`) are registered for stream implementations.
-
 ## Development
 
 ### Build Commands

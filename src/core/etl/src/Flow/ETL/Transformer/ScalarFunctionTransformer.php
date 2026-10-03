@@ -165,6 +165,7 @@ final readonly class ScalarFunctionTransformer implements Transformer
                 $output,
                 $derived->entry()->name(),
                 $builder->finish(),
+                $context->backend(),
             );
         }
 
@@ -174,6 +175,7 @@ final readonly class ScalarFunctionTransformer implements Transformer
             $output,
             $derived->entry()->name(),
             $columns->stored($derived, $column, $context->backend()),
+            $context->backend(),
         );
     }
 

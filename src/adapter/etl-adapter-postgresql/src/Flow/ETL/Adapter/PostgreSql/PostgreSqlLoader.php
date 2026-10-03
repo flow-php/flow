@@ -138,7 +138,8 @@ final class PostgreSqlLoader implements Loader
         if ($rows->count() <= $maxRows) {
             $builder = new InsertQueryBuilder($this->table, $this->typesMap);
             [$query, $params] = $builder->build(
-                $this->encoder()->encode($rows),
+                $this->encoder()->columns($rows),
+                $rows->count(),
                 $rows->schema(),
                 $this->client->converters(),
                 $this->insertOptions,
@@ -159,7 +160,8 @@ final class PostgreSqlLoader implements Loader
             foreach ($rows->chunks($maxRows) as $chunk) {
                 $builder = new InsertQueryBuilder($this->table, $this->typesMap);
                 [$query, $params] = $builder->build(
-                    $this->encoder()->encode($chunk),
+                    $this->encoder()->columns($chunk),
+                    $chunk->count(),
                     $chunk->schema(),
                     $this->client->converters(),
                     $this->insertOptions,

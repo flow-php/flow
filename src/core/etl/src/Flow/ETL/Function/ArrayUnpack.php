@@ -62,7 +62,7 @@ final class ArrayUnpack implements ScalarFunction, UnpackResults
             throw EvaluationException::at($i, $e);
         }
 
-        return (new ResultColumn())->of($this, $results);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 
     /**

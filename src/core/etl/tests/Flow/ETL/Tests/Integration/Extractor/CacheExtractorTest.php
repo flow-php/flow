@@ -8,12 +8,15 @@ use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Cache\Implementation\FilesystemCache;
 use Flow\ETL\Cache\Implementation\InMemoryCache;
 use Flow\ETL\Cardinality;
+use Flow\ETL\Column\AdaptiveBackend;
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\CountingCache;
 use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\ETL\Tests\Mother\RowsMother;
+use Flow\Floe\FloeSerializer;
 
 use function array_map;
 use function array_merge;
@@ -127,7 +130,7 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
             flow_context(config())->backend(),
         ));
 
-        $cache->set('key', $index->toRows());
+        $cache->set('key', $index->toRows(new PhpBackend()));
 
         $extractor = from_cache($cacheKey);
 
@@ -165,7 +168,7 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
             flow_context(config())->backend(),
         ));
 
-        $cache->set('key', $index->toRows());
+        $cache->set('key', $index->toRows(new PhpBackend()));
 
         $extractor = from_cache($cacheKey)->withClearOnFinish(true);
 
@@ -180,7 +183,11 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
 
     public function test_extracting_rows_from_filesystem_cache(): void
     {
-        $cache = new FilesystemCache($this->fs(), path(__DIR__ . '/var/cache-extractor-streaming'));
+        $cache = new FilesystemCache(
+            $this->fs(),
+            new FloeSerializer(new AdaptiveBackend()),
+            path(__DIR__ . '/var/cache-extractor-streaming'),
+        );
         $cache->clear();
 
         $index = new CacheIndex($cacheKey = 'key');
@@ -197,7 +204,7 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
             schema(int_schema('id')),
             flow_context(config())->backend(),
         ));
-        $cache->set('key', $index->toRows());
+        $cache->set('key', $index->toRows(new PhpBackend()));
 
         $extractor = from_cache($cacheKey);
 
@@ -214,7 +221,11 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
 
     public function test_stop_signal_stops_extraction_and_skips_clearing(): void
     {
-        $cache = new FilesystemCache($this->fs(), path(__DIR__ . '/var/cache-extractor-streaming-stop'));
+        $cache = new FilesystemCache(
+            $this->fs(),
+            new FloeSerializer(new AdaptiveBackend()),
+            path(__DIR__ . '/var/cache-extractor-streaming-stop'),
+        );
         $cache->clear();
 
         $index = new CacheIndex($cacheKey = 'key');
@@ -231,7 +242,7 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
             schema(int_schema('id')),
             flow_context(config())->backend(),
         ));
-        $cache->set('key', $index->toRows());
+        $cache->set('key', $index->toRows(new PhpBackend()));
 
         $generator = from_cache($cacheKey)
             ->withClearOnFinish(true)

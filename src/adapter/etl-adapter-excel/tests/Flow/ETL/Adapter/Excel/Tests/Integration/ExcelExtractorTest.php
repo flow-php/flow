@@ -868,15 +868,17 @@ final class ExcelExtractorTest extends FlowTestCase
         static::assertSame(1, $filesystem->listCalls);
     }
 
-    public function test_a_filtered_extract_declares_unknown_rows(): void
+    public function test_a_filtered_extract_infers_over_every_listed_file(): void
     {
-        $extractor = from_excel(ExcelFixtureContext::path('sniff/*'));
+        $filtered = from_excel(ExcelFixtureContext::path('sniff/*'));
+        $whole = from_excel(ExcelFixtureContext::path('sniff/*'));
 
-        iterator_to_array($extractor->extract(flow_context(), null, new KeepPaths([ExcelFixtureContext::path(
+        iterator_to_array($filtered->extract(flow_context(), null, new KeepPaths([ExcelFixtureContext::path(
             'sniff/a',
         )])), false);
+        $whole->schema();
 
-        static::assertEquals(Cardinality::unknown(), $extractor->statistics()->rows);
+        static::assertEquals($whole->statistics()->rows, $filtered->statistics()->rows);
     }
 
     public function test_date_cell_in_a_zoned_column_is_converted(): void
@@ -945,5 +947,15 @@ final class ExcelExtractorTest extends FlowTestCase
         );
 
         static::assertGreaterThanOrEqual(1, $backend->builders());
+    }
+
+    public function test_one_extractor_read_twice_interleaved_gives_each_read_every_row(): void
+    {
+        $extractor = from_excel(ExcelFixtureContext::path('sniff/*'))->withBatchSize(1);
+        $extractor->schema();
+        [$first, $second] = ExtractedRows::interleaved($extractor);
+
+        static::assertGreaterThan(0, $first->count());
+        static::assertSame($first->toArray(), $second->toArray());
     }
 }

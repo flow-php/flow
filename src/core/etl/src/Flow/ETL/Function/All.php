@@ -119,7 +119,7 @@ final readonly class All implements ScalarFunction
             $ordered[] = $results[$i];
         }
 
-        return (new ResultColumn())->of($this, $ordered);
+        return (new ResultColumn($context->backend()))->of($this, $ordered);
     }
 
     public function or(ScalarFunction $scalarFunction): Any

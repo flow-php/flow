@@ -1,5 +1,5 @@
 --TEST--
-RustCSVEncoder / RustJSONEncoder render natively what they can and leave the rest, by column, to the held PHP encoder's cells() / fragments()
+RustCSVEncoder / RustJsonEncoder render natively what they can and leave the rest, by column, to the held PHP encoder's cells() / fragments()
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 --FILE--
@@ -7,7 +7,7 @@ RustCSVEncoder / RustJSONEncoder render natively what they can and leave the res
 require __DIR__ . '/bootstrap.php';
 
 use Flow\ETL\Adapter\CSV\{CSVWriteOptions, PhpCSVEncoder, RustCSVEncoder};
-use Flow\ETL\Adapter\JSON\{PhpJSONEncoder, RustJSONEncoder};
+use Flow\ETL\Adapter\JSON\{PhpJsonEncoder, RustJsonEncoder};
 use Flow\ETL\Tests\Context\TextWriterBatches;
 
 $cases = [
@@ -26,9 +26,9 @@ foreach ($cases as [$batch, $format]) {
     [$schema, $values] = TextWriterBatches::of($batch);
     $rows = native_rows($schema, $values);
     $csv = new RecordingPhpCSVEncoder(new PhpCSVEncoder(new CSVWriteOptions(dateTimeFormat: $format, dateFormat: $format)));
-    $json = new RecordingPhpJSONEncoder(new PhpJSONEncoder(JSON_THROW_ON_ERROR, $format, $format));
+    $json = new RecordingPhpJsonEncoder(new PhpJsonEncoder(JSON_THROW_ON_ERROR, $format, $format));
     (new RustCSVEncoder(',', '"', '\\', "\n", $format, $format, $csv))->encode($rows);
-    (new RustJSONEncoder(JSON_THROW_ON_ERROR, $format, $format, $json))->encode($rows, "\n");
+    (new RustJsonEncoder(JSON_THROW_ON_ERROR, $format, $format, $json))->encode($rows, "\n");
 
     echo "{$batch} ({$format}): csv ", json_encode(recorded_names($csv->columns, $rows)), ', json ', json_encode(recorded_names($json->columns, $rows)), "\n";
 }

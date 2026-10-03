@@ -2,6 +2,10 @@
 //! where `cast.rs` casts it natively; every other value, and every value the native lane refuses, runs PHP's
 //! `$type->cast()` then `$physical->toPhysical()`, so results and refusals are PHP's own.
 
+// `appendPhysicals()`'s `$nullCount`: ext-php-rs names a PHP parameter after its Rust identifier and binds it in a
+// generated handler, which an `allow` on the method, the impl block or the parameter does not reach
+#![allow(non_snake_case)]
+
 use std::rc::Rc;
 
 use arrow_array::Array;
@@ -526,6 +530,31 @@ impl RustColumnBuilder {
                     None => zval_long(index as i64),
                 }),
             )
+        });
+
+        if result.is_err() {
+            self.values.truncate(start);
+        }
+
+        result
+    }
+
+    /// `ColumnBuilder::appendPhysicals()`: physical values as they are. A null under NOT NULL is refused at its
+    /// position, a physical of another kind as `append_physical()` refuses it; `$nullCount` is the PHP builders' hint,
+    /// this builder counts nulls as it appends.
+    #[php(name = "appendPhysicals")]
+    pub fn append_physicals(&mut self, physicals: &ZendHashTable, nullCount: Option<i64>) -> PhpResult<()> {
+        let _ = nullCount;
+        let start = self.values.len();
+        let result = ht_for_each(physicals, |_, index, physical| {
+            if physical.is_null() && !self.nullable {
+                return Err(schema_mismatch(
+                    zval_long(index as i64),
+                    value_does_not_match(&self.definition, null_zval(), None)?,
+                ));
+            }
+
+            append_physical(&mut self.values, &self.plan.kind, physical)
         });
 
         if result.is_err() {

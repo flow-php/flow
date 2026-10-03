@@ -44,12 +44,12 @@ final class MapColumnBuilder implements PhpColumnBuilder
         }
 
         assert(is_array($physical));
-        $this->keys->appendPhysicalMany(array_keys($physical));
-        $this->values->appendPhysicalMany(array_values($physical));
+        $this->keys->appendPhysicals(array_keys($physical));
+        $this->values->appendPhysicals(array_values($physical));
         $this->offsets[] = $this->keys->count();
     }
 
-    public function appendPhysicalMany(array $physicals, ?int $nullCount = null): void
+    public function appendPhysicals(array $physicals, ?int $nullCount = null): void
     {
         // @mago-ignore analysis:mixed-assignment
         foreach ($physicals as $physical) {

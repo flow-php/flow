@@ -22,6 +22,9 @@ use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\StringType;
 
 use function Flow\Types\DSL\type_bare;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_mixed;
 
 final readonly class ComparableValues
 {
@@ -67,9 +70,44 @@ final readonly class ComparableValues
         $bare = type_bare($type);
         $element = $bare instanceof ListType ? type_bare($bare->element()) : $bare;
 
+        if ($bare instanceof DateType) {
+            return $this->instants($physicals);
+        }
+
+        if ($element instanceof DateType) {
+            $lists = [];
+
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($physicals as $list) {
+                $lists[] = $list === null ? null : $this->instants(type_list(type_mixed())->assert($list));
+            }
+
+            return $lists;
+        }
+
         return $element instanceof HTMLElementType || $element instanceof XMLElementType
             ? (new TextValues())->of($type, $physicals)
             : $physicals;
+    }
+
+    /**
+     * A date's physical days on a datetime's microsecond scale, so a date and a datetime at the same instant compare
+     * and hash equal.
+     *
+     * @param list<mixed> $days
+     *
+     * @return list<?int>
+     */
+    public function instants(array $days): array
+    {
+        $instants = [];
+
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($days as $day) {
+            $instants[] = $day === null ? null : type_integer()->assert($day) * 86_400_000_000;
+        }
+
+        return $instants;
     }
 
     /**
@@ -95,6 +133,12 @@ final readonly class ComparableValues
      */
     public function ordering(Column $column): array
     {
-        return $this->orderedByPhysical($column->type()) ? $column->physicals() : $column->values();
+        if (!$this->orderedByPhysical($column->type())) {
+            return $column->values();
+        }
+
+        return type_bare($column->type()) instanceof DateType
+            ? $this->instants($column->physicals())
+            : $column->physicals();
     }
 }

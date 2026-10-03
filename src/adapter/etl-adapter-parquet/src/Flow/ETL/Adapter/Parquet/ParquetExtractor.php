@@ -4,23 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet;
 
-use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
-use Flow\ETL\Extractor\FileExtractor;
-use Flow\ETL\Extractor\FileReading;
-use Flow\ETL\Extractor\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\File\DerivedSchema;
+use Flow\ETL\Extractor\File\FileExtractor;
+use Flow\ETL\Extractor\File\FileReading;
+use Flow\ETL\Extractor\File\FileReadLoop;
+use Flow\ETL\Extractor\File\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\File\ReadWindow;
+use Flow\ETL\Extractor\File\SelfDescribingFile;
+use Flow\ETL\Extractor\File\SourceFile;
 use Flow\ETL\Extractor\RewindableExtractor;
-use Flow\ETL\Extractor\SelfDescribingFile;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\Extractor\SourceFile;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
-use Flow\ETL\Schema\Validator\StrictValidator;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
@@ -30,13 +31,11 @@ use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Engine\AdaptiveParquetEngine;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
-use Flow\Parquet\ParquetFile;
 use Generator;
-use Throwable;
 
 use function array_values;
 use function iterator_count;
-use function max;
+use function iterator_to_array;
 use function sprintf;
 
 final class ParquetExtractor implements
@@ -114,82 +113,30 @@ final class ParquetExtractor implements
      */
     public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
     {
-        $backend = $context->backend();
-        $batchSize = $this->batchSize();
-        $yielded = 0;
-
-        $fileOffset = $this->offset ?? 0;
+        $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $pathFilter), false);
         // every file is read under the first file's schema, or the union of all of them
-        $expected = $this->derivedSchema($this->schemaFiles(), $this->unionByName);
         $target = $this->schema();
-
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
+        $batches = new ParquetFileBatches(
+            $this->opener(),
+            $fileColumns,
+            $this->firstFile,
+            $this->unionByName
+                ? null
+                : new DerivedSchema($this->derivedSchema($this->schemaFiles(), $this->unionByName), $this->derivedFrom),
+        );
+        $this->firstFile = null;
 
-        foreach ($this->files($pathFilter) as $file) {
-            $source = null;
-
-            // finally, not a close() per exit: the limit/STOP returns below and an abandoned
-            // generator have to release the handle too (b73)
-            try {
-                $fileRows = $file->file->reader()->rowsNumber();
-
-                if ($fileOffset > $fileRows) {
-                    $fileOffset -= $fileRows;
-
-                    continue;
-                }
-
-                if (!$this->unionByName) {
-                    $validation = (new StrictValidator())->validate($expected, $file->schema());
-
-                    if (!$validation->isValid()) {
-                        throw InferredSchemaException::filesDiverge(
-                            $file->source()->uri(),
-                            $this->derivedFrom,
-                            $validation,
-                        );
-                    }
-                }
-
-                $body = $fileColumns->withoutTail($file->schema());
-                // R6: over the FILE's schema, never over schema()'s output
-                $rowsSchema = $fileColumns->declare($file->schema());
-                $constants = $fileColumns->forFile($file->source(), $rowsSchema);
-                $matchTo = !$rowsSchema->isSame($target) ? $target : null;
-
-                $source = $file->open();
-
-                foreach ($source->batches(
-                    $body,
-                    $batchSize,
-                    $fileOffset,
-                    $limit === null ? null : $limit - $yielded,
-                    $backend,
-                ) as $rows) {
-                    $rows = $constants->fillRows($rows, $rowsSchema, $backend);
-
-                    if ($matchTo !== null) {
-                        $rows = $rows->matchTo($matchTo);
-                    }
-
-                    $yielded += $rows->count();
-
-                    $signal = yield $rows;
-
-                    if ($signal === Signal::STOP) {
-                        return;
-                    }
-
-                    if ($limit !== null && $yielded >= $limit) {
-                        return;
-                    }
-                }
-
-                $fileOffset = max($fileOffset - $fileRows, 0);
-            } finally {
-                $source?->close();
-                $file->close();
-            }
+        try {
+            yield from (new FileReadLoop($fileColumns, $target))->read(
+                $sources,
+                $batches,
+                $this->batchSize(),
+                $context->backend(),
+                new ReadWindow($this->offset ?? 0, $limit),
+            );
+        } finally {
+            $batches->close();
         }
     }
 
@@ -357,20 +304,15 @@ final class ParquetExtractor implements
 
     private function open(SourceFile $source): ParquetSourceFile
     {
-        $stream = $this->filesystem->readFrom($source->path);
-        $engine = $this->openedWith ??= $this->engine ?? new AdaptiveParquetEngine($this->byteOrder, $this->options);
+        return $this->opener()->open($source);
+    }
 
-        try {
-            $reader = $engine->openForRead($stream);
-        } catch (Throwable $e) {
-            $stream->close();
-
-            throw $e;
-        }
-
-        return new ParquetSourceFile(
-            new ParquetFile($stream, $this->options, $reader),
-            $source,
+    private function opener(): ParquetSourceFileOpener
+    {
+        return new ParquetSourceFileOpener(
+            $this->filesystem,
+            $this->openedWith ??= $this->engine ?? new AdaptiveParquetEngine($this->byteOrder, $this->options),
+            $this->options,
             $this->schemaConverter,
             array_values($this->columns),
         );

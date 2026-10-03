@@ -7,7 +7,7 @@ RustBackend::adopt() refuses an untyped (mixed) column with the PHP wording
 require __DIR__ . '/bootstrap.php';
 
 use Flow\ETL\Column\RustBackend;
-use Flow\ETL\Column\Php\ValueColumn;
+use Flow\ETL\Column\ValueColumn;
 use Flow\ETL\Column\PhpBackend;
 use function Flow\ETL\DSL\int_schema;
 

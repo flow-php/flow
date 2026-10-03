@@ -313,7 +313,7 @@ function interfaces_reflection(): string
         'Flow\\ETL\\Column\\ColumnBuilder',
         'Flow\\ETL\\Adapter\\Parquet\\ParquetOpenSink',
         'Flow\\ETL\\Adapter\\CSV\\CSVEncoder',
-        'Flow\\ETL\\Adapter\\JSON\\JSONEncoder',
+        'Flow\\ETL\\Adapter\\JSON\\JsonEncoder',
         'Flow\\ETL\\Adapter\\CSV\\CSVOpenSource',
         'Flow\\ETL\\Adapter\\JSON\\JsonOpenSource',
         'Flow\\ETL\\Adapter\\Parquet\\ParquetOpenSource',
@@ -1249,9 +1249,9 @@ final class RecordingPhpCSVEncoder
 }
 
 /**
- * Stands in for the PhpJSONEncoder a RustJSONEncoder holds: renders through it and records every column left to it.
+ * Stands in for the PhpJsonEncoder a RustJsonEncoder holds: renders through it and records every column left to it.
  */
-final class RecordingPhpJSONEncoder
+final class RecordingPhpJsonEncoder
 {
     /**
      * @var list<Flow\ETL\Column\Column>
@@ -1259,7 +1259,7 @@ final class RecordingPhpJSONEncoder
     public array $columns = [];
 
     public function __construct(
-        private readonly Flow\ETL\Adapter\JSON\PhpJSONEncoder $php,
+        private readonly Flow\ETL\Adapter\JSON\PhpJsonEncoder $php,
     ) {}
 
     /**

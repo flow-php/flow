@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Sort;
 use Flow\ETL\Bucketing\Bucket;
 use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\Bucketing\Storage\MemoryBuckets;
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
@@ -116,7 +117,7 @@ final class ExternalSortTest extends FlowTestCase
         $sorted = rows(schema(int_schema('a'), int_schema('b')));
 
         foreach (ExternalSortMother::spilling(refs('a', 'b'))->sort($input, flow_context(config())) as $batch) {
-            $sorted = $sorted->concat($batch);
+            $sorted = $sorted->concat(new AdaptiveBackend(), $batch);
         }
 
         static::assertSame(
@@ -231,7 +232,10 @@ final class ExternalSortTest extends FlowTestCase
             mergeFanIn: 2,
             batchSize: $dataset['mergeBatchSize'],
         )->sort($input, flow_context(config())) as $batch) {
-            $sorted = $sorted->concat($batch->matchTo($dataset['schema']));
+            $sorted = $sorted->concat(
+                new AdaptiveBackend(),
+                $batch->matchTo($dataset['schema'], new AdaptiveBackend()),
+            );
         }
 
         // serialized, so NaN and -0.0 compare by what they are

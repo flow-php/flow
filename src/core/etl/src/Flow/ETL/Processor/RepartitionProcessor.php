@@ -11,6 +11,7 @@ use Flow\ETL\Bucketing\Hasher;
 use Flow\ETL\Bucketing\KeyGrouping;
 use Flow\ETL\Bucketing\KeyValues;
 use Flow\ETL\Bucketing\NativeHasher;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Dataset\Memory\BoundedRead;
 use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\FlowContext;
@@ -43,13 +44,13 @@ final readonly class RepartitionProcessor implements Processor
      */
     public function process(Generator $rows, FlowContext $context): Generator
     {
-        $grouping = new KeyGrouping(new KeyValues($this->by->all()), $this->hasher);
+        $grouping = new KeyGrouping(new KeyValues($this->by->all()), $this->hasher, $context->backend());
         $bounded = new BoundedRead($this->memoryLimit, $context->backend());
         [$read, $fits] = $bounded->read($rows);
 
         try {
             if ($fits) {
-                yield from $grouping->group($this->concatenated($read));
+                yield from $grouping->group($this->concatenated($read, $context->backend()));
 
                 return;
             }
@@ -84,7 +85,7 @@ final readonly class RepartitionProcessor implements Processor
      *
      * @return Generator<Rows>
      */
-    public function concatenated(array $batches): Generator
+    public function concatenated(array $batches, Backend $backend): Generator
     {
         $parts = [];
         $schema = null;
@@ -95,11 +96,11 @@ final readonly class RepartitionProcessor implements Processor
             }
 
             $schema ??= $batch->schema();
-            $parts[] = $batch->matchTo($schema);
+            $parts[] = $batch->matchTo($schema, $backend);
         }
 
         if ($parts !== []) {
-            yield $parts[0]->concat(...array_slice($parts, 1));
+            yield $parts[0]->concat($backend, ...array_slice($parts, 1));
         }
     }
 }

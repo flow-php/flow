@@ -87,6 +87,6 @@ final class IsType implements ScalarFunction
             $results[] = false;
         }
 
-        return (new ResultColumn())->of($this, $results);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

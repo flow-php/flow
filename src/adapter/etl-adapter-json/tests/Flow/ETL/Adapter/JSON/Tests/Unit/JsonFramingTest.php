@@ -10,9 +10,9 @@ use PHPUnit\Framework\TestCase;
 
 final class JsonFramingTest extends TestCase
 {
-    #[TestWith([JsonFraming::LINES, '', "\n", "\n", ''])]
-    #[TestWith([JsonFraming::ARRAY, '[', ',', ']', '[]'])]
-    #[TestWith([JsonFraming::ARRAY_LINES, "[\n", ",\n", "\n]", "[\n\n]"])]
+    #[TestWith([JsonFraming::Lines, '', "\n", "\n", ''])]
+    #[TestWith([JsonFraming::Array, '[', ',', ']', '[]'])]
+    #[TestWith([JsonFraming::ArrayLines, "[\n", ",\n", "\n]", "[\n\n]"])]
     public function test_framing(
         JsonFraming $framing,
         string $opening,

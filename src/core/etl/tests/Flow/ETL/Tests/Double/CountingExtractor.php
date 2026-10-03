@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
@@ -58,7 +59,10 @@ final class CountingExtractor implements BatchableExtractor, Extractor, Rewindab
 
         foreach ($this->batches as $rows) {
             for ($i = 0; $i < $rows->count(); $i++) {
-                $buffer = $buffer->concat($rows->slice($i, 1)->matchTo($this->schema));
+                $buffer = $buffer->concat(
+                    new AdaptiveBackend(),
+                    $rows->slice($i, 1)->matchTo($this->schema, new AdaptiveBackend()),
+                );
 
                 if ($buffer->count() === $this->batchSize()) {
                     $this->batchesYielded++;

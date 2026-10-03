@@ -5,6 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Column\Php;
 
 use Flow\ETL\Column\Column;
+use Flow\ETL\Column\Layout\LayoutFor;
+use Flow\ETL\Column\Layout\NullCount;
+use Flow\ETL\Column\Layout\Validity;
+use Flow\ETL\Column\Physical\Physical;
+use Flow\ETL\Column\Physical\PhysicalFor;
+use Flow\ETL\Column\Retype;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Types\Type;
 

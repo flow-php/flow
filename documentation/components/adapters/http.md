@@ -170,6 +170,19 @@ data_frame()
     ->run();
 ```
 
+Each response is one row and, by default, one batch. Group responses into batches with `withBatchSize()`; a pushed
+limit stops sending requests once it is reached:
+
+```php
+<?php
+
+data_frame()
+    ->read(from_static_http_requests($psr18Client, $requests())->withBatchSize(50))
+    ->limit(10) // 10 requests sent
+    ->write(to_output())
+    ->run();
+```
+
 ## Extractor - PsrHttpClientDynamicExtractor
 
 > Reach for this only when no built-in paginator fits. It is the lowest-level extractor of the three - you hand-write

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Column\Php;
 
-use Flow\ETL\Column\Php\IdentityPhysical;
 use Flow\ETL\Column\Php\MapColumn;
 use Flow\ETL\Column\Php\MapColumnBuilder;
 use Flow\ETL\Column\Php\ScalarColumnBuilder;
+use Flow\ETL\Column\Physical\IdentityPhysical;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\Types\DSL\type_integer;
@@ -24,7 +24,7 @@ final class MapColumnBuilderTest extends TestCase
             new ScalarColumnBuilder(type_integer(), new IdentityPhysical()),
         );
         $builder->appendPhysical(['a' => 1, 'b' => 2]);
-        $builder->appendPhysicalMany([null, ['c' => 3]]);
+        $builder->appendPhysicals([null, ['c' => 3]]);
 
         static::assertSame(3, $builder->count());
 

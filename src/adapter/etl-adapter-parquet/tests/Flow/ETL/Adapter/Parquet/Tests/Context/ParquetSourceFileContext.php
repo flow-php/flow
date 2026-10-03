@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\Parquet\Tests\Context;
 
 use Flow\ETL\Adapter\Parquet\ParquetSourceFile;
 use Flow\ETL\Adapter\Parquet\SchemaConverter;
-use Flow\ETL\Extractor\SourceFile;
+use Flow\ETL\Extractor\File\SourceFile;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
 use Flow\Parquet\Engine\PhpParquetEngine;

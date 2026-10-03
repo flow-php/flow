@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\SerializedPayloadDecoder;
 use Flow\Floe\FloeSerializer;
@@ -20,7 +21,7 @@ final class SerializedPayloadDecoderTest extends FlowTestCase
 {
     public function test_a_multi_row_payload_gives_up(): void
     {
-        $payload = serialize_to_string(new Base64Serializer(new FloeSerializer()), array_to_rows([
+        $payload = serialize_to_string(new Base64Serializer(new FloeSerializer(new AdaptiveBackend())), array_to_rows([
             ['id' => 1],
             ['id' => 2],
         ], schema(int_schema('id'))));
@@ -65,7 +66,7 @@ final class SerializedPayloadDecoderTest extends FlowTestCase
 
     public function test_it_reads_the_declared_columns_out_of_the_payload(): void
     {
-        $payload = serialize_to_string(new Base64Serializer(new FloeSerializer()), array_to_rows([[
+        $payload = serialize_to_string(new Base64Serializer(new FloeSerializer(new AdaptiveBackend())), array_to_rows([[
             'id' => 7,
         ]], schema(int_schema('id'))));
 
@@ -82,6 +83,10 @@ final class SerializedPayloadDecoderTest extends FlowTestCase
 
     public static function decoder(): SerializedPayloadDecoder
     {
-        return SerializedPayloadDecoder::of(ref('serialized'), new Base64Serializer(new FloeSerializer()), ['id']);
+        return SerializedPayloadDecoder::of(
+            ref('serialized'),
+            new Base64Serializer(new FloeSerializer(new AdaptiveBackend())),
+            ['id'],
+        );
     }
 }

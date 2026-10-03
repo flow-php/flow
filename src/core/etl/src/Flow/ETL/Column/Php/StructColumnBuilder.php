@@ -49,7 +49,7 @@ final class StructColumnBuilder implements PhpColumnBuilder
         }
     }
 
-    public function appendPhysicalMany(array $physicals, ?int $nullCount = null): void
+    public function appendPhysicals(array $physicals, ?int $nullCount = null): void
     {
         $names = array_keys($this->children);
         $columns = array_fill_keys($names, []);
@@ -68,7 +68,7 @@ final class StructColumnBuilder implements PhpColumnBuilder
         }
 
         foreach ($this->children as $name => $child) {
-            $child->appendPhysicalMany($columns[$name]);
+            $child->appendPhysicals($columns[$name]);
         }
     }
 

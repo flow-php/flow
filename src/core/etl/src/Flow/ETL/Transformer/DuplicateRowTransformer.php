@@ -98,9 +98,12 @@ final class DuplicateRowTransformer implements Transformer
                     }
                 }
 
-                $rows = $rows->project($output)->concat($copies->project($output))->gather($interleaved);
+                $rows = $rows
+                    ->project($output, $context->backend())
+                    ->concat($context->backend(), $copies->project($output, $context->backend()))
+                    ->gather($interleaved);
             } else {
-                $rows = $rows->project($output);
+                $rows = $rows->project($output, $context->backend());
             }
 
             $context->telemetry()->transformationCompleted($this, [

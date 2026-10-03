@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Cache;
 
 use Flow\ETL\Cardinality;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Rows;
 
@@ -89,9 +90,9 @@ final class CacheIndex
         return Cardinality::exact($total);
     }
 
-    public function toRows(): Rows
+    public function toRows(Backend $backend): Rows
     {
-        return array_to_rows($this->chunks, schema(str_schema('key'), int_schema('rows', nullable: true)));
+        return array_to_rows($this->chunks, schema(str_schema('key'), int_schema('rows', nullable: true)), $backend);
     }
 
     /**

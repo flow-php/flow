@@ -6,9 +6,9 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Column\Backend;
 use Flow\ETL\Column\Column;
-use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\ColumnRetyping;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
 
@@ -36,15 +36,7 @@ final readonly class DerivedColumns
      */
     public function stored(Definition $derived, Column $column, Backend $backend): Column
     {
-        if (!$derived->isNullable() && $column->nullCount() > 0) {
-            $index = 0;
-
-            while (!$column->isNull($index)) {
-                $index++;
-            }
-
-            throw new SchemaMismatchException($index, ColumnMismatchException::valueDoesNotMatch($derived, null));
-        }
+        (new ColumnRetyping())->notNull($derived, $column);
 
         if (type_bare($column->type())->normalize() === type_bare($derived->type())->normalize()) {
             return $backend->adopt($derived, $column->withType($derived->type()));
@@ -56,10 +48,16 @@ final readonly class DerivedColumns
         return $builder->finish();
     }
 
-    public function rows(Rows $input, Schema $declared, Schema $output, string $name, Column $derived): Rows
-    {
+    public function rows(
+        Rows $input,
+        Schema $declared,
+        Schema $output,
+        string $name,
+        Column $derived,
+        Backend $backend,
+    ): Rows {
         $withDerived = $input->withColumns($declared, [$name => $derived]);
 
-        return $declared->isSame($output) ? $withDerived : $withDerived->matchTo($output);
+        return $declared->isSame($output) ? $withDerived : $withDerived->matchTo($output, $backend);
     }
 }

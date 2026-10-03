@@ -105,6 +105,6 @@ final class ArrayExpand implements ScalarFunction, ExpandResults
             };
         }
 
-        return (new ResultColumn())->lists($this, $lists);
+        return (new ResultColumn($context->backend()))->lists($this, $lists);
     }
 }

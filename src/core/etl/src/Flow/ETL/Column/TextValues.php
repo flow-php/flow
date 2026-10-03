@@ -6,15 +6,16 @@ namespace Flow\ETL\Column;
 
 use DateTimeInterface;
 use DOMDocument;
-use Flow\ETL\Column\Php\HtmlElementPhysical;
-use Flow\ETL\Column\Php\PhysicalFor;
-use Flow\ETL\Column\Php\XmlDocumentPhysical;
-use Flow\ETL\Column\Php\XmlElementPhysical;
+use Flow\ETL\Column\Physical\HtmlElementPhysical;
+use Flow\ETL\Column\Physical\PhysicalFor;
+use Flow\ETL\Column\Physical\XmlDocumentPhysical;
+use Flow\ETL\Column\Physical\XmlElementPhysical;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateTimeType;
 use Flow\Types\Type\Logical\DateType;
 use Flow\Types\Type\Logical\HTMLElementType;
+use Flow\Types\Type\Logical\HTMLType;
 use Flow\Types\Type\Logical\JsonType;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
@@ -199,6 +200,26 @@ final readonly class TextValues
             $bare instanceof ListType => $this->keepsPhysical($bare->element()),
             default => true,
         };
+    }
+
+    /**
+     * The values a database driver binds for a column: markup (xml, xml_element, html, html_element) as the text its
+     * physicals render, every other type as its logical values - the driver's types convert those themselves.
+     *
+     * @param Type<mixed> $type
+     *
+     * @return list<mixed>
+     */
+    public function bindable(Type $type, Column $column): array
+    {
+        $bare = type_bare($type);
+
+        return $bare instanceof XMLType
+        || $bare instanceof XMLElementType
+        || $bare instanceof HTMLType
+        || $bare instanceof HTMLElementType
+            ? $this->texts($type, $column->physicals())
+            : $column->values();
     }
 
     /**

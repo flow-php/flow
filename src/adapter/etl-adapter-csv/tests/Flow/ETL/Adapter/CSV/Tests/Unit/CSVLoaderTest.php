@@ -12,6 +12,7 @@ use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
 
 use function array_keys;
+use function array_map;
 use function count;
 use function Flow\ETL\Adapter\CSV\to_csv;
 use function Flow\ETL\DSL\array_to_rows;
@@ -130,5 +131,28 @@ final class CSVLoaderTest extends FlowTestCase
         $loader->closure(flow_context());
 
         static::assertSame("id\n2\n", $filesystem->readFrom(path('memory://out.csv'))->content());
+    }
+
+    public function test_two_runs_through_one_loader_write_independent_files(): void
+    {
+        $filesystem = memory_filesystem();
+        $loader = to_csv(path('memory://out.csv'), filesystem: $filesystem)
+            ->withNewLineSeparator("\n")
+            ->partitionBy(partition_by('group'));
+        $read = [];
+
+        foreach (['a' => [1, 2], 'b' => [3]] as $group => $ids) {
+            $loader->load(
+                array_to_rows(
+                    array_map(static fn(int $id): array => ['id' => $id, 'group' => $group], $ids),
+                    schema(int_schema('id'), str_schema('group')),
+                ),
+                flow_context(),
+            );
+            $loader->closure(flow_context());
+            $read[] = $filesystem->readFrom(path('memory://group=' . $group . '/out.csv'))->content();
+        }
+
+        static::assertSame(["id\n1\n2\n", "id\n3\n"], $read);
     }
 }

@@ -8,7 +8,8 @@ use Flow\ETL\Adapter\Excel\Sheet\OpenSheet;
 use Flow\ETL\Adapter\Excel\Sheet\SheetCells;
 use Flow\ETL\Adapter\Excel\Sheet\SheetsManager;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Extractor\SourceFile;
+use Flow\ETL\Extractor\File\SourceFile;
+use Flow\ETL\Extractor\Grid\RecordDecoder;
 use Flow\Filesystem\Path;
 use OpenSpout\Reader\ODS\Reader as OdsReader;
 use OpenSpout\Reader\XLSX\Reader as XlsxReader;
@@ -41,10 +42,7 @@ final readonly class WorkbookReader
         return new OpenSheet(
             $reader,
             (new SheetCells($sheet, $this->options->withHeader, $this->options->offset))->rows(),
-            new ExcelDecoder(
-                withHeader: $this->options->withHeader,
-                convertEmptyToNull: $this->options->convertEmptyToNull,
-            ),
+            new RecordDecoder(withHeader: $this->options->withHeader, emptyToNull: $this->options->convertEmptyToNull),
         );
     }
 

@@ -110,7 +110,7 @@ pub fn csv_encoder_ce() -> &'static ClassEntry {
 }
 
 pub fn json_encoder_ce() -> &'static ClassEntry {
-    load(&JSON_ENCODER_CE, "Flow\\ETL\\Adapter\\JSON\\JSONEncoder")
+    load(&JSON_ENCODER_CE, "Flow\\ETL\\Adapter\\JSON\\JsonEncoder")
 }
 
 pub fn csv_open_source_ce() -> &'static ClassEntry {
@@ -179,6 +179,15 @@ pub fn register() -> Result<()> {
             method("append", vec![Arg::new("value", DataType::Mixed)], DataType::Void),
             method("appendMany", vec![Arg::new("values", DataType::Array)], DataType::Void),
             method(
+                "appendPhysicals",
+                vec![
+                    Arg::new("physicals", DataType::Array),
+                    Arg::new("nullCount", DataType::Long).allow_null().default("null"),
+                ],
+                DataType::Void,
+            )
+            .required_args(1),
+            method(
                 "appendFrom",
                 vec![Arg::new("column", COLUMN), Arg::new("i", DataType::Long)],
                 DataType::Void,
@@ -245,7 +254,7 @@ pub fn register() -> Result<()> {
         ],
     )?;
     interface(
-        "Flow\\ETL\\Adapter\\JSON\\JSONEncoder",
+        "Flow\\ETL\\Adapter\\JSON\\JsonEncoder",
         store_json_encoder,
         vec![method(
             "encode",

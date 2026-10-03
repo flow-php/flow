@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Cache\Implementation\FilesystemCache;
 use Flow\ETL\Cache\Implementation\InMemoryCache;
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
@@ -15,6 +16,7 @@ use Flow\ETL\Schema;
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\Tests\Double\SpySerializer;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\Floe\FloeSerializer;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Meter\MeterProvider;
@@ -120,9 +122,13 @@ final class CacheTest extends FlowIntegrationTestCase
     {
         $input = array_map(static fn(int $i) => ['id' => $i], range(1, 25));
 
-        $defaultCache = new FilesystemCache($this->fs(), path(__DIR__ . '/var/cache-mode-default'));
+        $defaultCache = new FilesystemCache(
+            $this->fs(),
+            new FloeSerializer(new AdaptiveBackend()),
+            path(__DIR__ . '/var/cache-mode-default'),
+        );
         $spy = new SpySerializer();
-        $customCache = new FilesystemCache($this->fs(), path(__DIR__ . '/var/cache-mode-custom'), $spy);
+        $customCache = new FilesystemCache($this->fs(), $spy, path(__DIR__ . '/var/cache-mode-custom'));
 
         df(config_builder()->cache($defaultCache))->read(from_array($input))->batchSize(10)->cache('parity')->run();
         df(config_builder()->cache($customCache))->read(from_array($input))->batchSize(10)->cache('parity')->run();

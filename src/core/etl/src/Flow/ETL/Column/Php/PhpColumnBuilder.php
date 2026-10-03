@@ -17,7 +17,7 @@ interface PhpColumnBuilder
      * @param list<mixed> $physicals
      * @param null|int $nullCount the nulls among $physicals when the caller already counted them
      */
-    public function appendPhysicalMany(array $physicals, ?int $nullCount = null): void;
+    public function appendPhysicals(array $physicals, ?int $nullCount = null): void;
 
     public function count(): int;
 

@@ -40,7 +40,7 @@ final class RowsExtractor implements Extractor, RewindableExtractor
         $schema = $this->schema();
 
         foreach ($this->rows as $rows) {
-            $signal = yield $rows->matchTo($schema);
+            $signal = yield $rows->matchTo($schema, $context->backend());
 
             if ($signal === Signal::STOP) {
                 return;

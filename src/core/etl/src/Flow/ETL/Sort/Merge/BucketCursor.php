@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Sort\Merge;
 
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Sort\RowOrder;
@@ -31,8 +32,9 @@ final class BucketCursor
     public function __construct(
         private readonly Generator $batches,
         private readonly RowOrder $order,
+        private readonly Backend $backend,
     ) {
-        $this->batch = Rows::empty(new Schema());
+        $this->batch = Rows::empty(new Schema(), $this->backend);
         $this->load();
     }
 
@@ -102,7 +104,7 @@ final class BucketCursor
             $this->batches->next();
         }
 
-        $this->batch = Rows::empty(new Schema());
+        $this->batch = Rows::empty(new Schema(), $this->backend);
         $this->keys = [];
     }
 }

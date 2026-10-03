@@ -7,6 +7,8 @@ namespace Flow\ETL\Tests\Unit\Transformer;
 use DOMDocument;
 use DOMNodeList;
 use DOMXPath;
+use Flow\ETL\Column\AdaptiveBackend;
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
@@ -234,11 +236,14 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
         ], schema(int_schema('v'))), flow_context(config()));
 
         $transformer = new ScalarFunctionTransformer('out', ref('v')->plus(lit(1)));
-        $single = $transformer
-            ->transform(array_to_rows([['v' => 1]], schema(int_schema('v'))), flow_context(config()))
-            ->merge($transformer->transform(array_to_rows([[
+        $single = $transformer->transform(array_to_rows([[
+            'v' => 1,
+        ]], schema(int_schema('v'))), flow_context(config()))->concat(
+            new PhpBackend(),
+            $transformer->transform(array_to_rows([[
                 'v' => 2,
-            ]], schema(int_schema('v'))), flow_context(config())));
+            ]], schema(int_schema('v'))), flow_context(config())),
+        );
 
         static::assertEquals($wholeBatch->schema()->get('out'), $single->schema()->get('out'));
         static::assertEquals($wholeBatch->toArray(), $single->toArray());
@@ -421,7 +426,7 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
         );
 
         (new ScalarFunctionTransformer('v', ref('lists')->expand()->expand()))->transform(
-            ListColumnsMother::rows()->matchTo(ListColumnsMother::schema()),
+            ListColumnsMother::rows()->matchTo(ListColumnsMother::schema(), new AdaptiveBackend()),
             flow_context(config()),
         );
     }
@@ -446,7 +451,7 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
             [['id' => 1, 'value' => 1], ['id' => 1, 'value' => 2], ['id' => 3, 'value' => 3]],
             (new ScalarFunctionTransformer('value', ref('list')->expand()))
                 ->transform($rows, flow_context())
-                ->project(schema(int_schema('id'), int_schema('value')))
+                ->project(schema(int_schema('id'), int_schema('value')), new AdaptiveBackend())
                 ->toArray(),
         );
     }
@@ -462,7 +467,10 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
             [['s.a' => 1, 's.b' => 'x'], ['s.a' => 2, 's.b' => null]],
             (new ScalarFunctionTransformer('s', ref('s')->unpack(schema(int_schema('a'), str_schema('b')))))
                 ->transform($rows, flow_context())
-                ->project(schema(int_schema('s.a', nullable: true), str_schema('s.b', nullable: true)))
+                ->project(
+                    schema(int_schema('s.a', nullable: true), str_schema('s.b', nullable: true)),
+                    new AdaptiveBackend(),
+                )
                 ->toArray(),
         );
     }

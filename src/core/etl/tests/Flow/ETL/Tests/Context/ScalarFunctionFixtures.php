@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Context;
 
+use DateTimeImmutable;
+use DOMDocument;
 use Flow\ETL\Adapter\Excel\Function\IsValidExcelSheetName;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Exception\RequiredPHPVersionException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Function;
@@ -15,11 +18,13 @@ use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Row\ResolvedReference;
 use Flow\ETL\Row\UnresolvedReference;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\String\StringStyles;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\Types\Type;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\enum_schema;
@@ -130,6 +135,57 @@ final class ScalarFunctionFixtures
             list_schema('list_of_structs', type_list(type_structure(['field' => type_string()])), true),
             map_schema('map', type_map(type_string(), type_integer()), true),
             structure_schema('structure', type_structure(['field' => type_integer()]), true),
+        );
+    }
+
+    /**
+     * Three rows under schema(): two of values, the last all null. `html` stays null - a document needs PHP 8.4.
+     */
+    public static function rows(Backend $backend): Rows
+    {
+        $document = new DOMDocument();
+        $document->loadXML('<root><a>1</a><b>2</b></root>');
+
+        return array_to_rows(
+            [
+                [
+                    'string' => 'a',
+                    'integer' => 1,
+                    'float' => 1.5,
+                    'boolean' => true,
+                    'datetime' => new DateTimeImmutable('2026-01-02 03:04:05 UTC'),
+                    'json' => '{"a":1}',
+                    'xml' => '<root><a>1</a></root>',
+                    'xml_element' => $document->getElementsByTagName('a')->item(0),
+                    'html' => null,
+                    'enum' => BackedStringEnum::one,
+                    'list' => ['a', 'b'],
+                    'list_of_lists' => [['a'], ['b']],
+                    'list_of_structs' => [['field' => 'x']],
+                    'map' => ['k' => 1],
+                    'structure' => ['field' => 1],
+                ],
+                [
+                    'string' => 'b',
+                    'integer' => 2,
+                    'float' => -0.5,
+                    'boolean' => false,
+                    'datetime' => new DateTimeImmutable('2026-01-03 00:00:00 UTC'),
+                    'json' => '[1,2]',
+                    'xml' => '<root><b>2</b></root>',
+                    'xml_element' => $document->getElementsByTagName('b')->item(0),
+                    'html' => null,
+                    'enum' => BackedStringEnum::two,
+                    'list' => [],
+                    'list_of_lists' => [],
+                    'list_of_structs' => [],
+                    'map' => [],
+                    'structure' => ['field' => 2],
+                ],
+                [],
+            ],
+            self::schema(),
+            $backend,
         );
     }
 
@@ -263,7 +319,7 @@ final class ScalarFunctionFixtures
             ],
             Function\CallUserFunc::class => [
                 'factory' => static fn(): ScalarFunction => new Function\CallUserFunc(
-                    lit('strtoupper'),
+                    lit('strval'),
                     type_string(),
                     [ref('string')],
                 ),

@@ -13,8 +13,8 @@ use crate::cast::{build_cast_kind, CastKind};
 use crate::ctx::{self, call_handle, call_method, ce_method_ref, expect_object, find_class, instance};
 use crate::exception::{ext_exception, json_exception};
 
-const PHYSICAL_FOR: &str = "Flow\\ETL\\Column\\Php\\PhysicalFor";
-const IDENTITY: &str = "Flow\\ETL\\Column\\Php\\IdentityPhysical";
+const PHYSICAL_FOR: &str = "Flow\\ETL\\Column\\Physical\\PhysicalFor";
+const IDENTITY: &str = "Flow\\ETL\\Column\\Physical\\IdentityPhysical";
 
 pub struct TypePlan {
     pub kind: Kind,
@@ -126,10 +126,10 @@ fn value_node(parsed: &TypeJson) -> Result<ValueNode, PhpException> {
                 .to_vec(),
         ),
         "timezone" => ValueNode::TimeZone,
-        "xml" => ValueNode::Markup(instance("Flow\\ETL\\Column\\Php\\XmlDocumentPhysical")?),
-        "xml_element" => ValueNode::Markup(instance("Flow\\ETL\\Column\\Php\\XmlElementPhysical")?),
-        "html" => ValueNode::Markup(instance("Flow\\ETL\\Column\\Php\\HtmlDocumentPhysical")?),
-        "html_element" => ValueNode::Markup(instance("Flow\\ETL\\Column\\Php\\HtmlElementPhysical")?),
+        "xml" => ValueNode::Markup(instance("Flow\\ETL\\Column\\Physical\\XmlDocumentPhysical")?),
+        "xml_element" => ValueNode::Markup(instance("Flow\\ETL\\Column\\Physical\\XmlElementPhysical")?),
+        "html" => ValueNode::Markup(instance("Flow\\ETL\\Column\\Physical\\HtmlDocumentPhysical")?),
+        "html_element" => ValueNode::Markup(instance("Flow\\ETL\\Column\\Physical\\HtmlElementPhysical")?),
         "null" => ValueNode::Null,
         "list" => ValueNode::List(child(parsed.element())?),
         "map" => ValueNode::Map(child(parsed.value())?),

@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Cache;
 
 use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Cardinality;
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -20,7 +21,7 @@ final class CacheIndexTest extends FlowTestCase
     {
         $index = new CacheIndex('dataset-id');
 
-        $indexRows = $index->toRows();
+        $indexRows = $index->toRows(new PhpBackend());
 
         static::assertCount(0, $indexRows);
         static::assertEquals($index, CacheIndex::fromRows('dataset-id', $indexRows));
@@ -53,7 +54,7 @@ final class CacheIndexTest extends FlowTestCase
         $index = new CacheIndex('original-key');
         $index->add('chunk-1');
 
-        $reconstructed = CacheIndex::fromRows('different-key', $index->toRows());
+        $reconstructed = CacheIndex::fromRows('different-key', $index->toRows(new PhpBackend()));
 
         static::assertSame('different-key', $reconstructed->key);
         static::assertSame(['chunk-1'], $reconstructed->values());
@@ -92,7 +93,10 @@ final class CacheIndexTest extends FlowTestCase
         $index->add('chunk-2', 0);
         $index->add('chunk-3', 4);
 
-        static::assertEquals(Cardinality::exact(7), CacheIndex::fromRows('dataset-id', $index->toRows())->rows());
+        static::assertEquals(
+            Cardinality::exact(7),
+            CacheIndex::fromRows('dataset-id', $index->toRows(new PhpBackend()))->rows(),
+        );
     }
 
     public function test_to_rows_from_rows_round_trip_preserves_order(): void
@@ -102,7 +106,7 @@ final class CacheIndexTest extends FlowTestCase
         $index->add('chunk-a');
         $index->add('chunk-c');
 
-        $reconstructed = CacheIndex::fromRows('dataset-id', $index->toRows());
+        $reconstructed = CacheIndex::fromRows('dataset-id', $index->toRows(new PhpBackend()));
 
         static::assertEquals($index, $reconstructed);
         static::assertSame(['chunk-b', 'chunk-a', 'chunk-c'], $reconstructed->values());
@@ -119,7 +123,7 @@ final class CacheIndexTest extends FlowTestCase
                 [['key' => 'chunk-1', 'rows' => 2], ['key' => 'chunk-2', 'rows' => null]],
                 schema(str_schema('key'), int_schema('rows', nullable: true)),
             ),
-            $index->toRows(),
+            $index->toRows(new PhpBackend()),
         );
     }
 }

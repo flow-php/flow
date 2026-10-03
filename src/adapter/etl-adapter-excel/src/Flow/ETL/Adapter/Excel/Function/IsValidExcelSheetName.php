@@ -63,6 +63,6 @@ final readonly class IsValidExcelSheetName implements ScalarFunction
             $results[] = $sheetName === null ? null : SheetNameAssertion::isValid($sheetName);
         }
 
-        return (new ResultColumn())->of($this, $results);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

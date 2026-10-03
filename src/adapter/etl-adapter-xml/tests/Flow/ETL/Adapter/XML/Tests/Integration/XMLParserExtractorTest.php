@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\XML\Tests\Integration;
 use Flow\ETL\Adapter\XML\XMLParserExtractor;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Config;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Extractor\Signal;
@@ -335,9 +336,19 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
     public function test_schema_is_the_declared_one(): void
     {
         static::assertEquals(
-            schema(str_schema('name')),
-            from_xml(__DIR__ . '/../Fixtures/flow_orders.xml')->withSchema(schema(str_schema('name')))->schema(),
+            schema(str_schema('node')),
+            from_xml(__DIR__ . '/../Fixtures/flow_orders.xml')->withSchema(schema(str_schema('node')))->schema(),
         );
+    }
+
+    public function test_a_schema_without_the_node_column_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'from_xml() reads every matched element into the "node" column, the schema declares no such column: name',
+        );
+
+        from_xml(__DIR__ . '/../Fixtures/flow_orders.xml')->withSchema(schema(str_schema('name')));
     }
 
     public function test_signal_stop(): void
@@ -504,6 +515,6 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
             false,
         );
 
-        static::assertGreaterThanOrEqual(1, $backend->adopts());
+        static::assertGreaterThanOrEqual(1, $backend->builders());
     }
 }

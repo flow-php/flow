@@ -32,7 +32,7 @@ final class WindowContext
             [$start, $end] = $this->windowFrame->bounds($this->index, $this->partition);
 
             $this->frame = $start > $end
-                ? Rows::empty($this->partition->schema())
+                ? Rows::empty($this->partition->schema(), $this->flowContext->backend())
                 : $this->partition->slice($start, $end - $start + 1);
         }
 

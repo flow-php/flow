@@ -16,6 +16,7 @@ use Flow\ETL\Schema\Definition\StringDefinition;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Context\MemoryFiles;
 use Flow\ETL\Tests\Double\CountingFilesystem;
+use Flow\ETL\Tests\Double\RecordingFilesystem;
 use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
@@ -25,6 +26,7 @@ use PHPUnit\Framework\Attributes\TestWith;
 
 use function array_keys;
 use function array_sum;
+use function count;
 use function Flow\ETL\Adapter\JSON\from_json;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
@@ -702,5 +704,24 @@ final class JsonExtractorTest extends FlowTestCase
         );
 
         static::assertGreaterThanOrEqual(1, $backend->builders() + $backend->adopts());
+    }
+
+    public function test_one_extractor_read_twice_interleaved_gives_each_read_every_row_and_closes_every_stream(): void
+    {
+        $filesystem = new RecordingFilesystem(MemoryFiles::with([
+            'memory://in/a.json' => '[{"id":1},{"id":2}]',
+            'memory://in/b.json' => '[{"id":3}]',
+        ]));
+        [$first, $second] = ExtractedRows::interleaved(from_json(
+            path('memory://in/*.json'),
+            filesystem: $filesystem,
+        )->withBatchSize(1));
+
+        static::assertSame([['id' => 1], ['id' => 2], ['id' => 3]], $first->toArray());
+        static::assertSame($first->toArray(), $second->toArray());
+        static::assertSame(
+            count(array_keys($filesystem->calls, 'readFrom', true)),
+            count(array_keys($filesystem->calls, 'closeSource', true)),
+        );
     }
 }

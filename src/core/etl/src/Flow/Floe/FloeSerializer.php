@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
-use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Column\Backend;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Rows;
@@ -27,8 +26,8 @@ final class FloeSerializer implements Serializer
      * @param int<1, max> $batchSize
      */
     public function __construct(
+        private readonly Backend $backend,
         private readonly int $batchSize = 1000,
-        private readonly Backend $backend = new AdaptiveBackend(),
     ) {
         // @mago-ignore analysis:impossible-condition,redundant-comparison
         if ($this->batchSize < 1) {
@@ -40,7 +39,7 @@ final class FloeSerializer implements Serializer
     {
         try {
             // validation stays on until an upstream mechanism guarantees Rows match their schema
-            $writer = new FloeStreamWriter($rows->schema(), new Options());
+            $writer = new FloeStreamWriter($rows->schema(), $this->backend, new Options());
             $writer->create($destination);
             $writer->write($rows);
             $writer->close();
@@ -74,7 +73,7 @@ final class FloeSerializer implements Serializer
 
             return $batches === []
                 ? (new RowsBuilder($reader->schema(), $this->backend))->finish()
-                : $batches[0]->concat(...array_slice($batches, 1));
+                : $batches[0]->concat($this->backend, ...array_slice($batches, 1));
         } catch (FloeException|RuntimeException $e) {
             throw new SerializationException($e->getMessage(), 0, $e);
         } finally {

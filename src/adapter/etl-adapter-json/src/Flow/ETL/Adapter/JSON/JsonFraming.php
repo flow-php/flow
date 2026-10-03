@@ -6,43 +6,43 @@ namespace Flow\ETL\Adapter\JSON;
 
 enum JsonFraming
 {
-    case ARRAY;
-    case ARRAY_LINES;
-    case LINES;
+    case Array;
+    case ArrayLines;
+    case Lines;
 
     public function closing(): string
     {
         return match ($this) {
-            self::LINES => "\n",
-            self::ARRAY => ']',
-            self::ARRAY_LINES => "\n]",
+            self::Lines => "\n",
+            self::Array => ']',
+            self::ArrayLines => "\n]",
         };
     }
 
     public function empty(): string
     {
         return match ($this) {
-            self::LINES => '',
-            self::ARRAY => '[]',
-            self::ARRAY_LINES => "[\n\n]",
+            self::Lines => '',
+            self::Array => '[]',
+            self::ArrayLines => "[\n\n]",
         };
     }
 
     public function opening(): string
     {
         return match ($this) {
-            self::LINES => '',
-            self::ARRAY => '[',
-            self::ARRAY_LINES => "[\n",
+            self::Lines => '',
+            self::Array => '[',
+            self::ArrayLines => "[\n",
         };
     }
 
     public function separator(): string
     {
         return match ($this) {
-            self::LINES => "\n",
-            self::ARRAY => ',',
-            self::ARRAY_LINES => ",\n",
+            self::Lines => "\n",
+            self::Array => ',',
+            self::ArrayLines => ",\n",
         };
     }
 }

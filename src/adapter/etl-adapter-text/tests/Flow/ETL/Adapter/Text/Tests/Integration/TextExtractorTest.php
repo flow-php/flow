@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\Text\Tests\Integration;
 
 use Flow\ETL\Adapter\Text\TextExtractor;
 use Flow\ETL\Cardinality;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Context\MemoryFiles;
@@ -15,6 +16,10 @@ use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\Double\UnsizedFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function array_keys;
+use function array_unique;
+use function array_values;
+use function count;
 use function Flow\ETL\Adapter\Text\from_text;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
@@ -111,9 +116,9 @@ final class TextExtractorTest extends FlowTestCase
     public function test_metadata_columns_extend_a_declared_schema(): void
     {
         static::assertEquals(
-            schema(str_schema('line'), str_schema('_input_file_uri')),
+            schema(str_schema('text'), str_schema('_input_file_uri')),
             from_text(__DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv')
-                ->withSchema(schema(str_schema('line')))
+                ->withSchema(schema(str_schema('text')))
                 ->withMetadataColumns(true)
                 ->schema(),
         );
@@ -200,5 +205,46 @@ final class TextExtractorTest extends FlowTestCase
         );
 
         static::assertGreaterThanOrEqual(1, $backend->builders());
+    }
+
+    public function test_a_schema_without_the_text_column_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'from_text() reads every line into the "text" column, the schema declares no such column: line',
+        );
+
+        from_text(__DIR__ . '/../Fixtures/orders_flow.csv')->withSchema(schema(str_schema('line')));
+    }
+
+    public function test_columns_a_schema_declares_beside_text_are_padded_with_nulls(): void
+    {
+        $rows = data_frame()
+            ->read(
+                from_text(path_real(__DIR__ . '/../Fixtures/parity_lines.txt'))
+                    ->withSchema(schema(str_schema('text'), str_schema('note', nullable: true))),
+            )
+            ->fetch();
+
+        static::assertNotSame(0, $rows->count());
+        static::assertSame([null], array_values(array_unique($rows->column('note')->values())));
+    }
+
+    public function test_one_extractor_read_twice_interleaved_gives_each_read_every_row_and_closes_every_stream(): void
+    {
+        $filesystem = new RecordingFilesystem(MemoryFiles::with([
+            'memory://in/a.txt' => "a\nb\n",
+            'memory://in/b.txt' => "c\n",
+        ]));
+        [$first, $second] = ExtractedRows::interleaved(from_text(path('memory://in/*.txt'), $filesystem)->withBatchSize(
+            1,
+        ));
+
+        static::assertSame([['text' => 'a'], ['text' => 'b'], ['text' => 'c']], $first->toArray());
+        static::assertSame($first->toArray(), $second->toArray());
+        static::assertSame(
+            count(array_keys($filesystem->calls, 'readFrom', true)),
+            count(array_keys($filesystem->calls, 'closeSource', true)),
+        );
     }
 }

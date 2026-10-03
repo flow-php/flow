@@ -6,9 +6,9 @@ namespace Flow\ETL\Tests\Unit;
 
 use DOMDocument;
 use DOMElement;
-use Flow\ETL\Column\Php\HtmlDocumentPhysical;
-use Flow\ETL\Column\Php\HtmlElementPhysical;
 use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Column\Physical\HtmlDocumentPhysical;
+use Flow\ETL\Column\Physical\HtmlElementPhysical;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\Context\RowsSerializationContext;

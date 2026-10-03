@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Unit;
 
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\Filesystem\Stream\MemorySourceStream;
 use Flow\Floe\Codec\NoopCodec;
 use Flow\Floe\Exception\FloeException;
@@ -30,7 +31,7 @@ final class FooterReaderTest extends TestCase
         $fs = memory_filesystem();
         $path = path('memory://footer.floe');
         $data = array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
-        $writer = new FloeWriter($fs, $data->schema());
+        $writer = new FloeWriter($fs, $data->schema(), new AdaptiveBackend());
         $writer->create($path);
         $writer->write($data);
         $writer->close();
@@ -46,7 +47,7 @@ final class FooterReaderTest extends TestCase
     {
         $fs = memory_filesystem();
         $path = path('memory://unsized.floe');
-        $writer = new FloeWriter($fs, schema());
+        $writer = new FloeWriter($fs, schema(), new AdaptiveBackend());
         $writer->create($path);
         $writer->close();
 
@@ -95,7 +96,7 @@ final class FooterReaderTest extends TestCase
         $fs = memory_filesystem();
         $path = path('memory://close-ok.floe');
         $data = array_to_rows([['id' => 1]], schema(int_schema('id')));
-        $writer = new FloeWriter($fs, $data->schema());
+        $writer = new FloeWriter($fs, $data->schema(), new AdaptiveBackend());
         $writer->create($path);
         $writer->write($data);
         $writer->close();

@@ -8,7 +8,7 @@ use Flow\ETL\Adapter\JSON\JSONMachine\JsonFileSample;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonFormat;
 use Flow\ETL\Adapter\JSON\Tests\Context\JsonFixtureContext;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Extractor\SourceFile;
+use Flow\ETL\Extractor\File\SourceFile;
 use Flow\ETL\Tests\Context\MemoryFiles;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;

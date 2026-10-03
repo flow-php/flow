@@ -41,12 +41,12 @@ final readonly class MemorySortProcessor implements Processor
             }
 
             $maxSize = max($batch->count(), $maxSize);
-            $buffer[] = $batch->matchTo($this->declared ?? $schema);
+            $buffer[] = $batch->matchTo($this->declared ?? $schema, $context->backend());
         }
 
         $all = $buffer === []
-            ? Rows::empty($this->declared ?? $schema ?? new Schema())
-            : $buffer[0]->concat(...array_slice($buffer, 1));
+            ? Rows::empty($this->declared ?? $schema ?? new Schema(), $context->backend())
+            : $buffer[0]->concat($context->backend(), ...array_slice($buffer, 1));
 
         yield from $all->sortBy(...$this->refs->all())->chunks($maxSize);
     }

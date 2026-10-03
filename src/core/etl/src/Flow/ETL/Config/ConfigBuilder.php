@@ -107,9 +107,8 @@ final class ConfigBuilder
         $id = $this->id ??= 'flow-php-' . $this->randomValueGenerator->string(32);
         $this->optimizer ??= Optimizer::default();
         $this->executor ??= new Executor();
-        $this->serializer ??= new FloeSerializer(backend: $this->backend);
-
-        $serializer = $this->serializer;
+        // built per build(), not stored: a later backend() call must reach the next build's serializer
+        $serializer = $this->serializer ?? new FloeSerializer($this->backend);
         $optimizer = $this->optimizer;
         $executor = $this->executor;
         $dataframeName = $this->name ?? 'flow_dataframe';

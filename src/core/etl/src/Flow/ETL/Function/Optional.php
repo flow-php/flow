@@ -56,6 +56,6 @@ final class Optional implements ScalarFunction
             $results[] = array_key_exists($i, $evaluated['failed']) ? null : $evaluated['values'][$i];
         }
 
-        return (new ResultColumn())->of($this, $results);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

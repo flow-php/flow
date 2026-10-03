@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Column\Php;
 
-use Flow\ETL\Column\Php\IdentityPhysical;
 use Flow\ETL\Column\Php\ListColumnBuilder;
 use Flow\ETL\Column\Php\ScalarColumnBuilder;
 use Flow\ETL\Column\Php\StructColumn;
 use Flow\ETL\Column\Php\StructColumnBuilder;
+use Flow\ETL\Column\Physical\IdentityPhysical;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\Types\DSL\type_integer;
@@ -24,7 +24,7 @@ final class StructColumnBuilderTest extends TestCase
             'b' => new ScalarColumnBuilder(type_integer(), new IdentityPhysical()),
         ]);
         $builder->appendPhysical(['b' => 2, 'a' => 1]);
-        $builder->appendPhysicalMany([null, ['a' => 3]]);
+        $builder->appendPhysicals([null, ['a' => 3]]);
 
         static::assertSame(3, $builder->count());
 
@@ -50,7 +50,7 @@ final class StructColumnBuilderTest extends TestCase
             ],
         );
         $bulk = $builder();
-        $bulk->appendPhysicalMany($physicals);
+        $bulk->appendPhysicals($physicals);
         $rowByRow = $builder();
 
         foreach ($physicals as $physical) {

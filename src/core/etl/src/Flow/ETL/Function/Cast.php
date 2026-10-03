@@ -7,7 +7,7 @@ namespace Flow\ETL\Function;
 use DateTimeInterface;
 use Exception;
 use Flow\ETL\Column\Column;
-use Flow\ETL\Column\Php\XmlDocumentPhysical;
+use Flow\ETL\Column\Physical\XmlDocumentPhysical;
 use Flow\ETL\Column\TextValues;
 use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -113,7 +113,7 @@ final class Cast implements ScalarFunction
                     );
                 }
 
-                return (new ResultColumn())->of($this, (new TextValues())->dateTimes(
+                return (new ResultColumn($context->backend()))->of($this, (new TextValues())->dateTimes(
                     $type,
                     $physicals,
                     DateTimeInterface::RFC3339,
@@ -151,6 +151,6 @@ final class Cast implements ScalarFunction
             throw EvaluationException::at($i, $e);
         }
 
-        return (new ResultColumn())->of($this, $results);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

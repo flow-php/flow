@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
+use DateTimeImmutable;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
@@ -13,15 +14,20 @@ use Flow\ETL\GroupBy\PivotAggregation;
 use Flow\ETL\GroupBy\PivotShape;
 use Flow\ETL\Tests\Context\GroupByContext;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Value\Json;
+use Flow\Types\Value\Uuid;
 use Generator;
 
 use function array_map;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\count;
+use function Flow\ETL\DSL\date_schema;
+use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\min;
 use function Flow\ETL\DSL\pivot_values;
 use function Flow\ETL\DSL\ref;
@@ -29,6 +35,7 @@ use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\sum;
+use function Flow\ETL\DSL\uuid_schema;
 use function iterator_to_array;
 
 final class GroupByTest extends FlowTestCase
@@ -415,5 +422,68 @@ final class GroupByTest extends FlowTestCase
             [],
             (new GroupBy('country'))->keys(rows(schema(int_schema('age'))), schema(str_schema('country'))),
         );
+    }
+
+    public function test_equal_datetime_instants_in_other_zones_are_one_group(): void
+    {
+        $rows = array_to_rows([
+            ['at' => new DateTimeImmutable('2026-01-02 10:00:00 UTC')],
+            ['at' => new DateTimeImmutable('2026-01-02 11:00:00 +01:00')],
+        ], schema(datetime_schema('at')));
+        $keys = (new GroupBy('at'))->keys($rows, $rows->schema());
+
+        static::assertSame((string) $keys[0], (string) $keys[1]);
+    }
+
+    public function test_a_date_and_an_equal_datetime_instant_share_a_key(): void
+    {
+        $dates = array_to_rows([['at' => new DateTimeImmutable('2026-01-02')]], schema(date_schema('at')));
+        $datetimes = array_to_rows([[
+            'at' => new DateTimeImmutable('2026-01-02 00:00:00 UTC'),
+        ]], schema(datetime_schema('at')));
+
+        static::assertSame(
+            (string) (new GroupBy('at'))->keys($dates, $dates->schema())[0],
+            (string) (new GroupBy('at'))->keys($datetimes, $datetimes->schema())[0],
+        );
+    }
+
+    public function test_uuid_and_json_keys_group_equal_values_and_keep_their_values(): void
+    {
+        $rows = array_to_rows(
+            [
+                ['id' => 'f47ac10b-58cc-4372-a567-0e02b2c3d479', 'doc' => '{"a":1}'],
+                ['id' => 'f47ac10b-58cc-4372-a567-0e02b2c3d479', 'doc' => '{"a":1}'],
+                ['id' => '00000000-0000-4000-8000-000000000000', 'doc' => '{"a":1}'],
+            ],
+            schema(uuid_schema('id'), json_schema('doc')),
+        );
+        $keys = (new GroupBy('id', 'doc'))->keys($rows, $rows->schema());
+
+        static::assertSame((string) $keys[0], (string) $keys[1]);
+        static::assertNotSame((string) $keys[0], (string) $keys[2]);
+        static::assertEquals(
+            ['id' => new Uuid('f47ac10b-58cc-4372-a567-0e02b2c3d479'), 'doc' => new Json('{"a":1}')],
+            iterator_to_array($keys[0]),
+        );
+    }
+
+    public function test_keys_of_a_batch_that_lacks_a_nullable_key_match_a_present_null(): void
+    {
+        $input = schema(str_schema('a'), str_schema('b', nullable: true));
+        $lacking = (new GroupBy('a', 'b'))->keys(array_to_rows([['a' => 'x']], schema(str_schema('a'))), $input);
+        $present = (new GroupBy('a', 'b'))->keys(array_to_rows([['a' => 'x', 'b' => null]], $input), $input);
+
+        static::assertSame(['a' => 'x', 'b' => null], iterator_to_array($lacking[0]));
+        static::assertSame((string) $present[0], (string) $lacking[0]);
+    }
+
+    public function test_keys_of_swapped_absences_do_not_collide(): void
+    {
+        $input = schema(str_schema('a', nullable: true), str_schema('b', nullable: true));
+        $lacksB = (new GroupBy('a', 'b'))->keys(array_to_rows([['a' => 'x']], schema(str_schema('a'))), $input);
+        $lacksA = (new GroupBy('a', 'b'))->keys(array_to_rows([['b' => 'x']], schema(str_schema('b'))), $input);
+
+        static::assertNotSame((string) $lacksB[0], (string) $lacksA[0]);
     }
 }

@@ -1,5 +1,5 @@
 --TEST--
-arrow registers the flow-php/parquet and Arrow stream interfaces reflection-identical to the package files
+arrow registers the flow-php/parquet interfaces reflection-identical to the package files
 --SKIPIF--
 <?php if (!extension_loaded("arrow")) die("skip arrow extension not loaded"); ?>
 --FILE--

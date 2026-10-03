@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Column\Php;
 
-use Flow\ETL\Column\Php\IdentityPhysical;
 use Flow\ETL\Column\Php\ScalarColumnBuilder;
+use Flow\ETL\Column\Physical\IdentityPhysical;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\Types\DSL\type_integer;
@@ -18,7 +18,7 @@ final class ScalarColumnBuilderTest extends TestCase
         $builder = new ScalarColumnBuilder(type_optional(type_integer()), new IdentityPhysical());
         $builder->appendPhysical(1);
         $builder->appendPhysical(null);
-        $builder->appendPhysicalMany([null, 4]);
+        $builder->appendPhysicals([null, 4]);
 
         static::assertSame(4, $builder->count());
 
@@ -31,8 +31,8 @@ final class ScalarColumnBuilderTest extends TestCase
     public function test_takes_the_null_count_the_caller_already_counted(): void
     {
         $builder = new ScalarColumnBuilder(type_optional(type_integer()), new IdentityPhysical());
-        $builder->appendPhysicalMany([1, null], 1);
-        $builder->appendPhysicalMany([null, null, 5], 2);
+        $builder->appendPhysicals([1, null], 1);
+        $builder->appendPhysicals([null, null, 5], 2);
 
         $column = $builder->finish();
 
@@ -43,7 +43,7 @@ final class ScalarColumnBuilderTest extends TestCase
     public function test_a_bulk_append_counts_only_nulls(): void
     {
         $builder = new ScalarColumnBuilder(type_optional(type_integer()), new IdentityPhysical());
-        $builder->appendPhysicalMany([0, '', false, null, '0']);
+        $builder->appendPhysicals([0, '', false, null, '0']);
 
         $column = $builder->finish();
 

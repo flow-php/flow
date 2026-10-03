@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Rows;
 use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\SourceStream;
@@ -26,7 +27,7 @@ final class SpySerializer implements Serializer
     public array $unserialized = [];
 
     public function __construct(
-        private readonly Serializer $inner = new FloeSerializer(),
+        private readonly Serializer $inner = new FloeSerializer(new AdaptiveBackend()),
     ) {}
 
     public function serialize(Rows $rows, DestinationStream $destination): void

@@ -26,6 +26,7 @@ use Generator;
 
 use function array_values;
 use function iterator_to_array;
+use function serialize;
 
 /**
  * Aggregates in one pass while the process stays under the memory limit. Past it, the rest of the stream is partitioned
@@ -117,7 +118,11 @@ final class GroupByAggregationProcessor implements Processor
             // not no row. Only reachable bound - an unbound plan has no schema to type the defaults with.
             if ($shape !== null && $this->groupBy->isGlobal()) {
                 yield (new RowsBuilder($shape->output, $context->backend()))->appendRows([
-                    $this->groupBy->aggregatedValues(new GroupKey([]), $shape->aggregators->cloned(), $shape->output),
+                    $this->groupBy->aggregatedValues(
+                        new GroupKey([], serialize([])),
+                        $shape->aggregators->cloned(),
+                        $shape->output,
+                    ),
                 ])->finish();
             }
         } finally {

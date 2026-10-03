@@ -115,6 +115,6 @@ final class RegexReplace implements ScalarFunction
             throw EvaluationException::at($i, $e);
         }
 
-        return (new ResultColumn())->of($this, $results);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

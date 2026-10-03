@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Unit;
 
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\Floe\Exception\FloeException;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\Footer;
@@ -195,7 +196,7 @@ final class FooterTest extends TestCase
         $path = path('memory://footer-rows.floe');
         $value = array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
 
-        $writer = new FloeWriter($filesystem, $value->schema());
+        $writer = new FloeWriter($filesystem, $value->schema(), new AdaptiveBackend());
         $writer->create($path);
         $writer->write($value);
         $writer->close();
@@ -209,7 +210,7 @@ final class FooterTest extends TestCase
         $path = path('memory://footer-empty.floe');
         $value = rows(schema());
 
-        $writer = new FloeWriter($filesystem, $value->schema());
+        $writer = new FloeWriter($filesystem, $value->schema(), new AdaptiveBackend());
         $writer->create($path);
         $writer->write($value);
         $writer->close();

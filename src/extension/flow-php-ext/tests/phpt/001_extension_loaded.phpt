@@ -22,9 +22,9 @@ interface Flow\ETL\Adapter\CSV\CSVEncoder
 interface Flow\ETL\Adapter\CSV\CSVOpenSource
 class Flow\ETL\Adapter\CSV\RustCSVEncoder implements Flow\ETL\Adapter\CSV\CSVEncoder
 class Flow\ETL\Adapter\CSV\RustCSVOpenSource implements Flow\ETL\Adapter\CSV\CSVOpenSource
-interface Flow\ETL\Adapter\JSON\JSONEncoder
+interface Flow\ETL\Adapter\JSON\JsonEncoder
 interface Flow\ETL\Adapter\JSON\JsonOpenSource
-class Flow\ETL\Adapter\JSON\RustJSONEncoder implements Flow\ETL\Adapter\JSON\JSONEncoder
+class Flow\ETL\Adapter\JSON\RustJsonEncoder implements Flow\ETL\Adapter\JSON\JsonEncoder
 class Flow\ETL\Adapter\JSON\RustJsonOpenSource implements Flow\ETL\Adapter\JSON\JsonOpenSource
 interface Flow\ETL\Adapter\Parquet\ParquetOpenSink
 interface Flow\ETL\Adapter\Parquet\ParquetOpenSource

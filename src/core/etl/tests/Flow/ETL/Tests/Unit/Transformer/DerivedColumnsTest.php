@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
-use Flow\ETL\Column\Php\ValueColumn;
 use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Column\ValueColumn;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
@@ -109,6 +109,7 @@ final class DerivedColumnsTest extends FlowTestCase
                     $output,
                     'note',
                     (new PhpBackend())->constant(str_schema('note', nullable: true), 'x', 1),
+                    new PhpBackend(),
                 )
                 ->toArray(),
         );
@@ -127,6 +128,7 @@ final class DerivedColumnsTest extends FlowTestCase
                     $declared->add(str_schema('extra', nullable: true)),
                     'note',
                     (new PhpBackend())->constant(str_schema('note', nullable: true), 'x', 1),
+                    new PhpBackend(),
                 )
                 ->toArray(),
         );

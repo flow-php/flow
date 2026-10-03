@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function\Evaluation;
 
 use ArrayObject;
-use Flow\ETL\Column\Php\ScalarColumn;
-use Flow\ETL\Column\Php\ValueColumn;
+use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Column\ValueColumn;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Function\Evaluation\ResultColumn;
 use Flow\ETL\Function\ReferenceResolver;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\Types\Type;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -40,7 +41,7 @@ final class ResultColumnTest extends TestCase
 {
     public function test_a_not_null_return_still_accepts_null(): void
     {
-        $column = (new ResultColumn())->of(lit(5), [5, null]);
+        $column = (new ResultColumn(new PhpBackend()))->of(lit(5), [5, null]);
 
         static::assertSame([5, null], $column->values());
         static::assertEquals(type_integer(), $column->type());
@@ -50,22 +51,27 @@ final class ResultColumnTest extends TestCase
     {
         $this->expectException(InvalidLogicException::class);
 
-        (new ResultColumn())->of(ref('a'), [1]);
+        (new ResultColumn(new PhpBackend()))->of(ref('a'), [1]);
     }
 
     public function test_casts_each_value_into_the_returned_type(): void
     {
-        static::assertSame([5, 6], (new ResultColumn())->of(lit(1), ['5', 6])->values());
+        static::assertSame([5, 6], (new ResultColumn(new PhpBackend()))->of(lit(1), ['5', 6])->values());
     }
 
-    public function test_is_a_php_column_whatever_the_configured_backend(): void
+    public function test_builds_through_the_backend_it_was_given(): void
     {
-        static::assertInstanceOf(ScalarColumn::class, (new ResultColumn())->of(lit(1), [1, 2]));
+        $backend = new SpyBackend();
+
+        (new ResultColumn($backend))->of(lit(1), [1, 2]);
+        (new ResultColumn($backend))->of(lit(1), ['1', 2]);
+
+        static::assertSame(2, $backend->builders());
     }
 
     public function test_null_type_builds_a_null_column(): void
     {
-        $column = (new ResultColumn())->of(lit(null), [null, null]);
+        $column = (new ResultColumn(new PhpBackend()))->of(lit(null), [null, null]);
 
         static::assertEquals(type_null(), $column->type());
         static::assertSame(2, $column->nullCount());
@@ -74,7 +80,7 @@ final class ResultColumnTest extends TestCase
     public function test_refusal_names_the_row_of_the_value(): void
     {
         try {
-            (new ResultColumn())->of(lit(1), [1, 2, 'x']);
+            (new ResultColumn(new PhpBackend()))->of(lit(1), [1, 2, 'x']);
             static::fail('expected a SchemaMismatchException');
         } catch (SchemaMismatchException $e) {
             static::assertSame(2, $e->rowIndex);
@@ -83,7 +89,7 @@ final class ResultColumnTest extends TestCase
 
     public function test_type_without_a_column_kind_is_an_untyped_column(): void
     {
-        $column = (new ResultColumn())->of(call(lit('strval'), type_instance_of(ArrayObject::class)), [
+        $column = (new ResultColumn(new PhpBackend()))->of(call(lit('strval'), type_instance_of(ArrayObject::class)), [
             new ArrayObject(),
             null,
         ]);
@@ -99,7 +105,7 @@ final class ResultColumnTest extends TestCase
             schema(json_schema('j')),
         );
 
-        $column = (new ResultColumn())->of($function, ['a', ['b' => 1]]);
+        $column = (new ResultColumn(new PhpBackend()))->of($function, ['a', ['b' => 1]]);
 
         static::assertInstanceOf(ValueColumn::class, $column);
         static::assertSame(['a', ['b' => 1]], $column->values());
@@ -129,13 +135,13 @@ final class ResultColumnTest extends TestCase
         Type $type,
         bool $holds,
     ): void {
-        static::assertSame($holds, (new ResultColumn())->holdsLosslessly($type));
+        static::assertSame($holds, (new ResultColumn(new PhpBackend()))->holdsLosslessly($type));
     }
 
     public function test_an_untyped_array_keeps_its_objects(): void
     {
         $object = new ArrayObject();
-        $column = (new ResultColumn())->typed(type_optional(type_array()), [[$object, 'count']]);
+        $column = (new ResultColumn(new PhpBackend()))->typed(type_optional(type_array()), [[$object, 'count']]);
 
         static::assertInstanceOf(ValueColumn::class, $column);
         static::assertSame([[$object, 'count']], $column->values());
@@ -143,7 +149,7 @@ final class ResultColumnTest extends TestCase
 
     public function test_lists_of_an_expand_are_a_list_column(): void
     {
-        $column = (new ResultColumn())->lists(lit(1), [[1, 2], []]);
+        $column = (new ResultColumn(new PhpBackend()))->lists(lit(1), [[1, 2], []]);
 
         static::assertEquals(type_list(type_integer()), $column->type());
         static::assertSame([[1, 2], []], $column->values());

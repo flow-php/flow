@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Bucketing\KeyValues;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
@@ -15,10 +16,12 @@ use Flow\ETL\GroupBy\Pivot;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 
-use function array_fill;
+use function array_key_exists;
+use function array_key_last;
 use function array_unique;
 use function count;
 use function Flow\ETL\DSL\definition_from_type;
+use function serialize;
 
 final class GroupBy
 {
@@ -130,28 +133,47 @@ final class GroupBy
             return [];
         }
 
-        $columns = [];
+        $present = [];
+        $absent = [];
 
-        foreach ($this->refs as $ref) {
-            // absent under a nullable declaration is a legitimate null; absent under NOT NULL is a
-            // row-shape violation, and Rows::column() names it and lists the available columns.
-            $columns[$ref->name()] = $rows->schema()->findDefinition($ref->base()) === null
-            && $input->get($ref)->isNullable()
-                // @mago-ignore analysis:possibly-invalid-argument
-                ? array_fill(0, $rows->count(), null)
-                : $rows->column($ref->base())->values();
+        foreach ($this->refs->all() as $ref) {
+            $absent[] = $rows->schema()->findDefinition($ref->base()) === null;
+
+            if (!$absent[array_key_last($absent)]) {
+                $present[] = $ref;
+            }
         }
 
         $keys = [];
+        $built = [];
 
-        for ($i = 0, $count = $rows->count(); $i < $count; $i++) {
-            $values = [];
+        // one key per distinct identity over every ref in order (an absent ref is a null slot), its values read from
+        // the first row that carries it
+        foreach ((new KeyValues($present))->of($rows) as $i => $presentValues) {
+            $identity = [];
+            $position = 0;
 
-            foreach ($columns as $name => $column) {
-                $values[$name] = $column[$i];
+            foreach ($absent as $isAbsent) {
+                $identity[] = $isAbsent ? null : $presentValues[$position++];
             }
 
-            $keys[] = new GroupKey($values);
+            $string = serialize($identity);
+
+            if (!array_key_exists($string, $built)) {
+                $values = [];
+
+                foreach ($this->refs->all() as $index => $ref) {
+                    // absent under a nullable declaration is a legitimate null; absent under NOT NULL is a
+                    // row-shape violation, and Rows::column() names it and lists the available columns.
+                    $values[$ref->name()] = $absent[$index] && $input->get($ref)->isNullable()
+                        ? null
+                        : $rows->column($ref->base())->value($i);
+                }
+
+                $built[$string] = new GroupKey($values, $string);
+            }
+
+            $keys[] = $built[$string];
         }
 
         return $keys;

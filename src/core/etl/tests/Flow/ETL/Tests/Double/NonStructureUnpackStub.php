@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Double;
 
 use Flow\ETL\Column\Column;
-use Flow\ETL\Column\Php\ValueColumn;
+use Flow\ETL\Column\ValueColumn;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\FunctionTree;
 use Flow\ETL\Function\ScalarFunction;

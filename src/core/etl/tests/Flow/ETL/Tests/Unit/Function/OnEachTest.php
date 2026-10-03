@@ -304,7 +304,7 @@ final class OnEachTest extends FlowTestCase
         static::assertSame(1, $operand->returnsCalls);
     }
 
-    public function test_the_element_batch_is_an_intermediate_built_without_the_configured_backend(): void
+    public function test_the_element_batch_is_built_by_the_configured_backend(): void
     {
         $backend = new SpyBackend();
         $rows = array_to_rows([['l' => [1, 2]]], schema(list_schema('l', type_list(type_integer()))));
@@ -316,7 +316,7 @@ final class OnEachTest extends FlowTestCase
                 ->eval($rows, flow_context(config_builder()->backend($backend)->build()))
                 ->values(),
         );
-        static::assertSame(0, $backend->builders());
+        static::assertGreaterThanOrEqual(1, $backend->builders());
     }
 
     public function test_the_function_evaluates_once_per_batch(): void

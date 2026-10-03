@@ -6,7 +6,11 @@ namespace Flow\ETL\Column\Php;
 
 use Flow\ETL\Column\Column;
 use Flow\ETL\Column\ColumnBuilder;
+use Flow\ETL\Column\Physical\IdentityPhysical;
+use Flow\ETL\Column\Physical\Physical;
+use Flow\ETL\Column\Physical\PhysicalKind;
 use Flow\ETL\Exception\ColumnMismatchException;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\NullDefinition;
@@ -18,6 +22,7 @@ use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\StringType;
 
 use function get_debug_type;
+use function sprintf;
 
 final class CastingColumnBuilder implements ColumnBuilder
 {
@@ -129,7 +134,43 @@ final class CastingColumnBuilder implements ColumnBuilder
             ));
         }
 
-        $this->physicals->appendPhysicalMany($physicals, $nulls);
+        $this->physicals->appendPhysicals($physicals, $nulls);
+    }
+
+    /**
+     * @param list<mixed> $physicals
+     *
+     * @throws SchemaMismatchException
+     */
+    public function appendPhysicals(array $physicals, ?int $nullCount = null): void
+    {
+        $kind = new PhysicalKind();
+        $type = $this->definition->type();
+        $checkNulls = !$this->nullable && $nullCount !== 0;
+
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($physicals as $position => $physical) {
+            if ($physical === null) {
+                if ($checkNulls) {
+                    throw new SchemaMismatchException($position, ColumnMismatchException::valueDoesNotMatch(
+                        $this->definition,
+                        null,
+                    ));
+                }
+
+                continue;
+            }
+
+            if (!$kind->accepts($type, $physical)) {
+                throw new InvalidArgumentException(sprintf(
+                    'Cannot store a %s physical in a %s column',
+                    get_debug_type($physical),
+                    $type->toString(),
+                ));
+            }
+        }
+
+        $this->physicals->appendPhysicals($physicals, $nullCount);
     }
 
     public function appendTake(Column $column, array $indices): void
@@ -145,7 +186,7 @@ final class CastingColumnBuilder implements ColumnBuilder
             $physicals[] = $all[$index];
         }
 
-        $this->physicals->appendPhysicalMany($physicals);
+        $this->physicals->appendPhysicals($physicals);
     }
 
     public function count(): int

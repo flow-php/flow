@@ -86,7 +86,7 @@ final class FailingOnValuesFunction implements ScalarFunction
             };
         }
 
-        return (new ResultColumn())->of($this, $values);
+        return (new ResultColumn($context->backend()))->of($this, $values);
     }
 
     /**

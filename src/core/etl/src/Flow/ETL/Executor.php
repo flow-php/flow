@@ -6,9 +6,10 @@ namespace Flow\ETL;
 
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
+use Flow\ETL\Executor\AdoptedBatches;
 use Flow\ETL\Executor\PhysicalPlan;
 use Flow\ETL\Executor\Pipeline;
-use Flow\ETL\Extractor\FileExtractor;
+use Flow\ETL\Extractor\File\FileExtractor;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Generator;
 use Throwable;
@@ -107,7 +108,7 @@ final readonly class Executor
         }
 
         if ($parts !== []) {
-            return $parts[0]->concat(...array_slice($parts, 1));
+            return $parts[0]->concat($plan->root()->context()->backend(), ...array_slice($parts, 1));
         }
 
         if ($last !== null) {
@@ -115,9 +116,9 @@ final readonly class Executor
         }
 
         try {
-            return Rows::empty($plan->schema());
+            return Rows::empty($plan->schema(), $plan->root()->context()->backend());
         } catch (SchemaNotDerivableException) {
-            return Rows::empty(new Schema());
+            return Rows::empty(new Schema(), $plan->root()->context()->backend());
         }
     }
 
@@ -141,9 +142,11 @@ final readonly class Executor
             'pipeline #%d',
             $leaf->id,
         ));
-        $generator = $source instanceof FileExtractor
-            ? $source->extract($leaf->context(), $leaf->limit(), $leaf->pathFilter())
-            : $source->extract($leaf->context(), $leaf->limit());
+        $generator = (new AdoptedBatches($leaf->context()->backend()))->of(
+            $source instanceof FileExtractor
+                ? $source->extract($leaf->context(), $leaf->limit(), $leaf->pathFilter())
+                : $source->extract($leaf->context(), $leaf->limit()),
+        );
         $sources = $leaf->sources();
 
         if ($sources !== null) {

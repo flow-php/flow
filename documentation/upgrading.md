@@ -57,9 +57,9 @@ Applies to `PaginationModifier`, `CountModifier` and `KeysetPaginationModifier` 
 
 ### 6) `flow-php/etl-adapter-postgresql` - `from_pgsql_limit_offset()` requires the query's own `ORDER BY`
 
-| Query                                            | Before                      | After                      |
-|--------------------------------------------------|-----------------------------|----------------------------|
-| `SELECT * FROM (SELECT id FROM t ORDER BY id) s` | pages in no defined order   | `InvalidArgumentException` |
+| Query                                            | Before                    | After                      |
+|--------------------------------------------------|---------------------------|----------------------------|
+| `SELECT * FROM (SELECT id FROM t ORDER BY id) s` | pages in no defined order | `InvalidArgumentException` |
 
 ### 7) `flow-php/etl` - `Pipeline\Optimizer` replaced by `Optimizer` + `Planner`, the `Pipeline` class removed
 
@@ -611,11 +611,17 @@ different instant; it now stays a `datetime` unless it is cast to a date explici
 
 ### 61) `flow-php/etl` - Floe takes a `Backend`
 
-| Before                                                                                    | After                                      |
-|-------------------------------------------------------------------------------------------|--------------------------------------------|
-| `?Hydrator $hydrator` on `FloeReader`, `FloeStreamReader`, `FloeSerializer`, `FloeMerger` | `Backend $backend = new AdaptiveBackend()` |
-| `?Hydrator $hydrator` on `FloeWriter`, `FloeStreamWriter`                                 | removed                                    |
-| `FloeMerger(Filesystem, ?Hydrator, Codec)`                                                | `FloeMerger(Filesystem, Backend, Codec)`   |
+No default: the caller passes the backend the rows are built in (`$context->backend()` inside a pipeline).
+
+| Before                                                                                | After                                                                    |
+|---------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
+| `FloeReader(Filesystem, Codec = Noop, int $chunkSize = 65536, ?Hydrator, FloeEngine)` | `FloeReader(Filesystem, Backend, Codec = Noop, int $chunkSize = 65536)`  |
+| `FloeStreamReader(SourceStream, Codec, int $chunkSize, ?Hydrator, FloeEngine)`        | `FloeStreamReader(SourceStream, Codec, int $chunkSize, Backend)`         |
+| `FloeWriter(Filesystem, Schema, Options = new Options(), ?Hydrator, FloeEngine)`      | `FloeWriter(Filesystem, Schema, Backend, Options = new Options())`       |
+| `FloeStreamWriter(Schema, Options = new Options(), ?Hydrator, FloeEngine)`            | `FloeStreamWriter(Schema, Backend, Options = new Options())`             |
+| `FloeMerger(Filesystem, ?Hydrator = null, Codec = Noop)`                              | `FloeMerger(Filesystem, Backend, Codec = Noop)`                          |
+| `FloeSerializer(int $batchSize = 1000, ?Hydrator = null)`                             | `FloeSerializer(Backend, int $batchSize = 1000)`                         |
+| `merge_floe(array $sources, $dest, bool $compact = false, ?Metadata, Filesystem)`     | `merge_floe(array $sources, $dest, Backend, bool $compact = false, ...)` |
 
 ### 62) adapters - encoders split into decoders and encoders
 
@@ -671,7 +677,7 @@ Project with `from_parquet(..., columns: [...])`. Change a type after reading, e
 | `Flow\Floe\Decoding\*`, `Flow\Floe\ValueDecoder`, `Flow\Floe\SchemaDecoder`, `Flow\Floe\ColumnBlueprint`                                                                                                   | removed - `Flow\Floe\FrameDecoder`                                                                                              |
 | `FrameWriter::row(string $body)`                                                                                                                                                                           | `FrameWriter::frame(int $type, string $body)`                                                                                   |
 | `ValueEncoder::{xmlDocument,xmlElement,htmlElement}ToString()`, `ValueDecoder::{xmlDocument,xmlElement,htmlDocument,htmlElement}FromString()`                                                              | removed - `(new XmlDocumentPhysical())->toPhysical()` / `fromPhysical()` and the other `Flow\ETL\Column\Php\*Physical`          |
-| `Flow\Floe\Decoding\TimeZones`                                                                                                                                                                             | `Flow\ETL\Column\Php\TimeZones`                                                                                                 |
+| `Flow\Floe\Decoding\TimeZones`                                                                                                                                                                             | `Flow\ETL\Column\Physical\TimeZones`                                                                                            |
 | `Offsets::pack()` throws `InvalidArgumentException` past 2³¹−1                                                                                                                                             | throws `Flow\ETL\Exception\OffsetOverflow` (extends `InvalidArgumentException`)                                                 |
 | `from_floe()->withBatchSize($n)`, `FloeReader::rows($n)` - batches of exactly `$n` rows                                                                                                                    | at most `$n` rows, never spanning two BATCH frames - re-batch with `->batchSize($n)`                                            |
 | a codec wraps every frame body                                                                                                                                                                             | a codec wraps each buffer of a BATCH frame behind an i64 uncompressed length (`-1` = stored raw); the directory stays plaintext |
@@ -679,26 +685,23 @@ Project with `from_parquet(..., columns: [...])`. Change a type after reading, e
 | an XML/HTML value that cannot be converted to or from its string while building a column throws `FloeException`                                                                                            | throws `Flow\ETL\Exception\InvalidArgumentException`, same message                                                              |
 ### 67) `flow-php/flow-php-ext`, `flow-php/etl`, `flow-php/etl-adapter-csv` - the extension is the column backend
 
-| Before                                                                                                                                                                                  | After                                                                                                                                    |
-|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
-| `Flow\Floe\RustFloeEncoderNative`, `Flow\ETL\Row\RustRowHydratorNative`                                                                                                                 | removed                                                                                                                                  |
-| -                                                                                                                                                                                       | `flow_php` registers `Flow\ETL\Column\{Backend, Column, ColumnBuilder, RustBackend, RustColumn, RustColumnBuilder}`                      |
-| any `flow_php` installs beside `flow-php/etl`                                                                                                                                           | Composer refuses `ext-flow_php` < 0.45 (`conflict`); forced past it: `Class "Flow\ETL\Column\RustBackend" not found`                     |
-| untagged builds report `0.44.1+65.g…`                                                                                                                                                   | `0.45.0-dev+65.g…` (next minor, pre-release)                                                                                             |
-| `Backend` has `builder`, `constant`, `decode`                                                                                                                                           | also `adopt(Definition, Column): Column` and `allocatedBytes(): int`; custom backends implement both                                     |
-| `Consumption` / `analyze()` / telemetry memory = `memory_get_usage()`                                                                                                                   | plus the configured backend's `allocatedBytes()` (native columns are not bound by `memory_limit`)                                        |
-| `new Consumption()`                                                                                                                                                                     | `new Consumption(Backend)`                                                                                                               |
-| `new TelemetryContext(Logger, Tracer, Meter, TelemetryOptions)`                                                                                                                         | `new TelemetryContext(Backend, Logger, Tracer, Meter, TelemetryOptions)`                                                                 |
-| `new KWayMerge(References, int)`                                                                                                                                                        | `new KWayMerge(References, Backend, int)`                                                                                                |
-| `new Joiner(Expression, Join, int)`                                                                                                                                                     | `new Joiner(Expression, Join, Backend, int)`                                                                                             |
-| `AggregatedGroups::flush(int)`                                                                                                                                                          | `flush(int, FlowContext)`                                                                                                                |
-| `CountingProcessor::rows(int)`                                                                                                                                                          | `rows(int, Backend)`                                                                                                                     |
-| `BucketingConfigBuilder::build(Path)`, `SortAlgorithmBuilder`, `GroupByAlgorithmBuilder`, `JoinAlgorithmBuilder`, `RepartitionAlgorithmBuilder` and their implementations `build(Path)` | `build(Path, Backend)` - custom algorithm builders implement the new signature                                                           |
-| `new FilesystemBuckets(Filesystem, Path, int)`                                                                                                                                          | `new FilesystemBuckets(Filesystem, Path, Backend, int)` (required)                                                                       |
-| sort merges, joins, group-by, `count()`, spilled bucket reads and partition filters build with `AdaptiveBackend` or `PhpBackend`                                                        | the configured backend                                                                                                                   |
-| `Rows` rebuilds (`of`, the `concat` mixed lane, `matchTo` null fills, `unserialize()`), `Rows::join()`, `Rows::joinCross()` build with `PhpBackend`                                     | `AdaptiveBackend`: native columns with the extension loaded, even under a configured `PhpBackend`, and `Consumption` does not count them |
-| a CSV read with the extension and a configured `PhpBackend`                                                                                                                             | PHP columns (`Backend::adopt()`)                                                                                                         |
-| a native string/list column past 2 GiB of offsets                                                                                                                                       | `OffsetOverflow` at `concat()` / `appendMany()`, as at `encode()`                                                                        |
+| Before                                                                                                                                                                                  | After                                                                                                                          |
+|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| `Flow\Floe\RustFloeEncoderNative`, `Flow\ETL\Row\RustRowHydratorNative`                                                                                                                 | removed                                                                                                                        |
+| -                                                                                                                                                                                       | `flow_php` registers `Flow\ETL\Column\{Backend, Column, ColumnBuilder, RustBackend, RustColumn, RustColumnBuilder}`            |
+| any `flow_php` installs beside `flow-php/etl`                                                                                                                                           | Composer refuses `ext-flow_php` < 0.45 (`conflict`); forced past it: `Class "Flow\ETL\Column\RustBackend" not found`           |
+| untagged builds report `0.44.1+65.g…`                                                                                                                                                   | `0.45.0-dev+65.g…` (next minor, pre-release)                                                                                   |
+| -                                                                                                                                                                                       | `Backend`: `builder()`, `constant()`, `decode()`, `adopt(Definition, Column): Column`, `allocatedBytes(): int`                 |
+| `Consumption` / `analyze()` / telemetry memory = `memory_get_usage()`                                                                                                                   | plus the configured backend's `allocatedBytes()` (native columns are not bound by `memory_limit`)                              |
+| `new Consumption(bool $realMemory = true)`                                                                                                                                              | `new Consumption(Backend, bool $realMemory = true)`                                                                            |
+| `new TelemetryContext(Logger, Tracer, Meter, TelemetryOptions)`                                                                                                                         | `new TelemetryContext(Backend, Logger, Tracer, Meter, TelemetryOptions)`                                                       |
+| `new KWayMerge(References, int $batchSize = 1000)`                                                                                                                                      | `new KWayMerge(References, Backend, int $batchSize = 1000)`                                                                    |
+| `new Joiner(Expression, Join, int $batchSize = 1000)`                                                                                                                                   | `new Joiner(Expression, Join, Backend, int $batchSize = 1000)`                                                                 |
+| `AggregatedGroups::flush(int $batchSize)`                                                                                                                                               | `flush(int $batchSize, FlowContext)`                                                                                           |
+| `BucketingConfigBuilder::build(Path)`, `SortAlgorithmBuilder`, `GroupByAlgorithmBuilder`, `JoinAlgorithmBuilder`, `RepartitionAlgorithmBuilder` and their implementations `build(Path)` | `build(Path, Backend)` - custom algorithm builders implement the new signature                                                 |
+| `new FilesystemBuckets(Filesystem, Path, int $batchSize = 1000)`                                                                                                                        | `new FilesystemBuckets(Filesystem, Path, Backend, int $batchSize = 1000)`                                                      |
+| sort merges, joins, group-by, `count()`, spilled bucket reads, partition filters, CSV reads                                                                                             | build in the configured backend (`config_builder()->backend()`, `AdaptiveBackend` by default) - `PhpBackend` keeps PHP columns |
+| -                                                                                                                                                                                       | a native string/list column past 2 GiB of offsets throws `OffsetOverflow` at `concat()` / `appendMany()` / `encode()`          |
 
 ### 68) `flow-php/etl`, adapters - `RawRowValues` removed, CSV sources yield batches
 
@@ -711,20 +714,21 @@ Project with `from_parquet(..., columns: [...])`. Change a type after reading, e
 
 ### 69) `flow-php/etl` - `Row` removed, `Rows` is a columnar batch
 
-| Before                                                                                                        | After                                                                         |
-|---------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
-| `foreach ($df->fetch() as $row) { $row->get('x'); }`                                                          | `foreach ($df->fetch()->toArray() as $row) { $row['x']; }`                    |
-| `$rows->first()->get('x')`, `$rows[0]->get('x')`                                                              | `$rows->column('x')->value(0)`, `$rows->values(0)['x']`                       |
-| `$rows->first()->toArray()`                                                                                   | `$rows->toArray()[0]`                                                         |
-| `Rows::of($schema)`                                                                                           | `Rows::empty($schema)`                                                        |
-| `Rows::of($schema, ...$row)`, `rows($schema, ...$row)`, `$rows->add(...$row)`                                 | `$rows->gather([...])`, `$rows->concat($other->matchTo($rows->schema()))`     |
-| `Rows` implements `ArrayAccess`, `IteratorAggregate`                                                          | `Countable` only                                                              |
-| `Rows::all()`, `first()`, `last()`, `row()`, `offsetGet()`                                                    | removed - `toArray()`, `values(int)`, `column(string)`, `slice()`, `gather()` |
-| `Rows::values(int)` outside the batch - a PHP warning and nulls, or the extension's `row N is outside [0, M)` | `InvalidArgumentException`: `Row N does not exist in a batch of M rows`       |
-| `Rows::unique(Comparator)`, `Row\Comparator`, `NativeComparator`                                              | `Rows::unique()` - value equality per column                                  |
-| `array_to_row(array $data, Schema, Backend, $partitions)`                                                     | `array_to_rows([$data], Schema, Backend)`                                     |
-| `SerializedPayloadDecoder::decode(Row): Row`                                                                  | `decode(Rows, int): Rows` - no payload is a one-row batch without columns     |
-| `Formatter\ASCII\Body::rows()`                                                                                | `count()`, `value(string, int)`                                               |
+| Before                                                                        | After                                                                                                                                   |
+|-------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| `foreach ($df->fetch() as $row) { $row->get('x'); }`                          | `foreach ($df->fetch()->toArray() as $row) { $row['x']; }`                                                                              |
+| `$rows->first()->get('x')`, `$rows[0]->get('x')`                              | `$rows->column('x')->value(0)`, `$rows->values(0)['x']`                                                                                 |
+| `$rows->first()->toArray()`                                                   | `$rows->toArray()[0]`                                                                                                                   |
+| `new Rows($schema)`, `rows($schema)`                                          | `Rows::empty(Schema, Backend)`, `rows(Schema, Backend = new AdaptiveBackend())`                                                         |
+| `new Rows($schema, ...$row)`, `rows($schema, ...$row)`, `$rows->add(...$row)` | `array_to_rows(array $data, Schema, Backend = new AdaptiveBackend())`, `$rows->concat(Backend, ...$others)`, `$rows->gather(list<int>)` |
+| `Rows` implements `ArrayAccess`, `IteratorAggregate`                          | `Countable` only                                                                                                                        |
+| `Rows::all()`, `first()`, `last()`, `offsetGet()`                             | removed - `toArray()`, `values(int)`, `column(string)`, `slice(int, int)`, `gather(list<int>)`                                          |
+| `Rows::unique(Comparator)`, `Row\Comparator`, `NativeComparator`              | removed - `$df->dropDuplicates()`                                                                                                       |
+| `array_to_row(array $data, Schema, Hydrator, $partitions)`                    | `array_to_rows([$data], Schema, Backend = new AdaptiveBackend())`                                                                       |
+| `SerializedPayloadDecoder::decode(Row): array`                                | `decode(Rows, int $index): Rows` - no payload is a one-row batch without columns                                                        |
+| `Formatter\ASCII\Body::rows(): array`                                         | `count(): int`, `value(string $entry, int $index): mixed`                                                                               |
+
+`Rows::values(int)` outside the batch throws `InvalidArgumentException`: `Row N does not exist in a batch of M rows`.
 
 ### 70) `flow-php/etl` - `ScalarFunction` evaluates a batch
 
@@ -797,16 +801,15 @@ public function eval(Rows $rows, FlowContext $context): Column
 
 ### 75) `flow-php/etl` - extension points take a batch
 
-| Before                                                                                  | After                                                                                                             |
-|-----------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|
-| `AggregatingFunction::aggregate(Row, FlowContext)`                                      | `aggregate(Rows, list<int> $indices, FlowContext)` + `merge(AggregatingFunction, FlowContext)`                    |
-| `Join\Comparison::compare(Row, Row): bool`                                              | `compare(Rows $left, Rows $right): list<bool>` - pairwise                                                         |
-| `Constraint::isSatisfiedBy(Row, Schema)`, `violation(Row, Schema)`                      | `firstViolation(Rows): ?int`, `violation(Rows, int)`                                                              |
-| `FrameAccumulator::accumulate(Row)`                                                     | `accumulate(Rows, int)`                                                                                           |
-| `WindowContext::row()`                                                                  | removed - `WindowContext(int, Rows, WindowFrame, FlowContext)`                                                    |
-| `PeerComparator::arePeers(Row, Row, Schema)`                                            | `arePeers(Rows, int, int)`                                                                                        |
-| `Dataset\Statistics\Columns::add(Definition, mixed)`                                    | `add(Definition, Column)`                                                                                         |
-| `new KWayMerge(References, Backend, int)`, `new Joiner(Expression, Join, Backend, int)` | `new KWayMerge(References, int)`, `new Joiner(Expression, Join, int)` - output is gathered from the input columns |
+| Before                                                             | After                                                                                          |
+|--------------------------------------------------------------------|------------------------------------------------------------------------------------------------|
+| `AggregatingFunction::aggregate(Row, FlowContext)`                 | `aggregate(Rows, list<int> $indices, FlowContext)` + `merge(AggregatingFunction, FlowContext)` |
+| `Join\Comparison::compare(Row, Row): bool`                         | `compare(Rows $left, Rows $right): list<bool>` - pairwise                                      |
+| `Constraint::isSatisfiedBy(Row, Schema)`, `violation(Row, Schema)` | `firstViolation(Rows): ?int`, `violation(Rows, int)`                                           |
+| `FrameAccumulator::accumulate(Row)`                                | `accumulate(Rows, int)`                                                                        |
+| `WindowContext::row()`                                             | removed - `WindowContext(int, Rows, WindowFrame, FlowContext)`                                 |
+| `PeerComparator::arePeers(Row, Row, Schema)`                       | `arePeers(Rows, int, int)`                                                                     |
+| `Dataset\Statistics\Columns::add(Definition, mixed)`               | `add(Definition, Column)`                                                                      |
 
 ### 76) `flow-php/etl` - one sort order: nulls smallest, strings by bytes
 
@@ -1092,11 +1095,11 @@ A `date` column stored that calendar day before, and still does.
 
 ### 102) `flow-php/etl` - `html_element` and `xml_element` bytes carry the owner document
 
-|                                                           | Before                                  | After                                                                             |
-|-----------------------------------------------------------|-----------------------------------------|-----------------------------------------------------------------------------------|
-| the bytes an element column stores (Floe, Parquet, spill) | the element's markup                    | `"\x01" . <path> . "\0" . <markup length> . "\0" . <markup> . <owner document>`   |
-| `domElementParent()` of an element read from a column     | `<body>` or nothing, from a re-parse    | the element's parent                                                              |
-| `cast(type_string())`, `to_json()`, `to_csv()`            | the element's markup                    | unchanged                                                                         |
+|                                                           | Before                               | After                                                                           |
+|-----------------------------------------------------------|--------------------------------------|---------------------------------------------------------------------------------|
+| the bytes an element column stores (Floe, Parquet, spill) | the element's markup                 | `"\x01" . <path> . "\0" . <markup length> . "\0" . <markup> . <owner document>` |
+| `domElementParent()` of an element read from a column     | `<body>` or nothing, from a re-parse | the element's parent                                                            |
+| `cast(type_string())`, `to_json()`, `to_csv()`            | the element's markup                 | unchanged                                                                       |
 
 An element column now stores its whole owner document per value: its size grows with the document.
 Files written before still read.
@@ -1149,6 +1152,250 @@ flow_php throws `Flow\ETL\Exception\RuntimeException`, plain `\Exception` when `
 `FloeStreamReader` wraps it as `FloeException`, `FloeSerializer` as `SerializationException`, both with the original
 as `previous`; `FloeStreamWriter` lets it through. Both catch the base `Flow\ETL\Exception\RuntimeException` now, so
 its subclasses thrown while decoding are wrapped as well.
+
+### 107) `flow-php/etl` - `RowsBuffer`, `RowEquality` and eleven `Rows` methods removed, `Rows::join*()` moved to `RowsJoin`
+
+| Before                                                                          | After                                                                              |
+|---------------------------------------------------------------------------------|------------------------------------------------------------------------------------|
+| `$rows->head($n)`                                                               | `$rows->take($n)`                                                                  |
+| `$rows->tail($n)`                                                               | `$rows->slice(max(0, $rows->count() - $n), min($n, $rows->count()))`               |
+| `$rows->takeRight($n)`                                                          | the `tail()` replacement - rows keep their order, not reversed                     |
+| `$rows->sortAscending('id')` / `sortDescending('id')`                           | `$rows->sortBy(ref('id')->asc())` / `sortBy(ref('id')->desc())`                    |
+| `$rows->unique()`                                                               | `df()->dropDuplicates()`                                                           |
+| `$rows->diffLeft($other)`, `diffRight()`, `hash()`, `reverse()`                 | removed, no replacement                                                            |
+| `$left->joinCross($right, $prefix)`                                             | `(new RowsJoin($backend))->cross($left, $right, $prefix)`                          |
+| `$left->joinInner($right, $on)`, `joinLeft`, `joinLeftAnti`, `joinRight`        | `(new RowsJoin($backend))->inner($left, $right, $on)`, `left`, `leftAnti`, `right` |
+| `new RowsBuffer(...)`, `new RowEquality()`                                      | removed, no replacement                                                            |
+| `$fileColumns->apply($rows)`, `$partitionColumns->apply($rows, $names, $types)` | `FileConstants::fillRows()`                                                        |
+| `$rows->merge($other)`                                                          | `$rows->concat($backend, $other)`                                                  |
+
+`RowsJoin` is `Flow\ETL\Join\RowsJoin`.
+
+`concat()` requires every part to carry the receiver's schema, an empty receiver too - `merge()` adopted the other
+batch's schema when the receiver was empty. Start an accumulator from `null` instead of `rows(schema())`:
+
+```php
+// before
+$all = rows(schema());
+foreach ($batches as $batch) {
+    $all = $all->merge($batch);
+}
+
+// after
+$all = null;
+foreach ($batches as $batch) {
+    $all = $all === null ? $batch : $all->concat($context->backend(), $batch);
+}
+```
+
+### 108) `flow-php/etl-adapter-xml` - `XMLReaderExtractor` removed
+
+| Before                                        | After                                            |
+|-----------------------------------------------|--------------------------------------------------|
+| `new XMLReaderExtractor($path, $xmlNodePath)` | `from_xml($path)->withXMLNodePath($xmlNodePath)` |
+
+### 109) `flow-php/arrow-ext` - `Flow\Arrow\RandomAccessFile` and `Flow\Arrow\OutputStream` removed
+
+| Before                                                           | After                                   |
+|------------------------------------------------------------------|-----------------------------------------|
+| `class S implements Flow\Arrow\RandomAccessFile`, `OutputStream` | removed - no arrow-ext class reads them |
+
+### 110) `flow-php/etl` - `Parameter::asObjects()` and `Parameter::asFloats()` removed
+
+| Before                               | After                                                                                 |
+|--------------------------------------|---------------------------------------------------------------------------------------|
+| `$parameter->asObjects($rows, $ctx)` | `$parameter->asInstancesOf($rows, $ctx, $class)` or `$parameter->values($rows, $ctx)` |
+| `$parameter->asFloats($rows, $ctx)`  | `$parameter->asNumbers($rows, $ctx)`                                                  |
+
+### 111) `flow-php/etl` - `FileConstants::fill()` and `PartitionColumns::fill()` removed
+
+| Before                                                        | After                                                                                                       |
+|---------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| `$constants->fill($row)`                                      | `[...$row, ...$constants->values()]` per row, or `$constants->fillRows($rows, $schema, $backend)` per batch |
+| `$partitionColumns->fill($row, $names, $values)`              | `FileConstants::values()`                                                                                   |
+| `new FileConstants($partitionColumns, $uri, $names, $values)` | `new FileConstants($uri, $names, $values)`                                                                  |
+
+### 112) `flow-php/etl-adapter-json` - `JsonLinesExtractor` and `JsonLinesLoader` removed
+
+| Before                                           | After                                                                                |
+|--------------------------------------------------|--------------------------------------------------------------------------------------|
+| `new JsonLinesExtractor($path, $filesystem)`     | `new JsonExtractor($path, $filesystem, JsonFormat::Lines)`                           |
+| `new JsonLinesLoader($path, $filesystem)`        | `new JsonLoader($path, $filesystem, JsonFraming::Lines)`                             |
+| `from_json_lines()` returns `JsonLinesExtractor` | returns `JsonExtractor`                                                              |
+| `to_json_lines()` returns `JsonLinesLoader`      | returns `JsonLoader`; `withRowsInNewLines()` on it throws `InvalidArgumentException` |
+
+### 113) `flow-php/etl-adapter-json`, `flow-php/flow-php-ext` - `*JSONEncoder` renamed `*JsonEncoder`
+
+| Before                                  | After                                   |
+|-----------------------------------------|-----------------------------------------|
+| `Flow\ETL\Adapter\JSON\JSONEncoder`     | `Flow\ETL\Adapter\JSON\JsonEncoder`     |
+| `PhpJSONEncoder`, `AdaptiveJSONEncoder` | `PhpJsonEncoder`, `AdaptiveJsonEncoder` |
+| `RustJSONEncoder` (flow_php)            | `RustJsonEncoder`                       |
+
+### 114) `flow-php/etl-adapter-csv`, `-excel`, `-google-sheet` - one record rule: header names, absent cells, blank leading rows
+
+Header names follow the CSV rule in all three: scalar as text, trimmed, a blank cell named `e` + its position.
+
+```
+header row [' id ', '', 'name']
+Excel        before [' id ', '', 'name']   after ['id', 'e01', 'name']
+Google Sheet before [' id ', '', 'name']   after ['id', 'e01', 'name']
+```
+
+|                                                                    | Before                                      | After                                                                                          |
+|--------------------------------------------------------------------|---------------------------------------------|------------------------------------------------------------------------------------------------|
+| CSV `withEmptyToNull(false)`, short line `1,a` under `id,name,age` | `['1', 'a', '']`                            | `['1', 'a', null]` - an absent cell is null, `emptyToNull` only turns a present `''` into null |
+| Excel header cell that is not scalar (a date)                      | `''`                                        | `e` + its position                                                                             |
+| Google Sheet `withHeader(false)`, a blank first row                | the blank row read as a row with no columns | skipped; the next row sizes the `e00`… names                                                   |
+
+### 115) `flow-php/etl-adapter-xml` - `XMLLoader::write()` removed
+
+| Before                               | After                                                                   |
+|--------------------------------------|-------------------------------------------------------------------------|
+| `$loader->write($rows, $partitions)` | `$loader->load($rows, $context)` - partitions come from `partitionBy()` |
+
+### 116) `flow-php/etl` - the configured `Backend` reaches every batch: `Rows`, joins, Floe writers
+
+| Before                                                             | After                                                                                               |
+|--------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
+| `$rows->matchTo($schema)`                                          | `$rows->matchTo($schema, $context->backend())`                                                      |
+| `$rows->project($schema)`                                          | `$rows->project($schema, $context->backend())`                                                      |
+| `rows($schema)` (DSL)                                              | `rows($schema)` - builds in `new AdaptiveBackend()`; `rows($schema, $backend)` builds in `$backend` |
+| `$rows->project($rows->schema()->keep(...$names))` to keep columns | `$rows->select(...$names)` - the columns as they are, in schema order, no conversion                |
+| `new FloeWriter($filesystem, $schema, $options)`                   | `new FloeWriter($filesystem, $schema, $backend, $options)`                                          |
+| `new FloeStreamWriter($schema, $options)`                          | `new FloeStreamWriter($schema, $backend, $options)`                                                 |
+
+Every batch an extractor yields is adopted into the configured backend before the first step sees it - a custom
+extractor that builds `PhpBackend` rows reads as `RustColumn`s under `flow_php` with the default backend, and native
+rows read as PHP columns under `config_builder()->backend(new PhpBackend())`. `$rows->concat($backend, ...)` returns
+columns of `$backend` too.
+
+`Rows::matchTo()` restamps a changed column whose type change the types prove (same kind at every level, no nested
+optional → required) and reads values only for any other change; a null under NOT NULL is reported at its row.
+
+### 117) `flow-php/etl` - `ColumnBuilder::appendPhysicals()` added, `PhpColumnBuilder::appendPhysicalMany()` renamed
+
+| Before                                                          | After                                                                                      |
+|-----------------------------------------------------------------|--------------------------------------------------------------------------------------------|
+| `class MyBuilder implements ColumnBuilder`                      | must add `public function appendPhysicals(array $physicals, ?int $nullCount = null): void` |
+| `$phpColumnBuilder->appendPhysicalMany($physicals, $nullCount)` | `$phpColumnBuilder->appendPhysicals($physicals, $nullCount)`                               |
+
+### 118) `flow-php/etl` - `DeclaredColumns` removed
+
+| Before                                                                     | After                                                                    |
+|----------------------------------------------------------------------------|--------------------------------------------------------------------------|
+| `array_to_rows((new DeclaredColumns())->project($rows, $schema), $schema)` | `(new RowsBuilder($schema, $backend))->appendProjected($rows)->finish()` |
+
+`RowsBuilder::appendRecords($data)` is what `array_to_rows()` does; the DSL function delegates to it.
+
+### 119) `flow-php/etl-adapter-postgresql` - `InsertQueryBuilder::build()` takes columns
+
+| Before                                                                     | After                                                                                       |
+|----------------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
+| `$builder->build($encoder->encode($rows), $schema, $converters, $options)` | `$builder->build($encoder->columns($rows), $rows->count(), $schema, $converters, $options)` |
+
+### 120) `flow-php/etl-adapter-http` - `from_static_http_requests()` takes `withBatchSize()` and honours the limit
+
+```
+3 requests, from_static_http_requests($client, $requests)
+before: 3 batches  [1 row] [1 row] [1 row]
+after:  3 batches  [1 row] [1 row] [1 row]      (default batch size 1, as before)
+
+3 requests, ->withBatchSize(2)
+before: no withBatchSize()
+after:  2 batches  [2 rows] [1 row]
+
+extract($context, limit: 2) over 3 requests, ->withBatchSize(5)
+before: no withBatchSize(); the pushed limit was ignored
+after:  1 batch [2 rows], 2 requests sent
+```
+
+### 121) `flow-php/etl-adapter-excel` - markup cells written, nested values rendered as text, styler gets the cell
+
+|                                            | Before                                                                                    | After                                                   |
+|--------------------------------------------|-------------------------------------------------------------------------------------------|---------------------------------------------------------|
+| `html`, `html_element`, `xml_element` cell | empty                                                                                     | its markup, e.g. `<a b="1"><c></c></a>`                 |
+| a datetime inside a list / map / structure | `{"date":"2026-01-02 03:04:05.000000","timezone_type":3,"timezone":"UTC"}`                | `"2026-01-02T03:04:05+00:00"`                           |
+| a float inside a list / map / structure    | `{"a":1}`                                                                                 | `{"a":1.0}`                                             |
+| a time inside a list / map / structure     | `{"y":0,"m":0,"d":0,"h":1,"i":2,"s":3,"f":0,"invert":0,"days":false,"from_string":false}` | `3723000000` (microseconds, as a time column stores it) |
+| `CellStyler::style($value, …)`             | the logical value (an enum case, a `Uuid`, …)                                             | the cell as written (`'one'`, `'f47ac10b-…'`, …)        |
+
+### 122) `flow-php/etl-adapter-seal` - an `xml_element` field keeps an end tag
+
+| Before              | After                  |
+|---------------------|------------------------|
+| `<a b="1"><c/></a>` | `<a b="1"><c></c></a>` |
+
+### 123) `flow-php/etl-adapter-doctrine`, `flow-php/etl-adapter-postgresql` - markup bound as rendered text
+
+| Before                                                                                | After                                                         |
+|---------------------------------------------------------------------------------------|---------------------------------------------------------------|
+| `xml_element` `<a b="1"><c/></a>`                                                     | `<a b="1"><c></c></a>`                                        |
+| PostgreSQL `xml` `<?xml version="1.0"?>\n<root>…</root>\n`                            | `<root>…</root>`                                              |
+| PostgreSQL `xml` with a DOCTYPE, comments or processing instructions outside the root | the root element only - they are dropped, as DBAL already did |
+
+### 124) `flow-php/etl` - `ResultColumn` takes the `Backend`; functions build in the configured backend
+
+| Before                                                                                                  | After                                                              |
+|---------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------|
+| `(new ResultColumn())->of($this, $values)` in a custom function                                         | `(new ResultColumn($context->backend()))->of($this, $values)`      |
+| a function's result under `flow_php` - a PHP column, copied into the extension's buffers after the step | a column of the configured backend (`RustColumn` under `flow_php`) |
+| `lit()` / `on_each()` columns                                                                           | built by the configured backend                                    |
+
+
+### 125) `flow-php/etl` - file reading and writing plumbing moved to `Extractor\File` and `Loader\File`
+
+Class names are unchanged; only the namespace moves. `Statistics`, `FilesExtractor`, `PathPartitionsExtractor`,
+`Partitioning`, `PartitioningLoader` and `SaveMode` stay where they are. `FilesSink::touched()` and
+`FilesSink::openStreams()` are removed, no replacement.
+
+| Before                                        | After                                              |
+|-----------------------------------------------|----------------------------------------------------|
+| `Flow\ETL\Extractor\FileExtractor`            | `Flow\ETL\Extractor\File\FileExtractor`            |
+| `Flow\ETL\Extractor\FileReading`              | `Flow\ETL\Extractor\File\FileReading`              |
+| `Flow\ETL\Extractor\SourceFile`               | `Flow\ETL\Extractor\File\SourceFile`               |
+| `Flow\ETL\Extractor\FileColumns`              | `Flow\ETL\Extractor\File\FileColumns`              |
+| `Flow\ETL\Extractor\FileConstants`            | `Flow\ETL\Extractor\File\FileConstants`            |
+| `Flow\ETL\Extractor\PartitionColumns`         | `Flow\ETL\Extractor\File\PartitionColumns`         |
+| `Flow\ETL\Extractor\PartitionTypes`           | `Flow\ETL\Extractor\File\PartitionTypes`           |
+| `Flow\ETL\Extractor\DeclaresPartitionTypes`   | `Flow\ETL\Extractor\File\DeclaresPartitionTypes`   |
+| `Flow\ETL\Extractor\PathFiltering`            | `Flow\ETL\Extractor\File\PathFiltering`            |
+| `Flow\ETL\Extractor\SelfDescribingFile`       | `Flow\ETL\Extractor\File\SelfDescribingFile`       |
+| `Flow\ETL\Extractor\MetadataColumns`          | `Flow\ETL\Extractor\File\MetadataColumns`          |
+| `Flow\ETL\Extractor\MetadataColumnsExtractor` | `Flow\ETL\Extractor\File\MetadataColumnsExtractor` |
+| `Flow\ETL\Loader\FileLoader`                  | `Flow\ETL\Loader\File\FileLoader`                  |
+| `Flow\ETL\Loader\PartitionRouter`             | `Flow\ETL\Loader\File\PartitionRouter`             |
+| `Flow\ETL\Filesystem\FilesSink`               | `Flow\ETL\Loader\File\FilesSink`                   |
+| `Flow\ETL\Extractor\SpillState`               | `Flow\ETL\Extractor\Memory\SpillState`             |
+| `Flow\ETL\Extractor\SpilledRows`              | `Flow\ETL\Extractor\Memory\SpilledRows`            |
+| `Flow\ETL\Extractor\InMemoryRows`             | `Flow\ETL\Extractor\Memory\InMemoryRows`           |
+| `Flow\ETL\Extractor\InferredRows`             | `Flow\ETL\Extractor\Memory\InferredRows`           |
+
+### 126) `flow-php/etl` - `FloeSerializer` and the caches take the backend and the serializer explicitly
+
+| Before                                                     | After                                                                                   |
+|------------------------------------------------------------|-----------------------------------------------------------------------------------------|
+| `new FloeSerializer()`, `new FloeSerializer($batchSize)`   | `new FloeSerializer($backend)`, `new FloeSerializer($backend, $batchSize)`              |
+| `new FilesystemCache($filesystem, $cacheDir, $serializer)` | `new FilesystemCache($filesystem, $serializer, $cacheDir)`                              |
+| `new PSRSimpleCache($cache, $ttl, $serializer)`            | `new PSRSimpleCache($cache, $serializer, $ttl)`                                         |
+| `new PSRCacheBuckets($cache, $prefix, $ttl, $serializer)`  | `new PSRCacheBuckets($cache, $serializer, $prefix, $ttl)`                               |
+| `filesystem_cache($cacheDir, $filesystem, $serializer)`    | `filesystem_cache($serializer, $cacheDir, $filesystem)`                                 |
+| `new ApcuCache($namespace)`                                | `new ApcuCache($serializer, $namespace)` - entries stored as serialized strings         |
+| `CacheIndex::toRows()`                                     | `toRows(Backend)`                                                                       |
+| `new Config(..., HashRepartitionConfig, Calculator, ...)`  | `new Config(..., HashRepartitionConfig, Backend, Calculator, ...)` - `Backend` required |
+
+To only move the cache directory, keep the default cache - it shares the pipeline's serializer and backend:
+
+```php
+// before
+config_builder()->cache(filesystem_cache($dir));
+
+// after
+config_builder()->cacheDir($dir);
+```
+
+Build a cache yourself only for a custom serializer or filesystem; it has no default serializer any more and takes it
+from its caller, e.g. `filesystem_cache(new FloeSerializer(new AdaptiveBackend()), $dir)`.
 
 ---
 

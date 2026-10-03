@@ -7,7 +7,6 @@ namespace Flow\ETL\Bucketing\Storage;
 use DateInterval;
 use Flow\ETL\Bucketing\BucketsStorage;
 use Flow\ETL\Rows;
-use Flow\Floe\FloeSerializer;
 use Flow\Serializer\Serializer;
 use Generator;
 use Psr\SimpleCache\CacheInterface;
@@ -21,9 +20,9 @@ final readonly class PSRCacheBuckets implements BucketsStorage
 {
     public function __construct(
         private CacheInterface $cache,
+        private Serializer $serializer,
         private string $prefix = 'flow:buckets',
         private ?DateInterval $ttl = null,
-        private Serializer $serializer = new FloeSerializer(),
     ) {}
 
     public function append(string $bucketId, Rows $rows): void

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Transformer;
 
 use DateTimeImmutable;
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Tests\FlowTestCase;
@@ -310,7 +311,7 @@ final class DuplicateRowTransformerTest extends FlowTestCase
         );
 
         (new DuplicateRowTransformer(lit(true), with_entry('t', ref('tags')->expand())))->transform(
-            ListColumnsMother::rows()->matchTo(ListColumnsMother::schema()),
+            ListColumnsMother::rows()->matchTo(ListColumnsMother::schema(), new AdaptiveBackend()),
             flow_context(config()),
         );
     }

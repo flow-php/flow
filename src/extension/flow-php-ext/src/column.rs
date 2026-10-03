@@ -111,7 +111,7 @@ fn base(type_zv: Zval) -> Result<Zval, PhpException> {
 /// structure element refuses the rows its optional one left absent.
 fn retype(from: Zval, to: Zval, array: &ArrayRef, kind: &Kind) -> Result<(), PhpException> {
     call_method(
-        &instance("Flow\\ETL\\Column\\Php\\Retype")?,
+        &instance("Flow\\ETL\\Column\\Retype")?,
         "assert",
         &mut [
             from.shallow_clone(),

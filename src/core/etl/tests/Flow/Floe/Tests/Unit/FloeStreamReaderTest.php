@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Unit;
 
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Rows;
 use Flow\Floe\Codec\NoopCodec;
 use Flow\Floe\Exception\FloeException;
@@ -33,14 +34,14 @@ final class FloeStreamReaderTest extends TestCase
         $path = path('memory://close.floe');
 
         $data = array_to_rows([['id' => 1]], schema(int_schema('id')));
-        $writer = new FloeWriter($filesystem, $data->schema());
+        $writer = new FloeWriter($filesystem, $data->schema(), new AdaptiveBackend());
         $writer->create($path);
         $writer->write($data);
         $writer->close();
 
         $source = new ClosingSpySourceStream($filesystem->readFrom($path));
 
-        (new FloeStreamReader($source, new NoopCodec(), 65_536))->close();
+        (new FloeStreamReader($source, new NoopCodec(), 65_536, new AdaptiveBackend()))->close();
 
         static::assertSame(1, $source->closeCount);
     }
@@ -61,7 +62,7 @@ final class FloeStreamReaderTest extends TestCase
         $this->expectExceptionMessage('Floe found unknown frame type 0x02');
 
         iterator_to_array(
-            (new FloeReader($filesystem))
+            (new FloeReader($filesystem, new AdaptiveBackend()))
                 ->read($path)
                 ->rows(),
             false,
@@ -86,7 +87,7 @@ final class FloeStreamReaderTest extends TestCase
             array_map(
                 static fn(Rows $batch) => $batch->toArray(),
                 iterator_to_array(
-                    (new FloeReader($filesystem))
+                    (new FloeReader($filesystem, new AdaptiveBackend()))
                         ->read($path)
                         ->rows(offset: 4),
                     false,
@@ -112,7 +113,7 @@ final class FloeStreamReaderTest extends TestCase
             array_map(
                 static fn(Rows $batch) => $batch->toArray(),
                 iterator_to_array(
-                    (new FloeReader($filesystem))
+                    (new FloeReader($filesystem, new AdaptiveBackend()))
                         ->read($path)
                         ->rows(limit: 2),
                     false,
@@ -147,7 +148,7 @@ final class FloeStreamReaderTest extends TestCase
             array_map(
                 static fn(Rows $batch) => $batch->count(),
                 iterator_to_array(
-                    (new FloeReader($filesystem))
+                    (new FloeReader($filesystem, new AdaptiveBackend()))
                         ->read($one)
                         ->rows(2),
                     false,
@@ -159,7 +160,7 @@ final class FloeStreamReaderTest extends TestCase
             array_map(
                 static fn(Rows $batch) => $batch->count(),
                 iterator_to_array(
-                    (new FloeReader($filesystem))
+                    (new FloeReader($filesystem, new AdaptiveBackend()))
                         ->read($two)
                         ->rows(10),
                     false,
@@ -184,7 +185,7 @@ final class FloeStreamReaderTest extends TestCase
         static::assertSame(
             [0, 1, 2, 3],
             array_keys(iterator_to_array(
-                (new FloeReader($filesystem))
+                (new FloeReader($filesystem, new AdaptiveBackend()))
                     ->read($path)
                     ->rows(2),
             )),

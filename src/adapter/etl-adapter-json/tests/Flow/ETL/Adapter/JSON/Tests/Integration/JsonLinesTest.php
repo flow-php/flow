@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\Tests\Integration;
 
-use Flow\ETL\Adapter\JSON\JsonLinesLoader;
+use Flow\ETL\Adapter\JSON\JsonFraming;
+use Flow\ETL\Adapter\JSON\JsonLoader;
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -79,7 +80,10 @@ final class JsonLinesTest extends FlowTestCase
 
     public function test_jsonl_loader_loading_empty_string(): void
     {
-        $loader = new JsonLinesLoader(path($path = __DIR__ . '/var/test_json_loader_loading_empty_string.jsonl'));
+        $loader = new JsonLoader(
+            path($path = __DIR__ . '/var/test_json_loader_loading_empty_string.jsonl'),
+            framing: JsonFraming::Lines,
+        );
 
         $loader->load(rows(schema()), $context = flow_context(config()));
 

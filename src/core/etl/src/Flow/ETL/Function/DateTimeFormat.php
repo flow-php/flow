@@ -81,7 +81,11 @@ final class DateTimeFormat implements ScalarFunction
                     );
                 }
 
-                return (new ResultColumn())->of($this, (new TextValues())->dateTimes($type, $physicals, $format));
+                return (new ResultColumn($context->backend()))->of($this, (new TextValues())->dateTimes(
+                    $type,
+                    $physicals,
+                    $format,
+                ));
             }
         }
 
@@ -104,6 +108,6 @@ final class DateTimeFormat implements ScalarFunction
             throw EvaluationException::at($i, $e);
         }
 
-        return (new ResultColumn())->of($this, $results);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

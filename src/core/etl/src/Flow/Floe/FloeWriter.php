@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
+use Flow\ETL\Column\Backend;
+use Flow\ETL\Loader\File\FileSink;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
@@ -14,7 +16,7 @@ use Flow\Floe\Exception\FloeException;
 
 use function sprintf;
 
-final class FloeWriter
+final class FloeWriter implements FileSink
 {
     private readonly FloeStreamWriter $inner;
 
@@ -26,9 +28,10 @@ final class FloeWriter
     public function __construct(
         private readonly Filesystem $filesystem,
         Schema $schema,
+        Backend $backend,
         private readonly Options $options = new Options(),
     ) {
-        $this->inner = new FloeStreamWriter($schema, $this->options);
+        $this->inner = new FloeStreamWriter($schema, $backend, $this->options);
     }
 
     /**

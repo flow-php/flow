@@ -157,6 +157,6 @@ final class MatchCases implements ScalarFunction
             $results[] = $values[$i] ?? null;
         }
 
-        return (new ResultColumn())->of($this, $results);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

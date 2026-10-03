@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\SerializeTransformer;
@@ -60,7 +61,10 @@ final class SerializeTransformerTest extends FlowTestCase
         static::assertEquals(
             [
                 [
-                    'serialized' => serialize_to_string(new Base64Serializer(new FloeSerializer()), $rows),
+                    'serialized' => serialize_to_string(
+                        new Base64Serializer(new FloeSerializer(new AdaptiveBackend())),
+                        $rows,
+                    ),
                 ],
             ],
             $transformedRows->toArray(),
@@ -91,14 +95,20 @@ final class SerializeTransformerTest extends FlowTestCase
                     'name' => 'John',
                     'active' => true,
                     'tags' => ['tag1', 'tag2'],
-                    'serialized' => serialize_to_string(new Base64Serializer(new FloeSerializer()), $rows->slice(0, 1)),
+                    'serialized' => serialize_to_string(
+                        new Base64Serializer(new FloeSerializer(new AdaptiveBackend())),
+                        $rows->slice(0, 1),
+                    ),
                 ],
                 [
                     'id' => 2,
                     'name' => 'Jane',
                     'active' => false,
                     'tags' => ['tag3', 'tag4'],
-                    'serialized' => serialize_to_string(new Base64Serializer(new FloeSerializer()), $rows->slice(1, 1)),
+                    'serialized' => serialize_to_string(
+                        new Base64Serializer(new FloeSerializer(new AdaptiveBackend())),
+                        $rows->slice(1, 1),
+                    ),
                 ],
             ],
             $transformedRows->toArray(),
@@ -125,10 +135,16 @@ final class SerializeTransformerTest extends FlowTestCase
         static::assertEquals(
             [
                 [
-                    'serialized' => serialize_to_string(new Base64Serializer(new FloeSerializer()), $rows->slice(0, 1)),
+                    'serialized' => serialize_to_string(
+                        new Base64Serializer(new FloeSerializer(new AdaptiveBackend())),
+                        $rows->slice(0, 1),
+                    ),
                 ],
                 [
-                    'serialized' => serialize_to_string(new Base64Serializer(new FloeSerializer()), $rows->slice(1, 1)),
+                    'serialized' => serialize_to_string(
+                        new Base64Serializer(new FloeSerializer(new AdaptiveBackend())),
+                        $rows->slice(1, 1),
+                    ),
                 ],
             ],
             $transformedRows->toArray(),

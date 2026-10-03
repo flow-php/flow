@@ -8,6 +8,7 @@ use Flow\ETL\Bucketing\Hasher;
 use Flow\ETL\Bucketing\KeyValues;
 use Flow\ETL\Bucketing\NativeHasher;
 use Flow\ETL\Bucketing\SingleBucketHasher;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Exception\DuplicatedEntriesException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Join\Expression;
@@ -47,6 +48,7 @@ final class Joiner
     public function __construct(
         private readonly Expression $expression,
         private readonly Join $type,
+        private readonly Backend $backend,
         private readonly int $batchSize = 1000,
     ) {
         // @mago-ignore analysis:invalid-operand
@@ -139,20 +141,23 @@ final class Joiner
             // for the same declared output - the projection drops the undeclared columns and pads the nulls the join
             // introduced
             yield $this->type === Join::left_anti
-                ? $batch->gather($outputLeft)->project($outputSchema)
-                : $this->merge($batch->gather($outputLeft), $probe->gather($outputRight))->project($outputSchema);
+                ? $batch->gather($outputLeft)->project($outputSchema, $this->backend)
+                : $this->merge($batch->gather($outputLeft), $probe->gather($outputRight))->project(
+                    $outputSchema,
+                    $this->backend,
+                );
         }
 
         if ($this->type === Join::right) {
             $leftSchema ??= new Schema();
-            $nullLeft = $left->nullRow ?? (new NullRowBuilder($leftSchema))->rows();
+            $nullLeft = $left->nullRow ?? (new NullRowBuilder($leftSchema, $this->backend))->rows();
             $outputSchema ??= $this->joinSchema->of($this->type, $leftSchema, $rightSchema);
 
             foreach (array_chunk($table->unmatched(), $this->batchSize) as $unmatched) {
                 yield $this->merge(
                     $nullLeft->gather(array_fill(0, count($unmatched), 0)),
                     $build->gather($unmatched),
-                )->project($outputSchema);
+                )->project($outputSchema, $this->backend);
             }
         }
     }
@@ -182,13 +187,18 @@ final class Joiner
             $schema ??= $batch->schema();
 
             if (!$batch->isEmpty()) {
-                $parts[] = $batch->project($schema);
+                $parts[] = $batch->project($schema, $this->backend);
             }
         }
 
         $schema ??= new Schema();
 
-        return [$parts === [] ? Rows::empty($schema) : $parts[0]->concat(...array_slice($parts, 1)), $schema];
+        return [
+            $parts === []
+                ? Rows::empty($schema, $this->backend)
+                : $parts[0]->concat($this->backend, ...array_slice($parts, 1)),
+            $schema,
+        ];
     }
 
     /**
@@ -266,14 +276,17 @@ final class Joiner
             }
 
             if ($outputLeft !== []) {
-                yield $this->merge($probe->gather($outputLeft), $batch->gather($outputRight))->project($outputSchema);
+                yield $this->merge($probe->gather($outputLeft), $batch->gather($outputRight))->project(
+                    $outputSchema,
+                    $this->backend,
+                );
             }
         }
 
         $rightSchema ??= new Schema();
 
         if ($this->type === Join::left || $this->type === Join::left_anti) {
-            $nullRight = $right->nullRow ?? (new NullRowBuilder($rightSchema))->rows();
+            $nullRight = $right->nullRow ?? (new NullRowBuilder($rightSchema, $this->backend))->rows();
             $outputSchema ??= $this->joinSchema->of($this->type, $leftSchema, $rightSchema);
 
             foreach (array_chunk($table->unmatched(), $this->batchSize) as $unmatched) {
@@ -281,8 +294,8 @@ final class Joiner
                     ? $this->merge(
                         $build->gather($unmatched),
                         $nullRight->gather(array_fill(0, count($unmatched), 0)),
-                    )->project($outputSchema)
-                    : $build->gather($unmatched)->project($outputSchema);
+                    )->project($outputSchema, $this->backend)
+                    : $build->gather($unmatched)->project($outputSchema, $this->backend);
             }
         }
     }
@@ -305,8 +318,12 @@ final class Joiner
         )));
 
         return $this->expression->meet(
-            $left->project($left->schema()->keep(...$names($this->expression->left())))->gather($leftIndices),
-            $right->project($right->schema()->keep(...$names($this->expression->right())))->gather($rightIndices),
+            $left->project($left->schema()->keep(...$names($this->expression->left())), $this->backend)->gather(
+                $leftIndices,
+            ),
+            $right
+                ->project($right->schema()->keep(...$names($this->expression->right())), $this->backend)
+                ->gather($rightIndices),
         );
     }
 
@@ -328,9 +345,9 @@ final class Joiner
 
     private function padded(Rows $build, ?Rows $nullRow, Schema $schema): Rows
     {
-        $null = $nullRow ?? (new NullRowBuilder($schema))->rows();
+        $null = $nullRow ?? (new NullRowBuilder($schema, $this->backend))->rows();
 
-        return $build->withSchema($null->schema())->concat($null);
+        return $build->withSchema($null->schema())->concat($this->backend, $null);
     }
 
     private function table(Rows $build, KeyValues $values, bool $trackUnmatched): HashTable

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Extractor;
 
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\Memory\InferredRows;
+use Flow\ETL\Extractor\Memory\InMemoryRows;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Memory\Memory;
 use Flow\ETL\Schema;

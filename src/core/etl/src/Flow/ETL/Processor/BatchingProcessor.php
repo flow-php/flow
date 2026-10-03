@@ -52,7 +52,9 @@ final readonly class BatchingProcessor implements Processor
             $schema ??= $batch->schema();
 
             if (!$batch->isEmpty()) {
-                $pending = $pending === null ? $batch->matchTo($schema) : $pending->concat($batch->matchTo($schema));
+                $pending = $pending === null
+                    ? $batch->matchTo($schema, $context->backend())
+                    : $pending->concat($context->backend(), $batch->matchTo($schema, $context->backend()));
 
                 while ($pending->count() >= $this->size) {
                     $signal = yield $pending->slice(0, $this->size);

@@ -56,7 +56,10 @@ final class IsNull implements ScalarFunction
 
         if ($column->nullCount() === 0) {
             // @mago-ignore analysis:possibly-invalid-argument
-            return (new ResultColumn())->of($this, $rows->isEmpty() ? [] : array_fill(0, $rows->count(), false));
+            return (new ResultColumn($context->backend()))->of(
+                $this,
+                $rows->isEmpty() ? [] : array_fill(0, $rows->count(), false),
+            );
         }
 
         $results = [];
@@ -65,6 +68,6 @@ final class IsNull implements ScalarFunction
             $results[] = $column->isNull($i);
         }
 
-        return (new ResultColumn())->of($this, $results);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

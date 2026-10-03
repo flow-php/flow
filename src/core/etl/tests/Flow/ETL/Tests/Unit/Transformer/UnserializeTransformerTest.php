@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\UnserializeTransformer;
@@ -25,7 +26,7 @@ final class UnserializeTransformerTest extends FlowTestCase
 {
     public function test_a_payload_written_with_another_type_is_refused(): void
     {
-        $payload = serialize_to_string(new Base64Serializer(new FloeSerializer()), array_to_rows([[
+        $payload = serialize_to_string(new Base64Serializer(new FloeSerializer(new AdaptiveBackend())), array_to_rows([[
             'id' => '12',
         ]], schema(str_schema('id'))));
 
@@ -91,8 +92,14 @@ final class UnserializeTransformerTest extends FlowTestCase
         ], $rowSchema);
 
         $rows = array_to_rows([
-            ['serialized' => serialize_to_string(new Base64Serializer(new FloeSerializer()), $source->slice(0, 1))],
-            ['serialized' => serialize_to_string(new Base64Serializer(new FloeSerializer()), $source->slice(1, 1))],
+            ['serialized' => serialize_to_string(
+                new Base64Serializer(new FloeSerializer(new AdaptiveBackend())),
+                $source->slice(0, 1),
+            )],
+            ['serialized' => serialize_to_string(
+                new Base64Serializer(new FloeSerializer(new AdaptiveBackend())),
+                $source->slice(1, 1),
+            )],
         ], schema(str_schema('serialized')));
 
         $transformer = new UnserializeTransformer('serialized', $rowSchema);
@@ -103,7 +110,7 @@ final class UnserializeTransformerTest extends FlowTestCase
             [
                 [
                     'serialized' => serialize_to_string(
-                        new Base64Serializer(new FloeSerializer()),
+                        new Base64Serializer(new FloeSerializer(new AdaptiveBackend())),
                         $source->slice(0, 1),
                     ),
                     'id' => 1,
@@ -113,7 +120,7 @@ final class UnserializeTransformerTest extends FlowTestCase
                 ],
                 [
                     'serialized' => serialize_to_string(
-                        new Base64Serializer(new FloeSerializer()),
+                        new Base64Serializer(new FloeSerializer(new AdaptiveBackend())),
                         $source->slice(1, 1),
                     ),
                     'id' => 2,
@@ -161,7 +168,7 @@ final class UnserializeTransformerTest extends FlowTestCase
 
     public function test_unserializing_multi_row_payload_emits_the_declared_shape(): void
     {
-        $payload = serialize_to_string(new Base64Serializer(new FloeSerializer()), array_to_rows([
+        $payload = serialize_to_string(new Base64Serializer(new FloeSerializer(new AdaptiveBackend())), array_to_rows([
             ['id' => 1],
             ['id' => 2],
         ], schema(int_schema('id'))));
@@ -177,7 +184,7 @@ final class UnserializeTransformerTest extends FlowTestCase
 
     public function test_the_declared_columns_land_under_the_merge_prefix(): void
     {
-        $payload = serialize_to_string(new Base64Serializer(new FloeSerializer()), array_to_rows([[
+        $payload = serialize_to_string(new Base64Serializer(new FloeSerializer(new AdaptiveBackend())), array_to_rows([[
             'id' => 7,
         ]], schema(int_schema('id'))));
 
@@ -207,8 +214,14 @@ final class UnserializeTransformerTest extends FlowTestCase
         ], $rowSchema);
 
         $rows = array_to_rows([
-            ['serialized' => serialize_to_string(new Base64Serializer(new FloeSerializer()), $source->slice(0, 1))],
-            ['serialized' => serialize_to_string(new Base64Serializer(new FloeSerializer()), $source->slice(1, 1))],
+            ['serialized' => serialize_to_string(
+                new Base64Serializer(new FloeSerializer(new AdaptiveBackend())),
+                $source->slice(0, 1),
+            )],
+            ['serialized' => serialize_to_string(
+                new Base64Serializer(new FloeSerializer(new AdaptiveBackend())),
+                $source->slice(1, 1),
+            )],
         ], schema(str_schema('serialized')));
 
         $transformer = new UnserializeTransformer('serialized', $rowSchema, false);
@@ -236,7 +249,7 @@ final class UnserializeTransformerTest extends FlowTestCase
 
     public function test_a_declared_column_replaces_an_input_column_of_the_same_name(): void
     {
-        $payload = serialize_to_string(new Base64Serializer(new FloeSerializer()), array_to_rows([[
+        $payload = serialize_to_string(new Base64Serializer(new FloeSerializer(new AdaptiveBackend())), array_to_rows([[
             'id' => 7,
         ]], schema(int_schema('id'))));
 
@@ -256,7 +269,7 @@ final class UnserializeTransformerTest extends FlowTestCase
 
     public function test_a_declared_column_the_payload_does_not_carry_is_null(): void
     {
-        $payload = serialize_to_string(new Base64Serializer(new FloeSerializer()), array_to_rows([[
+        $payload = serialize_to_string(new Base64Serializer(new FloeSerializer(new AdaptiveBackend())), array_to_rows([[
             'id' => 7,
         ]], schema(int_schema('id'))));
 

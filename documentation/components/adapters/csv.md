@@ -33,6 +33,14 @@ $rows = data_frame()
     ->fetch();
 ```
 
+### Header and missing cells
+
+```
+header row  [' id ', '', 'name']   →  columns ['id', 'e01', 'name']   (trimmed, a blank cell named e + its position)
+record      ['1', 'a']             →  ['id' => '1', 'e01' => 'a', 'name' => null]   (a cell the record lacks is null)
+record      ['1', '', 'x']         →  'e01' => null   (a present '' is null; `withEmptyToNull(false)` keeps it '')
+```
+
 ## Loader
 
 ```php

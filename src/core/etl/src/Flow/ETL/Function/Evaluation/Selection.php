@@ -41,7 +41,7 @@ final readonly class Selection
             }
         }
 
-        $subset = $rows->project($schema->keep(...$names))->gather($this->indices);
+        $subset = $rows->project($schema->keep(...$names), $context->backend())->gather($this->indices);
 
         try {
             return $function->eval($subset, $context);

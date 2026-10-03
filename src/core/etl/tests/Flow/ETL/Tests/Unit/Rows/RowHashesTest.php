@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Rows;
 
 use DateTimeImmutable;
+use Flow\ETL\Bucketing\NativeHasher;
 use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Rows;
 use Flow\ETL\Rows\RowHashes;
@@ -138,7 +139,7 @@ final class RowHashesTest extends FlowTestCase
         $rows = array_to_rows([['id' => 1]], schema(int_schema('id')));
 
         static::assertSame(
-            [(new NativePHPHash('md5'))->hash('id1')],
+            [(new NativePHPHash('md5'))->hash('id' . NativeHasher::normalize(1))],
             (new RowHashes())->of($rows, new NativePHPHash('md5')),
         );
     }

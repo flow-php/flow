@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Flow\Website\Service;
 
 use Flow\ETL\Cache\Implementation\PSRSimpleCache;
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Config\ConfigBuilder;
 use Flow\Filesystem\Filesystem;
+use Flow\Floe\FloeSerializer;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Telemetry;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
@@ -68,13 +70,16 @@ final readonly class FlowConfigFactory
 
     private function cache(string $directoryName, int $ttl): PSRSimpleCache
     {
-        return new PSRSimpleCache(new Psr16Cache(
-            new FilesystemAdapter(
-                'flow-contributors',
-                $ttl,
-                directory: type_string()->assert($this->parameters->get('kernel.cache_dir')) . '/'
-                    . ltrim($directoryName, '/'),
+        return new PSRSimpleCache(
+            new Psr16Cache(
+                new FilesystemAdapter(
+                    'flow-contributors',
+                    $ttl,
+                    directory: type_string()->assert($this->parameters->get('kernel.cache_dir')) . '/'
+                        . ltrim($directoryName, '/'),
+                ),
             ),
-        ));
+            new FloeSerializer(new AdaptiveBackend()),
+        );
     }
 }

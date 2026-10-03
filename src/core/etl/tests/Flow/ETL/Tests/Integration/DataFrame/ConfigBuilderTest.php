@@ -15,6 +15,7 @@ use Flow\ETL\Executor;
 use Flow\ETL\Optimizer;
 use Flow\ETL\Optimizer\Rule\PushLimitIntoSource;
 use Flow\ETL\Planner;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\Double\SpySerializer;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Override;
@@ -26,6 +27,8 @@ use function Flow\ETL\DSL\external_sort;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\memory_sort;
 use function Flow\ETL\DSL\schema;
+use function Flow\Serializer\DSL\serialize_to_string;
+use function Flow\Serializer\DSL\unserialize_from_string;
 use function str_replace;
 
 final class ConfigBuilderTest extends FlowIntegrationTestCase
@@ -195,5 +198,19 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         $executor = new Executor();
 
         static::assertSame($executor, config_builder()->executor($executor)->build()->executor());
+    }
+
+    public function test_the_default_serializer_follows_a_backend_set_after_a_build(): void
+    {
+        $builder = config_builder();
+        $builder->build();
+        $backend = new SpyBackend();
+        $serializer = $builder->backend($backend)->build()->serializer();
+
+        unserialize_from_string($serializer, serialize_to_string($serializer, array_to_rows([[
+            'id' => 1,
+        ]], schema(int_schema('id')))));
+
+        static::assertSame(1, $backend->decodes());
     }
 }

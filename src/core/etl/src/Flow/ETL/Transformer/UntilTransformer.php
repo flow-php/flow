@@ -50,7 +50,7 @@ final class UntilTransformer implements Transformer
                     TelemetryAttributes::ATTR_TRANSFORMATION_OUTPUT_ROWS => 0,
                 ]);
 
-                throw new LimitReachedException(0, Rows::empty($rows->schema()));
+                throw new LimitReachedException(0, Rows::empty($rows->schema(), $context->backend()));
             }
 
             // the unbound path has no plan to hold the resolved predicate, so it is memoised here -

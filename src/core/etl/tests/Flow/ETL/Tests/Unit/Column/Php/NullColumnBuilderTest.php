@@ -16,7 +16,7 @@ final class NullColumnBuilderTest extends TestCase
     {
         $builder = new NullColumnBuilder(type_null());
         $builder->appendPhysical(null);
-        $builder->appendPhysicalMany([null, null]);
+        $builder->appendPhysicals([null, null]);
 
         static::assertSame(3, $builder->count());
 

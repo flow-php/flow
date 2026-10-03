@@ -160,6 +160,41 @@ final class FilesExtractorTest extends FlowTestCase
         static::assertSame([2, 2, 2], $sizes);
     }
 
+    public function test_every_row_of_a_batch_carries_its_own_files_partition_value(): void
+    {
+        $batches = iterator_to_array(
+            files('memory://dir/**/*.txt', MemoryFiles::with([
+                'memory://dir/year=2023/a.txt' => 'a',
+                'memory://dir/year=2024/b.txt' => 'b',
+                'memory://dir/year=2025/c.txt' => 'c',
+            ]))
+                ->withBatchSize(3)
+                ->extract(flow_context()),
+            false,
+        );
+
+        static::assertCount(1, $batches);
+        static::assertSame(['2023', '2024', '2025'], $batches[0]->column('year')->values());
+        static::assertSame(['a.txt', 'b.txt', 'c.txt'], $batches[0]->column('base_name')->values());
+    }
+
+    public function test_a_limit_at_the_batch_boundary_keeps_each_rows_partition_value(): void
+    {
+        $batches = iterator_to_array(
+            files('memory://dir/**/*.txt', MemoryFiles::with([
+                'memory://dir/year=2023/a.txt' => 'a',
+                'memory://dir/year=2024/b.txt' => 'b',
+                'memory://dir/year=2025/c.txt' => 'c',
+            ]))
+                ->withBatchSize(2)
+                ->extract(flow_context(), limit: 2),
+            false,
+        );
+
+        static::assertCount(1, $batches);
+        static::assertSame(['2023', '2024'], $batches[0]->column('year')->values());
+    }
+
     public function test_files_extractor_honours_the_batch_contract(): void
     {
         self::assertExtractorHonoursBatchContract(

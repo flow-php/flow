@@ -9,8 +9,8 @@ require __DIR__ . '/bootstrap.php';
 use Flow\ETL\Adapter\CSV\PhpCSVEncoder;
 use Flow\ETL\Adapter\CSV\CSVWriteOptions;
 use Flow\ETL\Adapter\CSV\RustCSVEncoder;
-use Flow\ETL\Adapter\JSON\PhpJSONEncoder;
-use Flow\ETL\Adapter\JSON\RustJSONEncoder;
+use Flow\ETL\Adapter\JSON\PhpJsonEncoder;
+use Flow\ETL\Adapter\JSON\RustJsonEncoder;
 
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\schema;
@@ -41,16 +41,16 @@ foreach (['-1', '17'] as $precision) {
     printf("serialize_precision %s: csv %s, %d values\n", $precision, $php === $native ? 'identical' : 'DIFFERENT', substr_count($native, "\n"));
 
     foreach ([JSON_THROW_ON_ERROR, JSON_THROW_ON_ERROR | JSON_PRESERVE_ZERO_FRACTION] as $flags) {
-        $json = new RustJSONEncoder($flags, DATE_ATOM, 'Y-m-d', new PhpJSONEncoder($flags));
-        $php = implode("\n", array_map(static fn(Flow\ETL\Rows $batch): string => (new PhpJSONEncoder($flags))->encode($batch, "\n"), $rows(php_rows(...), $finite)));
+        $json = new RustJsonEncoder($flags, DATE_ATOM, 'Y-m-d', new PhpJsonEncoder($flags));
+        $php = implode("\n", array_map(static fn(Flow\ETL\Rows $batch): string => (new PhpJsonEncoder($flags))->encode($batch, "\n"), $rows(php_rows(...), $finite)));
         $native = implode("\n", array_map(static fn(Flow\ETL\Rows $batch): string => $json->encode($batch, "\n"), $rows(native_rows(...), $finite)));
         printf("serialize_precision %s: json flags %d %s, %d values\n", $precision, $flags, $php === $native ? 'identical' : 'DIFFERENT', substr_count($native, "\n") + 1);
     }
 
     foreach ([NAN, INF, -INF] as $float) {
         $values = [['f' => 1.5], ['f' => $float]];
-        $php = written(static fn() => (new PhpJSONEncoder())->encode(php_rows($schema, $values), "\n"));
-        $native = written(static fn() => (new RustJSONEncoder(JSON_THROW_ON_ERROR, DATE_ATOM, 'Y-m-d', new PhpJSONEncoder()))->encode(native_rows($schema, $values), "\n"));
+        $php = written(static fn() => (new PhpJsonEncoder())->encode(php_rows($schema, $values), "\n"));
+        $native = written(static fn() => (new RustJsonEncoder(JSON_THROW_ON_ERROR, DATE_ATOM, 'Y-m-d', new PhpJsonEncoder()))->encode(native_rows($schema, $values), "\n"));
         printf("json %s: %s\n", var_export($float, true), $php === $native ? $php : 'DIFFERENT');
     }
 

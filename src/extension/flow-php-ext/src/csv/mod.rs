@@ -1,5 +1,5 @@
 //! Native CSV reading: records and fields from `tokenizer`, rows shaped exactly like
-//! `CSVEncoder::decode()` + `CSVRowNormalizer::normalize()` shape them.
+//! `CSVDecoder::decode()` (`Flow\ETL\Extractor\Records`) shapes them.
 
 pub mod columns;
 pub mod fold;
@@ -146,7 +146,7 @@ impl CsvReader {
             )
     }
 
-    /// The current row's cell of `field`, as `CSVRowNormalizer::normalize()` shapes it; `None` is null.
+    /// The current row's cell of `field`, as `Records::decode()` shapes it; `None` is null.
     pub fn cell(&self, field: usize) -> Option<&[u8]> {
         cell_value(&self.record, field, self.empty_to_null)
     }
@@ -232,7 +232,7 @@ impl CsvReader {
         Ok(folded)
     }
 
-    /// `CSVEncoder::decode()`'s first line: the header when `withHeader`, else `e00, e01, ...` sized by
+    /// `Records::decode()`'s first record: the header when `withHeader`, else `e00, e01, ...` sized by
     /// the first record, which then stays pending as the first row.
     fn resolve_headers(&mut self) {
         if self.headers.is_some() || !self.tokenizer.next(&mut self.record) {
@@ -299,17 +299,17 @@ fn next_row(
     true
 }
 
-/// `CSVRowNormalizer::normalize()` for one cell: padding past the record's end, `emptyToNull`; `None` is null.
+/// `Records::decode()` for one cell: a cell past the record's end is null, a present `''` is null under `emptyToNull`;
+/// `None` is null.
 fn cell_value(record: &Record, index: usize, empty_to_null: bool) -> Option<&[u8]> {
     match record.field(index) {
         Field::Value(value) if !(empty_to_null && value.is_empty()) => Some(value),
-        Field::Value(_) | Field::Null => None,
-        Field::Missing if empty_to_null => None,
-        Field::Missing => Some(b""),
+        Field::Value(_) | Field::Null | Field::Missing => None,
     }
 }
 
-/// `array_combine($headers, $normalizer->normalize($fields, count($headers)))`.
+/// `Records::decode()` for one record: one value per header, a duplicated header keeps its first position and its
+/// last value.
 fn row_values(headers: &[Header], record: &Record, empty_to_null: bool) -> Zval {
     let mut values = ZendHashTable::with_capacity(headers.len() as u32);
 

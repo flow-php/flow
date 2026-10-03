@@ -4,8 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Column\Php;
 
-use Flow\ETL\Column\BufferLayout;
 use Flow\ETL\Column\Column;
+use Flow\ETL\Column\Layout\BufferLayout;
+use Flow\ETL\Column\Layout\Buffers;
+use Flow\ETL\Column\Layout\LayoutFor;
+use Flow\ETL\Column\Layout\Offsets;
+use Flow\ETL\Column\Layout\Validity;
+use Flow\ETL\Column\Physical\NullPhysical;
+use Flow\ETL\Column\Physical\PhysicalFor;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\ListType;

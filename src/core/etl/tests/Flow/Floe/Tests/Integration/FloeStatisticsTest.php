@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Integration;
 
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\Tests\Context\FloeStreamReaderContext;
@@ -28,8 +29,8 @@ final class FloeStatisticsTest extends FlowIntegrationTestCase
         ], schema(int_schema('id'))));
         FloeStreamReaderContext::write($this->fs(), $b, array_to_rows([['id' => 3]], schema(int_schema('id'))));
 
-        merge_floe([$a, $b], $spliced);
-        merge_floe([$a, $b], $compacted, compact: true);
+        merge_floe([$a, $b], $spliced, new AdaptiveBackend());
+        merge_floe([$a, $b], $compacted, new AdaptiveBackend(), compact: true);
 
         static::assertSame(3, FloeStreamReaderContext::footer($this->fs(), $spliced)->statistics->rows);
         static::assertSame(3, FloeStreamReaderContext::footer($this->fs(), $compacted)->statistics->rows);
@@ -51,7 +52,7 @@ final class FloeStatisticsTest extends FlowIntegrationTestCase
             'name' => 'second',
         ]], schema(str_schema('name'))));
 
-        merge_floe([$a, $b], $out);
+        merge_floe([$a, $b], $out, new AdaptiveBackend());
 
         $statistics = FloeStreamReaderContext::footer($this->fs(), $out)->statistics;
 
@@ -73,7 +74,7 @@ final class FloeStatisticsTest extends FlowIntegrationTestCase
         FloeStreamReaderContext::write($this->fs(), $path, array_to_rows([['id' => 1]], schema(int_schema('id'))));
 
         foreach ([[2, 3], [4, 5, 6]] as $ids) {
-            $writer = new FloeWriter($this->fs(), schema(int_schema('id')));
+            $writer = new FloeWriter($this->fs(), schema(int_schema('id')), new AdaptiveBackend());
             $writer->append($path);
 
             foreach ($ids as $id) {
@@ -117,7 +118,7 @@ final class FloeStatisticsTest extends FlowIntegrationTestCase
         FloeStreamReaderContext::write($this->fs(), $path, array_to_rows([['id' => 1]], schema(int_schema('id'))));
         $before = FloeStreamReaderContext::footer($this->fs(), $path)->statistics->byteSize;
 
-        $writer = new FloeWriter($this->fs(), schema(int_schema('id')));
+        $writer = new FloeWriter($this->fs(), schema(int_schema('id')), new AdaptiveBackend());
         $writer->append($path);
         $writer->write(array_to_rows([['id' => 2], ['id' => 3]], schema(int_schema('id'))));
         $writer->close();

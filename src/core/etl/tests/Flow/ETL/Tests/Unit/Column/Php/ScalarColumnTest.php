@@ -6,7 +6,7 @@ namespace Flow\ETL\Tests\Unit\Column\Php;
 
 use DateTimeZone;
 use Flow\ETL\Column\Php\ScalarColumn;
-use Flow\ETL\Column\Php\TimeZonePhysical;
+use Flow\ETL\Column\Physical\TimeZonePhysical;
 use Flow\ETL\Tests\Mother\ColumnMother;
 use PHPUnit\Framework\TestCase;
 

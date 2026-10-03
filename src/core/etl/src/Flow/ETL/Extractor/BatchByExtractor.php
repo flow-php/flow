@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
@@ -44,7 +45,7 @@ final class BatchByExtractor implements Extractor, OverridingExtractor, Rewindab
     public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         return (new BatchingByProcessor($this->column, $this->minSize))->process(
-            $this->declared($this->extractor->extract($context)),
+            $this->declared($this->extractor->extract($context), $context->backend()),
             $context,
         );
     }
@@ -54,7 +55,7 @@ final class BatchByExtractor implements Extractor, OverridingExtractor, Rewindab
      *
      * @return Generator<Rows>
      */
-    public function declared(Generator $batches): Generator
+    public function declared(Generator $batches, Backend $backend): Generator
     {
         if ($this->schema === null) {
             yield from $batches;
@@ -63,7 +64,7 @@ final class BatchByExtractor implements Extractor, OverridingExtractor, Rewindab
         }
 
         foreach ($batches as $batch) {
-            yield $batch->matchTo($this->schema);
+            yield $batch->matchTo($this->schema, $backend);
         }
     }
 

@@ -6,41 +6,31 @@ namespace Flow\ETL;
 
 use Countable;
 use Flow\ETL\Column\AdaptiveBackend;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Column\Column;
-use Flow\ETL\Column\Php\ValueColumn;
+use Flow\ETL\Column\ValueColumn;
 use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Exception\SchemaMismatchException;
-use Flow\ETL\Hash\Algorithm;
-use Flow\ETL\Hash\NativePHPHash;
-use Flow\ETL\Join\Expression;
-use Flow\ETL\Join\HashJoin\Joiner;
-use Flow\ETL\Join\HashJoin\JoinSide;
-use Flow\ETL\Join\HashJoin\RowMerger;
-use Flow\ETL\Join\Join;
-use Flow\ETL\Join\JoinSchema;
 use Flow\ETL\Row\Reference;
-use Flow\ETL\Row\UnresolvedReference;
-use Flow\ETL\Rows\RowEquality;
-use Flow\ETL\Rows\RowHashes;
+use Flow\ETL\Rows\ColumnRetyping;
 use Flow\ETL\Schema\Formatter\InlineSchemaFormatter;
 use Flow\ETL\Schema\SimilarNames;
 use Flow\ETL\Sort\RowOrder;
 use Flow\Floe\FrameDecoder;
 use Flow\Floe\FrameEncoder;
-use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Value\Json;
 use Generator;
 
 use function array_diff_key;
 use function array_fill;
+use function array_flip;
 use function array_key_exists;
 use function array_keys;
 use function array_shift;
-use function array_slice;
 use function array_values;
 use function count;
-use function Flow\Types\DSL\type_integer;
 use function implode;
 use function max;
 use function min;
@@ -69,6 +59,8 @@ final class Rows implements Countable
     }
 
     /**
+     * A serialized batch carries no context, so it decodes in the default backend.
+     *
      * @param RowsPayload $data
      */
     public function __unserialize(array $data): void
@@ -80,9 +72,8 @@ final class Rows implements Countable
         $this->count = $rows->count;
     }
 
-    public static function empty(Schema $schema): self
+    public static function empty(Schema $schema, Backend $backend): self
     {
-        $backend = new AdaptiveBackend();
         $columns = [];
 
         foreach ($schema->definitions() as $name => $definition) {
@@ -119,23 +110,14 @@ final class Rows implements Countable
             }
         }
 
+        $retyping = new ColumnRetyping();
+
         foreach ($schema->definitions() as $name => $definition) {
             if ($columns[$name] instanceof ValueColumn) {
                 throw ColumnMismatchException::untypedColumn($definition);
             }
 
-            if (!$definition->isNullable() && $columns[$name]->nullCount() > 0) {
-                $index = 0;
-
-                while (!$columns[$name]->isNull($index)) {
-                    $index++;
-                }
-
-                throw new SchemaMismatchException($index, ColumnMismatchException::valueDoesNotMatch(
-                    $definition,
-                    null,
-                ));
-            }
+            $retyping->notNull($definition, $columns[$name]);
         }
 
         return new self($schema, $columns, $count);
@@ -187,11 +169,29 @@ final class Rows implements Countable
     }
 
     /**
-     * Every input carries this schema; zero-row inputs add no rows.
+     * The same batch with every column in $backend's storage - itself when $backend already owns every column.
+     *
+     * @throws ColumnMismatchException a null under NOT NULL on a column that is copied
+     */
+    public function adoptedBy(Backend $backend): self
+    {
+        $columns = [];
+        $copied = false;
+
+        foreach ($this->schema->definitions() as $name => $definition) {
+            $columns[$name] = $backend->adopt($definition, $this->columns[$name]);
+            $copied = $copied || $columns[$name] !== $this->columns[$name];
+        }
+
+        return $copied ? new self($this->schema, $columns, $this->count) : $this;
+    }
+
+    /**
+     * Every input carries this schema; zero-row inputs add no rows. The result's columns are $backend's.
      *
      * @throws InvalidArgumentException
      */
-    public function concat(self ...$others): self
+    public function concat(Backend $backend, self ...$others): self
     {
         $inputs = $this->count > 0 ? [$this] : [];
         $count = $this->count;
@@ -199,7 +199,7 @@ final class Rows implements Countable
         foreach ($others as $other) {
             if (!$other->schema->isSame($this->schema)) {
                 throw InvalidArgumentException::because(
-                    'Cannot merge Rows with different schemas: [%s] and [%s]',
+                    'Cannot concat Rows with different schemas: [%s] and [%s]',
                     (new InlineSchemaFormatter())->format($this->schema),
                     (new InlineSchemaFormatter())->format($other->schema),
                 );
@@ -214,10 +214,9 @@ final class Rows implements Countable
         $head = array_shift($inputs);
 
         if ($head === null) {
-            return self::empty($this->schema);
+            return $this->adoptedBy($backend);
         }
 
-        $backend = new AdaptiveBackend();
         $columns = [];
 
         foreach ($this->schema->definitions() as $name => $definition) {
@@ -232,7 +231,7 @@ final class Rows implements Countable
             }
 
             if ($sameClass) {
-                $columns[$name] = $first->concat(...$rest);
+                $columns[$name] = $backend->adopt($definition, $first->concat(...$rest));
 
                 continue;
             }
@@ -252,17 +251,6 @@ final class Rows implements Countable
     public function count(): int
     {
         return $this->count;
-    }
-
-    public function diffLeft(self $rows): self
-    {
-        return $this->gather((new RowEquality())->notIn($this, $rows, $this->schema));
-    }
-
-    public function diffRight(self $rows): self
-    {
-        // the surviving rows come from the right side, so the right side's schema describes them
-        return $rows->gather((new RowEquality())->notIn($rows, $this, $this->schema));
     }
 
     public function drop(int $size): self
@@ -319,88 +307,18 @@ final class Rows implements Countable
         return new self($this->schema, $columns, count($indices));
     }
 
-    public function hash(Algorithm $algorithm = new NativePHPHash()): string
-    {
-        return $algorithm->hash(implode('', (new RowHashes())->of($this, $algorithm)));
-    }
-
-    /**
-     * @param int $count - Count of rows to return. Must be >= 0.
-     *
-     * @throws InvalidArgumentException When count is negative
-     * @throws InvalidTypeException When count is not an integer     */
-    public function head(int $count): self
-    {
-        $count = type_integer()->assert($count);
-
-        if ($count < 0) {
-            throw new InvalidArgumentException('Count must be greater than or equal to 0');
-        }
-
-        return $this->slice(0, min($count, $this->count));
-    }
-
     public function isEmpty(): bool
     {
         return $this->count === 0;
     }
 
-    public function joinCross(self $right, string $joinPrefix = 'joined_'): self
-    {
-        $schema = (new JoinSchema($joinPrefix))->cross($this->schema, $right->schema);
-        $left = [];
-        $rightIndices = [];
-
-        for ($i = 0; $i < $this->count; $i++) {
-            for ($j = 0; $j < $right->count; $j++) {
-                $left[] = $i;
-                $rightIndices[] = $j;
-            }
-        }
-
-        return (new RowMerger($joinPrefix))
-            ->merge($this->gather($left), $right->gather($rightIndices))
-            ->project($schema);
-    }
-
     /**
-     * @throws InvalidArgumentException
-     */
-    public function joinInner(self $right, Expression $expression): self
-    {
-        return $this->joinUsing($right, $expression, Join::inner);
-    }
-
-    /**
-     * @throws InvalidArgumentException
-     */
-    public function joinLeft(self $right, Expression $expression): self
-    {
-        return $this->joinUsing($right, $expression, Join::left);
-    }
-
-    /**
-     * @throws InvalidArgumentException
-     */
-    public function joinLeftAnti(self $right, Expression $expression): self
-    {
-        return $this->joinUsing($right, $expression, Join::left_anti);
-    }
-
-    /**
-     * @throws InvalidArgumentException
-     */
-    public function joinRight(self $right, Expression $expression): self
-    {
-        return $this->joinUsing($right, $expression, Join::right);
-    }
-
-    /**
-     * Adopts $schema, checking every column whose definition it changes (Definition::matches per value).
+     * Adopts $schema. A changed column whose type change the types prove is restamped; any other change is checked
+     * value by value and rebuilt in $backend.
      *
      * @throws SchemaMismatchException
      */
-    public function matchTo(Schema $schema): self
+    public function matchTo(Schema $schema, Backend $backend): self
     {
         if ($schema->isSame($this->schema)) {
             return new self($schema, $this->columns, $this->count);
@@ -414,102 +332,46 @@ final class Rows implements Countable
             }
         }
 
-        $backend = new AdaptiveBackend();
         $columns = [];
         $changed = [];
+        $retyping = new ColumnRetyping();
 
         foreach ($schema->definitions() as $name => $definition) {
             $own = $this->schema->findDefinition($definition->entry()->name());
 
             if ($own === null) {
-                if (!$definition->isNullable()) {
-                    if ($this->count > 0) {
-                        throw new SchemaMismatchException(0, ColumnMismatchException::missingColumn($definition));
-                    }
-
-                    $columns[$name] = $backend->builder($definition)->finish();
-
-                    continue;
-                }
-
-                $columns[$name] = $backend->constant($definition, null, $this->count);
+                $columns[$name] = $retyping->absent($definition, $this->count, $backend);
 
                 continue;
             }
 
-            if ($own->isSame($definition)) {
-                $columns[$name] = $this->columns[$name];
+            $restamped = $retyping->restamped($this->columns[$name], $own, $definition);
 
-                continue;
+            if ($restamped === null) {
+                $changed[$name] = [$this->columns[$name], $definition];
             }
 
-            $changed[$name] = $definition;
+            $columns[$name] = $restamped;
         }
 
-        for ($i = 0; $i < $this->count; $i++) {
-            foreach ($changed as $name => $definition) {
-                // @mago-ignore analysis:mixed-assignment
-                $value = $this->columns[$name]->value($i);
+        $retyping->validate($changed, $this->count);
 
-                if ($value === null ? !$definition->isNullable() : !$definition->matches($value)) {
-                    throw new SchemaMismatchException($i, ColumnMismatchException::valueDoesNotMatch(
-                        $definition,
-                        $value,
-                    ));
-                }
-            }
+        foreach ($changed as $name => [$column, $definition]) {
+            $columns[$name] = $retyping->rebuilt($column, $definition, $backend);
         }
 
-        foreach ($changed as $name => $definition) {
-            try {
-                $columns[$name] = $this->columns[$name]->withType($definition->type());
-            } catch (InvalidArgumentException) {
-                $builder = $backend->builder($definition);
-                $builder->appendMany($this->columns[$name]->values());
-                $columns[$name] = $builder->finish();
-            }
-        }
-
-        $ordered = [];
-
-        foreach ($schema->definitions() as $name => $_) {
-            $ordered[$name] = $columns[$name];
-        }
-
-        return self::fromColumns($schema, $ordered, $this->count);
+        /** @var array<string, Column> $columns */
+        return self::fromColumns($schema, $columns, $this->count);
     }
 
     /**
-     * @throws InvalidArgumentException
-     */
-    public function merge(self $rows): self
-    {
-        if ($this->isEmpty()) {
-            return $rows;
-        }
-
-        if ($rows->isEmpty()) {
-            return $this;
-        }
-
-        if (!$this->schema->isSame($rows->schema())) {
-            throw InvalidArgumentException::because(
-                'Cannot merge Rows with different schemas: [%s] and [%s]',
-                (new InlineSchemaFormatter())->format($this->schema),
-                (new InlineSchemaFormatter())->format($rows->schema),
-            );
-        }
-
-        return $this->concat($rows);
-    }
-
-    /**
-     * Drops the columns $schema does not declare and adopts it. Widening or retyping the batch is
-     * not a projection - that goes through matchTo().
+     * Drops the columns $schema does not declare and adopts it, converting a kept column whose definition $schema
+     * changes (in $backend). Contrast select(), which keeps the named columns as they are. Widening the batch with
+     * columns it lacks is not a projection - that goes through matchTo().
      *
      * @throws SchemaMismatchException
      */
-    public function project(Schema $schema): self
+    public function project(Schema $schema, Backend $backend): self
     {
         $definitions = [];
         $columns = [];
@@ -523,7 +385,40 @@ final class Rows implements Countable
             }
         }
 
-        return (new self(new Schema(...$definitions), $columns, $this->count))->matchTo($schema);
+        return (new self(new Schema(...$definitions), $columns, $this->count))->matchTo($schema, $backend);
+    }
+
+    /**
+     * The named columns as they are, in schema order - every column kept unconverted, in whatever backend built it.
+     * Contrast project(), which adopts a given schema and converts the columns it changes.
+     *
+     * @throws SchemaDefinitionNotFoundException
+     */
+    public function select(string ...$names): self
+    {
+        $keep = array_flip($names);
+        $definitions = [];
+        $columns = [];
+
+        foreach ($this->schema->definitions() as $name => $definition) {
+            if (array_key_exists($definition->entry()->name(), $keep)) {
+                $definitions[] = $definition;
+                $columns[$name] = $this->columns[$name];
+            }
+        }
+
+        if (count($definitions) !== count($keep)) {
+            foreach ($names as $selected) {
+                if ($this->schema->findDefinition($selected) === null) {
+                    throw SchemaDefinitionNotFoundException::withAvailable(
+                        $selected,
+                        ...$this->schema->references()->names(),
+                    );
+                }
+            }
+        }
+
+        return new self(new Schema(...$definitions), $columns, $this->count);
     }
 
     /**
@@ -547,17 +442,6 @@ final class Rows implements Countable
         }
 
         return $this->gather(array_values(array_diff_key(range(0, $this->count - 1), [$offset => true])));
-    }
-
-    public function reverse(): self
-    {
-        $indices = [];
-
-        for ($i = $this->count - 1; $i >= 0; $i--) {
-            $indices[] = $i;
-        }
-
-        return $this->gather($indices);
     }
 
     public function schema(): Schema
@@ -591,16 +475,6 @@ final class Rows implements Countable
     /**
      * @throws InvalidArgumentException
      */
-    public function sortAscending(string|Reference $reference): self
-    {
-        return $this->sortBy(
-            (new UnresolvedReference($reference instanceof Reference ? $reference->base() : $reference))->asc(),
-        );
-    }
-
-    /**
-     * @throws InvalidArgumentException
-     */
     public function sortBy(Reference ...$references): self
     {
         if ($this->count === 0) {
@@ -612,36 +486,6 @@ final class Rows implements Countable
         return $this->gather($order->permutation($order->keys($this), $this->count));
     }
 
-    /**
-     * @throws InvalidArgumentException
-     */
-    public function sortDescending(string|Reference $reference): self
-    {
-        return $this->sortBy(
-            (new UnresolvedReference($reference instanceof Reference ? $reference->base() : $reference))->desc(),
-        );
-    }
-
-    /**
-     * @param int $count - Count of rows to return. Must be >= 0.
-     *
-     * @throws InvalidArgumentException When count is negative
-     * @throws InvalidTypeException When count is not an integer     */
-    public function tail(int $count): self
-    {
-        $count = type_integer()->assert($count);
-
-        if ($count < 0) {
-            throw new InvalidArgumentException('Count must be greater than or equal to 0');
-        }
-
-        if ($count >= $this->count) {
-            return $this;
-        }
-
-        return $this->slice($this->count - $count, $count);
-    }
-
     public function take(int $size): self
     {
         if ($size < 0) {
@@ -649,15 +493,6 @@ final class Rows implements Countable
         }
 
         return $this->slice(0, min($size, $this->count));
-    }
-
-    public function takeRight(int $size): self
-    {
-        if ($size < 0) {
-            throw new InvalidArgumentException('Size must be greater than or equal to 0');
-        }
-
-        return $this->slice($this->count - min($size, $this->count), min($size, $this->count))->reverse();
     }
 
     /**
@@ -680,11 +515,6 @@ final class Rows implements Countable
         }
 
         return $array;
-    }
-
-    public function unique(): self
-    {
-        return $this->gather((new RowEquality())->unique($this));
     }
 
     /**
@@ -742,6 +572,7 @@ final class Rows implements Countable
      * Positional restamp: the n-th definition of $schema retypes the n-th column (Column::withType).
      *
      * @throws ColumnMismatchException
+     * @throws SchemaMismatchException a null under a NOT NULL definition, at its row
      * @throws InvalidArgumentException
      */
     public function withSchema(Schema $schema): self
@@ -757,13 +588,11 @@ final class Rows implements Countable
         $columns = array_values($this->columns);
         $retyped = [];
         $position = 0;
+        $retyping = new ColumnRetyping();
 
         foreach ($schema->definitions() as $name => $definition) {
             $column = $columns[$position++];
-
-            if (!$definition->isNullable() && $column->nullCount() > 0) {
-                throw ColumnMismatchException::valueDoesNotMatch($definition, null);
-            }
+            $retyping->notNull($definition, $column);
 
             try {
                 $retyped[$name] = $column->withType($definition->type());
@@ -773,26 +602,5 @@ final class Rows implements Countable
         }
 
         return new self($schema, $retyped, $this->count);
-    }
-
-    /**
-     * @throws InvalidArgumentException
-     */
-    private function joinUsing(self $right, Expression $expression, Join $type): self
-    {
-        $single = static function (self $rows): Generator {
-            yield $rows;
-        };
-
-        $joiner = new Joiner($expression, $type);
-        $joined = [];
-
-        foreach ($joiner->join(JoinSide::of($single($this)), JoinSide::of($single($right))) as $batch) {
-            $joined[] = $batch;
-        }
-
-        return $joined === []
-            ? self::empty($joiner->schema($this->schema, $right->schema))
-            : $joined[0]->concat(...array_slice($joined, 1));
     }
 }

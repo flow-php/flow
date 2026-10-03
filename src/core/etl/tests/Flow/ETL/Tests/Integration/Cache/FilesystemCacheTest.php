@@ -6,8 +6,10 @@ namespace Flow\ETL\Tests\Integration\Cache;
 
 use Flow\ETL\Cache;
 use Flow\ETL\Cache\Implementation\FilesystemCache;
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Exception\KeyNotInCacheException;
 use Flow\ETL\Tests\Double\SpySerializer;
+use Flow\Floe\FloeSerializer;
 use Flow\Types\Exception\InvalidArgumentException;
 
 use function file_get_contents;
@@ -64,7 +66,7 @@ final class FilesystemCacheTest extends CacheTestCase
     public function test_custom_serializer_is_used_for_set_and_get(): void
     {
         $spy = new SpySerializer();
-        $cache = new FilesystemCache($this->fs(), path(__DIR__ . '/var/filesystem-cache-spy'), $spy);
+        $cache = new FilesystemCache($this->fs(), $spy, path(__DIR__ . '/var/filesystem-cache-spy'));
         $cache->clear();
 
         $cache->set('spy', $rows = array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))));
@@ -137,6 +139,10 @@ final class FilesystemCacheTest extends CacheTestCase
 
     protected function cache(): Cache
     {
-        return new FilesystemCache($this->fs(), path(__DIR__ . '/var/filesystem-cache'));
+        return new FilesystemCache(
+            $this->fs(),
+            new FloeSerializer(new AdaptiveBackend()),
+            path(__DIR__ . '/var/filesystem-cache'),
+        );
     }
 }

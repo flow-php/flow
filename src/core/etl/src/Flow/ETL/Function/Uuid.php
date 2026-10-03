@@ -99,7 +99,7 @@ final class Uuid implements ScalarFunction
                 $results[] = new FlowUuid($this->generateV4());
             }
 
-            return (new ResultColumn())->of($this, $results);
+            return (new ResultColumn($context->backend()))->of($this, $results);
         }
 
         $params = (new Parameter($this->value))->asTypes(
@@ -122,7 +122,7 @@ final class Uuid implements ScalarFunction
             throw EvaluationException::at($i, $e);
         }
 
-        return (new ResultColumn())->of($this, $results);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 
     private function generateV4(): UuidV4|UuidInterface

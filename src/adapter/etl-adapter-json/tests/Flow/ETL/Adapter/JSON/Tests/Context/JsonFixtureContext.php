@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\JSON\Tests\Context;
 
 use Flow\ETL\Adapter\JSON\AdaptiveJsonOpenSource;
+use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonFileReader;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonFormat;
-use Flow\ETL\Adapter\JSON\JSONMachine\JsonLinesExtractor;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonSamples;
 use Flow\ETL\Adapter\JSON\JsonOpenSource;
 use Flow\ETL\Column\Backend;
 use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Exception\SchemaMismatchException;
-use Flow\ETL\Extractor\SourceFile;
+use Flow\ETL\Extractor\File\SourceFile;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\SchemaInference;
 use Flow\ETL\Schema\Inference\SchemaInferrer;
@@ -94,7 +94,7 @@ final class JsonFixtureContext
     }
 
     /**
-     * The schema JsonExtractor / JsonLinesExtractor infer from the fixture.
+     * The schema JsonExtractor infer from the fixture.
      */
     public static function infer(string $fixture, SchemaInference $inference = new SchemaInference()): Schema
     {
@@ -109,7 +109,7 @@ final class JsonFixtureContext
     /**
      * @param 'memory'|'native' $filesystem
      */
-    public static function linesExtractor(string $fixture, string $filesystem): JsonLinesExtractor
+    public static function linesExtractor(string $fixture, string $filesystem): JsonExtractor
     {
         if ($filesystem === 'native') {
             return from_json_lines(self::path($fixture));
@@ -124,7 +124,7 @@ final class JsonFixtureContext
     }
 
     /**
-     * The source JsonExtractor (Document) or JsonLinesExtractor (Lines) opens, over a reader of the same filesystem.
+     * The source JsonExtractor (Document or Lines) opens, over a reader of the same filesystem.
      */
     public static function open(
         JsonFormat $format,

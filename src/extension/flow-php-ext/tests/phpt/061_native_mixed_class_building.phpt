@@ -40,8 +40,8 @@ $rebuilt = static function (Rows $from, object $backend, bool $take) use ($schem
 $same('native appendTake of a PHP column', $php->gather([5, 0, 3, 3]), $rebuilt($php, new RustBackend(), true));
 $same('native appendFrom of a PHP column', $php->gather([5, 0, 3, 3]), $rebuilt($php, new RustBackend(), false));
 $same('PHP appendTake of a native column', $php->gather([5, 0, 3, 3]), $rebuilt($native, new PhpBackend(), true));
-$same('Rows::concat PHP + native', $php->concat($php), $php->concat($native));
-$same('Rows::concat native + PHP', $php->concat($php), $native->concat($php));
+$same('Rows::concat PHP + native', $php->concat(new PhpBackend(), $php), $php->concat(new RustBackend(), $native));
+$same('Rows::concat native + PHP', $php->concat(new PhpBackend(), $php), $native->concat(new PhpBackend(), $php));
 $same('Rows::gather over both', $php->gather([1, 4]), $native->gather([1, 4]));
 
 foreach ($schema->definitions() as $name => $definition) {

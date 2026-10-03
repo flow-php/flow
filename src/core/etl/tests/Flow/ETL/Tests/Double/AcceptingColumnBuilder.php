@@ -7,7 +7,7 @@ namespace Flow\ETL\Tests\Double;
 use Flow\ETL\Column\Column;
 use Flow\ETL\Column\ColumnBuilder;
 use Flow\ETL\Column\Php\ConstantColumn;
-use Flow\ETL\Column\Php\NullPhysical;
+use Flow\ETL\Column\Physical\NullPhysical;
 
 use function count;
 use function Flow\Types\DSL\type_null;
@@ -29,6 +29,11 @@ final class AcceptingColumnBuilder implements ColumnBuilder
     public function appendMany(array $values): void
     {
         $this->count += count($values);
+    }
+
+    public function appendPhysicals(array $physicals, ?int $nullCount = null): void
+    {
+        $this->count += count($physicals);
     }
 
     public function appendTake(Column $column, array $indices): void

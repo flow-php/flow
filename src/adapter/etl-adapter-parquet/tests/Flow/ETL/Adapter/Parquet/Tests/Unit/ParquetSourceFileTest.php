@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\Parquet\Tests\Unit;
 
 use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetSourceFileContext;
 use Flow\ETL\Column\PhpBackend;
-use Flow\ETL\Extractor\SourceFile;
+use Flow\ETL\Extractor\File\SourceFile;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;

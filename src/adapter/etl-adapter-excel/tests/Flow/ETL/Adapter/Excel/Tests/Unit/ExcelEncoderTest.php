@@ -7,12 +7,14 @@ namespace Flow\ETL\Adapter\Excel\Tests\Unit;
 use DateInterval;
 use DateTimeImmutable;
 use DateTimeZone;
+use Dom\HTMLDocument;
 use DOMDocument;
 use Flow\ETL\Adapter\Excel\ExcelEncoder;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Value\Uuid;
+use PHPUnit\Framework\Attributes\RequiresPhp;
 
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_schema;
@@ -20,7 +22,10 @@ use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\enum_schema;
 use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\html_element_schema;
+use function Flow\ETL\DSL\html_schema;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\schema;
@@ -29,7 +34,10 @@ use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\time_schema;
 use function Flow\ETL\DSL\time_zone_schema;
 use function Flow\ETL\DSL\uuid_schema;
+use function Flow\ETL\DSL\xml_element_schema;
 use function Flow\ETL\DSL\xml_schema;
+use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
@@ -146,6 +154,70 @@ final class ExcelEncoderTest extends FlowTestCase
             (new ExcelEncoder())->encode(array_to_rows(
                 [['id' => null, 'd' => null]],
                 schema(int_schema('id', nullable: true), date_schema('d', nullable: true)),
+            )),
+        );
+    }
+
+    public function test_encodes_an_xml_element_as_its_markup(): void
+    {
+        $document = new DOMDocument();
+        $document->loadXML('<root><a b="1">x</a></root>');
+
+        static::assertSame(
+            [['<a b="1">x</a>']],
+            (new ExcelEncoder())->encode(array_to_rows([[
+                'e' => $document->getElementsByTagName('a')->item(0),
+            ]], schema(xml_element_schema('e')))),
+        );
+    }
+
+    #[RequiresPhp('>= 8.4.0')]
+    public function test_encodes_html_and_html_elements_as_their_markup(): void
+    {
+        // @mago-ignore analysis:unavailable-method
+        $document = HTMLDocument::createFromString('<html><body><p class="x">hi</p></body></html>', LIBXML_NOERROR);
+        $element = $document->querySelector('p');
+
+        $cells = (new ExcelEncoder())->encode(array_to_rows(
+            [['h' => $document, 'e' => $element]],
+            schema(html_schema('h'), html_element_schema('e')),
+        ))[0];
+
+        static::assertIsString($cells[0]);
+        static::assertStringContainsString('<p class="x">hi</p>', $cells[0]);
+        static::assertSame('<p class="x">hi</p>', $cells[1]);
+    }
+
+    public function test_encodes_a_datetime_column_with_nulls_as_datetimes_and_null_cells(): void
+    {
+        $cells = (new ExcelEncoder())->encode(array_to_rows([
+            ['at' => new DateTimeImmutable('2026-01-02 03:04:05 UTC')],
+            ['at' => null],
+        ], schema(datetime_schema('at', nullable: true))));
+
+        static::assertInstanceOf(DateTimeImmutable::class, $cells[0][0]);
+        static::assertSame('2026-01-02T03:04:05+00:00', $cells[0][0]->format(DATE_ATOM));
+        static::assertNull($cells[1][0]);
+    }
+
+    public function test_encodes_a_json_column_as_its_text(): void
+    {
+        static::assertSame(
+            [['{"a":1}']],
+            (new ExcelEncoder())->encode(array_to_rows([['j' => '{"a":1}']], schema(json_schema('j')))),
+        );
+    }
+
+    public function test_encodes_nested_datetimes_as_text_and_keeps_float_fractions(): void
+    {
+        static::assertSame(
+            [['["2026-01-02T03:04:05+00:00"]', '{"a":1.0}']],
+            (new ExcelEncoder())->encode(array_to_rows(
+                [['l' => [new DateTimeImmutable('2026-01-02 03:04:05 UTC')], 'm' => ['a' => 1.0]]],
+                schema(
+                    list_schema('l', type_list(type_datetime())),
+                    map_schema('m', type_map(type_string(), type_float())),
+                ),
             )),
         );
     }

@@ -75,6 +75,7 @@ final readonly class NestedExpandTransformer implements Transformer
             $this->output,
             $derived->entry()->name(),
             $builder->finish(),
+            $context->backend(),
         );
     }
 

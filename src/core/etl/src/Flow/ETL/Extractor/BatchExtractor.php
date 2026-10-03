@@ -38,13 +38,13 @@ final class BatchExtractor implements BatchableExtractor, Extractor, OverridingE
 
         foreach ($this->extractor->extract($context) as $rows) {
             $schema ??= $rows->schema();
-            $pending[] = $rows->matchTo($schema);
+            $pending[] = $rows->matchTo($schema, $context->backend());
             $pendingCount += $rows->count();
 
             while ($pendingCount >= $this->batchSize) {
                 // one variadic concat per window copies each row once; a pairwise concat per child batch would
                 // re-copy everything pending
-                $window = Rows::empty($schema)->concat(...$pending);
+                $window = Rows::empty($schema, $context->backend())->concat($context->backend(), ...$pending);
                 $signal = yield $window->slice(0, $this->batchSize);
 
                 if ($signal === Signal::STOP) {
@@ -59,7 +59,10 @@ final class BatchExtractor implements BatchableExtractor, Extractor, OverridingE
         }
 
         if ($pendingCount > 0) {
-            yield Rows::empty($schema ?? $this->schema())->concat(...$pending);
+            yield Rows::empty($schema ?? $this->schema(), $context->backend())->concat(
+                $context->backend(),
+                ...$pending,
+            );
         }
     }
 

@@ -8,7 +8,7 @@ use DateTimeInterface;
 use Exception;
 use Flow\ETL\Column\Column;
 use Flow\ETL\Column\ComparableValues;
-use Flow\ETL\Column\Php\PhysicalFor;
+use Flow\ETL\Column\Physical\PhysicalFor;
 use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\Evaluation\ResultColumn;
@@ -158,6 +158,6 @@ final class IsIn implements ScalarFunction
             throw EvaluationException::at($i, $e);
         }
 
-        return (new ResultColumn())->of($this, $results);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

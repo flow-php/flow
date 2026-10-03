@@ -5,16 +5,18 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV;
 
 use Flow\ETL\Cardinality;
-use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
-use Flow\ETL\Extractor\FileExtractor;
-use Flow\ETL\Extractor\FileReading;
+use Flow\ETL\Extractor\File\FileExtractor;
+use Flow\ETL\Extractor\File\FileReading;
+use Flow\ETL\Extractor\File\FileReadLoop;
+use Flow\ETL\Extractor\File\InferredColumns;
+use Flow\ETL\Extractor\File\ListedFiles;
+use Flow\ETL\Extractor\File\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\File\ReadWindow;
 use Flow\ETL\Extractor\InfersSchema;
-use Flow\ETL\Extractor\ListedFiles;
-use Flow\ETL\Extractor\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
@@ -32,9 +34,6 @@ use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Flow\Types\Type\Native\String\StringTypeNarrower;
 use Generator;
 
-use function array_diff;
-use function array_unique;
-use function array_values;
 use function iterator_to_array;
 use function sprintf;
 
@@ -57,6 +56,11 @@ final class CSVExtractor implements
      * What the last schema inference sampled; null until one ran.
      */
     private ?CSVSampledFiles $sampled = null;
+
+    /**
+     * The source the inferred header was read from; '' until an inference ran.
+     */
+    private string $inferredFrom = '';
 
     private ?Schema $schema = null;
 
@@ -95,75 +99,27 @@ final class CSVExtractor implements
      */
     public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
     {
-        $backend = $context->backend();
-        $batchSize = $this->batchSize();
-        $yielded = 0;
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
+        $schema = $this->schema();
         $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $pathFilter), false);
-        $reader = new CSVFileReader($this->filesystem, $this->readOptions, $sources);
 
-        if ($this->schema !== null) {
-            $base = $this->schema;
-        } else {
-            // a local, not the property: withoutTail() takes a non-nullable Schema and no analyzer narrows a property
-            $derived = $this->derivedSchema;
-
-            if ($derived === null) {
-                $samples = new CSVSamples($reader->samples($this->inference->sampleSize));
-                $derived =
-                    $this->derivedSchema = (new SchemaInferrer(
+        yield from (new FileReadLoop($fileColumns, $schema))->read(
+            $sources,
+            new CSVFileBatches(
+                new CSVFileReader($this->filesystem, $this->readOptions, $sources),
+                $this->schema === null && !$this->inference->unionByName
+                    ? new InferredColumns(
+                        $fileColumns->withoutTail($schema),
+                        $fileColumns->tail(),
                         $this->inference,
-                        new StringTypeNarrower($this->inference->candidates()->toArray()),
-                    ))->infer($reader->header()->names, $samples);
-                $this->sampled = $samples->sampledFiles();
-            }
-
-            $base = $fileColumns->withoutTail($derived);
-        }
-
-        $schema = $fileColumns->declare($base);
-        $body = $fileColumns->withoutTail($schema);
-        $tail = $fileColumns->tail();
-        $expected = $base->references()->names();
-
-        foreach ($sources as $source) {
-            // forFile() reads the PARTITION definitions, which only declare() creates - $base is the body
-            $constants = $fileColumns->forFile($source, $schema);
-
-            // before any batch is built: a cell the inferred types refuse must not hide a file whose columns diverge
-            if ($this->schema === null && !$this->inference->unionByName) {
-                $columns = array_values(array_diff(array_unique($reader->columns($source)), $tail));
-
-                if (
-                    $columns !== []
-                    && (array_diff($columns, $expected) !== [] || array_diff($expected, $columns) !== [])
-                ) {
-                    throw InferredSchemaException::columnsDiverge(
-                        $source->uri(),
-                        $reader->header()->source ?? '',
-                        $base,
-                        $columns,
-                        $this->inference,
-                    );
-                }
-            }
-
-            foreach ($reader->batches($source, $body, $batchSize, $backend) as $batch) {
-                $rows = $constants->fillRows($batch, $schema, $backend);
-
-                $yielded += $rows->count();
-
-                $signal = yield $rows;
-
-                if ($signal === Signal::STOP) {
-                    return;
-                }
-
-                if ($limit !== null && $yielded >= $limit) {
-                    return;
-                }
-            }
-        }
+                        $this->inferredFrom,
+                    )
+                    : null,
+            ),
+            $this->batchSize(),
+            $context->backend(),
+            new ReadWindow(limit: $limit),
+        );
     }
 
     public function inferSchema(SchemaInferenceBuilder $builder): static
@@ -194,12 +150,14 @@ final class CSVExtractor implements
                 iterator_to_array($this->sourceFiles($this->filesystem, $this->path), false),
             );
 
+            $header = $reader->header();
+            $this->inferredFrom = $header->source ?? '';
             $samples = new CSVSamples($reader->samples($this->inference->sampleSize));
             $derived =
                 $this->derivedSchema = (new SchemaInferrer(
                     $this->inference,
                     new StringTypeNarrower($this->inference->candidates()->toArray()),
-                ))->infer($reader->header()->names, $samples);
+                ))->infer($header->names, $samples);
             $this->sampled = $samples->sampledFiles();
         }
 

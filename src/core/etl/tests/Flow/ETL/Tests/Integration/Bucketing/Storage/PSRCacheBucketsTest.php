@@ -6,8 +6,10 @@ namespace Flow\ETL\Tests\Integration\Bucketing\Storage;
 
 use Exception;
 use Flow\ETL\Bucketing\Storage\PSRCacheBuckets;
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Tests\Context\BucketsStorageContext;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\Floe\FloeSerializer;
 use Override;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
 use Symfony\Component\Cache\Psr16Cache;
@@ -44,7 +46,11 @@ final class PSRCacheBucketsTest extends FlowIntegrationTestCase
             'timeout' => 5,
         ])));
 
-        $storage = new PSRCacheBuckets($cache, prefix: 'flow:buckets:test:round_trip');
+        $storage = new PSRCacheBuckets(
+            $cache,
+            new FloeSerializer(new AdaptiveBackend()),
+            prefix: 'flow:buckets:test:round_trip',
+        );
         $storage->append('bucket', array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))));
         $storage->append('bucket', array_to_rows([['id' => 3]], schema(int_schema('id'))));
 

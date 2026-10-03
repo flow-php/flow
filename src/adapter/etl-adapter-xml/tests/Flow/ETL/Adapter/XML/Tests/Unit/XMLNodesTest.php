@@ -7,7 +7,7 @@ namespace Flow\ETL\Adapter\XML\Tests\Unit;
 use DOMDocument;
 use Flow\ETL\Adapter\XML\Tests\Context\SerializedNodes;
 use Flow\ETL\Adapter\XML\XMLNodes;
-use Flow\ETL\Column\Php\XmlDocumentPhysical;
+use Flow\ETL\Column\Physical\XmlDocumentPhysical;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\XmlNodeMother;

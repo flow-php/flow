@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Cache\Implementation;
 
 use Flow\ETL\Cache\Implementation\ApcuCache;
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Exception\KeyNotInCacheException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Floe\FloeSerializer;
 use Override;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
@@ -34,8 +36,8 @@ final class ApcuCacheTest extends FlowTestCase
             static::markTestSkipped('APCu is not enabled for CLI (apc.enable_cli=0).');
         }
 
-        $this->cache = new ApcuCache('flow_php_cache_test');
-        $this->otherCache = new ApcuCache('flow_php_cache_test_other');
+        $this->cache = new ApcuCache(new FloeSerializer(new PhpBackend()), 'flow_php_cache_test');
+        $this->otherCache = new ApcuCache(new FloeSerializer(new PhpBackend()), 'flow_php_cache_test_other');
 
         $this->cache->clear();
         $this->otherCache->clear();
@@ -103,6 +105,16 @@ final class ApcuCacheTest extends FlowTestCase
         $this->expectException(KeyNotInCacheException::class);
 
         $this->cache->schema('rows');
+    }
+
+    public function test_getting_an_entry_another_writer_stored(): void
+    {
+        apcu_store('flow_php_cache_test:rows', array_to_rows([['id' => 1]], schema(int_schema('id'))));
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Cache entry for key "rows" is corrupted or was not written by ApcuCache.');
+
+        $this->cache->get('rows');
     }
 
     public function test_getting_corrupted_schema_entry(): void

@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests;
 
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
-use Flow\ETL\Extractor\FileExtractor;
+use Flow\ETL\Extractor\File\FileExtractor;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
@@ -45,7 +46,7 @@ abstract class FlowTestCase extends TestCase
 
             foreach ($extractor->extract(flow_context()) as $batch) {
                 static::assertLessThanOrEqual($extractor->batchSize(), $batch->count(), $message);
-                $collected = $collected->merge($batch);
+                $collected = $collected->isEmpty() ? $batch : $collected->concat(new PhpBackend(), $batch);
             }
 
             static::assertEquals($expected->toArray(), $collected->toArray(), $message);
@@ -75,11 +76,11 @@ abstract class FlowTestCase extends TestCase
             $second = rows(schema());
 
             foreach ($extractor->extract(flow_context()) as $batch) {
-                $first = $first->merge($batch);
+                $first = $first->isEmpty() ? $batch : $first->concat(new PhpBackend(), $batch);
             }
 
             foreach ($extractor->extract(flow_context()) as $batch) {
-                $second = $second->merge($batch);
+                $second = $second->isEmpty() ? $batch : $second->concat(new PhpBackend(), $batch);
             }
 
             static::assertEquals($first->toArray(), $second->toArray(), $message);
@@ -123,7 +124,9 @@ abstract class FlowTestCase extends TestCase
         $extractedRows = rows(schema());
 
         foreach (self::extracted($extractor, $flowContext, $limit, $pathFilter) as $nextRows) {
-            $extractedRows = $extractedRows->merge($nextRows);
+            $extractedRows = $extractedRows->isEmpty()
+                ? $nextRows
+                : $extractedRows->concat(new PhpBackend(), $nextRows);
         }
 
         static::assertEquals($expectedArray, $extractedRows->toArray(), $message);
@@ -165,7 +168,9 @@ abstract class FlowTestCase extends TestCase
         $extractedRows = rows(schema());
 
         foreach (self::extracted($extractor, $flowContext, $limit, $pathFilter) as $nextRows) {
-            $extractedRows = $extractedRows->merge($nextRows);
+            $extractedRows = $extractedRows->isEmpty()
+                ? $nextRows
+                : $extractedRows->concat(new PhpBackend(), $nextRows);
         }
 
         static::assertEquals($expectedRows, $extractedRows, $message);

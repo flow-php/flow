@@ -55,7 +55,7 @@ final readonly class PruneEntriesTransformer implements Transformer
             }
 
             $schema = $rows->schema()->keep(...$present)->reorder(...$present);
-            $result = $rows->project($schema);
+            $result = $rows->project($schema, $context->backend());
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

@@ -66,6 +66,6 @@ final class NotEquals implements ScalarFunction
             $results[] = $equals === null ? null : !$equals;
         }
 
-        return (new ResultColumn())->of($this, $results);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

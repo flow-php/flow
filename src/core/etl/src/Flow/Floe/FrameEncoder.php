@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
-use Flow\ETL\Column\BufferLayout;
+use Flow\ETL\Column\Layout\BufferLayout;
 use Flow\ETL\Exception\OffsetOverflow;
 use Flow\ETL\Rows;
 use Flow\Floe\Codec\NoopCodec;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Unit;
 
+use DateTimeImmutable;
 use DOMDocument;
 use Flow\ETL\Adapter\Doctrine\DbalEncoder;
 use Flow\ETL\Tests\FlowTestCase;
@@ -11,6 +12,7 @@ use Flow\ETL\Tests\FlowTestCase;
 use function array_keys;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -67,6 +69,29 @@ final class DbalEncoderTest extends FlowTestCase
                 [['id' => 1, 'body' => null]],
                 schema(int_schema('id'), str_schema('body', nullable: true)),
             )),
+        );
+    }
+
+    public function test_renders_an_empty_xml_element_with_an_end_tag(): void
+    {
+        $doc = new DOMDocument();
+        $doc->loadXML('<root><a b="1"><c/></a></root>');
+
+        static::assertSame(
+            [['e' => '<a b="1"><c></c></a>']],
+            (new DbalEncoder())->encode(array_to_rows([[
+                'e' => $doc->getElementsByTagName('a')->item(0),
+            ]], schema(xml_element_schema('e')))),
+        );
+    }
+
+    public function test_passes_a_datetime_as_its_logical_value(): void
+    {
+        $at = new DateTimeImmutable('2026-01-02 03:04:05 UTC');
+
+        static::assertEquals(
+            [['at' => $at]],
+            (new DbalEncoder())->encode(array_to_rows([['at' => $at]], schema(datetime_schema('at')))),
         );
     }
 }

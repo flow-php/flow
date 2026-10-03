@@ -1,5 +1,5 @@
-//! `Flow\ETL\Adapter\JSON\RustJSONEncoder`: a `Rows` batch as the text `PhpJSONEncoder::encode()` returns, rendered
-//! from the arrow arrays; the columns it does not render are the fragments the held `PhpJSONEncoder::fragments()`
+//! `Flow\ETL\Adapter\JSON\RustJsonEncoder`: a `Rows` batch as the text `PhpJsonEncoder::encode()` returns, rendered
+//! from the arrow arrays; the columns it does not render are the fragments the held `PhpJsonEncoder::fragments()`
 //! produces.
 
 use ext_php_rs::binary::Binary;
@@ -32,20 +32,20 @@ enum Cells<'a> {
 
 #[php_class]
 #[php(
-    name = "Flow\\ETL\\Adapter\\JSON\\RustJSONEncoder",
+    name = "Flow\\ETL\\Adapter\\JSON\\RustJsonEncoder",
     flags = ClassFlags::Final,
-    implements(ce = json_encoder_ce, stub = "Flow\\ETL\\Adapter\\JSON\\JSONEncoder")
+    implements(ce = json_encoder_ce, stub = "Flow\\ETL\\Adapter\\JSON\\JsonEncoder")
 )]
-pub struct RustJSONEncoder {
+pub struct RustJsonEncoder {
     flags: Flags,
     formats: Formats,
-    /// The `PhpJSONEncoder` that renders the unrendered columns.
+    /// The `PhpJsonEncoder` that renders the unrendered columns.
     php: Zval,
     unrendered: Unrendered,
 }
 
 #[php_impl]
-impl RustJSONEncoder {
+impl RustJsonEncoder {
     pub fn __construct(
         flags: i64,
         date_time_format: BinarySlice<u8>,
@@ -84,8 +84,8 @@ impl RustJSONEncoder {
     }
 }
 
-impl RustJSONEncoder {
-    /// `$fragments`: `PhpJSONEncoder::fragments()` of the unrendered columns.
+impl RustJsonEncoder {
+    /// `$fragments`: `PhpJsonEncoder::fragments()` of the unrendered columns.
     fn render_rows(&self, rows: &Zval, fragments: &ZendHashTable, separator: &[u8]) -> PhpResult<Binary<u8>> {
         let batch = batch(rows, &self.formats, false)?;
         let mut keys = Vec::with_capacity(batch.columns.len());

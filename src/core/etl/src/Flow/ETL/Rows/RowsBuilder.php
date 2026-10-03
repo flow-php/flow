@@ -10,13 +10,19 @@ use Flow\ETL\Column\ColumnBuilder;
 use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
+use Flow\ETL\Row\ColumnName;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
 
+use function array_diff_key;
 use function array_key_exists;
+use function array_values;
 use function count;
+use function Flow\Types\DSL\type_array;
 use function implode;
+use function is_array;
+use function is_int;
 use function sprintf;
 
 final class RowsBuilder
@@ -191,6 +197,102 @@ final class RowsBuilder
         $this->count++;
 
         return $this;
+    }
+
+    /**
+     * Records projected onto the schema: a key it does not declare is dropped, an int key is kept under its positional
+     * name (ColumnName) when the schema declares that name.
+     *
+     * @param array<array<array-key, mixed>> $rows
+     *
+     * @throws SchemaMismatchException
+     */
+    public function appendProjected(array $rows): self
+    {
+        $definitions = $this->schema->definitions();
+        $columnName = new ColumnName();
+        $maps = [];
+
+        foreach ($rows as $row) {
+            $map = [];
+
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($row as $key => $value) {
+                if (array_key_exists($key, $definitions)) {
+                    $map[$key] = $value;
+
+                    continue;
+                }
+
+                if (is_int($key) && $this->schema->findDefinition($name = $columnName->of($key)) !== null) {
+                    $map[$name] = $value;
+                }
+            }
+
+            $maps[] = $map;
+        }
+
+        return $this->appendRows($maps);
+    }
+
+    /**
+     * One record or a list of them. A key the schema does not declare is refused at its row; a numeric-string key
+     * PHP turned into an int keeps its declared name, any other int key is named by its position (ColumnName).
+     *
+     * @param array<array-key, mixed> $data
+     *
+     * @throws SchemaMismatchException
+     */
+    public function appendRecords(array $data): self
+    {
+        $isRows = true;
+
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($data as $v) {
+            if (!is_array($v)) {
+                $isRows = false;
+
+                break;
+            }
+        }
+
+        $definitions = $this->schema->definitions();
+        $columnName = new ColumnName();
+        $maps = [];
+
+        // @mago-ignore analysis:mixed-assignment
+        foreach (array_values($isRows ? $data : [$data]) as $index => $row) {
+            $row = type_array()->assert($row);
+
+            if (array_diff_key($row, $definitions) === []) {
+                $maps[] = $row;
+
+                continue;
+            }
+
+            $map = [];
+
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($row as $key => $value) {
+                // PHP gives back a numeric-string column name as an int key, which the positional rule
+                // would rename to eNN. A declared schema naming that column settles which one it is.
+                $declared = $this->schema->findDefinition((string) $key);
+                $name = $declared === null ? $columnName->of($key) : (string) $key;
+
+                if ($declared === null && $this->schema->findDefinition($name) === null) {
+                    throw new SchemaMismatchException(
+                        $this->count + $index,
+                        ColumnMismatchException::unexpectedColumn($name),
+                    );
+                }
+
+                $map[$name] = $value;
+            }
+
+            $maps[] = $map;
+        }
+
+        return $this->appendRows($maps);
     }
 
     /**

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Column\Php;
 
-use Flow\ETL\Column\Php\Buffers;
+use Flow\ETL\Column\Layout\Buffers;
 use Flow\ETL\Column\Php\ColumnDecoder;
 use Flow\ETL\Column\Php\ConstantColumn;
 use Flow\ETL\Exception\InvalidArgumentException;

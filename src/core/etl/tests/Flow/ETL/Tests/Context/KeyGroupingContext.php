@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Context;
 use Flow\ETL\Bucketing\KeyGrouping;
 use Flow\ETL\Bucketing\KeyValues;
 use Flow\ETL\Bucketing\NativeHasher;
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Generator;
@@ -26,7 +27,7 @@ final class KeyGroupingContext
     public static function groups(array $by, Generator $input): array
     {
         return iterator_to_array(
-            (new KeyGrouping(new KeyValues($by), new NativeHasher()))->group($input),
+            (new KeyGrouping(new KeyValues($by), new NativeHasher(), new AdaptiveBackend()))->group($input),
             preserve_keys: false,
         );
     }

@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON;
 
+use Flow\ETL\Loader\File\FileSink;
 use Flow\ETL\Rows;
 use Flow\Filesystem\DestinationStream;
 
-final class JsonOpenSink
+final class JsonOpenSink implements FileSink
 {
     private bool $touched = false;
 
@@ -15,7 +16,7 @@ final class JsonOpenSink
 
     public function __construct(
         private readonly DestinationStream $stream,
-        private readonly JSONEncoder $encoder,
+        private readonly JsonEncoder $encoder,
         private readonly JsonFraming $framing,
     ) {}
 

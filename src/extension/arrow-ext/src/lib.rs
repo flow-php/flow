@@ -5,7 +5,6 @@ mod interfaces;
 mod parquet;
 mod php;
 mod render;
-mod stream;
 mod thrift;
 mod values;
 
@@ -36,14 +35,6 @@ pub extern "C" fn php_module_info(_module: *mut ModuleEntry) {
 pub unsafe extern "C" fn module_startup(_type: i32, _module_number: i32) -> i32 {
     if let Err(e) = interfaces::register() {
         eprintln!("arrow: failed to register the Flow\\Parquet interfaces: {e}");
-        return -1;
-    }
-    if let Err(e) = stream::output_stream::register() {
-        eprintln!("arrow: failed to register Flow\\Arrow\\OutputStream: {e}");
-        return -1;
-    }
-    if let Err(e) = stream::random_access_file::register() {
-        eprintln!("arrow: failed to register Flow\\Arrow\\RandomAccessFile: {e}");
         return -1;
     }
     0

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Join\HashJoin;
 
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Join\HashJoin\NullRowBuilder;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -16,7 +17,7 @@ final class NullRowBuilderTest extends FlowTestCase
 {
     public function test_empty_schema_produces_one_row_without_columns(): void
     {
-        $rows = (new NullRowBuilder(schema()))->rows();
+        $rows = (new NullRowBuilder(schema(), new AdaptiveBackend()))->rows();
 
         static::assertSame(1, $rows->count());
         static::assertSame([], $rows->columns());
@@ -26,13 +27,20 @@ final class NullRowBuilderTest extends FlowTestCase
     {
         static::assertSame(
             ['name', 'id'],
-            array_keys((new NullRowBuilder(schema(str_schema('name'), int_schema('id'))))->rows()->columns()),
+            array_keys(
+                (new NullRowBuilder(schema(str_schema('name'), int_schema('id')), new AdaptiveBackend()))
+                    ->rows()
+                    ->columns(),
+            ),
         );
     }
 
     public function test_row_nulls_every_schema_column_under_a_nullable_schema(): void
     {
-        $rows = (new NullRowBuilder(schema(int_schema('id'), str_schema('name'), str_schema('country'))))->rows();
+        $rows = (new NullRowBuilder(
+            schema(int_schema('id'), str_schema('name'), str_schema('country')),
+            new AdaptiveBackend(),
+        ))->rows();
 
         static::assertSame([['id' => null, 'name' => null, 'country' => null]], $rows->toArray());
         static::assertEquals(

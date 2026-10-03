@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Column;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
 
 use function extension_loaded;
@@ -26,6 +27,19 @@ interface ColumnBuilder
      * @throws SchemaMismatchException at the first refused value, its row the value's position in $values
      */
     public function appendMany(array $values): void;
+
+    /**
+     * Physical values exactly as Column::physicals() returns them - no cast, no conversion.
+     *
+     * @param list<mixed> $physicals
+     * @param null|int $nullCount exactly the nulls among $physicals when the caller counted them, null otherwise - a
+     *                            count that is not exact is undefined behaviour
+     *
+     * @throws SchemaMismatchException at the first null under a NOT NULL definition
+     * @throws InvalidArgumentException for a physical of another kind than the definition's (a string in an
+     *                                  integer column, an int in a float column); nothing is appended
+     */
+    public function appendPhysicals(array $physicals, ?int $nullCount = null): void;
 
     /**
      * Copies one physical cell, no materialisation.

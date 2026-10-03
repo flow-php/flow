@@ -109,6 +109,6 @@ final class Structure implements ScalarFunction
             $results[] = $values;
         }
 
-        return (new ResultColumn())->of($this, $results);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

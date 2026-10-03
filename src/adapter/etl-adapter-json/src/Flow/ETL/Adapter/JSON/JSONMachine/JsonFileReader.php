@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\JSON\JSONMachine;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Extractor\SourceFile;
+use Flow\ETL\Extractor\File\SourceFile;
 use Flow\ETL\Schema\Inference\SchemaSampler;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\SourceStream;

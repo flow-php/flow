@@ -42,7 +42,10 @@ final class ReturnsSpyFunction implements ScalarFunction
     public function eval(Rows $rows, FlowContext $context): Column
     {
         // @mago-ignore analysis:possibly-invalid-argument
-        return (new ResultColumn())->of($this, $rows->isEmpty() ? [] : array_fill(0, $rows->count(), 1));
+        return (new ResultColumn($context->backend()))->of(
+            $this,
+            $rows->isEmpty() ? [] : array_fill(0, $rows->count(), 1),
+        );
     }
 
     /**

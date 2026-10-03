@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use Closure;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Column\Column;
-use Flow\ETL\Column\Php\ValueColumn;
-use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Column\ValueColumn;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\Evaluation\ResultColumn;
@@ -32,6 +32,11 @@ final class Literal implements ScalarFunction
      * The column of the last evaluated batch, handed out again for a batch of the same size.
      */
     private ?Column $column = null;
+
+    /**
+     * The backend $column was built in: a column is reused only for the same row count in the same backend.
+     */
+    private ?Backend $columnBackend = null;
 
     public function __construct(
         private readonly mixed $value,
@@ -83,16 +88,17 @@ final class Literal implements ScalarFunction
 
     public function eval(Rows $rows, FlowContext $context): Column
     {
-        if ($this->column?->count() === $rows->count()) {
+        if ($this->column?->count() === $rows->count() && $this->columnBackend === $context->backend()) {
             return $this->column;
         }
 
+        $this->columnBackend = $context->backend();
         $type = type_bare($this->returns());
         $type = $type instanceof NullType ? $type : type_optional($type);
 
         // @mago-ignore analysis:possibly-invalid-argument
-        return $this->column = (new ResultColumn())->holdsLosslessly($type)
-            ? (new PhpBackend())->constant(definition_from_type('value', $type), $this->value, $rows->count())
+        return $this->column = (new ResultColumn($context->backend()))->holdsLosslessly($type)
+            ? $context->backend()->constant(definition_from_type('value', $type), $this->value, $rows->count())
             : new ValueColumn($rows->isEmpty() ? [] : array_fill(0, $rows->count(), $this->value));
     }
 

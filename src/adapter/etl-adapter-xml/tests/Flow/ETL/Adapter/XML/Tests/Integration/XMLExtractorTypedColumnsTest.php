@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\XML\Tests\Integration;
 
 use DOMDocument;
-use Flow\ETL\Column\Php\XmlDocumentPhysical;
+use Flow\ETL\Column\Physical\XmlDocumentPhysical;
 use Flow\ETL\Config;
 use Flow\ETL\Tests\FlowTestCase;
 

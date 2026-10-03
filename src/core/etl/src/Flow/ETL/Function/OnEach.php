@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use Flow\ETL\Column\Column;
-use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
@@ -159,7 +158,7 @@ final class OnEach implements ScalarFunction
 
         try {
             $results = (new Parameter($body))->values(
-                array_to_rows($elements, $elementSchema, new PhpBackend()),
+                array_to_rows($elements, $elementSchema, $context->backend()),
                 $context,
             );
         } catch (EvaluationException $e) {
@@ -183,6 +182,6 @@ final class OnEach implements ScalarFunction
             $output[] = $values;
         }
 
-        return (new ResultColumn())->typed($type, $output);
+        return (new ResultColumn($context->backend()))->typed($type, $output);
     }
 }

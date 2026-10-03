@@ -8,16 +8,22 @@ use Closure;
 use DateTimeImmutable;
 use DateTimeZone;
 use Flow\ETL\Column\AdaptiveBackend;
-use Flow\ETL\Column\Php\ValueColumn;
+use Flow\ETL\Column\Php\ConstantColumn;
+use Flow\ETL\Column\Php\ScalarColumn;
 use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Column\RustBackend;
+use Flow\ETL\Column\ValueColumn;
 use Flow\ETL\Exception\ColumnMismatchException;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\ETL\Tests\Double\SpyColumn;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\Attributes\TestWith;
 
 use function Flow\ETL\DSL\array_to_rows;
@@ -55,7 +61,6 @@ final class RowsTest extends FlowTestCase
         yield 'drop' => [static fn(Rows $rows): Rows => $rows->drop(-1)];
         yield 'dropRight' => [static fn(Rows $rows): Rows => $rows->dropRight(-1)];
         yield 'take' => [static fn(Rows $rows): Rows => $rows->take(-1)];
-        yield 'takeRight' => [static fn(Rows $rows): Rows => $rows->takeRight(-1)];
     }
 
     /**
@@ -70,100 +75,12 @@ final class RowsTest extends FlowTestCase
         $call(array_to_rows([['id' => 1]], schema(int_schema('id'))));
     }
 
-    public static function rows_diff_left_provider(): Generator
-    {
-        yield 'one entry identical row' => [
-            rows(schema()),
-            array_to_rows([['number' => 1]], schema(int_schema('number'))),
-            array_to_rows([['number' => 1]], schema(int_schema('number'))),
-        ];
-
-        yield 'one entry right different - missing entry' => [
-            array_to_rows([['number' => 1]], schema(int_schema('number'))),
-            array_to_rows([['number' => 1]], schema(int_schema('number'))),
-            rows(schema()),
-        ];
-
-        yield 'one entry left different - missing entry' => [
-            rows(schema()),
-            rows(schema()),
-            array_to_rows([['number' => 1]], schema(int_schema('number'))),
-        ];
-
-        yield 'one entry right different - different entry' => [
-            array_to_rows([['number' => 1]], schema(int_schema('number'))),
-            array_to_rows([['number' => 1]], schema(int_schema('number'))),
-            array_to_rows([['number' => 2]], schema(int_schema('number'))),
-        ];
-
-        yield 'one entry left different - different entry' => [
-            array_to_rows([['number' => 2]], schema(int_schema('number'))),
-            array_to_rows([['number' => 2]], schema(int_schema('number'))),
-            array_to_rows([['number' => 1]], schema(int_schema('number'))),
-        ];
-    }
-
-    public static function rows_diff_right_provider(): Generator
-    {
-        yield 'one entry identical row' => [
-            rows(schema()),
-            array_to_rows([['number' => 1]], schema(int_schema('number'))),
-            array_to_rows([['number' => 1]], schema(int_schema('number'))),
-        ];
-
-        yield 'one entry right different - missing entry' => [
-            rows(schema()),
-            array_to_rows([['number' => 1]], schema(int_schema('number'))),
-            rows(schema()),
-        ];
-
-        yield 'one entry left different - missing entry' => [
-            array_to_rows([['number' => 1]], schema(int_schema('number'))),
-            rows(schema()),
-            array_to_rows([['number' => 1]], schema(int_schema('number'))),
-        ];
-
-        yield 'one entry right different - different entry' => [
-            array_to_rows([['number' => 2]], schema(int_schema('number'))),
-            array_to_rows([['number' => 1]], schema(int_schema('number'))),
-            array_to_rows([['number' => 2]], schema(int_schema('number'))),
-        ];
-
-        yield 'one entry left different - different entry' => [
-            array_to_rows([['number' => 1]], schema(int_schema('number'))),
-            array_to_rows([['number' => 2]], schema(int_schema('number'))),
-            array_to_rows([['number' => 1]], schema(int_schema('number'))),
-        ];
-    }
-
-    public static function unique_rows_provider(): Generator
-    {
-        yield 'simple identical rows' => [
-            array_to_rows([['number' => 1]], schema(int_schema('number'))),
-            array_to_rows([['number' => 1], ['number' => 1]], schema(int_schema('number'))),
-        ];
-        yield 'rows equal in one column only' => [
-            array_to_rows(
-                [['number' => 1, 'name' => 'a'], ['number' => 1, 'name' => 'b']],
-                schema(int_schema('number'), str_schema('name', true)),
-            ),
-            array_to_rows(
-                [['number' => 1, 'name' => 'a'], ['number' => 1, 'name' => 'b'], ['number' => 1, 'name' => 'a']],
-                schema(int_schema('number'), str_schema('name', true)),
-            ),
-        ];
-        yield 'null and empty string are distinct' => [
-            array_to_rows([['name' => null], ['name' => '']], schema(str_schema('name', true))),
-            array_to_rows([['name' => null], ['name' => ''], ['name' => null]], schema(str_schema('name', true))),
-        ];
-    }
-
     public function test_match_to_adopts_a_wider_schema_and_pads_the_new_nullable_column(): void
     {
         static::assertSame(
             [['id' => 1, 'name' => null]],
             array_to_rows([['id' => 1]], schema(int_schema('id')))
-                ->matchTo(schema(int_schema('id'), str_schema('name', true)))
+                ->matchTo(schema(int_schema('id'), str_schema('name', true)), new AdaptiveBackend())
                 ->toArray(),
         );
     }
@@ -173,7 +90,10 @@ final class RowsTest extends FlowTestCase
         $this->expectException(SchemaMismatchException::class);
         $this->expectExceptionMessage('column "id" (row 0): could not convert 1 (integer) to string');
 
-        array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')))->matchTo(schema(str_schema('id')));
+        array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')))->matchTo(
+            schema(str_schema('id')),
+            new AdaptiveBackend(),
+        );
     }
 
     public function test_project_drops_the_columns_the_schema_does_not_declare(): void
@@ -184,13 +104,13 @@ final class RowsTest extends FlowTestCase
                 [['id' => 1, 'name' => 'a'], ['id' => 2, 'name' => 'b']],
                 schema(int_schema('id'), str_schema('name')),
             )
-                ->project(schema(int_schema('id')))
+                ->project(schema(int_schema('id')), new AdaptiveBackend())
                 ->toArray(),
         );
         static::assertSame(
             ['name' => 'a', 'id' => 1],
             array_to_rows([['id' => 1, 'name' => 'a']], schema(int_schema('id'), str_schema('name')))
-                ->project(schema(str_schema('name'), int_schema('id')))
+                ->project(schema(str_schema('name'), int_schema('id')), new AdaptiveBackend())
                 ->values(0),
         );
     }
@@ -201,7 +121,10 @@ final class RowsTest extends FlowTestCase
         $this->expectException(SchemaMismatchException::class);
         $this->expectExceptionMessage('column "name" (row 0) declared by the schema is missing from the row');
 
-        array_to_rows([['id' => 1]], schema(int_schema('id')))->project(schema(int_schema('id'), str_schema('name')));
+        array_to_rows([['id' => 1]], schema(int_schema('id')))->project(
+            schema(int_schema('id'), str_schema('name')),
+            new AdaptiveBackend(),
+        );
     }
 
     public function test_project_rejects_a_schema_that_retypes_a_column(): void
@@ -209,10 +132,10 @@ final class RowsTest extends FlowTestCase
         $this->expectException(SchemaMismatchException::class);
         $this->expectExceptionMessage('column "id" (row 0): could not convert 1 (integer) to string');
 
-        array_to_rows(
-            [['id' => 1, 'name' => 'a']],
-            schema(int_schema('id'), str_schema('name')),
-        )->project(schema(str_schema('id')));
+        array_to_rows([['id' => 1, 'name' => 'a']], schema(int_schema('id'), str_schema('name')))->project(
+            schema(str_schema('id')),
+            new AdaptiveBackend(),
+        );
     }
 
     public function test_construct_reorders_row_storage_into_schema_order(): void
@@ -347,172 +270,27 @@ final class RowsTest extends FlowTestCase
         static::assertFalse(array_to_rows([['id' => 1]], schema(int_schema('id')))->isEmpty());
     }
 
-    public function test_hash(): void
-    {
-        $rows = array_to_rows(
-            [
-                ['id' => 1, 'bool' => false],
-                ['id' => 2, 'bool' => false],
-                ['id' => 3, 'bool' => false],
-                ['id' => 4, 'bool' => false],
-            ],
-            schema(int_schema('id'), bool_schema('bool')),
-        );
-
-        static::assertSame(
-            $rows->hash(),
-            array_to_rows(
-                [
-                    ['bool' => false, 'id' => 1],
-                    ['bool' => false, 'id' => 2],
-                    ['bool' => false, 'id' => 3],
-                    ['bool' => false, 'id' => 4],
-                ],
-                schema(bool_schema('bool'), int_schema('id')),
-            )->hash(),
-        );
-    }
-
-    public function test_hash_empty_rows(): void
-    {
-        static::assertSame(rows(schema())->hash(), rows(schema())->hash());
-    }
-
-    public function test_hash_rows_with_different_columns(): void
-    {
-        $rows = array_to_rows(
-            [
-                ['id' => 1, 'bool' => false],
-                ['id' => 3, 'bool' => false],
-                ['id' => 2, 'bool' => false],
-                ['id' => 4, 'bool' => false],
-            ],
-            schema(int_schema('id'), bool_schema('bool')),
-        );
-
-        static::assertNotSame(
-            $rows->hash(),
-            array_to_rows([
-                ['bool' => false],
-                ['bool' => false],
-                ['bool' => false],
-                ['bool' => false],
-            ], schema(bool_schema('bool')))->hash(),
-        );
-    }
-
-    public function test_hash_rows_with_different_order(): void
-    {
-        $rows = array_to_rows(
-            [
-                ['id' => 1, 'bool' => false],
-                ['id' => 3, 'bool' => false],
-                ['id' => 2, 'bool' => false],
-                ['id' => 4, 'bool' => false],
-            ],
-            schema(int_schema('id'), bool_schema('bool')),
-        );
-
-        static::assertNotSame(
-            $rows->hash(),
-            array_to_rows(
-                [
-                    ['bool' => false, 'id' => 1],
-                    ['bool' => false, 'id' => 2],
-                    ['bool' => false, 'id' => 3],
-                    ['bool' => false, 'id' => 4],
-                ],
-                schema(bool_schema('bool'), int_schema('id')),
-            )->hash(),
-        );
-    }
-
-    public function test_head(): void
-    {
-        $rows = array_to_rows([
-            ['id' => 1],
-            ['id' => 2],
-            ['id' => 3],
-            ['id' => 4],
-            ['id' => 5],
-        ], schema(int_schema('id')));
-
-        $head = $rows->head(3);
-
-        static::assertCount(3, $head);
-        static::assertSame(1, $head->column('id')->value(0));
-        static::assertSame(2, $head->column('id')->value(1));
-        static::assertSame(3, $head->column('id')->value(2));
-    }
-
-    public function test_head_on_empty_rows(): void
-    {
-        $head = rows(schema())->head(5);
-
-        static::assertCount(0, $head);
-    }
-
-    public function test_head_with_count_larger_than_available(): void
-    {
-        $rows = array_to_rows([['id' => 1], ['id' => 2], ['id' => 3]], schema(int_schema('id')));
-
-        $head = $rows->head(10);
-
-        static::assertCount(3, $head);
-        static::assertSame(1, $head->column('id')->value(0));
-        static::assertSame(2, $head->column('id')->value(1));
-        static::assertSame(3, $head->column('id')->value(2));
-    }
-
-    public function test_head_with_negative_count(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Count must be greater than or equal to 0');
-
-        $rows = array_to_rows([['id' => 1], ['id' => 2], ['id' => 3]], schema(int_schema('id')));
-
-        $rows->head(-1);
-    }
-
-    public function test_head_with_zero_count(): void
-    {
-        $rows = array_to_rows([['id' => 1], ['id' => 2], ['id' => 3]], schema(int_schema('id')));
-
-        $head = $rows->head(0);
-
-        static::assertCount(0, $head);
-    }
-
-    public function test_merge_accepts_an_empty_side_with_any_schema(): void
-    {
-        $rows = array_to_rows([['id' => 1]], schema(int_schema('id')));
-
-        // an empty batch has nothing to disagree about, so it short-circuits before the schema check
-        static::assertEquals($rows, $rows->merge(rows(schema(str_schema('unrelated')))));
-        static::assertEquals($rows, rows(schema(str_schema('unrelated')))->merge($rows));
-    }
-
-    public function test_merge_throws_when_schemas_disagree(): void
+    public function test_concat_throws_when_schemas_disagree(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(
-            'Cannot merge Rows with different schemas: [id: integer] and [id: integer, name: string]',
+            'Cannot concat Rows with different schemas: [id: integer] and [id: integer, name: string]',
         );
 
-        array_to_rows([['id' => 1]], schema(int_schema('id')))->merge(array_to_rows(
-            [['id' => 2, 'name' => 'x']],
-            schema(int_schema('id'), str_schema('name')),
-        ));
+        array_to_rows([['id' => 1]], schema(int_schema('id')))->concat(
+            new PhpBackend(),
+            array_to_rows([['id' => 2, 'name' => 'x']], schema(int_schema('id'), str_schema('name'))),
+        );
     }
 
-    public function test_merges_collection_together(): void
+    public function test_concat_joins_batches_in_order(): void
     {
         $rowsOne = array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
         $rowsTwo = array_to_rows([['id' => 3], ['id' => 4], ['id' => 5]], schema(int_schema('id')));
 
         $rowsThree = array_to_rows([['id' => 6], ['id' => 7]], schema(int_schema('id')));
 
-        $merged = $rowsOne->merge($rowsTwo)->merge($rowsThree);
+        $merged = $rowsOne->concat(new PhpBackend(), $rowsTwo)->concat(new PhpBackend(), $rowsThree);
 
         static::assertEquals(
             array_to_rows([
@@ -544,39 +322,6 @@ final class RowsTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
 
         rows(schema())->remove(1);
-    }
-
-    public function test_reverse(): void
-    {
-        $rows = array_to_rows([['id' => 1], ['id' => 2], ['id' => 3]], schema(int_schema('id')));
-
-        $rows = $rows->reverse();
-
-        static::assertCount(3, $rows);
-        static::assertSame(3, $rows->column('id')->value(0));
-        static::assertSame(2, $rows->column('id')->value(1));
-        static::assertSame(1, $rows->column('id')->value(2));
-    }
-
-    #[DataProvider('rows_diff_left_provider')]
-    public function test_rows_diff_left(Rows $expected, Rows $left, Rows $right): void
-    {
-        static::assertEquals($expected->toArray(), $left->diffLeft($right)->toArray());
-    }
-
-    #[DataProvider('rows_diff_right_provider')]
-    public function test_rows_diff_right(Rows $expected, Rows $left, Rows $right): void
-    {
-        static::assertEquals($expected->toArray(), $left->diffRight($right)->toArray());
-    }
-
-    public function test_rows_diff_right_carries_the_right_sides_schema(): void
-    {
-        // the surviving rows come from the right side, so the left side's schema cannot describe them
-        $left = array_to_rows([['number' => 1]], schema(int_schema('number')));
-        $right = array_to_rows([['number' => 2, 'name' => 'two']], schema(int_schema('number'), str_schema('name')));
-
-        static::assertTrue($left->diffRight($right)->schema()->isSame($right->schema()));
     }
 
     public function test_rows_schema(): void
@@ -617,10 +362,10 @@ final class RowsTest extends FlowTestCase
         array_to_rows([
             ['list' => []],
             ['list' => [1, 2]],
-        ], schema(list_schema('list', type_list(type_integer()))))->matchTo(schema(list_schema(
-            'list',
-            type_list(type_string()),
-        )));
+        ], schema(list_schema('list', type_list(type_integer()))))->matchTo(
+            schema(list_schema('list', type_list(type_string()))),
+            new AdaptiveBackend(),
+        );
     }
 
     public function test_rows_serialization(): void
@@ -634,12 +379,6 @@ final class RowsTest extends FlowTestCase
 
         static::assertSame($rows->toArray(), $unserialized->toArray());
         static::assertTrue($rows->schema()->isSame($unserialized->schema()));
-    }
-
-    #[DataProvider('unique_rows_provider')]
-    public function test_rows_unique(Rows $expected, Rows $notUnique): void
-    {
-        static::assertSame($expected->toArray(), $notUnique->unique()->toArray());
     }
 
     public function test_sort_rows_by_not_existing_column(): void
@@ -716,85 +455,12 @@ final class RowsTest extends FlowTestCase
             schema(int_schema('number'), str_schema('name')),
         );
 
-        $ascending = $rows->sortAscending(ref('number'));
-        $descending = $rows->sortDescending(ref('number'));
+        $ascending = $rows->sortBy(ref('number'));
+        $descending = $rows->sortBy(ref('number')->desc());
 
         static::assertSame([1, 2, 3, 4, 5], $ascending->column('number')->values());
         static::assertSame([5, 4, 3, 2, 1], $descending->column('number')->values());
         static::assertSame([3, 1, 5, 2, 4], $rows->column('number')->values());
-    }
-
-    public function test_tail(): void
-    {
-        $rows = array_to_rows([
-            ['id' => 1],
-            ['id' => 2],
-            ['id' => 3],
-            ['id' => 4],
-            ['id' => 5],
-        ], schema(int_schema('id')));
-
-        $tail = $rows->tail(3);
-
-        static::assertCount(3, $tail);
-        static::assertSame(3, $tail->column('id')->value(0));
-        static::assertSame(4, $tail->column('id')->value(1));
-        static::assertSame(5, $tail->column('id')->value(2));
-    }
-
-    public function test_tail_maintains_correct_order(): void
-    {
-        $rows = array_to_rows([
-            ['id' => 1],
-            ['id' => 2],
-            ['id' => 3],
-            ['id' => 4],
-            ['id' => 5],
-        ], schema(int_schema('id')));
-
-        $tail = $rows->tail(2);
-
-        static::assertCount(2, $tail);
-        static::assertSame(4, $tail->column('id')->value(0));
-        static::assertSame(5, $tail->column('id')->value(1));
-    }
-
-    public function test_tail_on_empty_rows(): void
-    {
-        $tail = rows(schema())->tail(5);
-
-        static::assertCount(0, $tail);
-    }
-
-    public function test_tail_with_count_larger_than_available(): void
-    {
-        $rows = array_to_rows([['id' => 1], ['id' => 2], ['id' => 3]], schema(int_schema('id')));
-
-        $tail = $rows->tail(10);
-
-        static::assertCount(3, $tail);
-        static::assertSame(1, $tail->column('id')->value(0));
-        static::assertSame(2, $tail->column('id')->value(1));
-        static::assertSame(3, $tail->column('id')->value(2));
-    }
-
-    public function test_tail_with_negative_count(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Count must be greater than or equal to 0');
-
-        $rows = array_to_rows([['id' => 1], ['id' => 2], ['id' => 3]], schema(int_schema('id')));
-
-        $rows->tail(-1);
-    }
-
-    public function test_tail_with_zero_count(): void
-    {
-        $rows = array_to_rows([['id' => 1], ['id' => 2], ['id' => 3]], schema(int_schema('id')));
-
-        $tail = $rows->tail(0);
-
-        static::assertCount(0, $tail);
     }
 
     public function test_take(): void
@@ -829,40 +495,6 @@ final class RowsTest extends FlowTestCase
         static::assertSame(1, $rows->column('id')->value(0));
         static::assertSame(2, $rows->column('id')->value(1));
         static::assertSame(3, $rows->column('id')->value(2));
-    }
-
-    public function test_take_right(): void
-    {
-        $rows = array_to_rows([['id' => 1], ['id' => 2], ['id' => 3]], schema(int_schema('id')));
-
-        $rows = $rows->takeRight(1);
-
-        static::assertCount(1, $rows);
-        static::assertSame(3, $rows->column('id')->value(0));
-    }
-
-    public function test_take_right_all(): void
-    {
-        $rows = array_to_rows([['id' => 1], ['id' => 2], ['id' => 3]], schema(int_schema('id')));
-
-        $rows = $rows->takeRight(3);
-
-        static::assertCount(3, $rows);
-        static::assertSame(3, $rows->column('id')->value(0));
-        static::assertSame(2, $rows->column('id')->value(1));
-        static::assertSame(1, $rows->column('id')->value(2));
-    }
-
-    public function test_take_right_more_than_exists(): void
-    {
-        $rows = array_to_rows([['id' => 1], ['id' => 2], ['id' => 3]], schema(int_schema('id')));
-
-        $rows = $rows->takeRight(4);
-
-        static::assertCount(3, $rows);
-        static::assertSame(3, $rows->column('id')->value(0));
-        static::assertSame(2, $rows->column('id')->value(1));
-        static::assertSame(1, $rows->column('id')->value(2));
     }
 
     public function test_transforms_rows_to_array(): void
@@ -988,16 +620,12 @@ final class RowsTest extends FlowTestCase
             'a' => type_integer(),
         ]))));
 
-        // Values are compared by content (ArrayComparison), so the two rows are equal ...
-        static::assertCount(0, $left->diffLeft($right));
-        static::assertCount(0, $left->diffRight($right));
-
-        // ... and the field-order difference lives in the Schema, which 04c made positional, so R6
+        // the field-order difference lives in the Schema, which 04c made positional, so R6
         // refuses the merge rather than emitting a batch whose declared order no row agrees with.
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Cannot merge Rows with different schemas');
+        $this->expectExceptionMessage('Cannot concat Rows with different schemas');
 
-        $left->merge($right);
+        $left->concat(new PhpBackend(), $right);
     }
 
     public function test_rows_hop_a_foreign_zone_at_ingest(): void
@@ -1109,7 +737,7 @@ final class RowsTest extends FlowTestCase
         $this->expectException(SchemaMismatchException::class);
         $this->expectExceptionMessage($message);
 
-        $rows->matchTo($schema);
+        $rows->matchTo($schema, new AdaptiveBackend());
     }
 
     public function test_from_rows_refuses_null_under_not_null_in_row_1(): void
@@ -1201,37 +829,148 @@ final class RowsTest extends FlowTestCase
     {
         $rows = array_to_rows([['id' => 1, 'name' => 'a']], schema(int_schema('id'), str_schema('name')));
 
-        static::assertSame($rows->column('id'), $rows->project(schema(int_schema('id')))->column('id'));
+        static::assertSame(
+            $rows->column('id'),
+            $rows->project(schema(int_schema('id')), new AdaptiveBackend())->column('id'),
+        );
     }
 
-    public function test_concat_of_a_constant_and_a_scalar_column_yields_default_backend_columns(): void
+    public function test_concat_of_mixed_column_classes_rebuilds_in_the_given_backend(): void
     {
         $schema = schema(int_schema('id'));
         $constant = Rows::fromColumns($schema, ['id' => (new PhpBackend())->constant(int_schema('id'), 7, 2)], 2);
-        $concatenated = $constant->concat(array_to_rows([['id' => 1]], $schema));
+        $concatenated = $constant->concat(new PhpBackend(), array_to_rows([['id' => 1]], $schema, new PhpBackend()));
 
         static::assertSame([['id' => 7], ['id' => 7], ['id' => 1]], $concatenated->toArray());
+        static::assertInstanceOf(ScalarColumn::class, $concatenated->column('id'));
+    }
+
+    public function test_adopted_by_a_backend_that_owns_every_column_is_the_same_batch(): void
+    {
+        $rows = array_to_rows([['id' => 1]], schema(int_schema('id')), new PhpBackend());
+
+        static::assertSame($rows, $rows->adoptedBy(new PhpBackend()));
+    }
+
+    #[RequiresPhpExtension('flow_php')]
+    public function test_adopted_by_another_backend_copies_every_column_into_it(): void
+    {
+        $rows = array_to_rows(
+            [['id' => 1, 'name' => 'a']],
+            schema(int_schema('id'), str_schema('name')),
+            new PhpBackend(),
+        );
+
+        $adopted = $rows->adoptedBy(new RustBackend());
+
+        static::assertSame($rows->toArray(), $adopted->toArray());
+        static::assertSame('Flow\ETL\Column\RustColumn', $adopted->column('id')::class);
+        static::assertSame('Flow\ETL\Column\RustColumn', $adopted->column('name')::class);
+    }
+
+    #[RequiresPhpExtension('flow_php')]
+    public function test_concat_of_two_php_parts_builds_in_the_given_backend(): void
+    {
+        $schema = schema(int_schema('id'));
+        $concatenated = array_to_rows([['id' => 1]], $schema, new PhpBackend())->concat(
+            new RustBackend(),
+            array_to_rows([['id' => 2]], $schema, new PhpBackend()),
+        );
+
+        static::assertSame([1, 2], $concatenated->column('id')->values());
+        static::assertSame('Flow\ETL\Column\RustColumn', $concatenated->column('id')::class);
+    }
+
+    #[RequiresPhpExtension('flow_php')]
+    public function test_concat_with_no_rows_still_answers_in_the_given_backend(): void
+    {
+        $empty = Rows::empty(schema(int_schema('id')), new PhpBackend());
+
+        static::assertSame('Flow\ETL\Column\RustColumn', $empty->concat(new RustBackend())->column('id')::class);
+    }
+
+    #[RequiresPhpExtension('flow_php')]
+    public function test_concat_of_a_php_part_and_a_rust_part_builds_in_the_given_backend(): void
+    {
+        $schema = schema(int_schema('id'));
+        $concatenated = array_to_rows([['id' => 1]], $schema, new PhpBackend())->concat(
+            new RustBackend(),
+            array_to_rows([['id' => 2]], $schema, new RustBackend()),
+        );
+
+        static::assertSame([1, 2], $concatenated->column('id')->values());
+        static::assertSame('Flow\ETL\Column\RustColumn', $concatenated->column('id')::class);
+    }
+
+    public function test_empty_builds_its_columns_in_the_given_backend(): void
+    {
         static::assertInstanceOf(
-            (new AdaptiveBackend())
-                ->builder(int_schema('id'))
-                ->finish()::class,
-            $concatenated->column('id'),
+            ScalarColumn::class,
+            Rows::empty(schema(int_schema('id')), new PhpBackend())->column('id'),
+        );
+    }
+
+    public function test_match_to_builds_a_new_column_in_the_given_backend(): void
+    {
+        $matched = array_to_rows([['id' => 1]], schema(int_schema('id')), new PhpBackend())->matchTo(
+            schema(int_schema('id'), str_schema('name', nullable: true)),
+            new PhpBackend(),
+        );
+
+        static::assertInstanceOf(ConstantColumn::class, $matched->column('name'));
+    }
+
+    public function test_match_to_reports_the_first_null_under_not_null(): void
+    {
+        $this->expectException(SchemaMismatchException::class);
+        $this->expectExceptionMessage('(row 2)');
+
+        array_to_rows([['id' => 1], ['id' => 2], ['id' => null]], schema(int_schema('id', nullable: true)))->matchTo(
+            schema(int_schema('id')),
+            new PhpBackend(),
+        );
+    }
+
+    public function test_match_to_restamps_a_provable_change_without_reading_values(): void
+    {
+        $spy = new SpyColumn((new PhpBackend())->constant(int_schema('id'), 1, 2));
+        $matched = Rows::fromColumns(schema(int_schema('id')), ['id' => $spy], 2)->matchTo(
+            schema(int_schema('id', nullable: true)),
+            new PhpBackend(),
+        );
+
+        static::assertTrue($matched->schema()->get('id')->isNullable());
+        static::assertNotContains('value', $spy->calls->getArrayCopy());
+        static::assertNotContains('values', $spy->calls->getArrayCopy());
+    }
+
+    public function test_match_to_refuses_an_unprovable_change_at_the_bad_row(): void
+    {
+        $this->expectException(SchemaMismatchException::class);
+        $this->expectExceptionMessage('column "id" (row 1)');
+
+        array_to_rows([['id' => null], ['id' => 5]], schema(int_schema('id', nullable: true)))->matchTo(
+            schema(str_schema('id', nullable: true)),
+            new PhpBackend(),
         );
     }
 
     public function test_concat_refuses_a_zero_row_input_with_another_schema(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Cannot merge Rows with different schemas');
+        $this->expectExceptionMessage('Cannot concat Rows with different schemas');
 
-        array_to_rows([['id' => 1]], schema(int_schema('id')))->concat(rows(schema(str_schema('id'))));
+        array_to_rows([['id' => 1]], schema(int_schema('id')))->concat(
+            new PhpBackend(),
+            rows(schema(str_schema('id'))),
+        );
     }
 
     public function test_concat_of_empty_inputs_is_an_empty_batch(): void
     {
         $schema = schema(int_schema('id'));
 
-        static::assertSame(0, rows($schema)->concat(rows($schema))->count());
+        static::assertSame(0, rows($schema)->concat(new PhpBackend(), rows($schema))->count());
     }
 
     public function test_with_columns_beside_a_constant_column(): void
@@ -1258,7 +997,7 @@ final class RowsTest extends FlowTestCase
 
     public function test_empty_has_one_empty_column_per_definition(): void
     {
-        $rows = Rows::empty(schema(int_schema('id'), str_schema('name', nullable: true)));
+        $rows = Rows::empty(schema(int_schema('id'), str_schema('name', nullable: true)), new AdaptiveBackend());
 
         static::assertSame(0, $rows->count());
         static::assertSame(['id', 'name'], array_keys($rows->columns()));
@@ -1268,7 +1007,7 @@ final class RowsTest extends FlowTestCase
 
     public function test_empty_of_an_empty_schema(): void
     {
-        static::assertSame([], Rows::empty(schema())->columns());
+        static::assertSame([], Rows::empty(schema(), new AdaptiveBackend())->columns());
     }
 
     public function test_from_columns_refuses_an_untyped_column(): void
@@ -1318,14 +1057,18 @@ final class RowsTest extends FlowTestCase
         array_to_rows([['id' => 1]], schema(int_schema('id')))->withSchema(schema(int_schema('a'), int_schema('b')));
     }
 
-    public function test_with_schema_refuses_nulls_under_not_null(): void
+    public function test_with_schema_refuses_a_null_under_not_null_at_its_row(): void
     {
-        $this->expectException(ColumnMismatchException::class);
-        $this->expectExceptionMessage('column "key": could not convert null to integer, column is not nullable');
-
-        array_to_rows([['id' => null]], schema(int_schema('id', nullable: true)))->withSchema(schema(int_schema(
-            'key',
-        )));
+        try {
+            array_to_rows([
+                ['id' => 1],
+                ['id' => null],
+            ], schema(int_schema('id', nullable: true)))->withSchema(schema(int_schema('key')));
+            static::fail('a null under NOT NULL must be refused');
+        } catch (SchemaMismatchException $e) {
+            static::assertSame(1, $e->rowIndex);
+            static::assertStringContainsString('column "key"', $e->getMessage());
+        }
     }
 
     public function test_with_schema_refuses_another_column_kind(): void
@@ -1416,8 +1159,8 @@ final class RowsTest extends FlowTestCase
     {
         $rows = rows(schema(int_schema('id')));
 
-        static::assertSame($rows, $rows->sortAscending('id'));
-        static::assertSame($rows, $rows->sortDescending('id'));
+        static::assertSame($rows, $rows->sortBy(ref('id')));
+        static::assertSame($rows, $rows->sortBy(ref('id')->desc()));
         static::assertSame([], $rows->reduceToArray('id'));
     }
 
@@ -1428,11 +1171,10 @@ final class RowsTest extends FlowTestCase
         $matched = array_to_rows([
             ['s' => ['a' => 1]],
             ['s' => null],
-        ], schema(structure_schema('s', type_structure(['a' => type_optional(type_integer())]), nullable: true)))->matchTo(schema(structure_schema(
-            's',
-            type_structure(['a' => type_integer()]),
-            nullable: true,
-        )));
+        ], schema(structure_schema('s', type_structure(['a' => type_optional(type_integer())]), nullable: true)))->matchTo(
+            schema(structure_schema('s', type_structure(['a' => type_integer()]), nullable: true)),
+            new AdaptiveBackend(),
+        );
 
         static::assertSame([['s' => ['a' => 1]], ['s' => null]], $matched->toArray());
         static::assertSame('structure{a: integer}', $matched->column('s')->type()->toString());
@@ -1440,7 +1182,8 @@ final class RowsTest extends FlowTestCase
 
     public function test_match_to_adopts_a_not_null_column_an_empty_batch_lacks(): void
     {
-        $matched = rows(schema(int_schema('id')))->matchTo(schema(int_schema('id'), str_schema('name')));
+        $matched = rows(schema(int_schema('id')))
+            ->matchTo(schema(int_schema('id'), str_schema('name')), new AdaptiveBackend());
 
         static::assertSame(0, $matched->count());
         static::assertSame(['id', 'name'], $matched->schema()->references()->names());
@@ -1456,6 +1199,65 @@ final class RowsTest extends FlowTestCase
         array_to_rows([['at' => new DateTimeImmutable(
             '2026-01-01 00:00:00',
             new DateTimeZone('Europe/Warsaw'),
-        )]], schema(datetime_schema('at', zone: 'Europe/Warsaw')))->matchTo(schema(date_schema('at')));
+        )]], schema(datetime_schema('at', zone: 'Europe/Warsaw')))->matchTo(
+            schema(date_schema('at')),
+            new AdaptiveBackend(),
+        );
+    }
+
+    public function test_match_to_reports_a_bad_value_before_a_later_null_of_the_same_column(): void
+    {
+        try {
+            array_to_rows([
+                ['n' => [1]],
+                ['n' => [null]],
+                ['n' => null],
+            ], schema(list_schema('n', type_list(type_optional(type_integer())), nullable: true)))->matchTo(
+                schema(list_schema('n', type_list(type_integer()))),
+                new PhpBackend(),
+            );
+            static::fail('the bad value must be refused');
+        } catch (SchemaMismatchException $e) {
+            static::assertSame(1, $e->rowIndex);
+        }
+    }
+
+    public function test_match_to_reports_the_lowest_bad_row_and_its_column(): void
+    {
+        try {
+            array_to_rows(
+                [['a' => [1], 'b' => [1]], ['a' => [2], 'b' => [null]], ['a' => [null], 'b' => [3]]],
+                schema(
+                    list_schema('a', type_list(type_optional(type_integer()))),
+                    list_schema('b', type_list(type_optional(type_integer()))),
+                ),
+            )->matchTo(
+                schema(list_schema('a', type_list(type_integer())), list_schema('b', type_list(type_integer()))),
+                new PhpBackend(),
+            );
+            static::fail('the bad value must be refused');
+        } catch (SchemaMismatchException $e) {
+            static::assertSame(1, $e->rowIndex);
+            static::assertStringContainsString('"b"', $e->getMessage());
+        }
+    }
+
+    public function test_select_keeps_the_named_columns_as_they_are_in_schema_order(): void
+    {
+        $rows = array_to_rows(
+            [['id' => 1, 'name' => 'a', 'tag' => 'x']],
+            schema(int_schema('id'), str_schema('name'), str_schema('tag')),
+        );
+        $selected = $rows->select('tag', 'id');
+
+        static::assertSame(['id', 'tag'], $selected->schema()->references()->names());
+        static::assertSame($rows->column('tag'), $selected->column('tag'));
+    }
+
+    public function test_select_refuses_a_name_the_batch_lacks(): void
+    {
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+
+        array_to_rows([['id' => 1]], schema(int_schema('id')))->select('id', 'missing');
     }
 }

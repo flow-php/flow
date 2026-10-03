@@ -60,8 +60,8 @@ final readonly class TopNProcessor implements Processor
             }
 
             $maxSize = max($batch->count(), $maxSize);
-            $conformed = $batch->matchTo($this->declared ?? $schema);
-            $kept = $kept === null ? $conformed : $kept->concat($conformed);
+            $conformed = $batch->matchTo($this->declared ?? $schema, $context->backend());
+            $kept = $kept === null ? $conformed : $kept->concat($context->backend(), $conformed);
 
             // trimming only past twice the limit keeps the re-sorts amortised
             if ($kept->count() > (2 * $this->limit)) {
@@ -78,7 +78,7 @@ final readonly class TopNProcessor implements Processor
         }
 
         if ($kept === null) {
-            yield from Rows::empty($this->declared ?? $schema ?? new Schema())->chunks($maxSize);
+            yield from Rows::empty($this->declared ?? $schema ?? new Schema(), $context->backend())->chunks($maxSize);
 
             return;
         }

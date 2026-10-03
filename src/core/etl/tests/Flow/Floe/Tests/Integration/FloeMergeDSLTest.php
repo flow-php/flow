@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Integration;
 
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Floe\Tests\Context\FloeStreamReaderContext;
 
@@ -23,7 +24,7 @@ final class FloeMergeDSLTest extends FlowIntegrationTestCase
         FloeStreamReaderContext::write($this->fs(), $a, array_to_rows([['id' => 1]], schema(int_schema('id'))));
         FloeStreamReaderContext::write($this->fs(), $b, array_to_rows([['id' => 2]], schema(int_schema('id'))));
 
-        merge_floe([$a, $b], $out, compact: true);
+        merge_floe([$a, $b], $out, new AdaptiveBackend(), compact: true);
 
         static::assertEquals(
             array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))),
@@ -40,7 +41,7 @@ final class FloeMergeDSLTest extends FlowIntegrationTestCase
         FloeStreamReaderContext::write($this->fs(), $a, array_to_rows([['id' => 1]], schema(int_schema('id'))));
         FloeStreamReaderContext::write($this->fs(), $b, array_to_rows([['id' => 2]], schema(int_schema('id'))));
 
-        merge_floe([$a->path(), $b->path()], $out->path());
+        merge_floe([$a->path(), $b->path()], $out->path(), new AdaptiveBackend());
 
         static::assertEquals(
             array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))),

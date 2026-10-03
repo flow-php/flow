@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Bucketing;
 
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Rows;
 use Generator;
 
@@ -18,6 +19,7 @@ final readonly class KeyGrouping
     public function __construct(
         private KeyValues $keys,
         private Hasher $hasher,
+        private Backend $backend,
     ) {}
 
     /**
@@ -38,7 +40,7 @@ final readonly class KeyGrouping
 
             // bound once: every batch out of one bucket shares a schema
             $schema ??= $input->schema();
-            $batch = $input->matchTo($schema);
+            $batch = $input->matchTo($schema, $this->backend);
 
             /** @var array<string, list<int>> $indices */
             $indices = [];
@@ -53,7 +55,7 @@ final readonly class KeyGrouping
         }
 
         foreach ($groups as $parts) {
-            yield $parts[0]->concat(...array_slice($parts, 1));
+            yield $parts[0]->concat($this->backend, ...array_slice($parts, 1));
         }
     }
 }

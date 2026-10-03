@@ -7,6 +7,7 @@ namespace Flow\ETL\Sort;
 use Flow\ETL\Bucketing\Bucket;
 use Flow\ETL\Bucketing\BucketRun;
 use Flow\ETL\Bucketing\Buckets;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Dataset\Memory\MemoryBudget;
 use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -82,11 +83,11 @@ final readonly class ExternalSort
                 }
 
                 $schema ??= $batch->schema();
-                $buffer[] = $batch->matchTo($schema);
+                $buffer[] = $batch->matchTo($schema, $context->backend());
 
                 // the whole process, not this buffer: another spilling step in the pipeline holds memory too
                 if ($budget->exceeded()) {
-                    $runs[] = $this->spill($this->sorted($buffer, $limit), $runId, count($runs));
+                    $runs[] = $this->spill($this->sorted($buffer, $limit, $context->backend()), $runId, count($runs));
                     $buffer = [];
                     $budget->released();
                 }
@@ -94,17 +95,17 @@ final readonly class ExternalSort
 
             if ($runs === []) {
                 if ($buffer !== []) {
-                    yield from $this->sorted($buffer, $limit)->chunks($this->batchSize);
+                    yield from $this->sorted($buffer, $limit, $context->backend())->chunks($this->batchSize);
                 }
 
                 return;
             }
 
             if ($buffer !== []) {
-                $runs[] = $this->spill($this->sorted($buffer, $limit), $runId, count($runs));
+                $runs[] = $this->spill($this->sorted($buffer, $limit, $context->backend()), $runId, count($runs));
             }
 
-            $merger = new KWayMerge($this->refs, $this->batchSize);
+            $merger = new KWayMerge($this->refs, $context->backend(), $this->batchSize);
             $mergedIndex = 0;
 
             // each pass merges neighbouring runs in place, so equal keys keep the order they arrived in
@@ -184,9 +185,9 @@ final readonly class ExternalSort
      * @param list<Rows> $buffer
      * @param null|int $limit
      */
-    public function sorted(array $buffer, ?int $limit): Rows
+    public function sorted(array $buffer, ?int $limit, Backend $backend): Rows
     {
-        $sorted = $buffer[0]->concat(...array_slice($buffer, 1))->sortBy(...$this->refs->all());
+        $sorted = $buffer[0]->concat($backend, ...array_slice($buffer, 1))->sortBy(...$this->refs->all());
 
         return $limit === null ? $sorted : $sorted->take($limit);
     }

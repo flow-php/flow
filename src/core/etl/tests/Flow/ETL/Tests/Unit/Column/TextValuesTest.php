@@ -6,9 +6,10 @@ namespace Flow\ETL\Tests\Unit\Column;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use Flow\ETL\Column\Php\XmlDocumentPhysical;
+use Flow\ETL\Column\Physical\XmlDocumentPhysical;
 use Flow\ETL\Column\TextValues;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
+use Flow\ETL\Tests\Mother\ColumnMother;
 use Flow\Types\Type;
 use Flow\Types\Value\Uuid;
 use Generator;
@@ -17,6 +18,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\xml_schema;
 use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_date;
@@ -568,5 +571,22 @@ final class TextValuesTest extends TestCase
     public function test_floats_of_an_empty_list(): void
     {
         static::assertSame([], (new TextValues())->floats([]));
+    }
+
+    public function test_bindable_renders_markup_from_its_physicals(): void
+    {
+        $column = ColumnMother::of(xml_schema('x'), ['<root><a/></root>']);
+
+        static::assertSame(['<root><a/></root>'], (new TextValues())->bindable($column->type(), $column));
+    }
+
+    public function test_bindable_hands_over_every_other_type_as_logical_values(): void
+    {
+        $column = ColumnMother::of(datetime_schema('at'), [new DateTimeImmutable('2026-01-02 03:04:05 UTC')]);
+
+        static::assertEquals(
+            [new DateTimeImmutable('2026-01-02 03:04:05 UTC')],
+            (new TextValues())->bindable($column->type(), $column),
+        );
     }
 }

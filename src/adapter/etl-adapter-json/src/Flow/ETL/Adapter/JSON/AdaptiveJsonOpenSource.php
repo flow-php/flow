@@ -7,7 +7,7 @@ namespace Flow\ETL\Adapter\JSON;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonFileReader;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonFormat;
 use Flow\ETL\Column\Backend;
-use Flow\ETL\Extractor\SourceFile;
+use Flow\ETL\Extractor\File\SourceFile;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Filesystem;
 use Iterator;

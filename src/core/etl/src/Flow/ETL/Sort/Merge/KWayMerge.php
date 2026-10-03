@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Sort\Merge;
 
 use Flow\ETL\Bucketing\BucketRun;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
@@ -23,6 +24,7 @@ final readonly class KWayMerge
      */
     public function __construct(
         private References $refs,
+        private Backend $backend,
         private int $batchSize = 1000,
     ) {
         // @mago-ignore analysis:invalid-operand
@@ -50,7 +52,7 @@ final readonly class KWayMerge
         $schema = null;
 
         foreach ($runs as $run) {
-            $cursor = new BucketCursor($run->rows(), $order);
+            $cursor = new BucketCursor($run->rows(), $order, $this->backend);
 
             if ($cursor->valid()) {
                 $schema ??= $cursor->schema();
@@ -59,7 +61,7 @@ final readonly class KWayMerge
         }
 
         $schema ??= new Schema();
-        $pending = Rows::empty($schema);
+        $pending = Rows::empty($schema, $this->backend);
 
         while ($cursors !== []) {
             $frontier = 0;
@@ -96,14 +98,17 @@ final readonly class KWayMerge
                     $slices[] = $cursor
                         ->batch()
                         ->slice($from, $to - $from)
-                        ->matchTo($schema);
+                        ->matchTo($schema, $this->backend);
                     $cursor->advance($to);
                 }
             }
 
             $cursors = array_values(array_filter($cursors, static fn(BucketCursor $cursor): bool => $cursor->valid()));
-            $block = $slices[0]->concat(...array_slice($slices, 1));
-            $pending = $pending->concat($block->gather($order->permutation($order->keys($block), $block->count())));
+            $block = $slices[0]->concat($this->backend, ...array_slice($slices, 1));
+            $pending = $pending->concat(
+                $this->backend,
+                $block->gather($order->permutation($order->keys($block), $block->count())),
+            );
 
             while ($pending->count() >= $this->batchSize) {
                 yield $pending->slice(0, $this->batchSize);

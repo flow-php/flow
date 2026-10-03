@@ -52,6 +52,17 @@ data_frame()
 By default, Flow is using Filesystem Cache, location of the cache storage can be adjusted through
 the `FLOW_LOCAL_FILESYSTEM_CACHE_DIR` environment variable.
 
+To only move the cache directory, set it on the config - the default cache keeps the pipeline's serializer
+and backend:
+
+```php
+<?php
+
+use function Flow\ETL\DSL\config_builder;
+
+config_builder()->cacheDir(__DIR__ . '/var/cache');
+```
+
 To use different cache implementation please use `ConfigBuilder`
 
 ```php
@@ -64,7 +75,8 @@ config_builder()
     new PSRSimpleCache(
         new Psr16Cache(
             new ArrayAdapter()
-        )
+        ),
+        new FloeSerializer(new AdaptiveBackend()),
     )
   );
 ```
@@ -105,15 +117,16 @@ A `Serializer` writes to and reads from streams, so the default `FilesystemCache
 directly to and from the cache file. `PSRSimpleCache` materializes the payload string - its PSR-16
 backend stores string values - bounded by `cacheBatchSize`.
 
-You can swap the serializer per cache; the default `FilesystemCache` shares the same serializer as the
-rest of the pipeline (so it uses the context hydrator):
+The default `FilesystemCache` shares the serializer of the rest of the pipeline (so it decodes into the configured
+backend). Build one with `filesystem_cache()` only for a custom serializer or filesystem - a cache you build takes
+its serializer from you:
 
 ```php
 <?php
 
 use function Flow\ETL\DSL\filesystem_cache;
 
-filesystem_cache(serializer: new MyCustomSerializer());
+filesystem_cache(new MyCustomSerializer());
 ```
 
 `FilesystemCache` stores each entry in a file named after the cache key, with no extension - the

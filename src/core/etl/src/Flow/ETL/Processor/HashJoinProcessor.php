@@ -125,7 +125,7 @@ final class HashJoinProcessor implements Processor
             }
         }
 
-        $joiner = new Joiner($this->expression, $this->type, $this->batchSize);
+        $joiner = new Joiner($this->expression, $this->type, $context->backend(), $this->batchSize);
         $equalityKeys = $joiner->keys();
         $resident = $this->rightBuckets->storage() instanceof ResidentBucketsStorage;
 
@@ -161,7 +161,7 @@ final class HashJoinProcessor implements Processor
             }
 
             $nullRightRow = $this->type === Join::left
-                ? (new NullRowBuilder($rightSchema ?? new Schema()))->rows()
+                ? (new NullRowBuilder($rightSchema ?? new Schema(), $context->backend()))->rows()
                 : null;
 
             $leftRows = $this->tap(
@@ -212,7 +212,7 @@ final class HashJoinProcessor implements Processor
             // only the bucketized path builds it here, the resident path above derives the null-left
             // row inside the Joiner while streaming
             $nullLeftRow = $this->type === Join::right
-                ? (new NullRowBuilder($leftSchema ?? new Schema()))->rows()
+                ? (new NullRowBuilder($leftSchema ?? new Schema(), $context->backend()))->rows()
                 : null;
 
             foreach ($this->bucketPairs() as [$leftBucket, $rightBucket]) {

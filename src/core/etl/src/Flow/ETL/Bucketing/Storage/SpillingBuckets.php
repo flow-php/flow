@@ -52,7 +52,7 @@ final class SpillingBuckets implements BucketsStorage
     public function __construct(
         public readonly BucketsStorage $disk,
         public readonly Unit $memoryLimit,
-        Backend $backend,
+        private readonly Backend $backend,
         private readonly int $batchSize = 1000,
     ) {
         // @mago-ignore analysis:invalid-operand
@@ -61,7 +61,7 @@ final class SpillingBuckets implements BucketsStorage
             throw new InvalidArgumentException('Batch size must be greater than 0, given: ' . $this->batchSize);
         }
 
-        $this->budget = new MemoryBudget($backend, $this->memoryLimit);
+        $this->budget = new MemoryBudget($this->backend, $this->memoryLimit);
     }
 
     /**
@@ -108,7 +108,7 @@ final class SpillingBuckets implements BucketsStorage
             return;
         }
 
-        $buffered = $this->buffers[$bucketId][0]->concat(...array_slice($this->buffers[$bucketId], 1));
+        $buffered = $this->buffers[$bucketId][0]->concat($this->backend, ...array_slice($this->buffers[$bucketId], 1));
 
         for ($offset = 0, $count = $buffered->count(); $offset < $count; $offset += $this->batchSize) {
             yield $buffered->slice($offset, min($this->batchSize, $count - $offset));
@@ -139,7 +139,7 @@ final class SpillingBuckets implements BucketsStorage
             return;
         }
 
-        $buffered = $this->buffers[$bucketId][0]->concat(...array_slice($this->buffers[$bucketId], 1));
+        $buffered = $this->buffers[$bucketId][0]->concat($this->backend, ...array_slice($this->buffers[$bucketId], 1));
         $written = $count - ($count % $this->batchSize);
 
         for ($offset = 0; $offset < $written; $offset += $this->batchSize) {

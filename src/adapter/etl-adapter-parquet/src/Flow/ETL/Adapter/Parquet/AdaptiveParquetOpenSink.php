@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet;
 
+use Flow\ETL\Loader\File\FileSink;
 use Flow\ETL\Rows;
 use Flow\Filesystem\DestinationStream;
 use Flow\Parquet\Binary\ByteOrder;
@@ -16,7 +17,7 @@ use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
 
 use function extension_loaded;
 
-final readonly class AdaptiveParquetOpenSink implements ParquetOpenSink
+final readonly class AdaptiveParquetOpenSink implements FileSink, ParquetOpenSink
 {
     private ParquetOpenSink $sink;
 

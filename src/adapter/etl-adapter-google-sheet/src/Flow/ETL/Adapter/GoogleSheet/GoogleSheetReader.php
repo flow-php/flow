@@ -94,6 +94,6 @@ final readonly class GoogleSheetReader
             $values->get($this->spreadsheetId, $range->toString(), $this->readOptions->options)->getValues() ?? [],
         ));
 
-        return new GoogleSheetSample($decoder->headers(), $decoded, $range->endRow >= $rowCount, $rowCount);
+        return new GoogleSheetSample($decoder->headers() ?? [], $decoded, $range->endRow >= $rowCount, $rowCount);
     }
 }

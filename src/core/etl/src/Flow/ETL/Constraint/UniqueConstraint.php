@@ -33,7 +33,7 @@ final class UniqueConstraint implements Constraint
             return null;
         }
 
-        foreach ((new RowHashes())->of($rows->project($rows->schema()->keep(...$this->reference))) as $i => $key) {
+        foreach ((new RowHashes())->of($rows->select(...$this->reference->names())) as $i => $key) {
             if ($this->storage->has($key)) {
                 return $i;
             }

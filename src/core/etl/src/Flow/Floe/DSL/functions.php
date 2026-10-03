@@ -7,6 +7,7 @@ namespace Flow\Floe\DSL;
 use Flow\Documentation\Attribute\DocumentationDSL;
 use Flow\Documentation\Attribute\Module;
 use Flow\Documentation\Attribute\Type as DSLType;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Schema\Metadata;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
@@ -65,11 +66,12 @@ function floe_options(int $buffer_size = 65536, Codec $codec = new NoopCodec()):
 function merge_floe(
     array $sources,
     string|Path $dest,
+    Backend $backend,
     bool $compact = false,
     ?Metadata $metadata = null,
     Filesystem $filesystem = new NativeLocalFilesystem(),
 ): void {
-    (new FloeMerger($filesystem))->merge(
+    (new FloeMerger($filesystem, $backend))->merge(
         array_map(static fn(string|Path $source): Path => is_string($source) ? path_real($source) : $source, $sources),
         is_string($dest) ? path($dest) : $dest,
         $compact,

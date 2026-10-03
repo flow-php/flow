@@ -734,4 +734,110 @@ final class RowsBuilderTest extends FlowTestCase
             ['id' => 'x'],
         ]);
     }
+
+    public function test_append_records_takes_a_single_record(): void
+    {
+        static::assertSame(
+            [['id' => 1]],
+            (new RowsBuilder(schema(int_schema('id')), new PhpBackend()))
+                ->appendRecords(['id' => 1])
+                ->finish()
+                ->toArray(),
+        );
+    }
+
+    public function test_append_records_takes_a_list_of_records(): void
+    {
+        static::assertSame(
+            [['id' => 1], ['id' => 2]],
+            (new RowsBuilder(schema(int_schema('id')), new PhpBackend()))
+                ->appendRecords([['id' => 1], ['id' => 2]])
+                ->finish()
+                ->toArray(),
+        );
+    }
+
+    public function test_append_records_matches_a_numeric_string_key_to_its_declared_name(): void
+    {
+        static::assertSame(
+            [1],
+            (new RowsBuilder(schema(int_schema('2024')), new PhpBackend()))
+                ->appendRecords([['2024' => 1]])
+                ->finish()
+                ->column('2024')
+                ->values(),
+        );
+    }
+
+    public function test_append_records_refuses_an_undeclared_key_at_its_row(): void
+    {
+        try {
+            (new RowsBuilder(schema(int_schema('id')), new PhpBackend()))->appendRecords([
+                ['id' => 1],
+                ['id' => 2, 'nmae' => 'two'],
+            ]);
+            static::fail('an undeclared key must be refused');
+        } catch (SchemaMismatchException $e) {
+            static::assertSame(1, $e->rowIndex);
+            static::assertStringContainsString('nmae', $e->getMessage());
+        }
+    }
+
+    public function test_append_records_refuses_an_undeclared_key_at_its_row_after_a_prior_append(): void
+    {
+        try {
+            (new RowsBuilder(schema(int_schema('id')), new PhpBackend()))->appendRecords([
+                ['id' => 1],
+                ['id' => 2],
+            ])->appendRecords([['id' => 3, 'nmae' => 'three']]);
+            static::fail('an undeclared key must be refused');
+        } catch (SchemaMismatchException $e) {
+            static::assertSame(2, $e->rowIndex);
+        }
+    }
+
+    public function test_append_projected_drops_an_undeclared_key(): void
+    {
+        static::assertSame(
+            [['id' => 1, 'name' => 'one'], ['id' => 2, 'name' => null]],
+            (new RowsBuilder(schema(int_schema('id'), str_schema('name', nullable: true)), new PhpBackend()))
+                ->appendProjected([['id' => 1, 'name' => 'one'], ['id' => 2, 'nmae' => 'two']])
+                ->finish()
+                ->toArray(),
+        );
+    }
+
+    public function test_append_projected_keeps_an_int_key_whose_positional_name_is_declared(): void
+    {
+        static::assertSame(
+            [['e00' => 'a']],
+            (new RowsBuilder(schema(str_schema('e00')), new PhpBackend()))
+                ->appendProjected([['a', 'b']])
+                ->finish()
+                ->toArray(),
+        );
+    }
+
+    public function test_append_projected_keeps_a_numeric_column_name_declared_as_is(): void
+    {
+        static::assertSame(
+            [1],
+            (new RowsBuilder(schema(int_schema('2024')), new PhpBackend()))
+                ->appendProjected([['2024' => 1, 'other' => 2]])
+                ->finish()
+                ->column('2024')
+                ->values(),
+        );
+    }
+
+    public function test_append_projected_of_nothing_appends_nothing(): void
+    {
+        static::assertSame(
+            0,
+            (new RowsBuilder(schema(int_schema('id')), new PhpBackend()))
+                ->appendProjected([])
+                ->finish()
+                ->count(),
+        );
+    }
 }

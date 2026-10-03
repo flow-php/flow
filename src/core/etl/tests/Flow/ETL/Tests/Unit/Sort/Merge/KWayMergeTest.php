@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Sort\Merge;
 use Flow\ETL\Bucketing\BucketRun;
 use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\Bucketing\Storage\MemoryBuckets;
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Constraint\SortedByConstraint;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Sort\Merge\KWayMerge;
@@ -55,8 +56,15 @@ final class KWayMergeTest extends FlowTestCase
 
         $merged = rows($dataset['schema']);
 
-        foreach ((new KWayMerge(refs(...$dataset['references']), $dataset['mergeBatchSize']))->merge($runs) as $batch) {
-            $merged = $merged->concat($batch->matchTo($dataset['schema']));
+        foreach ((new KWayMerge(
+            refs(...$dataset['references']),
+            new AdaptiveBackend(),
+            $dataset['mergeBatchSize'],
+        ))->merge($runs) as $batch) {
+            $merged = $merged->concat(
+                new AdaptiveBackend(),
+                $batch->matchTo($dataset['schema'], new AdaptiveBackend()),
+            );
         }
 
         // serialized, so NaN and -0.0 compare by what they are
@@ -90,7 +98,7 @@ final class KWayMergeTest extends FlowTestCase
             ['id' => 9],
         ], schema(int_schema('id'))));
 
-        $merge = new KWayMerge(refs(ref('id')->asc()));
+        $merge = new KWayMerge(refs(ref('id')->asc()), new AdaptiveBackend());
 
         static::assertSame(
             [1, 2, 3, 4, 5, 6, 7, 8, 9],
@@ -117,7 +125,7 @@ final class KWayMergeTest extends FlowTestCase
         static::assertSame([], BucketsStorageContext::rows($spill->storage()->get('sort-merge-0')));
         static::assertSame([], BucketsStorageContext::rows($merged->storage()->get('sort-run-0')));
 
-        $merge = new KWayMerge(refs(ref('id')->asc()));
+        $merge = new KWayMerge(refs(ref('id')->asc()), new AdaptiveBackend());
 
         static::assertSame(
             [1, 2, 3, 4],
@@ -145,7 +153,7 @@ final class KWayMergeTest extends FlowTestCase
             ['id' => 2],
         ], schema(int_schema('id'))));
 
-        $merge = new KWayMerge(refs(ref('id')->desc()));
+        $merge = new KWayMerge(refs(ref('id')->desc()), new AdaptiveBackend());
 
         static::assertSame(
             [8, 7, 5, 4, 2, 1],
@@ -169,7 +177,7 @@ final class KWayMergeTest extends FlowTestCase
         ], schema(int_schema('id'))));
         $buckets->storage()->append('b', array_to_rows([['id' => 4]], schema(int_schema('id'))));
 
-        $merge = new KWayMerge(refs(ref('id')->asc()));
+        $merge = new KWayMerge(refs(ref('id')->asc()), new AdaptiveBackend());
 
         static::assertSame(
             [1, 2, 3, 4],
@@ -189,7 +197,7 @@ final class KWayMergeTest extends FlowTestCase
         $buckets->storage()->append('a', array_to_rows([['id' => 'a'], ['id' => 'c']], schema(str_schema('id'))));
         $buckets->storage()->append('b', array_to_rows([['id' => 'b'], ['id' => 'd']], schema(str_schema('id'))));
 
-        $merge = new KWayMerge(refs(ref('id')->asc()));
+        $merge = new KWayMerge(refs(ref('id')->asc()), new AdaptiveBackend());
 
         static::assertSame(
             ['a', 'b', 'c', 'd'],
@@ -212,7 +220,7 @@ final class KWayMergeTest extends FlowTestCase
         ));
         $buckets->storage()->append('b', array_to_rows([['id' => 2]], schema(int_schema('id'))));
 
-        $merge = new KWayMerge(refs(ref('id')->asc()));
+        $merge = new KWayMerge(refs(ref('id')->asc()), new AdaptiveBackend());
 
         static::assertSame(
             [['id' => 1, 'name' => 'a'], ['id' => 2, 'name' => null]],
@@ -228,7 +236,7 @@ final class KWayMergeTest extends FlowTestCase
         $buckets = new Buckets(new MemoryBuckets());
         $buckets->storage()->append('a', array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))));
 
-        $merge = new KWayMerge(refs(ref('id')->asc()));
+        $merge = new KWayMerge(refs(ref('id')->asc()), new AdaptiveBackend());
 
         static::assertSame(
             [1, 2],
@@ -238,7 +246,7 @@ final class KWayMergeTest extends FlowTestCase
 
     public function test_empty_bucket_set_yields_nothing(): void
     {
-        $merge = new KWayMerge(refs(ref('id')->asc()));
+        $merge = new KWayMerge(refs(ref('id')->asc()), new AdaptiveBackend());
 
         static::assertSame([], BucketsStorageContext::rows($merge->merge([])));
     }
@@ -253,7 +261,7 @@ final class KWayMergeTest extends FlowTestCase
         ], schema(int_schema('id'))));
         $buckets->storage()->append('b', array_to_rows([['id' => 2], ['id' => 4]], schema(int_schema('id'))));
 
-        $merge = new KWayMerge(refs(ref('id')->asc()), batchSize: 2);
+        $merge = new KWayMerge(refs(ref('id')->asc()), new AdaptiveBackend(), batchSize: 2);
 
         $sizes = [];
 
@@ -270,7 +278,7 @@ final class KWayMergeTest extends FlowTestCase
         $this->expectExceptionMessage('Batch size must be greater than 0, given: 0');
 
         // @mago-ignore analysis:invalid-argument
-        new KWayMerge(refs(ref('id')->asc()), batchSize: 0);
+        new KWayMerge(refs(ref('id')->asc()), new AdaptiveBackend(), batchSize: 0);
     }
 
     public function test_interleaves_runs_across_batch_boundaries_like_one_sort(): void
@@ -294,7 +302,7 @@ final class KWayMergeTest extends FlowTestCase
 
         $merged = [];
 
-        foreach ((new KWayMerge(refs(ref('id')->asc()), batchSize: 4))->merge([
+        foreach ((new KWayMerge(refs(ref('id')->asc()), new AdaptiveBackend(), batchSize: 4))->merge([
             new BucketRun('a', $buckets),
             new BucketRun('b', $buckets),
             new BucketRun('c', $buckets),
