@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-10-04
+## [0.45.0] - 2026-10-04
 
 ### Added
 - [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl - columnar Rows batch built by a configurable column Backend (PhpBackend, RustBackend, AdaptiveBackend)** - [@norberttech](https://github.com/norberttech)
@@ -123,8 +123,7 @@
 - [#2645](https://github.com/flow-php/flow/pull/2645) - **flow-php/etl - schema inference and row conforming skip redundant work** - [@norberttech](https://github.com/norberttech)
 - [#2645](https://github.com/flow-php/flow/pull/2645) - **flow-php/flow-php-ext - hydrated rows skip the conform pass when no column is absent** - [@norberttech](https://github.com/norberttech)
 - [#2641](https://github.com/flow-php/flow/pull/2641) - **Local and CI S3 service replaced with RustFS - MinIO deleted its community images from Docker Hub** - [@MrHDOLEK](https://github.com/MrHDOLEK)
-- [#2641](https://github.com/flow-php/flow/pull/2641) - **S3 development credentials changed from minioadmin to flowphpaccess01 / flowphpsecret01 - refresh your compose.yml and
-.env** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#2641](https://github.com/flow-php/flow/pull/2641) - **S3 development credentials changed from minioadmin to flowphpaccess01 / flowphpsecret01 - refresh your compose.yml and .env** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - Extractor::extract() takes the pushed row limit; FileExtractor also takes a path filter** - [@norberttech](https://github.com/norberttech)
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - Config::optimizer() replaced by planner() and executor()** - [@norberttech](https://github.com/norberttech)
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/etl - DataFrame::run() no longer takes a callback, use forEach()** - [@norberttech](https://github.com/norberttech)
@@ -156,7 +155,7 @@
 - [#2658](https://github.com/flow-php/flow/pull/2658) - **flow-php/types - type_time() cast of a datetime returns its wall clock** - [@norberttech](https://github.com/norberttech)
 - [#2658](https://github.com/flow-php/flow/pull/2658) - **flow-php/types - type_date() cast no longer mutates a DateTime** - [@norberttech](https://github.com/norberttech)
 - [#2658](https://github.com/flow-php/flow/pull/2658) - **flow-php/etl - to_date_time() keeps the time of a datetime object** - [@norberttech](https://github.com/norberttech)
-- [#2657](https://github.com/flow-php/flow/pull/2657) - **flow-php/etl-adapter-postgresql - array columns are typed list<?T> and can be written to Floe and Parquet** - [@norberttech](https://github.com/norberttech)
+- [#2657](https://github.com/flow-php/flow/pull/2657) - **flow-php/etl-adapter-postgresql - array columns are typed list and can be written to Floe and Parquet** - [@norberttech](https://github.com/norberttech)
 - [#2653](https://github.com/flow-php/flow/pull/2653) - **flow-php/flow-php-ext - native hydrator keeps per-value metadata of numeric-named columns, like the PHP one** - [@norberttech](https://github.com/norberttech)
 - [#2650](https://github.com/flow-php/flow/pull/2650) - **Flow PHP - regenerated stale CodeMirror completions on the landing site** - [@norberttech](https://github.com/norberttech)
 - [#2649](https://github.com/flow-php/flow/pull/2649) - **flow-php/postgresql - sql_query_tables() no longer returns FOR UPDATE OF names and CTE references** - [@norberttech](https://github.com/norberttech)
