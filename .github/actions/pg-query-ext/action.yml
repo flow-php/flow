@@ -25,7 +25,12 @@ runs:
       if: ${{ steps.cache.outputs.cache-hit != 'true' }}
       shell: bash
       working-directory: src/extension/pg-query-ext
-      run: make build
+      # a shallow checkout has no tags for config.m4 to describe; this build only runs the test suite
+      run: |
+        if ! git describe --tags --match '[0-9]*' >/dev/null 2>&1; then
+          export PG_QUERY_EXT_VERSION="0.0.0-0-g$(git rev-parse --short HEAD)"
+        fi
+        make build
 
     - name: "Enable pg-query-ext"
       shell: bash

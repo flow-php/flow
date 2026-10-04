@@ -8,6 +8,7 @@ use DateTimeInterface;
 use DOMDocument;
 use Flow\ETL\Column\Physical\HtmlElementPhysical;
 use Flow\ETL\Column\Physical\PhysicalFor;
+use Flow\ETL\Column\Physical\XmlCharacterReferences;
 use Flow\ETL\Column\Physical\XmlDocumentPhysical;
 use Flow\ETL\Column\Physical\XmlElementPhysical;
 use Flow\ETL\Exception\RuntimeException;
@@ -119,6 +120,7 @@ final readonly class TextValues
         if ($bare instanceof XMLType) {
             $nodes = (new PhysicalFor())->type($bare);
             $documents = new XmlDocumentPhysical();
+            $references = new XmlCharacterReferences();
             $values = [];
 
             // @mago-ignore analysis:mixed-assignment
@@ -140,7 +142,7 @@ final readonly class TextValues
                     throw new RuntimeException('Failed to serialize XML document.');
                 }
 
-                $values[] = $text;
+                $values[] = $references->decoded($text);
             }
 
             return $values;
