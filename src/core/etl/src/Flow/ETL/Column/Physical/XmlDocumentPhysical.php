@@ -69,6 +69,9 @@ final readonly class XmlDocumentPhysical implements Physical
             throw new InvalidArgumentException(sprintf('Floe failed to restore DOMDocument from "%s"', $physical));
         }
 
+        // libxml2 before 2.13 writes non-ASCII attribute characters of a document without an encoding as references
+        $document->encoding ??= 'UTF-8';
+
         return $document;
     }
 

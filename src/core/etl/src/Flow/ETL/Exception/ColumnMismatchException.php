@@ -13,7 +13,9 @@ use Throwable;
 use function get_debug_type;
 use function is_bool;
 use function is_float;
+use function is_infinite;
 use function is_int;
+use function is_nan;
 use function is_string;
 use function sprintf;
 use function strlen;
@@ -105,6 +107,8 @@ final class ColumnMismatchException extends InvalidArgumentException
         return match (true) {
             is_string($value) => "'" . (strlen($value) > 32 ? substr($value, 0, 32) . '...' : $value) . "'",
             is_bool($value) => $value ? 'true' : 'false',
+            is_float($value) && is_nan($value) => 'NAN',
+            is_float($value) && is_infinite($value) => $value > 0 ? 'INF' : '-INF',
             is_int($value), is_float($value) => (string) $value,
             $value instanceof DateTimeInterface => $value->format('Y-m-d\TH:i:s.uP'),
             default => get_debug_type($value),

@@ -190,7 +190,7 @@ function all_types_values(): array
 
     if (class_exists('\\Dom\\HTMLDocument')) {
         foreach ($rows as $index => $row) {
-            $rows[$index] = $row + ['html' => '<p>html</p>'];
+            $rows[$index] = $row + ['html' => '<!DOCTYPE html><html><head></head><body><p>html</p></body></html>'];
         }
     }
 
@@ -319,14 +319,16 @@ function interfaces_reflection(): string
         'Flow\\ETL\\Adapter\\Parquet\\ParquetOpenSource',
     ] as $name) {
         $class = new ReflectionClass($name);
+        // PHP 8.5 reports a userland `self` resolved to the class, an internal one stays `self` - the same type
+        $type = static fn(?ReflectionType $type): string => (string) $type === 'self' ? $name : (string) $type;
         $interfaces[$name] = [
             $class->isInterface(),
             array_map(static fn(ReflectionMethod $method): array => [
                 $method->getName(),
-                (string) $method->getReturnType(),
+                $type($method->getReturnType()),
                 array_map(static fn(ReflectionParameter $parameter): array => [
                     $parameter->getName(),
-                    (string) $parameter->getType(),
+                    $type($parameter->getType()),
                     $parameter->isOptional(),
                     $parameter->isVariadic(),
                     $parameter->isPassedByReference(),
