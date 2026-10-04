@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function Flow\ETL\DSL\lit;
@@ -60,25 +64,44 @@ final class Wordwrap implements ScalarFunction
         return type_string();
     }
 
-    public function eval(Row $row, FlowContext $context): ?string
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $value = (new Parameter($this->value))->asString($row, $context);
-        $width = type_integer()->assert((new Parameter($this->width))->as($row, $context, type_integer()));
-        $break = (new Parameter($this->break))->asString($row, $context);
-        $cut = (new Parameter($this->cut))->asBoolean($row, $context) ?? false;
+        $values = (new Parameter($this->value))->asStrings($rows, $context);
+        $breaks = (new Parameter($this->break))->asStrings($rows, $context);
+        $widths = (new Parameter($this->width))->asTypes($rows, $context, type_integer());
+        $cuts = (new Parameter($this->cut))->asBooleans($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($value === null) {
-            throw new InvalidArgumentException('Wordwrap function requires non-null value');
+        try {
+            foreach ($values as $i => $value) {
+                $break = $breaks[$i];
+                $width = $widths[$i];
+                $cut = $cuts[$i];
+
+                $width = type_integer()->assert($width);
+                $cut ??= false;
+
+                if ($value === null) {
+                    throw new InvalidArgumentException('Wordwrap function requires non-null value');
+                }
+
+                if ($width <= 0) {
+                    $results[] = $value;
+
+                    continue;
+                }
+
+                if ($break === null) {
+                    $break = "\n";
+                }
+
+                $results[] = s($value)->wordwrap($width, $break, $cut)->toString();
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        if ($width <= 0) {
-            return $value;
-        }
-
-        if ($break === null) {
-            $break = "\n";
-        }
-
-        return s($value)->wordwrap($width, $break, $cut)->toString();
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

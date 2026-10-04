@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Loader;
 
-use Flow\ETL\Row;
 use Flow\ETL\Row\References;
-use Flow\ETL\Schema;
+use Flow\ETL\Rows;
 use Flow\Filesystem\Partition;
 use Flow\Filesystem\Partitions;
 
@@ -16,18 +15,19 @@ final readonly class RowPartitions
         private References $by,
     ) {}
 
-    public function of(Row $row, Schema $schema): Partitions
+    public function of(Rows $rows, int $index): Partitions
     {
         $partitions = [];
 
         foreach ($this->by as $reference) {
-            $value = $row->get($reference);
+            // @mago-ignore analysis:mixed-assignment
+            $value = $rows->column($reference->base())->value($index);
 
             $partitions[] = new Partition(
                 $reference->name(),
                 $value === null
                     ? null
-                    : Partition::fromValue($reference->name(), $schema->get($reference)->type(), $value),
+                    : Partition::fromValue($reference->name(), $rows->schema()->get($reference)->type(), $value),
             );
         }
 

@@ -19,11 +19,10 @@ use Flow\ETL\Sink\Transactional;
 use function Flow\ETL\Adapter\Doctrine\to_dbal_table_delete;
 use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
 use function Flow\ETL\Adapter\Doctrine\to_dbal_transaction;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\integer_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\string_schema;
 use function getenv;
@@ -40,7 +39,10 @@ final class PostgreSQLTransactionSinkTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('value', Type::getType(Types::INTEGER), ['notnull' => true]),
         ]);
-        $table->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create());
+        $table = $table
+            ->edit()
+            ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+            ->create();
 
         $this->pgsqlDatabaseContext->createTable($table);
 
@@ -48,8 +50,8 @@ final class PostgreSQLTransactionSinkTest extends IntegrationTestCase
 
         df()
             ->read(from_rows(
-                rows(schema(integer_schema('id'), integer_schema('value')), row(['id' => 1, 'value' => 100])),
-                rows(schema(integer_schema('id'), integer_schema('value')), row(['id' => 2, 'value' => 200])),
+                array_to_rows([['id' => 1, 'value' => 100]], schema(integer_schema('id'), integer_schema('value'))),
+                array_to_rows([['id' => 2, 'value' => 200]], schema(integer_schema('id'), integer_schema('value'))),
             ))
             ->write(to_dbal_transaction($connection, to_dbal_table_insert($connection, 'test_table')))
             ->run();
@@ -76,7 +78,10 @@ final class PostgreSQLTransactionSinkTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
         ]);
-        $table->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create());
+        $table = $table
+            ->edit()
+            ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+            ->create();
 
         $this->pgsqlDatabaseContext->createTable($table);
         $this->pgsqlDatabaseContext->insert('test_table', ['id' => 1, 'name' => 'Initial']);
@@ -88,9 +93,9 @@ final class PostgreSQLTransactionSinkTest extends IntegrationTestCase
 
         try {
             df()
-                ->read(from_rows(rows(
+                ->read(from_rows(array_to_rows(
+                    [['id' => 1, 'name' => 'Should fail']],
                     schema(integer_schema('id'), string_schema('name')),
-                    row(['id' => 1, 'name' => 'Should fail']),
                 )))
                 ->write(to_dbal_transaction(
                     $connection,
@@ -123,17 +128,19 @@ final class PostgreSQLTransactionSinkTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
         ]);
-        $table->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create());
+        $table = $table
+            ->edit()
+            ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+            ->create();
 
         $this->pgsqlDatabaseContext->createTable($table);
 
         $connection = $this->pgsqlDatabaseContext->connection();
 
         df()
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [['id' => 1, 'name' => 'Updated'], ['id' => 2, 'name' => 'Updated']],
                 schema(integer_schema('id'), string_schema('name')),
-                row(['id' => 1, 'name' => 'Updated']),
-                row(['id' => 2, 'name' => 'Updated']),
             )))
             ->write(to_dbal_transaction(
                 $connection,
@@ -161,22 +168,25 @@ final class PostgreSQLTransactionSinkTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
         ]);
-        $table->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create());
+        $table = $table
+            ->edit()
+            ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+            ->create();
 
         $this->pgsqlDatabaseContext->createTable($table);
 
         $connection = $this->pgsqlDatabaseContext->connection();
 
         df()
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [['id' => 1, 'name' => 'Test']],
                 schema(integer_schema('id'), string_schema('name')),
-                row(['id' => 1, 'name' => 'Test']),
             )))
             ->write(
                 new Transactional(
-                    DbalTransaction::fromConnection(
-                        $connection,
-                    )->withIsolationLevel(TransactionIsolationLevel::SERIALIZABLE),
+                    DbalTransaction::fromConnection($connection)->withIsolationLevel(
+                        TransactionIsolationLevel::SERIALIZABLE,
+                    ),
                     to_dbal_table_insert($connection, 'test_table'),
                 ),
             )

@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\ETL\String\StringStyles;
 use Flow\Types\Type;
 
@@ -52,23 +56,40 @@ final class StringStyle implements ScalarFunction
         return type_string();
     }
 
-    public function eval(Row $row, FlowContext $context): ?string
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $string = (new Parameter($this->string))->asString($row, $context);
-        $style = (new Parameter($this->style))->as($row, $context, type_string(), type_enum(StringStyles::class));
+        $strings = (new Parameter($this->string))->asStrings($rows, $context);
+        $styles = (new Parameter($this->style))->asTypes(
+            $rows,
+            $context,
+            type_string(),
+            type_enum(StringStyles::class),
+        );
+        $results = [];
+        $i = 0;
 
-        if ($string === null) {
-            throw new InvalidArgumentException('StringStyle function requires non-null value');
+        try {
+            foreach ($strings as $i => $string) {
+                $style = $styles[$i];
+
+                if ($string === null) {
+                    throw new InvalidArgumentException('StringStyle function requires non-null value');
+                }
+
+                if ($style === null) {
+                    throw new InvalidArgumentException('StringStyle function requires non-null style');
+                }
+
+                if (is_string($style)) {
+                    $style = StringStyles::fromString($style);
+                }
+
+                $results[] = $style->convert($string);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        if ($style === null) {
-            throw new InvalidArgumentException('StringStyle function requires non-null style');
-        }
-
-        if (is_string($style)) {
-            $style = StringStyles::fromString($style);
-        }
-
-        return $style->convert($string);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

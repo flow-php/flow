@@ -8,12 +8,15 @@ use Dom\HTMLDocument;
 use Dom\HTMLElement;
 use DOMDocument;
 use DOMElement;
+use Flow\ETL\Tests\Context\FunctionContext;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\html_element_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\xml_element_schema;
 
 use const LIBXML_HTML_NOIMPLIED;
 use const LIBXML_NOERROR;
@@ -30,9 +33,13 @@ final class DOMElementAttributeValueTest extends TestCase
         );
 
         static::assertInstanceOf(HTMLElement::class, $element->documentElement);
-        static::assertEquals('foobar', ref('value')
-            ->domElementAttributeValue('id')
-            ->eval(row(['value' => $element->documentElement]), flow_context()));
+        static::assertEquals('foobar', (new FunctionContext(flow_context()))->eval(
+            ref('value')->domElementAttributeValue('id'),
+            [
+                'value' => $element->documentElement,
+            ],
+            schema(html_element_schema('value')),
+        ));
     }
 
     #[RequiresPhp('>= 8.4.0')]
@@ -42,11 +49,13 @@ final class DOMElementAttributeValueTest extends TestCase
         $element = HTMLDocument::createFromString('<span">foobar</span>', LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR);
 
         static::assertInstanceOf(HTMLElement::class, $element->documentElement);
-        static::assertNull(
-            ref('value')
-                ->domElementAttributeValue('id')
-                ->eval(row(['value' => $element->documentElement]), flow_context()),
-        );
+        static::assertNull((new FunctionContext(flow_context()))->eval(
+            ref('value')->domElementAttributeValue('id'),
+            [
+                'value' => $element->documentElement,
+            ],
+            schema(html_element_schema('value')),
+        ));
     }
 
     public function test_xml_extracting_attribute_from_dom_element_entry(): void
@@ -55,9 +64,13 @@ final class DOMElementAttributeValueTest extends TestCase
         $xml->loadXML('<root><foo baz="buz">bar</foo></root>');
 
         static::assertInstanceOf(DOMElement::class, $xml->documentElement);
-        static::assertEquals('buz', ref('value')
-            ->domElementAttributeValue('baz')
-            ->eval(row(['value' => $xml->documentElement->firstChild]), flow_context()));
+        static::assertEquals('buz', (new FunctionContext(flow_context()))->eval(
+            ref('value')->domElementAttributeValue('baz'),
+            [
+                'value' => $xml->documentElement->firstChild,
+            ],
+            schema(xml_element_schema('value')),
+        ));
     }
 
     public function test_xml_extracting_non_existing_attribute_from_dom_element_entry(): void
@@ -66,10 +79,12 @@ final class DOMElementAttributeValueTest extends TestCase
         $xml->loadXML('<root><foo baz="buz">bar</foo></root>');
 
         static::assertInstanceOf(DOMElement::class, $xml->documentElement);
-        static::assertNull(
-            ref('value')
-                ->domElementAttributeValue('bar')
-                ->eval(row(['value' => $xml->documentElement->firstChild]), flow_context()),
-        );
+        static::assertNull((new FunctionContext(flow_context()))->eval(
+            ref('value')->domElementAttributeValue('bar'),
+            [
+                'value' => $xml->documentElement->firstChild,
+            ],
+            schema(xml_element_schema('value')),
+        ));
     }
 }

@@ -5,18 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Window;
 
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
-
-use function array_slice;
-use function Flow\ETL\DSL\rows;
 
 final class WindowContext
 {
     private ?Rows $frame = null;
 
     public function __construct(
-        private readonly Row $row,
         private readonly int $index,
         private readonly Rows $partition,
         private readonly WindowFrame $windowFrame,
@@ -37,8 +32,8 @@ final class WindowContext
             [$start, $end] = $this->windowFrame->bounds($this->index, $this->partition);
 
             $this->frame = $start > $end
-                ? rows($this->partition->schema())
-                : rows($this->partition->schema(), ...array_slice($this->partition->all(), $start, $end - $start + 1));
+                ? Rows::empty($this->partition->schema(), $this->flowContext->backend())
+                : $this->partition->slice($start, $end - $start + 1);
         }
 
         return $this->frame;
@@ -52,10 +47,5 @@ final class WindowContext
     public function partition(): Rows
     {
         return $this->partition;
-    }
-
-    public function row(): Row
-    {
-        return $this->row;
     }
 }

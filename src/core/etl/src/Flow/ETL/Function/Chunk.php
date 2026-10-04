@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Symfony\Component\String\AbstractString;
 
@@ -53,27 +57,36 @@ final class Chunk implements ScalarFunction
         return type_list(type_string());
     }
 
-    /**
-     * @return array<int, string>
-     */
-    public function eval(Row $row, FlowContext $context): array
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $value = (new Parameter($this->value))->asString($row, $context);
-        $size = (new Parameter($this->size))->asInt($row, $context);
+        $values = (new Parameter($this->value))->asStrings($rows, $context);
+        $sizes = (new Parameter($this->size))->asInts($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($value === null) {
-            throw new InvalidArgumentException('Chunk function requires non-null value');
+        try {
+            foreach ($values as $i => $value) {
+                $size = $sizes[$i];
+
+                if ($value === null) {
+                    throw new InvalidArgumentException('Chunk function requires non-null value');
+                }
+
+                if ($size === null || $size <= 0) {
+                    throw new InvalidArgumentException('Chunk function requires non-null, positive size');
+                }
+
+                $chunks = s($value)->chunk($size);
+
+                $results[] = array_map(
+                    static fn(AbstractString $chunk): string => $chunk->toString(),
+                    iterator_to_array($chunks, false),
+                );
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        if ($size === null || $size <= 0) {
-            throw new InvalidArgumentException('Chunk function requires non-null, positive size');
-        }
-
-        $chunks = s($value)->chunk($size);
-
-        return array_map(
-            static fn(AbstractString $chunk): string => $chunk->toString(),
-            iterator_to_array($chunks, false),
-        );
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

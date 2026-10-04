@@ -8,9 +8,13 @@ use Dom\HTMLElement;
 use DOMDocument;
 use DOMElement;
 use DOMNode;
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function class_exists;
@@ -55,7 +59,7 @@ final class DOMElementParent implements ScalarFunction
         return type_optional(type_xml_element());
     }
 
-    public function eval(Row $row, FlowContext $context): DOMNode|HTMLElement|null
+    public function eval(Rows $rows, FlowContext $context): Column
     {
         $types = [
             type_instance_of(DOMNode::class),
@@ -65,22 +69,33 @@ final class DOMElementParent implements ScalarFunction
             $types[] = type_instance_of(HTMLElement::class);
         }
 
-        $node = (new Parameter($this->element))->as($row, $context, ...$types);
+        $nodes = (new Parameter($this->element))->asTypes($rows, $context, ...$types);
+        $results = [];
+        $i = 0;
 
-        if ($node instanceof DOMDocument) {
-            $node = $node->documentElement;
+        try {
+            foreach ($nodes as $i => $node) {
+                if ($node instanceof DOMDocument) {
+                    $node = $node->documentElement;
+                }
+
+                if ($node === null) {
+                    throw new InvalidArgumentException('DOMElementParent requires non-null DOMNode or HTMLElement.');
+                }
+
+                if ($node instanceof HTMLElement) {
+                    $results[] = $node->parentElement;
+
+                    continue;
+                }
+
+                // parentNode of a root element is the DOMDocument, which is not an xml_element.
+                $results[] = $node->parentNode instanceof DOMElement ? $node->parentNode : null;
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        if ($node === null) {
-            throw new InvalidArgumentException('DOMElementParent requires non-null DOMNode or HTMLElement.');
-        }
-
-        if ($node instanceof HTMLElement) {
-            // @mago-ignore analysis:less-specific-return-statement
-            return $node->parentElement;
-        }
-
-        // parentNode of a root element is the DOMDocument, which is not an xml_element.
-        return $node->parentNode instanceof DOMElement ? $node->parentNode : null;
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

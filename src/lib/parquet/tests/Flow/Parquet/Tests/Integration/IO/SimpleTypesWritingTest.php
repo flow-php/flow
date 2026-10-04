@@ -7,13 +7,13 @@ namespace Flow\Parquet\Tests\Integration\IO;
 use DateTimeImmutable;
 use Faker\Factory;
 use Flow\Parquet\Consts;
-use Flow\Parquet\Engine\ArrowParquetEngine;
 use Flow\Parquet\Engine\PhpParquetEngine;
-use Flow\Parquet\ParquetEngine;
+use Flow\Parquet\Engine\RustParquetEngine;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Tests\Context\TestParquetFile;
+use Flow\Parquet\Tests\Mother\ParquetEngineMother;
 use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -73,10 +73,10 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
             'precision 8, scale 8' => [8, 8, 0.99999999],
         ];
 
-        $engines = ['php' => new PhpParquetEngine()];
+        $engines = ['php' => PhpParquetEngine::class];
 
         if (extension_loaded('arrow')) {
-            $engines['arrow'] = new ArrowParquetEngine();
+            $engines['arrow'] = RustParquetEngine::class;
         }
 
         $result = [];
@@ -91,8 +91,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_bool_column(ParquetEngine $engine): void
+    public function test_writing_bool_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -122,8 +123,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_bool_nullable_column(ParquetEngine $engine): void
+    public function test_writing_bool_nullable_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -153,8 +155,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_date_column(ParquetEngine $engine): void
+    public function test_writing_date_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -186,8 +189,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_date_column_before_1970(ParquetEngine $engine): void
+    public function test_writing_date_column_before_1970(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -222,8 +226,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_date_nullable_column(ParquetEngine $engine): void
+    public function test_writing_date_nullable_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -257,8 +262,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_decimal_column(ParquetEngine $engine): void
+    public function test_writing_decimal_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -291,11 +297,12 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 
     #[DataProvider('decimalPrecisionProvider')]
     public function test_writing_decimal_column_with_different_precisions(
-        ParquetEngine $engine,
+        string $engineClass,
         int $precision,
         int $scale,
         float $maxValue,
     ): void {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -331,8 +338,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_decimal_nullable_column(ParquetEngine $engine): void
+    public function test_writing_decimal_nullable_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -364,8 +372,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_double_column(ParquetEngine $engine): void
+    public function test_writing_double_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -397,8 +406,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_double_nullable_column(ParquetEngine $engine): void
+    public function test_writing_double_nullable_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -430,8 +440,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_enum_column(ParquetEngine $engine): void
+    public function test_writing_enum_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -463,8 +474,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_float_column(ParquetEngine $engine): void
+    public function test_writing_float_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -487,8 +499,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_float_nullable_column(ParquetEngine $engine): void
+    public function test_writing_float_nullable_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -513,8 +526,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_int32_column(ParquetEngine $engine): void
+    public function test_writing_int32_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -546,8 +560,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_int32_nullable_column(ParquetEngine $engine): void
+    public function test_writing_int32_nullable_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -579,8 +594,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_int64(ParquetEngine $engine): void
+    public function test_writing_int64(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -611,8 +627,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_int64_nullable_column(ParquetEngine $engine): void
+    public function test_writing_int64_nullable_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -643,8 +660,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_json_column(ParquetEngine $engine): void
+    public function test_writing_json_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -680,8 +698,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_json_nullable_column(ParquetEngine $engine): void
+    public function test_writing_json_nullable_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -719,8 +738,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_string_column(ParquetEngine $engine): void
+    public function test_writing_string_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -751,8 +771,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_string_nullable_column(ParquetEngine $engine): void
+    public function test_writing_string_nullable_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -783,8 +804,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_time_column(ParquetEngine $engine): void
+    public function test_writing_time_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -815,8 +837,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_time_nullable_column(ParquetEngine $engine): void
+    public function test_writing_time_nullable_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -849,8 +872,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_timestamp_column(ParquetEngine $engine): void
+    public function test_writing_timestamp_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -881,8 +905,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_timestamp_column_for_years_before_1970(ParquetEngine $engine): void
+    public function test_writing_timestamp_column_for_years_before_1970(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -913,8 +938,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_timestamp_nullable_column(ParquetEngine $engine): void
+    public function test_writing_timestamp_nullable_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -945,8 +971,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_uuid_column(ParquetEngine $engine): void
+    public function test_writing_uuid_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -977,8 +1004,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_uuid_nullable_column(ParquetEngine $engine): void
+    public function test_writing_uuid_nullable_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);

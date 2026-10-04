@@ -101,7 +101,9 @@ final class ArrayMemory implements Countable, Memory
     {
         $this->assertMemoryStructure($data);
 
-        $this->memory = array_merge($this->memory, $data);
+        foreach ($data as $entry) {
+            $this->memory[] = $entry;
+        }
     }
 
     /**

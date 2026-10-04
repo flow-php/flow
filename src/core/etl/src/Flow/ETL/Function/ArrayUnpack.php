@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Function\Evaluation\ResultColumn;
 use Flow\ETL\Function\ScalarFunction\UnpackResults;
-use Flow\ETL\Row;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\Types\Type;
 
@@ -45,16 +49,20 @@ final class ArrayUnpack implements ScalarFunction, UnpackResults
         return [$this->array];
     }
 
-    /**
-     * @return array<array-key, mixed>
-     */
-    public function eval(Row $row, FlowContext $context): array
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        return (
-            (new Parameter($this->array))->asArray($row, $context) ?? throw new InvalidArgumentException(
-                'array_unpack() requires a non-null array',
-            )
-        );
+        $results = [];
+        $i = 0;
+
+        try {
+            foreach ((new Parameter($this->array))->asArrays($rows, $context) as $i => $array) {
+                $results[] = $array ?? throw new InvalidArgumentException('array_unpack() requires a non-null array');
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
+        }
+
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 
     /**

@@ -5,14 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Excel;
 
 use Flow\ETL\Adapter\Excel\Sheet\OpenSheet;
-use Flow\ETL\Row\RawRowValues;
 use Flow\Filesystem\Path;
 use Generator;
 
 final class WorkbookSheet
 {
     /**
-     * @var list<RawRowValues>
+     * @var list<array<array-key, mixed>>
      */
     private array $buffered = [];
 
@@ -45,12 +44,12 @@ final class WorkbookSheet
             $row = $sheet->cells->current();
 
             if ($row !== null) {
-                $this->buffered = $sheet->encoder->decode([$row]);
+                $this->buffered = $sheet->decoder->decode([$row]);
                 $sheet->cells->next();
             }
         }
 
-        return $sheet->encoder->headers() ?? [];
+        return $sheet->decoder->headers() ?? [];
     }
 
     /**
@@ -58,7 +57,7 @@ final class WorkbookSheet
      * rows() that follows replays the sample and parses on from where the sample stopped, instead of parsing the
      * sample a second time. Closing the sheet stays with its owner.
      *
-     * @return Generator<int, RawRowValues>
+     * @return Generator<int, array<array-key, mixed>>
      */
     public function sample(): Generator
     {
@@ -74,7 +73,7 @@ final class WorkbookSheet
             // buffered, so rows() neither repeats nor skips a row
             $sheet->cells->next();
 
-            foreach ($sheet->encoder->decode([$row]) as $rowValues) {
+            foreach ($sheet->decoder->decode([$row]) as $rowValues) {
                 $this->buffered[] = $rowValues;
 
                 yield $rowValues;
@@ -83,7 +82,7 @@ final class WorkbookSheet
     }
 
     /**
-     * @return Generator<int, RawRowValues>
+     * @return Generator<int, array<array-key, mixed>>
      */
     public function rows(): Generator
     {
@@ -101,7 +100,7 @@ final class WorkbookSheet
             $this->buffered = [];
 
             while (($row = $sheet->cells->current()) !== null) {
-                foreach ($sheet->encoder->decode([$row]) as $rowValues) {
+                foreach ($sheet->decoder->decode([$row]) as $rowValues) {
                     yield $rowValues;
                 }
 

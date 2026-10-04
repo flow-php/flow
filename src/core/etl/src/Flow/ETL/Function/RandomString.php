@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Function\Evaluation\ResultColumn;
 use Flow\ETL\NativePHPRandomValueGenerator;
 use Flow\ETL\RandomValueGenerator;
-use Flow\ETL\Row;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function Flow\ETL\DSL\lit;
@@ -57,14 +61,24 @@ final class RandomString implements ScalarFunction
         return type_string();
     }
 
-    public function eval(Row $row, FlowContext $context): ?string
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $length = (new Parameter($this->length))->asInt($row, $context);
+        $lengths = (new Parameter($this->length))->asInts($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($length === null) {
-            throw new InvalidArgumentException('RandomString requires non-null length');
+        try {
+            foreach ($lengths as $i => $length) {
+                if ($length === null) {
+                    throw new InvalidArgumentException('RandomString requires non-null length');
+                }
+
+                $results[] = $this->generator->string($length);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return $this->generator->string($length);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

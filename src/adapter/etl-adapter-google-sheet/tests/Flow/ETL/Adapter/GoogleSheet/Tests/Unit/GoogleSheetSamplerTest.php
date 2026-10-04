@@ -8,7 +8,6 @@ use Flow\ETL\Adapter\GoogleSheet\Tests\Context\GoogleSheetFixtureContext;
 use Flow\ETL\Adapter\GoogleSheet\Tests\Mother\SheetValuesMother;
 use Flow\ETL\Tests\FlowTestCase;
 
-use function array_map;
 use function iterator_to_array;
 
 final class GoogleSheetSamplerTest extends FlowTestCase
@@ -34,10 +33,7 @@ final class GoogleSheetSamplerTest extends FlowTestCase
 
         $rows = iterator_to_array(GoogleSheetFixtureContext::sampler($values, 2)->samples(2)->current(), false);
 
-        static::assertSame(
-            [['id' => '1'], ['id' => '2']],
-            array_map(static fn($rowValues): array => $rowValues->values, $rows),
-        );
+        static::assertSame([['id' => '1'], ['id' => '2']], $rows);
         static::assertSame('sheet!A1:B3', $values->getCalls[0][1]);
     }
 

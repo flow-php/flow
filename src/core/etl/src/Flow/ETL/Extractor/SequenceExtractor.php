@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Extractor;
 
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\Memory\InferredRows;
+use Flow\ETL\Extractor\Memory\InMemoryRows;
 use Flow\ETL\Extractor\SequenceGenerator\SequenceGenerator;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
@@ -59,7 +61,7 @@ final class SequenceExtractor implements BatchableExtractor, Extractor, InfersSc
                 continue;
             }
 
-            $signal = yield $batches->of($buffer, $schema, $context->hydrator());
+            $signal = yield $batches->of($buffer, $schema, $context->backend());
 
             if ($signal === Signal::STOP) {
                 return;
@@ -69,7 +71,7 @@ final class SequenceExtractor implements BatchableExtractor, Extractor, InfersSc
         }
 
         if ($buffer !== []) {
-            yield $batches->of($buffer, $schema, $context->hydrator());
+            yield $batches->of($buffer, $schema, $context->backend());
         }
     }
 

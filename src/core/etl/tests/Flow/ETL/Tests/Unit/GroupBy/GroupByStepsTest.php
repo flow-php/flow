@@ -5,16 +5,18 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\GroupBy;
 
 use Flow\ETL\Bucketing\Storage\MemoryBuckets;
+use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\GroupBy;
 use Flow\ETL\GroupBy\GroupBySteps;
-use Flow\ETL\Processor\BucketingProcessor;
 use Flow\ETL\Processor\GroupByAggregationProcessor;
 use Flow\ETL\Processor\PivotProcessor;
 use Flow\ETL\Tests\Context\GroupByContext;
 use Flow\ETL\Tests\Double\SpyBucketsStorage;
+use Flow\ETL\Tests\Double\UnenumerableSum;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\PruneEntriesTransformer;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
@@ -25,8 +27,6 @@ use function Flow\ETL\DSL\hash_group_by;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\pivot_values;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\sum;
@@ -52,22 +52,20 @@ final class GroupByStepsTest extends FlowTestCase
 
         $steps = GroupBySteps::of($groupBy, config());
 
-        static::assertCount(3, $steps);
+        static::assertCount(2, $steps);
         static::assertInstanceOf(PruneEntriesTransformer::class, $steps[0]);
-        static::assertInstanceOf(BucketingProcessor::class, $steps[1]);
-        static::assertInstanceOf(GroupByAggregationProcessor::class, $steps[2]);
+        static::assertInstanceOf(GroupByAggregationProcessor::class, $steps[1]);
     }
 
     public function test_non_enumerable_references_skip_the_pruning_transformer(): void
     {
         $groupBy = new GroupBy(ref('category'));
-        $groupBy->aggregate(sum(ref('amount'), exact: ref('flag')));
+        $groupBy->aggregate(new UnenumerableSum(ref('amount')));
 
         $steps = GroupBySteps::of($groupBy, config());
 
-        static::assertCount(2, $steps);
-        static::assertInstanceOf(BucketingProcessor::class, $steps[0]);
-        static::assertInstanceOf(GroupByAggregationProcessor::class, $steps[1]);
+        static::assertCount(1, $steps);
+        static::assertInstanceOf(GroupByAggregationProcessor::class, $steps[0]);
     }
 
     public function test_groups_across_multiple_batches(): void
@@ -78,9 +76,9 @@ final class GroupByStepsTest extends FlowTestCase
         $result = GroupByContext::aggregate(
             $groupBy,
             flow_context(config_builder()->groupBy(hash_group_by()->storage(new MemoryBuckets()))->build()),
-            rows(schema(str_schema('category'), int_schema('amount')), row(['category' => 'a', 'amount' => 10])),
-            rows(schema(str_schema('category'), int_schema('amount')), row(['category' => 'a', 'amount' => 20])),
-            rows(schema(str_schema('category'), int_schema('amount')), row(['category' => 'b', 'amount' => 15])),
+            array_to_rows([['category' => 'a', 'amount' => 10]], schema(str_schema('category'), int_schema('amount'))),
+            array_to_rows([['category' => 'a', 'amount' => 20]], schema(str_schema('category'), int_schema('amount'))),
+            array_to_rows([['category' => 'b', 'amount' => 15]], schema(str_schema('category'), int_schema('amount'))),
         );
 
         $aggregated = [];
@@ -106,11 +104,13 @@ final class GroupByStepsTest extends FlowTestCase
             flow_context(
                 config_builder()->groupBy(hash_group_by()->storage(new MemoryBuckets())->bucketsCount(1))->build(),
             ),
-            rows(
+            array_to_rows(
+                [
+                    ['category' => 'a', 'amount' => 10],
+                    ['category' => 'b', 'amount' => 15],
+                    ['category' => 'a', 'amount' => 20],
+                ],
                 schema(str_schema('category'), int_schema('amount')),
-                row(['category' => 'a', 'amount' => 10]),
-                row(['category' => 'b', 'amount' => 15]),
-                row(['category' => 'a', 'amount' => 20]),
             ),
         );
 
@@ -136,17 +136,20 @@ final class GroupByStepsTest extends FlowTestCase
         $batches = [];
 
         for ($id = 0; $id < 20; $id++) {
-            $batches[] = rows(
+            $batches[] = array_to_rows(
+                [['id' => $id, 'amount' => 1], ['id' => $id, 'amount' => 2]],
                 schema(int_schema('id'), int_schema('amount')),
-                row(['id' => $id, 'amount' => 1]),
-                row(['id' => $id, 'amount' => 2]),
             );
         }
 
         $result = GroupByContext::aggregate(
             $groupBy,
             flow_context(
-                config_builder()->groupBy(hash_group_by()->storage(new MemoryBuckets())->bucketsCount(4))->build(),
+                config_builder()
+                    ->groupBy(
+                        hash_group_by()->storage(new MemoryBuckets())->memoryLimit(Unit::fromBytes(1))->bucketsCount(4),
+                    )
+                    ->build(),
             ),
             ...$batches,
         );
@@ -175,12 +178,13 @@ final class GroupByStepsTest extends FlowTestCase
 
         GroupByContext::aggregate(
             $groupBy,
-            flow_context(config_builder()->groupBy(hash_group_by()->storage($storage))->build()),
-            rows(
-                schema(str_schema('category'), int_schema('amount')),
-                row(['category' => 'a', 'amount' => 10]),
-                row(['category' => 'b', 'amount' => 15]),
+            flow_context(
+                config_builder()
+                    ->groupBy(hash_group_by()->storage($storage)->memoryLimit(Unit::fromBytes(1))->batchSize(1))
+                    ->build(),
             ),
+            array_to_rows([['category' => 'a', 'amount' => 10]], schema(str_schema('category'), int_schema('amount'))),
+            array_to_rows([['category' => 'b', 'amount' => 15]], schema(str_schema('category'), int_schema('amount'))),
         );
 
         static::assertNotSame([], $storage->readBucketIds());
@@ -195,11 +199,9 @@ final class GroupByStepsTest extends FlowTestCase
         $result = GroupByContext::aggregate(
             $groupBy,
             flow_context(config_builder()->groupBy(hash_group_by()->storage(new MemoryBuckets()))->build()),
-            rows(
+            array_to_rows(
+                [['category' => 'a', 'amount' => 10], ['amount' => 15], ['amount' => 20]],
                 schema(str_schema('category', nullable: true), int_schema('amount')),
-                row(['category' => 'a', 'amount' => 10]),
-                row(['amount' => 15]),
-                row(['amount' => 20]),
             ),
         );
 
@@ -225,18 +227,27 @@ final class GroupByStepsTest extends FlowTestCase
 
         GroupByContext::aggregate(
             $groupBy,
-            flow_context(config_builder()->groupBy(hash_group_by()->storage($storage))->build()),
-            rows(
+            flow_context(
+                config_builder()
+                    ->groupBy(hash_group_by()->storage($storage)->memoryLimit(Unit::fromBytes(1))->batchSize(1))
+                    ->build(),
+            ),
+            array_to_rows(
+                [['category' => 'a', 'amount' => 10, 'noise' => 'x', 'id' => 1]],
                 schema(str_schema('category'), int_schema('amount'), str_schema('noise'), int_schema('id')),
-                row(['category' => 'a', 'amount' => 10, 'noise' => 'x', 'id' => 1]),
-                row(['category' => 'b', 'amount' => 15, 'noise' => 'y', 'id' => 2]),
+            ),
+            array_to_rows(
+                [['category' => 'b', 'amount' => 15, 'noise' => 'y', 'id' => 2]],
+                schema(str_schema('category'), int_schema('amount'), str_schema('noise'), int_schema('id')),
             ),
         );
 
+        static::assertNotSame([], $storage->appendedRows());
+
         foreach ($storage->appendedRows() as $batches) {
             foreach ($batches as $batch) {
-                foreach ($batch as $spilledRow) {
-                    static::assertSame(['category', 'amount'], $spilledRow->names());
+                foreach ($batch->toArray() as $spilledRow) {
+                    static::assertSame(['category', 'amount'], array_keys($spilledRow));
                 }
             }
         }
@@ -245,29 +256,38 @@ final class GroupByStepsTest extends FlowTestCase
     public function test_spills_all_columns_when_aggregator_references_cannot_be_enumerated(): void
     {
         $groupBy = new GroupBy(ref('category'));
-        $groupBy->aggregate(sum(ref('amount'), exact: ref('flag')));
+        $groupBy->aggregate(new UnenumerableSum(ref('amount')));
 
         $storage = new SpyBucketsStorage(new MemoryBuckets());
 
         $result = GroupByContext::aggregate(
             $groupBy,
-            flow_context(config_builder()->groupBy(hash_group_by()->storage($storage))->build()),
-            rows(
+            flow_context(
+                config_builder()
+                    ->groupBy(hash_group_by()->storage($storage)->memoryLimit(Unit::fromBytes(1))->batchSize(1))
+                    ->build(),
+            ),
+            array_to_rows(
+                [['category' => 'a', 'amount' => 0.5, 'flag' => true]],
                 schema(str_schema('category'), float_schema('amount'), bool_schema('flag')),
-                row(['category' => 'a', 'amount' => 0.1, 'flag' => true]),
-                row(['category' => 'a', 'amount' => 0.2, 'flag' => true]),
+            ),
+            array_to_rows(
+                [['category' => 'a', 'amount' => 0.25, 'flag' => true]],
+                schema(str_schema('category'), float_schema('amount'), bool_schema('flag')),
             ),
         );
 
+        static::assertNotSame([], $storage->appendedRows());
+
         foreach ($storage->appendedRows() as $batches) {
             foreach ($batches as $batch) {
-                foreach ($batch as $spilledRow) {
-                    static::assertSame(['category', 'amount', 'flag'], $spilledRow->names());
+                foreach ($batch->toArray() as $spilledRow) {
+                    static::assertSame(['category', 'amount', 'flag'], array_keys($spilledRow));
                 }
             }
         }
 
-        static::assertSame(0.3, $result[0]->first()->get('amount_sum'));
+        static::assertSame(0.75, $result[0]->column('amount_sum')->value(0));
     }
 
     public function test_missing_aggregated_column_is_treated_as_null_in_strict_mode(): void
@@ -279,14 +299,13 @@ final class GroupByStepsTest extends FlowTestCase
         $result = GroupByContext::aggregate(
             $groupBy,
             $context,
-            rows(
+            array_to_rows(
+                [['category' => 'a', 'amount' => 10], ['category' => 'a']],
                 schema(str_schema('category'), int_schema('amount', nullable: true)),
-                row(['category' => 'a', 'amount' => 10]),
-                row(['category' => 'a']),
             ),
         );
 
-        static::assertSame(10.0, $result[0]->first()->get('amount_sum'));
+        static::assertSame(10.0, $result[0]->column('amount_sum')->value(0));
     }
 
     public function test_handles_empty_input(): void

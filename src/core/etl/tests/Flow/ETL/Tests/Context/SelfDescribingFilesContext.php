@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Context;
 
-use Flow\ETL\Extractor\SelfDescribingFile;
-use Flow\ETL\Extractor\SourceFile;
+use Flow\ETL\Extractor\File\SelfDescribingFile;
+use Flow\ETL\Extractor\File\SourceFile;
 use Flow\ETL\Schema;
 use Flow\ETL\Tests\Double\FakeSelfDescribingFile;
 use Generator;

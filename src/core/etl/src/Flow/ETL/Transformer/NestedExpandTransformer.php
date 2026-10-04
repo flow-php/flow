@@ -7,14 +7,12 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\BoundStep;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Transformer;
 use Throwable;
 
-use function count;
 use function Flow\Types\DSL\type_array;
 
 final readonly class NestedExpandTransformer implements Transformer
@@ -66,36 +64,48 @@ final readonly class NestedExpandTransformer implements Transformer
     {
         $columns = new DerivedColumns();
         $declared = $columns->declare($rows->schema(), $derived);
-        $name = $derived->entry()->name();
-        $mapped = [];
+        [$sources, $values] = $this->expansion->eval($rows, $context);
 
-        foreach ($rows->all() as $r) {
-            // @mago-ignore analysis:mixed-assignment
-            foreach ($this->expansion->eval($r, $context) as $value) {
-                $mapped[] = new Row([...$r->values(), $name => $columns->value($derived, $value, count($mapped))]);
-            }
-        }
+        $builder = $context->backend()->builder($derived);
+        $builder->appendMany($values);
 
-        return $columns->rows($declared, $this->output, $mapped);
+        return $columns->rows(
+            $rows->gather($sources),
+            $declared,
+            $this->output,
+            $derived->entry()->name(),
+            $builder->finish(),
+            $context->backend(),
+        );
     }
 
     private function unpack(Rows $rows, FlowContext $context, Schema $declared): Rows
     {
         $columns = new UnpackedColumns();
-        $unpacked = [];
+        $prefix = $this->entryName . '.';
+        [$sources, $payloads] = $this->expansion->eval($rows, $context);
+        $values = [];
 
-        foreach ($rows->all() as $r) {
+        foreach ($declared->definitions() as $name => $_) {
+            $values[$prefix . $name] = [];
+        }
+
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($payloads as $payload) {
             // @mago-ignore analysis:mixed-assignment
-            foreach ($this->expansion->eval($r, $context) as $payload) {
-                $unpacked[] = new Row($columns->values(
-                    $r->values(),
-                    $this->entryName . '.',
-                    $declared,
-                    type_array()->assert($payload),
-                ));
+            foreach ($columns->values($prefix, $declared, type_array()->assert($payload)) as $name => $value) {
+                $values[$name][] = $value;
             }
         }
 
-        return new Rows($this->output, ...$unpacked);
+        $unpacked = [];
+
+        foreach ($values as $name => $columnValues) {
+            $builder = $context->backend()->builder($this->output->get((string) $name));
+            $builder->appendMany($columnValues);
+            $unpacked[$name] = $builder->finish();
+        }
+
+        return $rows->gather($sources)->withColumns($this->output, $unpacked);
     }
 }

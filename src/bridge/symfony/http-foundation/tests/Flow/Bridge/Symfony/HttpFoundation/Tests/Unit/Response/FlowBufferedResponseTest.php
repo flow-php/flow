@@ -9,10 +9,9 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\Bridge\Symfony\HttpFoundation\http_json_output;
 use function Flow\Bridge\Symfony\HttpFoundation\http_stream_open;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 
 final class FlowBufferedResponseTest extends FlowTestCase
@@ -27,7 +26,10 @@ final class FlowBufferedResponseTest extends FlowTestCase
 
     public function test_response_is_buffered_only_once(): void
     {
-        $extractor = new CountingExtractor(schema(int_schema('id')), rows(schema(int_schema('id')), row(['id' => 1])));
+        $extractor = new CountingExtractor(
+            schema(int_schema('id')),
+            array_to_rows([['id' => 1]], schema(int_schema('id'))),
+        );
 
         $response = http_stream_open($extractor)->response(http_json_output());
 

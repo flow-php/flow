@@ -11,7 +11,6 @@ use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
-use Flow\Floe\FloeSerializer;
 use Flow\Serializer\Exception\SerializationException;
 use Flow\Serializer\Serializer;
 use JsonException;
@@ -27,8 +26,8 @@ final readonly class FilesystemCache implements Cache
 
     public function __construct(
         private Filesystem $filesystem,
+        private Serializer $serializer,
         ?Path $cacheDir = null,
-        private Serializer $serializer = new FloeSerializer(),
     ) {
         $this->cacheDir = $cacheDir ?? $this->filesystem->getSystemTmpDir();
     }

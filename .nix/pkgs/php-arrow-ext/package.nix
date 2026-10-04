@@ -5,7 +5,7 @@
   rustPlatform,
   clang,
   llvmPackages,
-  arrow-ext-version ? "dev",
+  arrow-ext-version ? "0.45.0-dev",
 }:
 
 let
@@ -58,7 +58,7 @@ let
     doCheck = false;
 
     meta = with lib; {
-      description = "Apache Arrow PHP extension powered by Rust";
+      description = "Apache Arrow and Parquet bindings for flow-php/parquet (Rust)";
       license = licenses.mit;
     };
   };

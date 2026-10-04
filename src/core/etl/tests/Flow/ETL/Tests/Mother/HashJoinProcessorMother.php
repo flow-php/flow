@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Mother;
 use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\Bucketing\BucketsStorage;
 use Flow\ETL\Bucketing\Storage\MemoryBuckets;
+use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\Executor;
 use Flow\ETL\Executor\PhysicalPlan;
 use Flow\ETL\Join\Expression;
@@ -18,7 +19,7 @@ use Flow\ETL\Tests\Double\SpyBucketsStorage;
 final class HashJoinProcessorMother
 {
     /**
-     * Non-resident in-memory storage - exercises the grace hash join path without disk I/O.
+     * Non-resident in-memory storage and a one-byte limit - exercises the grace hash join path without disk I/O.
      *
      * @param int<1, max> $bucketsCount
      * @param int<1, max> $batchSize
@@ -38,6 +39,7 @@ final class HashJoinProcessorMother
             $storage ?? new SpyBucketsStorage(new MemoryBuckets()),
             $bucketsCount,
             $batchSize,
+            Unit::fromBytes(1),
         );
     }
 
@@ -66,6 +68,7 @@ final class HashJoinProcessorMother
         BucketsStorage $storage,
         int $bucketsCount = 64,
         int $batchSize = 1000,
+        ?Unit $memoryLimit = null,
     ): HashJoinProcessor {
         return new HashJoinProcessor(
             $right,
@@ -75,6 +78,7 @@ final class HashJoinProcessorMother
             new Buckets($storage),
             new Buckets($storage),
             new NativePHPRandomValueGenerator(),
+            $memoryLimit ?? Unit::fromGb(1),
             $bucketsCount,
             $batchSize,
         );

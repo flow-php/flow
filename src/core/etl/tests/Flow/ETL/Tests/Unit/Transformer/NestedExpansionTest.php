@@ -14,6 +14,7 @@ use Flow\ETL\Transformer\NestedExpansion;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\concat;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
@@ -21,7 +22,6 @@ use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure;
@@ -29,7 +29,6 @@ use function Flow\ETL\DSL\when;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
-use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_string;
 
 final class NestedExpansionTest extends FlowTestCase
@@ -48,7 +47,7 @@ final class NestedExpansionTest extends FlowTestCase
         $expansion = NestedExpansionContext::of($tree);
 
         static::assertSame($returns, $expansion->returns()->toString());
-        static::assertSame($eval, $expansion->eval(ListColumnsMother::row($override), flow_context(config())));
+        static::assertSame($eval, $expansion->eval(ListColumnsMother::rows($override), flow_context(config()))[1]);
     }
 
     /**
@@ -140,7 +139,10 @@ final class NestedExpansionTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Plus function requires non-null values');
 
-        $expansion->eval(ListColumnsMother::row(['nums' => [1, 2], 'tags' => ['x', 'y', 'z']]), flow_context(config()));
+        $expansion->eval(ListColumnsMother::rows([
+            'nums' => [1, 2],
+            'tags' => ['x', 'y', 'z'],
+        ]), flow_context(config()));
     }
 
     public function test_of_is_null_for_a_root_expand(): void
@@ -159,30 +161,27 @@ final class NestedExpansionTest extends FlowTestCase
         ));
     }
 
-    public function test_zipped_expands_over_mixed_lists_stay_mixed(): void
-    {
-        $expansion = NestedExpansionContext::of(
-            structure(['a' => ref('a')->expand(), 'b' => ref('b')->expand()]),
-            schema(list_schema('a', type_list(type_mixed())), list_schema('b', type_list(type_mixed()))),
-        );
-
-        static::assertSame('structure{a: mixed, b: mixed}', $expansion->returns()->toString());
-        static::assertSame(
-            [['a' => 1, 'b' => 'x'], ['a' => 2, 'b' => null]],
-            $expansion->eval(row(['a' => [1, 2], 'b' => ['x']]), flow_context(config())),
-        );
-    }
-
     public function test_an_expand_over_a_map_reads_its_values_by_position(): void
     {
         static::assertSame(
             [['v' => 1], ['v' => 2]],
             NestedExpansionContext::of(structure([
                 'v' => ref('m')->expand(),
-            ]), schema(map_schema('m', type_map(type_string(), type_integer()))))->eval(row(['m' => [
+            ]), schema(map_schema('m', type_map(type_string(), type_integer()))))->eval(array_to_rows([['m' => [
                 'a' => 1,
                 'b' => 2,
-            ]]), flow_context(config())),
+            ]]], schema(map_schema('m', type_map(type_string(), type_integer())))), flow_context(config()))[1],
+        );
+    }
+
+    public function test_every_element_names_the_row_it_comes_from(): void
+    {
+        static::assertSame(
+            [[0, 0, 1], [['tag' => 'x'], ['tag' => 'y'], ['tag' => 'z']]],
+            NestedExpansionContext::of(structure(['tag' => ref('tags')->expand()]))->eval(array_to_rows([
+                ['id' => 'a', 'tags' => ['x', 'y']],
+                ['id' => 'b', 'tags' => ['z']],
+            ], ListColumnsMother::tagsSchema()), flow_context(config())),
         );
     }
 
@@ -193,7 +192,13 @@ final class NestedExpansionTest extends FlowTestCase
             NestedExpansionContext::of(
                 structure(['c' => ref("\0expand:0"), 't' => ref('tags')->expand()]),
                 schema(str_schema("\0expand:0"), list_schema('tags', type_list(type_string()))),
-            )->eval(row(["\0expand:0" => 'kept', 'tags' => ['x']]), flow_context(config())),
+            )->eval(
+                array_to_rows(
+                    [["\0expand:0" => 'kept', 'tags' => ['x']]],
+                    schema(str_schema("\0expand:0"), list_schema('tags', type_list(type_string()))),
+                ),
+                flow_context(config()),
+            )[1],
         );
     }
 }

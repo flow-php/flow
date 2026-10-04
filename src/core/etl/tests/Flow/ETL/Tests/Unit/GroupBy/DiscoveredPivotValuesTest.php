@@ -9,6 +9,7 @@ use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\GroupBy\DiscoveredPivotValues;
 use Flow\ETL\Tests\Double\EmptyExtractor;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Exception\InvalidTypeException;
 
 use function Flow\ETL\DSL\concat;
 use function Flow\ETL\DSL\df;
@@ -72,6 +73,36 @@ final class DiscoveredPivotValuesTest extends FlowTestCase
         (new DiscoveredPivotValues(1))->resolve(
             df()->read(from_array([['country' => 'PL'], ['country' => 'US']])),
             ref('country'),
+        );
+    }
+
+    public function test_numeric_looking_strings_are_ordered_by_bytes_as_sort_by_does(): void
+    {
+        static::assertSame(
+            ['10', '100', '9', 'B'],
+            (new DiscoveredPivotValues())->resolve(
+                df()->read(from_array([['code' => '9'], ['code' => '10'], ['code' => 'B'], ['code' => '100']])),
+                ref('code'),
+            )->all(),
+        );
+    }
+
+    public function test_only_string_and_integer_values_can_become_pivot_columns(): void
+    {
+        $this->expectException(InvalidTypeException::class);
+        $this->expectExceptionMessage('Expected type "integer|string", got "float".');
+
+        (new DiscoveredPivotValues())->resolve(df()->read(from_array([['code' => 1.5]])), ref('code'));
+    }
+
+    public function test_integers_are_ordered_numerically(): void
+    {
+        static::assertSame(
+            [9, 10, 100],
+            (new DiscoveredPivotValues())->resolve(
+                df()->read(from_array([['code' => 100], ['code' => 9], ['code' => 10]])),
+                ref('code'),
+            )->all(),
         );
     }
 

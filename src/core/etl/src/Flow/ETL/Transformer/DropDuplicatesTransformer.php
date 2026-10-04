@@ -51,28 +51,32 @@ final readonly class DropDuplicatesTransformer implements Transformer
         $context->telemetry()->transformationStarted($this);
 
         try {
-            $newRows = [];
+            $columns = [];
 
-            foreach ($rows as $row) {
+            foreach ($this->entries as $entry) {
+                $name = $entry instanceof Reference ? $entry->base() : $entry;
+
+                $columns[] = $rows->schema()->findDefinition($name) === null ? [] : $rows->column($name)->values();
+            }
+
+            $kept = [];
+
+            for ($i = 0, $count = $rows->count(); $i < $count; $i++) {
                 $values = [];
 
-                foreach ($this->entries as $entry) {
-                    try {
-                        $values[] = $row->get($entry);
-                    } catch (InvalidArgumentException) {
-                        $values[] = null;
-                    }
+                foreach ($columns as $column) {
+                    $values[] = $column[$i] ?? null;
                 }
 
                 $hash = $this->hashAlgorithm->hash(serialize($values));
 
                 if (!$this->deduplication->exists($hash)) {
-                    $newRows[] = $row;
+                    $kept[] = $i;
                     $this->deduplication->add($hash);
                 }
             }
 
-            $result = new Rows($rows->schema(), ...$newRows);
+            $result = $rows->gather($kept);
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

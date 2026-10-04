@@ -11,11 +11,10 @@ use Flow\ETL\Tests\CommandOutputNormalizer;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Stream\Mode;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\to_output;
@@ -35,11 +34,9 @@ final class StreamLoaderTest extends FlowTestCase
         ob_start();
 
         $loader->load(
-            rows(
+            array_to_rows(
+                [['id' => 1, 'name' => 'id_1'], ['id' => 2, 'name' => 'id_2'], ['id' => 3, 'name' => 'id_3']],
                 schema(int_schema('id'), str_schema('name')),
-                row(['id' => 1, 'name' => 'id_1']),
-                row(['id' => 2, 'name' => 'id_2']),
-                row(['id' => 3, 'name' => 'id_3']),
             ),
             flow_context(config()),
         );
@@ -60,11 +57,9 @@ final class StreamLoaderTest extends FlowTestCase
         $loader = to_stream('php://qweqweqw', 0);
 
         $loader->load(
-            rows(
+            array_to_rows(
+                [['id' => 1, 'name' => 'id_1'], ['id' => 2, 'name' => 'id_2'], ['id' => 3, 'name' => 'id_3']],
                 schema(int_schema('id'), str_schema('name')),
-                row(['id' => 1, 'name' => 'id_1']),
-                row(['id' => 2, 'name' => 'id_2']),
-                row(['id' => 3, 'name' => 'id_3']),
             ),
             flow_context(config()),
         );
@@ -77,11 +72,9 @@ final class StreamLoaderTest extends FlowTestCase
         ob_start();
 
         $loader->load(
-            rows(
+            array_to_rows(
+                [['id' => 1, 'name' => 'id_1'], ['id' => 2, 'name' => 'id_2'], ['id' => 3, 'name' => 'id_3']],
                 schema(int_schema('id'), str_schema('name')),
-                row(['id' => 1, 'name' => 'id_1']),
-                row(['id' => 2, 'name' => 'id_2']),
-                row(['id' => 3, 'name' => 'id_3']),
             ),
             flow_context(config()),
         );
@@ -112,11 +105,9 @@ final class StreamLoaderTest extends FlowTestCase
         ob_start();
 
         $loader->load(
-            rows(
+            array_to_rows(
+                [['id' => 1, 'name' => 'id_1'], ['id' => 2, 'name' => 'id_2'], ['id' => 3, 'name' => 'id_3']],
                 schema(int_schema('id'), str_schema('name')),
-                row(['id' => 1, 'name' => 'id_1']),
-                row(['id' => 2, 'name' => 'id_2']),
-                row(['id' => 3, 'name' => 'id_3']),
             ),
             flow_context(config()),
         );
@@ -142,11 +133,9 @@ final class StreamLoaderTest extends FlowTestCase
         ob_start();
 
         $loader->load(
-            rows(
+            array_to_rows(
+                [['id' => 1, 'name' => 'id_1'], ['id' => 2, 'name' => 'id_2'], ['id' => 3, 'name' => 'id_3']],
                 schema(int_schema('id'), str_schema('name')),
-                row(['id' => 1, 'name' => 'id_1']),
-                row(['id' => 2, 'name' => 'id_2']),
-                row(['id' => 3, 'name' => 'id_3']),
             ),
             flow_context(config()),
         );
@@ -168,11 +157,9 @@ final class StreamLoaderTest extends FlowTestCase
         ob_start();
 
         $loader->load(
-            rows(
+            array_to_rows(
+                [['id' => 1, 'name' => 'id_1'], ['id' => 2, 'name' => 'id_2'], ['id' => 3, 'name' => 'id_3']],
                 schema(int_schema('id'), str_schema('name')),
-                row(['id' => 1, 'name' => 'id_1']),
-                row(['id' => 2, 'name' => 'id_2']),
-                row(['id' => 3, 'name' => 'id_3']),
             ),
             flow_context(config()),
         );
@@ -192,11 +179,9 @@ final class StreamLoaderTest extends FlowTestCase
         ob_start();
 
         $loader->load(
-            rows(
+            array_to_rows(
+                [['id' => 1, 'name' => 'id_1'], ['id' => 2, 'name' => 'id_2'], ['id' => 3, 'name' => 'id_3']],
                 schema(int_schema('id'), str_schema('name')),
-                row(['id' => 1, 'name' => 'id_1']),
-                row(['id' => 2, 'name' => 'id_2']),
-                row(['id' => 3, 'name' => 'id_3']),
             ),
             flow_context(config()),
         );

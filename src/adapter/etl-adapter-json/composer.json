@@ -19,6 +19,9 @@
         "psr/http-client": "^1.0",
         "psr/http-factory": "^1.0"
     },
+    "conflict": {
+        "ext-flow_php": "<0.45"
+    },
     "config": {
         "optimize-autoloader": true,
         "sort-packages": true

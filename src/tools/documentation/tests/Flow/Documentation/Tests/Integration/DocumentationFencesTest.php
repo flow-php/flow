@@ -18,16 +18,17 @@ use PHPUnit\Framework\TestCase;
 
 use function array_filter;
 use function array_values;
+use function fnmatch;
 use function implode;
 use function sprintf;
 
 final class DocumentationFencesTest extends TestCase
 {
     /**
-     * documentation/upgrading.md is append-only history. Its "Before:" fences are deliberately
-     * written against APIs that no longer exist, so the whole file is excluded by name.
+     * documentation/upgrading*.md is append-only history. Its "Before:" fences are deliberately
+     * written against APIs that no longer exist, so every such file is excluded by pattern.
      */
-    private const EXCLUDED = 'documentation/upgrading.md';
+    private const EXCLUDED = 'documentation/upgrading*.md';
 
     public static function documentation_links(): Generator
     {
@@ -43,7 +44,7 @@ final class DocumentationFencesTest extends TestCase
     public static function documentation_pages(): Generator
     {
         foreach ((new MarkdownCorpusContext())->filesIn(['documentation']) as $file) {
-            if ($file === self::EXCLUDED) {
+            if (fnmatch(self::EXCLUDED, $file)) {
                 continue;
             }
 
@@ -56,7 +57,7 @@ final class DocumentationFencesTest extends TestCase
         $fences = new MarkdownFences();
 
         foreach ((new MarkdownCorpusContext())->filesIn(['documentation']) as $file) {
-            if ($file === self::EXCLUDED) {
+            if (fnmatch(self::EXCLUDED, $file)) {
                 continue;
             }
 

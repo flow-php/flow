@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Sort\ExternalSort;
 
+use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Tests\Double\ThrowWhenRowMatches;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
@@ -22,8 +23,9 @@ final class ExternalSortLifecycleTest extends FlowIntegrationTestCase
     public function test_a_clean_run_leaves_no_spilled_runs(): void
     {
         $output = [];
-        df(config_builder()->sort(external_sort()->runSize(1)->bucketsCount(2))->build())
+        df(config_builder()->sort(external_sort()->memoryLimit(Unit::fromBytes(1))->bucketsCount(2))->build())
             ->read(from_array($this->descendingIds()))
+            ->batchSize(1)
             ->sortBy([ref('id')])
             ->write(to_array($output))
             ->run();
@@ -37,8 +39,9 @@ final class ExternalSortLifecycleTest extends FlowIntegrationTestCase
         $output = [];
 
         try {
-            df(config_builder()->sort(external_sort()->runSize(1)->bucketsCount(2))->build())
+            df(config_builder()->sort(external_sort()->memoryLimit(Unit::fromBytes(1))->bucketsCount(2))->build())
                 ->read(from_array($this->descendingIds()))
+                ->batchSize(1)
                 ->with(new ThrowWhenRowMatches('id', 5, new RuntimeException('upstream failed mid-bucketing')))
                 ->sortBy([ref('id')])
                 ->write(to_array($output))

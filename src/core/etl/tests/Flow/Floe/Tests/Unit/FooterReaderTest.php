@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Unit;
 
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\Filesystem\Stream\MemorySourceStream;
 use Flow\Floe\Codec\NoopCodec;
 use Flow\Floe\Exception\FloeException;
@@ -15,9 +16,8 @@ use Flow\Floe\Tests\Double\UnsizedSourceStream;
 use PHPUnit\Framework\TestCase;
 
 use function chr;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
@@ -30,8 +30,8 @@ final class FooterReaderTest extends TestCase
     {
         $fs = memory_filesystem();
         $path = path('memory://footer.floe');
-        $data = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
-        $writer = new FloeWriter($fs, $data->schema());
+        $data = array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
+        $writer = new FloeWriter($fs, $data->schema(), new AdaptiveBackend());
         $writer->create($path);
         $writer->write($data);
         $writer->close();
@@ -47,7 +47,7 @@ final class FooterReaderTest extends TestCase
     {
         $fs = memory_filesystem();
         $path = path('memory://unsized.floe');
-        $writer = new FloeWriter($fs, schema());
+        $writer = new FloeWriter($fs, schema(), new AdaptiveBackend());
         $writer->create($path);
         $writer->close();
 
@@ -95,8 +95,8 @@ final class FooterReaderTest extends TestCase
     {
         $fs = memory_filesystem();
         $path = path('memory://close-ok.floe');
-        $data = rows(schema(int_schema('id')), row(['id' => 1]));
-        $writer = new FloeWriter($fs, $data->schema());
+        $data = array_to_rows([['id' => 1]], schema(int_schema('id')));
+        $writer = new FloeWriter($fs, $data->schema(), new AdaptiveBackend());
         $writer->create($path);
         $writer->write($data);
         $writer->close();

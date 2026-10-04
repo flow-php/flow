@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\regex_match_all;
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
 
 final class RegexMatchAllTest extends FlowTestCase
 {
@@ -21,7 +22,7 @@ final class RegexMatchAllTest extends FlowTestCase
 
         $pregMatchAll = regex_match_all(lit('/\d+/'), lit('12 apples and 45 oranges'), lit('invalid'));
 
-        $pregMatchAll->eval(row([]), flow_context());
+        (new FunctionContext(flow_context()))->eval($pregMatchAll, [], schema());
     }
 
     public function test_regex_match_all_expression_on_invalid_pattern(): void
@@ -31,7 +32,7 @@ final class RegexMatchAllTest extends FlowTestCase
 
         $pregMatchAll = regex_match_all(lit(1), lit('12 apples and 45 oranges'));
 
-        $pregMatchAll->eval(row([]), flow_context());
+        (new FunctionContext(flow_context()))->eval($pregMatchAll, [], schema());
     }
 
     public function test_regex_match_all_expression_on_invalid_subject(): void
@@ -41,14 +42,14 @@ final class RegexMatchAllTest extends FlowTestCase
 
         $pregMatchAll = regex_match_all(lit('/\d+/'), lit(2));
 
-        $pregMatchAll->eval(row([]), flow_context());
+        (new FunctionContext(flow_context()))->eval($pregMatchAll, [], schema());
     }
 
     public function test_regex_match_all_expression_on_valid_strings(): void
     {
         $pregMatchAll = regex_match_all(lit('/\d+/'), lit('12 apples and 45 oranges'));
 
-        static::assertTrue($pregMatchAll->eval(row([]), flow_context()));
+        static::assertTrue((new FunctionContext(flow_context()))->eval($pregMatchAll, [], schema()));
     }
 
     public function test_regex_match_all_expression_on_valid_strings_with_flags(): void
@@ -59,6 +60,6 @@ final class RegexMatchAllTest extends FlowTestCase
             lit(PREG_PATTERN_ORDER),
         );
 
-        static::assertTrue($pregMatchAll->eval(row([]), flow_context()));
+        static::assertTrue((new FunctionContext(flow_context()))->eval($pregMatchAll, [], schema()));
     }
 }

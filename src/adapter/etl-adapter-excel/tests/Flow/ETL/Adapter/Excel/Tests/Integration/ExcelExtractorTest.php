@@ -15,11 +15,11 @@ use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\Row\AdaptiveRowHydrator;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\Double\KeepPaths;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\Double\UnsizedFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
@@ -29,7 +29,9 @@ use PHPUnit\Framework\Attributes\TestWith;
 use function array_keys;
 use function Flow\ETL\Adapter\Excel\DSL\from_excel;
 use function Flow\ETL\Adapter\Excel\DSL\is_valid_excel_sheet_name;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
@@ -38,14 +40,13 @@ use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\infer_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_datetime;
+use function iterator_to_array;
 use function max;
 
 final class ExcelExtractorTest extends FlowTestCase
@@ -273,14 +274,13 @@ final class ExcelExtractorTest extends FlowTestCase
     public function test_is_valid_excel_sheet_name_function(): void
     {
         $result = df()
-            ->read(from_rows(rows(
-                schema(string_schema('sheet')),
-                row(['sheet' => 'ValidSheet']),
-                row(['sheet' => 'Invalid/Sheet']),
-                row(['sheet' => 'Sheet*Name']),
-                row(['sheet' => 'This is a very long sheet name that exceeds the 31 character limit']),
-                row(['sheet' => 'Normal']),
-            )))
+            ->read(from_rows(array_to_rows([
+                ['sheet' => 'ValidSheet'],
+                ['sheet' => 'Invalid/Sheet'],
+                ['sheet' => 'Sheet*Name'],
+                ['sheet' => 'This is a very long sheet name that exceeds the 31 character limit'],
+                ['sheet' => 'Normal'],
+            ], schema(string_schema('sheet')))))
             ->withEntry('is_valid', is_valid_excel_sheet_name(ref('sheet')))
             ->fetch()
             ->toArray();
@@ -348,8 +348,8 @@ final class ExcelExtractorTest extends FlowTestCase
             static::assertEquals($extractor->schema(), $rows->schema());
             $sizes[] = $rows->count();
 
-            foreach ($rows as $row) {
-                $emails[] = $row->get('email');
+            foreach ($rows->toArray() as $row) {
+                $emails[] = $row['email'];
             }
         }
 
@@ -548,30 +548,6 @@ final class ExcelExtractorTest extends FlowTestCase
         $extractor->schema();
 
         static::assertCount(10, df()->extract($extractor)->fetch()->toArray());
-    }
-
-    public function test_the_same_schema_on_both_hydrators(): void
-    {
-        $extractor = from_excel(ExcelFixtureContext::file('fixture.xlsx'));
-
-        $default = df()
-            ->extract(from_excel(ExcelFixtureContext::file('fixture.xlsx')))
-            ->fetch()
-            ->toArray();
-        $adaptive = [];
-
-        foreach ($extractor->extract(
-            flow_context(Config::builder()->hydrator(new AdaptiveRowHydrator())->build()),
-        ) as $rows) {
-            static::assertEquals($extractor->schema(), $rows->schema());
-
-            foreach ($rows->toArray() as $row) {
-                $adaptive[] = $row;
-            }
-        }
-
-        static::assertCount(10, $adaptive);
-        static::assertSame($default, $adaptive);
     }
 
     public function test_the_sample_leaves_no_shared_strings_temp_folder(): void
@@ -892,15 +868,17 @@ final class ExcelExtractorTest extends FlowTestCase
         static::assertSame(1, $filesystem->listCalls);
     }
 
-    public function test_a_filtered_extract_declares_unknown_rows(): void
+    public function test_a_filtered_extract_infers_over_every_listed_file(): void
     {
-        $extractor = from_excel(ExcelFixtureContext::path('sniff/*'));
+        $filtered = from_excel(ExcelFixtureContext::path('sniff/*'));
+        $whole = from_excel(ExcelFixtureContext::path('sniff/*'));
 
-        iterator_to_array($extractor->extract(flow_context(), null, new KeepPaths([ExcelFixtureContext::path(
+        iterator_to_array($filtered->extract(flow_context(), null, new KeepPaths([ExcelFixtureContext::path(
             'sniff/a',
         )])), false);
+        $whole->schema();
 
-        static::assertEquals(Cardinality::unknown(), $extractor->statistics()->rows);
+        static::assertEquals($whole->statistics()->rows, $filtered->statistics()->rows);
     }
 
     public function test_date_cell_in_a_zoned_column_is_converted(): void
@@ -908,13 +886,16 @@ final class ExcelExtractorTest extends FlowTestCase
         static::assertSame(
             '2024-01-03 11:30:00 Europe/Warsaw',
             type_datetime()
-                ->assert(df()
-                    ->extract(
-                        from_excel(ExcelFixtureContext::file('dates_mixed.xlsx'))
-                            ->withSchema(schema(datetime_schema('d', zone: 'Europe/Warsaw'))),
-                    )
-                    ->fetch()
-                    ->all()[2]->get('d'))
+                ->assert(
+                    df()
+                        ->extract(
+                            from_excel(ExcelFixtureContext::file('dates_mixed.xlsx'))
+                                ->withSchema(schema(datetime_schema('d', zone: 'Europe/Warsaw'))),
+                        )
+                        ->fetch()
+                        ->column('d')
+                        ->value(2),
+                )
                 ->format('Y-m-d H:i:s e'),
         );
     }
@@ -928,23 +909,53 @@ final class ExcelExtractorTest extends FlowTestCase
             static::assertSame(
                 '2024-01-03 10:30:00 UTC',
                 type_datetime()
-                    ->assert(df()
-                        ->extract(from_excel(ExcelFixtureContext::file('dates_mixed.xlsx')))
-                        ->fetch()
-                        ->all()[2]->get('d'))
+                    ->assert(
+                        df()
+                            ->extract(from_excel(ExcelFixtureContext::file('dates_mixed.xlsx')))
+                            ->fetch()
+                            ->column('d')
+                            ->value(2),
+                    )
                     ->format('Y-m-d H:i:s e'),
             );
             static::assertSame(
                 '2024-01-03 10:30:00 UTC',
                 type_datetime()
-                    ->assert(df()
-                        ->extract(from_excel(ExcelFixtureContext::file('dates_mixed.ods')))
-                        ->fetch()
-                        ->all()[1]->get('d'))
+                    ->assert(
+                        df()
+                            ->extract(from_excel(ExcelFixtureContext::file('dates_mixed.ods')))
+                            ->fetch()
+                            ->column('d')
+                            ->value(1),
+                    )
                     ->format('Y-m-d H:i:s e'),
             );
         } finally {
             date_default_timezone_set($previous);
         }
+    }
+
+    public function test_extract_builds_through_the_config_backend(): void
+    {
+        $backend = new SpyBackend();
+
+        iterator_to_array(
+            from_excel(__DIR__ . '/../Fixtures/fixture.xlsx')->extract(
+                flow_context(config_builder()->backend($backend)->build()),
+            ),
+            false,
+        );
+
+        static::assertGreaterThanOrEqual(1, $backend->builders());
+    }
+
+    public function test_one_extractor_read_twice_interleaved_gives_each_read_every_row(): void
+    {
+        $extractor = from_excel(ExcelFixtureContext::path('sniff/*'))->withBatchSize(1);
+        $extractor->schema();
+        [$first, $second] = ExtractedRows::interleaved($extractor);
+
+        static::assertGreaterThan(0, $first->count());
+        static::assertSame($first->toArray(), $second->toArray());
     }
 }

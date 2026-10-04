@@ -10,6 +10,7 @@ use Flow\Types\Tests\Unit\Type\Fixtures\NumericStringableObject;
 use Flow\Types\Tests\Unit\Type\Fixtures\StringableObject;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\Types\DSL\type_from_array;
@@ -153,5 +154,15 @@ final class NumericStringTypeTest extends TestCase
     public function test_to_string(): void
     {
         static::assertSame('numeric-string', type_numeric_string()->toString());
+    }
+
+    #[TestWith([NAN])]
+    #[TestWith([INF])]
+    #[TestWith([-INF])]
+    public function test_a_non_finite_float_is_refused(float $value): void
+    {
+        $this->expectException(CastingException::class);
+
+        type_numeric_string()->cast($value);
     }
 }

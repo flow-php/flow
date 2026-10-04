@@ -19,6 +19,7 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Generator;
 
@@ -96,8 +97,6 @@ final class DbalQueryExtractor implements BatchableExtractor, Extractor, Rewinda
     public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         $schema = $this->schema();
-        $hydrator = $context->hydrator();
-        $encoder = new DbalEncoder();
         $yielded = 0;
 
         foreach ($this->parametersSet->all() as $parameters) {
@@ -105,38 +104,20 @@ final class DbalQueryExtractor implements BatchableExtractor, Extractor, Rewinda
                 return;
             }
 
-            $rawBatch = [];
+            $all = (new RowsBuilder($schema, $context->backend()))
+                ->appendRows($this->connection->fetchAllAssociative($this->query, $parameters, $this->types))
+                ->finish();
 
-            foreach ($this->connection->fetchAllAssociative($this->query, $parameters, $this->types) as $row) {
-                $rawBatch[] = $row;
-            }
+            foreach ($all->chunks($this->batchSize) as $batch) {
+                $yielded += $batch->count();
 
-            $hydrated = $hydrator->hydrate($encoder->decode($rawBatch), $schema);
-            $buffer = [];
-
-            foreach ($hydrated as $hydratedRow) {
-                $buffer[] = $hydratedRow;
-                $yielded++;
-
-                if (count($buffer) === $this->batchSize) {
-                    $signal = yield Rows::trusted($hydrated->schema(), $buffer);
-
-                    if ($signal === Signal::STOP) {
-                        return;
-                    }
-
-                    $buffer = [];
-
-                    if ($limit !== null && $yielded >= $limit) {
-                        return;
-                    }
-                }
-            }
-
-            if ($buffer !== []) {
-                $signal = yield Rows::trusted($hydrated->schema(), $buffer);
+                $signal = yield $batch;
 
                 if ($signal === Signal::STOP) {
+                    return;
+                }
+
+                if ($batch->count() === $this->batchSize && $limit !== null && $yielded >= $limit) {
                     return;
                 }
             }

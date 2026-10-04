@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function Flow\ETL\DSL\lit;
@@ -49,14 +53,24 @@ final class BinaryLength implements ScalarFunction
         return type_integer();
     }
 
-    public function eval(Row $row, FlowContext $context): ?int
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $value = (new Parameter($this->value))->asString($row, $context);
+        $values = (new Parameter($this->value))->asStrings($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($value === null) {
-            throw new InvalidArgumentException('BinaryLength function requires non-null value');
+        try {
+            foreach ($values as $i => $value) {
+                if ($value === null) {
+                    throw new InvalidArgumentException('BinaryLength function requires non-null value');
+                }
+
+                $results[] = b($value)->length();
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return b($value)->length();
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

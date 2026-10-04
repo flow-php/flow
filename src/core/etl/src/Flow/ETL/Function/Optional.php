@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Exception;
+use Flow\ETL\Column\Column;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Function\Evaluation\TolerantEvaluation;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
+use function array_key_exists;
 use function Flow\Types\DSL\type_optional;
 
 final class Optional implements ScalarFunction
@@ -44,12 +47,15 @@ final class Optional implements ScalarFunction
         return type_optional($this->function->returns());
     }
 
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        try {
-            return (new Parameter($this->function))->eval($row, $context);
-        } catch (Exception) {
-            return null;
+        $evaluated = (new TolerantEvaluation())->evaluate($this->function, $rows, $context);
+        $results = [];
+
+        for ($i = 0, $count = $rows->count(); $i < $count; $i++) {
+            $results[] = array_key_exists($i, $evaluated['failed']) ? null : $evaluated['values'][$i];
         }
+
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

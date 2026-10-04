@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function count;
@@ -72,29 +76,45 @@ final class RegexReplace implements ScalarFunction
         return type_string();
     }
 
-    public function eval(Row $row, FlowContext $context): ?string
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $pattern = (new Parameter($this->pattern))->asString($row, $context);
-        $replacement = (new Parameter($this->replacement))->asString($row, $context);
-        $subject = (new Parameter($this->subject))->asString($row, $context);
-        $limit = $this->limit !== null ? (new Parameter($this->limit))->asInt($row, $context) : -1;
+        $patterns = (new Parameter($this->pattern))->asStrings($rows, $context);
+        $replacements = (new Parameter($this->replacement))->asStrings($rows, $context);
+        $subjects = (new Parameter($this->subject))->asStrings($rows, $context);
+        $limits = (new Parameter($this->limit))->asInts($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($pattern === null) {
-            throw new InvalidArgumentException('RegexReplace requires non-null pattern');
+        try {
+            foreach ($patterns as $i => $pattern) {
+                $replacement = $replacements[$i];
+                $subject = $subjects[$i];
+                $limit = $limits[$i];
+
+                $limit = $this->limit !== null ? $limit : -1;
+
+                if ($pattern === null) {
+                    throw new InvalidArgumentException('RegexReplace requires non-null pattern');
+                }
+
+                if ($replacement === null) {
+                    throw new InvalidArgumentException('RegexReplace requires non-null replacement');
+                }
+
+                if ($subject === null) {
+                    throw new InvalidArgumentException('RegexReplace requires non-null subject');
+                }
+
+                if ($limit === null) {
+                    throw new InvalidArgumentException('RegexReplace requires non-null limit');
+                }
+
+                $results[] = preg_replace($pattern, $replacement, $subject, $limit);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        if ($replacement === null) {
-            throw new InvalidArgumentException('RegexReplace requires non-null replacement');
-        }
-
-        if ($subject === null) {
-            throw new InvalidArgumentException('RegexReplace requires non-null subject');
-        }
-
-        if ($limit === null) {
-            throw new InvalidArgumentException('RegexReplace requires non-null limit');
-        }
-
-        return preg_replace($pattern, $replacement, $subject, $limit);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

@@ -58,10 +58,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
         $statusForUri = $fs->status(path(__DIR__ . '/../var/some_path_to/*.txt'));
         static::assertNotNull($statusForUri);
-        static::assertSame(
-            'file://' . ltrim(__DIR__, '/') . '/../var/some_path_to/file.txt',
-            $statusForUri->path->uri(),
-        );
+        static::assertSame('file://' . __DIR__ . '/../var/some_path_to/file.txt', $statusForUri->path->uri());
 
         $fs->rm(path(__DIR__ . '/../var/some_path_to'));
     }
@@ -98,7 +95,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $fs = native_local_filesystem();
 
-        static::assertSame('file://' . ltrim(sys_get_temp_dir(), '/'), $fs->getSystemTmpDir()->uri());
+        static::assertSame('file://' . sys_get_temp_dir(), $fs->getSystemTmpDir()->uri());
     }
 
     public function test_unix_absolute_path_behavior(): void

@@ -1,0 +1,15 @@
+[package]
+name = "flow-batch-frame"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+
+[dependencies]
+arrow-array = "59"
+arrow-buffer = "59"
+arrow-data = "59"
+arrow-schema = "59"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

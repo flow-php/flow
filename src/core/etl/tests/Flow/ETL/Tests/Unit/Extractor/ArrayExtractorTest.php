@@ -7,11 +7,11 @@ namespace Flow\ETL\Tests\Unit\Extractor;
 use ArrayIterator;
 use ArrayObject;
 use Flow\ETL\Cardinality;
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Extractor\ArrayExtractor;
 use Flow\ETL\Extractor\Statistics;
-use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Tests\Double\FixedTmpDirFilesystem;
 use Flow\ETL\Tests\Double\FreshRowsAggregate;
@@ -280,10 +280,7 @@ final class ArrayExtractorTest extends FlowTestCase
     public function test_positional_rows_are_named_like_the_hydrator_names_them(array $dataset, array $expected): void
     {
         static::assertSame($expected, array_keys(from_array($dataset)->schema()->definitions()));
-        static::assertSame(
-            $expected,
-            array_keys(data_frame()->read(from_array($dataset))->fetch()->first()->toArray()),
-        );
+        static::assertSame($expected, array_keys(data_frame()->read(from_array($dataset))->fetch()->toArray()[0]));
     }
 
     public function test_a_bounded_sample_types_only_its_prefix(): void
@@ -310,7 +307,7 @@ final class ArrayExtractorTest extends FlowTestCase
         iterator_to_array(
             from_array($dataset)
                 ->inferSchema(infer_schema()->sampleSize(3))
-                ->extract(execution_context(config_builder()->hydrator(new PhpRowHydrator())->build())),
+                ->extract(execution_context(config_builder()->backend(new PhpBackend())->build())),
         );
     }
 

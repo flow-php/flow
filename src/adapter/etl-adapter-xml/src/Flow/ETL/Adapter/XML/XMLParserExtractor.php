@@ -8,15 +8,16 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
-use Flow\ETL\Extractor\FileExtractor;
-use Flow\ETL\Extractor\FileReading;
-use Flow\ETL\Extractor\ListedFiles;
-use Flow\ETL\Extractor\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\File\FileExtractor;
+use Flow\ETL\Extractor\File\FileReading;
+use Flow\ETL\Extractor\File\FileReadLoop;
+use Flow\ETL\Extractor\File\ListedFiles;
+use Flow\ETL\Extractor\File\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\File\ReadWindow;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Filesystem;
@@ -26,9 +27,10 @@ use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Generator;
 
-use function count;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\xml_schema;
+use function implode;
+use function iterator_to_array;
 use function sprintf;
 
 final class XMLParserExtractor implements
@@ -96,66 +98,18 @@ final class XMLParserExtractor implements
      */
     public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
     {
-        $hydrator = $context->hydrator();
-        $batchSize = $this->batchSize();
-        $yielded = 0;
-        $nodes = new XMLNodes($this->xmlNodePath);
-
-        $baseSchema = $this->schema ?? schema(xml_schema('node'));
-
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
-        $schema = $fileColumns->declare($baseSchema);
-        $body = $fileColumns->withoutTail($schema);
 
-        foreach ($this->sourceFiles($this->filesystem, $this->path, $pathFilter) as $source) {
-            $stream = $this->filesystem->readFrom($source->path);
-
-            try {
-                $constants = $fileColumns->forFile($source, $schema);
-
-                $batch = [];
-
-                foreach ($nodes->of($stream, $this->bufferSize) as $node) {
-                    $batch[] = new RawRowValues(['node' => $node]);
-
-                    if (count($batch) >= $batchSize) {
-                        $hydrated = $constants->fillRows($hydrator->hydrate($batch, $body), $schema);
-
-                        $batch = [];
-
-                        $yielded += $hydrated->count();
-
-                        $signal = yield $hydrated;
-
-                        if ($signal === Signal::STOP) {
-                            return;
-                        }
-
-                        if ($limit !== null && $yielded >= $limit) {
-                            return;
-                        }
-                    }
-                }
-
-                if ($batch !== []) {
-                    $hydrated = $constants->fillRows($hydrator->hydrate($batch, $body), $schema);
-
-                    $yielded += $hydrated->count();
-
-                    $signal = yield $hydrated;
-
-                    if ($signal === Signal::STOP) {
-                        return;
-                    }
-
-                    if ($limit !== null && $yielded >= $limit) {
-                        return;
-                    }
-                }
-            } finally {
-                $stream->close();
-            }
-        }
+        yield from (new FileReadLoop(
+            $fileColumns,
+            $fileColumns->declare($this->schema ?? schema(xml_schema('node'))),
+        ))->read(
+            iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $pathFilter), false),
+            new XMLFileBatches($this->filesystem, $this->xmlNodePath, $this->bufferSize),
+            $this->batchSize(),
+            $context->backend(),
+            new ReadWindow(limit: $limit),
+        );
     }
 
     public function schema(): Schema
@@ -190,8 +144,18 @@ final class XMLParserExtractor implements
         return $this;
     }
 
+    /**
+     * @throws InvalidArgumentException when $schema has no "node" column, the one the matched elements are read into
+     */
     public function withSchema(Schema $schema): static
     {
+        if ($schema->findDefinition('node') === null) {
+            throw new InvalidArgumentException(sprintf('from_xml() reads every matched element into the "node" column, the schema declares no such column: %s', implode(
+                ', ',
+                $schema->references()->names(),
+            )));
+        }
+
         $this->schema = $schema;
 
         return $this;

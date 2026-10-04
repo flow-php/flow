@@ -16,6 +16,7 @@ use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 use Throwable;
 
+use function array_keys;
 use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_equals;
@@ -42,16 +43,7 @@ final readonly class ScalarFunctionFilterTransformer implements Transformer
 
         try {
             $function = $this->resolved ?? $this->resolve($rows->schema());
-            $kept = [];
-
-            foreach ($rows->all() as $r) {
-                // @mago-ignore analysis:mixed-operand
-                if ((bool) $function->eval($r, $context)) {
-                    $kept[] = $r;
-                }
-            }
-
-            $result = Rows::trusted($rows->schema(), $kept);
+            $result = $rows->gather(array_keys($function->eval($rows, $context)->physicals(), true, true));
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

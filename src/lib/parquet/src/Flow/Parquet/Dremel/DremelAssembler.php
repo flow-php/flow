@@ -360,12 +360,15 @@ final readonly class DremelAssembler
         }
 
         if (!$repeated) {
+            // a REQUIRED struct adds no definition level: a child null below it leaves the struct present
+            $definitionLevel = $column->repetitions()->maxDefinitionLevel();
+
             foreach ($iterator as $iteration) {
                 $structure = [];
 
                 // @mago-ignore analysis:mixed-assignment
                 foreach ($iteration as $propertyName => $propertyValue) {
-                    if ($propertyValue instanceof NullLevel && $propertyValue->level < $depth) {
+                    if ($propertyValue instanceof NullLevel && $propertyValue->level < $definitionLevel) {
                         yield new NullLevel($propertyValue->level);
 
                         continue 2;

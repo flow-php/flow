@@ -4,80 +4,73 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
-use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\Serializer\Exception\SerializationException;
 use Flow\Serializer\Serializer;
 
-use function array_key_exists;
 use function Flow\Serializer\DSL\unserialize_from_string;
 use function is_string;
 
-/**
- * A payload that does not decode still has to produce the declared shape, so every branch that gives
- * up answers with the declared columns as nulls - the rule from_json follows.
- */
 final readonly class SerializedPayloadDecoder
 {
     /**
-     * @param array<string, string> $declared output column name => column name in the payload
-     * @param array<string, null> $nulls
+     * @param list<string> $names the payload columns to read
      */
     private function __construct(
         private Reference $source,
         private Serializer $serializer,
-        private array $declared,
-        private array $nulls,
+        private array $names,
+        private string $prefix,
+        private Rows $nothing,
     ) {}
 
     /**
-     * @param array<string, string> $declared output column name => column name in the payload
+     * @param list<string> $names the payload columns to read, each landing under $prefix . name
      */
-    public static function of(Reference $source, Serializer $serializer, array $declared): self
+    public static function of(Reference $source, Serializer $serializer, array $names, string $prefix = ''): self
     {
-        $nulls = [];
-
-        foreach ($declared as $name => $_) {
-            $nulls[$name] = null;
-        }
-
-        return new self($source, $serializer, $declared, $nulls);
+        return new self($source, $serializer, $names, $prefix, Rows::fromColumns(new Schema(), [], 1));
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    public function decode(Row $row): array
+    public function decode(Rows $rows, int $index): Rows
     {
-        if (!$row->has($this->source->name())) {
-            return $this->nulls;
+        if ($rows->schema()->findDefinition($this->source->name()) === null) {
+            return $this->nothing;
         }
 
-        $serialized = $row->get($this->source->name());
+        // @mago-ignore analysis:mixed-assignment
+        $serialized = $rows->column($this->source->name())->value($index);
 
         if (!is_string($serialized)) {
-            return $this->nulls;
+            return $this->nothing;
         }
 
         try {
             $decoded = unserialize_from_string($this->serializer, $serialized);
         } catch (SerializationException) {
-            return $this->nulls;
+            return $this->nothing;
         }
 
         if ($decoded->count() !== 1) {
-            return $this->nulls;
+            return $this->nothing;
         }
 
-        $payload = $decoded->first()->values();
-        $values = $this->nulls;
+        $definitions = [];
+        $columns = [];
 
-        foreach ($this->declared as $name => $payloadName) {
-            if (array_key_exists($payloadName, $payload)) {
-                $values[$name] = $payload[$payloadName];
+        foreach ($this->names as $name) {
+            $definition = $decoded->schema()->findDefinition($name);
+
+            if ($definition === null) {
+                continue;
             }
+
+            $definitions[] = $definition->rename($this->prefix . $name);
+            $columns[$this->prefix . $name] = $decoded->column($name);
         }
 
-        return $values;
+        return Rows::fromColumns(new Schema(...$definitions), $columns, 1);
     }
 }

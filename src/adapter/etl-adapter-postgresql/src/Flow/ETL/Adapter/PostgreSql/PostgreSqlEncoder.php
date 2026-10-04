@@ -4,31 +4,60 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql;
 
-use Flow\ETL\Row\Encoder;
-use Flow\ETL\Row\RawRowValues;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Column\TextValues;
+use Flow\ETL\Rows;
+use Flow\Types\Type;
 
-/**
- * @implements Encoder<array<string, mixed>>
- */
-final class PostgreSqlEncoder implements Encoder
+final readonly class PostgreSqlEncoder
 {
-    public function decode(array $batch): array
+    public function __construct(
+        private TextValues $text = new TextValues(),
+    ) {}
+
+    /**
+     * @param Type<mixed> $type
+     *
+     * @return list<mixed>
+     */
+    public function column(Type $type, Column $column): array
     {
-        $decoded = [];
-
-        foreach ($batch as $values) {
-            $decoded[] = new RawRowValues($values);
-        }
-
-        return $decoded;
+        return $this->text->bindable($type, $column);
     }
 
-    public function encode(array $batch): array
+    /**
+     * Every column's values, in schema order, as `column()` gives them.
+     *
+     * @return array<string, list<mixed>>
+     */
+    public function columns(Rows $rows): array
     {
+        $columns = [];
+
+        foreach ($rows->schema()->definitions() as $definition) {
+            $name = $definition->entry()->name();
+            $columns[$name] = $this->column($definition->type(), $rows->column($name));
+        }
+
+        return $columns;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function encode(Rows $rows): array
+    {
+        $columns = $this->columns($rows);
         $encoded = [];
 
-        foreach ($batch as $rowValues) {
-            $encoded[] = $rowValues->values;
+        for ($i = 0, $count = $rows->count(); $i < $count; $i++) {
+            $row = [];
+
+            foreach ($columns as $name => $column) {
+                $row[$name] = $column[$i];
+            }
+
+            $encoded[] = $row;
         }
 
         return $encoded;

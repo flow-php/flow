@@ -77,9 +77,9 @@ final class ReportsController extends AbstractController
 ## Available Outputs
 
 - `Flow\Bridge\Symfony\HttpFoundation\Output\CSVOutput` - `http_csv_output()` - converts dataset to CSV format.
-- `Flow\Bridge\Symfony\HttpFoundation\Output\JSONOutput` - `http_json_output()` -converts dataset to JSON format.
-- `Flow\Bridge\Symfony\HttpFoundation\Output\ParquetOutput` - `http_parquet_output()` -converts dataset to Parquet format.
-- `Flow\Bridge\Symfony\HttpFoundation\Output\XMLOutput` - `http_xml_output()` -converts dataset to XML format.
+- `Flow\Bridge\Symfony\HttpFoundation\Output\JsonOutput` - `http_json_output()` - converts dataset to JSON format.
+- `Flow\Bridge\Symfony\HttpFoundation\Output\ParquetOutput` - `http_parquet_output()` - converts dataset to Parquet format.
+- `Flow\Bridge\Symfony\HttpFoundation\Output\XMLOutput` - `http_xml_output()` - converts dataset to XML format.
 
 ## Modify output on the fly
 
@@ -87,10 +87,16 @@ Sometimes we need to modify the output on the fly.
 To do that, FlowStreamedResponse allows passing a Transformation that will be applied on the dataset.
 
 ```php
+<?php
+
+use Flow\ETL\{DataFrame, Transformation};
+
+use function Flow\ETL\DSL\lit;
+
 new class implements Transformation {
     public function transform(DataFrame $dataFrame): DataFrame
     {
-        return $dataFrame->withColumn('time', \time());
+        return $dataFrame->withEntry('time', lit(\time()));
     }
 };
 ```

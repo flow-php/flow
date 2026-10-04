@@ -9,9 +9,9 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Output\BufferedOutput;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 
@@ -21,10 +21,11 @@ final class ProgressBarLoaderTest extends TestCase
     {
         $progressBar = new ProgressBar(new BufferedOutput());
 
-        (new ProgressBarLoader($progressBar))->load(
-            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3])),
-            flow_context(),
-        );
+        (new ProgressBarLoader($progressBar))->load(array_to_rows([
+            ['id' => 1],
+            ['id' => 2],
+            ['id' => 3],
+        ], schema(int_schema('id'))), flow_context());
 
         static::assertSame(3, $progressBar->getProgress());
     }
@@ -35,8 +36,8 @@ final class ProgressBarLoaderTest extends TestCase
         $loader = new ProgressBarLoader($progressBar);
         $context = flow_context();
 
-        $loader->load(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])), $context);
-        $loader->load(rows(schema(int_schema('id')), row(['id' => 3])), $context);
+        $loader->load(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))), $context);
+        $loader->load(array_to_rows([['id' => 3]], schema(int_schema('id'))), $context);
 
         static::assertSame(3, $progressBar->getProgress());
     }

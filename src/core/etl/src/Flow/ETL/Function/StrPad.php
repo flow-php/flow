@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function Flow\ETL\DSL\lit;
@@ -59,21 +63,35 @@ final class StrPad implements ScalarFunction
         return type_string();
     }
 
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $value = (new Parameter($this->value))->asString($row, $context);
-        $length = (new Parameter($this->length))->asInt($row, $context);
-        $padString = (new Parameter($this->padString))->asString($row, $context);
-        $type = (new Parameter($this->type))->asInt($row, $context);
+        $values = (new Parameter($this->value))->asStrings($rows, $context);
+        $lengths = (new Parameter($this->length))->asInts($rows, $context);
+        $padStrings = (new Parameter($this->padString))->asStrings($rows, $context);
+        $types = (new Parameter($this->type))->asInts($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($value === null) {
-            throw new InvalidArgumentException('StrPad function requires non-null value');
+        try {
+            foreach ($values as $i => $value) {
+                $length = $lengths[$i];
+                $padString = $padStrings[$i];
+                $type = $types[$i];
+
+                if ($value === null) {
+                    throw new InvalidArgumentException('StrPad function requires non-null value');
+                }
+
+                if ($length === null || $padString === null || $type === null) {
+                    throw new InvalidArgumentException('StrPad function requires non-null length, padString and type');
+                }
+
+                $results[] = str_pad($value, $length, $padString, $type);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        if ($length === null || $padString === null || $type === null) {
-            throw new InvalidArgumentException('StrPad function requires non-null length, padString and type');
-        }
-
-        return str_pad($value, $length, $padString, $type);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

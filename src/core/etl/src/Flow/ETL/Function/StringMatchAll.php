@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
-use Throwable;
 
 use function Flow\ETL\DSL\lit;
 use function Flow\Types\DSL\type_array;
@@ -54,32 +57,43 @@ final class StringMatchAll implements ScalarFunction
         return type_array();
     }
 
-    /**
-     * @return array<int, array<int|string, string>>
-     */
-    public function eval(Row $row, FlowContext $context): array
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $haystack = (new Parameter($this->haystack))->asString($row, $context);
-        $pattern = (new Parameter($this->pattern))->asString($row, $context);
-
-        if ($haystack === null) {
-            throw new InvalidArgumentException('StringMatchAll function requires non-null haystack');
-        }
-
-        if ($pattern === null) {
-            throw new InvalidArgumentException('StringMatchAll function requires non-null pattern');
-        }
+        $haystacks = (new Parameter($this->haystack))->asStrings($rows, $context);
+        $patterns = (new Parameter($this->pattern))->asStrings($rows, $context);
+        $results = [];
+        $i = 0;
 
         try {
-            $matches = [];
+            foreach ($haystacks as $i => $haystack) {
+                $pattern = $patterns[$i];
 
-            if (preg_match_all($pattern, $haystack, $matches, PREG_SET_ORDER) !== false) {
-                return $matches;
+                if ($haystack === null) {
+                    throw new InvalidArgumentException('StringMatchAll function requires non-null haystack');
+                }
+
+                if ($pattern === null) {
+                    throw new InvalidArgumentException('StringMatchAll function requires non-null pattern');
+                }
+
+                try {
+                    $matches = [];
+
+                    if (preg_match_all($pattern, $haystack, $matches, PREG_SET_ORDER) !== false) {
+                        $results[] = $matches;
+
+                        continue;
+                    }
+
+                    $results[] = [];
+                } catch (Exception $e) {
+                    throw new InvalidArgumentException('StringMatchAll error: ' . $e->getMessage(), 0, $e);
+                }
             }
-
-            return [];
-        } catch (Throwable $e) {
-            throw new InvalidArgumentException('StringMatchAll error: ' . $e->getMessage());
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
+
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

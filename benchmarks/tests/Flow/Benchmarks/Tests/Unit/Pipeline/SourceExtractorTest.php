@@ -24,6 +24,15 @@ final class SourceExtractorTest extends TestCase
         }
     }
 
+    public static function sources_taking_a_schema(): Generator
+    {
+        foreach (Source::cases() as $source) {
+            if ($source !== Source::floe && $source !== Source::parquet) {
+                yield $source->value => [$source];
+            }
+        }
+    }
+
     #[DataProvider('sources')]
     public function test_declared_mode_attaches_the_frozen_schema(Source $source): void
     {
@@ -40,7 +49,7 @@ final class SourceExtractorTest extends TestCase
      * comparing schemas passes whether or not withSchema() was applied. Comparing the extractors
      * themselves does distinguish them - withSchema() returns a clone carrying the schema.
      */
-    #[DataProvider('sources')]
+    #[DataProvider('sources_taking_a_schema')]
     public function test_inferred_mode_attaches_no_schema(Source $source): void
     {
         (new SourceFixture($source, self::ROWS))->warm();

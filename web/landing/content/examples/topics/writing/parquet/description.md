@@ -1,1 +1,2 @@
-Write data to Parquet files. Parquet is a columnar format that provides efficient compression and is ideal for storing large analytical datasets.
+`to_parquet()` writes a columnar, compressed Parquet file with the frame's schema; `from_parquet()`
+reads it back.

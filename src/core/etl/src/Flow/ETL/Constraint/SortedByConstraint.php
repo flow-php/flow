@@ -4,30 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Constraint;
 
-use DateInterval;
-use DateTimeInterface;
 use Flow\ETL\Constraint;
-use Flow\ETL\Row;
+use Flow\ETL\Row\NullsOrder;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
-use Flow\ETL\Row\SortOrder;
-use Flow\ETL\Schema;
+use Flow\ETL\Rows;
+use Flow\ETL\Sort\RowOrder;
 use Flow\Types\Type\TypedValueFormatter;
 
 use function implode;
-use function is_array;
-use function is_numeric;
-use function is_string;
 use function var_export;
 
 final class SortedByConstraint implements Constraint
 {
-    private bool $firstRow = true;
-
     /**
-     * @var array<string, null|array<array-key, mixed>|bool|float|int|object|string>
+     * The last accepted row, one-row batch - the "previous" of the next batch's first row.
      */
-    private array $previousValues = [];
+    private ?Rows $previous = null;
 
     private readonly References $references;
 
@@ -36,71 +29,33 @@ final class SortedByConstraint implements Constraint
         $this->references = new References($column, ...$columns);
     }
 
-    public function isSatisfiedBy(Row $row, Schema $schema): bool
+    public function firstViolation(Rows $rows): ?int
     {
-        if ($this->firstRow) {
-            foreach ($this->references->all() as $reference) {
-                $this->previousValues[$reference->name()] = $row->get($reference);
-            }
-            $this->firstRow = false;
-
-            return true;
+        if ($rows->isEmpty()) {
+            return null;
         }
 
-        foreach ($this->references->all() as $reference) {
-            $currentValue = $row->get($reference);
-            $previousValue = $this->previousValues[$reference->name()];
+        $order = new RowOrder($this->references->all());
+        $keys = $order->keys($rows);
+        $violation = null;
 
-            $direction = $reference->sort();
+        if ($this->previous !== null && $order->compare($order->keys($this->previous), 0, $keys, 0) > 0) {
+            $violation = 0;
+        }
 
-            if ($previousValue === null && $currentValue === null) {
-                $comparison = 0;
-            } elseif ($previousValue === null) {
-                $comparison = $direction === SortOrder::ASC ? -1 : 1;
-            } elseif ($currentValue === null) {
-                $comparison = $direction === SortOrder::ASC ? 1 : -1;
-            } elseif (is_numeric($previousValue) && is_numeric($currentValue)) {
-                $prev = (float) $previousValue;
-                $curr = (float) $currentValue;
-                $comparison = $direction === SortOrder::ASC ? $prev <=> $curr : $curr <=> $prev;
-            } elseif (is_string($previousValue) && is_string($currentValue)) {
-                $comparison = $direction === SortOrder::ASC
-                    ? $previousValue <=> $currentValue
-                    : $currentValue <=> $previousValue;
-            } elseif ($previousValue instanceof DateTimeInterface && $currentValue instanceof DateTimeInterface) {
-                $comparison = $direction === SortOrder::ASC
-                    ? $previousValue <=> $currentValue
-                    : $currentValue <=> $previousValue;
-            } elseif ($previousValue instanceof DateInterval && $currentValue instanceof DateInterval) {
-                $comparison = $direction === SortOrder::ASC
-                    ? $previousValue <=> $currentValue
-                    : $currentValue <=> $previousValue;
-            } elseif (is_array($previousValue) && is_array($currentValue)) {
-                $comparison = $direction === SortOrder::ASC
-                    ? $previousValue <=> $currentValue
-                    : $currentValue <=> $previousValue;
-            } else {
-                $comparison = 0;
-            }
-
-            if ($comparison < 0) {
-                foreach ($this->references->all() as $ref) {
-                    $this->previousValues[$ref->name()] = $row->get($ref);
-                }
-
-                return true;
-            }
-
-            if ($comparison > 0) {
-                return false;
+        for ($i = 1, $count = $rows->count(); $violation === null && $i < $count; $i++) {
+            if ($order->compare($keys, $i - 1, $keys, $i) > 0) {
+                $violation = $i;
             }
         }
 
-        foreach ($this->references->all() as $reference) {
-            $this->previousValues[$reference->name()] = $row->get($reference);
+        $last = ($violation ?? $rows->count()) - 1;
+
+        if ($last >= 0) {
+            $this->previous = $rows->slice($last, 1);
         }
 
-        return true;
+        return $violation;
     }
 
     public function toString(): string
@@ -108,27 +63,36 @@ final class SortedByConstraint implements Constraint
         $columns = [];
 
         foreach ($this->references->all() as $reference) {
-            $columns[] = $reference->name() . ' ' . $reference->sort()->name;
+            $columns[] =
+                $reference->name()
+                . ' '
+                . $reference->sort()->name
+                . (
+                    $reference->nulls() === NullsOrder::defaultFor($reference->sort())
+                        ? ''
+                        : ' NULLS ' . $reference->nulls()->name
+                );
         }
 
         return sprintf('Sorted constraint on [%s]', implode(', ', $columns));
     }
 
-    public function violation(Row $row, Schema $schema): string
+    public function violation(Rows $rows, int $index): string
     {
         $formatter = new TypedValueFormatter();
         $violations = [];
 
         foreach ($this->references->all() as $reference) {
-            $definition = $schema->get($reference);
-            $previousValue = $this->previousValues[$reference->name()] ?? null;
+            $definition = $rows->schema()->get($reference);
+            // @mago-ignore analysis:mixed-assignment
+            $previousValue = $this->previous?->column($reference->base())->value(0);
 
             $violations[] = sprintf(
                 '%s<%s> expected %s order, current: %s, previous: %s',
                 $reference->name(),
                 $definition->type()->toString(),
                 $reference->sort()->name,
-                $formatter->format($definition->type(), $row->get($reference)),
+                $formatter->format($definition->type(), $rows->column($reference->base())->value($index)),
                 $previousValue === null ? 'null' : var_export($previousValue, true),
             );
         }

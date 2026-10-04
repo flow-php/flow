@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Parquet;
 
+use function interface_exists;
+
+if (interface_exists(ParquetFileWriter::class, false)) {
+    return;
+}
+
 interface ParquetFileWriter
 {
     /**
@@ -16,6 +22,12 @@ interface ParquetFileWriter
      * @param iterable<array<array-key, mixed>> $rows
      */
     public function writeBatch(iterable $rows): void;
+
+    /**
+     * @param array<string, list<mixed>> $columns by top-level column name, every list of one length; a schema column
+     *                                            the array lacks is written as nulls, a key the schema lacks is ignored
+     */
+    public function writeColumns(array $columns): void;
 
     /**
      * @param array<array-key, mixed> $row

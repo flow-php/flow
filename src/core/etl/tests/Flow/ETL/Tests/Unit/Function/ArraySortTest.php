@@ -7,16 +7,22 @@ namespace Flow\ETL\Tests\Unit\Function;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Function\ReferenceResolver;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Value\Json;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_structure;
 use function json_decode;
@@ -29,33 +35,138 @@ final class ArraySortTest extends FlowTestCase
         $this->expectExceptionMessage('Expected type "array<mixed>", got "string".');
 
         $context = flow_context(config());
-        ref('array')->arraySort()->eval(row(['array' => 'string']), $context);
+        (new FunctionContext($context))->eval(
+            ref('array')->arraySort(),
+            ['array' => 'string'],
+            schema(str_schema('array')),
+        );
     }
 
-    public function test_sorting_big_arrays(): void
+    public static function one_document_in_two_orders(): Generator
+    {
+        yield 'as stored' => [<<<'JSON'
+                [
+                  {
+                    "asin": "B00PHQB8EE",
+                    "images": [
+                      {
+                        "images": [
+                          {
+                            "link": "https://m.media-amazon.com/images/I/419NipwmTaL.jpg",
+                            "width": 190,
+                            "height": 500,
+                            "variant": "MAIN"
+                          },
+                          {
+                            "link": "https://m.media-amazon.com/images/I/419NipwmTaL._SL75_.jpg",
+                            "width": 29,
+                            "height": 75,
+                            "variant": "MAIN"
+                          },
+                          {
+                            "link": "https://m.media-amazon.com/images/I/61AQupUe5pL.jpg",
+                            "width": 418,
+                            "height": 1100,
+                            "variant": "MAIN"
+                          },
+                          {
+                            "link": "https://m.media-amazon.com/images/I/51XvsWDOBuS.jpg",
+                            "width": 500,
+                            "height": 279,
+                            "variant": "PT01"
+                          },
+                          {
+                            "link": "https://m.media-amazon.com/images/I/51XvsWDOBuS._SL75_.jpg",
+                            "width": 75,
+                            "height": 42,
+                            "variant": "PT01"
+                          }
+                        ],
+                        "marketplaceId": "ATVPDKIKX0DER"
+                      }
+                    ],
+                    "synchronized_at": "2023-04-21 11:33:25"
+                  }
+                ]
+                JSON];
+        yield 'reordered' => [<<<'JSON'
+                [
+                  {
+                    "asin": "B00PHQB8EE",
+                    "images": [
+                      {
+                        "images": [
+                        {
+                            "link": "https://m.media-amazon.com/images/I/51XvsWDOBuS._SL75_.jpg",
+                            "width": 75,
+                            "height": 42,
+                            "variant": "PT01"
+                          },
+                          {
+                            "link": "https://m.media-amazon.com/images/I/419NipwmTaL.jpg",
+                            "width": 190,
+                            "height": 500,
+                            "variant": "MAIN"
+                          },
+                          {
+                            "link": "https://m.media-amazon.com/images/I/61AQupUe5pL.jpg",
+                            "width": 418,
+                            "height": 1100,
+                            "variant": "MAIN"
+                          },
+                          {
+                            "link": "https://m.media-amazon.com/images/I/419NipwmTaL._SL75_.jpg",
+                            "width": 29,
+                            "height": 75,
+                            "variant": "MAIN"
+                          },
+                          {
+                            "link": "https://m.media-amazon.com/images/I/51XvsWDOBuS.jpg",
+                            "width": 500,
+                            "height": 279,
+                            "variant": "PT01"
+                          }
+                        ],
+                        "marketplaceId": "ATVPDKIKX0DER"
+                      }
+                    ],
+                    "synchronized_at": "2023-04-21 11:33:25"
+                  }
+                ]
+                JSON];
+    }
+
+    #[DataProvider('one_document_in_two_orders')]
+    public function test_sorting_big_arrays(string $json): void
     {
         static::assertSame(
-            ref('array')
-                ->arraySort()
-                ->eval(row(['array' => type_array()->assert(json_decode(
-                    $this->jsonDifferentOrder(),
-                    true,
-                    512,
-                    JSON_THROW_ON_ERROR,
-                ))]), flow_context()),
-            ref('array')
-                ->arraySort()
-                ->eval(row(['array' => type_array()->assert(json_decode(
-                    $this->json(),
-                    true,
-                    512,
-                    JSON_THROW_ON_ERROR,
-                ))]), flow_context()),
+            [[
+                '2023-04-21 11:33:25',
+                'B00PHQB8EE',
+                [[
+                    'ATVPDKIKX0DER',
+                    [
+                        [29,  75,   'MAIN', 'https://m.media-amazon.com/images/I/419NipwmTaL._SL75_.jpg'],
+                        [42,  75,   'PT01', 'https://m.media-amazon.com/images/I/51XvsWDOBuS._SL75_.jpg'],
+                        [190, 500,  'MAIN', 'https://m.media-amazon.com/images/I/419NipwmTaL.jpg'],
+                        [279, 500,  'PT01', 'https://m.media-amazon.com/images/I/51XvsWDOBuS.jpg'],
+                        [418, 1100, 'MAIN', 'https://m.media-amazon.com/images/I/61AQupUe5pL.jpg'],
+                    ],
+                ]],
+            ]],
+            type_instance_of(Json::class)
+                ->assert((new FunctionContext(flow_context()))->eval(
+                    ref('array')->arraySort(),
+                    ['array' => type_array()->assert(json_decode($json, true, 512, JSON_THROW_ON_ERROR))],
+                    schema(json_schema('array')),
+                ))
+                ->toArray(),
         );
     }
 
     public function test_sorting_nested_array_using_asort_algo(): void
     {
+        // a json operand gives a json column: the sorted array is read back from it
         static::assertSame(
             [
                 'a' => [
@@ -66,24 +177,29 @@ final class ArraySortTest extends FlowTestCase
                     ],
                 ],
             ],
-            ref('array')
-                ->arraySort(Sort::asort)
-                ->eval(row([
-                    'array' => [
-                        'a' => [
-                            'b' => [
-                                'e' => 'f',
-                                'c' => 'd',
+            type_instance_of(Json::class)
+                ->assert((new FunctionContext(flow_context()))->eval(
+                    ref('array')->arraySort(Sort::asort),
+                    [
+                        'array' => [
+                            'a' => [
+                                'b' => [
+                                    'e' => 'f',
+                                    'c' => 'd',
+                                ],
+                                'g' => 'h',
                             ],
-                            'g' => 'h',
                         ],
                     ],
-                ]), flow_context()),
+                    schema(json_schema('array')),
+                ))
+                ->toArray(),
         );
     }
 
     public function test_sorting_nested_associative_array(): void
     {
+        // a json operand gives a json column: the sorted array is read back from it
         static::assertSame(
             [
                 'a' => [
@@ -94,19 +210,23 @@ final class ArraySortTest extends FlowTestCase
                     'g' => 'h',
                 ],
             ],
-            ref('array')
-                ->arraySort(Sort::ksort)
-                ->eval(row([
-                    'array' => [
-                        'a' => [
-                            'g' => 'h',
-                            'b' => [
-                                'e' => 'f',
-                                'c' => 'd',
+            type_instance_of(Json::class)
+                ->assert((new FunctionContext(flow_context()))->eval(
+                    ref('array')->arraySort(Sort::ksort),
+                    [
+                        'array' => [
+                            'a' => [
+                                'g' => 'h',
+                                'b' => [
+                                    'e' => 'f',
+                                    'c' => 'd',
+                                ],
                             ],
                         ],
                     ],
-                ]), flow_context()),
+                    schema(json_schema('array')),
+                ))
+                ->toArray(),
         );
     }
 
@@ -115,105 +235,11 @@ final class ArraySortTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected type "array<mixed>", got "string".');
 
-        ref('array')->arraySort()->eval(row(['array' => 'string']), flow_context());
-    }
-
-    private function json(): string
-    {
-        return <<<'JSON'
-            [
-              {
-                "asin": "B00PHQB8EE",
-                "images": [
-                  {
-                    "images": [
-                      {
-                        "link": "https://m.media-amazon.com/images/I/419NipwmTaL.jpg",
-                        "width": 190,
-                        "height": 500,
-                        "variant": "MAIN"
-                      },
-                      {
-                        "link": "https://m.media-amazon.com/images/I/419NipwmTaL._SL75_.jpg",
-                        "width": 29,
-                        "height": 75,
-                        "variant": "MAIN"
-                      },
-                      {
-                        "link": "https://m.media-amazon.com/images/I/61AQupUe5pL.jpg",
-                        "width": 418,
-                        "height": 1100,
-                        "variant": "MAIN"
-                      },
-                      {
-                        "link": "https://m.media-amazon.com/images/I/51XvsWDOBuS.jpg",
-                        "width": 500,
-                        "height": 279,
-                        "variant": "PT01"
-                      },
-                      {
-                        "link": "https://m.media-amazon.com/images/I/51XvsWDOBuS._SL75_.jpg",
-                        "width": 75,
-                        "height": 42,
-                        "variant": "PT01"
-                      }
-                    ],
-                    "marketplaceId": "ATVPDKIKX0DER"
-                  }
-                ],
-                "synchronized_at": "2023-04-21 11:33:25"
-              }
-            ]
-            JSON;
-    }
-
-    private function jsonDifferentOrder(): string
-    {
-        return <<<'JSON'
-            [
-              {
-                "asin": "B00PHQB8EE",
-                "images": [
-                  {
-                    "images": [
-                    {
-                        "link": "https://m.media-amazon.com/images/I/51XvsWDOBuS._SL75_.jpg",
-                        "width": 75,
-                        "height": 42,
-                        "variant": "PT01"
-                      },
-                      {
-                        "link": "https://m.media-amazon.com/images/I/419NipwmTaL.jpg",
-                        "width": 190,
-                        "height": 500,
-                        "variant": "MAIN"
-                      },
-                      {
-                        "link": "https://m.media-amazon.com/images/I/61AQupUe5pL.jpg",
-                        "width": 418,
-                        "height": 1100,
-                        "variant": "MAIN"
-                      },
-                      {
-                        "link": "https://m.media-amazon.com/images/I/419NipwmTaL._SL75_.jpg",
-                        "width": 29,
-                        "height": 75,
-                        "variant": "MAIN"
-                      },
-                      {
-                        "link": "https://m.media-amazon.com/images/I/51XvsWDOBuS.jpg",
-                        "width": 500,
-                        "height": 279,
-                        "variant": "PT01"
-                      }
-                    ],
-                    "marketplaceId": "ATVPDKIKX0DER"
-                  }
-                ],
-                "synchronized_at": "2023-04-21 11:33:25"
-              }
-            ]
-            JSON;
+        (new FunctionContext(flow_context()))->eval(
+            ref('array')->arraySort(),
+            ['array' => 'string'],
+            schema(str_schema('array')),
+        );
     }
 
     public function test_ksort_declares_key_sorted_structure_fields(): void

@@ -11,6 +11,7 @@ use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
 use Flow\PostgreSql\Client\Exception\PostgreSqlError;
@@ -19,6 +20,7 @@ use RuntimeException;
 
 use function array_map;
 use function Flow\ETL\Adapter\PostgreSql\from_pgsql_cursor;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
@@ -260,7 +262,7 @@ final class PostgreSqlCursorExtractorTest extends FlowTestCase
 
         $batches = iterator_to_array(from_pgsql_cursor($client, 'SELECT tags FROM t')->extract(flow_context()));
 
-        static::assertSame(['a', 'b'], $batches[0]->first()->get('tags'));
+        static::assertSame(['a', 'b'], $batches[0]->column('tags')->value(0));
     }
 
     public function test_extract_casts_through_the_derived_schema(): void
@@ -269,12 +271,10 @@ final class PostgreSqlCursorExtractorTest extends FlowTestCase
             ->willDescribe(ColumnMother::of(['id' => 'int8', 'amount' => 'numeric']))
             ->willReturnCursors(new StubCursor([['id' => '1', 'amount' => '10.5']]));
 
-        $row = iterator_to_array(
-            from_pgsql_cursor($client, 'SELECT id, amount FROM t')->extract(flow_context()),
-        )[0]->first();
+        $rows = iterator_to_array(from_pgsql_cursor($client, 'SELECT id, amount FROM t')->extract(flow_context()))[0];
 
-        static::assertSame(1, $row->get('id'));
-        static::assertSame(10.5, $row->get('amount'));
+        static::assertSame(1, $rows->column('id')->value(0));
+        static::assertSame(10.5, $rows->column('amount')->value(0));
     }
 
     public function test_extract_derives_the_schema_once_and_reuses_it_across_batches(): void
@@ -453,5 +453,22 @@ final class PostgreSqlCursorExtractorTest extends FlowTestCase
             new Cardinality(atMost: 100, estimate: 42, relativeError: Cardinality::DEFAULT_RELATIVE_ERROR),
             $extractor->statistics()->rows,
         );
+    }
+
+    public function test_extract_builds_through_the_config_backend(): void
+    {
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willReturnCursors(new StubCursor([['id' => '1']]), new StubCursor());
+        $backend = new SpyBackend();
+
+        iterator_to_array(
+            from_pgsql_cursor($client, 'SELECT id FROM t')->extract(
+                flow_context(config_builder()->backend($backend)->build()),
+            ),
+            false,
+        );
+
+        static::assertGreaterThanOrEqual(1, $backend->builders());
     }
 }

@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Processor;
 use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Cache\Implementation\InMemoryCache;
 use Flow\ETL\Cardinality;
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Processor\CachingProcessor;
 use Flow\ETL\Rows;
@@ -14,11 +15,10 @@ use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\RowsMother;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
@@ -62,8 +62,8 @@ final class CachingProcessorTest extends FlowTestCase
         $processor = new CachingProcessor('test-cache');
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 1]));
-            yield rows(schema(int_schema('id')), row(['id' => 2]));
+            yield array_to_rows([['id' => 1]], schema(int_schema('id')));
+            yield array_to_rows([['id' => 2]], schema(int_schema('id')));
         })();
 
         $result = iterator_to_array($processor->process($generator, $context));
@@ -106,12 +106,12 @@ final class CachingProcessorTest extends FlowTestCase
         $cache = new InMemoryCache();
         $context = flow_context(config_builder()->cache($cache)->build());
 
-        $cache->set('test-cache', (new CacheIndex('test-cache'))->toRows());
+        $cache->set('test-cache', (new CacheIndex('test-cache'))->toRows(new PhpBackend()));
 
         $processor = new CachingProcessor('test-cache');
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 1]));
+            yield array_to_rows([['id' => 1]], schema(int_schema('id')));
         })();
 
         $result = iterator_to_array($processor->process($generator, $context));
@@ -127,7 +127,7 @@ final class CachingProcessorTest extends FlowTestCase
         $processor = new CachingProcessor();
 
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 1]));
+            yield array_to_rows([['id' => 1]], schema(int_schema('id')));
         })();
 
         iterator_to_array($processor->process($generator, $context));

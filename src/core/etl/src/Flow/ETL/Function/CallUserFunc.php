@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function array_combine;
@@ -85,24 +89,39 @@ final class CallUserFunc implements ScalarFunction
         return type_optional($this->returnType);
     }
 
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $callable = (new Parameter($this->callable))->eval($row, $context);
+        $callables = (new Parameter($this->callable))->values($rows, $context);
+        $arguments = array_map(static fn(ScalarFunction $parameter): array => (new Parameter($parameter))->values(
+            $rows,
+            $context,
+        ), $this->parameters);
+        $results = [];
+        $i = 0;
 
-        if (!is_callable($callable)) {
-            throw new InvalidArgumentException('CallUserFunc requires a valid callable');
+        try {
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($callables as $i => $callable) {
+                if (!is_callable($callable)) {
+                    throw new InvalidArgumentException('CallUserFunc requires a valid callable');
+                }
+
+                $parameters = [];
+
+                foreach ($arguments as $key => $argument) {
+                    $parameters[$key] = $argument[$i];
+                }
+
+                // The callable's output may not match the declared type - coerce it before trusting it.
+                // @mago-ignore analysis:mixed-assignment
+                $result = call_user_func($callable, ...$parameters);
+
+                $results[] = $result === null ? null : $this->returnType->cast($result);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        $parameters = [];
-
-        foreach ($this->parameters as $key => $parameter) {
-            $parameters[$key] = (new Parameter($parameter))->eval($row, $context);
-        }
-
-        // The callable's output may not match the declared type - coerce it before trusting it.
-        // @mago-ignore analysis:mixed-assignment
-        $result = call_user_func($callable, ...$parameters);
-
-        return $result === null ? null : $this->returnType->cast($result);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

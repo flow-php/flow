@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Integration\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Memory\ArrayMemory;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\array_keys_style_convert;
@@ -14,7 +15,8 @@ use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\to_memory;
 
 final class ArrayKeysStyleConvertTest extends FlowTestCase
@@ -43,6 +45,30 @@ final class ArrayKeysStyleConvertTest extends FlowTestCase
         $this->expectExceptionMessage('Expected type "array<mixed>", got "string".');
 
         $context = flow_context(config());
-        array_keys_style_convert(ref('string'), 'camel')->eval(row(['string' => 'test']), $context);
+        (new FunctionContext($context))->eval(
+            array_keys_style_convert(ref('string'), 'camel'),
+            [
+                'string' => 'test',
+            ],
+            schema(str_schema('string')),
+        );
+    }
+
+    public function test_a_nested_convert_stores_the_converted_shape(): void
+    {
+        data_frame()
+            ->read(from_array([
+                ['id' => 1, 'array' => ['itemId' => 1, 'itemVariants' => [['variantName' => 'a']]]],
+            ]))
+            ->withEntry('array', array_keys_style_convert(ref('array'), 'snake'))
+            ->write(to_memory($memory = new ArrayMemory()))
+            ->run();
+
+        static::assertSame(
+            [
+                ['id' => 1, 'array' => ['item_id' => 1, 'item_variants' => [['variant_name' => 'a']]]],
+            ],
+            $memory->dump(),
+        );
     }
 }

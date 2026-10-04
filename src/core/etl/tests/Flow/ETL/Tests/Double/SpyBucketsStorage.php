@@ -27,6 +27,11 @@ final class SpyBucketsStorage implements BucketsStorage
      */
     private array $readBucketIds = [];
 
+    /**
+     * @var array<string, int> rows of every set() call, by bucket
+     */
+    public array $setRowCounts = [];
+
     public function __construct(
         private readonly BucketsStorage $inner,
     ) {}
@@ -77,6 +82,7 @@ final class SpyBucketsStorage implements BucketsStorage
 
     public function set(string $bucketId, Rows $rows): void
     {
+        $this->setRowCounts[$bucketId] = $rows->count();
         $this->liveBucketIds[$bucketId] = true;
         $this->inner->set($bucketId, $rows);
     }

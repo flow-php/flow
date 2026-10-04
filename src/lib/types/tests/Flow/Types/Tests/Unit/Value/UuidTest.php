@@ -10,8 +10,35 @@ use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid as RamseyUuid;
 use Symfony\Component\Uid\Uuid as SymfonyUuid;
 
+use function hex2bin;
+use function str_repeat;
+
 final class UuidTest extends TestCase
 {
+    public function test_from_bytes_builds_canonical_lowercase_text(): void
+    {
+        $uuid = Uuid::fromBytes((string) hex2bin('6C2F1D4E8B3A4C5D9E6F0A1B2C3D4E5F'));
+
+        static::assertSame('6c2f1d4e-8b3a-4c5d-9e6f-0a1b2c3d4e5f', $uuid->toString());
+        static::assertEquals(new Uuid('6c2f1d4e-8b3a-4c5d-9e6f-0a1b2c3d4e5f'), $uuid);
+    }
+
+    public function test_from_bytes_refuses_fifteen_bytes(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Uuid::fromBytes() expects 16 bytes, got 15');
+
+        Uuid::fromBytes(str_repeat('a', 15));
+    }
+
+    public function test_from_bytes_refuses_seventeen_bytes(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Uuid::fromBytes() expects 16 bytes, got 17');
+
+        Uuid::fromBytes(str_repeat('a', 17));
+    }
+
     public function test_construct_with_invalid_string_uuid_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);

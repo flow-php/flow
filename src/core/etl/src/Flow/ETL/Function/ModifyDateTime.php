@@ -7,9 +7,13 @@ namespace Flow\ETL\Function;
 use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateTimeType;
 use Flow\Types\Type\Logical\OptionalType;
@@ -58,19 +62,33 @@ final class ModifyDateTime implements ScalarFunction
         return $base instanceof DateTimeType ? $base : type_datetime();
     }
 
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $value = (new Parameter($this->reference))->asInstanceOf($row, $context, DateTimeInterface::class);
-        $modifier = (new Parameter($this->modifier))->asString($row, $context);
+        $values = (new Parameter($this->reference))->asInstancesOf($rows, $context, DateTimeInterface::class);
+        $modifiers = (new Parameter($this->modifier))->asStrings($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($modifier === null || $value === null) {
-            throw new InvalidArgumentException('ModifyDateTime function requires non-null values');
+        try {
+            foreach ($values as $i => $value) {
+                $modifier = $modifiers[$i];
+
+                if ($modifier === null || $value === null) {
+                    throw new InvalidArgumentException('ModifyDateTime function requires non-null values');
+                }
+
+                if (!$value instanceof DateTime && !$value instanceof DateTimeImmutable) {
+                    throw new InvalidArgumentException(
+                        'ModifyDateTime function requires DateTime or DateTimeImmutable object',
+                    );
+                }
+
+                $results[] = $value->modify($modifier);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        if (!$value instanceof DateTime && !$value instanceof DateTimeImmutable) {
-            throw new InvalidArgumentException('ModifyDateTime function requires DateTime or DateTimeImmutable object');
-        }
-
-        return $value->modify($modifier);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

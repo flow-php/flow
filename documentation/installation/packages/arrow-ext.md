@@ -44,6 +44,14 @@ echo "extension=arrow" > $(php -r "echo PHP_CONFIG_FILE_SCAN_DIR;")/arrow.ini
 php -m | grep arrow
 ```
 
+## Version
+
+Install the extension of the Flow release you use. `flow-php/parquet` and `flow-php/etl-adapter-parquet` conflict
+with `ext-arrow <0.45`.
+
+An extension built for another release is refused with a `RuntimeException` naming its version and ABI, raised by
+`AdaptiveParquetEngine`. `new PhpParquetEngine()` still runs.
+
 ## PIE
 
 [PIE](https://github.com/php/pie) is the modern PHP extension installer.

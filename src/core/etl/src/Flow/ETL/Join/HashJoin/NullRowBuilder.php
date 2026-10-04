@@ -4,19 +4,28 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Join\HashJoin;
 
-use Flow\ETL\Row;
+use Flow\ETL\Column\Backend;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema;
-
-use function array_fill_keys;
 
 final readonly class NullRowBuilder
 {
-    public function __construct(
-        private Schema $schema,
-    ) {}
+    private Rows $rows;
 
-    public function row(): Row
+    public function __construct(Schema $schema, Backend $backend)
     {
-        return new Row(array_fill_keys($this->schema->references()->names(), null));
+        $nullable = $schema->makeNullable();
+        $columns = [];
+
+        foreach ($nullable->definitions() as $name => $definition) {
+            $columns[$name] = $backend->constant($definition, null, 1);
+        }
+
+        $this->rows = Rows::fromColumns($nullable, $columns, 1);
+    }
+
+    public function rows(): Rows
+    {
+        return $this->rows;
     }
 }

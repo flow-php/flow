@@ -1,3 +1,2 @@
-Write data directly to the process stdout. This is useful for streaming data to web clients without buffering in memory.
-
-**Note:** Stdout is write-only-reading is not supported.
+The `stdout://` filesystem streams writes straight to the process output, with nothing buffered in
+memory. It is write-only: reading from it is not supported.

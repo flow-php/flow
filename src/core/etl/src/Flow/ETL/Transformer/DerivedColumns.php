@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
-use Flow\ETL\Exception\ColumnMismatchException;
+use Flow\ETL\Column\Backend;
+use Flow\ETL\Column\Column;
 use Flow\ETL\Exception\SchemaMismatchException;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\ColumnRetyping;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
+
+use function Flow\Types\DSL\type_bare;
 
 final readonly class DerivedColumns
 {
@@ -24,27 +27,37 @@ final readonly class DerivedColumns
     }
 
     /**
+     * The function's column as the stored derived column: NOT NULL enforced here (intermediates are nullable), the
+     * same type adopted into the configured backend, any other type rebuilt through it.
+     *
      * @param Definition<mixed> $derived
      *
      * @throws SchemaMismatchException
      */
-    public function value(Definition $derived, mixed $value, int $rowIndex): mixed
+    public function stored(Definition $derived, Column $column, Backend $backend): Column
     {
-        // @mago-ignore analysis:mixed-assignment
-        $cast = $value === null ? null : $derived->type()->cast($value);
+        (new ColumnRetyping())->notNull($derived, $column);
 
-        if (!$derived->matches($cast)) {
-            throw new SchemaMismatchException($rowIndex, ColumnMismatchException::valueDoesNotMatch($derived, $cast));
+        if (type_bare($column->type())->normalize() === type_bare($derived->type())->normalize()) {
+            return $backend->adopt($derived, $column->withType($derived->type()));
         }
 
-        return $cast;
+        $builder = $backend->builder($derived);
+        $builder->appendMany($column->values());
+
+        return $builder->finish();
     }
 
-    /**
-     * @param list<Row> $rows each carrying a derived column checked by value()
-     */
-    public function rows(Schema $declared, Schema $output, array $rows): Rows
-    {
-        return $declared->isSame($output) ? Rows::trusted($output, $rows) : new Rows($output, ...$rows);
+    public function rows(
+        Rows $input,
+        Schema $declared,
+        Schema $output,
+        string $name,
+        Column $derived,
+        Backend $backend,
+    ): Rows {
+        $withDerived = $input->withColumns($declared, [$name => $derived]);
+
+        return $declared->isSame($output) ? $withDerived : $withDerived->matchTo($output, $backend);
     }
 }

@@ -32,7 +32,7 @@ just benchmark
 ```
 
 The `flow-report` columns are: `benchmark`, `subject`, `set`, `mem_peak`, `mode`, `total_time`, `rstdev`.
-The `set` column is the parameter set label - the row count and, for the parquet/floe format benchmarks, the
+The `set` column is the parameter set label - the row count and, for the parquet format benchmarks, the
 engine variant (e.g. `100,000,php` vs `100,000,arrow`).
 
 Defaults (see `phpbench.json.dist`): remote executor (per-iteration process isolation, the only executor that
@@ -66,6 +66,9 @@ To report a stored run without re-running (e.g. `phpbench report`, `phpbench log
 `tools/phpbench/vendor/bin/phpbench report --ref=before --report=flow-report`.
 
 Stored runs live in `var/phpbench/` (gitignored).
+
+Compare only runs of shells with the same `php -m`. The Blackfire probe alone (`nix-shell --arg with-blackfire true`)
+moves call-heavy subjects by up to 50 %: time without it, profile with `blackfire run`.
 
 ## Profiling a scenario without phpbench
 

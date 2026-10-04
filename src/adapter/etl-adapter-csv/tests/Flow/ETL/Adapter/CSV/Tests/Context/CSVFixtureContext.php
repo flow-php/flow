@@ -4,19 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV\Tests\Context;
 
+use Flow\ETL\Adapter\CSV\AdaptiveCSVOpenSource;
+use Flow\ETL\Adapter\CSV\CSVDecoder;
 use Flow\ETL\Adapter\CSV\CSVDialect;
-use Flow\ETL\Adapter\CSV\CSVEncoder;
 use Flow\ETL\Adapter\CSV\CSVFileReader;
 use Flow\ETL\Adapter\CSV\CSVFileSample;
 use Flow\ETL\Adapter\CSV\CSVLineReader;
 use Flow\ETL\Adapter\CSV\CSVOpenSource;
 use Flow\ETL\Adapter\CSV\CSVReadOptions;
-use Flow\ETL\Adapter\CSV\CSVSourceOpener;
-use Flow\ETL\Adapter\CSV\NativeCSVOpenSource;
 use Flow\ETL\Adapter\CSV\PhpCSVOpenSource;
-use Flow\ETL\Adapter\CSV\RustCSVReaderNative;
-use Flow\ETL\Extractor\SourceFile;
-use Flow\ETL\Row\RawRowValues;
+use Flow\ETL\Adapter\CSV\RustCSVOpenSource;
+use Flow\ETL\Column\Backend;
+use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Exception\SchemaMismatchException;
+use Flow\ETL\Extractor\File\SourceFile;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\ColumnTypes;
 use Flow\ETL\Schema\Inference\SchemaInference;
@@ -39,6 +40,7 @@ use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 use function range;
+use function serialize;
 use function sprintf;
 use function str_ends_with;
 use function str_repeat;
@@ -64,7 +66,7 @@ final class CSVFixtureContext
             $sources[] = new SourceFile($status->path);
         }
 
-        return new CSVFileReader(new CSVSourceOpener($filesystem, $options), $sources);
+        return new CSVFileReader($filesystem, $options, $sources);
     }
 
     public static function open(
@@ -72,7 +74,7 @@ final class CSVFixtureContext
         Filesystem $filesystem = new NativeLocalFilesystem(),
         CSVReadOptions $options = new CSVReadOptions(),
     ): CSVOpenSource {
-        return (new CSVSourceOpener($filesystem, $options))->open(self::source($fixture));
+        return new AdaptiveCSVOpenSource($filesystem, self::source($fixture), $options);
     }
 
     /**
@@ -98,7 +100,7 @@ final class CSVFixtureContext
     }
 
     /**
-     * The dialect CSVSourceOpener would resolve: pinned options first, detection for the rest.
+     * The dialect AdaptiveCSVOpenSource resolves: pinned options first, detection for the rest.
      */
     public static function dialect(SourceStream $stream, CSVReadOptions $options = new CSVReadOptions()): CSVDialect
     {
@@ -118,7 +120,7 @@ final class CSVFixtureContext
         string $fixture,
         Filesystem $filesystem = new NativeLocalFilesystem(),
         CSVReadOptions $options = new CSVReadOptions(),
-    ): NativeCSVOpenSource {
+    ): RustCSVOpenSource {
         return self::openNativeStream($filesystem->readFrom(path_real(self::path($fixture))), $options);
     }
 
@@ -128,19 +130,17 @@ final class CSVFixtureContext
     public static function openNativeStream(
         SourceStream $stream,
         CSVReadOptions $options = new CSVReadOptions(),
-    ): NativeCSVOpenSource {
+    ): RustCSVOpenSource {
         $dialect = self::dialect($stream, $options);
 
-        return new NativeCSVOpenSource(
+        return new RustCSVOpenSource(
             $stream,
-            new RustCSVReaderNative(
-                $dialect->separator,
-                $dialect->enclosure,
-                $dialect->escape,
-                $options->withHeader,
-                $options->emptyToNull,
-                $options->removeBOM,
-            ),
+            $dialect->separator,
+            $dialect->enclosure,
+            $dialect->escape,
+            $options->withHeader,
+            $options->emptyToNull,
+            $options->removeBOM,
             $options->charactersReadInLine,
         );
     }
@@ -150,12 +150,18 @@ final class CSVFixtureContext
         Filesystem $filesystem = new NativeLocalFilesystem(),
         CSVReadOptions $options = new CSVReadOptions(),
     ): PhpCSVOpenSource {
-        $stream = $filesystem->readFrom(path_real(self::path($fixture)));
+        return self::openPhpStream($filesystem->readFrom(path_real(self::path($fixture))), $options);
+    }
+
+    public static function openPhpStream(
+        SourceStream $stream,
+        CSVReadOptions $options = new CSVReadOptions(),
+    ): PhpCSVOpenSource {
         $dialect = self::dialect($stream, $options);
 
         return new PhpCSVOpenSource(
             $stream,
-            new CSVEncoder(
+            new CSVDecoder(
                 withHeader: $options->withHeader,
                 separator: $dialect->separator,
                 enclosure: $dialect->enclosure,
@@ -173,16 +179,78 @@ final class CSVFixtureContext
     }
 
     /**
-     * Every record's values and metadata, for strict comparison across paths - consumes the source.
+     * An open stream over `$content`.
+     */
+    public static function content(string $content): SourceStream
+    {
+        return self::memory($content)->readFrom(self::memorySource()->path);
+    }
+
+    /**
+     * Every batch's rows, or the refusal that stopped them - consumes and closes the source.
      *
-     * @return list<array{array<array-key, mixed>, array<array-key, mixed>}>
+     * @param int<1, max> $batchSize
+     *
+     * @return list<array<array-key, mixed>>|SchemaMismatchException
+     */
+    public static function batches(
+        CSVOpenSource $open,
+        Schema $schema,
+        int $batchSize,
+        Backend $backend = new PhpBackend(),
+    ): array|SchemaMismatchException {
+        $batches = [];
+
+        try {
+            foreach ($open->batches($schema, $batchSize, $backend) as $batch) {
+                $batches[] = $batch->toArray();
+            }
+
+            return $batches;
+        } catch (SchemaMismatchException $e) {
+            return $e;
+        } finally {
+            $open->close();
+        }
+    }
+
+    /**
+     * `batches()` as one string: the serialized rows, or the refusal's class, message, row and previous.
+     *
+     * @param int<1, max> $batchSize
+     */
+    public static function batchesOutcome(
+        CSVOpenSource $open,
+        Schema $schema,
+        int $batchSize,
+        Backend $backend = new PhpBackend(),
+    ): string {
+        $batches = self::batches($open, $schema, $batchSize, $backend);
+
+        return $batches instanceof SchemaMismatchException
+            ? $batches::class
+            . ': '
+            . $batches->getMessage()
+            . ' @'
+            . $batches->rowIndex
+            . ' <- '
+            . $batches->cause::class
+            . ': '
+            . $batches->cause->getMessage()
+            : serialize($batches);
+    }
+
+    /**
+     * Every record, for strict comparison across paths - consumes the source.
+     *
+     * @return list<array<array-key, ?string>>
      */
     public static function records(CSVOpenSource $open): array
     {
         $records = [];
 
         foreach ($open->records() as $record) {
-            $records[] = [$record->values, $record->metadata];
+            $records[] = $record;
         }
 
         return $records;
@@ -233,7 +301,7 @@ final class CSVFixtureContext
     /**
      * The PHP open source's records, opened on the first advance and closed when abandoned - a SchemaSampler unit.
      *
-     * @return Generator<int, RawRowValues>
+     * @return Generator<int, array<array-key, mixed>>
      */
     public static function phpRecords(string $fixture): Generator
     {
@@ -307,7 +375,7 @@ final class CSVFixtureContext
         array $sources = [],
         CSVReadOptions $options = new CSVReadOptions(),
     ): CSVFileReader {
-        return new CSVFileReader(new CSVSourceOpener($filesystem, $options), $sources);
+        return new CSVFileReader($filesystem, $options, $sources);
     }
 
     public static function sample(
@@ -315,7 +383,7 @@ final class CSVFixtureContext
         Filesystem $filesystem = new NativeLocalFilesystem(),
         CSVReadOptions $options = new CSVReadOptions(),
     ): CSVFileSample {
-        return new CSVFileSample(new CSVSourceOpener($filesystem, $options), self::source($fixture));
+        return new CSVFileSample($filesystem, $options, self::source($fixture));
     }
 
     /**

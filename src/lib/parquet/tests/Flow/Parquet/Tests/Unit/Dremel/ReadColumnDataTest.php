@@ -12,6 +12,7 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\MapKey;
 use Flow\Parquet\ParquetFile\Schema\MapValue;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Flow\Parquet\Tests\Context\FlatColumnPages;
 use PHPUnit\Framework\TestCase;
 
 use function iterator_to_array;
@@ -119,6 +120,25 @@ final class ReadColumnDataTest extends TestCase
                 new FlatValue($valueColumn, 2, 3, 2),
             ],
             iterator_to_array($columnData->iterator($valueColumn)),
+        );
+    }
+
+    public function test_iterating_over_a_paged_column_chains_its_pages(): void
+    {
+        $schema = Schema::with(NestedColumn::map('m', MapKey::string(), MapValue::int32()));
+        $rows = [['m' => ['a' => 1]], ['m' => ['b' => 2]], ['m' => ['c' => 3]]];
+        $keyColumn = $schema->get('m.key_value.key');
+        static::assertInstanceOf(FlatColumn::class, $keyColumn);
+
+        $columnData = new ReadColumnData($schema->get('m'), FlatColumnPages::paged($schema, $rows, 1));
+
+        static::assertEquals(
+            [
+                new FlatValue($keyColumn, 0, 2, 'a'),
+                new FlatValue($keyColumn, 0, 2, 'b'),
+                new FlatValue($keyColumn, 0, 2, 'c'),
+            ],
+            iterator_to_array($columnData->iterator($keyColumn)),
         );
     }
 }

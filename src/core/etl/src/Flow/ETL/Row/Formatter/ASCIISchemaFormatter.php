@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Formatter;
 
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Formatter\AsciiTableFormatter;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\SchemaFormatter;
@@ -68,7 +69,7 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
                 $values['metadata'] = json_encode($definition->metadata()->normalize(), JSON_THROW_ON_ERROR);
             }
 
-            $rows[] = new Row($values);
+            $rows[] = $values;
         }
 
         $columns = [str_schema('name'), str_schema('type'), bool_schema('nullable')];
@@ -77,7 +78,9 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
             $columns[] = str_schema('metadata');
         }
 
-        return new Rows(schema(...$columns), ...$rows);
+        return (new RowsBuilder(schema(...$columns), new AdaptiveBackend()))
+            ->appendRows($rows)
+            ->finish();
     }
 
     /**

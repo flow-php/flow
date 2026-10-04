@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function array_map;
@@ -64,25 +68,36 @@ final class Sprintf implements ScalarFunction
         return type_string();
     }
 
-    public function eval(Row $row, FlowContext $context): ?string
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $format = (new Parameter($this->format))->asString($row, $context);
-
-        /**
-         * @var array<null|float|int|string> $values
-         */
-        $values = array_map(static fn(ScalarFunction $value): mixed => (new Parameter($value))->eval(
-            $row,
+        $formats = (new Parameter($this->format))->asStrings($rows, $context);
+        $arguments = array_map(static fn(ScalarFunction $value): array => (new Parameter($value))->values(
+            $rows,
             $context,
         ), $this->values);
+        $results = [];
+        $i = 0;
 
-        if ($format === null || in_array(null, $values, true)) {
-            throw new InvalidArgumentException('Sprintf requires non-null format and values');
+        try {
+            foreach ($formats as $i => $format) {
+                /**
+                 * @var array<null|float|int|string> $values
+                 */
+                $values = array_map(static fn(array $argument): mixed => $argument[$i], $arguments);
+
+                if ($format === null || in_array(null, $values, true)) {
+                    throw new InvalidArgumentException('Sprintf requires non-null format and values');
+                }
+
+                /** @var array<float|int|string> $nonNullValues */
+                $nonNullValues = $values;
+
+                $results[] = sprintf($format, ...$nonNullValues);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        /** @var array<float|int|string> $nonNullValues */
-        $nonNullValues = $values;
-
-        return sprintf($format, ...$nonNullValues);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

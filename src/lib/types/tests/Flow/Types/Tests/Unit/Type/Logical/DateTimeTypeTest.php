@@ -492,4 +492,14 @@ final class DateTimeTypeTest extends TestCase
 
         static::assertSame('2021-01-01 00:00:00 UTC', $value->format('Y-m-d H:i:s e'));
     }
+
+    #[TestWith([NAN])]
+    #[TestWith([INF])]
+    #[TestWith([-INF])]
+    public function test_a_non_finite_float_is_refused(float $value): void
+    {
+        $this->expectException(CastingException::class);
+
+        type_datetime()->cast($value);
+    }
 }

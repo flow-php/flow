@@ -11,6 +11,8 @@ use Flow\ETL\Bucketing\HashBucketing;
 use Flow\ETL\Bucketing\NativeHasher;
 use Flow\ETL\Bucketing\ResidentBucketsStorage;
 use Flow\ETL\Bucketing\SingleBucketHasher;
+use Flow\ETL\Dataset\Memory\BoundedRead;
+use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\Exception\DuplicatedEntriesException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\JoinException;
@@ -33,8 +35,10 @@ use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
 
+use function array_diff_key;
 use function array_intersect_key;
 use function array_keys;
+use function range;
 
 final class HashJoinProcessor implements Processor
 {
@@ -58,6 +62,7 @@ final class HashJoinProcessor implements Processor
         public readonly Buckets $leftBuckets,
         public readonly Buckets $rightBuckets,
         private readonly RandomValueGenerator $random,
+        public readonly Unit $memoryLimit,
         public readonly int $bucketsCount = 64,
         public readonly int $batchSize = 1000,
     ) {
@@ -86,6 +91,7 @@ final class HashJoinProcessor implements Processor
             $this->leftBuckets,
             $this->rightBuckets,
             $this->random,
+            $this->memoryLimit,
             $this->bucketsCount,
             $this->batchSize,
         );
@@ -119,7 +125,7 @@ final class HashJoinProcessor implements Processor
             }
         }
 
-        $joiner = new Joiner($this->expression, $this->type, $this->batchSize);
+        $joiner = new Joiner($this->expression, $this->type, $context->backend(), $this->batchSize);
         $equalityKeys = $joiner->keys();
         $resident = $this->rightBuckets->storage() instanceof ResidentBucketsStorage;
 
@@ -131,15 +137,31 @@ final class HashJoinProcessor implements Processor
                 $equalityKeys !== null && $this->type !== Join::right ? $equalityKeys->rightRefs() : null,
             );
 
-            $this->bucketize(
-                $rightRows,
-                $this->rightBuckets,
-                $equalityKeys !== null && !$resident ? $equalityKeys->rightRefs() : null,
-                'join-right',
-            );
+            /** @var null|list<Rows> $held the build side, when all of it fits under the memory limit */
+            $held = null;
+
+            if (!$resident) {
+                $bounded = new BoundedRead($this->memoryLimit, $context->backend());
+                [$read, $fits] = $bounded->read($rightRows);
+
+                if ($fits) {
+                    $held = $read;
+                } else {
+                    $rightRows = $bounded->followedBy($read, $rightRows);
+                }
+            }
+
+            if ($held === null) {
+                $this->bucketize(
+                    $rightRows,
+                    $this->rightBuckets,
+                    $equalityKeys !== null && !$resident ? $equalityKeys->rightRefs() : null,
+                    'join-right',
+                );
+            }
 
             $nullRightRow = $this->type === Join::left
-                ? (new NullRowBuilder($rightSchema ?? new Schema()))->row()
+                ? (new NullRowBuilder($rightSchema ?? new Schema(), $context->backend()))->rows()
                 : null;
 
             $leftRows = $this->tap(
@@ -151,13 +173,20 @@ final class HashJoinProcessor implements Processor
                     : null,
             );
 
-            if ($resident) {
+            if ($resident || $held !== null) {
                 $rightBucket = $this->rightBuckets->all()[0] ?? null;
 
                 $joinedBatches = $joiner->join(
                     JoinSide::of($leftRows, null, $leftSchema),
                     JoinSide::of(
-                        $rightBucket === null ? self::noRows() : $this->rightBuckets->rows($rightBucket->id),
+                        match (true) {
+                            $held !== null => (new BoundedRead($this->memoryLimit, $context->backend()))->followedBy(
+                                $held,
+                                self::noRows(),
+                            ),
+                            $rightBucket === null => self::noRows(),
+                            default => $this->rightBuckets->rows($rightBucket->id),
+                        },
                         $nullRightRow,
                         $rightSchema,
                     ),
@@ -183,7 +212,7 @@ final class HashJoinProcessor implements Processor
             // only the bucketized path builds it here, the resident path above derives the null-left
             // row inside the Joiner while streaming
             $nullLeftRow = $this->type === Join::right
-                ? (new NullRowBuilder($leftSchema ?? new Schema()))->row()
+                ? (new NullRowBuilder($leftSchema ?? new Schema(), $context->backend()))->rows()
                 : null;
 
             foreach ($this->bucketPairs() as [$leftBucket, $rightBucket]) {
@@ -287,21 +316,31 @@ final class HashJoinProcessor implements Processor
             $schema ??= $batch->schema();
 
             if ($dropNullKeyRefs !== null) {
-                $kept = [];
-
-                foreach ($batch->all() as $row) {
-                    foreach ($dropNullKeyRefs as $ref) {
-                        if ($row->get($ref) === null) {
-                            continue 2;
-                        }
-                    }
-
-                    $kept[] = $row;
+                if ($batch->isEmpty()) {
+                    continue;
                 }
 
-                $batch = Rows::trusted($batch->schema(), $kept);
+                $null = [];
 
-                if ($batch->empty()) {
+                foreach ($dropNullKeyRefs as $ref) {
+                    $column = $batch->column($ref->base());
+
+                    if ($column->nullCount() === 0) {
+                        continue;
+                    }
+
+                    for ($i = 0, $count = $column->count(); $i < $count; $i++) {
+                        if ($column->isNull($i)) {
+                            $null[$i] = true;
+                        }
+                    }
+                }
+
+                if ($null !== []) {
+                    $batch = $batch->gather(array_keys(array_diff_key(range(0, $batch->count() - 1), $null)));
+                }
+
+                if ($batch->isEmpty()) {
                     continue;
                 }
             }

@@ -7,8 +7,8 @@
 ## Introduction
 
 Transformations are a powerful abstraction in Flow PHP that allow you to modify DataFrames in a composable and reusable
-way. Unlike Transformers which operate on individual Rows, Transformations work at the DataFrame level, providing access
-to the full processing pipeline.
+way. Unlike Transformers, which receive one batch (`Rows`) at a time, Transformations work at the DataFrame level,
+providing access to the full processing pipeline.
 
 Every Transformation implements the `Transformation` interface with a single method:
 
@@ -29,18 +29,18 @@ Transformations can be applied to DataFrames using two methods:
 Both methods accept `Transformation` objects directly or through convenient DSL functions.
 
 ```php
-use function Flow\ETL\DSL\{df, from_array, select, drop};
+use function Flow\ETL\DSL\{df, from_array, select, drop, to_output};
 
 // Using with()
 df()
-    ->read(from_array([/* ... */]))
+    ->read(from_array([['id' => 1, 'name' => 'Alice', 'temporary_column' => 'x']]))
     ->with(select('id', 'name'))
     ->write(to_output())
     ->run();
 
 // Using transform() - identical behavior
 df()
-    ->read(from_array([/* ... */]))
+    ->read(from_array([['id' => 1, 'name' => 'Alice', 'temporary_column' => 'x']]))
     ->transform(drop('temporary_column'))
     ->write(to_output())
     ->run();
@@ -53,7 +53,7 @@ df()
 Select specific columns from the DataFrame, keeping only the columns you need.
 
 ```php
-use function Flow\ETL\DSL\{df, from_array, select, ref};
+use function Flow\ETL\DSL\{df, from_array, select, ref, to_output};
 
 // Select columns by name
 df()
@@ -67,7 +67,7 @@ df()
 
 // Select using References for more control
 df()
-    ->read(from_array([/* ... */]))
+    ->read(from_array([['id' => 1, 'name' => 'Alice', 'city' => 'New York']]))
     ->with(select(ref('id'), ref('city')))
     ->write(to_output())
     ->run();
@@ -78,7 +78,7 @@ df()
 Remove unwanted columns from the DataFrame, keeping all other columns.
 
 ```php
-use function Flow\ETL\DSL\{df, from_array, drop, ref};
+use function Flow\ETL\DSL\{df, from_array, drop, ref, to_output};
 
 // Drop columns by name
 df()
@@ -92,7 +92,7 @@ df()
 
 // Drop using References
 df()
-    ->read(from_array([/* ... */]))
+    ->read(from_array([['id' => 1, 'temp_column' => 'x', 'debug_info' => 'y']]))
     ->with(drop(ref('temp_column'), ref('debug_info')))
     ->write(to_output())
     ->run();
@@ -104,7 +104,9 @@ Control memory usage by setting the batch size for processing. Smaller batch siz
 processing large datasets.
 
 ```php
-use function Flow\ETL\DSL\{df, from_csv, batch_size};
+use function Flow\ETL\Adapter\CSV\from_csv;
+use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
+use function Flow\ETL\DSL\{df, batch_size};
 
 // Process large CSV file in batches of 100 rows
 df()
@@ -119,7 +121,7 @@ df()
 Add an index column to each row, useful for tracking row position or creating unique identifiers.
 
 ```php
-use function Flow\ETL\DSL\{df, from_array, add_row_index};
+use function Flow\ETL\DSL\{df, from_array, add_row_index, to_output};
 use Flow\ETL\Transformation\AddRowIndex\StartFrom;
 
 // Add default index starting from 0
@@ -131,11 +133,11 @@ df()
     ->with(add_row_index())
     ->write(to_output())
     ->run();
-// Output: [['index' => 0, 'name' => 'Alice'], ['index' => 1, 'name' => 'Bob']]
+// Output: [['name' => 'Alice', 'index' => 0], ['name' => 'Bob', 'index' => 1]]
 
 // Custom column name and start from 1
 df()
-    ->read(from_array([/* ... */]))
+    ->read(from_array([['name' => 'Alice'], ['name' => 'Bob']]))
     ->with(add_row_index('row_number', StartFrom::ONE))
     ->write(to_output())
     ->run();
@@ -150,8 +152,9 @@ and every run uses that instance.
 Restrict the number of rows processed, useful for debugging or sampling data.
 
 ```php
+use function Flow\ETL\Adapter\CSV\to_csv;
 use function Flow\ETL\Adapter\Doctrine\from_dbal_query;
-use function Flow\ETL\DSL\{df, limit};
+use function Flow\ETL\DSL\{df, from_array, limit, to_output};
 
 // Process only first 1000 rows
 df()
@@ -162,7 +165,7 @@ df()
 
 // Remove limit (process all rows)
 df()
-    ->read(from_array([/* ... */]))
+    ->read(from_array([['id' => 1], ['id' => 2]]))
     ->with(limit(null))
     ->write(to_output())
     ->run();
@@ -173,7 +176,7 @@ df()
 Replace column values with a mask string, useful for hiding sensitive information.
 
 ```php
-use function Flow\ETL\DSL\{df, from_array, mask_columns};
+use function Flow\ETL\DSL\{df, from_array, mask_columns, to_output};
 
 // Mask sensitive columns with default mask
 df()
@@ -188,7 +191,7 @@ df()
 
 // Use custom mask
 df()
-    ->read(from_array([/* ... */]))
+    ->read(from_array([['name' => 'Alice', 'credit_card' => '4111 1111 1111 1111']]))
     ->with(mask_columns(['credit_card'], '[REDACTED]'))
     ->write(to_output())
     ->run();
@@ -198,8 +201,10 @@ df()
 
 Transformations can be chained together to create complex data processing pipelines:
 
-```php
-use function Flow\ETL\DSL\{df, from_csv, select, add_row_index, limit, batch_size};
+```php ignore
+use function Flow\ETL\Adapter\CSV\from_csv;
+use function Flow\ETL\Adapter\JSON\to_json;
+use function Flow\ETL\DSL\{df, select, add_row_index, limit, batch_size};
 
 df()
     ->read(from_csv('users.csv'))
@@ -217,10 +222,11 @@ df()
 was written at, and planned and bound together with the rest of the frame.
 
 ```php
-use function Flow\ETL\DSL\{df, from_array, lit, ref, select, to_branch, to_csv, to_transformation};
+use function Flow\ETL\Adapter\CSV\to_csv;
+use function Flow\ETL\DSL\{df, from_array, lit, ref, select, to_branch, to_transformation};
 
 df()
-    ->read(from_array([/* ... */]))
+    ->read(from_array([['id' => 1, 'name' => 'Alice', 'active' => true], ['id' => 2, 'name' => 'Bob', 'active' => false]]))
     ->write(to_transformation(select('id', 'name'), to_csv('names.csv')))
     ->write(to_branch(ref('active')->equals(lit(true)), to_csv('active.csv')))
     ->run();
@@ -252,7 +258,7 @@ $sortById = new class implements Transformation {
 };
 
 df()
-    ->read(from_array([/* ... */]))
+    ->read(from_array([['id' => 2], ['id' => 1]]))
     ->write(to_transformation($sortById, to_output()))
     ->run();
 ```
@@ -262,11 +268,11 @@ df()
 Correctness is the same everywhere; what differs between operations is how much they hold, and they hold it inside the
 sink. Three groups:
 
-| Cost                                   | Operations                                                                                                                                                      |
-|----------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Grows with the whole stream            | `sortBy()`, `aggregate()`, `groupBy()->aggregate()`, `pivot()`, window functions, `collect()`, `join()`, `repartition()`                                        |
-| Grows with the number of distinct keys | `dropDuplicates()`, `constrain()` with a `UniqueConstraint`                                                                                                     |
-| Constant                               | `select()`, `withEntry()`, `filter()`, `add_row_index()`, `limit()`, `until()`, `offset()`, `cache($id)`, `batch_size()`, `batchBy()`                           |
+| Cost                                   | Operations                                                                                                                            |
+|----------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
+| Grows with the whole stream            | `sortBy()`, `aggregate()`, `groupBy()->aggregate()`, `pivot()`, window functions, `collect()`, `join()`, `repartition()`              |
+| Grows with the number of distinct keys | `dropDuplicates()`, `constrain()` with a `UniqueConstraint`                                                                           |
+| Constant                               | `select()`, `withEntry()`, `filter()`, `add_row_index()`, `limit()`, `until()`, `offset()`, `cache($id)`, `batch_size()`, `batchBy()` |
 
 The first group buffers - in memory, or spilled to disk by the external sort - exactly as it does on an outer frame.
 `offset()` and `cache($id)` are in the constant group: `offset()` counts the rows it skips, and `cache($id)` writes each
@@ -292,7 +298,7 @@ A sink runs under the frame's `->onError(...)` handler, and each failure is offe
 
 ```php
 df()
-    ->read(from_array([/* ... */]))
+    ->read(from_array([['id' => 2], ['id' => 1]]))
     ->onError(skip_rows_handler())                // a failing step inside the sink skips that batch
     ->write(to_transformation($sortById, to_csv('sorted.csv')))
     ->run();
@@ -314,6 +320,8 @@ You can create custom transformations by implementing the `Transformation` inter
 ```php
 use Flow\ETL\{DataFrame, Transformation};
 
+use function Flow\ETL\DSL\{df, from_array, ref, to_output};
+
 final class UppercaseNames implements Transformation
 {
     public function transform(DataFrame $dataFrame): DataFrame
@@ -327,7 +335,7 @@ final class UppercaseNames implements Transformation
 
 // Use custom transformation
 df()
-    ->read(from_array([/* ... */]))
+    ->read(from_array([['name' => 'alice'], ['name' => 'bob']]))
     ->with(new UppercaseNames())
     ->write(to_output())
     ->run();

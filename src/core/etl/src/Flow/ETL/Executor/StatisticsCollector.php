@@ -61,7 +61,7 @@ final class StatisticsCollector
         }
 
         gc_collect_cycles();
-        $this->memory = new Consumption();
+        $this->memory = new Consumption($this->context->backend());
         $this->startedAt = $this->context->config->clock()->now();
         $this->startTime = HighResolutionTime::now();
     }
@@ -82,15 +82,9 @@ final class StatisticsCollector
             $this->schema = $this->schema->merge($rows->schema());
         }
 
-        if ($this->columnStatistics !== null) {
-            foreach ($rows->all() as $row) {
-                foreach ($rows->schema()->definitions() as $definition) {
-                    $name = $definition->entry()->name();
-
-                    if ($row->has($name)) {
-                        $this->columnStatistics->add($definition, $row->get($name));
-                    }
-                }
+        if ($this->columnStatistics !== null && !$rows->isEmpty()) {
+            foreach ($rows->schema()->definitions() as $name => $definition) {
+                $this->columnStatistics->add($definition, $rows->column($name));
             }
         }
     }

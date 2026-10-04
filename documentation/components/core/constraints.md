@@ -49,26 +49,31 @@ You can implement custom constraints by creating classes that implement the `Con
 ```php
 <?php
 
-use Flow\ETL\{Constraint, Row};
+use Flow\ETL\{Constraint, Rows};
 
-class AgeRangeConstraint implements Constraint
+final class AgeRangeConstraint implements Constraint
 {
     public function __construct(private int $minAge, private int $maxAge) {}
-    
-    public function isSatisfiedBy(Row $row): bool
+
+    public function firstViolation(Rows $rows): ?int
     {
-        $age = $row->get('age')->value();
-        return $age >= $this->minAge && $age <= $this->maxAge;
+        foreach ($rows->column('age')->values() as $i => $age) {
+            if ($age < $this->minAge || $age > $this->maxAge) {
+                return $i;
+            }
+        }
+
+        return null;
     }
-    
+
     public function toString(): string
     {
         return "Age must be between {$this->minAge} and {$this->maxAge}";
     }
-    
-    public function violation(Row $row): string
+
+    public function violation(Rows $rows, int $index): string
     {
-        return "Age {$row->get('age')->value()} is outside allowed range";
+        return "Age {$rows->column('age')->value($index)} is outside allowed range";
     }
 }
 ```

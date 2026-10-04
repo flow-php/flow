@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Column\Column;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\UnresolvedReference;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\ArrayKey;
 use Flow\Types\Type\Logical\StructureType;
 
+use function array_fill;
 use function array_key_exists;
 use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_bare;
@@ -88,30 +91,39 @@ final readonly class StructureSelect implements ScalarFunction
         return type_optional(new StructureType($elements));
     }
 
-    /**
-     * @return null|array<string, mixed>
-     */
-    public function eval(Row $row, FlowContext $context): ?array
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        if (!$row->has($this->ref)) {
-            return null;
+        if ($rows->schema()->findDefinition($this->ref->base()) === null) {
+            // @mago-ignore analysis:possibly-invalid-argument
+            return (new ResultColumn($context->backend()))->of(
+                $this,
+                $rows->isEmpty() ? [] : array_fill(0, $rows->count(), null),
+            );
         }
 
-        $value = $row->get($this->ref);
+        $results = [];
 
-        if (!is_array($value)) {
-            return null;
-        }
-        $output = [];
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($rows->column($this->ref->base())->values() as $value) {
+            if (!is_array($value)) {
+                $results[] = null;
 
-        foreach ($this->refs as $ref) {
-            if (array_key_exists($ref->to(), $value)) {
-                $output[$ref->name()] = $value[$ref->to()];
-            } else {
-                $output[$ref->name()] = null;
+                continue;
             }
+
+            $output = [];
+
+            foreach ($this->refs as $ref) {
+                if (array_key_exists($ref->to(), $value)) {
+                    $output[$ref->name()] = $value[$ref->to()];
+                } else {
+                    $output[$ref->name()] = null;
+                }
+            }
+
+            $results[] = $output;
         }
 
-        return $output;
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

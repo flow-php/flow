@@ -56,8 +56,7 @@ check), which is what triggers the rebuild.
 `src/extension/pg-query-ext/Makefile`, so the playground and the native extension can never
 disagree about which PostgreSQL grammar parses, and fails fast if that variable cannot be read.
 
-The pin is a **branch** (`18-latest`), not a tag. Changing it re-clones automatically; upstream
-moving the branch under a fixed version does not, and needs `rm -rf wasm/libpg_query-*`.
+The pin is a release tag (`18.0.0`), so a build is reproducible. Changing it re-clones automatically.
 
 ## Included PHP Extensions
 
@@ -274,7 +273,7 @@ What is now true:
 
 - `pack()`/`unpack()` 64-bit format codes (`q`, `Q`, `J`, `P`) work. `Flow\Floe` therefore works, and
   so does **`sortBy()`** and everything else that spills runs to disk through
-  `Flow\Floe\Encoding\Int64Encoder`. Before this, every Floe write in the browser died with
+  `Flow\ETL\Column\Layout\Int64Layout` (`pack('P*')`). Before this, every Floe write in the browser died with
   `ValueError: 64-bit format codes are not available for 32-bit versions of PHP`.
 - Large integers from Thrift/Parquet metadata no longer overflow to float. On the 32-bit build,
   reading a parquet file emitted hundreds of
@@ -282,7 +281,7 @@ What is now true:
   `Flow\Parquet\Thrift\CompactProtocol` and `Flow\ETL\Bucketing\HashBucketing`; the 64-bit build
   emits none.
 - Hex constants like `0x80000000` are plain integers and need no `(int)` cast.
-- `DateTimeEncoder` packs `getTimestamp()`, which now represents dates past 2038-01-19.
+- `DateTimePhysical` stores `getTimestamp() * 1_000_000 + µs`, which now represents dates past 2038-01-19.
 
 The `(int)` casts in the parquet library's `fromThrift()` methods are **left in place**. They are no
 longer load-bearing for the playground, but the library still supports 32-bit PHP builds generally,
@@ -334,7 +333,7 @@ Two consequences worth knowing before changing any of this:
   file of the *wrong* architecture, which the existing `[ ! -f ]` guard cannot detect.
 - **Switching target does not invalidate the dependency guards.** Each guard tests its own build
   output (`libxml2-2.11.4/` the source dir, `libzip-1.11.3/install/lib/libzip.a`,
-  `libpg_query-18-latest/libpg_query.a`), and none of them knows about the target. libzip
+  `libpg_query-18.0.0/libpg_query.a`), and none of them knows about the target. libzip
   additionally caches the resolved zlib path in `build/CMakeCache.txt`, which is why `build.sh`
   removes that directory before configuring.
 

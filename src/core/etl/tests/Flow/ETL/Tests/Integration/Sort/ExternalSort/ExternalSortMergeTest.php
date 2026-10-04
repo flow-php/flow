@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Sort\ExternalSort;
 
 use Flow\ETL\Bucketing\Storage\MemoryBuckets;
+use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\Tests\Double\RecordingBucketsStorage;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Filesystem\Path\Filter\KeepAll;
 
@@ -28,18 +30,40 @@ final class ExternalSortMergeTest extends FlowIntegrationTestCase
     {
         $input = [];
 
-        for ($id = 100; $id > 0; $id--) {
+        for ($id = 16; $id > 0; $id--) {
             $input[] = ['id' => $id];
         }
 
         $output = [];
-        df(config_builder()->sort(external_sort()->runSize(1)->bucketsCount(2))->build())
+        df(config_builder()->sort(external_sort()->memoryLimit(Unit::fromBytes(1))->bucketsCount(2))->build())
             ->read(from_array($input))
+            ->batchSize(2)
             ->sortBy([ref('id')])
             ->write(to_array($output))
             ->run();
 
-        static::assertSame(range(1, 100), array_column($output, 'id'));
+        static::assertSame(range(1, 16), array_column($output, 'id'));
+    }
+
+    public function test_spilled_runs_are_read_back_through_the_configured_backend(): void
+    {
+        $backend = new SpyBackend();
+        $output = [];
+
+        df(
+            config_builder()
+                ->backend($backend)
+                ->sort(external_sort()->memoryLimit(Unit::fromBytes(1)))
+                ->build(),
+        )
+            ->read(from_array([['id' => 3], ['id' => 1], ['id' => 2]]))
+            ->batchSize(1)
+            ->sortBy(ref('id'))
+            ->write(to_array($output))
+            ->run();
+
+        static::assertSame([1, 2, 3], array_column($output, 'id'));
+        static::assertGreaterThan(0, $backend->decodes());
     }
 
     public function test_memory_storage_spills_nothing_to_disk(): void
@@ -51,8 +75,13 @@ final class ExternalSortMergeTest extends FlowIntegrationTestCase
         }
 
         $output = [];
-        df(config_builder()->sort(external_sort()->storage(new MemoryBuckets())->runSize(1)->bucketsCount(2))->build())
+        df(
+            config_builder()
+                ->sort(external_sort()->storage(new MemoryBuckets())->memoryLimit(Unit::fromBytes(1))->bucketsCount(2))
+                ->build(),
+        )
             ->read(from_array($input))
+            ->batchSize(1)
             ->sortBy([ref('id')])
             ->write(to_array($output))
             ->run();
@@ -80,10 +109,17 @@ final class ExternalSortMergeTest extends FlowIntegrationTestCase
         $output = [];
         df(
             config_builder()
-                ->sort(external_sort()->storage($spill)->mergeStorage($merge)->runSize(1)->bucketsCount(2))
+                ->sort(
+                    external_sort()
+                        ->storage($spill)
+                        ->mergeStorage($merge)
+                        ->memoryLimit(Unit::fromBytes(1))
+                        ->bucketsCount(2),
+                )
                 ->build(),
         )
             ->read(from_array($input))
+            ->batchSize(1)
             ->sortBy([ref('id')])
             ->write(to_array($output))
             ->run();

@@ -7,9 +7,9 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\BoundStep;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 use Flow\Serializer\Base64Serializer;
@@ -50,24 +50,24 @@ final readonly class UnserializeTransformer implements Transformer
             // a payload that fails to decode still has to produce the declared shape, so every declared
             // column is nullable - the same rule from_json follows
             $outputSchema = $this->bind($rows->schema())->output;
-            $declared = [];
+            $prefix = $this->merge ? $this->mergePrefix : '';
+            $names = [];
+            $outputNames = [];
 
             foreach ($this->target->definitions() as $definition) {
-                $payloadName = $definition->entry()->name();
-                $declared[$this->merge ? $this->mergePrefix . $payloadName : $payloadName] = $payloadName;
+                $names[] = $definition->entry()->name();
+                $outputNames[] = $prefix . $definition->entry()->name();
             }
 
-            $decoder = SerializedPayloadDecoder::of($source, $serializer, $declared);
-            $unserialized = [];
+            $decoder = SerializedPayloadDecoder::of($source, $serializer, $names, $prefix);
+            $builder = new RowsBuilder($outputSchema->keep(...$outputNames), $context->backend());
 
-            foreach ($rows->all() as $row) {
-                $unserialized[] = new Row([
-                    ...($this->merge ? $row->values() : []),
-                    ...$decoder->decode($row),
-                ]);
+            for ($i = 0, $count = $rows->count(); $i < $count; $i++) {
+                $builder->appendFrom($decoder->decode($rows, $i), 0);
             }
 
-            $result = new Rows($outputSchema, ...$unserialized);
+            $decoded = $builder->finish();
+            $result = $this->merge ? $rows->withColumns($outputSchema, $decoded->columns()) : $decoded;
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

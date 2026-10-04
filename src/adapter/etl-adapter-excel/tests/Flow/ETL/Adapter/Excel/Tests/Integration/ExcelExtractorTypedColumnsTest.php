@@ -1,0 +1,46 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Adapter\Excel\Tests\Integration;
+
+use Flow\ETL\Config;
+use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\Adapter\Excel\DSL\from_excel;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\string_schema;
+use function Flow\Filesystem\DSL\path_real;
+use function Flow\Types\DSL\type_integer;
+
+final class ExcelExtractorTypedColumnsTest extends FlowTestCase
+{
+    public function test_reads_typed_columns_with_a_schema(): void
+    {
+        $extractor = from_excel(path_real(__DIR__ . '/../Fixtures/fixture.xlsx'))
+            ->withSchema(schema(int_schema('id'), string_schema('name'), string_schema('email', nullable: true)));
+
+        $count = 0;
+
+        foreach ($extractor->extract(flow_context(Config::builder()->build())) as $rows) {
+            static::assertEquals(type_integer(), $rows->schema()->get('id')->type());
+
+            $count += $rows->count();
+        }
+
+        static::assertSame(10, $count);
+    }
+
+    public function test_appends_input_file_uri_when_metadata_columns_are_enabled(): void
+    {
+        $extractor = from_excel($path = path_real(__DIR__ . '/../Fixtures/fixture.xlsx'))
+            ->withSchema(schema(int_schema('id'), string_schema('name'), string_schema('email', nullable: true)))
+            ->withMetadataColumns(true);
+
+        foreach ($extractor->extract(flow_context(Config::builder()->build())) as $rows) {
+            static::assertSame([$path->uri()], array_values(array_unique($rows->column('_input_file_uri')->values())));
+        }
+    }
+}

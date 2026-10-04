@@ -7,8 +7,8 @@ namespace Flow\ETL\Adapter\Avro\FlixTech;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
-use Flow\ETL\Extractor\FileExtractor;
-use Flow\ETL\Extractor\PathFiltering;
+use Flow\ETL\Extractor\File\FileExtractor;
+use Flow\ETL\Extractor\File\PathFiltering;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
@@ -37,7 +37,7 @@ final class AvroExtractor implements Extractor, FileExtractor
 
     public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
     {
-        yield new Rows(new Schema());
+        yield Rows::empty(new Schema(), $context->backend());
     }
 
     public function schema(): Schema

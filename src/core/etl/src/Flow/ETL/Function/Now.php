@@ -6,9 +6,13 @@ namespace Flow\ETL\Function;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateTimeType;
 
@@ -64,14 +68,24 @@ final class Now implements ScalarFunction
         return $this->type;
     }
 
-    public function eval(Row $row, FlowContext $context): ?DateTimeImmutable
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $tz = (new Parameter($this->timeZone))->asInstanceOf($row, $context, DateTimeZone::class);
+        $tzes = (new Parameter($this->timeZone))->asInstancesOf($rows, $context, DateTimeZone::class);
+        $results = [];
+        $i = 0;
 
-        if ($tz === null) {
-            throw new InvalidArgumentException('Now function requires valid DateTimeZone');
+        try {
+            foreach ($tzes as $i => $tz) {
+                if ($tz === null) {
+                    throw new InvalidArgumentException('Now function requires valid DateTimeZone');
+                }
+
+                $results[] = $this->type->cast(new DateTimeImmutable('now', $tz));
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return $this->type->cast(new DateTimeImmutable('now', $tz));
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

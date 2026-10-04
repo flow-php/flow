@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Dataset\Statistics;
 
 use Flow\ETL\Dataset\Statistics\Columns;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\ColumnMother;
 use InvalidArgumentException;
 
 use function Flow\ETL\DSL\integer_schema;
@@ -17,12 +18,12 @@ final class ColumnsTest extends FlowTestCase
     {
         $columns = new Columns();
 
-        $columns->add(integer_schema('a'), 1);
-        $columns->add(integer_schema('a'), 100);
-        $columns->add(integer_schema('a'), -5);
-        $columns->add(string_schema('b', true), 'a');
-        $columns->add(string_schema('b', true), 'some text');
-        $columns->add(string_schema('b', true), null);
+        $columns->add(integer_schema('a'), ColumnMother::of(integer_schema('a'), [1]));
+        $columns->add(integer_schema('a'), ColumnMother::of(integer_schema('a'), [100]));
+        $columns->add(integer_schema('a'), ColumnMother::of(integer_schema('a'), [-5]));
+        $columns->add(string_schema('b', true), ColumnMother::of(string_schema('b', true), ['a']));
+        $columns->add(string_schema('b', true), ColumnMother::of(string_schema('b', true), ['some text']));
+        $columns->add(string_schema('b', true), ColumnMother::of(string_schema('b', true), [null]));
 
         static::assertCount(2, $columns->all());
         static::assertSame(3, $columns->get('a')->distinctCount());

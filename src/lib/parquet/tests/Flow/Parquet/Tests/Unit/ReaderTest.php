@@ -5,31 +5,22 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Unit;
 
 use Flow\Filesystem\Stream\NativeLocalSourceStream;
-use Flow\Parquet\Engine\ArrowParquetEngine;
+use Flow\Parquet\Engine\AdaptiveParquetEngine;
 use Flow\Parquet\Engine\PhpParquetEngine;
-use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Reader;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
-use function extension_loaded;
 use function Flow\Filesystem\DSL\path_real;
 
 final class ReaderTest extends TestCase
 {
-    public function test_arrow_factory_creates_reader_with_arrow_engine(): void
+    public function test_the_default_engine_is_adaptive(): void
     {
-        if (!extension_loaded('arrow')) {
-            $this->expectException(RuntimeException::class);
-            Reader::arrow();
-
-            return;
-        }
-
-        $reader = Reader::arrow();
+        $reader = new Reader();
 
         static::assertInstanceOf(
-            ArrowParquetEngine::class,
+            AdaptiveParquetEngine::class,
             (new ReflectionClass($reader))
                 ->getProperty('engine')
                 ->getValue($reader),

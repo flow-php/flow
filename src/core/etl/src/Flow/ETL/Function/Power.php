@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\Calculator\Calculator;
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 use Flow\Types\Type\Native\FloatType;
@@ -17,6 +20,8 @@ use function Flow\ETL\DSL\lit;
 use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
+use function is_float;
+use function is_int;
 
 final class Power implements ScalarFunction
 {
@@ -25,8 +30,11 @@ final class Power implements ScalarFunction
     private readonly ScalarFunction $left;
     private readonly ScalarFunction $right;
 
-    public function __construct(ScalarFunction|int|float $left, ScalarFunction|int $right)
-    {
+    public function __construct(
+        ScalarFunction|int|float $left,
+        ScalarFunction|int $right,
+        private readonly bool $exact = false,
+    ) {
         $this->left = $left instanceof ScalarFunction ? $left : lit($left);
         $this->right = $right instanceof ScalarFunction ? $right : lit($right);
     }
@@ -45,7 +53,7 @@ final class Power implements ScalarFunction
     public function withChildren(array $children): static
     {
         /** @var list<ScalarFunction> $children */
-        return new self($children[0], $children[1]);
+        return new self($children[0], $children[1], $this->exact);
     }
 
     /**
@@ -66,15 +74,43 @@ final class Power implements ScalarFunction
         return $left instanceof IntegerType && $right instanceof IntegerType ? type_integer() : type_float();
     }
 
-    public function eval(Row $row, FlowContext $context): float|int|null
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $leftValue = (new Parameter($this->left))->asNumber($row, $context);
-        $rightValue = (new Parameter($this->right))->asInt($row, $context);
+        $lefts = (new Parameter($this->left))->asNumbers($rows, $context);
+        $rights = (new Parameter($this->right))->asInts($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($leftValue === null || $rightValue === null) {
-            throw new InvalidArgumentException('Power function requires non-null values');
+        try {
+            foreach ($lefts as $i => $left) {
+                $right = $rights[$i];
+
+                if ($left === null || $right === null) {
+                    throw new InvalidArgumentException('Power function requires non-null values');
+                }
+
+                if ($this->exact) {
+                    $results[] = $context->calculator()->power($left, $right);
+
+                    continue;
+                }
+
+                if (is_int($left) && $right < 0) {
+                    throw new InvalidArgumentException('Power function of an integer requires a non-negative exponent');
+                }
+
+                $result = $left ** $right;
+
+                if (is_int($left) && is_float($result)) {
+                    throw new InvalidArgumentException('Power function integer overflow');
+                }
+
+                $results[] = $result;
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return (new Calculator())->power($leftValue, $rightValue);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

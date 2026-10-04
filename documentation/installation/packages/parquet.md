@@ -37,4 +37,5 @@ For high-performance Parquet reading/writing via Apache Arrow, install the arrow
 pie install flow-php/arrow-ext
 ```
 
-See [Arrow Extension installation](/documentation/installation/packages/arrow-ext.md) for full details.
+`flow-php/parquet` conflicts with `ext-arrow <0.45`. See
+[Arrow Extension installation](/documentation/installation/packages/arrow-ext.md) for full details.

@@ -14,8 +14,7 @@ use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 
 use function array_values;
 use function bin2hex;
-use function floor;
-use function round;
+use function Flow\Parquet\floor_div;
 use function sprintf;
 use function unpack;
 
@@ -65,22 +64,14 @@ final readonly class Int96DateTimeConverter implements Converter
             | ($bytesArray[6] << 48)
             | ($bytesArray[7] << 56);
 
-        // The Julian epoch starts on January 1, 4713 BCE.
-        // The Unix epoch starts on January 1, 1970 CE.
-        // The number of days between these two dates is 2440588.
-        $daysSinceUnixEpoch = $daysInEpoch - 2440588;
+        $micros = (($daysInEpoch - 2_440_588) * 86_400_000_000) + floor_div($nanosecondsWithinDay, 1_000);
+        $seconds = floor_div($micros, 1_000_000);
 
-        // Convert the days since the Unix epoch and the nanoseconds within the day to a Unix timestamp
-        $timestampSeconds = ($daysSinceUnixEpoch * 86400) + ($nanosecondsWithinDay / 1e9);
-
-        // Separate the seconds and fractional seconds parts of the timestamp
-        $seconds = floor($timestampSeconds);
-        $fraction = $timestampSeconds - $seconds;
-
-        // Convert the fractional seconds to milliseconds
-        $microseconds = round($fraction * 1e6);
-
-        $dateTime = DateTimeImmutable::createFromFormat('U.u', sprintf('%d.%06d', $seconds, $microseconds));
+        $dateTime = DateTimeImmutable::createFromFormat('U.u', sprintf(
+            '%d.%06d',
+            $seconds,
+            $micros - ($seconds * 1_000_000),
+        ));
 
         if ($dateTime === false) {
             throw new RuntimeException('Failed to convert INT96 to DateTime, given bytes: ' . bin2hex($bytes));

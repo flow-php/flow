@@ -21,8 +21,8 @@ final readonly class ThrowWhenRowMatches implements Transformer
 
     public function transform(Rows $rows, FlowContext $context): Rows
     {
-        foreach ($rows as $row) {
-            if ($row->get($this->column) === $this->value) {
+        foreach ($rows->toArray() as $row) {
+            if ($row[$this->column] === $this->value) {
                 throw $this->throwable;
             }
         }

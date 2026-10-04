@@ -9,11 +9,13 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
-use Flow\ETL\Extractor\FileExtractor;
-use Flow\ETL\Extractor\FileReading;
+use Flow\ETL\Extractor\File\FileExtractor;
+use Flow\ETL\Extractor\File\FileReading;
+use Flow\ETL\Extractor\File\FileReadLoop;
+use Flow\ETL\Extractor\File\ListedFiles;
+use Flow\ETL\Extractor\File\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\File\ReadWindow;
 use Flow\ETL\Extractor\InfersSchema;
-use Flow\ETL\Extractor\ListedFiles;
-use Flow\ETL\Extractor\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
@@ -67,14 +69,16 @@ final class JsonExtractor implements
     public function __construct(
         private readonly Path $path,
         Filesystem $filesystem = new NativeLocalFilesystem(),
+        private readonly JsonFormat $format = JsonFormat::Document,
     ) {
         if (!$filesystem->supports($path)) {
             throw new InvalidArgumentException(sprintf(
                 'Filesystem %s serves "%s://" paths, given: "%s". Pass the filesystem that handles '
-                . 'this scheme, e.g. from_json($path, filesystem: aws_s3_filesystem(...)).',
+                . 'this scheme, e.g. %s($path, filesystem: aws_s3_filesystem(...)).',
                 $filesystem::class,
                 $filesystem->mount()->protocol,
                 $path->uri(),
+                $format === JsonFormat::Lines ? 'from_json_lines' : 'from_json',
             ));
         }
 
@@ -92,61 +96,28 @@ final class JsonExtractor implements
      */
     public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
     {
-        $hydrator = $context->hydrator();
-        $batchSize = $this->batchSize();
-        $yielded = 0;
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
+        $schema = $this->schema();
         $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $pathFilter), false);
-        $reader = new JsonFileReader(
-            $this->filesystem,
-            JsonFormat::Document,
-            $this->pointer,
-            $this->pointerToEntryName,
+
+        yield from (new FileReadLoop($fileColumns, $schema))->read(
             $sources,
+            new JsonFileBatches(
+                $this->filesystem,
+                new JsonFileReader(
+                    $this->filesystem,
+                    $this->format,
+                    $this->pointer,
+                    $this->pointerToEntryName,
+                    $sources,
+                ),
+                $this->format,
+                $this->pointer,
+            ),
+            $this->batchSize(),
+            $context->backend(),
+            new ReadWindow(limit: $limit),
         );
-
-        if ($this->schema !== null) {
-            $base = $this->schema;
-        } else {
-            // a local, not the property: withoutTail() takes a non-nullable Schema and no analyzer narrows a property
-            $derived = $this->derivedSchema;
-
-            if ($derived === null) {
-                $samples = new JsonSamples($reader->samples($this->inference->sampleSize));
-                $derived =
-                    $this->derivedSchema = (new SchemaInferrer($this->inference, new InstanceOfTypeNarrower()))->infer(
-                        [],
-                        $samples,
-                    );
-                $this->sampled = $samples->sampledFiles();
-            }
-
-            $base = $fileColumns->withoutTail($derived);
-        }
-
-        $schema = $fileColumns->declare($base);
-        $body = $fileColumns->withoutTail($schema);
-
-        foreach ($sources as $source) {
-            // forFile() reads the PARTITION definitions, which only declare() creates - $base is the body
-            $constants = $fileColumns->forFile($source, $schema);
-
-            foreach ($reader->batches($source, $batchSize) as $rawBatch) {
-                $hydrated = $constants->fillRows($hydrator->hydrate($rawBatch, $body), $schema);
-
-                $yielded += $hydrated->count();
-
-                $signal = yield $hydrated;
-
-                if ($signal === Signal::STOP) {
-                    return;
-                }
-
-                if ($limit !== null && $yielded >= $limit) {
-                    return;
-                }
-            }
-        }
     }
 
     public function inferSchema(SchemaInferenceBuilder $builder): static
@@ -173,7 +144,7 @@ final class JsonExtractor implements
         if ($derived === null) {
             $reader = new JsonFileReader(
                 $this->filesystem,
-                JsonFormat::Document,
+                $this->format,
                 $this->pointer,
                 $this->pointerToEntryName,
                 iterator_to_array($this->sourceFiles($this->filesystem, $this->path), false),
@@ -202,8 +173,9 @@ final class JsonExtractor implements
     }
 
     /**
-     * A document has no bytes-per-row unit, so rows are known only when the sample schema inference already read
-     * every element of every file.
+     * Rows come from what the sample schema inference already read; without one they are unknown, a sample is never
+     * read just for them. A document has no bytes-per-row unit, so its rows are known only when that sample read every
+     * element of every file; JSON lines estimate them from the sampled bytes per row.
      */
     public function statistics(): Statistics
     {
@@ -218,7 +190,12 @@ final class JsonExtractor implements
             return new Statistics(rows: Cardinality::unknown(), size: $size);
         }
 
-        return $this->statistics = new Statistics(rows: $this->sampled->exactRows($this->listed->count), size: $size);
+        return $this->statistics = new Statistics(
+            rows: $this->format === JsonFormat::Document
+                ? $this->sampled->exactRows($this->listed->count)
+                : $this->sampled->estimatedRows($this->listed->count, $size),
+            size: $size,
+        );
     }
 
     /**

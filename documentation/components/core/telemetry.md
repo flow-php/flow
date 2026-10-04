@@ -124,7 +124,7 @@ $spanExporter = console_exporter(colors: true);
 $metricExporter = console_exporter(colors: true);
 
 // Logs are formatted with severity-based coloring
-$logExporter = console_exporter(colors: true, maxBodyLength: 100);
+$logExporter = console_exporter(colors: true, maxLogBodyLength: 100);
 ```
 
 ### OTLP Export (Production)
@@ -138,10 +138,7 @@ use function Flow\Telemetry\DSL\{
     batching_log_processor, batching_metric_processor, batching_span_processor,
     logger_provider, memory_context_storage, meter_provider, resource, telemetry, tracer_provider
 };
-use function Flow\Bridge\Telemetry\OTLP\DSL\{
-    otlp_curl_transport, otlp_json_serializer,
-    otlp_exporter, otlp_exporter, otlp_exporter
-};
+use function Flow\Bridge\Telemetry\OTLP\DSL\{otlp_curl_transport, otlp_exporter, otlp_json_serializer};
 
 $clock = new SystemClock(new DateTimeZone('UTC'));
 $contextStorage = memory_context_storage();
@@ -210,13 +207,14 @@ Every DataFrame execution creates a root span with the following attributes:
 
 When `trace_loading` is enabled, child spans are created for each loader with:
 
-- Span name: Loader class name (e.g., `Flow\ETL\Loader\StreamLoader`)
+- Span name: short loader class name (e.g., `StreamLoader`); the full name is in `flow.etl.loader.class`
 - Parent: DataFrame span
 - Status: OK on success, ERROR on failure
 
 When `trace_transformations` is enabled, child spans are created for each transformer with:
 
-- Span name: Transformer class name (e.g., `Flow\ETL\Transformer\EntryNameTransformer`)
+- Span name: short transformer class name (e.g., `ScalarFunctionTransformer`); the full name is in
+  `flow.etl.transformer.class`, the batch sizes in `flow.etl.transformation.input_rows` / `output_rows`
 - Parent: DataFrame span
 - Status: OK on success, ERROR on failure
 
@@ -224,10 +222,10 @@ When `trace_transformations` is enabled, child spans are created for each transf
 
 When `collect_metrics` is enabled:
 
-| Metric                     | Type       | Unit       | Description                        |
-|----------------------------|------------|------------|------------------------------------|
-| `flow.etl.rows.processed`  | Counter    | `{row}`    | Cumulative count of processed rows |
-| `flow.etl.rows.throughput` | Throughput | `{row}/s`  | Rows processed per second          |
+| Metric                     | Type       | Unit    | Description                        |
+|----------------------------|------------|---------|------------------------------------|
+| `flow.etl.rows.processed`  | Counter    | `{row}` | Cumulative count of processed rows |
+| `flow.etl.rows.throughput` | Throughput | `{row}` | Rows processed per second          |
 
 ### Logs
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\GoogleSheet;
 
+use Flow\ETL\Extractor\Grid\RecordDecoder;
 use Flow\ETL\Schema\Inference\InferredTypes;
 use Flow\Types\Type\Logical\InstanceOfTypeNarrower;
 use Flow\Types\Type\Native\String\StringTypeNarrower;
@@ -25,11 +26,11 @@ final readonly class GoogleSheetReadOptions
     ) {}
 
     /**
-     * A fresh encoder per pass - the sample and the read each consume their own header row.
+     * A fresh decoder per pass - the sample and the read each consume their own header row.
      */
-    public function encoder(): GoogleSheetEncoder
+    public function decoder(): RecordDecoder
     {
-        return new GoogleSheetEncoder($this->withHeader, $this->dropExtraColumns, $this->emptyToNull);
+        return new RecordDecoder($this->withHeader, $this->emptyToNull, $this->dropExtraColumns);
     }
 
     /**

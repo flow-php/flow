@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\StructureType;
@@ -83,27 +87,34 @@ final class ArrayMergeCollection implements ScalarFunction
         );
     }
 
-    /**
-     * @return null|array<mixed>
-     */
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $array = (new Parameter($this->array))->asArray($row, $context);
+        $arrays = (new Parameter($this->array))->asArrays($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($array === null) {
-            throw new InvalidArgumentException('ArrayMergeCollection function requires non-null array');
-        }
+        try {
+            foreach ($arrays as $i => $array) {
+                if ($array === null) {
+                    throw new InvalidArgumentException('ArrayMergeCollection function requires non-null array');
+                }
 
-        // @mago-ignore analysis:mixed-assignment
-        foreach ($array as $element) {
-            if (!is_array($element)) {
-                throw new InvalidArgumentException(
-                    'ArrayMergeCollection function requires array elements to be arrays',
-                );
+                // @mago-ignore analysis:mixed-assignment
+                foreach ($array as $element) {
+                    if (!is_array($element)) {
+                        throw new InvalidArgumentException(
+                            'ArrayMergeCollection function requires array elements to be arrays',
+                        );
+                    }
+                }
+
+                /** @var array<array<mixed>> $array */
+                $results[] = array_merge(...array_values($array));
             }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        /** @var array<array<mixed>> $array */
-        return array_merge(...array_values($array));
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

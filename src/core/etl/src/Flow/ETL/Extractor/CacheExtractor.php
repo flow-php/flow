@@ -47,7 +47,7 @@ final class CacheExtractor implements Extractor, RewindableExtractor
         if (!$cache->has($this->id)) {
             if ($this->fallbackExtractor !== null) {
                 foreach ($this->fallbackExtractor->extract($context) as $rows) {
-                    $signal = yield $declared === null ? $rows : $rows->matchTo($declared);
+                    $signal = yield $declared === null ? $rows : $rows->matchTo($declared, $context->backend());
 
                     if ($signal === Signal::STOP) {
                         return;
@@ -60,7 +60,7 @@ final class CacheExtractor implements Extractor, RewindableExtractor
 
             foreach ($index->values() as $cacheKey) {
                 $cached = $cache->get($cacheKey);
-                $signal = yield $folded === null ? $cached : $cached->matchTo($folded);
+                $signal = yield $folded === null ? $cached : $cached->matchTo($folded, $context->backend());
 
                 if ($signal === Signal::STOP) {
                     return;

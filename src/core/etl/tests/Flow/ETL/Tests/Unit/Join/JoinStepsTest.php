@@ -11,10 +11,10 @@ use Flow\ETL\Processor\HashJoinProcessor;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\PhysicalPlanMother;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 
@@ -35,7 +35,7 @@ final class JoinStepsTest extends FlowTestCase
 
     public function test_of_takes_a_frame_output_as_its_right_side(): void
     {
-        $right = PhysicalPlanMother::reading(from_rows(rows(schema(int_schema('id')), row(['id' => 1]))));
+        $right = PhysicalPlanMother::reading(from_rows(array_to_rows([['id' => 1]], schema(int_schema('id')))));
 
         $steps = JoinSteps::of($right, Expression::on(['id' => 'id'], 'r_'), Join::inner, config_builder()->build());
 

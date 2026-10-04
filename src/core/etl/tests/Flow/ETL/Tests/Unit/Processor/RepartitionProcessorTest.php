@@ -4,127 +4,152 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Processor;
 
-use Flow\ETL\Bucketing\Bucket;
-use Flow\ETL\Bucketing\Buckets;
-use Flow\ETL\Bucketing\HashBucketing;
-use Flow\ETL\Bucketing\NativeHasher;
 use Flow\ETL\Bucketing\Storage\MemoryBuckets;
-use Flow\ETL\NativePHPRandomValueGenerator;
-use Flow\ETL\Processor\RepartitionProcessor;
+use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\Rows;
+use Flow\ETL\Tests\Context\GroupedRows;
+use Flow\ETL\Tests\Double\ReportedMemoryBackend;
+use Flow\ETL\Tests\Double\SpyBucketsStorage;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\RepartitionProcessorMother;
 use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestWith;
 
 use function array_map;
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function iterator_to_array;
-use function usort;
+use function memory_get_usage;
+use function mt_rand;
+use function mt_srand;
+use function sort;
 
 final class RepartitionProcessorTest extends FlowTestCase
 {
+    public static function random_datasets(): Generator
+    {
+        for ($seed = 1; $seed <= 50; $seed++) {
+            yield "seed {$seed}" => [$seed];
+        }
+    }
+
     public function test_bind_returns_the_input_schema(): void
     {
         $input = schema(str_schema('k'), int_schema('v'));
-        $processor = new RepartitionProcessor(refs(ref('k')), new Buckets(new MemoryBuckets()));
 
-        static::assertEquals($input, $processor->bind($input)->output);
+        static::assertEquals($input, RepartitionProcessorMother::inMemory(refs(ref('k')))->bind($input)->output);
+    }
+
+    public function test_under_the_limit_it_groups_in_one_pass_without_touching_the_buckets(): void
+    {
+        $storage = new SpyBucketsStorage(new MemoryBuckets());
+        $schema = schema(str_schema('k'), int_schema('v'));
+
+        $groups = iterator_to_array(
+            RepartitionProcessorMother::inMemory(refs(ref('k')), $storage)->process(
+                (static function () use ($schema): Generator {
+                    yield array_to_rows([['k' => 'a', 'v' => 1], ['k' => 'b', 'v' => 2]], $schema);
+                    yield array_to_rows([['k' => 'a', 'v' => 3], ['k' => 'b', 'v' => 4]], $schema);
+                })(),
+                flow_context(),
+            ),
+            false,
+        );
+
+        static::assertSame(
+            [[1, 3], [2, 4]],
+            array_map(static fn(Rows $group): array => $group->reduceToArray('v'), $groups),
+        );
+        static::assertSame([], $storage->appendedRows());
     }
 
     /**
-     * One bucket proves the grouping is the processor's own work; 64 proves a key is never split
+     * Past the limit: one bucket proves the grouping is the processor's own work; 64 prove a key is never split
      * across buckets, which is what makes the downstream window contiguous.
      *
      * @param int<1, max> $bucketsCount
      */
     #[TestWith([1])]
     #[TestWith([64])]
-    public function test_every_row_sharing_a_key_arrives_in_one_batch(int $bucketsCount): void
+    public function test_past_the_limit_every_row_sharing_a_key_still_arrives_in_one_batch(int $bucketsCount): void
     {
+        $storage = new SpyBucketsStorage(new MemoryBuckets());
         $schema = schema(str_schema('k'), int_schema('v'));
-        $buckets = new Buckets(new MemoryBuckets());
-        $strategy = new HashBucketing(
-            [ref('k')],
-            $bucketsCount,
-            new NativeHasher(),
-            new NativePHPRandomValueGenerator(),
-            'repartition',
-        );
-
-        $input = (static function () use ($schema): Generator {
-            yield rows($schema, row(['k' => 'a', 'v' => 1]), row(['k' => 'b', 'v' => 2]));
-            yield rows($schema, row(['k' => 'a', 'v' => 3]), row(['k' => 'b', 'v' => 4]));
-        })();
-
-        $metadata = [];
-
-        foreach ($strategy->bucketize($input, $buckets->storage()) as $bucket) {
-            $buckets->add($bucket);
-            $metadata[] = rows(Bucket::schema(), $bucket->toRow());
-        }
 
         $groups = array_map(
-            static fn(Rows $group): array => array_map(
-                static fn(array $values): int => (int) $values['v'],
-                $group->toArray(),
-            ),
+            static fn(Rows $group): array => $group->reduceToArray('v'),
             iterator_to_array(
-                (new RepartitionProcessor(refs(ref('k')), $buckets))->process(
-                    (static function () use ($metadata): Generator {
-                        yield from $metadata;
+                RepartitionProcessorMother::with(refs(ref('k')), $storage, Unit::fromBytes(1), $bucketsCount)->process(
+                    (static function () use ($schema): Generator {
+                        yield array_to_rows([['k' => 'a', 'v' => 1], ['k' => 'b', 'v' => 2]], $schema);
+                        yield array_to_rows([['k' => 'a', 'v' => 3], ['k' => 'b', 'v' => 4]], $schema);
                     })(),
                     flow_context(),
                 ),
-                preserve_keys: false,
+                false,
             ),
         );
-
-        usort($groups, static fn(array $a, array $b): int => $a[0] <=> $b[0]);
+        sort($groups);
 
         static::assertSame([[1, 3], [2, 4]], $groups);
+        static::assertNotSame([], $storage->appendedRows());
+        static::assertSame([], $storage->liveBucketIds());
     }
 
-    public function test_buckets_are_cleared_when_the_stream_is_done(): void
+    #[DataProvider('random_datasets')]
+    public function test_crossing_the_limit_at_any_batch_gives_the_groups_one_in_memory_pass_gives(int $seed): void
     {
-        $schema = schema(str_schema('k'), int_schema('v'));
-        $buckets = new Buckets(new MemoryBuckets());
-        $strategy = new HashBucketing(
-            [ref('k')],
-            4,
-            new NativeHasher(),
-            new NativePHPRandomValueGenerator(),
-            'repartition',
-        );
+        mt_srand($seed);
+        $schema = schema(int_schema('k', nullable: true), int_schema('v'));
+        $batches = [];
+        $id = 0;
 
-        $metadata = [];
+        for ($b = 0, $count = mt_rand(1, 8); $b < $count; $b++) {
+            $rows = [];
 
-        foreach ($strategy->bucketize(
-            (static function () use ($schema): Generator {
-                yield rows($schema, row(['k' => 'a', 'v' => 1]));
-            })(),
-            $buckets->storage(),
-        ) as $bucket) {
-            $buckets->add($bucket);
-            $metadata[] = rows(Bucket::schema(), $bucket->toRow());
+            for ($r = 0, $size = mt_rand(1, 20); $r < $size; $r++) {
+                $rows[] = ['k' => mt_rand(0, 6) === 0 ? null : mt_rand(0, 40), 'v' => $id++];
+            }
+
+            $batches[] = array_to_rows($rows, $schema);
         }
 
-        iterator_to_array(
-            (new RepartitionProcessor(refs(ref('k')), $buckets))->process(
-                (static function () use ($metadata): Generator {
-                    yield from $metadata;
-                })(),
+        $crossAt = mt_rand(0, $count);
+        $backend = new ReportedMemoryBackend();
+        $input = (static function () use ($batches, $crossAt, $backend): Generator {
+            foreach ($batches as $position => $batch) {
+                if ($position === $crossAt) {
+                    $backend->reported = 1_000_000_000_000;
+                }
+
+                yield $batch;
+            }
+        })();
+
+        $storage = new SpyBucketsStorage(new MemoryBuckets());
+
+        static::assertSame(
+            GroupedRows::batchesAsSet(RepartitionProcessorMother::inMemory(refs(ref('k')))->process(
+                (static fn(): Generator => yield from $batches)(),
                 flow_context(),
-            ),
-            preserve_keys: false,
+            )),
+            GroupedRows::batchesAsSet(RepartitionProcessorMother::with(
+                refs(ref('k')),
+                $storage,
+                Unit::fromBytes(memory_get_usage(false) + 500_000_000),
+            )->process($input, flow_context(config_builder()->backend($backend)->build()))),
         );
 
-        static::assertSame([], $buckets->all());
+        // the batch at $crossAt is read past the limit: it and every later batch are partitioned
+        if ($crossAt < $count) {
+            static::assertNotSame([], $storage->appendedRows());
+        }
     }
 }

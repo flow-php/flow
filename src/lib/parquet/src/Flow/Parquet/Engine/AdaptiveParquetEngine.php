@@ -11,20 +11,26 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFileReader;
 use Flow\Parquet\ParquetFileWriter;
-use Generator;
-
-use function extension_loaded;
 
 final readonly class AdaptiveParquetEngine implements ParquetEngine
 {
-    private ParquetEngine $delegate;
+    private ParquetEngine $engine;
 
-    public function __construct(ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN, Options $options = new Options())
-    {
-        $this->delegate = extension_loaded('arrow')
-            ? new ArrowParquetEngine($options)
+    public function __construct(
+        ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN,
+        Options $options = new Options(),
+        ?ArrowExtension $extension = null,
+    ) {
+        $this->engine = ($extension ?? ArrowExtension::detect())->available() && $byteOrder === ByteOrder::LITTLE_ENDIAN
+            ? new RustParquetEngine($options)
             : new PhpParquetEngine($byteOrder, $options);
+    }
+
+    public function openForRead(SourceStream $stream): ParquetFileReader
+    {
+        return $this->engine->openForRead($stream);
     }
 
     public function openForWrite(
@@ -33,17 +39,7 @@ final readonly class AdaptiveParquetEngine implements ParquetEngine
         Compressions $compression,
         Options $options,
     ): ParquetFileWriter {
-        return $this->delegate->openForWrite($stream, $schema, $compression, $options);
-    }
-
-    public function readValues(
-        SourceStream $stream,
-        Schema $schema,
-        array $columns = [],
-        ?int $limit = null,
-        ?int $offset = null,
-    ): Generator {
-        return $this->delegate->readValues($stream, $schema, $columns, $limit, $offset);
+        return $this->engine->openForWrite($stream, $schema, $compression, $options);
     }
 
     public function writeRows(
@@ -53,6 +49,6 @@ final readonly class AdaptiveParquetEngine implements ParquetEngine
         Options $options,
         iterable $rows,
     ): void {
-        $this->delegate->writeRows($stream, $schema, $compression, $options, $rows);
+        $this->engine->writeRows($stream, $schema, $compression, $options, $rows);
     }
 }

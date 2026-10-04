@@ -260,7 +260,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
             static::assertTrue($rows->schema()->isSame($extractor->schema()));
         }
 
-        $first = $batches[0]->first()->toArray();
+        $first = $batches[0]->toArray()[0];
         static::assertSame(1, $first['id']);
         static::assertSame(1.5, $first['price']);
         static::assertTrue($first['active']);

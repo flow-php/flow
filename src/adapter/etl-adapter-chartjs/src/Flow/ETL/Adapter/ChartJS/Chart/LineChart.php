@@ -12,6 +12,7 @@ use Flow\ETL\Rows;
 use function array_key_exists;
 use function array_map;
 use function array_merge;
+use function array_push;
 use function array_values;
 use function is_scalar;
 
@@ -45,19 +46,25 @@ final class LineChart implements Chart
 
     public function collect(Rows $rows): void
     {
-        foreach ($rows as $row) {
-            $labelValue = $row->get($this->label);
-            $this->data['labels'][] = is_scalar($labelValue) ? (string) $labelValue : '';
+        if ($rows->count() === 0) {
+            return;
+        }
 
-            foreach ($this->datasets as $dataset) {
-                if (!array_key_exists($dataset->name(), $this->data['datasets'])) {
-                    $this->data['datasets'][$dataset->name()] = [
-                        'label' => $dataset->name(),
-                        'data' => [$row->get($dataset)],
-                    ];
-                } else {
-                    $this->data['datasets'][$dataset->name()]['data'][] = $row->get($dataset);
-                }
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($rows->column($this->label->base())->values() as $labelValue) {
+            $this->data['labels'][] = is_scalar($labelValue) ? (string) $labelValue : '';
+        }
+
+        foreach ($this->datasets as $dataset) {
+            $values = $rows->column($dataset->base())->values();
+
+            if (!array_key_exists($dataset->name(), $this->data['datasets'])) {
+                $this->data['datasets'][$dataset->name()] = [
+                    'label' => $dataset->name(),
+                    'data' => $values,
+                ];
+            } else {
+                array_push($this->data['datasets'][$dataset->name()]['data'], ...$values);
             }
         }
     }

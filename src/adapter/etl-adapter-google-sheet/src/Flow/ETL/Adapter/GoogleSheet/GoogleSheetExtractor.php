@@ -10,15 +10,15 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
+use Flow\ETL\Extractor\File\MetadataColumns;
+use Flow\ETL\Extractor\File\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\InfersSchema;
-use Flow\ETL\Extractor\MetadataColumns;
-use Flow\ETL\Extractor\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\SchemaInference;
 use Flow\ETL\Schema\Inference\SchemaInferenceBuilder;
@@ -104,7 +104,7 @@ final class GoogleSheetExtractor implements
         $schema = $this->addMetadataColumns
             ? $base->add(str_schema('_spread_sheet_id'), str_schema('_sheet_name'))
             : $base;
-        $hydrator = $context->hydrator();
+        $backend = $context->backend();
         $checked = $this->schema !== null || $this->inference->unionByName;
 
         $batchSize = $this->batchSize();
@@ -118,10 +118,7 @@ final class GoogleSheetExtractor implements
 
         foreach ($batches as $batch) {
             if (!$checked) {
-                $columns = array_map(
-                    static fn(int|string $name): string => (string) $name,
-                    array_keys($batch[0]->values),
-                );
+                $columns = array_map(static fn(int|string $name): string => (string) $name, array_keys($batch[0]));
 
                 // a row that carries no columns is not a divergence: withHeader(false) decodes a leading blank
                 // row to one, and the names come from the row after it
@@ -145,23 +142,24 @@ final class GoogleSheetExtractor implements
 
             if ($this->addMetadataColumns) {
                 $batch = array_map(
-                    function (RawRowValues $rowValues): RawRowValues {
+                    function (array $values): array {
                         // assigned, never unpacked: a numeric column name is an int array key and ... renumbers it
-                        $values = $rowValues->values;
                         $values['_spread_sheet_id'] = $this->spreadsheetId;
                         $values['_sheet_name'] = $this->columnRange->sheetName;
 
-                        return new RawRowValues($values);
+                        return $values;
                     },
                     $batch,
                 );
             }
 
-            $hydrated = $hydrator->hydrate($batch, $schema);
+            $rows = (new RowsBuilder($schema, $backend))
+                ->appendRows($batch)
+                ->finish();
 
-            $yielded += $hydrated->count();
+            $yielded += $rows->count();
 
-            $signal = yield $hydrated;
+            $signal = yield $rows;
 
             if ($signal === Signal::STOP) {
                 return;

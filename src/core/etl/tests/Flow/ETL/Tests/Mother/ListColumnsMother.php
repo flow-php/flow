@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Mother;
 
-use Flow\ETL\Row;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\list_schema;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Types\DSL\type_boolean;
@@ -33,16 +33,16 @@ final class ListColumnsMother
     /**
      * @param array<string, mixed> $override
      */
-    public static function row(array $override = []): Row
+    public static function rows(array $override = []): Rows
     {
-        return row([
+        return array_to_rows([[
             'id' => 'a',
             'tags' => ['x', 'y'],
             'nums' => [1, 2, 3],
             'lists' => [['q', 'r'], ['s']],
             'flags' => [true, false],
             ...$override,
-        ]);
+        ]], self::schema()->makeNullable());
     }
 
     public static function tagsSchema(): Schema

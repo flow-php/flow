@@ -1,0 +1,106 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Adapter\CSV\Tests\Integration;
+
+use Flow\ETL\Config;
+use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\Adapter\CSV\from_csv;
+use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\Filesystem\DSL\path_real;
+use function usort;
+
+final class CSVExtractorTypedColumnsTest extends FlowTestCase
+{
+    public function test_hydrates_typed_columns_with_empty_to_null_and_input_uri(): void
+    {
+        $extractor = from_csv($path = path_real(__DIR__ . '/../Fixtures/file_with_empty_columns.csv'))
+            ->withSchema(schema(
+                int_schema('id', nullable: true),
+                str_schema('name', nullable: true),
+                bool_schema('active', nullable: true),
+            ))
+            ->withMetadataColumns(true);
+
+        $actual = [];
+
+        foreach ($extractor->extract(flow_context(Config::builder()->build())) as $rows) {
+            foreach ($rows->toArray() as $row) {
+                $actual[] = $row;
+            }
+        }
+
+        static::assertSame(
+            [
+                ['id' => null, 'name' => null, 'active' => false, '_input_file_uri' => $path->uri()],
+                ['id' => 1, 'name' => 'Norbert', 'active' => null, '_input_file_uri' => $path->uri()],
+            ],
+            $actual,
+        );
+    }
+
+    public function test_reads_partitioned_files_with_schema_typed_partition_values(): void
+    {
+        $extractor = from_csv(__DIR__ . '/../Fixtures/partitioned/group=*/*.csv')->withSchema(schema(
+            int_schema('group'),
+            int_schema('id'),
+            str_schema('value'),
+        ));
+
+        $actual = [];
+
+        foreach ($extractor->extract(flow_context(Config::builder()->build())) as $rows) {
+            foreach ($rows->toArray() as $row) {
+                $actual[] = $row;
+            }
+        }
+
+        usort($actual, static fn(array $a, array $b): int => (int) $a['id'] <=> (int) $b['id']);
+
+        static::assertSame(
+            [
+                ['id' => 1, 'value' => 'a', 'group' => 1],
+                ['id' => 2, 'value' => 'b', 'group' => 1],
+                ['id' => 3, 'value' => 'c', 'group' => 1],
+                ['id' => 4, 'value' => 'd', 'group' => 1],
+                ['id' => 5, 'value' => 'e', 'group' => 2],
+                ['id' => 6, 'value' => 'f', 'group' => 2],
+                ['id' => 7, 'value' => 'g', 'group' => 2],
+                ['id' => 8, 'value' => 'h', 'group' => 2],
+            ],
+            $actual,
+        );
+    }
+
+    public function test_appends_partition_columns_absent_from_the_schema(): void
+    {
+        $extractor = from_csv(__DIR__ . '/../Fixtures/partitioned/group=1/file_01.csv')->withSchema(schema(
+            int_schema('id'),
+            str_schema('value'),
+        ));
+
+        $actual = [];
+
+        foreach ($extractor->extract(flow_context(Config::builder()->build())) as $rows) {
+            foreach ($rows->toArray() as $row) {
+                $actual[] = $row;
+            }
+        }
+
+        usort($actual, static fn(array $a, array $b): int => (int) $a['id'] <=> (int) $b['id']);
+
+        static::assertSame(
+            [
+                ['id' => 1, 'value' => 'a', 'group' => '1'],
+                ['id' => 2, 'value' => 'b', 'group' => '1'],
+            ],
+            $actual,
+        );
+    }
+}

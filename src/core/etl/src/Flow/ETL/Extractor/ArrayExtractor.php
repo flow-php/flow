@@ -7,6 +7,9 @@ namespace Flow\ETL\Extractor;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\Memory\InferredRows;
+use Flow\ETL\Extractor\Memory\InMemoryRows;
+use Flow\ETL\Extractor\Memory\SpilledRows;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\SchemaInference;
@@ -86,7 +89,7 @@ final class ArrayExtractor implements BatchableExtractor, Extractor, InfersSchem
                 continue;
             }
 
-            $signal = yield $batches->of($buffer, $schema, $context->hydrator());
+            $signal = yield $batches->of($buffer, $schema, $context->backend());
 
             if ($signal === Signal::STOP) {
                 return;
@@ -96,7 +99,7 @@ final class ArrayExtractor implements BatchableExtractor, Extractor, InfersSchem
         }
 
         if ($buffer !== []) {
-            yield $batches->of($buffer, $schema, $context->hydrator());
+            yield $batches->of($buffer, $schema, $context->backend());
         }
     }
 

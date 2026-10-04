@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function Flow\ETL\DSL\lit;
@@ -73,38 +77,52 @@ final class RegexAll implements ScalarFunction
         return type_optional(type_array());
     }
 
-    /**
-     * @return null|array<array-key, mixed>
-     */
-    public function eval(Row $row, FlowContext $context): ?array
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $pattern = (new Parameter($this->pattern))->asString($row, $context);
-        $subject = (new Parameter($this->subject))->asString($row, $context);
-        $offset = (new Parameter($this->offset))->asInt($row, $context);
+        $patterns = (new Parameter($this->pattern))->asStrings($rows, $context);
+        $subjects = (new Parameter($this->subject))->asStrings($rows, $context);
+        $offsets = (new Parameter($this->offset))->asInts($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($pattern === null) {
-            throw new InvalidArgumentException('RegexAll requires non-null pattern');
-        }
+        try {
+            foreach ($patterns as $i => $pattern) {
+                $subject = $subjects[$i];
+                $offset = $offsets[$i];
 
-        if ($subject === null) {
-            throw new InvalidArgumentException('RegexAll requires non-null subject');
-        }
+                if ($pattern === null) {
+                    throw new InvalidArgumentException('RegexAll requires non-null pattern');
+                }
 
-        if ($offset === null) {
-            throw new InvalidArgumentException('RegexAll requires non-null offset');
-        }
+                if ($subject === null) {
+                    throw new InvalidArgumentException('RegexAll requires non-null subject');
+                }
 
-        $matches = [];
+                if ($offset === null) {
+                    throw new InvalidArgumentException('RegexAll requires non-null offset');
+                }
 
-        // Returns the number of full pattern matches (which might be zero), or false on failure.
-        if (preg_match_all($pattern, $subject, $matches, $this->flags, $offset) !== false) {
-            if ($matches === [[]]) {
-                return null;
+                $matches = [];
+
+                // Returns the number of full pattern matches (which might be zero), or false on failure.
+                if (preg_match_all($pattern, $subject, $matches, $this->flags, $offset) !== false) {
+                    if ($matches === [[]]) {
+                        $results[] = null;
+
+                        continue;
+                    }
+
+                    $results[] = $matches;
+
+                    continue;
+                }
+
+                $results[] = null;
             }
-
-            return $matches;
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return null;
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

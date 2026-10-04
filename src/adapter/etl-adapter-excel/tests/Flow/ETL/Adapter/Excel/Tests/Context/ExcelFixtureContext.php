@@ -13,7 +13,7 @@ use Flow\ETL\Adapter\Excel\Sheet\SheetsManager;
 use Flow\ETL\Adapter\Excel\WorkbookReader;
 use Flow\ETL\Adapter\Excel\WorkbookSampler;
 use Flow\ETL\Adapter\Excel\WorkbookSheet;
-use Flow\ETL\Extractor\SourceFile;
+use Flow\ETL\Extractor\File\SourceFile;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\SchemaInference;
 use Flow\ETL\Schema\Inference\SchemaInferrer;

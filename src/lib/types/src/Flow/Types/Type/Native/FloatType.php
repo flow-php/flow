@@ -10,10 +10,12 @@ use DOMElement;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
+use Flow\Types\Type\NonFiniteFloat;
 
 use function is_bool;
 use function is_float;
 use function is_numeric;
+use function is_string;
 
 /**
  * @template T of float
@@ -54,6 +56,12 @@ final readonly class FloatType implements Type
             // the reference is a wall clock, so a sub-second interval straddles a second boundary
             // or not depending on when this runs - subtract in micros, then divide
             return ((float) $endTime->format('Uu') - (float) $reference->format('Uu')) / 1e6;
+        }
+
+        $nonFinite = is_string($value) ? NonFiniteFloat::fromText($value) : null;
+
+        if ($nonFinite !== null) {
+            return $nonFinite;
         }
 
         if (is_numeric($value)) {

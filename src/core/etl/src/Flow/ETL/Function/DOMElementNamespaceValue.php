@@ -11,9 +11,13 @@ use Dom\XPath;
 use DOMDocument;
 use DOMNode;
 use DOMXPath;
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function class_exists;
@@ -64,7 +68,7 @@ final class DOMElementNamespaceValue implements ScalarFunction
         return type_optional(type_string());
     }
 
-    public function eval(Row $row, FlowContext $context): ?string
+    public function eval(Rows $rows, FlowContext $context): Column
     {
         $types = [
             type_instance_of(DOMNode::class),
@@ -76,8 +80,28 @@ final class DOMElementNamespaceValue implements ScalarFunction
             $types[] = type_list(type_instance_of(Element::class));
         }
 
-        $node = (new Parameter($this->domElement))->as($row, $context, ...$types);
+        $nodes = (new Parameter($this->domElement))->asTypes($rows, $context, ...$types);
+        $attributeNames = (new Parameter($this->attribute))->asStrings($rows, $context);
+        $results = [];
+        $i = 0;
 
+        try {
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($nodes as $i => $node) {
+                $results[] = $this->namespaceValue($node, $attributeNames[$i]);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
+        }
+
+        return (new ResultColumn($context->backend()))->of($this, $results);
+    }
+
+    /**
+     * @param mixed $node the evaluated DOM operand of one row
+     */
+    public function namespaceValue(mixed $node, ?string $attributeName): ?string
+    {
         if ($node instanceof DOMDocument) {
             $node = $node->documentElement;
         }
@@ -93,8 +117,6 @@ final class DOMElementNamespaceValue implements ScalarFunction
         if (!$node instanceof DOMNode && !$node instanceof Element) {
             return null;
         }
-
-        $attributeName = (new Parameter($this->attribute))->asString($row, $context);
 
         if ($attributeName === null) {
             return $node->namespaceURI;

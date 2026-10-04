@@ -9,8 +9,12 @@ use Dom\HTMLElement;
 use DOMDocument;
 use DOMElement;
 use DOMNode;
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function class_exists;
@@ -59,7 +63,7 @@ final class DOMElementValue implements ScalarFunction
         return type_optional(type_string());
     }
 
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Rows $rows, FlowContext $context): Column
     {
         $types = [
             type_instance_of(DOMNode::class),
@@ -72,24 +76,38 @@ final class DOMElementValue implements ScalarFunction
             $types[] = type_list(type_instance_of(HTMLElement::class));
         }
 
-        $node = (new Parameter($this->node))->as($row, $context, ...$types);
+        $nodes = (new Parameter($this->node))->asTypes($rows, $context, ...$types);
+        $results = [];
+        $i = 0;
 
-        if (is_array($node) && count($node)) {
-            $node = reset($node);
+        try {
+            foreach ($nodes as $i => $node) {
+                if (is_array($node) && count($node)) {
+                    $node = reset($node);
+                }
+
+                if ($node instanceof DOMDocument) {
+                    $node = $node->documentElement;
+                }
+
+                if ($node instanceof DOMElement) {
+                    $results[] = $node->nodeValue;
+
+                    continue;
+                }
+
+                if ($node instanceof CharacterData || $node instanceof HTMLElement) {
+                    $results[] = $node->textContent;
+
+                    continue;
+                }
+
+                $results[] = null;
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        if ($node instanceof DOMDocument) {
-            $node = $node->documentElement;
-        }
-
-        if ($node instanceof DOMElement) {
-            return $node->nodeValue;
-        }
-
-        if ($node instanceof CharacterData || $node instanceof HTMLElement) {
-            return $node->textContent;
-        }
-
-        return null;
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

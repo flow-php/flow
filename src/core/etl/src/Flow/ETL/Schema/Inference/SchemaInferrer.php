@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Schema\Inference;
 
-use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Schema;
 use Flow\Types\Type\TypeNarrower;
 
@@ -22,7 +21,7 @@ final readonly class SchemaInferrer
      * a source abandoned mid-way is closed by its producer, not here.
      *
      * @param list<string> $names - columns known before any row; [] when the format carries none (JSON)
-     * @param iterable<int, iterable<int, RawRowValues>> $sources - one inner iterable per source, in listing order.
+     * @param iterable<int, iterable<int, array<array-key, mixed>>> $sources - one inner iterable per source, in listing order.
      *                                                             A source that lists no files yields exactly one.
      *                                                             An empty outer iterable yields every name as ?string.
      */
@@ -62,7 +61,7 @@ final readonly class SchemaInferrer
 
     /**
      * @param list<string> $names - columns known before any row; [] when the format carries none (JSON)
-     * @param iterable<int, RawRowValues> $source - one source's rows, unstarted
+     * @param iterable<int, array<array-key, mixed>> $source - one source's rows, unstarted
      * @param int<0, max>|-1 $rowBudget - rows to observe, 0 for none, -1 for all of them
      */
     public function sniff(array $names, iterable $source, int $rowBudget): ColumnTypes

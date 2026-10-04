@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Column\Column;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Nullability;
 use Flow\Types\Type\TypeFactory;
@@ -61,22 +63,30 @@ final class IsType implements ScalarFunction
         return (new Nullability())->any(type_boolean(), $this->value->returns());
     }
 
-    public function eval(Row $row, FlowContext $context): ?bool
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $value = (new Parameter($this->value))->eval($row, $context);
+        $results = [];
 
-        // A NULL operand is unknowable, even against type_null() - ->isNull() is the null test.
-        if ($value === null) {
-            return null;
-        }
+        // @mago-ignore analysis:mixed-assignment
+        foreach ((new Parameter($this->value))->values($rows, $context) as $value) {
+            // A NULL operand is unknowable, even against type_null() - ->isNull() is the null test.
+            if ($value === null) {
+                $results[] = null;
 
-        foreach ($this->types as $type) {
-            // @mago-ignore analysis:redundant-type-comparison
-            if ($type->isValid($value)) {
-                return true;
+                continue;
             }
+
+            foreach ($this->types as $type) {
+                if ($type->isValid($value)) {
+                    $results[] = true;
+
+                    continue 2;
+                }
+            }
+
+            $results[] = false;
         }
 
-        return false;
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

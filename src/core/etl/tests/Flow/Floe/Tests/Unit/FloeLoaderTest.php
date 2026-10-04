@@ -5,25 +5,25 @@ declare(strict_types=1);
 namespace Flow\Floe\Tests\Unit;
 
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Filesystem\SaveMode;
 use Flow\Floe\Exception\IncompatibleSchemaException;
-use Flow\Floe\Tests\Double\SpyHydrator;
+use Flow\Floe\Tests\Context\FloeFilesContext;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
-use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\partition_by;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Floe\DSL\from_floe;
 use function Flow\Floe\DSL\to_floe;
+use function implode;
 use function sort;
 
 final class FloeLoaderTest extends TestCase
@@ -35,32 +35,43 @@ final class FloeLoaderTest extends TestCase
         $path = path('memory://closed.floe');
 
         $loader = to_floe($path, filesystem: $memory);
-        $loader->load(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])), $context);
+        $loader->load(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))), $context);
         $loader->closure($context);
 
         $ids = [];
 
         foreach (from_floe($path, filesystem: $memory)->extract($context) as $batch) {
-            foreach ($batch->all() as $extractedRow) {
-                $ids[] = $extractedRow->get('id');
+            foreach ($batch->toArray() as $extractedRow) {
+                $ids[] = $extractedRow['id'];
             }
         }
 
         static::assertSame([1, 2], $ids);
     }
 
-    public function test_load_honors_the_context_hydrator(): void
+    public function test_a_second_run_writes_under_its_own_schema(): void
     {
-        $hydrator = new SpyHydrator();
-        $context = flow_context(config_builder()->hydrator($hydrator)->build());
+        $context = flow_context(config());
         $memory = memory_filesystem();
-        $path = path('memory://hydrator.floe');
+        $loader = to_floe(path('memory://runs/data.floe'), filesystem: $memory)->saveMode(SaveMode::Append);
 
-        $loader = to_floe($path, filesystem: $memory);
-        $loader->load(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])), $context);
+        $loader->load(array_to_rows([['id' => 1]], schema(int_schema('id'))), $context);
+        $loader->closure($context);
+        $loader->load(array_to_rows([['name' => 'a']], schema(str_schema('name'))), $context);
         $loader->closure($context);
 
-        static::assertGreaterThan(0, $hydrator->dehydrateCalls);
+        $schemas = [];
+
+        foreach ($memory->list(path('memory://runs/*.floe')) as $file) {
+            $schemas[] = implode(
+                ',',
+                FloeFilesContext::phpReader($memory)->read($file->path)->schema()->references()->names(),
+            );
+        }
+
+        sort($schemas);
+
+        static::assertSame(['id', 'name'], $schemas);
     }
 
     public function test_destination_returns_path(): void
@@ -80,10 +91,9 @@ final class FloeLoaderTest extends TestCase
 
         $loader = to_floe($path, filesystem: $memory);
         $loader->load(
-            rows(
+            array_to_rows(
+                [['id' => 1, 'note' => 'a'], ['id' => 2, 'note' => null]],
                 schema(int_schema('id'), str_schema('note', nullable: true)),
-                row(['id' => 1, 'note' => 'a']),
-                row(['id' => 2, 'note' => null]),
             ),
             $context,
         );
@@ -99,10 +109,9 @@ final class FloeLoaderTest extends TestCase
     {
         $this->expectException(RuntimeException::class);
 
-        to_floe(path('memory://no-extension'), filesystem: memory_filesystem())->load(
-            rows(schema(int_schema('id')), row(['id' => 1])),
-            flow_context(config()),
-        );
+        to_floe(path('memory://no-extension'), filesystem: memory_filesystem())->load(array_to_rows([[
+            'id' => 1,
+        ]], schema(int_schema('id'))), flow_context(config()));
     }
 
     public function test_partitioned_batches_write_one_file_per_partition(): void
@@ -114,10 +123,9 @@ final class FloeLoaderTest extends TestCase
         // one batch carrying both combinations: the loader routes it, B39
         $loader = to_floe($base, filesystem: $memory)->partitionBy(partition_by('country'));
         $loader->load(
-            rows(
+            array_to_rows(
+                [['id' => 1, 'country' => 'PL'], ['id' => 2, 'country' => 'US']],
                 schema(int_schema('id'), str_schema('country')),
-                row(['id' => 1, 'country' => 'PL']),
-                row(['id' => 2, 'country' => 'US']),
             ),
             $context,
         );
@@ -129,8 +137,8 @@ final class FloeLoaderTest extends TestCase
         $ids = [];
 
         foreach (from_floe(path('memory://parts/**/*.floe'), filesystem: $memory)->extract($context) as $batch) {
-            foreach ($batch->all() as $extractedRow) {
-                $ids[] = $extractedRow->get('id');
+            foreach ($batch->toArray() as $extractedRow) {
+                $ids[] = $extractedRow['id'];
             }
         }
 
@@ -146,16 +154,16 @@ final class FloeLoaderTest extends TestCase
         $path = path('memory://repeated.floe');
 
         $loader = to_floe($path, filesystem: $memory);
-        $loader->load(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])), $context);
-        $loader->load(rows(schema(int_schema('id')), row(['id' => 3])), $context);
+        $loader->load(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))), $context);
+        $loader->load(array_to_rows([['id' => 3]], schema(int_schema('id'))), $context);
         $loader->closure($context);
 
         $ids = [];
 
         // reading the concrete (non-pattern) path proves all rows landed in one file
         foreach (from_floe($path, filesystem: $memory)->extract($context) as $batch) {
-            foreach ($batch->all() as $extractedRow) {
-                $ids[] = $extractedRow->get('id');
+            foreach ($batch->toArray() as $extractedRow) {
+                $ids[] = $extractedRow['id'];
             }
         }
 

@@ -12,8 +12,8 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Schema\Definition;
-use Flow\ETL\Schema\Definition\ZoneAlignment;
 use Flow\ETL\Schema\Metadata;
+use Flow\ETL\Schema\SameSchemas;
 use Flow\ETL\Schema\SortingStrategy;
 use Flow\ETL\Schema\SortingStrategy\AlphabeticalStrategy;
 
@@ -36,11 +36,6 @@ final readonly class Schema implements Countable
      * @var array<string, Definition<mixed>>
      */
     private array $definitions;
-
-    /**
-     * @var array<string, Definition<mixed>>
-     */
-    private array $zonedDefinitions;
 
     /**
      * @param Definition<mixed> ...$definitions
@@ -246,6 +241,10 @@ final readonly class Schema implements Countable
      */
     public function isSame(self $schema): bool
     {
+        if ($this === $schema || SameSchemas::proved($this, $schema)) {
+            return true;
+        }
+
         if (array_keys($this->definitions) !== array_keys($schema->definitions)) {
             return false;
         }
@@ -255,6 +254,8 @@ final readonly class Schema implements Countable
                 return false;
             }
         }
+
+        SameSchemas::remember($this, $schema);
 
         return true;
     }
@@ -561,14 +562,6 @@ final readonly class Schema implements Countable
         return new self(...$definitions);
     }
 
-    /**
-     * @return array<string, Definition<mixed>>
-     */
-    public function zonedDefinitions(): array
-    {
-        return $this->zonedDefinitions;
-    }
-
     private function indexOf(string|Reference $reference): int
     {
         $index = array_search(UnresolvedReference::init($reference)->name(), array_keys($this->definitions), true);
@@ -642,6 +635,5 @@ final readonly class Schema implements Countable
         }
 
         $this->definitions = $uniqueDefinitions;
-        $this->zonedDefinitions = (new ZoneAlignment())->columns($uniqueDefinitions);
     }
 }

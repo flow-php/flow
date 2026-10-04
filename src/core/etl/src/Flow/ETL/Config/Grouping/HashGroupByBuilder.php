@@ -5,12 +5,18 @@ declare(strict_types=1);
 namespace Flow\ETL\Config\Grouping;
 
 use Flow\ETL\Bucketing\BucketsStorage;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Config\Bucketing\BucketingConfigBuilder;
+use Flow\ETL\Config\MemoryLimit;
+use Flow\ETL\Dataset\Memory\Unit;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Filesystem\Path;
 
 final class HashGroupByBuilder implements GroupByAlgorithmBuilder
 {
     private readonly BucketingConfigBuilder $bucketing;
+
+    private ?Unit $memoryLimit = null;
 
     public function __construct()
     {
@@ -27,9 +33,12 @@ final class HashGroupByBuilder implements GroupByAlgorithmBuilder
         return $this;
     }
 
-    public function build(Path $spillRoot): HashGroupByConfig
+    public function build(Path $spillRoot, Backend $backend): HashGroupByConfig
     {
-        return new HashGroupByConfig($this->bucketing->build($spillRoot));
+        return new HashGroupByConfig(
+            $this->bucketing->build($spillRoot, $backend),
+            $this->memoryLimit ?? MemoryLimit::default(),
+        );
     }
 
     /**
@@ -38,6 +47,20 @@ final class HashGroupByBuilder implements GroupByAlgorithmBuilder
     public function bucketsCount(int $bucketsCount): self
     {
         $this->bucketing->bucketsCount($bucketsCount);
+
+        return $this;
+    }
+
+    /**
+     * The process memory past which buckets move to the storage; defaults to MemoryLimit::default().
+     */
+    public function memoryLimit(Unit $memoryLimit): self
+    {
+        if ($memoryLimit->inBytes() < 1) {
+            throw new InvalidArgumentException('Group by memory limit must be greater than 0 bytes');
+        }
+
+        $this->memoryLimit = $memoryLimit;
 
         return $this;
     }

@@ -63,7 +63,6 @@ use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
-use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
@@ -321,7 +320,7 @@ final class SchemaConverter
             return type_list($this->convert($items, $path . '.items'));
         }
 
-        return type_list(type_mixed());
+        return type_json();
     }
 
     /**
@@ -469,7 +468,7 @@ final class SchemaConverter
             return type_map(type_string(), $this->convert($additionalProperties, $path . '.additionalProperties'));
         }
 
-        return type_map(type_string(), type_mixed());
+        return type_json();
     }
 
     /**

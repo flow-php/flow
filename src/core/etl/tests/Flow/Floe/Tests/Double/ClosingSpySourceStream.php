@@ -8,9 +8,13 @@ use Flow\Filesystem\Path;
 use Flow\Filesystem\SourceStream;
 use Generator;
 
+use function strlen;
+
 final class ClosingSpySourceStream implements SourceStream
 {
     public int $closeCount = 0;
+
+    public int $readBytes = 0;
 
     public function __construct(
         private readonly SourceStream $stream,
@@ -24,7 +28,10 @@ final class ClosingSpySourceStream implements SourceStream
 
     public function content(): string
     {
-        return $this->stream->content();
+        $content = $this->stream->content();
+        $this->readBytes += strlen($content);
+
+        return $content;
     }
 
     public function isOpen(): bool
@@ -34,7 +41,11 @@ final class ClosingSpySourceStream implements SourceStream
 
     public function iterate(int $length = 1): Generator
     {
-        return $this->stream->iterate($length);
+        foreach ($this->stream->iterate($length) as $chunk) {
+            $this->readBytes += strlen($chunk);
+
+            yield $chunk;
+        }
     }
 
     public function path(): Path
@@ -44,7 +55,10 @@ final class ClosingSpySourceStream implements SourceStream
 
     public function read(int $length, int $offset): string
     {
-        return $this->stream->read($length, $offset);
+        $bytes = $this->stream->read($length, $offset);
+        $this->readBytes += strlen($bytes);
+
+        return $bytes;
     }
 
     public function readLines(string $separator = "\n", ?int $length = null): Generator

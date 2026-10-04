@@ -1,1 +1,2 @@
-Extract partition metadata from file paths without reading file contents using from_path_partitions(). Returns the file path and a map of partition key-value pairs. Useful for discovering available partitions or building file manifests.
+`from_path_partitions()` lists files without reading them: one row per file with its `path`, the
+`partitions` map, and one column per partition. Use it to discover partitions or build a manifest.

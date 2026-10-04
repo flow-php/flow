@@ -8,6 +8,7 @@ use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\ConvertedType;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\LogicalType;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\ParquetFile\Schema\Repetition;
 use Flow\Parquet\ParquetFile\Schema\TimeUnit;
@@ -107,5 +108,14 @@ final class FlatColumnTest extends TestCase
             [Repetition::OPTIONAL],
             Schema::with(FlatColumn::int32('int32'))->get('int32')->repetitions()->toArray(),
         );
+    }
+
+    public function test_enum_is_annotated_enum(): void
+    {
+        $column = FlatColumn::enum('color');
+
+        static::assertSame(ConvertedType::ENUM, $column->convertedType());
+        static::assertSame(LogicalType::ENUM, $column->logicalType()?->name());
+        static::assertNotNull($column->toThrift()->logicalType->ENUM);
     }
 }

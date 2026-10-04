@@ -21,19 +21,19 @@ class TimeUnit
             'var' => 'MILLIS',
             'isRequired' => false,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\MilliSeconds',
+            'class' => '\Flow\Parquet\ThriftModel\MilliSeconds',
         ],
         2 => [
             'var' => 'MICROS',
             'isRequired' => false,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\MicroSeconds',
+            'class' => '\Flow\Parquet\ThriftModel\MicroSeconds',
         ],
         3 => [
             'var' => 'NANOS',
             'isRequired' => false,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\NanoSeconds',
+            'class' => '\Flow\Parquet\ThriftModel\NanoSeconds',
         ],
     ];
 

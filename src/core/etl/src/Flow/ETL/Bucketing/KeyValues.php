@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Bucketing;
 
-use Flow\ETL\Row;
+use Flow\ETL\Column\ComparableValues;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
-use Flow\ETL\Schema;
 
 /**
  * Extracts bucket-key values positionally, in reference order - position, not column name, defines
  * key identity, so two sides of a join extract hash-compatible values from differently named columns.
+ * Each value is its column's equality form (ComparableValues): === on it is value equality.
  */
 final readonly class KeyValues
 {
@@ -27,28 +27,25 @@ final readonly class KeyValues
      */
     public function of(Rows $rows): array
     {
-        $values = [];
-        $schema = $rows->schema();
-
-        foreach ($rows as $row) {
-            $values[] = $this->ofRow($row, $schema);
+        if ($rows->isEmpty()) {
+            return [];
         }
 
-        return $values;
-    }
-
-    /**
-     * @return list<mixed>
-     */
-    public function ofRow(Row $row, Schema $schema): array
-    {
         $values = [];
 
+        for ($i = 0, $count = $rows->count(); $i < $count; $i++) {
+            $values[] = [];
+        }
+
+        $comparable = new ComparableValues();
+
         foreach ($this->refs as $ref) {
-            // absent under a nullable declaration is a legitimate null - it keys into a bucket that
-            // no comparison will match, which is what SQL says an unknown key does. Absent under NOT
-            // NULL is a row-shape violation, and Row::get() names it and lists the available columns.
-            $values[] = !$row->has($ref) && $schema->get($ref)->isNullable() ? null : $row->get($ref);
+            $column = $rows->column($rows->schema()->get($ref)->entry()->name());
+
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($comparable->equality($column) as $i => $value) {
+                $values[$i][] = $value;
+            }
         }
 
         return $values;

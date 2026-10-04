@@ -7,13 +7,19 @@ namespace Flow\ETL\Function;
 use DateInterval;
 use DateTimeImmutable;
 use DateTimeInterface;
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Column\ComparableValues;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Nullability;
 use Flow\Types\Type\ValueComparator;
 
 use function Flow\ETL\DSL\lit;
+use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_boolean;
 
 final class Equals implements ScalarFunction
@@ -56,24 +62,56 @@ final class Equals implements ScalarFunction
         return (new Nullability())->any(type_boolean(), $this->left->returns(), $this->right->returns());
     }
 
-    public function eval(Row $row, FlowContext $context): ?bool
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $left = (new Parameter($this->left))->eval($row, $context);
-        $right = (new Parameter($this->right))->eval($row, $context);
+        $leftColumn = (new Parameter($this->left))->column($rows, $context);
+        $rightColumn = (new Parameter($this->right))->column($rows, $context);
+        $comparable = new ComparableValues();
+        $sameType = type_bare($leftColumn->type())::class === type_bare($rightColumn->type())::class;
+        [$lefts, $rights] = $sameType
+            ? [$comparable->equality($leftColumn), $comparable->equality($rightColumn)]
+            : [$leftColumn->values(), $rightColumn->values()];
+        $results = [];
+        $i = 0;
 
-        if ($left === null || $right === null) {
-            return null;
+        // same-typed physicals: every arm of the dispatch below is === on them
+        if ($sameType && $comparable->equalByPhysical($leftColumn->type())) {
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($lefts as $i => $left) {
+                $results[] = $left === null || $rights[$i] === null ? null : $left === $rights[$i];
+            }
+
+            return (new ResultColumn($context->backend()))->of($this, $results);
         }
 
-        // The dispatch picks a comparison strategy from the values, never a column type - bind has
-        // already proved the pair comparable in returns().
-        return match (true) {
-            is_int($left) || is_float($left) || is_int($right) || is_float($right) => $left == $right,
-            $left instanceof DateTimeInterface && $right instanceof DateTimeInterface => $left == $right,
-            $left instanceof DateInterval && $right instanceof DateInterval => (new DateTimeImmutable('@0'))->add(
-                $left,
-            ) == (new DateTimeImmutable('@0'))->add($right),
-            default => $left === $right,
-        };
+        try {
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($lefts as $i => $left) {
+                // @mago-ignore analysis:mixed-assignment
+                $right = $rights[$i];
+
+                if ($left === null || $right === null) {
+                    $results[] = null;
+
+                    continue;
+                }
+
+                // The dispatch picks a comparison strategy from the values, never a column type - bind has
+                // already proved the pair comparable in returns().
+                // @mago-expect analysis:mixed-operand(2)
+                $results[] = match (true) {
+                    is_int($left) || is_float($left) || is_int($right) || is_float($right) => $left == $right,
+                    $left instanceof DateTimeInterface && $right instanceof DateTimeInterface => $left == $right,
+                    $left instanceof DateInterval && $right instanceof DateInterval => (new DateTimeImmutable(
+                        '@0',
+                    ))->add($left) == (new DateTimeImmutable('@0'))->add($right),
+                    default => $left === $right,
+                };
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
+        }
+
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

@@ -19,6 +19,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Throwable;
 
 use function Flow\ETL\DSL\array_get;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\discover_pivot_values;
@@ -32,7 +33,6 @@ use function Flow\ETL\DSL\pivot_values;
 use function Flow\ETL\DSL\rank;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\rename_replace;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -50,8 +50,8 @@ final class PlanBindTest extends FlowTestCase
     ];
 
     /**
-     * One plan per bind class of the step table. The two exclusions the plan names - a refused bind
-     * (joinEach) and the BucketingProcessor metadata hop - are covered by their own tests.
+     * One plan per bind class of the step table. The exclusion the plan names - a refused bind (joinEach) - is
+     * covered by its own tests.
      *
      * @return Generator<string, array{callable(): DataFrame}>
      */
@@ -330,11 +330,10 @@ final class PlanBindTest extends FlowTestCase
     {
         $extractor = new CountingExtractor(
             $input = schema(str_schema('product'), str_schema('country'), int_schema('amount')),
-            rows(
-                $input,
-                row(['product' => 'Banana', 'country' => 'USA', 'amount' => 1000]),
-                row(['product' => 'Banana', 'country' => 'China', 'amount' => 400]),
-            ),
+            array_to_rows([
+                ['product' => 'Banana', 'country' => 'USA', 'amount' => 1000],
+                ['product' => 'Banana', 'country' => 'China', 'amount' => 400],
+            ], $input),
         );
 
         $schema = df()

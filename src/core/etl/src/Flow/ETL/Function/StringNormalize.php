@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Normalizer;
 
@@ -52,15 +56,27 @@ final class StringNormalize implements ScalarFunction
         return type_string();
     }
 
-    public function eval(Row $row, FlowContext $context): ?string
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $value = (new Parameter($this->value))->asString($row, $context);
-        $form = (new Parameter($this->form))->asInt($row, $context, Normalizer::NFC);
+        $values = (new Parameter($this->value))->asStrings($rows, $context);
+        $forms = (new Parameter($this->form))->asInts($rows, $context, Normalizer::NFC);
+        $results = [];
+        $i = 0;
 
-        if ($value === null) {
-            throw new InvalidArgumentException('StringNormalize function requires non-null value');
+        try {
+            foreach ($values as $i => $value) {
+                $form = $forms[$i];
+
+                if ($value === null) {
+                    throw new InvalidArgumentException('StringNormalize function requires non-null value');
+                }
+
+                $results[] = u($value)->normalize($form)->toString();
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return u($value)->normalize($form)->toString();
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

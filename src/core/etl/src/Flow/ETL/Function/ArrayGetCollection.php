@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
 use Flow\ArrayDot\Exception\InvalidPathException;
 use Flow\ArrayDot\Path;
 use Flow\ArrayDot\Step\Key;
 use Flow\ArrayDot\Step\Multimatch;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function array_map;
@@ -76,54 +80,81 @@ final class ArrayGetCollection implements ScalarFunction
         return new self($ref, $keys, '0');
     }
 
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Rows $rows, FlowContext $context): Column
     {
         try {
-            $value = (new Parameter($this->ref))->asArray($row, $context);
-            $index = (new Parameter($this->index))->asString($row, $context);
-            $keys = (new Parameter($this->keys))->asArray($row, $context);
-
-            if ($value === null || $index === null || $keys === null) {
-                throw new InvalidArgumentException(
-                    'ArrayGetCollection function requires non-null array, index, and keys',
-                );
-            }
-
-            // the keys are literal, so they become Key steps and are never parsed as a path
-            $keyPaths = array_map(static function (mixed $key): Path {
-                if (!is_scalar($key)) {
-                    throw new InvalidArgumentException(sprintf(
-                        'ArrayGetCollection keys must be scalar, got "%s".',
-                        get_debug_type($key),
-                    ));
-                }
-
-                return new Path([new Key((string) $key, nullsafe: true)]);
-            }, array_values($keys));
-
-            try {
-                $array = $index === '0' ? array_values($value) : $value;
-
-                // @mago-ignore analysis:mixed-assignment
-                $extractedValues = array_dot_get($array, new Path([
-                    ...Path::fromString($index)->steps,
-                    new Multimatch($keyPaths),
-                ]));
-            } catch (InvalidPathException $e) {
-                throw new InvalidArgumentException(
-                    'ArrayGetCollection function failed to get values from array.',
-                    0,
-                    $e,
-                );
-            }
-
-            if (!is_array($extractedValues)) {
-                throw new InvalidArgumentException('ArrayGetCollection function requires the result to be an array');
-            }
-
-            return $extractedValues;
-        } catch (InvalidArgumentException $e) {
-            throw new InvalidArgumentException('ArrayGetCollection function failed to evaluate parameters.', 0, $e);
+            $values = (new Parameter($this->ref))->asArrays($rows, $context);
+            $indexes = (new Parameter($this->index))->asStrings($rows, $context);
+            $keysList = (new Parameter($this->keys))->asArrays($rows, $context);
+        } catch (EvaluationException $e) {
+            throw new EvaluationException(
+                $e->rowIndex,
+                new InvalidArgumentException('ArrayGetCollection function failed to evaluate parameters.', 0, $e),
+            );
         }
+
+        $results = [];
+        $i = 0;
+
+        try {
+            foreach ($values as $i => $value) {
+                $index = $indexes[$i];
+                $keys = $keysList[$i];
+
+                try {
+                    if ($value === null || $index === null || $keys === null) {
+                        throw new InvalidArgumentException(
+                            'ArrayGetCollection function requires non-null array, index, and keys',
+                        );
+                    }
+
+                    // the keys are literal, so they become Key steps and are never parsed as a path
+                    $keyPaths = array_map(static function (mixed $key): Path {
+                        if (!is_scalar($key)) {
+                            throw new InvalidArgumentException(sprintf(
+                                'ArrayGetCollection keys must be scalar, got "%s".',
+                                get_debug_type($key),
+                            ));
+                        }
+
+                        return new Path([new Key((string) $key, nullsafe: true)]);
+                    }, array_values($keys));
+
+                    try {
+                        $array = $index === '0' ? array_values($value) : $value;
+
+                        // @mago-ignore analysis:mixed-assignment
+                        $extractedValues = array_dot_get($array, new Path([
+                            ...Path::fromString($index)->steps,
+                            new Multimatch($keyPaths),
+                        ]));
+                    } catch (InvalidPathException $e) {
+                        throw new InvalidArgumentException(
+                            'ArrayGetCollection function failed to get values from array.',
+                            0,
+                            $e,
+                        );
+                    }
+
+                    if (!is_array($extractedValues)) {
+                        throw new InvalidArgumentException(
+                            'ArrayGetCollection function requires the result to be an array',
+                        );
+                    }
+
+                    $results[] = $extractedValues;
+                } catch (InvalidArgumentException $e) {
+                    throw new InvalidArgumentException(
+                        'ArrayGetCollection function failed to evaluate parameters.',
+                        0,
+                        $e,
+                    );
+                }
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
+        }
+
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

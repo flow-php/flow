@@ -73,7 +73,8 @@ final class CastTest extends FlowTestCase
             ->fetch();
 
         // Cast declares type_array (a json column) and the bind enforces that declaration.
-        $json = $rows->first()->get('b');
+        // @mago-ignore analysis:mixed-assignment
+        $json = $rows->column('b')->value(0);
 
         static::assertInstanceOf(Json::class, $json);
         static::assertSame([1, 2, 3], $json->toArray());
@@ -81,15 +82,17 @@ final class CastTest extends FlowTestCase
 
     public function test_cast_non_deterministic_values(): void
     {
-        $row = df()
-            ->read(from_array([
-                ['array' => []],
-            ]))
-            ->withEntry('list_int', ref('array')->cast(type_optional(type_list(type_integer()))))
-            ->drop('array')
-            ->fetch()
-            ->first();
-
-        static::assertSame([], $row->get('list_int'));
+        static::assertSame(
+            [],
+            df()
+                ->read(from_array([
+                    ['array' => []],
+                ]))
+                ->withEntry('list_int', ref('array')->cast(type_optional(type_list(type_integer()))))
+                ->drop('array')
+                ->fetch()
+                ->column('list_int')
+                ->value(0),
+        );
     }
 }

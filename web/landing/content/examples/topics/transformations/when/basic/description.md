@@ -1,1 +1,2 @@
-Add conditional logic to your transformations. Evaluate a condition and return different values based on whether it's true or false-similar to an if/else statement.
+`when(condition, then, else)` is an if/else per row: here `true` for active users tagged `foo`,
+`false` for everyone else.

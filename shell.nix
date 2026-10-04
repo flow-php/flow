@@ -150,6 +150,10 @@ pkgs.mkShell {
     export PHPIZE="${php.unwrapped.dev}/bin/phpize"
     ''}
 
+    if [ -f "$PWD/.nix/blackfire/blackfire.env" ]; then
+        set -a; . "$PWD/.nix/blackfire/blackfire.env"; set +a
+    fi
+
     eval "$(${pkgs.starship}/bin/starship init bash)"
 
     clear

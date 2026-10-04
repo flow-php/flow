@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests;
 
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Config\Cache\CacheConfig;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\FilesystemTable;
@@ -62,7 +63,7 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
 
         $this->fs = new NativeLocalFilesystem();
         $this->fstab = new FilesystemTable($this->fs, new StdOutFilesystem());
-        $this->serializer = new FloeSerializer();
+        $this->serializer = new FloeSerializer(new AdaptiveBackend());
 
         $this->cleanupCacheDir($this->cacheDir);
         mkdir($this->cacheDir->path(), recursive: true);

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Formatter\ASCII;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 
@@ -25,33 +24,36 @@ final readonly class Body
      */
     public function maximumLength(string $entry, int|bool $truncate = 20): int
     {
+        $definition = $this->schema()->findDefinition($entry);
+
+        if ($definition === null) {
+            return 0;
+        }
+
         $max = 0;
 
-        foreach ($this->rows as $row) {
-            try {
-                $value = new ASCIIValue($this->schema()->get($entry)->type(), $row->get($entry));
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($this->rows->column($definition->entry()->name())->values() as $cell) {
+            $value = new ASCIIValue($definition->type(), $cell);
 
-                if ($value->length($truncate) >= $max) {
-                    $max = $value->length($truncate);
-                }
-            } catch (InvalidArgumentException) {
+            if ($value->length($truncate) >= $max) {
+                $max = $value->length($truncate);
             }
         }
 
         return $max;
     }
 
-    /**
-     * @return array<Row>
-     */
-    public function rows(): array
+    public function count(): int
     {
-        $rows = [];
+        return $this->rows->count();
+    }
 
-        foreach ($this->rows as $row) {
-            $rows[] = $row;
-        }
-
-        return $rows;
+    /**
+     * @throws InvalidArgumentException the batch has no $entry column
+     */
+    public function value(string $entry, int $index): mixed
+    {
+        return $this->rows->column($entry)->value($index);
     }
 }

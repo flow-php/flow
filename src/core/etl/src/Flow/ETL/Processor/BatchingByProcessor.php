@@ -5,17 +5,17 @@ declare(strict_types=1);
 namespace Flow\ETL\Processor;
 
 use Flow\ETL\BoundStep;
+use Flow\ETL\Column\ComparableValues;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Processor;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
 
-use function count;
+use function array_slice;
 
 /**
  * Groups rows into batches by column value.
@@ -52,49 +52,69 @@ final readonly class BatchingByProcessor implements Processor
      */
     public function process(Generator $rows, FlowContext $context): Generator
     {
-        /** @var array<Row> $buffer */
-        $buffer = [];
+        /** @var list<Rows> $parts */
+        $parts = [];
+        $buffered = 0;
         $currentValue = null;
         $hasValue = false;
+        $comparable = new ComparableValues();
         $schema = null;
 
         while ($rows->valid()) {
-            $batch = $rows->current();
-            $schema ??= $batch->schema();
+            $schema ??= $rows->current()->schema();
+            $batch = $rows->current()->matchTo($schema, $context->backend());
+            $start = 0;
 
-            foreach ($batch as $row) {
-                $value = $row->get($this->column);
+            if ($batch->isEmpty()) {
+                $rows->next();
 
+                continue;
+            }
+
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($comparable->equality($batch->column($this->column->base())) as $i => $value) {
                 if (!$hasValue) {
+                    // @mago-ignore analysis:mixed-assignment
                     $currentValue = $value;
                     $hasValue = true;
                 }
 
                 if ($value !== $currentValue) {
-                    if ($this->minSize === null || count($buffer) >= $this->minSize) {
-                        if ($buffer !== []) {
-                            $signal = yield new Rows($schema, ...$buffer);
+                    $size = $buffered + $i - $start;
 
-                            if ($signal === Signal::STOP) {
-                                $rows->send(Signal::STOP);
-
-                                return;
-                            }
-
-                            $buffer = [];
+                    if (($this->minSize === null || $size >= $this->minSize) && $size > 0) {
+                        if ($i > $start) {
+                            $parts[] = $batch->slice($start, $i - $start);
                         }
+
+                        $signal = yield $parts[0]->concat($context->backend(), ...array_slice($parts, 1));
+
+                        if ($signal === Signal::STOP) {
+                            $rows->send(Signal::STOP);
+
+                            return;
+                        }
+
+                        $parts = [];
+                        $buffered = 0;
+                        $start = $i;
                     }
+
+                    // @mago-ignore analysis:mixed-assignment
                     $currentValue = $value;
                 }
+            }
 
-                $buffer[] = $row;
+            if ($start < $batch->count()) {
+                $parts[] = $batch->slice($start, $batch->count() - $start);
+                $buffered += $batch->count() - $start;
             }
 
             $rows->next();
         }
 
-        if ($buffer !== []) {
-            yield new Rows($schema ?? new Schema(), ...$buffer);
+        if ($parts !== []) {
+            yield $parts[0]->concat($context->backend(), ...array_slice($parts, 1));
         }
     }
 }

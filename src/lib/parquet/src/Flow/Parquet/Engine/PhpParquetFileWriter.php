@@ -21,12 +21,16 @@ use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFileWriter;
 use Flow\Parquet\Thrift\CompactProtocol;
 use Flow\Parquet\Thrift\PhpFileStream;
+use Flow\Parquet\Writer\ColumnLists;
 use Flow\Parquet\Writer\RowGroupBuilder;
 
 use function array_chunk;
+use function array_slice;
 use function fclose;
 use function fopen;
 use function is_array;
+use function max;
+use function min;
 use function pack;
 use function stream_get_contents;
 use function strlen;
@@ -119,6 +123,30 @@ final class PhpParquetFileWriter implements ParquetFileWriter
 
         foreach (array_chunk($rows, $interval) as $chunk) {
             $this->rowGroupBuilder->addRows($chunk);
+
+            if ($this->rowGroupBuilder->isFull()) {
+                $this->flushRowGroup($stream);
+            }
+        }
+    }
+
+    public function writeColumns(array $columns): void
+    {
+        $stream = $this->stream ?? throw new RuntimeException('Writer is not open');
+        $count = (new ColumnLists())->length($columns);
+
+        /** @var int<1, max> $interval */
+        $interval = $this->rowGroupSizeCheckInterval;
+
+        for ($offset = 0; $offset < $count; $offset += $interval) {
+            $length = min($interval, $count - $offset);
+            $slices = [];
+
+            foreach ($columns as $name => $values) {
+                $slices[$name] = array_slice($values, $offset, $length);
+            }
+
+            $this->rowGroupBuilder->addColumns($slices, $length);
 
             if ($this->rowGroupBuilder->isFull()) {
                 $this->flushRowGroup($stream);

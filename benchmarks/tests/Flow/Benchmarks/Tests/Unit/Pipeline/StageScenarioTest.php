@@ -50,6 +50,6 @@ final class StageScenarioTest extends TestCase
         $written->remove();
 
         static::assertCount(self::ROWS, $rows);
-        static::assertSame(['order_id', 'seller_id', 'created_at', 'customer', 'email'], $rows->first()->names());
+        static::assertSame(['order_id', 'seller_id', 'created_at', 'customer', 'email'], array_keys($rows->values(0)));
     }
 }

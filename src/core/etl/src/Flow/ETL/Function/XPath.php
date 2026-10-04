@@ -10,9 +10,13 @@ use DOMNameSpaceNode;
 use DOMNode;
 use DOMNodeList;
 use DOMXPath;
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function Flow\ETL\DSL\lit;
@@ -58,52 +62,63 @@ final class XPath implements ScalarFunction
         return type_optional(type_list(type_xml_element()));
     }
 
-    /**
-     * @return null|list<DOMElement>
-     */
-    public function eval(Row $row, FlowContext $context): ?array
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $value = (new Parameter($this->value))->asInstanceOf($row, $context, DOMNode::class);
-        $path = (new Parameter($this->path))->asString($row, $context);
+        $values = (new Parameter($this->value))->asInstancesOf($rows, $context, DOMNode::class);
+        $paths = (new Parameter($this->path))->asStrings($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($value === null) {
-            throw new InvalidArgumentException('XPath requires non-null DOMNode value');
-        }
+        try {
+            foreach ($values as $i => $value) {
+                $path = $paths[$i];
 
-        if ($path === null) {
-            throw new InvalidArgumentException('XPath requires non-null path');
-        }
+                if ($value === null) {
+                    throw new InvalidArgumentException('XPath requires non-null DOMNode value');
+                }
 
-        if (!$value instanceof DOMDocument) {
-            $dom = $value->ownerDocument ?? new DOMDocument();
-            $importedNode = $dom->importNode($value, true);
+                if ($path === null) {
+                    throw new InvalidArgumentException('XPath requires non-null path');
+                }
 
-            if ($importedNode !== false && $importedNode->parentNode === null) {
-                $dom->appendChild($importedNode);
+                if (!$value instanceof DOMDocument) {
+                    $dom = $value->ownerDocument ?? new DOMDocument();
+                    $importedNode = $dom->importNode($value, true);
+
+                    if ($importedNode !== false && $importedNode->parentNode === null) {
+                        $dom->appendChild($importedNode);
+                    }
+
+                    $value = $dom;
+                }
+
+                $xpath = new DOMXPath($value);
+                /** @var DOMNodeList<DOMNameSpaceNode|DOMNode>|false $result */
+                $result = $xpath->query($path);
+
+                if ($result === false || $result->length === 0) {
+                    $results[] = null;
+
+                    continue;
+                }
+
+                $nodes = [];
+
+                foreach ($result as $node) {
+                    // text(), attribute and comment queries yield nodes the declared list<xml_element> cannot hold.
+                    if (!$node instanceof DOMElement) {
+                        continue;
+                    }
+
+                    $nodes[] = $node;
+                }
+
+                $results[] = $nodes === [] ? null : $nodes;
             }
-
-            $value = $dom;
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        $xpath = new DOMXPath($value);
-        /** @var DOMNodeList<DOMNameSpaceNode|DOMNode>|false $result */
-        $result = $xpath->query($path);
-
-        if ($result === false || $result->length === 0) {
-            return null;
-        }
-
-        $nodes = [];
-
-        foreach ($result as $node) {
-            // text(), attribute and comment queries yield nodes the declared list<xml_element> cannot hold.
-            if (!$node instanceof DOMElement) {
-                continue;
-            }
-
-            $nodes[] = $node;
-        }
-
-        return $nodes === [] ? null : $nodes;
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

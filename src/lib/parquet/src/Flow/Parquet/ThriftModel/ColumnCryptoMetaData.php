@@ -21,13 +21,13 @@ class ColumnCryptoMetaData
             'var' => 'ENCRYPTION_WITH_FOOTER_KEY',
             'isRequired' => false,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\EncryptionWithFooterKey',
+            'class' => '\Flow\Parquet\ThriftModel\EncryptionWithFooterKey',
         ],
         2 => [
             'var' => 'ENCRYPTION_WITH_COLUMN_KEY',
             'isRequired' => false,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\EncryptionWithColumnKey',
+            'class' => '\Flow\Parquet\ThriftModel\EncryptionWithColumnKey',
         ],
     ];
 

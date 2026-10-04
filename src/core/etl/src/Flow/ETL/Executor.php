@@ -6,15 +6,17 @@ namespace Flow\ETL;
 
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
+use Flow\ETL\Executor\AdoptedBatches;
 use Flow\ETL\Executor\PhysicalPlan;
 use Flow\ETL\Executor\Pipeline;
-use Flow\ETL\Extractor\FileExtractor;
+use Flow\ETL\Extractor\File\FileExtractor;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Generator;
 use Throwable;
 use WeakMap;
 
 use function array_reverse;
+use function array_slice;
 use function sprintf;
 
 final readonly class Executor
@@ -94,20 +96,29 @@ final readonly class Executor
      */
     public function merge(Generator $batches, PhysicalPlan $plan): Rows
     {
-        $rows = null;
+        $last = null;
+        $parts = [];
 
-        foreach ($batches as $nextRows) {
-            $rows = $rows === null ? $nextRows : $rows->merge($nextRows);
+        foreach ($batches as $batch) {
+            $last = $batch;
+
+            if (!$batch->isEmpty()) {
+                $parts[] = $batch;
+            }
         }
 
-        if ($rows !== null) {
-            return $rows;
+        if ($parts !== []) {
+            return $parts[0]->concat($plan->root()->context()->backend(), ...array_slice($parts, 1));
+        }
+
+        if ($last !== null) {
+            return $last;
         }
 
         try {
-            return new Rows($plan->schema());
+            return Rows::empty($plan->schema(), $plan->root()->context()->backend());
         } catch (SchemaNotDerivableException) {
-            return new Rows(new Schema());
+            return Rows::empty(new Schema(), $plan->root()->context()->backend());
         }
     }
 
@@ -131,9 +142,11 @@ final readonly class Executor
             'pipeline #%d',
             $leaf->id,
         ));
-        $generator = $source instanceof FileExtractor
-            ? $source->extract($leaf->context(), $leaf->limit(), $leaf->pathFilter())
-            : $source->extract($leaf->context(), $leaf->limit());
+        $generator = (new AdoptedBatches($leaf->context()->backend()))->of(
+            $source instanceof FileExtractor
+                ? $source->extract($leaf->context(), $leaf->limit(), $leaf->pathFilter())
+                : $source->extract($leaf->context(), $leaf->limit()),
+        );
         $sources = $leaf->sources();
 
         if ($sources !== null) {

@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
-use Throwable;
 
 use function count;
 use function Flow\ETL\DSL\lit;
@@ -54,29 +57,38 @@ final class StringMatch implements ScalarFunction
         return type_optional(type_array());
     }
 
-    /**
-     * @return null|array<int|string, string>
-     */
-    public function eval(Row $row, FlowContext $context): ?array
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $haystack = (new Parameter($this->haystack))->asString($row, $context);
-        $pattern = (new Parameter($this->pattern))->asString($row, $context);
-
-        if ($haystack === null) {
-            throw new InvalidArgumentException('StringMatch function requires non-null haystack');
-        }
-
-        if ($pattern === null) {
-            throw new InvalidArgumentException('StringMatch function requires non-null pattern');
-        }
+        $haystacks = (new Parameter($this->haystack))->asStrings($rows, $context);
+        $patterns = (new Parameter($this->pattern))->asStrings($rows, $context);
+        $results = [];
+        $i = 0;
 
         try {
-            /** @var array<int|string, string> $result */
-            $result = s($haystack)->match($pattern);
+            foreach ($haystacks as $i => $haystack) {
+                $pattern = $patterns[$i];
 
-            return count($result) > 0 ? $result : null;
-        } catch (Throwable $e) {
-            throw new InvalidArgumentException('StringMatch error: ' . $e->getMessage());
+                if ($haystack === null) {
+                    throw new InvalidArgumentException('StringMatch function requires non-null haystack');
+                }
+
+                if ($pattern === null) {
+                    throw new InvalidArgumentException('StringMatch function requires non-null pattern');
+                }
+
+                try {
+                    /** @var array<int|string, string> $result */
+                    $result = s($haystack)->match($pattern);
+
+                    $results[] = count($result) > 0 ? $result : null;
+                } catch (Exception $e) {
+                    throw new InvalidArgumentException('StringMatch error: ' . $e->getMessage(), 0, $e);
+                }
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
+
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

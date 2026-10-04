@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function Flow\ETL\DSL\lit;
@@ -51,15 +55,29 @@ final class StringTitle implements ScalarFunction
         return type_string();
     }
 
-    public function eval(Row $row, FlowContext $context): ?string
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $string = (new Parameter($this->string))->asString($row, $context);
-        $allWords = (new Parameter($this->allWords))->asBoolean($row, $context) ?? false;
+        $strings = (new Parameter($this->string))->asStrings($rows, $context);
+        $allWordsList = (new Parameter($this->allWords))->asBooleans($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($string === null) {
-            throw new InvalidArgumentException('StringTitle function requires non-null value');
+        try {
+            foreach ($strings as $i => $string) {
+                $allWords = $allWordsList[$i];
+
+                $allWords ??= false;
+
+                if ($string === null) {
+                    throw new InvalidArgumentException('StringTitle function requires non-null value');
+                }
+
+                $results[] = u($string)->title(allWords: $allWords)->toString();
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return u($string)->title(allWords: $allWords)->toString();
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

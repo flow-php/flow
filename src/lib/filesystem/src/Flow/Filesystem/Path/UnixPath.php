@@ -525,6 +525,10 @@ final readonly class UnixPath
 
     public function uri(): string
     {
+        if ($this->protocol === 'file') {
+            return 'file://' . $this->path;
+        }
+
         return $this->protocol . '://' . ltrim($this->path, '/');
     }
 

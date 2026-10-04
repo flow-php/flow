@@ -166,9 +166,9 @@ final class DbalTransactionSinkTest extends FlowTestCase
             ->batchSize(2)
             ->write(
                 new Transactional(
-                    DbalTransaction::fromConnection(
-                        $connection,
-                    )->withIsolationLevel(TransactionIsolationLevel::SERIALIZABLE),
+                    DbalTransaction::fromConnection($connection)->withIsolationLevel(
+                        TransactionIsolationLevel::SERIALIZABLE,
+                    ),
                     to_transformation(
                         new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->sortBy([ref('id')])),
                         $spy,

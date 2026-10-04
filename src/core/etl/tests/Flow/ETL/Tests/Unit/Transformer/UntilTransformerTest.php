@@ -11,12 +11,12 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\ListColumnsMother;
 use Flow\ETL\Transformer\UntilTransformer;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 
@@ -27,7 +27,7 @@ final class UntilTransformerTest extends FlowTestCase
         static::assertSame(
             [['id' => 1], ['id' => 2]],
             (new UntilTransformer(ref('id')->lessThan(lit(3))))
-                ->transform(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])), flow_context(config()))
+                ->transform(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))), flow_context(config()))
                 ->toArray(),
         );
     }
@@ -51,10 +51,11 @@ final class UntilTransformerTest extends FlowTestCase
         $thrown = null;
 
         try {
-            (new UntilTransformer(ref('id')->lessThan(lit(3))))->transform(
-                rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3])),
-                flow_context(config()),
-            );
+            (new UntilTransformer(ref('id')->lessThan(lit(3))))->transform(array_to_rows([
+                ['id' => 1],
+                ['id' => 2],
+                ['id' => 3],
+            ], schema(int_schema('id'))), flow_context(config()));
         } catch (LimitReachedException $e) {
             $thrown = $e;
         }
@@ -68,17 +69,13 @@ final class UntilTransformerTest extends FlowTestCase
         $thrown = null;
 
         try {
-            (new UntilTransformer(ref('id')->lessThan(lit(3))))->transform(
-                rows(
-                    schema(int_schema('id')),
-                    row(['id' => 1]),
-                    row(['id' => 2]),
-                    row(['id' => 5]),
-                    row(['id' => 1]),
-                    row(['id' => 2]),
-                ),
-                flow_context(config()),
-            );
+            (new UntilTransformer(ref('id')->lessThan(lit(3))))->transform(array_to_rows([
+                ['id' => 1],
+                ['id' => 2],
+                ['id' => 5],
+                ['id' => 1],
+                ['id' => 2],
+            ], schema(int_schema('id'))), flow_context(config()));
         } catch (LimitReachedException $e) {
             $thrown = $e;
         }
@@ -92,14 +89,14 @@ final class UntilTransformerTest extends FlowTestCase
         $transformer = new UntilTransformer(ref('id')->lessThan(lit(1)));
 
         try {
-            $transformer->transform(rows(schema(int_schema('id')), row(['id' => 5])), flow_context(config()));
+            $transformer->transform(array_to_rows([['id' => 5]], schema(int_schema('id'))), flow_context(config()));
         } catch (LimitReachedException) {
         }
 
         $thrown = null;
 
         try {
-            $transformer->transform(rows(schema(int_schema('id')), row(['id' => 0])), flow_context(config()));
+            $transformer->transform(array_to_rows([['id' => 0]], schema(int_schema('id'))), flow_context(config()));
         } catch (LimitReachedException $e) {
             $thrown = $e;
         }
@@ -113,10 +110,9 @@ final class UntilTransformerTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('until() requires a predicate returning boolean');
 
-        (new UntilTransformer(ref('id')))->transform(
-            rows(schema(int_schema('id')), row(['id' => 1])),
-            flow_context(config()),
-        );
+        (new UntilTransformer(ref('id')))->transform(array_to_rows([[
+            'id' => 1,
+        ]], schema(int_schema('id'))), flow_context(config()));
     }
 
     public function test_an_empty_batch_is_bound_against_its_own_schema(): void
@@ -131,7 +127,7 @@ final class UntilTransformerTest extends FlowTestCase
         $transformer = new UntilTransformer(ref('id')->lessThan(lit(1)));
 
         try {
-            $transformer->transform(rows(schema(int_schema('id')), row(['id' => 5])), flow_context(config()));
+            $transformer->transform(array_to_rows([['id' => 5]], schema(int_schema('id'))), flow_context(config()));
         } catch (LimitReachedException) {
         }
 

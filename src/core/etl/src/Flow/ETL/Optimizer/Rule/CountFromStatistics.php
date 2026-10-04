@@ -30,6 +30,9 @@ final readonly class CountFromStatistics implements Rule
 
         return $rows === null
             ? $plan
-            : new LogicalPlan(new Result(new Read(from_rows((new CountingProcessor())->rows($rows)))));
+            : new LogicalPlan(new Result(new Read(from_rows((new CountingProcessor())->rows(
+                $rows,
+                $context->backend(),
+            )))));
     }
 }

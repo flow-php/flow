@@ -14,6 +14,7 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\QueryBuilder\Sql;
@@ -72,7 +73,6 @@ final class PostgreSqlCursorExtractor implements BatchableExtractor, Extractor, 
     {
         $read = $this->read ??= ReadQuery::of($this->query, self::class);
 
-        $encoder = new PostgreSqlEncoder();
         $cursorName = $this->cursorName ?? 'flow_cursor_' . bin2hex(random_bytes(8));
 
         $schema = $this->schema();
@@ -119,11 +119,13 @@ final class PostgreSqlCursorExtractor implements BatchableExtractor, Extractor, 
 
                 $cursor->free();
 
-                $hydrated = $context->hydrator()->hydrate($encoder->decode($rawBatch), $schema);
+                $rows = (new RowsBuilder($schema, $context->backend()))
+                    ->appendRows($rawBatch)
+                    ->finish();
 
-                $yielded += $hydrated->count();
+                $yielded += $rows->count();
 
-                $signal = yield $hydrated;
+                $signal = yield $rows;
 
                 if ($signal === Signal::STOP) {
                     return;

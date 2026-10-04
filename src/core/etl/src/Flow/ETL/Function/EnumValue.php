@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use BackedEnum;
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Native\EnumType;
 use ReflectionEnum;
@@ -65,14 +69,25 @@ final class EnumValue implements ScalarFunction
         return $backingType !== null && $backingType->getName() === 'int' ? type_integer() : type_string();
     }
 
-    public function eval(Row $row, FlowContext $context): int|string
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $enum = (new Parameter($this->value))->eval($row, $context);
+        $enums = (new Parameter($this->value))->values($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if (!$enum instanceof BackedEnum) {
-            throw new InvalidArgumentException('EnumValue function requires a BackedEnum value');
+        try {
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($enums as $i => $enum) {
+                if (!$enum instanceof BackedEnum) {
+                    throw new InvalidArgumentException('EnumValue function requires a BackedEnum value');
+                }
+
+                $results[] = $enum->value;
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return $enum->value;
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

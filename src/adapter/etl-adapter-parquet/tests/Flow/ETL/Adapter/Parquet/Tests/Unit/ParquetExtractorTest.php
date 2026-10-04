@@ -7,17 +7,25 @@ namespace Flow\ETL\Adapter\Parquet\Tests\Unit;
 use Closure;
 use Flow\ETL\Adapter\Parquet\ParquetExtractor;
 use Flow\ETL\Cardinality;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\Double\CountingFilesystem;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Parquet\Binary\ByteOrder;
+use Flow\Parquet\Exception\InvalidArgumentException as NotParquet;
 use Flow\Parquet\Options;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\Adapter\Parquet\from_parquet;
+use function Flow\ETL\DSL\config_builder;
+use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
+use function Flow\Filesystem\DSL\memory_filesystem;
+use function Flow\Filesystem\DSL\path;
+use function gc_collect_cycles;
 
 final class ParquetExtractorTest extends FlowTestCase
 {
@@ -91,6 +99,26 @@ final class ParquetExtractorTest extends FlowTestCase
 
         static::assertSame($extractor->statistics(), $extractor->statistics());
         static::assertSame(1, $filesystem->readFromCalls);
+        static::assertSame(0, $filesystem->closedStreams());
+
+        unset($extractor);
+        gc_collect_cycles();
+
+        static::assertSame(1, $filesystem->closedStreams());
+    }
+
+    public function test_a_file_that_is_not_parquet_closes_the_stream_it_opened(): void
+    {
+        $filesystem = new CountingFilesystem(memory_filesystem());
+        $filesystem->writeTo(path('memory://not.parquet'))->append('id,name')->close();
+
+        try {
+            from_parquet(path('memory://not.parquet'), filesystem: $filesystem)->statistics();
+            static::fail('a CSV file was read as Parquet');
+        } catch (NotParquet) {
+        }
+
+        static::assertSame(1, $filesystem->readFromCalls);
         static::assertSame(1, $filesystem->closedStreams());
     }
 
@@ -161,14 +189,26 @@ final class ParquetExtractorTest extends FlowTestCase
         static::assertSame(1, $filesystem->readFromCalls);
     }
 
-    public function test_a_declared_schema_still_reads_the_footer_for_statistics(): void
+    public function test_with_schema_is_refused(): void
     {
-        static::assertEquals(
-            Cardinality::exact(1000),
-            from_parquet(__DIR__ . '/../Integration/Fixtures/Pagination/01_1000.parquet')
-                ->withSchema(schema(int_schema('id')))
-                ->statistics()
-                ->rows,
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'Parquet is a self-describing format and does not accept a schema; declaring one is not supported yet.',
         );
+
+        from_parquet(__DIR__ . '/../Integration/Fixtures/Pagination/01_1000.parquet')->withSchema(schema(int_schema(
+            'id',
+        )));
+    }
+
+    public function test_extract_builds_through_the_config_backend(): void
+    {
+        $backend = new SpyBackend();
+
+        from_parquet(__DIR__ . '/../Integration/Fixtures/Pagination/01_1000.parquet')
+            ->extract(flow_context(config_builder()->backend($backend)->build()))
+            ->current();
+
+        static::assertGreaterThanOrEqual(1, $backend->builders() + $backend->adopts());
     }
 }

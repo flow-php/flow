@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use InvalidArgumentException as BaseInvalidArgumentException;
 use Symfony\Component\Uid\Ulid as SymfonyUlid;
@@ -67,19 +71,37 @@ final class Ulid implements ScalarFunction
         return type_string();
     }
 
-    public function eval(Row $row, FlowContext $context): string
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $param = $this->ref === null ? null : (new Parameter($this->ref))->asString($row, $context);
+        $refs = (new Parameter($this->ref))->asStrings($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if (null !== $param) {
-            try {
-                // A ULID is a string column - the object form cannot be typed as one (L6).
-                return SymfonyUlid::fromString($param)->toBase32();
-            } catch (BaseInvalidArgumentException $e) {
-                throw new InvalidArgumentException('Ulid requires valid ULID string: ' . $e->getMessage(), 0, $e);
+        try {
+            foreach ($refs as $i => $ref) {
+                $param = $this->ref === null ? null : $ref;
+
+                if (null !== $param) {
+                    try {
+                        // A ULID is a string column - the object form cannot be typed as one.
+                        $results[] = SymfonyUlid::fromString($param)->toBase32();
+
+                        continue;
+                    } catch (BaseInvalidArgumentException $e) {
+                        throw new InvalidArgumentException(
+                            'Ulid requires valid ULID string: ' . $e->getMessage(),
+                            0,
+                            $e,
+                        );
+                    }
+                }
+
+                $results[] = (new SymfonyUlid())->toBase32();
             }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return (new SymfonyUlid())->toBase32();
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

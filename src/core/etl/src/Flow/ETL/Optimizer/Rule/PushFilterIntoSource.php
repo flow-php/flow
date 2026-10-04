@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Optimizer\Rule;
 
-use Flow\ETL\Extractor\FileExtractor;
+use Flow\ETL\Extractor\File\FileExtractor;
 use Flow\ETL\Filesystem\ScalarFunctionFilter;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\All;

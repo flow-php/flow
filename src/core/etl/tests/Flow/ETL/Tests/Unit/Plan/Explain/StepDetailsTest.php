@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Plan\Explain;
 
-use Flow\ETL\Bucketing\Buckets;
-use Flow\ETL\Bucketing\HashBucketing;
-use Flow\ETL\Bucketing\NativeHasher;
 use Flow\ETL\Bucketing\Storage\MemoryBuckets;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Constraint\UniqueConstraint;
+use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\Executor;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\GroupBy;
@@ -17,27 +15,27 @@ use Flow\ETL\GroupBy\DeclaredPivotValues;
 use Flow\ETL\Join\Comparison\Equal;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
-use Flow\ETL\NativePHPRandomValueGenerator;
 use Flow\ETL\Plan\Explain\StepDetails;
 use Flow\ETL\Processor\BatchingByProcessor;
 use Flow\ETL\Processor\BatchingProcessor;
-use Flow\ETL\Processor\BucketingProcessor;
 use Flow\ETL\Processor\CachingProcessor;
 use Flow\ETL\Processor\CollectingProcessor;
 use Flow\ETL\Processor\ConstrainedProcessor;
-use Flow\ETL\Processor\GroupByAggregationProcessor;
 use Flow\ETL\Processor\MemorySortProcessor;
 use Flow\ETL\Processor\MergeSortProcessor;
 use Flow\ETL\Processor\OffsetProcessor;
 use Flow\ETL\Processor\PivotProcessor;
-use Flow\ETL\Processor\RepartitionProcessor;
 use Flow\ETL\Processor\TopNProcessor;
 use Flow\ETL\Processor\VoidProcessor;
 use Flow\ETL\Processor\WindowProcessor;
+use Flow\ETL\Row\NullsOrder;
 use Flow\ETL\Tests\Double\DeclaringExtractor;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\ExternalSortMother;
+use Flow\ETL\Tests\Mother\GroupByAggregationProcessorMother;
 use Flow\ETL\Tests\Mother\HashJoinProcessorMother;
 use Flow\ETL\Tests\Mother\PhysicalPlanMother;
+use Flow\ETL\Tests\Mother\RepartitionProcessorMother;
 use Flow\ETL\Transformer\CrossJoinRowsTransformer;
 
 use function Flow\ETL\DSL\from_array;
@@ -110,19 +108,23 @@ final class StepDetailsTest extends FlowTestCase
             $details->settings(new MemorySortProcessor(refs(ref('id'), ref('name')->desc()))),
         );
         static::assertSame(
-            ['Sort: id desc', 'Spill: MemoryBuckets', 'Merge: 4 ways', 'Batch: 50'],
-            $details->settings(
-                new MergeSortProcessor(
-                    refs(ref('id')->desc()),
-                    new Buckets(new MemoryBuckets()),
-                    new Buckets(new MemoryBuckets()),
-                    new NativePHPRandomValueGenerator(),
-                    4,
-                    50,
-                ),
-            ),
+            ['Sort: id desc', 'Memory: 64 MB', 'Spill: MemoryBuckets', 'Merge: 4 ways', 'Batch: 50'],
+            $details->settings(new MergeSortProcessor(ExternalSortMother::with(
+                refs(ref('id')->desc()),
+                new MemoryBuckets(),
+                Unit::fromMb(64),
+                4,
+                50,
+            ))),
         );
         static::assertSame(['Top: 3', 'Sort: id asc'], $details->settings(new TopNProcessor(refs(ref('id')), 3)));
+        static::assertSame(
+            ['Sort: id asc nulls last, name desc nulls first'],
+            $details->settings(new MemorySortProcessor(refs(
+                ref('id')->asc(NullsOrder::LAST),
+                ref('name')->desc(NullsOrder::FIRST),
+            ))),
+        );
     }
 
     public function test_a_group_by_lists_its_columns_and_aggregations(): void
@@ -131,10 +133,13 @@ final class StepDetailsTest extends FlowTestCase
         $groupBy->aggregate(sum(ref('id')));
 
         static::assertSame(
-            ['Group by: name', 'Aggregations: Sum', 'Storage: MemoryBuckets', 'Batch: 25'],
-            (new StepDetails())->settings(
-                new GroupByAggregationProcessor($groupBy, new Buckets(new MemoryBuckets()), 25),
-            ),
+            ['Group by: name', 'Aggregations: Sum', 'Memory: 64 MB', 'Storage: MemoryBuckets', 'Batch: 25'],
+            (new StepDetails())->settings(GroupByAggregationProcessorMother::with(
+                $groupBy,
+                new MemoryBuckets(),
+                Unit::fromMb(64),
+                batchSize: 25,
+            )),
         );
     }
 
@@ -159,10 +164,12 @@ final class StepDetailsTest extends FlowTestCase
     public function test_a_repartition_lists_its_columns_hasher_and_storage(): void
     {
         static::assertSame(
-            ['By: id', 'Hasher: NativeHasher', 'Storage: MemoryBuckets'],
-            (new StepDetails())->settings(
-                new RepartitionProcessor(refs(ref('id')), new Buckets(new MemoryBuckets()), new NativeHasher()),
-            ),
+            ['By: id', 'Hasher: NativeHasher', 'Memory: 64 MB', 'Storage: MemoryBuckets'],
+            (new StepDetails())->settings(RepartitionProcessorMother::with(
+                refs(ref('id')),
+                new MemoryBuckets(),
+                Unit::fromMb(64),
+            )),
         );
     }
 
@@ -234,18 +241,5 @@ final class StepDetailsTest extends FlowTestCase
     public function test_a_source_that_declares_nothing_lists_no_statistics(): void
     {
         static::assertSame([], (new StepDetails())->settings(new DeclaringExtractor(new Statistics())));
-    }
-
-    public function test_bucketing_lists_its_strategy_and_storage(): void
-    {
-        static::assertSame(
-            ['Strategy: HashBucketing', 'Storage: MemoryBuckets'],
-            (new StepDetails())->settings(
-                new BucketingProcessor(
-                    new HashBucketing([ref('id')], 4, new NativeHasher(), new NativePHPRandomValueGenerator(), 'test'),
-                    new Buckets(new MemoryBuckets()),
-                ),
-            ),
-        );
     }
 }

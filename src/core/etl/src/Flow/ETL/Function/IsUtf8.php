@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Nullability;
 
@@ -49,14 +53,26 @@ final class IsUtf8 implements ScalarFunction
         return (new Nullability())->any(type_boolean(), $this->string->returns());
     }
 
-    public function eval(Row $row, FlowContext $context): ?bool
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $string = (new Parameter($this->string))->asString($row, $context);
+        $strings = (new Parameter($this->string))->asStrings($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($string === null) {
-            return null;
+        try {
+            foreach ($strings as $i => $string) {
+                if ($string === null) {
+                    $results[] = null;
+
+                    continue;
+                }
+
+                $results[] = b($string)->isUtf8();
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return b($string)->isUtf8();
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

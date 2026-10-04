@@ -12,11 +12,10 @@ use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function array_map;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
@@ -38,7 +37,7 @@ final class FeedExtractorTest extends FlowTestCase
         $collected = [];
         $completed = false;
 
-        $extractor->feed(rows(schema(int_schema('id')), row(['id' => 1])));
+        $extractor->feed(array_to_rows([['id' => 1]], schema(int_schema('id'))));
 
         $fiber = new Fiber(static function () use ($extractor, $context, &$collected, &$completed): void {
             foreach ($extractor->extract($context) as $rows) {
@@ -71,7 +70,7 @@ final class FeedExtractorTest extends FlowTestCase
         $context = flow_context(config());
         $collected = [];
 
-        $extractor->feed(rows(schema(int_schema('id')), row(['id' => 1])));
+        $extractor->feed(array_to_rows([['id' => 1]], schema(int_schema('id'))));
 
         $fiber = new Fiber(static function () use ($extractor, $context, &$collected): void {
             foreach ($extractor->extract($context) as $rows) {
@@ -80,7 +79,7 @@ final class FeedExtractorTest extends FlowTestCase
         });
 
         $fiber->start();
-        $extractor->feed(rows(schema(int_schema('id')), row(['id' => 2])));
+        $extractor->feed(array_to_rows([['id' => 2]], schema(int_schema('id'))));
         $fiber->resume();
 
         static::assertTrue($fiber->isSuspended());
@@ -97,7 +96,7 @@ final class FeedExtractorTest extends FlowTestCase
         $batch = null;
         $valid = null;
 
-        $extractor->feed(rows(schema(int_schema('id')), row(['id' => 1])));
+        $extractor->feed(array_to_rows([['id' => 1]], schema(int_schema('id'))));
 
         $fiber = new Fiber(static function () use ($extractor, $context, &$batch, &$valid): void {
             $generator = $extractor->extract($context);
@@ -120,7 +119,7 @@ final class FeedExtractorTest extends FlowTestCase
         $trailing = null;
         $valid = null;
 
-        $extractor->feed(rows(schema(int_schema('id')), row(['id' => 1])));
+        $extractor->feed(array_to_rows([['id' => 1]], schema(int_schema('id'))));
 
         $fiber = new Fiber(static function () use ($extractor, $context, &$trailing, &$valid): void {
             $generator = $extractor->extract($context);
@@ -153,7 +152,7 @@ final class FeedExtractorTest extends FlowTestCase
         $context = flow_context(config());
         $collected = [];
 
-        $extractor->feed(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])));
+        $extractor->feed(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))));
 
         $fiber = new Fiber(static function () use ($extractor, $context, &$collected): void {
             foreach ($extractor->extract($context) as $rows) {

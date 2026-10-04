@@ -31,10 +31,15 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
 {
     public function test_creating_limit_offset_extractor_for_table(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new DoctrineTable($table = 'flow_doctrine_order_by_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('code', Type::getType(Types::INTEGER), ['notnull' => true]),
-        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
+        $this->pgsqlDatabaseContext->createTable(
+            (new DoctrineTable($table = 'flow_doctrine_order_by_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('code', Type::getType(Types::INTEGER), ['notnull' => true]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
 
         $customTypesMap = new TypesMap([
             StringType::class => TextType::class,

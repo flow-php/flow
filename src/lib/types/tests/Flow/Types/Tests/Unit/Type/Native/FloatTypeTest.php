@@ -102,6 +102,36 @@ final class FloatTypeTest extends TestCase
             'exceptionClass' => CastingException::class,
         ];
 
+        yield 'lower-case nan' => [
+            'value' => 'nan',
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
+
+        yield 'mixed-case Inf' => [
+            'value' => 'Inf',
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
+
+        yield 'signed +INF' => [
+            'value' => '+INF',
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
+
+        yield 'INF' => [
+            'value' => 'INF',
+            'expected' => INF,
+            'exceptionClass' => null,
+        ];
+
+        yield '-INF' => [
+            'value' => '-INF',
+            'expected' => -INF,
+            'exceptionClass' => null,
+        ];
+
         yield 'numeric string' => [
             'value' => '12.9',
             'expected' => 12.9,
@@ -217,6 +247,11 @@ final class FloatTypeTest extends TestCase
         } else {
             static::assertSame($expected, type_float()->cast($value));
         }
+    }
+
+    public function test_cast_of_the_nan_text(): void
+    {
+        static::assertNan(type_float()->cast('NAN'));
     }
 
     #[DataProvider('is_valid_data_provider')]

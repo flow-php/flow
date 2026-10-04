@@ -26,98 +26,84 @@ For detailed installation instructions, see the [installation page](/documentati
 Insert:
 
 ```php
-$bulk = Bulk::create();
-$bulk->insert(
+<?php
+
+use Flow\Doctrine\Bulk\{Bulk, BulkData};
+
+Bulk::create()->insert(
     $dbalConnection,
-    'your-table-name',
-    new BulkData([
-        ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
-        ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
-        ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
-    ])
-);
-
-```
-
-### Type Optimization with BulkData
-
-`BulkData` can accept optional type information to optimize database operations:
-
-```php
-use Doctrine\DBAL\Types\Type;
-use Doctrine\DBAL\Types\Types;
-
-$bulk = Bulk::create();
-$bulk->insert(
-    $dbalConnection,
-    'your-table-name',
-    new BulkData(
-        [
-            ['id' => 1, 'name' => 'Name One', 'created_at' => new \DateTime()],
-            ['id' => 2, 'name' => 'Name Two', 'created_at' => new \DateTime()],
-        ],
-        [
-            'id' => Type::getType(Types::INTEGER),
-            'name' => Type::getType(Types::STRING),
-            'created_at' => Type::getType(Types::DATETIME_IMMUTABLE),
-        ]
-    )
-);
-```
-
-**Type Detection Behavior:**
-
-- **With Types**: When column types are provided, `BulkData` uses them directly for optimal performance
-- **Without Types**: When no types are provided, `BulkData` automatically queries the database to understand the table structure and determine appropriate types
-
-This automatic type detection ensures data consistency but comes with a performance cost due to the additional database query. For optimal performance in high-throughput scenarios, explicitly providing column types is recommended.
-
-Update:
-
-```php
-$bulk = Bulk::create();
-$bulk->update(
-    $dbalConnection,
-    'your-table-name',
+    'users',
     new BulkData([
         ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
         ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
         ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
     ]),
-    [
-        'primary_key_columns' => ['id'],
-        'update_columns' => ['name']
-    ]
 );
-
 ```
+
+### Column types
+
+Without types, `Bulk` reads the column types of the table from the database, once per table and `Bulk` instance. Pass
+them to `BulkData` to bind with exactly these types:
+
+```php
+<?php
+
+use Doctrine\DBAL\Types\{Type, Types};
+use Flow\Doctrine\Bulk\{Bulk, BulkData};
+
+Bulk::create()->insert(
+    $dbalConnection,
+    'users',
+    new BulkData(
+        [
+            ['id' => 1, 'name' => 'Name One', 'created_at' => new \DateTimeImmutable()],
+            ['id' => 2, 'name' => 'Name Two', 'created_at' => new \DateTimeImmutable()],
+        ],
+        [
+            'id' => Type::getType(Types::INTEGER),
+            'name' => Type::getType(Types::STRING),
+            'created_at' => Type::getType(Types::DATETIME_IMMUTABLE),
+        ],
+    ),
+);
+```
+
+Update (PostgreSQL):
+
+```php
+<?php
+
+use Flow\Doctrine\Bulk\{Bulk, BulkData};
+use Flow\Doctrine\Bulk\Dialect\PostgreSQLUpdateOptions;
+
+Bulk::create()->update(
+    $dbalConnection,
+    'users',
+    new BulkData([
+        ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
+        ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
+    ]),
+    new PostgreSQLUpdateOptions(primaryKeyColumns: ['id'], updateColumns: ['name']),
+);
+```
+
+`Bulk::delete()` removes the rows matching every column of `BulkData`.
 
 ## Supported Dialects
 
-* PostgreSQL
-* MySQL / MariaDB
-* SQLite
+- PostgreSQL
+- MySQL / MariaDB
+- SQLite
 
 ### Adding new Dialects
 
-[Dialect](/src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk/Dialect/Dialect.php) is basic abstraction of this library.  
-The main role of Dialect is to prepare SQL insert/update statement based
-on [BulkData](/src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk/BulkData.php)
-and provided `options`.
+A [Dialect](/src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk/Dialect/Dialect.php) builds the SQL of one insert,
+update or delete from a [BulkData](/src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk/BulkData.php) and the dialect's
+own `InsertOptions` / `UpdateOptions` implementation (`PostgreSQLInsertOptions`, `MySQLInsertOptions`,
+`SqliteInsertOptions`, ...).
 
-* `$insertOptions`
-* `$updateOptions`
-
-Options are key => value maps without predefined structure that allows to manipulate building SQL statement.
-Each dialect should define it own structure for options in order to support db engine features, including those
-that are specific for given engine.
-
-[QueryFactory](/src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk/QueryFactory.php) is abstraction for creating queries, there is currently only one
-implementation, DbalPlatform. QueryFactory `insertOptions` and `updateOptions` is combination of all options provided
-by supported Dialects where each entry must be optional.
-
-example:
-`dialect_option?: string`
-
-[DbalPlatform](/src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk/DbalPlatform.php) is a factory that detects which Dialect should be used for given
-Doctrine DBAL Platform. 
+[DbalPlatform](/src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk/DbalPlatform.php) picks the Dialect for a Doctrine
+DBAL platform, and [DbalQueryFactory](/src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk/QueryFactory/DbalQueryFactory.php),
+the [QueryFactory](/src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk/QueryFactory.php) implementation, asks it for
+the query.

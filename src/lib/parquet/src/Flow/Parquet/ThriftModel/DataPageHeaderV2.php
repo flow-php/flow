@@ -41,7 +41,7 @@ class DataPageHeaderV2
             'var' => 'encoding',
             'isRequired' => true,
             'type' => TType::I32,
-            'class' => '\Flow\Parquet\Thrift\Encoding',
+            'class' => '\Flow\Parquet\ThriftModel\Encoding',
         ],
         5 => [
             'var' => 'definition_levels_byte_length',
@@ -62,7 +62,7 @@ class DataPageHeaderV2
             'var' => 'statistics',
             'isRequired' => false,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\Statistics',
+            'class' => '\Flow\Parquet\ThriftModel\Statistics',
         ],
     ];
 

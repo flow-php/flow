@@ -4,9 +4,10 @@
 
 [TOC]
 
-Floe is Flow's native, self-describing binary file format for `Rows`. It stores the schema inside
-the file, evolves seamlessly across appended sections, and reads back through the DataFrame API with
-`from_floe()` / `to_floe()`. Files use the `.floe` extension.
+Floe is Flow's native, self-describing, columnar binary file format. Each batch is written as one BATCH frame holding
+every column in the Arrow buffer layout, the schema lives in the file's footer, and `from_floe()` reads the batches
+back into the configured [column backend](/documentation/components/core/column-backend.md). Files use the `.floe`
+extension.
 
 ## Writing
 
@@ -38,10 +39,22 @@ data_frame()
     ->run();
 ```
 
-When the [`flow_php` extension](/documentation/components/extensions/flow-php-ext.md) is loaded, the
-strict read and the write fuse frame-split + value decode/encode + hydrate/dehydrate into one native
-call per batch. It is transparent - the on-disk format is unchanged and the rows are byte-for-byte
-identical to the pure-PHP engine.
+Batches hold at most `withBatchSize()` rows, never spanning two BATCH frames.
+
+The footer is the schema: `from_floe(...)->withSchema()` throws. Change a column's type or zone after reading:
+
+```php
+<?php
+
+use function Flow\ETL\DSL\{data_frame, ref, to_output, to_timezone};
+use function Flow\Floe\DSL\from_floe;
+
+data_frame()
+    ->read(from_floe(__DIR__ . '/output.floe'))
+    ->withEntry('at', to_timezone(ref('at'), 'Europe/Warsaw'))
+    ->write(to_output())
+    ->run();
+```
 
 ## Save Modes
 
@@ -57,8 +70,7 @@ machinery as other file loaders:
 ```php
 <?php
 
-use Flow\ETL\Filesystem\SaveMode;
-use function Flow\ETL\DSL\{data_frame, from_array};
+use function Flow\ETL\DSL\{append, data_frame, from_array};
 use function Flow\Floe\DSL\{from_floe, to_floe};
 
 data_frame()
@@ -109,7 +121,8 @@ data_frame()
 ## Limit & Offset Pushdown
 
 `limit()` stops reading early, and `withOffset()` skips whole file sections using the footer before
-reading, so neither scans the full file:
+reading, then passes over every BATCH frame whose row count lies inside the offset without decoding it, so
+neither scans the full file:
 
 ```php
 <?php
@@ -131,10 +144,9 @@ schema is available without scanning any rows:
 ```php
 <?php
 
-use function Flow\ETL\DSL\{data_frame, flow_context, config};
 use function Flow\Floe\DSL\from_floe;
 
-$schema = from_floe(__DIR__ . '/output.floe')->schema(flow_context(config()));
+$schema = from_floe(__DIR__ . '/output.floe')->schema();
 ```
 
 ## Reading the First or Last Rows
@@ -146,10 +158,11 @@ boundary section onward - the leading rows are never read:
 ```php
 <?php
 
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\Floe\FloeReader;
 use function Flow\Filesystem\DSL\{native_local_filesystem, path};
 
-$file = (new FloeReader(native_local_filesystem()))->read(path(__DIR__ . '/output.floe'));
+$file = (new FloeReader(native_local_filesystem(), new AdaptiveBackend()))->read(path(__DIR__ . '/output.floe'));
 
 foreach ($file->head(300) as $rows) {
     // first 300 rows; stops reading once 300 are yielded
@@ -160,7 +173,7 @@ foreach ($file->tail(300) as $rows) {
 }
 ```
 
-Both yield `Rows` in batches (default 1000, override with the second argument) and return every row when
+Both yield `Rows` in batches of at most 1000 rows (override with the second argument) and return every row when
 the file holds fewer than the requested count. For the first N through the DataFrame API use `->limit(N)`
 (pushed into the extractor); `tail()` is a reader-level convenience because it needs the file's total
 from the footer.
@@ -169,210 +182,151 @@ from the footer.
 
 `merge_floe()` combines several `.floe` files (same or append-compatible evolving schema) into one.
 The default byte-splices frame regions without re-encoding a single row - O(bytes); `compact: true`
-re-encodes every row, coalescing same-schema runs into fewer sections:
+re-reads and re-writes every batch, coalescing same-schema runs into fewer sections:
 
 ```php
 <?php
+
+use Flow\ETL\Column\AdaptiveBackend;
 
 use function Flow\Floe\DSL\merge_floe;
 
 merge_floe(
     [__DIR__ . '/data/part-1.floe', __DIR__ . '/data/part-2.floe'],
     __DIR__ . '/data/merged.floe',
+    new AdaptiveBackend(),
 );
 ```
 
 Sources must evolve the running merged schema cleanly - otherwise `IncompatibleSchemaException` is
-thrown before anything is written. Each source's per-section partition combinations are preserved
-(deduped into the merged footer table), so sources with differing combinations merge without error.
-`merge_floe()` works on the local filesystem; for other filesystems use `Flow\Floe\FloeMerger` directly.
+thrown before anything is written. `merge_floe()` works on the local filesystem; for other filesystems use `Flow\Floe\FloeMerger` directly.
 
 ## Whole-Value Serialization
 
 The whole-value serialization paths - the [cache](/documentation/components/core/caching.md) and
 `Flow\Floe\FloeSerializer` (the config default serializer) - stream: `serialize(Rows, DestinationStream)`
-goes through `FloeStreamWriter` and `unserialize(SourceStream)` through the strict `FloeStreamReader::rows()`
-read in batches of `batchSize` rows (default 1000), so the engine holds one batch at a time. The batch size
-never changes the produced bytes - only the memory bound. String payloads round-trip through the
-`Flow\Serializer\DSL` helpers `serialize_to_string()` / `unserialize_from_string()`. A whole-value
-`unserialize()` verifies the decoded row count against the footer and rejects torn payloads. Numbers and
-guidance live in the [caching documentation](/documentation/components/core/caching.md).
+goes through `FloeStreamWriter`, which writes one BATCH frame, and `unserialize(SourceStream)` through the
+strict `FloeStreamReader::rows()`, read in frame-sized batches of at most `batchSize` rows (default 1000) and
+returned as one `Rows` in the serializer's backend. String payloads round-trip through the `Flow\Serializer\DSL`
+helpers `serialize_to_string()` / `unserialize_from_string()`. A whole-value `unserialize()` verifies the decoded row
+count against the footer and rejects torn payloads.
 
 ## Validation
 
-Floe asserts, it never casts. A value that does not match its column type is rejected - it is never
-converted to fit.
+Floe never casts. Values are checked when a batch is built - a value that does not fit its column throws
+`SchemaMismatchException` before anything reaches the writer. The writer then checks each batch's schema against
+the file's schema, fixed when the write session starts: `FloeWriter` takes it as an argument, `to_floe()` takes
+`withSchema()` or else the first batch's schema:
 
-Two checks run when a batch is written:
-
-- **Column set** - a row carrying a column the file's schema does not declare is rejected. Always on.
-- **Per value** - every value must satisfy its column type. Gated by `validateData`, on by default.
+| Batch schema                                                  | Result                        |
+|---------------------------------------------------------------|-------------------------------|
+| a column the file does not declare                            | `IncompatibleSchemaException` |
+| lacks a column the file declares nullable                     | written, reads back as null   |
+| lacks a column the file declares not nullable                 | `IncompatibleSchemaException` |
+| a column of another type, or nullable where the file's is not | `IncompatibleSchemaException` |
 
 ```php
 <?php
 
-use function Flow\ETL\DSL\{data_frame, from_array};
-use function Flow\Floe\DSL\to_floe;
+use Flow\ETL\Column\PhpBackend;
+use Flow\Floe\FloeWriter;
+use function Flow\ETL\DSL\{array_to_rows, int_schema, schema, str_schema};
+use function Flow\Filesystem\DSL\{native_local_filesystem, path};
 
-data_frame()
-    ->read(from_array([['id' => 1], ['id' => 'AB-1']]))
-    ->write(to_floe(__DIR__ . '/orders.floe'))
-    ->run();
+$writer = new FloeWriter(native_local_filesystem(), schema(int_schema('id')), new PhpBackend());
+$writer->create(path(__DIR__ . '/orders.floe'));
+$writer->write(array_to_rows([['id' => 1]], schema(int_schema('id')), new PhpBackend()));
+$writer->write(array_to_rows([['id' => 'AB-1']], schema(str_schema('id')), new PhpBackend()));
 ```
 
-The first batch fixes the file's schema to `integer`, so the second one throws:
-
 ```
-Floe write session schema is fixed and this batch does not fit it: column "id" (row 0):
-could not convert 'AB-1' (string) to integer.
+Floe write session schema is fixed and this batch does not fit it:   Mismatched Definitions:
+    |-- expected: id<integer>, given: id<string>
 ```
 
-Both checks throw `IncompatibleSchemaException` before any bytes reach the destination, so a rejected
-batch leaves the file readable. Other messages take the same shape:
-
-```
-column "amount" (row 0): could not convert null to string, column is not nullable
-new column "email"
-```
-
-`validate_data: false` skips the per-value check only. The column-set check still runs, so silent
-column loss cannot be unlocked. This mirrors parquet-java's `ParquetWriter::withValidation()`.
-
-Two behaviours differ from other columnar formats on purpose:
-
-- **Absent is not null.** A row that omits a column writes an absent flag and reads back as null;
-  a row that carries an explicit `null` in a non-nullable column is rejected. Parquet turns a missing
-  optional field into a null and rejects a missing required one; Arrow cannot omit a column at all.
-- **An int is not a float.** An integer value in a `float` column is rejected. pyarrow, parquet-java
-  and Avro all widen it silently.
-
-## Unsupported column types
-
-Floe stores one type per column, so a column whose type is only known per value cannot be written.
-These throw `FloeException` when the write session opens:
-
-```
-Floe does not support values of type "mixed"
-Floe does not support map keys of type "uuid"
-```
-
-That covers `mixed`.
-Use a declared element type, or a `json_schema()` column when the shape is genuinely dynamic.
+The check runs before any bytes reach the destination, so a rejected batch leaves the file readable.
 
 ## On-Disk Layout
 
-A `.floe` file is a fixed 6-byte header, a stream of length-prefixed frames, and a JSON footer that a
-reader can locate from the last 8 bytes without scanning the body. The schema lives **only in the
-footer** - there is no inline schema frame. All multi-byte integers are **little-endian**.
+A `.floe` file is a 6-byte header, a stream of length-prefixed frames and a JSON footer located from the last
+8 bytes. The schema lives only in the footer. Integers are little-endian.
 
 ```
-┌──────────────────────────────────────────────────────────┐
-│ HEADER                              6 bytes              │
-├──────────────────────────────────────────────────────────┤
-│ FRAMES  (repeated, in write order)                       │
-│    PARTITIONS  (0x03)   emitted when combination changes │
-│    ROW         (0x02)   one frame per row                │
-│    ROW         (0x02)                                    │
-│    ...                                                     │
-├──────────────────────────────────────────────────────────┤
-│ FOOTER FRAME   (0x06)                                    │
-│    footer JSON  +  TRAILER (8 bytes)                     │
-└──────────────────────────────────────────────────────────┘
+HEADER                               6 bytes
+FRAMES (write order)
+  BATCH   (0x05)                     one per write()
+  ...
+FOOTER    (0x06)                     footer JSON + TRAILER (8 bytes)
 ```
 
 ### Header (6 bytes)
 
 ```
- byte  0    1    2    3     4        5
-      ┌────┬────┬────┬────┬────────┬────────┐
-      │ 'F'│ 'L'│ 'O'│ 'E'│ version│ flags  │
-      └────┴────┴────┴────┴────────┴────────┘
-        magic "FLOE"        0x02     codec id
-                                     (0x00 = no compression)
+'F' 'L' 'O' 'E'  version  codec
+                  0x02     0x00 = no compression
 ```
 
 ### Frame envelope
 
-Every frame - `ROW`, `PARTITIONS`, `FOOTER` - shares the same envelope: a 1-byte type, a
-4-byte little-endian body length, then the body.
-
 ```
-      ┌────────┬───────────────┬───────────────────────┐
-      │ type   │ body length   │ body                  │
-      │ 1 byte │ 4 bytes (LE)  │ <length> bytes        │
-      └────────┴───────────────┴───────────────────────┘
-        0x02 ROW   0x03 PARTITIONS   0x06 FOOTER
+type     1 byte          0x05 BATCH   0x06 FOOTER
+length   4 bytes (u32)
+body     <length> bytes
 ```
 
-The file's schema is not a frame - it carries **exactly one schema**, fixed at session start (explicit,
-or the first batch's union) and stored only in the footer (see `schema` below). A row narrower than the
-schema rides it (see the ROW absent flag). A later batch that introduces a new column or an incompatible
-type throws `IncompatibleSchemaException` - schema evolution lives only in `merge_floe()`.
+Any other frame type is refused with `Floe found unknown frame type 0x%02X`.
 
-- **ROW (`0x02`)** - one row encoded **by column** against the file schema: for each schema
-  column, in order, a one-byte presence flag -
-  - `0x01` **present** - followed by the value encoded per the column's schema type, no per-value tag.
-  - `0x00` **null** - the value is null.
-  - `0x02` **null with metadata** - a null value carrying per-value metadata that diverges from the
-    column's schema metadata: a metadata block (4-byte little-endian JSON length + JSON), no value.
-  - `0x03` **absent** - the row has no such column.
-  - `0x04` **present with metadata** - a divergent-metadata block (4-byte length + JSON) followed by
-    the encoded value.
+### BATCH body
 
-  The two metadata flags (`0x02`, `0x04`) appear only when a row's per-value metadata differs from the
-  column's schema metadata; otherwise every value uses `0x00`/`0x01`. Every value is encoded positionally
-  against its column type, so no value carries a type tag. A row whose columns exactly match the section,
-  with no divergent metadata, produces the same bytes as a plain positional encode. One frame per row.
+One batch in columnar form: a plaintext directory, then the buffer area.
 
-  A **structure** value nests the same idea one level down: one flag byte per declared element, in the
-  structure type's declared field order, with no element names on the wire -
+```
+rowCount     u32
+nodeCount    u32
+bufferCount  u32
+nodes        nodeCount   × {length u32, nullCount u32}    pre-order, every column's type tree
+extents      bufferCount × {offset u32, length u32}       into the buffer area
+padding      to 8 bytes
+buffer area  per non-empty buffer: i64 uncompressed length (-1 = stored raw) + bytes, padded to 8
+```
 
-  - `0x01` **present** - followed by the element value encoded per its declared type.
-  - `0x00` **null** - the element key is present in the value, holding null.
-  - `0x03` **absent** - the value has no such key (an `optional` element that was omitted).
+- Nodes per type: scalar and null 1, list 1 + element, map 2 (map, entries) + key + value, structure 1 + children.
+- Buffers per node: validity (`''` when the node holds no nulls), then offsets for list, map and string kinds,
+  then values/data; a null column has none.
+- An empty buffer is extent `{0, 0}` with no prefix.
+- A codec compresses each buffer on its own; the buffer is stored raw (`-1`) whenever the codec output is not
+  smaller. The directory is never compressed.
 
-  Because the bytes carry no names, the declared field order binds each flag byte to its element. The
-  writer looks each element up **by name** in the value and emits in declared order, so a value whose
-  keys arrive in a different order still produces the declared-order bytes; the reader rebuilds keys
-  in declared order.
-- **PARTITIONS (`0x03`)** - the partition key/value pairs for the section that follows: a 4-byte count
-  followed by repeated `[nameLen(4), name, valueLen(4), value]`. Written at the start of every section
-  whose combination differs from the previous one; the reader starts at the empty combination, so an
-  unpartitioned first section emits none and a later change back to unpartitioned emits a `count=0`
-  frame.
-- **FOOTER (`0x06`)** - the footer JSON followed by the trailer (below).
+`[['id' => 1, 'name' => 'ab'], ['id' => 2, 'name' => null]]` under `int_schema('id')`,
+`str_schema('name', nullable: true)` - 72-byte directory, 80-byte buffer area:
+
+```
+02000000 02000000 05000000                                         rows 2, nodes 2, buffers 5
+02000000 00000000  02000000 01000000                               id {2,0}, name {2,1}
+00000000 00000000  00000000 18000000  18000000 09000000            id validity {0,0}, id values {0,24}, name validity {24,9}
+28000000 14000000  40000000 0a000000  00000000                     name offsets {40,20}, name data {64,10}, padding
+ffffffffffffffff 0100000000000000 0200000000000000                 id values
+ffffffffffffffff 01 00000000000000                                 name validity
+ffffffffffffffff 000000000200000002000000 00000000                 name offsets
+ffffffffffffffff 6162 000000000000                                 name data
+```
 
 ### Footer
-
-The `FOOTER` frame body is a JSON object carrying everything needed to read the file **without
-scanning rows**:
 
 ```json
 {
   "version":    2,
   "writer":     "1.x-dev",
-  "schema":     { /* the file's single schema */ },
-  "sections":   [ { "offset": 6, "partitionsId": 0, "rowCount": 2 } ],
-  "partitions": [ { "country": "PL" } ],
-  "statistics": { "rows": 2, "byteSize": 118 },
-  "metadata":   { /* typed key/value, Schema\Metadata */ }
+  "schema":     [ /* the file's single schema */ ],
+  "sections":   [ { "offset": 6, "rowCount": 2 } ],
+  "statistics": { "rows": 2, "byteSize": 157 },
+  "metadata":   { /* Schema\Metadata */ }
 }
 ```
 
-- **`statistics`** holds the file's row count and the uncompressed bytes of its data frames (header and
-  footer excluded), so a reader can size the file before reading a row. The footer and its sections
-  ignore keys they do not know, so a field added later does not break an older reader.
-
-- **`sections`** map a byte `offset` → `partitionsId` + `rowCount`, so a reader can skip whole sections
-  (offset/limit pushdown) and know each section's partition combination up front. Sections bound
-  partition combinations and appends only; every section shares the file's one schema.
-- **`partitions`** is the deduplicated, order-preserving table of partition combinations, indexed by
-  `partitionsId`; the unpartitioned combination is an empty object at its own id. A file can hold many
-  combinations (one per section).
-- **`schema`** is the file's single schema and the sole place it is stored, so every read decodes
-  against it without scanning the body. On a read, a row narrower than it (an absent column) is padded
-  with null entries so every yielded row conforms. `merge_floe()` re-encodes drifted sources to their
-  union, so a merged file is still one schema.
+- `sections` - byte `offset` and `rowCount` of each section, for offset/limit pushdown without a scan.
+- `statistics` - row count and the bytes of the data frames (header and footer excluded).
+- Unknown keys are ignored, so a field added later does not break an older reader.
 
 ### Trailer (last 8 bytes)
 

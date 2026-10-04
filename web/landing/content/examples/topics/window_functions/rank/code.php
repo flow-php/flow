@@ -6,7 +6,7 @@ use function Flow\ETL\DSL\{data_frame, rank, from_array, ref, to_output, window}
 
 require __DIR__ . '/vendor/autoload.php';
 
-$df = data_frame()
+data_frame()
     ->read(
         from_array([
             ['id' => 1, 'name' => 'Greg', 'department' => 'IT', 'salary' => 6000],
@@ -15,6 +15,7 @@ $df = data_frame()
             ['id' => 4, 'name' => 'John', 'department' => 'Finances', 'salary' => 9000],
             ['id' => 5, 'name' => 'Jane', 'department' => 'Finances', 'salary' => 14_000],
             ['id' => 6, 'name' => 'Janet', 'department' => 'Finances', 'salary' => 9000],
+            ['id' => 7, 'name' => 'Ann', 'department' => 'Finances', 'salary' => 8000],
         ])
     )
     ->withEntry('rank', rank()->over(window()->partitionBy(ref('department'))->orderBy(ref('salary')->desc())))

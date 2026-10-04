@@ -31,7 +31,7 @@ class OffsetIndex
             'etype' => TType::STRUCT,
             'elem' => [
                 'type' => TType::STRUCT,
-                'class' => '\Flow\Parquet\Thrift\PageLocation',
+                'class' => '\Flow\Parquet\ThriftModel\PageLocation',
             ],
         ],
         2 => [

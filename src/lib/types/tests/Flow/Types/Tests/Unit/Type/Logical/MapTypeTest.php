@@ -209,4 +209,19 @@ final class MapTypeTest extends TestCase
     {
         static::assertSame('map<string, string>', type_map(type_string(), type_string())->toString());
     }
+
+    public function test_a_key_php_coerces_back_is_refused(): void
+    {
+        try {
+            type_map(type_string(), type_integer())->cast([5 => 1]);
+            static::fail('Expected CastingException');
+        } catch (CastingException $e) {
+            static::assertSame('Can\'t cast "array" into "map<string, integer>" type', $e->getMessage());
+            static::assertInstanceOf(InvalidTypeException::class, $e->getPrevious());
+            static::assertSame(
+                'Expected type "map<string, integer>", got "map<integer, integer>".',
+                $e->getPrevious()->getMessage(),
+            );
+        }
+    }
 }

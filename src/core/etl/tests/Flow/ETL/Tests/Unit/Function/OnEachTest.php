@@ -11,19 +11,25 @@ use Flow\ETL\Function\OnEach;
 use Flow\ETL\Function\OnEachElementSchema;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Function\ScalarFunction;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\Double\CountingReturnsFunction;
+use Flow\ETL\Tests\Double\FailingOnValuesFunction;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\Types\DSL\structure_element;
 use function Flow\Types\DSL\type_array;
@@ -32,6 +38,7 @@ use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function serialize;
@@ -44,36 +51,55 @@ final class OnEachTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected type "string", got "integer"');
 
-        (new ReferenceResolver())
-            ->resolve(
+        (new FunctionContext(flow_context()))->eval(
+            (new ReferenceResolver())->resolve(
                 ref('array')->onEach(ref('element')->upper()),
                 schema(list_schema('array', type_list(type_integer()))),
-            )
-            ->eval(row(['array' => [1, 2, 3]]), flow_context());
+            ),
+            ['array' => [
+                1,
+                2,
+                3,
+            ]],
+            schema(list_schema('array', type_list(type_integer()))),
+        );
     }
 
     public function test_an_element_the_declared_type_refuses_is_not_swallowed(): void
     {
         $this->expectException(SchemaMismatchException::class);
 
-        (new ReferenceResolver())
-            ->resolve(
+        (new FunctionContext(flow_context()))->eval(
+            (new ReferenceResolver())->resolve(
                 ref('array')->onEach(ref('element')->upper()),
                 schema(list_schema('array', type_list(type_string()))),
-            )
-            ->eval(row(['array' => ['a', null]]), flow_context());
+            ),
+            ['array' => [
+                'a',
+                null,
+            ]],
+            schema(list_schema('array', type_list(type_optional(type_string())))),
+        );
     }
 
     public function test_executing_function_on_each_value_from_array(): void
     {
         static::assertSame(
             ['1', '2', '3', '4', '5'],
-            (new ReferenceResolver())
-                ->resolve(
+            (new FunctionContext(flow_context()))->eval(
+                (new ReferenceResolver())->resolve(
                     ref('array')->onEach(ref('element')->cast(type_string())),
                     schema(list_schema('array', type_list(type_integer()))),
-                )
-                ->eval(row(['array' => [1, 2, 3, 4, 5]]), flow_context()),
+                ),
+                ['array' => [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                ]],
+                schema(list_schema('array', type_list(type_integer()))),
+            ),
         );
     }
 
@@ -81,12 +107,14 @@ final class OnEachTest extends FlowTestCase
     {
         static::assertSame(
             [],
-            (new ReferenceResolver())
-                ->resolve(
+            (new FunctionContext(flow_context()))->eval(
+                (new ReferenceResolver())->resolve(
                     ref('array')->onEach(ref('element')->cast(type_string())),
                     schema(list_schema('array', type_list(type_integer()))),
-                )
-                ->eval(row(['array' => []]), flow_context()),
+                ),
+                ['array' => []],
+                schema(list_schema('array', type_list(type_integer()))),
+            ),
         );
     }
 
@@ -94,12 +122,20 @@ final class OnEachTest extends FlowTestCase
     {
         static::assertSame(
             ['a' => '1', 'b' => '2', 'c' => '3', 'd' => '4', 'e' => '5'],
-            (new ReferenceResolver())
-                ->resolve(
+            (new FunctionContext(flow_context()))->eval(
+                (new ReferenceResolver())->resolve(
                     ref('array')->onEach(ref('element')->cast(type_string()), true),
                     schema(map_schema('array', type_map(type_string(), type_integer()))),
-                )
-                ->eval(row(['array' => ['a' => 1, 'b' => 2, 'c' => 3, 'd' => 4, 'e' => 5]]), flow_context()),
+                ),
+                ['array' => [
+                    'a' => 1,
+                    'b' => 2,
+                    'c' => 3,
+                    'd' => 4,
+                    'e' => 5,
+                ]],
+                schema(map_schema('array', type_map(type_string(), type_integer()))),
+            ),
         );
     }
 
@@ -107,12 +143,20 @@ final class OnEachTest extends FlowTestCase
     {
         static::assertSame(
             ['1', '2', '3', '4', '5'],
-            (new ReferenceResolver())
-                ->resolve(
+            (new FunctionContext(flow_context()))->eval(
+                (new ReferenceResolver())->resolve(
                     ref('array')->onEach(ref('element')->cast(type_string()), false),
                     schema(map_schema('array', type_map(type_string(), type_integer()))),
-                )
-                ->eval(row(['array' => ['a' => 1, 'b' => 2, 'c' => 3, 'd' => 4, 'e' => 5]]), flow_context()),
+                ),
+                ['array' => [
+                    'a' => 1,
+                    'b' => 2,
+                    'c' => 3,
+                    'd' => 4,
+                    'e' => 5,
+                ]],
+                schema(map_schema('array', type_map(type_string(), type_integer()))),
+            ),
         );
     }
 
@@ -123,19 +167,28 @@ final class OnEachTest extends FlowTestCase
         $this->expectException(SchemaNotDerivableException::class);
         $this->expectExceptionMessage('the array operand declares "json", which has no element type');
 
-        (new ReferenceResolver())
-            ->resolve(
+        (new FunctionContext(flow_context()))->eval(
+            (new ReferenceResolver())->resolve(
                 ref('array')->onEach(ref('element')->cast(type_string())),
                 schema(definition_from_type('array', type_array())),
-            )
-            ->eval(row(['array' => [1, 2]]), flow_context());
+            ),
+            ['array' => [
+                1,
+                2,
+            ]],
+            schema(list_schema('array', type_list(type_integer()))),
+        );
     }
 
     public function test_the_element_schema_is_built_once_per_eval_not_once_per_element(): void
     {
         $operand = new CountingReturnsFunction(lit([1, 2, 3, 4, 5]), type_list(type_integer()));
 
-        (new OnEach($operand, ref('element')->cast(type_string())))->eval(row([]), flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            new OnEach($operand, ref('element')->cast(type_string())),
+            [],
+            schema(),
+        );
 
         static::assertSame(1, $operand->returnsCalls);
     }
@@ -224,7 +277,11 @@ final class OnEachTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('OnEach requires non-null array');
 
-        ref('tags')->onEach(ref('element'))->eval(row(['tags' => null]), flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            ref('tags')->onEach(ref('element')),
+            ['tags' => null],
+            schema(str_schema('tags', nullable: true)),
+        );
     }
 
     public function test_with_children_keeps_the_element_schema(): void
@@ -234,5 +291,50 @@ final class OnEachTest extends FlowTestCase
 
         // two stateless instances are equal, but serialize() names an instance it already wrote only by back-reference
         static::assertSame(1, substr_count(serialize([$elementSchema, $rebuilt]), 'OnEachElementSchema'));
+    }
+
+    public function test_the_body_is_bound_once_per_node_not_once_per_batch(): void
+    {
+        $operand = new CountingReturnsFunction(lit([1, 2]), type_list(type_integer()));
+        $onEach = new OnEach($operand, ref('element')->cast(type_string()));
+        $rows = array_to_rows([['id' => 1]], schema(int_schema('id')));
+
+        static::assertSame([['1', '2']], $onEach->eval($rows, flow_context())->values());
+        static::assertSame([['1', '2']], $onEach->eval($rows, flow_context())->values());
+        static::assertSame(1, $operand->returnsCalls);
+    }
+
+    public function test_the_element_batch_is_built_by_the_configured_backend(): void
+    {
+        $backend = new SpyBackend();
+        $rows = array_to_rows([['l' => [1, 2]]], schema(list_schema('l', type_list(type_integer()))));
+
+        static::assertSame(
+            [['1', '2']],
+            (new ReferenceResolver())
+                ->resolve(new OnEach(ref('l'), ref('element')->cast(type_string())), $rows->schema())
+                ->eval($rows, flow_context(config_builder()->backend($backend)->build()))
+                ->values(),
+        );
+        static::assertGreaterThanOrEqual(1, $backend->builders());
+    }
+
+    public function test_the_function_evaluates_once_per_batch(): void
+    {
+        $spy = new FailingOnValuesFunction(ref('element'));
+        $rows = array_to_rows([
+            ['l' => [1, 2]],
+            ['l' => [3]],
+            ['l' => []],
+        ], schema(list_schema('l', type_list(type_integer()))));
+
+        static::assertSame(
+            [[1, 2], [3], []],
+            (new ReferenceResolver())
+                ->resolve(new OnEach(ref('l'), $spy), $rows->schema())
+                ->eval($rows, flow_context())
+                ->values(),
+        );
+        static::assertSame(1, $spy->evals);
     }
 }

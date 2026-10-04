@@ -17,6 +17,8 @@ use Flow\Documentation\Attribute\Type as DSLType;
 use Flow\ETL\Analyze;
 use Flow\ETL\Cache;
 use Flow\ETL\Cache\Implementation\FilesystemCache;
+use Flow\ETL\Column\AdaptiveBackend;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Config;
 use Flow\ETL\Config\ConfigBuilder;
 use Flow\ETL\Config\Grouping\HashGroupByBuilder;
@@ -41,9 +43,9 @@ use Flow\ETL\Extractor\BatchExtractor;
 use Flow\ETL\Extractor\CacheExtractor;
 use Flow\ETL\Extractor\ChainExtractor;
 use Flow\ETL\Extractor\DataFrameExtractor;
+use Flow\ETL\Extractor\File\PartitionTypes;
 use Flow\ETL\Extractor\FilesExtractor;
 use Flow\ETL\Extractor\MemoryExtractor;
-use Flow\ETL\Extractor\PartitionTypes;
 use Flow\ETL\Extractor\PathPartitionsExtractor;
 use Flow\ETL\Extractor\RowsExtractor;
 use Flow\ETL\Extractor\SequenceExtractor;
@@ -145,17 +147,13 @@ use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Memory\Memory;
 use Flow\ETL\NativePHPRandomValueGenerator;
 use Flow\ETL\RandomValueGenerator;
-use Flow\ETL\Row;
-use Flow\ETL\Row\AdaptiveRowHydrator;
-use Flow\ETL\Row\ColumnName;
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
-use Flow\ETL\Row\Hydrator;
-use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\SortOrder;
 use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Definition\BooleanDefinition;
@@ -217,11 +215,8 @@ use Flow\ETL\Window\FrameBoundType;
 use Flow\ETL\WithEntry;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
-use Flow\Filesystem\Partition;
-use Flow\Filesystem\Partitions;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\Mode;
-use Flow\Floe\FloeSerializer;
 use Flow\Serializer\Serializer;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateTimeType;
@@ -386,11 +381,11 @@ function files(string|Path $directory, Filesystem $filesystem = new NativeLocalF
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function filesystem_cache(
+    Serializer $serializer,
     Path|string|null $cache_dir = null,
     Filesystem $filesystem = new NativeLocalFilesystem(),
-    Serializer $serializer = new FloeSerializer(),
 ): FilesystemCache {
-    return new FilesystemCache($filesystem, is_string($cache_dir) ? path_real($cache_dir) : $cache_dir, $serializer);
+    return new FilesystemCache($filesystem, $serializer, is_string($cache_dir) ? path_real($cache_dir) : $cache_dir);
 }
 
 /**
@@ -569,19 +564,10 @@ function rename_map(array $renames): RenameMapEntryStrategy
     return new RenameMapEntryStrategy($renames);
 }
 
-/**
- * @param array<array-key, mixed> $values
- */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function row(array $values): Row
+function rows(Schema $schema, Backend $backend = new AdaptiveBackend()): Rows
 {
-    return new Row($values);
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function rows(Schema $schema, Row ...$row): Rows
-{
-    return new Rows($schema, ...$row);
+    return Rows::empty($schema, $backend);
 }
 
 /**
@@ -1173,69 +1159,13 @@ function number_format(
 
 /**
  * @param array<array<mixed>>|array<mixed|string> $data
- * @param array<Partition>|Partitions $partitions
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function array_to_row(
-    array $data,
-    Schema $schema,
-    Hydrator $hydrator = new AdaptiveRowHydrator(),
-    array|Partitions $partitions = [],
-): Row {
-    $map = [];
-
-    // @mago-ignore analysis:mixed-assignment
-    foreach ($data as $key => $value) {
-        $map[(new ColumnName())->of($key)] = $value;
-    }
-
-    foreach ($partitions as $partition) {
-        if (!array_key_exists($partition->name, $map)) {
-            $map[$partition->name] = $partition->value;
-        }
-    }
-
-    return $hydrator->hydrate([new RawRowValues($map)], $schema)->first();
-}
-
-/**
- * @param array<array<mixed>>|array<mixed|string> $data
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function array_to_rows(array $data, Schema $schema, Hydrator $hydrator = new AdaptiveRowHydrator()): Rows
+function array_to_rows(array $data, Schema $schema, Backend $backend = new AdaptiveBackend()): Rows
 {
-    $isRows = true;
-
-    // @mago-ignore analysis:mixed-assignment
-    foreach ($data as $v) {
-        if (!is_array($v)) {
-            $isRows = false;
-
-            break;
-        }
-    }
-
-    $rawRows = $isRows ? $data : [$data];
-    $maps = [];
-
-    // @mago-ignore analysis:mixed-assignment
-    foreach ($rawRows as $row) {
-        $row = type_array()->assert($row);
-        $map = [];
-
-        // @mago-ignore analysis:mixed-assignment
-        foreach ($row as $key => $value) {
-            // PHP gives back a numeric-string column name as an int key, which the positional rule
-            // would rename to eNN. A declared schema naming that column settles which one it is.
-            $declared = $schema->findDefinition((string) $key);
-
-            $map[$declared === null ? (new ColumnName())->of($key) : (string) $key] = $value;
-        }
-
-        $maps[] = new RawRowValues($map);
-    }
-
-    return $hydrator->hydrate($maps, $schema);
+    return (new RowsBuilder($schema, $backend))
+        ->appendRecords($data)
+        ->finish();
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::WINDOW_FUNCTION)]
@@ -1257,9 +1187,13 @@ function dense_rank(): DenseRank
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function average(Reference|string $ref, int $scale = 2, Rounding $rounding = Rounding::HALF_UP): Average
-{
-    return new Average(is_string($ref) ? ref($ref) : $ref, $scale, $rounding);
+function average(
+    Reference|string $ref,
+    int $scale = 2,
+    Rounding $rounding = Rounding::HALF_UP,
+    bool $exact = false,
+): Average {
+    return new Average(is_string($ref) ? ref($ref) : $ref, $scale, $rounding, $exact);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
@@ -1329,7 +1263,7 @@ function unbounded_following(): FrameBound
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function sum(Reference|string $ref, ScalarFunction|bool $exact = false): Sum
+function sum(Reference|string $ref, bool $exact = false): Sum
 {
     return new Sum(is_string($ref) ? ref($ref) : $ref, $exact);
 }

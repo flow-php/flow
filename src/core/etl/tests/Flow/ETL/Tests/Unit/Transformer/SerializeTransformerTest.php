@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\Column\AdaptiveBackend;
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\SerializeTransformer;
 use Flow\Floe\FloeSerializer;
 use Flow\Serializer\Base64Serializer;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\list_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Serializer\DSL\serialize_to_string;
@@ -52,7 +53,7 @@ final class SerializeTransformerTest extends FlowTestCase
 
     public function test_serializing_empty_row_under_one_entry(): void
     {
-        $rows = rows($rowSchema = schema(), $row1 = row([]));
+        $rows = Rows::fromColumns(schema(), [], 1);
 
         $transformer = new SerializeTransformer('serialized');
         $transformedRows = $transformer->transform($rows, flow_context());
@@ -61,8 +62,8 @@ final class SerializeTransformerTest extends FlowTestCase
             [
                 [
                     'serialized' => serialize_to_string(
-                        new Base64Serializer(new FloeSerializer()),
-                        rows($rowSchema, $row1),
+                        new Base64Serializer(new FloeSerializer(new AdaptiveBackend())),
+                        $rows,
                     ),
                 ],
             ],
@@ -78,11 +79,10 @@ final class SerializeTransformerTest extends FlowTestCase
             bool_schema('active'),
             list_schema('tags', type_list(type_string())),
         );
-        $rows = rows(
-            $rowSchema,
-            $row1 = row(['id' => 1, 'name' => 'John', 'active' => true, 'tags' => ['tag1', 'tag2']]),
-            $row2 = row(['id' => 2, 'name' => 'Jane', 'active' => false, 'tags' => ['tag3', 'tag4']]),
-        );
+        $rows = array_to_rows([
+            ['id' => 1, 'name' => 'John', 'active' => true, 'tags' => ['tag1', 'tag2']],
+            ['id' => 2, 'name' => 'Jane', 'active' => false, 'tags' => ['tag3', 'tag4']],
+        ], $rowSchema);
 
         $transformer = new SerializeTransformer('serialized');
 
@@ -96,8 +96,8 @@ final class SerializeTransformerTest extends FlowTestCase
                     'active' => true,
                     'tags' => ['tag1', 'tag2'],
                     'serialized' => serialize_to_string(
-                        new Base64Serializer(new FloeSerializer()),
-                        rows($rowSchema, $row1),
+                        new Base64Serializer(new FloeSerializer(new AdaptiveBackend())),
+                        $rows->slice(0, 1),
                     ),
                 ],
                 [
@@ -106,8 +106,8 @@ final class SerializeTransformerTest extends FlowTestCase
                     'active' => false,
                     'tags' => ['tag3', 'tag4'],
                     'serialized' => serialize_to_string(
-                        new Base64Serializer(new FloeSerializer()),
-                        rows($rowSchema, $row2),
+                        new Base64Serializer(new FloeSerializer(new AdaptiveBackend())),
+                        $rows->slice(1, 1),
                     ),
                 ],
             ],
@@ -123,11 +123,10 @@ final class SerializeTransformerTest extends FlowTestCase
             bool_schema('active'),
             list_schema('tags', type_list(type_string())),
         );
-        $rows = rows(
-            $rowSchema,
-            $row1 = row(['id' => 1, 'name' => 'John', 'active' => true, 'tags' => ['tag1', 'tag2']]),
-            $row2 = row(['id' => 2, 'name' => 'Jane', 'active' => false, 'tags' => ['tag3', 'tag4']]),
-        );
+        $rows = array_to_rows([
+            ['id' => 1, 'name' => 'John', 'active' => true, 'tags' => ['tag1', 'tag2']],
+            ['id' => 2, 'name' => 'Jane', 'active' => false, 'tags' => ['tag3', 'tag4']],
+        ], $rowSchema);
 
         $transformer = new SerializeTransformer('serialized', true);
 
@@ -137,14 +136,14 @@ final class SerializeTransformerTest extends FlowTestCase
             [
                 [
                     'serialized' => serialize_to_string(
-                        new Base64Serializer(new FloeSerializer()),
-                        rows($rowSchema, $row1),
+                        new Base64Serializer(new FloeSerializer(new AdaptiveBackend())),
+                        $rows->slice(0, 1),
                     ),
                 ],
                 [
                     'serialized' => serialize_to_string(
-                        new Base64Serializer(new FloeSerializer()),
-                        rows($rowSchema, $row2),
+                        new Base64Serializer(new FloeSerializer(new AdaptiveBackend())),
+                        $rows->slice(1, 1),
                     ),
                 ],
             ],

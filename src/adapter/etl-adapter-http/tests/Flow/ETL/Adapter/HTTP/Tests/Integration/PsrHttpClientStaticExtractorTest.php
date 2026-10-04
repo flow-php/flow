@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\HTTP\Tests\Integration;
 
+use Flow\ETL\Adapter\HTTP\Tests\Mother\PaginationMother;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Rows;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Http\Mock\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
@@ -16,6 +18,7 @@ use Stringable;
 use function file_get_contents;
 use function Flow\ETL\Adapter\Http\from_static_http_requests;
 use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\map_schema;
@@ -29,6 +32,7 @@ use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function is_scalar;
+use function iterator_to_array;
 use function json_decode;
 use function json_encode;
 
@@ -82,13 +86,15 @@ final class PsrHttpClientStaticExtractorTest extends FlowTestCase
             static::fail('Expected Rows instance for tomaszhanc');
         }
 
-        $norbertResponseBodyValue = $norbertRows->first()->get('response_body');
+        // @mago-ignore analysis:mixed-assignment
+        $norbertResponseBodyValue = $norbertRows->column('response_body')->value(0);
         $norbertBodyJson = is_scalar($norbertResponseBodyValue) || $norbertResponseBodyValue instanceof Stringable
             ? (string) $norbertResponseBodyValue
             : '';
         $norbertResponseBody = type_array()->assert(json_decode($norbertBodyJson, true, 512, JSON_THROW_ON_ERROR));
 
-        $tomekResponseBodyValue = $tomekRows->first()->get('response_body');
+        // @mago-ignore analysis:mixed-assignment
+        $tomekResponseBodyValue = $tomekRows->column('response_body')->value(0);
         $tomekBodyJson = is_scalar($tomekResponseBodyValue) || $tomekResponseBodyValue instanceof Stringable
             ? (string) $tomekResponseBodyValue
             : '';
@@ -201,6 +207,22 @@ final class PsrHttpClientStaticExtractorTest extends FlowTestCase
             type_structure(['login' => type_string(), 'id' => type_integer()]),
             $rows->schema()->get('response_body')->type(),
         );
-        static::assertSame(['login' => 'norberttech', 'id' => 1], $rows->first()->get('response_body'));
+        static::assertSame(['login' => 'norberttech', 'id' => 1], $rows->column('response_body')->value(0));
+    }
+
+    public function test_extract_builds_through_the_config_backend(): void
+    {
+        $client = new Client(new Psr17Factory());
+        $client->addResponse(PaginationMother::jsonResponse(['id' => 1]));
+        $backend = new SpyBackend();
+
+        iterator_to_array(
+            from_static_http_requests($client, [PaginationMother::request()])->extract(
+                flow_context(config_builder()->backend($backend)->build()),
+            ),
+            false,
+        );
+
+        static::assertGreaterThanOrEqual(1, $backend->builders());
     }
 }

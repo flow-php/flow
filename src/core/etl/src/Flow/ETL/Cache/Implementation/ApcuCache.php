@@ -10,6 +10,8 @@ use Flow\ETL\Exception\KeyNotInCacheException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\Serializer\Exception\SerializationException;
+use Flow\Serializer\Serializer;
 
 use function apcu_delete;
 use function apcu_enabled;
@@ -17,12 +19,16 @@ use function apcu_exists;
 use function apcu_fetch;
 use function apcu_store;
 use function extension_loaded;
+use function Flow\Serializer\DSL\serialize_to_string;
+use function Flow\Serializer\DSL\unserialize_from_string;
+use function is_string;
 use function preg_quote;
 use function sprintf;
 
 final readonly class ApcuCache implements Cache
 {
     public function __construct(
+        private Serializer $serializer,
         private string $namespace = 'flow_php_cache',
     ) {
         if (!extension_loaded('apcu') || !apcu_enabled()) {
@@ -56,14 +62,18 @@ final readonly class ApcuCache implements Cache
             throw new KeyNotInCacheException($key);
         }
 
-        if (!$value instanceof Rows) {
+        if (!is_string($value)) {
             throw new RuntimeException(sprintf(
                 'Cache entry for key "%s" is corrupted or was not written by ApcuCache.',
                 $key,
             ));
         }
 
-        return $value;
+        try {
+            return unserialize_from_string($this->serializer, $value);
+        } catch (SerializationException $e) {
+            throw new KeyNotInCacheException($key, $e);
+        }
     }
 
     public function has(string $key): bool
@@ -95,7 +105,7 @@ final readonly class ApcuCache implements Cache
     public function set(string $key, Rows $value): void
     {
         if (
-            apcu_store($this->namespacedKey($key), $value) === false
+            apcu_store($this->namespacedKey($key), serialize_to_string($this->serializer, $value)) === false
             || apcu_store($this->schemaKey($key), $value->schema()) === false
         ) {
             throw new RuntimeException(sprintf(

@@ -6,25 +6,30 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use DateTimeImmutable;
 use Flow\ArrayDot\Exception\InvalidPathException;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Function\ArrayGet;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Function\ScalarFunction;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\RowsMother;
 use Flow\Types\Type\Logical\StructureType;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\array_exists;
 use function Flow\ETL\DSL\array_get;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\structure_get;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\Types\DSL\structure_element;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_mixed;
@@ -108,8 +113,20 @@ final class ArrayGetTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('ArrayGet function failed to get value from array.');
 
-        array_get(ref('integer_entry'), 'invalid_path')->eval(row(['integer_entry' => 1]), flow_context());
-        array_exists(ref('integer_entry'), 'invalid_path')->eval(row(['integer_entry' => 1]), flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            array_get(ref('integer_entry'), 'invalid_path'),
+            [
+                'integer_entry' => 1,
+            ],
+            schema(int_schema('integer_entry')),
+        );
+        (new FunctionContext(flow_context()))->eval(
+            array_exists(ref('integer_entry'), 'invalid_path'),
+            [
+                'integer_entry' => 1,
+            ],
+            schema(int_schema('integer_entry')),
+        );
     }
 
     public function test_array_access_for_not_array_entry_strict_mode(): void
@@ -118,53 +135,118 @@ final class ArrayGetTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('ArrayGet function failed to get value from array');
 
-        array_get(ref('integer_entry'), 'invalid_path')->eval(row(['integer_entry' => 1]), $context);
+        (new FunctionContext($context))->eval(
+            array_get(ref('integer_entry'), 'invalid_path'),
+            [
+                'integer_entry' => 1,
+            ],
+            schema(int_schema('integer_entry')),
+        );
     }
 
     public function test_array_accessor_transformer(): void
     {
-        $row = row([
-            'array_entry' => [
-                'id' => 1,
-                'status' => 'PENDING',
-                'enabled' => true,
-                'array' => ['foo' => 'bar'],
-            ],
-        ]);
-        static::assertEquals('bar', array_get(ref('array_entry'), 'array.foo')->eval($row, flow_context()));
-        static::assertTrue(array_exists(ref('array_entry'), 'array.foo')->eval($row, flow_context()));
+        $rows = RowsMother::arrayEntry();
+        static::assertEquals('bar', (new FunctionContext(flow_context()))->eval(
+            array_get(ref('array_entry'), 'array.foo'),
+            $rows->values(0),
+            $rows->schema(),
+        ));
+        static::assertTrue((new FunctionContext(flow_context()))->eval(
+            array_exists(ref('array_entry'), 'array.foo'),
+            $rows->values(0),
+            $rows->schema(),
+        ));
     }
 
     public function test_array_accessor_transformer_with_invalid_and_without_strict_path(): void
     {
-        $row = row([
-            'array_entry' => [
-                'id' => 1,
-                'status' => 'PENDING',
-                'enabled' => true,
-                'datetime' => new DateTimeImmutable('2020-01-01 00:00:00 UTC'),
-                'array' => ['foo' => 'bar'],
+        static::assertNull((new FunctionContext(flow_context()))->eval(
+            array_get(ref('array_entry'), '?invalid_path'),
+            [
+                'array_entry' => [
+                    'id' => 1,
+                    'status' => 'PENDING',
+                    'enabled' => true,
+                    'datetime' => new DateTimeImmutable('2020-01-01 00:00:00 UTC'),
+                    'array' => ['foo' => 'bar'],
+                ],
             ],
-        ]);
-        static::assertNull(array_get(ref('array_entry'), '?invalid_path')->eval($row, flow_context()));
-        static::assertTrue(array_exists(ref('array_entry'), '?invalid_path')->eval($row, flow_context()));
-        static::assertFalse(array_exists(ref('array_entry'), 'invalid_path')->eval($row, flow_context()));
+            schema(structure_schema('array_entry', type_structure([
+                'id' => type_integer(),
+                'status' => type_string(),
+                'enabled' => type_boolean(),
+                'datetime' => type_datetime(),
+                'array' => type_structure(['foo' => type_string()]),
+            ]))),
+        ));
+        static::assertTrue((new FunctionContext(flow_context()))->eval(
+            array_exists(ref('array_entry'), '?invalid_path'),
+            [
+                'array_entry' => [
+                    'id' => 1,
+                    'status' => 'PENDING',
+                    'enabled' => true,
+                    'datetime' => new DateTimeImmutable('2020-01-01 00:00:00 UTC'),
+                    'array' => ['foo' => 'bar'],
+                ],
+            ],
+            schema(structure_schema('array_entry', type_structure([
+                'id' => type_integer(),
+                'status' => type_string(),
+                'enabled' => type_boolean(),
+                'datetime' => type_datetime(),
+                'array' => type_structure(['foo' => type_string()]),
+            ]))),
+        ));
+        static::assertFalse((new FunctionContext(flow_context()))->eval(
+            array_exists(ref('array_entry'), 'invalid_path'),
+            [
+                'array_entry' => [
+                    'id' => 1,
+                    'status' => 'PENDING',
+                    'enabled' => true,
+                    'datetime' => new DateTimeImmutable('2020-01-01 00:00:00 UTC'),
+                    'array' => ['foo' => 'bar'],
+                ],
+            ],
+            schema(structure_schema('array_entry', type_structure([
+                'id' => type_integer(),
+                'status' => type_string(),
+                'enabled' => type_boolean(),
+                'datetime' => type_datetime(),
+                'array' => type_structure(['foo' => type_string()]),
+            ]))),
+        ));
     }
 
     public function test_array_accessor_transformer_with_invalid_but_strict_path(): void
     {
-        $this->expectException(InvalidPathException::class);
-        $this->expectExceptionMessage('Path "invalid_path" does not exists in array ');
-
-        array_get(ref('array_entry'), 'invalid_path')->eval(row([
-            'array_entry' => [
-                'id' => 1,
-                'status' => 'PENDING',
-                'enabled' => true,
-                'datetime' => new DateTimeImmutable('2020-01-01 00:00:00 UTC'),
-                'array' => ['foo' => 'bar'],
-            ],
-        ]), flow_context());
+        try {
+            (new FunctionContext(flow_context()))->eval(
+                array_get(ref('array_entry'), 'invalid_path'),
+                [
+                    'array_entry' => [
+                        'id' => 1,
+                        'status' => 'PENDING',
+                        'enabled' => true,
+                        'datetime' => new DateTimeImmutable('2020-01-01 00:00:00 UTC'),
+                        'array' => ['foo' => 'bar'],
+                    ],
+                ],
+                schema(structure_schema('array_entry', type_structure([
+                    'id' => type_integer(),
+                    'status' => type_string(),
+                    'enabled' => type_boolean(),
+                    'datetime' => type_datetime(),
+                    'array' => type_structure(['foo' => type_string()]),
+                ]))),
+            );
+            static::fail('expected an EvaluationException');
+        } catch (EvaluationException $e) {
+            static::assertInstanceOf(InvalidPathException::class, $e->getPrevious());
+            static::assertStringContainsString('Path "invalid_path" does not exists in array ', $e->getMessage());
+        }
     }
 
     public function test_returns_rejects_a_non_structure_input(): void

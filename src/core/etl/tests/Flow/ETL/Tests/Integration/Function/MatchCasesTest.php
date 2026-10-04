@@ -6,14 +6,13 @@ namespace Flow\ETL\Tests\Integration\Function;
 
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\match_cases;
 use function Flow\ETL\DSL\match_condition;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\Types\DSL\type_boolean;
@@ -23,14 +22,13 @@ final class MatchCasesTest extends FlowTestCase
 {
     public function test_case_match(): void
     {
-        $rows = rows(
-            schema(string_schema('string')),
-            row(['string' => 'string-with-dashes']),
-            row(['string' => '123']),
-            row(['string' => '14%']),
-            row(['string' => '+14']),
-            row(['string' => '']),
-        );
+        $rows = array_to_rows([
+            ['string' => 'string-with-dashes'],
+            ['string' => '123'],
+            ['string' => '14%'],
+            ['string' => '+14'],
+            ['string' => ''],
+        ], schema(string_schema('string')));
 
         $output = df()
             ->read(from_rows($rows))

@@ -4,32 +4,10 @@
 
 Columns of the [Data Frame](/documentation/components/core/core.md) are described by the
 [Schema](/src/core/etl/src/Flow/ETL/Schema.php) - it owns their names, order, types and nullability.
-A [Row](/src/core/etl/src/Flow/ETL/Row.php) carries the values for one record, keyed by column name.
-A group of Rows is called `Rows`, represented by the [Rows](/src/core/etl/src/Flow/ETL/Rows.php)
-class, and every `Rows` carries the one `Schema` that describes it.
+A batch of records is represented by the [Rows](/src/core/etl/src/Flow/ETL/Rows.php) class: one column per
+schema definition, and every `Rows` carries the one `Schema` that describes it.
 
 Let's look at the following example:
-
-```php
-<?php
-
-declare(strict_types=1);
-
-use function Flow\ETL\DSL\{bool_schema, int_schema, row, rows, schema, str_schema};
-
-$rows = rows(
-    schema(int_schema('id'), str_schema('name'), bool_schema('active')),
-    row(['id' => 1, 'name' => 'user_01', 'active' => true]),
-    row(['id' => 2, 'name' => 'user_02', 'active' => false]),
-    row(['id' => 3, 'name' => 'user_03', 'active' => true]),
-    row(['id' => 4, 'name' => 'user_04', 'active' => false]),
-);
-```
-
-Rows are the main data structure in Flow ETL, they're used to represent data in the data frame.
-Extractors are yielding Rows and Loaders are saving Rows.
-
-The same can be achieved using the following code:
 
 ```php
 <?php
@@ -52,6 +30,9 @@ $rows = array_to_rows(
     schema(int_schema('id'), str_schema('name'), bool_schema('active')),
 );
 ```
+
+Extractors yield `Rows`, transformers return new `Rows`, loaders write them. A record is read back with
+`$rows->values($i)` (one row as an array), `$rows->toArray()` (every row) or `$rows->column('name')->value($i)`.
 
 ## Column Types
 
@@ -88,10 +69,10 @@ A column holds exactly one type. `null|T` spells a nullable column, and a nullab
 structure element; every other union is refused. Declare the widest common type with `str_schema()`, or
 `json_schema()` when the shape is genuinely dynamic.
 
-The schema is declared, never guessed: `array_to_rows()` takes it as its second argument and a
-[Hydrator](/src/core/etl/src/Flow/ETL/Row/Hydrator.php) turns the raw values into `Rows` against it,
-casting each one to the type its column declares. A value the declared type refuses aborts the batch
-with a `SchemaMismatchException` naming the column and its row.
+The schema is declared, never guessed: `array_to_rows()` takes it as its second argument and the
+[column backend](/documentation/components/core/column-backend.md) builds `Rows` against it, casting each value to the
+type its column declares. A value the declared type refuses aborts the batch with a `SchemaMismatchException` naming
+the column and its row.
 
 Schema *inference* belongs to the readers, which sample a source and derive a schema from it before any
 row flows - see [Schema](/documentation/components/core/schema.md).

@@ -34,7 +34,7 @@ jobs:
           install-dependencies: 'false'
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+        uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable
         with:
           toolchain: stable
 
@@ -86,6 +86,12 @@ jobs:
         working-directory: src/extension/arrow-ext
         run: make build
 
+      - name: Install Composer Dependencies
+        uses: ./.github/actions/composer-install
+        with:
+          php-version: ${{ matrix.php }}
+          dependencies: locked
+
       - name: Run PHPT tests
         working-directory: src/extension/arrow-ext
         run: make test
@@ -97,12 +103,6 @@ jobs:
           sudo cp ext/modules/arrow.so "$EXT_DIR/"
           echo "extension=arrow.so" | sudo tee -a "$(php -r 'echo php_ini_loaded_file();')"
           php -m | grep arrow
-
-      - name: Install Composer Dependencies
-        uses: ./.github/actions/composer-install
-        with:
-          php-version: ${{ matrix.php }}
-          dependencies: locked
 
       - name: Run Parquet Integration Tests with Arrow
         run: just test --testsuite=lib-parquet-integration ${{ (matrix.php == '8.3' && runner.os == 'Linux') && '--coverage-clover=./var/phpunit/coverage/clover/coverage.xml' || '' }}
@@ -141,7 +141,7 @@ jobs:
           tools: 'composer:v2, phpize, php-config'
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+        uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable
         with:
           toolchain: stable
 
@@ -202,7 +202,13 @@ jobs:
 
       - name: Verify extension version
         run: |
-          expected="$(git describe --tags --match '[0-9]*' | sed -E 's/-([0-9]+)-(g[0-9a-f]+)$/+\1.\2/')"
+          describe="$(git describe --tags --match '[0-9]*')"
+          if git describe --exact-match --tags --match '[0-9]*' HEAD >/dev/null 2>&1; then
+            expected="$describe"
+          else
+            # commits past a tag are a pre-release of the next minor: 0.44.1-65-g4525c4adc -> 0.45.0-dev+65.g4525c4adc
+            expected="$(echo "$describe" | awk -F- '{split($1, v, "."); printf "%d.%d.0-dev+%s.%s", v[1], v[2] + 1, $2, $3}')"
+          fi
           actual="$(php -r 'echo phpversion("arrow");')"
           echo "expected: $expected, actual: $actual"
           test "$actual" = "$expected"

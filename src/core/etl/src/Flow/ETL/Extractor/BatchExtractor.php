@@ -10,8 +10,6 @@ use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
 
-use function count;
-
 final class BatchExtractor implements BatchableExtractor, Extractor, OverridingExtractor, RewindableExtractor
 {
     use Batches;
@@ -30,33 +28,41 @@ final class BatchExtractor implements BatchableExtractor, Extractor, OverridingE
      */
     public function extract(FlowContext $context, ?int $limit = null): Generator
     {
-        // pinned from the declaration or the first child batch, then every later batch is matched to
-        // it - a buffer spans child batches, so its rows must all answer to one schema before trusted()
+        // pinned from the declaration or the first child batch, then every later batch is matched to it - a window
+        // spans child batches, so they must all answer to one schema before they are concatenated
         $schema = $this->schema;
 
-        $buffer = [];
+        /** @var list<Rows> $pending */
+        $pending = [];
+        $pendingCount = 0;
 
         foreach ($this->extractor->extract($context) as $rows) {
             $schema ??= $rows->schema();
-            $rows = $rows->matchTo($schema);
+            $pending[] = $rows->matchTo($schema, $context->backend());
+            $pendingCount += $rows->count();
 
-            foreach ($rows->all() as $row) {
-                $buffer[] = $row;
+            while ($pendingCount >= $this->batchSize) {
+                // one variadic concat per window copies each row once; a pairwise concat per child batch would
+                // re-copy everything pending
+                $window = Rows::empty($schema, $context->backend())->concat($context->backend(), ...$pending);
+                $signal = yield $window->slice(0, $this->batchSize);
 
-                if (count($buffer) === $this->batchSize) {
-                    $signal = yield Rows::trusted($schema, $buffer);
-
-                    if ($signal === Signal::STOP) {
-                        return;
-                    }
-
-                    $buffer = [];
+                if ($signal === Signal::STOP) {
+                    return;
                 }
+
+                $pending = $window->count() > $this->batchSize
+                    ? [$window->slice($this->batchSize, $window->count() - $this->batchSize)]
+                    : [];
+                $pendingCount -= $this->batchSize;
             }
         }
 
-        if ($buffer !== []) {
-            yield Rows::trusted($schema ?? $this->schema(), $buffer);
+        if ($pendingCount > 0) {
+            yield Rows::empty($schema ?? $this->schema(), $context->backend())->concat(
+                $context->backend(),
+                ...$pending,
+            );
         }
     }
 

@@ -13,7 +13,6 @@ use Flow\ETL\Function\PartitionRanking;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Function\WindowFunction;
 use Flow\ETL\Processor;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
@@ -22,10 +21,7 @@ use Flow\ETL\Window\WindowContext;
 use Flow\ETL\Window\WindowFrame;
 use Generator;
 
-use function array_values;
-use function count;
 use function Flow\ETL\DSL\definition_from_type;
-use function Flow\ETL\DSL\rows;
 
 /**
  * Applies window functions over partitioned and ordered data.
@@ -56,14 +52,14 @@ final class WindowProcessor implements Processor
             $bound ??= $this->boundTo($batch->schema());
 
             if (!$batch->count()) {
-                yield new Rows($bound->output);
+                yield Rows::empty($bound->output, $context->backend());
 
                 continue;
             }
 
             // one incoming batch is one partition: RepartitionSteps put every row sharing the
             // partition key into a single Rows before this processor ever sees it
-            yield $this->processPartition($bound, $batch->all(), $context);
+            yield $this->processPartition($bound, $batch, $context);
         }
     }
 
@@ -93,12 +89,6 @@ final class WindowProcessor implements Processor
         );
     }
 
-    /**
-     * An order reference already failed loudly - sortBy() reaches Rows::sortDescending(), which throws
-     * on the first row of the first partition. Only the partition path degraded silently, because
-     * extractPartitionKey() substitutes null for a missing entry. This check makes both refuse
-     * identically, one batch earlier, with the gate's message.
-     */
     private static function assertWindowReferences(WindowFunction $function, Schema $schema): void
     {
         $window = $function->window();
@@ -114,7 +104,7 @@ final class WindowProcessor implements Processor
      * Evaluates a frame-only window function for every row of the partition, reusing the previous
      * result whenever the frame bounds did not move.
      *
-     * @return array<int, mixed>
+     * @return list<mixed>
      */
     private function accumulateValues(
         FrameAccumulating $function,
@@ -122,10 +112,7 @@ final class WindowProcessor implements Processor
         Rows $partition,
         FlowContext $context,
     ): array {
-        // Rows guarantees a list internally, but all() is typed array<Row> - narrow it here rather than
-        // widen the shared Rows contract. One copy per partition, not per row.
-        $rows = array_values($partition->all());
-        $count = count($rows);
+        $count = $partition->count();
         $values = [];
         $accumulator = null;
         $previousBounds = null;
@@ -136,7 +123,7 @@ final class WindowProcessor implements Processor
             $bounds = $frame->bounds($index, $partition);
 
             if ($bounds === $previousBounds) {
-                $values[$index] = $value;
+                $values[] = $value;
 
                 continue;
             }
@@ -150,39 +137,37 @@ final class WindowProcessor implements Processor
                 && $bounds[1] > $previousBounds[1]
             ) {
                 for ($i = $previousBounds[1] + 1; $i <= $bounds[1]; $i++) {
-                    $accumulator->accumulate($rows[$i]);
+                    $accumulator->accumulate($partition, $i);
                 }
             } else {
                 $accumulator = $function->accumulator($context);
 
                 for ($i = $bounds[0]; $i <= $bounds[1]; $i++) {
-                    $accumulator->accumulate($rows[$i]);
+                    $accumulator->accumulate($partition, $i);
                 }
             }
 
-            // @mago-ignore analysis:mixed-assignment
             $value = $accumulator->value();
             $previousBounds = $bounds;
-            $values[$index] = $value;
+            $values[] = $value;
         }
 
         return $values;
     }
 
     /**
-     * @param array<Row> $rows - never empty; process() answers a zero-row batch from the bound schema
+     * @param Rows $partition never empty; process() answers a zero-row batch from the bound schema
      */
-    private function processPartition(BoundWindow $bound, array $rows, FlowContext $context): Rows
+    private function processPartition(BoundWindow $bound, Rows $partition, FlowContext $context): Rows
     {
         $resolved = $bound->resolved;
         $derived = $bound->derived;
         $window = $resolved->window();
         $orderBy = $window->order();
         $sortBy = $orderBy === [] ? $window->partitions()->all() : $orderBy;
-        $partitionRows = rows($bound->input, ...$rows)->sortBy(...$sortBy);
+        $partitionRows = $partition->matchTo($bound->input, $context->backend())->sortBy(...$sortBy);
 
         $frame = $window->frame();
-        $processedRows = [];
 
         $values = match (true) {
             $resolved instanceof PartitionRanking => $resolved->rankPartition($partitionRows),
@@ -195,17 +180,17 @@ final class WindowProcessor implements Processor
             default => null,
         };
 
-        foreach ($partitionRows as $index => $row) {
-            $value = $values === null
-                ? $resolved->apply(new WindowContext($row, $index, $partitionRows, $frame, $context))
-                : $values[$index];
+        if ($values === null) {
+            $values = [];
 
-            $processedRows[] = new Row([
-                ...$row->values(),
-                $derived->entry()->name() => $value === null ? null : $derived->type()->cast($value),
-            ]);
+            for ($index = 0, $count = $partitionRows->count(); $index < $count; $index++) {
+                $values[] = $resolved->apply(new WindowContext($index, $partitionRows, $frame, $context));
+            }
         }
 
-        return rows($bound->output, ...$processedRows);
+        $builder = $context->backend()->builder($derived);
+        $builder->appendMany($values);
+
+        return $partitionRows->withColumns($bound->output, [$derived->entry()->name() => $builder->finish()]);
     }
 }

@@ -44,7 +44,6 @@ use Flow\ETL\Plan\Node\Write;
 use Flow\ETL\Planner\NodeTranslator;
 use Flow\ETL\Processor\BatchingByProcessor;
 use Flow\ETL\Processor\BatchingProcessor;
-use Flow\ETL\Processor\BucketingProcessor;
 use Flow\ETL\Processor\CachingProcessor;
 use Flow\ETL\Processor\CollectingProcessor;
 use Flow\ETL\Processor\ConstrainedProcessor;
@@ -85,6 +84,7 @@ use Flow\ETL\WithEntry;
 use PHPUnit\Framework\Attributes\TestWith;
 
 use function array_map;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
@@ -97,8 +97,6 @@ use function Flow\ETL\DSL\memory_sort;
 use function Flow\ETL\DSL\rank;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\to_memory;
 use function Flow\ETL\DSL\window;
@@ -108,7 +106,7 @@ final class NodeTranslatorTest extends FlowTestCase
     public function test_aggregate_steps_are_the_exact_list_in_order(): void
     {
         static::assertSame(
-            [PruneEntriesTransformer::class, BucketingProcessor::class, GroupByAggregationProcessor::class],
+            [PruneEntriesTransformer::class, GroupByAggregationProcessor::class],
             array_map(
                 static fn($step) => $step::class,
                 NodeTranslator::toSteps(
@@ -376,7 +374,7 @@ final class NodeTranslatorTest extends FlowTestCase
     public function test_repartition_steps_are_the_exact_list_in_order(): void
     {
         static::assertSame(
-            [BucketingProcessor::class, RepartitionProcessor::class],
+            [RepartitionProcessor::class],
             array_map(
                 static fn($step) => $step::class,
                 NodeTranslator::toSteps(new Repartition(NodeMother::read(), refs('id')), NodeMother::context(), []),
@@ -438,7 +436,7 @@ final class NodeTranslatorTest extends FlowTestCase
     public function test_transform_a_stateful_transformer_runs_as_its_fresh_instance(): void
     {
         $transformer = new AddRowIndexTransformer('idx', StartFrom::ZERO);
-        $transformer->transform(rows(schema(int_schema('id')), row(['id' => 1])), flow_context());
+        $transformer->transform(array_to_rows([['id' => 1]], schema(int_schema('id'))), flow_context());
 
         $steps = NodeTranslator::toSteps(new Transform(NodeMother::read(), $transformer), NodeMother::context(), []);
 
@@ -447,7 +445,7 @@ final class NodeTranslatorTest extends FlowTestCase
         static::assertNotSame($transformer, $steps[0]);
         static::assertSame(
             [['id' => 1, 'idx' => 0]],
-            $steps[0]->transform(rows(schema(int_schema('id')), row(['id' => 1])), flow_context())->toArray(),
+            $steps[0]->transform(array_to_rows([['id' => 1]], schema(int_schema('id'))), flow_context())->toArray(),
         );
     }
 
@@ -499,7 +497,7 @@ final class NodeTranslatorTest extends FlowTestCase
     public function test_window_column_a_partitioned_window_translates_to_repartition_steps_then_the_window_processor(): void
     {
         static::assertSame(
-            [BucketingProcessor::class, RepartitionProcessor::class, WindowProcessor::class],
+            [RepartitionProcessor::class, WindowProcessor::class],
             array_map(
                 static fn($step) => $step::class,
                 NodeTranslator::toSteps(

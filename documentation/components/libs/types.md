@@ -48,7 +48,7 @@ Examples:
 ```php
 <?php
 
-use Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_string;
 
 $variable = $input->get('some-input');
 
@@ -61,7 +61,7 @@ On top of that it will also narrow the `$string` variable to a string type, so y
 ```php
 <?php
 
-use Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_string;
 
 $variable = $input->get('some-input');
 
@@ -89,7 +89,7 @@ To cast a variable to a specific type, you just simply need to use the `cast` me
 ```php
 <?php
 
-use Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_string;
 
 $variable = $input->get('some-input');
 
@@ -164,8 +164,8 @@ List is a collection of elements of the same where keys start from 0 and are aut
 ```php
 <?php
 
-use Flow\Types\DSL\type_list;
-use Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_string;
 
 $listOfStrings = type_list(type_string());
 ```
@@ -178,9 +178,9 @@ Map is a key value data structure where all keys and all values has the same typ
 ```php
 <?php
 
-use Flow\Types\DSL\type_map;
-use Flow\Types\DSL\type_string;
-use Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_integer;
 
 $mapOfStringToInt = type_map(type_string(), type_integer());
 ```
@@ -193,9 +193,9 @@ structures with the same fields in a different order are different types.
 ```php
 <?php
 
-use Flow\Types\DSL\type_structure;
-use Flow\Types\DSL\type_string;
-use Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_structure;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_integer;
 
 $userStructure = type_structure([
     'id' => type_string(),
@@ -210,9 +210,9 @@ anywhere - including before a required one:
 ```php
 <?php
 
-use Flow\Types\DSL\structure_element;
-use Flow\Types\DSL\type_structure;
-use Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\structure_element;
+use function Flow\Types\DSL\type_structure;
+use function Flow\Types\DSL\type_string;
 
 $userStructure = type_structure([
     'id' => type_string(),
@@ -233,10 +233,10 @@ All above types can be easily combined together, so for to get the list of users
 ```php
 <?php
 
-use Flow\Types\DSL\type_list;
-use Flow\Types\DSL\type_structure;
-use Flow\Types\DSL\type_string;
-use Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_structure;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_integer;
 
 $userStructure = type_list(
     type_structure([

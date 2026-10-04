@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Floe\Tests\Context;
 
-use Flow\ETL\Row\Hydrator;
+use Flow\ETL\Column\AdaptiveBackend;
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
@@ -12,7 +13,6 @@ use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
 use Flow\Floe\Codec;
 use Flow\Floe\Codec\NoopCodec;
-use Flow\Floe\FloeEngine;
 use Flow\Floe\FloeReader;
 use Flow\Floe\FloeWriter;
 use Flow\Floe\Footer;
@@ -23,7 +23,6 @@ use Flow\Floe\Options;
 use Flow\Floe\Section;
 use Flow\Floe\Statistics;
 
-use function count;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
@@ -76,13 +75,13 @@ final class FloeStreamReaderContext
         $filesystem = memory_filesystem();
         $path = path('memory://round-trip.floe');
 
-        $writer = new FloeWriter($filesystem, $rows->schema());
+        $writer = new FloeWriter($filesystem, $rows->schema(), new AdaptiveBackend());
         $writer->create($path);
         $writer->write($rows);
         $writer->close();
 
         $batches = iterator_to_array(
-            (new FloeReader($filesystem))
+            (new FloeReader($filesystem, new AdaptiveBackend()))
                 ->read($path)
                 ->rows(),
         );
@@ -109,16 +108,17 @@ final class FloeStreamReaderContext
      */
     public static function reconstruct(Filesystem $filesystem, Path $path): Rows
     {
-        $file = (new FloeReader($filesystem))->read($path);
-        $rows = [];
+        $file = (new FloeReader($filesystem, new AdaptiveBackend()))->read($path);
+        $rows = rows($file->footer()->schema());
 
         foreach ($file->rows() as $batch) {
-            foreach ($batch->all() as $row) {
-                $rows[] = $row;
-            }
+            $rows = $rows->concat(
+                new AdaptiveBackend(),
+                $batch->matchTo($file->footer()->schema(), new AdaptiveBackend()),
+            );
         }
 
-        return new Rows($file->footer()->schema(), ...$rows);
+        return $rows;
     }
 
     /**
@@ -128,10 +128,10 @@ final class FloeStreamReaderContext
     {
         $merged = null;
 
-        foreach ((new FloeReader($filesystem))
+        foreach ((new FloeReader($filesystem, new AdaptiveBackend()))
             ->read($path)
             ->rows() as $batch) {
-            $merged = $merged === null ? $batch : $merged->merge($batch);
+            $merged = $merged === null ? $batch : $merged->concat(new PhpBackend(), $batch);
         }
 
         return $merged ?? rows(schema());
@@ -147,33 +147,36 @@ final class FloeStreamReaderContext
         array $metadata = [],
         Codec $codec = new NoopCodec(),
     ): void {
-        $writer = new FloeWriter($filesystem, $rows->schema(), new Options(codec: $codec));
+        $writer = new FloeWriter($filesystem, $rows->schema(), new AdaptiveBackend(), new Options(codec: $codec));
         $writer->create($path, Metadata::fromArray($metadata));
         $writer->write($rows);
         $writer->close();
     }
 
     /**
-     * A file holding exactly these ROW frame bodies under `$schema` - frames no FloeWriter would produce.
-     *
-     * @param list<string> $bodies
+     * A file holding exactly these complete frames under `$schema` - frames no FloeWriter would produce.
      */
-    public static function writeFrames(Filesystem $filesystem, Path $path, Schema $schema, array $bodies): void
-    {
+    public static function writeFrames(
+        Filesystem $filesystem,
+        Path $path,
+        Schema $schema,
+        string $frames,
+        int $rowCount,
+    ): void {
         /** @var array<int, array<string, mixed>> $normalized */
         $normalized = $schema->normalize();
         $footerJson = (new Footer(
             Format::VERSION,
             'test',
             $normalized,
-            [new Section(Format::HEADER_LENGTH, count($bodies))],
-            new Statistics(count($bodies), strlen(Format::rowFrames($bodies))),
+            [new Section(Format::HEADER_LENGTH, $rowCount)],
+            new Statistics($rowCount, strlen($frames)),
             Metadata::empty(),
         ))->toJson();
 
         $stream = $filesystem->writeTo($path);
         $stream->append(
-            Format::header(0x00) . Format::rowFrames($bodies)
+            Format::header(0x00) . $frames
                 . Format::frame(Format::FRAME_FOOTER, $footerJson . Format::trailer(strlen($footerJson))),
         );
         $stream->close();
@@ -188,10 +191,8 @@ final class FloeStreamReaderContext
         Schema $schema,
         array $batches,
         Options $options = new Options(),
-        ?Hydrator $hydrator = null,
-        FloeEngine $engine = FloeEngine::adaptive,
     ): string {
-        $writer = new FloeWriter($filesystem, $schema, $options, $hydrator, $engine);
+        $writer = new FloeWriter($filesystem, $schema, new AdaptiveBackend(), $options);
         $writer->create($path);
 
         foreach ($batches as $batch) {
@@ -210,7 +211,7 @@ final class FloeStreamReaderContext
      */
     public static function writeWithoutFooter(Filesystem $filesystem, Path $path, Rows $rows): void
     {
-        $writer = new FloeWriter($filesystem, $rows->schema());
+        $writer = new FloeWriter($filesystem, $rows->schema(), new AdaptiveBackend());
         $writer->create($path);
         $writer->write($rows);
         $writer->close();

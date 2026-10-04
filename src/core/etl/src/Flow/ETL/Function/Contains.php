@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Nullability;
 
@@ -55,19 +59,35 @@ final class Contains implements ScalarFunction
         return (new Nullability())->any(type_boolean(), $this->haystack->returns(), $this->needle->returns());
     }
 
-    public function eval(Row $row, FlowContext $context): ?bool
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $haystack = (new Parameter($this->haystack))->as($row, $context, type_string(), type_array());
-        $needle = (new Parameter($this->needle))->asString($row, $context);
+        $haystacks = (new Parameter($this->haystack))->asTypes($rows, $context, type_string(), type_array());
+        $needles = (new Parameter($this->needle))->asStrings($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($haystack === null || $needle === null) {
-            return null;
+        try {
+            foreach ($haystacks as $i => $haystack) {
+                $needle = $needles[$i];
+
+                if ($haystack === null || $needle === null) {
+                    $results[] = null;
+
+                    continue;
+                }
+
+                if (is_string($haystack)) {
+                    $results[] = str_contains($haystack, $needle);
+
+                    continue;
+                }
+
+                $results[] = in_array($needle, $haystack, true);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        if (is_string($haystack)) {
-            return str_contains($haystack, $needle);
-        }
-
-        return in_array($needle, $haystack, true);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

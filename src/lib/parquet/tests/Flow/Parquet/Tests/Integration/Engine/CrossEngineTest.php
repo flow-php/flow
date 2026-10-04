@@ -6,8 +6,8 @@ namespace Flow\Parquet\Tests\Integration\Engine;
 
 use Flow\Filesystem\Stream\NativeLocalDestinationStream;
 use Flow\Filesystem\Stream\NativeLocalSourceStream;
-use Flow\Parquet\Engine\ArrowParquetEngine;
 use Flow\Parquet\Engine\PhpParquetEngine;
+use Flow\Parquet\Engine\RustParquetEngine;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Schema;
@@ -30,7 +30,7 @@ final class CrossEngineTest extends TestCase
     protected function setUp(): void
     {
         if (!extension_loaded('arrow')) {
-            self::markTestSkipped('Arrow extension is not loaded');
+            self::markTestSkipped('arrow is not loaded');
         }
     }
 
@@ -54,19 +54,25 @@ final class CrossEngineTest extends TestCase
             ['id' => 2, 'label' => 'second', 'big_number' => 2_000_000_000_000],
         ];
 
-        $engine = new ArrowParquetEngine();
+        $engine = new RustParquetEngine();
 
         $writeStream = NativeLocalDestinationStream::openBlank(path($path));
         $engine->writeRows($writeStream, $schema, Compressions::SNAPPY, new Options(), $inputData);
-
-        $parquetFile = (new Reader())->read($path);
         $readStream = NativeLocalSourceStream::open(path_real($path));
-        $result = iterator_to_array($engine->readValues($readStream, $parquetFile->schema()));
+        $chunks = iterator_to_array(
+            $engine->openForRead($readStream)->readColumns(
+                ['id', 'label', 'big_number'],
+                batchSize: 2,
+                limit: null,
+                offset: null,
+            ),
+            false,
+        );
 
-        static::assertCount(2, $result);
-        static::assertSame(1, $result[0]['id']);
-        static::assertSame('first', $result[0]['label']);
-        static::assertSame(1_000_000_000_000, $result[0]['big_number']);
+        static::assertSame(
+            [['id' => [1, 2], 'label' => ['first', 'second'], 'big_number' => [1_000_000_000_000, 2_000_000_000_000]]],
+            $chunks,
+        );
     }
 
     public function test_arrow_write_php_read(): void
@@ -84,7 +90,7 @@ final class CrossEngineTest extends TestCase
             ['id' => 20, 'name' => 'beta', 'active' => false],
         ];
 
-        $engine = new ArrowParquetEngine();
+        $engine = new RustParquetEngine();
         $stream = NativeLocalDestinationStream::openBlank(path($path));
         $engine->writeRows($stream, $schema, Compressions::SNAPPY, new Options(), $inputData);
 
@@ -145,16 +151,23 @@ final class CrossEngineTest extends TestCase
 
         (new Writer(engine: new PhpParquetEngine()))->write($path, $schema, $inputData);
 
-        $engine = new ArrowParquetEngine();
-        $parquetFile = (new Reader())->read($path);
-        $result = iterator_to_array($engine->readValues(
-            NativeLocalSourceStream::open(path_real($path)),
-            $parquetFile->schema(),
-        ));
+        $engine = new RustParquetEngine();
+        $chunks = iterator_to_array(
+            $engine->openForRead(NativeLocalSourceStream::open(path_real($path)))->readColumns(
+                ['id', 'name', 'value'],
+                batchSize: 2,
+                limit: null,
+                offset: null,
+            ),
+            false,
+        );
 
-        static::assertCount(3, $result);
-        static::assertSame(1, $result[0]['id']);
-        static::assertSame('one', $result[0]['name']);
-        static::assertEqualsWithDelta(1.1, $result[0]['value'], 0.001);
+        static::assertSame(
+            [
+                ['id' => [1, 2], 'name' => ['one', 'two'], 'value' => [1.1, 2.2]],
+                ['id' => [3], 'name' => ['three'], 'value' => [3.3]],
+            ],
+            $chunks,
+        );
     }
 }

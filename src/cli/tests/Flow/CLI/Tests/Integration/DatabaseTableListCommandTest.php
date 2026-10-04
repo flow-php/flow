@@ -38,21 +38,34 @@ final class DatabaseTableListCommandTest extends FlowTestCase
 
     public function test_run_db_table_list(): void
     {
-        $this->dbContext()->createTable((new Table('table_01', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->addPrimaryKeyConstraint(
-            new PrimaryKeyConstraint(null, [new UnqualifiedName(Identifier::unquoted('id'))], true),
-        ));
+        $this->dbContext()->createTable(
+            (new Table('table_01', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(
+                    new PrimaryKeyConstraint(null, [new UnqualifiedName(Identifier::unquoted('id'))], true),
+                )
+                ->create(),
+        );
 
-        $this->dbContext()->createTable((new Table('table_02', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('created_at', Type::getType(Types::DATETIME_IMMUTABLE), ['notnull' => true]),
-            new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'platformOptions' => ['jsonb' => true]]),
-        ]))->addPrimaryKeyConstraint(
-            new PrimaryKeyConstraint(null, [new UnqualifiedName(Identifier::unquoted('id'))], true),
-        ));
+        $this->dbContext()->createTable(
+            (new Table('table_02', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('created_at', Type::getType(Types::DATETIME_IMMUTABLE), ['notnull' => true]),
+                new Column('tags', Type::getType(Types::JSON), [
+                    'notnull' => true,
+                    'platformOptions' => ['jsonb' => true],
+                ]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(
+                    new PrimaryKeyConstraint(null, [new UnqualifiedName(Identifier::unquoted('id'))], true),
+                )
+                ->create(),
+        );
 
         $tester = new CommandTester(new DatabaseTableListCommand('db:table:list'));
 

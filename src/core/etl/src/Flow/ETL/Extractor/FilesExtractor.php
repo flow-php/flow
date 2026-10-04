@@ -7,7 +7,12 @@ namespace Flow\ETL\Extractor;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\File\FileExtractor;
+use Flow\ETL\Extractor\File\ListedFiles;
+use Flow\ETL\Extractor\File\ListingPartitions;
+use Flow\ETL\Extractor\File\SourceFile;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\Filesystem\FileListing;
 use Flow\Filesystem\Filesystem;
@@ -17,8 +22,6 @@ use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Generator;
 
-use function count;
-use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -63,16 +66,16 @@ final class FilesExtractor implements BatchableExtractor, Extractor, FileExtract
     public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
     {
         $batchSize = $this->batchSize();
+        $backend = $context->backend();
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
         $schema = $this->schema();
-        $buffer = [];
+        $builder = new RowsBuilder($schema, $backend);
         $yielded = 0;
 
         foreach ((new FileListing($this->filesystem))->list($this->path, $pathFilter) as $fileStatus) {
-            $constants = $fileColumns->forFile(new SourceFile($fileStatus->path, $fileStatus->size), $schema);
             $extension = $fileStatus->path->extension();
 
-            $buffer[] = $constants->fill([
+            $builder->append([
                 'path' => $fileStatus->path->path(),
                 'protocol' => $fileStatus->path->protocol(),
                 'file_name' => $fileStatus->path->filename(),
@@ -82,29 +85,31 @@ final class FilesExtractor implements BatchableExtractor, Extractor, FileExtract
                 // Path::extension() answers false for an extensionless file; the column is one
                 // type, so the absence is spelled null rather than a boolean in a string column.
                 'extension' => $extension === false ? null : $extension,
+                ...$fileColumns->forFile(new SourceFile($fileStatus->path, $fileStatus->size), $schema)->values(),
             ]);
 
-            if (count($buffer) < $batchSize) {
+            if ($builder->count() < $batchSize) {
                 continue;
             }
 
-            $yielded += count($buffer);
+            $rows = $builder->finish();
+            $yielded += $rows->count();
 
-            $signal = yield array_to_rows($buffer, $schema, $context->hydrator());
+            $signal = yield $rows;
 
             if ($signal === Signal::STOP) {
                 return;
             }
 
-            $buffer = [];
+            $builder = new RowsBuilder($schema, $backend);
 
             if ($limit !== null && $yielded >= $limit) {
                 return;
             }
         }
 
-        if ($buffer !== []) {
-            yield array_to_rows($buffer, $schema, $context->hydrator());
+        if ($builder->count() > 0) {
+            yield $builder->finish();
         }
     }
 

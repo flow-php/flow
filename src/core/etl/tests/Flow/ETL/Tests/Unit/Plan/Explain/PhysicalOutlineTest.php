@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Plan\Explain;
 
+use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\Plan\Explain\PhysicalOutline;
 use Flow\ETL\Plan\Explain\TreeLayout;
 use Flow\ETL\Tests\Double\UndescribableRowLessExtractor;
@@ -12,6 +13,7 @@ use Flow\ETL\Tests\Mother\PhysicalPlanMother;
 
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\hash_join;
 use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\to_output;
 
@@ -72,6 +74,7 @@ final class PhysicalOutlineTest extends FlowTestCase
                       │     On: id = id
                       │     Prefix: joined_
                       │     Storage: FilesystemBuckets
+                      │     Memory: 64 MB
                       │     Buckets: 64
                       │     Batch: 1000
                       └─ Right side: Pipeline #0
@@ -84,6 +87,7 @@ final class PhysicalOutlineTest extends FlowTestCase
                     ->join(
                         data_frame()->read(from_array([['id' => 1]])),
                         join_on(['id' => 'id'], join_prefix: 'joined_'),
+                        algorithm: hash_join()->memoryLimit(Unit::fromMb(64)),
                     )
                     ->collect()
                     ->write(to_output(truncate: false)),

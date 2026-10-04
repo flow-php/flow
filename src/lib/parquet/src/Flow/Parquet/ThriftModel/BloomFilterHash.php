@@ -25,7 +25,7 @@ class BloomFilterHash
             'var' => 'XXHASH',
             'isRequired' => false,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\XxHash',
+            'class' => '\Flow\Parquet\ThriftModel\XxHash',
         ],
     ];
 

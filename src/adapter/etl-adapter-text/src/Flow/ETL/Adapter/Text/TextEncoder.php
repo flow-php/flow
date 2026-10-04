@@ -4,71 +4,59 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Text;
 
+use Flow\ETL\Column\TextValues;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Encoder;
-use Flow\ETL\Row\RawRowValues;
-use Stringable;
+use Flow\ETL\Rows;
+use Flow\Types\Type\Logical\ListType;
+use Flow\Types\Type\Logical\MapType;
+use Flow\Types\Type\Logical\StructureType;
 
 use function array_values;
 use function count;
-use function get_debug_type;
-use function is_bool;
-use function is_scalar;
-use function rtrim;
+use function Flow\Types\DSL\type_bare;
+use function implode;
 use function sprintf;
+use function str_repeat;
 
-/**
- * @implements Encoder<string>
- */
-final class TextEncoder implements Encoder
+final class TextEncoder
 {
     public function __construct(
         private readonly string $newLineSeparator = PHP_EOL,
     ) {}
 
-    public function decode(array $batch): array
+    public function encode(Rows $rows): string
     {
-        $maps = [];
+        $count = $rows->count();
 
-        foreach ($batch as $line) {
-            $maps[] = new RawRowValues(['text' => rtrim($line)]);
+        if ($count < 1) {
+            return '';
         }
 
-        return $maps;
-    }
+        $definitions = array_values($rows->schema()->definitions());
 
-    public function encode(array $batch): array
-    {
-        $lines = [];
-
-        foreach ($batch as $rowValues) {
-            $values = $rowValues->values;
-
-            if (count($values) > 1) {
-                throw new RuntimeException(sprintf(
-                    'Text data loader supports only a single entry rows, and you have %d rows.',
-                    count($values),
-                ));
-            }
-
-            /** @var mixed $value */
-            $value = array_values($values)[0] ?? null;
-
-            $lines[] = $this->renderValue($value) . $this->newLineSeparator;
+        if (count($definitions) > 1) {
+            throw new RuntimeException(sprintf(
+                'Text data loader writes at most one column, the batch has %d columns.',
+                count($definitions),
+            ));
         }
 
-        return $lines;
-    }
+        if ($definitions === []) {
+            return str_repeat($this->newLineSeparator, $count);
+        }
 
-    private function renderValue(mixed $value): string
-    {
-        return match (true) {
-            $value === null => '',
-            is_bool($value) => $value ? 'true' : 'false',
-            is_scalar($value), $value instanceof Stringable => (string) $value,
-            default => throw new RuntimeException(
-                'Text data loader supports only scalar values, got ' . get_debug_type($value),
-            ),
-        };
+        $type = $definitions[0]->type();
+        $bare = type_bare($type);
+
+        if ($bare instanceof ListType || $bare instanceof MapType || $bare instanceof StructureType) {
+            throw new RuntimeException('Text data loader supports only scalar values, got array');
+        }
+
+        return (
+            implode(
+                $this->newLineSeparator,
+                (new TextValues())->texts($type, $rows->column($definitions[0]->entry()->name())->physicals()),
+            ) . $this->newLineSeparator
+        );
     }
 }

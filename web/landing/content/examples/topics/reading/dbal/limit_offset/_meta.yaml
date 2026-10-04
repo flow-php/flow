@@ -1,4 +1,4 @@
 priority: 1
 hidden: false
 run:
-  skip: "needs a database connection"
+  skip: "uses pdo_sqlite, which the playground PHP build does not include"

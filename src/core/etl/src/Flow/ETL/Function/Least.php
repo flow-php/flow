@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Column\Column;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 use Flow\Types\Type\Unifier\NullabilityRule;
@@ -69,23 +71,27 @@ final class Least implements ScalarFunction
         );
     }
 
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        // NULL iff every argument is NULL - nulls are skipped, never compared
-        $values = [];
+        $arguments = array_map(static fn(ScalarFunction $value): array => (new Parameter($value))->values(
+            $rows,
+            $context,
+        ), $this->values);
+        $results = [];
 
-        foreach ($this->values as $value) {
-            $evaluated = (new Parameter($value))->eval($row, $context);
+        for ($i = 0, $count = $rows->count(); $i < $count; $i++) {
+            // NULL iff every argument is NULL - nulls are skipped, never compared
+            $values = [];
 
-            if ($evaluated !== null) {
-                $values[] = $evaluated;
+            foreach ($arguments as $argument) {
+                if ($argument[$i] !== null) {
+                    $values[] = $argument[$i];
+                }
             }
+
+            $results[] = $values === [] ? null : min($values);
         }
 
-        if ($values === []) {
-            return null;
-        }
-
-        return min($values);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

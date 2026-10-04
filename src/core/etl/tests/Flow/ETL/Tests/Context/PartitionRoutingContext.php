@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Context;
 
+use Flow\ETL\Loader\File\PartitionRouter;
 use Flow\ETL\Loader\Partitioning;
-use Flow\ETL\Loader\PartitionRouter;
 use Flow\ETL\Rows;
 use Flow\Filesystem\Partitions;
 

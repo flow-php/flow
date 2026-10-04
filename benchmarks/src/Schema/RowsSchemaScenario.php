@@ -7,8 +7,7 @@ namespace Flow\Benchmarks\Schema;
 use Flow\ETL\Rows;
 
 use function array_key_exists;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
@@ -60,9 +59,9 @@ final class RowsSchemaScenario
         $list = [];
 
         for ($index = 0; $index < $this->batch; $index++) {
-            $list[] = row(['a' => 'x' . $index]);
+            $list[] = ['a' => 'x' . $index];
         }
 
-        return self::$batches[$this->batch] = rows(schema(str_schema('a')), ...$list);
+        return self::$batches[$this->batch] = array_to_rows($list, schema(str_schema('a')));
     }
 }

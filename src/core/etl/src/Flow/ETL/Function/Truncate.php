@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function Flow\ETL\DSL\lit;
@@ -56,20 +60,35 @@ final class Truncate implements ScalarFunction
         return type_string();
     }
 
-    public function eval(Row $row, FlowContext $context): ?string
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $value = (new Parameter($this->value))->asString($row, $context);
-        $length = (new Parameter($this->length))->asInt($row, $context);
-        $ellipsis = (new Parameter($this->ellipsis))->asString($row, $context);
+        $values = (new Parameter($this->value))->asStrings($rows, $context);
+        $lengths = (new Parameter($this->length))->asInts($rows, $context);
+        $ellipsisList = (new Parameter($this->ellipsis))->asStrings($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($value === null) {
-            throw new InvalidArgumentException('Truncate function requires non-null value');
+        try {
+            foreach ($values as $i => $value) {
+                $length = $lengths[$i];
+                $ellipsis = $ellipsisList[$i];
+
+                if ($value === null) {
+                    throw new InvalidArgumentException('Truncate function requires non-null value');
+                }
+
+                if ($length === null) {
+                    $results[] = $value;
+
+                    continue;
+                }
+
+                $results[] = s($value)->truncate($length, $ellipsis ?? '...')->toString();
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        if ($length === null) {
-            return $value;
-        }
-
-        return s($value)->truncate($length, $ellipsis ?? '...')->toString();
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

@@ -7,14 +7,18 @@ namespace Flow\Types\Tests\Unit\Type\Logical;
 use DateTimeImmutable;
 use DateTimeZone;
 use DOMElement;
+use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
+use function error_reporting;
 use function Flow\Types\DSL\type_from_array;
 use function Flow\Types\DSL\type_xml_element;
+use function restore_error_handler;
+use function set_error_handler;
 
 final class XMLElementTypeTest extends TestCase
 {
@@ -156,5 +160,28 @@ final class XMLElementTypeTest extends TestCase
     public function test_to_string(): void
     {
         static::assertSame('xml_element', type_xml_element()->toString());
+    }
+
+    public function test_a_string_that_is_not_xml_is_refused_without_a_warning(): void
+    {
+        $warnings = [];
+        set_error_handler(static function (int $level, string $message) use (&$warnings): bool {
+            if ((error_reporting() & $level) !== 0) {
+                $warnings[] = $message;
+            }
+
+            return true;
+        });
+
+        try {
+            type_xml_element()->cast('not xml');
+            static::fail('Expected CastingException');
+        } catch (CastingException $e) {
+            static::assertSame('Can\'t cast "string" into "xml_element" type', $e->getMessage());
+        } finally {
+            restore_error_handler();
+        }
+
+        static::assertSame([], $warnings);
     }
 }

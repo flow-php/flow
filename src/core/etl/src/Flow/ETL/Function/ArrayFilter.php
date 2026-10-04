@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\ListType;
 
@@ -63,16 +67,28 @@ final class ArrayFilter implements ScalarFunction
         return $array;
     }
 
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $array = (new Parameter($this->array))->asArray($row, $context);
+        $arrays = (new Parameter($this->array))->asArrays($rows, $context);
+        $values = (new Parameter($this->value))->values($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if (null === $array) {
-            throw new InvalidArgumentException('ArrayFilter function requires non-null array');
+        try {
+            foreach ($arrays as $i => $array) {
+                // @mago-ignore analysis:mixed-assignment
+                $value = $values[$i];
+
+                if (null === $array) {
+                    throw new InvalidArgumentException('ArrayFilter function requires non-null array');
+                }
+
+                $results[] = array_filter($array, static fn($item) => $item !== $value);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        $value = (new Parameter($this->value))->eval($row, $context);
-
-        return array_filter($array, static fn($item) => $item !== $value);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

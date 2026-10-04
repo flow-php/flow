@@ -182,7 +182,7 @@ final readonly class BulkData
                     if (array_key_exists($columnName, $this->types)) {
                         $type = $this->types[$columnName];
                     } else {
-                        $type = $table->dbalColumn($columnName)->getType();
+                        $type = Type::getType($table->dbalColumn($columnName)->getTypeName());
                     }
 
                     $keys[] =
@@ -226,7 +226,7 @@ final readonly class BulkData
                 $type =
                     $types[$column] ??= array_key_exists($column, $this->types)
                         ? $this->types[$column]
-                        : $table->dbalColumn($column)->getType();
+                        : Type::getType($table->dbalColumn($column)->getTypeName());
                 $rows[$index][$column . '_' . $index] = $type->convertToDatabaseValue($entry, $platform);
             }
         }
@@ -284,7 +284,7 @@ final readonly class BulkData
                         $type = $this->types[$columnName];
                     } else {
                         $dbColumn = $table->dbalColumn($columnName);
-                        $type = $dbColumn->getType();
+                        $type = Type::getType($dbColumn->getTypeName());
                     }
 
                     $keys[] = 'CAST(? as ' . $type->getSQLDeclaration([], $table->platform()) . ')';
@@ -317,7 +317,7 @@ final readonly class BulkData
                 $type =
                     $types[$column] ??= array_key_exists($column, $this->types)
                         ? $this->types[$column]
-                        : $table->dbalColumn($column)->getType();
+                        : Type::getType($table->dbalColumn($column)->getTypeName());
                 $parameters[] = $type->convertToDatabaseValue($entry, $platform);
             }
         }

@@ -20,8 +20,11 @@
         "packaged/thrift": "^0.15.0",
         "symfony/polyfill-mbstring": "^1.33"
     },
+    "conflict": {
+        "ext-arrow": "<0.45"
+    },
     "suggest": {
-        "ext-arrow": "For high-performance Parquet reading/writing via Apache Arrow"
+        "ext-arrow": "Native Parquet reading and writing (flow-php/arrow-ext)"
     },
     "config": {
         "optimize-autoloader": true,

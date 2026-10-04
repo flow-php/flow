@@ -8,29 +8,26 @@ use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Schema;
-use Generator;
+
+use function interface_exists;
+
+if (interface_exists(ParquetEngine::class, false)) {
+    return;
+}
 
 interface ParquetEngine
 {
+    /**
+     * The file on $stream, its footer read by the returned reader, which owns the stream from here on.
+     */
+    public function openForRead(SourceStream $stream): ParquetFileReader;
+
     public function openForWrite(
         DestinationStream $stream,
         Schema $schema,
         Compressions $compression,
         Options $options,
     ): ParquetFileWriter;
-
-    /**
-     * @param array<string> $columns
-     *
-     * @return \Generator<int, array<array-key, mixed>>
-     */
-    public function readValues(
-        SourceStream $stream,
-        Schema $schema,
-        array $columns = [],
-        ?int $limit = null,
-        ?int $offset = null,
-    ): Generator;
 
     /**
      * @param iterable<array<array-key, mixed>> $rows

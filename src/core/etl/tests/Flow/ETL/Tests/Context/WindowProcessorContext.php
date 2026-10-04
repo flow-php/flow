@@ -48,8 +48,8 @@ final class WindowProcessorContext
         $values = [];
 
         foreach (self::batches($entry, $function, $rows) as $batch) {
-            foreach ($batch as $row) {
-                $values[] = $row->get($name);
+            foreach ($batch->toArray() as $row) {
+                $values[] = $row[$name];
             }
         }
 

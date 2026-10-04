@@ -195,7 +195,9 @@ final class FunctionsTest extends TestCase
         $metrics = $counter->collect();
 
         static::assertCount(6, $metrics);
-        $overflowMetrics = array_filter($metrics, static fn($m) => $m->attributes->has(MetricLimits::OVERFLOW_ATTRIBUTE));
+        $overflowMetrics = array_filter($metrics, static fn($m) => $m->attributes->has(
+            MetricLimits::OVERFLOW_ATTRIBUTE,
+        ));
         static::assertCount(1, $overflowMetrics);
     }
 

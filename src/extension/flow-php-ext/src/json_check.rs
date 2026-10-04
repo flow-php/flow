@@ -8,7 +8,10 @@ pub fn json_nesting_within_php_depth(bytes: &[u8]) -> bool {
 /// Any such escape, paired or not, is left to PHP.
 pub fn json_without_surrogate_escape(bytes: &[u8]) -> bool {
     !memchr::memchr_iter(b'\\', bytes).any(|at| {
-        matches!(bytes.get(at + 1..at + 4), Some([b'u', b'd' | b'D', b'8'..=b'9' | b'a'..=b'f' | b'A'..=b'F']))
+        matches!(
+            bytes.get(at + 1..at + 4),
+            Some([b'u', b'd' | b'D', b'8'..=b'9' | b'a'..=b'f' | b'A'..=b'F'])
+        )
     })
 }
 

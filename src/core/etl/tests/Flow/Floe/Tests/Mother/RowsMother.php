@@ -13,6 +13,7 @@ use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
 
 use function array_map;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
@@ -23,7 +24,6 @@ use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\null_schema;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -54,11 +54,19 @@ final class RowsMother
         return rows(schema());
     }
 
+    public static function workedExample(): Rows
+    {
+        return array_to_rows(
+            [['id' => 1, 'name' => 'ab'], ['id' => 2, 'name' => null]],
+            schema(int_schema('id'), str_schema('name', nullable: true)),
+        );
+    }
+
     public static function ids(int $from, int $to): Rows
     {
-        return rows(
+        return array_to_rows(
+            array_map(static fn(int $id) => ['id' => $id], range($from, $to)),
             schema(int_schema('id')),
-            ...array_map(static fn(int $id) => row(['id' => $id]), range($from, $to)),
         );
     }
 
@@ -67,27 +75,24 @@ final class RowsMother
      */
     public static function numbered(int $count): Rows
     {
-        return rows(
-            schema(int_schema('id'), str_schema('name', nullable: true), datetime_schema('at')),
-            ...array_map(
-                static fn(int $id) => row([
+        return array_to_rows(
+            array_map(
+                static fn(int $id) => [
                     'id' => $id,
                     'name' => ($id % 4) === 0 ? null : 'user_' . $id,
                     'at' => (new DateTimeImmutable('2026-01-01 00:00:00.000001 +00:00'))->modify("+{$id} hours"),
-                ]),
+                ],
                 range(1, $count),
             ),
+            schema(int_schema('id'), str_schema('name', nullable: true), datetime_schema('at')),
         );
     }
 
     public static function heterogeneous(): Rows
     {
-        return rows(
+        return array_to_rows(
+            [['a' => 1, 'b' => 'x'], ['a' => 2, 'b' => 'y'], ['a' => 3, 'c' => 1.5], ['b' => 'z', 'a' => 4]],
             schema(int_schema('a'), str_schema('b', nullable: true), float_schema('c', nullable: true)),
-            row(['a' => 1, 'b' => 'x']),
-            row(['a' => 2, 'b' => 'y']),
-            row(['a' => 3, 'c' => 1.5]),
-            row(['b' => 'z', 'a' => 4]),
         );
     }
 
@@ -106,7 +111,38 @@ final class RowsMother
             'b' => type_string(),
         ]);
 
-        return rows(
+        return array_to_rows(
+            [[
+                'int' => 42,
+                'int_min' => PHP_INT_MIN,
+                'int_max' => PHP_INT_MAX,
+                'float' => 3.14159,
+                'bool' => true,
+                'string' => 'hello',
+                'string_binary' => "line\nbreak\x00null\xFFbyte",
+                'string_unicode' => 'zażółć gęślą jaźń 🚀',
+                'string_null' => null,
+                'string_from_null' => null,
+                'datetime_immutable' => new DateTimeImmutable(
+                    '2025-06-15 12:30:45.123456',
+                    new DateTimeZone('Europe/Warsaw'),
+                ),
+                'datetime_mutable' => new DateTime('2025-06-15 12:30:45.654321', new DateTimeZone('America/New_York')),
+                'datetime_before_epoch' => new DateTimeImmutable('1969-07-20 20:17:00.500000 UTC'),
+                'date' => new DateTimeImmutable('2025-06-15 00:00:00', new DateTimeZone('UTC')),
+                'time' => new DateInterval('PT2H30M15S'),
+                'uuid' => type_uuid()->cast('0196aecb-b568-7e57-a381-8ec8d3e4a531'),
+                'json' => type_json()->cast('[1,2,3]'),
+                'json_object' => type_json()->cast('{"a":1,"b":[true,null]}'),
+                'enum_backed' => BackedStringEnum::two,
+                'enum_basic' => BasicEnum::three,
+                'list' => [1, -2, PHP_INT_MAX],
+                'map' => ['a' => 1, 'b' => 2],
+                'structure' => $structure->cast(['street' => 'Main', 'nested' => ['count' => 5, 'tags' => ['a']]]),
+                'structure_interleaved' => $interleaved->cast(['z' => 1, 'b' => 'x']),
+                'xml' => type_xml()->cast('<root attr="1"><child>text &amp; entity</child></root>'),
+                'xml_element' => type_xml_element()->cast('<item id="5">value</item>'),
+            ]],
             schema(
                 int_schema('int'),
                 int_schema('int_min'),
@@ -135,37 +171,6 @@ final class RowsMother
                 xml_schema('xml'),
                 xml_element_schema('xml_element'),
             ),
-            row([
-                'int' => 42,
-                'int_min' => PHP_INT_MIN,
-                'int_max' => PHP_INT_MAX,
-                'float' => 3.14159,
-                'bool' => true,
-                'string' => 'hello',
-                'string_binary' => "line\nbreak\x00null\xFFbyte",
-                'string_unicode' => 'zażółć gęślą jaźń 🚀',
-                'string_null' => null,
-                'string_from_null' => null,
-                'datetime_immutable' => new DateTimeImmutable(
-                    '2025-06-15 12:30:45.123456',
-                    new DateTimeZone('Europe/Warsaw'),
-                ),
-                'datetime_mutable' => new DateTime('2025-06-15 12:30:45.654321', new DateTimeZone('America/New_York')),
-                'datetime_before_epoch' => new DateTimeImmutable('1969-07-20 20:17:00.500000 UTC'),
-                'date' => new DateTimeImmutable('2025-06-15 00:00:00', new DateTimeZone('Europe/Warsaw')),
-                'time' => new DateInterval('PT2H30M15S'),
-                'uuid' => type_uuid()->cast('0196aecb-b568-7e57-a381-8ec8d3e4a531'),
-                'json' => type_json()->cast('[1,2,3]'),
-                'json_object' => type_json()->cast('{"a":1,"b":[true,null]}'),
-                'enum_backed' => BackedStringEnum::two,
-                'enum_basic' => BasicEnum::three,
-                'list' => [1, -2, PHP_INT_MAX],
-                'map' => ['a' => 1, 'b' => 2],
-                'structure' => $structure->cast(['street' => 'Main', 'nested' => ['count' => 5, 'tags' => ['a']]]),
-                'structure_interleaved' => $interleaved->cast(['z' => 1, 'b' => 'x']),
-                'xml' => type_xml()->cast('<root attr="1"><child>text &amp; entity</child></root>'),
-                'xml_element' => type_xml_element()->cast('<item id="5">value</item>'),
-            ]),
         );
     }
 }

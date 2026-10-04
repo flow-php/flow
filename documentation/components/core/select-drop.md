@@ -6,13 +6,13 @@
 
 ## Select
 
-To quickly select only relevant entries use Rows `DataFrame::select`
+Keep only the listed columns with `DataFrame::select()`:
 
 ```php 
 <?php 
 
 data_frame()
-    ->read(from_array(...))
+    ->read(from_array([['id' => 1, 'name' => 'Norbert', 'email' => 'norbert@example.com']]))
     ->select("id", "name")
     ->write(to_output())
     ->run();
@@ -20,13 +20,13 @@ data_frame()
 
 ## Drop
 
-To quickly drop irrelevant entries use Rows `DataFrame::drop`
+Remove the listed columns with `DataFrame::drop()`:
 
 ```php 
 <?php 
 
 data_frame()
-    ->read(from_array(...))
+    ->read(from_array([['id' => 1, 'name' => 'Norbert', '_tags' => 'internal']]))
     ->drop("_tags")
     ->write(to_output())
     ->run();

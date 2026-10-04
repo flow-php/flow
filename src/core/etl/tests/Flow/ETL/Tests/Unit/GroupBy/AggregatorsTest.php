@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\GroupBy;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\GroupBy\Aggregators;
+use Flow\ETL\Tests\Double\UnenumerableSum;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\ListColumnsMother;
 
@@ -49,7 +50,7 @@ final class AggregatorsTest extends FlowTestCase
     public function test_references_are_null_when_any_aggregator_cannot_enumerate_them(): void
     {
         static::assertNull(
-            (new Aggregators(count(ref('order_id')), sum(ref('discount'), exact: ref('flag'))))->references(),
+            (new Aggregators(count(ref('order_id')), new UnenumerableSum(ref('discount'))))->references(),
         );
     }
 
@@ -60,7 +61,7 @@ final class AggregatorsTest extends FlowTestCase
             'aggregate() cannot contain array_expand(), it turns one row into many rows. Expand with withEntry() first, then use the new column.',
         );
 
-        (new Aggregators(sum(ref('n'), ref('flags')->expand()->equals(lit(true)))))->resolved(
+        (new Aggregators(new UnenumerableSum(ref('n'), ref('flags')->expand()->equals(lit(true)))))->resolved(
             ListColumnsMother::numberAndFlagsSchema(),
         );
     }

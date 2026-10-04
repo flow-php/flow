@@ -20,6 +20,8 @@ interface Reference extends ScalarFunction
 
     public function name(): string;
 
+    public function nulls(): NullsOrder;
+
     public function sort(): SortOrder;
 
     public function to(): string;

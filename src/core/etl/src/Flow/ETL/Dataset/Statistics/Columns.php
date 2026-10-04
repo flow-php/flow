@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Dataset\Statistics;
 
+use Flow\ETL\Column\Column as ColumnData;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Schema\Definition;
 use InvalidArgumentException;
@@ -22,22 +23,19 @@ final class Columns
     public function __construct() {}
 
     /**
-     * @param Entry<mixed> $entry
-     */
-    /**
      * @param Definition<mixed> $definition
      */
-    public function add(Definition $definition, mixed $value): void
+    public function add(Definition $definition, ColumnData $column): void
     {
         $name = $definition->entry()->name();
 
         if (!array_key_exists($name, $this->columns)) {
-            $this->columns[$name] = new Column($definition, $value);
+            $this->columns[$name] = new Column($definition, $column);
 
             return;
         }
 
-        $this->columns[$name]->add($definition, $value);
+        $this->columns[$name]->add($definition, $column);
     }
 
     /**

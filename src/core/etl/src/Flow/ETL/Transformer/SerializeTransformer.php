@@ -15,8 +15,6 @@ use Flow\Serializer\Base64Serializer;
 use Throwable;
 
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Serializer\DSL\serialize_to_string;
@@ -62,17 +60,15 @@ final readonly class SerializeTransformer implements Transformer
                         : $inputSchema->replace($target->name(), $column)
                 );
 
-            $serialized = [];
+            $serialized = $context->backend()->builder($column);
 
-            foreach ($rows->all() as $row) {
-                $payload = serialize_to_string($serializer, rows($inputSchema, $row));
-
-                $serialized[] = $this->standalone
-                    ? row([$target->name() => $payload])
-                    : row([...$row->values(), $target->name() => $payload]);
+            for ($i = 0, $count = $rows->count(); $i < $count; $i++) {
+                $serialized->append(serialize_to_string($serializer, $rows->slice($i, 1)));
             }
 
-            $result = new Rows($outputSchema, ...$serialized);
+            $result = $this->standalone
+                ? Rows::fromColumns($outputSchema, [$target->name() => $serialized->finish()], $rows->count())
+                : $rows->withColumns($outputSchema, [$target->name() => $serialized->finish()]);
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

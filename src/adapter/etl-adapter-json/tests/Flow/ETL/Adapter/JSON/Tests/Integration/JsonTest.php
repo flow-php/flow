@@ -15,6 +15,7 @@ use function file_exists;
 use function file_get_contents;
 use function Flow\ETL\Adapter\JSON\from_json;
 use function Flow\ETL\Adapter\Json\to_json;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\average;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\df;
@@ -28,7 +29,6 @@ use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
@@ -136,9 +136,9 @@ final class JsonTest extends FlowTestCase
     {
         $jsonObject = ['short' => 'short_description', 'long' => 'long_description'];
         df()
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [['id' => 1, 'nested' => type_json()->cast($jsonObject)]],
                 schema(int_schema('id'), json_schema('nested')),
-                row(['id' => 1, 'nested' => type_json()->cast($jsonObject)]),
             )))
             ->write(to_json($path = __DIR__ . '/var/test_jsonentry.json')->saveMode(overwrite()))
             ->run();

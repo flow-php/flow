@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\JSON\Tests\Integration\JSONMachine;
 
 use Closure;
-use Flow\ETL\Adapter\JSON\JSONMachine\JsonLinesExtractor;
+use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
 use Flow\ETL\Adapter\JSON\Tests\Context\JsonFixtureContext;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Config;
@@ -16,6 +16,7 @@ use Flow\ETL\Schema\Definition\StringDefinition;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Context\MemoryFiles;
 use Flow\ETL\Tests\Double\CountingFilesystem;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Generator;
@@ -27,6 +28,7 @@ use function array_keys;
 use function array_sum;
 use function Flow\ETL\Adapter\JSON\from_json_lines;
 use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
@@ -54,7 +56,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
             ->read(from_json_lines(__DIR__ . '/../../Fixtures/timezones.jsonl')->withMetadataColumns(true))
             ->fetch();
 
-        foreach ($rows as $row) {
+        foreach ($rows->toArray() as $row) {
             static::assertSame(
                 [
                     'timezones',
@@ -64,7 +66,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
                     'capital',
                     '_input_file_uri',
                 ],
-                array_keys($row->toArray()),
+                array_keys($row),
             );
         }
 
@@ -92,7 +94,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
             ->read(from_json_lines(__DIR__ . '/../../Fixtures/nested_timezones.jsonl')->withPointer('/timezones', true))
             ->fetch();
 
-        foreach ($rows as $row) {
+        foreach ($rows->toArray() as $row) {
             static::assertSame(
                 [
                     'timezones',
@@ -101,7 +103,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
                     'country_code',
                     'capital',
                 ],
-                array_keys(type_array()->assert($row->get('/timezones'))),
+                array_keys(type_array()->assert($row['/timezones'])),
             );
         }
 
@@ -114,7 +116,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
 
         $rows = df()->read(from_json_lines(__DIR__ . '/../../Fixtures/timezones.jsonl')->withSchema($schema))->fetch();
 
-        foreach ($rows as $row) {
+        foreach ($rows->toArray() as $row) {
             static::assertSame(
                 [
                     'timezones',
@@ -123,7 +125,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
                     'country_code',
                     'capital',
                 ],
-                array_keys($row->toArray()),
+                array_keys($row),
             );
         }
 
@@ -147,7 +149,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
         $total = 0;
 
         foreach ($extractor->extract(flow_context(config())) as $rows) {
-            foreach ($rows->all() as $row) {
+            foreach ($rows->toArray() as $row) {
                 static::assertSame(
                     [
                         'timezones',
@@ -156,7 +158,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
                         'country_code',
                         'capital',
                     ],
-                    array_keys($row->toArray()),
+                    array_keys($row),
                 );
             }
             $total += $rows->count();
@@ -286,7 +288,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
     }
 
     /**
-     * @param Closure(JsonLinesExtractor): void $setter
+     * @param Closure(JsonExtractor): void $setter
      */
     #[DataProvider('shapeChangingSetters')]
     public function test_a_shape_changing_setter_drops_the_inferred_schema(Closure $setter): void
@@ -304,12 +306,12 @@ final class JsonLinesExtractorTest extends FlowTestCase
     }
 
     /**
-     * @return Generator<string, array{Closure(JsonLinesExtractor): void}>
+     * @return Generator<string, array{Closure(JsonExtractor): void}>
      */
     public static function shapeChangingSetters(): Generator
     {
-        yield 'withPointer' => [static fn(JsonLinesExtractor $e) => $e->withPointer('/timezones', true)];
-        yield 'inferSchema' => [static fn(JsonLinesExtractor $e) => $e->inferSchema(infer_schema()->allStrings())];
+        yield 'withPointer' => [static fn(JsonExtractor $e) => $e->withPointer('/timezones', true)];
+        yield 'inferSchema' => [static fn(JsonExtractor $e) => $e->inferSchema(infer_schema()->allStrings())];
     }
 
     public function test_infer_schema_drops_the_inferred_schema_and_all_strings_floors_it(): void
@@ -605,7 +607,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
     }
 
     /**
-     * @param Closure(JsonLinesExtractor): void $setter
+     * @param Closure(JsonExtractor): void $setter
      */
     #[DataProvider('shapeChangingSetters')]
     public function test_a_shape_changing_setter_drops_the_sample(Closure $setter): void
@@ -738,5 +740,19 @@ final class JsonLinesExtractorTest extends FlowTestCase
         $extractor->statistics();
 
         static::assertSame(1, $filesystem->listCalls);
+    }
+
+    public function test_extract_builds_through_the_config_backend(): void
+    {
+        $backend = new SpyBackend();
+
+        iterator_to_array(
+            from_json_lines(__DIR__ . '/../../Fixtures/timezones.jsonl')->extract(
+                flow_context(config_builder()->backend($backend)->build()),
+            ),
+            false,
+        );
+
+        static::assertGreaterThanOrEqual(1, $backend->builders() + $backend->adopts());
     }
 }

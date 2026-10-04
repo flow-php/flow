@@ -14,7 +14,9 @@ use function Flow\Types\DSL\type_string;
 return new class implements Migration {
     public function migrate(MigrationContext $context): void
     {
-        $container = type_instance_of(ContainerInterface::class)->assert($context->attribute(FlowPostgreSqlBundle::SERVICE_CONTAINER));
+        $container = type_instance_of(ContainerInterface::class)->assert($context->attribute(
+            FlowPostgreSqlBundle::SERVICE_CONTAINER,
+        ));
 
         $table = type_string()->assert($container->getParameter('flow_test.container_table'));
         $seed = type_instance_of(MigrationSeedProvider::class)

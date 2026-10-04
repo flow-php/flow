@@ -4,21 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel;
 
+use DateTimeInterface;
 use Flow\ETL\Adapter\Excel\Sheet\SheetNameAssertion;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Filesystem\FilesSink;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\Loader\Discardable;
-use Flow\ETL\Loader\FileLoader;
+use Flow\ETL\Loader\File\FileLoader;
+use Flow\ETL\Loader\File\FilesSink;
+use Flow\ETL\Loader\File\PartitionRouter;
 use Flow\ETL\Loader\Partitioning;
 use Flow\ETL\Loader\PartitioningLoader;
-use Flow\ETL\Loader\PartitionRouter;
-use Flow\ETL\Row;
-use Flow\ETL\Row\TypedRowValues;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
@@ -32,7 +31,7 @@ use OpenSpout\Writer\ODS\Options as OdsOptions;
 use OpenSpout\Writer\XLSX\Options as XlsxOptions;
 use Throwable;
 
-use function array_keys;
+use function array_values;
 use function is_string;
 use function sprintf;
 
@@ -148,8 +147,6 @@ final class ExcelLoader implements Closure, Discardable, FileLoader, Loader, Par
             $encoder = $this->encoder();
 
             foreach ($this->router->route($rows) as [$partitions, $group]) {
-                $dehydrated = $context->hydrator()->dehydrate($group);
-
                 $stream = ($this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode))->writeTo(
                     $partitions->toArray(),
                 );
@@ -161,38 +158,42 @@ final class ExcelLoader implements Closure, Discardable, FileLoader, Loader, Par
                     );
                 $manager->open($stream->path()->path());
 
-                foreach ($group as $rowIndex => $row) {
-                    $sheetName = $this->resolveSheetName($row);
+                $sheetColumn =
+                    $this->sheetNameEntryName !== null
+                    && $group->schema()->findDefinition($this->sheetNameEntryName) !== null
+                        ? $this->sheetNameEntryName
+                        : null;
+                $written = $sheetColumn === null
+                    ? $group
+                    : $group->project($group->schema()->gracefulRemove($sheetColumn), $context->backend());
+                $sheetValues = $sheetColumn === null ? null : $group->column($sheetColumn)->values();
 
-                    $rowSchema = $this->sheetNameEntryName !== null && $row->has($this->sheetNameEntryName)
-                        ? $group->schema()->gracefulRemove($this->sheetNameEntryName)
-                        : $group->schema();
+                /** @var array<array-key, list<int>> $sheets */
+                $sheets = [];
 
-                    $typed = $dehydrated[$rowIndex];
-                    $values = $typed->values;
-                    $types = $typed->types;
-                    $metadata = $typed->metadata;
+                for ($i = 0; $i < $group->count(); $i++) {
+                    $sheets[$this->resolveSheetName($sheetValues === null ? null : $sheetValues[$i])][] = $i;
+                }
 
-                    if ($this->sheetNameEntryName !== null) {
-                        unset(
-                            $values[$this->sheetNameEntryName],
-                            $types[$this->sheetNameEntryName],
-                            $metadata[$this->sheetNameEntryName],
-                        );
-                    }
+                foreach ($sheets as $sheetName => $indices) {
+                    $sheetName = (string) $sheetName;
+                    $sheetRows = $written->gather($indices);
 
                     if ($this->withHeader && !$manager->isHeaderWritten($sheetName)) {
                         $manager->writeHeader(
                             $sheetName,
-                            $encoder->encodeHeader(array_keys($values)),
+                            $encoder->encodeHeader(array_values($sheetRows->schema()->references()->names())),
                             $this->headerStyle,
                         );
                     }
 
-                    $styles = $this->resolveCellStyles($row, $rowSchema, $rowIndex, $sheetName);
-                    /** @var array<int, null|bool|float|int|string> $cells */
-                    $cells = $encoder->encode([new TypedRowValues($values, $types, $metadata)])[0];
-                    $manager->writeRow($sheetName, $cells, $styles);
+                    foreach ($encoder->encode($sheetRows) as $k => $cells) {
+                        $manager->writeRow(
+                            $sheetName,
+                            $cells,
+                            $this->resolveCellStyles($sheetRows->schema(), $cells, $indices[$k] + 1, $sheetName),
+                        );
+                    }
                 }
             }
 
@@ -319,18 +320,20 @@ final class ExcelLoader implements Closure, Discardable, FileLoader, Loader, Par
     }
 
     /**
+     * @param array<int, null|bool|DateTimeInterface|float|int|string> $cells the row as the encoder wrote it
+     *
      * @return null|array<int, null|Style>
      */
-    private function resolveCellStyles(Row $row, Schema $schema, int $rowIndex, string $sheetName): ?array
+    private function resolveCellStyles(Schema $schema, array $cells, int $rowNumber, string $sheetName): ?array
     {
         $styles = [];
         $columnIndex = 0;
 
         foreach ($schema->definitions() as $definition) {
             $styles[$columnIndex] = $this->cellStyler?->style(
-                $row->get($definition->entry()->name()),
+                $cells[$columnIndex],
                 $definition,
-                $rowIndex + 1,
+                $rowNumber,
                 $columnIndex,
                 $sheetName,
             ) ?? $this->temporalStyle($definition);
@@ -340,16 +343,12 @@ final class ExcelLoader implements Closure, Discardable, FileLoader, Loader, Par
         return $styles;
     }
 
-    private function resolveSheetName(Row $row): string
+    private function resolveSheetName(mixed $value): string
     {
-        if ($this->sheetNameEntryName !== null && $row->has($this->sheetNameEntryName)) {
-            $value = $row->get($this->sheetNameEntryName);
+        if (is_string($value) && $value !== '') {
+            SheetNameAssertion::assert($value);
 
-            if (is_string($value) && $value !== '') {
-                SheetNameAssertion::assert($value);
-
-                return $value;
-            }
+            return $value;
         }
 
         return $this->sheetName ?? 'Sheet1';

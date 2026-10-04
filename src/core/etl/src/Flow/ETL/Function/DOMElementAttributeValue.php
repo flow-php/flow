@@ -7,9 +7,13 @@ namespace Flow\ETL\Function;
 use Dom\HTMLElement;
 use DOMDocument;
 use DOMNode;
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function class_exists;
@@ -60,7 +64,7 @@ final class DOMElementAttributeValue implements ScalarFunction
         return type_optional(type_string());
     }
 
-    public function eval(Row $row, FlowContext $context): ?string
+    public function eval(Rows $rows, FlowContext $context): Column
     {
         $types = [
             type_instance_of(DOMNode::class),
@@ -72,42 +76,59 @@ final class DOMElementAttributeValue implements ScalarFunction
             $types[] = type_list(type_instance_of(HTMLElement::class));
         }
 
-        $node = (new Parameter($this->domElement))->as($row, $context, ...$types);
+        $nodes = (new Parameter($this->domElement))->asTypes($rows, $context, ...$types);
+        $attributeNames = (new Parameter($this->attribute))->asStrings($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($node instanceof DOMDocument) {
-            $node = $node->documentElement;
+        try {
+            foreach ($nodes as $i => $node) {
+                $attributeName = $attributeNames[$i];
+
+                if ($node instanceof DOMDocument) {
+                    $node = $node->documentElement;
+                }
+
+                if (is_array($node) && count($node)) {
+                    $node = reset($node);
+                }
+
+                if ($node === null) {
+                    throw new InvalidArgumentException('DOMElementAttributeValue requires non-null DOMNode');
+                }
+
+                if ($attributeName === null) {
+                    throw new InvalidArgumentException('DOMElementAttributeValue requires non-null attribute name');
+                }
+
+                if (!$node instanceof DOMNode && !$node instanceof HTMLElement) {
+                    $results[] = null;
+
+                    continue;
+                }
+
+                $attributes = $node->attributes;
+
+                if ($attributes === null) {
+                    $results[] = null;
+
+                    continue;
+                }
+
+                $namedItem = $attributes->getNamedItem($attributeName);
+
+                if ($namedItem === null) {
+                    $results[] = null;
+
+                    continue;
+                }
+
+                $results[] = $namedItem->nodeValue;
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        if (is_array($node) && count($node)) {
-            $node = reset($node);
-        }
-
-        $attributeName = (new Parameter($this->attribute))->asString($row, $context);
-
-        if ($node === null) {
-            throw new InvalidArgumentException('DOMElementAttributeValue requires non-null DOMNode');
-        }
-
-        if ($attributeName === null) {
-            throw new InvalidArgumentException('DOMElementAttributeValue requires non-null attribute name');
-        }
-
-        if (!$node instanceof DOMNode && !$node instanceof HTMLElement) {
-            return null;
-        }
-
-        $attributes = $node->attributes;
-
-        if ($attributes === null) {
-            return null;
-        }
-
-        $namedItem = $attributes->getNamedItem($attributeName);
-
-        if ($namedItem === null) {
-            return null;
-        }
-
-        return $namedItem->nodeValue;
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

@@ -1,1 +1,2 @@
-Flow includes a dedicated filesystem abstraction for working with files. The local filesystem provides operations for listing files (with glob pattern support), reading data (in full or chunks), and writing data.
+`fstab()->for('file')` is the local filesystem every reader and writer goes through. It writes
+streams, lists paths by glob pattern and reads files back, in full or in chunks.

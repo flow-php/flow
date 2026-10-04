@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\HTTP\Tests\Integration;
 use Flow\ETL\Adapter\HTTP\Tests\Mother\PaginationMother;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\SchemaMismatchException;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Http\Mock\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
@@ -25,6 +26,7 @@ use function Flow\ETL\Adapter\Http\http_request_option_body;
 use function Flow\ETL\Adapter\Http\http_request_option_query;
 use function Flow\ETL\Adapter\Http\http_stop_when_max_pages;
 use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\map_schema;
@@ -383,7 +385,7 @@ final class PsrHttpClientPaginatedExtractorTest extends FlowTestCase
             type_structure(['login' => type_string(), 'id' => type_integer()]),
             $rows[0]->schema()->get('response_body')->type(),
         );
-        static::assertSame(['login' => 'flow-php', 'id' => 73_495_297], $rows[0]->first()->get('response_body'));
+        static::assertSame(['login' => 'flow-php', 'id' => 73_495_297], $rows[0]->column('response_body')->value(0));
     }
 
     public function test_schema_typed_response_body_with_missing_field(): void
@@ -425,7 +427,7 @@ final class PsrHttpClientPaginatedExtractorTest extends FlowTestCase
             type_structure(['login' => type_string(), 'id' => type_integer()]),
             $rows[0]->schema()->get('response_body')->type(),
         );
-        static::assertSame(['login' => 'flow-php', 'id' => 73_495_297], $rows[0]->first()->get('response_body'));
+        static::assertSame(['login' => 'flow-php', 'id' => 73_495_297], $rows[0]->column('response_body')->value(0));
     }
 
     public function test_stops_on_client_error_but_yields_its_row(): void
@@ -442,6 +444,24 @@ final class PsrHttpClientPaginatedExtractorTest extends FlowTestCase
 
         static::assertCount(2, $client->getRequests());
         static::assertCount(2, $rows);
-        static::assertSame(500, $rows[1]->first()->get('response_status_code'));
+        static::assertSame(500, $rows[1]->column('response_status_code')->value(0));
+    }
+
+    public function test_extract_builds_through_the_config_backend(): void
+    {
+        $client = new Client(new Psr17Factory());
+        $client->addResponse(PaginationMother::jsonResponse(['meta' => ['next_cursor' => null]]));
+        $backend = new SpyBackend();
+
+        iterator_to_array(
+            from_http_paginated(
+                $client,
+                PaginationMother::request(),
+                http_pagination_cursor('meta.next_cursor', http_request_option_query('cursor')),
+            )->extract(flow_context(config_builder()->backend($backend)->build())),
+            false,
+        );
+
+        static::assertGreaterThanOrEqual(1, $backend->builders());
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Bucketing\KeyValues;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
@@ -15,9 +16,12 @@ use Flow\ETL\GroupBy\Pivot;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 
+use function array_key_exists;
+use function array_key_last;
 use function array_unique;
 use function count;
 use function Flow\ETL\DSL\definition_from_type;
+use function serialize;
 
 final class GroupBy
 {
@@ -48,7 +52,10 @@ final class GroupBy
         $this->aggregations = new Aggregators(...$aggregator);
     }
 
-    public function aggregatedRow(GroupKey $key, Aggregators $aggregators, Schema $output): Row
+    /**
+     * @return array<array-key, mixed>
+     */
+    public function aggregatedValues(GroupKey $key, Aggregators $aggregators, Schema $output): array
     {
         $values = [];
 
@@ -64,7 +71,7 @@ final class GroupBy
             $values[$aggregator->outputName()] = $value === null ? null : $definition->type()->cast($value);
         }
 
-        return new Row($values);
+        return $values;
     }
 
     /**
@@ -117,17 +124,59 @@ final class GroupBy
         return new Schema(...$definitions);
     }
 
-    public function keyValues(Row $row, Schema $input): GroupKey
+    /**
+     * @return list<GroupKey> one per row of $rows
+     */
+    public function keys(Rows $rows, Schema $input): array
     {
-        $values = [];
-
-        foreach ($this->refs as $ref) {
-            // absent under a nullable declaration is a legitimate null; absent under NOT NULL is a
-            // row-shape violation, and Row::get() already names it and lists the available columns.
-            $values[$ref->name()] = !$row->has($ref) && $input->get($ref)->isNullable() ? null : $row->get($ref);
+        if ($rows->isEmpty()) {
+            return [];
         }
 
-        return new GroupKey($values);
+        $present = [];
+        $absent = [];
+
+        foreach ($this->refs->all() as $ref) {
+            $absent[] = $rows->schema()->findDefinition($ref->base()) === null;
+
+            if (!$absent[array_key_last($absent)]) {
+                $present[] = $ref;
+            }
+        }
+
+        $keys = [];
+        $built = [];
+
+        // one key per distinct identity over every ref in order (an absent ref is a null slot), its values read from
+        // the first row that carries it
+        foreach ((new KeyValues($present))->of($rows) as $i => $presentValues) {
+            $identity = [];
+            $position = 0;
+
+            foreach ($absent as $isAbsent) {
+                $identity[] = $isAbsent ? null : $presentValues[$position++];
+            }
+
+            $string = serialize($identity);
+
+            if (!array_key_exists($string, $built)) {
+                $values = [];
+
+                foreach ($this->refs->all() as $index => $ref) {
+                    // absent under a nullable declaration is a legitimate null; absent under NOT NULL is a
+                    // row-shape violation, and Rows::column() names it and lists the available columns.
+                    $values[$ref->name()] = $absent[$index] && $input->get($ref)->isNullable()
+                        ? null
+                        : $rows->column($ref->base())->value($i);
+                }
+
+                $built[$string] = new GroupKey($values, $string);
+            }
+
+            $keys[] = $built[$string];
+        }
+
+        return $keys;
     }
 
     public function pivot(Reference $ref, DeclaredPivotValues $values): void

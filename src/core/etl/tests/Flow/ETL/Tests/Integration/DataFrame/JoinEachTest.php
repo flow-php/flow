@@ -11,13 +11,12 @@ use Flow\ETL\Loader;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
@@ -29,26 +28,27 @@ final class JoinEachTest extends FlowTestCase
         $loader->expects(self::exactly(2))->method('load');
 
         $rows = df()
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [
+                    ['id' => 1, 'country' => 'PL'],
+                    ['id' => 2, 'country' => 'PL'],
+                    ['id' => 3, 'country' => 'PL'],
+                    ['id' => 4, 'country' => 'PL'],
+                    ['id' => 5, 'country' => 'US'],
+                    ['id' => 6, 'country' => 'US'],
+                    ['id' => 7, 'country' => 'US'],
+                    ['id' => 9, 'country' => 'US'],
+                ],
                 schema(int_schema('id'), str_schema('country')),
-                row(['id' => 1, 'country' => 'PL']),
-                row(['id' => 2, 'country' => 'PL']),
-                row(['id' => 3, 'country' => 'PL']),
-                row(['id' => 4, 'country' => 'PL']),
-                row(['id' => 5, 'country' => 'US']),
-                row(['id' => 6, 'country' => 'US']),
-                row(['id' => 7, 'country' => 'US']),
-                row(['id' => 9, 'country' => 'US']),
             )))
             ->batchSize(4)
             ->joinEach(
                 new class implements DataFrameFactory {
                     public function from(Rows $rows): DataFrame
                     {
-                        return data_frame()->process(rows(
+                        return data_frame()->process(array_to_rows(
+                            [['code' => 'PL', 'name' => 'Poland'], ['code' => 'US', 'name' => 'United States']],
                             schema(str_schema('code'), str_schema('name')),
-                            row(['code' => 'PL', 'name' => 'Poland']),
-                            row(['code' => 'US', 'name' => 'United States']),
                         ));
                     }
                 },
@@ -78,26 +78,30 @@ final class JoinEachTest extends FlowTestCase
         $loader->expects(self::exactly(2))->method('load');
 
         $rows = df()
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [
+                    ['id' => 1, 'country_code' => 'PL'],
+                    ['id' => 2, 'country_code' => 'PL'],
+                    ['id' => 3, 'country_code' => 'PL'],
+                    ['id' => 4, 'country_code' => 'PL'],
+                    ['id' => 5, 'country_code' => 'US'],
+                    ['id' => 6, 'country_code' => 'US'],
+                    ['id' => 7, 'country_code' => 'US'],
+                    ['id' => 9, 'country_code' => 'US'],
+                ],
                 schema(int_schema('id'), str_schema('country_code')),
-                row(['id' => 1, 'country_code' => 'PL']),
-                row(['id' => 2, 'country_code' => 'PL']),
-                row(['id' => 3, 'country_code' => 'PL']),
-                row(['id' => 4, 'country_code' => 'PL']),
-                row(['id' => 5, 'country_code' => 'US']),
-                row(['id' => 6, 'country_code' => 'US']),
-                row(['id' => 7, 'country_code' => 'US']),
-                row(['id' => 9, 'country_code' => 'US']),
             )))
             ->batchSize(4)
             ->joinEach(
                 new class implements DataFrameFactory {
                     public function from(Rows $rows): DataFrame
                     {
-                        return data_frame()->process(rows(
+                        return data_frame()->process(array_to_rows(
+                            [
+                                ['country_code' => 'PL', 'name' => 'Poland'],
+                                ['country_code' => 'US', 'name' => 'United States'],
+                            ],
                             schema(str_schema('country_code'), str_schema('name')),
-                            row(['country_code' => 'PL', 'name' => 'Poland']),
-                            row(['country_code' => 'US', 'name' => 'United States']),
                         ));
                     }
                 },

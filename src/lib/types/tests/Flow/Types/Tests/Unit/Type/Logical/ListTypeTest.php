@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
+use DateTimeImmutable;
+use DateTimeInterface;
 use DateTimeZone;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
@@ -13,7 +15,9 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
+use function array_map;
 use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_date;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_from_array;
 use function Flow\Types\DSL\type_integer;
@@ -254,5 +258,33 @@ final class ListTypeTest extends TestCase
     public function test_to_string(): void
     {
         static::assertSame('list<boolean>', type_list(type_boolean())->toString());
+    }
+
+    public function test_a_cast_that_keeps_non_list_keys_is_refused(): void
+    {
+        try {
+            type_list(type_string())->cast([1 => 'x']);
+            static::fail('Expected CastingException');
+        } catch (CastingException $e) {
+            static::assertSame('Can\'t cast "array" into "list<string>" type', $e->getMessage());
+            static::assertInstanceOf(InvalidTypeException::class, $e->getPrevious());
+            static::assertSame(
+                'Expected type "list<string>", got "map<integer, string>".',
+                $e->getPrevious()->getMessage(),
+            );
+        }
+    }
+
+    public function test_a_zoned_datetime_casts_to_its_calendar_day_in_a_list_of_dates(): void
+    {
+        $dates = type_list(type_date())->cast([new DateTimeImmutable(
+            '2026-01-02 00:30:00',
+            new DateTimeZone('Europe/Warsaw'),
+        )]);
+
+        static::assertSame(
+            ['2026-01-02 00:00:00 UTC'],
+            array_map(static fn(DateTimeInterface $date): string => $date->format('Y-m-d H:i:s e'), $dates),
+        );
     }
 }

@@ -67,6 +67,7 @@ final class MemoryTelemetryContext
         $this->config = $configBuilder->build();
         $this->flowContext = flow_context($this->config);
         $this->telemetryContext = new TelemetryContext(
+            $this->config->backend(),
             $this->telemetry->logger('flow-php'),
             $this->telemetry->tracer('flow-php'),
             $this->telemetry->meter('flow-php'),

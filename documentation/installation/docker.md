@@ -69,16 +69,16 @@ $ docker run -v $(pwd):/flow-workspace --rm -it ghcr.io/flow-php/flow:latest run
 
 ## Bundled extensions
 
-Alongside PHP 8.5 and the extensions Flow's adapters need - `bcmath`, `gmp`, `pdo_mysql`,
+Alongside PHP 8.5 and the extensions Flow's adapters need - `bcmath`, `gmp`, `zip`, `pdo_mysql`,
 `pdo_pgsql`, `pdo_sqlite`, `pgsql`, and the `brotli`, `lz4`, `snappy`, `zstd` codecs - the image ships four extensions
 that Flow detects and uses automatically:
 
-| Extension  | Package                                                                       | Effect when loaded                                                                                                                                     |
-|------------|-------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `flow_php` | [flow-php/flow-php-ext](/documentation/components/extensions/flow-php-ext.md) | `AdaptiveRowHydrator` and the adaptive Floe engine run native, fusing every Floe read/write and every raw-scalar hydration into one native call per batch |
-| `arrow`    | [flow-php/arrow-ext](/documentation/components/extensions/arrow-ext.md)       | `AdaptiveParquetEngine` selects `ArrowParquetEngine`, so Parquet reads and writes run native                                                           |
-| `pg_query` | [flow-php/pg-query-ext](/documentation/components/extensions/pg-query-ext.md) | `Flow\PostgreSql\Parser` becomes usable at all - SQL parsing, normalization and AST manipulation                                                       |
-| `protobuf` | `pecl/protobuf`                                                               | `Flow\PostgreSql\Parser` decodes the parse tree in C instead of pure PHP - measured ~69x faster end to end                                             |
+| Extension  | Package                                                                       | Effect when loaded                                                                                                                                                                                                                  |
+|------------|-------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `flow_php` | [flow-php/flow-php-ext](/documentation/components/extensions/flow-php-ext.md) | `AdaptiveBackend` picks `RustBackend` ([Column Backend](/documentation/components/core/column-backend.md)); CSV and JSON are read and written in Rust; with `arrow`, Parquet batches pass between the extensions without PHP values |
+| `arrow`    | [flow-php/arrow-ext](/documentation/components/extensions/arrow-ext.md)       | `AdaptiveParquetEngine` picks arrow-ext's `RustParquetEngine`, so Parquet files are decoded and encoded in Rust                                                                                                                     |
+| `pg_query` | [flow-php/pg-query-ext](/documentation/components/extensions/pg-query-ext.md) | `Flow\PostgreSql\Parser` becomes usable at all - SQL parsing, normalization and AST manipulation                                                                                                                                    |
+| `protobuf` | `pecl/protobuf`                                                               | `Flow\PostgreSql\Parser` decodes the parse tree in C instead of pure PHP - measured ~69x faster end to end                                                                                                                          |
 
 `pdo_pgsql` and `pgsql` link libpq 18 from the PGDG repository, matching the PostgreSQL 18 grammar
 `pg_query` is built against. PHP 8.5 additionally compiles in `lexbor`, `uri` and Zend OPcache unconditionally.
@@ -90,23 +90,24 @@ that Flow detects and uses automatically:
 
 ### Opting out of the native path
 
-Engine selection happens per read and per write, so a single step can be pinned to the PHP implementation:
+The backend is chosen per data frame, the Parquet engine per read:
 
 ```php
 <?php
 
-use Flow\ETL\Row\PhpRowHydrator;
-use Flow\Floe\FloeEngine;
+use Flow\ETL\Column\PhpBackend;
 use Flow\Parquet\Engine\PhpParquetEngine;
 
 use function Flow\ETL\Adapter\Parquet\from_parquet;
 use function Flow\ETL\DSL\{config_builder, data_frame};
 use function Flow\Floe\DSL\to_floe;
 
-return data_frame(config_builder()->hydrator(new PhpRowHydrator()))
+return data_frame(config_builder()->backend(new PhpBackend()))
     ->read(from_parquet(__DIR__ . '/input.parquet', engine: new PhpParquetEngine()))
-    ->write(to_floe(__DIR__ . '/output.floe', engine: FloeEngine::php));
+    ->write(to_floe(__DIR__ . '/output.floe'));
 ```
+
+`PhpBackend` keeps the batches in PHP, but CSV and JSON files are still parsed by `flow_php` while it is loaded.
 
 To take the whole container off one native path, mount an empty file over that extension's ini:
 
@@ -115,6 +116,6 @@ $ docker run --rm -v /dev/null:/usr/local/etc/php/conf.d/docker-php-ext-flow_php
     -v $(pwd):/flow-workspace ghcr.io/flow-php/flow:latest run /flow-workspace/pipeline.php
 ```
 
-Once a native engine is selected it does **not** silently degrade. Extension failures surface as
-`Flow\Floe\Exception\ExtensionException`, which `FloeReader` and `FloeWriter` wrap as
-`Flow\Floe\Exception\FloeException`.
+Once a native path is selected it does **not** silently degrade. `flow_php` failures surface as
+`Flow\ETL\Exception\RuntimeException`; a Floe read wraps them as `Flow\Floe\Exception\FloeException`. arrow-ext
+failures surface as `Flow\Parquet\Exception\*`.

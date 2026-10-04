@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Nullability;
 
@@ -51,15 +55,29 @@ final class EndsWith implements ScalarFunction
         return (new Nullability())->any(type_boolean(), $this->haystack->returns(), $this->needle->returns());
     }
 
-    public function eval(Row $row, FlowContext $context): ?bool
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $haystack = (new Parameter($this->haystack))->asString($row, $context);
-        $needle = (new Parameter($this->needle))->asString($row, $context);
+        $haystacks = (new Parameter($this->haystack))->asStrings($rows, $context);
+        $needles = (new Parameter($this->needle))->asStrings($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($haystack === null || $needle === null) {
-            return null;
+        try {
+            foreach ($haystacks as $i => $haystack) {
+                $needle = $needles[$i];
+
+                if ($haystack === null || $needle === null) {
+                    $results[] = null;
+
+                    continue;
+                }
+
+                $results[] = str_ends_with($haystack, $needle);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return str_ends_with($haystack, $needle);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

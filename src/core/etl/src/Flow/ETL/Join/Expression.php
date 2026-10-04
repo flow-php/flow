@@ -7,8 +7,8 @@ namespace Flow\ETL\Join;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Join\Comparison\All;
 use Flow\ETL\Join\Comparison\Equal;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Rows;
 
 use function array_slice;
 use function gettype;
@@ -81,7 +81,10 @@ final readonly class Expression
         return $this->comparison->left();
     }
 
-    public function meet(Row $left, Row $right): bool
+    /**
+     * @return list<bool> pair i is (left row i, right row i)
+     */
+    public function meet(Rows $left, Rows $right): array
     {
         return $this->comparison->compare($left, $right);
     }

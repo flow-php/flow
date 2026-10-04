@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Dom\Element;
 use Dom\HTMLDocument;
 use Dom\HTMLElement;
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RequiredPHPVersionException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function class_exists;
@@ -61,24 +64,36 @@ final class HTMLQuerySelector implements ScalarFunction
         return type_optional(type_html_element());
     }
 
-    public function eval(Row $row, FlowContext $context): ?Element
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $value = (new Parameter($this->value))->as(
-            $row,
+        $values = (new Parameter($this->value))->asTypes(
+            $rows,
             $context,
             type_instance_of(HTMLDocument::class),
             type_instance_of(HTMLElement::class),
         );
-        $selector = (new Parameter($this->selector))->asString($row, $context);
+        $selectors = (new Parameter($this->selector))->asStrings($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if (null === $value) {
-            throw new InvalidArgumentException('HTMLQuerySelector requires non-null HTMLDocument');
+        try {
+            foreach ($values as $i => $value) {
+                $selector = $selectors[$i];
+
+                if (null === $value) {
+                    throw new InvalidArgumentException('HTMLQuerySelector requires non-null HTMLDocument');
+                }
+
+                if (null === $selector) {
+                    throw new InvalidArgumentException('HTMLQuerySelector requires non-null selector');
+                }
+
+                $results[] = $value->querySelector($selector);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        if (null === $selector) {
-            throw new InvalidArgumentException('HTMLQuerySelector requires non-null selector');
-        }
-
-        return $value->querySelector($selector);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

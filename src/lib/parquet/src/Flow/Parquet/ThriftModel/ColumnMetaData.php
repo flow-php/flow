@@ -24,7 +24,7 @@ class ColumnMetaData
             'var' => 'type',
             'isRequired' => true,
             'type' => TType::I32,
-            'class' => '\Flow\Parquet\Thrift\Type',
+            'class' => '\Flow\Parquet\ThriftModel\Type',
         ],
         2 => [
             'var' => 'encodings',
@@ -33,7 +33,7 @@ class ColumnMetaData
             'etype' => TType::I32,
             'elem' => [
                 'type' => TType::I32,
-                'class' => '\Flow\Parquet\Thrift\Encoding',
+                'class' => '\Flow\Parquet\ThriftModel\Encoding',
             ],
         ],
         3 => [
@@ -49,7 +49,7 @@ class ColumnMetaData
             'var' => 'codec',
             'isRequired' => true,
             'type' => TType::I32,
-            'class' => '\Flow\Parquet\Thrift\CompressionCodec',
+            'class' => '\Flow\Parquet\ThriftModel\CompressionCodec',
         ],
         5 => [
             'var' => 'num_values',
@@ -73,7 +73,7 @@ class ColumnMetaData
             'etype' => TType::STRUCT,
             'elem' => [
                 'type' => TType::STRUCT,
-                'class' => '\Flow\Parquet\Thrift\KeyValue',
+                'class' => '\Flow\Parquet\ThriftModel\KeyValue',
             ],
         ],
         9 => [
@@ -95,7 +95,7 @@ class ColumnMetaData
             'var' => 'statistics',
             'isRequired' => false,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\Statistics',
+            'class' => '\Flow\Parquet\ThriftModel\Statistics',
         ],
         13 => [
             'var' => 'encoding_stats',
@@ -104,7 +104,7 @@ class ColumnMetaData
             'etype' => TType::STRUCT,
             'elem' => [
                 'type' => TType::STRUCT,
-                'class' => '\Flow\Parquet\Thrift\PageEncodingStats',
+                'class' => '\Flow\Parquet\ThriftModel\PageEncodingStats',
             ],
         ],
         14 => [
@@ -121,7 +121,7 @@ class ColumnMetaData
             'var' => 'size_statistics',
             'isRequired' => false,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\SizeStatistics',
+            'class' => '\Flow\Parquet\ThriftModel\SizeStatistics',
         ],
     ];
 

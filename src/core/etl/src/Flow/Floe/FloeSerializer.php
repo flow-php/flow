@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
-use Flow\ETL\Row\Hydrator;
+use Flow\ETL\Column\Backend;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\SourceStream;
 use Flow\Floe\Codec\NoopCodec;
-use Flow\Floe\Exception\ExtensionException;
 use Flow\Floe\Exception\FloeException;
 use Flow\Serializer\Exception\SerializationException;
 use Flow\Serializer\Serializer;
 
-use function count;
+use function array_slice;
 use function sprintf;
 
 final class FloeSerializer implements Serializer
@@ -23,11 +24,10 @@ final class FloeSerializer implements Serializer
 
     /**
      * @param int<1, max> $batchSize
-     * @param null|Hydrator $hydrator null uses the adaptive hydrator
      */
     public function __construct(
+        private readonly Backend $backend,
         private readonly int $batchSize = 1000,
-        private readonly ?Hydrator $hydrator = null,
     ) {
         // @mago-ignore analysis:impossible-condition,redundant-comparison
         if ($this->batchSize < 1) {
@@ -39,11 +39,11 @@ final class FloeSerializer implements Serializer
     {
         try {
             // validation stays on until an upstream mechanism guarantees Rows match their schema
-            $writer = new FloeStreamWriter($rows->schema(), new Options(), hydrator: $this->hydrator);
+            $writer = new FloeStreamWriter($rows->schema(), $this->backend, new Options());
             $writer->create($destination);
             $writer->write($rows);
             $writer->close();
-        } catch (FloeException|ExtensionException $e) {
+        } catch (FloeException|RuntimeException $e) {
             throw new SerializationException($e->getMessage(), 0, $e);
         }
     }
@@ -51,29 +51,30 @@ final class FloeSerializer implements Serializer
     public function unserialize(SourceStream $source): Rows
     {
         try {
-            $reader = new FloeStreamReader($source, new NoopCodec(), self::CHUNK_SIZE, $this->hydrator);
+            $reader = new FloeStreamReader($source, new NoopCodec(), self::CHUNK_SIZE, $this->backend);
 
             $footer = $reader->footer();
 
-            $rows = [];
+            $batches = [];
+            $decoded = 0;
 
             foreach ($reader->rows($this->batchSize) as $batch) {
-                foreach ($batch->all() as $row) {
-                    $rows[] = $row;
-                }
+                $batches[] = $batch;
+                $decoded += $batch->count();
             }
 
-            if (count($rows) !== $footer->statistics->rows) {
+            if ($decoded !== $footer->statistics->rows) {
                 throw new FloeException(sprintf(
                     'Floe payload is corrupted, decoded %d of %d rows',
-                    count($rows),
+                    $decoded,
                     $footer->statistics->rows,
                 ));
             }
 
-            // every row came out of a reader batch already conformed to this schema
-            return Rows::trusted($reader->schema(), $rows);
-        } catch (FloeException|ExtensionException $e) {
+            return $batches === []
+                ? (new RowsBuilder($reader->schema(), $this->backend))->finish()
+                : $batches[0]->concat($this->backend, ...array_slice($batches, 1));
+        } catch (FloeException|RuntimeException $e) {
             throw new SerializationException($e->getMessage(), 0, $e);
         } finally {
             $source->close();

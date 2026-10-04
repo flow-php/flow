@@ -6,13 +6,13 @@ namespace Flow\Parquet\Tests\Integration\IO;
 
 use Faker\Factory;
 use Flow\Parquet\Consts;
-use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\MapKey;
 use Flow\Parquet\ParquetFile\Schema\MapValue;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Tests\Context\TestParquetFile;
+use Flow\Parquet\Tests\Mother\ParquetEngineMother;
 use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -25,8 +25,9 @@ use function range;
 class MapsWritingTest extends ParquetIntegrationTestCase
 {
     #[DataProvider('engine_provider')]
-    public function test_writing_empty_map_of_int_int(ParquetEngine $engine): void
+    public function test_writing_empty_map_of_int_int(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -54,8 +55,9 @@ class MapsWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_map_of_int_int(ParquetEngine $engine): void
+    public function test_writing_map_of_int_int(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -87,8 +89,9 @@ class MapsWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_map_of_int_int_with_all_maps_null(ParquetEngine $engine): void
+    public function test_writing_map_of_int_int_with_all_maps_null(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -116,8 +119,9 @@ class MapsWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_map_of_int_string(ParquetEngine $engine): void
+    public function test_writing_map_of_int_string(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -149,8 +153,9 @@ class MapsWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_map_of_string_decimal(ParquetEngine $engine): void
+    public function test_writing_map_of_string_decimal(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -171,8 +176,9 @@ class MapsWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_nullable_map_of_int_int(ParquetEngine $engine): void
+    public function test_writing_nullable_map_of_int_int(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);

@@ -19,10 +19,9 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\NodeMother;
 use RuntimeException;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 
 final class SinkFeedFactoryTest extends FlowTestCase
@@ -43,7 +42,7 @@ final class SinkFeedFactoryTest extends FlowTestCase
             new SinkOffers($context->errorHandler()),
             7,
         );
-        $feed->load(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])), $context);
+        $feed->load(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))), $context);
         $feed->closure($context);
 
         static::assertSame([2], $spy->loadedRowCounts());
@@ -65,7 +64,7 @@ final class SinkFeedFactoryTest extends FlowTestCase
             new SinkOffers($context->errorHandler()),
             0,
         );
-        $feed->load(rows(schema(int_schema('id')), row(['id' => 1])), $context);
+        $feed->load(array_to_rows([['id' => 1]], schema(int_schema('id'))), $context);
         $feed->closure($context);
 
         static::assertNotNull($planned->refusal());
@@ -90,6 +89,6 @@ final class SinkFeedFactoryTest extends FlowTestCase
 
         $this->expectException(SinkFailure::class);
 
-        $feed->load(rows(schema(int_schema('id')), row(['id' => 1])), $context);
+        $feed->load(array_to_rows([['id' => 1]], schema(int_schema('id'))), $context);
     }
 }

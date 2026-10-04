@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Join\Comparison;
 
 use Flow\ETL\Join\Comparison;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\UnresolvedReference;
+use Flow\ETL\Rows;
 use Flow\Types\Value\Uuid;
 
 use function is_array;
@@ -23,41 +23,30 @@ final readonly class Equal implements Comparison
         private string|Reference $entryRight,
     ) {}
 
-    public function compare(Row $left, Row $right): bool
+    public function compare(Rows $left, Rows $right): array
     {
-        $leftValue = $left->get($this->entryLeft);
-        $rightValue = $right->get($this->entryRight);
+        $rightValues = $right->column($this->right()[0]->base())->values();
+        $result = [];
 
-        // SQL semantics - null never equals anything, including null
-        if ($leftValue === null || $rightValue === null) {
-            return false;
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($left->column($this->left()[0]->base())->values() as $i => $leftValue) {
+            // @mago-ignore analysis:mixed-assignment
+            $rightValue = $rightValues[$i];
+
+            $result[] = match (true) {
+                // SQL semantics - null never equals anything, including null
+                $leftValue === null || $rightValue === null => false,
+                is_numeric($leftValue) && is_numeric($rightValue) => (float) $leftValue == (float) $rightValue,
+                is_string($leftValue) && is_string($rightValue) => $leftValue === $rightValue,
+                is_bool($leftValue) && is_bool($rightValue) => $leftValue === $rightValue,
+                is_array($leftValue) && is_array($rightValue) => $leftValue === $rightValue,
+                $leftValue instanceof Uuid && $rightValue instanceof Uuid => $leftValue->isEqual($rightValue),
+                is_object($leftValue) && is_object($rightValue) => $leftValue == $rightValue,
+                default => false,
+            };
         }
 
-        if (is_numeric($leftValue) && is_numeric($rightValue)) {
-            return (float) $leftValue == (float) $rightValue;
-        }
-
-        if (is_string($leftValue) && is_string($rightValue)) {
-            return $leftValue === $rightValue;
-        }
-
-        if (is_bool($leftValue) && is_bool($rightValue)) {
-            return $leftValue === $rightValue;
-        }
-
-        if (is_array($leftValue) && is_array($rightValue)) {
-            return $leftValue === $rightValue;
-        }
-
-        if (is_object($leftValue) && is_object($rightValue)) {
-            if ($leftValue instanceof Uuid && $rightValue instanceof Uuid) {
-                return $leftValue->isEqual($rightValue);
-            }
-
-            return $leftValue == $rightValue;
-        }
-
-        return false;
+        return $result;
     }
 
     /**

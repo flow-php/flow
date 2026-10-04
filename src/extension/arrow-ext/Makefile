@@ -31,14 +31,26 @@ build:
 # Run PHPT tests
 test: build
 	@echo "Running PHPT tests..."
-	@failed=0; total=0; passed=0; \
+	@failed=0; total=0; passed=0; skipped=0; \
 	for f in tests/phpt/*.phpt; do \
 		total=$$((total + 1)); \
 		test_name=$$(basename "$$f"); \
 		tmp="$$(dirname "$$f")/_run_$${test_name%.phpt}.php"; \
+		skipif="$$(dirname "$$f")/_skipif_$${test_name%.phpt}.php"; \
+		sed -n '/^--SKIPIF--$$/,/^--FILE--$$/p' "$$f" | sed '1d;$$d' > "$$skipif"; \
+		skip_out=""; \
+		if [ -s "$$skipif" ]; then \
+			skip_out=$$($(PHP) -d extension=$$(realpath $(EXTENSION_SO)) "$$skipif" 2>&1) || true; \
+		fi; \
+		rm -f "$$skipif"; \
+		case "$$skip_out" in skip*) \
+			echo "SKIP: $$test_name ($$skip_out)"; \
+			skipped=$$((skipped + 1)); \
+			continue;; \
+		esac; \
 		sed -n '/^--FILE--$$/,/^--EXPECT/p' "$$f" | sed '1d;$$d' > "$$tmp"; \
 		expected=$$(sed -n '/^--EXPECT\(F\)\{0,1\}--$$/,$$p' "$$f" | sed '1d' | tr -d '\r'); \
-		actual=$$($(PHP) -n -d extension=$$(realpath $(EXTENSION_SO)) "$$tmp" 2>&1) || true; \
+		actual=$$($(PHP) -d extension=$$(realpath $(EXTENSION_SO)) "$$tmp" 2>&1) || true; \
 		actual=$$(printf '%s' "$$actual" | tr -d '\r'); \
 		rm -f "$$tmp"; \
 		if [ "$$actual" = "$$expected" ]; then \
@@ -51,7 +63,7 @@ test: build
 			failed=1; \
 		fi; \
 	done; \
-	echo "$$passed/$$total tests passed"; \
+	echo "$$passed/$$total tests passed ($$skipped skipped)"; \
 	if [ $$failed -eq 1 ]; then exit 1; fi
 
 # Install to current PHP extension directory

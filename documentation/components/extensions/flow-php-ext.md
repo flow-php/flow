@@ -8,19 +8,10 @@ package: flow-php/flow-php-ext
 
 [TOC]
 
-Flow stores durable datasets (`to_floe()`) and caches intermediate ones (`DataFrame::cache()`,
-sort / join / group-by spill buckets) using the native **Floe** binary format (`.floe`) - the schema
-is written once per file and rows carry raw values only, which makes both the payload and the
-hydration dramatically cheaper than native PHP `serialize()`/`unserialize()`.
-
-This extension encodes and decodes Floe **frames** natively in Rust via
-[ext-php-rs](https://github.com/extphprs/ext-php-rs). The pure-PHP implementation in `Flow\Floe`
-(flow-php/etl) is the canonical behavior reference and works without the extension - loading it is
-purely an optimization. File header and footer assembly always stay in PHP.
-
-> You never need to call this extension directly. `Flow\Floe\FloeReader`/`FloeWriter` - used by
-> `from_floe()`/`to_floe()`, the cache and the sort / join / group-by buckets caches - route whole
-> batches to it automatically when `extension_loaded('flow_php')` is true.
+This extension is Flow's native column backend and reads CSV and JSON and writes CSV and JSON natively in Rust - Parquet
+through the [arrow extension](/documentation/components/extensions/arrow-ext.md) - via
+[ext-php-rs](https://github.com/extphprs/ext-php-rs). The pure-PHP implementations in `flow-php/etl` are the canonical
+behaviour reference and work without the extension - loading it is purely an optimization.
 
 ## Loading the Extension
 
@@ -38,65 +29,121 @@ php -d extension=./ext/modules/flow_php.so your_script.php
 
 ## Usage
 
-The extension is used implicitly through the ETL cache:
+The extension is used implicitly by the CSV reader:
 
 ```php
 <?php
 
-use function Flow\ETL\DSL\{df, from_array, to_stream};
+use function Flow\ETL\Adapter\CSV\from_csv;
+use function Flow\ETL\DSL\{df, to_stream};
 
 df()
-    ->read(from_array($bigDataset))
-    ->cache('my-dataset') // serialized with the extension when loaded
-    ->write(to_stream(__DIR__ . '/output.csv'))
+    ->read(from_csv(__DIR__ . '/input.csv')) // read natively when the extension is loaded
+    ->write(to_stream(__DIR__ . '/output.txt'))
     ->run();
 ```
 
-The extension registers two native classes; the PHP side (`FloeStreamWriter`/`FloeStreamReader`) owns
-file framing, sectioning, partitions, footer and - on read - skip/limit/padding, and picks the native
-implementation automatically:
+With the extension loaded, `Flow\ETL\Column\AdaptiveBackend` - the default of `config_builder()->backend()` - picks the
+extension's `RustBackend` and every batch column is a `Flow\ETL\Column\RustColumn` over an Apache Arrow array. How to
+choose a backend and what it builds: [Column Backend](/documentation/components/core/column-backend.md).
 
-- **`Flow\Floe\RustFloeEncoderNative`** - the Floe ROW frame-body codec:
-  `encode(list<TypedRowValues>, schemaBody)` returns the encoded frame bodies,
-  `decode(list<string>, schemaBody)` returns `list<Flow\ETL\Row\RawRowValues>`, and
-  `decodeRows(list<string>, schemaBody, Schema)` decodes and casts straight into `Flow\ETL\Rows` in one pass, and
-  `encodeFrames(Rows, schemaBody, Schema)` turns `Rows` straight into one string of complete ROW frames - what the
-  reader and the writer use when the configured hydrator is the native one. The userland wrapper
-  `Flow\Floe\NativeFloeEncoder` carries the `Flow\Floe\FloeEncoder` interface, and `FloeEngine::adaptive` - the
-  engine every writer/reader defaults to - builds it over `Flow\Floe\PhpFloeEncoder` when the extension is loaded.
-- **`Flow\ETL\Row\RustRowHydratorNative`** - the native `hydrate`/`cast`/`dehydrate` behind
-  `Flow\ETL\Row\NativeRowHydrator`, which `Flow\ETL\Row\AdaptiveRowHydrator` (the config default)
-  selects when the extension is loaded - used by adapter loaders and raw-scalar extractors such as
-  CSV, JSON or XML. `cast(batch, Schema)` casts raw scalars and builds entries in a single native
-  pass; values outside the proven native subset (and every exotic type such as enum, xml or time)
-  cast per value through the schema's PHP `Type::cast`, so results and exceptions match
-  `PhpRowHydrator` exactly. Schema-less `cast` (type inference) stays PHP. Hydrate and cast plans are
-  cached on the `Schema` object identity and rebuilt only when a different schema arrives.
+```php
+<?php
 
-All extension failures throw `Flow\Floe\Exception\ExtensionException`; `FloeReader`/`FloeWriter` wrap
-it as `Flow\Floe\Exception\FloeException`. There is no silent fallback to the PHP engine.
+use Flow\ETL\Column\RustBackend;
 
-## Structure columns across the PHP/Rust boundary
+use function Flow\ETL\DSL\int_schema;
 
-A structure column crosses to Rust in the schema JSON as tag `structure_v2` with an ordered `fields`
-list - one `{name, type, optional}` object per field, `name` always a JSON string (PHP casts integer
-element names on `normalize()`). The Rust side reads the list in order; the per-field `optional` flag
-is used only by the cast plan (`required = !optional`), never by the encoder or decoder, which emit
-and read one flag byte per field in declared order.
+$builder = (new RustBackend())->builder(int_schema('id'));
+$builder->appendMany([1, '2', 3.0]);
 
-A version-skewed pair fails loudly instead of writing wrong bytes:
+$column = $builder->finish();                        // Flow\ETL\Column\RustColumn
+$column->values();                                   // [1, 2, 3]
+(new RustBackend())->allocatedBytes();               // bytes held outside PHP's memory manager
+```
 
-- new `flow-php/etl` with a pre-`structure_v2` extension:
-  `flow_php does not support values of type "structure_v2" in this build`
-- old `flow-php/etl` with a current extension:
-  `flow_php does not support values of type "structure" in this build`
+Every contract with a Rust and a PHP implementation follows one pattern: the extension registers the interface, the
+`Rust*` class implements it, `Php*` is the PHP implementation and `Adaptive*` picks one by `extension_loaded()`.
 
-Either message means the extension and `flow-php/etl` disagree on the structure schema format:
-reinstall one to match the other, or set the Floe engine to `FloeEngine::php` while upgrading.
+| contract                                     | Rust                    | PHP                    | picked by                   |
+|----------------------------------------------|-------------------------|------------------------|-----------------------------|
+| `Flow\ETL\Column\Backend`                    | `RustBackend`           | `PhpBackend`           | `AdaptiveBackend`           |
+| `Flow\ETL\Adapter\CSV\CSVOpenSource`         | `RustCSVOpenSource`     | `PhpCSVOpenSource`     | `AdaptiveCSVOpenSource`     |
+| `Flow\ETL\Adapter\CSV\CSVEncoder`            | `RustCSVEncoder`        | `PhpCSVEncoder`        | `AdaptiveCSVEncoder`        |
+| `Flow\ETL\Adapter\JSON\JsonOpenSource`       | `RustJsonOpenSource`    | `PhpJsonOpenSource`    | `AdaptiveJsonOpenSource`    |
+| `Flow\ETL\Adapter\JSON\JsonEncoder`          | `RustJsonEncoder`       | `PhpJsonEncoder`       | `AdaptiveJsonEncoder`       |
+| `Flow\ETL\Adapter\Parquet\ParquetOpenSource` | `RustParquetOpenSource` | `PhpParquetOpenSource` | `AdaptiveParquetOpenSource` |
+| `Flow\ETL\Adapter\Parquet\ParquetOpenSink`   | `RustParquetOpenSink`   | `PhpParquetOpenSink`   | `AdaptiveParquetOpenSink`   |
 
-Datetime column zones do not fail, they degrade:
+The extension also registers `Flow\ETL\Column\{Column, ColumnBuilder}` (`RustColumn`, `RustColumnBuilder`) and
+`Flow\ETL\RustIterator`, the iterator its sources return.
 
-- new `flow-php/etl` with an extension that predates column zones: the extension is ignored and the
-  PHP engine runs
-- old `flow-php/etl` with a current extension: a zone-less `datetime` column keeps that library's
-  behaviour, each value in its stored zone
+## CSV and JSON writers
+
+With the extension loaded, `to_csv()`, `to_json()` and `to_json_lines()` render a batch from the arrow buffers, without
+a PHP value per cell. The bytes are the ones the PHP writers produce.
+
+```php
+<?php
+
+use function Flow\ETL\Adapter\CSV\{from_csv, to_csv};
+use function Flow\ETL\Adapter\JSON\to_json_lines;
+use function Flow\ETL\DSL\df;
+
+df()
+    ->read(from_csv(__DIR__ . '/input.csv'))
+    ->write(to_csv(__DIR__ . '/output.csv')->withDateTimeFormat('Y-m-d H:i:s.u P')) // rendered natively
+    ->write(to_json_lines(__DIR__ . '/output.jsonl')->withDateTimeFormat('D, d M Y'))  // `D` and `M`: this column renders in PHP
+    ->run();
+```
+
+A datetime or date format is rendered natively when its letters are among `Y y m n d j H G i s u v e T P p O Z U c`
+(and `\` escapes); any other letter renders that column in PHP. `xml`, `xml_element`, `html` and `html_element` columns,
+a `json` column written to JSON, and a `list` / `map` / `structure` holding one of those also render in PHP - only
+those columns, the rest of the batch stays native. `to_json()` and `to_json_lines()` render natively under the flags
+`JSON_THROW_ON_ERROR`, `JSON_UNESCAPED_SLASHES`, `JSON_UNESCAPED_UNICODE` and `JSON_PRESERVE_ZERO_FRACTION`; any other
+flag (`JSON_PRETTY_PRINT`, ...) writes through PHP.
+
+`RustCSVEncoder` / `RustJsonEncoder` hold the PHP encoder they render the PHP columns with.
+
+## Parquet
+
+With both this extension and the [arrow extension](/documentation/components/extensions/arrow-ext.md) loaded,
+`from_parquet()` and `to_parquet()` without an `engine:` read and write native columns: arrow-ext reads and writes the
+file, and its batches cross into `RustColumn`s (and back) through the Arrow C Data Interface, without a copy and
+without a PHP value per cell.
+
+| loaded          | `from_parquet()` / `to_parquet()`                                       |
+|-----------------|-------------------------------------------------------------------------|
+| flow_php, arrow | native columns through the Arrow C Data Interface                       |
+| arrow           | `RustParquetEngine` (arrow-ext), PHP values                             |
+| flow_php        | `PhpParquetEngine`; `RustBackend` adopts the values into native columns |
+| neither         | `PhpParquetEngine`                                                      |
+
+```php
+<?php
+
+use Flow\Parquet\Engine\PhpParquetEngine;
+
+use function Flow\ETL\Adapter\Parquet\{from_parquet, to_parquet};
+use function Flow\ETL\DSL\df;
+
+df()
+    ->read(from_parquet(__DIR__ . '/orders.parquet')->withOffset(50_000)) // only the row groups from row 50 000 are decoded
+    ->write(to_parquet(__DIR__ . '/copy.parquet'))
+    ->run();
+
+df()
+    ->read(from_parquet(__DIR__ . '/orders.parquet', engine: new PhpParquetEngine())) // PhpParquetEngine opts out
+    ->write(to_parquet(__DIR__ . '/copy.parquet', engine: new PhpParquetEngine()))
+    ->run();
+```
+
+A schema type that stores another arrow type than the file column reads as is refused before the first batch. The
+imported batches are counted by `RustBackend::allocatedBytes()` for as long as they live; arrow-ext's own read
+buffers (a row group's projected column chunks, decode buffers) are not, so a `MemoryBudget` does not see them. Read and
+write refusals are arrow-ext's `Flow\Parquet\Exception\*`, as with `RustParquetEngine`.
+
+`RustParquetOpenSource` reads through arrow-ext's `Flow\Arrow\Parquet\RustBatchReader`, `RustParquetOpenSink` writes
+through its `Flow\Parquet\Engine\RustParquetFileWriter`.
+

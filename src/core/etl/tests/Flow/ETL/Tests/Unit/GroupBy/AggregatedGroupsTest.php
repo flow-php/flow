@@ -11,13 +11,12 @@ use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function array_map;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\sum;
@@ -32,14 +31,14 @@ final class AggregatedGroupsTest extends FlowTestCase
         $input = schema(str_schema('country'), int_schema('amount'));
         $groups = new AggregatedGroups($groupBy, GroupByShape::of($groupBy, $input));
 
-        $groups->accumulate(
-            rows($input, row(['country' => 'PL', 'amount' => 10]), row(['country' => 'DE', 'amount' => 20])),
-            flow_context(config()),
-        );
-        $groups->accumulate(rows($input, row(['country' => 'PL', 'amount' => 30])), flow_context(config()));
+        $groups->accumulate(array_to_rows([
+            ['country' => 'PL', 'amount' => 10],
+            ['country' => 'DE', 'amount' => 20],
+        ], $input), flow_context(config()));
+        $groups->accumulate(array_to_rows([['country' => 'PL', 'amount' => 30]], $input), flow_context(config()));
 
         /** @var list<Rows> $batches */
-        $batches = iterator_to_array($groups->flush(1000));
+        $batches = iterator_to_array($groups->flush(1000, flow_context(config())));
 
         static::assertCount(1, $batches);
         static::assertSame(
@@ -60,10 +59,10 @@ final class AggregatedGroupsTest extends FlowTestCase
         $shape = GroupByShape::of($groupBy, $input);
         $groups = new AggregatedGroups($groupBy, $shape);
 
-        $groups->accumulate(rows($input, row(['country' => 'PL', 'amount' => 10])), flow_context(config()));
+        $groups->accumulate(array_to_rows([['country' => 'PL', 'amount' => 10]], $input), flow_context(config()));
 
         /** @var list<Rows> $batches */
-        $batches = iterator_to_array($groups->flush(1000));
+        $batches = iterator_to_array($groups->flush(1000, flow_context(config())));
 
         static::assertEquals($shape->output, $batches[0]->schema());
         static::assertEquals(schema(str_schema('country'), float_schema('amount_sum', nullable: true)), $shape->output);
@@ -77,19 +76,18 @@ final class AggregatedGroupsTest extends FlowTestCase
         $input = schema(str_schema('country'), int_schema('amount'));
         $groups = new AggregatedGroups($groupBy, GroupByShape::of($groupBy, $input));
 
-        $groups->accumulate(
-            rows(
-                $input,
-                row(['country' => 'PL', 'amount' => 10]),
-                row(['country' => 'DE', 'amount' => 20]),
-                row(['country' => 'FR', 'amount' => 30]),
-            ),
-            flow_context(config()),
-        );
+        $groups->accumulate(array_to_rows([
+            ['country' => 'PL', 'amount' => 10],
+            ['country' => 'DE', 'amount' => 20],
+            ['country' => 'FR', 'amount' => 30],
+        ], $input), flow_context(config()));
 
         static::assertSame(
             [2, 1],
-            array_map(static fn(Rows $batch): int => $batch->count(), iterator_to_array($groups->flush(2))),
+            array_map(
+                static fn(Rows $batch): int => $batch->count(),
+                iterator_to_array($groups->flush(2, flow_context(config()))),
+            ),
         );
     }
 
@@ -103,7 +101,7 @@ final class AggregatedGroupsTest extends FlowTestCase
             int_schema('amount'),
         )));
 
-        static::assertSame([], iterator_to_array($groups->flush(1000)));
+        static::assertSame([], iterator_to_array($groups->flush(1000, flow_context(config()))));
     }
 
     public function test_a_row_missing_a_nullable_group_key_lands_in_the_null_group(): void
@@ -114,13 +112,14 @@ final class AggregatedGroupsTest extends FlowTestCase
         $input = schema(str_schema('country', nullable: true), int_schema('amount'));
         $groups = new AggregatedGroups($groupBy, GroupByShape::of($groupBy, $input));
 
-        $groups->accumulate(
-            rows($input, row(['amount' => 10]), row(['country' => 'PL', 'amount' => 20]), row(['amount' => 5])),
-            flow_context(config()),
-        );
+        $groups->accumulate(array_to_rows([
+            ['amount' => 10],
+            ['country' => 'PL', 'amount' => 20],
+            ['amount' => 5],
+        ], $input), flow_context(config()));
 
         /** @var list<Rows> $batches */
-        $batches = iterator_to_array($groups->flush(1000));
+        $batches = iterator_to_array($groups->flush(1000, flow_context(config())));
 
         static::assertSame(
             [

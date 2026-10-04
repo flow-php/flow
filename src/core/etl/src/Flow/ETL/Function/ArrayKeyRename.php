@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function Flow\ArrayDot\array_dot_rename;
@@ -47,14 +51,24 @@ final class ArrayKeyRename implements ScalarFunction
         return type_array();
     }
 
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $value = (new Parameter($this->ref))->asArray($row, $context);
+        $values = (new Parameter($this->ref))->asArrays($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($value === null) {
-            throw new InvalidArgumentException('ArrayKeyRename function requires non-null array');
+        try {
+            foreach ($values as $i => $value) {
+                if ($value === null) {
+                    throw new InvalidArgumentException('ArrayKeyRename function requires non-null array');
+                }
+
+                $results[] = array_dot_rename($value, $this->path, $this->newName);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return array_dot_rename($value, $this->path, $this->newName);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

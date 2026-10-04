@@ -5,14 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Cache;
 
 use Flow\ETL\Cardinality;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
 
 use function array_map;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function get_debug_type;
@@ -38,9 +37,16 @@ final class CacheIndex
     {
         $index = new self($key);
 
-        foreach ($rows->all() as $row) {
-            $value = $row->get('key');
+        if ($rows->isEmpty()) {
+            return $index;
+        }
 
+        $keys = $rows->column('key')->values();
+        // an index written by 0.44.x has no "rows" column
+        $counts = $rows->schema()->findDefinition('rows') === null ? [] : $rows->column('rows')->values();
+
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($keys as $i => $value) {
             if (!is_string($value)) {
                 throw new InvalidArgumentException(sprintf(
                     'CacheIndex expects rows with a string "key" entry, got: %s',
@@ -48,8 +54,8 @@ final class CacheIndex
                 ));
             }
 
-            // an index written by 0.44.x has no "rows" column
-            $chunkRows = $row->has('rows') ? $row->get('rows') : null;
+            // @mago-ignore analysis:mixed-assignment
+            $chunkRows = $counts[$i] ?? null;
 
             if ($chunkRows !== null && !is_int($chunkRows)) {
                 throw new InvalidArgumentException(sprintf(
@@ -84,12 +90,9 @@ final class CacheIndex
         return Cardinality::exact($total);
     }
 
-    public function toRows(): Rows
+    public function toRows(Backend $backend): Rows
     {
-        return rows(
-            schema(str_schema('key'), int_schema('rows', nullable: true)),
-            ...array_map(static fn(array $chunk): Row => row($chunk), $this->chunks),
-        );
+        return array_to_rows($this->chunks, schema(str_schema('key'), int_schema('rows', nullable: true)), $backend);
     }
 
     /**

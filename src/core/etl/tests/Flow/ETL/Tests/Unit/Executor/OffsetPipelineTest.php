@@ -19,6 +19,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 use function array_map;
 use function array_sum;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
@@ -26,7 +27,6 @@ use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function iterator_to_array;
@@ -52,23 +52,23 @@ final class OffsetPipelineTest extends FlowTestCase
 
     public function test_process_maintains_row_structure_with_mixed_entry_types(): void
     {
-        $segments = new Segments(from_rows(rows(
+        $segments = new Segments(from_rows(array_to_rows(
+            [
+                ['id' => 1, 'active' => true],
+                ['id' => 2, 'active' => false],
+                ['id' => 3, 'active' => true],
+                ['id' => 4, 'active' => false],
+            ],
             schema(int_schema('id'), bool_schema('active')),
-            row(['id' => 1, 'active' => true]),
-            row(['id' => 2, 'active' => false]),
-            row(['id' => 3, 'active' => true]),
-            row(['id' => 4, 'active' => false]),
         )));
         $segments->add(new OffsetProcessor(1));
         $result = iterator_to_array(ExecutedSegments::of($segments, flow_context(config())));
         static::assertCount(1, $result);
         static::assertCount(3, $result[0]);
         static::assertEquals(
-            rows(
+            array_to_rows(
+                [['id' => 2, 'active' => false], ['id' => 3, 'active' => true], ['id' => 4, 'active' => false]],
                 schema(int_schema('id'), bool_schema('active')),
-                row(['id' => 2, 'active' => false]),
-                row(['id' => 3, 'active' => true]),
-                row(['id' => 4, 'active' => false]),
             ),
             $result[0],
         );
@@ -97,9 +97,9 @@ final class OffsetPipelineTest extends FlowTestCase
 
             public function extract(FlowContext $context, ?int $limit = null): Generator
             {
-                yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
-                yield rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 4]));
-                yield rows(schema(int_schema('id')), row(['id' => 5]), row(['id' => 6]));
+                yield array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
+                yield array_to_rows([['id' => 3], ['id' => 4]], schema(int_schema('id')));
+                yield array_to_rows([['id' => 5], ['id' => 6]], schema(int_schema('id')));
             }
 
             public function statistics(): Statistics
@@ -110,7 +110,7 @@ final class OffsetPipelineTest extends FlowTestCase
         $segments->add(new OffsetProcessor(4));
         $result = iterator_to_array(ExecutedSegments::of($segments, flow_context(config())));
         static::assertCount(1, $result);
-        static::assertEquals(rows(schema(int_schema('id')), row(['id' => 5]), row(['id' => 6])), $result[0]);
+        static::assertEquals(array_to_rows([['id' => 5], ['id' => 6]], schema(int_schema('id'))), $result[0]);
     }
 
     public function test_process_with_multiple_batches_offset_spanning_batches(): void
@@ -128,9 +128,9 @@ final class OffsetPipelineTest extends FlowTestCase
 
             public function extract(FlowContext $context, ?int $limit = null): Generator
             {
-                yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
-                yield rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 4]), row(['id' => 5]));
-                yield rows(schema(int_schema('id')), row(['id' => 6]));
+                yield array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
+                yield array_to_rows([['id' => 3], ['id' => 4], ['id' => 5]], schema(int_schema('id')));
+                yield array_to_rows([['id' => 6]], schema(int_schema('id')));
             }
 
             public function statistics(): Statistics
@@ -141,8 +141,8 @@ final class OffsetPipelineTest extends FlowTestCase
         $segments->add(new OffsetProcessor(3));
         $result = iterator_to_array(ExecutedSegments::of($segments, flow_context(config())));
         static::assertCount(2, $result);
-        static::assertEquals(rows(schema(int_schema('id')), row(['id' => 4]), row(['id' => 5])), $result[0]);
-        static::assertEquals(rows(schema(int_schema('id')), row(['id' => 6])), $result[1]);
+        static::assertEquals(array_to_rows([['id' => 4], ['id' => 5]], schema(int_schema('id'))), $result[0]);
+        static::assertEquals(array_to_rows([['id' => 6]], schema(int_schema('id'))), $result[1]);
     }
 
     public function test_process_with_multiple_batches_offset_within_first_batch(): void
@@ -160,8 +160,8 @@ final class OffsetPipelineTest extends FlowTestCase
 
             public function extract(FlowContext $context, ?int $limit = null): Generator
             {
-                yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3]));
-                yield rows(schema(int_schema('id')), row(['id' => 4]), row(['id' => 5]));
+                yield array_to_rows([['id' => 1], ['id' => 2], ['id' => 3]], schema(int_schema('id')));
+                yield array_to_rows([['id' => 4], ['id' => 5]], schema(int_schema('id')));
             }
 
             public function statistics(): Statistics
@@ -172,18 +172,17 @@ final class OffsetPipelineTest extends FlowTestCase
         $segments->add(new OffsetProcessor(1));
         $result = iterator_to_array(ExecutedSegments::of($segments, flow_context(config())));
         static::assertCount(2, $result);
-        static::assertEquals(rows(schema(int_schema('id')), row(['id' => 2]), row(['id' => 3])), $result[0]);
-        static::assertEquals(rows(schema(int_schema('id')), row(['id' => 4]), row(['id' => 5])), $result[1]);
+        static::assertEquals(array_to_rows([['id' => 2], ['id' => 3]], schema(int_schema('id'))), $result[0]);
+        static::assertEquals(array_to_rows([['id' => 4], ['id' => 5]], schema(int_schema('id'))), $result[1]);
     }
 
     public function test_process_with_offset_equal_to_batch_size(): void
     {
-        $segments = new Segments(from_rows(rows(
-            schema(int_schema('id')),
-            row(['id' => 1]),
-            row(['id' => 2]),
-            row(['id' => 3]),
-        )));
+        $segments = new Segments(from_rows(array_to_rows([
+            ['id' => 1],
+            ['id' => 2],
+            ['id' => 3],
+        ], schema(int_schema('id')))));
         $segments->add(new OffsetProcessor(3));
         $result = iterator_to_array(ExecutedSegments::of($segments, flow_context(config())));
         static::assertCount(0, $result);
@@ -191,7 +190,7 @@ final class OffsetPipelineTest extends FlowTestCase
 
     public function test_process_with_offset_larger_than_batch_size(): void
     {
-        $segments = new Segments(from_rows(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]))));
+        $segments = new Segments(from_rows(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')))));
         $segments->add(new OffsetProcessor(5));
         $result = iterator_to_array(ExecutedSegments::of($segments, flow_context(config())));
         static::assertCount(0, $result);
@@ -212,9 +211,9 @@ final class OffsetPipelineTest extends FlowTestCase
 
             public function extract(FlowContext $context, ?int $limit = null): Generator
             {
-                yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
+                yield array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
                 yield rows(schema());
-                yield rows(schema(int_schema('id')), row(['id' => 3]));
+                yield array_to_rows([['id' => 3]], schema(int_schema('id')));
             }
 
             public function statistics(): Statistics
@@ -225,48 +224,46 @@ final class OffsetPipelineTest extends FlowTestCase
         $segments->add(new OffsetProcessor(2));
         $result = iterator_to_array(ExecutedSegments::of($segments, flow_context(config())));
         static::assertCount(1, $result);
-        static::assertEquals(rows(schema(int_schema('id')), row(['id' => 3])), $result[0]);
+        static::assertEquals(array_to_rows([['id' => 3]], schema(int_schema('id'))), $result[0]);
     }
 
     public function test_process_with_offset_smaller_than_batch_size(): void
     {
-        $segments = new Segments(from_rows(rows(
-            schema(int_schema('id')),
-            row(['id' => 1]),
-            row(['id' => 2]),
-            row(['id' => 3]),
-            row(['id' => 4]),
-            row(['id' => 5]),
-        )));
+        $segments = new Segments(from_rows(array_to_rows([
+            ['id' => 1],
+            ['id' => 2],
+            ['id' => 3],
+            ['id' => 4],
+            ['id' => 5],
+        ], schema(int_schema('id')))));
         $segments->add(new OffsetProcessor(2));
         $result = iterator_to_array(ExecutedSegments::of($segments, flow_context(config())));
         static::assertCount(1, $result);
         static::assertCount(3, $result[0]);
         static::assertEquals(
-            rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 4]), row(['id' => 5])),
+            array_to_rows([['id' => 3], ['id' => 4], ['id' => 5]], schema(int_schema('id'))),
             $result[0],
         );
     }
 
     public function test_process_with_transformer_before_offset(): void
     {
-        $segments = new Segments(from_rows(rows(
-            schema(int_schema('id')),
-            row(['id' => 1]),
-            row(['id' => 2]),
-            row(['id' => 3]),
-            row(['id' => 4]),
-        )));
+        $segments = new Segments(from_rows(array_to_rows([
+            ['id' => 1],
+            ['id' => 2],
+            ['id' => 3],
+            ['id' => 4],
+        ], schema(int_schema('id')))));
         $segments->add(new ScalarFunctionTransformer('doubled', ref('id')->multiply(lit(2))));
         $segments->add(new OffsetProcessor(1));
         $result = iterator_to_array(ExecutedSegments::of($segments, flow_context(config())));
         static::assertCount(1, $result);
         static::assertCount(3, $result[0]);
         $rows = $result[0];
-        static::assertEquals(2, $rows->all()[0]->get('id'));
-        static::assertEquals(4, $rows->all()[0]->get('doubled'));
-        static::assertEquals(3, $rows->all()[1]->get('id'));
-        static::assertEquals(6, $rows->all()[1]->get('doubled'));
+        static::assertEquals(2, $rows->column('id')->value(0));
+        static::assertEquals(4, $rows->column('doubled')->value(0));
+        static::assertEquals(3, $rows->column('id')->value(1));
+        static::assertEquals(6, $rows->column('doubled')->value(1));
     }
 
     #[DataProvider('offset_values_data_provider')]
@@ -274,34 +271,34 @@ final class OffsetPipelineTest extends FlowTestCase
     {
         $rowsData = [];
         for ($i = 1; $i <= 20; $i++) {
-            $rowsData[] = row(['id' => $i]);
+            $rowsData[] = ['id' => $i];
         }
-        $segments = new Segments(from_rows(rows(schema(int_schema('id')), ...$rowsData)));
+        $segments = new Segments(from_rows(array_to_rows($rowsData, schema(int_schema('id')))));
         $segments->add(new OffsetProcessor($offset >= 0 ? $offset : 0));
         $result = iterator_to_array(ExecutedSegments::of($segments, flow_context(config())));
         $expectedCount = max(0, 20 - $offset);
         $totalRows = array_sum(array_map(static fn($batch) => $batch->count(), $result));
         static::assertEquals($expectedCount, $totalRows);
         if ($expectedCount > 0) {
-            $firstRowId = $result[0]->first()->get('id');
+            // @mago-ignore analysis:mixed-assignment
+            $firstRowId = $result[0]->column('id')->value(0);
             static::assertEquals($offset + 1, $firstRowId);
         }
     }
 
     public function test_process_with_zero_offset_returns_all_data(): void
     {
-        $segments = new Segments(from_rows(rows(
-            schema(int_schema('id')),
-            row(['id' => 1]),
-            row(['id' => 2]),
-            row(['id' => 3]),
-        )));
+        $segments = new Segments(from_rows(array_to_rows([
+            ['id' => 1],
+            ['id' => 2],
+            ['id' => 3],
+        ], schema(int_schema('id')))));
         $segments->add(new OffsetProcessor(0));
         $result = iterator_to_array(ExecutedSegments::of($segments, flow_context(config())));
         static::assertCount(1, $result);
         static::assertCount(3, $result[0]);
         static::assertEquals(
-            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3])),
+            array_to_rows([['id' => 1], ['id' => 2], ['id' => 3]], schema(int_schema('id'))),
             $result[0],
         );
     }

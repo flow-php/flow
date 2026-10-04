@@ -1,1 +1,2 @@
-Read data directly from a PHP array. This is useful when your data is already in memory, such as API responses or test fixtures.
+`from_array()` reads rows that are already in memory - API responses, fixtures. Without a schema,
+the column types are inferred from the values.

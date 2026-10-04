@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Column\Column;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Function\Evaluation\Selection;
+use Flow\ETL\Rows;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 use Flow\Types\Type\Unifier\NullabilityRule;
@@ -13,6 +16,7 @@ use Flow\Types\Type\Unifier\PromotingUnifier;
 
 use function array_map;
 use function array_values;
+use function range;
 
 final class Coalesce implements ScalarFunction
 {
@@ -61,16 +65,39 @@ final class Coalesce implements ScalarFunction
         );
     }
 
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        foreach ($this->values as $value) {
-            $result = (new Parameter($value))->eval($row, $context);
+        $pending = $rows->isEmpty() ? [] : range(0, $rows->count() - 1);
+        $values = [];
 
-            if ($result !== null) {
-                return $result;
+        foreach ($this->values as $value) {
+            if ($pending === []) {
+                break;
             }
+
+            $column = (new Selection($pending))->evaluate($value, $rows, $context);
+            $stillNull = [];
+
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($column->values() as $k => $result) {
+                if ($result === null) {
+                    $stillNull[] = $pending[$k];
+
+                    continue;
+                }
+
+                $values[$pending[$k]] = $result;
+            }
+
+            $pending = $stillNull;
         }
 
-        return null;
+        $results = [];
+
+        for ($i = 0, $count = $rows->count(); $i < $count; $i++) {
+            $results[] = $values[$i] ?? null;
+        }
+
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

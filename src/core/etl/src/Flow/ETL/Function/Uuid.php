@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use DateTimeInterface;
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Value\Uuid as FlowUuid;
 use Ramsey\Uuid\Uuid as RamseyUuid;
@@ -86,24 +90,39 @@ final class Uuid implements ScalarFunction
         return new self('uuid7', $value);
     }
 
-    public function eval(Row $row, FlowContext $context): FlowUuid
+    public function eval(Rows $rows, FlowContext $context): Column
     {
+        $results = [];
+
         if ($this->uuidVersion === 'uuid4') {
-            return new FlowUuid($this->generateV4());
+            for ($i = 0, $count = $rows->count(); $i < $count; $i++) {
+                $results[] = new FlowUuid($this->generateV4());
+            }
+
+            return (new ResultColumn($context->backend()))->of($this, $results);
         }
 
-        $param = (new Parameter($this->value))->as(
-            $row,
+        $params = (new Parameter($this->value))->asTypes(
+            $rows,
             $context,
             type_string(),
             type_instance_of(DateTimeInterface::class),
         );
+        $i = 0;
 
-        if (!$param instanceof DateTimeInterface) {
-            throw new InvalidArgumentException('Uuid uuid7 function requires a DateTimeInterface value');
+        try {
+            foreach ($params as $i => $param) {
+                if (!$param instanceof DateTimeInterface) {
+                    throw new InvalidArgumentException('Uuid uuid7 function requires a DateTimeInterface value');
+                }
+
+                $results[] = new FlowUuid($this->generateV7($param));
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return new FlowUuid($this->generateV7($param));
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 
     private function generateV4(): UuidV4|UuidInterface

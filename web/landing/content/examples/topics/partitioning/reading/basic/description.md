@@ -1,1 +1,2 @@
-Read data from Hive-style partitioned directories using glob patterns. Flow automatically discovers all partitions matching `column=*/` patterns.
+A glob over Hive-style directories (`color=*/sku=*/*.csv`) reads every partition and adds `color`
+and `sku` as columns, taken from the path.

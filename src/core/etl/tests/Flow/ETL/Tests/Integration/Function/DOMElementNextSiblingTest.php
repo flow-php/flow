@@ -5,19 +5,20 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Function;
 
 use DOMDocument;
+use DOMElement;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\html_element_schema;
 use function Flow\ETL\DSL\optional;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\xml_element_schema;
+use function Flow\ETL\DSL\xml_schema;
 use function Flow\Types\DSL\type_html_element;
+use function Flow\Types\DSL\type_instance_of;
 
 final class DOMElementNextSiblingTest extends FlowTestCase
 {
@@ -25,14 +26,11 @@ final class DOMElementNextSiblingTest extends FlowTestCase
     public function test_dom_element_sibling_text_value(): void
     {
         $rows = df()
-            ->read(from_rows(rows(
-                schema(html_element_schema('html_element')),
-                row([
-                    'html_element' => type_html_element()->cast(
-                        '<article><section><h1>User Name</h1></section>01</article>',
-                    ),
-                ]),
-            )))
+            ->read(from_rows(array_to_rows([[
+                'html_element' => type_html_element()->cast(
+                    '<article><section><h1>User Name</h1></section>01</article>',
+                ),
+            ]], schema(html_element_schema('html_element')))))
             ->withEntry('user_details', ref('html_element')->htmlQuerySelector('section'))
             ->withEntry('user_name', ref('user_details')->htmlQuerySelector('h1')->domElementValue())
             ->withEntry('user_id', optional(ref('user_details')->domElementNextSibling()->domElementValue()))
@@ -54,14 +52,11 @@ final class DOMElementNextSiblingTest extends FlowTestCase
     public function test_dom_element_sibling_text_value_when_only_element_is_allowed(): void
     {
         $rows = df()
-            ->read(from_rows(rows(
-                schema(html_element_schema('html_element')),
-                row([
-                    'html_element' => type_html_element()->cast(
-                        '<article><section><h1>User Name</h1></section>01</article>',
-                    ),
-                ]),
-            )))
+            ->read(from_rows(array_to_rows([[
+                'html_element' => type_html_element()->cast(
+                    '<article><section><h1>User Name</h1></section>01</article>',
+                ),
+            ]], schema(html_element_schema('html_element')))))
             ->withEntry('user_details', ref('html_element')->htmlQuerySelector('section'))
             ->withEntry('user_name', ref('user_details')->htmlQuerySelector('h1')->domElementValue())
             ->withEntry('user_id', optional(ref('user_details')->domElementNextSibling()->domElementValue()))
@@ -84,13 +79,14 @@ final class DOMElementNextSiblingTest extends FlowTestCase
         $dom = new DOMDocument();
         $dom->loadXML('<user><name>User Name</name><number>01</number></user>');
 
+        // a batch stores an element's own markup, so siblings are reached from the document it belongs to
         $rows = df()
-            ->read(from_rows(rows(
-                schema(xml_element_schema('xml_element')),
-                row(['xml_element' => $dom->getElementsByTagName('name')->item(0)]),
-            )))
-            ->withEntry('user_name', ref('xml_element')->domElementValue())
-            ->withEntry('user_id', ref('xml_element')->domElementNextSibling()->domElementValue())
+            ->read(from_rows(array_to_rows([['xml' => $dom]], schema(xml_schema('xml')))))
+            ->withEntry('user_name', ref('xml')->xpath('/user/name')->arrayGet('0')->domElementValue())
+            ->withEntry(
+                'user_id',
+                ref('xml')->xpath('/user/name')->arrayGet('0')->domElementNextSibling()->domElementValue(),
+            )
             ->select('user_name', 'user_id')
             ->fetch();
 
@@ -103,5 +99,21 @@ final class DOMElementNextSiblingTest extends FlowTestCase
             ],
             $rows->toArray(),
         );
+    }
+
+    public function test_storing_the_element_of_an_xpath_chain_keeps_its_markup(): void
+    {
+        $dom = new DOMDocument();
+        $dom->loadXML('<user><name>User Name</name><number>01</number></user>');
+
+        $rows = df()
+            ->read(from_rows(array_to_rows([['xml' => $dom]], schema(xml_schema('xml')))))
+            ->withEntry('sibling', ref('xml')->xpath('/user/name')->arrayGet('0')->domElementNextSibling())
+            ->select('sibling')
+            ->fetch();
+
+        $sibling = type_instance_of(DOMElement::class)->assert($rows->column('sibling')->value(0));
+
+        static::assertSame('<number>01</number>', $sibling->ownerDocument?->saveXML($sibling));
     }
 }

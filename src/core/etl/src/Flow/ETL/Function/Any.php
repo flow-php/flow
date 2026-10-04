@@ -4,14 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Column\Column;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Function\Evaluation\Selection;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Nullability;
 
+use function array_key_exists;
 use function array_map;
 use function array_values;
 use function Flow\Types\DSL\type_boolean;
+use function range;
 
 final readonly class Any implements ScalarFunction
 {
@@ -65,25 +70,56 @@ final readonly class Any implements ScalarFunction
         ));
     }
 
-    public function eval(Row $row, FlowContext $context): ?bool
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $sawNull = false;
+        $undecided = $rows->isEmpty() ? [] : range(0, $rows->count() - 1);
+        $results = [];
 
-        foreach ($this->functions as $ref) {
-            $value = (new Parameter($ref))->eval($row, $context);
+        /** @var array<int, true> $sawNull */
+        $sawNull = [];
 
-            if ($value === null) {
-                $sawNull = true;
-
-                continue;
+        foreach ($this->functions as $function) {
+            if ($undecided === []) {
+                break;
             }
 
-            if ($value) {
-                return true;
+            $column = (new Selection($undecided))->evaluate($function, $rows, $context);
+            $next = [];
+
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($column->values() as $k => $value) {
+                $i = $undecided[$k];
+
+                if ($value === null) {
+                    $sawNull[$i] = true;
+                    $next[] = $i;
+
+                    continue;
+                }
+
+                if ($value) {
+                    $results[$i] = true;
+
+                    continue;
+                }
+
+                $next[] = $i;
             }
+
+            $undecided = $next;
         }
 
-        return $sawNull ? null : false;
+        foreach ($undecided as $i) {
+            $results[$i] = array_key_exists($i, $sawNull) ? null : false;
+        }
+
+        $ordered = [];
+
+        for ($i = 0, $count = $rows->count(); $i < $count; $i++) {
+            $ordered[] = $results[$i];
+        }
+
+        return (new ResultColumn($context->backend()))->of($this, $ordered);
     }
 
     public function or(ScalarFunction $scalarFunction): self

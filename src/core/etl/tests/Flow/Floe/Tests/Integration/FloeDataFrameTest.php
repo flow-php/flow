@@ -5,17 +5,15 @@ declare(strict_types=1);
 namespace Flow\Floe\Tests\Integration;
 
 use DateTimeZone;
-use Flow\ETL\Row\PhpRowHydrator;
 use Flow\ETL\Tests\Context\LoaderEndingContext;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Filesystem\Exception\RuntimeException as FilesystemRuntimeException;
 use Flow\Filesystem\Tests\Double\FailingCloseFilesystem;
-use Flow\Floe\FloeEngine;
-use Flow\Floe\NativeFloeEncoder;
 use Flow\Types\Value\Json;
 
 use function array_keys;
 use function Flow\ETL\DSL\append;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
@@ -25,8 +23,6 @@ use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\partition_by;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\time_zone_schema;
@@ -60,37 +56,16 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
         static::assertSame(2, data_frame()->read(from_floe($dir . '/*.floe'))->count());
     }
 
-    public function test_writing_and_reading_with_explicit_native_engine(): void
-    {
-        if (!NativeFloeEncoder::isSupported()) {
-            static::markTestSkipped('flow_php extension is not loaded');
-        }
-
-        $path = $this->cacheDir->suffix('native-engine.floe');
-
-        data_frame()
-            ->read(from_array([['id' => 1], ['id' => 2]]))
-            ->write(to_floe($path, engine: FloeEngine::native)->saveMode(overwrite()))
-            ->run();
-
-        static::assertSame(2, data_frame()->read(from_floe($path, engine: FloeEngine::native))->count());
-    }
-
-    public function test_writing_and_reading_with_explicit_php_engine(): void
+    public function test_writing_and_reading_with_the_default_backend(): void
     {
         $path = $this->cacheDir->suffix('php-engine.floe');
 
-        data_frame(config_builder()->hydrator(new PhpRowHydrator()))
+        data_frame(config_builder())
             ->read(from_array([['id' => 1], ['id' => 2]]))
-            ->write(to_floe($path, engine: FloeEngine::php)->saveMode(overwrite()))
+            ->write(to_floe($path)->saveMode(overwrite()))
             ->run();
 
-        static::assertSame(
-            2,
-            data_frame(config_builder()->hydrator(new PhpRowHydrator()))
-                ->read(from_floe($path, engine: FloeEngine::php))
-                ->count(),
-        );
+        static::assertSame(2, data_frame(config_builder())->read(from_floe($path))->count());
     }
 
     public function test_a_timezone_column_round_trips_through_floe(): void
@@ -98,11 +73,10 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
         $path = $this->cacheDir->suffix('timezones.floe');
 
         data_frame()
-            ->read(from_rows(rows(
-                schema(time_zone_schema('tz')),
-                row(['tz' => type_time_zone()->cast('Europe/Warsaw')]),
-                row(['tz' => type_time_zone()->cast('UTC')]),
-            )))
+            ->read(from_rows(array_to_rows([
+                ['tz' => type_time_zone()->cast('Europe/Warsaw')],
+                ['tz' => type_time_zone()->cast('UTC')],
+            ], schema(time_zone_schema('tz')))))
             ->write(to_floe($path)->saveMode(overwrite()))
             ->run();
 
@@ -112,8 +86,8 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
 
         $names = [];
 
-        foreach ($read as $row) {
-            $names[] = type_instance_of(DateTimeZone::class)->assert($row->get('tz'))->getName();
+        foreach ($read->toArray() as $row) {
+            $names[] = type_instance_of(DateTimeZone::class)->assert($row['tz'])->getName();
         }
 
         static::assertSame(['Europe/Warsaw', 'UTC'], $names);
@@ -139,12 +113,14 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
         // column nullable - NOT NULL is a declaration, never an inference.
         static::assertTrue($rows->schema()->get('body')->isNullable());
 
-        $first = $rows[0]->get('body');
+        // @mago-ignore analysis:mixed-assignment
+        $first = $rows->column('body')->value(0);
         static::assertIsArray($first);
         static::assertInstanceOf(Json::class, $first['data']);
         static::assertSame([1, 'a'], $first['data']->toArray());
 
-        $second = $rows[1]->get('body');
+        // @mago-ignore analysis:mixed-assignment
+        $second = $rows->column('body')->value(1);
         static::assertIsArray($second);
         static::assertInstanceOf(Json::class, $second['data']);
         static::assertSame([], $second['data']->toArray());
@@ -155,10 +131,10 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
         $path = $this->cacheDir->suffix('list-json.floe');
 
         data_frame()
-            ->read(from_rows(rows(
-                schema(list_schema('json_list', type_list(type_json()))),
-                row(['json_list' => [Json::fromArray(['a' => 1]), Json::fromArray([1, 'b'])]]),
-            )))
+            ->read(from_rows(array_to_rows([['json_list' => [
+                Json::fromArray(['a' => 1]),
+                Json::fromArray([1, 'b']),
+            ]]], schema(list_schema('json_list', type_list(type_json()))))))
             ->write(to_floe($path)->saveMode(overwrite()))
             ->run();
 
@@ -166,7 +142,8 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
 
         static::assertSame('list<json>', $rows->schema()->get('json_list')->type()->toString());
 
-        $list = $rows[0]->get('json_list');
+        // @mago-ignore analysis:mixed-assignment
+        $list = $rows->column('json_list')->value(0);
         static::assertIsArray($list);
         static::assertInstanceOf(Json::class, $list[0]);
         static::assertSame(['a' => 1], $list[0]->toArray());
@@ -191,7 +168,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
 
             static::assertSame(
                 array_keys($extractor->schema()->definitions()),
-                array_keys(data_frame()->read($extractor)->fetch()->first()->toArray()),
+                array_keys(data_frame()->read($extractor)->fetch()->toArray()[0]),
             );
         }
     }
@@ -207,7 +184,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
 
         $rows = data_frame()->read(from_floe($path)->withMetadataColumns(true))->fetch();
 
-        static::assertTrue($rows->first()->has('_input_file_uri'));
+        static::assertNotNull($rows->schema()->findDefinition('_input_file_uri'));
     }
 
     public function test_offset_and_limit_pushdown(): void
@@ -289,7 +266,7 @@ final class FloeDataFrameTest extends FlowIntegrationTestCase
         $result = data_frame()->read(from_floe($path))->fetch();
 
         static::assertSame(2, $result->count());
-        static::assertSame(['id', 'name'], $result->first()->names());
+        static::assertSame(['id', 'name'], array_keys($result->values(0)));
     }
 
     public function test_a_close_that_fails_during_closure_leaves_no_file(): void

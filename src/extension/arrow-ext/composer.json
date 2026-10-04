@@ -1,7 +1,7 @@
 {
     "name": "flow-php/arrow-ext",
     "type": "php-ext",
-    "description": "Apache Arrow PHP extension powered by Rust",
+    "description": "Apache Arrow and Parquet bindings for flow-php/parquet (Rust)",
     "keywords": ["arrow", "parquet", "extension", "rust", "native"],
     "license": "MIT",
     "require": {
@@ -9,7 +9,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Flow\\Arrow\\": "php/Flow/Arrow/"
+            "Flow\\Arrow\\": "php/Flow/Arrow/",
+            "Flow\\Parquet\\Engine\\": "php/Flow/Parquet/Engine/"
         }
     },
     "scripts": {

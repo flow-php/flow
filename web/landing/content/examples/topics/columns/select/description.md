@@ -1,1 +1,2 @@
-Choose specific columns from your data, discarding the rest. Transformations like select help keep pipelines readable and explicit about which data is being processed.
+`select()` keeps the named columns and drops the rest. As a transformation it can be passed to
+`with()`, or called directly as `->select('id')`.

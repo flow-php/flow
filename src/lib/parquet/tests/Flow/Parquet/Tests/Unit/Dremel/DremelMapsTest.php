@@ -141,9 +141,9 @@ final class DremelMapsTest extends TestCase
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
 
-            $shredder->shred($schema, $rows);
+            $shredder->shred($schema, $rows, 0);
         } else {
-            $result = $shredder->shred($schema, $rows);
+            $result = $shredder->shred($schema, $rows, 0);
 
             $normalized = [];
 
@@ -350,9 +350,9 @@ final class DremelMapsTest extends TestCase
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
 
-            $shredder->shred($schema, $rows);
+            $shredder->shred($schema, $rows, 0);
         } else {
-            $result = $shredder->shred($schema, $rows);
+            $result = $shredder->shred($schema, $rows, 0);
 
             $normalized = [];
 
@@ -612,9 +612,9 @@ final class DremelMapsTest extends TestCase
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
 
-            $shredder->shred($schema, $rows);
+            $shredder->shred($schema, $rows, 0);
         } else {
-            $result = $shredder->shred($schema, $rows);
+            $result = $shredder->shred($schema, $rows, 0);
 
             $normalized = [];
 
@@ -841,9 +841,9 @@ final class DremelMapsTest extends TestCase
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
 
-            $shredder->shred($schema, $rows);
+            $shredder->shred($schema, $rows, 0);
         } else {
-            $result = $shredder->shred($schema, $rows);
+            $result = $shredder->shred($schema, $rows, 0);
 
             $normalized = [];
 
@@ -958,9 +958,9 @@ final class DremelMapsTest extends TestCase
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
 
-            $shredder->shred($schema, $rows);
+            $shredder->shred($schema, $rows, 0);
         } else {
-            $result = $shredder->shred($schema, $rows);
+            $result = $shredder->shred($schema, $rows, 0);
 
             $normalized = [];
 
@@ -1055,9 +1055,9 @@ final class DremelMapsTest extends TestCase
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
 
-            $shredder->shred($schema, $rows);
+            $shredder->shred($schema, $rows, 0);
         } else {
-            $result = $shredder->shred($schema, $rows);
+            $result = $shredder->shred($schema, $rows, 0);
 
             $normalized = [];
 
@@ -1149,9 +1149,9 @@ final class DremelMapsTest extends TestCase
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
 
-            $shredder->shred($schema, $rows);
+            $shredder->shred($schema, $rows, 0);
         } else {
-            $result = $shredder->shred($schema, $rows);
+            $result = $shredder->shred($schema, $rows, 0);
 
             $normalized = [];
 
@@ -1248,9 +1248,9 @@ final class DremelMapsTest extends TestCase
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
 
-            $shredder->shred($schema, $rows);
+            $shredder->shred($schema, $rows, 0);
         } else {
-            $result = $shredder->shred($schema, $rows);
+            $result = $shredder->shred($schema, $rows, 0);
 
             $normalized = [];
 
@@ -1377,9 +1377,9 @@ final class DremelMapsTest extends TestCase
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
 
-            $shredder->shred($schema, $rows);
+            $shredder->shred($schema, $rows, 0);
         } else {
-            $result = $shredder->shred($schema, $rows);
+            $result = $shredder->shred($schema, $rows, 0);
 
             $normalized = [];
 
@@ -1528,9 +1528,9 @@ final class DremelMapsTest extends TestCase
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
 
-            $shredder->shred($schema, $rows);
+            $shredder->shred($schema, $rows, 0);
         } else {
-            $result = $shredder->shred($schema, $rows);
+            $result = $shredder->shred($schema, $rows, 0);
 
             $normalized = [];
 

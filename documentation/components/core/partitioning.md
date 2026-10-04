@@ -266,5 +266,7 @@ Output carries `path`, a `partitions` map, and one string column per partition (
 
 ## Repartitioning
 
-`repartition()` shuffles rows between batches in memory. It does not write directories - use the
+`repartition()` shuffles the stream so every row sharing the given columns arrives in one batch. While the process
+stays under the memory limit it groups in memory; past it the input is partitioned into buckets first, configured with
+`config_builder()->repartition(hash_repartition()->memoryLimit(...))`. It does not write directories - use the
 loader's `partitionBy()` for that.

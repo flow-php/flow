@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Plan\Node;
 
+use Flow\ETL\Config\Sort\SortAlgorithmBuilder;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Plan\Materialization;
 use Flow\ETL\Plan\Node;
@@ -25,6 +26,7 @@ final readonly class TopN implements Node
         private Node $input,
         public References $refs,
         public int $limit,
+        public ?SortAlgorithmBuilder $algorithm = null,
     ) {
         if ($this->limit < 1) {
             throw new InvalidArgumentException('TopN limit must be greater than 0, given: ' . $this->limit);
@@ -41,7 +43,9 @@ final readonly class TopN implements Node
 
     public function withChildren(array $children): self
     {
-        return $children[0] === $this->input ? $this : new self($children[0], $this->refs, $this->limit);
+        return $children[0] === $this->input
+            ? $this
+            : new self($children[0], $this->refs, $this->limit, $this->algorithm);
     }
 
     public function rowCount(): RowCount

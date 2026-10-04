@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\JsonType;
 use Flow\Types\Type\Logical\ListType;
@@ -72,29 +76,48 @@ final class JsonEncode implements ScalarFunction
         return type_optional($isContainer ? type_json() : type_string());
     }
 
-    public function eval(Row $row, FlowContext $context): Json|string|null
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $value = (new Parameter($this->value))->eval($row, $context);
-        $flags = (int) (new Parameter($this->flags))->asInt($row, $context);
-
-        if ($value === null) {
-            return null;
-        }
+        $values = (new Parameter($this->value))->values($rows, $context);
+        $flagsList = (new Parameter($this->flags))->asInts($rows, $context);
+        $results = [];
+        $i = 0;
 
         try {
-            $encoded = json_encode($value, $flags);
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($values as $i => $value) {
+                $flags = $flagsList[$i];
 
-            if ($encoded === false) {
-                throw new InvalidArgumentException('JsonEncode error: json_encode returned false');
+                $flags = (int) $flags;
+
+                if ($value === null) {
+                    $results[] = null;
+
+                    continue;
+                }
+
+                try {
+                    $encoded = json_encode($value, $flags);
+
+                    if ($encoded === false) {
+                        throw new InvalidArgumentException('JsonEncode error: json_encode returned false');
+                    }
+
+                    if (is_array($value) || is_object($value)) {
+                        $results[] = new Json($encoded);
+
+                        continue;
+                    }
+
+                    $results[] = $encoded;
+                } catch (JsonException $e) {
+                    throw new InvalidArgumentException('JsonEncode error: ' . $e->getMessage());
+                }
             }
-
-            if (is_array($value) || is_object($value)) {
-                return new Json($encoded);
-            }
-
-            return $encoded;
-        } catch (JsonException $e) {
-            throw new InvalidArgumentException('JsonEncode error: ' . $e->getMessage());
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
+
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

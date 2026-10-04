@@ -9,7 +9,6 @@ use Flow\ETL\Cache;
 use Flow\ETL\Exception\KeyNotInCacheException;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
-use Flow\Floe\FloeSerializer;
 use Flow\Serializer\Exception\SerializationException;
 use Flow\Serializer\Serializer;
 use JsonException;
@@ -26,8 +25,8 @@ final readonly class PSRSimpleCache implements Cache
 {
     public function __construct(
         private CacheInterface $cache,
+        private Serializer $serializer,
         private int|DateInterval|null $ttl = null,
-        private Serializer $serializer = new FloeSerializer(),
     ) {}
 
     public function clear(): void

@@ -11,10 +11,8 @@ use Flow\ETL\Tests\Context\BucketsStorageContext;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\BucketMother;
 
-use function array_map;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 
 final class BucketRunTest extends FlowTestCase
@@ -24,9 +22,9 @@ final class BucketRunTest extends FlowTestCase
         $a = new Buckets($storageA = new MemoryBuckets());
         $b = new Buckets($storageB = new MemoryBuckets());
 
-        $storageA->append('shared-id', rows(schema(int_schema('id')), row(['id' => 1])));
+        $storageA->append('shared-id', array_to_rows([['id' => 1]], schema(int_schema('id'))));
         $a->add(BucketMother::withTotalRows('shared-id', 1));
-        $storageB->append('shared-id', rows(schema(int_schema('id')), row(['id' => 2])));
+        $storageB->append('shared-id', array_to_rows([['id' => 2]], schema(int_schema('id'))));
         $b->add(BucketMother::withTotalRows('shared-id', 1));
 
         (new BucketRun('shared-id', $a))->remove();
@@ -40,20 +38,16 @@ final class BucketRunTest extends FlowTestCase
         $a = new Buckets($storageA = new MemoryBuckets());
         $b = new Buckets($storageB = new MemoryBuckets());
 
-        $storageA->append('shared-id', rows(schema(int_schema('id')), row(['id' => 1])));
-        $storageB->append('shared-id', rows(schema(int_schema('id')), row(['id' => 2])));
+        $storageA->append('shared-id', array_to_rows([['id' => 1]], schema(int_schema('id'))));
+        $storageB->append('shared-id', array_to_rows([['id' => 2]], schema(int_schema('id'))));
 
         static::assertSame(
             [1],
-            array_map(static fn($r): mixed => $r->get(
-                'id',
-            ), BucketsStorageContext::rows((new BucketRun('shared-id', $a))->rows())),
+            array_column(BucketsStorageContext::rows((new BucketRun('shared-id', $a))->rows()), 'id'),
         );
         static::assertSame(
             [2],
-            array_map(static fn($r): mixed => $r->get(
-                'id',
-            ), BucketsStorageContext::rows((new BucketRun('shared-id', $b))->rows())),
+            array_column(BucketsStorageContext::rows((new BucketRun('shared-id', $b))->rows()), 'id'),
         );
     }
 }

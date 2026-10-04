@@ -6,9 +6,9 @@ the native fold widens every pair of CSV leaf types exactly like TypeWidener
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\CSV\RustColumnFoldNative;
-use Flow\ETL\Adapter\CSV\RustCSVReaderNative;
+use Flow\ETL\Schema\Inference\ColumnTypes;
 use Flow\ETL\Schema\Inference\InferredTypes;
+use Flow\Types\Type\Native\String\StringTypeNarrower;
 use Flow\Types\Type\TypeWidener;
 
 use function Flow\Types\DSL\type_boolean;
@@ -35,32 +35,19 @@ $leaves = [
     'boolean' => ['true', type_boolean()],
     'timezone' => ['UTC', type_time_zone()],
 ];
-$candidates = array_map(static fn($type): string => $type->toString(), InferredTypes::default()->toArray());
+$typer = new StringTypeNarrower(InferredTypes::default()->toArray());
 $widener = new TypeWidener();
 $pairs = 0;
 $mismatches = 0;
 
 foreach ($leaves as $left => [$leftCell, $leftType]) {
     foreach ($leaves as $right => [$rightCell, $rightType]) {
-        $csv = fopen('php://memory', 'rb+');
-        fputcsv($csv, ['c'], ',', '"', '\\');
-        fputcsv($csv, [$leftCell ?? ''], ',', '"', '\\');
-        fputcsv($csv, [$rightCell ?? ''], ',', '"', '\\');
-        rewind($csv);
-
-        $reader = new RustCSVReaderNative(',', '"', '\\', true, true, true);
-        $reader->feed((string) stream_get_contents($csv));
-        $reader->finish();
-        $fold = new RustColumnFoldNative([], $candidates);
-        $reader->fold($fold, -1);
-
-        $expected = $widener->widen($leftType, $rightType)->toString();
-        $actual = $fold->types()['c'];
+        $expected = ColumnTypes::fromColumnTypes(['v' => $widener->widen($leftType, $rightType)], 2, $typer);
         $pairs++;
 
-        if ($expected !== $actual) {
+        if ($expected != rust_sniff_column([$leftCell, $rightCell], $typer)) {
             $mismatches++;
-            echo "{$left} + {$right}: TypeWidener={$expected} native={$actual}\n";
+            echo "{$left} + {$right}: TypeWidener=", $widener->widen($leftType, $rightType)->toString(), " native differs\n";
         }
     }
 }

@@ -229,6 +229,8 @@ use Flow\ArrayDot\Step\Key;
 use Flow\ArrayDot\Step\Multimatch;
 use Flow\ArrayDot\Step\Wildcard;
 
+use function Flow\ArrayDot\array_dot_get;
+
 $path = new Path([new Key('users'), new Wildcard(), new Multimatch([
     new Path([new Key('id')]),
     new Path([new Key('first.name', nullsafe: true)]),

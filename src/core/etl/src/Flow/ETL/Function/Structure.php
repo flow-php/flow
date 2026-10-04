@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Column\Column;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\StructureType;
 
@@ -87,17 +89,26 @@ final class Structure implements ScalarFunction
         return new StructureType($elements);
     }
 
-    /**
-     * @return non-empty-array<array-key, mixed>
-     */
-    public function eval(Row $row, FlowContext $context): array
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $values = [];
+        $elements = [];
 
         foreach ($this->elements as $name => $element) {
-            $values[$name] = $element->eval($row, $context);
+            $elements[$name] = (new Parameter($element))->values($rows, $context);
         }
 
-        return $values;
+        $results = [];
+
+        for ($i = 0, $count = $rows->count(); $i < $count; $i++) {
+            $values = [];
+
+            foreach ($elements as $name => $element) {
+                $values[$name] = $element[$i];
+            }
+
+            $results[] = $values;
+        }
+
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

@@ -13,13 +13,12 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\RowsMother;
 
 use function array_map;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_memory;
 use function Flow\ETL\DSL\infer_schema;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\to_memory;
@@ -33,25 +32,27 @@ final class MemoryExtractorTest extends FlowTestCase
         $memory = new ArrayMemory();
 
         to_memory($memory)->load(
-            rows(schema(int_schema('number'), str_schema('name')), row(['number' => 1, 'name' => 'one'])),
+            array_to_rows([['number' => 1, 'name' => 'one']], schema(int_schema('number'), str_schema('name'))),
             flow_context(config()),
         );
 
         self::assertExtractedRowsEquals(
-            rows(schema(str_schema('number'), str_schema('name')), row(['number' => '1', 'name' => 'one'])),
+            array_to_rows([['number' => '1', 'name' => 'one']], schema(str_schema('number'), str_schema('name'))),
             from_memory($memory)->withSchema(schema(str_schema('number'), str_schema('name'))),
         );
     }
 
     public function test_memory_extractor(): void
     {
-        $rows = rows(
+        $rows = array_to_rows(
+            [
+                ['number' => 1, 'name' => 'one'],
+                ['number' => 2, 'name' => 'two'],
+                ['number' => 3, 'name' => 'tree'],
+                ['number' => 4, 'name' => 'four'],
+                ['number' => 5, 'name' => 'five'],
+            ],
             schema(int_schema('number'), str_schema('name')),
-            row(['number' => 1, 'name' => 'one']),
-            row(['number' => 2, 'name' => 'two']),
-            row(['number' => 3, 'name' => 'tree']),
-            row(['number' => 4, 'name' => 'four']),
-            row(['number' => 5, 'name' => 'five']),
         );
 
         $memory = new ArrayMemory();

@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function Flow\ETL\DSL\lit;
@@ -51,19 +55,31 @@ final class Repeat implements ScalarFunction
         return type_string();
     }
 
-    public function eval(Row $row, FlowContext $context): string
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $value = (new Parameter($this->value))->asString($row, $context);
-        $times = (new Parameter($this->times))->asInt($row, $context);
+        $values = (new Parameter($this->value))->asStrings($rows, $context);
+        $timesList = (new Parameter($this->times))->asInts($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($value === null) {
-            throw new InvalidArgumentException('Repeat function requires non-null value');
+        try {
+            foreach ($values as $i => $value) {
+                $times = $timesList[$i];
+
+                if ($value === null) {
+                    throw new InvalidArgumentException('Repeat function requires non-null value');
+                }
+
+                if ($times === null || $times <= 0) {
+                    throw new InvalidArgumentException('Repeat function requires non-null, positive times');
+                }
+
+                $results[] = s($value)->repeat($times)->toString();
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        if ($times === null || $times <= 0) {
-            throw new InvalidArgumentException('Repeat function requires non-null, positive times');
-        }
-
-        return s($value)->repeat($times)->toString();
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

@@ -24,7 +24,7 @@ class FileCryptoMetaData
             'var' => 'encryption_algorithm',
             'isRequired' => true,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\EncryptionAlgorithm',
+            'class' => '\Flow\Parquet\ThriftModel\EncryptionAlgorithm',
         ],
         2 => [
             'var' => 'key_metadata',

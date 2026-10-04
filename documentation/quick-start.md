@@ -14,8 +14,7 @@ Let's take a look at a simple example of how to use Flow ETL to read a CSV file,
 declare(strict_types=1);
 
 use function Flow\ETL\Adapter\CSV\{from_csv, to_csv};
-use function Flow\ETL\DSL\{data_frame, lit, ref, sum, to_output};
-use Flow\ETL\Filesystem\SaveMode;
+use function Flow\ETL\DSL\{data_frame, lit, overwrite, ref, sum, to_output};
 
 require __DIR__ . '/vendor/autoload.php';
 
@@ -50,15 +49,13 @@ It creates a new instance of the `Flow\ETL\Flow` class, which is the main class 
 
 For comprehensive DataFrame documentation, see the [Data Frame Guide](/documentation/components/core/core.md).
 
-[Data Frame Examples](/data_frame/#example)
-
-[Examples Documentation](/documentation/examples)
+[Data Frame Examples](/getting_started/#example)
 
 ## Extraction - Reading
 
 The first step in creating a data processing pipeline is to read the data from a data source.
 Extractors are responsible for reading data from a data source and converting it into a format that can be processed by Flow ETL.
-All extractors return \Generator and by design will return rows one by one - this is to ensure that memory consumption is constant and low.
+All extractors return a `\Generator` of batches (`Rows`, one column per schema definition), so memory stays constant no matter how big the source is.
 
 ```php
 data_frame()
@@ -74,7 +71,7 @@ data_frame()
     ->read(from_csv(__DIR__ . '/reports/*.csv'));
 ```  
 
-[Extractors Examples](/data_reading/#example)
+[Extractors Examples](/reading/#example)
 
 ## Transformation
 
@@ -92,7 +89,7 @@ One of the most powerful features of Flow ETL is the ability to transform data u
     ->withEntry('revenue', ref('total_price')->minus(ref('discount')))
 ```
 
-`withEntry()` function accepts two arguments, the first one is the name of the new entry (column), the second one is the value of the new column.
+`withEntry()` function accepts two arguments, the first one is the name of the new column, the second one is the value of the new column.
 The value of the new column can be a literal value, a reference to an existing column or a function call.
 
 - `ref('created_at')` - creates a reference to the `created_at` column.
@@ -125,8 +122,8 @@ truncating the output.
     ->write(to_csv(__DIR__ . '/daily_revenue.csv')->saveMode(overwrite()))
 ```
 
-Second write is writing the data to a CSV file, we're using the `mode()` function to set the save mode to `overwrite`.
-There are three save modes available:
+Second write is writing the data to a CSV file, we're using `saveMode(overwrite())` to set the save mode to `overwrite`.
+There are four save modes available:
 
 - `SaveMode::Append` - If data sink already exists, data will be appended. This solution might cause data duplication since it does not check if the given rows already exist.
 - `SaveMode::ExceptionIfExists` - If data sink already exists an error will be thrown.
@@ -134,10 +131,10 @@ There are three save modes available:
 - `SaveMode::Overwrite` - If data sink already exists, it will be removed and written again.
 
 > [!NOTE]
-> Append mode is not really appending anything to existing files, instead it creates a folder in which it stores outputs under randomized file names. 
-> It can be later read using a glob-pattern, for example `from_csv('/path/to/folder/*.csv')`.
+> Append mode does not append to an existing file. It writes a sibling file `name_<suffix>.ext` next to it
+> (`daily_revenue_ecd5b31525.csv`). Read all of them with a glob: `from_csv(__DIR__ . '/daily_revenue*.csv')`.
 
-[Loaders Examples](/data_writing/#example)
+[Loaders Examples](/writing/#example)
 
 ## Lazy Execution
 

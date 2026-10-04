@@ -40,7 +40,10 @@ final class PipelineScenarioTest extends TestCase
         $written->remove();
 
         static::assertCount(self::ROWS, $rows);
-        static::assertSame(['order_id', 'seller_id', 'created_at', 'customer', 'contact'], $rows->first()->names());
+        static::assertSame(
+            ['order_id', 'seller_id', 'created_at', 'customer', 'contact'],
+            array_keys($rows->values(0)),
+        );
     }
 
     #[DataProvider('sources')]
@@ -50,12 +53,12 @@ final class PipelineScenarioTest extends TestCase
 
         $declaredFile = new WrittenFile(Paths::var() . '/pipeline_' . $source->value . '_*.floe');
         (new PipelineScenario($source, SchemaMode::declared, self::ROWS))->run();
-        $declared = data_frame()->read(from_floe($declaredFile->path()))->fetch()->first()->names();
+        $declared = array_keys(data_frame()->read(from_floe($declaredFile->path()))->fetch()->values(0));
         $declaredFile->remove();
 
         $inferredFile = new WrittenFile(Paths::var() . '/pipeline_' . $source->value . '_*.floe');
         (new PipelineScenario($source, SchemaMode::inferred, self::ROWS))->run();
-        $inferred = data_frame()->read(from_floe($inferredFile->path()))->fetch()->first()->names();
+        $inferred = array_keys(data_frame()->read(from_floe($inferredFile->path()))->fetch()->values(0));
         $inferredFile->remove();
 
         static::assertSame($declared, $inferred);

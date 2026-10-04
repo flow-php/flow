@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Nullability;
 
@@ -51,15 +55,29 @@ final class StringEqualsTo implements ScalarFunction
         return (new Nullability())->any(type_boolean(), $this->value->returns(), $this->string->returns());
     }
 
-    public function eval(Row $row, FlowContext $context): ?bool
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $value = (new Parameter($this->value))->asString($row, $context);
-        $string = (new Parameter($this->string))->asString($row, $context);
+        $values = (new Parameter($this->value))->asStrings($rows, $context);
+        $strings = (new Parameter($this->string))->asStrings($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($value === null || $string === null) {
-            return null;
+        try {
+            foreach ($values as $i => $value) {
+                $string = $strings[$i];
+
+                if ($value === null || $string === null) {
+                    $results[] = null;
+
+                    continue;
+                }
+
+                $results[] = s($value)->equalsTo($string);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return s($value)->equalsTo($string);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

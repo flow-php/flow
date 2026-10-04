@@ -17,6 +17,7 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Generator;
 
@@ -125,7 +126,6 @@ final class DbalLimitOffsetExtractor implements BatchableExtractor, Extractor, R
         }
 
         $yielded = 0;
-        $encoder = new DbalEncoder();
 
         for ($page = 0; $page < (new Pages($total, $this->batchSize))->pages(); $page++) {
             // the request asks only for what is still wanted, while the offset keeps striding by the batch size
@@ -148,11 +148,13 @@ final class DbalLimitOffsetExtractor implements BatchableExtractor, Extractor, R
                 $rawBatch[] = $row;
             }
 
-            $hydrated = $context->hydrator()->hydrate($encoder->decode($rawBatch), $schema);
+            $rows = (new RowsBuilder($schema, $context->backend()))
+                ->appendRows($rawBatch)
+                ->finish();
 
-            $yielded += $hydrated->count();
+            $yielded += $rows->count();
 
-            $signal = yield $hydrated;
+            $signal = yield $rows;
 
             if ($signal === Signal::STOP) {
                 return;

@@ -15,20 +15,20 @@ use Flow\ETL\Executor;
 use Flow\ETL\Optimizer;
 use Flow\ETL\Optimizer\Rule\PushLimitIntoSource;
 use Flow\ETL\Planner;
-use Flow\ETL\Row\AdaptiveRowHydrator;
-use Flow\ETL\Row\PhpRowHydrator;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\Double\SpySerializer;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Override;
 
 use function Flow\ETL\DSL\analyze;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\external_sort;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\memory_sort;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
+use function Flow\Serializer\DSL\serialize_to_string;
+use function Flow\Serializer\DSL\unserialize_from_string;
 use function str_replace;
 
 final class ConfigBuilderTest extends FlowIntegrationTestCase
@@ -56,7 +56,7 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
 
         $config->cache->cache->set(
             'key',
-            $rows = rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3])),
+            $rows = array_to_rows([['id' => 1], ['id' => 2], ['id' => 3]], schema(int_schema('id'))),
         );
 
         static::assertEquals($rows, $config->cache->cache->get('key'));
@@ -149,11 +149,6 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         static::assertInstanceOf(FilesystemBuckets::class, $config->sort->bucketing->storage);
     }
 
-    public function test_default_hydrator_is_the_adaptive_hydrator(): void
-    {
-        static::assertInstanceOf(AdaptiveRowHydrator::class, config_builder()->build()->hydrator());
-    }
-
     public function test_default_sorting_algorithm_is_external_sort(): void
     {
         static::assertInstanceOf(ExternalSortConfig::class, config_builder()->build()->sort);
@@ -162,13 +157,6 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
     public function test_memory_sort_algorithm_override(): void
     {
         static::assertInstanceOf(MemorySortConfig::class, config_builder()->sort(memory_sort())->build()->sort);
-    }
-
-    public function test_hydrator_override_wins_over_the_default(): void
-    {
-        $hydrator = new PhpRowHydrator();
-
-        static::assertSame($hydrator, config_builder()->hydrator($hydrator)->build()->hydrator());
     }
 
     public function test_external_sort_storage_override(): void
@@ -210,5 +198,19 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         $executor = new Executor();
 
         static::assertSame($executor, config_builder()->executor($executor)->build()->executor());
+    }
+
+    public function test_the_default_serializer_follows_a_backend_set_after_a_build(): void
+    {
+        $builder = config_builder();
+        $builder->build();
+        $backend = new SpyBackend();
+        $serializer = $builder->backend($backend)->build()->serializer();
+
+        unserialize_from_string($serializer, serialize_to_string($serializer, array_to_rows([[
+            'id' => 1,
+        ]], schema(int_schema('id')))));
+
+        static::assertSame(1, $backend->decodes());
     }
 }

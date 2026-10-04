@@ -20,6 +20,7 @@ use Generator;
 use RuntimeException;
 
 use function array_merge;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\datetime_schema;
@@ -29,8 +30,6 @@ use function Flow\ETL\DSL\ignore_error_handler;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\skip_rows_handler;
 use function Flow\ETL\DSL\str_schema;
@@ -75,19 +74,19 @@ final class ETLErrorHandlingTest extends FlowTestCase
                     str_schema('phase', true),
                 );
 
-                yield rows($schema, row([
+                yield array_to_rows([[
                     'id' => 101,
                     'deleted' => false,
                     'expiration-date' => new DateTimeImmutable('2020-08-24'),
                     'phase' => null,
-                ]));
+                ]], $schema);
 
-                yield rows($schema, row([
+                yield array_to_rows([[
                     'id' => 102,
                     'deleted' => true,
                     'expiration-date' => new DateTimeImmutable('2020-08-25'),
                     'phase' => null,
-                ]));
+                ]], $schema);
             }
 
             public function statistics(): Statistics
@@ -156,19 +155,19 @@ final class ETLErrorHandlingTest extends FlowTestCase
                     str_schema('phase', true),
                 );
 
-                yield rows($schema, row([
+                yield array_to_rows([[
                     'id' => 101,
                     'deleted' => false,
                     'expiration-date' => new DateTimeImmutable('2020-08-24'),
                     'phase' => null,
-                ]));
+                ]], $schema);
 
-                yield rows($schema, row([
+                yield array_to_rows([[
                     'id' => 102,
                     'deleted' => true,
                     'expiration-date' => new DateTimeImmutable('2020-08-25'),
                     'phase' => null,
-                ]));
+                ]], $schema);
             }
 
             public function statistics(): Statistics
@@ -259,19 +258,19 @@ final class ETLErrorHandlingTest extends FlowTestCase
                     str_schema('phase', true),
                 );
 
-                yield rows($schema, row([
+                yield array_to_rows([[
                     'id' => 101,
                     'deleted' => false,
                     'expiration-date' => new DateTimeImmutable('2020-08-24'),
                     'phase' => null,
-                ]));
+                ]], $schema);
 
-                yield rows($schema, row([
+                yield array_to_rows([[
                     'id' => 102,
                     'deleted' => true,
                     'expiration-date' => new DateTimeImmutable('2020-08-25'),
                     'phase' => null,
-                ]));
+                ]], $schema);
             }
 
             public function statistics(): Statistics
@@ -288,7 +287,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
 
             public function transform(Rows $rows, FlowContext $context): Rows
             {
-                if ($rows->first()->get('id') === 101) {
+                if ($rows->column('id')->value(0) === 101) {
                     throw new RuntimeException('Transformer Exception');
                 }
 

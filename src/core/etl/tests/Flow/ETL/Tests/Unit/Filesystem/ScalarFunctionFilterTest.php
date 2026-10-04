@@ -107,4 +107,14 @@ final class ScalarFunctionFilterTest extends FlowTestCase
         static::assertTrue($filter->accept(new FileStatus(path('flow-file://data/year=2024/file.csv'), true)));
         static::assertFalse($filter->accept(new FileStatus(path('flow-file://data/year=2025/file.csv'), true)));
     }
+
+    public function test_an_undeclared_null_partition_value_reads_as_null(): void
+    {
+        $filter = new ScalarFunctionFilter(ref('year')->isNull(), schema(), flow_context(config()));
+
+        static::assertTrue($filter->accept(
+            new FileStatus(path('flow-file://data/year=__HIVE_DEFAULT_PARTITION__/f.csv'), true),
+        ));
+        static::assertFalse($filter->accept(new FileStatus(path('flow-file://data/year=2024/f.csv'), true)));
+    }
 }

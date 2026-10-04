@@ -47,9 +47,10 @@ final class DoctrineConnection
         $definition = to_dbal_schema_table((new FakeRandomOrdersExtractor())->schema(), $table);
 
         if ($keyed) {
-            $definition->addPrimaryKeyConstraint(
-                PrimaryKeyConstraint::editor()->setUnquotedColumnNames('order_id')->create(),
-            );
+            $definition = $definition
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('order_id')->create())
+                ->create();
         }
 
         $connection->createSchemaManager()->createTable($definition);

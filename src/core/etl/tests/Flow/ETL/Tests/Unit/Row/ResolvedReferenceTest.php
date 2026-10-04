@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row;
 
+use Flow\ETL\Row\NullsOrder;
 use Flow\ETL\Row\ResolvedReference;
+use Flow\ETL\Row\SortOrder;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\int_schema;
@@ -35,5 +37,16 @@ final class ResolvedReferenceTest extends FlowTestCase
         static::assertNotSame($resolved, $aliased);
         static::assertSame('b', $aliased->name());
         static::assertSame('integer', $aliased->returns()->toString());
+    }
+
+    public function test_it_carries_the_sort_and_nulls_order(): void
+    {
+        $resolved = ref('a')->desc(NullsOrder::FIRST)->resolve(int_schema('a'));
+
+        static::assertSame(SortOrder::DESC, $resolved->sort());
+        static::assertSame(NullsOrder::FIRST, $resolved->nulls());
+        static::assertSame(NullsOrder::FIRST, $resolved->as('b')->nulls());
+        static::assertSame(NullsOrder::LAST, $resolved->asc(NullsOrder::LAST)->nulls());
+        static::assertSame(NullsOrder::LAST, $resolved->desc()->nulls());
     }
 }

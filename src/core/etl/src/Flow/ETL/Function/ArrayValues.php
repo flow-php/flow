@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
@@ -67,17 +71,24 @@ final class ArrayValues implements ScalarFunction
         };
     }
 
-    /**
-     * @return null|array<int, mixed>
-     */
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $array = (new Parameter($this->array))->asArray($row, $context);
+        $arrays = (new Parameter($this->array))->asArrays($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if (!is_array($array)) {
-            throw new InvalidArgumentException('ArrayValues function requires non-null array');
+        try {
+            foreach ($arrays as $i => $array) {
+                if (!is_array($array)) {
+                    throw new InvalidArgumentException('ArrayValues function requires non-null array');
+                }
+
+                $results[] = array_values($array);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return array_values($array);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

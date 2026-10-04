@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Extractor\FileReading;
-use Flow\ETL\Extractor\SelfDescribingFile;
-use Flow\ETL\Extractor\SourceFile;
+use Flow\ETL\Extractor\File\FileReading;
+use Flow\ETL\Extractor\File\SelfDescribingFile;
+use Flow\ETL\Extractor\File\SourceFile;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;

@@ -8,10 +8,14 @@ use Flow\ETL\Adapter\ChartJS\Chart\BarChart;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\Adapter\ChartJS\bar_chart;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_memory;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
+use function Flow\ETL\DSL\schema;
 
 final class BarChartTest extends FlowTestCase
 {
@@ -115,6 +119,19 @@ final class BarChartTest extends FlowTestCase
                     ],
                 ],
             ],
+            $chart->data(),
+        );
+    }
+
+    public function test_an_int_label_is_rendered_as_a_string_across_batches(): void
+    {
+        $chart = bar_chart(ref('l'), refs(ref('v')));
+
+        $chart->collect(array_to_rows([['l' => 1, 'v' => 5]], schema(int_schema('l'), int_schema('v'))));
+        $chart->collect(array_to_rows([['l' => 2, 'v' => 6]], schema(int_schema('l'), int_schema('v'))));
+
+        static::assertSame(
+            ['type' => 'bar', 'data' => ['labels' => ['1', '2'], 'datasets' => [['label' => 'v', 'data' => [5, 6]]]]],
             $chart->data(),
         );
     }

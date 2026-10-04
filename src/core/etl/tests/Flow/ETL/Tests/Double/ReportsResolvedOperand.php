@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
+use Flow\ETL\Column\Column;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Function\Evaluation\ResultColumn;
 use Flow\ETL\Function\FunctionTree;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Function\ScalarFunctionChain;
-use Flow\ETL\Row;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
+use function array_fill;
 use function Flow\Types\DSL\type_boolean;
 
 /**
@@ -41,9 +44,14 @@ final class ReportsResolvedOperand implements ScalarFunction
         return new self($children[0]);
     }
 
-    public function eval(Row $row, FlowContext $context): bool
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        return $this->operand->resolved();
+        // @mago-ignore analysis:possibly-invalid-argument
+        return (new ResultColumn($context->backend()))->of($this, array_fill(
+            0,
+            $rows->count(),
+            $this->operand->resolved(),
+        ));
     }
 
     /**

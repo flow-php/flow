@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function Flow\ETL\DSL\lit;
@@ -69,34 +73,46 @@ final class Regex implements ScalarFunction
         return type_optional(type_array());
     }
 
-    /**
-     * @return null|array<array-key, mixed>
-     */
-    public function eval(Row $row, FlowContext $context): ?array
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $pattern = (new Parameter($this->pattern))->asString($row, $context);
-        $subject = (new Parameter($this->subject))->asString($row, $context);
-        $offset = (new Parameter($this->offset))->asInt($row, $context);
+        $patterns = (new Parameter($this->pattern))->asStrings($rows, $context);
+        $subjects = (new Parameter($this->subject))->asStrings($rows, $context);
+        $offsets = (new Parameter($this->offset))->asInts($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($pattern === null) {
-            throw new InvalidArgumentException('Regex requires non-null pattern');
+        try {
+            foreach ($patterns as $i => $pattern) {
+                $subject = $subjects[$i];
+                $offset = $offsets[$i];
+
+                if ($pattern === null) {
+                    throw new InvalidArgumentException('Regex requires non-null pattern');
+                }
+
+                if ($subject === null) {
+                    throw new InvalidArgumentException('Regex requires non-null subject');
+                }
+
+                if ($offset === null) {
+                    throw new InvalidArgumentException('Regex requires non-null offset');
+                }
+
+                $matches = [];
+
+                // preg_match() returns 1 if the pattern matches given subject, 0 if it does not, or false on failure.
+                if (preg_match($pattern, $subject, $matches, $this->flags, $offset) === 1) {
+                    $results[] = $matches;
+
+                    continue;
+                }
+
+                $results[] = null;
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        if ($subject === null) {
-            throw new InvalidArgumentException('Regex requires non-null subject');
-        }
-
-        if ($offset === null) {
-            throw new InvalidArgumentException('Regex requires non-null offset');
-        }
-
-        $matches = [];
-
-        // preg_match() returns 1 if the pattern matches given subject, 0 if it does not, or false on failure.
-        if (preg_match($pattern, $subject, $matches, $this->flags, $offset) === 1) {
-            return $matches;
-        }
-
-        return null;
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

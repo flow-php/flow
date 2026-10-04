@@ -10,32 +10,58 @@ use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Extractor\BatchExtractor;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\Memory\ArrayMemory;
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\DeclaringExtractor;
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\Tests\Double\VaryingBatchesExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\RowsMother;
 
+use function array_map;
+use function array_merge;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\batches;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_memory;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function iterator_to_array;
+use function range;
 
 final class BatchExtractorTest extends FlowTestCase
 {
+    public function test_windows_built_from_many_child_batches_keep_counts_and_order(): void
+    {
+        $children = [];
+
+        for ($batch = 0; $batch < 25; $batch++) {
+            $children[] = array_to_rows(
+                array_map(static fn(int $id): array => ['id' => $id], range(($batch * 100) + 1, ($batch * 100) + 100)),
+                schema(int_schema('id')),
+            );
+        }
+
+        $windows = iterator_to_array(
+            batches(new VaryingBatchesExtractor(...$children), 1_000)->extract(flow_context()),
+            false,
+        );
+
+        static::assertSame([1000, 1000, 500], array_map(static fn(Rows $rows): int => $rows->count(), $windows));
+        static::assertSame(
+            range(1, 2_500),
+            array_merge(...array_map(static fn(Rows $rows): array => $rows->reduceToArray('id'), $windows)),
+        );
+    }
+
     public function test_a_buffer_spanning_child_batches_answers_to_the_first_batch_schema(): void
     {
         // the second child batch omits a column the first declares nullable - the buffer that spans
         // both must carry one schema, and the later rows are matched to it rather than mislabelled
         $child = new VaryingBatchesExtractor(
-            rows(schema(int_schema('id'), str_schema('name', nullable: true)), row(['id' => 1, 'name' => 'a'])),
-            rows(schema(int_schema('id')), row(['id' => 2])),
+            array_to_rows([['id' => 1, 'name' => 'a']], schema(int_schema('id'), str_schema('name', nullable: true))),
+            array_to_rows([['id' => 2]], schema(int_schema('id'))),
         );
 
         $batches = iterator_to_array(batches($child, 2)->extract(flow_context()), false);
@@ -48,8 +74,8 @@ final class BatchExtractorTest extends FlowTestCase
     public function test_a_later_child_batch_that_widens_the_shape_is_refused(): void
     {
         $child = new VaryingBatchesExtractor(
-            rows(schema(int_schema('id')), row(['id' => 1])),
-            rows(schema(int_schema('id'), str_schema('extra')), row(['id' => 2, 'extra' => 'x'])),
+            array_to_rows([['id' => 1]], schema(int_schema('id'))),
+            array_to_rows([['id' => 2, 'extra' => 'x']], schema(int_schema('id'), str_schema('extra'))),
         );
 
         $this->expectException(SchemaMismatchException::class);
@@ -98,7 +124,7 @@ final class BatchExtractorTest extends FlowTestCase
 
     public function test_with_schema_does_not_leak_into_a_second_pipeline(): void
     {
-        $child = from_rows(rows(schema(int_schema('id')), row(['id' => 1])));
+        $child = from_rows(array_to_rows([['id' => 1]], schema(int_schema('id'))));
 
         iterator_to_array(
             batches($child, 1)

@@ -10,7 +10,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\Types\DSL\type_string;
 use function sprintf;
 
@@ -36,18 +36,18 @@ final readonly class AddStampToStringEntryTransformer implements Transformer
     {
         $stamped = [];
 
-        foreach ($rows->all() as $row) {
-            $stamped[] = row([
-                ...$row->values(),
+        for ($i = 0; $i < $rows->count(); $i++) {
+            $stamped[] = [
+                ...$rows->values($i),
                 $this->entryName => sprintf(
                     '%s%s%s',
-                    type_string()->assert($row->get($this->entryName)),
+                    type_string()->assert($rows->column($this->entryName)->value($i)),
                     $this->divider,
                     $this->stamp,
                 ),
-            ]);
+            ];
         }
 
-        return new Rows($rows->schema(), ...$stamped);
+        return array_to_rows($stamped, $rows->schema());
     }
 }

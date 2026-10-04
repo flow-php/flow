@@ -55,20 +55,15 @@ final class Rank implements PartitionRanking, WindowFunction
             throw new BaseRuntimeException('Rank window function requires to be ordered by one column');
         }
 
-        $comparator = new PeerComparator($orderBy);
         $ranks = [];
         $rank = 1;
-        $index = 0;
-        $previous = null;
 
-        foreach ($partition as $row) {
-            if ($previous !== null && !$comparator->arePeers($previous, $row, $partition->schema())) {
+        foreach ((new PeerComparator($orderBy))->peersOfPrevious($partition) as $index => $peer) {
+            if ($index > 0 && !$peer) {
                 $rank = $index + 1;
             }
 
             $ranks[] = $rank;
-            $previous = $row;
-            $index++;
         }
 
         return $ranks;

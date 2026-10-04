@@ -7,6 +7,8 @@ namespace Flow\ETL\Tests\Integration\Cache;
 use Exception;
 use Flow\ETL\Cache;
 use Flow\ETL\Cache\Implementation\PSRSimpleCache;
+use Flow\ETL\Column\AdaptiveBackend;
+use Flow\Floe\FloeSerializer;
 use Override;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
 use Symfony\Component\Cache\Psr16Cache;
@@ -44,10 +46,13 @@ final class PSRSimpleRedisCacheTest extends CacheTestCase
 
     protected function cache(): Cache
     {
-        return new PSRSimpleCache(new Psr16Cache(new RedisAdapter(RedisAdapter::createConnection($this->dsn(), [
-            'retry_interval' => 2,
-            'timeout' => 5,
-        ]))));
+        return new PSRSimpleCache(
+            new Psr16Cache(new RedisAdapter(RedisAdapter::createConnection($this->dsn(), [
+                'retry_interval' => 2,
+                'timeout' => 5,
+            ]))),
+            new FloeSerializer(new AdaptiveBackend()),
+        );
     }
 
     protected function dsn(): string

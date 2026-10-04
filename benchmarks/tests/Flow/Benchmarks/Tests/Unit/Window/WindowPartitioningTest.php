@@ -25,11 +25,12 @@ final class WindowPartitioningTest extends TestCase
         foreach (PartitionCardinality::cases() as $cardinality) {
             static::assertContains(
                 'day',
-                (new WindowPartitioning($cardinality))
-                    ->derive(data_frame()->read(from_floe(Datasets::orders(self::ROWS)->floe())))
-                    ->fetch()
-                    ->first()
-                    ->names(),
+                array_keys(
+                    (new WindowPartitioning($cardinality))
+                        ->derive(data_frame()->read(from_floe(Datasets::orders(self::ROWS)->floe())))
+                        ->fetch()
+                        ->values(0),
+                ),
                 $cardinality->value,
             );
         }

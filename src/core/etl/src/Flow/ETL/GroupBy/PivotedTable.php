@@ -36,22 +36,35 @@ final class PivotedTable
 
     public function accumulate(Rows $batch, FlowContext $context): void
     {
-        foreach ($batch as $row) {
-            $key = $this->groupBy->keyValues($row, $this->shape->input);
+        $keys = $this->groupBy->keys($batch, $this->shape->input);
+
+        if ($keys === []) {
+            return;
+        }
+
+        $pivotValues = $batch->column($this->shape->pivot->column->base())->values();
+
+        /** @var array<string, array<array-key, list<int>>> $indices */
+        $indices = [];
+
+        foreach ($keys as $i => $key) {
             $index = (string) $key;
 
             $this->keys[$index] ??= $key;
             $this->accumulators[$index] ??= [];
 
-            $pivotValue = $row->get($this->shape->pivot->column);
-
-            if ($pivotValue === null) {
+            if ($pivotValues[$i] === null) {
                 continue;
             }
 
-            $column = type_union(type_string(), type_integer())->assert($pivotValue);
-            $accumulator = $this->accumulators[$index][$column] ??= clone $this->shape->aggregation;
-            $accumulator->aggregate($row, $context);
+            $indices[$index][type_union(type_string(), type_integer())->assert($pivotValues[$i])][] = $i;
+        }
+
+        foreach ($indices as $index => $columns) {
+            foreach ($columns as $column => $rows) {
+                $accumulator = $this->accumulators[$index][$column] ??= clone $this->shape->aggregation;
+                $accumulator->aggregate($batch, $rows, $context);
+            }
         }
     }
 
@@ -88,13 +101,13 @@ final class PivotedTable
             $buffer[] = $row;
 
             if (count($buffer) >= $batchSize) {
-                yield array_to_rows($buffer, $this->shape->output, $context->hydrator());
+                yield array_to_rows($buffer, $this->shape->output, $context->backend());
                 $buffer = [];
             }
         }
 
         if ($buffer !== []) {
-            yield array_to_rows($buffer, $this->shape->output, $context->hydrator());
+            yield array_to_rows($buffer, $this->shape->output, $context->backend());
         }
     }
 }

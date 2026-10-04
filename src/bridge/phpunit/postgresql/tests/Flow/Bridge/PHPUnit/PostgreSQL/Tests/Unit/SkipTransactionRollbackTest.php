@@ -17,21 +17,27 @@ final class SkipTransactionRollbackTest extends TestCase
 {
     public function test_attribute_can_target_class(): void
     {
-        $attribute = (new ReflectionClass(SkipTransactionRollback::class))->getAttributes(Attribute::class)[0]->newInstance();
+        $attribute = (new ReflectionClass(SkipTransactionRollback::class))->getAttributes(
+            Attribute::class,
+        )[0]->newInstance();
 
         static::assertNotSame(0, $attribute->flags & Attribute::TARGET_CLASS);
     }
 
     public function test_attribute_can_target_method(): void
     {
-        $attribute = (new ReflectionClass(SkipTransactionRollback::class))->getAttributes(Attribute::class)[0]->newInstance();
+        $attribute = (new ReflectionClass(SkipTransactionRollback::class))->getAttributes(
+            Attribute::class,
+        )[0]->newInstance();
 
         static::assertNotSame(0, $attribute->flags & Attribute::TARGET_METHOD);
     }
 
     public function test_attribute_detected_on_class(): void
     {
-        static::assertNotEmpty((new ReflectionClass(SkippedTestCase::class))->getAttributes(SkipTransactionRollback::class));
+        static::assertNotEmpty((new ReflectionClass(SkippedTestCase::class))->getAttributes(
+            SkipTransactionRollback::class,
+        ));
     }
 
     public function test_attribute_detected_on_method(): void
@@ -54,6 +60,8 @@ final class SkipTransactionRollbackTest extends TestCase
 
     public function test_attribute_not_present_on_normal_class(): void
     {
-        static::assertEmpty((new ReflectionClass(NormalTestCase::class))->getAttributes(SkipTransactionRollback::class));
+        static::assertEmpty((new ReflectionClass(NormalTestCase::class))->getAttributes(
+            SkipTransactionRollback::class,
+        ));
     }
 }

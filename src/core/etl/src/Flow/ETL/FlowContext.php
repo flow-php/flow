@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use Flow\Calculator\Calculator;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Config\Telemetry\TelemetryContext;
 use Flow\ETL\ErrorHandler\ThrowError;
-use Flow\ETL\Row\Hydrator;
 
 /**
  * Mutable Flow execution context.
@@ -40,12 +40,9 @@ final class FlowContext
         return $this->errorHandler;
     }
 
-    /**
-     * @return Hydrator
-     */
-    public function hydrator(): Hydrator
+    public function backend(): Backend
     {
-        return $this->config->hydrator();
+        return $this->config->backend();
     }
 
     public function setErrorHandler(ErrorHandler $handler): self
@@ -66,6 +63,7 @@ final class FlowContext
     public function telemetry(): TelemetryContext
     {
         return $this->telemetryContext ??= new TelemetryContext(
+            $this->config->backend(),
             $this->config->telemetry->telemetry->logger('flow_php_dataframe', $this->config->version()),
             $this->config->telemetry->telemetry->tracer('flow_php_dataframe', $this->config->version()),
             $this->config->telemetry->telemetry->meter('flow_php_dataframe', $this->config->version()),

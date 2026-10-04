@@ -5,40 +5,50 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class PrependTest extends FlowTestCase
 {
     public function test_prepend_empty_string_to_content(): void
     {
-        $result = ref('str')->prepend('')->eval(row(['str' => 'hello']), flow_context());
-
-        static::assertEquals('hello', $result);
+        static::assertEquals('hello', (new FunctionContext(flow_context()))->eval(
+            ref('str')->prepend(''),
+            ['str' => 'hello'],
+            schema(str_schema('str')),
+        ));
     }
 
     public function test_prepend_to_empty_string(): void
     {
-        $result = ref('str')->prepend('hello')->eval(row(['str' => '']), flow_context());
-
-        static::assertEquals('hello', $result);
+        static::assertEquals('hello', (new FunctionContext(flow_context()))->eval(
+            ref('str')->prepend('hello'),
+            ['str' => ''],
+            schema(str_schema('str')),
+        ));
     }
 
     public function test_prepend_to_non_empty_string(): void
     {
-        $result = ref('str')->prepend('Hello ')->eval(row(['str' => 'world']), flow_context());
-
-        static::assertEquals('Hello world', $result);
+        static::assertEquals('Hello world', (new FunctionContext(flow_context()))->eval(
+            ref('str')->prepend('Hello '),
+            ['str' => 'world'],
+            schema(str_schema('str')),
+        ));
     }
 
     public function test_prepend_with_null_prefix(): void
     {
-        $result = ref('str')->prepend(ref('prefix'))->eval(row(['str' => 'world', 'prefix' => null]), flow_context());
-
-        static::assertEquals('world', $result);
+        static::assertEquals('world', (new FunctionContext(flow_context()))->eval(
+            ref('str')->prepend(ref('prefix')),
+            ['str' => 'world', 'prefix' => null],
+            schema(str_schema('str'), str_schema('prefix', nullable: true)),
+        ));
     }
 
     public function test_prepend_with_null_value(): void
@@ -46,17 +56,19 @@ final class PrependTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Prepend function requires non-null value');
 
-        $result = ref('str')->prepend('Hello ')->eval(row(['str' => null]), flow_context());
-
-        static::assertNull($result);
+        static::assertNull((new FunctionContext(flow_context()))->eval(
+            ref('str')->prepend('Hello '),
+            ['str' => null],
+            schema(str_schema('str', nullable: true)),
+        ));
     }
 
     public function test_prepend_with_scalar_function_parameter(): void
     {
-        $result = ref('str')
-            ->prepend(ref('prefix'))
-            ->eval(row(['str' => 'world', 'prefix' => 'Hello ']), flow_context());
-
-        static::assertEquals('Hello world', $result);
+        static::assertEquals('Hello world', (new FunctionContext(flow_context()))->eval(
+            ref('str')->prepend(ref('prefix')),
+            ['str' => 'world', 'prefix' => 'Hello '],
+            schema(str_schema('str'), str_schema('prefix')),
+        ));
     }
 }

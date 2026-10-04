@@ -45,6 +45,7 @@ use function array_sum;
 use function file_get_contents;
 use function Flow\ETL\Adapter\Text\from_text;
 use function Flow\ETL\DSL\add_row_index;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\batch_size;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\drop;
@@ -58,8 +59,6 @@ use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\mask_columns;
 use function Flow\ETL\DSL\partition_types;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\to_branch;
@@ -409,7 +408,7 @@ final class SinkRootTest extends FlowIntegrationTestCase
         $spy = new SpyLoader();
         $extractor = new RecordingFileExtractor(
             schema(int_schema('id')),
-            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3])),
+            array_to_rows([['id' => 1], ['id' => 2], ['id' => 3]], schema(int_schema('id'))),
         );
 
         $rows = df()->read($extractor)->write($spy)->limit(2)->fetch();

@@ -27,7 +27,7 @@ class SchemaElement
             'var' => 'type',
             'isRequired' => false,
             'type' => TType::I32,
-            'class' => '\Flow\Parquet\Thrift\Type',
+            'class' => '\Flow\Parquet\ThriftModel\Type',
         ],
         2 => [
             'var' => 'type_length',
@@ -38,7 +38,7 @@ class SchemaElement
             'var' => 'repetition_type',
             'isRequired' => false,
             'type' => TType::I32,
-            'class' => '\Flow\Parquet\Thrift\FieldRepetitionType',
+            'class' => '\Flow\Parquet\ThriftModel\FieldRepetitionType',
         ],
         4 => [
             'var' => 'name',
@@ -54,7 +54,7 @@ class SchemaElement
             'var' => 'converted_type',
             'isRequired' => false,
             'type' => TType::I32,
-            'class' => '\Flow\Parquet\Thrift\ConvertedType',
+            'class' => '\Flow\Parquet\ThriftModel\ConvertedType',
         ],
         7 => [
             'var' => 'scale',
@@ -75,7 +75,7 @@ class SchemaElement
             'var' => 'logicalType',
             'isRequired' => false,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\LogicalType',
+            'class' => '\Flow\Parquet\ThriftModel\LogicalType',
         ],
     ];
 

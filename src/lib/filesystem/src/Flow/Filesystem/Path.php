@@ -83,10 +83,14 @@ final readonly class Path
     public function extractPlaceholderPartitions(self $path): Partitions
     {
         if ($this->implementation instanceof UnixPath) {
-            return $this->implementation->extractPlaceholderPartitions(type_instance_of(UnixPath::class)->assert($path->implementation));
+            return $this->implementation->extractPlaceholderPartitions(type_instance_of(
+                UnixPath::class,
+            )->assert($path->implementation));
         }
 
-        return $this->implementation->extractPlaceholderPartitions(type_instance_of(WindowsPath::class)->assert($path->implementation));
+        return $this->implementation->extractPlaceholderPartitions(type_instance_of(
+            WindowsPath::class,
+        )->assert($path->implementation));
     }
 
     public function filename(): string

@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function Flow\ETL\DSL\lit;
@@ -58,21 +62,27 @@ final class StringBeforeLast implements ScalarFunction
         return type_string();
     }
 
-    public function eval(Row $row, FlowContext $context): ?string
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $string = (new Parameter($this->string))->asString($row, $context);
+        $strings = (new Parameter($this->string))->asStrings($rows, $context);
+        $needles = (new Parameter($this->needle))->asStrings($rows, $context);
+        $includeNeedles = (new Parameter($this->includeNeedle))->asBooleans($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($string === null) {
-            throw new InvalidArgumentException('StringBeforeLast function requires non-null value');
+        try {
+            foreach ($strings as $i => $string) {
+                if ($string === null) {
+                    throw new InvalidArgumentException('StringBeforeLast function requires non-null value');
+                }
+
+                $typedNeedle = type_union(type_string(), type_list(type_string()))->assert($needles[$i]);
+                $results[] = u($string)->beforeLast($typedNeedle, $includeNeedles[$i] ?? false)->toString();
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        $needle = (new Parameter($this->needle))->asString($row, $context) ?? (new Parameter($this->needle))->asArray(
-            $row,
-            $context,
-        );
-        $typedNeedle = type_union(type_string(), type_list(type_string()))->assert($needle);
-        $includeNeedle = (new Parameter($this->includeNeedle))->asBoolean($row, $context) ?? false;
-
-        return u($string)->beforeLast($typedNeedle, $includeNeedle)->toString();
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

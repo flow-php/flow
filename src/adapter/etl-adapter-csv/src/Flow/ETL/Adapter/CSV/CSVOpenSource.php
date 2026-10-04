@@ -4,11 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV;
 
-use Flow\ETL\Row\RawRowValues;
+use Flow\ETL\Column\Backend;
+use Flow\ETL\Exception\SchemaMismatchException;
+use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\ColumnTypes;
 use Flow\ETL\Schema\Inference\SchemaInference;
 use Flow\Types\Type\TypeNarrower;
-use Generator;
+use Iterator;
+
+use function interface_exists;
+
+if (interface_exists(CSVOpenSource::class, false)) {
+    return;
+}
 
 interface CSVOpenSource
 {
@@ -36,11 +45,30 @@ interface CSVOpenSource
     public function columns(): array;
 
     /**
+     * Batches of exactly $batchSize rows (the last may be shorter), keyed and ordered by $schema; row indexes in
+     * refusals are relative to the batch. This instance is consumed afterwards.
+     *
+     * @param int<1, max> $batchSize
+     *
+     * @throws SchemaMismatchException
+     *
+     * @return Iterator<int, Rows>
+     */
+    public function batches(Schema $schema, int $batchSize, Backend $backend): Iterator;
+
+    /**
+     * The header records() resolved; [] before it ran or for a 0-byte source.
+     *
+     * @return list<string>
+     */
+    public function headers(): array;
+
+    /**
      * This instance is consumed afterwards.
      *
-     * @return Generator<int, RawRowValues>
+     * @return Iterator<int, array<array-key, ?string>>
      */
-    public function records(): Generator;
+    public function records(): Iterator;
 
     /**
      * SchemaInferrer::sniff() over records(). This instance is consumed afterwards.

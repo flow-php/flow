@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Transformer;
 
 use DateTimeImmutable;
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Tests\FlowTestCase;
@@ -13,6 +14,7 @@ use Flow\ETL\Transformer\DuplicateRowTransformer;
 use Flow\ETL\WithEntry;
 use Flow\Types\Exception\InvalidTypeException;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\date_schema;
@@ -21,7 +23,6 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\string_schema;
@@ -60,7 +61,7 @@ final class DuplicateRowTransformerTest extends FlowTestCase
                 ['id' => 2, 'flag' => true],
             ],
             (new DuplicateRowTransformer(true, with_entry('flag', lit(true))))
-                ->transform(rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])), flow_context(config()))
+                ->transform(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))), flow_context(config()))
                 ->toArray(),
         );
     }
@@ -71,10 +72,9 @@ final class DuplicateRowTransformerTest extends FlowTestCase
             ref('status')->equals(lit('inactive')),
             with_entry('flag', lit(true)),
         ))->transform(
-            rows(
+            array_to_rows(
+                [['id' => 1, 'status' => 'active'], ['id' => 2, 'status' => 'inactive']],
                 schema(int_schema('id'), string_schema('status')),
-                row(['id' => 1, 'status' => 'active']),
-                row(['id' => 2, 'status' => 'inactive']),
             ),
             flow_context(config()),
         );
@@ -96,10 +96,12 @@ final class DuplicateRowTransformerTest extends FlowTestCase
             ref('status')->equals(lit('inactive')),
             with_entry('amount', ref('amount')->multiply(lit(-1))),
         ))->transform(
-            rows(
+            array_to_rows(
+                [
+                    ['id' => 1, 'status' => 'active', 'amount' => 100],
+                    ['id' => 2, 'status' => 'inactive', 'amount' => 100],
+                ],
                 schema(int_schema('id'), string_schema('status'), int_schema('amount', nullable: true)),
-                row(['id' => 1, 'status' => 'active', 'amount' => 100]),
-                row(['id' => 2, 'status' => 'inactive', 'amount' => 100]),
             ),
             flow_context(config()),
         );
@@ -111,7 +113,30 @@ final class DuplicateRowTransformerTest extends FlowTestCase
 
     public function test_applying_two_transformations(): void
     {
-        $rows = rows(
+        $rows = array_to_rows(
+            [
+                [
+                    'id' => 1,
+                    'status' => 'active',
+                    'amount' => 100,
+                    'date_created' => type_date()->cast('2025-01-01'),
+                    'date_deactivated' => null,
+                ],
+                [
+                    'id' => 2,
+                    'status' => 'inactive',
+                    'amount' => 100,
+                    'date_created' => type_date()->cast('2025-01-01'),
+                    'date_deactivated' => type_date()->cast('2025-01-03'),
+                ],
+                [
+                    'id' => 3,
+                    'status' => 'active',
+                    'amount' => 100,
+                    'date_created' => type_date()->cast('2025-01-01'),
+                    'date_deactivated' => null,
+                ],
+            ],
             schema(
                 int_schema('id'),
                 string_schema('status'),
@@ -120,27 +145,6 @@ final class DuplicateRowTransformerTest extends FlowTestCase
                 date_schema('date_deactivated', nullable: true),
                 date_schema('date_updated', nullable: true),
             ),
-            row([
-                'id' => 1,
-                'status' => 'active',
-                'amount' => 100,
-                'date_created' => type_date()->cast('2025-01-01'),
-                'date_deactivated' => null,
-            ]),
-            row([
-                'id' => 2,
-                'status' => 'inactive',
-                'amount' => 100,
-                'date_created' => type_date()->cast('2025-01-01'),
-                'date_deactivated' => type_date()->cast('2025-01-03'),
-            ]),
-            row([
-                'id' => 3,
-                'status' => 'active',
-                'amount' => 100,
-                'date_created' => type_date()->cast('2025-01-01'),
-                'date_deactivated' => null,
-            ]),
         );
 
         $transformedRows = (new DuplicateRowTransformer(
@@ -213,11 +217,13 @@ final class DuplicateRowTransformerTest extends FlowTestCase
 
     public function test_doing_nothing_when_condition_is_not_satisfied(): void
     {
-        $rows = rows(
+        $rows = array_to_rows(
+            [
+                ['id' => 1, 'status' => 'active', 'amount' => 100],
+                ['id' => 2, 'status' => 'active', 'amount' => 100],
+                ['id' => 3, 'status' => 'active', 'amount' => 100],
+            ],
             schema(int_schema('id'), string_schema('status'), int_schema('amount')),
-            row(['id' => 1, 'status' => 'active', 'amount' => 100]),
-            row(['id' => 2, 'status' => 'active', 'amount' => 100]),
-            row(['id' => 3, 'status' => 'active', 'amount' => 100]),
         );
 
         $transformedRows = (new DuplicateRowTransformer(
@@ -239,11 +245,13 @@ final class DuplicateRowTransformerTest extends FlowTestCase
 
     public function test_duplicating_row(): void
     {
-        $rows = rows(
+        $rows = array_to_rows(
+            [
+                ['id' => 1, 'status' => 'active', 'amount' => 100],
+                ['id' => 2, 'status' => 'inactive', 'amount' => 100],
+                ['id' => 3, 'status' => 'active', 'amount' => 100],
+            ],
             schema(int_schema('id'), string_schema('status'), int_schema('amount')),
-            row(['id' => 1, 'status' => 'active', 'amount' => 100]),
-            row(['id' => 2, 'status' => 'inactive', 'amount' => 100]),
-            row(['id' => 3, 'status' => 'active', 'amount' => 100]),
         );
 
         $transformedRows = (new DuplicateRowTransformer(
@@ -303,7 +311,7 @@ final class DuplicateRowTransformerTest extends FlowTestCase
         );
 
         (new DuplicateRowTransformer(lit(true), with_entry('t', ref('tags')->expand())))->transform(
-            rows(ListColumnsMother::schema(), ListColumnsMother::row()),
+            ListColumnsMother::rows()->matchTo(ListColumnsMother::schema(), new AdaptiveBackend()),
             flow_context(config()),
         );
     }

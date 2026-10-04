@@ -8,6 +8,7 @@ use Flow\ETL\Bucketing\Storage\MemoryBuckets;
 use Flow\ETL\Cache\Implementation\InMemoryCache;
 use Flow\ETL\DataFrame;
 use Flow\ETL\DataFrameFactory;
+use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\RecordingBucketsStorage;
@@ -15,6 +16,7 @@ use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Filesystem\Path\Filter\KeepAll;
 
 use function array_column;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\count as count_agg;
 use function Flow\ETL\DSL\df;
@@ -26,8 +28,6 @@ use function Flow\ETL\DSL\hash_join;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\sum;
@@ -64,9 +64,16 @@ final class AlgorithmOverrideTest extends FlowIntegrationTestCase
         $configured = new RecordingBucketsStorage(new MemoryBuckets());
 
         $output = [];
-        df(config_builder()->groupBy(hash_group_by()->storage($configured))->build())
+        df(
+            config_builder()
+                ->groupBy(hash_group_by()->storage($configured)->memoryLimit(Unit::fromBytes(1))->batchSize(1))
+                ->build(),
+        )
             ->read(from_array([['g' => 'a'], ['g' => 'b'], ['g' => 'a']]))
-            ->aggregate([count_agg(ref('g'))], hash_group_by()->storage($pinned))
+            ->batchSize(1)
+            ->aggregate([count_agg(ref(
+                'g',
+            ))], hash_group_by()->storage($pinned)->memoryLimit(Unit::fromBytes(1))->batchSize(1))
             ->write(to_array($output))
             ->run();
 
@@ -80,9 +87,14 @@ final class AlgorithmOverrideTest extends FlowIntegrationTestCase
         $configured = new RecordingBucketsStorage(new MemoryBuckets());
 
         $output = [];
-        df(config_builder()->groupBy(hash_group_by()->storage($configured))->build())
+        df(
+            config_builder()
+                ->groupBy(hash_group_by()->storage($configured)->memoryLimit(Unit::fromBytes(1))->batchSize(1))
+                ->build(),
+        )
             ->read(from_array([['g' => 'a'], ['g' => 'b'], ['g' => 'a']]))
-            ->groupBy([ref('g')], hash_group_by()->storage($pinned))
+            ->batchSize(1)
+            ->groupBy([ref('g')], hash_group_by()->storage($pinned)->memoryLimit(Unit::fromBytes(1))->batchSize(1))
             ->aggregate(count_agg(ref('g')))
             ->write(to_array($output))
             ->run();
@@ -116,9 +128,9 @@ final class AlgorithmOverrideTest extends FlowIntegrationTestCase
                 new class implements DataFrameFactory {
                     public function from(Rows $rows): DataFrame
                     {
-                        return df()->process(rows(
+                        return df()->process(array_to_rows(
+                            [['id' => 1, 'n' => 'a']],
                             schema(int_schema('id'), str_schema('n')),
-                            row(['id' => 1, 'n' => 'a']),
                         ));
                     }
                 },
@@ -137,13 +149,17 @@ final class AlgorithmOverrideTest extends FlowIntegrationTestCase
         $configured = new RecordingBucketsStorage(new MemoryBuckets());
 
         $output = [];
-        df(config_builder()->join(hash_join()->storage($configured))->build())
+        df(
+            config_builder()
+                ->join(hash_join()->storage($configured)->memoryLimit(Unit::fromBytes(1))->batchSize(1))
+                ->build(),
+        )
             ->read(from_array([['id' => 1], ['id' => 2]]))
             ->join(
                 df()->read(from_array([['id' => 1, 'n' => 'a']])),
                 join_on(['id' => 'id'], 'joined_'),
                 Join::left,
-                hash_join()->storage($pinned),
+                hash_join()->storage($pinned)->memoryLimit(Unit::fromBytes(1))->batchSize(1),
             )
             ->write(to_array($output))
             ->run();
@@ -160,7 +176,7 @@ final class AlgorithmOverrideTest extends FlowIntegrationTestCase
         $output = [];
         df(config_builder()->sort(external_sort()->storage(new MemoryBuckets()))->build())
             ->read(from_array([['id' => 3], ['id' => 1], ['id' => 2]]))
-            ->sortBy([ref('id')], external_sort()->runSize(1)->bucketsCount(2))
+            ->sortBy([ref('id')], external_sort()->memoryLimit(Unit::fromBytes(1))->batchSize(1)->bucketsCount(2))
             ->write(to_array($output))
             ->run();
 
@@ -180,9 +196,13 @@ final class AlgorithmOverrideTest extends FlowIntegrationTestCase
         $configured = new RecordingBucketsStorage(new MemoryBuckets());
 
         $output = [];
-        df(config_builder()->sort(external_sort()->storage($configured)->runSize(1))->build())
+        df(
+            config_builder()
+                ->sort(external_sort()->storage($configured)->memoryLimit(Unit::fromBytes(1))->batchSize(1))
+                ->build(),
+        )
             ->read(from_array([['id' => 3], ['id' => 1], ['id' => 2]]))
-            ->sortBy([ref('id')], external_sort()->storage($pinned)->runSize(1))
+            ->sortBy([ref('id')], external_sort()->storage($pinned)->memoryLimit(Unit::fromBytes(1))->batchSize(1))
             ->write(to_array($output))
             ->run();
 
@@ -196,7 +216,11 @@ final class AlgorithmOverrideTest extends FlowIntegrationTestCase
         $configured = new RecordingBucketsStorage(new MemoryBuckets());
 
         $output = [];
-        df(config_builder()->sort(external_sort()->storage($configured)->runSize(1))->build())
+        df(
+            config_builder()
+                ->sort(external_sort()->storage($configured)->memoryLimit(Unit::fromBytes(1))->batchSize(1))
+                ->build(),
+        )
             ->read(from_array([['id' => 3], ['id' => 1], ['id' => 2]]))
             ->sortBy([ref('id')])
             ->write(to_array($output))

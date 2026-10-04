@@ -11,6 +11,7 @@ on:
       - 'composer.lock'
       - 'composer.json'
       - 'phpunit.xml.dist'
+      - '.nix/pkgs/**'
   push:
     branches: [ 1.x ]
     paths:
@@ -22,6 +23,7 @@ on:
       - 'composer.lock'
       - 'composer.json'
       - 'phpunit.xml.dist'
+      - '.nix/pkgs/**'
   schedule:
     - cron: '0 4 * * *'
   workflow_dispatch:

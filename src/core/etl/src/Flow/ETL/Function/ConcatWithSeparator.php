@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function array_map;
@@ -65,28 +69,43 @@ final class ConcatWithSeparator implements ScalarFunction
         return type_string();
     }
 
-    public function eval(Row $row, FlowContext $context): string
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $separator = (new Parameter($this->separator))->asString($row, $context);
+        $separators = (new Parameter($this->separator))->asStrings($rows, $context);
+        $arguments = array_map(static fn(ScalarFunction $ref): array => (new Parameter($ref))->values(
+            $rows,
+            $context,
+        ), $this->refs);
+        $results = [];
+        $i = 0;
 
-        if (!is_string($separator)) {
-            throw new InvalidArgumentException('ConcatWithSeparator function requires non-null separator');
-        }
+        try {
+            foreach ($separators as $i => $separator) {
+                if (!is_string($separator)) {
+                    throw new InvalidArgumentException('ConcatWithSeparator function requires non-null separator');
+                }
 
-        /** @var array<string> $concatValues */
-        $concatValues = [];
+                /** @var array<string> $concatValues */
+                $concatValues = [];
 
-        foreach ($this->refs as $value) {
-            $value = (new Parameter($value))->eval($row, $context);
+                foreach ($arguments as $argument) {
+                    // @mago-ignore analysis:mixed-assignment
+                    $value = $argument[$i];
 
-            if (is_type(type_list(type_string()), $value)) {
-                /** @var list<string> $value */
-                $concatValues = array_merge($concatValues, $value);
-            } elseif ($value !== null) {
-                $concatValues[] = type_string()->cast($value);
+                    if (is_type(type_list(type_string()), $value)) {
+                        /** @var list<string> $value */
+                        $concatValues = array_merge($concatValues, $value);
+                    } elseif ($value !== null) {
+                        $concatValues[] = type_string()->cast($value);
+                    }
+                }
+
+                $results[] = implode($separator, $concatValues);
             }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return implode($separator, $concatValues);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

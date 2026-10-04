@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function array_map;
@@ -56,21 +60,34 @@ final class Concat implements ScalarFunction
         return type_string();
     }
 
-    public function eval(Row $row, FlowContext $context): string
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        /** @var array<string> $concatValues */
-        $concatValues = [];
+        $arguments = array_map(static fn(ScalarFunction $ref): array => (new Parameter($ref))->values(
+            $rows,
+            $context,
+        ), $this->refs);
+        $results = [];
+        $i = 0;
 
-        foreach ($this->refs as $ref) {
-            $value = (new Parameter($ref))->eval($row, $context);
+        try {
+            for ($count = $rows->count(); $i < $count; $i++) {
+                /** @var array<string> $concatValues */
+                $concatValues = [];
 
-            if ($value === null) {
-                continue;
+                foreach ($arguments as $argument) {
+                    if ($argument[$i] === null) {
+                        continue;
+                    }
+
+                    $concatValues[] = type_string()->cast($argument[$i]);
+                }
+
+                $results[] = implode('', $concatValues);
             }
-
-            $concatValues[] = type_string()->cast($value);
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return implode('', $concatValues);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

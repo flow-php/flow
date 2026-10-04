@@ -16,15 +16,16 @@ use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Context\ExtractedRows;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Google\Service\Sheets;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function array_sum;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\infer_schema;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function iterator_to_array;
@@ -120,13 +121,12 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         $rows = ExtractedRows::of($extractor);
 
         static::assertCount(2, $rows);
-        static::assertEquals(
-            row(['_sheet_name' => 'sheet', '_spread_sheet_id' => 'spread-id', 'header' => 'row1']),
-            $rows->all()[0],
-        );
-        static::assertEquals(
-            row(['_sheet_name' => 'sheet', '_spread_sheet_id' => 'spread-id', 'header' => 'row2']),
-            $rows->all()[1],
+        static::assertSame(
+            [
+                ['header' => 'row1', '_spread_sheet_id' => 'spread-id', '_sheet_name' => 'sheet'],
+                ['header' => 'row2', '_spread_sheet_id' => 'spread-id', '_sheet_name' => 'sheet'],
+            ],
+            $rows->toArray(),
         );
     }
 
@@ -309,7 +309,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         foreach ($extractor->withBatchSize(2)->extract(flow_context()) as $rows) {
             static::assertTrue($rows->schema()->isSame($extractor->schema()));
             $sizes[] = $rows->count();
-            $first ??= $rows->first()->toArray();
+            $first ??= $rows->toArray()[0];
         }
 
         static::assertLessThanOrEqual(2, max($sizes));
@@ -409,7 +409,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
 
         static::assertSame(
             ['3' => 'a', '7' => 'b', '_spread_sheet_id' => 'spread-id', '_sheet_name' => 'sheet'],
-            $rowsArray[0]->first()->toArray(),
+            $rowsArray[0]->toArray()[0],
         );
     }
 
@@ -462,7 +462,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
                 ->extract(flow_context()),
         );
 
-        static::assertNull($rowsArray[0]->first()->toArray()['name']);
+        static::assertNull($rowsArray[0]->toArray()[0]['name']);
     }
 
     public function test_empty_cells_stay_strings_when_asked(): void
@@ -480,7 +480,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
                 ->extract(flow_context()),
         );
 
-        static::assertSame('', $rowsArray[0]->first()->toArray()['name']);
+        static::assertSame('', $rowsArray[0]->toArray()[0]['name']);
     }
 
     public function test_a_value_past_the_sample_that_does_not_fit_is_refused(): void
@@ -508,10 +508,9 @@ final class GoogleSheetExtractorTest extends FlowTestCase
             $rows,
         )], [SheetValuesMother::batch([$rows])]);
 
-        // 3, not 2: the blank row still decodes to a column-less row, as it did before inference existed. What this
-        // pins is that the divergence check no longer reads that row as "every column is missing".
+        // a leading blank row is skipped before the generated header is sized, so the two data rows keep their columns
         self::assertExtractedRowsCount(
-            3,
+            2,
             GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(100, $values))->withHeader(false),
         );
     }
@@ -616,5 +615,22 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         $setter($extractor);
 
         static::assertEquals(new Statistics(), $extractor->statistics());
+    }
+
+    public function test_extract_builds_through_the_config_backend(): void
+    {
+        $backend = new SpyBackend();
+
+        iterator_to_array(
+            GoogleSheetFixtureContext::extractor(GoogleSheetFixtureContext::service(100, GoogleSheetFixtureContext::valuesAndBatches([], [SheetValuesMother::batch([[
+                ['header'],
+                ['row1'],
+            ]])])))
+                ->withSchema(schema(str_schema('header')))
+                ->extract(flow_context(config_builder()->backend($backend)->build())),
+            false,
+        );
+
+        static::assertGreaterThanOrEqual(1, $backend->builders());
     }
 }

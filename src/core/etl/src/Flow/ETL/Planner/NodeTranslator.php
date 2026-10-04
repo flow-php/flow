@@ -103,7 +103,11 @@ final readonly class NodeTranslator
             $node instanceof Node\Repartition => RepartitionSteps::of($node->by, $context->config),
             $node instanceof Node\Select => [new SelectEntriesTransformer(...$node->entries)],
             $node instanceof Node\Sort => SortSteps::of($node->refs, $context->config, $node->algorithm),
-            $node instanceof Node\TopN => [new TopNProcessor($node->refs, $node->limit)],
+            $node instanceof Node\TopN => [new TopNProcessor(
+                $node->refs,
+                $node->limit,
+                SortSteps::external($node->refs, $context->config, $node->algorithm),
+            )],
             $node instanceof Node\Transform => [
                 $node->transformer instanceof Stateful ? $node->transformer->fresh() : $node->transformer,
             ],

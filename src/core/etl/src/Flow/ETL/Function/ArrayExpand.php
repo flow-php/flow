@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Column\Column;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Function\Evaluation\ResultColumn;
 use Flow\ETL\Function\ScalarFunction\ExpandResults;
-use Flow\ETL\Row;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
@@ -15,6 +17,7 @@ use Flow\Types\Type\Logical\StructureType;
 
 use function array_keys;
 use function array_map;
+use function array_values;
 use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_map;
@@ -80,25 +83,28 @@ final class ArrayExpand implements ScalarFunction, ExpandResults
         };
     }
 
-    /**
-     * @return array<mixed>
-     */
-    public function eval(Row $row, FlowContext $context): array
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $array = (new Parameter($this->ref))->asArray($row, $context);
+        $lists = [];
 
-        if ($array === null) {
-            return [];
+        foreach ((new Parameter($this->ref))->asArrays($rows, $context) as $array) {
+            if ($array === null) {
+                $lists[] = [];
+
+                continue;
+            }
+
+            $lists[] = match ($this->expand) {
+                ArrayExpand\ArrayExpand::KEYS => array_keys($array),
+                ArrayExpand\ArrayExpand::BOTH => array_map(
+                    static fn($key, $value) => [$key => $value],
+                    array_keys($array),
+                    $array,
+                ),
+                default => array_values($array),
+            };
         }
 
-        if ($this->expand === ArrayExpand\ArrayExpand::KEYS) {
-            return array_keys($array);
-        }
-
-        if ($this->expand === ArrayExpand\ArrayExpand::BOTH) {
-            return array_map(static fn($key, $value) => [$key => $value], array_keys($array), $array);
-        }
-
-        return $array;
+        return (new ResultColumn($context->backend()))->lists($this, $lists);
     }
 }

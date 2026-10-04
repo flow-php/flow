@@ -24,8 +24,8 @@ final class WorkbookReaderTest extends FlowTestCase
         );
 
         static::assertCount(3, $rows);
-        static::assertSame(['e00', 'e01', 'e02'], array_keys($rows[0]->values));
-        static::assertSame('', $rows[0]->values['e01']);
+        static::assertSame(['e00', 'e01', 'e02'], array_keys($rows[0]));
+        static::assertSame('', $rows[0]['e01']);
     }
 
     public function test_sheet_is_a_new_object_every_time(): void

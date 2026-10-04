@@ -166,7 +166,7 @@ final class WorkbookSheetTest extends FlowTestCase
         );
 
         static::assertCount(11, $rows);
-        static::assertSame(['e00' => 'id', 'e01' => 'name', 'e02' => 'email'], $rows[0]->values);
+        static::assertSame(['e00' => 'id', 'e01' => 'name', 'e02' => 'email'], $rows[0]);
     }
 
     public function test_rows_resolve_the_columns_without_a_columns_call_first(): void
@@ -174,7 +174,7 @@ final class WorkbookSheetTest extends FlowTestCase
         $rows = iterator_to_array(ExcelFixtureContext::sheet('fixture.xlsx')->rows(), false);
 
         static::assertCount(10, $rows);
-        static::assertSame(['id', 'name', 'email'], array_keys($rows[0]->values));
+        static::assertSame(['id', 'name', 'email'], array_keys($rows[0]));
     }
 
     public function test_an_unknown_sheet_name_names_the_sheet_it_looked_for(): void

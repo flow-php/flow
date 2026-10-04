@@ -8,9 +8,8 @@ use Flow\ETL\Formatter\ASCII\ASCIITable;
 use Flow\ETL\Tests\CommandOutputNormalizer;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
@@ -20,16 +19,15 @@ final class ASCIITableTest extends FlowTestCase
 
     public function test_ascii_table_with_mb_strings(): void
     {
-        $rows = rows(
-            schema(str_schema('row')),
-            row(['row' => '[498][534]/Wiele z tego,|/co niegdyś było, przepadło.']),
-            row(['row' => '[540][572]/A nie żyje już nikt z tych,|/którzy by o tym pamiętali.']),
-            row(['row' => '[572][647]WŁADCA PIERŚCIENI']),
-            row(['row' => '[701][741]/Wszystko zaczęło się|/od wykucia Pierścieni Władzy.']),
-            row(['row' => '[742][762]/Trzy zostały dane elfom...']),
-            row(['row' => '[763][805]/nieśmiertelnym, najmędrszym|/i najbliższym magii spośród wszystkich ras.']),
-            row(['row' => '[816][853]/Siedem - władcom krasnoludów,|/wspaniałym górnikom']),
-        );
+        $rows = array_to_rows([
+            ['row' => '[498][534]/Wiele z tego,|/co niegdyś było, przepadło.'],
+            ['row' => '[540][572]/A nie żyje już nikt z tych,|/którzy by o tym pamiętali.'],
+            ['row' => '[572][647]WŁADCA PIERŚCIENI'],
+            ['row' => '[701][741]/Wszystko zaczęło się|/od wykucia Pierścieni Władzy.'],
+            ['row' => '[742][762]/Trzy zostały dane elfom...'],
+            ['row' => '[763][805]/nieśmiertelnym, najmędrszym|/i najbliższym magii spośród wszystkich ras.'],
+            ['row' => '[816][853]/Siedem - władcom krasnoludów,|/wspaniałym górnikom'],
+        ], schema(str_schema('row')));
 
         self::assertCommandOutputContains(<<<'TABLE'
             +-------------------------------------------------------------------------------------+
@@ -48,16 +46,15 @@ final class ASCIITableTest extends FlowTestCase
 
     public function test_ascii_table_with_mb_strings_truncate(): void
     {
-        $rows = rows(
-            schema(str_schema('row')),
-            row(['row' => '[498][534]/Wiele z tego,|/co niegdyś było, przepadło.']),
-            row(['row' => '[540][572]/A nie żyje już nikt z tych,|/którzy by o tym pamiętali.']),
-            row(['row' => '[572][647]WŁADCA PIERŚCIENI']),
-            row(['row' => '[701][741]/Wszystko zaczęło się|/od wykucia Pierścieni Władzy.']),
-            row(['row' => '[742][762]/Trzy zostały dane elfom...']),
-            row(['row' => '[763][805]/nieśmiertelnym, najmędrszym|/i najbliższym magii spośród wszystkich ras.']),
-            row(['row' => '[816][853]/Siedem - władcom krasnoludów,|/wspaniałym górnikom']),
-        );
+        $rows = array_to_rows([
+            ['row' => '[498][534]/Wiele z tego,|/co niegdyś było, przepadło.'],
+            ['row' => '[540][572]/A nie żyje już nikt z tych,|/którzy by o tym pamiętali.'],
+            ['row' => '[572][647]WŁADCA PIERŚCIENI'],
+            ['row' => '[701][741]/Wszystko zaczęło się|/od wykucia Pierścieni Władzy.'],
+            ['row' => '[742][762]/Trzy zostały dane elfom...'],
+            ['row' => '[763][805]/nieśmiertelnym, najmędrszym|/i najbliższym magii spośród wszystkich ras.'],
+            ['row' => '[816][853]/Siedem - władcom krasnoludów,|/wspaniałym górnikom'],
+        ], schema(str_schema('row')));
 
         self::assertCommandOutputContains(<<<'TABLE'
             +----------------------+
@@ -76,15 +73,17 @@ final class ASCIITableTest extends FlowTestCase
 
     public function test_ascii_table_with_non_symmetric_entries(): void
     {
-        $rows = rows(
+        $rows = array_to_rows(
+            [
+                ['row' => '[498][534]/Wiele z tego,|/co niegdyś było, przepadło.'],
+                ['row' => '[540][572]/A nie żyje już nikt z tych,|/którzy by o tym pamiętali.'],
+                ['row' => '[572][647]WŁADCA PIERŚCIENI'],
+                ['row' => '[701][741]/Wszystko zaczęło się|/od wykucia Pierścieni Władzy.'],
+                ['row' => '[742][762]/Trzy zostały dane elfom...'],
+                ['row' => '[763][805]/nieśmiertelnym, najmędrszym|/i najbliższym magii spośród wszystkich ras.'],
+                ['test' => '[816][853]/Siedem - władcom krasnoludów,|/wspaniałym górnikom'],
+            ],
             schema(str_schema('row', nullable: true), str_schema('test', nullable: true)),
-            row(['row' => '[498][534]/Wiele z tego,|/co niegdyś było, przepadło.']),
-            row(['row' => '[540][572]/A nie żyje już nikt z tych,|/którzy by o tym pamiętali.']),
-            row(['row' => '[572][647]WŁADCA PIERŚCIENI']),
-            row(['row' => '[701][741]/Wszystko zaczęło się|/od wykucia Pierścieni Władzy.']),
-            row(['row' => '[742][762]/Trzy zostały dane elfom...']),
-            row(['row' => '[763][805]/nieśmiertelnym, najmędrszym|/i najbliższym magii spośród wszystkich ras.']),
-            row(['test' => '[816][853]/Siedem - władcom krasnoludów,|/wspaniałym górnikom']),
         );
 
         self::assertCommandOutputContains(<<<'TABLE'
@@ -111,10 +110,9 @@ final class ASCIITableTest extends FlowTestCase
             |  1 |   EN |
             |  2 |   PL |
             +----+------+
-            TABLE, (new ASCIITable(rows(
+            TABLE, (new ASCIITable(array_to_rows(
+            [['id' => 1, 'name' => 'EN'], ['id' => 2, 'name' => 'PL']],
             schema(int_schema('id'), str_schema('name')),
-            row(['id' => 1, 'name' => 'EN']),
-            row(['id' => 2, 'name' => 'PL']),
         )))->print(false));
     }
 }

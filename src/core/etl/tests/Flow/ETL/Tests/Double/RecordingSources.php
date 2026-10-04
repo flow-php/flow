@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Row\RawRowValues;
 use Generator;
 
 use function array_keys;
@@ -24,14 +23,14 @@ final class RecordingSources
     public array $rowsRead = [];
 
     /**
-     * @param list<list<RawRowValues>> $sources
+     * @param list<list<array<array-key, mixed>>> $sources
      */
     public function __construct(
         private readonly array $sources,
     ) {}
 
     /**
-     * @return Generator<int, RawRowValues>
+     * @return Generator<int, array<array-key, mixed>>
      */
     public function source(int $index): Generator
     {
@@ -46,7 +45,7 @@ final class RecordingSources
     }
 
     /**
-     * @return Generator<int, Generator<int, RawRowValues>>
+     * @return Generator<int, Generator<int, array<array-key, mixed>>>
      */
     public function sources(): Generator
     {

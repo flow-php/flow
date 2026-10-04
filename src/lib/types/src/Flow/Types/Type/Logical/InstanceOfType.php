@@ -18,6 +18,7 @@ use function Flow\Types\DSL\type_structure;
 use function interface_exists;
 use function is_a;
 use function is_object;
+use function is_scalar;
 use function is_string;
 
 /**
@@ -75,7 +76,8 @@ final readonly class InstanceOfType implements Type
         }
 
         try {
-            $object = (object) $value;
+            // an explicit wrapper: PHP 8.5 warns on (object) NAN
+            $object = is_scalar($value) ? (object) ['scalar' => $value] : (object) $value;
 
             if (!$object instanceof $this->class) {
                 throw new CastingException($value, type_instance_of($this->class));

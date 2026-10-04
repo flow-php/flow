@@ -13,7 +13,9 @@ use Flow\Parquet\ParquetFile\RowGroup;
 use Flow\Parquet\ParquetFile\Schema;
 
 use function array_chunk;
+use function array_slice;
 use function count;
+use function min;
 
 final class RowGroupBuilder
 {
@@ -25,6 +27,11 @@ final class RowGroupBuilder
     private array $rowBuffer = [];
 
     private int $rowsCount = 0;
+
+    /**
+     * Rows of the row groups flushed before this one: the writer's index of this group's first row.
+     */
+    private int $flushedRows = 0;
 
     public function __construct(
         private readonly Schema $schema,
@@ -62,13 +69,51 @@ final class RowGroupBuilder
         $this->flushBuffer();
 
         foreach (array_chunk($rows, $interval) as $chunk) {
-            $flatColumnsData = $this->shredder->shred($this->schema, $chunk);
+            $flatColumnsData = $this->shredder->shred($this->schema, $chunk, $this->flushedRows + $this->rowsCount);
 
             foreach ($flatColumnsData as $flatPath => $columnValues) {
                 $this->columnChunkBuilders->addColumnByFlatPath($flatPath, $columnValues);
             }
 
             $this->rowsCount += count($chunk);
+
+            if ($this->columnChunkBuilders->isAnyPageFull()) {
+                $this->columnChunkBuilders->closePages();
+            }
+        }
+    }
+
+    /**
+     * @param array<string, list<mixed>> $columns by top-level column name
+     * @param int $count rows in every list
+     */
+    public function addColumns(array $columns, int $count): void
+    {
+        /** @var int<1, max> $interval */
+        $interval = $this->options->getInt(Option::PAGE_SIZE_CHECK_INTERVAL);
+        // rows still buffered by addRow() came first - parquet identifies a row by its position
+        $this->flushBuffer();
+
+        for ($offset = 0; $offset < $count; $offset += $interval) {
+            $length = min($interval, $count - $offset);
+            $slices = [];
+
+            foreach ($columns as $name => $values) {
+                $slices[$name] = array_slice($values, $offset, $length);
+            }
+
+            $flatColumnsData = $this->shredder->shredColumns(
+                $this->schema,
+                $slices,
+                $length,
+                $this->flushedRows + $this->rowsCount,
+            );
+
+            foreach ($flatColumnsData as $flatPath => $columnValues) {
+                $this->columnChunkBuilders->addColumnByFlatPath($flatPath, $columnValues);
+            }
+
+            $this->rowsCount += $length;
 
             if ($this->columnChunkBuilders->isAnyPageFull()) {
                 $this->columnChunkBuilders->closePages();
@@ -84,6 +129,7 @@ final class RowGroupBuilder
         $offset = $fileOffset;
         $buffer = '';
         $chunks = [];
+        $this->flushedRows += $rowsCount;
         $this->rowsCount = 0;
 
         foreach ($this->columnChunkBuilders->flush($offset) as $container) {
@@ -115,7 +161,11 @@ final class RowGroupBuilder
             return;
         }
 
-        $flatColumnsData = $this->shredder->shred($this->schema, $this->rowBuffer);
+        $flatColumnsData = $this->shredder->shred(
+            $this->schema,
+            $this->rowBuffer,
+            $this->flushedRows + $this->rowsCount - count($this->rowBuffer),
+        );
 
         foreach ($flatColumnsData as $flatPath => $columnValues) {
             $this->columnChunkBuilders->addColumnByFlatPath($flatPath, $columnValues);

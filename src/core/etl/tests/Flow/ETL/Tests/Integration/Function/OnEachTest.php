@@ -28,7 +28,8 @@ final class OnEachTest extends FlowTestCase
         static::assertEquals(
             [
                 ['array' => ['a' => '1', 'b' => '2', 'c' => '3', 'd' => '4', 'e' => '5']],
-                ['array' => ['f' => '1', 'g' => '2.3', 'h' => '3', 'i' => '4', 'j' => null]],
+                // an optional and nullable structure element given null reads back absent (ruling 4)
+                ['array' => ['f' => '1', 'g' => '2.3', 'h' => '3', 'i' => '4']],
             ],
             $results,
         );

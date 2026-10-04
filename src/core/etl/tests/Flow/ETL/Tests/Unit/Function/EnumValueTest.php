@@ -8,6 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Function\ScalarFunction;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
@@ -20,7 +21,6 @@ use function Flow\ETL\DSL\enum_schema;
 use function Flow\ETL\DSL\enum_value;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Types\DSL\type_equals;
@@ -31,19 +31,33 @@ final class EnumValueTest extends FlowTestCase
 {
     public function test_enum_value_accepts_literal_enum(): void
     {
-        static::assertSame(1, enum_value(BackedIntEnum::one)->eval(row([]), flow_context()));
+        static::assertSame(1, (new FunctionContext(flow_context()))->eval(
+            enum_value(BackedIntEnum::one),
+            [],
+            schema(),
+        ));
     }
 
     public function test_enum_value_from_scalar_function_chain(): void
     {
-        static::assertSame(1, ref('e')->enumValue()->eval(row(['e' => BackedIntEnum::one]), flow_context()));
+        static::assertSame(1, (new FunctionContext(flow_context()))->eval(
+            ref('e')->enumValue(),
+            [
+                'e' => BackedIntEnum::one,
+            ],
+            schema(enum_schema('e', BackedIntEnum::class)),
+        ));
     }
 
     #[TestWith([BackedStringEnum::one, 'one'])]
     #[TestWith([BackedIntEnum::one, 1])]
     public function test_enum_value_returns_backing_value(UnitEnum $enum, int|string $expected): void
     {
-        static::assertSame($expected, enum_value(ref('e'))->eval(row(['e' => $enum]), flow_context()));
+        static::assertSame($expected, (new FunctionContext(flow_context()))->eval(
+            enum_value(ref('e')),
+            ['e' => $enum],
+            schema(enum_schema('e', $enum::class)),
+        ));
     }
 
     #[TestWith([BasicEnum::one])]
@@ -56,7 +70,7 @@ final class EnumValueTest extends FlowTestCase
         $this->expectExceptionMessage('EnumValue function requires a BackedEnum value');
 
         $context = flow_context(config());
-        enum_value($input)->eval(row([]), $context);
+        (new FunctionContext($context))->eval(enum_value($input), [], schema());
     }
 
     public function test_a_non_enum_operand_is_refused_at_bind(): void

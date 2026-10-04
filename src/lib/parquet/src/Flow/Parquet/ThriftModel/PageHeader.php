@@ -21,7 +21,7 @@ class PageHeader
             'var' => 'type',
             'isRequired' => true,
             'type' => TType::I32,
-            'class' => '\Flow\Parquet\Thrift\PageType',
+            'class' => '\Flow\Parquet\ThriftModel\PageType',
         ],
         2 => [
             'var' => 'uncompressed_page_size',
@@ -42,25 +42,25 @@ class PageHeader
             'var' => 'data_page_header',
             'isRequired' => false,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\DataPageHeader',
+            'class' => '\Flow\Parquet\ThriftModel\DataPageHeader',
         ],
         6 => [
             'var' => 'index_page_header',
             'isRequired' => false,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\IndexPageHeader',
+            'class' => '\Flow\Parquet\ThriftModel\IndexPageHeader',
         ],
         7 => [
             'var' => 'dictionary_page_header',
             'isRequired' => false,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\DictionaryPageHeader',
+            'class' => '\Flow\Parquet\ThriftModel\DictionaryPageHeader',
         ],
         8 => [
             'var' => 'data_page_header_v2',
             'isRequired' => false,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\DataPageHeaderV2',
+            'class' => '\Flow\Parquet\ThriftModel\DataPageHeaderV2',
         ],
     ];
 

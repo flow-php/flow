@@ -17,6 +17,10 @@ use Flow\Parquet\ParquetFile\Schema\ListElement;
 use Flow\Parquet\ParquetFile\Schema\MapKey;
 use Flow\Parquet\ParquetFile\Schema\MapValue;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Flow\Parquet\ParquetFile\Schema\Repetition;
+use Flow\Parquet\Tests\Context\FlatColumnPages;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
@@ -24,6 +28,52 @@ use function iterator_to_array;
 
 final class DremelStructuresTest extends TestCase
 {
+    /**
+     * @return Generator<string, array{NestedColumn, array<array<string, mixed>>}>
+     */
+    public static function structs_with_a_null_optional_child(): Generator
+    {
+        $children = static fn(): array => [FlatColumn::int64('id', Repetition::REQUIRED), FlatColumn::string('name')];
+
+        yield 'required struct' => [
+            NestedColumn::struct('s', $children(), Repetition::REQUIRED),
+            [['s' => ['id' => 1, 'name' => null]], ['s' => ['id' => 2, 'name' => 'x']]],
+        ];
+        yield 'optional struct' => [
+            NestedColumn::struct('s', $children()),
+            [['s' => ['id' => 1, 'name' => null]], ['s' => null], ['s' => ['id' => 2, 'name' => 'x']]],
+        ];
+        yield 'required struct in an optional struct' => [
+            NestedColumn::struct('s', [NestedColumn::struct('inner', $children(), Repetition::REQUIRED)]),
+            [['s' => ['inner' => ['id' => 1, 'name' => null]]], ['s' => null]],
+        ];
+        yield 'required struct in a list' => [
+            NestedColumn::list('s', ListElement::structure($children(), required: true)),
+            [['s' => [['id' => 1, 'name' => null], ['id' => 2, 'name' => 'x']]], ['s' => null]],
+        ];
+        yield 'optional struct as a map value' => [
+            NestedColumn::map('s', MapKey::string(), MapValue::structure($children())),
+            [['s' => ['a' => ['id' => 1, 'name' => null]]], ['s' => ['b' => ['id' => 2, 'name' => 'x']]]],
+        ];
+    }
+
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
+    #[DataProvider('structs_with_a_null_optional_child')]
+    public function test_a_null_optional_child_keeps_its_struct(NestedColumn $column, array $rows): void
+    {
+        $schema = Schema::with($column);
+
+        static::assertSame(
+            $rows,
+            iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                $schema->get('s'),
+                new ReadColumnData($schema->get('s'), FlatColumnPages::merged($schema, $rows)),
+            )),
+        );
+    }
+
     /**
      * @param array<string, mixed> $row
      */
@@ -130,9 +180,9 @@ final class DremelStructuresTest extends TestCase
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
 
-            $shredder->shred($schema, [$row]);
+            $shredder->shred($schema, [$row], 0);
         } else {
-            $shredResult = $shredder->shred($schema, [$row]);
+            $shredResult = $shredder->shred($schema, [$row], 0);
 
             $normalized = [];
 
@@ -264,9 +314,9 @@ final class DremelStructuresTest extends TestCase
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
 
-            $shredder->shred($schema, [$row]);
+            $shredder->shred($schema, [$row], 0);
         } else {
-            $shredResult = $shredder->shred($schema, [$row]);
+            $shredResult = $shredder->shred($schema, [$row], 0);
 
             $normalized = [];
 
@@ -427,9 +477,9 @@ final class DremelStructuresTest extends TestCase
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
 
-            $shredder->shred($schema, [$row]);
+            $shredder->shred($schema, [$row], 0);
         } else {
-            $shredResult = $shredder->shred($schema, [$row]);
+            $shredResult = $shredder->shred($schema, [$row], 0);
 
             $normalized = [];
 
@@ -574,9 +624,9 @@ final class DremelStructuresTest extends TestCase
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
 
-            $shredder->shred($schema, [$row]);
+            $shredder->shred($schema, [$row], 0);
         } else {
-            $shredResult = $shredder->shred($schema, [$row]);
+            $shredResult = $shredder->shred($schema, [$row], 0);
 
             $normalized = [];
 
@@ -706,9 +756,9 @@ final class DremelStructuresTest extends TestCase
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
 
-            $shredder->shred($schema, [$row]);
+            $shredder->shred($schema, [$row], 0);
         } else {
-            $shredResult = $shredder->shred($schema, [$row]);
+            $shredResult = $shredder->shred($schema, [$row], 0);
 
             $normalized = [];
 
@@ -814,9 +864,9 @@ final class DremelStructuresTest extends TestCase
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
 
-            $shredder->shred($schema, [$row]);
+            $shredder->shred($schema, [$row], 0);
         } else {
-            $shredResult = $shredder->shred($schema, [$row]);
+            $shredResult = $shredder->shred($schema, [$row], 0);
 
             $normalized = [];
 
@@ -937,9 +987,9 @@ final class DremelStructuresTest extends TestCase
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
 
-            $shredder->shred($schema, [$row]);
+            $shredder->shred($schema, [$row], 0);
         } else {
-            $shredResult = $shredder->shred($schema, [$row]);
+            $shredResult = $shredder->shred($schema, [$row], 0);
 
             $normalized = [];
 
@@ -1064,9 +1114,9 @@ final class DremelStructuresTest extends TestCase
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
 
-            $shredder->shred($schema, [$row]);
+            $shredder->shred($schema, [$row], 0);
         } else {
-            $shredResult = $shredder->shred($schema, [$row]);
+            $shredResult = $shredder->shred($schema, [$row], 0);
 
             $normalized = [];
 

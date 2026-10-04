@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\Calculator\Calculator;
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 use Flow\Types\Type\Native\FloatType;
@@ -17,6 +20,8 @@ use function Flow\ETL\DSL\lit;
 use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
+use function is_float;
+use function is_int;
 
 final class Minus implements ScalarFunction
 {
@@ -25,8 +30,11 @@ final class Minus implements ScalarFunction
     private readonly ScalarFunction $left;
     private readonly ScalarFunction $right;
 
-    public function __construct(ScalarFunction|int|float $left, ScalarFunction|int|float $right)
-    {
+    public function __construct(
+        ScalarFunction|int|float $left,
+        ScalarFunction|int|float $right,
+        private readonly bool $exact = false,
+    ) {
         $this->left = $left instanceof ScalarFunction ? $left : lit($left);
         $this->right = $right instanceof ScalarFunction ? $right : lit($right);
     }
@@ -45,7 +53,7 @@ final class Minus implements ScalarFunction
     public function withChildren(array $children): static
     {
         /** @var list<ScalarFunction> $children */
-        return new self($children[0], $children[1]);
+        return new self($children[0], $children[1], $this->exact);
     }
 
     /**
@@ -66,15 +74,39 @@ final class Minus implements ScalarFunction
         return $left instanceof IntegerType && $right instanceof IntegerType ? type_integer() : type_float();
     }
 
-    public function eval(Row $row, FlowContext $context): int|float|null
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $leftValue = (new Parameter($this->left))->asNumber($row, $context);
-        $rightValue = (new Parameter($this->right))->asNumber($row, $context);
+        $lefts = (new Parameter($this->left))->asNumbers($rows, $context);
+        $rights = (new Parameter($this->right))->asNumbers($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($leftValue === null || $rightValue === null) {
-            throw new InvalidArgumentException('Minus function requires non-null values');
+        try {
+            foreach ($lefts as $i => $left) {
+                $right = $rights[$i];
+
+                if ($left === null || $right === null) {
+                    throw new InvalidArgumentException('Minus function requires non-null values');
+                }
+
+                if ($this->exact) {
+                    $results[] = $context->calculator()->subtract($left, $right);
+
+                    continue;
+                }
+
+                $result = $left - $right;
+
+                if (is_int($left) && is_int($right) && is_float($result)) {
+                    throw new InvalidArgumentException('Minus function integer overflow');
+                }
+
+                $results[] = $result;
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return (new Calculator())->subtract($leftValue, $rightValue);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

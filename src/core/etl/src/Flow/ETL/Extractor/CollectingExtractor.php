@@ -26,13 +26,18 @@ final class CollectingExtractor implements Extractor, OverridingExtractor, Rewin
 
         foreach ($this->extractor->extract($context) as $rows) {
             if ($schema !== null) {
-                $rows = $rows->matchTo($schema);
+                $rows = $rows->matchTo($schema, $context->backend());
             }
 
-            $collectedRows = $collectedRows === null ? $rows : $collectedRows->merge($rows);
+            // an empty part adds nothing, whatever its schema
+            $collectedRows = match (true) {
+                $collectedRows === null, $collectedRows->isEmpty() => $rows,
+                $rows->isEmpty() => $collectedRows,
+                default => $collectedRows->concat($context->backend(), $rows),
+            };
         }
 
-        yield $collectedRows ?? new Rows($this->schema());
+        yield $collectedRows ?? Rows::empty($this->schema(), $context->backend());
     }
 
     public function isRepeatable(): bool

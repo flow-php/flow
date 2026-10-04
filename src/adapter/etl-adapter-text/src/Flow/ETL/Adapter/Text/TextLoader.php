@@ -4,38 +4,39 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Text;
 
-use Flow\ETL\Config\Telemetry\TelemetryAttributes;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Filesystem\FilesSink;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\Loader\Discardable;
-use Flow\ETL\Loader\FileLoader;
+use Flow\ETL\Loader\File\FileLoader;
+use Flow\ETL\Loader\File\FileSink;
+use Flow\ETL\Loader\File\FileSinks;
+use Flow\ETL\Loader\File\FileWriteFrame;
+use Flow\ETL\Loader\File\PartitionRouter;
 use Flow\ETL\Loader\Partitioning;
 use Flow\ETL\Loader\PartitioningLoader;
-use Flow\ETL\Loader\PartitionRouter;
 use Flow\ETL\Rows;
+use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
-use Throwable;
 
-use function implode;
 use function sprintf;
 
-final class TextLoader implements Closure, Discardable, FileLoader, Loader, PartitioningLoader
+final class TextLoader implements Closure, Discardable, FileLoader, FileSinks, Loader, PartitioningLoader
 {
+    private ?FileWriteFrame $frame = null;
+
     private PartitionRouter $router;
 
     private readonly Filesystem $filesystem;
 
     private SaveMode $saveMode = SaveMode::ExceptionIfExists;
-
-    private ?FilesSink $files = null;
 
     private ?TextEncoder $encoder = null;
 
@@ -69,14 +70,14 @@ final class TextLoader implements Closure, Discardable, FileLoader, Loader, Part
 
     public function closure(FlowContext $context): void
     {
-        $this->files?->publish();
-        $this->files = null;
+        $this->frame?->closure();
+        $this->frame = null;
     }
 
     public function discard(FlowContext $context): void
     {
-        $this->files?->abandon();
-        $this->files = null;
+        $this->frame?->discard();
+        $this->frame = null;
     }
 
     public function destination(): Path
@@ -90,23 +91,18 @@ final class TextLoader implements Closure, Discardable, FileLoader, Loader, Part
             return;
         }
 
-        $context->telemetry()->loadingStarted($this, [
-            TelemetryAttributes::ATTR_LOADER_DESTINATION_URI => $this->path->uri(),
-        ]);
+        ($this->frame ??= new FileWriteFrame(
+            $this->filesystem,
+            $this->path,
+            $this->saveMode,
+            $this->router,
+            $this,
+        ))->write($rows, $context, $this);
+    }
 
-        try {
-            foreach ($this->router->route($rows) as [$partitions, $group]) {
-                ($this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode))
-                    ->writeTo($partitions->toArray())
-                    ->append(implode('', $this->encoder()->encode($context->hydrator()->dehydrate($group))));
-            }
-
-            $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
-        } catch (Throwable $e) {
-            $context->telemetry()->loadingFailed($this, $e);
-
-            throw $e;
-        }
+    public function open(DestinationStream $stream, Backend $backend): FileSink
+    {
+        return new TextOpenSink($stream, $this->encoder());
     }
 
     public function saveMode(SaveMode $mode): static

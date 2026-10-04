@@ -5,30 +5,38 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class StringAfterTest extends FlowTestCase
 {
     public function test_string_after(): void
     {
-        static::assertSame(' world', ref('str')
-            ->stringAfter(ref('needle'))
-            ->eval(row(['str' => 'hello world', 'needle' => 'hello']), flow_context()));
+        static::assertSame(' world', (new FunctionContext(flow_context()))->eval(
+            ref('str')->stringAfter(ref('needle')),
+            ['str' => 'hello world', 'needle' => 'hello'],
+            schema(str_schema('str'), str_schema('needle')),
+        ));
 
-        static::assertSame(' world', ref('str')
-            ->stringAfter(ref('needle'))
-            ->eval(row(['str' => 'hello world', 'needle' => 'o']), flow_context()));
+        static::assertSame(' world', (new FunctionContext(flow_context()))->eval(
+            ref('str')->stringAfter(ref('needle')),
+            ['str' => 'hello world', 'needle' => 'o'],
+            schema(str_schema('str'), str_schema('needle')),
+        ));
     }
 
     public function test_string_after_including_needle(): void
     {
-        static::assertSame('o world', ref('str')
-            ->stringAfter(ref('needle'), includeNeedle: true)
-            ->eval(row(['str' => 'hello world', 'needle' => 'o']), flow_context()));
+        static::assertSame('o world', (new FunctionContext(flow_context()))->eval(
+            ref('str')->stringAfter(ref('needle'), includeNeedle: true),
+            ['str' => 'hello world', 'needle' => 'o'],
+            schema(str_schema('str'), str_schema('needle')),
+        ));
     }
 
     public function test_string_after_throws_on_null_input(): void
@@ -36,6 +44,10 @@ final class StringAfterTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('StringAfter function requires non-null value');
 
-        ref('str')->stringAfter('x')->eval(row(['str' => null]), flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            ref('str')->stringAfter('x'),
+            ['str' => null],
+            schema(str_schema('str', nullable: true)),
+        );
     }
 }

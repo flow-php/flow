@@ -7,12 +7,34 @@ fn main() {
     println!("cargo:rustc-env=ARROW_VERSION={version}");
     println!("cargo:rerun-if-changed=Cargo.lock");
 
-    let arrow_version =
-        resolve_dep_version("arrow-schema").unwrap_or_else(|| "unknown".to_string());
+    let arrow_version = resolve_dep_version("arrow-schema").unwrap_or_else(|| "unknown".to_string());
     let parquet_version = resolve_dep_version("parquet").unwrap_or_else(|| "unknown".to_string());
 
     println!("cargo:rustc-env=ARROW_LIB_VERSION={arrow_version}");
     println!("cargo:rustc-env=PARQUET_LIB_VERSION={parquet_version}");
+
+    emit_php_version_cfg();
+}
+
+/// The `php84`/`php85` cfgs ext-php-rs sets for itself, for the same PHP (`PHP` first, then `PATH`): the extension
+/// binary is bound to the PHP minor it is built against, so version gates are compile-time.
+fn emit_php_version_cfg() {
+    use ext_php_rs_build::{
+        emit_check_cfg, emit_php_cfg_flags, emit_rerun_if_env_changed, find_php, ApiVersion, PHPInfo,
+    };
+
+    emit_rerun_if_env_changed();
+    emit_check_cfg();
+
+    let php = find_php().expect("cannot find the php executable");
+    let info = PHPInfo::get(&php).expect("cannot read php -i");
+    let version: ApiVersion = info
+        .zend_version()
+        .expect("cannot read the Zend API version")
+        .try_into()
+        .expect("unsupported Zend API version");
+
+    emit_php_cfg_flags(version);
 }
 
 fn extension_version(env_name: &str) -> String {
@@ -67,7 +89,8 @@ fn git(args: &[&str]) -> Option<String> {
         .filter(|stdout| !stdout.is_empty())
 }
 
-/// `0.43.0-107-gf998a45d0` (git describe) becomes `0.43.0+107.gf998a45d0`, semver build metadata Composer reads as 0.43.0.
+/// `0.44.1-65-g4525c4adc` (git describe) becomes `0.45.0-dev+65.g4525c4adc`: commits past a tag are a pre-release of the
+/// next minor, outside Composer's `<0.45` conflict of the libraries. A tag, or any other string, passes through.
 fn as_semver(describe: &str) -> String {
     let mut parts = describe.rsplitn(3, '-');
 
@@ -75,9 +98,17 @@ fn as_semver(describe: &str) -> String {
         (Some(hash), Some(distance), Some(tag))
             if hash.starts_with('g')
                 && !distance.is_empty()
-                && distance.bytes().all(|b| b.is_ascii_digit()) =>
+                && distance.bytes().all(|b| b.is_ascii_digit())
+                && distance != "0" =>
         {
-            format!("{tag}+{distance}.{hash}")
+            let mut numbers = tag.split('.').map(|number| number.parse::<u64>().ok());
+
+            match (numbers.next().flatten(), numbers.next().flatten()) {
+                (Some(major), Some(minor)) => {
+                    format!("{major}.{}.0-dev+{distance}.{hash}", minor + 1)
+                }
+                _ => describe.to_string(),
+            }
         }
         _ => describe.to_string(),
     }
@@ -92,11 +123,7 @@ fn resolve_dep_version(crate_name: &str) -> Option<String> {
             for line in chunk.lines() {
                 let line = line.trim();
                 if line.starts_with("version = ") {
-                    return Some(
-                        line.trim_start_matches("version = ")
-                            .trim_matches('"')
-                            .to_string(),
-                    );
+                    return Some(line.trim_start_matches("version = ").trim_matches('"').to_string());
                 }
             }
         }

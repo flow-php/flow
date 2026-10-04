@@ -8,15 +8,19 @@ use DateTime;
 use DateTimeImmutable;
 use DateTimeZone;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 use stdClass;
 
 use function array_slice;
+use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\random_string;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\to_date_time;
 use function Flow\Types\DSL\type_datetime;
 
@@ -68,11 +72,11 @@ final class ToDateTimeTest extends FlowTestCase
     {
         static::assertEquals(
             new DateTimeImmutable('2020-01-01 00:00:00', new DateTimeZone('UTC')),
-            to_date_time(ref('date_time'))
-                ->eval(row(['date_time' => new DateTimeImmutable(
-                    '2020-01-01 00:00:00',
-                    new DateTimeZone('UTC'),
-                )]), flow_context()),
+            (new FunctionContext(flow_context()))->eval(
+                to_date_time(ref('date_time')),
+                ['date_time' => new DateTimeImmutable('2020-01-01 00:00:00', new DateTimeZone('UTC'))],
+                schema(datetime_schema('date_time')),
+            ),
         );
     }
 
@@ -80,10 +84,13 @@ final class ToDateTimeTest extends FlowTestCase
     {
         static::assertEquals(
             new DateTimeImmutable('2020-01-01 00:00:00', new DateTimeZone('UTC')),
-            to_date_time(ref('int'))
-                ->eval(row([
+            (new FunctionContext(flow_context()))->eval(
+                to_date_time(ref('int')),
+                [
                     'int' => (int) (new DateTimeImmutable('2020-01-01 00:00:00', new DateTimeZone('UTC')))->format('U'),
-                ]), flow_context()),
+                ],
+                schema(int_schema('int')),
+            ),
         );
     }
 
@@ -91,15 +98,25 @@ final class ToDateTimeTest extends FlowTestCase
     {
         static::assertEquals(
             new DateTimeImmutable('2020-01-01 00:00:00', new DateTimeZone('UTC')),
-            to_date_time(ref('string'), 'Y-m-d H:i:s')->eval(row(['string' => '2020-01-01 00:00:00']), flow_context()),
+            (new FunctionContext(flow_context()))->eval(
+                to_date_time(ref('string'), 'Y-m-d H:i:s'),
+                [
+                    'string' => '2020-01-01 00:00:00',
+                ],
+                schema(str_schema('string')),
+            ),
         );
     }
 
     public function test_unparseable_string_to_date_time_is_null(): void
     {
-        static::assertNull(to_date_time(ref('string'), 'Y-m-d H:i:s')->eval(row([
-            'string' => 'not a datetime',
-        ]), flow_context()));
+        static::assertNull((new FunctionContext(flow_context()))->eval(
+            to_date_time(ref('string'), 'Y-m-d H:i:s'),
+            [
+                'string' => 'not a datetime',
+            ],
+            schema(str_schema('string')),
+        ));
     }
 
     public function test_constant_zone_returns_a_zoned_type(): void
@@ -115,13 +132,11 @@ final class ToDateTimeTest extends FlowTestCase
         static::assertSame(
             '10:30:00',
             type_datetime()
-                ->assert(
-                    to_date_time(ref('at'))
-                        ->eval(row(['at' => new DateTimeImmutable(
-                            '2020-01-01 10:30:00',
-                            new DateTimeZone('UTC'),
-                        )]), flow_context()),
-                )
+                ->assert((new FunctionContext(flow_context()))->eval(
+                    to_date_time(ref('at')),
+                    ['at' => new DateTimeImmutable('2020-01-01 10:30:00', new DateTimeZone('UTC'))],
+                    schema(datetime_schema('at')),
+                ))
                 ->format('H:i:s'),
         );
     }
@@ -131,9 +146,13 @@ final class ToDateTimeTest extends FlowTestCase
         static::assertSame(
             '2020-01-01 11:30:00 Europe/Warsaw',
             type_datetime()
-                ->assert(to_date_time(ref('at'), 'Y-m-d H:i:s', new DateTimeZone('Europe/Warsaw'))->eval(row([
-                    'at' => 1577874600,
-                ]), flow_context()))
+                ->assert((new FunctionContext(flow_context()))->eval(
+                    to_date_time(ref('at'), 'Y-m-d H:i:s', new DateTimeZone('Europe/Warsaw')),
+                    [
+                        'at' => 1577874600,
+                    ],
+                    schema(int_schema('at')),
+                ))
                 ->format('Y-m-d H:i:s e'),
         );
     }
@@ -144,9 +163,13 @@ final class ToDateTimeTest extends FlowTestCase
 
         static::assertEquals(
             new DateTimeImmutable('2020-01-01 11:30:00', new DateTimeZone('Europe/Warsaw')),
-            to_date_time(ref('at'), 'Y-m-d H:i:s', new DateTimeZone('Europe/Warsaw'))->eval(row([
-                'at' => $value,
-            ]), flow_context()),
+            (new FunctionContext(flow_context()))->eval(
+                to_date_time(ref('at'), 'Y-m-d H:i:s', new DateTimeZone('Europe/Warsaw')),
+                [
+                    'at' => $value,
+                ],
+                schema(datetime_schema('at')),
+            ),
         );
         static::assertSame('2020-01-01 10:30:00 UTC', $value->format('Y-m-d H:i:s e'));
     }
@@ -156,7 +179,7 @@ final class ToDateTimeTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('ToDateTime function requires DateTimeInterface object');
 
-        to_date_time(ref('at'))->eval(row(['at' => new stdClass()]), flow_context());
+        (new FunctionContext(flow_context()))->eval(to_date_time(lit(new stdClass())), [], schema());
     }
 
     public function test_string_in_a_utc_alias_zone_lands_in_utc(): void
@@ -164,9 +187,13 @@ final class ToDateTimeTest extends FlowTestCase
         static::assertSame(
             '2020-01-01 10:30:00 UTC',
             type_datetime()
-                ->assert(to_date_time(ref('at'), 'Y-m-d H:i:s', new DateTimeZone('GMT'))->eval(row([
-                    'at' => '2020-01-01 10:30:00',
-                ]), flow_context()))
+                ->assert((new FunctionContext(flow_context()))->eval(
+                    to_date_time(ref('at'), 'Y-m-d H:i:s', new DateTimeZone('GMT')),
+                    [
+                        'at' => '2020-01-01 10:30:00',
+                    ],
+                    schema(str_schema('at')),
+                ))
                 ->format('Y-m-d H:i:s e'),
         );
     }

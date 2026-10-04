@@ -6,13 +6,18 @@ namespace Flow\ETL\Function;
 
 use DateTimeInterface;
 use DateTimeZone;
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateTimeType;
 
 use function Flow\ETL\DSL\lit;
+use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_datetime;
 
 final class ToTimeZone implements ScalarFunction
@@ -57,14 +62,42 @@ final class ToTimeZone implements ScalarFunction
         return $this->type;
     }
 
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $dateTime = (new Parameter($this->value))->asInstanceOf($row, $context, DateTimeInterface::class);
+        $column = (new Parameter($this->value))->column($rows, $context);
 
-        if ($dateTime === null) {
-            throw new InvalidArgumentException('ToTimeZone function requires non-null values');
+        if (type_bare($column->type()) instanceof DateTimeType) {
+            for ($i = 0, $count = $column->count(); $column->nullCount() > 0 && $i < $count; $i++) {
+                if ($column->isNull($i)) {
+                    throw new EvaluationException(
+                        $i,
+                        new InvalidArgumentException('ToTimeZone function requires non-null values'),
+                    );
+                }
+            }
+
+            return $column->withType($this->type);
         }
 
-        return $this->type->cast($dateTime);
+        $results = [];
+        $i = 0;
+
+        try {
+            foreach ((new Parameter($this->value))->asInstancesOf(
+                $rows,
+                $context,
+                DateTimeInterface::class,
+            ) as $i => $dateTime) {
+                if ($dateTime === null) {
+                    throw new InvalidArgumentException('ToTimeZone function requires non-null values');
+                }
+
+                $results[] = $this->type->cast($dateTime);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
+        }
+
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

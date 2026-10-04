@@ -17,6 +17,7 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\QueryBuilder\Sql;
@@ -72,7 +73,6 @@ final class PostgreSqlKeySetExtractor implements BatchableExtractor, Extractor, 
 
         $schema = $this->schema();
 
-        $encoder = new PostgreSqlEncoder();
         $yielded = 0;
         $cursorValues = null;
         $maximum = match (true) {
@@ -114,11 +114,13 @@ final class PostgreSqlKeySetExtractor implements BatchableExtractor, Extractor, 
                 break;
             }
 
-            $hydrated = $context->hydrator()->hydrate($encoder->decode($rawBatch), $schema);
+            $rows = (new RowsBuilder($schema, $context->backend()))
+                ->appendRows($rawBatch)
+                ->finish();
 
-            $yielded += $hydrated->count();
+            $yielded += $rows->count();
 
-            $signal = yield $hydrated;
+            $signal = yield $rows;
 
             if ($signal === Signal::STOP) {
                 return;

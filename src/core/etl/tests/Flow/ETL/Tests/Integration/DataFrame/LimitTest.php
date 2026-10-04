@@ -23,6 +23,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use function array_column;
 use function array_map;
 use function array_slice;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_data_frame;
@@ -32,7 +33,6 @@ use function Flow\ETL\DSL\integer_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\Types\DSL\type_integer;
@@ -103,7 +103,7 @@ final class LimitTest extends FlowIntegrationTestCase
             public function extract(FlowContext $context, ?int $limit = null): Generator
             {
                 for ($i = 0; $i < 20; $i++) {
-                    yield rows(schema(integer_schema('id')), row(['id' => $i]));
+                    yield array_to_rows([['id' => $i]], schema(integer_schema('id')));
                 }
             }
 
@@ -138,7 +138,7 @@ final class LimitTest extends FlowIntegrationTestCase
                 public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     for ($i = 0; $i < 1000; $i++) {
-                        yield rows(schema(integer_schema('id')), row(['id' => $i + 1]), row(['id' => $i + 2]));
+                        yield array_to_rows([['id' => $i + 1], ['id' => $i + 2]], schema(integer_schema('id')));
                     }
                 }
 
@@ -199,22 +199,16 @@ final class LimitTest extends FlowIntegrationTestCase
                 public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     for ($i = 0; $i < 1000; $i++) {
-                        yield rows(
-                            schema(list_schema(
-                                'ids',
-                                type_list(type_structure([
-                                    'id' => type_integer(),
-                                    'more_ids' => type_list(type_map(type_string(), type_integer())),
-                                ])),
-                            )),
-                            row([
-                                'ids' => [
-                                    ['id' => $i + 1, 'more_ids' => [['more_id' => $i + 4], ['more_id' => $i + 7]]],
-                                    ['id' => $i + 2, 'more_ids' => [['more_id' => $i + 5], ['more_id' => $i + 8]]],
-                                    ['id' => $i + 3, 'more_ids' => [['more_id' => $i + 6], ['more_id' => $i + 9]]],
-                                ],
-                            ]),
-                        );
+                        yield array_to_rows([[
+                            'ids' => [
+                                ['id' => $i + 1, 'more_ids' => [['more_id' => $i + 4], ['more_id' => $i + 7]]],
+                                ['id' => $i + 2, 'more_ids' => [['more_id' => $i + 5], ['more_id' => $i + 8]]],
+                                ['id' => $i + 3, 'more_ids' => [['more_id' => $i + 6], ['more_id' => $i + 9]]],
+                            ],
+                        ]], schema(list_schema('ids', type_list(type_structure([
+                            'id' => type_integer(),
+                            'more_ids' => type_list(type_map(type_string(), type_integer())),
+                        ])))));
                     }
                 }
 
@@ -261,7 +255,7 @@ final class LimitTest extends FlowIntegrationTestCase
                 public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     for ($i = 0; $i < 1000; $i++) {
-                        yield rows(schema(integer_schema('id')), row(['id' => $i + 1]), row(['id' => $i + 2]));
+                        yield array_to_rows([['id' => $i + 1], ['id' => $i + 2]], schema(integer_schema('id')));
                     }
                 }
 
@@ -299,7 +293,7 @@ final class LimitTest extends FlowIntegrationTestCase
                 public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     for ($i = 0; $i < 100; $i++) {
-                        yield rows(schema(integer_schema('id')), row(['id' => $i + 1]), row(['id' => $i + 2]));
+                        yield array_to_rows([['id' => $i + 1], ['id' => $i + 2]], schema(integer_schema('id')));
                     }
                 }
 
@@ -337,7 +331,7 @@ final class LimitTest extends FlowIntegrationTestCase
                 public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     for ($i = 0; $i < 5; $i++) {
-                        yield rows(schema(integer_schema('id')), row(['id' => $i]));
+                        yield array_to_rows([['id' => $i]], schema(integer_schema('id')));
                     }
                 }
 
@@ -443,7 +437,7 @@ final class LimitTest extends FlowIntegrationTestCase
     {
         $source = new RecordingFileExtractor(
             schema(int_schema('id')),
-            rows(schema(int_schema('id')), ...array_map(static fn(int $id) => row(['id' => $id]), range(1, 6))),
+            array_to_rows(array_map(static fn(int $id) => ['id' => $id], range(1, 6)), schema(int_schema('id'))),
         );
         $nested = from_data_frame(df()->read($source));
 

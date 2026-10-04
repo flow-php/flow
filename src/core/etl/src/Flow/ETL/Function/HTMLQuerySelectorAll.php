@@ -7,10 +7,14 @@ namespace Flow\ETL\Function;
 use DOM\Element;
 use DOM\HTMLDocument;
 use Dom\HTMLElement;
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RequiredPHPVersionException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function class_exists;
@@ -62,43 +66,54 @@ final class HTMLQuerySelectorAll implements ScalarFunction
         return type_optional(type_list(type_html_element()));
     }
 
-    /**
-     * @return null|array<Element>
-     */
-    public function eval(Row $row, FlowContext $context): ?array
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $value = (new Parameter($this->value))->as(
-            $row,
+        $values = (new Parameter($this->value))->asTypes(
+            $rows,
             $context,
             type_instance_of(HTMLDocument::class),
             type_instance_of(HTMLElement::class),
         );
-        $selector = (new Parameter($this->selector))->asString($row, $context);
+        $selectors = (new Parameter($this->selector))->asStrings($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if (null === $value) {
-            throw new InvalidArgumentException('HTMLQuerySelectorAll requires non-null HTMLDocument');
-        }
+        try {
+            foreach ($values as $i => $value) {
+                $selector = $selectors[$i];
 
-        if (null === $selector) {
-            throw new InvalidArgumentException('HTMLQuerySelectorAll requires non-null selector');
-        }
+                if (null === $value) {
+                    throw new InvalidArgumentException('HTMLQuerySelectorAll requires non-null HTMLDocument');
+                }
 
-        $result = $value->querySelectorAll($selector);
+                if (null === $selector) {
+                    throw new InvalidArgumentException('HTMLQuerySelectorAll requires non-null selector');
+                }
 
-        if (0 === $result->count()) {
-            return null;
-        }
+                $result = $value->querySelectorAll($selector);
 
-        $nodes = [];
+                if (0 === $result->count()) {
+                    $results[] = null;
 
-        foreach ($result as $node) {
-            if (!$node instanceof Element) {
-                continue;
+                    continue;
+                }
+
+                $nodes = [];
+
+                foreach ($result as $node) {
+                    if (!$node instanceof Element) {
+                        continue;
+                    }
+
+                    $nodes[] = $node;
+                }
+
+                $results[] = $nodes;
             }
-
-            $nodes[] = $node;
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return $nodes;
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

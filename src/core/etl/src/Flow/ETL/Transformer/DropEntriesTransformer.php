@@ -34,7 +34,7 @@ final readonly class DropEntriesTransformer implements Transformer
 
         try {
             $schema = $rows->schema()->gracefulRemove(...$this->refs);
-            $result = $rows->project($schema);
+            $result = $rows->project($schema, $context->backend());
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

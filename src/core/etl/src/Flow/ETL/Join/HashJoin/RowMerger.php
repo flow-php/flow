@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Join\HashJoin;
 
 use Flow\ETL\Exception\DuplicatedEntriesException;
-use Flow\ETL\Row;
+use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 
 use function array_key_exists;
 use function array_keys;
@@ -55,37 +56,46 @@ final class RowMerger
     }
 
     /**
+     * Pair-aligned: row i of the result is left row i merged with right row i.
+     *
      * @throws DuplicatedEntriesException
      */
-    public function merge(Row $left, Row $right): Row
+    public function merge(Rows $left, Rows $right): Rows
     {
-        $leftValues = $left->values();
-        $rightValues = $right->values();
+        $leftNames = array_keys($left->schema()->definitions());
+        $rightNames = array_keys($right->schema()->definitions());
 
-        $planKey = implode("\x00", array_keys($leftValues)) . "\x01" . implode("\x00", array_keys($rightValues));
+        $planKey = implode("\x00", $leftNames) . "\x01" . implode("\x00", $rightNames);
 
-        [$keepLeft, $keepRight, $renames] =
-            $this->plans[$planKey] ??= $this->plan(array_keys($leftValues), array_keys($rightValues));
+        [$keepLeft, $keepRight, $renames] = $this->plans[$planKey] ??= $this->plan($leftNames, $rightNames);
 
-        $values = [];
+        $definitions = [];
+        $columns = [];
 
-        // @mago-ignore analysis:mixed-assignment
-        foreach ($leftValues as $name => $value) {
+        foreach ($left->schema()->definitions() as $name => $definition) {
             if (array_key_exists($name, $keepLeft)) {
-                $values[$name] = $value;
+                $definitions[] = $definition;
+                $columns[$name] = $left->column($name);
             }
         }
 
-        // @mago-ignore analysis:mixed-assignment
-        foreach ($rightValues as $name => $value) {
+        foreach ($right->schema()->definitions() as $name => $definition) {
             if (!array_key_exists($name, $keepRight)) {
                 continue;
             }
 
-            $values[$renames[$name] ?? $name] = $value;
+            if (array_key_exists($name, $renames)) {
+                $definitions[] = $definition->rename($renames[$name]);
+                $columns[$renames[$name]] = $right->column($name);
+
+                continue;
+            }
+
+            $definitions[] = $definition;
+            $columns[$name] = $right->column($name);
         }
 
-        return new Row($values);
+        return Rows::fromColumns(new Schema(...$definitions), $columns, $left->count());
     }
 
     /**

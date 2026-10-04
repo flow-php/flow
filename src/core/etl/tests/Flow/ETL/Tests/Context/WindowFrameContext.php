@@ -22,9 +22,8 @@ final class WindowFrameContext
         $results = [];
 
         foreach ($frame->get() as $batch) {
-            foreach ($batch as $row) {
-                $value = $row->get('result');
-
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($batch->column('result')->values() as $value) {
                 $results[] = is_int($value) || is_float($value) ? $value : null;
             }
         }

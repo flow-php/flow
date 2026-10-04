@@ -11,10 +11,9 @@ use Flow\ETL\Plan;
 use Flow\ETL\Plan\Node\Limit;
 use Flow\ETL\Plan\Trigger;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\ColumnRetyping;
 use Flow\ETL\Schema;
 use Generator;
-
-use function Flow\ETL\DSL\array_to_rows;
 
 final class DataFrameExtractor implements RewindableExtractor
 {
@@ -46,7 +45,19 @@ final class DataFrameExtractor implements RewindableExtractor
 
         foreach ($config->executor()->execute($config->planner()->plan($logical, $this->plan->context)) as $rows) {
             if ($this->schema !== null) {
-                $rows = array_to_rows($rows->toArray(), $this->schema, $context->hydrator());
+                $backend = $context->backend();
+                $retyping = new ColumnRetyping();
+                $columns = [];
+
+                foreach ($this->schema->definitions() as $name => $definition) {
+                    $own = $rows->schema()->findDefinition($definition->entry()->name());
+
+                    $columns[$name] = $own === null
+                        ? $retyping->absent($definition, $rows->count(), $backend)
+                        : $retyping->cast($rows->column($definition->entry()->name()), $own, $definition, $backend);
+                }
+
+                $rows = Rows::fromColumns($this->schema, $columns, $rows->count());
             }
 
             $signal = yield $rows;

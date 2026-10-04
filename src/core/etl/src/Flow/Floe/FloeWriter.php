@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
-use Flow\ETL\Row\Hydrator;
+use Flow\ETL\Column\Backend;
+use Flow\ETL\Loader\File\FileSink;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
@@ -15,24 +16,22 @@ use Flow\Floe\Exception\FloeException;
 
 use function sprintf;
 
-final class FloeWriter
+final class FloeWriter implements FileSink
 {
     private readonly FloeStreamWriter $inner;
 
     /**
      * @param Schema $schema fixes the session schema for the writer's life
-     * @param null|Hydrator $hydrator null uses the adaptive hydrator
      *
      * @throws FloeException
      */
     public function __construct(
         private readonly Filesystem $filesystem,
         Schema $schema,
+        Backend $backend,
         private readonly Options $options = new Options(),
-        ?Hydrator $hydrator = null,
-        FloeEngine $engine = FloeEngine::adaptive,
     ) {
-        $this->inner = new FloeStreamWriter($schema, $this->options, $hydrator, $engine);
+        $this->inner = new FloeStreamWriter($schema, $backend, $this->options);
     }
 
     /**

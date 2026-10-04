@@ -60,9 +60,9 @@ final class PostgreSqlLoader implements Loader
 
         try {
             match ($this->operation) {
-                Operation::INSERT => $this->insertRows($rows, $context),
-                Operation::UPDATE => $this->updateRows($rows, $context),
-                Operation::DELETE => $this->deleteRows($rows, $context),
+                Operation::INSERT => $this->insertRows($rows),
+                Operation::UPDATE => $this->updateRows($rows),
+                Operation::DELETE => $this->deleteRows($rows),
             };
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
@@ -113,7 +113,7 @@ final class PostgreSqlLoader implements Loader
         return $this->encoder ??= new PostgreSqlEncoder();
     }
 
-    private function deleteRows(Rows $rows, FlowContext $context): void
+    private function deleteRows(Rows $rows): void
     {
         $deleteOptions = $this->deleteOptions;
 
@@ -124,13 +124,13 @@ final class PostgreSqlLoader implements Loader
         $builder = new DeleteQueryBuilder($this->table, $this->typesMap);
         $schema = $rows->schema();
 
-        foreach ($this->encoder()->encode($context->hydrator()->dehydrate($rows)) as $values) {
+        foreach ($this->encoder()->encode($rows) as $values) {
             [$query, $params] = $builder->build($values, $schema, $deleteOptions);
             $this->client->execute($query, $params);
         }
     }
 
-    private function insertRows(Rows $rows, FlowContext $context): void
+    private function insertRows(Rows $rows): void
     {
         // PQ_QUERY_PARAM_MAX_LIMIT: an INSERT binds one parameter per column per row
         $maxRows = max(1, intdiv(65_535, $rows->schema()->count()));
@@ -138,7 +138,8 @@ final class PostgreSqlLoader implements Loader
         if ($rows->count() <= $maxRows) {
             $builder = new InsertQueryBuilder($this->table, $this->typesMap);
             [$query, $params] = $builder->build(
-                $this->encoder()->encode($context->hydrator()->dehydrate($rows)),
+                $this->encoder()->columns($rows),
+                $rows->count(),
                 $rows->schema(),
                 $this->client->converters(),
                 $this->insertOptions,
@@ -159,7 +160,8 @@ final class PostgreSqlLoader implements Loader
             foreach ($rows->chunks($maxRows) as $chunk) {
                 $builder = new InsertQueryBuilder($this->table, $this->typesMap);
                 [$query, $params] = $builder->build(
-                    $this->encoder()->encode($context->hydrator()->dehydrate($chunk)),
+                    $this->encoder()->columns($chunk),
+                    $chunk->count(),
                     $chunk->schema(),
                     $this->client->converters(),
                     $this->insertOptions,
@@ -179,7 +181,7 @@ final class PostgreSqlLoader implements Loader
         }
     }
 
-    private function updateRows(Rows $rows, FlowContext $context): void
+    private function updateRows(Rows $rows): void
     {
         $updateOptions = $this->updateOptions;
 
@@ -190,7 +192,7 @@ final class PostgreSqlLoader implements Loader
         $builder = new UpdateQueryBuilder($this->table, $this->typesMap);
         $schema = $rows->schema();
 
-        foreach ($this->encoder()->encode($context->hydrator()->dehydrate($rows)) as $values) {
+        foreach ($this->encoder()->encode($rows) as $values) {
             [$query, $params] = $builder->build($values, $schema, $updateOptions);
 
             if ($query !== null) {

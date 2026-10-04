@@ -8,9 +8,9 @@ use Flow\ETL\Join\Join;
 use Flow\ETL\Join\JoinShape;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
@@ -107,8 +107,11 @@ final class JoinShapeTest extends FlowTestCase
             ['id' => 1, 'country' => 'PL', 'name' => 'Norbert'],
             JoinShape::of(join_on(['id' => 'id']), Join::inner)
                 ->merger()
-                ->merge(row(['id' => 1, 'country' => 'PL']), row(['id' => 1, 'name' => 'Norbert']))
-                ->toArray(),
+                ->merge(
+                    array_to_rows([['id' => 1, 'country' => 'PL']], schema(int_schema('id'), str_schema('country'))),
+                    array_to_rows([['id' => 1, 'name' => 'Norbert']], schema(int_schema('id'), str_schema('name'))),
+                )
+                ->values(0),
         );
     }
 
@@ -118,8 +121,11 @@ final class JoinShapeTest extends FlowTestCase
             ['country' => 'PL', 'id' => 2, 'name' => 'Norbert'],
             JoinShape::of(join_on(['id' => 'id']), Join::right)
                 ->merger()
-                ->merge(row(['id' => 1, 'country' => 'PL']), row(['id' => 2, 'name' => 'Norbert']))
-                ->toArray(),
+                ->merge(
+                    array_to_rows([['id' => 1, 'country' => 'PL']], schema(int_schema('id'), str_schema('country'))),
+                    array_to_rows([['id' => 2, 'name' => 'Norbert']], schema(int_schema('id'), str_schema('name'))),
+                )
+                ->values(0),
         );
     }
 }

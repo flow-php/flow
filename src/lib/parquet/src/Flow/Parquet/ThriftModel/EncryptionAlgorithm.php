@@ -21,13 +21,13 @@ class EncryptionAlgorithm
             'var' => 'AES_GCM_V1',
             'isRequired' => false,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\AesGcmV1',
+            'class' => '\Flow\Parquet\ThriftModel\AesGcmV1',
         ],
         2 => [
             'var' => 'AES_GCM_CTR_V1',
             'isRequired' => false,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\AesGcmCtrV1',
+            'class' => '\Flow\Parquet\ThriftModel\AesGcmCtrV1',
         ],
     ];
 

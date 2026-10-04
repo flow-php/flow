@@ -7,12 +7,16 @@ namespace Flow\Types\Value;
 use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Exception\RuntimeException;
 use Ramsey\Uuid\UuidInterface;
+use ReflectionClass;
 use Stringable;
 use Symfony\Component\Uid\Uuid as SymfonyUuid;
 
+use function bin2hex;
 use function is_string;
 use function preg_match;
+use function sprintf;
 use function strlen;
+use function substr;
 
 final readonly class Uuid implements Stringable
 {
@@ -40,6 +44,30 @@ final readonly class Uuid implements Stringable
         } else {
             $this->value = $value->toRfc4122();
         }
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public static function fromBytes(string $bytes): self
+    {
+        if (strlen($bytes) !== 16) {
+            throw new InvalidArgumentException('Uuid::fromBytes() expects 16 bytes, got ' . strlen($bytes));
+        }
+
+        $hex = bin2hex($bytes);
+        $uuid = (new ReflectionClass(self::class))->newInstanceWithoutConstructor();
+        // @mago-ignore analysis:invalid-property-write
+        $uuid->value = sprintf(
+            '%s-%s-%s-%s-%s',
+            substr($hex, 0, 8),
+            substr($hex, 8, 4),
+            substr($hex, 12, 4),
+            substr($hex, 16, 4),
+            substr($hex, 20),
+        );
+
+        return $uuid;
     }
 
     public static function fromString(string $value): self

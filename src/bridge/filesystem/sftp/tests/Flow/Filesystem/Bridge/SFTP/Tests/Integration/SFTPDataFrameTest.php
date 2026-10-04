@@ -34,8 +34,8 @@ final class SFTPDataFrameTest extends SFTPTestCase
         $rows = data_frame()->read(from_csv(path('sftp:///upload/orders.csv'), filesystem: $filesystem))->fetch();
 
         static::assertCount(1_000, $rows);
-        static::assertSame('user-0@example.com', $rows->first()->get('email'));
-        static::assertSame('user-999@example.com', $rows->last()?->get('email'));
+        static::assertSame('user-0@example.com', $rows->column('email')->value(0));
+        static::assertSame('user-999@example.com', $rows->column('email')->value($rows->count() - 1));
     }
 
     public function test_orders_written_as_parquet_survive_a_round_trip_with_every_entry_type(): void
@@ -55,28 +55,29 @@ final class SFTPDataFrameTest extends SFTPTestCase
 
         static::assertCount(1_000, $rows);
 
-        $first = $rows->first();
-
-        static::assertSame(0, $first->get('index'));
+        static::assertSame(0, $rows->column('index')->value(0));
         static::assertSame(
             '254d61c5-22c8-4407-83a2-76f1cab53af2',
-            type_uuid()->assert($first->get('order_id'))->toString(),
+            type_uuid()->assert($rows->column('order_id')->value(0))->toString(),
         );
         static::assertSame(
             '2025-01-01 12:00:00',
-            type_datetime()->assert($first->get('created_at'))->format('Y-m-d H:i:s'),
+            type_datetime()->assert($rows->column('created_at')->value(0))->format('Y-m-d H:i:s'),
         );
         static::assertSame(
             ['street' => '123 Main St, Apt 0', 'city' => 'City ', 'zip' => '12345-0', 'country' => 'PL'],
-            $first->get('address'),
+            $rows->column('address')->value(0),
         );
-        static::assertSame(['Note 1 for order 0', 'Note 2 for order 0', 'Note 3 for order 0'], $first->get('notes'));
+        static::assertSame(
+            ['Note 1 for order 0', 'Note 2 for order 0', 'Note 3 for order 0'],
+            $rows->column('notes')->value(0),
+        );
         static::assertEqualsWithDelta(
             [
                 ['sku' => 'SKU_0001', 'quantity' => 1, 'price' => 0.14],
                 ['sku' => 'SKU_0002', 'quantity' => 2, 'price' => 25.13],
             ],
-            $first->get('items'),
+            $rows->column('items')->value(0),
             0.0001,
         );
     }

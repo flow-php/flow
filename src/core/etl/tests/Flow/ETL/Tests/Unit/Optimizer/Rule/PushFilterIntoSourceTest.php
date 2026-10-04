@@ -23,6 +23,7 @@ use Flow\Filesystem\Path\Filter\Filters;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Flow\Types\Exception\InvalidArgumentException;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\int_schema;
@@ -30,8 +31,6 @@ use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\random_string;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\to_memory;
 use function Flow\Types\DSL\type_boolean;
@@ -300,7 +299,7 @@ final class PushFilterIntoSourceTest extends FlowTestCase
     {
         $extractor = new RecordingFileExtractor(
             schema(int_schema('year')),
-            rows(schema(int_schema('year')), row(['year' => 2023])),
+            array_to_rows([['year' => 2023]], schema(int_schema('year'))),
         );
 
         df()
@@ -384,11 +383,11 @@ final class PushFilterIntoSourceTest extends FlowTestCase
         $frame->fetch();
 
         static::assertStringEndsWith(
-            "Extractor: RecordingFileExtractor\n         Source: file://dev/null",
+            "Extractor: RecordingFileExtractor\n         Source: file:///dev/null",
             $frame->explain()->toString(Stage::unoptimized),
         );
         static::assertStringEndsWith(
-            "Extractor: RecordingFileExtractor\n         Source: file://dev/null\n         Files: Filters",
+            "Extractor: RecordingFileExtractor\n         Source: file:///dev/null\n         Files: Filters",
             $frame->explain()->toString(),
         );
     }

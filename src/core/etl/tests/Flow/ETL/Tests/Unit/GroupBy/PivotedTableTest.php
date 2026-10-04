@@ -10,12 +10,11 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\PivotedTableMother;
 
 use function array_map;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\min;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\sum;
 
 final class PivotedTableTest extends FlowTestCase
@@ -24,18 +23,15 @@ final class PivotedTableTest extends FlowTestCase
     {
         $table = PivotedTableMother::of(sum(ref('amount')), 'USA', 'PL');
 
-        $table->accumulate(
-            rows(
-                PivotedTableMother::schema(),
-                row(['product' => 'Banana', 'country' => 'USA', 'amount' => 10]),
-                row(['product' => 'Banana', 'country' => 'PL', 'amount' => 20]),
-            ),
-            flow_context(config()),
-        );
-        $table->accumulate(
-            rows(PivotedTableMother::schema(), row(['product' => 'Banana', 'country' => 'USA', 'amount' => 5])),
-            flow_context(config()),
-        );
+        $table->accumulate(array_to_rows([
+            ['product' => 'Banana', 'country' => 'USA', 'amount' => 10],
+            ['product' => 'Banana', 'country' => 'PL', 'amount' => 20],
+        ], PivotedTableMother::schema()), flow_context(config()));
+        $table->accumulate(array_to_rows([[
+            'product' => 'Banana',
+            'country' => 'USA',
+            'amount' => 5,
+        ]], PivotedTableMother::schema()), flow_context(config()));
 
         /** @var list<Rows> $batches */
         $batches = iterator_to_array($table->flush(1000, flow_context(config())));
@@ -48,10 +44,11 @@ final class PivotedTableTest extends FlowTestCase
     {
         $table = PivotedTableMother::of(sum(ref('amount')), 'USA', 'PL');
 
-        $table->accumulate(
-            rows(PivotedTableMother::schema(), row(['product' => 'Banana', 'country' => 'USA', 'amount' => 10])),
-            flow_context(config()),
-        );
+        $table->accumulate(array_to_rows([[
+            'product' => 'Banana',
+            'country' => 'USA',
+            'amount' => 10,
+        ]], PivotedTableMother::schema()), flow_context(config()));
 
         /** @var list<Rows> $batches */
         $batches = iterator_to_array($table->flush(1000, flow_context(config())));
@@ -64,10 +61,11 @@ final class PivotedTableTest extends FlowTestCase
         $input = PivotedTableMother::schema(nullableCountry: true);
         $table = PivotedTableMother::boundTo($input, sum(ref('amount')), 'USA');
 
-        $table->accumulate(
-            rows($input, row(['product' => 'Banana', 'country' => null, 'amount' => 10])),
-            flow_context(config()),
-        );
+        $table->accumulate(array_to_rows([[
+            'product' => 'Banana',
+            'country' => null,
+            'amount' => 10,
+        ]], $input), flow_context(config()));
 
         /** @var list<Rows> $batches */
         $batches = iterator_to_array($table->flush(1000, flow_context(config())));
@@ -79,14 +77,10 @@ final class PivotedTableTest extends FlowTestCase
     {
         $table = PivotedTableMother::of(sum(ref('amount')), 'USA');
 
-        $table->accumulate(
-            rows(
-                PivotedTableMother::schema(),
-                row(['product' => 'Banana', 'country' => 'USA', 'amount' => 30]),
-                row(['product' => 'Banana', 'country' => 'DE', 'amount' => 99]),
-            ),
-            flow_context(config()),
-        );
+        $table->accumulate(array_to_rows([
+            ['product' => 'Banana', 'country' => 'USA', 'amount' => 30],
+            ['product' => 'Banana', 'country' => 'DE', 'amount' => 99],
+        ], PivotedTableMother::schema()), flow_context(config()));
 
         /** @var list<Rows> $batches */
         $batches = iterator_to_array($table->flush(1000, flow_context(config())));
@@ -99,15 +93,11 @@ final class PivotedTableTest extends FlowTestCase
     {
         $table = PivotedTableMother::of(sum(ref('amount')), 'USA');
 
-        $table->accumulate(
-            rows(
-                PivotedTableMother::schema(),
-                row(['product' => 'Banana', 'country' => 'USA', 'amount' => 10]),
-                row(['product' => 'Apple', 'country' => 'USA', 'amount' => 20]),
-                row(['product' => 'Cherry', 'country' => 'USA', 'amount' => 30]),
-            ),
-            flow_context(config()),
-        );
+        $table->accumulate(array_to_rows([
+            ['product' => 'Banana', 'country' => 'USA', 'amount' => 10],
+            ['product' => 'Apple', 'country' => 'USA', 'amount' => 20],
+            ['product' => 'Cherry', 'country' => 'USA', 'amount' => 30],
+        ], PivotedTableMother::schema()), flow_context(config()));
 
         static::assertSame(
             [2, 1],
@@ -139,14 +129,10 @@ final class PivotedTableTest extends FlowTestCase
     {
         $table = PivotedTableMother::of(min(ref('amount')), 'USA');
 
-        $table->accumulate(
-            rows(
-                PivotedTableMother::schema(),
-                row(['product' => 'Banana', 'country' => 'USA', 'amount' => 30]),
-                row(['product' => 'Banana', 'country' => 'USA', 'amount' => 10]),
-            ),
-            flow_context(config()),
-        );
+        $table->accumulate(array_to_rows([
+            ['product' => 'Banana', 'country' => 'USA', 'amount' => 30],
+            ['product' => 'Banana', 'country' => 'USA', 'amount' => 10],
+        ], PivotedTableMother::schema()), flow_context(config()));
 
         /** @var list<Rows> $batches */
         $batches = iterator_to_array($table->flush(1000, flow_context(config())));

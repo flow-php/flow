@@ -13,10 +13,9 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\RowsMother;
 use PHPUnit\Framework\Attributes\TestWith;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
@@ -30,8 +29,8 @@ final class BatchingProcessorTest extends FlowTestCase
     public function test_a_batch_under_another_schema_is_conformed_to_the_first(int $size): void
     {
         $generator = (static function () {
-            yield rows(schema(int_schema('id'), str_schema('name', true)), row(['id' => 1, 'name' => 'a']));
-            yield rows(schema(int_schema('id')), row(['id' => 2]));
+            yield array_to_rows([['id' => 1, 'name' => 'a']], schema(int_schema('id'), str_schema('name', true)));
+            yield array_to_rows([['id' => 2]], schema(int_schema('id')));
         })();
 
         /** @var list<Rows> $result */
@@ -74,13 +73,7 @@ final class BatchingProcessorTest extends FlowTestCase
     {
         $processor = new BatchingProcessor(2);
         $generator = (static function () {
-            yield rows(
-                schema(int_schema('id')),
-                row(['id' => 1]),
-                row(['id' => 2]),
-                row(['id' => 3]),
-                row(['id' => 4]),
-            );
+            yield array_to_rows([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4]], schema(int_schema('id')));
         })();
         /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()));
@@ -93,14 +86,13 @@ final class BatchingProcessorTest extends FlowTestCase
     {
         $processor = new BatchingProcessor(3);
         $generator = (static function () {
-            yield rows(
-                schema(int_schema('id')),
-                row(['id' => 1]),
-                row(['id' => 2]),
-                row(['id' => 3]),
-                row(['id' => 4]),
-                row(['id' => 5]),
-            );
+            yield array_to_rows([
+                ['id' => 1],
+                ['id' => 2],
+                ['id' => 3],
+                ['id' => 4],
+                ['id' => 5],
+            ], schema(int_schema('id')));
         })();
         /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()));
@@ -113,11 +105,11 @@ final class BatchingProcessorTest extends FlowTestCase
     {
         $processor = new BatchingProcessor(2);
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 1]));
-            yield rows(schema(int_schema('id')), row(['id' => 2]));
-            yield rows(schema(int_schema('id')), row(['id' => 3]));
-            yield rows(schema(int_schema('id')), row(['id' => 4]));
-            yield rows(schema(int_schema('id')), row(['id' => 5]));
+            yield array_to_rows([['id' => 1]], schema(int_schema('id')));
+            yield array_to_rows([['id' => 2]], schema(int_schema('id')));
+            yield array_to_rows([['id' => 3]], schema(int_schema('id')));
+            yield array_to_rows([['id' => 4]], schema(int_schema('id')));
+            yield array_to_rows([['id' => 5]], schema(int_schema('id')));
         })();
         /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()));

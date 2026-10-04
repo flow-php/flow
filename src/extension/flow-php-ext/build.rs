@@ -12,7 +12,9 @@ fn main() {
 /// The `php84`/`php85` cfgs ext-php-rs sets for itself, for the same PHP (`PHP` first, then `PATH`): the extension
 /// binary is bound to the PHP minor it is built against, so version gates are compile-time.
 fn emit_php_version_cfg() {
-    use ext_php_rs_build::{emit_check_cfg, emit_php_cfg_flags, emit_rerun_if_env_changed, find_php, ApiVersion, PHPInfo};
+    use ext_php_rs_build::{
+        emit_check_cfg, emit_php_cfg_flags, emit_rerun_if_env_changed, find_php, ApiVersion, PHPInfo,
+    };
 
     emit_rerun_if_env_changed();
     emit_check_cfg();
@@ -80,7 +82,8 @@ fn git(args: &[&str]) -> Option<String> {
         .filter(|stdout| !stdout.is_empty())
 }
 
-/// `0.43.0-107-gf998a45d0` (git describe) becomes `0.43.0+107.gf998a45d0`, semver build metadata Composer reads as 0.43.0.
+/// `0.44.1-65-g4525c4adc` (git describe) becomes `0.45.0-dev+65.g4525c4adc`: commits past a tag are a pre-release of the
+/// next minor, outside Composer's `<0.45` conflict of the libraries. A tag, or any other string, passes through.
 fn as_semver(describe: &str) -> String {
     let mut parts = describe.rsplitn(3, '-');
 
@@ -88,9 +91,17 @@ fn as_semver(describe: &str) -> String {
         (Some(hash), Some(distance), Some(tag))
             if hash.starts_with('g')
                 && !distance.is_empty()
-                && distance.bytes().all(|b| b.is_ascii_digit()) =>
+                && distance.bytes().all(|b| b.is_ascii_digit())
+                && distance != "0" =>
         {
-            format!("{tag}+{distance}.{hash}")
+            let mut numbers = tag.split('.').map(|number| number.parse::<u64>().ok());
+
+            match (numbers.next().flatten(), numbers.next().flatten()) {
+                (Some(major), Some(minor)) => {
+                    format!("{major}.{}.0-dev+{distance}.{hash}", minor + 1)
+                }
+                _ => describe.to_string(),
+            }
         }
         _ => describe.to_string(),
     }

@@ -1,1 +1,2 @@
-Extract data from Floe files. Floe is Flow's native self-describing binary format that stores the schema inside the file and evolves it across appended sections.
+`from_floe()` reads Floe, Flow's own binary format. The file carries its schema, so nothing is
+inferred and every type, nested ones included, comes back exactly as written.

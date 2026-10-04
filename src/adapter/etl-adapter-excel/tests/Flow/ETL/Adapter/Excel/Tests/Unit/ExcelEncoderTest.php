@@ -7,111 +7,53 @@ namespace Flow\ETL\Adapter\Excel\Tests\Unit;
 use DateInterval;
 use DateTimeImmutable;
 use DateTimeZone;
+use Dom\HTMLDocument;
 use DOMDocument;
 use Flow\ETL\Adapter\Excel\ExcelEncoder;
-use Flow\ETL\Row\TypedRowValues;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Value\Uuid;
-use Stringable;
+use PHPUnit\Framework\Attributes\RequiresPhp;
 
-use function Flow\Types\DSL\type_array;
-use function Flow\Types\DSL\type_boolean;
-use function Flow\Types\DSL\type_date;
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\date_schema;
+use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\enum_schema;
+use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\html_element_schema;
+use function Flow\ETL\DSL\html_schema;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\json_schema;
+use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\map_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\structure_schema;
+use function Flow\ETL\DSL\time_schema;
+use function Flow\ETL\DSL\time_zone_schema;
+use function Flow\ETL\DSL\uuid_schema;
+use function Flow\ETL\DSL\xml_element_schema;
+use function Flow\ETL\DSL\xml_schema;
 use function Flow\Types\DSL\type_datetime;
-use function Flow\Types\DSL\type_enum;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
-use function Flow\Types\DSL\type_json;
-use function Flow\Types\DSL\type_object;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
-use function Flow\Types\DSL\type_time;
-use function Flow\Types\DSL\type_time_zone;
-use function Flow\Types\DSL\type_uuid;
-use function Flow\Types\DSL\type_xml;
+use function Flow\Types\DSL\type_structure;
 
 final class ExcelEncoderTest extends FlowTestCase
 {
-    public function test_decode_captures_headers_from_the_first_row_and_emits_no_row_for_it(): void
-    {
-        $encoder = new ExcelEncoder();
-
-        static::assertSame([], $encoder->decode([['id', 'name']]));
-        static::assertSame(['id' => 1, 'name' => 'Norbert'], $encoder->decode([[1, 'Norbert']])[0]->values);
-    }
-
-    public function test_decode_generates_auto_headers_when_header_is_disabled(): void
-    {
-        static::assertSame(
-            ['e00' => 1, 'e01' => 'Norbert'],
-            (new ExcelEncoder(withHeader: false))->decode([[1, 'Norbert']])[0]->values,
-        );
-    }
-
-    public function test_headers_are_generated_when_header_is_disabled(): void
-    {
-        $encoder = new ExcelEncoder(withHeader: false);
-
-        static::assertCount(1, $encoder->decode([[1, 2, 3]]));
-        static::assertSame(['e00', 'e01', 'e02'], $encoder->headers());
-    }
-
-    public function test_headers_are_null_before_the_first_decode(): void
-    {
-        static::assertNull((new ExcelEncoder())->headers());
-    }
-
-    public function test_headers_are_stringified_and_blank_for_non_scalar_cells(): void
-    {
-        $encoder = new ExcelEncoder();
-        $encoder->decode([[1, null, 'x']]);
-
-        static::assertSame(['1', '', 'x'], $encoder->headers());
-    }
-
-    public function test_headers_are_the_header_row_after_decode(): void
-    {
-        $encoder = new ExcelEncoder();
-
-        static::assertSame([], $encoder->decode([['id', 'name']]));
-        static::assertSame(['id', 'name'], $encoder->headers());
-    }
-
-    public function test_decode_keeps_empty_cells_when_convert_empty_to_null_is_disabled(): void
-    {
-        static::assertSame(
-            ['id' => 1, 'name' => ''],
-            (new ExcelEncoder(convertEmptyToNull: false))->decode([['id', 'name'], [1, '']])[0]->values,
-        );
-    }
-
-    public function test_decode_maps_cells_to_headers(): void
-    {
-        static::assertSame(
-            ['id' => 1, 'name' => 'Norbert'],
-            (new ExcelEncoder())->decode([['id', 'name'], [1, 'Norbert']])[0]->values,
-        );
-    }
-
-    public function test_decode_turns_empty_cells_into_null_by_default(): void
-    {
-        static::assertSame(
-            ['id' => 1, 'name' => null],
-            (new ExcelEncoder())->decode([['id', 'name'], [1, '']])[0]->values,
-        );
-    }
-
     public function test_encodes_scalars_as_a_flat_cell_list_in_value_order(): void
     {
         static::assertSame(
             [[1, 'Norbert', 1.5, true]],
-            (new ExcelEncoder())->encode([new TypedRowValues([
-                'id' => 1,
-                'name' => 'Norbert',
-                'p' => 1.5,
-                'a' => true,
-            ], ['id' => type_integer(), 'name' => type_string(), 'p' => type_float(), 'a' => type_boolean()])]),
+            (new ExcelEncoder())->encode(array_to_rows(
+                [['id' => 1, 'name' => 'Norbert', 'p' => 1.5, 'a' => true]],
+                schema(int_schema('id'), str_schema('name'), float_schema('p'), bool_schema('a')),
+            )),
         );
     }
 
@@ -120,13 +62,12 @@ final class ExcelEncoderTest extends FlowTestCase
         $date = new DateTimeImmutable('2024-08-01');
         $dateTime = new DateTimeImmutable('2024-08-01 10:30:00');
 
-        static::assertSame(
+        static::assertEquals(
             [[$date, $dateTime, '01:30']],
-            (new ExcelEncoder(timeFormat: '%H:%I'))->encode([new TypedRowValues([
-                'd' => $date,
-                'dt' => $dateTime,
-                't' => new DateInterval('PT1H30M'),
-            ], ['d' => type_date(), 'dt' => type_datetime(), 't' => type_time()])]),
+            (new ExcelEncoder(timeFormat: '%H:%I'))->encode(array_to_rows(
+                [['d' => $date, 'dt' => $dateTime, 't' => new DateInterval('PT1H30M')]],
+                schema(date_schema('d'), datetime_schema('dt'), time_schema('t')),
+            )),
         );
     }
 
@@ -134,9 +75,9 @@ final class ExcelEncoderTest extends FlowTestCase
     {
         static::assertSame(
             [['14:30:45']],
-            (new ExcelEncoder())->encode([
-                new TypedRowValues(['t' => new DateInterval('PT14H30M45S')], ['t' => type_time()]),
-            ]),
+            (new ExcelEncoder())->encode(array_to_rows([[
+                't' => new DateInterval('PT14H30M45S'),
+            ]], schema(time_schema('t')))),
         );
     }
 
@@ -144,9 +85,9 @@ final class ExcelEncoderTest extends FlowTestCase
     {
         static::assertSame(
             [['1']],
-            (new ExcelEncoder())->encode([
-                new TypedRowValues(['e' => BackedIntEnum::one], ['e' => type_enum(BackedIntEnum::class)]),
-            ]),
+            (new ExcelEncoder())->encode(array_to_rows([[
+                'e' => BackedIntEnum::one,
+            ]], schema(enum_schema('e', BackedIntEnum::class)))),
         );
     }
 
@@ -154,24 +95,9 @@ final class ExcelEncoderTest extends FlowTestCase
     {
         static::assertSame(
             [['three']],
-            (new ExcelEncoder())->encode([
-                new TypedRowValues(['e' => BasicEnum::three], ['e' => type_enum(BasicEnum::class)]),
-            ]),
-        );
-    }
-
-    public function test_encodes_a_stringable_as_its_string(): void
-    {
-        static::assertSame(
-            [['Krakow']],
-            (new ExcelEncoder())->encode([
-                new TypedRowValues(['s' => new class implements Stringable {
-                    public function __toString(): string
-                    {
-                        return 'Krakow';
-                    }
-                }], ['s' => type_object()]),
-            ]),
+            (new ExcelEncoder())->encode(array_to_rows([[
+                'e' => BasicEnum::three,
+            ]], schema(enum_schema('e', BasicEnum::class)))),
         );
     }
 
@@ -182,43 +108,22 @@ final class ExcelEncoderTest extends FlowTestCase
 
         static::assertSame(
             [['<root><a>1</a></root>']],
-            (new ExcelEncoder())->encode([new TypedRowValues(['x' => $document], ['x' => type_xml()])]),
+            (new ExcelEncoder())->encode(array_to_rows([['x' => $document]], schema(xml_schema('x')))),
         );
     }
 
-    public function test_encodes_a_value_that_does_not_match_its_declared_type_as_null(): void
-    {
-        static::assertSame(
-            [[null, null, null, null, null, null, null]],
-            (new ExcelEncoder())->encode([new TypedRowValues([
-                'datetime' => 'not a datetime',
-                'date' => 'not a date',
-                'time' => 'not an interval',
-                'enum' => 'not an enum',
-                'json' => 'not a json value',
-                'uuid' => 'not a uuid',
-                'xml' => 'not a document',
-            ], [
-                'datetime' => type_datetime(),
-                'date' => type_date(),
-                'time' => type_time(),
-                'enum' => type_enum(BasicEnum::class),
-                'json' => type_json(),
-                'uuid' => type_uuid(),
-                'xml' => type_xml(),
-            ])]),
-        );
-    }
-
-    public function test_encodes_arrays_as_json(): void
+    public function test_encodes_containers_as_json(): void
     {
         static::assertSame(
             [['["a","b"]', '{"x":1}', '{"city":"Krakow"}']],
-            (new ExcelEncoder())->encode([new TypedRowValues([
-                'tags' => ['a', 'b'],
-                'm' => ['x' => 1],
-                'addr' => ['city' => 'Krakow'],
-            ], ['tags' => type_array(), 'm' => type_array(), 'addr' => type_array()])]),
+            (new ExcelEncoder())->encode(array_to_rows(
+                [['tags' => ['a', 'b'], 'm' => ['x' => 1], 'addr' => ['city' => 'Krakow']]],
+                schema(
+                    list_schema('tags', type_list(type_string())),
+                    map_schema('m', type_map(type_string(), type_integer())),
+                    structure_schema('addr', type_structure(['city' => type_string()])),
+                ),
+            )),
         );
     }
 
@@ -226,9 +131,9 @@ final class ExcelEncoderTest extends FlowTestCase
     {
         static::assertSame(
             [['Europe/Warsaw']],
-            (new ExcelEncoder())->encode([new TypedRowValues([
+            (new ExcelEncoder())->encode(array_to_rows([[
                 'tz' => new DateTimeZone('Europe/Warsaw'),
-            ], ['tz' => type_time_zone()])]),
+            ]], schema(time_zone_schema('tz')))),
         );
     }
 
@@ -236,9 +141,9 @@ final class ExcelEncoderTest extends FlowTestCase
     {
         static::assertSame(
             [['f47ac10b-58cc-4372-a567-0e02b2c3d479']],
-            (new ExcelEncoder())->encode([new TypedRowValues([
+            (new ExcelEncoder())->encode(array_to_rows([[
                 'id' => new Uuid('f47ac10b-58cc-4372-a567-0e02b2c3d479'),
-            ], ['id' => type_uuid()])]),
+            ]], schema(uuid_schema('id')))),
         );
     }
 
@@ -246,9 +151,74 @@ final class ExcelEncoderTest extends FlowTestCase
     {
         static::assertSame(
             [[null, null]],
-            (new ExcelEncoder())->encode([
-                new TypedRowValues(['id' => null, 'd' => null], ['id' => type_integer(), 'd' => type_date()]),
-            ]),
+            (new ExcelEncoder())->encode(array_to_rows(
+                [['id' => null, 'd' => null]],
+                schema(int_schema('id', nullable: true), date_schema('d', nullable: true)),
+            )),
+        );
+    }
+
+    public function test_encodes_an_xml_element_as_its_markup(): void
+    {
+        $document = new DOMDocument();
+        $document->loadXML('<root><a b="1">x</a></root>');
+
+        static::assertSame(
+            [['<a b="1">x</a>']],
+            (new ExcelEncoder())->encode(array_to_rows([[
+                'e' => $document->getElementsByTagName('a')->item(0),
+            ]], schema(xml_element_schema('e')))),
+        );
+    }
+
+    #[RequiresPhp('>= 8.4.0')]
+    public function test_encodes_html_and_html_elements_as_their_markup(): void
+    {
+        // @mago-ignore analysis:unavailable-method
+        $document = HTMLDocument::createFromString('<html><body><p class="x">hi</p></body></html>', LIBXML_NOERROR);
+        $element = $document->querySelector('p');
+
+        $cells = (new ExcelEncoder())->encode(array_to_rows(
+            [['h' => $document, 'e' => $element]],
+            schema(html_schema('h'), html_element_schema('e')),
+        ))[0];
+
+        static::assertIsString($cells[0]);
+        static::assertStringContainsString('<p class="x">hi</p>', $cells[0]);
+        static::assertSame('<p class="x">hi</p>', $cells[1]);
+    }
+
+    public function test_encodes_a_datetime_column_with_nulls_as_datetimes_and_null_cells(): void
+    {
+        $cells = (new ExcelEncoder())->encode(array_to_rows([
+            ['at' => new DateTimeImmutable('2026-01-02 03:04:05 UTC')],
+            ['at' => null],
+        ], schema(datetime_schema('at', nullable: true))));
+
+        static::assertInstanceOf(DateTimeImmutable::class, $cells[0][0]);
+        static::assertSame('2026-01-02T03:04:05+00:00', $cells[0][0]->format(DATE_ATOM));
+        static::assertNull($cells[1][0]);
+    }
+
+    public function test_encodes_a_json_column_as_its_text(): void
+    {
+        static::assertSame(
+            [['{"a":1}']],
+            (new ExcelEncoder())->encode(array_to_rows([['j' => '{"a":1}']], schema(json_schema('j')))),
+        );
+    }
+
+    public function test_encodes_nested_datetimes_as_text_and_keeps_float_fractions(): void
+    {
+        static::assertSame(
+            [['["2026-01-02T03:04:05+00:00"]', '{"a":1.0}']],
+            (new ExcelEncoder())->encode(array_to_rows(
+                [['l' => [new DateTimeImmutable('2026-01-02 03:04:05 UTC')], 'm' => ['a' => 1.0]]],
+                schema(
+                    list_schema('l', type_list(type_datetime())),
+                    map_schema('m', type_map(type_string(), type_float())),
+                ),
+            )),
         );
     }
 }

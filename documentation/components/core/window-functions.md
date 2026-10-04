@@ -21,7 +21,7 @@ smaller partitions on which later window function will be applied.
 - [`AVERAGE`](/src/core/etl/src/Flow/ETL/Function/Average.php)
 - [`COUNT`](/src/core/etl/src/Flow/ETL/Function/Count.php)
 
-All window functions are implementing [`WindowFunction`](/src/core/etl/src/Flow/ETL/Function/WindowFunction.php)
+All window functions implement [`WindowFunction`](/src/core/etl/src/Flow/ETL/Function/WindowFunction.php)
 interface.
 
 ### Example
@@ -47,22 +47,17 @@ data_frame()
 Output:
 
 ```console
-+----+-------+------------+--------+------+
-| id |  name | department | salary | rank |
-+----+-------+------------+--------+------+
-|  5 |  Jane |   Finances |  14000 |    1 |
-|  3 | Tomas |   Finances |  11000 |    2 |
-|  4 |  John |   Finances |   9000 |    3 |
-|  6 | Janet |   Finances |   4000 |    4 |
-+----+-------+------------+--------+------+
-4 rows
 +----+--------+------------+--------+------+
 | id |   name | department | salary | rank |
 +----+--------+------------+--------+------+
+|  5 |   Jane |   Finances |  14000 |    1 |
+|  3 |  Tomas |   Finances |  11000 |    2 |
+|  4 |   John |   Finances |   9000 |    3 |
+|  6 |  Janet |   Finances |   4000 |    4 |
 |  1 |   Greg |         IT |   6000 |    1 |
 |  2 | Michal |         IT |   5000 |    2 |
 +----+--------+------------+--------+------+
-2 rows
+6 rows
 ```
 
 ## Frames

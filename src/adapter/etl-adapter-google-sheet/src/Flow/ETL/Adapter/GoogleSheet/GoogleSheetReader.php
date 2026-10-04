@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\GoogleSheet;
 
-use Flow\ETL\Row\RawRowValues;
 use Generator;
 use Google\Service\Sheets;
 
@@ -22,7 +21,7 @@ final readonly class GoogleSheetReader
     ) {}
 
     /**
-     * @return Generator<int, list<RawRowValues>>
+     * @return Generator<int, list<array<array-key, mixed>>>
      */
     public function batches(int $rowsPerPage, int $batchSize): Generator
     {
@@ -36,14 +35,14 @@ final readonly class GoogleSheetReader
 
         /** @var Sheets\Resource\SpreadsheetsValues $values */
         $values = $this->service->spreadsheets_values;
-        $encoder = $this->readOptions->encoder();
+        $decoder = $this->readOptions->decoder();
         $batch = [];
 
         foreach ($values->batchGet($this->spreadsheetId, array_merge($this->readOptions->options, [
             'ranges' => $ranges,
         ]))->getValueRanges() as $valueRange) {
             // @mago-ignore analysis:redundant-null-coalesce
-            foreach ($encoder->decode(array_values($valueRange->getValues() ?? [])) as $rowValues) {
+            foreach ($decoder->decode(array_values($valueRange->getValues() ?? [])) as $rowValues) {
                 $batch[] = $rowValues;
 
                 if (count($batch) >= $batchSize) {
@@ -89,12 +88,12 @@ final readonly class GoogleSheetReader
 
         /** @var Sheets\Resource\SpreadsheetsValues $values */
         $values = $this->service->spreadsheets_values;
-        $encoder = $this->readOptions->encoder();
+        $decoder = $this->readOptions->decoder();
         // @mago-ignore analysis:redundant-null-coalesce
-        $decoded = $encoder->decode(array_values(
+        $decoded = $decoder->decode(array_values(
             $values->get($this->spreadsheetId, $range->toString(), $this->readOptions->options)->getValues() ?? [],
         ));
 
-        return new GoogleSheetSample($encoder->headers(), $decoded, $range->endRow >= $rowCount, $rowCount);
+        return new GoogleSheetSample($decoder->headers() ?? [], $decoded, $range->endRow >= $rowCount, $rowCount);
     }
 }

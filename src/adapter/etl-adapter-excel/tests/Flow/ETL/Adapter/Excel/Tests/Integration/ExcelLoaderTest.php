@@ -8,6 +8,7 @@ use DateInterval;
 use DateTimeImmutable;
 use Flow\ETL\Adapter\Excel\CellStyler;
 use Flow\ETL\Adapter\Excel\ExcelWriter;
+use Flow\ETL\Adapter\Excel\Tests\Double\RecordingCellStyler;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Tests\FlowTestCase;
@@ -21,6 +22,7 @@ use ZipArchive;
 
 use function Flow\ETL\Adapter\Excel\DSL\from_excel;
 use function Flow\ETL\Adapter\Excel\DSL\to_excel;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
@@ -34,8 +36,6 @@ use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\partition_by;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\string_schema;
@@ -64,7 +64,10 @@ final class ExcelLoaderTest extends FlowTestCase
         $outputPath = __DIR__ . '/var/output_auto.ods';
 
         df()
-            ->read(from_rows(rows(schema(int_schema('id'), string_schema('name')), row(['id' => 1, 'name' => 'Test']))))
+            ->read(from_rows(array_to_rows(
+                [['id' => 1, 'name' => 'Test']],
+                schema(int_schema('id'), string_schema('name')),
+            )))
             ->write(to_excel($outputPath)->saveMode(overwrite()))
             ->run();
 
@@ -83,7 +86,10 @@ final class ExcelLoaderTest extends FlowTestCase
         $outputPath = __DIR__ . '/var/output_auto.xlsx';
 
         df()
-            ->read(from_rows(rows(schema(int_schema('id'), string_schema('name')), row(['id' => 1, 'name' => 'Test']))))
+            ->read(from_rows(array_to_rows(
+                [['id' => 1, 'name' => 'Test']],
+                schema(int_schema('id'), string_schema('name')),
+            )))
             ->write(to_excel($outputPath)->saveMode(overwrite()))
             ->run();
 
@@ -102,11 +108,9 @@ final class ExcelLoaderTest extends FlowTestCase
         $outputPath = __DIR__ . '/var/output_batches.xlsx';
 
         df()
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [['id' => 1, 'name' => 'First'], ['id' => 2, 'name' => 'Second'], ['id' => 3, 'name' => 'Third']],
                 schema(int_schema('id'), string_schema('name')),
-                row(['id' => 1, 'name' => 'First']),
-                row(['id' => 2, 'name' => 'Second']),
-                row(['id' => 3, 'name' => 'Third']),
             )))
             ->batchSize(2)
             ->write(to_excel($outputPath)->saveMode(overwrite()))
@@ -130,11 +134,13 @@ final class ExcelLoaderTest extends FlowTestCase
         $outputPath = __DIR__ . '/var/output.' . $extension;
 
         df()
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [
+                    ['id' => 1, 'name' => 'Alice', 'email' => 'alice@example.com'],
+                    ['id' => 2, 'name' => 'Bob', 'email' => 'bob@example.com'],
+                    ['id' => 3, 'name' => 'Charlie', 'email' => 'charlie@example.com'],
+                ],
                 schema(int_schema('id'), string_schema('name'), string_schema('email')),
-                row(['id' => 1, 'name' => 'Alice', 'email' => 'alice@example.com']),
-                row(['id' => 2, 'name' => 'Bob', 'email' => 'bob@example.com']),
-                row(['id' => 3, 'name' => 'Charlie', 'email' => 'charlie@example.com']),
             )))
             ->write(to_excel($outputPath)->saveMode(overwrite())->withWriter($writer))
             ->run();
@@ -159,9 +165,9 @@ final class ExcelLoaderTest extends FlowTestCase
         $time = new DateInterval('PT14H30M45S');
 
         df()
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [['date_val' => $date, 'datetime_val' => $datetime, 'time_val' => $time]],
                 schema(date_schema('date_val'), datetime_schema('datetime_val'), time_schema('time_val')),
-                row(['date_val' => $date, 'datetime_val' => $datetime, 'time_val' => $time]),
             )))
             ->write(
                 to_excel($outputPath)
@@ -184,7 +190,10 @@ final class ExcelLoaderTest extends FlowTestCase
         $outputPath = __DIR__ . '/var/output_custom_sheet.' . $extension;
 
         df()
-            ->read(from_rows(rows(schema(int_schema('id'), string_schema('name')), row(['id' => 1, 'name' => 'Test']))))
+            ->read(from_rows(array_to_rows(
+                [['id' => 1, 'name' => 'Test']],
+                schema(int_schema('id'), string_schema('name')),
+            )))
             ->write(to_excel($outputPath)->saveMode(overwrite())->withSheetName('MySheet')->withWriter($writer))
             ->run();
 
@@ -204,7 +213,16 @@ final class ExcelLoaderTest extends FlowTestCase
         $uuid = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
 
         df()
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [[
+                    'i' => 1,
+                    'f' => 1.5,
+                    'b' => true,
+                    'd' => new DateTimeImmutable('2024-06-15'),
+                    'dt' => new DateTimeImmutable('2024-06-15 14:30:00'),
+                    'u' => type_uuid()->cast($uuid),
+                    'j' => type_json()->cast(['key' => 'value']),
+                ]],
                 schema(
                     int_schema('i'),
                     float_schema('f'),
@@ -214,15 +232,6 @@ final class ExcelLoaderTest extends FlowTestCase
                     uuid_schema('u'),
                     json_schema('j'),
                 ),
-                row([
-                    'i' => 1,
-                    'f' => 1.5,
-                    'b' => true,
-                    'd' => new DateTimeImmutable('2024-06-15'),
-                    'dt' => new DateTimeImmutable('2024-06-15 14:30:00'),
-                    'u' => type_uuid()->cast($uuid),
-                    'j' => type_json()->cast(['key' => 'value']),
-                ]),
             )))
             ->write(to_excel($outputPath)->saveMode(overwrite()))
             ->run();
@@ -248,9 +257,9 @@ final class ExcelLoaderTest extends FlowTestCase
         $datetime = new DateTimeImmutable('2024-06-15 14:30:00');
 
         df()
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [['date_val' => $date, 'datetime_val' => $datetime]],
                 schema(date_schema('date_val'), datetime_schema('datetime_val')),
-                row(['date_val' => $date, 'datetime_val' => $datetime]),
             )))
             ->write(to_excel($outputPath)->saveMode(overwrite())->withWriter(ExcelWriter::XLSX))
             ->run();
@@ -269,11 +278,13 @@ final class ExcelLoaderTest extends FlowTestCase
         $outputPath = __DIR__ . '/var/output_shared_formats.xlsx';
 
         df()
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [
+                    ['d' => new DateTimeImmutable('2024-06-15'), 'dt' => new DateTimeImmutable('2024-06-15 14:30:00')],
+                    ['d' => new DateTimeImmutable('2024-06-16'), 'dt' => new DateTimeImmutable('2024-06-16 14:30:00')],
+                    ['d' => new DateTimeImmutable('2024-06-17'), 'dt' => new DateTimeImmutable('2024-06-17 14:30:00')],
+                ],
                 schema(date_schema('d'), datetime_schema('dt')),
-                row(['d' => new DateTimeImmutable('2024-06-15'), 'dt' => new DateTimeImmutable('2024-06-15 14:30:00')]),
-                row(['d' => new DateTimeImmutable('2024-06-16'), 'dt' => new DateTimeImmutable('2024-06-16 14:30:00')]),
-                row(['d' => new DateTimeImmutable('2024-06-17'), 'dt' => new DateTimeImmutable('2024-06-17 14:30:00')]),
             )))
             ->write(to_excel($outputPath)->saveMode(overwrite())->withWriter(ExcelWriter::XLSX))
             ->run();
@@ -293,11 +304,13 @@ final class ExcelLoaderTest extends FlowTestCase
         $loader = $loader->withSheetNameFromEntry('category');
 
         df()
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [
+                    ['id' => 1, 'name' => 'Alice', 'category' => 'Users'],
+                    ['id' => 2, 'name' => 'Bob', 'category' => 'Users'],
+                    ['id' => 3, 'name' => 'Product A', 'category' => 'Products'],
+                ],
                 schema(int_schema('id'), string_schema('name'), string_schema('category')),
-                row(['id' => 1, 'name' => 'Alice', 'category' => 'Users']),
-                row(['id' => 2, 'name' => 'Bob', 'category' => 'Users']),
-                row(['id' => 3, 'name' => 'Product A', 'category' => 'Products']),
             )))
             ->write($loader->saveMode(overwrite()))
             ->run();
@@ -328,10 +341,12 @@ final class ExcelLoaderTest extends FlowTestCase
         $outputPath = __DIR__ . '/var/output_nulls.' . $extension;
 
         df()
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [
+                    ['id' => 1, 'name' => 'Alice', 'email' => null],
+                    ['id' => 2, 'name' => null, 'email' => 'bob@example.com'],
+                ],
                 schema(int_schema('id'), string_schema('name', nullable: true), string_schema('email', nullable: true)),
-                row(['id' => 1, 'name' => 'Alice', 'email' => null]),
-                row(['id' => 2, 'name' => null, 'email' => 'bob@example.com']),
             )))
             ->write(to_excel($outputPath)->saveMode(overwrite())->withWriter($writer))
             ->run();
@@ -354,7 +369,15 @@ final class ExcelLoaderTest extends FlowTestCase
         $uuidString = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
 
         df()
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [[
+                    'int_val' => 42,
+                    'float_val' => 3.14,
+                    'bool_val' => true,
+                    'string_val' => 'hello',
+                    'uuid_val' => type_uuid()->cast($uuidString),
+                    'json_val' => type_json()->cast(['key' => 'value']),
+                ]],
                 schema(
                     int_schema('int_val'),
                     float_schema('float_val'),
@@ -363,14 +386,6 @@ final class ExcelLoaderTest extends FlowTestCase
                     uuid_schema('uuid_val'),
                     json_schema('json_val'),
                 ),
-                row([
-                    'int_val' => 42,
-                    'float_val' => 3.14,
-                    'bool_val' => true,
-                    'string_val' => 'hello',
-                    'uuid_val' => type_uuid()->cast($uuidString),
-                    'json_val' => type_json()->cast(['key' => 'value']),
-                ]),
             )))
             ->write(to_excel($outputPath)->saveMode(overwrite())->withWriter($writer))
             ->run();
@@ -398,10 +413,9 @@ final class ExcelLoaderTest extends FlowTestCase
         $outputPath = __DIR__ . '/var/output_no_header.' . $extension;
 
         df()
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [['id' => 1, 'name' => 'Alice'], ['id' => 2, 'name' => 'Bob']],
                 schema(int_schema('id'), string_schema('name')),
-                row(['id' => 1, 'name' => 'Alice']),
-                row(['id' => 2, 'name' => 'Bob']),
             )))
             ->write(to_excel($outputPath)->saveMode(overwrite())->withHeader(false)->withWriter($writer))
             ->run();
@@ -474,10 +488,9 @@ final class ExcelLoaderTest extends FlowTestCase
         $loader = $loader->withCellStyler($cellStyler);
 
         df()
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [['id' => 1, 'name' => 'Alice'], ['id' => 2, 'name' => 'Bob']],
                 schema(int_schema('id'), string_schema('name')),
-                row(['id' => 1, 'name' => 'Alice']),
-                row(['id' => 2, 'name' => 'Bob']),
             )))
             ->write($loader->saveMode(overwrite()))
             ->run();
@@ -493,6 +506,33 @@ final class ExcelLoaderTest extends FlowTestCase
         );
     }
 
+    public function test_cell_styler_receives_the_row_index_within_the_batch(): void
+    {
+        $styler = new RecordingCellStyler();
+
+        df()
+            ->read(from_rows(array_to_rows(
+                [
+                    ['id' => 1, 'sheet' => 'A'],
+                    ['id' => 2, 'sheet' => 'B'],
+                    ['id' => 3, 'sheet' => 'A'],
+                    ['id' => 4, 'sheet' => 'A'],
+                    ['id' => 5, 'sheet' => 'B'],
+                ],
+                schema(int_schema('id'), string_schema('sheet')),
+            )))
+            ->batchSize(2)
+            ->write(
+                to_excel(__DIR__ . '/var/output_row_number.xlsx')
+                    ->withSheetNameFromEntry('sheet')
+                    ->withCellStyler($styler)
+                    ->saveMode(overwrite()),
+            )
+            ->run();
+
+        static::assertSame(['A:1@1', 'B:2@2', 'A:3@1', 'A:4@2', 'B:5@1'], $styler->firstColumnCells);
+    }
+
     public function test_with_header_style(): void
     {
         $outputPath = __DIR__ . '/var/output_header_style.xlsx';
@@ -503,7 +543,10 @@ final class ExcelLoaderTest extends FlowTestCase
         $loader = $loader->withHeaderStyle($headerStyle);
 
         df()
-            ->read(from_rows(rows(schema(int_schema('id'), string_schema('name')), row(['id' => 1, 'name' => 'Test']))))
+            ->read(from_rows(array_to_rows(
+                [['id' => 1, 'name' => 'Test']],
+                schema(int_schema('id'), string_schema('name')),
+            )))
             ->write($loader->saveMode(overwrite()))
             ->run();
 
@@ -524,7 +567,10 @@ final class ExcelLoaderTest extends FlowTestCase
         $options = new OdsOptions(DEFAULT_COLUMN_WIDTH: 15.0, DEFAULT_ROW_HEIGHT: 20.0);
 
         df()
-            ->read(from_rows(rows(schema(int_schema('id'), string_schema('name')), row(['id' => 1, 'name' => 'Test']))))
+            ->read(from_rows(array_to_rows(
+                [['id' => 1, 'name' => 'Test']],
+                schema(int_schema('id'), string_schema('name')),
+            )))
             ->write(to_excel($outputPath)->saveMode(overwrite())->withWriterOptions($options))
             ->run();
 
@@ -545,7 +591,10 @@ final class ExcelLoaderTest extends FlowTestCase
         $options = new XlsxOptions(SHOULD_USE_INLINE_STRINGS: false, DEFAULT_COLUMN_WIDTH: 15.0);
 
         df()
-            ->read(from_rows(rows(schema(int_schema('id'), string_schema('name')), row(['id' => 1, 'name' => 'Test']))))
+            ->read(from_rows(array_to_rows(
+                [['id' => 1, 'name' => 'Test']],
+                schema(int_schema('id'), string_schema('name')),
+            )))
             ->write(to_excel($outputPath)->saveMode(overwrite())->withWriterOptions($options))
             ->run();
 

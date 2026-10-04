@@ -31,9 +31,8 @@ final readonly class SellersDataset
         $sellerIds = [];
 
         foreach (data_frame()->read(from_parquet($ordersPath)->withColumns(['seller_id']))->get() as $batch) {
-            foreach ($batch->all() as $row) {
-                $sellerId = $row->get('seller_id');
-
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($batch->column('seller_id')->values() as $sellerId) {
                 if (is_scalar($sellerId) || $sellerId instanceof Stringable) {
                     $sellerIds[(string) $sellerId] = true;
                 }

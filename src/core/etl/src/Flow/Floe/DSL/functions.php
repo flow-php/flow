@@ -7,13 +7,13 @@ namespace Flow\Floe\DSL;
 use Flow\Documentation\Attribute\DocumentationDSL;
 use Flow\Documentation\Attribute\Module;
 use Flow\Documentation\Attribute\Type as DSLType;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Schema\Metadata;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Flow\Floe\Codec;
 use Flow\Floe\Codec\NoopCodec;
-use Flow\Floe\FloeEngine;
 use Flow\Floe\FloeExtractor;
 use Flow\Floe\FloeLoader;
 use Flow\Floe\FloeMerger;
@@ -32,10 +32,9 @@ function from_floe(
     string|Path $path,
     Codec $codec = new NoopCodec(),
     int $chunk_size = 65536,
-    FloeEngine $engine = FloeEngine::adaptive,
     Filesystem $filesystem = new NativeLocalFilesystem(),
 ): FloeExtractor {
-    return new FloeExtractor(is_string($path) ? path_real($path) : $path, $codec, $chunk_size, $engine, $filesystem);
+    return new FloeExtractor(is_string($path) ? path_real($path) : $path, $codec, $chunk_size, $filesystem);
 }
 
 /**
@@ -46,10 +45,9 @@ function to_floe(
     string|Path $path,
     ?Metadata $metadata = null,
     Options $options = new Options(),
-    FloeEngine $engine = FloeEngine::adaptive,
     Filesystem $filesystem = new NativeLocalFilesystem(),
 ): FloeLoader {
-    return new FloeLoader(is_string($path) ? path_real($path) : $path, $metadata, $options, $engine, $filesystem);
+    return new FloeLoader(is_string($path) ? path_real($path) : $path, $metadata, $options, $filesystem);
 }
 
 #[DocumentationDSL(module: Module::FLOE, type: DSLType::HELPER)]
@@ -68,11 +66,12 @@ function floe_options(int $buffer_size = 65536, Codec $codec = new NoopCodec()):
 function merge_floe(
     array $sources,
     string|Path $dest,
+    Backend $backend,
     bool $compact = false,
     ?Metadata $metadata = null,
     Filesystem $filesystem = new NativeLocalFilesystem(),
 ): void {
-    (new FloeMerger($filesystem))->merge(
+    (new FloeMerger($filesystem, $backend))->merge(
         array_map(static fn(string|Path $source): Path => is_string($source) ? path_real($source) : $source, $sources),
         is_string($dest) ? path($dest) : $dest,
         $compact,

@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
-use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\Reader;
+use Flow\Parquet\Tests\Mother\ParquetEngineMother;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 class ListsReadingTest extends ParquetIntegrationTestCase
 {
     #[DataProvider('engine_provider')]
-    public function test_reading_list_column(ParquetEngine $engine): void
+    public function test_reading_list_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/lists.parquet');
 
@@ -35,8 +36,9 @@ class ListsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_list_column_with_limit(ParquetEngine $engine): void
+    public function test_reading_list_column_with_limit(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/lists.parquet');
 
@@ -58,8 +60,9 @@ class ListsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_list_nested_column(ParquetEngine $engine): void
+    public function test_reading_list_nested_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/lists.parquet');
 
@@ -89,8 +92,9 @@ class ListsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_list_nullable_column(ParquetEngine $engine): void
+    public function test_reading_list_nullable_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/lists.parquet');
 
@@ -117,8 +121,9 @@ class ListsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_list_of_structures_column(ParquetEngine $engine): void
+    public function test_reading_list_of_structures_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/lists.parquet');
 
@@ -149,8 +154,9 @@ class ListsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_list_of_structures_nullable_column(ParquetEngine $engine): void
+    public function test_reading_list_of_structures_nullable_column(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/lists.parquet');
 

@@ -6,8 +6,8 @@ namespace Flow\Benchmarks\Format\Parquet;
 
 use Flow\Benchmarks\BenchmarkRows;
 use Flow\Benchmarks\Datasets\Datasets;
-use Flow\Parquet\Engine\ArrowParquetEngine;
 use Flow\Parquet\Engine\PhpParquetEngine;
+use Flow\Parquet\Engine\RustParquetEngine;
 use Generator;
 use PhpBench\Attributes as Bench;
 
@@ -25,7 +25,7 @@ final class ParquetWriteBench
     #[Bench\Groups(['format', 'format-parquet'])]
     public function bench_parquet_write(array $params): void
     {
-        $engine = $params['engine'] === ArrowParquetEngine::class ? new ArrowParquetEngine() : new PhpParquetEngine();
+        $engine = $params['engine'] === RustParquetEngine::class ? new RustParquetEngine() : new PhpParquetEngine();
 
         (new ParquetWriteScenario((int) $params['rows'], $engine))->run();
     }
@@ -42,7 +42,7 @@ final class ParquetWriteBench
         yield 'php' => ['engine' => PhpParquetEngine::class];
 
         if (extension_loaded('arrow')) {
-            yield 'arrow' => ['engine' => ArrowParquetEngine::class];
+            yield 'arrow' => ['engine' => RustParquetEngine::class];
         }
     }
 }

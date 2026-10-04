@@ -16,6 +16,10 @@ endif
 CARGO_OUTPUT := target/release/libflow_php.$(LIB_EXT)
 EXTENSION_SO := $(MODULE_DIR)/flow_php.so
 
+# arrow-ext's built extension: loaded before flow_php in every test run, so the Parquet ETL phpts run instead of skip
+ARROW_SO ?=
+LOAD_ARROW := $(if $(ARROW_SO),-d extension=$(realpath $(ARROW_SO)),)
+
 .PHONY: all build clean test install rebuild
 
 all: build
@@ -40,7 +44,7 @@ test: build
 		sed -n '/^--SKIPIF--$$/,/^--FILE--$$/p' "$$f" | sed '1d;$$d' > "$$skipif"; \
 		skip_out=""; \
 		if [ -s "$$skipif" ]; then \
-			skip_out=$$($(PHP) -d extension=$$(realpath $(EXTENSION_SO)) "$$skipif" 2>&1) || true; \
+			skip_out=$$($(PHP) $(LOAD_ARROW) -d extension=$$(realpath $(EXTENSION_SO)) "$$skipif" 2>&1) || true; \
 		fi; \
 		rm -f "$$skipif"; \
 		case "$$skip_out" in skip*) \
@@ -50,7 +54,7 @@ test: build
 		esac; \
 		sed -n '/^--FILE--$$/,/^--EXPECT/p' "$$f" | sed '1d;$$d' > "$$tmp"; \
 		expected=$$(sed -n '/^--EXPECT\(F\)\{0,1\}--$$/,$$p' "$$f" | sed '1d' | tr -d '\r'); \
-		actual=$$($(PHP) -d extension=$$(realpath $(EXTENSION_SO)) "$$tmp" 2>&1) || true; \
+		actual=$$($(PHP) $(LOAD_ARROW) -d extension=$$(realpath $(EXTENSION_SO)) "$$tmp" 2>&1) || true; \
 		actual=$$(printf '%s' "$$actual" | tr -d '\r'); \
 		rm -f "$$tmp"; \
 		if [ "$$actual" = "$$expected" ]; then \

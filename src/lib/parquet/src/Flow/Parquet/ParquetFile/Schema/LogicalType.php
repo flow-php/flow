@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\ParquetFile\Schema;
 
 use Flow\Parquet\ParquetFile\Schema\LogicalType\Decimal;
+use Flow\Parquet\ParquetFile\Schema\LogicalType\Integer;
 use Flow\Parquet\ParquetFile\Schema\LogicalType\Time;
 use Flow\Parquet\ParquetFile\Schema\LogicalType\Timestamp;
 use Flow\Parquet\ThriftModel\BsonType;
@@ -12,7 +13,6 @@ use Flow\Parquet\ThriftModel\DateType;
 use Flow\Parquet\ThriftModel\DecimalType;
 use Flow\Parquet\ThriftModel\EnumType;
 use Flow\Parquet\ThriftModel\Float16Type;
-use Flow\Parquet\ThriftModel\IntType;
 use Flow\Parquet\ThriftModel\JsonType;
 use Flow\Parquet\ThriftModel\ListType;
 use Flow\Parquet\ThriftModel\LogicalType as ThriftLogicalType;
@@ -62,6 +62,7 @@ final readonly class LogicalType
         private ?Timestamp $timestamp = null,
         private ?Time $time = null,
         private ?Decimal $decimal = null,
+        private ?Integer $integer = null,
     ) {}
 
     public static function bson(): self
@@ -208,12 +209,15 @@ final readonly class LogicalType
             // @mago-ignore analysis:redundant-condition
             // @mago-ignore analysis:redundant-comparison
             decimal: $logicalType->DECIMAL !== null ? Decimal::fromThrift($logicalType->DECIMAL) : null,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
+            integer: $logicalType->INTEGER !== null ? Integer::fromThrift($logicalType->INTEGER) : null,
         );
     }
 
-    public static function integer(): self
+    public static function integer(int $bitWidth, bool $isSigned): self
     {
-        return new self(self::INTEGER);
+        return new self(self::INTEGER, integer: new Integer($bitWidth, $isSigned));
     }
 
     public static function json(): self
@@ -261,6 +265,11 @@ final readonly class LogicalType
         return $this->decimal;
     }
 
+    public function integerData(): ?Integer
+    {
+        return $this->integer;
+    }
+
     public function is(string $logicalType): bool
     {
         return $this->name() === $logicalType;
@@ -292,7 +301,7 @@ final readonly class LogicalType
                     'precision' => $this->decimalData()?->precision(),
                 ]) : null,
             self::ENUM => $this->is(self::ENUM) ? new EnumType() : null,
-            self::INTEGER => $this->is(self::INTEGER) ? new IntType() : null,
+            self::INTEGER => $this->is(self::INTEGER) ? $this->integer?->toThrift() : null,
             self::JSON => $this->is(self::JSON) ? new JsonType() : null,
             self::LIST => $this->is(self::LIST) ? new ListType() : null,
             self::MAP => $this->is(self::MAP) ? new MapType() : null,

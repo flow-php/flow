@@ -8,6 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Function\ScalarFunction;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\combine;
@@ -15,7 +16,6 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Types\DSL\type_list;
@@ -41,13 +41,13 @@ final class CombineTest extends FlowTestCase
     {
         static::assertSame(
             ['a' => 1, 'b' => 2, 'c' => 3],
-            combine(lit(['a', 'b', 'c']), lit([1, 2, 3]))->eval(row([]), flow_context()),
+            (new FunctionContext(flow_context()))->eval(combine(lit(['a', 'b', 'c']), lit([1, 2, 3])), [], schema()),
         );
     }
 
     public function test_array_combine_when_arrays_are_empty(): void
     {
-        static::assertSame([], combine(lit([]), lit([]))->eval(row([]), flow_context()));
+        static::assertSame([], (new FunctionContext(flow_context()))->eval(combine(lit([]), lit([])), [], schema()));
     }
 
     public function test_array_combine_when_keys_are_not_array(): void
@@ -55,14 +55,18 @@ final class CombineTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected type "array<mixed>", got "string".');
 
-        combine(lit('a'), lit([1, 2, 3]))->eval(row([]), flow_context());
+        (new FunctionContext(flow_context()))->eval(combine(lit('a'), lit([1, 2, 3])), [], schema());
     }
 
     public function test_array_combine_when_keys_are_not_unique(): void
     {
         static::assertSame(
             ['a' => 4, 'b' => 2, 'c' => 3],
-            combine(lit(['a', 'b', 'c', 'a']), lit([1, 2, 3, 4]))->eval(row([]), flow_context()),
+            (new FunctionContext(flow_context()))->eval(
+                combine(lit(['a', 'b', 'c', 'a']), lit([1, 2, 3, 4])),
+                [],
+                schema(),
+            ),
         );
     }
 
@@ -71,6 +75,6 @@ final class CombineTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Combine function requires keys and values arrays to have the same length');
 
-        combine(lit(['a', 'b', 'c']), lit([]))->eval(row([]), flow_context());
+        (new FunctionContext(flow_context()))->eval(combine(lit(['a', 'b', 'c']), lit([])), [], schema());
     }
 }

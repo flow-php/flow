@@ -19,6 +19,7 @@ use function array_values;
 use function file_exists;
 use function Flow\ETL\Adapter\Text\from_text;
 use function Flow\ETL\Adapter\Text\to_text;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\collect;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\files;
@@ -31,8 +32,6 @@ use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\partition_types;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Types\DSL\type_integer;
@@ -164,7 +163,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
                 [
                     'path' =>
                         'file://'
-                            . ltrim(str_replace('\\', '/', __DIR__), '/')
+                            . str_replace('\\', '/', __DIR__)
                             . '/Fixtures/Partitioning/overwrite/date=2024-04-01/file.txt',
                     'partitions' => ['date' => '2024-04-01'],
                     'date' => '2024-04-01',
@@ -172,7 +171,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
                 [
                     'path' =>
                         'file://'
-                            . ltrim(str_replace('\\', '/', __DIR__), '/')
+                            . str_replace('\\', '/', __DIR__)
                             . '/Fixtures/Partitioning/overwrite/date=2024-04-02/file.txt',
                     'partitions' => ['date' => '2024-04-02'],
                     'date' => '2024-04-02',
@@ -180,7 +179,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
                 [
                     'path' =>
                         'file://'
-                            . ltrim(str_replace('\\', '/', __DIR__), '/')
+                            . str_replace('\\', '/', __DIR__)
                             . '/Fixtures/Partitioning/overwrite/date=2024-04-03/file.txt',
                     'partitions' => ['date' => '2024-04-03'],
                     'date' => '2024-04-03',
@@ -188,7 +187,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
                 [
                     'path' =>
                         'file://'
-                            . ltrim(str_replace('\\', '/', __DIR__), '/')
+                            . str_replace('\\', '/', __DIR__)
                             . '/Fixtures/Partitioning/overwrite/date=2024-04-04/file.txt',
                     'partitions' => ['date' => '2024-04-04'],
                     'date' => '2024-04-04',
@@ -215,13 +214,15 @@ final class PartitioningTest extends FlowIntegrationTestCase
     public function test_repartition_groups_every_row_sharing_a_key_into_one_batch(): void
     {
         $batches = df()
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [
+                    ['id' => 1, 'country' => 'PL', 'age' => 20],
+                    ['id' => 5, 'country' => 'US', 'age' => 40],
+                    ['id' => 2, 'country' => 'PL', 'age' => 20],
+                    ['id' => 6, 'country' => 'US', 'age' => 40],
+                    ['id' => 3, 'country' => 'PL', 'age' => 25],
+                ],
                 schema(int_schema('id'), str_schema('country'), int_schema('age')),
-                row(['id' => 1, 'country' => 'PL', 'age' => 20]),
-                row(['id' => 5, 'country' => 'US', 'age' => 40]),
-                row(['id' => 2, 'country' => 'PL', 'age' => 20]),
-                row(['id' => 6, 'country' => 'US', 'age' => 40]),
-                row(['id' => 3, 'country' => 'PL', 'age' => 25]),
             )))
             ->repartition(ref('country'))
             ->get();
@@ -369,6 +370,6 @@ final class PartitioningTest extends FlowIntegrationTestCase
             ->fetch();
 
         static::assertCount(1, $rows);
-        static::assertSame(2023, $rows->first()->get('year'));
+        static::assertSame(2023, $rows->column('year')->value(0));
     }
 }

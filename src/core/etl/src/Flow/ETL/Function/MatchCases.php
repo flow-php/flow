@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Function\Evaluation\Selection;
 use Flow\ETL\Function\MatchCases\MatchCondition;
-use Flow\ETL\Row;
+use Flow\ETL\Rows;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 use Flow\Types\Type\Unifier\NullabilityRule;
@@ -20,6 +24,7 @@ use function array_values;
 use function count;
 use function Flow\ETL\DSL\lit;
 use function json_encode;
+use function range;
 
 final class MatchCases implements ScalarFunction
 {
@@ -94,21 +99,64 @@ final class MatchCases implements ScalarFunction
         );
     }
 
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        foreach ($this->cases as $condition) {
-            if ($condition->valid($row, $context)) {
-                return $condition->eval($row, $context);
+        $pending = $rows->isEmpty() ? [] : range(0, $rows->count() - 1);
+        $values = [];
+
+        foreach ($this->cases as $case) {
+            if ($pending === []) {
+                break;
+            }
+
+            $taken = [];
+            $rest = [];
+
+            foreach ($case->valid($rows, $pending, $context) as $k => $valid) {
+                if ($valid) {
+                    $taken[] = $pending[$k];
+                } else {
+                    $rest[] = $pending[$k];
+                }
+            }
+
+            if ($taken !== []) {
+                // @mago-ignore analysis:mixed-assignment
+                foreach ((new Selection($taken))
+                    ->evaluate($case, $rows, $context)
+                    ->values() as $k => $value) {
+                    $values[$taken[$k]] = $value;
+                }
+            }
+
+            $pending = $rest;
+        }
+
+        if ($pending !== []) {
+            if ($this->default === null) {
+                throw new EvaluationException(
+                    $pending[0],
+                    new InvalidArgumentException(
+                        'Not a single case matches row, consider using default parameter, row: '
+                            . json_encode($rows->values($pending[0]), JSON_THROW_ON_ERROR),
+                    ),
+                );
+            }
+
+            // @mago-ignore analysis:mixed-assignment
+            foreach ((new Selection($pending))
+                ->evaluate($this->default, $rows, $context)
+                ->values() as $k => $value) {
+                $values[$pending[$k]] = $value;
             }
         }
 
-        if ($this->default !== null) {
-            return (new Parameter($this->default))->eval($row, $context);
+        $results = [];
+
+        for ($i = 0, $count = $rows->count(); $i < $count; $i++) {
+            $results[] = $values[$i] ?? null;
         }
 
-        throw new InvalidArgumentException(
-            'Not a single case matches row, consider using default parameter, row: '
-                . json_encode($row->toArray(), JSON_THROW_ON_ERROR),
-        );
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

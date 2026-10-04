@@ -14,6 +14,7 @@ use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 use Flow\Types\Type\Native\String\StringTemporalParts;
+use Flow\Types\Type\NonFiniteFloat;
 use Throwable;
 
 use function is_bool;
@@ -52,7 +53,7 @@ final readonly class DateType implements Type
 
         try {
             if ($value instanceof DateTimeImmutable || $value instanceof DateTime) {
-                return DateTimeImmutable::createFromInterface($value)->setTime(0, 0, 0, 0);
+                return new DateTimeImmutable($value->format('Y-m-d'), $utc);
             }
 
             if (is_string($value)) {
@@ -69,6 +70,10 @@ final readonly class DateType implements Type
                 }
 
                 return new DateTimeImmutable((new DateTimeImmutable($value))->format('Y-m-d'), $utc);
+            }
+
+            if (NonFiniteFloat::is($value)) {
+                throw new CastingException($value, $this, reason: 'value is not a point in time');
             }
 
             if (is_numeric($value)) {
@@ -98,7 +103,11 @@ final readonly class DateType implements Type
 
     public function isValid(mixed $value): bool
     {
-        return $value instanceof DateTimeInterface && $value->format('H:i:s.u') === '00:00:00.000000';
+        return (
+            $value instanceof DateTimeInterface
+            && $value->getOffset() === 0
+            && $value->format('H:i:s.u') === '00:00:00.000000'
+        );
     }
 
     public function normalize(): array

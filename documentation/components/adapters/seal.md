@@ -24,17 +24,17 @@ In addition to this adapter, install the SEAL engine adapter for your search bac
 composer require flow-php/etl-adapter-seal cmsig/seal-elasticsearch-adapter
 ```
 
-| Backend       | Package                          |
-|---------------|----------------------------------|
-| Algolia       | `cmsig/seal-algolia-adapter`     |
+| Backend       | Package                            |
+|---------------|------------------------------------|
+| Algolia       | `cmsig/seal-algolia-adapter`       |
 | Elasticsearch | `cmsig/seal-elasticsearch-adapter` |
-| Loupe         | `cmsig/seal-loupe-adapter`       |
-| Meilisearch   | `cmsig/seal-meilisearch-adapter` |
-| Memory        | `cmsig/seal-memory-adapter`      |
-| OpenSearch    | `cmsig/seal-opensearch-adapter`  |
-| RediSearch    | `cmsig/seal-redisearch-adapter`  |
-| Solr          | `cmsig/seal-solr-adapter`        |
-| Typesense     | `cmsig/seal-typesense-adapter`   |
+| Loupe         | `cmsig/seal-loupe-adapter`         |
+| Meilisearch   | `cmsig/seal-meilisearch-adapter`   |
+| Memory        | `cmsig/seal-memory-adapter`        |
+| OpenSearch    | `cmsig/seal-opensearch-adapter`    |
+| RediSearch    | `cmsig/seal-redisearch-adapter`    |
+| Solr          | `cmsig/seal-solr-adapter`          |
+| Typesense     | `cmsig/seal-typesense-adapter`     |
 
 ## Description
 
@@ -97,8 +97,8 @@ to_seal_upsert($engine, 'users')->withBulkSize(500);
 
 ### Deleting Documents
 
-`to_seal_delete()` removes documents by their identifiers. By default, the identifier is taken from the `id` entry of
-each row - use `withIdentifierEntry()` when your identifier entry has a different name.
+`to_seal_delete()` removes documents by their identifiers, read from the `id` column. `withIdentifierEntry()` names
+another column.
 
 ```php
 use function Flow\ETL\Adapter\Seal\to_seal_delete;
@@ -116,18 +116,19 @@ to_seal_delete($engine, 'products')->withIdentifierEntry('sku');
 
 ### Data Normalization
 
-Before saving, rows are normalized into search documents:
+Each row becomes one document:
 
-| Flow Type                 | Document Value                                  |
-|---------------------------|-------------------------------------------------|
-| `string`, `int`, `float`, `bool` | unchanged                                 |
-| `uuid`                    | string representation                           |
-| `datetime`                | string, `DateTimeInterface::ATOM` by default     |
-| `date`                    | string, `Y-m-d` by default                       |
-| `enum`                    | case name                                       |
-| `xml`, `xml_element`      | serialized XML string                           |
-| `json`                    | decoded array                                   |
-| `list`, `map`, `structure` | array (nested values normalized recursively)   |
+| Flow Type                                    | Document Value                               |
+|----------------------------------------------|----------------------------------------------|
+| `string`, `int`, `float`, `bool`             | unchanged                                    |
+| `uuid`                                       | string representation                        |
+| `datetime`                                   | string, `DateTimeInterface::ATOM` by default |
+| `date`                                       | string, `Y-m-d` by default                   |
+| `enum`                                       | case name                                    |
+| `time`                                       | microseconds                                 |
+| `xml`, `xml_element`, `html`, `html_element` | markup text, e.g. `<a b="1"><c></c></a>`     |
+| `json`                                       | decoded array                                |
+| `list`, `map`, `structure`                   | array (nested values normalized recursively) |
 
 ## Schema Conversion
 
@@ -156,20 +157,20 @@ $sealSchema = to_seal_schema(
 
 ### Type Mapping
 
-| Flow Type                          | SEAL Field        | Default Flags          |
-|------------------------------------|-------------------|------------------------|
-| `string`, `uuid`, `enum`, `xml`, `html` | `TextField`  | searchable             |
-| `integer`                          | `IntegerField`    | filterable, sortable   |
-| `float`                            | `FloatField`      | filterable, sortable   |
-| `boolean`                          | `BooleanField`    | filterable             |
-| `datetime`, `date`                 | `DateTimeField`   | filterable, sortable   |
-| `json`, `map`                      | `JsonObjectField` | -                      |
-| `list<T>`                          | field of `T` with `multiple: true` | as `T` |
-| `structure`                        | `ObjectField` (recursive) | -              |
+| Flow Type                               | SEAL Field                         | Default Flags        |
+|-----------------------------------------|------------------------------------|----------------------|
+| `string`, `uuid`, `enum`, `xml`, `html` | `TextField`                        | searchable           |
+| `integer`                               | `IntegerField`                     | filterable, sortable |
+| `float`                                 | `FloatField`                       | filterable, sortable |
+| `boolean`                               | `BooleanField`                     | filterable           |
+| `datetime`, `date`                      | `DateTimeField`                    | filterable, sortable |
+| `json`, `map`                           | `JsonObjectField`                  | -                    |
+| `list<T>`                               | field of `T` with `multiple: true` | as `T`               |
+| `structure`                             | `ObjectField` (recursive)          | -                    |
 
 ### Field Flags
 
-Default flags can be overridden per definition through entry metadata:
+Default flags can be overridden per definition through its metadata:
 
 | Metadata                     | Effect                                  |
 |------------------------------|-----------------------------------------|

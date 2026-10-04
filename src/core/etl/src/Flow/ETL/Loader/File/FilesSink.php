@@ -1,0 +1,168 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Loader\File;
+
+use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Filesystem\SaveMode;
+use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Partition;
+use Flow\Filesystem\Path;
+use Flow\Filesystem\Stream\VoidStream;
+use Throwable;
+
+use function array_key_exists;
+use function count;
+use function Flow\Filesystem\DSL\path;
+use function str_contains;
+use function str_replace;
+
+final class FilesSink
+{
+    public const string FLOW_TMP_FILE_PREFIX = '._flow_php_tmp.';
+
+    /**
+     * Paths this state brought into existence, so abandon() can remove exactly those. A destination that already
+     * existed and was left alone (Ignore) never lands here - removing it would delete the user's file.
+     *
+     * @var array<string, Path>
+     */
+    private array $created = [];
+
+    /** @var array<string, DestinationStream> */
+    private array $streams = [];
+
+    public function __construct(
+        private readonly Filesystem $filesystem,
+        private readonly Path $destination,
+        private readonly SaveMode $saveMode,
+    ) {}
+
+    public function abandon(): void
+    {
+        $streams = $this->streams;
+        $created = $this->created;
+        $this->streams = [];
+        $this->created = [];
+        $failure = null;
+
+        // every handle closes first: a format writer flushes its footer on close, and the file has to be gone
+        // after that, not before
+        foreach ($streams as $stream) {
+            if ($stream->isOpen()) {
+                try {
+                    $stream->close();
+                } catch (Throwable $closeFailure) {
+                    $failure ??= $closeFailure;
+                }
+            }
+        }
+
+        foreach ($created as $path) {
+            if ($this->filesystem->status($path) !== null) {
+                $this->filesystem->rm($path);
+            }
+        }
+
+        if ($failure !== null) {
+            throw $failure;
+        }
+    }
+
+    public function publish(): void
+    {
+        // a stream leaves the registry only once it is published, so abandon() after a failure part way through
+        // still removes every file that never made it
+        foreach ($this->streams as $uri => $stream) {
+            if ($stream->isOpen()) {
+                $stream->close();
+            }
+
+            if ($this->saveMode === SaveMode::Overwrite) {
+                if ($stream->path()->partitions()->count() || [] !== $this->destination->partitionPlaceholders()) {
+                    $writtenFiles = path(
+                        $stream->path()->parentDirectory()->uri()
+                            . '/'
+                            . str_replace(self::FLOW_TMP_FILE_PREFIX, '', $stream->path()->filename())
+                            . '*.'
+                            // @mago-ignore analysis:possibly-false-operand
+                            . $stream->path()->extension(),
+                        $stream->path()->options(),
+                    );
+
+                    foreach ($this->filesystem->list($writtenFiles) as $stale) {
+                        if (str_contains($stale->path->path(), self::FLOW_TMP_FILE_PREFIX)) {
+                            continue;
+                        }
+
+                        $this->filesystem->rm($stale->path);
+                    }
+                }
+
+                $this->filesystem->mv($stream->path(), path(
+                    str_replace(self::FLOW_TMP_FILE_PREFIX, '', $stream->path()->uri()),
+                    $stream->path()->options(),
+                ));
+            }
+
+            unset($this->streams[$uri], $this->created[$uri]);
+        }
+    }
+
+    /**
+     * @param array<Partition> $partitions
+     */
+    public function writeTo(array $partitions = []): DestinationStream
+    {
+        if (!$this->destination->extension()) {
+            throw new RuntimeException('Stream path must have an extension, given: ' . $this->destination->uri());
+        }
+
+        $placeholders = $this->destination->partitionPlaceholders();
+
+        if ($this->destination->isPattern() && [] === $placeholders) {
+            throw new RuntimeException("Destination path can't be pattern, given: " . $this->destination->uri());
+        }
+
+        if ([] !== $placeholders && !count($partitions)) {
+            throw new RuntimeException(
+                'Destination path "'
+                . $this->destination->uri()
+                . '" contains partition placeholders but rows are not partitioned, add partitionBy() to your pipeline',
+            );
+        }
+
+        $destination = count($partitions) ? $this->destination->addPartitions(...$partitions) : $this->destination;
+        $uri = $destination->uri();
+
+        if (array_key_exists($uri, $this->streams)) {
+            return $this->streams[$uri];
+        }
+
+        $exists = $this->filesystem->status($destination) !== null;
+
+        if ($this->saveMode === SaveMode::ExceptionIfExists && $exists) {
+            throw new RuntimeException(
+                'Destination path "'
+                . $uri
+                . '" already exists, please change path to different or set different SaveMode',
+            );
+        }
+
+        if ($this->saveMode === SaveMode::Ignore && $exists) {
+            return $this->streams[$uri] = new VoidStream($destination);
+        }
+
+        $outputPath = match (true) {
+            $this->saveMode === SaveMode::Append && $exists => $destination->randomize(),
+            $this->saveMode === SaveMode::Overwrite => $destination->basenamePrefix(self::FLOW_TMP_FILE_PREFIX),
+            default => $destination,
+        };
+
+        $this->created[$uri] = $outputPath;
+
+        return $this->streams[$uri] = $this->filesystem->writeTo($outputPath);
+    }
+}

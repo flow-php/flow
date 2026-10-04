@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Nullability;
 
@@ -55,19 +59,43 @@ final class ArrayPathExists implements ScalarFunction
         return (new Nullability())->any(type_boolean(), $this->array->returns(), $this->path->returns());
     }
 
-    public function eval(Row $row, FlowContext $context): ?bool
+    public function eval(Rows $rows, FlowContext $context): Column
     {
         try {
-            $array = (new Parameter($this->array))->asArray($row, $context);
-            $path = (new Parameter($this->path))->asString($row, $context);
-
-            if ($array === null || $path === null) {
-                return null;
-            }
-
-            return array_dot_exists($array, $path);
-        } catch (InvalidArgumentException $e) {
-            throw new InvalidArgumentException('ArrayPathExists error: ' . $e->getMessage());
+            $arrays = (new Parameter($this->array))->asArrays($rows, $context);
+            $paths = (new Parameter($this->path))->asStrings($rows, $context);
+        } catch (EvaluationException $e) {
+            throw new EvaluationException(
+                $e->rowIndex,
+                new InvalidArgumentException(
+                    'ArrayPathExists error: ' . ($e->getPrevious()?->getMessage() ?? $e->getMessage()),
+                ),
+            );
         }
+
+        $results = [];
+        $i = 0;
+
+        try {
+            foreach ($arrays as $i => $array) {
+                $path = $paths[$i];
+
+                try {
+                    if ($array === null || $path === null) {
+                        $results[] = null;
+
+                        continue;
+                    }
+
+                    $results[] = array_dot_exists($array, $path);
+                } catch (InvalidArgumentException $e) {
+                    throw new InvalidArgumentException('ArrayPathExists error: ' . $e->getMessage(), 0, $e);
+                }
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
+        }
+
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

@@ -7,11 +7,11 @@ namespace Flow\ETL\GroupBy;
 use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\Bucketing\HashBucketing;
 use Flow\ETL\Bucketing\NativeHasher;
+use Flow\ETL\Bucketing\Storage\SpillingBuckets;
 use Flow\ETL\Config;
 use Flow\ETL\Config\Grouping\GroupByAlgorithmBuilder;
 use Flow\ETL\GroupBy;
 use Flow\ETL\Processor;
-use Flow\ETL\Processor\BucketingProcessor;
 use Flow\ETL\Processor\GroupByAggregationProcessor;
 use Flow\ETL\Processor\PivotProcessor;
 use Flow\ETL\Transformer;
@@ -29,7 +29,8 @@ final readonly class GroupBySteps
      */
     public static function of(GroupBy $groupBy, Config $config, ?GroupByAlgorithmBuilder $algorithm = null): array
     {
-        $grouping = $algorithm?->build($config->cache->localFilesystemCacheDir) ?? $config->grouping;
+        $grouping =
+            $algorithm?->build($config->cache->localFilesystemCacheDir, $config->backend()) ?? $config->grouping;
         if ($groupBy->isPivot()) {
             return [new PivotProcessor($groupBy, $grouping->bucketing->batchSize)];
         }
@@ -47,8 +48,13 @@ final readonly class GroupBySteps
             $steps[] = new PruneEntriesTransformer(...array_values($pruned));
         }
 
-        $buckets = new Buckets($grouping->bucketing->storage);
-        $steps[] = new BucketingProcessor(
+        $buckets = new Buckets(SpillingBuckets::around(
+            $grouping->bucketing,
+            $grouping->memoryLimit,
+            $config->backend(),
+        ));
+        $steps[] = new GroupByAggregationProcessor(
+            $groupBy,
             new HashBucketing(
                 $groupBy->references(),
                 $grouping->bucketing->bucketsCount,
@@ -57,8 +63,9 @@ final readonly class GroupBySteps
                 'group-by',
             ),
             $buckets,
+            $grouping->memoryLimit,
+            $grouping->bucketing->batchSize,
         );
-        $steps[] = new GroupByAggregationProcessor($groupBy, $buckets, $grouping->bucketing->batchSize);
 
         return $steps;
     }

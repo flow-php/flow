@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function Flow\ETL\DSL\lit;
@@ -56,20 +60,33 @@ final class Round implements ScalarFunction
         return type_float();
     }
 
-    public function eval(Row $row, FlowContext $context): float
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $value = (new Parameter($this->value))->asNumber($row, $context);
-        $precision = (new Parameter($this->precision))->asInt($row, $context);
-        $mode = (new Parameter($this->mode))->asInt($row, $context);
+        $values = (new Parameter($this->value))->asNumbers($rows, $context);
+        $precisions = (new Parameter($this->precision))->asInts($rows, $context);
+        $modes = (new Parameter($this->mode))->asInts($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($value === null || $precision === null || $mode === null) {
-            throw new InvalidArgumentException('Round function requires non-null values');
+        try {
+            foreach ($values as $i => $value) {
+                $precision = $precisions[$i];
+                $mode = $modes[$i];
+
+                if ($value === null || $precision === null || $mode === null) {
+                    throw new InvalidArgumentException('Round function requires non-null values');
+                }
+
+                if ($mode < 1 || $mode > 4) {
+                    $mode = 1;
+                }
+
+                $results[] = round($value, $precision, $mode);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        if ($mode < 1 || $mode > 4) {
-            $mode = 1;
-        }
-
-        return round($value, $precision, $mode);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

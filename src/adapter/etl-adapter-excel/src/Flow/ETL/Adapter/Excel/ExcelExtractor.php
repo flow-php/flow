@@ -5,16 +5,18 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Excel;
 
 use Flow\ETL\Cardinality;
-use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
-use Flow\ETL\Extractor\FileExtractor;
-use Flow\ETL\Extractor\FileReading;
+use Flow\ETL\Extractor\File\FileExtractor;
+use Flow\ETL\Extractor\File\FileReading;
+use Flow\ETL\Extractor\File\FileReadLoop;
+use Flow\ETL\Extractor\File\InferredColumns;
+use Flow\ETL\Extractor\File\ListedFiles;
+use Flow\ETL\Extractor\File\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\File\ReadWindow;
 use Flow\ETL\Extractor\InfersSchema;
-use Flow\ETL\Extractor\ListedFiles;
-use Flow\ETL\Extractor\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
@@ -32,8 +34,6 @@ use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Generator;
 use Throwable;
 
-use function array_diff;
-use function array_values;
 use function count;
 use function iterator_to_array;
 use function sprintf;
@@ -123,127 +123,33 @@ final class ExcelExtractor implements
      */
     public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
     {
-        $hydrator = $context->hydrator();
-        $batchSize = $this->batchSize();
-        $yielded = 0;
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
-        $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $pathFilter), false);
-        $workbook = new WorkbookReader($this->readOptions, new ExcelFormatDetector($this->filesystem));
+        $schema = $this->schema();
         // only the first extract() after an inference reads on from its sample; every later one parses afresh
-        $sampled = $this->sampled;
+        $batches = new ExcelFileBatches(
+            new WorkbookReader($this->readOptions, new ExcelFormatDetector($this->filesystem)),
+            $this->sampled,
+            $this->schema === null && !$this->inference->unionByName
+                ? new InferredColumns(
+                    $fileColumns->withoutTail($schema),
+                    $fileColumns->tail(),
+                    $this->inference,
+                    $this->inferredFrom,
+                )
+                : null,
+        );
         $this->sampled = null;
 
         try {
-            if ($this->schema !== null) {
-                $base = $this->schema;
-            } else {
-                // a local, not the property: withoutTail() takes a non-nullable Schema and no analyzer narrows a property
-                $derived = $this->derivedSchema;
-
-                if ($derived === null) {
-                    $sampler = new WorkbookSampler($workbook, $sources);
-
-                    try {
-                        // one header() call: after infer() the sampler's sheets are closed and asking again reopens one
-                        $header = $sampler->header();
-                        $this->inferredFrom = $header->source ?? '';
-
-                        $derived =
-                            $this->derivedSchema = (new SchemaInferrer(
-                                $this->inference,
-                                new CellTypeNarrower($this->inference->candidates()),
-                            ))->infer($header->names, $sampler->samples($this->inference->sampleSize));
-                        $this->sampledRows = $sampler->sampledRows();
-                        $this->sampledFiles = count($sources);
-                    } catch (Throwable $failure) {
-                        $sampler->close();
-
-                        throw $failure;
-                    }
-
-                    $sampled?->close();
-                    $sampled = $sampler;
-                }
-
-                $base = $fileColumns->withoutTail($derived);
-            }
-
-            $schema = $fileColumns->declare($base);
-            $body = $fileColumns->withoutTail($schema);
-            $tail = $fileColumns->tail();
-            $expected = $base->references()->names();
-
-            foreach ($sources as $source) {
-                $sheet = $sampled?->take($source) ?? $workbook->sheet($source);
-
-                try {
-                    if ($this->schema === null && !$this->inference->unionByName) {
-                        $columns = array_values(array_diff($sheet->columns(), $tail));
-
-                        if (
-                            $columns !== []
-                            && (array_diff($columns, $expected) !== [] || array_diff($expected, $columns) !== [])
-                        ) {
-                            throw InferredSchemaException::columnsDiverge(
-                                $source->uri(),
-                                $this->inferredFrom,
-                                $base,
-                                $columns,
-                                $this->inference,
-                            );
-                        }
-                    }
-
-                    // forFile() reads the PARTITION definitions, which only declare() creates - $base is the body
-                    $constants = $fileColumns->forFile($source, $schema);
-                    $batch = [];
-
-                    foreach ($sheet->rows() as $rowValues) {
-                        $batch[] = $rowValues;
-
-                        if (count($batch) < $batchSize) {
-                            continue;
-                        }
-
-                        $hydrated = $constants->fillRows($hydrator->hydrate($batch, $body), $schema);
-                        $batch = [];
-
-                        $yielded += $hydrated->count();
-
-                        $signal = yield $hydrated;
-
-                        if ($signal === Signal::STOP) {
-                            return;
-                        }
-
-                        if ($limit !== null && $yielded >= $limit) {
-                            return;
-                        }
-                    }
-
-                    if ($batch === []) {
-                        continue;
-                    }
-
-                    $hydrated = $constants->fillRows($hydrator->hydrate($batch, $body), $schema);
-
-                    $yielded += $hydrated->count();
-
-                    $signal = yield $hydrated;
-
-                    if ($signal === Signal::STOP) {
-                        return;
-                    }
-
-                    if ($limit !== null && $yielded >= $limit) {
-                        return;
-                    }
-                } finally {
-                    $sheet->close();
-                }
-            }
+            yield from (new FileReadLoop($fileColumns, $schema))->read(
+                iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $pathFilter), false),
+                $batches,
+                $this->batchSize(),
+                $context->backend(),
+                new ReadWindow(limit: $limit),
+            );
         } finally {
-            $sampled?->close();
+            $batches->close();
         }
     }
 

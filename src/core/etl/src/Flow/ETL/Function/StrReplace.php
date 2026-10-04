@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function Flow\ETL\DSL\lit;
@@ -63,23 +67,36 @@ final class StrReplace implements ScalarFunction
         return type_string();
     }
 
-    public function eval(Row $row, FlowContext $context): ?string
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $value = (new Parameter($this->value))->asString($row, $context);
-        $search = (new Parameter($this->search))->as($row, $context, type_string(), type_array());
-        $replace = (new Parameter($this->replace))->as($row, $context, type_string(), type_array());
+        $values = (new Parameter($this->value))->asStrings($rows, $context);
+        $searches = (new Parameter($this->search))->asTypes($rows, $context, type_string(), type_array());
+        $replaces = (new Parameter($this->replace))->asTypes($rows, $context, type_string(), type_array());
+        $results = [];
+        $i = 0;
 
-        if ($value === null) {
-            throw new InvalidArgumentException('StrReplace function requires non-null value');
+        try {
+            foreach ($values as $i => $value) {
+                $search = $searches[$i];
+                $replace = $replaces[$i];
+
+                if ($value === null) {
+                    throw new InvalidArgumentException('StrReplace function requires non-null value');
+                }
+
+                if ($search === null || $replace === null) {
+                    throw new InvalidArgumentException('StrReplace function requires non-null search and replace');
+                }
+
+                $typedSearch = type_union(type_string(), type_list(type_string()))->assert($search);
+                $typedReplace = type_union(type_string(), type_list(type_string()))->assert($replace);
+
+                $results[] = str_replace($typedSearch, $typedReplace, $value);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        if ($search === null || $replace === null) {
-            throw new InvalidArgumentException('StrReplace function requires non-null search and replace');
-        }
-
-        $typedSearch = type_union(type_string(), type_list(type_string()))->assert($search);
-        $typedReplace = type_union(type_string(), type_list(type_string()))->assert($replace);
-
-        return str_replace($typedSearch, $typedReplace, $value);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

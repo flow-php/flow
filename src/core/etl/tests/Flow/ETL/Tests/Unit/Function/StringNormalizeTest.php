@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 use Normalizer;
 
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 
 final class StringNormalizeTest extends FlowTestCase
 {
@@ -19,38 +22,56 @@ final class StringNormalizeTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        ref('value')->stringNormalize(lit('not-a-form'))->eval(row(['value' => 'abc']), flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            ref('value')->stringNormalize(lit('not-a-form')),
+            ['value' => 'abc'],
+            schema(str_schema('value')),
+        );
     }
 
     public function test_normalize_already_normalized(): void
     {
-        static::assertSame('hello', ref('str')
-            ->stringNormalize(Normalizer::NFC)
-            ->eval(row(['str' => 'hello']), flow_context()));
+        static::assertSame('hello', (new FunctionContext(flow_context()))->eval(
+            ref('str')->stringNormalize(Normalizer::NFC),
+            ['str' => 'hello'],
+            schema(str_schema('str')),
+        ));
     }
 
     public function test_normalize_empty_string(): void
     {
-        static::assertSame('', ref('str')->stringNormalize()->eval(row(['str' => '']), flow_context()));
+        static::assertSame('', (new FunctionContext(flow_context()))->eval(
+            ref('str')->stringNormalize(),
+            ['str' => ''],
+            schema(str_schema('str')),
+        ));
     }
 
     public function test_normalize_nfc_default(): void
     {
-        static::assertSame('é', ref('str')->stringNormalize()->eval(row(['str' => "e\u{0301}"]), flow_context()));
+        static::assertSame('é', (new FunctionContext(flow_context()))->eval(
+            ref('str')->stringNormalize(),
+            ['str' => "e\u{0301}"],
+            schema(str_schema('str')),
+        ));
     }
 
     public function test_normalize_nfc_explicit(): void
     {
-        static::assertSame('é', ref('str')
-            ->stringNormalize(Normalizer::NFC)
-            ->eval(row(['str' => "e\u{0301}"]), flow_context()));
+        static::assertSame('é', (new FunctionContext(flow_context()))->eval(
+            ref('str')->stringNormalize(Normalizer::NFC),
+            ['str' => "e\u{0301}"],
+            schema(str_schema('str')),
+        ));
     }
 
     public function test_normalize_nfd(): void
     {
-        static::assertSame("e\u{0301}", ref('str')
-            ->stringNormalize(Normalizer::NFD)
-            ->eval(row(['str' => 'é']), flow_context()));
+        static::assertSame("e\u{0301}", (new FunctionContext(flow_context()))->eval(
+            ref('str')->stringNormalize(Normalizer::NFD),
+            ['str' => 'é'],
+            schema(str_schema('str')),
+        ));
     }
 
     public function test_normalize_throws_on_null_input(): void
@@ -58,15 +79,19 @@ final class StringNormalizeTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('StringNormalize function requires non-null value');
 
-        ref('str')->stringNormalize()->eval(row(['str' => null]), flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            ref('str')->stringNormalize(),
+            ['str' => null],
+            schema(str_schema('str', nullable: true)),
+        );
     }
 
     public function test_normalize_with_scalar_function_form(): void
     {
-        $normalized = ref('str')
-            ->stringNormalize(ref('form'))
-            ->eval(row(['str' => "e\u{0301}", 'form' => Normalizer::NFC]), flow_context());
-
-        static::assertSame('é', $normalized);
+        static::assertSame('é', (new FunctionContext(flow_context()))->eval(
+            ref('str')->stringNormalize(ref('form')),
+            ['str' => "e\u{0301}", 'form' => Normalizer::NFC],
+            schema(str_schema('str'), int_schema('form')),
+        ));
     }
 }

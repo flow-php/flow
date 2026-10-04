@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\Dremel;
 
 use Flow\Parquet\Dremel\ColumnData\FlatValue;
+use Flow\Parquet\Dremel\ColumnData\PagedFlatColumnValues;
 use Flow\Parquet\Dremel\ColumnData\ReadFlatColumnValues;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Schema\Column;
@@ -19,13 +20,13 @@ final readonly class ReadColumnData
     public Column $column;
 
     /**
-     * @var array<string, ReadFlatColumnValues>
+     * @var array<string, PagedFlatColumnValues|ReadFlatColumnValues>
      */
     public array $flatValues;
 
     /**
      * @param Column $column
-     * @param array<ReadFlatColumnValues> $flatValues
+     * @param array<PagedFlatColumnValues|ReadFlatColumnValues> $flatValues
      */
     public function __construct(Column $column, array $flatValues = [])
     {

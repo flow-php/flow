@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\ListType;
@@ -75,18 +79,27 @@ final class ArrayMerge implements ScalarFunction
         return type_array();
     }
 
-    /**
-     * @return null|array<mixed>
-     */
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $left = (new Parameter($this->left))->asArray($row, $context);
-        $right = (new Parameter($this->right))->asArray($row, $context);
+        $lefts = (new Parameter($this->left))->asArrays($rows, $context);
+        $rights = (new Parameter($this->right))->asArrays($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($left === null || $right === null) {
-            throw new InvalidArgumentException('ArrayMerge function requires two non-null arrays');
+        try {
+            foreach ($lefts as $i => $left) {
+                $right = $rights[$i];
+
+                if ($left === null || $right === null) {
+                    throw new InvalidArgumentException('ArrayMerge function requires two non-null arrays');
+                }
+
+                $results[] = array_merge($left, $right);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return array_merge($left, $right);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

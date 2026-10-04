@@ -38,7 +38,7 @@ final class FlowToParquetSchemaTest extends FlowTestCase
                 FlatColumn::int64('integer', ParquetSchema\Repetition::REQUIRED),
                 FlatColumn::boolean('boolean', ParquetSchema\Repetition::REQUIRED),
                 FlatColumn::string('string', ParquetSchema\Repetition::REQUIRED),
-                FlatColumn::float('float', ParquetSchema\Repetition::REQUIRED),
+                FlatColumn::double('float', ParquetSchema\Repetition::REQUIRED),
                 FlatColumn::dateTime('datetime', ParquetSchema\Repetition::REQUIRED),
                 FlatColumn::json('json', ParquetSchema\Repetition::REQUIRED),
                 NestedColumn::list('list', ParquetSchema\ListElement::string(true), ParquetSchema\Repetition::REQUIRED),

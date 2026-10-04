@@ -6,7 +6,7 @@ namespace Flow\Floe\Tests\Integration;
 
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Floe\Exception\FloeException;
-use Flow\Floe\Tests\Context\FloeEngineContext;
+use Flow\Floe\Tests\Context\FloeFilesContext;
 
 use function Flow\Filesystem\DSL\path;
 
@@ -21,7 +21,7 @@ final class FloeHardBreakTest extends FlowIntegrationTestCase
         $this->expectException(FloeException::class);
         $this->expectExceptionMessageMatches('/Floe footer is malformed: .*statistics/');
 
-        FloeEngineContext::phpReader($this->fs())
+        FloeFilesContext::phpReader($this->fs())
             ->read(path(__DIR__ . '/../Fixtures/pre-statistics/heterogeneous.floe'))
             ->schema();
     }

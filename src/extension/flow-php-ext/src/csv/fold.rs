@@ -9,9 +9,9 @@ use std::collections::HashMap;
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::types::{ZendHashTable, Zval};
 
-use crate::ctx::{call_handle, zval_str, Ctx};
 use crate::csv::php_trim;
 use crate::csv::tokenizer::is_space;
+use crate::ctx::{self, call_handle, zval_str};
 use crate::date_check::{checkdate, iso_date_gate, iso_date_time_gate};
 use crate::exception::ext_exception;
 use crate::json_check::json_valid;
@@ -129,15 +129,11 @@ impl Candidates {
 /// `StringTypeNarrower::narrow()` for a string cell, without the HTML and XML rungs.
 pub struct Narrower {
     candidates: Candidates,
-    ctx: Ctx,
 }
 
 impl Narrower {
     fn new(candidates: Candidates) -> Result<Self, PhpException> {
-        Ok(Self {
-            candidates,
-            ctx: Ctx::new()?,
-        })
+        Ok(Self { candidates })
     }
 
     pub fn narrow(&mut self, value: &[u8]) -> Result<Leaf, PhpException> {
@@ -192,7 +188,12 @@ impl Narrower {
         }
 
         // same one-sided rule as the cast: only PHP may say "not JSON"
-        let valid = call_handle(self.ctx.json_validate()?, None, &mut [zval_str(value)], "validate a JSON cell")?;
+        let valid = call_handle(
+            ctx::json_validate()?,
+            None,
+            &mut [zval_str(value)],
+            "validate a JSON cell",
+        )?;
 
         Ok(valid.bool().unwrap_or(false))
     }
@@ -208,7 +209,12 @@ impl Narrower {
             return Ok(Some(Leaf::Date));
         }
 
-        let parts_zv = call_handle(self.ctx.date_parse()?, None, &mut [zval_str(value)], "parse a temporal cell")?;
+        let parts_zv = call_handle(
+            ctx::date_parse()?,
+            None,
+            &mut [zval_str(value)],
+            "parse a temporal cell",
+        )?;
         let parts = parts_zv
             .array()
             .ok_or_else(|| ext_exception("flow_php expected date_parse() to return an array"))?;
@@ -242,11 +248,11 @@ impl Narrower {
     }
 
     fn is_timezone(&mut self, value: &[u8]) -> Result<bool, PhpException> {
-        if self.ctx.timezone_identifiers()?.contains(value) {
+        if ctx::is_timezone_identifier(value)? {
             return Ok(true);
         }
 
-        Ok(is_offset(value) && self.ctx.timezone_accepts(value)?)
+        Ok(is_offset(value) && ctx::timezone_accepts(value)?)
     }
 }
 
@@ -261,14 +267,22 @@ fn is_null(value: &[u8]) -> bool {
 
 /// `Json::isValid()`'s shape gate before `json_validate()`.
 fn is_json_shaped(value: &[u8]) -> bool {
-    matches!((value.first(), value.last()), (Some(b'{'), Some(b'}')) | (Some(b'['), Some(b']')))
+    matches!(
+        (value.first(), value.last()),
+        (Some(b'{'), Some(b'}')) | (Some(b'['), Some(b']'))
+    )
 }
 
 /// PHP 8 `is_numeric()` on a string: optional leading and trailing whitespace, optional sign,
 /// `digits[.digits] | .digits | digits.`, optional exponent. No hex, no `INF`/`NAN`.
 fn is_numeric(value: &[u8]) -> bool {
     let mut position = value.iter().take_while(|byte| is_space(**byte)).count();
-    let end = value.len() - value[position..].iter().rev().take_while(|byte| is_space(**byte)).count();
+    let end = value.len()
+        - value[position..]
+            .iter()
+            .rev()
+            .take_while(|byte| is_space(**byte))
+            .count();
 
     if matches!(value.get(position), Some(b'+' | b'-')) {
         position += 1;
@@ -338,7 +352,10 @@ fn has_explicit_day(value: &[u8]) -> bool {
         return true;
     }
 
-    groups >= 2 && value.windows(3).any(|window| window.iter().all(u8::is_ascii_alphabetic))
+    groups >= 2
+        && value
+            .windows(3)
+            .any(|window| window.iter().all(u8::is_ascii_alphabetic))
 }
 
 /// `StringTypeNarrower::isTimeZone()`'s `/^[+-]\d{2}:\d{2}$/` on a trimmed value.
@@ -354,7 +371,7 @@ struct Column {
 /// `ColumnTypes::observe()` over whole rows: names seeded `null` (then widened), names met only in rows start at
 /// their first observed type; a `string` / `?string` column skips non-null cells.
 pub struct Fold {
-    pub narrower: Narrower,
+    narrower: Narrower,
     columns: Vec<Column>,
     index: HashMap<Vec<u8>, usize>,
     rows: u64,
@@ -383,7 +400,12 @@ impl Fold {
     }
 
     /// One cell of the current row; `None` is a null cell. `position` caches the cell's column across rows.
-    pub fn observe(&mut self, name: &[u8], position: &mut Option<usize>, value: Option<&[u8]>) -> Result<(), PhpException> {
+    pub fn observe(
+        &mut self,
+        name: &[u8],
+        position: &mut Option<usize>,
+        value: Option<&[u8]>,
+    ) -> Result<(), PhpException> {
         if position.is_none() {
             *position = self.index.get(name).copied();
         }
@@ -426,7 +448,9 @@ impl Fold {
 
     /// Column name => type code, first-seen order.
     pub fn types(&self) -> impl Iterator<Item = (&[u8], String)> {
-        self.columns.iter().map(|column| (column.name.as_slice(), column.kind.code()))
+        self.columns
+            .iter()
+            .map(|column| (column.name.as_slice(), column.kind.code()))
     }
 }
 

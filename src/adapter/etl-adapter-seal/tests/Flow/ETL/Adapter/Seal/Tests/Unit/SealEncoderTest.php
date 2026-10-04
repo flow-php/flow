@@ -9,7 +9,6 @@ use DateTimeImmutable;
 use DateTimeZone;
 use DOMDocument;
 use Flow\ETL\Adapter\Seal\SealEncoder;
-use Flow\ETL\Row\TypedRowValues;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Type;
@@ -17,12 +16,24 @@ use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RequiresPhp;
 
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\date_schema;
+use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\definition_from_type;
+use function Flow\ETL\DSL\html_element_schema;
+use function Flow\ETL\DSL\html_schema;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\xml_element_schema;
+use function Flow\ETL\DSL\xml_schema;
 use function Flow\Types\DSL\type_boolean;
-use function Flow\Types\DSL\type_date;
 use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_enum;
 use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_html_element;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
@@ -32,7 +43,6 @@ use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_time;
 use function Flow\Types\DSL\type_time_zone;
 use function Flow\Types\DSL\type_uuid;
-use function Flow\Types\DSL\type_xml;
 
 final class SealEncoderTest extends FlowTestCase
 {
@@ -84,7 +94,9 @@ final class SealEncoderTest extends FlowTestCase
     {
         static::assertSame(
             $expected,
-            (new SealEncoder())->encode([new TypedRowValues(['field' => $value], ['field' => $type])])[0]['field'],
+            (new SealEncoder())->encode(array_to_rows([[
+                'field' => $value,
+            ]], schema(definition_from_type('field', $type, nullable: $value === null))))[0]['field'],
         );
     }
 
@@ -95,7 +107,7 @@ final class SealEncoderTest extends FlowTestCase
 
         static::assertSame(
             '<root><a>1</a></root>',
-            (new SealEncoder())->encode([new TypedRowValues(['xml' => $doc], ['xml' => type_xml()])])[0]['xml'],
+            (new SealEncoder())->encode(array_to_rows([['xml' => $doc]], schema(xml_schema('xml'))))[0]['xml'],
         );
     }
 
@@ -103,9 +115,9 @@ final class SealEncoderTest extends FlowTestCase
     {
         static::assertSame(
             '2023-10-01',
-            (new SealEncoder())->encode([
-                new TypedRowValues(['date' => new DateTimeImmutable('2023-10-01 00:00:00')], ['date' => type_date()]),
-            ])[0]['date'],
+            (new SealEncoder())->encode(array_to_rows([[
+                'date' => new DateTimeImmutable('2023-10-01 00:00:00'),
+            ]], schema(date_schema('date'))))[0]['date'],
         );
     }
 
@@ -113,10 +125,56 @@ final class SealEncoderTest extends FlowTestCase
     {
         static::assertSame(
             [['id' => 1, 'name' => 'Alice'], ['id' => 2, 'name' => 'Bob']],
-            (new SealEncoder())->encode([
-                new TypedRowValues(['id' => 1, 'name' => 'Alice'], ['id' => type_integer(), 'name' => type_string()]),
-                new TypedRowValues(['id' => 2, 'name' => 'Bob'], ['id' => type_integer(), 'name' => type_string()]),
-            ]),
+            (new SealEncoder())->encode(array_to_rows(
+                [['id' => 1, 'name' => 'Alice'], ['id' => 2, 'name' => 'Bob']],
+                schema(int_schema('id'), str_schema('name')),
+            )),
+        );
+    }
+
+    public function test_encodes_an_xml_element_as_its_markup(): void
+    {
+        $document = new DOMDocument();
+        $document->loadXML('<root><a b="1"><c/></a></root>');
+
+        static::assertSame(
+            [['e' => '<a b="1"><c></c></a>']],
+            (new SealEncoder())->encode(array_to_rows([[
+                'e' => $document->getElementsByTagName('a')->item(0),
+            ]], schema(xml_element_schema('e')))),
+        );
+    }
+
+    public function test_encodes_a_datetime_column_with_nulls(): void
+    {
+        static::assertSame(
+            [['at' => '2026-01-02T03:04:05+00:00'], ['at' => null]],
+            (new SealEncoder())->encode(array_to_rows([
+                ['at' => new DateTimeImmutable('2026-01-02 03:04:05 UTC')],
+                ['at' => null],
+            ], schema(datetime_schema('at', nullable: true)))),
+        );
+    }
+
+    #[RequiresPhp('>= 8.4.0')]
+    public function test_encodes_an_html_document_as_its_markup(): void
+    {
+        static::assertSame(
+            [['h' => '<!DOCTYPE html><html><head></head><body><p>a</p></body></html>']],
+            (new SealEncoder())->encode(array_to_rows([[
+                'h' => '<!DOCTYPE html><html><head></head><body><p>a</p></body></html>',
+            ]], schema(html_schema('h')))),
+        );
+    }
+
+    #[RequiresPhp('>= 8.4.0')]
+    public function test_encodes_an_html_element_with_a_parent_as_its_markup(): void
+    {
+        static::assertSame(
+            [['e' => '<p>a</p>']],
+            (new SealEncoder())->encode(array_to_rows([[
+                'e' => type_html_element()->cast('<div><p>a</p></div>')->firstElementChild,
+            ]], schema(html_element_schema('e')))),
         );
     }
 }

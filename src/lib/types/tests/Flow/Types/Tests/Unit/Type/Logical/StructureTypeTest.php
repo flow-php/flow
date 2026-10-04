@@ -868,4 +868,27 @@ final class StructureTypeTest extends TestCase
             $struct->toString(),
         );
     }
+
+    public function test_a_cast_whose_keys_form_a_list_is_refused(): void
+    {
+        try {
+            type_structure(['0' => structure_element('0', type_integer())])->cast(['0' => 1]);
+            static::fail('Expected CastingException');
+        } catch (CastingException $e) {
+            static::assertSame('Can\'t cast "array" into "structure{0: integer}" type', $e->getMessage());
+            static::assertInstanceOf(InvalidTypeException::class, $e->getPrevious());
+            static::assertSame(
+                'Expected type "structure{0: integer}", got "list<integer>".',
+                $e->getPrevious()->getMessage(),
+            );
+        }
+    }
+
+    public function test_an_all_optional_structure_casts_an_empty_array(): void
+    {
+        static::assertSame(
+            [],
+            type_structure(['a' => structure_element('a', type_string(), optional: true)])->cast([]),
+        );
+    }
 }

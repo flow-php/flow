@@ -21,3 +21,55 @@ the robust and adaptable nature of the Flow PHP ecosystem.
 ## Installation
 
 For detailed installation instructions, see the [installation page](/documentation/installation/packages/etl-adapter-parquet.md).
+
+## Engines
+
+Without `engine:`, `AdaptiveParquetEngine` opens the file. The loaded extensions, arrow-ext and
+[`flow_php`](/documentation/components/extensions/flow-php-ext.md), pick the lane:
+
+| arrow-ext | `flow_php` | Engine              | Batches                                                             |
+|-----------|------------|---------------------|---------------------------------------------------------------------|
+| no        | no         | `PhpParquetEngine`  | PHP columns                                                         |
+| yes       | no         | `RustParquetEngine` | PHP columns built from arrow-ext's values                           |
+| no        | yes        | `PhpParquetEngine`  | native columns built from the PHP engine's values                   |
+| yes       | yes        | `RustParquetEngine` | arrow-ext's batches straight into native columns, and back on write |
+
+`RustParquetEngine` needs little-endian byte order. Native columns come from the
+[column backend](/documentation/components/core/column-backend.md). An explicit engine is always used;
+`PhpParquetEngine` opts out of arrow-ext:
+
+```php
+<?php
+
+use Flow\Parquet\Engine\PhpParquetEngine;
+
+use function Flow\ETL\Adapter\Parquet\{from_parquet, to_parquet};
+use function Flow\ETL\DSL\df;
+
+df()
+    ->read(from_parquet(__DIR__ . '/orders.parquet', engine: new PhpParquetEngine()))
+    ->write(to_parquet(__DIR__ . '/copy.parquet', engine: new PhpParquetEngine()))
+    ->run();
+```
+
+Flow `float` columns are written as Parquet `DOUBLE`.
+
+## Schema
+
+The file footer is the schema: `from_parquet(...)->withSchema()` throws. Project with `columns:`, change types after
+reading:
+
+```php
+<?php
+
+use function Flow\ETL\Adapter\Parquet\from_parquet;
+use function Flow\ETL\DSL\{data_frame, ref, to_output, to_timezone};
+use function Flow\Types\DSL\type_json;
+
+data_frame()
+    ->read(from_parquet(__DIR__ . '/orders.parquet', columns: ['id', 'payload', 'created_at']))
+    ->withEntry('payload', ref('payload')->cast(type_json()))
+    ->withEntry('created_at', to_timezone(ref('created_at'), 'Europe/Warsaw'))
+    ->write(to_output())
+    ->run();
+```

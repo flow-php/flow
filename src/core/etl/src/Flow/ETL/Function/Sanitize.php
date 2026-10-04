@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function Flow\ETL\DSL\lit;
@@ -58,26 +62,42 @@ final class Sanitize implements ScalarFunction
         return type_string();
     }
 
-    public function eval(Row $row, FlowContext $context): ?string
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $val = (new Parameter($this->value))->asString($row, $context);
-        $placeholder = (new Parameter($this->placeholder))->asString($row, $context);
-        $skipCharacters = (new Parameter($this->skipCharacters))->asInt($row, $context);
+        $vals = (new Parameter($this->value))->asStrings($rows, $context);
+        $placeholders = (new Parameter($this->placeholder))->asStrings($rows, $context);
+        $skipCharactersList = (new Parameter($this->skipCharacters))->asInts($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($val === null) {
-            throw new InvalidArgumentException('Sanitize function requires non-null value');
+        try {
+            foreach ($vals as $i => $val) {
+                $placeholder = $placeholders[$i];
+                $skipCharacters = $skipCharactersList[$i];
+
+                if ($val === null) {
+                    throw new InvalidArgumentException('Sanitize function requires non-null value');
+                }
+
+                if ($placeholder === null) {
+                    throw new InvalidArgumentException('Sanitize function requires non-null placeholder');
+                }
+
+                $size = mb_strlen($val);
+
+                if ($skipCharacters !== null && $size > $skipCharacters) {
+                    $results[] =
+                        mb_substr($val, 0, $skipCharacters) . str_repeat($placeholder, max(0, $size - $skipCharacters));
+
+                    continue;
+                }
+
+                $results[] = str_repeat($placeholder, $size);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        if ($placeholder === null) {
-            throw new InvalidArgumentException('Sanitize function requires non-null placeholder');
-        }
-
-        $size = mb_strlen($val);
-
-        if ($skipCharacters !== null && $size > $skipCharacters) {
-            return mb_substr($val, 0, $skipCharacters) . str_repeat($placeholder, max(0, $size - $skipCharacters));
-        }
-
-        return str_repeat($placeholder, $size);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

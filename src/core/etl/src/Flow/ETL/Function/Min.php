@@ -5,14 +5,16 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use DateTimeInterface;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function Flow\Types\DSL\type_optional;
 use function is_numeric;
 use function min;
+use function sprintf;
 
 final class Min implements AggregatingFunction
 {
@@ -46,28 +48,41 @@ final class Min implements AggregatingFunction
         return new self($children[0]);
     }
 
-    public function aggregate(Row $row, FlowContext $context): void
+    public function aggregate(Rows $rows, array $indices, FlowContext $context): void
     {
-        if (!$row->has($this->ref)) {
+        if ($rows->schema()->findDefinition($this->ref->base()) === null) {
             return;
         }
 
-        /** @var mixed $value */
-        $value = $row->get($this->ref);
-
-        if ($this->min === null) {
-            if (is_numeric($value)) {
-                $this->min = (float) $value;
-            } elseif ($value instanceof DateTimeInterface) {
-                $this->min = $value;
-            }
-        } else {
-            if (is_numeric($value)) {
-                $this->min = min($this->min, (float) $value);
-            } elseif ($value instanceof DateTimeInterface) {
-                $this->min = min($this->min, $value);
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($rows->column($this->ref->base())->take($indices)->values() as $value) {
+            if ($this->min === null) {
+                if (is_numeric($value)) {
+                    $this->min = (float) $value;
+                } elseif ($value instanceof DateTimeInterface) {
+                    $this->min = $value;
+                }
+            } else {
+                if (is_numeric($value)) {
+                    $this->min = min($this->min, (float) $value);
+                } elseif ($value instanceof DateTimeInterface) {
+                    $this->min = min($this->min, $value);
+                }
             }
         }
+    }
+
+    public function merge(AggregatingFunction $other, FlowContext $context): void
+    {
+        if (!$other instanceof self) {
+            throw new InvalidArgumentException(sprintf('%s cannot merge %s', self::class, $other::class));
+        }
+
+        if ($other->min === null) {
+            return;
+        }
+
+        $this->min = $this->min === null ? $other->min : min($this->min, $other->min);
     }
 
     public function outputName(): string

@@ -9,18 +9,19 @@ use Flow\ETL\Exception\ConstraintViolationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Processor\ConstrainedProcessor;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\ETL\Schema;
 use Flow\ETL\Tests\Double\CountingExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\RowsMother;
 
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\constraint_sorted_by;
+use function Flow\ETL\DSL\constraint_unique;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
+use function is_int;
 
 final class ConstrainedProcessorTest extends FlowTestCase
 {
@@ -48,7 +49,7 @@ final class ConstrainedProcessorTest extends FlowTestCase
     {
         $processor = new ConstrainedProcessor([]);
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 1]));
+            yield array_to_rows([['id' => 1]], schema(int_schema('id')));
         })();
         $result = iterator_to_array($processor->process($generator, flow_context()));
         static::assertCount(1, $result);
@@ -57,9 +58,9 @@ final class ConstrainedProcessorTest extends FlowTestCase
     public function test_handles_empty_input(): void
     {
         $constraint = new class implements Constraint {
-            public function isSatisfiedBy(Row $row, Schema $schema): bool
+            public function firstViolation(Rows $rows): ?int
             {
-                return true;
+                return null;
             }
 
             public function toString(): string
@@ -67,7 +68,7 @@ final class ConstrainedProcessorTest extends FlowTestCase
                 return 'always';
             }
 
-            public function violation(Row $row, Schema $schema): string
+            public function violation(Rows $rows, int $index): string
             {
                 return '';
             }
@@ -83,10 +84,16 @@ final class ConstrainedProcessorTest extends FlowTestCase
     public function test_passes_rows_when_all_constraints_satisfied(): void
     {
         $constraint = new class implements Constraint {
-            public function isSatisfiedBy(Row $row, Schema $schema): bool
+            public function firstViolation(Rows $rows): ?int
             {
-                // @mago-ignore analysis:possibly-null-operand,possibly-invalid-operand
-                return $row->get('id') > 0;
+                // @mago-ignore analysis:mixed-assignment
+                foreach ($rows->column('id')->values() as $i => $id) {
+                    if (!is_int($id) || $id <= 0) {
+                        return $i;
+                    }
+                }
+
+                return null;
             }
 
             public function toString(): string
@@ -94,14 +101,14 @@ final class ConstrainedProcessorTest extends FlowTestCase
                 return 'id > 0';
             }
 
-            public function violation(Row $row, Schema $schema): string
+            public function violation(Rows $rows, int $index): string
             {
                 return 'id must be greater than 0';
             }
         };
         $processor = new ConstrainedProcessor([$constraint]);
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]));
+            yield array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')));
         })();
         /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()));
@@ -120,10 +127,16 @@ final class ConstrainedProcessorTest extends FlowTestCase
     public function test_throws_exception_when_constraint_violated(): void
     {
         $constraint = new class implements Constraint {
-            public function isSatisfiedBy(Row $row, Schema $schema): bool
+            public function firstViolation(Rows $rows): ?int
             {
-                // @mago-ignore analysis:possibly-null-operand,possibly-invalid-operand
-                return $row->get('id') > 0;
+                // @mago-ignore analysis:mixed-assignment
+                foreach ($rows->column('id')->values() as $i => $id) {
+                    if (!is_int($id) || $id <= 0) {
+                        return $i;
+                    }
+                }
+
+                return null;
             }
 
             public function toString(): string
@@ -131,16 +144,43 @@ final class ConstrainedProcessorTest extends FlowTestCase
                 return 'id > 0';
             }
 
-            public function violation(Row $row, Schema $schema): string
+            public function violation(Rows $rows, int $index): string
             {
                 return 'id must be greater than 0';
             }
         };
         $processor = new ConstrainedProcessor([$constraint]);
         $generator = (static function () {
-            yield rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => -1]));
+            yield array_to_rows([['id' => 1], ['id' => -1]], schema(int_schema('id')));
         })();
         $this->expectException(ConstraintViolationException::class);
         iterator_to_array($processor->process($generator, flow_context()));
+    }
+
+    public function test_the_earliest_violation_wins_and_names_the_stream_row(): void
+    {
+        $processor = new ConstrainedProcessor([
+            constraint_unique('id'),
+            constraint_sorted_by(ref('n')),
+        ]);
+        $generator = (static function () {
+            yield array_to_rows(
+                [['id' => 1, 'n' => 1], ['id' => 2, 'n' => 2]],
+                schema(int_schema('id'), int_schema('n')),
+            );
+            yield array_to_rows(
+                [['id' => 3, 'n' => 3], ['id' => 4, 'n' => 0], ['id' => 3, 'n' => 5]],
+                schema(int_schema('id'), int_schema('n')),
+            );
+        })();
+
+        try {
+            iterator_to_array($processor->process($generator, flow_context()));
+            static::fail('expected a ConstraintViolationException');
+        } catch (ConstraintViolationException $e) {
+            static::assertStringContainsString('Sorted constraint on [n ASC]', $e->getMessage());
+            static::assertStringContainsString('current: 0, previous: 3', $e->getMessage());
+            static::assertStringEndsWith('in row: 3', $e->getMessage());
+        }
     }
 }

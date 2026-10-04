@@ -13,7 +13,9 @@ use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Path\Filter;
 use Throwable;
 
-use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function sprintf;
 
 final readonly class ScalarFunctionFilter implements Filter
@@ -39,11 +41,13 @@ final readonly class ScalarFunctionFilter implements Filter
     public function accept(FileStatus $status): bool
     {
         $values = [];
+        $definitions = [];
 
         foreach ($status->path->partitions()->toArray() as $partition) {
             // findDefinition(), not get(): a source that declares no partition columns hands an empty schema
             // here, and Schema::get() would throw.
             $definition = $this->partitions->findDefinition($partition->name);
+            $definitions[] = $definition ?? str_schema($partition->name, nullable: true);
 
             if ($definition === null || $definition->matches($partition->value)) {
                 $values[$partition->name] = $partition->value;
@@ -68,7 +72,13 @@ final readonly class ScalarFunctionFilter implements Filter
             }
         }
 
+        $schema = schema(...$definitions);
+
+        // an undeclared partition column resolves against the file's own path value (a str column)
         // @mago-ignore analysis:mixed-operand
-        return (bool) $this->resolved->eval(row($values), $this->context);
+        return (bool) (new ReferenceResolver())
+            ->resolve($this->resolved, $schema)
+            ->eval(array_to_rows([$values], $schema, $this->context->backend()), $this->context)
+            ->value(0);
     }
 }

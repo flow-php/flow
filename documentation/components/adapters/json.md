@@ -24,69 +24,98 @@ simplified and efficient task, perfectly aligning with the robust and adaptable 
 For detailed installation instructions, see
 the [installation page](/documentation/installation/packages/etl-adapter-json.md).
 
-
-> Json library is not explicitly required, you need to make sure it is available in your composer.json file.
-> If you are only using Loader, this dependency is optional.
-
-## Extractor - JSONMachine - JsonExtractor
+## Extractor
 
 ```php
 <?php
 
-use function Flow\ETL\Adapter\JSON\from_json;
+use function Flow\ETL\Adapter\JSON\{from_json, from_json_lines};
 use function Flow\ETL\DSL\{data_frame, to_output};
 
 data_frame()
     ->read(from_json(__DIR__ . '/data.json'))
-    ->collect()
+    ->write(to_output())
+    ->run();
+
+data_frame()
+    ->read(from_json_lines(__DIR__ . '/data.jsonl'))
     ->write(to_output())
     ->run();
 ```
 
+Both return a `JsonExtractor`. `from_json()` reads one document: a top-level array, or the subtree selected with
+`withPointer()`.
+
 In JSON lines, a line holding only whitespace (space, tab, CR, LF, VT, FF) is skipped, as DuckDB does; this is not
 configurable.
 
-## Loader - JsonLoader
+With the [`flow_php`](/documentation/components/extensions/flow-php-ext.md) extension loaded, JSON lines and a document
+holding a top-level array are read natively, as strict JSON: malformed input throws
+`RuntimeException('Malformed JSON in "<uri>" at line N: ...')` (`at element N` in a document). A pointer, or a document
+that is not an array, is read by the PHP reader.
+
+## Loader
 
 ```php
 <?php
 
-use function Flow\ETL\Adapter\JSON\to_json;
+use function Flow\ETL\Adapter\JSON\{to_json, to_json_lines};
 use function Flow\ETL\DSL\{data_frame, from_array};
 
 data_frame()
-    ->read(from_array(
-        \array_map(
-            fn (int $i) : array => ['id' => $i, 'name' => 'name_' . $i],
-            \range(0, 10)
-        )
-    ))
-    ->collect()
+    ->read(from_array([['id' => 1, 'name' => 'name_1'], ['id' => 2, 'name' => 'name_2']]))
     ->write(to_json(\sys_get_temp_dir() . '/file.json'))
+    ->write(to_json_lines(\sys_get_temp_dir() . '/file.jsonl'))
     ->run();
 ```
 
-## Loader - JsonLoader - JSON lines
+Both return a `JsonLoader`. `to_json()` writes one array document, `to_json_lines()` writes
+[JSON lines](https://jsonlines.org/).
 
-It is also possible to export the rows using the [json lines](https://jsonlines.org/) format
+## What the loaders write
 
 ```php
 <?php
 
 use function Flow\ETL\Adapter\JSON\to_json_lines;
-use function Flow\ETL\DSL\{data_frame, from_array};
+use function Flow\ETL\DSL\{bool_schema, data_frame, datetime_schema, float_schema, from_array, int_schema, json_schema, list_schema, map_schema, schema, structure_schema};
+use function Flow\Types\DSL\{type_date, type_integer, type_list, type_map, type_string, type_structure};
 
 data_frame()
     ->read(from_array(
-        \array_map(
-            fn (int $i) : array => ['id' => $i, 'name' => 'name_' . $i],
-            \range(0, 10)
-        )
+        [
+            ['id' => 1, 'active' => true, 'price' => 0.1 + 0.2, 'at' => new DateTimeImmutable('2026-01-02 03:04:05 UTC'), 'days' => [new DateTimeImmutable('2026-01-02')], 'labels' => [0 => 'a', 1 => 'b'], 'size' => ['w' => 1, 'h' => 2], 'meta' => '{"tags": []}'],
+            ['id' => 2, 'active' => false, 'price' => 1.0, 'at' => null, 'days' => [], 'labels' => [], 'size' => ['w' => 3, 'h' => 4], 'meta' => '{}'],
+        ],
+        schema(
+            int_schema('id'), bool_schema('active'), float_schema('price'), datetime_schema('at', nullable: true),
+            list_schema('days', type_list(type_date())), map_schema('labels', type_map(type_integer(), type_string())),
+            structure_schema('size', type_structure(['w' => type_integer(), 'h' => type_integer()])), json_schema('meta'),
+        ),
     ))
-    ->collect()
-    ->write(to_json_lines(\sys_get_temp_dir() . '/file.jsonl'))
+    ->write(to_json_lines($path))
     ->run();
 ```
+
+```json
+{"id":1,"active":true,"price":0.30000000000000004,"at":"2026-01-02T03:04:05+00:00","days":["2026-01-02"],"labels":{"0":"a","1":"b"},"size":{"w":1,"h":2},"meta":{"tags":[]}}
+{"id":2,"active":false,"price":1,"at":null,"days":[],"labels":{},"size":{"w":3,"h":4},"meta":{}}
+```
+
+The shape follows the column type, never the data: a `list` is always `[...]`, a `map`, a `structure` and a row are
+always `{...}` (an empty map is `{}`, a map keyed `0, 1` is `{"0":...,"1":...}`), a `json` column keeps its objects and
+lists. A `datetime` / `date` is written with `withDateTimeFormat()` / `withDateFormat()` at every depth, a `time` as
+microseconds. A float has the shortest digits that read back as the same float (`1.0` is `1`, or `1.0` under
+`JSON_PRESERVE_ZERO_FRACTION`); `NAN` and the infinities are refused:
+`RuntimeException('Failed to encode JSON: Inf and NaN cannot be JSON encoded')`.
+
+Floats are rendered under `serialize_precision = -1`. When the ini holds another value the writer sets it for the
+render and restores it, so `ini_set()` must be allowed; otherwise it throws
+`RuntimeException('Writing floats requires serialize_precision = -1 and ini_set() cannot change it')`.
+
+With the [`flow_php`](/documentation/components/extensions/flow-php-ext.md) extension loaded and no flags beyond
+`JSON_THROW_ON_ERROR`, `JSON_UNESCAPED_SLASHES`, `JSON_UNESCAPED_UNICODE` and `JSON_PRESERVE_ZERO_FRACTION`, the same
+bytes are rendered natively.
 
 ## JSON Schema conversion
 
@@ -119,8 +148,10 @@ file.
 | `string` (+ `format: date` / `date-time` / `time` / `uuid` / `html` / `xml`) | `string` / `date` / `datetime` / `time` / `uuid` / `html` / `xml` |
 | `integer` / `number` / `boolean` / `null`                                    | `integer` / `float` / `boolean` / null column                     |
 | `array` + `items`                                                            | `list<items>`                                                     |
+| `array` without `items`                                                      | `json`                                                            |
 | `object` + `properties`                                                      | `structure` (`required` controls optional members)                |
 | `object` + `additionalProperties: <schema>`                                  | `map<string, value>`                                              |
+| `object` without `properties` / `additionalProperties`                       | `json`                                                            |
 | `type: ["object", "array"]`                                                  | `json`                                                            |
 | empty schema `{}` / boolean schema `true`                                    | `json` (accept anything, marked in metadata)                      |
 | `enum` / `const`                                                             | scalar type derived from the values, values preserved in metadata |

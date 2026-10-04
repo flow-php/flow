@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\Calculator\Calculator;
+use Exception;
 use Flow\Calculator\Rounding;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function Flow\ETL\DSL\lit;
@@ -60,21 +63,34 @@ final class Divide implements ScalarFunction
         return type_float();
     }
 
-    public function eval(Row $row, FlowContext $context): int|float|null
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $leftValue = (new Parameter($this->left))->asNumber($row, $context);
-        $rightValue = (new Parameter($this->right))->asNumber($row, $context);
-        $scale = (new Parameter($this->scale))->asInt($row, $context);
-        $rounding = (new Parameter($this->rounding))->asEnum($row, $context, Rounding::class);
+        $lefts = (new Parameter($this->left))->asNumbers($rows, $context);
+        $rights = (new Parameter($this->right))->asNumbers($rows, $context);
+        $scales = (new Parameter($this->scale))->asInts($rows, $context);
+        $roundings = (new Parameter($this->rounding))->asEnums($rows, $context, Rounding::class);
+        $calculator = $context->calculator();
+        $results = [];
+        $i = 0;
 
-        if ($leftValue === null || $rightValue === null) {
-            throw new InvalidArgumentException('Divide function requires non-null values');
+        try {
+            foreach ($lefts as $i => $leftValue) {
+                $rightValue = $rights[$i];
+
+                if ($leftValue === null || $rightValue === null) {
+                    throw new InvalidArgumentException('Divide function requires non-null values');
+                }
+
+                if ($rightValue === 0) {
+                    throw new InvalidArgumentException('Divide function cannot divide by zero');
+                }
+
+                $results[] = $calculator->divide($leftValue, $rightValue, $scales[$i], $roundings[$i]);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        if ($rightValue === 0) {
-            throw new InvalidArgumentException('Divide function cannot divide by zero');
-        }
-
-        return (new Calculator())->divide($leftValue, $rightValue, $scale, $rounding);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

@@ -7,12 +7,17 @@ namespace Flow\ETL\Adapter\XML\Tests\Unit;
 use DOMDocument;
 use Flow\ETL\Adapter\XML\Tests\Context\SerializedNodes;
 use Flow\ETL\Adapter\XML\XMLNodes;
+use Flow\ETL\Column\Physical\XmlDocumentPhysical;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\XmlNodeMother;
 use Flow\Filesystem\Stream\StringSourceStream;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestWith;
 
 use function Flow\Filesystem\DSL\path;
+use function iterator_to_array;
 use function libxml_use_internal_errors;
 
 final class XMLNodesTest extends FlowTestCase
@@ -135,7 +140,7 @@ final class XMLNodesTest extends FlowTestCase
         $previous = libxml_use_internal_errors($internalErrors);
 
         try {
-            $nodes = (new XMLNodes('root/item'))->of(
+            $nodes = (new XMLNodes('root/item'))->documents(
                 new StringSourceStream(path('memory://a.xml'), '<root><item>1</item><item>2</item></root>'),
                 8192,
             );
@@ -155,7 +160,7 @@ final class XMLNodesTest extends FlowTestCase
         $previous = libxml_use_internal_errors(false);
 
         try {
-            $nodes = (new XMLNodes('root/item'))->of(
+            $nodes = (new XMLNodes('root/item'))->documents(
                 new StringSourceStream(path('memory://a.xml'), '<root><item>1</item><item>2</item></root>'),
                 8192,
             );
@@ -166,5 +171,61 @@ final class XMLNodesTest extends FlowTestCase
         } finally {
             libxml_use_internal_errors($previous);
         }
+    }
+
+    public static function edge_documents(): Generator
+    {
+        foreach (XmlNodeMother::edges() as $label => ['document' => $document, 'node' => $node]) {
+            yield $label => [$document, $node];
+        }
+    }
+
+    #[DataProvider('edge_documents')]
+    public function test_a_node_text_is_the_physical_of_its_document(string $xml, string $node): void
+    {
+        $nodes = new XMLNodes('rows/row');
+        $physical = new XmlDocumentPhysical();
+        $documents = iterator_to_array(
+            $nodes->documents(new StringSourceStream(path('memory://a.xml'), $xml), 8192),
+            false,
+        );
+        $texts = iterator_to_array($nodes->texts(new StringSourceStream(path('memory://a.xml'), $xml), 8192), false);
+
+        static::assertSame([$node], $texts);
+        static::assertCount(1, $documents);
+        static::assertSame($physical->toPhysical($documents[0]), $physical->physical($texts[0]));
+    }
+
+    public function test_texts_keep_the_callers_libxml_error_mode_at_every_yield(): void
+    {
+        $previous = libxml_use_internal_errors(false);
+
+        try {
+            $texts = (new XMLNodes('root/item'))->texts(
+                new StringSourceStream(path('memory://a.xml'), '<root><item>1</item><item>2</item></root>'),
+                8192,
+            );
+
+            foreach ($texts as $_text) {
+                static::assertFalse(libxml_use_internal_errors());
+            }
+
+            static::assertFalse(libxml_use_internal_errors());
+        } finally {
+            libxml_use_internal_errors($previous);
+        }
+    }
+
+    public function test_texts_refuse_a_malformed_document(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessageMatches(
+            '/^XML Error: Opening and ending tag mismatch: item line 1 and wrong at line 1$/',
+        );
+
+        iterator_to_array((new XMLNodes('root/item'))->texts(
+            new StringSourceStream(path('memory://a.xml'), '<root><item>1</item><item>2</wrong></root>'),
+            8192,
+        ));
     }
 }

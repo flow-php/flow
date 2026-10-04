@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\StructureType;
 
@@ -62,17 +66,24 @@ final class ArrayReverse implements ScalarFunction
         return $array;
     }
 
-    /**
-     * @return null|array<mixed>
-     */
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $array = (new Parameter($this->array))->asArray($row, $context);
+        $arrays = (new Parameter($this->array))->asArrays($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($array === null) {
-            throw new InvalidArgumentException('ArrayReverse function requires non-null array');
+        try {
+            foreach ($arrays as $i => $array) {
+                if ($array === null) {
+                    throw new InvalidArgumentException('ArrayReverse function requires non-null array');
+                }
+
+                $results[] = array_reverse($array, $this->preserveKeys);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return array_reverse($array, $this->preserveKeys);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

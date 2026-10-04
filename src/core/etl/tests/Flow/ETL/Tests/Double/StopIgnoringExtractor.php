@@ -14,8 +14,6 @@ use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
 
-use function array_chunk;
-
 /**
  * Breaks exactly one clause of the batch contract: it batches at its size, but never reads what is
  * sent into it, so Signal::STOP does not end it.
@@ -30,9 +28,7 @@ final class StopIgnoringExtractor implements BatchableExtractor, Extractor, Rewi
 
     public function extract(FlowContext $context, ?int $limit = null): Generator
     {
-        foreach (array_chunk($this->rows->all(), $this->batchSize()) as $chunk) {
-            yield Rows::trusted($this->rows->schema(), $chunk);
-        }
+        yield from $this->rows->chunks($this->batchSize());
     }
 
     public function isRepeatable(): bool

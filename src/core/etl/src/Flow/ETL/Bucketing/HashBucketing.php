@@ -6,7 +6,6 @@ namespace Flow\ETL\Bucketing;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\RandomValueGenerator;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Generator;
@@ -16,7 +15,7 @@ use function hexdec;
 use function sprintf;
 use function substr;
 
-final class HashBucketing implements BucketingStrategy
+final class HashBucketing
 {
     private readonly KeyValues $keyValues;
 
@@ -40,6 +39,21 @@ final class HashBucketing implements BucketingStrategy
         $this->keyValues = new KeyValues($by);
     }
 
+    public function index(string $hash): int
+    {
+        return (int) hexdec(substr($hash, 0, 8)) % $this->bucketsCount;
+    }
+
+    /**
+     * The bucket a row with these key values lands in.
+     *
+     * @param list<mixed> $values in the order of the bucketing references
+     */
+    public function indexOf(array $values): int
+    {
+        return $this->index($this->hasher->hash([$values])[0]);
+    }
+
     /**
      * @param Generator<Rows> $rows
      *
@@ -58,20 +72,20 @@ final class HashBucketing implements BucketingStrategy
         foreach ($rows as $batch) {
             $hashes = $this->hasher->hash($this->keyValues->of($batch));
 
-            /** @var array<string, list<Row>> $groups */
+            /** @var array<string, list<int>> $groups */
             $groups = [];
 
-            foreach ($batch as $i => $row) {
-                $index = (int) hexdec(substr($hashes[$i], 0, 8)) % $this->bucketsCount;
+            foreach ($hashes as $i => $hash) {
+                $index = $this->index($hash);
                 $id = sprintf('%s-%s-%d', $this->namespace, $runId, $index);
-                $groups[$id][] = $row;
+                $groups[$id][] = $i;
                 $indexes[$id] = $index;
             }
 
             // a bucket is a subset of a batch that already passed the gate, under the same schema
-            foreach ($groups as $id => $groupRows) {
-                $storage->append($id, Rows::trusted($batch->schema(), $groupRows));
-                $totals[$id] = ($totals[$id] ?? 0) + count($groupRows);
+            foreach ($groups as $id => $indices) {
+                $storage->append($id, $batch->gather($indices));
+                $totals[$id] = ($totals[$id] ?? 0) + count($indices);
             }
         }
 

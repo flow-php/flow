@@ -7,9 +7,13 @@ namespace Flow\ETL\Function;
 use Dom\HTMlElement;
 use DOMElement;
 use DOMNode;
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function class_exists;
@@ -53,7 +57,7 @@ final class DOMElementAttributesCount implements ScalarFunction
         return type_integer();
     }
 
-    public function eval(Row $row, FlowContext $context): ?int
+    public function eval(Rows $rows, FlowContext $context): Column
     {
         $types = [
             type_instance_of(DOMElement::class),
@@ -63,12 +67,22 @@ final class DOMElementAttributesCount implements ScalarFunction
             $types[] = type_instance_of(HTMLElement::class);
         }
 
-        $domElement = (new Parameter($this->domElement))->as($row, $context, ...$types);
+        $domElements = (new Parameter($this->domElement))->asTypes($rows, $context, ...$types);
+        $results = [];
+        $i = 0;
 
-        if ($domElement === null) {
-            throw new InvalidArgumentException('DOMElementAttributesCount requires non-null DOMElement');
+        try {
+            foreach ($domElements as $i => $domElement) {
+                if ($domElement === null) {
+                    throw new InvalidArgumentException('DOMElementAttributesCount requires non-null DOMElement');
+                }
+
+                $results[] = $domElement->attributes->length ?? 0;
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return $domElement->attributes->length ?? 0;
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

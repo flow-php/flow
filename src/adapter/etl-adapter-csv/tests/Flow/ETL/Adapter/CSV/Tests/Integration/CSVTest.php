@@ -9,27 +9,35 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Exception\RuntimeException as FilesystemRuntimeException;
 use Flow\Filesystem\Tests\Double\FailingCloseFilesystem;
 
+use function array_slice;
 use function file_exists;
 use function file_get_contents;
 use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\Adapter\CSV\to_csv;
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\to_transformation;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 use function implode;
 use function iterator_to_array;
 use function mkdir;
@@ -49,10 +57,9 @@ final class CSVTest extends FlowTestCase
         // R10: the Schema owns column order and rows are never rekeyed, so the writer reads the order
         // off the Schema - the first row's key order must not decide the header
         df()
-            ->read(from_rows(rows(
+            ->read(from_rows(array_to_rows(
+                [['name' => 'a', 'id' => 1], ['id' => 2, 'name' => 'b']],
                 schema(int_schema('id'), str_schema('name')),
-                row(['name' => 'a', 'id' => 1]),
-                row(['id' => 2, 'name' => 'b']),
             )))
             ->load(to_csv($path = __DIR__ . '/var/test_schema_order.csv')->saveMode(overwrite()))
             ->run();
@@ -202,6 +209,83 @@ final class CSVTest extends FlowTestCase
         static::assertFileExists($output . '/order-year=2024/order-month=03/789-DE.csv');
         static::assertFileExists($output . '/order-year=2025/order-month=01/555-FR.csv');
         static::assertFileDoesNotExist($output . '/order-year=2024/order-month=03/order-name=123456-PL');
+    }
+
+    public function test_booleans_read_back_as_written(): void
+    {
+        $schema = schema(bool_schema('required'), bool_schema('optional', nullable: true));
+        $rows = [
+            ['required' => true, 'optional' => false],
+            ['required' => false, 'optional' => null],
+            ['required' => false, 'optional' => true],
+        ];
+
+        df()
+            ->read(from_array($rows, $schema))
+            ->write(to_csv($path = __DIR__ . '/var/test_booleans_read_back.csv')->saveMode(overwrite()))
+            ->run();
+
+        static::assertSame(
+            implode(PHP_EOL, ['required,optional', 'true,false', 'false,', 'false,true', '']),
+            file_get_contents($path),
+        );
+        static::assertSame($rows, df()->read(from_csv($path, schema: $schema))->fetch()->toArray());
+
+        unlink($path);
+    }
+
+    public function test_floats_read_back_as_written(): void
+    {
+        $schema = schema(float_schema('value'));
+        $rows = [
+            ['value' => 0.1 + 0.2],
+            ['value' => 1 / 3],
+            ['value' => 123_456_789_012_345.678],
+            ['value' => INF],
+            ['value' => -INF],
+        ];
+
+        df()
+            ->read(from_array([...$rows, ['value' => NAN]], $schema))
+            ->write(to_csv($path = __DIR__ . '/var/test_floats_read_back.csv')->saveMode(overwrite()))
+            ->run();
+
+        $read = df()->read(from_csv($path, schema: $schema))->fetch()->toArray();
+
+        static::assertSame($rows, array_slice($read, 0, 5));
+        static::assertNan($read[5]['value']);
+
+        unlink($path);
+    }
+
+    public function test_nested_cells_are_json_shaped_by_their_type(): void
+    {
+        df()
+            ->read(from_array(
+                [
+                    ['id' => 1, 'map' => [0 => 'a', 1 => 'b'], 'structure' => ['x' => 1]],
+                    ['id' => 2, 'map' => [], 'structure' => ['x' => 2]],
+                ],
+                schema(
+                    int_schema('id'),
+                    map_schema('map', type_map(type_integer(), type_string())),
+                    structure_schema('structure', type_structure(['x' => type_integer()])),
+                ),
+            ))
+            ->write(to_csv($path = __DIR__ . '/var/test_nested_cells.csv')->saveMode(overwrite()))
+            ->run();
+
+        static::assertSame(
+            implode(PHP_EOL, [
+                'id,map,structure',
+                '1,"{""0"":""a"",""1"":""b""}","{""x"":1}"',
+                '2,{},"{""x"":2}"',
+                '',
+            ]),
+            file_get_contents($path),
+        );
+
+        unlink($path);
     }
 
     public function test_a_close_that_fails_during_closure_leaves_no_file(): void

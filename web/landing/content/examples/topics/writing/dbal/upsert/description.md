@@ -1,1 +1,3 @@
-Insert new records or update existing ones in a database. Supports MySQL, PostgreSQL, and SQLite with platform-specific conflict resolution strategies.
+`sqlite_insert_options(conflict_columns:)` turns the insert into an upsert, so writing the same ten
+orders twice leaves ten rows instead of failing. MySQL and PostgreSQL have their own
+`*_insert_options()`.

@@ -6,7 +6,6 @@ namespace Flow\Parquet\Tests\Integration\IO;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\LogicalType;
@@ -18,6 +17,7 @@ use Flow\Parquet\ParquetFile\Schema\TimeUnit;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Tests\Context\TemporalValues;
 use Flow\Parquet\Tests\Context\TestParquetFile;
+use Flow\Parquet\Tests\Mother\ParquetEngineMother;
 use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -27,8 +27,10 @@ use function iterator_to_array;
 final class LogicalTypesWritingTest extends ParquetIntegrationTestCase
 {
     #[DataProvider('engine_pair_provider')]
-    public function test_dates_are_the_wall_clock_day(ParquetEngine $writer, ParquetEngine $reader): void
+    public function test_dates_are_the_wall_clock_day(string $writerClass, string $readerClass): void
     {
+        $writer = ParquetEngineMother::create($writerClass);
+        $reader = ParquetEngineMother::create($readerClass);
         $path = TestParquetFile::path($this);
 
         (new Writer(engine: $writer))->write($path, Schema::with(FlatColumn::date('d')), [
@@ -52,8 +54,10 @@ final class LogicalTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_pair_provider')]
-    public function test_decimals_round_half_away_from_zero(ParquetEngine $writer, ParquetEngine $reader): void
+    public function test_decimals_round_half_away_from_zero(string $writerClass, string $readerClass): void
     {
+        $writer = ParquetEngineMother::create($writerClass);
+        $reader = ParquetEngineMother::create($readerClass);
         $path = TestParquetFile::path($this);
 
         (new Writer(engine: $writer))->write($path, Schema::with(FlatColumn::decimal('d', 9, 2)), [
@@ -76,8 +80,10 @@ final class LogicalTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_pair_provider')]
-    public function test_decimals_round_trip(ParquetEngine $writer, ParquetEngine $reader): void
+    public function test_decimals_round_trip(string $writerClass, string $readerClass): void
     {
+        $writer = ParquetEngineMother::create($writerClass);
+        $reader = ParquetEngineMother::create($readerClass);
         $path = TestParquetFile::path($this);
         $rows = [
             ['d9' => 12345.67, 'd38' => 12345.67, 'i32' => 12345.67, 'i64' => 12345.67, 'ba' => 12345.67],
@@ -132,8 +138,10 @@ final class LogicalTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_pair_provider')]
-    public function test_times_round_trip_in_every_unit(ParquetEngine $writer, ParquetEngine $reader): void
+    public function test_times_round_trip_in_every_unit(string $writerClass, string $readerClass): void
     {
+        $writer = ParquetEngineMother::create($writerClass);
+        $reader = ParquetEngineMother::create($readerClass);
         $path = TestParquetFile::path($this);
         $time = (new DateTimeImmutable('2020-01-01 00:00:00 UTC'))->diff(
             new DateTimeImmutable('2020-01-01 03:04:05.678901 UTC'),
@@ -168,8 +176,10 @@ final class LogicalTypesWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_pair_provider')]
-    public function test_timestamps_round_trip_in_every_unit(ParquetEngine $writer, ParquetEngine $reader): void
+    public function test_timestamps_round_trip_in_every_unit(string $writerClass, string $readerClass): void
     {
+        $writer = ParquetEngineMother::create($writerClass);
+        $reader = ParquetEngineMother::create($readerClass);
         $path = TestParquetFile::path($this);
         $instant = new DateTimeImmutable('2020-01-02 04:04:05.678901 +01:00');
         $preEpoch = new DateTimeImmutable('1969-12-31 23:59:58.5 UTC');

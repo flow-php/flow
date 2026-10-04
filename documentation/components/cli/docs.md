@@ -338,23 +338,25 @@ Arguments:
 Options:
       --input-file-format=INPUT-FILE-FORMAT                Source file format. When not set file format is guessed from source file path extension
       --input-file-limit=INPUT-FILE-LIMIT                  Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed
+      --input-file-offset=INPUT-FILE-OFFSET                Number of rows to skip before starting to read data
       --config=CONFIG                                      Path to a local php file that MUST return instance of: Flow\ETL\Config
       --input-json-pointer=INPUT-JSON-POINTER              JSON Pointer to a subtree from which schema should be extracted
       --input-json-pointer-entry-name                      When set, JSON Pointer will be used as an entry name in the schema
+      --input-excel-header[=INPUT-EXCEL-HEADER]            When set, Excel header will be used as a schema
+      --input-excel-sheet-name=INPUT-EXCEL-SHEET-NAME      When set, Excel sheet name will be selected for reading
+      --input-excel-offset=INPUT-EXCEL-OFFSET              Offset to start reading from
       --input-csv-header[=INPUT-CSV-HEADER]                When set, CSV header will be used as a schema
       --input-csv-empty-to-null[=INPUT-CSV-EMPTY-TO-NULL]  When set, empty CSV values will be treated as NULL values
       --input-csv-separator=INPUT-CSV-SEPARATOR            CSV separator character
       --input-csv-enclosure=INPUT-CSV-ENCLOSURE            CSV enclosure character
       --input-csv-escape=INPUT-CSV-ESCAPE                  CSV escape character
-      --input-excel-header=INPUT-EXCEL-HEADER              When set, Excel header will be used as a schema
-      --input-excel-sheet-name=INPUT-EXCEL-SHEETNAME       When set, Excel sheet name will be selected for reading
-      --input-excel-offset=INPUT-EXCEL-OFFSET              Offset to start reading from
       --input-xml-node-path=INPUT-XML-NODE-PATH            XML node path to a subtree from which schema should be extracted, for example /root/element This is not xpath, just a node names separated by slash
       --input-xml-buffer-size=INPUT-XML-BUFFER-SIZE        XML buffer size in bytes
       --input-parquet-columns=INPUT-PARQUET-COLUMNS        Columns to read from parquet file (multiple values allowed)
       --input-parquet-offset=INPUT-PARQUET-OFFSET          Offset to start reading from
   -h, --help                                               Display help for the given command. When no command is given display help for the list command
-  -q, --quiet                                              Do not output any message
+      --silent                                             Do not output any message
+  -q, --quiet                                              Only errors are displayed. All other output is suppressed
   -V, --version                                            Display this application version
       --ansi|--no-ansi                                     Force (or disable --no-ansi) ANSI output
   -n, --no-interaction                                     Do not ask any interactive question
@@ -381,7 +383,8 @@ Options:
       --statistics      Display column chunks statistics details
       --page-headers    Display page headers details
   -h, --help            Display help for the given command. When no command is given display help for the list command
-  -q, --quiet           Do not output any message
+      --silent          Do not output any message
+  -q, --quiet           Only errors are displayed. All other output is suppressed
   -V, --version         Display this application version
       --ansi|--no-ansi  Force (or disable --no-ansi) ANSI output
   -n, --no-interaction  Do not ask any interactive question
@@ -454,6 +457,7 @@ Options:
       --output-php                             Print schema as PHP code
       --output-table                           Print schema as ascii table
       --output-ascii                           Print schema as ascii list
+      --db-column[=DB-COLUMN]                  Filter schema by column name(s) (multiple values allowed)
       --config=CONFIG                          Path to a local php file that MUST return instance of: Flow\ETL\Config
   -c, --db-connection-file=DB-CONNECTION-FILE  Path to file that returns and instance of \Doctrine\DBAL\Connection
   -h, --help                                   Display help for the given command. When no command is given display help for the list command

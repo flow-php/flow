@@ -22,7 +22,10 @@ final class PlannedTable
             (new Table($name, [
                 new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
                 new Column('grp', Type::getType(Types::INTEGER), ['notnull' => true]),
-            ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
         );
 
         for ($id = 1; $id <= $rows; $id++) {

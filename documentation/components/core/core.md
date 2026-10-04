@@ -16,7 +16,8 @@ A Data Frame is the core component of Flow PHP's ETL framework. It represents a 
 
 ## Key Features
 
-- **Memory Efficient**: Processes data in chunks using generators, avoiding memory exhaustion
+- **Memory Efficient**: Processes data in batches using generators, avoiding memory exhaustion
+- **Columnar**: Every batch stores one column per schema definition, built by a configurable [column backend](/documentation/components/core/column-backend.md)
 - **Lazy Evaluation**: Operations are only executed when needed
 - **Immutable**: Each transformation returns a new DataFrame instance
 - **Type Safe**: Strict typing throughout with comprehensive schema support
@@ -38,7 +39,7 @@ These methods build the processing pipeline without executing it immediately:
 
 These methods execute the entire pipeline and return results:
 
-- **Data retrieval**: `get()`, `getEach()`, `fetch()`, `count()`
+- **Data retrieval**: `get()`, `getEachAsArray()`, `fetch()`, `count()`
 - **Output operations**: `run()`, `forEach()`, `printRows()`
 - **Schema inspection**: `display()`
 
@@ -52,28 +53,37 @@ trigger it should print - `Trigger::rows` by default, `Trigger::run` for the pla
 for the plan `count()` executes.
 
 ```php
-echo data_frame()
-    ->read(from_csv('orders.csv'))
+$dataFrame = data_frame()
+    ->read(from_csv('/data/orders.csv'))
     ->filter(ref('email')->isNotNull())
     ->write(to_json('out.json'))
-    ->explain()->toString();
+    ->select('id', 'email');
+
+echo $dataFrame->explain()->toString();
 ```
 
 ```text
 Outputs
-├─ #3 Result
+├─ #4 Result
 │  │  Rows this plan hands out: to the trigger, or to the node reading it
-│  └─ #2 Filter
-│     │  Condition: IsNotNull
-│     └─ #1 Read
-│           Extractor: CSVExtractor
-└─ #4 Write
+│  └─ #3 Select
+│     │  Columns: id, email
+│     └─ #2 Filter
+│        │  Condition: IsNotNull
+│        └─ #1 Read
+│              Extractor: CSVExtractor
+│              Source: file:///data/orders.csv
+└─ #5 Write
    │  Loader: JsonLoader
    └─ #2 Filter (shared)
 ```
 
 ```php
-echo $dataFrame->explain(Trigger::run)->toString();
+echo data_frame()
+    ->read(from_csv('/data/orders.csv'))
+    ->filter(ref('email')->isNotNull())
+    ->write(to_json('out.json'))
+    ->explain(Trigger::run)->toString();
 ```
 
 ```text
@@ -83,15 +93,15 @@ echo $dataFrame->explain(Trigger::run)->toString();
    │  Condition: IsNotNull
    └─ #1 Read
          Extractor: CSVExtractor
+         Source: file:///data/orders.csv
 ```
 
 `run()` takes no rows, so its plan carries only the sinks - the `Write` is the root and there is no `Result`. A
 `Result` comes back only when a verb follows the last `write()`: nothing would read that chain end, so one is put on
 it to pull the rows, and `run(analyze: ...)` still counts them.
 
-`Outputs` lists everything the frame produces: `Result` is what a rows-returning trigger reads, `Write` is the sink,
-and both read the same rows. A node several consumers read is printed once, and every other consumer points back at it by
-number - `#2 Filter (shared)` is that same filter, not a second one. A node keeps its number in every format.
+`Outputs` lists everything the frame produces: `Result` is what a rows-returning trigger reads, `Write` is the sink.
+A node several consumers read is printed once, and every other consumer points back at it by number - `#2 Filter (shared)` is that same filter, not a second one. A node keeps its number in every format.
 A frame joined with `join()` / `crossJoin()` is part of the same tree: the join reads it the way it reads any other
 input, numbered with the rest of the plan, and it runs with this frame's configuration. A frame read with
 `from_data_frame()` is a `Read` of `DataFrameExtractor` and runs with its own.
@@ -102,7 +112,7 @@ input, numbered with the rest of the plan, and it runs with this frame's configu
 |------------------------------|-------------------------------------------------------------------------------------|
 | `Stage::optimized` (default) | the plan the optimizer hands to the planner                                         |
 | `Stage::unoptimized`         | the plan as the frame built it                                                      |
-| `Stage::physical`            | the plan the executor runs: pipelines, their steps, and every setting each was given |
+| `Stage::physical`            | the plan the executor runs: pipelines, their steps and every setting each was given |
 | `Format::tree` (default)     | the tree above: every node above the nodes it reads                                 |
 | `Format::flow`               | the same tree turned around: sources first, every node above the nodes that read it |
 | `Format::boxes`              | a box per node, children side by side                                               |
@@ -115,11 +125,14 @@ echo $dataFrame->explain()->toString(format: Format::flow);
 ```text
 #1 Read
 │  Extractor: CSVExtractor
+│  Source: file:///data/orders.csv
 └─ #2 Filter
    │  Condition: IsNotNull
-   ├─ #3 Result
-   │     Rows this plan hands out: to the trigger, or to the node reading it
-   └─ #4 Write
+   ├─ #3 Select
+   │  │  Columns: id, email
+   │  └─ #4 Result
+   │        Rows this plan hands out: to the trigger, or to the node reading it
+   └─ #5 Write
          Loader: JsonLoader
 ```
 
@@ -132,21 +145,28 @@ echo $dataFrame->explain()->toString(format: Format::boxes);
 │          Outputs          ├──────────────┐
 └─────────────┬─────────────┘              │
 ┌─────────────┴─────────────┐┌─────────────┴─────────────┐
-│         #3 Result         ││         #4 Write          │
+│         #4 Result         ││         #5 Write          │
 │   ────────────────────    ││   ────────────────────    │
 │ Rows this plan hands out: ││    Loader: JsonLoader     │
 │ to the trigger, or to the ││                           │
 │      node reading it      ││                           │
 └─────────────┬─────────────┘└─────────────┬─────────────┘
 ┌─────────────┴─────────────┐┌─────────────┴─────────────┐
-│         #2 Filter         ││         #2 Filter         │
+│         #3 Select         ││         #2 Filter         │
 │   ────────────────────    ││         (shared)          │
-│   Condition: IsNotNull    ││                           │
+│    Columns: id, email     ││                           │
 └─────────────┬─────────────┘└───────────────────────────┘
+┌─────────────┴─────────────┐
+│         #2 Filter         │
+│   ────────────────────    │
+│   Condition: IsNotNull    │
+└─────────────┬─────────────┘
 ┌─────────────┴─────────────┐
 │          #1 Read          │
 │   ────────────────────    │
 │  Extractor: CSVExtractor  │
+│          Source:          │
+│  file:///data/orders.csv  │
 └───────────────────────────┘
 ```
 
@@ -181,12 +201,16 @@ Physical plan
       │     On: id = id
       │     Prefix: joined_
       │     Storage: FilesystemBuckets
+      │     Memory: 1000 MB
       │     Buckets: 64
       │     Batch: 1000
       └─ Right side: Pipeline #0
             Extractor: ArrayExtractor
                Statistics: rows exact 1 · size unknown
 ```
+
+`Memory: 1000 MB` is the default limit under `memory_limit = -1`. With a set `memory_limit` it is 70% of it, or
+`FLOW_MAX_MEMORY`.
 
 A joined frame is planned apart, so its pipelines are numbered apart - `Right side:` says which plan they belong to.
 Every source lists what it declares about itself before a row is read - `exact n`, `≤ n` (a guaranteed bound),
@@ -203,7 +227,7 @@ DataFrames are created using the `data_frame()` DSL function and populated with 
 ```php
 <?php
 
-use function Flow\ETL\DSL\{data_frame, from_array, to_output};
+use function Flow\ETL\DSL\{col, data_frame, from_array, lit, to_output};
 
 $dataFrame = data_frame()
     ->read(from_array([
@@ -221,7 +245,7 @@ $dataFrame = data_frame()
 
 ## Memory Management Best Practices
 
-1. **Prefer Generator Methods**: Use `get()`, `getEach()`, `getEachAsArray()` over `fetch()` for large datasets
+1. **Prefer Generator Methods**: Use `get()`, `getEachAsArray()` over `fetch()` for large datasets
 2. **Avoid Memory-Intensive Operations**: Be cautious with `collect()`, `sortBy()`, `groupBy()`, and `join()` on large datasets
 3. **Use Appropriate Batch Sizes**: Start with 1000-5000 rows and adjust based on your memory constraints
 4. **Monitor Memory Usage**: Use `run(analyze: true)` to track memory consumption during development
@@ -237,13 +261,13 @@ $dataFrame = data_frame()
 
 Before a frame runs, the optimizer rewrites its plan. `Optimizer::default()` runs these rules, in order:
 
-| Rule                   | Rewrite                                                                          |
-|------------------------|----------------------------------------------------------------------------------|
-| `CombineLimits`        | two stacked `limit()` calls become one, with the smaller limit                   |
-| `CombineSortAndLimit`  | `sortBy()` followed by `limit()` keeps only the top rows instead of sorting all  |
-| `PushLimitIntoSource`  | the extractor stops reading once the limit (plus any `offset()`) is reached      |
-| `PushFilterIntoSource` | a `filter()` on partition columns skips whole partition directories              |
-| `CountFromStatistics`  | `count()` over a source that knows its rows exactly reads that number, no rows   |
+| Rule                   | Rewrite                                                                         |
+|------------------------|---------------------------------------------------------------------------------|
+| `CombineLimits`        | two stacked `limit()` calls become one, with the smaller limit                  |
+| `CombineSortAndLimit`  | `sortBy()` followed by `limit()` keeps only the top rows instead of sorting all |
+| `PushLimitIntoSource`  | the extractor stops reading once the limit (plus any `offset()`) is reached     |
+| `PushFilterIntoSource` | a `filter()` on partition columns skips whole partition directories             |
+| `CountFromStatistics`  | `count()` over a source that knows its rows exactly reads that number, no rows  |
 
 Rules live in `Flow\ETL\Optimizer\Rule` and are configured through `config_builder()->optimizer()`:
 
@@ -273,7 +297,7 @@ data_frame(config_builder()->optimizer(Optimizer::default()->with(new MyRule()))
 For detailed information about specific DataFrame operations, see the following component documentation:
 
 ### Core Operations
-- **[Building Blocks](/documentation/components/core/building-blocks.md)** - Understanding Rows, Entries, and basic data structures
+- **[Building Blocks](/documentation/components/core/building-blocks.md)** - Rows, columns and the schema that describes them
 - **[Transformations](/documentation/components/core/transformations.md)** - Reusable DataFrame transformations and the Transformation interface
 - **[Select/Drop](/documentation/components/core/select-drop.md)** - Column selection and removal
 - **[Rename](/documentation/components/core/rename.md)** - Column renaming strategies
@@ -291,10 +315,11 @@ For detailed information about specific DataFrame operations, see the following 
 - **[Window Functions](/documentation/components/core/window-functions.md)** - Advanced analytical functions
 
 ### Memory & Performance
+- **[Column Backend](/documentation/components/core/column-backend.md)** - Where batch columns live: PHP arrays or the flow_php extension
 - **[Batch Processing](/documentation/components/core/batch-processing.md)** - Controlling batch sizes and memory collection
 - **[Partitioning](/documentation/components/core/partitioning.md)** - Data partitioning for efficient processing
 - **[Caching](/documentation/components/core/caching.md)** - Performance optimization through caching
-- **[Floe File Format](/documentation/components/core/floe.md)** - Flow's native self-describing binary row format
+- **[Floe File Format](/documentation/components/core/floe.md)** - Flow's native self-describing columnar binary format
 - **[Source Statistics](/documentation/components/core/statistics.md)** - What a source declares about its rows and bytes before it is read
 - **[Data Retrieval](/documentation/components/core/data-retrieval.md)** - Methods for getting processed data
 

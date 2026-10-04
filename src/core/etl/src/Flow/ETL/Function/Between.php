@@ -4,14 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Column\ComparableValues;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\Between\Boundary;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Nullability;
 
+use function array_map;
 use function Flow\ETL\DSL\lit;
+use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_boolean;
 
 final class Between implements ScalarFunction
@@ -66,18 +73,35 @@ final class Between implements ScalarFunction
         );
     }
 
-    public function eval(Row $row, FlowContext $context): ?bool
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $boundary = (new Parameter($this->boundary))->asEnum($row, $context, Boundary::class);
+        $boundaries = (new Parameter($this->boundary))->asEnums($rows, $context, Boundary::class);
+        $columns = array_map(
+            static fn(ScalarFunction $function): Column => (new Parameter($function))->column($rows, $context),
+            [$this->value, $this->lowerBoundRef, $this->upperBoundRef],
+        );
+        $comparable = new ComparableValues();
+        $sameType =
+            type_bare($columns[0]->type())::class === type_bare($columns[1]->type())::class
+            && type_bare($columns[0]->type())::class === type_bare($columns[2]->type())::class;
+        [$values, $lowerBounds, $upperBounds] = array_map(static fn(Column $column): array => $sameType
+            ? $comparable->ordering($column)
+            : $column->values(), $columns);
+        $results = [];
+        $i = 0;
 
-        if (!$boundary instanceof Boundary) {
-            throw new InvalidArgumentException('Between function requires valid boundary');
+        try {
+            foreach ($boundaries as $i => $boundary) {
+                if (!$boundary instanceof Boundary) {
+                    throw new InvalidArgumentException('Between function requires valid boundary');
+                }
+
+                $results[] = $boundary->compare($values[$i], $lowerBounds[$i], $upperBounds[$i]);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return $boundary->compare(
-            (new Parameter($this->value))->eval($row, $context),
-            (new Parameter($this->lowerBoundRef))->eval($row, $context),
-            (new Parameter($this->upperBoundRef))->eval($row, $context),
-        );
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

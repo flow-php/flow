@@ -6,6 +6,9 @@ namespace Flow\ETL\Tests\Unit\Config\Sort;
 
 use Flow\ETL\Bucketing\Storage\FilesystemBuckets;
 use Flow\ETL\Bucketing\Storage\MemoryBuckets;
+use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Config\MemoryLimit;
+use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Path;
@@ -16,7 +19,7 @@ final class ExternalSortBuilderTest extends FlowTestCase
 {
     public function test_bucketing_options_are_set(): void
     {
-        $config = external_sort()->bucketsCount(10)->batchSize(250)->build(Path::realpath(__DIR__));
+        $config = external_sort()->bucketsCount(10)->batchSize(250)->build(Path::realpath(__DIR__), new PhpBackend());
 
         static::assertSame(10, $config->bucketing->bucketsCount);
         static::assertSame(250, $config->bucketing->batchSize);
@@ -24,24 +27,29 @@ final class ExternalSortBuilderTest extends FlowTestCase
 
     public function test_default_builds_a_filesystem_buckets_storage(): void
     {
-        $config = external_sort()->build(Path::realpath(__DIR__));
+        $config = external_sort()->build(Path::realpath(__DIR__), new PhpBackend());
 
         static::assertInstanceOf(FilesystemBuckets::class, $config->bucketing->storage);
         static::assertSame(100, $config->bucketing->bucketsCount);
         static::assertSame(1000, $config->bucketing->batchSize);
-        static::assertSame(10_000, $config->runSize);
+        static::assertSame(MemoryLimit::default()->inBytes(), $config->memoryLimit->inBytes());
     }
 
     public function test_merge_storage_defaults_to_null_so_the_spill_storage_is_reused(): void
     {
-        static::assertNull(external_sort()->storage(new MemoryBuckets())->build(Path::realpath(__DIR__))->merge);
+        static::assertNull(
+            external_sort()->storage(new MemoryBuckets())->build(Path::realpath(__DIR__), new PhpBackend())->merge,
+        );
     }
 
     public function test_merge_storage_is_carried_into_the_config(): void
     {
         $merge = new MemoryBuckets();
 
-        static::assertSame($merge, external_sort()->mergeStorage($merge)->build(Path::realpath(__DIR__))->merge);
+        static::assertSame(
+            $merge,
+            external_sort()->mergeStorage($merge)->build(Path::realpath(__DIR__), new PhpBackend())->merge,
+        );
     }
 
     public function test_injected_storage_wins_over_the_default(): void
@@ -50,21 +58,26 @@ final class ExternalSortBuilderTest extends FlowTestCase
 
         static::assertSame(
             $storage,
-            external_sort()->storage($storage)->build(Path::realpath(__DIR__))->bucketing->storage,
+            external_sort()->storage($storage)->build(Path::realpath(__DIR__), new PhpBackend())->bucketing->storage,
         );
     }
 
-    public function test_run_size_below_one_is_rejected(): void
+    public function test_memory_limit_below_one_byte_is_rejected(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Run size must be greater than 0');
+        $this->expectExceptionMessage('Sort memory limit must be greater than 0 bytes');
 
-        // @mago-ignore analysis:invalid-argument
-        external_sort()->runSize(0);
+        external_sort()->memoryLimit(Unit::fromBytes(0));
     }
 
-    public function test_run_size_is_set(): void
+    public function test_memory_limit_is_set(): void
     {
-        static::assertSame(500, external_sort()->runSize(500)->build(Path::realpath(__DIR__))->runSize);
+        static::assertSame(
+            Unit::fromMb(500)->inBytes(),
+            external_sort()
+                ->memoryLimit(Unit::fromMb(500))
+                ->build(Path::realpath(__DIR__), new PhpBackend())
+                ->memoryLimit->inBytes(),
+        );
     }
 }

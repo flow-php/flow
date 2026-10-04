@@ -35,7 +35,7 @@ final class CSVFileSampleTest extends FlowTestCase
         static::assertCount(3, $records);
 
         foreach ($records as $record) {
-            static::assertSame(['id', 'name', 'v'], array_keys($record->values));
+            static::assertSame(['id', 'name', 'v'], array_keys($record));
         }
     }
 

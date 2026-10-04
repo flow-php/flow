@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Column\Column;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Function\Evaluation\Selection;
+use Flow\ETL\Rows;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 use Flow\Types\Type\Unifier\NullabilityRule;
@@ -75,18 +78,45 @@ final class When implements ScalarFunction
         return $this->else === null ? type_optional($result) : $result;
     }
 
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $condition = (new Parameter($this->condition))->asBoolean($row, $context);
+        $then = [];
+        $else = [];
 
-        if ($condition) {
-            return (new Parameter($this->then))->eval($row, $context);
+        foreach ((new Parameter($this->condition))->asBooleans($rows, $context) as $i => $condition) {
+            if ($condition) {
+                $then[] = $i;
+            } else {
+                $else[] = $i;
+            }
         }
 
-        if ($this->else !== null) {
-            return (new Parameter($this->else))->eval($row, $context);
+        $values = [];
+
+        if ($then !== []) {
+            $column = (new Selection($then))->evaluate($this->then, $rows, $context);
+
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($column->values() as $k => $value) {
+                $values[$then[$k]] = $value;
+            }
         }
 
-        return null;
+        if ($else !== [] && $this->else !== null) {
+            $column = (new Selection($else))->evaluate($this->else, $rows, $context);
+
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($column->values() as $k => $value) {
+                $values[$else[$k]] = $value;
+            }
+        }
+
+        $results = [];
+
+        for ($i = 0, $count = $rows->count(); $i < $count; $i++) {
+            $results[] = $values[$i] ?? null;
+        }
+
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

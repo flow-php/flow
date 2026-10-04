@@ -1,1 +1,2 @@
-Read partitioned data after writing with overwrite mode. Each partition contains exactly one file with the latest data.
+After an `overwrite()` run each partition holds exactly one file, with the data of the last run.
+`color` comes back from the path.

@@ -1,217 +1,146 @@
-//! Decode plan built from a SCHEMA frame body (a JSON list of normalized definitions):
-//! per column a name and a recursive value `Decoder`, in schema order.
+//! What a column of one Flow type needs beyond its `Kind`, derived once per type JSON (`Type::normalize()`) and shared
+//! by every column and builder of that type: the Type object, its cast lane, its `Physical`, and how its logical
+//! values are built.
+
+use std::rc::Rc;
 
 use ext_php_rs::exception::PhpException;
-use serde::Deserialize;
+use ext_php_rs::types::Zval;
+use ext_php_rs::zend::Function;
+use flow_batch_frame::kind::{kind_of, parse_type, Kind, TypeJson};
 
-use crate::ctx::Ctx;
-use crate::exception::ext_exception;
+use crate::cast::{build_cast_kind, CastKind};
+use crate::ctx::{self, call_handle, call_method, ce_method_ref, expect_object, find_class, instance};
+use crate::exception::{ext_exception, json_exception};
 
-pub enum MapKey {
-    Integer,
-    String,
+const PHYSICAL_FOR: &str = "Flow\\ETL\\Column\\Physical\\PhysicalFor";
+const IDENTITY: &str = "Flow\\ETL\\Column\\Physical\\IdentityPhysical";
+
+pub struct TypePlan {
+    pub kind: Kind,
+    pub type_zv: Zval,
+    pub values: ValueNode,
+    pub cast: CastKind,
+    /// `$type->cast()` of the concrete Type class.
+    pub cast_fn: &'static Function,
+    /// `PhysicalFor::type($type)` and its `toPhysical()`.
+    pub physical: Zval,
+    pub to_physical: &'static Function,
+    /// The physical is `IdentityPhysical`: the cast value is the physical one.
+    pub identity: bool,
 }
 
-/// Recursive value decoder mirroring `ValueDecoder::decoderFor` dispatch.
-pub enum Decoder {
-    Integer,
-    Float,
-    Boolean,
-    String,
+/// How a logical value is built from its physical one.
+pub enum ValueNode {
+    Plain,
     Null,
-    /// A `datetime` column: the stored instant, in the column zone.
     DateTime(Vec<u8>),
-    /// A `date`, or a zone-less `datetime` from an older flow-php/etl: each value's stored zone.
-    StoredZoneDateTime,
-    Interval,
+    Date,
+    Time,
     Uuid,
     Json,
+    Enum(Vec<u8>),
     TimeZone,
-    Enum,
-    Xml,
-    XmlElement,
-    Html,
-    HtmlElement,
-    List(Box<Decoder>),
-    Map(MapKey, Box<Decoder>),
-    Structure(Vec<(Vec<u8>, Decoder)>),
-    Optional(Box<Decoder>),
+    /// A markup `Physical` whose `fromPhysical()` builds the DOM value (D4).
+    Markup(Zval),
+    List(Box<ValueNode>),
+    Map(Box<ValueNode>),
+    Struct(Vec<ValueNode>),
 }
 
-pub struct Column {
-    pub name: String,
-    pub decoder: Decoder,
-}
-
-pub struct Plan {
-    pub columns: Vec<Column>,
-}
-
-#[derive(Deserialize, Default)]
-pub struct TypeJson {
-    #[serde(rename = "type")]
-    pub type_: String,
-    element: Option<Box<TypeJson>>,
-    key: Option<Box<TypeJson>>,
-    value: Option<Box<TypeJson>>,
-    base: Option<Box<TypeJson>>,
-    #[serde(default)]
-    fields: Vec<StructureElementJson>,
-    #[serde(default)]
-    zone: Option<String>,
-}
-
-#[derive(Deserialize)]
-pub struct StructureElementJson {
-    // ALWAYS a JSON string - PHP casts the name on normalize(). A JSON number here
-    // would fail parse_schema_json for the WHOLE schema, not just this field.
-    pub name: String,
-    #[serde(rename = "type")]
-    pub type_: TypeJson,
-    #[serde(default)]
-    pub optional: bool,
-}
-
-impl TypeJson {
-    pub fn element(&self) -> Option<&TypeJson> {
-        self.element.as_deref()
+/// The plan of `$type`, built on first use of its type JSON.
+pub fn type_plan(type_zv: &Zval) -> Result<Rc<TypePlan>, PhpException> {
+    if let Some(plan) = ctx::type_plan_of(type_zv)? {
+        return Ok(plan);
     }
 
-    pub fn key(&self) -> Option<&TypeJson> {
-        self.key.as_deref()
-    }
+    let plan = json_plan(type_zv)?;
+    ctx::store_type_plan(type_zv, &plan)?;
 
-    pub fn value(&self) -> Option<&TypeJson> {
-        self.value.as_deref()
-    }
-
-    pub fn base(&self) -> Option<&TypeJson> {
-        self.base.as_deref()
-    }
-
-    pub fn fields(&self) -> &[StructureElementJson] {
-        &self.fields
-    }
-
-    pub fn zone(&self) -> Option<&[u8]> {
-        self.zone.as_deref().map(str::as_bytes)
-    }
+    Ok(plan)
 }
 
-#[derive(Deserialize)]
-pub struct NormalizedDefinition {
-    #[serde(rename = "ref")]
-    pub name: String,
-    #[serde(rename = "type")]
-    pub type_: TypeJson,
-    pub nullable: bool,
+fn json_plan(type_zv: &Zval) -> Result<Rc<TypePlan>, PhpException> {
+    let normalized = call_method(type_zv, "normalize", &mut [])?;
+    let json = call_handle(ctx::json_encode()?, None, &mut [normalized], "encode a type as JSON")?;
+    let json = json
+        .zend_str()
+        .ok_or_else(|| ext_exception("flow_php expected type JSON to be a string"))?
+        .as_bytes()
+        .to_vec();
+
+    if let Some(plan) = ctx::plan(&json)? {
+        return Ok(plan);
+    }
+
+    let parsed = parse_type(&json).map_err(json_exception)?;
+    let type_obj = expect_object(type_zv, "a Type")?;
+    let type_ce =
+        unsafe { type_obj.ce.as_ref() }.ok_or_else(|| ext_exception("flow_php failed to resolve a Type class"))?;
+    let physical = call_method(&instance(PHYSICAL_FOR)?, "type", &mut [type_zv.shallow_clone()])?;
+    let plan = Rc::new(TypePlan {
+        kind: kind_of(&parsed).map_err(json_exception)?,
+        type_zv: type_zv.shallow_clone(),
+        values: value_node(&parsed)?,
+        cast: build_cast_kind(&parsed),
+        cast_fn: ce_method_ref(type_ce, "cast")?,
+        to_physical: ce_method_ref(
+            unsafe { expect_object(&physical, "a Physical")?.ce.as_ref() }
+                .ok_or_else(|| ext_exception("flow_php failed to resolve a Physical class"))?,
+            "toPhysical",
+        )?,
+        physical: physical.shallow_clone(),
+        identity: expect_object(&physical, "a Physical")?.instance_of(find_class(IDENTITY)?),
+    });
+    ctx::store_plan(json, &plan)?;
+
+    Ok(plan)
 }
 
-pub fn parse_schema_json(schema_json: &[u8]) -> Result<Vec<NormalizedDefinition>, PhpException> {
-    let json = std::str::from_utf8(schema_json)
-        .map_err(|_| ext_exception("flow_php failed to decode schema JSON: invalid UTF-8"))?;
-
-    serde_json::from_str(json)
-        .map_err(|e| ext_exception(format!("flow_php failed to decode schema JSON: {e}")))
+/// `PhysicalFor::definition($definition)`: its refusals (wildcard enum, mixed, a foreign definition) are PHP's.
+pub fn physical_for_definition(definition: &Zval) -> Result<Zval, PhpException> {
+    call_method(
+        &instance(PHYSICAL_FOR)?,
+        "definition",
+        &mut [definition.shallow_clone()],
+    )
 }
 
-fn build_decoder(type_json: &TypeJson) -> Result<Decoder, PhpException> {
-    let missing = |part: &str| {
-        ext_exception(format!(
-            "flow_php schema JSON for type \"{}\" is missing its {part}",
-            type_json.type_
-        ))
+fn value_node(parsed: &TypeJson) -> Result<ValueNode, PhpException> {
+    let child = |part: Option<&TypeJson>| -> Result<Box<ValueNode>, PhpException> {
+        Ok(Box::new(value_node(part.ok_or_else(|| {
+            ext_exception("flow_php type JSON is missing a nested type")
+        })?)?))
     };
 
-    Ok(match type_json.type_.as_str() {
-        "integer" | "positive_integer" => Decoder::Integer,
-        "float" => Decoder::Float,
-        "boolean" => Decoder::Boolean,
-        "string" | "non_empty_string" | "numeric-string" | "class_string" => Decoder::String,
-        "null" => Decoder::Null,
-        "datetime" => match type_json.zone() {
-            Some(zone) => Decoder::DateTime(zone.to_vec()),
-            None => Decoder::StoredZoneDateTime,
-        },
-        "date" => Decoder::StoredZoneDateTime,
-        "time" => Decoder::Interval,
-        "uuid" => Decoder::Uuid,
-        "json" => Decoder::Json,
-        "timezone" => Decoder::TimeZone,
-        "enum" => Decoder::Enum,
-        "xml" => Decoder::Xml,
-        "xml_element" => Decoder::XmlElement,
-        "html" => Decoder::Html,
-        "html_element" => Decoder::HtmlElement,
-        "list" => Decoder::List(Box::new(build_decoder(
-            type_json
-                .element
-                .as_ref()
-                .ok_or_else(|| missing("element"))?,
-        )?)),
-        "map" => {
-            let key = match type_json
-                .key
-                .as_ref()
-                .ok_or_else(|| missing("key"))?
-                .type_
-                .as_str()
-            {
-                "integer" => MapKey::Integer,
-                "string" => MapKey::String,
-                other => {
-                    return Err(ext_exception(format!(
-                        "flow_php does not support map keys of type \"{other}\""
-                    )));
-                }
-            };
-
-            Decoder::Map(
-                key,
-                Box::new(build_decoder(
-                    type_json.value.as_ref().ok_or_else(|| missing("value"))?,
-                )?),
-            )
-        }
-        "structure_v2" => {
-            if type_json.fields.is_empty() {
-                return Err(ext_exception(
-                    "flow_php read a structure type with no fields; the loaded flow_php extension and the \
-                     flow-php/etl in use disagree on the structure schema format - reinstall one to match the \
-                     other, or set the Floe engine to FloeEngine::php",
-                ));
-            }
-
-            let mut elements = Vec::with_capacity(type_json.fields.len());
-
-            for field in &type_json.fields {
-                elements.push((field.name.clone().into_bytes(), build_decoder(&field.type_)?));
-            }
-
-            Decoder::Structure(elements)
-        }
-        "optional" => Decoder::Optional(Box::new(build_decoder(
-            type_json.base.as_ref().ok_or_else(|| missing("base"))?,
-        )?)),
-        other => {
-            return Err(ext_exception(format!(
-                "flow_php does not support values of type \"{other}\" in this build"
-            )));
-        }
+    Ok(match parsed.type_.as_str() {
+        "datetime" => ValueNode::DateTime(parsed.zone().unwrap_or(b"UTC").to_vec()),
+        "date" => ValueNode::Date,
+        "time" => ValueNode::Time,
+        "uuid" => ValueNode::Uuid,
+        "json" => ValueNode::Json,
+        "enum" => ValueNode::Enum(
+            parsed
+                .class()
+                .ok_or_else(|| ext_exception("flow_php enum type JSON is missing its class"))?
+                .to_vec(),
+        ),
+        "timezone" => ValueNode::TimeZone,
+        "xml" => ValueNode::Markup(instance("Flow\\ETL\\Column\\Physical\\XmlDocumentPhysical")?),
+        "xml_element" => ValueNode::Markup(instance("Flow\\ETL\\Column\\Physical\\XmlElementPhysical")?),
+        "html" => ValueNode::Markup(instance("Flow\\ETL\\Column\\Physical\\HtmlDocumentPhysical")?),
+        "html_element" => ValueNode::Markup(instance("Flow\\ETL\\Column\\Physical\\HtmlElementPhysical")?),
+        "null" => ValueNode::Null,
+        "list" => ValueNode::List(child(parsed.element())?),
+        "map" => ValueNode::Map(child(parsed.value())?),
+        "structure_v2" => ValueNode::Struct(
+            parsed
+                .fields()
+                .iter()
+                .map(|field| value_node(&field.type_))
+                .collect::<Result<_, _>>()?,
+        ),
+        "optional" => *child(parsed.base())?,
+        _ => ValueNode::Plain,
     })
-}
-
-pub fn build_plan(schema_json: &[u8], _ctx: &mut Ctx) -> Result<Plan, PhpException> {
-    let definitions = parse_schema_json(schema_json)?;
-
-    let mut columns = Vec::with_capacity(definitions.len());
-
-    for definition in &definitions {
-        columns.push(Column {
-            name: definition.name.clone(),
-            decoder: build_decoder(&definition.type_)?,
-        });
-    }
-
-    Ok(Plan { columns })
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\Engine;
 
+use Flow\Parquet\Engine\RustParquetEngine;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\Reader;
@@ -21,7 +22,7 @@ final class EngineParityTest extends TestCase
     protected function setUp(): void
     {
         if (!extension_loaded('arrow')) {
-            self::markTestSkipped('Arrow extension is not loaded');
+            self::markTestSkipped('arrow is not loaded');
         }
     }
 
@@ -50,7 +51,11 @@ final class EngineParityTest extends TestCase
         ]);
 
         static::assertSame(
-            iterator_to_array(Reader::arrow()->read($path)->values()),
+            iterator_to_array(
+                (new Reader(engine: new RustParquetEngine()))
+                    ->read($path)
+                    ->values(),
+            ),
             iterator_to_array(Reader::php()->read($path)->values()),
         );
     }

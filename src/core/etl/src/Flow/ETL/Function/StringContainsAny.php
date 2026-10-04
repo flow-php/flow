@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Nullability;
 
@@ -58,21 +62,35 @@ final class StringContainsAny implements ScalarFunction
         return (new Nullability())->any(type_boolean(), $this->value->returns(), $this->needles->returns());
     }
 
-    public function eval(Row $row, FlowContext $context): ?bool
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $value = (new Parameter($this->value))->asString($row, $context);
-        $needles = (new Parameter($this->needles))->asArray($row, $context);
+        $values = (new Parameter($this->value))->asStrings($rows, $context);
+        $needlesList = (new Parameter($this->needles))->asArrays($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($value === null || $needles === null) {
-            return null;
+        try {
+            foreach ($values as $i => $value) {
+                $needles = $needlesList[$i];
+
+                if ($value === null || $needles === null) {
+                    $results[] = null;
+
+                    continue;
+                }
+
+                if (count($needles) === 0) {
+                    throw new InvalidArgumentException('StringContainsAny function requires a non-empty needles array');
+                }
+
+                $typedNeedles = type_list(type_string())->assert($needles);
+
+                $results[] = s($value)->containsAny($typedNeedles);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        if (count($needles) === 0) {
-            throw new InvalidArgumentException('StringContainsAny function requires a non-empty needles array');
-        }
-
-        $typedNeedles = type_list(type_string())->assert($needles);
-
-        return s($value)->containsAny($typedNeedles);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

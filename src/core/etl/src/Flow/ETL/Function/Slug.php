@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 
@@ -62,19 +66,33 @@ final class Slug implements ScalarFunction
         return type_string();
     }
 
-    public function eval(Row $row, FlowContext $context): ?string
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $string = (new Parameter($this->string))->asString($row, $context);
-        $separator = (new Parameter($this->separator))->asString($row, $context, '-');
-        $locale = (new Parameter($this->locale))->asString($row, $context);
-        $symbolsMap = (new Parameter($this->symbolsMap))->asArray($row, $context);
+        $strings = (new Parameter($this->string))->asStrings($rows, $context);
+        $separators = (new Parameter($this->separator))->asStrings($rows, $context, '-');
+        $locales = (new Parameter($this->locale))->asStrings($rows, $context);
+        $symbolsMaps = (new Parameter($this->symbolsMap))->asArrays($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($string === null) {
-            throw new InvalidArgumentException('Slug function requires non-null value');
+        try {
+            foreach ($strings as $i => $string) {
+                $separator = $separators[$i];
+                $locale = $locales[$i];
+                $symbolsMap = $symbolsMaps[$i];
+
+                if ($string === null) {
+                    throw new InvalidArgumentException('Slug function requires non-null value');
+                }
+
+                $results[] = (new AsciiSlugger(symbolsMap: $symbolsMap))
+                    ->slug($string, $separator, $locale)
+                    ->toString();
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return (new AsciiSlugger(symbolsMap: $symbolsMap))
-            ->slug($string, $separator, $locale)
-            ->toString();
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

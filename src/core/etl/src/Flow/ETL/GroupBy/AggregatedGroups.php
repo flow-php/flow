@@ -6,9 +6,12 @@ namespace Flow\ETL\GroupBy;
 
 use Flow\ETL\FlowContext;
 use Flow\ETL\GroupBy;
-use Flow\ETL\Row\RowsBuffer;
 use Flow\ETL\Rows;
 use Generator;
+
+use function array_chunk;
+use function array_key_exists;
+use function count;
 
 final class AggregatedGroups
 {
@@ -22,13 +25,44 @@ final class AggregatedGroups
         private readonly GroupByShape $shape,
     ) {}
 
+    /**
+     * @return array<string, Group> by the key's string form
+     */
+    public function groups(): array
+    {
+        return $this->groups;
+    }
+
     public function accumulate(Rows $batch, FlowContext $context): void
     {
-        foreach ($batch as $row) {
-            $key = $this->groupBy->keyValues($row, $this->shape->input);
-            $group = $this->groups[(string) $key] ??= new Group($key, $this->shape->aggregators->cloned());
-            $group->aggregators->aggregate($row, $context);
+        /** @var array<string, list<int>> $indices */
+        $indices = [];
+
+        /** @var array<string, GroupKey> $keys */
+        $keys = [];
+
+        foreach ($this->groupBy->keys($batch, $this->shape->input) as $i => $key) {
+            $index = (string) $key;
+            $indices[$index][] = $i;
+            $keys[$index] ??= $key;
         }
+
+        foreach ($indices as $index => $rows) {
+            $group = $this->groups[$index] ??= new Group($keys[$index], $this->shape->aggregators->cloned());
+            $group->aggregators->aggregate($batch, $rows, $context);
+        }
+    }
+
+    /**
+     * $group aggregated rows that come before every row this instance aggregated under the same key.
+     */
+    public function absorbEarlier(string $key, Group $group, FlowContext $context): void
+    {
+        if (array_key_exists($key, $this->groups)) {
+            $group->aggregators->merge($this->groups[$key]->aggregators, $context);
+        }
+
+        $this->groups[$key] = $group;
     }
 
     /**
@@ -36,20 +70,44 @@ final class AggregatedGroups
      *
      * @return Generator<Rows>
      */
-    public function flush(int $batchSize): Generator
+    public function flush(int $batchSize, FlowContext $context): Generator
     {
-        $buffer = new RowsBuffer($this->shape->output, $batchSize);
+        foreach (array_chunk($this->groups, $batchSize) as $groups) {
+            yield $this->rows($groups, $context);
+        }
+    }
 
-        foreach ($this->groups as $group) {
-            $aggregated = $this->groupBy->aggregatedRow($group->key, $group->aggregators, $this->shape->output);
+    /**
+     * @param list<Group> $groups
+     */
+    public function rows(array $groups, FlowContext $context): Rows
+    {
+        $output = $this->shape->output;
+        $values = [];
 
-            if (null !== ($batch = $buffer->add($aggregated))) {
-                yield $batch;
+        foreach ($output->definitions() as $name => $_) {
+            $values[$name] = [];
+        }
+
+        foreach ($groups as $group) {
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($group->key as $name => $value) {
+                $values[$output->get($name)->entry()->name()][] = $value;
+            }
+
+            foreach ($group->aggregators as $aggregator) {
+                $values[$aggregator->outputName()][] = $aggregator->value();
             }
         }
 
-        if (null !== ($batch = $buffer->flush())) {
-            yield $batch;
+        $columns = [];
+
+        foreach ($output->definitions() as $name => $definition) {
+            $builder = $context->backend()->builder($definition);
+            $builder->appendMany($values[$name]);
+            $columns[$name] = $builder->finish();
         }
+
+        return Rows::fromColumns($output, $columns, count($groups));
     }
 }

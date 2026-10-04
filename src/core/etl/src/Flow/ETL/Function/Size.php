@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function count;
@@ -52,18 +56,33 @@ final class Size implements ScalarFunction
         return type_optional(type_integer());
     }
 
-    public function eval(Row $row, FlowContext $context): ?int
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $value = (new Parameter($this->value))->eval($row, $context);
+        $values = (new Parameter($this->value))->values($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if (is_string($value)) {
-            return s($value)->length();
+        try {
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($values as $i => $value) {
+                if (is_string($value)) {
+                    $results[] = s($value)->length();
+
+                    continue;
+                }
+
+                if (is_countable($value)) {
+                    $results[] = count($value);
+
+                    continue;
+                }
+
+                $results[] = null;
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        if (is_countable($value)) {
-            return count($value);
-        }
-
-        return null;
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

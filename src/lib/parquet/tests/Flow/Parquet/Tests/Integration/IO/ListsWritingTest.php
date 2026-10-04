@@ -6,7 +6,6 @@ namespace Flow\Parquet\Tests\Integration\IO;
 
 use Faker\Factory;
 use Flow\Parquet\Consts;
-use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\ListElement;
@@ -14,6 +13,7 @@ use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\ParquetFile\Schema\Repetition;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Tests\Context\TestParquetFile;
+use Flow\Parquet\Tests\Mother\ParquetEngineMother;
 use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -26,8 +26,9 @@ use function range;
 class ListsWritingTest extends ParquetIntegrationTestCase
 {
     #[DataProvider('engine_provider')]
-    public function test_writing_empty_lists_of_ints(ParquetEngine $engine): void
+    public function test_writing_empty_lists_of_ints(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -55,8 +56,9 @@ class ListsWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_list_of_decimals(ParquetEngine $engine): void
+    public function test_writing_list_of_decimals(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -77,8 +79,9 @@ class ListsWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_list_of_ints(ParquetEngine $engine): void
+    public function test_writing_list_of_ints(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -110,8 +113,9 @@ class ListsWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_list_of_strings(ParquetEngine $engine): void
+    public function test_writing_list_of_strings(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -143,8 +147,9 @@ class ListsWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_list_of_structures(ParquetEngine $engine): void
+    public function test_writing_list_of_structures(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -182,8 +187,9 @@ class ListsWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_list_with_nullable_elements(ParquetEngine $engine): void
+    public function test_writing_list_with_nullable_elements(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -217,8 +223,9 @@ class ListsWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_list_with_nullable_list_values(ParquetEngine $engine): void
+    public function test_writing_list_with_nullable_list_values(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -252,8 +259,9 @@ class ListsWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_nullable_list_of_ints(ParquetEngine $engine): void
+    public function test_writing_nullable_list_of_ints(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -287,8 +295,9 @@ class ListsWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_nullable_list_of_structures(ParquetEngine $engine): void
+    public function test_writing_nullable_list_of_structures(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -328,8 +337,9 @@ class ListsWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_nullable_list_of_structures_with_required_fields(ParquetEngine $engine): void
+    public function test_writing_nullable_list_of_structures_with_required_fields(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);
@@ -365,8 +375,9 @@ class ListsWritingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_writing_nullable_lists_of_ints(ParquetEngine $engine): void
+    public function test_writing_nullable_lists_of_ints(string $engineClass): void
     {
+        $engine = ParquetEngineMother::create($engineClass);
         $path = TestParquetFile::path($this);
 
         $writer = new Writer(engine: $engine);

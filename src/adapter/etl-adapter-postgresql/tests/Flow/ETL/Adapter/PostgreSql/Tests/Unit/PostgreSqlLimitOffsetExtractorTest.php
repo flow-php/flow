@@ -11,6 +11,7 @@ use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Rows;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
 use Flow\PostgreSql\Client\Exception\PostgreSqlError;
@@ -19,6 +20,7 @@ use Flow\PostgreSql\Client\Exception\QueryException;
 use function array_map;
 use function extension_loaded;
 use function Flow\ETL\Adapter\PostgreSql\from_pgsql_limit_offset;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
@@ -168,12 +170,12 @@ final class PostgreSqlLimitOffsetExtractorTest extends FlowTestCase
             ->willCountTotal(1)
             ->willReturnCursors(new StubCursor([['id' => '1', 'amount' => '10.5']]));
 
-        $row = iterator_to_array(
+        $rows = iterator_to_array(
             from_pgsql_limit_offset($client, 'SELECT id, amount FROM t ORDER BY id')->extract(flow_context()),
-        )[0]->first();
+        )[0];
 
-        static::assertSame(1, $row->get('id'));
-        static::assertSame(10.5, $row->get('amount'));
+        static::assertSame(1, $rows->column('id')->value(0));
+        static::assertSame(10.5, $rows->column('amount')->value(0));
     }
 
     public function test_extract_derives_the_schema_once_and_reuses_it_across_batches(): void
@@ -364,5 +366,23 @@ final class PostgreSqlLimitOffsetExtractorTest extends FlowTestCase
             new Cardinality(atMost: 100, estimate: 42, relativeError: Cardinality::DEFAULT_RELATIVE_ERROR),
             $extractor->statistics()->rows,
         );
+    }
+
+    public function test_extract_builds_through_the_config_backend(): void
+    {
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willCountTotal(1)
+            ->willReturnCursors(new StubCursor([['id' => '1']]));
+        $backend = new SpyBackend();
+
+        iterator_to_array(
+            from_pgsql_limit_offset($client, 'SELECT id FROM t ORDER BY id')->extract(
+                flow_context(config_builder()->backend($backend)->build()),
+            ),
+            false,
+        );
+
+        static::assertGreaterThanOrEqual(1, $backend->builders());
     }
 }

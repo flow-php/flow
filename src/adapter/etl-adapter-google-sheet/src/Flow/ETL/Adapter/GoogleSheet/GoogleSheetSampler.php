@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\GoogleSheet;
 
-use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Schema\Inference\SchemaSampler;
 use Generator;
 
@@ -28,7 +27,7 @@ final class GoogleSheetSampler implements SchemaSampler
      *
      * @param int<1, max> $batchSize
      *
-     * @return null|Generator<int, list<RawRowValues>>
+     * @return null|Generator<int, list<array<array-key, mixed>>>
      */
     public function batches(int $batchSize): ?Generator
     {
@@ -77,7 +76,7 @@ final class GoogleSheetSampler implements SchemaSampler
      * $rowBudget is deliberately unused: the budget sized the single range when this sampler was constructed,
      * and sample() is memoised, so advancing further cannot fetch more.
      *
-     * @return Generator<int, Generator<int, RawRowValues>>
+     * @return Generator<int, Generator<int, array<array-key, mixed>>>
      */
     public function samples(int $rowBudget): iterable
     {

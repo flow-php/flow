@@ -29,25 +29,25 @@ class DataPageHeader
             'var' => 'encoding',
             'isRequired' => true,
             'type' => TType::I32,
-            'class' => '\Flow\Parquet\Thrift\Encoding',
+            'class' => '\Flow\Parquet\ThriftModel\Encoding',
         ],
         3 => [
             'var' => 'definition_level_encoding',
             'isRequired' => true,
             'type' => TType::I32,
-            'class' => '\Flow\Parquet\Thrift\Encoding',
+            'class' => '\Flow\Parquet\ThriftModel\Encoding',
         ],
         4 => [
             'var' => 'repetition_level_encoding',
             'isRequired' => true,
             'type' => TType::I32,
-            'class' => '\Flow\Parquet\Thrift\Encoding',
+            'class' => '\Flow\Parquet\ThriftModel\Encoding',
         ],
         5 => [
             'var' => 'statistics',
             'isRequired' => false,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\Statistics',
+            'class' => '\Flow\Parquet\ThriftModel\Statistics',
         ],
     ];
 

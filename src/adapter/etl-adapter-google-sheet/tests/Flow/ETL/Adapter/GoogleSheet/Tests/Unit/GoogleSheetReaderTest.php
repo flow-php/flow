@@ -108,7 +108,7 @@ final class GoogleSheetReaderTest extends FlowTestCase
         static::assertSame($options, $values->getCalls[0][2]);
     }
 
-    public function test_sample_decodes_names_and_rows_through_its_own_encoder(): void
+    public function test_sample_decodes_names_and_rows_through_its_own_decoder(): void
     {
         $sample = GoogleSheetFixtureContext::reader(GoogleSheetFixtureContext::service(
             100,
@@ -116,7 +116,7 @@ final class GoogleSheetReaderTest extends FlowTestCase
         ))->sample(2);
 
         static::assertSame(['id', 'note'], $sample->names);
-        static::assertSame(['id' => '1', 'note' => null], $sample->rows[0]->values);
+        static::assertSame(['id' => '1', 'note' => null], $sample->rows[0]);
         static::assertCount(2, $sample->rows);
     }
 

@@ -7,10 +7,14 @@ namespace Flow\ETL\Function;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Function\Evaluation\ResultColumn;
 use Flow\ETL\Function\ToDateTime\PatternCoverage;
-use Flow\ETL\Row;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateTimeType;
 
@@ -102,36 +106,56 @@ final class ToDateTime implements ScalarFunction
         return type_optional($this->type);
     }
 
-    public function eval(Row $row, FlowContext $context): ?DateTimeImmutable
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $value = (new Parameter($this->value))->eval($row, $context);
-        $format = (new Parameter($this->format))->asString($row, $context);
-        $timeZone = (new Parameter($this->timeZone))->asInstanceOf($row, $context, DateTimeZone::class);
+        $values = (new Parameter($this->value))->values($rows, $context);
+        $formats = (new Parameter($this->format))->asStrings($rows, $context);
+        $timeZones = (new Parameter($this->timeZone))->asInstancesOf($rows, $context, DateTimeZone::class);
+        $results = [];
+        $i = 0;
 
-        if ($value === null || $format === null || $timeZone === null) {
-            throw new InvalidArgumentException('ToDateTime function requires non-null values');
-        }
+        try {
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($values as $i => $value) {
+                $format = $formats[$i];
+                $timeZone = $timeZones[$i];
 
-        if (is_object($value)) {
-            if ($value instanceof DateTimeInterface) {
-                return $this->type->cast($value);
+                if ($value === null || $format === null || $timeZone === null) {
+                    throw new InvalidArgumentException('ToDateTime function requires non-null values');
+                }
+
+                if (is_object($value)) {
+                    if ($value instanceof DateTimeInterface) {
+                        $results[] = $this->type->cast($value);
+
+                        continue;
+                    }
+
+                    throw new InvalidArgumentException('ToDateTime function requires DateTimeInterface object');
+                }
+
+                if (is_int($value)) {
+                    $dateTime = DateTimeImmutable::createFromFormat('U', (string) $value, $timeZone);
+
+                    $results[] = $dateTime === false ? null : $this->type->cast($dateTime);
+
+                    continue;
+                }
+
+                if (is_string($value)) {
+                    $dateTime = DateTimeImmutable::createFromFormat($format, $value, $timeZone);
+
+                    $results[] = $dateTime === false ? null : $this->type->cast($dateTime);
+
+                    continue;
+                }
+
+                throw new InvalidArgumentException('ToDateTime function requires int or string value');
             }
-
-            throw new InvalidArgumentException('ToDateTime function requires DateTimeInterface object');
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        if (is_int($value)) {
-            $dateTime = DateTimeImmutable::createFromFormat('U', (string) $value, $timeZone);
-
-            return $dateTime === false ? null : $this->type->cast($dateTime);
-        }
-
-        if (is_string($value)) {
-            $dateTime = DateTimeImmutable::createFromFormat($format, $value, $timeZone);
-
-            return $dateTime === false ? null : $this->type->cast($dateTime);
-        }
-
-        throw new InvalidArgumentException('ToDateTime function requires int or string value');
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

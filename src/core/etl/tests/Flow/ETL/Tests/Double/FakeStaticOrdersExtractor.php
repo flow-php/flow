@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Double;
 
 use DateTimeImmutable;
+use Flow\ETL\Column\AdaptiveBackend;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row\AdaptiveRowHydrator;
-use Flow\ETL\Row\Hydrator;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
@@ -78,7 +78,7 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
         $schema = self::schema();
 
         foreach ($this->rawData() as $row) {
-            yield array_to_rows($row, $schema, $context->hydrator());
+            yield array_to_rows($row, $schema, $context->backend());
         }
     }
 
@@ -138,13 +138,13 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
         }
     }
 
-    public function toRows(Hydrator $hydrator = new AdaptiveRowHydrator()): Rows
+    public function toRows(Backend $backend = new AdaptiveBackend()): Rows
     {
-        $rows = rows(schema());
         $schema = self::schema();
+        $rows = rows($schema, $backend);
 
         foreach ($this->rawData() as $row) {
-            $rows = $rows->merge(array_to_rows($row, $schema, $hydrator));
+            $rows = $rows->concat($backend, array_to_rows($row, $schema, $backend));
         }
 
         return $rows;

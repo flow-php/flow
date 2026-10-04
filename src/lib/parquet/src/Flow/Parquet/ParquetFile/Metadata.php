@@ -17,6 +17,7 @@ final readonly class Metadata
         private ?string $createdBy,
     ) {}
 
+    // called by name from arrow-ext RustParquetFileReader::metadata(), pinned by phpts 047, 052
     public static function fromThrift(FileMetaData $thrift): self
     {
         return new self(

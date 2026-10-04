@@ -17,9 +17,9 @@ use LogicException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 
@@ -36,7 +36,7 @@ final class PostgreSqlLoaderTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('DeleteOptions must be set for DELETE operation');
 
-        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), flow_context());
+        $loader->load(array_to_rows([['id' => 1]], schema(int_schema('id'))), flow_context());
     }
 
     public function test_load_delete_requires_primary_keys(): void
@@ -51,7 +51,7 @@ final class PostgreSqlLoaderTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Primary keys must be specified for DELETE operation');
 
-        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), flow_context());
+        $loader->load(array_to_rows([['id' => 1]], schema(int_schema('id'))), flow_context());
     }
 
     public function test_load_update_requires_primary_keys(): void
@@ -66,7 +66,7 @@ final class PostgreSqlLoaderTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Primary keys must be specified for UPDATE operation');
 
-        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), flow_context());
+        $loader->load(array_to_rows([['id' => 1]], schema(int_schema('id'))), flow_context());
     }
 
     public function test_load_update_requires_update_options(): void
@@ -80,7 +80,7 @@ final class PostgreSqlLoaderTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('UpdateOptions must be set for UPDATE operation');
 
-        $loader->load(rows(schema(int_schema('id')), row(['id' => 1])), flow_context());
+        $loader->load(array_to_rows([['id' => 1]], schema(int_schema('id'))), flow_context());
     }
 
     public function test_a_chunked_insert_joins_a_callers_transaction(): void

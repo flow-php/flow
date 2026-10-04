@@ -37,7 +37,7 @@ data_frame()
 > the richest type that parses, so `'19.99'` read from a CSV infers as `?float`. Restrict the candidates with
 > `->types(...)`, or take strings only with `->allStrings()`.
 
-## Adding Entries with withEntry()
+## Adding Columns with withEntry()
 
 Add new columns or modify existing ones using expressions:
 
@@ -61,7 +61,9 @@ data_frame()
 
 Create duplicate rows for testing or data expansion:
 
-### duplicateRow() - Duplicate Specific Row
+### duplicateRow() - Duplicate Matching Rows
+
+`duplicateRow()` takes a boolean condition; every row it is true for appears twice.
 
 ```php
 <?php
@@ -72,7 +74,7 @@ data_frame()
         ['id' => 2, 'name' => 'Product B'],
         ['id' => 3, 'name' => 'Product C'],
     ]))
-    ->duplicateRow(1) // Duplicate the second row (0-indexed)
+    ->duplicateRow(ref('id')->equals(lit(2)))
     ->write(to_output())
     ->run();
 
@@ -81,29 +83,7 @@ data_frame()
 
 ## Removing Duplicates
 
-Remove duplicate rows from your dataset:
-
-```php
-<?php
-
-data_frame()
-    ->read(from_array([
-        ['id' => 1, 'name' => 'Product A', 'category' => 'Electronics'],
-        ['id' => 2, 'name' => 'Product B', 'category' => 'Books'],
-        ['id' => 1, 'name' => 'Product A', 'category' => 'Electronics'], // Duplicate
-        ['id' => 3, 'name' => 'Product C', 'category' => 'Electronics'],
-        ['id' => 2, 'name' => 'Product B', 'category' => 'Books'], // Duplicate
-    ]))
-    ->dropDuplicates() // Remove all duplicate rows
-    ->write(to_output())
-    ->run();
-
-// Result: Only unique rows remain
-```
-
-### Selective Duplicate Removal
-
-Remove duplicates based on specific columns:
+`dropDuplicates()` takes at least one column and keeps the first row of each distinct combination of those columns:
 
 ```php
 <?php
@@ -113,13 +93,12 @@ use function Flow\ETL\DSL\{data_frame, from_array, to_output};
 data_frame()
     ->read(from_array([
         ['id' => 1, 'name' => 'Product A', 'version' => 1],
-        ['id' => 1, 'name' => 'Product A', 'version' => 2], // Same product, different version
+        ['id' => 1, 'name' => 'Product A', 'version' => 2],
         ['id' => 2, 'name' => 'Product B', 'version' => 1],
-        ['id' => 3, 'name' => 'Product C', 'version' => 1],
     ]))
-    ->dropDuplicates('id', 'name') // Remove duplicates based on id and name only
+    ->dropDuplicates('id', 'name')
     ->write(to_output())
     ->run();
 
-// Result: Keep first occurrence of each id/name combination
+// Result: [1, 'Product A', 1], [2, 'Product B', 1]
 ```

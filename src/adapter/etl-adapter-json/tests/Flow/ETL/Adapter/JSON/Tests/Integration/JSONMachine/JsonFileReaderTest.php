@@ -7,7 +7,9 @@ namespace Flow\ETL\Adapter\JSON\Tests\Integration\JSONMachine;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonFileSample;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonFormat;
 use Flow\ETL\Adapter\JSON\Tests\Context\JsonFixtureContext;
-use Flow\ETL\Row\RawRowValues;
+use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Extractor\File\SourceFile;
+use Flow\ETL\Tests\Context\MemoryFiles;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
@@ -20,6 +22,7 @@ use function array_keys;
 use function array_map;
 use function array_slice;
 use function count;
+use function Flow\Filesystem\DSL\path;
 use function Flow\Types\DSL\type_array;
 use function implode;
 use function iterator_to_array;
@@ -94,7 +97,7 @@ final class JsonFileReaderTest extends FlowTestCase
         static::assertCount(247, $rows);
         static::assertSame(iterator_to_array(Items::fromFile($source->path->path(), [
             'decoder' => new ExtJsonDecoder(true),
-        ]), false), array_map(static fn(RawRowValues $values): array => $values->values, $rows));
+        ]), false), array_map(static fn(array $values): array => $values, $rows));
     }
 
     #[TestWith([JsonFormat::Document, 'empty_record.json'])]
@@ -105,10 +108,7 @@ final class JsonFileReaderTest extends FlowTestCase
 
         $rows = iterator_to_array($reader->sample(JsonFixtureContext::source($fixture)), false);
 
-        static::assertSame(
-            [['id' => 1], ['id' => 2]],
-            array_map(static fn(RawRowValues $v): array => $v->values, $rows),
-        );
+        static::assertSame([['id' => 1], ['id' => 2]], array_map(static fn(array $v): array => $v, $rows));
     }
 
     public function test_a_zero_byte_document_yields_nothing(): void
@@ -183,7 +183,7 @@ final class JsonFileReaderTest extends FlowTestCase
         $reader = JsonFixtureContext::reader($format, pointer: $pointer);
 
         $rows = iterator_to_array($reader->sample(JsonFixtureContext::source($fixture)), false);
-        $values = array_map(static fn(RawRowValues $v): mixed => $v->values[$expectedKey], $rows);
+        $values = array_map(static fn(array $v): mixed => $v[$expectedKey], $rows);
 
         static::assertCount($expectedRows, $rows);
         static::assertSame($expectedHead, array_slice($values, 0, count($expectedHead)));
@@ -204,8 +204,8 @@ final class JsonFileReaderTest extends FlowTestCase
         static::assertCount($expectedRows, $rows);
 
         foreach ($rows as $row) {
-            static::assertSame([$pointer], array_keys($row->values));
-            static::assertIsArray($row->values[$pointer]);
+            static::assertSame([$pointer], array_keys($row));
+            static::assertIsArray($row[$pointer]);
         }
     }
 
@@ -221,7 +221,7 @@ final class JsonFileReaderTest extends FlowTestCase
         unset($rows);
 
         static::assertNotNull($first);
-        static::assertSame(['id' => 1], $first->values);
+        static::assertSame(['id' => 1], $first);
 
         static::assertSame(1, $counting->readFromCalls);
         static::assertSame(1, $counting->closedStreams());
@@ -235,7 +235,7 @@ final class JsonFileReaderTest extends FlowTestCase
 
         $rows = iterator_to_array($reader->sample(JsonFixtureContext::source($fixture)), false);
 
-        static::assertSame([1, 2, 3, 4, 5], array_map(static fn(RawRowValues $v): mixed => $v->values['id'], $rows));
+        static::assertSame([1, 2, 3, 4, 5], array_map(static fn(array $v): mixed => $v['id'], $rows));
     }
 
     #[TestWith([JsonFormat::Document, 'five_rows.json'])]
@@ -259,7 +259,7 @@ final class JsonFileReaderTest extends FlowTestCase
 
         foreach ($reader->samples(100) as $sample) {
             foreach ($sample as $values) {
-                $ids[] = $values->values['id'];
+                $ids[] = $values['id'];
             }
         }
 
@@ -288,7 +288,7 @@ final class JsonFileReaderTest extends FlowTestCase
         static::assertSame(0, $beforeAdvance, 'samples() opens nothing until a sample is iterated');
         static::assertSame(1, $afterAdvance, 'advancing the first sample opens exactly the first source');
         static::assertNotNull($first);
-        static::assertSame(['id' => 1], $first->values);
+        static::assertSame(['id' => 1], $first);
     }
 
     #[TestWith(['blank_line.jsonl'])]
@@ -315,7 +315,23 @@ final class JsonFileReaderTest extends FlowTestCase
 
         $rows = iterator_to_array($reader->sample(JsonFixtureContext::source('pointer_blank_line.jsonl')), false);
 
-        static::assertSame([1, 2], array_map(static fn(RawRowValues $v): mixed => $v->values['a'], $rows));
+        static::assertSame([1, 2], array_map(static fn(array $v): mixed => $v['a'], $rows));
+    }
+
+    #[TestWith(['[1, {"id":1}]', null])]
+    #[TestWith(['{"id":1}', null])]
+    #[TestWith(['{"items":[1]}', '/items'])]
+    public function test_a_scalar_record_is_refused(string $content, ?string $pointer): void
+    {
+        $filesystem = MemoryFiles::with(['memory://scalar.json' => $content]);
+        $reader = JsonFixtureContext::reader(JsonFormat::Document, $filesystem, pointer: $pointer);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            'A JSON record must be an object or an array, int given in "memory://scalar.json".',
+        );
+
+        iterator_to_array($reader->sample(new SourceFile(path('memory://scalar.json'))), false);
     }
 
     public function test_a_nul_only_line_is_refused(): void

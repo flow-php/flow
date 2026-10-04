@@ -5,7 +5,7 @@
   rustPlatform,
   clang,
   llvmPackages,
-  flow-php-ext-version ? "dev",
+  flow-php-ext-version ? "0.45.0-dev",
 }:
 
 let
@@ -58,7 +58,7 @@ let
     doCheck = false;
 
     meta = with lib; {
-      description = "Flow PHP native extension (Rust) - Floe frame-body encoder/decoder for DataFrame Rows";
+      description = "Flow PHP native extension (Rust) - native column backend, CSV/JSON readers, Parquet ETL through arrow-ext";
       license = licenses.mit;
     };
   };

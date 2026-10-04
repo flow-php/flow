@@ -8,9 +8,8 @@ use Flow\ETL\Rows;
 use Generator;
 
 use function array_merge;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
@@ -30,10 +29,10 @@ final class ScoredRows
             $rows = [];
 
             foreach ($batch as [$score, $name]) {
-                $rows[] = row(['score' => $score, 'name' => $name]);
+                $rows[] = ['score' => $score, 'name' => $name];
             }
 
-            yield rows(schema(int_schema('score'), str_schema('name')), ...$rows);
+            yield array_to_rows($rows, schema(int_schema('score'), str_schema('name')));
         }
     }
 

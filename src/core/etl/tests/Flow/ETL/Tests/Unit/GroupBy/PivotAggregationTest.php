@@ -12,14 +12,13 @@ use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\min;
 use function Flow\ETL\DSL\pivot_values;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\sum;
@@ -46,8 +45,8 @@ final class PivotAggregationTest extends FlowTestCase
         /** @var list<Rows> $batches */
         $batches = iterator_to_array((new PivotAggregation())->aggregateBound(
             (static function () use ($input): Generator {
-                yield rows($input, row(['product' => 'Banana', 'country' => 'USA', 'amount' => 30]));
-                yield rows($input, row(['product' => 'Banana', 'country' => 'USA', 'amount' => 10]));
+                yield array_to_rows([['product' => 'Banana', 'country' => 'USA', 'amount' => 30]], $input);
+                yield array_to_rows([['product' => 'Banana', 'country' => 'USA', 'amount' => 10]], $input);
             })(),
             flow_context(config()),
             $groupBy,
@@ -86,12 +85,11 @@ final class PivotAggregationTest extends FlowTestCase
             2,
             iterator_to_array((new PivotAggregation(2))->aggregateBound(
                 (static function () use ($input): Generator {
-                    yield rows(
-                        $input,
-                        row(['product' => 'Banana', 'country' => 'USA', 'amount' => 1]),
-                        row(['product' => 'Apple', 'country' => 'USA', 'amount' => 2]),
-                        row(['product' => 'Cherry', 'country' => 'USA', 'amount' => 3]),
-                    );
+                    yield array_to_rows([
+                        ['product' => 'Banana', 'country' => 'USA', 'amount' => 1],
+                        ['product' => 'Apple', 'country' => 'USA', 'amount' => 2],
+                        ['product' => 'Cherry', 'country' => 'USA', 'amount' => 3],
+                    ], $input);
                 })(),
                 flow_context(config()),
                 $groupBy,

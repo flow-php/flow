@@ -9,11 +9,10 @@ use Flow\ETL\Adapter\Seal\Tests\IntegrationTestCase;
 use function Flow\ETL\Adapter\Seal\to_seal_delete;
 use function Flow\ETL\Adapter\Seal\to_seal_schema;
 use function Flow\ETL\Adapter\Seal\to_seal_upsert;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\integer_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_schema;
@@ -29,16 +28,17 @@ final class SealLoaderTest extends IntegrationTestCase
         ));
 
         to_seal_upsert($engine, 'users')->load(
-            rows(
+            array_to_rows(
+                [['id' => '1', 'name' => 'Alice'], ['id' => '2', 'name' => 'Bob']],
                 schema(string_schema('id'), string_schema('name')),
-                row(['id' => '1', 'name' => 'Alice']),
-                row(['id' => '2', 'name' => 'Bob']),
             ),
             flow_context(),
         );
         $this->sealContext()->refresh();
 
-        to_seal_delete($engine, 'users')->load(rows(schema(string_schema('id')), row(['id' => '1'])), flow_context());
+        to_seal_delete($engine, 'users')->load(array_to_rows([[
+            'id' => '1',
+        ]], schema(string_schema('id'))), flow_context());
         $this->sealContext()->refresh();
 
         static::assertSame(1, $engine->countDocuments('users'));
@@ -54,14 +54,17 @@ final class SealLoaderTest extends IntegrationTestCase
         ));
 
         to_seal_upsert($engine, 'products')->load(
-            rows(schema(string_schema('sku'), string_schema('name')), row(['sku' => 'SKU_0001', 'name' => 'Keyboard'])),
+            array_to_rows(
+                [['sku' => 'SKU_0001', 'name' => 'Keyboard']],
+                schema(string_schema('sku'), string_schema('name')),
+            ),
             flow_context(),
         );
         $this->sealContext()->refresh();
 
         to_seal_delete($engine, 'products')
             ->withIdentifierEntry('sku')
-            ->load(rows(schema(string_schema('sku')), row(['sku' => 'SKU_0001'])), flow_context());
+            ->load(array_to_rows([['sku' => 'SKU_0001']], schema(string_schema('sku'))), flow_context());
         $this->sealContext()->refresh();
 
         static::assertSame(0, $engine->countDocuments('products'));
@@ -78,13 +81,13 @@ final class SealLoaderTest extends IntegrationTestCase
         $documents = [];
 
         for ($i = 1; $i <= 10; $i++) {
-            $documents[] = row(['id' => (string) $i, 'name' => 'User ' . $i, 'age' => 20 + $i]);
+            $documents[] = ['id' => (string) $i, 'name' => 'User ' . $i, 'age' => 20 + $i];
         }
 
         to_seal_upsert($engine, 'users')
             ->withBulkSize(3)
             ->load(
-                rows(schema(str_schema('id'), str_schema('name'), int_schema('age')), ...$documents),
+                array_to_rows($documents, schema(str_schema('id'), str_schema('name'), int_schema('age'))),
                 flow_context(),
             );
         $this->sealContext()->refresh();
@@ -101,10 +104,9 @@ final class SealLoaderTest extends IntegrationTestCase
         ));
 
         to_seal_upsert($engine, 'users')->load(
-            rows(
+            array_to_rows(
+                [['id' => '1', 'name' => 'Alice', 'age' => 30], ['id' => '2', 'name' => 'Bob', 'age' => 25]],
                 schema(string_schema('id'), string_schema('name'), integer_schema('age')),
-                row(['id' => '1', 'name' => 'Alice', 'age' => 30]),
-                row(['id' => '2', 'name' => 'Bob', 'age' => 25]),
             ),
             flow_context(),
         );
@@ -124,16 +126,16 @@ final class SealLoaderTest extends IntegrationTestCase
         $loader = to_seal_upsert($engine, 'users');
 
         $loader->load(
-            rows(
+            array_to_rows(
+                [['id' => '1', 'name' => 'Alice', 'age' => 30]],
                 schema(string_schema('id'), string_schema('name'), integer_schema('age')),
-                row(['id' => '1', 'name' => 'Alice', 'age' => 30]),
             ),
             flow_context(),
         );
         $loader->load(
-            rows(
+            array_to_rows(
+                [['id' => '1', 'name' => 'Alice Updated', 'age' => 31]],
                 schema(string_schema('id'), string_schema('name'), integer_schema('age')),
-                row(['id' => '1', 'name' => 'Alice Updated', 'age' => 31]),
             ),
             flow_context(),
         );

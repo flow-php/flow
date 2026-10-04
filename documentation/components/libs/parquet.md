@@ -14,19 +14,11 @@ For detailed installation instructions, see the [installation page](/documentati
 
 ## Engine System
 
-The parquet library supports a pluggable engine system with two implementations:
-
-- **PHP Engine** (`PhpParquetEngine`) - Pure PHP implementation. Works everywhere with no extra dependencies beyond
-  optional compression extensions.
-- **Arrow Engine** (`ArrowParquetEngine`) - Uses
-  the [arrow PHP extension](/documentation/components/extensions/arrow-ext.md) for native Rust-powered performance. All
-  compression codecs are built into the extension.
-- **Adaptive Engine** (`AdaptiveParquetEngine`) - Default. Automatically selects Arrow if the `arrow` extension is
-  loaded, otherwise falls back to PHP.
-
-### Engine Selection
-
-By default, `new Reader()` and `new Writer()` use the adaptive engine:
+- **PHP Engine** (`PhpParquetEngine`) - pure PHP, no extra dependencies beyond optional compression extensions.
+- **Rust Engine** (`RustParquetEngine`) - registered by the
+  [arrow extension](/documentation/components/extensions/arrow-ext.md), every compression codec built in.
+- **Adaptive Engine** (`AdaptiveParquetEngine`) - the default: `RustParquetEngine` when the arrow extension is loaded,
+  `PhpParquetEngine` otherwise. A big-endian `Reader` uses `PhpParquetEngine`.
 
 ```php
 <?php
@@ -34,41 +26,16 @@ By default, `new Reader()` and `new Writer()` use the adaptive engine:
 use Flow\Parquet\Reader;
 use Flow\Parquet\Writer;
 
-// Adaptive engine: uses Arrow if ext-arrow is loaded, otherwise PHP
-$reader = new Reader();
+$reader = new Reader();   // AdaptiveParquetEngine
 $writer = new Writer();
-```
 
-To explicitly choose an engine:
-
-```php
-<?php
-
-use Flow\Parquet\Reader;
-use Flow\Parquet\Writer;
-
-// Force Arrow engine (throws if ext-arrow is not loaded)
-$reader = Reader::arrow();
-$writer = Writer::arrow();
-
-// Force PHP engine
 $reader = Reader::php();
 $writer = Writer::php();
 ```
 
-### Cross-Engine Compatibility
-
-Files written by one engine can be read by the other. Both produce standard Apache Parquet files.
-
-### When to Use Each Engine
-
-| Consideration       | PHP Engine                        | Arrow Engine                                                            |
-|---------------------|-----------------------------------|-------------------------------------------------------------------------|
-| **Setup**           | No extra requirements             | Requires [ext-arrow](/documentation/components/extensions/arrow-ext.md) |
-| **Performance**     | Good for small/medium datasets    | Significantly faster for large datasets                                 |
-| **Compression**     | Requires PHP extensions per codec | All codecs built-in                                                     |
-| **Nested types**    | Full Dremel support               | Full support via Arrow                                                  |
-| **Recommended for** | Environments without Rust         | Production workloads                                                    |
+Both engines read the same values and accept and refuse the same writes. The Arrow engine refuses, before the first
+batch and naming `\Flow\Parquet\Reader::php()`, what it cannot read: `INTERVAL`, dictionary and view types, `LZO`, a
+path into a `LIST` / `MAP`, and `INT96` under `Option::INT_96_AS_DATETIME = false`.
 
 ## What is Parquet
 
@@ -84,11 +51,11 @@ Row-based format:
 
 -----------------
 
-| ID | Name  | Age |
-|----|-------|-----|
-| 1  | Alice | 20  |
-| 2  | Bob   | 25  |
-| 3  | Carol | 30  |
+| ID  | Name  | Age |
+|-----|-------|-----|
+| 1   | Alice | 20  |
+| 2   | Bob   | 25  |
+| 3   | Carol | 30  |
 
 Column-based format:
 --------------------
@@ -148,10 +115,11 @@ $reader = new Reader();
 > `new Reader()` uses the adaptive engine. See [Engine System](#engine-system) for how to explicitly choose the Arrow or
 > PHP engine.
 
-The Reader accepts two arguments:
+The Reader accepts three arguments:
 
 - `$byteOrder` - by default set to `ByteOrder::LITTLE_ENDIAN`
 - `$options` - a set of options that can be used to configure the reader.
+- `$engine` - by default `AdaptiveParquetEngine`
 
 All available options are described in [Option](/src/lib/parquet/src/Flow/Parquet/Option.php) enum.
 
@@ -159,7 +127,8 @@ All available options are described in [Option](/src/lib/parquet/src/Flow/Parque
 
 ### Reader Options
 
-- `INT_96_AS_DATETIME` - default: `true` - if set to `true` then `INT96` values will be converted to `DateTime` objects.
+- `INT_96_AS_DATETIME` - default: `true` - if set to `true` then `INT96` values are read as `DateTimeImmutable`,
+  floored to microseconds.
 
 ### Reading a file
 
@@ -174,13 +143,16 @@ $file = $reader->read('path/to/file.parquet');
 $file = $reader->readStream(\fopen('path/to/file.parquet', 'rb'));
 ```
 
-At this point, nothing is read yet. We just created a file object.
+`RustParquetEngine` reads the footer when the file is opened, `PhpParquetEngine` on the first call that needs it. An
+invalid file throws `InvalidArgumentException` `Given file is not valid Parquet file...`.
 
 There are several things we can read from parquet file:
 
 - `ParquetFile::values(array $columns = [], ?int $limit = null, ?int $offset = null) : \Generator`
+- `ParquetFile::columns(int $batchSize, array $columns = [], ?int $limit = null, ?int $offset = null) : \Generator`
 - `ParquetFile::metadata() : Metadata`
 - `ParquetFile::schema() : Schema` - shortcut for `ParquetFile::metadata()->schema()`
+- `ParquetFile::close() : void` - closes the reader and its stream
 
 ### Reading the whole file:
 
@@ -225,6 +197,20 @@ foreach ($file->values(["column_1", "column_2"], limit: 100, offset: 1000) as $r
 }
 ```
 
+### Reading columns in batches
+
+```php
+use Flow\Parquet\Reader;
+
+$file = (new Reader())->read('path/to/file.parquet');
+
+foreach ($file->columns(batchSize: 1000, columns: ["column_1", "column_2"]) as $chunk) {
+    // $chunk = ['column_1' => [...up to 1000 values], 'column_2' => [...]]
+}
+```
+
+`limit` and `offset` work as in `values()`.
+
 ## Writing Parquet Files
 
 Since parquet is a binary format, we need to provide a schema for the writer so it can know how
@@ -267,7 +253,7 @@ $writer = new Writer();
 ```
 
 > [!TIP]
-> `new Writer()` uses the adaptive engine. Use `Writer::arrow()` or `Writer::php()` to explicitly select an engine.
+> `new Writer()` uses `AdaptiveParquetEngine`. Use `Writer::php()` to select the PHP engine.
 > See [Engine System](#engine-system).
 
 and write our data:
@@ -309,6 +295,24 @@ We can also open a file for a resource:
 $writer->openForStream($stream, $schema);
 ```
 
+### Writing columns
+
+A batch that is already held by column is written without building rows: one list per top-level column, every list of
+the same length. A schema column the array lacks is written as nulls, a key the schema lacks is ignored.
+
+```php
+$writer->open($path, $schema);
+$writer->writeColumns(['id' => [1, 2, 3], 'name' => ['a', 'b', null]]);
+$writer->writeColumns(['id' => [4], 'tags' => [['x', 'y']]]);
+$writer->close();
+```
+
+The file is the one `writeBatch()` writes for the same rows, and a value is accepted or refused as `writeBatch()`
+accepts or refuses it. Lists of different lengths are refused:
+`InvalidArgumentException('writeColumns() takes lists of one length, got "id": 3, "name": 2')`.
+
+A custom `ParquetFileWriter` implements `writeColumns(array $columns): void`.
+
 ### Writing a single row
 
 ```php
@@ -327,15 +331,13 @@ $writer->close();
 
 ### Writer Options
 
-- `BYTE_ARRAY_TO_STRING` - default: `true` - if set to `true` then `BYTE_ARRAY` values will be converted to `string`
-  objects.
 - `DICTIONARY_PAGE_MIN_CARDINALITY_RATION` - default '0.4' - minimum ratio of unique values to total values for a column
   to have dictionary encoding.
 - `DICTIONARY_PAGE_SIZE` - default: `1Mb` - maximum size of dictionary page.
 - `GZIP_COMPRESSION_LEVEL` - default: `9` - compression level for GZIP compression (applied only when GZIP compression
   is enabled).
-- `PAGE_SIZE_BYTES` - default: `8Kb` - maximum size of data page.
-- `ROW_GROUP_SIZE_BYTES` - default: `8Mb` - maximum size of row group.
+- `PAGE_SIZE_BYTES` - default: `128Kb` - maximum size of data page.
+- `ROW_GROUP_SIZE_BYTES` - default: `32Mb` - maximum size of row group.
 - `ROW_GROUP_SIZE_CHECK_INTERVAL` default: `1000` - number of rows to write before checking if row group size limit is
   reached.
 - `VALIDATE_DATA` - default: `true` - if set to `true` then writer will validate data against schema.
@@ -370,8 +372,8 @@ You will need to play a bit with those values to find the best one for your use 
 ## Compressions
 
 > [!NOTE]
-> When using the Arrow engine, all compression codecs are built into the native extension. The PHP compression
-> extensions listed below are only required when using the PHP engine.
+> With the Arrow engine every compression codec is built into the extension. The PHP compression extensions listed below
+> are only required by the PHP engine.
 
 Parquet supports several compression algorithms.
 
@@ -428,7 +430,7 @@ $options = Options::default()->set(Option::COLUMNS_COMPRESSIONS, [
 ]);
 
 // Global compression serves as fallback for unspecified columns
-$writer = new Writer(compressions: Compressions::GZIP, options: $options);
+$writer = new Writer(compression: Compressions::GZIP, options: $options);
 ```
 
 #### Nested Column Compression
@@ -646,7 +648,7 @@ $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
     'description' => Encodings::PLAIN             // High variance text
 ]);
 
-$writer = new Writer(compressions: Compressions::SNAPPY, options: $options);
+$writer = new Writer(compression: Compressions::SNAPPY, options: $options);
 ```
 
 #### Nested Column Encoding (Flat Path Notation)
@@ -763,9 +765,9 @@ $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
 
 | Encoding            | INT32/INT64 | BYTE_ARRAY | BOOLEAN | FLOAT/DOUBLE | FIXED_LEN_BYTE_ARRAY |
 |---------------------|-------------|------------|---------|--------------|----------------------|
-| PLAIN               | yes           | yes          | yes       | yes            | yes                    |
-| RLE_DICTIONARY      | yes           | yes          | yes       | yes            | no                    |
-| DELTA_BINARY_PACKED | yes           | no          | no       | no            | no                    |
+| PLAIN               | yes         | yes        | yes     | yes          | yes                  |
+| RLE_DICTIONARY      | yes         | yes        | yes     | yes          | no                   |
+| DELTA_BINARY_PACKED | yes         | no         | no      | no           | no                   |
 
 ### Performance Guidelines
 

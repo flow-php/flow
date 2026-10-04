@@ -24,7 +24,7 @@ final class SerializedNodes
         return array_map(
             static fn(DOMDocument $document): string => (string) $document->saveXML($document->documentElement),
             iterator_to_array(
-                (new XMLNodes($xmlNodePath))->of(
+                (new XMLNodes($xmlNodePath))->documents(
                     new StringSourceStream(path('memory://document.xml'), $xml),
                     $bufferSize,
                 ),

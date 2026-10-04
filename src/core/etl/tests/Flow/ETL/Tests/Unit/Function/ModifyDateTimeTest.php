@@ -7,13 +7,14 @@ namespace Flow\ETL\Tests\Unit\Function;
 use DateTimeImmutable;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\ReferenceResolver;
+use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Types\DSL\type_date;
@@ -25,9 +26,13 @@ final class ModifyDateTimeTest extends FlowTestCase
     {
         static::assertEquals(
             new DateTimeImmutable('2025-01-01 12:00:00 +00:00'),
-            ref('datetime')
-                ->modifyDateTime('noon')
-                ->eval(row(['datetime' => type_date()->cast('2025-01-01')]), flow_context()),
+            (new FunctionContext(flow_context()))->eval(
+                ref('datetime')->modifyDateTime('noon'),
+                [
+                    'datetime' => type_date()->cast('2025-01-01'),
+                ],
+                schema(date_schema('datetime')),
+            ),
         );
     }
 
@@ -35,9 +40,13 @@ final class ModifyDateTimeTest extends FlowTestCase
     {
         static::assertEquals(
             new DateTimeImmutable('2025-01-01 00:00:00 +00:00'),
-            ref('datetime')
-                ->modifyDateTime('midnight')
-                ->eval(row(['datetime' => type_datetime()->cast('2025-01-01 10:00:23 +00:00')]), flow_context()),
+            (new FunctionContext(flow_context()))->eval(
+                ref('datetime')->modifyDateTime('midnight'),
+                [
+                    'datetime' => type_datetime()->cast('2025-01-01 10:00:23 +00:00'),
+                ],
+                schema(datetime_schema('datetime')),
+            ),
         );
     }
 
@@ -46,9 +55,13 @@ final class ModifyDateTimeTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected type "string", got "integer".');
 
-        ref('datetime')
-            ->modifyDateTime(lit(1))
-            ->eval(row(['datetime' => type_datetime()->cast('2025-01-01 10:00:23 +00:00')]), flow_context());
+        (new FunctionContext(flow_context()))->eval(
+            ref('datetime')->modifyDateTime(lit(1)),
+            [
+                'datetime' => type_datetime()->cast('2025-01-01 10:00:23 +00:00'),
+            ],
+            schema(datetime_schema('datetime')),
+        );
     }
 
     public function test_zone_of_the_reference_is_kept(): void

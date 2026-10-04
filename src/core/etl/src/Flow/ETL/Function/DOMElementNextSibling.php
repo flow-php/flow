@@ -9,9 +9,13 @@ use Dom\HTMLElement;
 use DOMDocument;
 use DOMElement;
 use DOMNode;
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function class_exists;
@@ -56,7 +60,7 @@ final class DOMElementNextSibling implements ScalarFunction
         return type_optional(type_xml_element());
     }
 
-    public function eval(Row $row, FlowContext $context): ?DOMElement
+    public function eval(Rows $rows, FlowContext $context): Column
     {
         $types = [
             type_instance_of(DOMNode::class),
@@ -67,21 +71,31 @@ final class DOMElementNextSibling implements ScalarFunction
             $types[] = type_instance_of(HTMLElement::class);
         }
 
-        $node = (new Parameter($this->element))->as($row, $context, ...$types);
+        $nodes = (new Parameter($this->element))->asTypes($rows, $context, ...$types);
+        $results = [];
+        $i = 0;
 
-        if ($node instanceof DOMDocument) {
-            $node = $node->documentElement;
+        try {
+            foreach ($nodes as $i => $node) {
+                if ($node instanceof DOMDocument) {
+                    $node = $node->documentElement;
+                }
+
+                if (!$node instanceof DOMElement) {
+                    throw new InvalidArgumentException('DOMElementNextSibling requires DOMElement.');
+                }
+
+                // @mago-ignore analysis:impossible-condition
+                if ($node instanceof CharacterData) {
+                    throw new InvalidArgumentException('DOMElementNextSibling requires HTMLElement.');
+                }
+
+                $results[] = $node->nextElementSibling;
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        if (!$node instanceof DOMElement) {
-            throw new InvalidArgumentException('DOMElementNextSibling requires DOMElement.');
-        }
-
-        // @mago-ignore analysis:impossible-condition
-        if ($node instanceof CharacterData) {
-            throw new InvalidArgumentException('DOMElementNextSibling requires HTMLElement.');
-        }
-
-        return $node->nextElementSibling;
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

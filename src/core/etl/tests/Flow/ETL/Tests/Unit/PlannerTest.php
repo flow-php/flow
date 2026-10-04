@@ -54,6 +54,7 @@ use Flow\ETL\Transformer\SelectEntriesTransformer;
 use function array_map;
 use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\Adapter\CSV\to_csv;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
@@ -63,8 +64,6 @@ use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\memory_sort;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\to_array;
@@ -535,7 +534,10 @@ final class PlannerTest extends FlowTestCase
 
     public function test_planning_reads_no_row(): void
     {
-        $extractor = new CountingExtractor(schema(int_schema('id')), rows(schema(int_schema('id')), row(['id' => 1])));
+        $extractor = new CountingExtractor(
+            schema(int_schema('id')),
+            array_to_rows([['id' => 1]], schema(int_schema('id'))),
+        );
         $planned = new PlannedNodes();
 
         (new Planner())->node(NodeMother::select(new Read($extractor)), NodeMother::context(), $planned);

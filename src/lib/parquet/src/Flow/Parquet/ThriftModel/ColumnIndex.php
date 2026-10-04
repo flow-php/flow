@@ -58,7 +58,7 @@ class ColumnIndex
             'var' => 'boundary_order',
             'isRequired' => true,
             'type' => TType::I32,
-            'class' => '\Flow\Parquet\Thrift\BoundaryOrder',
+            'class' => '\Flow\Parquet\ThriftModel\BoundaryOrder',
         ],
         5 => [
             'var' => 'null_counts',

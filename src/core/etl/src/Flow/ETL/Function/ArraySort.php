@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ArraySort\Sort;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\StructureType;
 
@@ -84,22 +88,34 @@ final class ArraySort implements ScalarFunction
         return $array;
     }
 
-    /**
-     * @return null|array<mixed>
-     */
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $array = (new Parameter($this->ref))->asArray($row, $context);
-        $flags = (new Parameter($this->flags))->asInt($row, $context);
-        $recursive = (new Parameter($this->recursive))->asBoolean($row, $context) ?? false;
+        $arrays = (new Parameter($this->ref))->asArrays($rows, $context);
+        $flagsList = (new Parameter($this->flags))->asInts($rows, $context);
+        $recursives = (new Parameter($this->recursive))->asBooleans($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($array === null) {
-            throw new InvalidArgumentException('ArraySort function requires non-null array');
+        try {
+            foreach ($arrays as $i => $array) {
+                $flags = $flagsList[$i];
+                $recursive = $recursives[$i];
+
+                $recursive ??= false;
+
+                if ($array === null) {
+                    throw new InvalidArgumentException('ArraySort function requires non-null array');
+                }
+
+                $this->recursiveSort($array, $this->sortFunction->value, $flags, $recursive);
+
+                $results[] = $array;
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        $this->recursiveSort($array, $this->sortFunction->value, $flags, $recursive);
-
-        return $array;
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 
     /**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Config\Telemetry;
 
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Config\Sort\ExternalSortConfig;
 use Flow\ETL\Config\Sort\MemorySortConfig;
 use Flow\ETL\Dataset\Memory\Consumption;
@@ -60,12 +61,13 @@ final class TelemetryContext
     private readonly SpanStack $transformationSpans;
 
     public function __construct(
+        private readonly Backend $backend,
         private readonly Logger $logger,
         private readonly Tracer $tracer,
         private readonly Meter $meter,
         public readonly TelemetryOptions $options,
     ) {
-        $this->memory = new Consumption();
+        $this->memory = new Consumption($this->backend);
         $this->loadingSpans = new SpanStack();
         $this->transformationSpans = new SpanStack();
     }
@@ -141,7 +143,7 @@ final class TelemetryContext
         $this->dataFrameExecutionTime = null;
         $this->totalRowsProcessed = 0;
         $this->dataFrameSpan = null;
-        $this->memory = new Consumption();
+        $this->memory = new Consumption($this->backend);
     }
 
     /**
@@ -200,7 +202,7 @@ final class TelemetryContext
         $this->dataFrameExecutionTime = null;
         $this->totalRowsProcessed = 0;
         $this->dataFrameSpan = null;
-        $this->memory = new Consumption();
+        $this->memory = new Consumption($this->backend);
     }
 
     public function dataFrameStarted(FlowContext $context): void

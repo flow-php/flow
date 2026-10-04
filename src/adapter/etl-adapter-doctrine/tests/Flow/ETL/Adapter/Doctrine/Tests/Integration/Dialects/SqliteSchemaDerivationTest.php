@@ -32,7 +32,10 @@ final class SqliteSchemaDerivationTest extends IntegrationTestCase
                 new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
                 new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
                 new Column('amount', Type::getType(Types::FLOAT), ['notnull' => true]),
-            ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
         );
 
         for ($i = 1; $i <= 3; $i++) {

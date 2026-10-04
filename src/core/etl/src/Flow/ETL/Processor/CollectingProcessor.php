@@ -34,9 +34,14 @@ final readonly class CollectingProcessor implements Processor
         $collected = null;
 
         foreach ($rows as $batch) {
-            $collected = $collected === null ? $batch : $collected->merge($batch);
+            // an empty part adds nothing, whatever its schema
+            $collected = match (true) {
+                $collected === null, $collected->isEmpty() => $batch,
+                $batch->isEmpty() => $collected,
+                default => $collected->concat($context->backend(), $batch),
+            };
         }
 
-        yield $collected ?? new Rows($this->declared ?? new Schema());
+        yield $collected ?? Rows::empty($this->declared ?? new Schema(), $context->backend());
     }
 }

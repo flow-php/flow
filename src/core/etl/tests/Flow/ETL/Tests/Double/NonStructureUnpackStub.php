@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
+use Flow\ETL\Column\Column;
+use Flow\ETL\Column\ValueColumn;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\FunctionTree;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Function\ScalarFunction\UnpackResults;
 use Flow\ETL\Function\ScalarFunctionChain;
-use Flow\ETL\Row;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
+use function array_fill;
 use function Flow\Types\DSL\type_string;
 
 /**
@@ -37,12 +40,10 @@ final class NonStructureUnpackStub implements UnpackResults
         return $this;
     }
 
-    /**
-     * @return array<array-key, mixed>
-     */
-    public function eval(Row $row, FlowContext $context): array
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        return [];
+        // @mago-ignore analysis:possibly-invalid-argument
+        return new ValueColumn(array_fill(0, $rows->count(), []));
     }
 
     /**

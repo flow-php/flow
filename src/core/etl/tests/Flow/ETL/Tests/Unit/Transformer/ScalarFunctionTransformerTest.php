@@ -7,6 +7,8 @@ namespace Flow\ETL\Tests\Unit\Transformer;
 use DOMDocument;
 use DOMNodeList;
 use DOMXPath;
+use Flow\ETL\Column\AdaptiveBackend;
+use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
@@ -22,6 +24,7 @@ use Flow\ETL\Transformer\ScalarFunctionTransformer;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\concat;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
@@ -29,7 +32,6 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -83,7 +85,7 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
                 ['array' => 3],
             ],
             (new ScalarFunctionTransformer('array', new ArrayExpand(lit([1, 2, 3]), ArrayExpand\ArrayExpand::VALUES)))
-                ->transform(rows(schema(), row([])), flow_context(config()))
+                ->transform(array_to_rows([[]], schema()), flow_context(config()))
                 ->toArray(),
         );
     }
@@ -105,7 +107,7 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
                 ['name' => 'Norbert', 'number' => 1],
             ],
             (new ScalarFunctionTransformer('number', lit(1)))
-                ->transform(rows(schema(str_schema('name')), row(['name' => 'Norbert'])), flow_context(config()))
+                ->transform(array_to_rows([['name' => 'Norbert']], schema(str_schema('name'))), flow_context(config()))
                 ->toArray(),
         );
     }
@@ -128,7 +130,7 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
             ],
             (new ScalarFunctionTransformer('c', ref('a')->plus(ref('b'))))
                 ->transform(
-                    rows(schema(int_schema('a'), int_schema('b')), row(['a' => 1, 'b' => 2])),
+                    array_to_rows([['a' => 1, 'b' => 2]], schema(int_schema('a'), int_schema('b'))),
                     flow_context(config()),
                 )
                 ->toArray(),
@@ -145,7 +147,7 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
                 ['a' => 1, 'number' => 0],
             ],
             (new ScalarFunctionTransformer('number', ref('num')->plus(ref('num1'))))
-                ->transform(rows(schema(int_schema('a')), row(['a' => 1])), flow_context(config()))
+                ->transform(array_to_rows([['a' => 1]], schema(int_schema('a'))), flow_context(config()))
                 ->toArray(),
         );
     }
@@ -160,7 +162,7 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
                 'array',
                 new ArrayUnpack(lit(['id' => 1, 'secret' => 'dropped']), schema(int_schema('id'))),
             ))
-                ->transform(rows(schema(), row([])), flow_context(config()))
+                ->transform(array_to_rows([[]], schema()), flow_context(config()))
                 ->toArray(),
         );
     }
@@ -172,7 +174,7 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
         $result = (new ScalarFunctionTransformer(
             str_schema('array'),
             new ArrayUnpack(lit(['id' => 1, 'name' => 'Norbert']), schema(int_schema('id'), str_schema('name'))),
-        ))->transform(rows(schema(), row([])), flow_context(config()));
+        ))->transform(array_to_rows([[]], schema()), flow_context(config()));
 
         static::assertEquals([['array.id' => 1, 'array.name' => 'Norbert']], $result->toArray());
         static::assertEquals(
@@ -191,22 +193,21 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
         $nodes = type_instance_of(DOMNodeList::class)->assert($xpath->query('/root/foo'));
         $expected = [$nodes->item(0), $nodes->item(1)];
 
-        $result = (new ScalarFunctionTransformer('xpath', ref('xml')->xpath('/root/foo')))->transform(
-            rows(schema(xml_schema('xml')), row(['xml' => type_xml()->cast($xml)])),
-            flow_context(config()),
-        );
+        $result = (new ScalarFunctionTransformer('xpath', ref('xml')->xpath('/root/foo')))->transform(array_to_rows([[
+            'xml' => type_xml()->cast($xml),
+        ]], schema(xml_schema('xml'))), flow_context(config()));
 
-        static::assertEquals($expected, $result->first()->get('xpath'));
+        static::assertEquals($expected, $result->column('xpath')->value(0));
         static::assertEquals(type_list(type_xml_element()), $result->schema()->get('xpath')->type());
         static::assertTrue($result->schema()->get('xpath')->isNullable());
     }
 
     public function test_a_declared_output_definition_coerces_the_produced_value(): void
     {
-        $result = (new ScalarFunctionTransformer(str_schema('out'), ref('v')))->transform(
-            rows(schema(int_schema('v')), row(['v' => 1]), row(['v' => 2])),
-            flow_context(config()),
-        );
+        $result = (new ScalarFunctionTransformer(str_schema('out'), ref('v')))->transform(array_to_rows([
+            ['v' => 1],
+            ['v' => 2],
+        ], schema(int_schema('v'))), flow_context(config()));
 
         static::assertSame(
             [
@@ -219,25 +220,30 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
 
     public function test_the_produced_column_takes_the_declared_definition(): void
     {
-        $result = (new ScalarFunctionTransformer(str_schema('out'), ref('v')))->transform(
-            rows(schema(int_schema('v')), row(['v' => 1]), row(['v' => 2])),
-            flow_context(config()),
-        );
+        $result = (new ScalarFunctionTransformer(str_schema('out'), ref('v')))->transform(array_to_rows([
+            ['v' => 1],
+            ['v' => 2],
+        ], schema(int_schema('v'))), flow_context(config()));
 
         static::assertEquals(type_string(), $result->schema()->get('out')->type());
     }
 
     public function test_the_produced_definition_does_not_depend_on_batch_size(): void
     {
-        $wholeBatch = (new ScalarFunctionTransformer('out', ref('v')->plus(lit(1))))->transform(
-            rows(schema(int_schema('v')), row(['v' => 1]), row(['v' => 2])),
-            flow_context(config()),
-        );
+        $wholeBatch = (new ScalarFunctionTransformer('out', ref('v')->plus(lit(1))))->transform(array_to_rows([
+            ['v' => 1],
+            ['v' => 2],
+        ], schema(int_schema('v'))), flow_context(config()));
 
         $transformer = new ScalarFunctionTransformer('out', ref('v')->plus(lit(1)));
-        $single = $transformer
-            ->transform(rows(schema(int_schema('v')), row(['v' => 1])), flow_context(config()))
-            ->merge($transformer->transform(rows(schema(int_schema('v')), row(['v' => 2])), flow_context(config())));
+        $single = $transformer->transform(array_to_rows([[
+            'v' => 1,
+        ]], schema(int_schema('v'))), flow_context(config()))->concat(
+            new PhpBackend(),
+            $transformer->transform(array_to_rows([[
+                'v' => 2,
+            ]], schema(int_schema('v'))), flow_context(config())),
+        );
 
         static::assertEquals($wholeBatch->schema()->get('out'), $single->schema()->get('out'));
         static::assertEquals($wholeBatch->toArray(), $single->toArray());
@@ -248,10 +254,10 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
         $this->expectException(SchemaMismatchException::class);
         $this->expectExceptionMessage('column "out" (row 1)');
 
-        (new ScalarFunctionTransformer(int_schema('out'), ref('v')))->transform(
-            rows(schema(int_schema('v', nullable: true)), row(['v' => 1]), row(['v' => null])),
-            flow_context(config()),
-        );
+        (new ScalarFunctionTransformer(int_schema('out'), ref('v')))->transform(array_to_rows([
+            ['v' => 1],
+            ['v' => null],
+        ], schema(int_schema('v', nullable: true))), flow_context(config()));
     }
 
     public function test_a_batch_arriving_under_another_schema_than_the_bound_one_is_conformed_to_the_bound_output(): void
@@ -263,7 +269,7 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
 
         static::assertSame(
             [['id' => 1, 'name' => null, 'out' => 'x']],
-            $step->transform(rows(schema(int_schema('id')), row(['id' => 1])), flow_context(config()))->toArray(),
+            $step->transform(array_to_rows([['id' => 1]], schema(int_schema('id'))), flow_context(config()))->toArray(),
         );
     }
 
@@ -275,7 +281,7 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
         (new ScalarFunctionTransformer(
             int_schema('out'),
             new ArrayExpand(lit([1, null]), ArrayExpand\ArrayExpand::VALUES),
-        ))->transform(rows(schema(), row([])), flow_context(config()));
+        ))->transform(array_to_rows([[]], schema()), flow_context(config()));
     }
 
     public function test_an_empty_batch_is_bound_against_its_own_schema(): void
@@ -365,10 +371,10 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
                 ['id' => 'a', 'tags' => ['x', 'y'], 's' => ['tag' => 'y']],
             ],
             (new ScalarFunctionTransformer('s', structure(['tag' => ref('tags')->expand()])))
-                ->transform(
-                    rows(ListColumnsMother::tagsSchema(), row(['id' => 'a', 'tags' => ['x', 'y']])),
-                    flow_context(config()),
-                )
+                ->transform(array_to_rows([[
+                    'id' => 'a',
+                    'tags' => ['x', 'y'],
+                ]], ListColumnsMother::tagsSchema()), flow_context(config()))
                 ->toArray(),
         );
     }
@@ -384,10 +390,10 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
                 'u',
                 structure(['tag' => ref('tags')->expand()])->unpack(schema(str_schema('tag'))),
             ))
-                ->transform(
-                    rows(ListColumnsMother::tagsSchema(), row(['id' => 'a', 'tags' => ['x', 'y']])),
-                    flow_context(config()),
-                )
+                ->transform(array_to_rows([[
+                    'id' => 'a',
+                    'tags' => ['x', 'y'],
+                ]], ListColumnsMother::tagsSchema()), flow_context(config()))
                 ->toArray(),
         );
     }
@@ -420,7 +426,7 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
         );
 
         (new ScalarFunctionTransformer('v', ref('lists')->expand()->expand()))->transform(
-            rows(ListColumnsMother::schema(), ListColumnsMother::row()),
+            ListColumnsMother::rows()->matchTo(ListColumnsMother::schema(), new AdaptiveBackend()),
             flow_context(config()),
         );
     }
@@ -432,5 +438,40 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
         . ' unpacks into N columns, so returns() must be a StructureType, got "string".');
 
         (new ScalarFunctionTransformer('u', new NonStructureUnpackStub()))->bind(schema());
+    }
+
+    public function test_an_expand_explodes_every_row_of_the_batch_in_order(): void
+    {
+        $rows = array_to_rows(
+            [['id' => 1, 'list' => [1, 2]], ['id' => 2, 'list' => []], ['id' => 3, 'list' => [3]]],
+            schema(int_schema('id'), list_schema('list', type_list(type_integer()))),
+        );
+
+        static::assertSame(
+            [['id' => 1, 'value' => 1], ['id' => 1, 'value' => 2], ['id' => 3, 'value' => 3]],
+            (new ScalarFunctionTransformer('value', ref('list')->expand()))
+                ->transform($rows, flow_context())
+                ->project(schema(int_schema('id'), int_schema('value')), new AdaptiveBackend())
+                ->toArray(),
+        );
+    }
+
+    public function test_an_unpack_fills_one_column_per_declared_element_for_every_row(): void
+    {
+        $rows = array_to_rows([
+            ['s' => ['a' => 1, 'b' => 'x']],
+            ['s' => ['a' => 2, 'b' => null]],
+        ], schema(structure_schema('s', type_structure(['a' => type_integer(), 'b' => type_optional(type_string())]))));
+
+        static::assertSame(
+            [['s.a' => 1, 's.b' => 'x'], ['s.a' => 2, 's.b' => null]],
+            (new ScalarFunctionTransformer('s', ref('s')->unpack(schema(int_schema('a'), str_schema('b')))))
+                ->transform($rows, flow_context())
+                ->project(
+                    schema(int_schema('s.a', nullable: true), str_schema('s.b', nullable: true)),
+                    new AdaptiveBackend(),
+                )
+                ->toArray(),
+        );
     }
 }

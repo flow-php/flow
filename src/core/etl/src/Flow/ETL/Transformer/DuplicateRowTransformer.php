@@ -20,10 +20,8 @@ use Flow\Types\Type\Unifier\NullabilityRule;
 use Flow\Types\Type\Unifier\PromotingUnifier;
 use Throwable;
 
-use function array_key_exists;
 use function array_values;
 use function Flow\ETL\DSL\definition_from_type;
-use function Flow\ETL\DSL\rows;
 use function Flow\Types\DSL\type_equals;
 
 final class DuplicateRowTransformer implements Transformer
@@ -68,43 +66,44 @@ final class DuplicateRowTransformer implements Transformer
             $condition = $this->resolved ?? $this->resolve($rows->schema());
             $output = $this->output ?? $this->declare($rows->schema());
             $duplicated = [];
-            $sources = [];
 
-            foreach ($rows->all() as $position => $row) {
-                if ((new Parameter($condition))->asBoolean($row, $context) ?? false) {
-                    $duplicated[] = $row;
-                    $sources[$position] = true;
+            foreach ((new Parameter($condition))->asBooleans($rows, $context) as $position => $duplicate) {
+                if ($duplicate ?? false) {
+                    $duplicated[] = $position;
                 }
             }
 
             if ($duplicated !== []) {
-                // The maps inside ScalarFunctionTransformer are per-row and stateless, so applying
+                // The maps inside ScalarFunctionTransformer are column-wise and stateless, so applying
                 // each entry once over all duplicated rows is equivalent to applying it per row.
-                $duplicatedRows = rows($rows->schema(), ...$duplicated);
+                $copies = $rows->gather($duplicated);
 
                 foreach ($this->entries as $entry) {
-                    $duplicatedRows = (new ScalarFunctionTransformer($entry->name, $entry->function))->transform(
-                        $duplicatedRows,
+                    $copies = (new ScalarFunctionTransformer($entry->name, $entry->function))->transform(
+                        $copies,
                         $context,
                     );
                 }
 
-                $copies = $duplicatedRows->all();
+                $count = $rows->count();
                 $copy = 0;
                 $interleaved = [];
 
                 // each copy follows the row it duplicates, so the output does not depend on where a batch ends
-                foreach ($rows->all() as $position => $row) {
-                    $interleaved[] = $row;
+                for ($position = 0; $position < $count; $position++) {
+                    $interleaved[] = $position;
 
-                    if (array_key_exists($position, $sources)) {
-                        $interleaved[] = $copies[$copy++];
+                    if ($copy < count($duplicated) && $duplicated[$copy] === $position) {
+                        $interleaved[] = $count + $copy++;
                     }
                 }
 
-                $rows = new Rows($output, ...$interleaved);
+                $rows = $rows
+                    ->project($output, $context->backend())
+                    ->concat($context->backend(), $copies->project($output, $context->backend()))
+                    ->gather($interleaved);
             } else {
-                $rows = new Rows($output, ...$rows->all());
+                $rows = $rows->project($output, $context->backend());
             }
 
             $context->telemetry()->transformationCompleted($this, [

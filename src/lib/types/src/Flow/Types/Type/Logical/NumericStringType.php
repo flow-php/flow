@@ -7,8 +7,11 @@ namespace Flow\Types\Type\Logical;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
+use Flow\Types\Type\NonFiniteFloat;
 use Stringable;
 
+use function is_float;
+use function is_int;
 use function is_numeric;
 use function is_string;
 
@@ -40,7 +43,7 @@ final class NumericStringType implements Type
             return $value;
         }
 
-        if (is_numeric($value)) {
+        if (is_int($value) || is_float($value) && !NonFiniteFloat::is($value)) {
             return (string) $value;
         }
 

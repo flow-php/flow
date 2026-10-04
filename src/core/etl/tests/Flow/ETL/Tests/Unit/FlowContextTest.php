@@ -77,7 +77,7 @@ final class FlowContextTest extends FlowTestCase
                 'cache',
                 'calculator',
                 'errorHandler',
-                'hydrator',
+                'backend',
                 'setErrorHandler',
                 'withErrorHandler',
                 'telemetry',

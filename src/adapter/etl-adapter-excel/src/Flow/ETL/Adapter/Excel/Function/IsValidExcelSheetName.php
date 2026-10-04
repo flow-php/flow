@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Excel\Function;
 
 use Flow\ETL\Adapter\Excel\Sheet\SheetNameAssertion;
+use Flow\ETL\Column\Column;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Function\Evaluation\ResultColumn;
 use Flow\ETL\Function\FunctionTree;
 use Flow\ETL\Function\Parameter;
 use Flow\ETL\Function\ResolvesFromChildren;
 use Flow\ETL\Function\ScalarFunction;
-use Flow\ETL\Row;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Nullability;
 
@@ -53,14 +55,14 @@ final readonly class IsValidExcelSheetName implements ScalarFunction
         return (new Nullability())->any(type_boolean(), $this->sheetName->returns());
     }
 
-    public function eval(Row $row, FlowContext $context): ?bool
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $sheetName = (new Parameter($this->sheetName))->asString($row, $context);
+        $results = [];
 
-        if ($sheetName === null) {
-            return null;
+        foreach ((new Parameter($this->sheetName))->asStrings($rows, $context) as $sheetName) {
+            $results[] = $sheetName === null ? null : SheetNameAssertion::isValid($sheetName);
         }
 
-        return SheetNameAssertion::isValid($sheetName);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

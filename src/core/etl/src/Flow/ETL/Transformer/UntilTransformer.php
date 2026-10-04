@@ -17,7 +17,6 @@ use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 use Throwable;
 
-use function count;
 use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_equals;
@@ -51,27 +50,25 @@ final class UntilTransformer implements Transformer
                     TelemetryAttributes::ATTR_TRANSFORMATION_OUTPUT_ROWS => 0,
                 ]);
 
-                throw new LimitReachedException(0, new Rows($rows->schema()));
+                throw new LimitReachedException(0, Rows::empty($rows->schema(), $context->backend()));
             }
 
             // the unbound path has no plan to hold the resolved predicate, so it is memoised here -
             // until() stops the whole stream, not one batch
             $this->resolved ??= $this->resolve($rows->schema());
-            $nextRows = [];
 
-            foreach ($rows as $row) {
-                if (!$this->resolved->eval($row, $context)) {
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($this->resolved->eval($rows, $context)->physicals() as $i => $value) {
+                if (!$value) {
                     $this->limitReached = true;
 
                     $context->telemetry()->transformationCompleted($this, [
                         TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),
-                        TelemetryAttributes::ATTR_TRANSFORMATION_OUTPUT_ROWS => count($nextRows),
+                        TelemetryAttributes::ATTR_TRANSFORMATION_OUTPUT_ROWS => $i,
                     ]);
 
-                    throw new LimitReachedException(0, new Rows($rows->schema(), ...$nextRows));
+                    throw new LimitReachedException(0, $rows->slice(0, $i));
                 }
-
-                $nextRows[] = $row;
             }
 
             $context->telemetry()->transformationCompleted($this, [

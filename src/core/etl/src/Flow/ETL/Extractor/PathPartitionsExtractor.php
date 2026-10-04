@@ -7,7 +7,11 @@ namespace Flow\ETL\Extractor;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\File\FileExtractor;
+use Flow\ETL\Extractor\File\ListingPartitions;
+use Flow\ETL\Extractor\File\SourceFile;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\Filesystem\FileListing;
 use Flow\Filesystem\Filesystem;
@@ -21,8 +25,6 @@ use Generator;
 use function array_map;
 use function array_merge;
 use function array_values;
-use function count;
-use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -70,41 +72,43 @@ final class PathPartitionsExtractor implements BatchableExtractor, Extractor, Fi
     public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
     {
         $batchSize = $this->batchSize();
+        $backend = $context->backend();
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
         $schema = $this->schema();
-        $buffer = [];
+        $builder = new RowsBuilder($schema, $backend);
         $yielded = 0;
 
         foreach ((new FileListing($this->filesystem))->list($this->path, $pathFilter) as $fileStatus) {
-            $constants = $fileColumns->forFile(new SourceFile($fileStatus->path, $fileStatus->size), $schema);
-            $buffer[] = $constants->fill([
+            $builder->append([
                 'path' => $fileStatus->path->uri(),
                 'partitions' => array_merge(...array_values(array_map(static fn(Partition $p) => [
                     $p->name => $p->value,
                 ], $fileStatus->path->partitions()->toArray()))),
+                ...$fileColumns->forFile(new SourceFile($fileStatus->path, $fileStatus->size), $schema)->values(),
             ]);
 
-            if (count($buffer) < $batchSize) {
+            if ($builder->count() < $batchSize) {
                 continue;
             }
 
-            $yielded += count($buffer);
+            $rows = $builder->finish();
+            $yielded += $rows->count();
 
-            $signal = yield array_to_rows($buffer, $schema, $context->hydrator());
+            $signal = yield $rows;
 
             if ($signal === Signal::STOP) {
                 return;
             }
 
-            $buffer = [];
+            $builder = new RowsBuilder($schema, $backend);
 
             if ($limit !== null && $yielded >= $limit) {
                 return;
             }
         }
 
-        if ($buffer !== []) {
-            yield array_to_rows($buffer, $schema, $context->hydrator());
+        if ($builder->count() > 0) {
+            yield $builder->finish();
         }
     }
 

@@ -14,10 +14,6 @@ use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 use Throwable;
 
-use function array_key_exists;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
-
 /**
  * Unlike {@see SelectEntriesTransformer}, which throws when a reference is not declared by the
  * schema, prune keeps what is there and silently skips absent references - pruned rows are spilled
@@ -59,22 +55,7 @@ final readonly class PruneEntriesTransformer implements Transformer
             }
 
             $schema = $rows->schema()->keep(...$present)->reorder(...$present);
-            $newRows = [];
-
-            foreach ($rows as $row) {
-                $values = $row->values();
-                $pruned = [];
-
-                foreach ($this->refs as $ref) {
-                    if (array_key_exists($ref->name(), $values)) {
-                        $pruned[$ref->name()] = $values[$ref->name()];
-                    }
-                }
-
-                $newRows[] = row($pruned);
-            }
-
-            $result = rows($schema, ...$newRows);
+            $result = $rows->project($schema, $context->backend());
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

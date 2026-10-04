@@ -5,13 +5,19 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Fixtures\Join;
 
 use Flow\ETL\Join\Comparison;
-use Flow\ETL\Row;
+use Flow\ETL\Rows;
 
 final readonly class AlwaysMeets implements Comparison
 {
-    public function compare(Row $left, Row $right): bool
+    public function compare(Rows $left, Rows $right): array
     {
-        return true;
+        $met = [];
+
+        for ($i = 0, $count = $left->count(); $i < $count; $i++) {
+            $met[] = true;
+        }
+
+        return $met;
     }
 
     public function left(): array

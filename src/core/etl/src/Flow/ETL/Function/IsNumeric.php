@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Nullability;
 
@@ -49,14 +53,27 @@ final class IsNumeric implements ScalarFunction
         return (new Nullability())->any(type_boolean(), $this->value->returns());
     }
 
-    public function eval(Row $row, FlowContext $context): ?bool
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $value = (new Parameter($this->value))->eval($row, $context);
+        $values = (new Parameter($this->value))->values($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($value === null) {
-            return null;
+        try {
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($values as $i => $value) {
+                if ($value === null) {
+                    $results[] = null;
+
+                    continue;
+                }
+
+                $results[] = is_numeric($value);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return is_numeric($value);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

@@ -5,18 +5,21 @@ declare(strict_types=1);
 namespace Flow\Floe;
 
 use Composer\InstalledVersions;
-use Flow\ETL\Row\AdaptiveRowHydrator;
-use Flow\ETL\Row\Hydrator;
+use Flow\ETL\Column\Backend;
+use Flow\ETL\Exception\OffsetOverflow;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Schema\Validator\EvolvingValidator;
 use Flow\Filesystem\DestinationStream;
-use Flow\Floe\Codec\NoopCodec;
 use Flow\Floe\Exception\FloeException;
+use Flow\Floe\Exception\FrameTooLarge;
 use Flow\Floe\Exception\IncompatibleSchemaException;
 
 use function array_key_exists;
+use function array_shift;
+use function array_unshift;
+use function intdiv;
 use function sprintf;
 
 final class FloeStreamWriter
@@ -51,26 +54,23 @@ final class FloeStreamWriter
 
     private Schema $sessionSchema;
 
-    private ?FloeEncoder $sessionEncoder = null;
-
     private ?FrameWriter $frameWriter = null;
 
     private int $totalRows = 0;
 
-    private readonly Hydrator $hydrator;
+    private readonly FrameEncoder $frameEncoder;
 
     /**
      * @throws FloeException
      */
     public function __construct(
         Schema $schema,
+        private readonly Backend $backend,
         private readonly Options $options = new Options(),
-        ?Hydrator $hydrator = null,
-        private readonly FloeEngine $engine = FloeEngine::adaptive,
     ) {
         Format::validateCodecId($this->options->codec->id());
         $this->sessionSchema = $schema;
-        $this->hydrator = $hydrator ?? new AdaptiveRowHydrator();
+        $this->frameEncoder = new FrameEncoder($this->options->codec);
     }
 
     /**
@@ -154,26 +154,46 @@ final class FloeStreamWriter
             return;
         }
 
-        $this->openSession();
-        $this->assertBatchFitsSession($rows->schema());
+        $matched = $rows;
 
-        $matched = $rows->schema()->isSame($this->sessionSchema) ? $rows : $rows->matchTo($this->sessionSchema);
-
-        if ($this->options->codec instanceof NoopCodec) {
-            $frames = $this->sessionEncoder()->encodeFrames($matched, $this->hydrator);
-
-            $this->startSectionWhenDue();
-            $this->frameWriter()->raw($frames);
-            $this->sectionRowCount += $matched->count();
-            $this->totalRows += $matched->count();
-
-            return;
+        if (!$rows->schema()->isSame($this->sessionSchema)) {
+            $this->assertBatchFitsSession($rows->schema());
+            $matched = $rows->matchTo($this->sessionSchema, $this->backend);
         }
 
-        $typed = $this->hydrator->dehydrate($matched);
+        $bodies = [];
+        $parts = [[$matched, 0]];
+
+        while ($parts !== []) {
+            [$part, $start] = array_shift($parts);
+
+            try {
+                $bodies[] = [$this->frameEncoder->encode($part), $part->count()];
+            } catch (OffsetOverflow|FrameTooLarge $e) {
+                if ($part->count() === 1) {
+                    $message = sprintf('%s (row %d)', $e->getMessage(), $start);
+
+                    throw $e instanceof OffsetOverflow
+                        ? new OffsetOverflow($message, 0, $e)
+                        : new FrameTooLarge($message, 0, $e);
+                }
+
+                $half = intdiv($part->count(), 2);
+                array_unshift(
+                    $parts,
+                    [$part->slice(0, $half), $start],
+                    [$part->slice($half, $part->count() - $half), $start + $half],
+                );
+            }
+        }
 
         $this->startSectionWhenDue();
-        $this->emitBatch($typed);
+
+        foreach ($bodies as [$body, $count]) {
+            $this->frameWriter()->frame(Format::FRAME_BATCH, $body);
+            $this->sectionRowCount += $count;
+            $this->totalRows += $count;
+        }
     }
 
     public static function writerVersion(): string
@@ -184,18 +204,6 @@ final class FloeStreamWriter
     }
 
     /**
-     * @throws FloeException
-     */
-    private function openSession(): void
-    {
-        if ($this->sessionEncoder !== null) {
-            return;
-        }
-
-        $this->sessionEncoder = $this->engine->encoder($this->sessionSchema);
-    }
-
-    /**
      * @throws IncompatibleSchemaException
      */
     private function assertBatchFitsSession(Schema $batch): void
@@ -203,7 +211,7 @@ final class FloeStreamWriter
         $definitions = $this->sessionSchema->definitions();
 
         // unconditional, and before the validator: EvolvingValidator admits a nullable extra column,
-        // which the session encoder would then drop - silent column loss is not unlockable here
+        // which the session schema cannot carry
         foreach ($batch->definitions() as $name => $_) {
             if (!array_key_exists($name, $definitions)) {
                 throw new IncompatibleSchemaException(sprintf(self::BATCH_MISMATCH, sprintf('new column "%s"', $name)));
@@ -214,20 +222,6 @@ final class FloeStreamWriter
 
         if (!$validation->isValid()) {
             throw new IncompatibleSchemaException(sprintf(self::BATCH_MISMATCH, $validation->toString()));
-        }
-    }
-
-    /**
-     * @param list<\Flow\ETL\Row\TypedRowValues> $typed
-     *
-     * @throws FloeException
-     */
-    private function emitBatch(array $typed): void
-    {
-        foreach ($this->sessionEncoder()->encode($typed) as $encoded) {
-            $this->frameWriter()->row($this->options->codec->encode($encoded));
-            $this->sectionRowCount++;
-            $this->totalRows++;
         }
     }
 
@@ -280,14 +274,6 @@ final class FloeStreamWriter
         $this->sectionOffset = $this->frameWriter()->position();
         $this->sectionOpen = true;
         $this->sectionRowCount = 0;
-    }
-
-    /**
-     * @throws FloeException
-     */
-    private function sessionEncoder(): FloeEncoder
-    {
-        return $this->sessionEncoder ?? throw new FloeException('Floe writer has no active session encoder');
     }
 
     /**

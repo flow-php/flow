@@ -70,8 +70,9 @@ final class ArrayMemoryTest extends FlowTestCase
         $memory = new ArrayMemory();
         $memory->save([['id' => 1], ['id' => 2]]);
         $memory->save([['id' => 3], ['id' => 4]]);
+        $memory->save([['id' => 5]]);
 
-        static::assertSame([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4]], $memory->dump());
-        static::assertcount(4, $memory);
+        static::assertSame([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]], $memory->dump());
+        static::assertcount(5, $memory);
     }
 }

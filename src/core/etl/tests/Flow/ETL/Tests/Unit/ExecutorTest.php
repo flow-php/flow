@@ -23,30 +23,74 @@ use Flow\ETL\Tests\Double\PlanDrainingTransformer;
 use Flow\ETL\Tests\Double\RecordingExtractor;
 use Flow\ETL\Tests\Double\RecordingFileExtractor;
 use Flow\ETL\Tests\Double\RecordingRule;
+use Flow\ETL\Tests\Double\SpyColumn;
 use Flow\ETL\Tests\Double\SpyLoader;
 use Flow\ETL\Tests\Double\ThrowingTransformer;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\NodeMother;
+use Flow\ETL\Tests\Mother\PhysicalPlanMother;
 use Flow\ETL\Tests\Mother\RowsMother;
 use Flow\ETL\Transformer\LimitTransformer;
 use Flow\ETL\Transformer\RenameEntryTransformer;
 use Flow\Filesystem\Tests\Double\RejectingFilter;
 use RuntimeException;
 
+use function array_filter;
+use function array_keys;
 use function array_map;
 use function array_sum;
+use function array_values;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function iterator_to_array;
 
 final class ExecutorTest extends FlowTestCase
 {
+    public function test_merge_concatenates_the_batches_once(): void
+    {
+        $calls = new ArrayObject();
+        $schema = schema(int_schema('id'));
+        $batches = (static function () use ($schema, $calls) {
+            foreach ([[1], [2], [3], [4], [5]] as $ids) {
+                $column = array_to_rows([['id' => $ids[0]]], $schema)->column('id');
+
+                yield Rows::fromColumns($schema, ['id' => new SpyColumn($column, $calls)], 1);
+            }
+        })();
+
+        $merged = (new Executor())->merge($batches, PhysicalPlanMother::reading(from_array([])));
+
+        static::assertSame([1, 2, 3, 4, 5], $merged->reduceToArray('id'));
+        static::assertSame(
+            ['concat'],
+            array_values(array_filter($calls->getArrayCopy(), static fn(string $call): bool => $call === 'concat')),
+        );
+    }
+
+    public function test_merge_of_empty_batches_keeps_the_last_batch(): void
+    {
+        $batches = (static function () {
+            yield array_to_rows([], schema(int_schema('id')));
+            yield array_to_rows([], schema(int_schema('other')));
+        })();
+
+        static::assertSame(
+            ['other'],
+            array_keys(
+                (new Executor())
+                    ->merge($batches, PhysicalPlanMother::reading(from_array([])))
+                    ->schema()
+                    ->definitions(),
+            ),
+        );
+    }
+
     public function test_a_single_pipeline_runs_its_segments_in_order(): void
     {
         $segments = new Segments(from_rows(RowsMother::sequentialIds(3)));
@@ -241,7 +285,7 @@ final class ExecutorTest extends FlowTestCase
         );
         $batches = (static function () {
             yield RowsMother::sequentialIds(1);
-            yield rows(schema(int_schema('id')), row(['id' => 2]));
+            yield array_to_rows([['id' => 2]], schema(int_schema('id')));
         })();
 
         static::assertSame(
@@ -351,8 +395,8 @@ final class ExecutorTest extends FlowTestCase
     {
         $plan = NodeMother::plan(NodeMother::limit(
             NodeMother::read(from_rows(
-                rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])),
-                rows(schema(int_schema('id')), row(['id' => 3]), row(['id' => 4])),
+                array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))),
+                array_to_rows([['id' => 3], ['id' => 4]], schema(int_schema('id'))),
             )),
             3,
         ));
@@ -449,8 +493,8 @@ final class ExecutorTest extends FlowTestCase
         $telemetry = new MemoryTelemetryContext();
         $generator = ExecutedPlan::of(
             NodeMother::plan(NodeMother::read(from_rows(
-                rows(schema(int_schema('id')), row(['id' => 1])),
-                rows(schema(int_schema('id')), row(['id' => 2])),
+                array_to_rows([['id' => 1]], schema(int_schema('id'))),
+                array_to_rows([['id' => 2]], schema(int_schema('id'))),
             ))),
             $telemetry->flowContext,
         );

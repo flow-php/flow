@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Join;
 
 use Flow\ETL\Bucketing\Buckets;
+use Flow\ETL\Bucketing\Storage\SpillingBuckets;
 use Flow\ETL\Config;
 use Flow\ETL\Config\Join\JoinAlgorithmBuilder;
 use Flow\ETL\Executor\PhysicalPlan;
@@ -26,7 +27,7 @@ final readonly class JoinSteps
         Config $config,
         ?JoinAlgorithmBuilder $algorithm = null,
     ): array {
-        $join = $algorithm?->build($config->cache->localFilesystemCacheDir) ?? $config->join;
+        $join = $algorithm?->build($config->cache->localFilesystemCacheDir, $config->backend()) ?? $config->join;
 
         return [
             new HashJoinProcessor(
@@ -34,9 +35,10 @@ final readonly class JoinSteps
                 $config->executor(),
                 $on,
                 $type,
-                new Buckets($join->bucketing->storage),
-                new Buckets($join->bucketing->storage),
+                new Buckets(SpillingBuckets::around($join->bucketing, $join->memoryLimit, $config->backend())),
+                new Buckets(SpillingBuckets::around($join->bucketing, $join->memoryLimit, $config->backend())),
                 $config->randomValueGenerator(),
+                $join->memoryLimit,
                 $join->bucketing->bucketsCount,
                 $join->bucketing->batchSize,
             ),

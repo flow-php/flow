@@ -20,4 +20,4 @@ data_frame()
     ->write(to_array($array))
     ->run();
 
-\var_dump($array, true);
+\var_dump($array);

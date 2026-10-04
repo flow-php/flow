@@ -6,17 +6,16 @@ namespace Flow\ETL\Tests\Integration\Bucketing\Storage;
 
 use Exception;
 use Flow\ETL\Bucketing\Storage\PSRCacheBuckets;
-use Flow\ETL\Row;
+use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Tests\Context\BucketsStorageContext;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\Floe\FloeSerializer;
 use Override;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
 use Symfony\Component\Cache\Psr16Cache;
 
-use function array_map;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function getenv;
 
@@ -47,14 +46,15 @@ final class PSRCacheBucketsTest extends FlowIntegrationTestCase
             'timeout' => 5,
         ])));
 
-        $storage = new PSRCacheBuckets($cache, prefix: 'flow:buckets:test:round_trip');
-        $storage->append('bucket', rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2])));
-        $storage->append('bucket', rows(schema(int_schema('id')), row(['id' => 3])));
-
-        static::assertSame(
-            [1, 2, 3],
-            array_map(static fn(Row $r): mixed => $r->get('id'), BucketsStorageContext::rows($storage->get('bucket'))),
+        $storage = new PSRCacheBuckets(
+            $cache,
+            new FloeSerializer(new AdaptiveBackend()),
+            prefix: 'flow:buckets:test:round_trip',
         );
+        $storage->append('bucket', array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))));
+        $storage->append('bucket', array_to_rows([['id' => 3]], schema(int_schema('id'))));
+
+        static::assertSame([1, 2, 3], array_column(BucketsStorageContext::rows($storage->get('bucket')), 'id'));
 
         $storage->remove('bucket');
 

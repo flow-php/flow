@@ -8,10 +8,12 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Batches;
-use Flow\ETL\Extractor\FileExtractor;
-use Flow\ETL\Extractor\FileReading;
-use Flow\ETL\Extractor\ListedFiles;
-use Flow\ETL\Extractor\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\File\FileExtractor;
+use Flow\ETL\Extractor\File\FileReading;
+use Flow\ETL\Extractor\File\FileReadLoop;
+use Flow\ETL\Extractor\File\ListedFiles;
+use Flow\ETL\Extractor\File\MetadataColumnsExtractor;
+use Flow\ETL\Extractor\File\ReadWindow;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
@@ -25,9 +27,10 @@ use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Generator;
 
-use function count;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function implode;
+use function iterator_to_array;
 use function sprintf;
 
 final class TextExtractor implements
@@ -73,69 +76,18 @@ final class TextExtractor implements
      */
     public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
     {
-        $hydrator = $context->hydrator();
-        $batchSize = $this->batchSize();
-        $yielded = 0;
-        $encoder = new TextEncoder();
-
-        $baseSchema = $this->schema ?? schema(str_schema('text'));
-
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
-        $schema = $fileColumns->declare($baseSchema);
-        $body = $fileColumns->withoutTail($schema);
 
-        foreach ($this->sourceFiles($this->filesystem, $this->path, $pathFilter) as $source) {
-            $stream = $this->filesystem->readFrom($source->path);
-
-            try {
-                $constants = $fileColumns->forFile($source, $schema);
-
-                $rawLines = [];
-
-                foreach ($stream->readLines() as $line) {
-                    $rawLines[] = $line;
-
-                    if (count($rawLines) >= $batchSize) {
-                        $hydrated = $constants->fillRows(
-                            $hydrator->hydrate($encoder->decode($rawLines), $body),
-                            $schema,
-                        );
-
-                        $rawLines = [];
-
-                        $yielded += $hydrated->count();
-
-                        $signal = yield $hydrated;
-
-                        if ($signal === Signal::STOP) {
-                            return;
-                        }
-
-                        if ($limit !== null && $yielded >= $limit) {
-                            return;
-                        }
-                    }
-                }
-
-                if ($rawLines !== []) {
-                    $hydrated = $constants->fillRows($hydrator->hydrate($encoder->decode($rawLines), $body), $schema);
-
-                    $yielded += $hydrated->count();
-
-                    $signal = yield $hydrated;
-
-                    if ($signal === Signal::STOP) {
-                        return;
-                    }
-
-                    if ($limit !== null && $yielded >= $limit) {
-                        return;
-                    }
-                }
-            } finally {
-                $stream->close();
-            }
-        }
+        yield from (new FileReadLoop(
+            $fileColumns,
+            $fileColumns->declare($this->schema ?? schema(str_schema('text'))),
+        ))->read(
+            iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $pathFilter), false),
+            new TextFileBatches($this->filesystem),
+            $this->batchSize(),
+            $context->backend(),
+            new ReadWindow(limit: $limit),
+        );
     }
 
     public function schema(): Schema
@@ -160,8 +112,18 @@ final class TextExtractor implements
         return new Statistics(size: $this->listed->bytes);
     }
 
+    /**
+     * @throws InvalidArgumentException when $schema has no "text" column, the one the lines are read into
+     */
     public function withSchema(Schema $schema): static
     {
+        if ($schema->findDefinition('text') === null) {
+            throw new InvalidArgumentException(sprintf('from_text() reads every line into the "text" column, the schema declares no such column: %s', implode(
+                ', ',
+                $schema->references()->names(),
+            )));
+        }
+
         $this->schema = $schema;
 
         return $this;

@@ -15,6 +15,7 @@ use Flow\ETL\Tests\Double\DeclaringExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_all;
@@ -23,7 +24,6 @@ use function Flow\ETL\DSL\from_data_frame;
 use function Flow\ETL\DSL\from_memory;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -36,8 +36,8 @@ final class ChainExtractorTest extends FlowTestCase
         static::assertEquals(
             schema(int_schema('id', true), str_schema('name', true)),
             from_all(
-                from_rows(rows(schema(int_schema('id')), row(['id' => 1]))),
-                from_data_frame(df()->read(from_rows(rows(schema(str_schema('name')), row(['name' => 'a']))))),
+                from_rows(array_to_rows([['id' => 1]], schema(int_schema('id')))),
+                from_data_frame(df()->read(from_rows(array_to_rows([['name' => 'a']], schema(str_schema('name')))))),
             )->schema(),
         );
     }
@@ -63,8 +63,8 @@ final class ChainExtractorTest extends FlowTestCase
 
             public function extract(FlowContext $context, ?int $limit = null): Generator
             {
-                yield rows(schema(int_schema('id')), row(['id' => 1]));
-                yield rows(schema(int_schema('id')), row(['id' => 2]));
+                yield array_to_rows([['id' => 1]], schema(int_schema('id')));
+                yield array_to_rows([['id' => 2]], schema(int_schema('id')));
             }
 
             public function statistics(): Statistics
@@ -84,8 +84,8 @@ final class ChainExtractorTest extends FlowTestCase
 
             public function extract(FlowContext $context, ?int $limit = null): Generator
             {
-                yield rows(schema(int_schema('id')), row(['id' => 3]));
-                yield rows(schema(int_schema('id')), row(['id' => 4]));
+                yield array_to_rows([['id' => 3]], schema(int_schema('id')));
+                yield array_to_rows([['id' => 4]], schema(int_schema('id')));
             }
 
             public function statistics(): Statistics
@@ -95,14 +95,14 @@ final class ChainExtractorTest extends FlowTestCase
         });
 
         self::assertExtractedRowsEquals(
-            rows(schema(int_schema('id')), row(['id' => 1]), row(['id' => 2]), row(['id' => 3]), row(['id' => 4])),
+            array_to_rows([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4]], schema(int_schema('id'))),
             $extractor,
         );
     }
 
     public function test_with_schema_does_not_leak_into_a_second_pipeline(): void
     {
-        $child = from_rows(rows(schema(int_schema('id')), row(['id' => 1])));
+        $child = from_rows(array_to_rows([['id' => 1]], schema(int_schema('id'))));
 
         iterator_to_array(
             from_all($child)
@@ -120,7 +120,7 @@ final class ChainExtractorTest extends FlowTestCase
 
     public function test_is_repeatable(): void
     {
-        static::assertTrue(from_all(from_rows(rows(schema(int_schema('id')), row(['id' => 1]))))->isRepeatable());
+        static::assertTrue(from_all(from_rows(array_to_rows([['id' => 1]], schema(int_schema('id')))))->isRepeatable());
     }
 
     public function test_it_sums_the_statistics_of_its_children(): void

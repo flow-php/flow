@@ -46,7 +46,9 @@ jobs:
           extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib'
           cache-key-suffix: "-locked-phar"
           apt-packages: "build-essential autoconf automake libtool protobuf-compiler libprotobuf-c-dev"
-          pie-extensions: "flow-php/pg-query-ext:1.x-dev"
+
+      - name: "Build pg-query-ext from source"
+        uses: "./.github/actions/pg-query-ext"
 
       - name: "Build PHAR file"
         run: "just phar"
@@ -116,10 +118,12 @@ jobs:
           extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib'
           cache-key-suffix: "-website-phar"
           apt-packages: "build-essential autoconf automake libtool protobuf-compiler libprotobuf-c-dev"
-          pie-extensions: "flow-php/pg-query-ext:1.x-dev"
           extra-working-directory: "web/landing"
           extra-cache-key-suffix: "-website"
           extra-composer-file: "web/landing/composer.lock"
+
+      - name: "Build pg-query-ext from source"
+        uses: "./.github/actions/pg-query-ext"
 
       - name: "Generate documentation"
         run: "just docs"

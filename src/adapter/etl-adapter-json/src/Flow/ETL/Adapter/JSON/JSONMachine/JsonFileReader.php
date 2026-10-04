@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\JSONMachine;
 
-use Flow\ETL\Extractor\SourceFile;
-use Flow\ETL\Row\RawRowValues;
+use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Extractor\File\SourceFile;
 use Flow\ETL\Schema\Inference\SchemaSampler;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\SourceStream;
@@ -15,9 +15,11 @@ use JsonMachine\JsonDecoder\ExtJsonDecoder;
 use LimitIterator;
 
 use function count;
+use function get_debug_type;
 use function is_array;
 use function iterator_to_array;
 use function json_decode;
+use function sprintf;
 use function strlen;
 use function trim;
 
@@ -57,7 +59,7 @@ final readonly class JsonFileReader implements SchemaSampler
      *
      * @param int<1, max> $batchSize
      *
-     * @return Generator<int, non-empty-list<RawRowValues>>
+     * @return Generator<int, non-empty-list<array<array-key, mixed>>>
      */
     public function batches(SourceFile $source, int $batchSize): Generator
     {
@@ -94,8 +96,8 @@ final readonly class JsonFileReader implements SchemaSampler
     /**
      * A 0-byte stream is no JSON text and yields nothing
      *
-     * A member is `mixed`, not an array: a document whose elements are scalars decodes to scalars, which reach
-     * count() in sample() and raise a TypeError - bug b79.
+     * A member is `mixed`, not an array: a document whose elements are scalars decodes to scalars, which sample()
+     * refuses.
      *
      * @return Generator<mixed, mixed>
      */
@@ -157,7 +159,7 @@ final readonly class JsonFileReader implements SchemaSampler
      * The pointer wrap and the empty-record skip live here and nowhere else, so the sample and the read see the
      * same rows.
      *
-     * @return Generator<int, RawRowValues>
+     * @return Generator<int, array<array-key, mixed>>
      */
     public function sample(SourceFile $source, JsonReadBytes $read = new JsonReadBytes()): Generator
     {
@@ -169,10 +171,18 @@ final readonly class JsonFileReader implements SchemaSampler
                 JsonFormat::Lines => $this->lineItems($stream, $read),
             };
 
-            /** @var array<string, mixed> $row */
+            // @mago-ignore analysis:mixed-assignment
             foreach ($items as $row) {
                 if ($this->pointer !== null && $this->pointerToEntryName) {
                     $row = [$this->pointer => $row];
+                }
+
+                if (!is_array($row)) {
+                    throw new RuntimeException(sprintf(
+                        'A JSON record must be an object or an array, %s given in "%s".',
+                        get_debug_type($row),
+                        $source->uri(),
+                    ));
                 }
 
                 // {} decodes to []: a record with no fields is skipped - bug b80
@@ -180,7 +190,7 @@ final readonly class JsonFileReader implements SchemaSampler
                     continue;
                 }
 
-                yield new RawRowValues($row);
+                yield $row;
             }
         } finally {
             $stream->close();

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Schema\Inference;
 
-use Flow\ETL\Row\RawRowValues;
 use Flow\ETL\Schema;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\OptionalType;
@@ -92,12 +91,12 @@ final class ColumnTypes
     }
 
     /**
-     * RawRowValues::$metadata is not read: the fold types columns, metadata is folded by the hydrator per batch.
+     * @param array<array-key, mixed> $row
      */
-    public function observe(RawRowValues $row): void
+    public function observe(array $row): void
     {
         /** @var mixed $value */
-        foreach ($row->values as $name => $value) {
+        foreach ($row as $name => $value) {
             $current = array_key_exists($name, $this->types) ? $this->types[$name] : null;
 
             if (

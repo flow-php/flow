@@ -7,7 +7,7 @@ namespace Flow\CLI\Factory;
 use Flow\CLI\Options\FileFormat;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Loader;
-use Flow\ETL\Loader\FileLoader;
+use Flow\ETL\Loader\File\FileLoader;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
 

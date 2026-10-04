@@ -62,7 +62,7 @@ final class UnixPathTest extends PathTestCase
         $path = new UnixPath('/path/to/file.txt');
 
         static::assertEquals('/path/to/file.txt', $path->path());
-        static::assertEquals('file://path/to/file.txt', $path->uri());
+        static::assertEquals('file:///path/to/file.txt', $path->uri());
         static::assertEquals('file.txt', $path->basename());
         static::assertEquals('file', $path->filename());
         static::assertEquals('txt', $path->extension());
@@ -414,8 +414,8 @@ final class UnixPathTest extends PathTestCase
         $partitionPaths = $path->partitionsPaths();
 
         static::assertCount(2, $partitionPaths);
-        static::assertEquals('file://country=US', $partitionPaths[0]->uri());
-        static::assertEquals('file://country=US/region=west', $partitionPaths[1]->uri());
+        static::assertEquals('file:///country=US', $partitionPaths[0]->uri());
+        static::assertEquals('file:///country=US/region=west', $partitionPaths[1]->uri());
     }
 
     public function test_partitions_paths_without_partitions(): void
@@ -563,7 +563,7 @@ final class UnixPathTest extends PathTestCase
 
         static::assertSame('file', $path->protocol());
         static::assertSame('/private/tmp/foo.txt', $path->path());
-        static::assertSame('file://private/tmp/foo.txt', $path->uri());
+        static::assertSame('file:///private/tmp/foo.txt', $path->uri());
     }
 
     public function test_realpath_with_non_file_scheme(): void
@@ -584,7 +584,7 @@ final class UnixPathTest extends PathTestCase
         $path = new UnixPath('relative/path/file.txt');
 
         static::assertEquals('/relative/path/file.txt', $path->path());
-        static::assertEquals('file://relative/path/file.txt', $path->uri());
+        static::assertEquals('file:///relative/path/file.txt', $path->uri());
     }
 
     public function test_root_directory_cases(): void
@@ -614,7 +614,7 @@ final class UnixPathTest extends PathTestCase
         $partitioned = $path->addPartitions(partition('group', 'a'));
 
         static::assertEquals('/group=a/file.txt', $partitioned->path());
-        static::assertEquals('file://group=a/file.txt', $partitioned->uri());
+        static::assertEquals('file:///group=a/file.txt', $partitioned->uri());
     }
 
     public function test_set_extension_without_existing_extension(): void
@@ -647,11 +647,11 @@ final class UnixPathTest extends PathTestCase
 
         $skipped1 = $path->skipDirectories(1);
         static::assertNotNull($skipped1);
-        static::assertEquals('file://www/index.html', $skipped1->uri());
+        static::assertEquals('file:///www/index.html', $skipped1->uri());
 
         $skipped2 = $path->skipDirectories(2);
         static::assertNotNull($skipped2);
-        static::assertEquals('file://index.html', $skipped2->uri());
+        static::assertEquals('file:///index.html', $skipped2->uri());
 
         $skipped3 = $path->skipDirectories(3);
         static::assertNull($skipped3);
@@ -721,6 +721,25 @@ final class UnixPathTest extends PathTestCase
     {
         $path = new UnixPath('/path/file.txt');
 
-        static::assertEquals('file://path/file.txt', $path->uri());
+        static::assertEquals('file:///path/file.txt', $path->uri());
+    }
+
+    public function test_uri_of_a_file_path_reads_back_as_the_same_path(): void
+    {
+        $path = new UnixPath('/path/file.txt');
+
+        static::assertSame('/path/file.txt', (new UnixPath($path->uri()))->path());
+        static::assertSame('file:///path/file.txt', (new UnixPath($path->uri()))->uri());
+    }
+
+    public function test_uri_of_the_root_directory(): void
+    {
+        static::assertSame('file:///', (new UnixPath('/'))->uri());
+    }
+
+    public function test_uri_of_a_non_file_protocol_has_no_leading_slash(): void
+    {
+        static::assertSame('memory://path/file.txt', (new UnixPath('memory://path/file.txt'))->uri());
+        static::assertSame('s3://bucket/key.txt', (new UnixPath('s3://bucket/key.txt'))->uri());
     }
 }

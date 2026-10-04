@@ -4,18 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Rows;
 use Flow\ETL\Window;
 use Flow\ETL\Window\Accumulator\CountAccumulator;
 use Flow\ETL\Window\FrameAccumulator;
 use Flow\ETL\Window\WindowContext;
 use Flow\Types\Type;
 
+use function count;
 use function Flow\Types\DSL\type_integer;
+use function sprintf;
 
 final class Count implements AggregatingFunction, FrameAccumulating, WindowFunction
 {
@@ -70,16 +73,22 @@ final class Count implements AggregatingFunction, FrameAccumulating, WindowFunct
         return new self($children[0], $this->window);
     }
 
-    public function aggregate(Row $row, FlowContext $context): void
+    public function aggregate(Rows $rows, array $indices, FlowContext $context): void
     {
-        if ($this->ref !== null && !$row->has($this->ref)) {
+        if ($this->ref !== null && $rows->schema()->findDefinition($this->ref->base()) === null) {
             return;
         }
 
-        if ($this->ref) {
-            $row->get($this->ref);
+        $this->count += count($indices);
+    }
+
+    public function merge(AggregatingFunction $other, FlowContext $context): void
+    {
+        if (!$other instanceof self) {
+            throw new InvalidArgumentException(sprintf('%s cannot merge %s', self::class, $other::class));
         }
-        $this->count++;
+
+        $this->count += $other->count;
     }
 
     public function accumulator(FlowContext $context): FrameAccumulator
@@ -95,8 +104,10 @@ final class Count implements AggregatingFunction, FrameAccumulating, WindowFunct
 
         $accumulator = $this->accumulator($window->flowContext());
 
-        foreach ($window->frame() as $frameRow) {
-            $accumulator->accumulate($frameRow);
+        $frame = $window->frame();
+
+        for ($index = 0, $count = $frame->count(); $index < $count; $index++) {
+            $accumulator->accumulate($frame, $index);
         }
 
         return $accumulator->value();

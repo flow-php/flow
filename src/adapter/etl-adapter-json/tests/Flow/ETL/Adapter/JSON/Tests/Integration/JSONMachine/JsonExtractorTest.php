@@ -16,6 +16,8 @@ use Flow\ETL\Schema\Definition\StringDefinition;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Context\MemoryFiles;
 use Flow\ETL\Tests\Double\CountingFilesystem;
+use Flow\ETL\Tests\Double\RecordingFilesystem;
+use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Generator;
@@ -24,8 +26,10 @@ use PHPUnit\Framework\Attributes\TestWith;
 
 use function array_keys;
 use function array_sum;
+use function count;
 use function Flow\ETL\Adapter\JSON\from_json;
 use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
@@ -67,7 +71,7 @@ final class JsonExtractorTest extends FlowTestCase
             ->read(from_json(__DIR__ . '/../../Fixtures/timezones.json')->withMetadataColumns(true))
             ->fetch();
 
-        foreach ($rows as $row) {
+        foreach ($rows->toArray() as $row) {
             static::assertSame(
                 [
                     'timezones',
@@ -77,7 +81,7 @@ final class JsonExtractorTest extends FlowTestCase
                     'capital',
                     '_input_file_uri',
                 ],
-                array_keys($row->toArray()),
+                array_keys($row),
             );
         }
 
@@ -90,7 +94,7 @@ final class JsonExtractorTest extends FlowTestCase
             ->read(from_json(__DIR__ . '/../../Fixtures/nested_timezones.json')->withPointer('/timezones', true))
             ->fetch();
 
-        foreach ($rows as $row) {
+        foreach ($rows->toArray() as $row) {
             static::assertSame(
                 [
                     'timezones',
@@ -99,7 +103,7 @@ final class JsonExtractorTest extends FlowTestCase
                     'country_code',
                     'capital',
                 ],
-                array_keys(type_array()->assert($row->get('/timezones'))),
+                array_keys(type_array()->assert($row['/timezones'])),
             );
         }
 
@@ -115,7 +119,7 @@ final class JsonExtractorTest extends FlowTestCase
             ))
             ->fetch();
 
-        foreach ($rows as $row) {
+        foreach ($rows->toArray() as $row) {
             static::assertSame(
                 [
                     'timezones',
@@ -124,7 +128,7 @@ final class JsonExtractorTest extends FlowTestCase
                     'country_code',
                     'capital',
                 ],
-                array_keys($row->toArray()),
+                array_keys($row),
             );
         }
 
@@ -148,7 +152,7 @@ final class JsonExtractorTest extends FlowTestCase
         $total = 0;
 
         foreach ($extractor->extract(flow_context(config())) as $rows) {
-            foreach ($rows->all() as $row) {
+            foreach ($rows->toArray() as $row) {
                 static::assertSame(
                     [
                         'timezones',
@@ -157,7 +161,7 @@ final class JsonExtractorTest extends FlowTestCase
                         'country_code',
                         'capital',
                     ],
-                    array_keys($row->toArray()),
+                    array_keys($row),
                 );
             }
             $total += $rows->count();
@@ -686,5 +690,38 @@ final class JsonExtractorTest extends FlowTestCase
         $extractor->statistics();
 
         static::assertSame(1, $filesystem->listCalls);
+    }
+
+    public function test_extract_builds_through_the_config_backend(): void
+    {
+        $backend = new SpyBackend();
+
+        iterator_to_array(
+            from_json(__DIR__ . '/../../Fixtures/timezones.json')->extract(
+                flow_context(config_builder()->backend($backend)->build()),
+            ),
+            false,
+        );
+
+        static::assertGreaterThanOrEqual(1, $backend->builders() + $backend->adopts());
+    }
+
+    public function test_one_extractor_read_twice_interleaved_gives_each_read_every_row_and_closes_every_stream(): void
+    {
+        $filesystem = new RecordingFilesystem(MemoryFiles::with([
+            'memory://in/a.json' => '[{"id":1},{"id":2}]',
+            'memory://in/b.json' => '[{"id":3}]',
+        ]));
+        [$first, $second] = ExtractedRows::interleaved(from_json(
+            path('memory://in/*.json'),
+            filesystem: $filesystem,
+        )->withBatchSize(1));
+
+        static::assertSame([['id' => 1], ['id' => 2], ['id' => 3]], $first->toArray());
+        static::assertSame($first->toArray(), $second->toArray());
+        static::assertSame(
+            count(array_keys($filesystem->calls, 'readFrom', true)),
+            count(array_keys($filesystem->calls, 'closeSource', true)),
+        );
     }
 }

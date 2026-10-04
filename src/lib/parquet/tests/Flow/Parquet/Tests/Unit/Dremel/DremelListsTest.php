@@ -102,7 +102,7 @@ final class DremelListsTest extends TestCase
         static::assertEquals(3, $schema->get('l.list.element')->repetitions()->maxDefinitionLevel());
         static::assertEquals(1, $schema->get('l.list.element')->repetitions()->maxRepetitionLevel());
 
-        $result = $shredder->shred($schema, $rows);
+        $result = $shredder->shred($schema, $rows, 0);
 
         $normalized = [];
 
@@ -267,7 +267,7 @@ final class DremelListsTest extends TestCase
         static::assertEquals(5, $schema->get('l.list.element.list.element')->repetitions()->maxDefinitionLevel());
         static::assertEquals(2, $schema->get('l.list.element.list.element')->repetitions()->maxRepetitionLevel());
 
-        $result = $shredder->shred($schema, $rows);
+        $result = $shredder->shred($schema, $rows, 0);
 
         $normalized = [];
 
@@ -387,7 +387,7 @@ final class DremelListsTest extends TestCase
             $schema->get('l.list.element.list.element.key_value.value')->repetitions()->maxRepetitionLevel(),
         );
 
-        $result = $shredder->shred($schema, $rows);
+        $result = $shredder->shred($schema, $rows, 0);
 
         $normalized = [];
 
@@ -586,7 +586,7 @@ final class DremelListsTest extends TestCase
                 ->maxRepetitionLevel(),
         );
 
-        $result = $shredder->shred($schema, $rows);
+        $result = $shredder->shred($schema, $rows, 0);
 
         $normalized = [];
 
@@ -701,7 +701,7 @@ final class DremelListsTest extends TestCase
             $schema->get('l.list.element.list.element.string')->repetitions()->maxRepetitionLevel(),
         );
 
-        $result = $shredder->shred($schema, $rows);
+        $result = $shredder->shred($schema, $rows, 0);
 
         $normalized = [];
 
@@ -925,9 +925,9 @@ final class DremelListsTest extends TestCase
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
 
-            $shredder->shred($schema, $rows);
+            $shredder->shred($schema, $rows, 0);
         } else {
-            $result = $shredder->shred($schema, $rows);
+            $result = $shredder->shred($schema, $rows, 0);
 
             $normalized = [];
 
@@ -1097,7 +1097,7 @@ final class DremelListsTest extends TestCase
         static::assertEquals(6, $schema->get('l.list.element.l.list.element')->repetitions()->maxDefinitionLevel());
         static::assertEquals(2, $schema->get('l.list.element.l.list.element')->repetitions()->maxRepetitionLevel());
 
-        $result = $shredder->shred($schema, $rows);
+        $result = $shredder->shred($schema, $rows, 0);
 
         $readFlatValues = [];
 
@@ -1236,7 +1236,7 @@ final class DremelListsTest extends TestCase
         static::assertEquals(6, $schema->get('l.list.element.m.key_value.value')->repetitions()->maxDefinitionLevel());
         static::assertEquals(2, $schema->get('l.list.element.m.key_value.value')->repetitions()->maxRepetitionLevel());
 
-        $result = $shredder->shred($schema, $rows);
+        $result = $shredder->shred($schema, $rows, 0);
 
         $normalized = [];
 
@@ -1443,7 +1443,7 @@ final class DremelListsTest extends TestCase
         static::assertEquals(4, $schema->get('l.list.element.string')->repetitions()->maxDefinitionLevel());
         static::assertEquals(1, $schema->get('l.list.element.string')->repetitions()->maxRepetitionLevel());
 
-        $result = $shredder->shred($schema, $rows);
+        $result = $shredder->shred($schema, $rows, 0);
 
         $normalized = [];
 
@@ -1532,7 +1532,7 @@ final class DremelListsTest extends TestCase
         static::assertEquals(5, $schema->get('l.list.element.s.string')->repetitions()->maxDefinitionLevel());
         static::assertEquals(1, $schema->get('l.list.element.s.string')->repetitions()->maxRepetitionLevel());
 
-        $result = $shredder->shred($schema, $rows);
+        $result = $shredder->shred($schema, $rows, 0);
 
         $normalized = [];
 
@@ -1605,7 +1605,7 @@ final class DremelListsTest extends TestCase
         static::assertEquals(2, $schema->get('l.list.element')->repetitions()->maxDefinitionLevel());
         static::assertEquals(1, $schema->get('l.list.element')->repetitions()->maxRepetitionLevel());
 
-        $result = $shredder->shred($schema, $rows);
+        $result = $shredder->shred($schema, $rows, 0);
 
         $normalized = [];
 
@@ -1666,7 +1666,7 @@ final class DremelListsTest extends TestCase
         static::assertEquals(1, $schema->get('l.list.element')->repetitions()->maxDefinitionLevel());
         static::assertEquals(1, $schema->get('l.list.element')->repetitions()->maxRepetitionLevel());
 
-        $result = $shredder->shred($schema, $rows);
+        $result = $shredder->shred($schema, $rows, 0);
 
         $normalized = [];
 
@@ -1734,7 +1734,7 @@ final class DremelListsTest extends TestCase
         static::assertEquals(2, $schema->get('l.list.element.list.element')->repetitions()->maxDefinitionLevel());
         static::assertEquals(2, $schema->get('l.list.element.list.element')->repetitions()->maxRepetitionLevel());
 
-        $result = $shredder->shred($schema, $rows);
+        $result = $shredder->shred($schema, $rows, 0);
 
         $normalized = [];
 
@@ -1840,9 +1840,9 @@ final class DremelListsTest extends TestCase
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
 
-            $shredder->shred($schema, $rows);
+            $shredder->shred($schema, $rows, 0);
         } else {
-            $result = $shredder->shred($schema, $rows);
+            $result = $shredder->shred($schema, $rows, 0);
 
             $normalized = [];
 
@@ -1978,9 +1978,9 @@ final class DremelListsTest extends TestCase
         if ($exceptMessage) {
             $this->expectExceptionMessage($exceptMessage);
 
-            $shredder->shred($schema, $rows);
+            $shredder->shred($schema, $rows, 0);
         } else {
-            $result = $shredder->shred($schema, $rows);
+            $result = $shredder->shred($schema, $rows, 0);
 
             $normalized = [];
 

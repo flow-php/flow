@@ -37,7 +37,7 @@ final class SchemaTest extends TestCase
         foreach ($rows as $row) {
             /** @var array<string, mixed> $row */
             static::assertIsArray($row);
-            $shredResult = $shredder->shred($schema, [$row]);
+            $shredResult = $shredder->shred($schema, [$row], 0);
 
             foreach ($schema->columns() as $column) {
                 $readFlatValues = [];

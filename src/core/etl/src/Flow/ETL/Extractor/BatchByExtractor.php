@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Processor\BatchingByProcessor;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
-
-use function count;
 
 final class BatchByExtractor implements Extractor, OverridingExtractor, RewindableExtractor
 {
@@ -44,42 +44,27 @@ final class BatchByExtractor implements Extractor, OverridingExtractor, Rewindab
      */
     public function extract(FlowContext $context, ?int $limit = null): Generator
     {
-        // pinned from the declaration or the first child batch, then every later batch is matched to
-        // it - a buffer spans child batches, so its rows must all answer to one schema before trusted()
-        $schema = $this->schema;
+        return (new BatchingByProcessor($this->column, $this->minSize))->process(
+            $this->declared($this->extractor->extract($context), $context->backend()),
+            $context,
+        );
+    }
 
-        $buffer = [];
-        $currentGroupValue = null;
+    /**
+     * @param Generator<Rows> $batches
+     *
+     * @return Generator<Rows>
+     */
+    public function declared(Generator $batches, Backend $backend): Generator
+    {
+        if ($this->schema === null) {
+            yield from $batches;
 
-        foreach ($this->extractor->extract($context) as $rows) {
-            $schema ??= $rows->schema();
-            $rows = $rows->matchTo($schema);
-
-            foreach ($rows->all() as $row) {
-                $groupValue = $row->get($this->column);
-
-                if ($currentGroupValue === null) {
-                    $currentGroupValue = $groupValue;
-                } elseif ($currentGroupValue !== $groupValue) {
-                    if ($this->minSize === null || count($buffer) >= $this->minSize) {
-                        $signal = yield Rows::trusted($schema, $buffer);
-
-                        if ($signal === Signal::STOP) {
-                            return;
-                        }
-
-                        $buffer = [];
-                    }
-
-                    $currentGroupValue = $groupValue;
-                }
-
-                $buffer[] = $row;
-            }
+            return;
         }
 
-        if (count($buffer) > 0) {
-            yield Rows::trusted($schema ?? $this->schema(), $buffer);
+        foreach ($batches as $batch) {
+            yield $batch->matchTo($this->schema, $backend);
         }
     }
 

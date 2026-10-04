@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV;
 
-use Flow\ETL\Extractor\SourceFile;
-use Flow\ETL\Row\RawRowValues;
+use Flow\ETL\Column\Backend;
+use Flow\ETL\Extractor\File\SourceFile;
+use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\SchemaSampler;
+use Flow\Filesystem\Filesystem;
 use Generator;
-
-use function count;
 
 final readonly class CSVFileReader implements SchemaSampler
 {
@@ -17,7 +18,8 @@ final readonly class CSVFileReader implements SchemaSampler
      * @param list<SourceFile> $sources materialised, not a Generator: header() and samples() both walk it
      */
     public function __construct(
-        private CSVSourceOpener $opener,
+        private Filesystem $filesystem,
+        private CSVReadOptions $options,
         private array $sources,
     ) {}
 
@@ -26,26 +28,14 @@ final readonly class CSVFileReader implements SchemaSampler
      *
      * @param int<1, max> $batchSize
      *
-     * @return Generator<int, non-empty-list<RawRowValues>>
+     * @return Generator<int, Rows>
      */
-    public function batches(SourceFile $source, int $batchSize): Generator
+    public function batches(SourceFile $source, Schema $schema, int $batchSize, Backend $backend): Generator
     {
-        $open = $this->opener->open($source);
-        $batch = [];
+        $open = new AdaptiveCSVOpenSource($this->filesystem, $source, $this->options);
 
         try {
-            foreach ($open->records() as $values) {
-                $batch[] = $values;
-
-                if (count($batch) >= $batchSize) {
-                    yield $batch;
-                    $batch = [];
-                }
-            }
-
-            if ($batch !== []) {
-                yield $batch;
-            }
+            yield from $open->batches($schema, $batchSize, $backend);
         } finally {
             $open->close();
         }
@@ -56,7 +46,7 @@ final readonly class CSVFileReader implements SchemaSampler
      */
     public function columns(SourceFile $source): array
     {
-        $open = $this->opener->open($source);
+        $open = new AdaptiveCSVOpenSource($this->filesystem, $source, $this->options);
 
         try {
             return $open->columns();
@@ -86,7 +76,7 @@ final readonly class CSVFileReader implements SchemaSampler
     public function samples(int $rowBudget): iterable
     {
         foreach ($this->sources as $source) {
-            yield new CSVFileSample($this->opener, $source);
+            yield new CSVFileSample($this->filesystem, $this->options, $source);
         }
     }
 }

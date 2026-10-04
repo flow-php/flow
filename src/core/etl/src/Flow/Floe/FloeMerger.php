@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Floe;
 
-use Flow\ETL\Row\Hydrator;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Schema\Validator\EvolvingValidator;
@@ -22,7 +22,7 @@ final readonly class FloeMerger
 
     public function __construct(
         private Filesystem $filesystem,
-        private ?Hydrator $hydrator = null,
+        private Backend $backend,
         private Codec $codec = new NoopCodec(),
     ) {
         Format::validateCodecId($this->codec->id());
@@ -45,9 +45,6 @@ final readonly class FloeMerger
 
         $metadata ??= Metadata::empty();
 
-        // a merged file carries exactly one schema; raw splicing is only valid when every
-        // source already shares it - differing (but compatible) schemas are re-encoded to
-        // the union, exactly as compaction does
         if ($compact || !$this->sourcesShareSchema($reconciled['layouts'], $reconciled['merged'])) {
             $this->mergeCompact($sources, $reconciled['layouts'], $reconciled['merged'], $dest, $metadata);
 
@@ -147,12 +144,12 @@ final readonly class FloeMerger
         $writer = new FloeWriter(
             $this->filesystem,
             $merged ?? new Schema(),
+            $this->backend,
             new Options(codec: $this->codec),
-            hydrator: $this->hydrator,
         );
         $writer->create($dest, $mergedMetadata->merge($metadata));
 
-        $reader = new FloeReader($this->filesystem, $this->codec, hydrator: $this->hydrator);
+        $reader = new FloeReader($this->filesystem, $this->backend, $this->codec);
 
         foreach ($sources as $source) {
             $streamReader = $reader->read($source);

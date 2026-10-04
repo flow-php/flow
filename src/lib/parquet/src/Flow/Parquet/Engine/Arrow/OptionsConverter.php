@@ -11,6 +11,23 @@ use Flow\Parquet\ParquetFile\Encodings;
 
 final class OptionsConverter
 {
+    // called by name from arrow-ext RustParquetEngine::__construct(), pinned by phpts 047, 052
+    /**
+     * The options the arrow engine itself reads, which Rust cannot read off the Option enum.
+     *
+     * @return array{INT_96_AS_DATETIME: bool, ARROW_WRITE_BATCH_SIZE: int}
+     */
+    public static function toEngine(?Options $options): array
+    {
+        $options ??= new Options();
+
+        return [
+            'INT_96_AS_DATETIME' => $options->getBool(Option::INT_96_AS_DATETIME),
+            'ARROW_WRITE_BATCH_SIZE' => $options->getInt(Option::ARROW_WRITE_BATCH_SIZE),
+        ];
+    }
+
+    // called by name from arrow-ext RustParquetEngine::openForWrite(), pinned by phpts 047, 052
     /**
      * @return array<string, mixed>
      */

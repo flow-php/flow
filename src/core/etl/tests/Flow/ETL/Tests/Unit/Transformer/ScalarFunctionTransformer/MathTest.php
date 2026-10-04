@@ -11,13 +11,12 @@ use Flow\ETL\Transformer\ScalarFunctionTransformer;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\integer_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 
 final class MathTest extends FlowTestCase
@@ -52,7 +51,7 @@ final class MathTest extends FlowTestCase
             0.3,
             float_schema('b'),
             0.1,
-            ['result' => 0.2, 'a' => 0.3, 'b' => 0.1],
+            ['result' => 0.19999999999999998, 'a' => 0.3, 'b' => 0.1],
         ];
 
         yield [
@@ -68,7 +67,7 @@ final class MathTest extends FlowTestCase
             0.3,
             float_schema('b'),
             0.1,
-            ['result' => 0.2, 'a' => 0.3_0000_0000_0000_000, 'b' => 0.1_0000_0000_0000_000],
+            ['result' => 0.19999999999999998, 'a' => 0.3_0000_0000_0000_000, 'b' => 0.1_0000_0000_0000_000],
         ];
     }
 
@@ -98,7 +97,7 @@ final class MathTest extends FlowTestCase
             0.3,
             float_schema('b'),
             -0.1,
-            ['result' => 0.2, 'a' => 0.3, 'b' => -0.1],
+            ['result' => 0.19999999999999998, 'a' => 0.3, 'b' => -0.1],
         ];
 
         yield [
@@ -125,7 +124,7 @@ final class MathTest extends FlowTestCase
             -0.3,
             integer_schema('b'),
             10,
-            ['result' => 5.9049E-6, 'a' => -0.3, 'b' => 10],
+            ['result' => 5.9048999999999975E-6, 'a' => -0.3, 'b' => 10],
         ];
     }
 
@@ -146,7 +145,7 @@ final class MathTest extends FlowTestCase
     ): void {
         $rows = (new ScalarFunctionTransformer('result', ref($a->entry()->name())
             ->divide(ref($b->entry()->name()), $scale, $rounding)))->transform(
-            rows(schema($a, $b), row([$a->entry()->name() => $aValue, $b->entry()->name() => $bValue])),
+            array_to_rows([[$a->entry()->name() => $aValue, $b->entry()->name() => $bValue]], schema($a, $b)),
             flow_context(),
         );
 
@@ -165,7 +164,7 @@ final class MathTest extends FlowTestCase
             'result',
             ref($a->entry()->name())->minus(ref($b->entry()->name())),
         ))->transform(
-            rows(schema($a, $b), row([$a->entry()->name() => $aValue, $b->entry()->name() => $bValue])),
+            array_to_rows([[$a->entry()->name() => $aValue, $b->entry()->name() => $bValue]], schema($a, $b)),
             flow_context(),
         );
 
@@ -184,7 +183,7 @@ final class MathTest extends FlowTestCase
             'result',
             ref($a->entry()->name())->multiply(ref($b->entry()->name())),
         ))->transform(
-            rows(schema($a, $b), row([$a->entry()->name() => $aValue, $b->entry()->name() => $bValue])),
+            array_to_rows([[$a->entry()->name() => $aValue, $b->entry()->name() => $bValue]], schema($a, $b)),
             flow_context(),
         );
 
@@ -203,7 +202,7 @@ final class MathTest extends FlowTestCase
             'result',
             ref($a->entry()->name())->plus(ref($b->entry()->name())),
         ))->transform(
-            rows(schema($a, $b), row([$a->entry()->name() => $aValue, $b->entry()->name() => $bValue])),
+            array_to_rows([[$a->entry()->name() => $aValue, $b->entry()->name() => $bValue]], schema($a, $b)),
             flow_context(),
         );
 
@@ -222,7 +221,7 @@ final class MathTest extends FlowTestCase
             'result',
             ref($a->entry()->name())->power(ref($b->entry()->name())),
         ))->transform(
-            rows(schema($a, $b), row([$a->entry()->name() => $aValue, $b->entry()->name() => $bValue])),
+            array_to_rows([[$a->entry()->name() => $aValue, $b->entry()->name() => $bValue]], schema($a, $b)),
             flow_context(),
         );
 

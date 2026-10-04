@@ -23,7 +23,7 @@ $dataFrame = data_frame()->read(from_array($largeDataset));
 foreach ($dataFrame->get() as $rows) {
     echo "Processing batch of " . $rows->count() . " rows\n";
     // Process each batch
-    foreach ($rows as $row) {
+    foreach ($rows->toArray() as $row) {
         // Process individual row
     }
 }
@@ -35,17 +35,6 @@ reports is exact. Memory stays constant, but the dataset is on disk for as long 
 which is what lets you call `get()` or `run()` on it more than once, exactly as you can with an
 array. (`schema()` never consumed the source in the first place - it answers from the plan.) Declare the schema up front with `from_array($largeDataset)->withSchema($schema)` to skip the spill
 entirely; a declared schema streams the source directly and can therefore be read only once.
-
-### getEach() - Retrieve individual Rows
-
-```php
-<?php
-
-foreach ($dataFrame->getEach() as $row) {
-    echo "ID: " . $row->get('id')->value() . "\n";
-    echo "Name: " . $row->get('name')->value() . "\n";
-}
-```
 
 ### getAsArray() - Retrieve as array batches
 
@@ -78,8 +67,8 @@ foreach ($dataFrame->getEachAsArray() as $rowArray) {
 
 // Fetch limited results (safe)
 $firstTen = $dataFrame->fetch(10);
-foreach ($firstTen as $row) {
-    // Process row
+foreach ($firstTen->toArray() as $row) {
+    echo "ID: " . $row['id'] . "\n";
 }
 
 // Fetch all results (dangerous for large datasets!)

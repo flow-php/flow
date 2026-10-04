@@ -1,3 +1,3 @@
-Window functions perform calculations across a set of rows that are related to the current row. Unlike regular aggregations, window functions don't collapse rows - each row retains its identity while gaining access to aggregate information about its "window" of related rows.
-
-Use `window()` to define partitions and ordering, then apply window functions like `rank()`, `dense_rank()`, or `row_number()` to compute values within each partition.
+A window function computes over related rows without collapsing them: every row stays and gains a
+value. `window()` defines the partitions and their order, and `over()` applies `rank()`,
+`dense_rank()`, `row_number()` or an aggregate to it.

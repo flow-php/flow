@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV;
 
-use Flow\ETL\Row\RawRowValues;
+use Flow\ETL\Column\Backend;
+use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
+use Flow\ETL\Schema;
 use Flow\ETL\Schema\Inference\ColumnTypes;
 use Flow\ETL\Schema\Inference\SchemaInference;
 use Flow\ETL\Schema\Inference\SchemaInferrer;
 use Flow\Filesystem\SourceStream;
 use Flow\Types\Type\TypeNarrower;
 use Generator;
+
+use function count;
 
 final class PhpCSVOpenSource implements CSVOpenSource
 {
@@ -26,9 +31,34 @@ final class PhpCSVOpenSource implements CSVOpenSource
 
     public function __construct(
         private readonly SourceStream $stream,
-        private readonly CSVEncoder $encoder,
+        private readonly CSVDecoder $decoder,
         private readonly CSVLineReader $lineReader,
     ) {}
+
+    /**
+     * @return Generator<int, Rows>
+     */
+    public function batches(Schema $schema, int $batchSize, Backend $backend): Generator
+    {
+        $rows = [];
+
+        foreach ($this->records() as $values) {
+            $rows[] = $values;
+
+            if (count($rows) >= $batchSize) {
+                yield (new RowsBuilder($schema, $backend))
+                    ->appendRows($rows)
+                    ->finish();
+                $rows = [];
+            }
+        }
+
+        if ($rows !== []) {
+            yield (new RowsBuilder($schema, $backend))
+                ->appendRows($rows)
+                ->finish();
+        }
+    }
 
     public function close(): void
     {
@@ -43,24 +73,29 @@ final class PhpCSVOpenSource implements CSVOpenSource
     public function columns(): array
     {
         foreach ($this->lineReader->readLines($this->stream) as $line) {
-            $this->encoder->decode([$line]);
+            $this->decoder->decode([$line]);
 
             break;
         }
 
-        return $this->encoder->headers() ?? [];
+        return $this->decoder->headers() ?? [];
+    }
+
+    public function headers(): array
+    {
+        return $this->decoder->headers() ?? [];
     }
 
     /**
      * CSVLineReader::readLines() already joins a quoted multi-line record, so never re-split or re-join here.
      * This instance is consumed afterwards.
      *
-     * @return Generator<int, RawRowValues>
+     * @return Generator<int, array<array-key, ?string>>
      */
     public function records(): Generator
     {
         foreach ($this->lineReader->readLines($this->stream) as $line) {
-            foreach ($this->encoder->decode([$line]) as $values) {
+            foreach ($this->decoder->decode([$line]) as $values) {
                 $this->producedBytes += $this->lineReader->lastRecordBytes();
                 $this->producedRows++;
 

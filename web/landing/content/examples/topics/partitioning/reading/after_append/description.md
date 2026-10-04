@@ -1,1 +1,2 @@
-Read partitioned data after multiple writes with append mode. Flow automatically combines all files matching `filename*.ext` pattern in each partition.
+Two `append()` runs leave two files in each partition (`products.csv` and
+`products_<suffix>.csv`). The glob `color=*/*.csv` reads both, and `color` comes back from the path.

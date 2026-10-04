@@ -18,6 +18,7 @@ use Flow\Types\Type\Native\StringType;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RequiresPhp;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use Stringable;
@@ -289,5 +290,13 @@ final class StringTypeTest extends TestCase
     public function test_to_string(): void
     {
         static::assertSame('string', type_string()->toString());
+    }
+
+    #[TestWith([NAN, 'NAN'])]
+    #[TestWith([INF, 'INF'])]
+    #[TestWith([-INF, '-INF'])]
+    public function test_a_non_finite_float_is_spelled_as_the_float_cast_reads_it(float $value, string $text): void
+    {
+        static::assertSame($text, type_string()->cast($value));
     }
 }

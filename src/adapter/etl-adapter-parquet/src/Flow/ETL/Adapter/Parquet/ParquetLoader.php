@@ -4,59 +4,46 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet;
 
-use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Filesystem\FilesSink;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\Loader\Discardable;
-use Flow\ETL\Loader\FileLoader;
+use Flow\ETL\Loader\File\FileLoader;
+use Flow\ETL\Loader\File\FileWriteFrame;
+use Flow\ETL\Loader\File\PartitionRouter;
 use Flow\ETL\Loader\Partitioning;
 use Flow\ETL\Loader\PartitioningLoader;
-use Flow\ETL\Loader\PartitionRouter;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
-use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
-use Flow\Parquet\Engine\AdaptiveParquetEngine;
 use Flow\Parquet\Option as ParquetOption;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Compressions;
-use Flow\Parquet\Writer;
-use Throwable;
 
 use function sprintf;
 
 final class ParquetLoader implements Closure, Discardable, FileLoader, Loader, PartitioningLoader
 {
+    private ?FileWriteFrame $frame = null;
+
     private PartitionRouter $router;
 
     private readonly Filesystem $filesystem;
 
     private SaveMode $saveMode = SaveMode::ExceptionIfExists;
 
-    private ?FilesSink $files = null;
-
-    /** @var array<string, Writer> */
-    private array $writers = [];
-
     private Compressions $compressions = Compressions::SNAPPY;
 
     private readonly SchemaConverter $converter;
 
-    private ?ParquetEncoder $encoder = null;
-
     private ?ParquetEngine $engine = null;
-
-    private ?Schema $inferredSchema = null;
 
     private Options $options;
 
@@ -94,20 +81,14 @@ final class ParquetLoader implements Closure, Discardable, FileLoader, Loader, P
 
     public function closure(FlowContext $context): void
     {
-        $this->closeWriters();
-
-        $this->files?->publish();
-        $this->files = null;
+        $this->frame?->closure();
+        $this->frame = null;
     }
 
     public function discard(FlowContext $context): void
     {
-        try {
-            $this->closeWriters();
-        } finally {
-            $this->files?->abandon();
-            $this->files = null;
-        }
+        $this->frame?->discard();
+        $this->frame = null;
     }
 
     public function destination(): Path
@@ -117,32 +98,19 @@ final class ParquetLoader implements Closure, Discardable, FileLoader, Loader, P
 
     public function load(Rows $rows, FlowContext $context): void
     {
-        $context->telemetry()->loadingStarted($this, [
-            TelemetryAttributes::ATTR_LOADER_DESTINATION_URI => $this->path->uri(),
-        ]);
-
-        try {
-            if ($this->schema === null) {
-                $this->inferredSchema ??= $rows->schema()->makeNullable();
-            }
-
-            foreach ($this->router->route($rows) as [$partitions, $group]) {
-                $stream = ($this->files ??= new FilesSink($this->filesystem, $this->path, $this->saveMode))->writeTo(
-                    $partitions->toArray(),
-                );
-
-                ($this->writers[$stream->path()->uri()] ??=
-                    $this->openWriter($stream))->writeBatch($this->encoder()->encode(
-                    $context->hydrator()->dehydrate($group),
-                ));
-            }
-
-            $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
-        } catch (Throwable $e) {
-            $context->telemetry()->loadingFailed($this, $e);
-
-            throw $e;
-        }
+        ($this->frame ??= new FileWriteFrame(
+            $this->filesystem,
+            $this->path,
+            $this->saveMode,
+            $this->router,
+            new ParquetFileSinks(
+                $this->schema?->gracefulRemove(...$this->router->droppedNames()),
+                $this->converter,
+                $this->compressions,
+                $this->options,
+                $this->engine,
+            ),
+        ))->write($rows, $context, $this);
     }
 
     public function saveMode(SaveMode $mode): static
@@ -178,50 +146,5 @@ final class ParquetLoader implements Closure, Discardable, FileLoader, Loader, P
         $this->schema = $schema;
 
         return $this;
-    }
-
-    private function closeWriters(): void
-    {
-        $failure = null;
-
-        foreach ($this->writers as $uri => $writer) {
-            unset($this->writers[$uri]);
-
-            try {
-                $writer->close();
-            } catch (Throwable $closeFailure) {
-                $failure ??= $closeFailure;
-            }
-        }
-
-        if ($failure !== null) {
-            throw $failure;
-        }
-    }
-
-    private function encoder(): ParquetEncoder
-    {
-        return $this->encoder ??= new ParquetEncoder($this->converter->toParquet($this->schema()));
-    }
-
-    private function openWriter(DestinationStream $stream): Writer
-    {
-        $writer = new Writer(
-            compression: $this->compressions,
-            options: $this->options,
-            engine: $this->engine ?? new AdaptiveParquetEngine(),
-        );
-        $writer->openForStream($stream, $this->converter->toParquet($this->schema()));
-
-        return $writer;
-    }
-
-    private function schema(): Schema
-    {
-        return ($this->schema
-        ?? $this->inferredSchema
-        ?? throw new RuntimeException(
-            'Schema has not been inferred yet. Load at least one batch of rows first.',
-        ))->gracefulRemove(...$this->router->droppedNames());
     }
 }

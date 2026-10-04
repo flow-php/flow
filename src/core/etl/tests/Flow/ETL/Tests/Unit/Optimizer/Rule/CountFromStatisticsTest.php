@@ -19,6 +19,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\Adapter\Parquet\from_parquet;
 use function Flow\ETL\Adapter\Parquet\to_parquet;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
@@ -27,8 +28,6 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\to_memory;
 use function Flow\Filesystem\DSL\memory_filesystem;
@@ -46,7 +45,7 @@ final class CountFromStatisticsTest extends FlowTestCase
         );
 
         static::assertEquals(
-            from_rows(rows(schema(int_schema('count')), row(['count' => 3]))),
+            from_rows(array_to_rows([['count' => 3]], schema(int_schema('count')))),
             $plan->source()->extractor(),
         );
     }
@@ -59,7 +58,7 @@ final class CountFromStatisticsTest extends FlowTestCase
         );
 
         static::assertEquals(
-            from_rows(rows(schema(int_schema('count')), row(['count' => 10]))),
+            from_rows(array_to_rows([['count' => 10]], schema(int_schema('count')))),
             $plan->source()->extractor(),
         );
     }
@@ -81,7 +80,7 @@ final class CountFromStatisticsTest extends FlowTestCase
         );
 
         static::assertEquals(
-            from_rows(rows(schema(int_schema('count')), row(['count' => 25]))),
+            from_rows(array_to_rows([['count' => 25]], schema(int_schema('count')))),
             $plan->source()->extractor(),
         );
     }
@@ -103,7 +102,7 @@ final class CountFromStatisticsTest extends FlowTestCase
         );
 
         static::assertEquals(
-            from_rows(rows(schema(int_schema('count')), row(['count' => 25]))),
+            from_rows(array_to_rows([['count' => 25]], schema(int_schema('count')))),
             $plan->source()->extractor(),
         );
     }

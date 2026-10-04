@@ -30,7 +30,7 @@ class DictionaryPageHeader
             'var' => 'encoding',
             'isRequired' => true,
             'type' => TType::I32,
-            'class' => '\Flow\Parquet\Thrift\Encoding',
+            'class' => '\Flow\Parquet\ThriftModel\Encoding',
         ],
         3 => [
             'var' => 'is_sorted',

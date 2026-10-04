@@ -38,13 +38,13 @@ final class PathTest extends TestCase
      */
     public static function paths(): Generator
     {
-        yield ['/file.csv', 'file', 'file://file.csv'];
-        yield ['file://file.csv', 'file', 'file://file.csv'];
-        yield ['file:///', 'file', 'file://'];
-        yield ['/', 'file', 'file://'];
-        yield ['/absolute/path/to/file.txt', 'file', 'file://absolute/path/to/file.txt'];
-        yield ['file://absolute/path/to/file.txt', 'file', 'file://absolute/path/to/file.txt'];
-        yield ['file:///absolute/path/to/file.txt', 'file', 'file://absolute/path/to/file.txt'];
+        yield ['/file.csv', 'file', 'file:///file.csv'];
+        yield ['file://file.csv', 'file', 'file:///file.csv'];
+        yield ['file:///', 'file', 'file:///'];
+        yield ['/', 'file', 'file:///'];
+        yield ['/absolute/path/to/file.txt', 'file', 'file:///absolute/path/to/file.txt'];
+        yield ['file://absolute/path/to/file.txt', 'file', 'file:///absolute/path/to/file.txt'];
+        yield ['file:///absolute/path/to/file.txt', 'file', 'file:///absolute/path/to/file.txt'];
         yield ['flow-file://', 'flow-file', 'flow-file://'];
         yield ['flow-file:///', 'flow-file', 'flow-file://'];
         yield ['flow-file://folder/file.csv', 'flow-file', 'flow-file://folder/file.csv'];

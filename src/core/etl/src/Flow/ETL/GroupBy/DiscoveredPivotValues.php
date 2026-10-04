@@ -10,6 +10,7 @@ use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor\Repeatability;
 use Flow\ETL\Plan\Trigger;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Sort\RowOrder;
 
 use function array_values;
 use function count;
@@ -37,14 +38,20 @@ final readonly class DiscoveredPivotValues implements PivotValues
         }
 
         $distinct = [];
+        $type = null;
 
         // the frame, not its source: the pivot column may be produced by an earlier step, and an
         // earlier filter decides which values exist at all
         foreach ($source->get() as $batch) {
-            foreach ($batch as $row) {
-                /** @var mixed $value */
-                $value = $row->get($pivot);
+            if ($batch->isEmpty()) {
+                continue;
+            }
 
+            $column = $batch->column($pivot->base());
+            $type ??= $column->type();
+
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($column->values() as $value) {
                 if ($value === null) {
                     continue;
                 }
@@ -71,8 +78,8 @@ final readonly class DiscoveredPivotValues implements PivotValues
         }
 
         $values = array_values($distinct);
-        // sorted so the discovered column order is deterministic across runs
-        sort($values);
+        // sorted so the discovered column order is deterministic across runs, in the order sortBy() uses
+        sort($values, RowOrder::flag($type ?? type_string()));
 
         return new DeclaredPivotValues(...$values);
     }

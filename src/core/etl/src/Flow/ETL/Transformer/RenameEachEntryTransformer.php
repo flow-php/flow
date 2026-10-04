@@ -8,14 +8,11 @@ use Flow\ETL\BoundStep;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row\RowRenaming;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\Rename\RenameEntryStrategy;
 use Throwable;
-
-use function array_search;
 
 final readonly class RenameEachEntryTransformer implements Transformer
 {
@@ -52,31 +49,15 @@ final readonly class RenameEachEntryTransformer implements Transformer
 
         try {
             $schema = $rows->schema();
-            $renames = [];
-
+            // strategies chain, so a later one renames what an earlier one produced
             foreach ($this->strategies as $strategy) {
                 foreach ($strategy->renames($schema) as $from => $to) {
                     // a numeric entry name arrives as int - PHP casts numeric-string array keys
-                    $from = (string) $from;
-
-                    $schema = $schema->rename($from, $to);
-
-                    // strategies chain, so a later one renames what an earlier one produced; the map
-                    // has to stay keyed by the row's original name or the projection lands short
-                    $original = array_search($from, $renames, true);
-
-                    $renames[false === $original ? $from : $original] = $to;
+                    $schema = $schema->rename((string) $from, $to);
                 }
             }
 
-            $renaming = RowRenaming::of($renames);
-            $renamed = [];
-
-            foreach ($rows->all() as $row) {
-                $renamed[] = $renaming->apply($row);
-            }
-
-            $result = new Rows($schema, ...$renamed);
+            $result = $rows->withSchema($schema);
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

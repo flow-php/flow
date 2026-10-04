@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
 use DateTimeImmutable;
+use Flow\ETL\Adapter\Parquet\ParquetExtractor;
 use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetFilesContext;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InferredSchemaException;
@@ -12,6 +13,7 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Plan\Stage;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Double\CountingFilesystem;
+use Flow\ETL\Tests\Double\RecordingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Tests\Double\RejectingFilter;
@@ -19,25 +21,38 @@ use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Options;
 use Flow\Parquet\Reader;
+use Flow\Types\Value\Json;
+use Flow\Types\Value\Uuid;
 
 use function array_keys;
+use function count;
 use function Flow\ETL\Adapter\Parquet\from_parquet;
 use function Flow\ETL\Adapter\Parquet\to_parquet;
 use function Flow\ETL\DSL\analyze;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\partition_types;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\structure_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
+use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_json;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
+use function Flow\Types\DSL\type_uuid;
 use function iterator_to_array;
 
 final class ParquetExtractorTest extends FlowTestCase
@@ -89,15 +104,51 @@ final class ParquetExtractorTest extends FlowTestCase
 
     public function test_extract_yields_the_metadata_column_schema_promises(): void
     {
-        $extractor = from_parquet(path(__DIR__ . '/Fixtures/orders_1k.parquet'), columns: ['email'])
-            ->withMetadataColumns(true)
-            ->withSchema(schema(str_schema('email')));
+        $extractor = from_parquet(
+            path(__DIR__ . '/Fixtures/orders_1k.parquet'),
+            columns: ['email'],
+        )->withMetadataColumns(true);
 
         foreach ($extractor->extract(flow_context(config())) as $batch) {
-            static::assertSame($extractor->schema()->references()->names(), $batch->first()->names());
+            static::assertSame($extractor->schema()->references()->names(), $batch->schema()->references()->names());
 
             break;
         }
+    }
+
+    public function test_nested_uuid_and_json_read_as_value_objects(): void
+    {
+        $memory = memory_filesystem();
+        $uuid = '5f0e3a0e-0b8a-4b7a-9d6e-1f2a3b4c5d6e';
+
+        df()
+            ->read(from_rows(array_to_rows(
+                [['lu' => [$uuid], 's' => ['j' => ['b' => 2], 'u' => $uuid], 'm' => ['k' => $uuid]]],
+                schema(
+                    list_schema('lu', type_list(type_uuid())),
+                    structure_schema('s', type_structure(['j' => type_json(), 'u' => type_uuid()])),
+                    map_schema('m', type_map(type_string(), type_uuid())),
+                ),
+            )))
+            ->write(to_parquet(path('memory://nested.parquet'), filesystem: $memory))
+            ->run();
+
+        $rows = df()->read(from_parquet(path('memory://nested.parquet'), filesystem: $memory))->fetch();
+
+        // @mago-ignore analysis:mixed-assignment
+        $list = $rows->column('lu')->value(0);
+        // @mago-ignore analysis:mixed-assignment
+        $structure = $rows->column('s')->value(0);
+        // @mago-ignore analysis:mixed-assignment
+        $map = $rows->column('m')->value(0);
+
+        static::assertIsArray($list);
+        static::assertInstanceOf(Uuid::class, $list[0]);
+        static::assertIsArray($structure);
+        static::assertInstanceOf(Json::class, $structure['j']);
+        static::assertInstanceOf(Uuid::class, $structure['u']);
+        static::assertIsArray($map);
+        static::assertInstanceOf(Uuid::class, $map['k']);
     }
 
     public function test_schema_appends_the_metadata_column(): void
@@ -156,8 +207,8 @@ final class ParquetExtractorTest extends FlowTestCase
         $extractor = from_parquet(path(__DIR__ . '/Fixtures/Pagination/partitioned/date=2024-01-01/*.parquet'));
 
         foreach ($extractor->extract(flow_context(config())) as $rows) {
-            static::assertSame(['id', 'name', 'date'], array_keys($rows->first()->toArray()));
-            static::assertSame('2024-01-01', $rows->first()->get('date'));
+            static::assertSame(['id', 'name', 'date'], array_keys($rows->toArray()[0]));
+            static::assertSame('2024-01-01', $rows->column('date')->value(0));
             static::assertEquals($extractor->schema(), $rows->schema());
 
             return;
@@ -216,7 +267,7 @@ final class ParquetExtractorTest extends FlowTestCase
 
         foreach ($extractor->extract(flow_context(config())) as $rows) {
             static::assertEquals($extractor->schema(), $rows->schema());
-            static::assertEquals(new DateTimeImmutable('2024-01-01 00:00:00 UTC'), $rows->first()->get('date'));
+            static::assertEquals(new DateTimeImmutable('2024-01-01 00:00:00 UTC'), $rows->column('date')->value(0));
 
             return;
         }
@@ -455,13 +506,13 @@ final class ParquetExtractorTest extends FlowTestCase
     {
         $memory = memory_filesystem();
         ParquetFilesContext::write($memory, [
-            'memory://glob/a.parquet' => rows(schema(int_schema('id')), row(['id' => 1])),
-            'memory://glob/b.parquet' => rows(
-                schema(int_schema('id'), str_schema('extra')),
-                row([
+            'memory://glob/a.parquet' => array_to_rows([['id' => 1]], schema(int_schema('id'))),
+            'memory://glob/b.parquet' => array_to_rows(
+                [[
                     'id' => 2,
                     'extra' => 'x',
-                ]),
+                ]],
+                schema(int_schema('id'), str_schema('extra')),
             ),
         ]);
 
@@ -477,13 +528,13 @@ final class ParquetExtractorTest extends FlowTestCase
     {
         $memory = memory_filesystem();
         ParquetFilesContext::write($memory, [
-            'memory://glob/a.parquet' => rows(schema(int_schema('id')), row(['id' => 1])),
-            'memory://glob/b.parquet' => rows(
-                schema(int_schema('id'), str_schema('extra')),
-                row([
+            'memory://glob/a.parquet' => array_to_rows([['id' => 1]], schema(int_schema('id'))),
+            'memory://glob/b.parquet' => array_to_rows(
+                [[
                     'id' => 2,
                     'extra' => 'x',
-                ]),
+                ]],
+                schema(int_schema('id'), str_schema('extra')),
             ),
         ]);
 
@@ -493,6 +544,22 @@ final class ParquetExtractorTest extends FlowTestCase
                 ->read(from_parquet(path('memory://glob/*.parquet'), filesystem: $memory)->unionByName())
                 ->fetch()
                 ->toArray(),
+        );
+    }
+
+    public function test_one_extractor_read_twice_interleaved_gives_each_read_every_row_and_closes_every_stream(): void
+    {
+        $filesystem = new RecordingFilesystem(native_local_filesystem());
+        [$first, $second] = ExtractedRows::interleaved((new ParquetExtractor(
+            path_real(__DIR__ . '/Fixtures/Pagination/*.parquet'),
+            $filesystem,
+        ))->withBatchSize(7));
+
+        static::assertGreaterThan(0, $first->count());
+        static::assertSame($first->toArray(), $second->toArray());
+        static::assertSame(
+            count(array_keys($filesystem->calls, 'readFrom', true)),
+            count(array_keys($filesystem->calls, 'closeSource', true)),
         );
     }
 }

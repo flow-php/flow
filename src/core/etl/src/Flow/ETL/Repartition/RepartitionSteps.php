@@ -7,10 +7,10 @@ namespace Flow\ETL\Repartition;
 use Flow\ETL\Bucketing\Buckets;
 use Flow\ETL\Bucketing\HashBucketing;
 use Flow\ETL\Bucketing\NativeHasher;
+use Flow\ETL\Bucketing\Storage\SpillingBuckets;
 use Flow\ETL\Config;
 use Flow\ETL\Config\Repartition\RepartitionAlgorithmBuilder;
 use Flow\ETL\Processor;
-use Flow\ETL\Processor\BucketingProcessor;
 use Flow\ETL\Processor\RepartitionProcessor;
 use Flow\ETL\Row\References;
 
@@ -24,11 +24,17 @@ final readonly class RepartitionSteps
      */
     public static function of(References $by, Config $config, ?RepartitionAlgorithmBuilder $algorithm = null): array
     {
-        $repartition = $algorithm?->build($config->cache->localFilesystemCacheDir) ?? $config->repartition;
-        $buckets = new Buckets($repartition->bucketing->storage);
+        $repartition =
+            $algorithm?->build($config->cache->localFilesystemCacheDir, $config->backend()) ?? $config->repartition;
+        $buckets = new Buckets(SpillingBuckets::around(
+            $repartition->bucketing,
+            $repartition->memoryLimit,
+            $config->backend(),
+        ));
 
         return [
-            new BucketingProcessor(
+            new RepartitionProcessor(
+                $by,
                 new HashBucketing(
                     $by->all(),
                     $repartition->bucketing->bucketsCount,
@@ -37,8 +43,8 @@ final readonly class RepartitionSteps
                     'repartition',
                 ),
                 $buckets,
+                $repartition->memoryLimit,
             ),
-            new RepartitionProcessor($by, $buckets),
         ];
     }
 }

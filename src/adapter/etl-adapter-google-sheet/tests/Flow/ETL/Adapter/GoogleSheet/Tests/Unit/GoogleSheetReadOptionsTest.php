@@ -11,8 +11,6 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Type\Logical\InstanceOfTypeNarrower;
 use Flow\Types\Type\Native\String\StringTypeNarrower;
 
-use function array_map;
-
 final class GoogleSheetReadOptionsTest extends FlowTestCase
 {
     public function test_defaults(): void
@@ -65,34 +63,34 @@ final class GoogleSheetReadOptionsTest extends FlowTestCase
         static::assertSame(['valueRenderOption' => 'UNFORMATTED_VALUE'], $options->options);
     }
 
-    public function test_encoder_is_a_fresh_instance_per_call(): void
+    public function test_decoder_is_a_fresh_instance_per_call(): void
     {
         $options = new GoogleSheetReadOptions();
 
-        static::assertNotSame($options->encoder(), $options->encoder());
+        static::assertNotSame($options->decoder(), $options->decoder());
     }
 
-    public function test_encoder_carries_the_empty_to_null_flag(): void
+    public function test_decoder_carries_the_empty_to_null_flag(): void
     {
         static::assertSame(
             [['a' => '']],
-            array_map(static fn($rowValues): array => $rowValues->values, (new GoogleSheetReadOptions())
+            (new GoogleSheetReadOptions())
                 ->withEmptyToNull(false)
-                ->encoder()
-                ->decode([['a'], ['']])),
+                ->decoder()
+                ->decode([['a'], ['']]),
         );
     }
 
-    public function test_encoder_carries_the_drop_extra_columns_flag(): void
+    public function test_decoder_carries_the_drop_extra_columns_flag(): void
     {
-        $encoder = (new GoogleSheetReadOptions())
+        $decoder = (new GoogleSheetReadOptions())
             ->withDropExtraColumns(false)
-            ->encoder();
+            ->decoder();
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Row has more columns (2) than headers (1)');
 
-        $encoder->decode([['a'], ['x', 'y']]);
+        $decoder->decode([['a'], ['x', 'y']]);
     }
 
     public function test_typer_runs_the_string_ladder_under_the_default_render_option(): void
@@ -113,13 +111,13 @@ final class GoogleSheetReadOptionsTest extends FlowTestCase
         );
     }
 
-    public function test_encoder_carries_the_header_flag(): void
+    public function test_decoder_carries_the_header_flag(): void
     {
-        $encoder = (new GoogleSheetReadOptions())
+        $decoder = (new GoogleSheetReadOptions())
             ->withHeader(false)
-            ->encoder();
-        $encoder->decode([['1']]);
+            ->decoder();
+        $decoder->decode([['1']]);
 
-        static::assertSame(['e00'], $encoder->headers());
+        static::assertSame(['e00'], $decoder->headers());
     }
 }

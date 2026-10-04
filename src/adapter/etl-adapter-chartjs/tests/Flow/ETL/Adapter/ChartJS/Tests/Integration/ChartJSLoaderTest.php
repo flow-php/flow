@@ -519,8 +519,8 @@ final class ChartJSLoaderTest extends FlowTestCase
                     'datasets' => [
                         [
                             'data' => [
-                                69876.76000000001,
-                                32555.319999999996,
+                                69876.76,
+                                32555.32,
                                 13853.8,
                                 7854.33,
                                 10853.0,

@@ -1,0 +1,41 @@
+name: "pg-query-ext from source"
+description: "Builds src/extension/pg-query-ext from the checked-out source, cached by its source hash, and enables it"
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Resolve PHP version"
+      id: php
+      shell: bash
+      run: echo "version=$(php -r 'echo PHP_VERSION;')" >> "$GITHUB_OUTPUT"
+
+    - name: "Cache pg_query.so"
+      id: cache
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+      with:
+        path: src/extension/pg-query-ext/ext/modules/pg_query.so
+        key: pg-query-ext-${{ runner.os }}-${{ runner.arch }}-php-${{ steps.php.outputs.version }}-${{ hashFiles('src/extension/pg-query-ext/**') }}
+
+    - name: "Install build dependencies"
+      if: ${{ steps.cache.outputs.cache-hit != 'true' }}
+      shell: bash
+      run: sudo apt-get update && sudo apt-get install -y build-essential autoconf automake libtool protobuf-compiler libprotobuf-c-dev
+
+    - name: "Build pg-query-ext"
+      if: ${{ steps.cache.outputs.cache-hit != 'true' }}
+      shell: bash
+      working-directory: src/extension/pg-query-ext
+      # a shallow checkout has no tags for config.m4 to describe; this build only runs the test suite
+      run: |
+        if ! git describe --tags --match '[0-9]*' >/dev/null 2>&1; then
+          export PG_QUERY_EXT_VERSION="0.0.0-0-g$(git rev-parse --short HEAD)"
+        fi
+        make build
+
+    - name: "Enable pg-query-ext"
+      shell: bash
+      working-directory: src/extension/pg-query-ext
+      run: |
+        sudo cp ext/modules/pg_query.so "$(php -r 'echo ini_get("extension_dir");')/"
+        echo "extension=pg_query.so" | sudo tee -a "$(php -r 'echo php_ini_loaded_file();')"
+        php -m | grep -x pg_query

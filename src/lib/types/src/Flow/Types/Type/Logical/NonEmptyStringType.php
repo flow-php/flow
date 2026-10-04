@@ -11,12 +11,14 @@ use DOMElement;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
+use Flow\Types\Type\NonFiniteFloat;
 use Stringable;
 use Throwable;
 
 use function Flow\Types\DSL\dom_element_to_string;
 use function is_array;
 use function is_bool;
+use function is_float;
 use function is_object;
 use function is_scalar;
 use function is_string;
@@ -81,6 +83,10 @@ final class NonEmptyStringType implements Type
 
             if (null === $value) {
                 throw new CastingException($value, $this);
+            }
+
+            if (is_float($value) && ($text = NonFiniteFloat::text($value)) !== null) {
+                return $text;
             }
 
             if (is_scalar($value) || is_object($value) && method_exists($value, '__toString')) {

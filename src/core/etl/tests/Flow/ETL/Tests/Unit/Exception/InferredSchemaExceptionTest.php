@@ -34,13 +34,13 @@ final class InferredSchemaExceptionTest extends FlowTestCase
         static::assertStringContainsString('infer_schema()->unionByName()', $exception->getMessage());
     }
 
-    public function test_files_diverge_names_both_files_the_difference_and_both_remedies(): void
+    public function test_files_diverge_names_both_files_the_difference_and_the_remedy(): void
     {
         static::assertSame(
             "Columns of file:///orders/part-02.parquet do not match the schema read from file:///orders/part-01.parquet:\n"
             . "  Unexpected Definitions: \n"
             . "    |-- extra<string>\n"
-            . 'Read the files as one wider schema with ->unionByName(), or declare the schema with ->withSchema(...).',
+            . 'Read the files as one wider schema with ->unionByName().',
             InferredSchemaException::filesDiverge(
                 'file:///orders/part-02.parquet',
                 'file:///orders/part-01.parquet',

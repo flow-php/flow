@@ -15,6 +15,7 @@ use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Generator;
 
 use function array_map;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
@@ -22,7 +23,6 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\integer_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\Types\DSL\type_integer;
@@ -139,7 +139,7 @@ final class OffsetTest extends FlowIntegrationTestCase
                 public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     for ($i = 0; $i < 10; $i++) {
-                        yield rows(schema(integer_schema('id')), row(['id' => $i + 1]));
+                        yield array_to_rows([['id' => $i + 1]], schema(integer_schema('id')));
                     }
                 }
 
@@ -187,7 +187,7 @@ final class OffsetTest extends FlowIntegrationTestCase
                 public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     for ($i = 0; $i < 5; $i++) {
-                        yield rows(schema(integer_schema('id')), row(['id' => $i + 1]));
+                        yield array_to_rows([['id' => $i + 1]], schema(integer_schema('id')));
                     }
                 }
 
@@ -237,21 +237,15 @@ final class OffsetTest extends FlowIntegrationTestCase
                 public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     for ($i = 0; $i < 100; $i++) {
-                        yield rows(
-                            schema(list_schema(
-                                'ids',
-                                type_list(type_structure([
-                                    'id' => type_integer(),
-                                ])),
-                            )),
-                            row([
-                                'ids' => [
-                                    ['id' => $i + 1],
-                                    ['id' => $i + 2],
-                                    ['id' => $i + 3],
-                                ],
-                            ]),
-                        );
+                        yield array_to_rows([[
+                            'ids' => [
+                                ['id' => $i + 1],
+                                ['id' => $i + 2],
+                                ['id' => $i + 3],
+                            ],
+                        ]], schema(list_schema('ids', type_list(type_structure([
+                            'id' => type_integer(),
+                        ])))));
                     }
                 }
 
@@ -319,7 +313,7 @@ final class OffsetTest extends FlowIntegrationTestCase
                 public function extract(FlowContext $context, ?int $limit = null): Generator
                 {
                     for ($i = 0; $i < 10; $i++) {
-                        yield rows(schema(integer_schema('id')), row(['id' => $i + 1]));
+                        yield array_to_rows([['id' => $i + 1]], schema(integer_schema('id')));
                     }
                 }
 
@@ -392,11 +386,11 @@ final class OffsetTest extends FlowIntegrationTestCase
         $data = array_map(static fn(int $id): array => ['id' => $id, 'name' => 'Item ' . $id], range(1, 100));
         $page1 = df()->read(from_array($data))->offset(0)->limit(10)->fetch();
         static::assertCount(10, $page1);
-        static::assertSame(1, $page1->first()->get('id'));
-        static::assertSame(10, $page1->all()[9]->get('id'));
+        static::assertSame(1, $page1->column('id')->value(0));
+        static::assertSame(10, $page1->column('id')->value(9));
         $page3 = df()->read(from_array($data))->offset(20)->limit(10)->fetch();
         static::assertCount(10, $page3);
-        static::assertSame(21, $page3->first()->get('id'));
-        static::assertSame(30, $page3->all()[9]->get('id'));
+        static::assertSame(21, $page3->column('id')->value(0));
+        static::assertSame(30, $page3->column('id')->value(9));
     }
 }

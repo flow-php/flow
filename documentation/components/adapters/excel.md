@@ -71,6 +71,16 @@ $rows = data_frame()
 Row numbers count from 1 and include the header row, so `->withOffset(5)` on a sheet with a header skips rows 2-4
 and starts at row 5.
 
+### Header and missing cells
+
+```
+header row  [' id ', '', 'name']   →  columns ['id', 'e01', 'name']   (trimmed, a blank cell named e + its position)
+record      ['1', 'a']             →  ['id' => '1', 'e01' => 'a', 'name' => null]   (a cell the record lacks is null)
+record      ['1', '', 'x']         →  'e01' => null   (a present '' is null; `withConvertEmptyToNull(false)` keeps it '')
+```
+
+A header cell that is not text (a date, a number) is named like a blank one.
+
 ### Schema
 
 Without a declared schema, `from_excel()` samples the workbook before the first row is read, decides one schema, and
@@ -168,9 +178,9 @@ data_frame()
     ->run();
 ```
 
-### Dynamic Sheet Names from Entry
+### Sheet Name from a Column
 
-Route rows to different sheets based on entry values:
+Write each row to the sheet named by its `category` value:
 
 ```php
 <?php
@@ -213,9 +223,21 @@ data_frame()
     ->run();
 ```
 
+### Cells
+
+| Column                                       | Cell                                                                                   |
+|----------------------------------------------|----------------------------------------------------------------------------------------|
+| `string`, `integer`, `float`, `boolean`      | the value                                                                              |
+| `datetime`, `date`                           | a date cell, displayed with `withDateTimeFormat()` / `withDateFormat()`                |
+| `time`                                       | text, `withTimeFormat()`                                                               |
+| `enum`                                       | a backed enum's value, a unit enum's name                                              |
+| `uuid`, `json`                               | text                                                                                   |
+| `xml`, `xml_element`, `html`, `html_element` | the markup, e.g. `<a b="1"><c></c></a>`                                                |
+| `list`, `map`, `structure`                   | JSON text: a datetime element as `DATE_ATOM`, a time as microseconds, a float as `1.0` |
+
 ### Cell Styling
 
-Apply custom styles to individual cells based on their value and the column they belong to:
+`$value` is the cell as it is written (see [Cells](#cells)), not the column value.
 
 ```php
 <?php

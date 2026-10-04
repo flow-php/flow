@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Function\Evaluation\ResultColumn;
 use Flow\ETL\Hash\Algorithm;
 use Flow\ETL\Hash\NativePHPHash;
-use Flow\ETL\Row;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Value\Json;
 
@@ -56,20 +60,31 @@ final class Hash implements ScalarFunction
         return type_optional(type_string());
     }
 
-    public function eval(Row $row, FlowContext $context): ?string
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $value = (new Parameter($this->value))->eval($row, $context);
+        $values = (new Parameter($this->value))->values($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($value instanceof Json) {
-            $value = $value->toArray();
+        try {
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($values as $i => $value) {
+                if ($value instanceof Json) {
+                    $value = $value->toArray();
+                }
+
+                $results[] = match ($value) {
+                    null => null,
+                    default => match (gettype($value)) {
+                        'array', 'object' => $this->algorithm->hash(serialize($value)),
+                        default => $this->algorithm->hash(is_scalar($value) ? (string) $value : ''),
+                    },
+                };
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return match ($value) {
-            null => null,
-            default => match (gettype($value)) {
-                'array', 'object' => $this->algorithm->hash(serialize($value)),
-                default => $this->algorithm->hash(is_scalar($value) ? (string) $value : ''),
-            },
-        };
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

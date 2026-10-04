@@ -4,24 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Sort\Merge;
 
-use Flow\ETL\Row;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\ETL\Sort\RowOrder;
+use Flow\ETL\Sort\SortKey;
 use Generator;
-
-use function array_values;
-use function count;
 
 final class BucketCursor
 {
-    private int $count = 0;
+    private Rows $batch;
 
     private int $index = 0;
 
     /**
-     * @var list<Row>
+     * @var list<SortKey> $batch's sort keys
      */
-    private array $rows = [];
+    private array $keys = [];
 
     private ?Schema $schema = null;
 
@@ -32,20 +31,38 @@ final class BucketCursor
      */
     public function __construct(
         private readonly Generator $batches,
+        private readonly RowOrder $order,
+        private readonly Backend $backend,
     ) {
+        $this->batch = Rows::empty(new Schema(), $this->backend);
         $this->load();
     }
 
-    public function current(): Row
+    public function advance(int $index): void
     {
-        return $this->rows[$this->index];
-    }
+        $this->index = $index;
 
-    public function next(): void
-    {
-        if (++$this->index >= $this->count) {
+        if ($this->index >= $this->batch->count()) {
             $this->load();
         }
+    }
+
+    public function batch(): Rows
+    {
+        return $this->batch;
+    }
+
+    public function index(): int
+    {
+        return $this->index;
+    }
+
+    /**
+     * @return list<SortKey>
+     */
+    public function keys(): array
+    {
+        return $this->keys;
     }
 
     public function schema(): Schema
@@ -55,7 +72,7 @@ final class BucketCursor
 
     public function valid(): bool
     {
-        return $this->index < $this->count;
+        return $this->index < $this->batch->count();
     }
 
     /**
@@ -78,8 +95,8 @@ final class BucketCursor
 
             if ($batch->count() > 0) {
                 $this->schema ??= $batch->schema();
-                $this->rows = array_values($batch->all());
-                $this->count = count($this->rows);
+                $this->batch = $batch;
+                $this->keys = $this->order->keys($batch);
 
                 return;
             }
@@ -87,7 +104,7 @@ final class BucketCursor
             $this->batches->next();
         }
 
-        $this->rows = [];
-        $this->count = 0;
+        $this->batch = Rows::empty(new Schema(), $this->backend);
+        $this->keys = [];
     }
 }

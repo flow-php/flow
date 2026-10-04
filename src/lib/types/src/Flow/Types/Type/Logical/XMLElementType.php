@@ -38,7 +38,10 @@ final readonly class XMLElementType implements Type
 
         if (is_string($value)) {
             $dom = new DOMDocument();
-            $dom->loadXML($value);
+
+            if (!@$dom->loadXML($value)) {
+                throw new CastingException($value, $this);
+            }
 
             return type_instance_of(DOMElement::class)->assert($dom->documentElement);
         }

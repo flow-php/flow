@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Optimizer;
 
-use Flow\ETL\Config\Sort\ExternalSortConfig;
-use Flow\ETL\FlowContext;
 use Flow\ETL\Plan\Node;
 use Flow\ETL\Plan\Node\Limit;
 use Flow\ETL\Plan\Node\Sort;
@@ -17,10 +15,6 @@ use Flow\ETL\Plan\Rewrite;
  */
 final readonly class TopNRewrite implements Rewrite
 {
-    public function __construct(
-        private FlowContext $context,
-    ) {}
-
     public function of(Node $node): Node
     {
         if (!$node instanceof Limit) {
@@ -33,13 +27,7 @@ final readonly class TopNRewrite implements Rewrite
             return $node;
         }
 
-        $config = $this->context->config;
-        $algorithm = $sort->algorithm?->build($config->cache->localFilesystemCacheDir) ?? $config->sort;
-
-        if ($algorithm instanceof ExternalSortConfig && $node->limit > $algorithm->runSize) {
-            return $node;
-        }
-
-        return new TopN($sort->children()[0], $sort->refs, $node->limit);
+        // a TopN past its memory limit falls back to the sort's own spilling path, so any limit is safe to rewrite
+        return new TopN($sort->children()[0], $sort->refs, $node->limit, $sort->algorithm);
     }
 }

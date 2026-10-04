@@ -44,7 +44,7 @@ use const JSON_THROW_ON_ERROR;
 final readonly class StructureType implements Type
 {
     /**
-     * @var list<StructureElement<value-of<T>>>
+     * @var non-empty-list<StructureElement<value-of<T>>>
      */
     private array $elements;
 
@@ -199,7 +199,12 @@ final readonly class StructureType implements Type
                 $castedStructure[$element->name] = $element->type->cast($value[$element->name] ?? null);
             }
 
-            return $this->assert($castedStructure);
+            if ($castedStructure !== [] && array_is_list($castedStructure)) {
+                throw InvalidTypeException::value($castedStructure, $this);
+            }
+
+            /** @var T $castedStructure */
+            return $castedStructure;
         } catch (Throwable $e) {
             throw new CastingException($value, $this, $e);
         }
@@ -220,7 +225,7 @@ final readonly class StructureType implements Type
     }
 
     /**
-     * @return list<StructureElement<value-of<T>>>
+     * @return non-empty-list<StructureElement<value-of<T>>>
      */
     public function elements(): array
     {

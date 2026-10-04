@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Config\Sort;
 
 use Flow\ETL\Bucketing\BucketsStorage;
+use Flow\ETL\Column\Backend;
 use Flow\ETL\Config\Bucketing\BucketingConfigBuilder;
+use Flow\ETL\Config\MemoryLimit;
+use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Filesystem\Path;
 
@@ -15,10 +18,7 @@ final class ExternalSortBuilder implements SortAlgorithmBuilder
 
     private ?BucketsStorage $mergeStorage = null;
 
-    /**
-     * @var int<1, max>
-     */
-    private int $runSize = 10_000;
+    private ?Unit $memoryLimit = null;
 
     public function __construct()
     {
@@ -35,9 +35,13 @@ final class ExternalSortBuilder implements SortAlgorithmBuilder
         return $this;
     }
 
-    public function build(Path $spillRoot): ExternalSortConfig
+    public function build(Path $spillRoot, Backend $backend): ExternalSortConfig
     {
-        return new ExternalSortConfig($this->bucketing->build($spillRoot), $this->mergeStorage, $this->runSize);
+        return new ExternalSortConfig(
+            $this->bucketing->build($spillRoot, $backend),
+            $this->memoryLimit ?? MemoryLimit::default(),
+            $this->mergeStorage,
+        );
     }
 
     /**
@@ -61,16 +65,15 @@ final class ExternalSortBuilder implements SortAlgorithmBuilder
     }
 
     /**
-     * @param int<1, max> $runSize
+     * The process memory past which the sort spills sorted runs; defaults to MemoryLimit::default().
      */
-    public function runSize(int $runSize): self
+    public function memoryLimit(Unit $memoryLimit): self
     {
-        // @mago-ignore analysis:impossible-condition,redundant-comparison
-        if ($runSize < 1) {
-            throw new InvalidArgumentException('Run size must be greater than 0');
+        if ($memoryLimit->inBytes() < 1) {
+            throw new InvalidArgumentException('Sort memory limit must be greater than 0 bytes');
         }
 
-        $this->runSize = $runSize;
+        $this->memoryLimit = $memoryLimit;
 
         return $this;
     }

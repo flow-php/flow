@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Column\Column;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Nullability;
 
@@ -44,11 +46,16 @@ final class Not implements ScalarFunction
         return (new Nullability())->any(type_boolean(), $this->value->returns());
     }
 
-    public function eval(Row $row, FlowContext $context): ?bool
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $value = (new Parameter($this->value))->eval($row, $context);
+        $results = [];
 
-        // SQL NOT NULL is NULL - the row must drop, not flip to true.
-        return $value === null ? null : !$value;
+        // @mago-ignore analysis:mixed-assignment
+        foreach ((new Parameter($this->value))->values($rows, $context) as $value) {
+            // SQL NOT NULL is NULL - the row must drop, not flip to true.
+            $results[] = $value === null ? null : !$value;
+        }
+
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

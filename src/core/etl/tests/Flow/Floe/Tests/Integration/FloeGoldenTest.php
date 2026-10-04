@@ -6,11 +6,14 @@ namespace Flow\Floe\Tests\Integration;
 
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
-use Flow\Floe\Tests\Context\FloeEngineContext;
+use Flow\Floe\Tests\Context\FloeFilesContext;
 use Flow\Floe\Tests\Context\FloeGoldenContext;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function array_map;
+use function array_merge;
+use function iterator_to_array;
 use function ord;
 
 /**
@@ -43,8 +46,8 @@ final class FloeGoldenTest extends FlowIntegrationTestCase
     {
         $written = $this->cacheDir->suffix('golden-' . $name . '.floe');
 
-        FloeEngineContext::writeAll(
-            FloeEngineContext::phpWriter($this->fs(), FloeGoldenContext::schema($batches)),
+        FloeFilesContext::writeAll(
+            FloeFilesContext::phpWriter($this->fs(), FloeGoldenContext::schema($batches)),
             $written,
             $batches,
         );
@@ -61,23 +64,28 @@ final class FloeGoldenTest extends FlowIntegrationTestCase
     #[DataProvider('golden_fixtures')]
     public function test_golden_files_read_back_to_the_rows_that_wrote_them(string $name, array $batches): void
     {
-        $expected = [];
+        $file = FloeFilesContext::phpReader($this->fs())->read(FloeGoldenContext::path($name));
+        $read = iterator_to_array($file->rows(), false);
+        $file->close();
 
-        foreach ($batches as $batch) {
-            foreach ($batch as $row) {
-                $expected[] = $row;
-            }
-        }
-
-        static::assertEquals($expected, FloeEngineContext::readRows(
-            FloeEngineContext::phpReader($this->fs()),
-            FloeGoldenContext::path($name),
-        ));
+        static::assertEquals(
+            array_merge(...array_map(static fn(Rows $batch) => $batch->toArray(), $batches)),
+            array_merge(...array_map(static fn(Rows $batch) => $batch->toArray(), $read)),
+        );
     }
 
     #[DataProvider('golden_fixture_names')]
     public function test_golden_header_is_the_current_format_version(string $name): void
     {
         static::assertSame(0x02, ord($this->fs()->readFrom(FloeGoldenContext::path($name))->content()[4]));
+    }
+
+    #[DataProvider('golden_fixture_names')]
+    public function test_golden_fixtures_hold_batch_frames(string $name): void
+    {
+        static::assertSame(
+            $name === 'empty' ? 0x06 : 0x05,
+            ord($this->fs()->readFrom(FloeGoldenContext::path($name))->content()[6]),
+        );
     }
 }

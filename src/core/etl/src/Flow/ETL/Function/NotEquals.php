@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Column\Column;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Nullability;
 use Flow\Types\Type\ValueComparator;
@@ -53,10 +55,17 @@ final class NotEquals implements ScalarFunction
         return (new Nullability())->any(type_boolean(), $this->left->returns(), $this->right->returns());
     }
 
-    public function eval(Row $row, FlowContext $context): ?bool
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $equals = (new Equals($this->left, $this->right))->eval($row, $context);
+        $results = [];
 
-        return $equals === null ? null : !$equals;
+        // @mago-ignore analysis:mixed-assignment
+        foreach ((new Equals($this->left, $this->right))
+            ->eval($rows, $context)
+            ->physicals() as $equals) {
+            $results[] = $equals === null ? null : !$equals;
+        }
+
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

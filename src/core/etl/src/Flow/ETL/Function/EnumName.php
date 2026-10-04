@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use UnitEnum;
 
@@ -49,14 +53,25 @@ final class EnumName implements ScalarFunction
         return type_string();
     }
 
-    public function eval(Row $row, FlowContext $context): string
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $enum = (new Parameter($this->value))->eval($row, $context);
+        $enums = (new Parameter($this->value))->values($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if (!$enum instanceof UnitEnum) {
-            throw new InvalidArgumentException('EnumName function requires a UnitEnum value');
+        try {
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($enums as $i => $enum) {
+                if (!$enum instanceof UnitEnum) {
+                    throw new InvalidArgumentException('EnumName function requires a UnitEnum value');
+                }
+
+                $results[] = $enum->name;
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return $enum->name;
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

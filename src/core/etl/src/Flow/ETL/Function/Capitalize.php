@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function Flow\ETL\DSL\lit;
@@ -54,18 +58,31 @@ final class Capitalize implements ScalarFunction
         return type_string();
     }
 
-    public function eval(Row $row, FlowContext $context): ?string
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $string = (new Parameter($this->string))->eval($row, $context);
+        $strings = (new Parameter($this->string))->values($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($string === null) {
-            throw new InvalidArgumentException('Capitalize function requires non-null value');
+        try {
+            // @mago-ignore analysis:mixed-assignment
+            foreach ($strings as $i => $string) {
+                if ($string === null) {
+                    throw new InvalidArgumentException('Capitalize function requires non-null value');
+                }
+
+                if (function_exists('mb_convert_case')) {
+                    $results[] = mb_convert_case(is_scalar($string) ? (string) $string : '', MB_CASE_TITLE);
+
+                    continue;
+                }
+
+                $results[] = ucwords(is_scalar($string) ? (string) $string : '');
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        if (function_exists('mb_convert_case')) {
-            return mb_convert_case(is_scalar($string) ? (string) $string : '', MB_CASE_TITLE);
-        }
-
-        return ucwords(is_scalar($string) ? (string) $string : '');
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

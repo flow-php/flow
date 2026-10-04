@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function Flow\ETL\DSL\lit;
@@ -63,17 +67,36 @@ final class NumberFormat implements ScalarFunction
         return type_string();
     }
 
-    public function eval(Row $row, FlowContext $context): ?string
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $value = (new Parameter($this->value))->asNumber($row, $context);
-        $decimals = (new Parameter($this->decimals))->asInt($row, $context);
-        $decimalSeparator = (new Parameter($this->decimalSeparator))->asString($row, $context);
-        $thousandsSeparator = (new Parameter($this->thousandsSeparator))->asString($row, $context);
+        $values = (new Parameter($this->value))->asNumbers($rows, $context);
+        $decimalsList = (new Parameter($this->decimals))->asInts($rows, $context);
+        $decimalSeparators = (new Parameter($this->decimalSeparator))->asStrings($rows, $context);
+        $thousandsSeparators = (new Parameter($this->thousandsSeparator))->asStrings($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if ($value === null || $decimals === null || $decimalSeparator === null || $thousandsSeparator === null) {
-            throw new InvalidArgumentException('NumberFormat function requires non-null values');
+        try {
+            foreach ($values as $i => $value) {
+                $decimals = $decimalsList[$i];
+                $decimalSeparator = $decimalSeparators[$i];
+                $thousandsSeparator = $thousandsSeparators[$i];
+
+                if (
+                    $value === null
+                    || $decimals === null
+                    || $decimalSeparator === null
+                    || $thousandsSeparator === null
+                ) {
+                    throw new InvalidArgumentException('NumberFormat function requires non-null values');
+                }
+
+                $results[] = number_format((float) $value, $decimals, $decimalSeparator, $thousandsSeparator);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        return number_format((float) $value, $decimals, $decimalSeparator, $thousandsSeparator);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

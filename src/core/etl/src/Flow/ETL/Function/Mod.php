@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\Calculator\Calculator;
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 
 use function Flow\ETL\DSL\lit;
@@ -51,19 +54,32 @@ final class Mod implements ScalarFunction
         return type_integer();
     }
 
-    public function eval(Row $row, FlowContext $context): ?int
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $leftValue = (new Parameter($this->left))->asInt($row, $context);
-        $rightValue = (new Parameter($this->right))->asInt($row, $context);
+        $lefts = (new Parameter($this->left))->asInts($rows, $context);
+        $rights = (new Parameter($this->right))->asInts($rows, $context);
+        $calculator = $context->calculator();
+        $results = [];
+        $i = 0;
 
-        if ($leftValue === null || $rightValue === null) {
-            throw new InvalidArgumentException('Mod function requires non-null values');
+        try {
+            foreach ($lefts as $i => $leftValue) {
+                $rightValue = $rights[$i];
+
+                if ($leftValue === null || $rightValue === null) {
+                    throw new InvalidArgumentException('Mod function requires non-null values');
+                }
+
+                if ($rightValue === 0) {
+                    throw new InvalidArgumentException('Mod function cannot perform modulo by zero');
+                }
+
+                $results[] = $calculator->modulus($leftValue, $rightValue);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        if ($rightValue === 0) {
-            throw new InvalidArgumentException('Mod function cannot perform modulo by zero');
-        }
-
-        return (new Calculator())->modulus($leftValue, $rightValue);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

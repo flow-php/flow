@@ -7,11 +7,17 @@ namespace Flow\ETL\Adapter\XML\XMLWriter;
 use DOMDocument;
 use Flow\ETL\Adapter\XML\Abstraction\XMLNode;
 use Flow\ETL\Adapter\XML\XMLWriter;
+use Flow\Types\Exception\CastingException;
 
 use function array_key_exists;
+use function array_keys;
+use function Flow\Types\DSL\type_string;
+use function in_array;
+use function preg_grep;
 use function str_contains;
 use function strstr;
 use function strtr;
+use function substr_replace;
 
 /**
  * DOMDocumentWriter's output on libxml 2.14 and later, byte for byte, without building a DOM for every row: libxml's
@@ -109,6 +115,36 @@ final class StringXMLWriter implements XMLWriter
 
     private ?DOMDocument $validator = null;
 
+    public function attributes(string $name, array $values): array
+    {
+        $name = $this->attributeName($name);
+
+        if (in_array(null, $values, true)) {
+            throw new CastingException(null, type_string());
+        }
+
+        /** @var list<string> */
+        return substr_replace(
+            substr_replace($this->escapeAll($values, self::ATTRIBUTE, '/[&<>"\x00-\x1F]/'), ' ' . $name . '="', 0, 0),
+            '"',
+            PHP_INT_MAX,
+            0,
+        );
+    }
+
+    public function elements(string $name, array $values): array
+    {
+        $name = $this->elementName($name);
+
+        /** @var list<string> */
+        return substr_replace(
+            substr_replace($this->escapeAll($values, self::TEXT, '/[&<>\x00-\x08\x0B-\x1F]/'), '<' . $name . '>', 0, 0),
+            '</' . $name . '>',
+            PHP_INT_MAX,
+            0,
+        );
+    }
+
     public function write(XMLNode $node): string
     {
         $name = $this->elementName($node->name);
@@ -153,6 +189,28 @@ final class StringXMLWriter implements XMLWriter
         }
 
         return strtr($value, $map);
+    }
+
+    /**
+     * @param list<?string> $values null is ''
+     * @param array<string, string> $map
+     *
+     * @return list<string>
+     */
+    private function escapeAll(array $values, array $map, string $escaped): array
+    {
+        foreach (array_keys($values, null, true) as $i) {
+            $values[$i] = '';
+        }
+
+        /** @var list<string> $texts */
+        $texts = $values;
+
+        foreach (preg_grep($escaped, $texts) ?: [] as $i => $text) {
+            $texts[$i] = self::escape($text, $map);
+        }
+
+        return $texts;
     }
 
     private function attributeName(string $name): string

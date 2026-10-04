@@ -6,10 +6,13 @@ namespace Flow\ETL\Adapter\Parquet\Tests\Context;
 
 use Flow\ETL\Adapter\Parquet\ParquetSourceFile;
 use Flow\ETL\Adapter\Parquet\SchemaConverter;
-use Flow\ETL\Extractor\SourceFile;
+use Flow\ETL\Extractor\File\SourceFile;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
-use Flow\Parquet\Reader;
+use Flow\Parquet\Engine\PhpParquetEngine;
+use Flow\Parquet\Options;
+use Flow\Parquet\ParquetEngine;
+use Flow\Parquet\ParquetFile;
 
 use function Flow\Filesystem\DSL\path;
 
@@ -23,13 +26,15 @@ final class ParquetSourceFileContext
     /**
      * @param list<string> $columns
      */
-    public static function over(Filesystem $filesystem, array $columns = []): ParquetSourceFile
-    {
+    public static function over(
+        Filesystem $filesystem,
+        array $columns = [],
+        ParquetEngine $engine = new PhpParquetEngine(),
+    ): ParquetSourceFile {
         $stream = $filesystem->readFrom(self::fixture());
 
         return new ParquetSourceFile(
-            (new Reader())->readStream($stream),
-            $stream,
+            new ParquetFile($stream, new Options(), $engine->openForRead($stream)),
             new SourceFile(self::fixture()),
             new SchemaConverter(),
             $columns,

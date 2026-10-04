@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Http;
 
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\BatchableExtractor;
+use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Generator;
 use Psr\Http\Client\ClientInterface;
@@ -23,8 +26,10 @@ use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 
-final class PsrHttpClientStaticExtractor implements Extractor
+final class PsrHttpClientStaticExtractor implements BatchableExtractor, Extractor
 {
+    use Batches;
+
     /**
      * @var null|callable(RequestInterface, ResponseInterface) : void
      */
@@ -43,15 +48,21 @@ final class PsrHttpClientStaticExtractor implements Extractor
     public function __construct(
         private readonly ClientInterface $client,
         private readonly iterable $requests,
-    ) {}
+    ) {
+        // one request is one row: each response reaches the pipeline on its own unless withBatchSize() groups them
+        $this->batchSize = 1;
+    }
 
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
     public function extract(FlowContext $context, ?int $limit = null): Generator
     {
-        $encoder = new HttpEncoder();
-        $hydrator = $context->hydrator();
+        $decoder = new HttpDecoder();
+        $backend = $context->backend();
+        $schema = $this->schema();
+        $builder = new RowsBuilder($schema, $backend);
+        $remaining = $limit;
 
         foreach ($this->requests as $request) {
             if ($this->preRequest) {
@@ -64,13 +75,25 @@ final class PsrHttpClientStaticExtractor implements Extractor
                 ($this->postRequest)($request, $response);
             }
 
-            $hydrated = $hydrator->hydrate($encoder->decode([new HttpExchange($request, $response)]), $this->schema());
+            $builder->appendRows($decoder->decode([new HttpExchange($request, $response)]));
 
-            $signal = yield $hydrated;
+            if ($builder->count() < $this->batchSize() && ($remaining === null || $builder->count() < $remaining)) {
+                continue;
+            }
 
-            if ($signal === Signal::STOP) {
+            $batch = $builder->finish();
+            $remaining = $remaining === null ? null : $remaining - $batch->count();
+            $signal = yield $batch;
+
+            if ($signal === Signal::STOP || $remaining === 0) {
                 return;
             }
+
+            $builder = new RowsBuilder($schema, $backend);
+        }
+
+        if ($builder->count() > 0) {
+            yield $builder->finish();
         }
     }
 

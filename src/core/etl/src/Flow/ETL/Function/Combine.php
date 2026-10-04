@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\ListType;
 
@@ -72,37 +76,48 @@ final class Combine implements ScalarFunction
         return type_map($keys->element(), $values->element());
     }
 
-    /**
-     * @return null|array<int|string, mixed>
-     */
-    public function eval(Row $row, FlowContext $context): ?array
+    public function eval(Rows $rows, FlowContext $context): Column
     {
-        $keys = (new Parameter($this->keys))->asArray($row, $context);
-        $values = (new Parameter($this->values))->asArray($row, $context);
+        $keysList = (new Parameter($this->keys))->asArrays($rows, $context);
+        $valuesList = (new Parameter($this->values))->asArrays($rows, $context);
+        $results = [];
+        $i = 0;
 
-        if (null === $keys || null === $values) {
-            throw new InvalidArgumentException('Combine function requires non-null arrays');
+        try {
+            foreach ($keysList as $i => $keys) {
+                $values = $valuesList[$i];
+
+                if (null === $keys || null === $values) {
+                    throw new InvalidArgumentException('Combine function requires non-null arrays');
+                }
+
+                if ([] === $keys) {
+                    $results[] = [];
+
+                    continue;
+                }
+
+                if (!array_is_list($keys)) {
+                    throw new InvalidArgumentException('Combine function requires keys to be a list');
+                }
+
+                if (count($keys) !== count($values)) {
+                    throw new InvalidArgumentException(
+                        'Combine function requires keys and values arrays to have the same length',
+                    );
+                }
+
+                if (!is_string($keys[0] ?? null) && !is_int($keys[0] ?? null)) {
+                    throw new InvalidArgumentException('Combine function requires keys to be strings or integers');
+                }
+
+                /** @var array<array-key, array-key> $keys */
+                $results[] = array_combine($keys, $values);
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
         }
 
-        if ([] === $keys) {
-            return [];
-        }
-
-        if (!array_is_list($keys)) {
-            throw new InvalidArgumentException('Combine function requires keys to be a list');
-        }
-
-        if (count($keys) !== count($values)) {
-            throw new InvalidArgumentException(
-                'Combine function requires keys and values arrays to have the same length',
-            );
-        }
-
-        if (!is_string($keys[0] ?? null) && !is_int($keys[0] ?? null)) {
-            throw new InvalidArgumentException('Combine function requires keys to be strings or integers');
-        }
-
-        /** @var array<array-key, array-key> $keys */
-        return array_combine($keys, $values);
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

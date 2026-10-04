@@ -1,16 +1,22 @@
 //! Native CSV reading: records and fields from `tokenizer`, rows shaped exactly like
-//! `CSVEncoder::decode()` + `CSVRowNormalizer::normalize()` shape them.
+//! `CSVDecoder::decode()` (`Flow\ETL\Extractor\Records`) shapes them.
 
+pub mod columns;
 pub mod fold;
+#[allow(
+    non_snake_case,
+    reason = "PHP takes a parameter name from its Rust identifier: the contracts' are camelCase"
+)]
+pub mod source;
 pub mod tokenizer;
+pub mod write;
 
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::exception::PhpException;
-use ext_php_rs::types::{ZendHashTable, ZendObject, ZendStr, Zval};
+use ext_php_rs::types::{ZendHashTable, ZendStr, Zval};
 
-use crate::ctx::{array_key_index, ht_insert_key, null_zval, write_slot, zval_str, HtKey};
+use crate::ctx::{array_key_index, ht_insert_key, null_zval, zval_str, HtKey};
 use crate::exception::ext_exception;
-use crate::hydrate::RowValuesClass;
 use tokenizer::{Dialect, Field, Record, Tokenizer};
 
 /// A header name resolved once into the array key `array_combine()` would use for it.
@@ -42,7 +48,7 @@ impl Header {
     }
 }
 
-/// One key of `RawRowValues::$values`: `array_combine()` keeps a duplicated header at its first position with the
+/// One key of a row: `array_combine()` keeps a duplicated header at its first position with the
 /// value of its last one.
 struct Cell {
     header_index: usize,
@@ -58,6 +64,7 @@ pub struct CsvReader {
     record: Record,
     first_row_pending: bool,
     consumed_bytes: u64,
+    finished: bool,
 }
 
 impl CsvReader {
@@ -97,6 +104,7 @@ impl CsvReader {
             record: Record::default(),
             first_row_pending: false,
             consumed_bytes: 0,
+            finished: false,
         })
     }
 
@@ -106,6 +114,41 @@ impl CsvReader {
 
     pub fn finish(&mut self) {
         self.tokenizer.finish();
+        self.finished = true;
+    }
+
+    pub fn is_finished(&self) -> bool {
+        self.finished
+    }
+
+    /// The field of the header named `name` (the last of duplicates, as `array_combine()` keeps it); `None` before the
+    /// header resolved or when no header has that name.
+    pub fn field_of(&mut self, name: &[u8]) -> Option<usize> {
+        self.resolve_headers();
+        let headers = self.headers.as_ref()?;
+
+        self.cells
+            .iter()
+            .find(|cell| headers[cell.header_index].name == name)
+            .map(|cell| cell.field_index)
+    }
+
+    /// Advances to the next complete row, counting its bytes; `false` when none is buffered.
+    pub fn next_record(&mut self) -> bool {
+        self.resolve_headers();
+
+        self.headers.is_some()
+            && next_row(
+                &mut self.first_row_pending,
+                &mut self.tokenizer,
+                &mut self.record,
+                &mut self.consumed_bytes,
+            )
+    }
+
+    /// The current row's cell of `field`, as `Records::decode()` shapes it; `None` is null.
+    pub fn cell(&self, field: usize) -> Option<&[u8]> {
+        cell_value(&self.record, field, self.empty_to_null)
     }
 
     /// The bytes, as read, of every row `next` and `fold` produced so far: line endings included, the header
@@ -124,8 +167,8 @@ impl CsvReader {
             .unwrap_or_default()
     }
 
-    /// Up to `batch_size` `RawRowValues`; an empty list when no complete record is buffered.
-    pub fn next(&mut self, batch_size: usize, class: &RowValuesClass) -> Result<ZBox<ZendHashTable>, PhpException> {
+    /// Up to `batch_size` rows keyed by header; an empty list when no complete record is buffered.
+    pub fn next(&mut self, batch_size: usize) -> Result<ZBox<ZendHashTable>, PhpException> {
         self.resolve_headers();
 
         let mut batch = ZendHashTable::new();
@@ -135,12 +178,17 @@ impl CsvReader {
         };
 
         while batch.len() < batch_size {
-            if !next_row(&mut self.first_row_pending, &mut self.tokenizer, &mut self.record, &mut self.consumed_bytes) {
+            if !next_row(
+                &mut self.first_row_pending,
+                &mut self.tokenizer,
+                &mut self.record,
+                &mut self.consumed_bytes,
+            ) {
                 break;
             }
 
             batch
-                .push(row_values(headers, &self.record, self.empty_to_null, class))
+                .push(row_values(headers, &self.record, self.empty_to_null))
                 .map_err(|e| ext_exception(format!("flow_php failed to collect CSV row values: {e:?}")))?;
         }
 
@@ -160,7 +208,12 @@ impl CsvReader {
         let mut positions = vec![None; self.cells.len()];
 
         while limit.is_none_or(|limit| folded < limit) {
-            if !next_row(&mut self.first_row_pending, &mut self.tokenizer, &mut self.record, &mut self.consumed_bytes) {
+            if !next_row(
+                &mut self.first_row_pending,
+                &mut self.tokenizer,
+                &mut self.record,
+                &mut self.consumed_bytes,
+            ) {
                 break;
             }
 
@@ -179,7 +232,7 @@ impl CsvReader {
         Ok(folded)
     }
 
-    /// `CSVEncoder::decode()`'s first line: the header when `withHeader`, else `e00, e01, ...` sized by
+    /// `Records::decode()`'s first record: the header when `withHeader`, else `e00, e01, ...` sized by
     /// the first record, which then stays pending as the first row.
     fn resolve_headers(&mut self) {
         if self.headers.is_some() || !self.tokenizer.next(&mut self.record) {
@@ -206,13 +259,19 @@ impl CsvReader {
         } else {
             self.first_row_pending = true;
 
-            (0..record.len()).map(|index| Header::new(format!("e{index:02}").into_bytes())).collect()
+            (0..record.len())
+                .map(|index| Header::new(format!("e{index:02}").into_bytes()))
+                .collect()
         });
 
         let headers = self.headers.as_ref().expect("resolved above");
 
         for (index, header) in headers.iter().enumerate() {
-            match self.cells.iter_mut().find(|cell| headers[cell.header_index].name == header.name) {
+            match self
+                .cells
+                .iter_mut()
+                .find(|cell| headers[cell.header_index].name == header.name)
+            {
                 Some(cell) => cell.field_index = index,
                 None => self.cells.push(Cell {
                     header_index: index,
@@ -240,18 +299,18 @@ fn next_row(
     true
 }
 
-/// `CSVRowNormalizer::normalize()` for one cell: padding past the record's end, `emptyToNull`; `None` is null.
+/// `Records::decode()` for one cell: a cell past the record's end is null, a present `''` is null under `emptyToNull`;
+/// `None` is null.
 fn cell_value(record: &Record, index: usize, empty_to_null: bool) -> Option<&[u8]> {
     match record.field(index) {
         Field::Value(value) if !(empty_to_null && value.is_empty()) => Some(value),
-        Field::Value(_) | Field::Null => None,
-        Field::Missing if empty_to_null => None,
-        Field::Missing => Some(b""),
+        Field::Value(_) | Field::Null | Field::Missing => None,
     }
 }
 
-/// `new RawRowValues(array_combine($headers, $normalizer->normalize($fields, count($headers))))`.
-fn row_values(headers: &[Header], record: &Record, empty_to_null: bool, class: &RowValuesClass) -> ZBox<ZendObject> {
+/// `Records::decode()` for one record: one value per header, a duplicated header keeps its first position and its
+/// last value.
+fn row_values(headers: &[Header], record: &Record, empty_to_null: bool) -> Zval {
     let mut values = ZendHashTable::with_capacity(headers.len() as u32);
 
     for (index, header) in headers.iter().enumerate() {
@@ -260,24 +319,20 @@ fn row_values(headers: &[Header], record: &Record, empty_to_null: bool, class: &
         ht_insert_key(&mut values, &header.key(), value);
     }
 
-    let mut row_values = ZendObject::new(class.ce);
-
     let mut values_zv = Zval::new();
     values_zv.set_hashtable(values);
-    write_slot(&mut row_values, class.values_slot, values_zv);
 
-    let mut metadata_zv = Zval::new();
-    metadata_zv.set_hashtable(ZendHashTable::new());
-    write_slot(&mut row_values, class.metadata_slot, metadata_zv);
-
-    row_values
+    values_zv
 }
 
 /// PHP's `trim()`: `" \t\n\r\0\x0B"`, nothing else.
 pub fn php_trim(bytes: &[u8]) -> &[u8] {
     let is_trimmed = |byte: &u8| matches!(byte, b' ' | b'\t' | b'\n' | b'\r' | b'\0' | 0x0B);
     let start = bytes.iter().position(|byte| !is_trimmed(byte)).unwrap_or(bytes.len());
-    let end = bytes.iter().rposition(|byte| !is_trimmed(byte)).map_or(start, |end| end + 1);
+    let end = bytes
+        .iter()
+        .rposition(|byte| !is_trimmed(byte))
+        .map_or(start, |end| end + 1);
 
     &bytes[start..end]
 }

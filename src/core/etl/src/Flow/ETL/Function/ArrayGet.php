@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
 use Flow\ArrayDot\Exception\InvalidPathException;
 use Flow\ArrayDot\Path;
 use Flow\ArrayDot\Step\Key;
+use Flow\ETL\Column\Column;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
+use Flow\ETL\Function\Evaluation\ResultColumn;
+use Flow\ETL\Rows;
 use Flow\Types\Type;
 use Flow\Types\Type\ArrayKey;
 use Flow\Types\Type\Logical\StructureType;
@@ -100,18 +104,36 @@ final class ArrayGet implements ScalarFunction
         return $nullable ? (new TypeWidener())->nullable($type) : $type;
     }
 
-    public function eval(Row $row, FlowContext $context): mixed
+    public function eval(Rows $rows, FlowContext $context): Column
     {
         try {
-            $value = (new Parameter($this->ref))->asArray($row, $context);
-
-            if ($value === null) {
-                throw new InvalidArgumentException('ArrayGet function requires non-null array');
-            }
-
-            return array_dot_get($value, $this->path);
-        } catch (InvalidArgumentException $e) {
-            throw new InvalidArgumentException('ArrayGet function failed to get value from array.', 0, $e);
+            $values = (new Parameter($this->ref))->asArrays($rows, $context);
+        } catch (EvaluationException $e) {
+            throw new EvaluationException(
+                $e->rowIndex,
+                new InvalidArgumentException('ArrayGet function failed to get value from array.', 0, $e),
+            );
         }
+
+        $results = [];
+        $i = 0;
+
+        try {
+            foreach ($values as $i => $value) {
+                try {
+                    if ($value === null) {
+                        throw new InvalidArgumentException('ArrayGet function requires non-null array');
+                    }
+
+                    $results[] = array_dot_get($value, $this->path);
+                } catch (InvalidArgumentException $e) {
+                    throw new InvalidArgumentException('ArrayGet function failed to get value from array.', 0, $e);
+                }
+            }
+        } catch (Exception $e) {
+            throw EvaluationException::at($i, $e);
+        }
+
+        return (new ResultColumn($context->backend()))->of($this, $results);
     }
 }

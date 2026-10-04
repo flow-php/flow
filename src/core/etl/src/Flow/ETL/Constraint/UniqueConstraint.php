@@ -7,10 +7,10 @@ namespace Flow\ETL\Constraint;
 use Flow\ETL\Constraint;
 use Flow\ETL\Constraint\UniqueConstraint\InMemoryStorage;
 use Flow\ETL\Constraint\UniqueConstraint\Storage;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
-use Flow\ETL\Schema;
+use Flow\ETL\Rows;
+use Flow\ETL\Rows\RowHashes;
 use Flow\Types\Type\TypedValueFormatter;
 
 use function Flow\ETL\DSL\refs;
@@ -21,36 +21,27 @@ final class UniqueConstraint implements Constraint
 
     private Storage $storage;
 
-    /**
-     * Rows arrive batch by batch and Rows::schema() hands out the same instance for a whole batch,
-     * so the kept schema is folded once per batch instead of once per row.
-     */
-    private ?Schema $keptSchema = null;
-
-    private ?Schema $keptSchemaSource = null;
-
     public function __construct(string|Reference $column, string|Reference ...$columns)
     {
         $this->reference = refs($column, ...$columns);
         $this->storage = new InMemoryStorage();
     }
 
-    public function isSatisfiedBy(Row $row, Schema $schema): bool
+    public function firstViolation(Rows $rows): ?int
     {
-        if ($this->keptSchema === null || $this->keptSchemaSource !== $schema) {
-            $this->keptSchema = $schema->keep(...$this->reference);
-            $this->keptSchemaSource = $schema;
+        if ($rows->isEmpty()) {
+            return null;
         }
 
-        $key = $row->hash($this->keptSchema);
+        foreach ((new RowHashes())->of($rows->select(...$this->reference->names())) as $i => $key) {
+            if ($this->storage->has($key)) {
+                return $i;
+            }
 
-        if ($this->storage->has($key)) {
-            return false;
+            $this->storage->set($key);
         }
 
-        $this->storage->set($key);
-
-        return true;
+        return null;
     }
 
     public function toString(): string
@@ -61,19 +52,19 @@ final class UniqueConstraint implements Constraint
         )));
     }
 
-    public function violation(Row $row, Schema $schema): string
+    public function violation(Rows $rows, int $index): string
     {
         $formatter = new TypedValueFormatter();
         $violations = [];
 
-        foreach ($schema->keep(...$this->reference)->definitions() as $definition) {
+        foreach ($rows->schema()->keep(...$this->reference)->definitions() as $definition) {
             $name = $definition->entry()->name();
             $violations[] =
                 $name
                 . '<'
                 . $definition->type()->toString()
                 . '> = '
-                . $formatter->format($definition->type(), $row->get($name));
+                . $formatter->format($definition->type(), $rows->column($name)->value($index));
         }
 
         return sprintf('Values: [%s]', implode(', ', $violations));

@@ -31,7 +31,7 @@ class TimestampType
             'var' => 'unit',
             'isRequired' => true,
             'type' => TType::STRUCT,
-            'class' => '\Flow\Parquet\Thrift\TimeUnit',
+            'class' => '\Flow\Parquet\ThriftModel\TimeUnit',
         ],
     ];
 
