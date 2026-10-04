@@ -1,6 +1,13 @@
-## [Unreleased] - 2026-09-26
+## [Unreleased] - 2026-10-04
 
 ### Added
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl - columnar Rows batch built by a configurable column Backend (PhpBackend, RustBackend, AdaptiveBackend)** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl - FileReadLoop / FileBatches and FileWriteFrame / FileSinks shared by every file format** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl - Rows::select(), Rows::concat(), RowsJoin and ColumnBuilder::appendPhysicals()** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/flow-php-ext - native Arrow column backend, CSV, JSON and Parquet read and write as native columns** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/arrow-ext - new Parquet core exchanging batches with flow_php through the Arrow C Data Interface** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl-adapter-http - withBatchSize() on from_static_http_requests()** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl - Column Backend documentation page and new playground examples** - [@norberttech](https://github.com/norberttech)
 - [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/parquet - DECIMAL on INT32, INT64, BYTE_ARRAY and FLBA of any width** - [@norberttech](https://github.com/norberttech)
 - [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/parquet - TimeUnit enum with MILLIS, MICROS, NANOS** - [@norberttech](https://github.com/norberttech)
 - [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/arrow-ext - unit and utc schema keys for TIMESTAMP and TIME** - [@norberttech](https://github.com/norberttech)
@@ -48,6 +55,19 @@
 - [#2640](https://github.com/flow-php/flow/pull/2640) - **flow-php/cli - ProgressBarLoader advancing a progress bar per batch** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl - Row removed, every reader, writer, function and processor works on columns** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl - the configured backend builds every batch, function result, join, sort, group-by and cache read** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl - Rows::empty(), matchTo(), project(), concat() and ResultColumn take a Backend** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl - FloeSerializer and the caches take the serializer and backend explicitly** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl - file plumbing moved to Extractor\File and Loader\File, column internals to Column\Physical and Column\Layout** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl - Floe writes one BATCH frame per batch** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl - a mismatched flow_php or arrow extension build is refused with a clear message** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl-adapter-csv - header names, absent cells and blank leading rows follow one rule shared with Excel and Google Sheet** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl-adapter-json - from_json_lines() / to_json_lines() return JsonExtractor / JsonLoader, *JSONEncoder renamed *JsonEncoder** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl-adapter-excel - CellStyler receives the written cell** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl-adapter-doctrine - markup is bound as rendered text** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl-adapter-postgresql - InsertQueryBuilder::build() takes columns, markup is bound as rendered text** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/parquet - ParquetEngine follows the Php / Rust / Adaptive pattern, arrow-ext owns Parquet** - [@norberttech](https://github.com/norberttech)
 - [#2660](https://github.com/flow-php/flow/pull/2660) - **flow-php/types - structure normalize() no longer writes allow_extra, fromArray() refuses allow_extra true** - [@norberttech](https://github.com/norberttech)
 - [#2660](https://github.com/flow-php/flow/pull/2660) - **flow-php/etl - Floe footer ignores unknown keys without an open structure** - [@norberttech](https://github.com/norberttech)
 - [#2660](https://github.com/flow-php/flow/pull/2660) - **flow-php/mago-types-bridge - type_structure() always derives a sealed shape** - [@norberttech](https://github.com/norberttech)
@@ -117,6 +137,15 @@
 - [#2635](https://github.com/flow-php/flow/pull/2635) - **flow-php/parquet - reader and writer row types widened to array-key.** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl - group-by keys stay stable when a batch lacks a nullable key column** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl - date and datetime keys at the same instant join and group together** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl - matchTo() reports the first bad row** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl - html and xml elements keep their parent through a column** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl-adapter-excel - html, html_element and xml_element cells are written instead of empty** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl-adapter-seal - html values no longer leak internal bytes** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/parquet - DELTA_BINARY_PACKED, unsigned integers and INT96 follow the spec** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/filesystem - Path::uri() of a local file keeps the root slash** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl - to_branch() runs in the WASM playground** - [@norberttech](https://github.com/norberttech)
 - [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/parquet - TIMESTAMP and TIME honour MILLIS/NANOS units** - [@norberttech](https://github.com/norberttech)
 - [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/parquet - DATE written as the value's wall-clock day** - [@norberttech](https://github.com/norberttech)
 - [#2659](https://github.com/flow-php/flow/pull/2659) - **flow-php/parquet - ConvertedType-only columns read as temporal and decimal values** - [@norberttech](https://github.com/norberttech)
@@ -153,6 +182,11 @@
 - [#2635](https://github.com/flow-php/flow/pull/2635) - **flow-php/etl - chained rename strategies no longer desync rows from the schema on numeric entry names.** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl - row(), InferredBatch, DataFrame::getEach(), RowsBuffer, RowEquality, DeclaredColumns and eleven Rows helpers** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl-adapter-json - JsonLinesExtractor and JsonLinesLoader** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/etl-adapter-xml - XMLReaderExtractor and XMLLoader::write()** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/arrow-ext - RandomAccessFile and OutputStream** - [@norberttech](https://github.com/norberttech)
+- [#2666](https://github.com/flow-php/flow/pull/2666) - **flow-php/parquet - ArrowParquetEngine, the arrow() factories and Option::BYTE_ARRAY_TO_STRING** - [@norberttech](https://github.com/norberttech)
 - [#2660](https://github.com/flow-php/flow/pull/2660) - **flow-php/types - type_structure() allow_extra argument and StructureType::allowsExtra()** - [@norberttech](https://github.com/norberttech)
 - [#2660](https://github.com/flow-php/flow/pull/2660) - **flow-php/etl - Floe refusal of structures allowing extra values** - [@norberttech](https://github.com/norberttech)
 - [#2660](https://github.com/flow-php/flow/pull/2660) - **flow-php/flow-php-ext - allow_extra schema field and its refusals** - [@norberttech](https://github.com/norberttech)
