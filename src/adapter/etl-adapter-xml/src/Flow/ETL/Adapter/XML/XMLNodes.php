@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\XML;
 
 use DOMDocument;
+use Flow\ETL\Column\Physical\XmlCharacterReferences;
 use Flow\Filesystem\SourceStream;
 use Generator;
 
@@ -62,6 +63,7 @@ final readonly class XMLNodes
     public function texts(SourceStream $stream, int $bufferSize): Generator
     {
         $internalErrors = libxml_use_internal_errors();
+        $references = new XmlCharacterReferences();
 
         foreach ($this->cursor->of($stream, $bufferSize) as $reader) {
             $text = @$reader->readOuterXml();
@@ -72,7 +74,7 @@ final readonly class XMLNodes
 
             libxml_use_internal_errors($internalErrors);
 
-            yield $text;
+            yield $references->decoded($text);
         }
     }
 }

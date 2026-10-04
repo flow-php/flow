@@ -48,7 +48,7 @@ final class AdaptiveParquetOpenSinkTest extends FlowTestCase
         $sink = new AdaptiveParquetOpenSink(
             $filesystem->writeTo(path('memory://out.parquet')),
             (new SchemaConverter())->toParquet($schema),
-            Compressions::ZSTD,
+            Compressions::GZIP,
             Options::default(),
             $engine,
         );

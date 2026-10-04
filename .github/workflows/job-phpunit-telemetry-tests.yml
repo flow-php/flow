@@ -54,7 +54,9 @@ jobs:
           extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, curl, pgsql, grpc, protobuf'
           ini-values: 'memory_limit=-1'
           apt-packages: "build-essential autoconf automake libtool protobuf-compiler libprotobuf-c-dev"
-          pie-extensions: "flow-php/pg-query-ext:1.x-dev"
+
+      - name: "Build pg-query-ext from source"
+        uses: "./.github/actions/pg-query-ext"
 
       - name: "Install PHPUnit ${{ matrix.phpunit-version }}"
         if: ${{ matrix.phpunit-version != '11' }}

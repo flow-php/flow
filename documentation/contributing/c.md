@@ -95,7 +95,7 @@ The extension is only half of the story. A given `libpg_query` version pins a sp
 
 | Place                                                                                                                           | What it is                                                                | Used by                           |
 |---------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|-----------------------------------|
-| `src/extension/pg-query-ext/vendor/libpg_query` (Makefile `PG_VERSION`)                                                         | the C library compiled into the extension                                 | CI (`pie` build)                  |
+| `src/extension/pg-query-ext/vendor/libpg_query` (`LIBPG_QUERY_VERSION`)                                                         | the C library compiled into the extension                                 | CI (`pie` build)                  |
 | `.nix/pkgs/php-pg-query-ext/package.nix` (`libpg_query` `version`/`rev`/`hash`)                                                 | the C library compiled into the **nix dev shell**                         | local `nix-shell`                 |
 | `src/lib/postgresql/resources/proto/pg_query.proto` + the generated stubs in `src/lib/postgresql/src/Flow/PostgreSql/Protobuf/` | the protobuf schema the PHP side serializes/deserializes parse trees with | the `flow-php/postgresql` library |
 
@@ -107,7 +107,8 @@ incident: PG17→PG18 left the stubs stale and crashed CI intermittently, while 
 
 When you change the `libpg_query` version, do **all** of the following, then run the full PHP suite:
 
-1. Bump the C side (`src/extension/pg-query-ext/Makefile` `PG_VERSION` / vendored copy).
+1. Bump the C side: `LIBPG_QUERY_VERSION` in `src/extension/pg-query-ext/Makefile` and `ext/config.m4` (a release tag, never a
+   branch - `18-latest` moved under CI once), then `make distclean build`.
 2. Bump the nix pin in `.nix/pkgs/php-pg-query-ext/package.nix` to the **same** `libpg_query` tag, and
    update its `hash` (`nix-prefetch-url --unpack <github-archive-url>` → `nix hash convert --to sri`).
 3. Regenerate the PHP stubs from the new grammar - sync `resources/proto/pg_query.proto` from

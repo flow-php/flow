@@ -21,4 +21,7 @@
       <directory>../../src/core/etl/src/Flow/ETL/DSL</directory>
     </exclude>
   </source>
+  <extensions>
+    <bootstrap class="Flow\ETL\Tests\Comparator\ComparatorExtension"/>
+  </extensions>
 </phpunit>

@@ -56,8 +56,7 @@ check), which is what triggers the rebuild.
 `src/extension/pg-query-ext/Makefile`, so the playground and the native extension can never
 disagree about which PostgreSQL grammar parses, and fails fast if that variable cannot be read.
 
-The pin is a **branch** (`18-latest`), not a tag. Changing it re-clones automatically; upstream
-moving the branch under a fixed version does not, and needs `rm -rf wasm/libpg_query-*`.
+The pin is a release tag (`18.0.0`), so a build is reproducible. Changing it re-clones automatically.
 
 ## Included PHP Extensions
 
@@ -334,7 +333,7 @@ Two consequences worth knowing before changing any of this:
   file of the *wrong* architecture, which the existing `[ ! -f ]` guard cannot detect.
 - **Switching target does not invalidate the dependency guards.** Each guard tests its own build
   output (`libxml2-2.11.4/` the source dir, `libzip-1.11.3/install/lib/libzip.a`,
-  `libpg_query-18-latest/libpg_query.a`), and none of them knows about the target. libzip
+  `libpg_query-18.0.0/libpg_query.a`), and none of them knows about the target. libzip
   additionally caches the resolved zlib path in `build/CMakeCache.txt`, which is why `build.sh`
   removes that directory before configuring.
 

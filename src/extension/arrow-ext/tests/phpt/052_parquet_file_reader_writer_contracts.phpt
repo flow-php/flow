@@ -88,7 +88,7 @@ $writer = static fn($stream, Compressions $compression = Compressions::SNAPPY, i
 );
 $values = static fn(string $uri): string => json_encode(iterator_to_array(Reader::php()->readStream($filesystem->readFrom(path($uri)))->values(), false));
 
-$file = $writer($filesystem->writeTo(path('memory://doors.parquet')), Compressions::LZ4, 2);
+$file = $writer($filesystem->writeTo(path('memory://doors.parquet')), Compressions::GZIP, 2);
 var_dump($file instanceof ParquetFileWriter);
 $file->writeRow(['id' => 1]);
 $file->writeBatch([['id' => 2], 'key' => ['id' => 3, 'name' => 'c']]);

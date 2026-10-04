@@ -34,6 +34,8 @@ final readonly class XmlElementPhysical implements Physical
                 throw new InvalidArgumentException('Floe failed to convert DOMElement to XML string');
             }
 
+            $xml = (new XmlCharacterReferences())->decoded($xml);
+
             return $path === null ? $xml : $this->position->physical($path, $this->canonical($value), $xml);
         }
 
@@ -43,6 +45,7 @@ final readonly class XmlElementPhysical implements Physical
         // @mago-ignore analysis:mixed-assignment
         $markup = $value->ownerDocument?->saveXml($path === null ? $value : null);
         assert(is_string($markup));
+        $markup = (new XmlCharacterReferences())->decoded($markup);
 
         return $path === null ? $markup : $this->position->physical($path, $this->canonical($value), $markup);
     }

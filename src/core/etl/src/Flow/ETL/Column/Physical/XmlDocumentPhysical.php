@@ -56,7 +56,7 @@ final readonly class XmlDocumentPhysical implements Physical
             throw new InvalidArgumentException('Floe failed to convert DOMDocument to XML string');
         }
 
-        return $xml;
+        return (new XmlCharacterReferences())->decoded($xml);
     }
 
     public function fromPhysical(mixed $physical): mixed
