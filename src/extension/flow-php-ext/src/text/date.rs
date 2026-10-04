@@ -93,8 +93,9 @@ impl Zone {
         }
     }
 
-    /// A named zone reads `DateTimeZone::getTransitions($min, $max)`: the offset in force at `$min`, then every change
-    /// up to `$max`. Once per batch per column.
+    /// A named zone reads `DateTimeZone::getTransitions($min, $max + 1)`: the offset in force at `$min`, then every
+    /// change up to and including `$max`. PHP built against the system tzdata (Debian, Ubuntu) leaves out a transition
+    /// at exactly the end of the range, PHP's bundled database keeps it. Once per batch per column.
     pub fn resolve(&mut self, min_second: i64, max_second: i64) -> Result<(), PhpException> {
         let Zone::Named { id, transitions } = self else {
             return Ok(());
@@ -103,7 +104,7 @@ impl Zone {
         let listed = call_method(
             &ctx::timezone(id)?,
             "getTransitions",
-            &mut [zval_long(min_second), zval_long(max_second)],
+            &mut [zval_long(min_second), zval_long(max_second.saturating_add(1))],
         )?;
         let listed = listed
             .array()
