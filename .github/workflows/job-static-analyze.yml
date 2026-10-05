@@ -21,27 +21,29 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: "Setup PHP Environment"
-        uses: "./.github/actions/setup-php-env"
-        with:
-          php-version: "${{ matrix.php-version }}"
-          dependencies: "${{ matrix.dependencies }}"
-          coverage: "none"
-          extra-working-directory: "web/landing"
-          extra-cache-key-suffix: "-website"
-          extra-composer-file: "web/landing/composer.lock"
+      - parallel:
+        - name: "Install actionlint + zizmor"
+          env:
+            ACTIONLINT_VERSION: "1.7.12"
+            ZIZMOR_VERSION: "1.24.1"
+          run: |
+            curl -fsSL "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz" \
+              | sudo tar -xz -C /usr/local/bin actionlint
+            pipx install "zizmor==${ZIZMOR_VERSION}"
 
-      - name: "Static Analyze"
-        run: "just analyze"
+        - name: "Setup PHP Environment"
+          uses: "./.github/actions/setup-php-env"
+          with:
+            php-version: "${{ matrix.php-version }}"
+            dependencies: "${{ matrix.dependencies }}"
+            coverage: "none"
+            extra-working-directory: "web/landing"
+            extra-cache-key-suffix: "-website"
+            extra-composer-file: "web/landing/composer.lock"
 
-      - name: "Install actionlint + zizmor"
-        env:
-          ACTIONLINT_VERSION: "1.7.12"
-          ZIZMOR_VERSION: "1.24.1"
-        run: |
-          curl -fsSL "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz" \
-            | sudo tar -xz -C /usr/local/bin actionlint
-          pipx install "zizmor==${ZIZMOR_VERSION}"
+      - parallel:
+        - name: "Static Analyze"
+          run: "just analyze"
 
-      - name: "Lint"
-        run: "just lint"
+        - name: "Lint"
+          run: "just lint"
