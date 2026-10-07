@@ -1,3 +1,24 @@
+## [Unreleased] - 2026-10-07
+
+### Added
+- [#2671](https://github.com/flow-php/flow/pull/2671) - **flow-php/etl-adapter-postgresql - keyset reads run a NULL key check query before the first page** - [@norberttech](https://github.com/norberttech)
+- [#2671](https://github.com/flow-php/flow/pull/2671) - **flow-php/etl-adapter-doctrine - keyset reads run a NULL key check query before the first page** - [@norberttech](https://github.com/norberttech)
+
+### Changed
+- [#2671](https://github.com/flow-php/flow/pull/2671) - **flow-php/etl-adapter-postgresql - a short keyset page ends the read without an extra query** - [@norberttech](https://github.com/norberttech)
+- [#2671](https://github.com/flow-php/flow/pull/2671) - **flow-php/etl-adapter-doctrine - a short keyset page ends the read without an extra query** - [@norberttech](https://github.com/norberttech)
+- [#2671](https://github.com/flow-php/flow/pull/2671) - **flow-php/etl-adapter-doctrine - keyset extractor rejects setMaxResults() / setFirstResult()** - [@norberttech](https://github.com/norberttech)
+- [#2671](https://github.com/flow-php/flow/pull/2671) - **flow-php/etl-adapter-doctrine - pagination_key_set() requires at least one key** - [@norberttech](https://github.com/norberttech)
+- [#2671](https://github.com/flow-php/flow/pull/2671) - **flow-php/postgresql - keyset query ORDER BY must equal the keys** - [@norberttech](https://github.com/norberttech)
+- [#2671](https://github.com/flow-php/flow/pull/2671) - **flow-php/postgresql - same-direction composite keyset keys use a row comparison** - [@norberttech](https://github.com/norberttech)
+
+### Fixed
+- [#2671](https://github.com/flow-php/flow/pull/2671) - **flow-php/etl-adapter-postgresql - keyset reads no longer drop NULL or duplicate key rows depending on batch size** - [@norberttech](https://github.com/norberttech)
+- [#2671](https://github.com/flow-php/flow/pull/2671) - **flow-php/etl-adapter-doctrine - keyset reads no longer drop NULL or duplicate key rows depending on batch size** - [@norberttech](https://github.com/norberttech)
+- [#2671](https://github.com/flow-php/flow/pull/2671) - **flow-php/etl-adapter-postgresql - quoted keyset keys read their unquoted result columns** - [@norberttech](https://github.com/norberttech)
+- [#2671](https://github.com/flow-php/flow/pull/2671) - **flow-php/postgresql - keyset pagination no longer silently replaces a query's own LIMIT** - [@norberttech](https://github.com/norberttech)
+- [#2671](https://github.com/flow-php/flow/pull/2671) - **flow-php/postgresql - keyset pagination rejects a NULL cursor value** - [@norberttech](https://github.com/norberttech)
+
 ## [0.45.0] - 2026-10-04
 
 ### Added
