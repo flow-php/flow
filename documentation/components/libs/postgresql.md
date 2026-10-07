@@ -494,14 +494,22 @@ $page1 = sql_to_keyset_query($sql, limit: 100, columns: $columns, cursor: null);
 // SELECT * FROM audit_log ORDER BY created_at DESC, id DESC LIMIT 100
 
 $page2 = sql_to_keyset_query($sql, limit: 100, columns: $columns, cursor: ['2025-01-15 14:30:00', 1000]);
-// SELECT * FROM audit_log WHERE created_at < $1 OR (created_at = $1 AND id < $2) ORDER BY created_at DESC, id DESC LIMIT 100
+// SELECT * FROM audit_log WHERE (created_at, id) < ($1, $2) ORDER BY created_at DESC, id DESC LIMIT 100
 ```
 
 The cursor values come from the last row of the previous page. Keyset pagination:
 
 - Uses O(log n) index lookups instead of O(n) row scanning
-- Handles mixed ASC/DESC sort orders correctly
+- Uses a row comparison `(a, b) > ($1, $2)` when all keys sort the same direction, and an `OR` expansion when
+  directions are mixed
 - Works with existing WHERE conditions (combined with AND)
+
+Rules:
+
+- Key columns must be non-null and unique together; a NULL cursor value throws `PaginationException`
+- ORDER BY is optional; when present it must list exactly the keys, in order, with no NULLS clause, ordinal,
+  expression or USING
+- The query must not have its own LIMIT or OFFSET; pass the page size as `limit`
 
 ---
 
@@ -678,7 +686,7 @@ $query->traverse(new KeysetPaginationModifier(new KeysetPaginationConfig(
     cursor: ['2025-01-15', 42]
 )));
 echo $query->deparse();
-// SELECT * FROM users WHERE created_at > $1 OR (created_at = $1 AND id > $2) ORDER BY created_at, id LIMIT 10
+// SELECT * FROM users WHERE (created_at, id) > ($1, $2) ORDER BY created_at, id LIMIT 10
 ```
 
 `ExplainModifier` wraps every statement before any of them is visited, so run it in its own `traverse()` after the

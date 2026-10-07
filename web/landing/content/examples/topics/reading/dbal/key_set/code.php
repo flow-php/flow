@@ -42,8 +42,7 @@ data_frame()
             $connection,
             $connection->createQueryBuilder()
                 ->select('order_id', 'created_at', 'customer')
-                ->from('orders')
-                ->setMaxResults(5),
+                ->from('orders'),
             pagination_key_set(pagination_key_asc('order_id')),
         )
     )

@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\Tests\Integration;
 
+use Flow\ETL\Adapter\PostgreSql\Tests\Context\NamedRowsContext;
 use Flow\ETL\Adapter\PostgreSql\Tests\IntegrationTestCase;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\RuntimeException;
+use PHPUnit\Framework\Attributes\TestWith;
 
 use function array_column;
 use function Flow\ETL\Adapter\PostgreSql\from_pgsql_key_set;
@@ -13,6 +16,7 @@ use function Flow\ETL\Adapter\PostgreSql\pgsql_pagination_key_asc;
 use function Flow\ETL\Adapter\PostgreSql\pgsql_pagination_key_desc;
 use function Flow\ETL\Adapter\PostgreSql\pgsql_pagination_key_set;
 use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_all;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\int_schema;
@@ -21,6 +25,7 @@ use function Flow\PostgreSql\DSL\asc;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\column;
 use function Flow\PostgreSql\DSL\column_type_integer;
+use function Flow\PostgreSql\DSL\column_type_numeric;
 use function Flow\PostgreSql\DSL\column_type_text;
 use function Flow\PostgreSql\DSL\create;
 use function Flow\PostgreSql\DSL\delete;
@@ -47,7 +52,7 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
                 ->column(column('name', column_type_text())),
         );
 
-        $this->insertTestData(25);
+        NamedRowsContext::insert($this->client, $this->tableName, 25);
     }
 
     public function test_a_data_modifying_cte_is_refused_before_it_runs(): void
@@ -377,14 +382,133 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
         );
     }
 
-    private function insertTestData(int $count): void
+    public function test_duplicate_keys_throw(): void
     {
-        $insert = insert()->into($this->tableName)->columns('id', 'name');
+        $this->client->execute(
+            create()
+                ->table('flow_postgresql_keyset_duplicates')
+                ->column(column('id', column_type_integer())->primaryKey())
+                ->column(column('k', column_type_integer())->notNull()),
+        );
+        $this->client->execute(
+            insert()
+                ->into('flow_postgresql_keyset_duplicates')
+                ->columns('id', 'k')
+                ->values(literal(1), literal(1))
+                ->values(literal(2), literal(1))
+                ->values(literal(3), literal(1))
+                ->values(literal(4), literal(2))
+                ->values(literal(5), literal(3))
+                ->values(literal(6), literal(3)),
+        );
 
-        for ($i = 1; $i <= $count; $i++) {
-            $insert = $insert->values(literal($i), literal(sprintf('User_%02d', $i)));
-        }
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Keyset pagination requires unique keys, but two rows share the key');
 
-        $this->client->execute($insert);
+        df()
+            ->read(from_pgsql_key_set(
+                $this->client,
+                select(col('id'), col('k'))->from(table('flow_postgresql_keyset_duplicates')),
+                pgsql_pagination_key_set(pgsql_pagination_key_asc('k')),
+            )->withBatchSize(2))
+            ->fetch();
+    }
+
+    public function test_equal_numeric_keys_with_different_scale_throw(): void
+    {
+        $this->client->execute(
+            create()->table('flow_postgresql_keyset_numeric')->column(column('k', column_type_numeric())->notNull()),
+        );
+        $this->client->execute(
+            insert()
+                ->into('flow_postgresql_keyset_numeric')
+                ->columns('k')
+                ->values(literal('1.0'))
+                ->values(literal('1.00'))
+                ->values(literal('2')),
+        );
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Keyset pagination expected the next page to start at the key');
+
+        df()
+            ->read(from_pgsql_key_set(
+                $this->client,
+                select(col('k'))->from(table('flow_postgresql_keyset_numeric')),
+                pgsql_pagination_key_set(pgsql_pagination_key_asc('k')),
+            )->withBatchSize(1))
+            ->fetch();
+    }
+
+    public function test_null_in_secondary_key_throws_before_first_row(): void
+    {
+        $this->client->execute(
+            create()
+                ->table('flow_postgresql_keyset_nulls')
+                ->column(column('a', column_type_integer())->notNull())
+                ->column(column('b', column_type_integer())->nullable()),
+        );
+        $this->client->execute(
+            insert()
+                ->into('flow_postgresql_keyset_nulls')
+                ->columns('a', 'b')
+                ->values(literal(1), literal(1))
+                ->values(literal(1), literal(null))
+                ->values(literal(2), literal(1)),
+        );
+
+        $generator = from_pgsql_key_set(
+            $this->client,
+            select(col('a'), col('b'))->from(table('flow_postgresql_keyset_nulls')),
+            pgsql_pagination_key_set(pgsql_pagination_key_asc('a'), pgsql_pagination_key_asc('b')),
+        )
+            ->withBatchSize(2)
+            ->extract(flow_context());
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            'Keyset pagination requires non-null keys, but a row has NULL in the key column(s) "a", "b"',
+        );
+
+        $generator->current();
+    }
+
+    #[TestWith([2])]
+    #[TestWith([3])]
+    #[TestWith([5])]
+    #[TestWith([6])]
+    #[TestWith([10])]
+    public function test_null_keys_throw_at_every_batch_size(int $batchSize): void
+    {
+        $this->client->execute(
+            create()
+                ->table('keyset_null_repro')
+                ->column(column('id', column_type_integer())->primaryKey())
+                ->column(column('k', column_type_integer())->nullable()),
+        );
+        $this->client->execute(
+            insert()
+                ->into('keyset_null_repro')
+                ->columns('id', 'k')
+                ->values(literal(1), literal(1))
+                ->values(literal(2), literal(2))
+                ->values(literal(3), literal(3))
+                ->values(literal(4), literal(4))
+                ->values(literal(5), literal(null))
+                ->values(literal(6), literal(null)),
+        );
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            'Keyset pagination requires non-null keys, but a row has NULL in the key column(s) "k"',
+        );
+
+        df()
+            ->read(from_pgsql_key_set(
+                $this->client,
+                'SELECT id, k FROM keyset_null_repro',
+                pgsql_pagination_key_set(pgsql_pagination_key_asc('k')),
+            )->withBatchSize($batchSize))
+            ->fetch();
     }
 }

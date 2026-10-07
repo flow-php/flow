@@ -4,22 +4,31 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\Tests\Unit;
 
+use Flow\ETL\Adapter\PostgreSql\Pagination\KeySet;
+use Flow\ETL\Adapter\PostgreSql\Pagination\Order;
+use Flow\ETL\Adapter\PostgreSql\Tests\Double\SortedRowsClient;
 use Flow\ETL\Adapter\PostgreSql\Tests\Double\SpyClient;
 use Flow\ETL\Adapter\PostgreSql\Tests\Double\StubCursor;
 use Flow\ETL\Adapter\PostgreSql\Tests\Mother\ColumnMother;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
 use Flow\PostgreSql\Client\Exception\PostgreSqlError;
 use Flow\PostgreSql\Client\Exception\QueryException;
+use Flow\PostgreSql\Exception\PaginationException;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 
 use function array_map;
 use function extension_loaded;
 use function Flow\ETL\Adapter\PostgreSql\from_pgsql_key_set;
 use function Flow\ETL\Adapter\PostgreSql\pgsql_pagination_key_asc;
+use function Flow\ETL\Adapter\PostgreSql\pgsql_pagination_key_desc;
 use function Flow\ETL\Adapter\PostgreSql\pgsql_pagination_key_set;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\df;
@@ -31,6 +40,62 @@ use function range;
 
 final class PostgreSqlKeySetExtractorTest extends FlowTestCase
 {
+    /**
+     * @return Generator<string, array{int}>
+     */
+    public static function batch_sizes(): Generator
+    {
+        yield '1' => [1];
+        yield '2' => [2];
+        yield '3' => [3];
+        yield '4' => [4];
+        yield '6' => [6];
+        yield '10' => [10];
+    }
+
+    /**
+     * @return Generator<string, array{string, KeySet, string}>
+     */
+    public static function null_checks(): Generator
+    {
+        yield 'single key' => [
+            'SELECT id FROM t WHERE active = $1',
+            pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+            'SELECT 1 FROM (SELECT id FROM t WHERE active = $1) _flow_keyset_nulls WHERE id IS NULL LIMIT 1',
+        ];
+        yield 'composite key' => [
+            'SELECT id, created_at FROM t WHERE active = $1',
+            pgsql_pagination_key_set(pgsql_pagination_key_asc('created_at'), pgsql_pagination_key_asc('id')),
+            'SELECT 1 FROM (SELECT id, created_at FROM t WHERE active = $1) _flow_keyset_nulls WHERE created_at IS NULL OR id IS NULL LIMIT 1',
+        ];
+        yield 'qualified key' => [
+            'SELECT u.id FROM t u WHERE u.active = $1',
+            pgsql_pagination_key_set(pgsql_pagination_key_asc('u.id')),
+            'SELECT 1 FROM (SELECT u.id FROM t u WHERE u.active = $1) _flow_keyset_nulls WHERE id IS NULL LIMIT 1',
+        ];
+    }
+
+    /**
+     * @return Generator<string, array{int, list<array{k: null|int}>, KeySet, Order}>
+     */
+    public static function null_keys(): Generator
+    {
+        foreach (self::batch_sizes() as [$batchSize]) {
+            yield "ascending, batch {$batchSize}" => [
+                $batchSize,
+                [['k' => 1], ['k' => 2], ['k' => null]],
+                pgsql_pagination_key_set(pgsql_pagination_key_asc('k')),
+                Order::ASC,
+            ];
+            yield "descending, batch {$batchSize}" => [
+                $batchSize,
+                [['k' => null], ['k' => 2], ['k' => 1]],
+                pgsql_pagination_key_set(pgsql_pagination_key_desc('k')),
+                Order::DESC,
+            ];
+        }
+    }
+
     public function test_a_failing_read_probes_once(): void
     {
         $client = (new SpyClient())->willRefuseDescribe(QueryException::executionFailed(
@@ -79,9 +144,8 @@ final class PostgreSqlKeySetExtractorTest extends FlowTestCase
         $client = (new SpyClient())
             ->willDescribe(ColumnMother::of(['id' => 'int8']))
             ->willReturnCursors(
-                new StubCursor([['id' => '1'], ['id' => '2']]),
+                new StubCursor([['id' => '1'], ['id' => '2'], ['id' => '3']]),
                 new StubCursor([['id' => '3']]),
-                new StubCursor(),
             );
 
         iterator_to_array(
@@ -99,9 +163,8 @@ final class PostgreSqlKeySetExtractorTest extends FlowTestCase
 
         static::assertSame(
             [
-                ['sql' => 'SELECT id FROM t WHERE active = $1 ORDER BY id ASC LIMIT $2', 'parameters' => [true, 2]],
-                ['sql' => $nextPage, 'parameters' => [true, 2, '2']],
-                ['sql' => $nextPage, 'parameters' => [true, 2, '3']],
+                ['sql' => 'SELECT id FROM t WHERE active = $1 ORDER BY id ASC LIMIT $2', 'parameters' => [true, 3]],
+                ['sql' => $nextPage, 'parameters' => [true, 3, '2']],
             ],
             $client->cursorQueries,
         );
@@ -164,9 +227,8 @@ final class PostgreSqlKeySetExtractorTest extends FlowTestCase
         $client = (new SpyClient())
             ->willDescribe(ColumnMother::of(['id' => 'int8']))
             ->willReturnCursors(
-                new StubCursor([['id' => '1'], ['id' => '2']]),
+                new StubCursor([['id' => '1'], ['id' => '2'], ['id' => '3']]),
                 new StubCursor([['id' => '3']]),
-                new StubCursor(),
             );
 
         $extractor = from_pgsql_key_set(
@@ -316,9 +378,8 @@ final class PostgreSqlKeySetExtractorTest extends FlowTestCase
         $client = (new SpyClient())
             ->willDescribe(ColumnMother::of(['id' => 'int8']))
             ->willReturnCursors(
-                new StubCursor(array_map(static fn(int $id): array => ['id' => (string) $id], range(1, 1000))),
-                new StubCursor(array_map(static fn(int $id): array => ['id' => (string) $id], range(1001, 1500))),
-                new StubCursor(array_map(static fn(int $id): array => ['id' => (string) $id], range(1501, 2500))),
+                new StubCursor(array_map(static fn(int $id): array => ['id' => (string) $id], range(1, 1001))),
+                new StubCursor(array_map(static fn(int $id): array => ['id' => (string) $id], range(1001, 1501))),
             );
         $extractor = from_pgsql_key_set(
             $client,
@@ -415,5 +476,226 @@ final class PostgreSqlKeySetExtractorTest extends FlowTestCase
         );
 
         static::assertGreaterThanOrEqual(1, $backend->builders());
+    }
+
+    #[DataProvider('batch_sizes')]
+    public function test_duplicate_keys_throw_at_every_batch_size(int $batchSize): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Keyset pagination requires unique keys, but two rows share the key');
+
+        iterator_to_array(
+            from_pgsql_key_set(
+                new SortedRowsClient(
+                    ['id'],
+                    [['id' => 1], ['id' => 1], ['id' => 1], ['id' => 2], ['id' => 3], ['id' => 3]],
+                    'id',
+                    Order::ASC,
+                ),
+                'SELECT id FROM t',
+                pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+            )
+                ->withBatchSize($batchSize)
+                ->extract(flow_context()),
+        );
+    }
+
+    /**
+     * @param list<array{k: null|int}> $rows
+     */
+    #[DataProvider('null_keys')]
+    public function test_null_key_throws_without_reading_a_page_at_every_batch_size(
+        int $batchSize,
+        array $rows,
+        KeySet $keySet,
+        Order $order,
+    ): void {
+        $client = new SortedRowsClient(['k'], $rows, 'k', $order);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            'Keyset pagination requires non-null keys, but a row has NULL in the key column(s) "k"',
+        );
+
+        try {
+            iterator_to_array(
+                from_pgsql_key_set($client, 'SELECT k FROM t', $keySet)
+                    ->withBatchSize($batchSize)
+                    ->extract(flow_context()),
+            );
+        } finally {
+            static::assertSame(0, $client->cursorCalls);
+        }
+    }
+
+    #[DataProvider('batch_sizes')]
+    public function test_unique_keys_read_every_row_at_every_batch_size(int $batchSize): void
+    {
+        self::assertExtractedRowsCount(
+            5,
+            from_pgsql_key_set(
+                new SortedRowsClient(
+                    ['id'],
+                    [['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]],
+                    'id',
+                    Order::ASC,
+                ),
+                'SELECT id FROM t',
+                pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+            )->withBatchSize($batchSize),
+        );
+    }
+
+    #[TestWith([1])]
+    #[TestWith([2])]
+    public function test_duplicate_keys_within_the_maximum_throw(int $batchSize): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Keyset pagination requires unique keys, but two rows share the key (id = 2)');
+
+        iterator_to_array(
+            from_pgsql_key_set(
+                new SortedRowsClient(['id'], [['id' => 1], ['id' => 2], ['id' => 2]], 'id', Order::ASC),
+                'SELECT id FROM t',
+                pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+            )
+                ->withBatchSize($batchSize)
+                ->withMaximum(2)
+                ->extract(flow_context()),
+        );
+    }
+
+    public function test_empty_result_issues_one_page(): void
+    {
+        $client = new SortedRowsClient(['id'], [], 'id', Order::ASC);
+
+        static::assertSame(
+            [],
+            iterator_to_array(
+                from_pgsql_key_set(
+                    $client,
+                    'SELECT id FROM t',
+                    pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+                )->extract(flow_context()),
+            ),
+        );
+        static::assertSame(1, $client->cursorCalls);
+    }
+
+    public function test_exact_multiple_ends_without_an_empty_page(): void
+    {
+        $client = new SortedRowsClient(['id'], [['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4]], 'id', Order::ASC);
+
+        self::assertExtractedRowsCount(
+            4,
+            from_pgsql_key_set(
+                $client,
+                'SELECT id FROM t',
+                pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+            )->withBatchSize(2),
+        );
+        static::assertSame(2, $client->cursorCalls);
+    }
+
+    #[DataProvider('null_checks')]
+    public function test_null_check_runs_before_the_first_page(string $query, KeySet $keySet, string $nullCheck): void
+    {
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8', 'created_at' => 'int8']))
+            ->willReturnCursors(
+                new StubCursor([
+                    ['id' => '1', 'created_at' => '1'],
+                    ['id' => '2', 'created_at' => '2'],
+                    ['id' => '3', 'created_at' => '3'],
+                ]),
+                new StubCursor([['id' => '3', 'created_at' => '3']]),
+            );
+
+        iterator_to_array(
+            from_pgsql_key_set($client, $query, $keySet, [true])->withBatchSize(2)->extract(flow_context()),
+        );
+
+        static::assertSame([['sql' => $nullCheck, 'parameters' => [true]]], $client->fetchOneQueries);
+        static::assertSame(['describe', 'fetchOne', 'cursor', 'cursor'], $client->calls);
+    }
+
+    public function test_null_key_throws_before_any_page(): void
+    {
+        $client = (new SpyClient())
+            ->willDescribe(ColumnMother::of(['id' => 'int8']))
+            ->willFindNullKey();
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            'Keyset pagination requires non-null keys, but a row has NULL in the key column(s) "created_at", "id"; filter them out with IS NOT NULL or choose non-null keys',
+        );
+
+        try {
+            iterator_to_array(
+                from_pgsql_key_set(
+                    $client,
+                    'SELECT id, created_at FROM t',
+                    pgsql_pagination_key_set(pgsql_pagination_key_asc('created_at'), pgsql_pagination_key_asc('id')),
+                )->extract(flow_context()),
+            );
+        } finally {
+            static::assertSame([], $client->cursorQueries);
+        }
+    }
+
+    public function test_query_limit_is_rejected_before_any_query(): void
+    {
+        $client = new SpyClient();
+
+        $this->expectException(PaginationException::class);
+
+        try {
+            iterator_to_array(
+                from_pgsql_key_set(
+                    $client,
+                    'SELECT id FROM t ORDER BY id LIMIT 5',
+                    pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+                )
+                    ->withSchema(schema(int_schema('id', nullable: true)))
+                    ->extract(flow_context()),
+            );
+        } finally {
+            static::assertSame([], $client->calls);
+        }
+    }
+
+    public function test_short_page_ends_the_read(): void
+    {
+        $client = new SortedRowsClient(['id'], [['id' => 1], ['id' => 2], ['id' => 3]], 'id', Order::ASC);
+
+        self::assertExtractedRowsCount(
+            3,
+            from_pgsql_key_set(
+                $client,
+                'SELECT id FROM t',
+                pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+            )->withBatchSize(2),
+        );
+        static::assertSame(2, $client->cursorCalls);
+    }
+
+    public function test_short_first_page_sends_no_further_page_query(): void
+    {
+        $client = new SortedRowsClient(
+            ['k'],
+            [['k' => 1], ['k' => 2], ['k' => 3], ['k' => 4], ['k' => 5], ['k' => 6]],
+            'k',
+            Order::ASC,
+        );
+
+        self::assertExtractedRowsCount(
+            6,
+            from_pgsql_key_set(
+                $client,
+                'SELECT k FROM t',
+                pgsql_pagination_key_set(pgsql_pagination_key_asc('k')),
+            )->withBatchSize(10),
+        );
+        static::assertSame(1, $client->cursorCalls);
     }
 }

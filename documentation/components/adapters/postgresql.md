@@ -119,7 +119,7 @@ data_frame()
 | Extractor                 | Best For                            | Memory                 | ORDER BY Required |
 |---------------------------|-------------------------------------|------------------------|-------------------|
 | `from_pgsql_cursor`       | Very large datasets, true streaming | Lowest (server-side)   | No                |
-| `from_pgsql_key_set`      | Large datasets with indexed keys    | Medium (page buffered) | Auto-generated    |
+| `from_pgsql_key_set`      | Large datasets with indexed keys    | Medium (page buffered) | Equal to the keys |
 | `from_pgsql_limit_offset` | Small-medium datasets               | Medium (page buffered) | Yes               |
 
 ## Extractor - LIMIT/OFFSET Pagination
@@ -180,8 +180,29 @@ data_frame()
 The `from_pgsql_key_set` extractor uses keyset pagination (also known as cursor-based pagination). This provides
 consistent performance regardless of how deep you paginate, making it ideal for large datasets.
 
-> **Note:** The ORDER BY clause is automatically generated from the keyset configuration. You only need to define
-> the sort order once using `pgsql_pagination_key_asc()` or `pgsql_pagination_key_desc()`.
+### Key rule
+
+The keys must be **indexed, non-null and unique together**. A single non-unique column such as `created_at` is not a
+key; add the primary key as the least significant key:
+
+```php
+pgsql_pagination_key_set(
+    pgsql_pagination_key_asc('created_at'),
+    pgsql_pagination_key_asc('id'),
+);
+```
+
+- Before the first page the extractor sends one check query,
+  `SELECT 1 FROM (<query>) _flow_keyset_nulls WHERE created_at IS NULL OR id IS NULL LIMIT 1`, and throws when it
+  finds a row. On an indexed key this is an index lookup; on an unindexed key it is one full scan.
+- Two rows with the same key throw `Keyset pagination requires unique keys`.
+- A next page that does not start at the row the previous page looked ahead to throws. This happens when the database
+  compares two different values as equal (a case- or accent-insensitive collation, `numeric` `1.0` and `1.00`) or when
+  rows change between pages.
+- Known limit: two such values on the same page are both read without an error. Nothing is lost.
+- ORDER BY is generated from the keys; a query's own ORDER BY must equal them. The query must not have its own
+  LIMIT or OFFSET; use `withMaximum()` or `DataFrame::limit()`.
+- A page shorter than the batch size ends the read without another query.
 
 ### Basic Usage
 

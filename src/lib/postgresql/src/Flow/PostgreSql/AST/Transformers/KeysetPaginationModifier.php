@@ -15,12 +15,14 @@ use Flow\PostgreSql\Protobuf\AST\A_Expr;
 use Flow\PostgreSql\Protobuf\AST\A_Expr_Kind;
 use Flow\PostgreSql\Protobuf\AST\BoolExpr;
 use Flow\PostgreSql\Protobuf\AST\BoolExprType;
+use Flow\PostgreSql\Protobuf\AST\CoercionForm;
 use Flow\PostgreSql\Protobuf\AST\ColumnRef;
 use Flow\PostgreSql\Protobuf\AST\LimitOption;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ParamRef;
 use Flow\PostgreSql\Protobuf\AST\ParseResult;
 use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RowExpr;
 use Flow\PostgreSql\Protobuf\AST\SelectStmt;
 use Flow\PostgreSql\Protobuf\AST\SortBy;
 use Flow\PostgreSql\Protobuf\AST\SortByDir;
@@ -28,7 +30,9 @@ use Flow\PostgreSql\QueryBuilder\Expression\Parameter;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Table\SubqueryReference;
 
+use function array_keys;
 use function array_map;
+use function array_unique;
 use function count;
 use function Flow\PostgreSql\DSL\literal;
 use function Flow\PostgreSql\DSL\select;
@@ -71,19 +75,27 @@ final class KeysetPaginationModifier implements NodeModifier
         }
 
         /** @var SelectStmt $node */
-        if (!$context->isTopLevel()) {
-            return null;
-        }
-
         if (count($this->config->columns) === 0) {
             throw new PaginationException('Keyset pagination requires at least one column');
         }
 
-        if ((new SelectStatement($node))->hasSetOperation()) {
+        $statement = new SelectStatement($node);
+
+        if ($statement->hasLimit() || $statement->hasOffset()) {
+            throw new PaginationException(
+                'Keyset pagination sets its own LIMIT; remove LIMIT and OFFSET from the query and pass the page size as the limit',
+            );
+        }
+
+        if ($statement->hasOrderBy()) {
+            (new KeysetSortClause($this->config->columns))->assertMatches($node->getSortClause());
+        }
+
+        if ($statement->hasSetOperation()) {
             return $this->wrapSetOperationWithKeyset($node, $context);
         }
 
-        if (!(new SelectStatement($node))->hasOrderBy()) {
+        if (!$statement->hasOrderBy()) {
             $this->addOrderByFromKeyset($node);
         }
 
@@ -195,6 +207,21 @@ final class KeysetPaginationModifier implements NodeModifier
     private function buildKeysetCondition(): Node
     {
         $columns = $this->config->columns;
+
+        // a row comparison is an index range bound; the OR-expansion is only evaluated as a filter
+        if (
+            count($columns) > 1
+            && count(array_unique(array_map(
+                static fn(KeysetColumn $column): string => $column->order->value,
+                $columns,
+            ))) === 1
+        ) {
+            return $this->buildRowComparisonExpr(
+                array_map(fn(KeysetColumn $column): Node => $this->createColumnRef($column->column), $columns),
+                $columns[0]->order === SortOrder::ASC ? '>' : '<',
+            );
+        }
+
         $orConditions = [];
 
         for ($i = 0, $count = count($columns); $i < $count; $i++) {
@@ -235,6 +262,39 @@ final class KeysetPaginationModifier implements NodeModifier
         $orNode->setBoolExpr($orExpr);
 
         return $orNode;
+    }
+
+    /**
+     * @param list<Node> $columnRefs
+     */
+    private function buildRowComparisonExpr(array $columnRefs, string $operator): Node
+    {
+        $params = [];
+
+        foreach (array_keys($columnRefs) as $index) {
+            $paramRef = new ParamRef();
+            $paramRef->setNumber($index + 1 + $this->parameterOffset);
+            $params[] = (new Node())->setParamRef($paramRef);
+        }
+
+        $opName = new PBString();
+        $opName->setSval($operator);
+
+        $aExpr = new A_Expr();
+        $aExpr->setKind(A_Expr_Kind::AEXPR_OP);
+        $aExpr->setName([(new Node())->setString($opName)]);
+        $aExpr->setLexpr((new Node())->setRowExpr(
+            (new RowExpr())
+                ->setArgs($columnRefs)
+                ->setRowFormat(CoercionForm::COERCE_IMPLICIT_CAST),
+        ));
+        $aExpr->setRexpr((new Node())->setRowExpr(
+            (new RowExpr())
+                ->setArgs($params)
+                ->setRowFormat(CoercionForm::COERCE_IMPLICIT_CAST),
+        ));
+
+        return (new Node())->setAExpr($aExpr);
     }
 
     private function createColumnRef(string $columnName): Node
@@ -278,7 +338,6 @@ final class KeysetPaginationModifier implements NodeModifier
             }
         }
 
-        // the set operation stays intact, including its own ORDER BY and LIMIT
         $outerSelect = select(star())
             ->from((new SubqueryReference((new Node())->setSelectStmt($stmt)))->as('_keyset_subq'))
             ->toAst();

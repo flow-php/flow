@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Flow\Clock\FakeClock;
 use Flow\ETL\Adapter\Doctrine\DbalMetadata;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
+use Flow\ETL\Exception\RuntimeException;
 
 use function Flow\ETL\Adapter\Doctrine\from_dbal_key_set_qb;
 use function Flow\ETL\Adapter\Doctrine\pagination_key_asc;
@@ -17,6 +18,7 @@ use function Flow\ETL\Adapter\Doctrine\to_dbal_schema_table;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\map_schema;
@@ -138,7 +140,8 @@ final class SqliteKeySetExtractorTest extends IntegrationTestCase
             ->fetch()
             ->toArray();
 
-        static::assertSame(5, $this->sqliteDatabaseContext->numberOfExecutedSelectQueries());
+        // the NULL check, then 5 pages of 1
+        static::assertSame(6, $this->sqliteDatabaseContext->numberOfExecutedSelectQueries());
         static::assertCount(5, $rows);
         static::assertSame(25, $rows[0]['id']);
     }
@@ -182,7 +185,8 @@ final class SqliteKeySetExtractorTest extends IntegrationTestCase
             ->fetch()
             ->toArray();
 
-        static::assertSame(5, $this->sqliteDatabaseContext->numberOfExecutedSelectQueries());
+        // the NULL check, then 5 pages of 1
+        static::assertSame(6, $this->sqliteDatabaseContext->numberOfExecutedSelectQueries());
         static::assertCount(5, $rows);
         static::assertSame(1, $rows[0]['id']);
     }
@@ -226,7 +230,8 @@ final class SqliteKeySetExtractorTest extends IntegrationTestCase
             ->fetch()
             ->toArray();
 
-        static::assertSame(5, $this->sqliteDatabaseContext->numberOfExecutedSelectQueries());
+        // the NULL check, then 5 pages of 1
+        static::assertSame(6, $this->sqliteDatabaseContext->numberOfExecutedSelectQueries());
         static::assertCount(5, $rows);
         static::assertSame(25, $rows[0]['id']);
     }
@@ -403,5 +408,31 @@ final class SqliteKeySetExtractorTest extends IntegrationTestCase
             ],
             $rows,
         );
+    }
+
+    public function test_null_in_secondary_key_throws_before_first_row(): void
+    {
+        $this->sqliteDatabaseContext->createTable(to_dbal_schema_table(
+            schema(int_schema('a'), int_schema('b', true)),
+            $table = 'flow_key_set_extractor_nulls_test',
+        ));
+        $this->sqliteDatabaseContext->insert($table, ['a' => 1, 'b' => 1]);
+        $this->sqliteDatabaseContext->insert($table, ['a' => 1, 'b' => null]);
+        $this->sqliteDatabaseContext->insert($table, ['a' => 2, 'b' => 1]);
+
+        $generator = from_dbal_key_set_qb(
+            $this->sqliteDatabaseContext->connection(),
+            $this->sqliteDatabaseContext->connection()->createQueryBuilder()->from($table)->select('a', 'b'),
+            pagination_key_set(pagination_key_asc('b'), pagination_key_asc('a')),
+        )
+            ->withBatchSize(2)
+            ->extract(flow_context());
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            'Keyset pagination requires non-null keys, but a row has NULL in the key column(s) "a", "b"',
+        );
+
+        $generator->current();
     }
 }

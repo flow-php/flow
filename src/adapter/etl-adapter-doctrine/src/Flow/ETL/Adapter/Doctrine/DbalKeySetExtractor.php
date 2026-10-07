@@ -9,6 +9,7 @@ use Doctrine\DBAL\Query\QueryBuilder;
 use Flow\ETL\Adapter\Doctrine\Explain\ExplainedRows;
 use Flow\ETL\Adapter\Doctrine\Pagination\Key;
 use Flow\ETL\Adapter\Doctrine\Pagination\KeySet;
+use Flow\ETL\Adapter\Doctrine\Pagination\KeySetPage;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
@@ -24,20 +25,14 @@ use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Generator;
 
-use function array_key_exists;
-use function array_key_last;
 use function array_map;
-use function count;
+use function implode;
 use function min;
 use function sha1;
 
 /**
- * Extractor implementing keyset pagination for Doctrine DBAL queries.
- *
- * This extractor fetches rows page by page using keyset pagination, which is more efficient
- * than limit/offset for large datasets. It requires a KeySet object defining the columns
- * and sort orders for pagination. The key columns must be non-null and provide a unique
- * ordering to ensure correct pagination.
+ * Keyset pagination over a Doctrine DBAL query; the keys must be indexed, non-null and unique together, and the query
+ * must carry no ORDER BY, setMaxResults() or setFirstResult().
  */
 final class DbalKeySetExtractor implements BatchableExtractor, Extractor, RewindableExtractor
 {
@@ -68,8 +63,11 @@ final class DbalKeySetExtractor implements BatchableExtractor, Extractor, Rewind
             );
         }
 
-        if (empty($this->keySet->keys)) {
-            throw new InvalidArgumentException('KeySet must contain at least one key for pagination');
+        if ($this->queryBuilder->getMaxResults() !== null || $this->queryBuilder->getFirstResult() !== 0) {
+            throw new InvalidArgumentException(
+                'Keyset pagination sets its own LIMIT and OFFSET, please remove setMaxResults()/setFirstResult() '
+                . 'from Query Builder and use withMaximum() or DataFrame::limit()',
+            );
         }
 
         // a page is a network round trip, not a buffer: 100 would cost 10x the round trips
@@ -88,7 +86,6 @@ final class DbalKeySetExtractor implements BatchableExtractor, Extractor, Rewind
     {
         $schema = $this->schema();
         $yielded = 0;
-        $lastRow = null;
         $maximum = match (true) {
             $this->maximum !== null && $limit !== null => min($this->maximum, $limit),
             $this->maximum !== null => $this->maximum,
@@ -96,101 +93,108 @@ final class DbalKeySetExtractor implements BatchableExtractor, Extractor, Rewind
         };
         $keyAliases = array_map($this->keyAlias(...), $this->keySet->keys);
 
+        // DBAL's QueryBuilder is mutable and has no copy API other than its deep __clone()
+        $check = clone $this->queryBuilder;
+        $check
+            ->andWhere($check->expr()->or(...array_map(static fn(Key $key): string => $check
+                ->expr()
+                ->isNull($key->column), $this->keySet->keys)))
+            ->setMaxResults(1);
+
+        if (
+            $this->connection->executeQuery(
+                $check->getSQL(),
+                $this->queryBuilder->getParameters(),
+                $this->queryBuilder->getParameterTypes(),
+            )->fetchAssociative() !== false
+        ) {
+            throw new RuntimeException(sprintf(
+                'Keyset pagination requires non-null keys, but a row has NULL in the key column(s) %s; filter them out with IS NOT NULL or choose non-null keys',
+                implode(', ', array_map(static fn(Key $key): string => '"' . $key->column . '"', $this->keySet->keys)),
+            ));
+        }
+
+        $cursor = null;
+        $expected = null;
+
         while (true) {
             if ($maximum !== null && $yielded >= $maximum) {
                 return;
             }
 
-            $qb = clone $this->queryBuilder;
-            $qb->setMaxResults($maximum === null ? $this->batchSize : min($this->batchSize, $maximum - $yielded));
+            $size = $maximum === null ? $this->batchSize : min($this->batchSize, $maximum - $yielded);
 
-            foreach ($this->keySet->keys as $key) {
+            $qb = clone $this->queryBuilder;
+            $qb->setMaxResults($size + 1);
+
+            foreach ($this->keySet->keys as $index => $key) {
                 $qb->addOrderBy($key->column, $key->order->value);
-                $qb->addSelect($key->column . ' AS ' . $this->keyAlias($key));
+                $qb->addSelect($key->column . ' AS ' . $keyAliases[$index]);
             }
 
-            if ($lastRow !== null) {
+            if ($cursor !== null) {
                 $conditions = [];
-                $parameters = [];
-                $parameterTypes = [];
 
                 foreach ($this->keySet->keys as $index => $key) {
-                    $keyAlias = $this->keyAlias($key);
-
-                    if (!array_key_exists($keyAlias, $lastRow)) {
-                        throw new RuntimeException(sprintf(
-                            'Column "%s" not found in last row for keyset pagination',
-                            $key->column,
-                        ));
-                    }
-
-                    // @mago-expect analysis:mixed-assignment
-                    $lastValue = $lastRow[$keyAlias];
-
-                    if ($lastValue === null) {
-                        throw new RuntimeException(sprintf(
-                            'NULL value found in column "%s" for keyset pagination; key columns must be non-null',
-                            $key->column,
-                        ));
-                    }
-
-                    $parameters[$keyAlias] = $lastValue;
-                    $parameterTypes[$keyAlias] = $key->type;
-
                     $subConditions = [];
 
                     for ($i = 0; $i < $index; $i++) {
-                        $prevKey = $this->keySet->keys[$i];
-                        $subConditions[] = $qb->expr()->eq($prevKey->column, ':' . $this->keyAlias($prevKey));
+                        $subConditions[] = $qb->expr()->eq($this->keySet->keys[$i]->column, ':' . $keyAliases[$i]);
                     }
 
                     $operator = $key->order->value === 'DESC' ? 'lt' : 'gt';
-                    $subConditions[] = $qb->expr()->{$operator}($key->column, ':' . $keyAlias);
+                    $subConditions[] = $qb->expr()->{$operator}($key->column, ':' . $keyAliases[$index]);
 
                     $conditions[] = $qb->expr()->and(...$subConditions);
+
+                    $qb->setParameter($keyAliases[$index], $cursor->values[$index], $key->type);
                 }
 
-                if (count($conditions) > 0) {
-                    $qb->andWhere($qb->expr()->or(...$conditions));
-
-                    // @mago-expect analysis:mixed-assignment
-                    foreach ($parameters as $param => $value) {
-                        $qb->setParameter($param, $value, $parameterTypes[$param]);
-                    }
-                }
+                $qb->andWhere($qb->expr()->or(...$conditions));
             }
 
             // the pgsql driver resolves the result's column types on every fetchAssociative(), but once per
             // fetchAllAssociative(); a page is buffered whole either way
-            $rawBatch = $this->connection
-                ->executeQuery($qb->getSQL(), $qb->getParameters(), $qb->getParameterTypes())
-                ->fetchAllAssociative();
+            $page = KeySetPage::of(
+                $this->keySet,
+                $keyAliases,
+                $this->connection
+                    ->executeQuery($qb->getSQL(), $qb->getParameters(), $qb->getParameterTypes())
+                    ->fetchAllAssociative(),
+                $size,
+                $expected,
+            );
 
-            if ($rawBatch === []) {
-                break;
-            }
+            if ($page->rows !== []) {
+                $rawBatch = [];
 
-            $lastRow = $rawBatch[array_key_last($rawBatch)];
+                foreach ($page->rows as $row) {
+                    foreach ($keyAliases as $keyAlias) {
+                        unset($row[$keyAlias]);
+                    }
 
-            foreach ($rawBatch as $index => $row) {
-                foreach ($keyAliases as $keyAlias) {
-                    unset($row[$keyAlias]);
+                    $rawBatch[] = $row;
                 }
 
-                $rawBatch[$index] = $row;
+                $rows = (new RowsBuilder($schema, $context->backend()))
+                    ->appendRows($rawBatch)
+                    ->finish();
+
+                $yielded += $rows->count();
+
+                $signal = yield $rows;
+
+                if ($signal === Signal::STOP) {
+                    return;
+                }
             }
 
-            $rows = (new RowsBuilder($schema, $context->backend()))
-                ->appendRows($rawBatch)
-                ->finish();
-
-            $yielded += $rows->count();
-
-            $signal = yield $rows;
-
-            if ($signal === Signal::STOP) {
+            if ($page->isLast()) {
                 return;
             }
+
+            $cursor = $page->cursor;
+            $expected = $page->lookahead;
         }
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql;
 
+use Flow\ETL\Adapter\PostgreSql\Pagination\Key;
 use Flow\ETL\Adapter\PostgreSql\Pagination\KeySet;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\PostgreSql\AST\Nodes\Exception\InvalidStatementException;
@@ -15,12 +16,22 @@ use Flow\PostgreSql\AST\Transformers\PaginationConfig;
 use Flow\PostgreSql\AST\Transformers\PaginationModifier;
 use Flow\PostgreSql\Exception\ParserException;
 use Flow\PostgreSql\ParsedQuery;
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ParseResult;
+use Flow\PostgreSql\Protobuf\AST\SelectStmt;
+use Flow\PostgreSql\QueryBuilder\Condition\IsNull;
 use Flow\PostgreSql\QueryBuilder\Cursor\DeclareCursorOptionsStep;
 use Flow\PostgreSql\QueryBuilder\Sql;
+use Flow\PostgreSql\QueryBuilder\Table\DerivedTable;
 
+use function array_map;
+use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\declare_cursor;
+use function Flow\PostgreSql\DSL\is_null;
+use function Flow\PostgreSql\DSL\literal;
+use function Flow\PostgreSql\DSL\or_;
 use function Flow\PostgreSql\DSL\param;
+use function Flow\PostgreSql\DSL\select;
 use function Flow\PostgreSql\DSL\sql_parse;
 use function sprintf;
 
@@ -99,6 +110,23 @@ final readonly class ReadQuery
                 new KeysetPaginationConfig(param($first), $keySet->toKeysetColumns(), param($first + 1)),
             ))
             ->deparse();
+    }
+
+    /**
+     * SELECT 1 FROM (<query>) _flow_keyset_nulls WHERE k1 IS NULL [OR k2 IS NULL …] LIMIT 1, bound to the caller's
+     * parameters only.
+     */
+    public function keySetNullCheck(KeySet $keySet): string
+    {
+        $conditions = array_map(static fn(Key $key): IsNull => is_null(col($key->name())), $keySet->keys);
+        $copy = new SelectStmt();
+        $copy->mergeFrom($this->select->raw());
+
+        return select(literal(1))
+            ->from(new DerivedTable((new Node())->setSelectStmt($copy), '_flow_keyset_nulls'))
+            ->where(or_(...$conditions))
+            ->limit(1)
+            ->toSql();
     }
 
     /**

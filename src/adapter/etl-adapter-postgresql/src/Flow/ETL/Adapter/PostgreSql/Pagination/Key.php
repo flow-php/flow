@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\PostgreSql\Pagination;
 
 use Flow\PostgreSql\AST\Transformers\KeysetColumn;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 use function Flow\PostgreSql\DSL\sql_keyset_column;
 
@@ -23,6 +24,11 @@ final readonly class Key
     public static function desc(string $column): self
     {
         return new self($column, Order::DESC);
+    }
+
+    public function name(): string
+    {
+        return QualifiedIdentifier::parse($this->column)->name();
     }
 
     public function toKeysetColumn(): KeysetColumn

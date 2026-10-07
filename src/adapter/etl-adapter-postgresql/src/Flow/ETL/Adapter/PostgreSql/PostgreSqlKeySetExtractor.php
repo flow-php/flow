@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\PostgreSql;
 
 use Flow\ETL\Adapter\PostgreSql\Pagination\Key;
 use Flow\ETL\Adapter\PostgreSql\Pagination\KeySet;
+use Flow\ETL\Adapter\PostgreSql\Pagination\KeySetPage;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
@@ -23,15 +24,9 @@ use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use Generator;
 
-use function array_key_exists;
+use function array_map;
 use function count;
-use function end;
-use function explode;
-use function get_debug_type;
-use function is_bool;
-use function is_float;
-use function is_int;
-use function is_string;
+use function implode;
 use function min;
 use function sprintf;
 
@@ -74,7 +69,6 @@ final class PostgreSqlKeySetExtractor implements BatchableExtractor, Extractor, 
         $schema = $this->schema();
 
         $yielded = 0;
-        $cursorValues = null;
         $maximum = match (true) {
             $this->maximum !== null && $limit !== null => min($this->maximum, $limit),
             $this->maximum !== null => $this->maximum,
@@ -82,6 +76,16 @@ final class PostgreSqlKeySetExtractor implements BatchableExtractor, Extractor, 
         };
         $first = count($this->parameters) + 1;
         $firstPage = $read->keySetFirstPage($this->keySet, $first);
+
+        if ($this->client->fetchOne($read->keySetNullCheck($this->keySet), $this->parameters) !== null) {
+            throw new RuntimeException(sprintf(
+                'Keyset pagination requires non-null keys, but a row has NULL in the key column(s) %s; filter them out with IS NOT NULL or choose non-null keys',
+                implode(', ', array_map(static fn(Key $key): string => '"' . $key->column . '"', $this->keySet->keys)),
+            ));
+        }
+
+        $cursor = null;
+        $expected = null;
         $nextPage = null;
 
         while (true) {
@@ -89,44 +93,39 @@ final class PostgreSqlKeySetExtractor implements BatchableExtractor, Extractor, 
                 return;
             }
 
-            $cursor = $this->client->cursor(
-                $cursorValues === null ? $firstPage : ($nextPage ??= $read->keySetNextPage($this->keySet, $first)),
-                [
-                    ...$this->parameters,
-                    $maximum === null ? $this->batchSize : min($this->batchSize, $maximum - $yielded),
-                    ...($cursorValues ?? []),
-                ],
+            $size = $maximum === null ? $this->batchSize : min($this->batchSize, $maximum - $yielded);
+
+            $pgCursor = $this->client->cursor(
+                $cursor === null ? $firstPage : ($nextPage ??= $read->keySetNextPage($this->keySet, $first)),
+                [...$this->parameters, $size + 1, ...($cursor->values ?? [])],
             );
 
-            $hasRows = false;
-            $lastRow = null;
-            $rawBatch = [];
+            $fetched = [...$pgCursor->iterate()];
 
-            foreach ($cursor->iterate() as $row) {
-                $hasRows = true;
-                $lastRow = $row;
-                $rawBatch[] = $row;
+            $pgCursor->free();
+
+            $page = KeySetPage::of($this->keySet, $fetched, $size, $expected);
+
+            if ($page->rows !== []) {
+                $rows = (new RowsBuilder($schema, $context->backend()))
+                    ->appendRows($page->rows)
+                    ->finish();
+
+                $yielded += $rows->count();
+
+                $signal = yield $rows;
+
+                if ($signal === Signal::STOP) {
+                    return;
+                }
             }
 
-            $cursor->free();
-
-            if (!$hasRows || $lastRow === null) {
-                break;
-            }
-
-            $rows = (new RowsBuilder($schema, $context->backend()))
-                ->appendRows($rawBatch)
-                ->finish();
-
-            $yielded += $rows->count();
-
-            $signal = yield $rows;
-
-            if ($signal === Signal::STOP) {
+            if ($page->isLast()) {
                 return;
             }
 
-            $cursorValues = $this->extractCursorValues($lastRow);
+            $cursor = $page->cursor;
+            $expected = $page->lookahead;
         }
     }
 
@@ -186,55 +185,5 @@ final class PostgreSqlKeySetExtractor implements BatchableExtractor, Extractor, 
         $this->schema = $schema;
 
         return $this;
-    }
-
-    /**
-     * @param array<string, mixed> $row
-     *
-     * @return list<bool|float|int|string>
-     */
-    private function extractCursorValues(array $row): array
-    {
-        $values = [];
-
-        foreach ($this->keySet->keys as $key) {
-            $columnName = $this->getColumnName($key);
-
-            if (!array_key_exists($columnName, $row)) {
-                throw new RuntimeException(sprintf(
-                    'Column "%s" not found in result row for keyset pagination',
-                    $columnName,
-                ));
-            }
-
-            // @mago-expect analysis:mixed-assignment
-            $value = $row[$columnName];
-
-            if ($value === null) {
-                throw new RuntimeException(sprintf(
-                    'NULL value found in column "%s" for keyset pagination; key columns must be non-null',
-                    $columnName,
-                ));
-            }
-
-            if (!is_string($value) && !is_int($value) && !is_float($value) && !is_bool($value)) {
-                throw new RuntimeException(sprintf(
-                    'Unsupported value type "%s" in column "%s" for keyset pagination',
-                    get_debug_type($value),
-                    $columnName,
-                ));
-            }
-
-            $values[] = $value;
-        }
-
-        return $values;
-    }
-
-    private function getColumnName(Key $key): string
-    {
-        $parts = explode('.', $key->column);
-
-        return end($parts);
     }
 }
