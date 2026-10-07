@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Text\Tests\Integration;
 
+use DateTimeImmutable;
 use Flow\ETL\Adapter\Text\TextExtractor;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -21,12 +22,17 @@ use function array_unique;
 use function array_values;
 use function count;
 use function Flow\ETL\Adapter\Text\from_text;
+use function Flow\ETL\Adapter\Text\to_text;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
@@ -246,5 +252,25 @@ final class TextExtractorTest extends FlowTestCase
             count(array_keys($filesystem->calls, 'readFrom', true)),
             count(array_keys($filesystem->calls, 'closeSource', true)),
         );
+    }
+
+    public function test_partition_schema_is_the_partition_block_of_the_read_schema(): void
+    {
+        $memory = memory_filesystem();
+
+        data_frame()
+            ->read(from_array(
+                [
+                    ['date' => new DateTimeImmutable('2026-10-01 00:00:00 UTC'), 'text' => 'a'],
+                    ['date' => new DateTimeImmutable('2026-10-02 00:00:00 UTC'), 'text' => 'b'],
+                ],
+                schema(datetime_schema('date'), str_schema('text')),
+            ))
+            ->write(to_text(path('memory://var/text/file.txt'), filesystem: $memory)->partitionBy(partition_by('date')))
+            ->run();
+
+        $extractor = from_text(path('memory://var/text/**/*.txt'), filesystem: $memory);
+
+        static::assertEquals($extractor->schema()->keep('date'), $extractor->partitionSchema());
     }
 }

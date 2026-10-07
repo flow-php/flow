@@ -36,13 +36,13 @@ final class RowPartitionsTest extends FlowTestCase
     {
         return [
             'int' => [int_schema('v'), 7, '7'],
-            'float' => [float_schema('v'), 1.5, '1.500000'],
+            'float' => [float_schema('v'), 1.5, '1.5'],
             'string' => [str_schema('v'), 'eu', 'eu'],
             'bool' => [bool_schema('v'), true, 'true'],
-            'datetime truncates to a day' => [
+            'datetime' => [
                 datetime_schema('v'),
                 new DateTimeImmutable('2024-01-01 21:30:00'),
-                '2024-01-01',
+                '2024-01-01T21:30:00+00:00',
             ],
         ];
     }

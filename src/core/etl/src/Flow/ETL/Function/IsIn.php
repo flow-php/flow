@@ -25,7 +25,7 @@ use function Flow\Types\DSL\type_boolean;
 use function get_debug_type;
 use function in_array;
 
-final class IsIn implements ScalarFunction
+final class IsIn implements ComparisonFunction
 {
     use ScalarFunctionChain;
 
@@ -44,6 +44,14 @@ final class IsIn implements ScalarFunction
     /**
      * @return list<ScalarFunction>
      */
+    public function operands(): array
+    {
+        return [$this->haystack, $this->needle];
+    }
+
+    /**
+     * @return list<ScalarFunction>
+     */
     public function children(): array
     {
         return [$this->haystack, $this->needle];
@@ -56,6 +64,14 @@ final class IsIn implements ScalarFunction
     {
         /** @var list<ScalarFunction> $children */
         return new self($children[0], $children[1]);
+    }
+
+    /**
+     * @param list<ScalarFunction> $operands
+     */
+    public function withOperands(array $operands): static
+    {
+        return new self($operands[0], $operands[1]);
     }
 
     /**

@@ -6,11 +6,11 @@ namespace Flow\ETL\Adapter\JSON;
 
 use DateTimeInterface;
 use Flow\ETL\Column\Column;
-use Flow\ETL\Column\RoundTripPrecision;
 use Flow\ETL\Column\TextValues;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Rows;
 use Flow\Types\Type;
+use Flow\Types\Type\RoundTripPrecision;
 use JsonException;
 
 use function array_combine;

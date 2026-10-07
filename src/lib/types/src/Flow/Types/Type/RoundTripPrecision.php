@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Column;
+namespace Flow\Types\Type;
 
-use Flow\ETL\Exception\RuntimeException;
+use Flow\Types\Exception\RuntimeException;
 
 use function ini_get;
 use function ini_set;

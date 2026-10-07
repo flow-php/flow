@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use DateTimeImmutable;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\Between\Boundary;
 use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Exception\InvalidArgumentException as TypesInvalidArgumentException;
 
 use function Flow\ETL\DSL\between;
 use function Flow\ETL\DSL\flow_context;
@@ -149,5 +151,18 @@ final class BetweenTest extends FlowTestCase
             ],
             schema(int_schema('value')),
         );
+    }
+
+    public function test_between_refuses_incomparable_bounds_at_bind(): void
+    {
+        $this->expectException(TypesInvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            "Can't compare '(date >= integer)' due to data type mismatch - an explicit cast is required.",
+        );
+
+        ref('a')
+            ->resolve(int_schema('a'))
+            ->between(lit(1), lit(new DateTimeImmutable('2024-01-01')))
+            ->returns();
     }
 }

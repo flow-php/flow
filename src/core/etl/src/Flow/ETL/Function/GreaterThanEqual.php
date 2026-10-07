@@ -21,7 +21,7 @@ use function Flow\ETL\DSL\lit;
 use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_boolean;
 
-final class GreaterThanEqual implements ScalarFunction
+final class GreaterThanEqual implements ComparisonFunction
 {
     use ScalarFunctionChain;
 
@@ -32,6 +32,14 @@ final class GreaterThanEqual implements ScalarFunction
     {
         $this->left = $left instanceof ScalarFunction ? $left : lit($left);
         $this->right = $right instanceof ScalarFunction ? $right : lit($right);
+    }
+
+    /**
+     * @return list<ScalarFunction>
+     */
+    public function operands(): array
+    {
+        return [$this->left, $this->right];
     }
 
     /**
@@ -49,6 +57,14 @@ final class GreaterThanEqual implements ScalarFunction
     {
         /** @var list<ScalarFunction> $children */
         return new self($children[0], $children[1]);
+    }
+
+    /**
+     * @param list<ScalarFunction> $operands
+     */
+    public function withOperands(array $operands): static
+    {
+        return new self($operands[0], $operands[1]);
     }
 
     /**

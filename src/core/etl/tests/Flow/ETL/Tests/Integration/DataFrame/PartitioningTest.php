@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use DateTimeImmutable;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
-use Flow\Types\Exception\InvalidArgumentException;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -100,12 +100,10 @@ final class PartitioningTest extends FlowIntegrationTestCase
         yield 'files' => [files($glob)];
     }
 
-    public function test_a_partition_filter_with_an_incomparable_literal_is_refused_at_bind(): void
+    public function test_a_partition_value_that_is_not_a_date_fails_a_date_filter(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            "Can't compare '(string == date)' due to data type mismatch - an explicit cast is required.",
-        );
+        $this->expectException(EvaluationException::class);
+        $this->expectExceptionMessage('Cast function failed: Can\'t cast "string" into "date" type (row 0)');
 
         df()
             ->read(from_text(__DIR__

@@ -16,12 +16,12 @@ final readonly class ReferenceResolver
      * its Type and nullability. Never mutates $function.
      * Total: a reference the schema does not know is left unresolved, not thrown on.
      *
-     * One pass, not a fixpoint - this resolver inserts nothing, so a post-order pass over a finite
-     * tree converges in one traversal by construction. The day a coercion pass inserts Cast nodes
-     * into this tree, the pass count must be re-decided.
+     * One pass, not a fixpoint - the only nodes it inserts are the Casts TemporalStringCoercion wraps around
+     * operands already resolved, and a Cast adds no reference, so a post-order pass over a finite tree
+     * converges in one traversal.
      *
-     * Sound: the only non-leaf return is $function->withChildren(), typed static; a root that is
-     * itself a reference leaf resolves to its Reference sibling class, never to a foreign node.
+     * Sound: the only non-leaf returns are withChildren() and withOperands(), both typed static;
+     * a root that is itself a reference leaf resolves to its Reference sibling class, never to a foreign node.
      *
      * @template T of FunctionTree
      *
@@ -51,13 +51,11 @@ final readonly class ReferenceResolver
             $resolved[] = $this->resolve($child, $schema);
         }
 
-        if ($resolved === $children) {
-            return $function;
-        }
-
         // @mago-ignore analysis:less-specific-return-statement - withChildren(): static preserves
         // the node's class, which the analyzer cannot unify with T.
-        return $function->withChildren($resolved);
+        return (new TemporalStringCoercion())->coerce(
+            $resolved === $children ? $function : $function->withChildren($resolved),
+        );
     }
 
     /**

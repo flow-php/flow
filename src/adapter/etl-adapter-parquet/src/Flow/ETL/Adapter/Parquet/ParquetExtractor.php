@@ -168,7 +168,7 @@ final class ParquetExtractor implements
 
     public function partitionSchema(): Schema
     {
-        return $this->fileColumns($this->filesystem, $this->path)->partitions(new Schema());
+        return $this->fileColumns($this->filesystem, $this->path)->partitions($this->schema());
     }
 
     public function source(): Path

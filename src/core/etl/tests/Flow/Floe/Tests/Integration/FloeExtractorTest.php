@@ -7,6 +7,7 @@ namespace Flow\Floe\Tests\Integration;
 use DateTimeImmutable;
 use DateTimeZone;
 use Flow\ETL\Cardinality;
+use Flow\ETL\Function\Between\Boundary;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Double\CountingFilesystem;
@@ -22,8 +23,11 @@ use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\to_timezone;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
@@ -268,5 +272,58 @@ final class FloeExtractorTest extends FlowIntegrationTestCase
         static::assertSame([['id' => 1], ['id' => 2], ['id' => 3]], $first->toArray());
         static::assertSame($first->toArray(), $second->toArray());
         static::assertSame($filesystem->readFromCalls, $filesystem->closedStreams());
+    }
+
+    public function test_partition_schema_types_a_partition_column_the_file_holds_like_the_read(): void
+    {
+        $memory = memory_filesystem();
+
+        df()
+            ->read(from_array(
+                [['id' => 'a', 'date' => new DateTimeImmutable('2026-10-02 13:00:00 UTC')]],
+                schema(str_schema('id'), datetime_schema('date')),
+            ))
+            ->write(
+                to_floe(path('memory://var/typed/file.floe'), filesystem: $memory)->partitionBy(
+                    partition_by('date')->writeColumns(),
+                ),
+            )
+            ->run();
+
+        $extractor = from_floe(path('memory://var/typed/**/*.floe'), filesystem: $memory);
+
+        static::assertEquals($extractor->schema()->keep('date'), $extractor->partitionSchema());
+    }
+
+    public function test_a_datetime_range_over_a_partition_column_the_file_holds_returns_the_matching_rows(): void
+    {
+        $memory = memory_filesystem();
+
+        df()
+            ->read(from_array(
+                [
+                    ['id' => 'a', 'date' => new DateTimeImmutable('2026-10-01 00:00:00 UTC')],
+                    ['id' => 'b', 'date' => new DateTimeImmutable('2026-10-02 00:00:00 UTC')],
+                    ['id' => 'c', 'date' => new DateTimeImmutable('2026-10-03 00:00:00 UTC')],
+                ],
+                schema(str_schema('id'), datetime_schema('date')),
+            ))
+            ->write(
+                to_floe(path('memory://var/range/file.floe'), filesystem: $memory)->partitionBy(
+                    partition_by('date')->writeColumns(),
+                ),
+            )
+            ->run();
+
+        $rows = df()
+            ->read(from_floe(path('memory://var/range/**/*.floe'), filesystem: $memory))
+            ->filter(ref('date')->between(
+                lit(new DateTimeImmutable('2026-10-02 00:00:00 UTC')),
+                lit(new DateTimeImmutable('2026-10-03 00:00:00 UTC')),
+                Boundary::INCLUSIVE,
+            ))
+            ->fetch();
+
+        static::assertSame(['b', 'c'], $rows->reduceToArray('id'));
     }
 }
