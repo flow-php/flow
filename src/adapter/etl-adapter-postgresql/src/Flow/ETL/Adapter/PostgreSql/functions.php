@@ -67,7 +67,7 @@ function from_pgsql_limit_offset(
  * instead of skipping rows.
  *
  * @param Client $client PostgreSQL client
- * @param Sql|string $query SQL query to execute (must have ORDER BY matching keyset columns)
+ * @param Sql|string $query SQL query to execute (ORDER BY optional; when present it must equal the keys; no LIMIT/OFFSET; keys indexed, non-null, unique)
  * @param KeySet $keySet Columns to use for keyset pagination
  * @param list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap with {@see \Flow\PostgreSql\DSL\typed()} to force a specific PostgreSQL type
  */

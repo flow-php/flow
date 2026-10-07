@@ -51,6 +51,12 @@ final class SpyClient implements Client
     /** @var list<list<mixed>> */
     public array $describeParameters = [];
 
+    /** @var list<array{sql: string, parameters: list<mixed>}> */
+    public array $fetchOneQueries = [];
+
+    /** @var null|array<string, mixed> */
+    private ?array $nullKeyRow = null;
+
     private int $scalarIntAnswer = 0;
 
     private int $explainAnswer = 0;
@@ -126,6 +132,13 @@ final class SpyClient implements Client
     public function willRefuseDescribe(QueryException $failure): self
     {
         $this->describeFailure = $failure;
+
+        return $this;
+    }
+
+    public function willFindNullKey(): self
+    {
+        $this->nullKeyRow = ['?column?' => 1];
 
         return $this;
     }
@@ -248,7 +261,10 @@ final class SpyClient implements Client
 
     public function fetchOne(Sql|string $sql, array $parameters = []): ?array
     {
-        throw new RuntimeException('SpyClient does not implement ' . __FUNCTION__);
+        $this->calls[] = 'fetchOne';
+        $this->fetchOneQueries[] = ['sql' => $sql instanceof Sql ? $sql->toSql() : $sql, 'parameters' => $parameters];
+
+        return $this->nullKeyRow;
     }
 
     public function fetchOneInto(RowMapper $mapper, Sql|string $sql, array $parameters = []): mixed

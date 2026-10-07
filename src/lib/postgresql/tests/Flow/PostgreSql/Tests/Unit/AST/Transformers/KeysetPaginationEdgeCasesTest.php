@@ -70,7 +70,7 @@ final class KeysetPaginationEdgeCasesTest extends TestCase
             cursor: ['2025-01-05 08:30:00', 50000],
         );
         static::assertSame(
-            'SELECT al.id, al.event_type, al.entity_type, al.entity_id, al.user_id, al.ip_address, al.changes, al.created_at FROM audit_log al WHERE (al.event_type IN (\'create\', \'update\', \'delete\') AND al.created_at >= \'2025-01-01\') AND (al.created_at < $1 OR (al.created_at = $1 AND al.id < $2)) ORDER BY al.created_at DESC, al.id DESC LIMIT 1000',
+            'SELECT al.id, al.event_type, al.entity_type, al.entity_id, al.user_id, al.ip_address, al.changes, al.created_at FROM audit_log al WHERE (al.event_type IN (\'create\', \'update\', \'delete\') AND al.created_at >= \'2025-01-01\') AND (al.created_at, al.id) < ($1, $2) ORDER BY al.created_at DESC, al.id DESC LIMIT 1000',
             $page100,
         );
     }
@@ -101,13 +101,13 @@ final class KeysetPaginationEdgeCasesTest extends TestCase
 
         $page2 = sql_to_keyset_query($baseQuery, limit: 50, columns: $columns, cursor: ['2025-01-15 14:30:00', 1000]);
         static::assertSame(
-            'SELECT a.id, a.user_id, a.action_type, a.metadata, a.created_at FROM activity_log a WHERE a.created_at < $1 OR (a.created_at = $1 AND a.id < $2) ORDER BY a.created_at DESC, a.id DESC LIMIT 50',
+            'SELECT a.id, a.user_id, a.action_type, a.metadata, a.created_at FROM activity_log a WHERE (a.created_at, a.id) < ($1, $2) ORDER BY a.created_at DESC, a.id DESC LIMIT 50',
             $page2,
         );
 
         $page3 = sql_to_keyset_query($baseQuery, limit: 50, columns: $columns, cursor: ['2025-01-15 12:15:00', 850]);
         static::assertSame(
-            'SELECT a.id, a.user_id, a.action_type, a.metadata, a.created_at FROM activity_log a WHERE a.created_at < $1 OR (a.created_at = $1 AND a.id < $2) ORDER BY a.created_at DESC, a.id DESC LIMIT 50',
+            'SELECT a.id, a.user_id, a.action_type, a.metadata, a.created_at FROM activity_log a WHERE (a.created_at, a.id) < ($1, $2) ORDER BY a.created_at DESC, a.id DESC LIMIT 50',
             $page3,
         );
     }
@@ -142,7 +142,7 @@ final class KeysetPaginationEdgeCasesTest extends TestCase
 
         $page2 = sql_to_keyset_query($baseQuery, limit: 25, columns: $columns, cursor: ['2025-01-10 09:45:00', 5000]);
         static::assertSame(
-            'SELECT o.id AS order_id, o.created_at, o.total_amount, u.email AS customer_email, p.name AS product_name FROM orders o JOIN users u ON o.user_id = u.id JOIN order_items oi ON o.id = oi.order_id JOIN products p ON oi.product_id = p.id WHERE o.status = \'completed\' AND (o.created_at < $1 OR (o.created_at = $1 AND o.id < $2)) ORDER BY o.created_at DESC, o.id DESC LIMIT 25',
+            'SELECT o.id AS order_id, o.created_at, o.total_amount, u.email AS customer_email, p.name AS product_name FROM orders o JOIN users u ON o.user_id = u.id JOIN order_items oi ON o.id = oi.order_id JOIN products p ON oi.product_id = p.id WHERE o.status = \'completed\' AND (o.created_at, o.id) < ($1, $2) ORDER BY o.created_at DESC, o.id DESC LIMIT 25',
             $page2,
         );
     }
@@ -178,7 +178,7 @@ final class KeysetPaginationEdgeCasesTest extends TestCase
 
         $page2 = sql_to_keyset_query($baseQuery, limit: 12, columns: $columns, cursor: ['2025-01-10 15:00:00', 750]);
         static::assertSame(
-            'SELECT p.id, p.name, p.price, p.category_id, p.created_at FROM products p WHERE (p.active = true AND p.price BETWEEN 50 AND 500 AND p.category_id IN (1, 2, 3, 4, 5) AND p.stock_quantity > 0 AND (p.name ILIKE \'%phone%\' OR p.name ILIKE \'%tablet%\')) AND (p.created_at < $1 OR (p.created_at = $1 AND p.id < $2)) ORDER BY p.created_at DESC, p.id DESC LIMIT 12',
+            'SELECT p.id, p.name, p.price, p.category_id, p.created_at FROM products p WHERE (p.active = true AND p.price BETWEEN 50 AND 500 AND p.category_id IN (1, 2, 3, 4, 5) AND p.stock_quantity > 0 AND (p.name ILIKE \'%phone%\' OR p.name ILIKE \'%tablet%\')) AND (p.created_at, p.id) < ($1, $2) ORDER BY p.created_at DESC, p.id DESC LIMIT 12',
             $page2,
         );
     }
@@ -244,7 +244,7 @@ final class KeysetPaginationEdgeCasesTest extends TestCase
 
         $page2 = sql_to_keyset_query($baseQuery, limit: 30, columns: $columns, cursor: ['2024-06-15', 500]);
         static::assertSame(
-            'SELECT e.id, e.name, e.department_id, e.salary, rank() OVER (PARTITION BY e.department_id ORDER BY e.salary DESC) AS salary_rank, e.hire_date FROM employees e WHERE e.active = true AND (e.hire_date < $1 OR (e.hire_date = $1 AND e.id < $2)) ORDER BY e.hire_date DESC, e.id DESC LIMIT 30',
+            'SELECT e.id, e.name, e.department_id, e.salary, rank() OVER (PARTITION BY e.department_id ORDER BY e.salary DESC) AS salary_rank, e.hire_date FROM employees e WHERE e.active = true AND (e.hire_date, e.id) < ($1, $2) ORDER BY e.hire_date DESC, e.id DESC LIMIT 30',
             $page2,
         );
     }

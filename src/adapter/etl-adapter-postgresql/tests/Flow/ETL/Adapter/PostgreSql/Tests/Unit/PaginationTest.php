@@ -51,6 +51,14 @@ final class PaginationTest extends FlowTestCase
         static::assertSame(SortOrder::DESC, $columns[1]->order);
     }
 
+    public function test_key_name_is_the_last_identifier_part(): void
+    {
+        static::assertSame('id', Key::asc('id')->name());
+        static::assertSame('id', Key::asc('u.id')->name());
+        static::assertSame('CreatedAt', Key::asc('"CreatedAt"')->name());
+        static::assertSame('CreatedAt', Key::asc('u."CreatedAt"')->name());
+    }
+
     public function test_keyset_requires_at_least_one_key(): void
     {
         $this->expectException(InvalidArgumentException::class);

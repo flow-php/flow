@@ -17,6 +17,7 @@ use function extension_loaded;
 use function Flow\PostgreSql\DSL\param;
 use function Flow\PostgreSql\DSL\sql_keyset_column;
 use function Flow\PostgreSql\DSL\sql_parse;
+use function Flow\PostgreSql\DSL\sql_to_keyset_query;
 
 final class KeysetPaginationModifierTest extends TestCase
 {
@@ -65,7 +66,7 @@ final class KeysetPaginationModifierTest extends TestCase
                 ],
                 ['2025-01-15 12:30:00', 42],
             ),
-            'SELECT * FROM users WHERE created_at > $1 OR (created_at = $1 AND id > $2) ORDER BY created_at, id LIMIT 10',
+            'SELECT * FROM users WHERE (created_at, id) > ($1, $2) ORDER BY created_at, id LIMIT 10',
         ];
 
         yield 'subsequent page multiple columns mixed order' => [
@@ -150,7 +151,7 @@ final class KeysetPaginationModifierTest extends TestCase
                 ],
                 ['2025-01-15', 42],
             ),
-            'SELECT * FROM users WHERE (status = $1 AND category = $2) AND (created_at > $3 OR (created_at = $3 AND id > $4)) ORDER BY created_at, id LIMIT 10',
+            'SELECT * FROM users WHERE (status = $1 AND category = $2) AND (created_at, id) > ($3, $4) ORDER BY created_at, id LIMIT 10',
         ];
 
         yield 'with existing parameters - first page no cursor' => [
@@ -190,7 +191,7 @@ final class KeysetPaginationModifierTest extends TestCase
                 [sql_keyset_column('created_at', SortOrder::ASC), sql_keyset_column('id', SortOrder::ASC)],
                 param(3),
             ),
-            'SELECT * FROM users WHERE status = $1 AND (created_at > $3 OR (created_at = $3 AND id > $4)) ORDER BY created_at, id LIMIT $2',
+            'SELECT * FROM users WHERE status = $1 AND (created_at, id) > ($3, $4) ORDER BY created_at, id LIMIT $2',
         ];
 
         yield 'limit as a parameter with cursor values - keyset numbered after the limit' => [
@@ -374,5 +375,76 @@ final class KeysetPaginationModifierTest extends TestCase
 
         $modifier = new KeysetPaginationModifier(new KeysetPaginationConfig(10, []));
         $parsed->traverse($modifier);
+    }
+
+    public function test_all_desc_composite_key_uses_row_comparison(): void
+    {
+        static::assertSame('SELECT * FROM users WHERE (created_at, id) < ($1, $2) ORDER BY created_at DESC, id DESC LIMIT 10', sql_to_keyset_query(
+            'SELECT * FROM users',
+            10,
+            [sql_keyset_column('created_at', SortOrder::DESC), sql_keyset_column('id', SortOrder::DESC)],
+            ['2025-01-01', 7],
+        ));
+    }
+
+    public function test_order_by_not_matching_keys_is_rejected(): void
+    {
+        $this->expectException(PaginationException::class);
+        $this->expectExceptionMessage(
+            'Keyset pagination requires ORDER BY item #1 to be the key "id ASC" with no NULLS clause, ordinal, expression or USING',
+        );
+
+        sql_to_keyset_query('SELECT * FROM users ORDER BY name', 10, [sql_keyset_column('id')]);
+    }
+
+    public function test_query_limit_is_rejected(): void
+    {
+        $this->expectException(PaginationException::class);
+        $this->expectExceptionMessage(
+            'Keyset pagination sets its own LIMIT; remove LIMIT and OFFSET from the query and pass the page size as the limit',
+        );
+
+        sql_to_keyset_query('SELECT * FROM users ORDER BY id LIMIT 5', 10, [sql_keyset_column('id')]);
+    }
+
+    public function test_query_offset_is_rejected(): void
+    {
+        $this->expectException(PaginationException::class);
+        $this->expectExceptionMessage(
+            'Keyset pagination sets its own LIMIT; remove LIMIT and OFFSET from the query and pass the page size as the limit',
+        );
+
+        sql_to_keyset_query('SELECT * FROM users ORDER BY id OFFSET 5', 10, [sql_keyset_column('id')]);
+    }
+
+    public function test_set_operation_limit_is_rejected(): void
+    {
+        $this->expectException(PaginationException::class);
+        $this->expectExceptionMessage(
+            'Keyset pagination sets its own LIMIT; remove LIMIT and OFFSET from the query and pass the page size as the limit',
+        );
+
+        sql_to_keyset_query('SELECT id FROM t UNION SELECT id FROM u ORDER BY id LIMIT 5', 10, [sql_keyset_column(
+            'id',
+        )]);
+    }
+
+    public function test_set_operation_offset_is_rejected(): void
+    {
+        $this->expectException(PaginationException::class);
+        $this->expectExceptionMessage(
+            'Keyset pagination sets its own LIMIT; remove LIMIT and OFFSET from the query and pass the page size as the limit',
+        );
+
+        sql_to_keyset_query('SELECT id FROM t UNION SELECT id FROM u OFFSET 5', 10, [sql_keyset_column('id')]);
+    }
+
+    public function test_set_operation_branch_limit_is_kept(): void
+    {
+        static::assertSame('SELECT * FROM ((SELECT id FROM t LIMIT 5) UNION SELECT id FROM u) _keyset_subq ORDER BY id ASC LIMIT 10', sql_to_keyset_query(
+            '(SELECT id FROM t LIMIT 5) UNION (SELECT id FROM u)',
+            10,
+            [sql_keyset_column('id')],
+        ));
     }
 }

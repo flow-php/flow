@@ -194,10 +194,10 @@ function sql_to_count_query(string $sql): string
  * More efficient than OFFSET for large datasets - uses indexed WHERE conditions.
  * Automatically detects existing query parameters and appends keyset placeholders at the end.
  *
- * @param string $sql The SQL query to paginate (must have ORDER BY)
+ * @param string $sql The SQL query to paginate (ORDER BY optional; when present it must equal the keys; no LIMIT/OFFSET)
  * @param int $limit Maximum number of rows to return
  * @param list<KeysetColumn> $columns Columns for keyset pagination (must match ORDER BY)
- * @param null|list<null|bool|float|int|string> $cursor Values from last row of previous page (null for first page)
+ * @param null|list<bool|float|int|string> $cursor Values from last row of previous page (null for first page)
  *
  * @return string The paginated SQL query
  */

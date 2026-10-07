@@ -30,7 +30,7 @@ final class DbalKeySetExtractorTest extends IntegrationTestCase
         ));
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('KeySet must contain at least one key for pagination');
+        $this->expectExceptionMessage('KeySet requires at least one key');
 
         from_dbal_key_set_qb(
             $this->pgsqlDatabaseContext->connection(),

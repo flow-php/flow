@@ -9,6 +9,97 @@ Upgrading from older versions: [0.35.x to 0.40.x](/documentation/upgrading-0.35-
 
 ---
 
+## Upgrading from 0.45.x to 0.46.x
+
+### 1) `flow-php/etl-adapter-postgresql`, `flow-php/etl-adapter-doctrine` - keyset reads reject NULL keys up front
+
+| Before                                                                                 | After                                                                                                         |
+|----------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
+| a NULL key: rows lost or `NULL value found in column ...`, depending on the batch size | one check query before the first page, then `RuntimeException` `Keyset pagination requires non-null keys ...` |
+| no query before the first page                                                         | `SELECT 1 FROM (<query>) ... WHERE k IS NULL LIMIT 1` (DBAL: the builder plus `IS NULL` conditions)           |
+
+Filter NULL keys out with `IS NOT NULL`, or page by non-null columns. Index the keys - on an unindexed key the check is one full scan.
+
+### 2) `flow-php/etl-adapter-postgresql`, `flow-php/etl-adapter-doctrine` - keyset reads reject duplicate keys
+
+| Before                                                                                              | After                                                                                                                  |
+|-----------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| two rows with the same key: rows at a page boundary silently skipped                                | `RuntimeException` `Keyset pagination requires unique keys ...`                                                        |
+| keys equal in the database but different in PHP (`'a'`/`'A'` under a `_ci` collation, `1.0`/`1.00`) | `RuntimeException` `Keyset pagination expected the next page to start at the key ...` when a page boundary splits them |
+
+Add a unique column (for example the primary key) to the key set as its least significant key.
+
+### 3) `flow-php/etl-adapter-postgresql`, `flow-php/etl-adapter-doctrine` - a short keyset page ends the read
+
+| Before                                                | After                                                                                             |
+|-------------------------------------------------------|---------------------------------------------------------------------------------------------------|
+| each page `LIMIT n`; reading stopped on an empty page | each page `LIMIT n + 1` (the extra row is not yielded); a page of `n` rows or fewer ends the read |
+| one trailing empty `SELECT`                           | none                                                                                              |
+
+Nothing to change unless you count queries: a read sends the NULL check plus the page queries.
+
+### 4) `flow-php/postgresql`, `flow-php/etl-adapter-postgresql` - keyset pagination rejects the query's own LIMIT/OFFSET
+
+| Before                                                                               | After                                                             |
+|--------------------------------------------------------------------------------------|-------------------------------------------------------------------|
+| `sql_to_keyset_query('SELECT ... LIMIT 5', 10, ...)` - LIMIT silently replaced by 10 | `PaginationException` `Keyset pagination sets its own LIMIT; ...` |
+| `from_pgsql_key_set($client, 'SELECT ... LIMIT 5', ...)`                             | same `PaginationException`, before any query                      |
+
+Drop LIMIT/OFFSET from the query; use `withMaximum()` or `DataFrame::limit()`.
+
+### 5) `flow-php/etl-adapter-doctrine` - `from_dbal_key_set_qb()` rejects `setMaxResults()` / `setFirstResult()`
+
+| Before                                                          | After                                                                             |
+|-----------------------------------------------------------------|-----------------------------------------------------------------------------------|
+| `$qb->setMaxResults(5)` - silently overwritten by the page size | `InvalidArgumentException` `Keyset pagination sets its own LIMIT and OFFSET, ...` |
+| `$qb->setFirstResult(5)` - applied to every page                | same `InvalidArgumentException`                                                   |
+
+Remove them from the builder; use `withMaximum()` or `DataFrame::limit()`.
+
+### 6) `flow-php/postgresql`, `flow-php/etl-adapter-postgresql` - a query's own ORDER BY must equal the keys
+
+| Before                                                                                 | After                                                                                          |
+|----------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------|
+| `'SELECT ... ORDER BY name'` with key `id` - kept, pages wrong                         | `PaginationException` `Keyset pagination requires ORDER BY item #1 to be the key "id ASC" ...` |
+| `ORDER BY id NULLS FIRST`, `ORDER BY 1`, `ORDER BY lower(name)`, `ORDER BY id USING <` | same `PaginationException`                                                                     |
+
+Drop the ORDER BY (it is generated from the keys) or make it list exactly the keys, in order and direction.
+
+### 7) `flow-php/postgresql` - `KeysetPaginationConfig` / `sql_to_keyset_query()` reject a NULL cursor value
+
+| Before                                                                                 | After                                                                                |
+|----------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| `new KeysetPaginationConfig(10, $columns, [null, 7])` - predicate that matches nothing | `PaginationException` `Keyset cursor value #1 is NULL; key columns must be non-null` |
+
+Page by non-null key columns.
+
+### 8) `flow-php/postgresql` - same-direction composite keys emit a row comparison
+
+| Before                                                       | After                         |
+|--------------------------------------------------------------|-------------------------------|
+| `created_at > $1 OR (created_at = $1 AND id > $2)`           | `(created_at, id) > ($1, $2)` |
+| all DESC: `created_at < $1 OR (created_at = $1 AND id < $2)` | `(created_at, id) < ($1, $2)` |
+
+Nothing to change; the row comparison is an index range bound. Mixed ASC/DESC keys keep the `OR` form. Update assertions on the generated SQL.
+
+### 9) `flow-php/etl-adapter-doctrine` - a non-scalar keyset value is rejected
+
+| Before                                                                       | After                                                                                        |
+|------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------|
+| a key value that is not `string`/`int`/`float`/`bool` - bound as a parameter | `RuntimeException` `Unsupported value type "<type>" in column "<key>" for keyset pagination` |
+
+Page by scalar columns.
+
+### 10) `flow-php/etl-adapter-doctrine` - `pagination_key_set()` rejects zero keys
+
+| Before                                                                                                             | After                                                                                       |
+|--------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
+| `pagination_key_set()` built; `from_dbal_key_set_qb()` threw `KeySet must contain at least one key for pagination` | `pagination_key_set()` throws `InvalidArgumentException` `KeySet requires at least one key` |
+
+Pass at least one key.
+
+---
+
 ## Upgrading from 0.44.x to 0.45.x
 
 ### 1) `flow-php/etl-adapter-postgresql` - a failed `from_pgsql_cursor()` read throws its own error and rolls back

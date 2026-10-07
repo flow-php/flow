@@ -226,6 +226,41 @@ data_frame()
 
 The query runs once per parameter set, three times here.
 
+## Extractor - Keyset Pagination
+
+`from_dbal_key_set_qb()` reads a query builder page by page, asking for the rows after the last key it saw.
+
+The keys must be **indexed, non-null and unique together**. A single non-unique column such as `created_at` is not a
+key; add the primary key. `pagination_key_set()` takes the keys from least to most significant, so the last key is the
+primary sort:
+
+```php
+use function Flow\ETL\Adapter\Doctrine\{from_dbal_key_set_qb, pagination_key_asc, pagination_key_set};
+use function Flow\ETL\DSL\{data_frame, to_output};
+
+data_frame()
+    ->read(from_dbal_key_set_qb(
+        $connection,
+        $connection->createQueryBuilder()->select('id', 'created_at', 'total')->from('orders'),
+        pagination_key_set(pagination_key_asc('id'), pagination_key_asc('created_at')), // ORDER BY created_at, id
+    )->withBatchSize(1000))
+    ->limit(10_000)
+    ->write(to_output())
+    ->run();
+```
+
+- Before the first page the extractor sends one check query, the builder plus `WHERE (created_at IS NULL) OR (id IS
+  NULL) LIMIT 1`, and throws when it finds a row. On an indexed key this is an index lookup; on an unindexed key it is
+  one full scan.
+- Two rows with the same key throw `Keyset pagination requires unique keys`.
+- A next page that does not start at the row the previous page looked ahead to throws. This happens when the database
+  compares two different values as equal (a case- or accent-insensitive collation such as MySQL's default, `numeric`
+  `1.0` and `1.00`) or when rows change between pages.
+- Known limit: two such values on the same page are both read without an error. Nothing is lost.
+- The query builder must not have an ORDER BY, `setMaxResults()` or `setFirstResult()`; use `withMaximum()` or
+  `DataFrame::limit()`.
+- A page shorter than the batch size ends the read without another query.
+
 ## Schema Converter
 
 With `to_dbal_schema_table()` function we can convert any Flow Schema (which represents a dataset)

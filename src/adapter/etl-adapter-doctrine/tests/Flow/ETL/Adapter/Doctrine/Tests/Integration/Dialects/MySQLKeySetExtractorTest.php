@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Flow\Clock\FakeClock;
 use Flow\ETL\Adapter\Doctrine\DbalMetadata;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
+use Flow\ETL\Exception\RuntimeException;
 
 use function Flow\ETL\Adapter\Doctrine\from_dbal_key_set_qb;
 use function Flow\ETL\Adapter\Doctrine\pagination_key_asc;
@@ -17,6 +18,7 @@ use function Flow\ETL\Adapter\Doctrine\to_dbal_schema_table;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\map_schema;
@@ -138,7 +140,8 @@ final class MySQLKeySetExtractorTest extends IntegrationTestCase
             ->fetch()
             ->toArray();
 
-        static::assertSame(5, $this->mysqlDatabaseContext->numberOfExecutedSelectQueries());
+        // the NULL check, then 5 pages of 1
+        static::assertSame(6, $this->mysqlDatabaseContext->numberOfExecutedSelectQueries());
         static::assertCount(5, $rows);
         static::assertSame(25, $rows[0]['id']);
     }
@@ -182,7 +185,8 @@ final class MySQLKeySetExtractorTest extends IntegrationTestCase
             ->fetch()
             ->toArray();
 
-        static::assertSame(5, $this->mysqlDatabaseContext->numberOfExecutedSelectQueries());
+        // the NULL check, then 5 pages of 1
+        static::assertSame(6, $this->mysqlDatabaseContext->numberOfExecutedSelectQueries());
         static::assertCount(5, $rows);
         static::assertSame(1, $rows[0]['id']);
     }
@@ -226,7 +230,8 @@ final class MySQLKeySetExtractorTest extends IntegrationTestCase
             ->fetch()
             ->toArray();
 
-        static::assertSame(5, $this->mysqlDatabaseContext->numberOfExecutedSelectQueries());
+        // the NULL check, then 5 pages of 1
+        static::assertSame(6, $this->mysqlDatabaseContext->numberOfExecutedSelectQueries());
         static::assertCount(5, $rows);
         static::assertSame(25, $rows[0]['id']);
     }
@@ -403,5 +408,56 @@ final class MySQLKeySetExtractorTest extends IntegrationTestCase
             ],
             $rows,
         );
+    }
+
+    public function test_case_insensitive_equal_keys_throw(): void
+    {
+        $this->mysqlDatabaseContext->createTable(to_dbal_schema_table(
+            schema(
+                int_schema('id', metadata: DbalMetadata::primaryKey()),
+                str_schema('k', metadata: DbalMetadata::length(10)),
+            ),
+            $table = 'flow_key_set_extractor_case_test',
+        ));
+        $this->mysqlDatabaseContext->insert($table, ['id' => 1, 'k' => 'a']);
+        $this->mysqlDatabaseContext->insert($table, ['id' => 2, 'k' => 'A']);
+        $this->mysqlDatabaseContext->insert($table, ['id' => 3, 'k' => 'b']);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Keyset pagination expected the next page to start at the key');
+
+        df()
+            ->read(from_dbal_key_set_qb(
+                $this->mysqlDatabaseContext->connection(),
+                $this->mysqlDatabaseContext->connection()->createQueryBuilder()->from($table)->select('id', 'k'),
+                pagination_key_set(pagination_key_asc('k')),
+            )->withBatchSize(1))
+            ->fetch();
+    }
+
+    public function test_null_in_secondary_key_throws_before_first_row(): void
+    {
+        $this->mysqlDatabaseContext->createTable(to_dbal_schema_table(
+            schema(int_schema('a'), int_schema('b', true)),
+            $table = 'flow_key_set_extractor_nulls_test',
+        ));
+        $this->mysqlDatabaseContext->insert($table, ['a' => 1, 'b' => 1]);
+        $this->mysqlDatabaseContext->insert($table, ['a' => 1, 'b' => null]);
+        $this->mysqlDatabaseContext->insert($table, ['a' => 2, 'b' => 1]);
+
+        $generator = from_dbal_key_set_qb(
+            $this->mysqlDatabaseContext->connection(),
+            $this->mysqlDatabaseContext->connection()->createQueryBuilder()->from($table)->select('a', 'b'),
+            pagination_key_set(pagination_key_asc('b'), pagination_key_asc('a')),
+        )
+            ->withBatchSize(2)
+            ->extract(flow_context());
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            'Keyset pagination requires non-null keys, but a row has NULL in the key column(s) "a", "b"',
+        );
+
+        $generator->current();
     }
 }
