@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem;
 
+use DateTimeInterface;
 use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateTimeType;
@@ -15,17 +16,24 @@ use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\XMLElementType;
 use Flow\Types\Type\Logical\XMLType;
+use Flow\Types\Type\Native\FloatType;
+use Flow\Types\Type\NonFiniteFloat;
+use Flow\Types\Type\RoundTripPrecision;
 use Flow\Types\Type\TypedValueFormatter;
 
 use function array_filter;
 use function array_keys;
 use function explode;
 use function Flow\Types\DSL\type_string;
+use function json_encode;
 use function preg_match;
 use function rawurldecode;
 use function rawurlencode;
 use function sprintf;
 use function strlen;
+
+use const JSON_PRESERVE_ZERO_FRACTION;
+use const JSON_THROW_ON_ERROR;
 
 final class Partition
 {
@@ -112,7 +120,26 @@ final class Partition
     public static function fromValue(string $name, Type $type, mixed $value): string
     {
         if ($type instanceof DateTimeType) {
-            return $type->cast($type->assert($value))->format('Y-m-d');
+            $datetime = $type->cast($type->assert($value));
+
+            return $datetime->format($datetime->format('u') === '000000' ? DateTimeInterface::ATOM : 'Y-m-d\TH:i:s.uP');
+        }
+
+        if ($type instanceof FloatType) {
+            $float = $type->assert($value);
+            $precision = new RoundTripPrecision();
+            $precision->force();
+
+            try {
+                return (
+                    NonFiniteFloat::text($float) ?? json_encode(
+                        $float,
+                        JSON_PRESERVE_ZERO_FRACTION | JSON_THROW_ON_ERROR,
+                    )
+                );
+            } finally {
+                $precision->restore();
+            }
         }
 
         if (

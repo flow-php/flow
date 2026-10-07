@@ -14,14 +14,16 @@ use Flow\ETL\Function\Between\Boundary;
 use Flow\ETL\Function\Evaluation\ResultColumn;
 use Flow\ETL\Rows;
 use Flow\Types\Type;
+use Flow\Types\Type\Comparison\Operator;
 use Flow\Types\Type\Nullability;
+use Flow\Types\Type\ValueComparator;
 
 use function array_map;
 use function Flow\ETL\DSL\lit;
 use function Flow\Types\DSL\type_bare;
 use function Flow\Types\DSL\type_boolean;
 
-final class Between implements ScalarFunction
+final class Between implements ComparisonFunction
 {
     use ScalarFunctionChain;
 
@@ -45,6 +47,14 @@ final class Between implements ScalarFunction
     /**
      * @return list<ScalarFunction>
      */
+    public function operands(): array
+    {
+        return [$this->value, $this->lowerBoundRef, $this->upperBoundRef];
+    }
+
+    /**
+     * @return list<ScalarFunction>
+     */
     public function children(): array
     {
         return [$this->value, $this->lowerBoundRef, $this->upperBoundRef, $this->boundary];
@@ -60,10 +70,24 @@ final class Between implements ScalarFunction
     }
 
     /**
+     * @param list<ScalarFunction> $operands
+     */
+    public function withOperands(array $operands): static
+    {
+        return new self($operands[0], $operands[1], $operands[2], $this->boundary);
+    }
+
+    /**
      * @return Type<mixed>
      */
     public function returns(): Type
     {
+        (new ValueComparator())->assertAllTypesComparable([
+            $this->value->returns(),
+            $this->lowerBoundRef->returns(),
+            $this->upperBoundRef->returns(),
+        ], Operator::GREATER_THAN_EQUAL);
+
         return (new Nullability())->any(
             type_boolean(),
             $this->value->returns(),

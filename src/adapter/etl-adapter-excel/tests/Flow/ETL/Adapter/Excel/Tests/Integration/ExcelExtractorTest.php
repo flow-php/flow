@@ -29,6 +29,7 @@ use PHPUnit\Framework\Attributes\TestWith;
 use function array_keys;
 use function Flow\ETL\Adapter\Excel\DSL\from_excel;
 use function Flow\ETL\Adapter\Excel\DSL\is_valid_excel_sheet_name;
+use function Flow\ETL\Adapter\Excel\DSL\to_excel;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
@@ -36,9 +37,12 @@ use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\infer_schema;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\overwrite;
+use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -957,5 +961,27 @@ final class ExcelExtractorTest extends FlowTestCase
 
         static::assertGreaterThan(0, $first->count());
         static::assertSame($first->toArray(), $second->toArray());
+    }
+
+    public function test_partition_schema_is_the_partition_block_of_the_read_schema(): void
+    {
+        df()
+            ->read(from_array(
+                [
+                    ['date' => new DateTimeImmutable('2026-10-01 00:00:00 UTC'), 'text' => 'a'],
+                    ['date' => new DateTimeImmutable('2026-10-02 00:00:00 UTC'), 'text' => 'b'],
+                ],
+                schema(datetime_schema('date'), str_schema('text')),
+            ))
+            ->write(
+                to_excel(__DIR__ . '/var/partition_schema/file.xlsx')
+                    ->saveMode(overwrite())
+                    ->partitionBy(partition_by('date')->writeColumns()),
+            )
+            ->run();
+
+        $extractor = from_excel(__DIR__ . '/var/partition_schema/**/*.xlsx');
+
+        static::assertEquals($extractor->schema()->keep('date'), $extractor->partitionSchema());
     }
 }

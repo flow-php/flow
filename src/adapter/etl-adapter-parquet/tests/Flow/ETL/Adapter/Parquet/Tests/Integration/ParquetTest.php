@@ -28,6 +28,7 @@ use Flow\Types\Value\Uuid as FlowUuid;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
+use PHPUnit\Framework\Attributes\TestWith;
 use Ramsey\Uuid\Uuid;
 
 use function array_column;
@@ -62,6 +63,7 @@ use function Flow\ETL\DSL\to_transformation;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
@@ -765,6 +767,65 @@ final class ParquetTest extends FlowTestCase
         static::assertSame(
             ['id', 'date', 'clicks'],
             ParquetFilesContext::columnNames($memory, 'memory://var/write_columns/date=2026-09-01/file.parquet'),
+        );
+    }
+
+    #[TestWith([true])]
+    #[TestWith([false])]
+    public function test_a_datetime_partition_reads_back_the_written_time(bool $writeColumns): void
+    {
+        $memory = memory_filesystem();
+        $by = partition_by('date');
+
+        data_frame()
+            ->read(from_array(
+                [
+                    ['id' => 'a', 'date' => new DateTimeImmutable('2026-10-02 09:00:00 UTC')],
+                    ['id' => 'b', 'date' => new DateTimeImmutable('2026-10-02 13:00:00.123456 UTC')],
+                ],
+                schema(str_schema('id'), datetime_schema('date')),
+            ))
+            ->write(to_parquet(path('memory://var/times/file.parquet'), filesystem: $memory)->partitionBy(
+                $writeColumns ? $by->writeColumns() : $by,
+            ))
+            ->run();
+
+        static::assertEquals(
+            [
+                ['id' => 'a', 'date' => new DateTimeImmutable('2026-10-02 09:00:00 UTC')],
+                ['id' => 'b', 'date' => new DateTimeImmutable('2026-10-02 13:00:00.123456 UTC')],
+            ],
+            data_frame()
+                ->read(from_parquet(path('memory://var/times/**/*.parquet'), filesystem: $memory)->partitionTypes(
+                    partition_types(date: type_datetime()),
+                ))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    public function test_a_float_partition_reads_back_the_written_value(): void
+    {
+        $memory = memory_filesystem();
+
+        data_frame()
+            ->read(from_array(
+                [['id' => 'a', 'x' => 0.0], ['id' => 'b', 'x' => 1.0E-9]],
+                schema(str_schema('id'), float_schema('x')),
+            ))
+            ->write(to_parquet(path('memory://var/floats/file.parquet'), filesystem: $memory)->partitionBy(partition_by(
+                'x',
+            )))
+            ->run();
+
+        static::assertSame(
+            [['id' => 'a', 'x' => 0.0], ['id' => 'b', 'x' => 1.0E-9]],
+            data_frame()
+                ->read(from_parquet(path('memory://var/floats/**/*.parquet'), filesystem: $memory)->partitionTypes(
+                    partition_types(x: type_float()),
+                ))
+                ->fetch()
+                ->toArray(),
         );
     }
 

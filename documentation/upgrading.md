@@ -98,6 +98,49 @@ Page by scalar columns.
 
 Pass at least one key.
 
+### 11) `flow-php/filesystem`, `flow-php/etl` - `datetime` and `float` partition values keep their full value
+
+| Before                                                                                                               | After                                    |
+|----------------------------------------------------------------------------------------------------------------------|------------------------------------------|
+| `partition_by('date')` over `datetime` `2026-10-02 13:00:00 UTC` - `date=2026-10-02`                                 | `date=2026-10-02T13%3A00%3A00%2B00%3A00` |
+| reading it back as `datetime` (`writeColumns()` or `partition_types(date: type_datetime())`) - `2026-10-02 00:00:00` | `2026-10-02 13:00:00`                    |
+| `partition_by('x')` over `float` `1.0E-9` - `x=0.000000`, read back `0.0`                                            | `x=1.0e-9`, read back `1.0E-9`           |
+| `from_path_partitions()` / `files()` / an undeclared partition column - `'2026-10-02'`                               | `'2026-10-02T13:00:00+00:00'`            |
+
+Directories written before keep reading as midnight. Writing into a dataset that has them adds a second directory per
+day, and `overwrite()` replaces only the new one - rewrite the dataset, or partition by a `date` column to keep
+`date=2026-10-02`:
+
+```php
+$df->withEntry('date', ref('date')->cast(type_date()))
+```
+
+### 12) `flow-php/etl-adapter-parquet`, `flow-php/etl` - a partition column the file holds is typed from the file in a pushed filter
+
+| Before                                                                                                                                         | After                                                                |
+|------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
+| `from_parquet()` / `from_floe()` over `writeColumns()` data - `partitionSchema()` types `date` `string`                                        | the file's type (`datetime`, `date`, `integer`, ...)                 |
+| `filter(ref('date')->between(lit(DateTime), lit(DateTime)))` - throws `Boundary::compare requires value and bounds to be of a comparable type` | returns the matching rows, directories outside the range are skipped |
+| same filter with `lit('2026-10-02')` bounds                                                                                                    | returns the same rows - see `### 14)`                                |
+
+### 13) `flow-php/etl` - `RoundTripPrecision` moved to `flow-php/types`
+
+| Before                                                 | After                                   |
+|--------------------------------------------------------|-----------------------------------------|
+| `Flow\ETL\Column\RoundTripPrecision`                   | `Flow\Types\Type\RoundTripPrecision`    |
+| `force()` throws `Flow\ETL\Exception\RuntimeException` | `Flow\Types\Exception\RuntimeException` |
+
+### 14) `flow-php/etl` - a string compared with a `datetime` / `date` is cast to it
+
+| Before                                                                                      | After                                                            |
+|---------------------------------------------------------------------------------------------|------------------------------------------------------------------|
+| `ref('ts')->between(lit('2026-10-02'), lit('2026-10-03'))` - throws `Boundary::compare ...` | rows between those dates                                         |
+| `ref('ts')->equals(lit('2026-10-02'))` - throws `Can't compare '(datetime == string)'`      | compares as `datetime`                                           |
+| `ref('ts')->equals(ref('s'))`, `s` a string column - throws `Can't compare`                 | `s` cast per row; a non-date value throws `Cast function failed` |
+| `ref('a')->between(lit(1), lit($dateTime))` - throws at evaluation                          | throws `Can't compare` when the plan binds                       |
+
+`same()` / `notSame()` stay strict.
+
 ---
 
 ## Upgrading from 0.44.x to 0.45.x

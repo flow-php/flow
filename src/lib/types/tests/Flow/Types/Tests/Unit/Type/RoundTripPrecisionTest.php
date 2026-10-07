@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Unit\Column;
+namespace Flow\Types\Tests\Unit\Type;
 
-use Flow\ETL\Column\RoundTripPrecision;
+use Flow\Types\Type\RoundTripPrecision;
 use PHPUnit\Framework\TestCase;
 
 use function ini_get;

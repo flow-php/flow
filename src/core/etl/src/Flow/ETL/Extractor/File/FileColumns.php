@@ -40,7 +40,8 @@ final readonly class FileColumns
     }
 
     /**
-     * $declared carries a withSchema()d partition column's type; keep() drops the body columns it brings.
+     * $declared carries the type the read gives a partition column - a withSchema()d or a file footer type;
+     * keep() drops the body columns it brings.
      */
     public function partitions(Schema $declared): Schema
     {

@@ -11,6 +11,7 @@ use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Plan\Stage;
+use Flow\ETL\Schema\Definition;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\Double\RecordingFilesystem;
@@ -23,6 +24,8 @@ use Flow\Parquet\Options;
 use Flow\Parquet\Reader;
 use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 use function array_keys;
 use function count;
@@ -31,13 +34,17 @@ use function Flow\ETL\Adapter\Parquet\to_parquet;
 use function Flow\ETL\DSL\analyze;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\date_schema;
+use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\map_schema;
+use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\partition_types;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -560,6 +567,59 @@ final class ParquetExtractorTest extends FlowTestCase
         static::assertSame(
             count(array_keys($filesystem->calls, 'readFrom', true)),
             count(array_keys($filesystem->calls, 'closeSource', true)),
+        );
+    }
+
+    public static function partition_columns_the_file_holds(): Generator
+    {
+        yield 'datetime' => [datetime_schema('date'), new DateTimeImmutable('2026-10-02 13:00:00 UTC')];
+        yield 'date' => [date_schema('day'), new DateTimeImmutable('2026-10-02')];
+        yield 'integer' => [int_schema('year'), 2026];
+    }
+
+    /**
+     * @param Definition<mixed> $definition
+     */
+    #[DataProvider('partition_columns_the_file_holds')]
+    public function test_partition_schema_types_a_partition_column_the_file_holds_like_the_read(
+        Definition $definition,
+        mixed $value,
+    ): void {
+        $memory = memory_filesystem();
+        $name = $definition->entry()->name();
+
+        df()
+            ->read(from_array([['id' => 'a', $name => $value]], schema(str_schema('id'), $definition)))
+            ->write(
+                to_parquet(path('memory://var/typed/file.parquet'), filesystem: $memory)->partitionBy(
+                    partition_by($name)->writeColumns(),
+                ),
+            )
+            ->run();
+
+        $extractor = from_parquet(path('memory://var/typed/**/*.parquet'), filesystem: $memory);
+
+        static::assertEquals($extractor->schema()->keep($name), $extractor->partitionSchema());
+    }
+
+    public function test_partition_schema_types_a_path_only_partition_column_as_a_string(): void
+    {
+        $memory = memory_filesystem();
+
+        df()
+            ->read(from_array(
+                [['id' => 'a', 'date' => new DateTimeImmutable('2026-10-02 13:00:00 UTC')]],
+                schema(str_schema('id'), datetime_schema('date')),
+            ))
+            ->write(to_parquet(
+                path('memory://var/path_only/file.parquet'),
+                filesystem: $memory,
+            )->partitionBy(partition_by('date')))
+            ->run();
+
+        static::assertEquals(
+            schema(str_schema('date')),
+            from_parquet(path('memory://var/path_only/**/*.parquet'), filesystem: $memory)->partitionSchema(),
         );
     }
 }

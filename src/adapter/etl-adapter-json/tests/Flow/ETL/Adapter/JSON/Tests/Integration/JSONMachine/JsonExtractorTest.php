@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\JSON\Tests\Integration\JSONMachine;
 
 use Closure;
+use DateTimeImmutable;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
 use Flow\ETL\Adapter\JSON\Tests\Context\JsonFixtureContext;
 use Flow\ETL\Cardinality;
@@ -28,13 +29,17 @@ use function array_keys;
 use function array_sum;
 use function count;
 use function Flow\ETL\Adapter\JSON\from_json;
+use function Flow\ETL\Adapter\JSON\to_json;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\infer_schema;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\partition_types;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\schema_to_ascii;
@@ -723,5 +728,29 @@ final class JsonExtractorTest extends FlowTestCase
             count(array_keys($filesystem->calls, 'readFrom', true)),
             count(array_keys($filesystem->calls, 'closeSource', true)),
         );
+    }
+
+    public function test_partition_schema_is_the_partition_block_of_the_read_schema(): void
+    {
+        $memory = memory_filesystem();
+
+        df()
+            ->read(from_array(
+                [
+                    ['date' => new DateTimeImmutable('2026-10-01 00:00:00 UTC'), 'text' => 'a'],
+                    ['date' => new DateTimeImmutable('2026-10-02 00:00:00 UTC'), 'text' => 'b'],
+                ],
+                schema(datetime_schema('date'), str_schema('text')),
+            ))
+            ->write(
+                to_json(path('memory://var/json/file.json'), filesystem: $memory)->partitionBy(
+                    partition_by('date')->writeColumns(),
+                ),
+            )
+            ->run();
+
+        $extractor = from_json(path('memory://var/json/**/*.json'), filesystem: $memory);
+
+        static::assertEquals($extractor->schema()->keep('date'), $extractor->partitionSchema());
     }
 }

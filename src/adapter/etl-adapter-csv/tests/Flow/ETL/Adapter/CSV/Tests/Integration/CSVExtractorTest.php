@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
 use Closure;
+use DateTimeImmutable;
 use Flow\ETL\Adapter\CSV\CSVExtractor;
 use Flow\ETL\Adapter\CSV\Tests\Context\CSVFixtureContext;
 use Flow\ETL\Config;
@@ -37,6 +38,7 @@ use function fgetcsv;
 use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\Adapter\CSV\to_csv;
 use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
@@ -50,7 +52,9 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\schema_metadata;
 use function Flow\ETL\DSL\schema_to_ascii;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\native_local_filesystem;
+use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_html;
@@ -1296,5 +1300,29 @@ final class CSVExtractorTest extends FlowTestCase
             count(array_keys($filesystem->calls, 'readFrom', true)),
             count(array_keys($filesystem->calls, 'closeSource', true)),
         );
+    }
+
+    public function test_partition_schema_is_the_partition_block_of_the_read_schema(): void
+    {
+        $memory = memory_filesystem();
+
+        df()
+            ->read(from_array(
+                [
+                    ['date' => new DateTimeImmutable('2026-10-01 00:00:00 UTC'), 'text' => 'a'],
+                    ['date' => new DateTimeImmutable('2026-10-02 00:00:00 UTC'), 'text' => 'b'],
+                ],
+                schema(datetime_schema('date'), str_schema('text')),
+            ))
+            ->write(
+                to_csv(path('memory://var/csv/file.csv'), filesystem: $memory)->partitionBy(
+                    partition_by('date')->writeColumns(),
+                ),
+            )
+            ->run();
+
+        $extractor = from_csv(path('memory://var/csv/**/*.csv'), filesystem: $memory);
+
+        static::assertEquals($extractor->schema()->keep('date'), $extractor->partitionSchema());
     }
 }

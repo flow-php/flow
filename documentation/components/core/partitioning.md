@@ -125,6 +125,44 @@ as-is. Appended files get randomized suffixes (`sales_a1b2c3.csv`), which become
 Aim for balanced partition sizes: `date` or `department` over a unique `id`, which would create one
 tiny partition per row.
 
+## Partition Values
+
+Each value is written in full, so a typed read gets it back unchanged:
+
+| Column type | Value                            | Directory                                       |
+|-------------|----------------------------------|-------------------------------------------------|
+| `datetime`  | `2026-10-02 13:00:00 UTC`        | `date=2026-10-02T13%3A00%3A00%2B00%3A00`        |
+| `datetime`  | `2026-10-02 13:00:00.123456 UTC` | `date=2026-10-02T13%3A00%3A00.123456%2B00%3A00` |
+| `date`      | `2026-10-02`                     | `date=2026-10-02`                               |
+| `float`     | `1.0E-9`                         | `x=1.0e-9`                                      |
+
+A `datetime` column makes one directory per distinct value. For one directory per day, partition by a `date`:
+
+```php
+<?php
+
+use function Flow\ETL\Adapter\Parquet\to_parquet;
+use function Flow\ETL\DSL\{data_frame, from_array, overwrite, partition_by, ref};
+use function Flow\Types\DSL\type_date;
+
+data_frame()
+    ->read(from_array([
+        ['created_at' => new DateTimeImmutable('2024-01-01 09:00:00'), 'amount' => 100],
+        ['created_at' => new DateTimeImmutable('2024-01-01 13:00:00'), 'amount' => 200],
+    ]))
+    ->withEntry('day', ref('created_at')->cast(type_date()))
+    ->write(to_parquet(__DIR__ . '/output/events.parquet')
+        ->partitionBy(partition_by('day'))
+        ->saveMode(overwrite()))
+    ->run();
+```
+
+```text
+output/
+└── day=2024-01-01/
+    └── events.parquet
+```
+
 ## Save Modes with Partitioning
 
 The save mode decides how existing partition directories are handled.
@@ -223,7 +261,10 @@ data_frame()
 
 Partition values from the path become regular columns. Given a schema that does not declare a
 partition column, it is appended as a **string** column - declare it (`int_schema('date')`) to read
-it as another type.
+it as another type. A file that also holds the partition column (`partition_by(...)->writeColumns()`) types
+it from the file schema (Parquet, Floe), so `filter(ref('date')->between(lit($from), lit($to)))` with
+`DateTimeImmutable` bounds prunes. String bounds (`lit('2026-10-02')`) are cast to the column's `date` /
+`datetime` type, so they prune too.
 
 ### Partition Pruning
 

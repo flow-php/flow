@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\Tests\Integration;
 
+use DateTimeImmutable;
 use Flow\ETL\Adapter\XML\XMLParserExtractor;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Config;
@@ -22,10 +23,14 @@ use Flow\ETL\Tests\FlowIntegrationTestCase;
 use function array_keys;
 use function file_get_contents;
 use function Flow\ETL\Adapter\XML\from_xml;
+use function Flow\ETL\Adapter\XML\to_xml;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
+use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -516,5 +521,29 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
         );
 
         static::assertGreaterThanOrEqual(1, $backend->builders());
+    }
+
+    public function test_partition_schema_is_the_partition_block_of_the_read_schema(): void
+    {
+        $memory = memory_filesystem();
+
+        df()
+            ->read(from_array(
+                [
+                    ['date' => new DateTimeImmutable('2026-10-01 00:00:00 UTC'), 'text' => 'a'],
+                    ['date' => new DateTimeImmutable('2026-10-02 00:00:00 UTC'), 'text' => 'b'],
+                ],
+                schema(datetime_schema('date'), str_schema('text')),
+            ))
+            ->write(
+                to_xml(path('memory://var/xml/file.xml'), filesystem: $memory)->partitionBy(
+                    partition_by('date')->writeColumns(),
+                ),
+            )
+            ->run();
+
+        $extractor = from_xml(path('memory://var/xml/**/*.xml'), 'rows/row', filesystem: $memory);
+
+        static::assertEquals($extractor->schema()->keep('date'), $extractor->partitionSchema());
     }
 }

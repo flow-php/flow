@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Optimizer\Rule;
 
 use DateTimeImmutable;
+use Flow\ETL\Exception\EvaluationException;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Optimizer;
 use Flow\ETL\Optimizer\Rule\PushFilterIntoSource;
 use Flow\ETL\Plan\Node\Filter;
 use Flow\ETL\Plan\Node\Read;
 use Flow\ETL\Plan\Stage;
-use Flow\ETL\Planner;
 use Flow\ETL\Tests\Double\FixedRandomValueGenerator;
 use Flow\ETL\Tests\Double\RecordingExtractor;
 use Flow\ETL\Tests\Double\RecordingFileExtractor;
@@ -21,7 +21,6 @@ use Flow\ETL\Tests\Mother\PartitionedSourceMother;
 use Flow\ETL\WithEntry;
 use Flow\Filesystem\Path\Filter\Filters;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
-use Flow\Types\Exception\InvalidArgumentException;
 
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\df;
@@ -357,22 +356,15 @@ final class PushFilterIntoSourceTest extends FlowTestCase
         static::assertFalse($pathFilter->accept(PartitionedSourceMother::file('year=2024/month=07')));
     }
 
-    public function test_an_incomparable_partition_predicate_fails_the_plan(): void
+    public function test_a_string_partition_compared_with_a_date_is_cast_and_a_non_date_value_fails(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            "Can't compare '(string == date)' due to data type mismatch - an explicit cast is required.",
-        );
+        $this->expectException(EvaluationException::class);
+        $this->expectExceptionMessage('Cast function failed: Can\'t cast "string" into "date" type (row 0)');
 
-        (new Planner(Optimizer::default()))->plan(
-            NodeMother::plan(
-                new Filter(
-                    new Read(PartitionedSourceMother::yearMonth()),
-                    ref('month')->equals(lit(new DateTimeImmutable('2024-01-01'))),
-                ),
-            ),
-            NodeMother::context(),
-        );
+        df()
+            ->read(PartitionedSourceMother::yearMonth())
+            ->filter(ref('month')->equals(lit(new DateTimeImmutable('2024-01-01'))))
+            ->fetch();
     }
 
     public function test_the_extractor_instance_is_never_mutated(): void

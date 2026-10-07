@@ -29,6 +29,7 @@ use Flow\Types\Type\Native\BooleanType;
 use Flow\Types\Type\Native\FloatType;
 use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\NonFiniteFloat;
+use Flow\Types\Type\RoundTripPrecision;
 use JsonException;
 
 use function array_keys;

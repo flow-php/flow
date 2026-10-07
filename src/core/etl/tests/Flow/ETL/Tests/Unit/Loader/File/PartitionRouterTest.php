@@ -127,6 +127,6 @@ final class PartitionRouterTest extends FlowTestCase
 
         static::assertCount(1, $groups);
         static::assertSame([1, 2], $groups[0][1]->reduceToArray(ref('id')));
-        static::assertSame('2026-01-02', $groups[0][0]->get('at')->value);
+        static::assertSame('2026-01-02T10:00:00+00:00', $groups[0][0]->get('at')->value);
     }
 }
