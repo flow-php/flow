@@ -53,7 +53,7 @@ fn push(ht: &mut ZendHashTable, value: Zval) -> Result<(), PhpException> {
 /// A map key as `array_keys()` returns it: the int or string key `array_combine()` coerces.
 fn map_key(ht: &mut ZendHashTable, keys: &dyn Array, key: &Kind, j: usize, value: Zval) {
     match key {
-        Kind::Bytes => ht_insert(ht, keys.as_binary::<i32>().value(j), value),
+        Kind::Bytes => ht_insert(ht, keys.as_binary::<i64>().value(j), value),
         _ => {
             let index = long(keys, key, j);
             crate::ctx::ht_insert_long(ht, index, value);
@@ -73,7 +73,7 @@ pub fn physical_at(array: &dyn Array, kind: &Kind, i: usize) -> Result<Zval, Php
         Kind::Float64 => double(array.as_primitive::<Float64Type>().value(i)),
         Kind::Boolean => boolean(array.as_boolean().value(i)),
         Kind::Uuid => zval_str(array.as_fixed_size_binary().value(i)),
-        Kind::Bytes => zval_str(array.as_binary::<i32>().value(i)),
+        Kind::Bytes => zval_str(array.as_binary::<i64>().value(i)),
         Kind::List(element) => {
             let list = array.as_list::<i32>();
             let offsets = list.value_offsets();
@@ -133,13 +133,13 @@ pub fn value_at(array: &dyn Array, kind: &Kind, node: &ValueNode, i: usize) -> R
         (ValueNode::Date, _) => date_from_days(long(array, kind, i)),
         (ValueNode::Time, _) => interval_from_micros(long(array, kind, i)),
         (ValueNode::Uuid, _) => uuid_from_bytes(array.as_fixed_size_binary().value(i)),
-        (ValueNode::Json, _) => json_from_bytes(array.as_binary::<i32>().value(i)),
-        (ValueNode::Enum(class), _) => ctx::enum_case(class, array.as_binary::<i32>().value(i)),
-        (ValueNode::TimeZone, _) => ctx::timezone(array.as_binary::<i32>().value(i)),
+        (ValueNode::Json, _) => json_from_bytes(array.as_binary::<i64>().value(i)),
+        (ValueNode::Enum(class), _) => ctx::enum_case(class, array.as_binary::<i64>().value(i)),
+        (ValueNode::TimeZone, _) => ctx::timezone(array.as_binary::<i64>().value(i)),
         (ValueNode::Markup(physical), _) => call_method(
             physical,
             "fromPhysical",
-            &mut [zval_str(array.as_binary::<i32>().value(i))],
+            &mut [zval_str(array.as_binary::<i64>().value(i))],
         ),
         (ValueNode::List(element_node), Kind::List(element)) => {
             let list = array.as_list::<i32>();
@@ -240,14 +240,12 @@ pub fn append_physical(builder: &mut KindBuilder, kind: &Kind, physical: &Zval) 
                 .ok_or_else(|| wrong_physical(kind, physical))?;
             builder.append_fixed(bytes);
         }
-        Kind::Bytes => builder
-            .append_bytes(
-                physical
-                    .zend_str()
-                    .ok_or_else(|| wrong_physical(kind, physical))?
-                    .as_bytes(),
-            )
-            .map_err(overflow)?,
+        Kind::Bytes => builder.append_bytes(
+            physical
+                .zend_str()
+                .ok_or_else(|| wrong_physical(kind, physical))?
+                .as_bytes(),
+        ),
         Kind::List(element) => {
             let values = physical.array().ok_or_else(|| wrong_physical(kind, physical))?;
 

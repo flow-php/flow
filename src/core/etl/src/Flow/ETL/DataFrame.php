@@ -15,6 +15,7 @@ use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Executor\StatisticsCollector;
 use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Function\AggregatingFunction;
+use Flow\ETL\Function\ExpandingFunctions;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Function\WindowFunction;
 use Flow\ETL\Join\Expression;
@@ -835,9 +836,11 @@ final class DataFrame
      */
     public function withEntry(string|Definition $entry, ScalarFunction|WindowFunction $reference): self
     {
-        $this->root = $reference instanceof WindowFunction
-            ? new Node\WindowColumn($this->root, $entry, $reference)
-            : new Node\WithColumn($this->root, $entry, $reference);
+        $this->root = match (true) {
+            $reference instanceof WindowFunction => new Node\WindowColumn($this->root, $entry, $reference),
+            (new ExpandingFunctions())->in($reference) !== [] => new Node\ExpandColumn($this->root, $entry, $reference),
+            default => new Node\WithColumn($this->root, $entry, $reference),
+        };
 
         return $this;
     }

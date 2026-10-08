@@ -20,6 +20,7 @@ use Flow\ETL\Schema\SimilarNames;
 use Flow\ETL\Sort\RowOrder;
 use Flow\Floe\FrameDecoder;
 use Flow\Floe\FrameEncoder;
+use Flow\Floe\SplittingFrameEncoder;
 use Flow\Types\Value\Json;
 use Generator;
 
@@ -29,6 +30,7 @@ use function array_flip;
 use function array_key_exists;
 use function array_keys;
 use function array_shift;
+use function array_slice;
 use function array_values;
 use function count;
 use function implode;
@@ -37,7 +39,7 @@ use function min;
 use function sprintf;
 
 /**
- * @type RowsPayload = array{schema: Schema, frame: string}
+ * @type RowsPayload = array{schema: Schema, frames: list<string>}
  */
 final class Rows implements Countable
 {
@@ -55,7 +57,13 @@ final class Rows implements Countable
      */
     public function __serialize(): array
     {
-        return ['schema' => $this->schema, 'frame' => $this->encodeFrame()];
+        $frames = [];
+
+        foreach ((new SplittingFrameEncoder())->encode($this) as [$frame]) {
+            $frames[] = $frame;
+        }
+
+        return ['schema' => $this->schema, 'frames' => $frames];
     }
 
     /**
@@ -65,7 +73,14 @@ final class Rows implements Countable
      */
     public function __unserialize(array $data): void
     {
-        $rows = (new FrameDecoder())->decode($data['frame'], $data['schema'], new AdaptiveBackend());
+        $backend = new AdaptiveBackend();
+        $parts = [];
+
+        foreach ($data['frames'] as $frame) {
+            $parts[] = (new FrameDecoder())->decode($frame, $data['schema'], $backend);
+        }
+
+        $rows = $parts[0]->concat($backend, ...array_slice($parts, 1));
 
         $this->schema = $rows->schema;
         $this->columns = $rows->columns;

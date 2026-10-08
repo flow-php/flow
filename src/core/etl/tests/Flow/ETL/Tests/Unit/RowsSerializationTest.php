@@ -214,10 +214,10 @@ final class RowsSerializationTest extends FlowTestCase
 
         RowsSerializationContext::unserialize([
             'schema' => schema(int_schema('id')),
-            'frame' => array_to_rows(
+            'frames' => [array_to_rows(
                 [['id' => 1, 'other' => 2]],
                 schema(int_schema('id'), int_schema('other')),
-            )->encodeFrame(),
+            )->encodeFrame()],
         ]);
     }
 
@@ -228,7 +228,7 @@ final class RowsSerializationTest extends FlowTestCase
 
         RowsSerializationContext::unserialize([
             'schema' => schema(int_schema('id')),
-            'frame' =>
+            'frames' => [
                 pack('VVV', 1, 1, 2)
                     . pack('VV', 1, 0)
                     . pack('VV', 0, 0)
@@ -236,6 +236,7 @@ final class RowsSerializationTest extends FlowTestCase
                     . "\0\0\0\0"
                     . pack('P', -1)
                     . "\x01\x00\0\0\0\0\0\0",
+            ],
         ]);
     }
 }

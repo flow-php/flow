@@ -6,20 +6,15 @@ namespace Flow\Floe;
 
 use Composer\InstalledVersions;
 use Flow\ETL\Column\Backend;
-use Flow\ETL\Exception\OffsetOverflow;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Schema\Validator\EvolvingValidator;
 use Flow\Filesystem\DestinationStream;
 use Flow\Floe\Exception\FloeException;
-use Flow\Floe\Exception\FrameTooLarge;
 use Flow\Floe\Exception\IncompatibleSchemaException;
 
 use function array_key_exists;
-use function array_shift;
-use function array_unshift;
-use function intdiv;
 use function sprintf;
 
 final class FloeStreamWriter
@@ -58,7 +53,7 @@ final class FloeStreamWriter
 
     private int $totalRows = 0;
 
-    private readonly FrameEncoder $frameEncoder;
+    private readonly SplittingFrameEncoder $frameEncoder;
 
     /**
      * @throws FloeException
@@ -70,7 +65,7 @@ final class FloeStreamWriter
     ) {
         Format::validateCodecId($this->options->codec->id());
         $this->sessionSchema = $schema;
-        $this->frameEncoder = new FrameEncoder($this->options->codec);
+        $this->frameEncoder = new SplittingFrameEncoder(new FrameEncoder($this->options->codec));
     }
 
     /**
@@ -161,31 +156,7 @@ final class FloeStreamWriter
             $matched = $rows->matchTo($this->sessionSchema, $this->backend);
         }
 
-        $bodies = [];
-        $parts = [[$matched, 0]];
-
-        while ($parts !== []) {
-            [$part, $start] = array_shift($parts);
-
-            try {
-                $bodies[] = [$this->frameEncoder->encode($part), $part->count()];
-            } catch (OffsetOverflow|FrameTooLarge $e) {
-                if ($part->count() === 1) {
-                    $message = sprintf('%s (row %d)', $e->getMessage(), $start);
-
-                    throw $e instanceof OffsetOverflow
-                        ? new OffsetOverflow($message, 0, $e)
-                        : new FrameTooLarge($message, 0, $e);
-                }
-
-                $half = intdiv($part->count(), 2);
-                array_unshift(
-                    $parts,
-                    [$part->slice(0, $half), $start],
-                    [$part->slice($half, $part->count() - $half), $start + $half],
-                );
-            }
-        }
+        $bodies = $this->frameEncoder->encode($matched);
 
         $this->startSectionWhenDue();
 

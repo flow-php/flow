@@ -19,7 +19,7 @@ final class RowsSerializationContext
     }
 
     /**
-     * @param array{schema: \Flow\ETL\Schema, frame: string} $payload
+     * @param array{schema: \Flow\ETL\Schema, frames: list<string>} $payload
      */
     public static function unserialize(array $payload): Rows
     {

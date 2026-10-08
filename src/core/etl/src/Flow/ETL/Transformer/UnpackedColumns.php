@@ -4,10 +4,42 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
+use Flow\ETL\Exception\InvalidLogicException;
+use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Schema;
+use Flow\Types\Type\Logical\StructureType;
+
+use function Flow\ETL\DSL\definition_from_type;
+use function sprintf;
 
 final readonly class UnpackedColumns
 {
+    /**
+     * The columns unpack declares, read off returns() - the contract every ScalarFunction has.
+     *
+     * @throws InvalidLogicException
+     */
+    public function declared(ScalarFunction $resolved): Schema
+    {
+        $returns = $resolved->returns();
+
+        if (!$returns instanceof StructureType) {
+            throw new InvalidLogicException(sprintf(
+                '%s unpacks into N columns, so returns() must be a StructureType, got "%s".',
+                $resolved::class,
+                $returns->toString(),
+            ));
+        }
+
+        $definitions = [];
+
+        foreach ($returns->elements() as $element) {
+            $definitions[] = definition_from_type((string) $element->name, $element->type);
+        }
+
+        return new Schema(...$definitions);
+    }
+
     /**
      * One nullable column per declared column of $declared, named "$prefix$column", added to (or
      * replacing in) $base in declaration order.

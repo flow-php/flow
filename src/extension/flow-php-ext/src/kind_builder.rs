@@ -10,7 +10,7 @@ use arrow_data::ArrayData;
 use arrow_schema::ArrowError;
 use flow_batch_frame::kind::{data_type, Kind};
 
-/// Offsets are i32 (D5): the last offset a row would reach past `i32::MAX`.
+/// List and map offsets are i32 (D5): the last offset a row would reach past `i32::MAX`. String offsets are i64.
 pub struct OffsetOverflow(pub u64);
 
 pub enum KindBuilder {
@@ -27,7 +27,7 @@ pub enum KindBuilder {
         validity: NullBufferBuilder,
     },
     Bytes {
-        offsets: Vec<i32>,
+        offsets: Vec<i64>,
         data: Vec<u8>,
         validity: NullBufferBuilder,
     },
@@ -124,9 +124,11 @@ impl KindBuilder {
                 values.append(false);
                 validity.append_null();
             }
-            KindBuilder::Bytes { offsets, validity, .. }
-            | KindBuilder::List { offsets, validity, .. }
-            | KindBuilder::Map { offsets, validity, .. } => {
+            KindBuilder::Bytes { offsets, validity, .. } => {
+                offsets.push(*offsets.last().expect("offsets start at 0"));
+                validity.append_null();
+            }
+            KindBuilder::List { offsets, validity, .. } | KindBuilder::Map { offsets, validity, .. } => {
                 offsets.push(*offsets.last().expect("offsets start at 0"));
                 validity.append_null();
             }
@@ -164,7 +166,7 @@ impl KindBuilder {
         validity.append_non_null();
     }
 
-    pub fn append_bytes(&mut self, bytes: &[u8]) -> Result<(), OffsetOverflow> {
+    pub fn append_bytes(&mut self, bytes: &[u8]) {
         let KindBuilder::Bytes {
             offsets,
             data,
@@ -174,12 +176,9 @@ impl KindBuilder {
             unreachable!("append_bytes on a non bytes kind");
         };
 
-        let end = offset(data.len() + bytes.len())?;
         data.extend_from_slice(bytes);
-        offsets.push(end);
+        offsets.push(data.len() as i64);
         validity.append_non_null();
-
-        Ok(())
     }
 
     /// The element builder of a list; call `end_entries` once the row's elements are appended.
@@ -321,7 +320,7 @@ impl KindBuilder {
             Kind::Float64 => self.append_fixed(&array.as_primitive::<Float64Type>().value(i).to_le_bytes()),
             Kind::Uuid => self.append_fixed(array.as_fixed_size_binary().value(i)),
             Kind::Boolean => self.append_bool(array.as_boolean().value(i)),
-            Kind::Bytes => self.append_bytes(array.as_binary::<i32>().value(i))?,
+            Kind::Bytes => self.append_bytes(array.as_binary::<i64>().value(i)),
             Kind::List(element) => {
                 let list = array.as_list::<i32>();
                 let offsets = list.value_offsets();
@@ -472,10 +471,10 @@ mod tests {
         let mut row = |id: i64, tag: &[u8]| {
             let children = builder.struct_children();
             children[0].append_fixed(&id.to_le_bytes());
-            children[1].list_element().append_bytes(tag).ok();
+            children[1].list_element().append_bytes(tag);
             children[1].end_entries().ok();
             let (keys, values) = children[2].map_entries();
-            keys.append_bytes(tag).ok();
+            keys.append_bytes(tag);
             values.append_bool(true);
             children[2].end_entries().ok();
             builder.end_struct();
@@ -497,7 +496,7 @@ mod tests {
                 .column(1)
                 .as_list::<i32>()
                 .values()
-                .as_binary::<i32>()
+                .as_binary::<i64>()
                 .value(0),
             b"kept"
         );

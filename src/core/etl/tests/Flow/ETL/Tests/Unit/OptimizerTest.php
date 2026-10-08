@@ -12,6 +12,7 @@ use Flow\ETL\Optimizer\Rule\CombineSortAndLimit;
 use Flow\ETL\Optimizer\Rule\CountFromStatistics;
 use Flow\ETL\Optimizer\Rule\PushFilterIntoSource;
 use Flow\ETL\Optimizer\Rule\PushLimitIntoSource;
+use Flow\ETL\Optimizer\Rule\PushProjectionIntoExpand;
 use Flow\ETL\Tests\Double\RecordingRule;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\NodeMother;
@@ -65,6 +66,7 @@ final class OptimizerTest extends FlowTestCase
                 PushLimitIntoSource::class,
                 PushFilterIntoSource::class,
                 CountFromStatistics::class,
+                PushProjectionIntoExpand::class,
             ],
             array_map(static fn($rule) => $rule::class, Optimizer::default()->rules()),
         );
@@ -73,7 +75,13 @@ final class OptimizerTest extends FlowTestCase
     public function test_without_drops_the_named_rule_and_keeps_the_rest(): void
     {
         static::assertSame(
-            [CombineLimits::class, CombineSortAndLimit::class, PushFilterIntoSource::class, CountFromStatistics::class],
+            [
+                CombineLimits::class,
+                CombineSortAndLimit::class,
+                PushFilterIntoSource::class,
+                CountFromStatistics::class,
+                PushProjectionIntoExpand::class,
+            ],
             array_map(
                 static fn($rule) => $rule::class,
                 Optimizer::default()->without(PushLimitIntoSource::class)->rules(),

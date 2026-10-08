@@ -2,11 +2,11 @@ mod common;
 
 use std::sync::Arc;
 
-use arrow_array::builder::{BinaryBuilder, Int64Builder, MapBuilder, MapFieldNames};
+use arrow_array::builder::{Int64Builder, LargeBinaryBuilder, MapBuilder, MapFieldNames};
 use arrow_array::types::Int64Type;
 use arrow_array::{
-    Array, ArrayRef, BinaryArray, BooleanArray, Date32Array, FixedSizeBinaryArray, Float64Array, Int64Array, ListArray,
-    NullArray, StructArray, TimestampMicrosecondArray,
+    Array, ArrayRef, BooleanArray, Date32Array, FixedSizeBinaryArray, Float64Array, Int64Array, LargeBinaryArray,
+    ListArray, NullArray, StructArray, TimestampMicrosecondArray,
 };
 use arrow_buffer::NullBuffer;
 use arrow_data::ArrayData;
@@ -67,7 +67,7 @@ fn cases() -> Vec<(&'static str, Kind, ArrayData, Vec<&'static str>)> {
             key: "key".into(),
             value: "value".into(),
         }),
-        BinaryBuilder::new(),
+        LargeBinaryBuilder::new(),
         Int64Builder::new(),
     );
     map.keys().append_value(b"a");
@@ -84,7 +84,7 @@ fn cases() -> Vec<(&'static str, Kind, ArrayData, Vec<&'static str>)> {
         (
             "nullable string",
             kind_of("{\"type\":\"string\"}"),
-            BinaryArray::from(vec![Some(b"ab".as_ref()), None]).into_data(),
+            LargeBinaryArray::from(vec![Some(b"ab".as_ref()), None]).into_data(),
             vec!["01", "000000000200000002000000", "6162"],
         ),
         (
@@ -203,9 +203,13 @@ fn decodes_the_column_encode_test_cases_back() {
 #[test]
 fn a_selection_under_a_null_list_slot_is_compacted() {
     let kind = kind_of("{\"type\":\"list\",\"element\":{\"type\":\"string\"}}");
-    let strings = BinaryArray::from(vec![b"a".as_ref(), b"bc", b"d"]);
+    let strings = LargeBinaryArray::from(vec![b"a".as_ref(), b"bc", b"d"]);
     let offsets = arrow_buffer::OffsetBuffer::new(vec![0, 1, 2, 3].into());
-    let field = Arc::new(arrow_schema::Field::new("item", arrow_schema::DataType::Binary, true));
+    let field = Arc::new(arrow_schema::Field::new(
+        "item",
+        arrow_schema::DataType::LargeBinary,
+        true,
+    ));
     let list = ListArray::new(
         field,
         offsets,
@@ -228,7 +232,7 @@ fn a_selection_under_a_null_list_slot_is_compacted() {
 #[test]
 fn bytes_that_are_not_utf8_round_trip() {
     let kind = kind_of("{\"type\":\"string\"}");
-    let data = BinaryArray::from(vec![b"a\xFFb".as_ref()]).into_data();
+    let data = LargeBinaryArray::from(vec![b"a\xFFb".as_ref()]).into_data();
     let buffers = encoded_hex(&data, &kind);
     let buffers: Vec<&str> = buffers.iter().map(String::as_str).collect();
 

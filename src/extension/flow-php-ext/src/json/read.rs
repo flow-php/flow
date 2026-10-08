@@ -654,7 +654,7 @@ fn into_column(values: &mut KindBuilder, kind: &Kind, cast: &CastKind, text: &st
                             true
                         }
                         (MapKeyKind::Str, None, Kind::Bytes) => {
-                            keys.append_bytes(name.as_bytes()).map_err(overflow)?;
+                            keys.append_bytes(name.as_bytes());
 
                             true
                         }

@@ -14,6 +14,7 @@ use Flow\ETL\Optimizer\Rule\CombineSortAndLimit;
 use Flow\ETL\Optimizer\Rule\CountFromStatistics;
 use Flow\ETL\Optimizer\Rule\PushFilterIntoSource;
 use Flow\ETL\Optimizer\Rule\PushLimitIntoSource;
+use Flow\ETL\Optimizer\Rule\PushProjectionIntoExpand;
 use Flow\ETL\Tests\Context\MemoryTelemetryContext;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\LimitTransformer;
@@ -992,6 +993,7 @@ final class TelemetryContextTest extends FlowTestCase
                 PushLimitIntoSource::class,
                 PushFilterIntoSource::class,
                 CountFromStatistics::class,
+                PushProjectionIntoExpand::class,
             ],
             $debugLogs[0]->record->attributes->get('optimizer_rules'),
         );

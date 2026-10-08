@@ -199,7 +199,7 @@ fn append_cast(
                         true
                     }
                     (MapKeyKind::Str, Some(name), Kind::Bytes) => {
-                        keys.append_bytes(name.as_bytes()).map_err(overflow)?;
+                        keys.append_bytes(name.as_bytes());
 
                         true
                     }
@@ -337,9 +337,7 @@ pub(crate) fn append_native(builder: &mut KindBuilder, native: Native) -> Result
         Native::Days(days) => builder.append_fixed(&days.to_le_bytes()),
         Native::Bool(value) => builder.append_bool(value),
         Native::Uuid(bytes) => builder.append_fixed(&bytes),
-        Native::Bytes(string) => builder
-            .append_bytes(string.zend_str().expect("a native string").as_bytes())
-            .map_err(overflow)?,
+        Native::Bytes(string) => builder.append_bytes(string.zend_str().expect("a native string").as_bytes()),
     }
 
     Ok(())

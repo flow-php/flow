@@ -14,6 +14,7 @@ use Flow\ETL\Plan\Node\Cache;
 use Flow\ETL\Plan\Node\CrossJoin;
 use Flow\ETL\Plan\Node\Distinct;
 use Flow\ETL\Plan\Node\Drop;
+use Flow\ETL\Plan\Node\ExpandColumn;
 use Flow\ETL\Plan\Node\Filter;
 use Flow\ETL\Plan\Node\Join;
 use Flow\ETL\Plan\Node\Limit;
@@ -73,6 +74,7 @@ final readonly class Details
             $node instanceof Filter => ['Condition: ' . $this->name($node->function)],
             $node instanceof Until => ['Until: ' . $this->name($node->function)],
             $node instanceof WithColumn => [sprintf('Column: %s = %s', $node->name(), $this->name($node->function))],
+            $node instanceof ExpandColumn => $this->expandColumn($node),
             $node instanceof Write => ['Loader: ' . $this->name($node->loader)],
             $node instanceof Limit => ['Limit: ' . $node->limit],
             $node instanceof Offset => ['Skip: ' . $node->offset],
@@ -158,6 +160,21 @@ final readonly class Details
         return implode(', ', array_map(static fn(Reference|string $entry): string => $entry instanceof Reference
             ? $entry->name()
             : $entry, $entries));
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function expandColumn(ExpandColumn $node): array
+    {
+        $lines = [sprintf('Column: %s = %s', $node->name(), $this->name($node->function))];
+
+        return match (true) {
+            $node->carries->isAll() => $lines,
+            $node->carries->allBut => [...$lines, 'Keeps: every column but ' . implode(', ', $node->carries->names)],
+            $node->carries->names === [] => [...$lines, 'Keeps: no input column'],
+            default => [...$lines, 'Keeps: ' . implode(', ', $node->carries->names)],
+        };
     }
 
     /**

@@ -5,8 +5,8 @@ use std::any::Any;
 use std::sync::Arc;
 
 use arrow_array::builder::{
-    ArrayBuilder, BinaryBuilder, BooleanBuilder, Date32Builder, DurationMicrosecondBuilder, FixedSizeBinaryBuilder,
-    Float64Builder, Int64Builder, ListBuilder, MapBuilder, MapFieldNames, TimestampMicrosecondBuilder,
+    ArrayBuilder, BooleanBuilder, Date32Builder, DurationMicrosecondBuilder, FixedSizeBinaryBuilder, Float64Builder,
+    Int64Builder, LargeBinaryBuilder, ListBuilder, MapBuilder, MapFieldNames, TimestampMicrosecondBuilder,
 };
 use arrow_array::cast::AsArray;
 use arrow_array::types::{Date32Type, DurationMicrosecondType, Float64Type, Int64Type, TimestampMicrosecondType};
@@ -68,7 +68,7 @@ impl ReadCell {
             DataType::Boolean => ReadCell::Bool,
             DataType::Int64 => ReadCell::Int,
             DataType::Float64 => ReadCell::Float,
-            DataType::Binary => ReadCell::Bytes,
+            DataType::LargeBinary => ReadCell::Bytes,
             DataType::FixedSizeBinary(16) if is_uuid(parquet) => ReadCell::Uuid,
             DataType::FixedSizeBinary(16) => ReadCell::Bytes,
             DataType::Date32 => ReadCell::Date,
@@ -163,7 +163,7 @@ impl ReadCell {
             ReadCell::Bytes => {
                 zv = zval_str(match array.data_type() {
                     DataType::FixedSizeBinary(_) => array.as_fixed_size_binary().value(row),
-                    _ => array.as_binary::<i32>().value(row),
+                    _ => array.as_binary::<i64>().value(row),
                 });
             }
             ReadCell::Uuid => zv = zval_str(&uuid_text(array.as_fixed_size_binary().value(row))),
@@ -484,7 +484,7 @@ pub enum ColumnBuilder {
     Bool(BooleanBuilder),
     Int(Int64Builder),
     Float(Float64Builder),
-    Bytes(BinaryBuilder),
+    Bytes(LargeBinaryBuilder),
     Uuid(FixedSizeBinaryBuilder),
     Date(Date32Builder),
     Timestamp(TimestampMicrosecondBuilder),
@@ -533,7 +533,7 @@ impl ColumnBuilder {
             DataType::Boolean => ColumnBuilder::Bool(BooleanBuilder::with_capacity(capacity)),
             DataType::Int64 => ColumnBuilder::Int(Int64Builder::with_capacity(capacity)),
             DataType::Float64 => ColumnBuilder::Float(Float64Builder::with_capacity(capacity)),
-            DataType::Binary => ColumnBuilder::Bytes(BinaryBuilder::with_capacity(capacity, 1024)),
+            DataType::LargeBinary => ColumnBuilder::Bytes(LargeBinaryBuilder::with_capacity(capacity, 1024)),
             DataType::FixedSizeBinary(size) => {
                 ColumnBuilder::Uuid(FixedSizeBinaryBuilder::with_capacity(capacity, *size))
             }
@@ -683,9 +683,9 @@ impl WriteCell {
             | DataType::UInt64 => (WriteCell::Int, DataType::Int64),
             DataType::Float32 | DataType::Float64 => (WriteCell::Float, DataType::Float64),
             DataType::Decimal128(_, _) => (WriteCell::Decimal, DataType::Float64),
-            DataType::Utf8 | DataType::Binary => (WriteCell::Bytes, DataType::Binary),
+            DataType::Utf8 | DataType::Binary => (WriteCell::Bytes, DataType::LargeBinary),
             DataType::FixedSizeBinary(16) if is_uuid(target) => (WriteCell::Uuid, DataType::FixedSizeBinary(16)),
-            DataType::FixedSizeBinary(_) => (WriteCell::Bytes, DataType::Binary),
+            DataType::FixedSizeBinary(_) => (WriteCell::Bytes, DataType::LargeBinary),
             DataType::Date32 => (WriteCell::Date, DataType::Date32),
             DataType::Timestamp(_, _) => (
                 WriteCell::Timestamp,
@@ -889,8 +889,8 @@ impl WriteCell {
         })
     }
 
-    /// Whether `builder` takes `values` (one row's, every value bound for it) with its offsets in i32; only cells
-    /// holding offsets can pass it.
+    /// Whether `builder` takes `values` (one row's, every value bound for it) with its offsets in i32 - the Parquet
+    /// target narrows strings to i32; only cells holding offsets can pass it.
     pub fn fits(&self, builder: &mut ColumnBuilder, values: &[&Validated]) -> bool {
         match (self, builder) {
             (WriteCell::Bytes, ColumnBuilder::Bytes(bytes)) => offsets_fit(

@@ -7,8 +7,8 @@ use std::collections::HashMap;
 use arrow_array::cast::AsArray;
 use arrow_array::types::{Date32Type, DurationMicrosecondType, Float64Type, Int64Type, TimestampMicrosecondType};
 use arrow_array::{
-    Array, BinaryArray, BooleanArray, Date32Array, DurationMicrosecondArray, FixedSizeBinaryArray, Float64Array,
-    Int64Array, ListArray, MapArray, TimestampMicrosecondArray,
+    Array, BooleanArray, Date32Array, DurationMicrosecondArray, FixedSizeBinaryArray, Float64Array, Int64Array,
+    LargeBinaryArray, ListArray, MapArray, TimestampMicrosecondArray,
 };
 use arrow_buffer::NullBuffer;
 use ext_php_rs::exception::PhpException;
@@ -45,7 +45,7 @@ const CELL: Flags = Flags {
 
 enum MapKeys<'a> {
     Int(&'a Int64Array),
-    Bytes(&'a BinaryArray),
+    Bytes(&'a LargeBinaryArray),
 }
 
 enum Values<'a> {
@@ -54,7 +54,7 @@ enum Values<'a> {
     Duration(&'a DurationMicrosecondArray),
     Float(&'a Float64Array),
     Bool(&'a BooleanArray),
-    Bytes(&'a BinaryArray),
+    Bytes(&'a LargeBinaryArray),
     Uuid(&'a FixedSizeBinaryArray),
     Instant {
         array: &'a TimestampMicrosecondArray,
@@ -128,7 +128,7 @@ impl<'a> Renderer<'a> {
             (ValueNode::Plain, Kind::Float64) => Values::Float(array.as_primitive::<Float64Type>()),
             (ValueNode::Plain, Kind::Boolean) => Values::Bool(array.as_boolean()),
             (ValueNode::Plain | ValueNode::Enum(_) | ValueNode::TimeZone | ValueNode::Json, Kind::Bytes) => {
-                Values::Bytes(array.as_binary::<i32>())
+                Values::Bytes(array.as_binary::<i64>())
             }
             (ValueNode::List(element_node), Kind::List(element)) => {
                 let list = array.as_list::<i32>();
@@ -149,7 +149,7 @@ impl<'a> Renderer<'a> {
                 Values::Map {
                     map,
                     keys: match key.kind {
-                        Kind::Bytes => MapKeys::Bytes(map.keys().as_binary::<i32>()),
+                        Kind::Bytes => MapKeys::Bytes(map.keys().as_binary::<i64>()),
                         Kind::Int64 => MapKeys::Int(map.keys().as_primitive::<Int64Type>()),
                         _ => return None,
                     },
@@ -401,7 +401,7 @@ fn entries(keys: &MapKeys<'_>, start: usize, end: usize) -> Vec<(usize, usize)> 
 mod tests {
     use std::sync::Arc;
 
-    use arrow_array::builder::{BinaryBuilder, Int64Builder, MapBuilder};
+    use arrow_array::builder::{Int64Builder, LargeBinaryBuilder, MapBuilder};
     use arrow_array::types::Int64Type;
     use arrow_array::{Array, ArrayRef, Int64Array, ListArray, StructArray};
     use arrow_schema::{DataType, Field as ArrowField};
@@ -433,7 +433,7 @@ mod tests {
     }
 
     fn string_map(rows: &[&[(&[u8], i64)]]) -> ArrayRef {
-        let mut builder = MapBuilder::new(None, BinaryBuilder::new(), Int64Builder::new());
+        let mut builder = MapBuilder::new(None, LargeBinaryBuilder::new(), Int64Builder::new());
 
         for row in rows {
             for (key, value) in *row {

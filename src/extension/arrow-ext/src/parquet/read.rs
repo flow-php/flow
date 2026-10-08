@@ -613,7 +613,7 @@ mod tests {
             vec![Some(1), None, None]
         );
         assert_eq!(
-            arrays[1].as_binary::<i32>().iter().collect::<Vec<_>>(),
+            arrays[1].as_binary::<i64>().iter().collect::<Vec<_>>(),
             vec![Some(&b"a"[..]), None, Some(&b"c"[..])]
         );
     }
@@ -624,7 +624,7 @@ mod tests {
 
         assert_eq!(reader.fields()[0].name(), "structure.name");
         assert!(reader.fields()[0].is_nullable());
-        assert_eq!(reader.types(), &[DataType::Binary]);
+        assert_eq!(reader.types(), &[DataType::LargeBinary]);
     }
 
     #[test]

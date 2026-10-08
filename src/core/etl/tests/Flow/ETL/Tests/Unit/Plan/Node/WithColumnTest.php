@@ -12,11 +12,9 @@ use Flow\ETL\Plan\Transparency;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\NodeMother;
 
-use function Flow\ETL\DSL\array_expand;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\structure;
 
 final class WithColumnTest extends FlowTestCase
 {
@@ -66,17 +64,6 @@ final class WithColumnTest extends FlowTestCase
         static::assertSame(Transparency::transparent, $node->transparency());
         static::assertSame(Materialization::streaming, $node->materialization());
         static::assertEquals(Redefined::names('doubled'), $node->redefines());
-    }
-
-    public function test_row_count_is_expanding_when_the_function_tree_contains_array_expand(): void
-    {
-        static::assertSame(
-            RowCount::expanding,
-            (new WithColumn(NodeMother::read(), 'item', array_expand(ref('items'))))->rowCount(),
-        );
-        static::assertSame(RowCount::expanding, (new WithColumn(NodeMother::read(), 'item', structure([
-            'tag' => array_expand(ref('items')),
-        ])))->rowCount());
     }
 
     public function test_redefines_the_definitions_name_when_the_entry_is_a_definition(): void
