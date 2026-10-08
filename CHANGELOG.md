@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-10-08
+## [0.46.0] - 2026-10-08
 
 ### Added
 - [#2674](https://github.com/flow-php/flow/pull/2674) - **flow-php/etl - optimizer rule pruning columns a later select()/drop() discards before an expansion** - [@norberttech](https://github.com/norberttech)
