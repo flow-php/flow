@@ -5,7 +5,7 @@
   rustPlatform,
   clang,
   llvmPackages,
-  flow-php-ext-version ? "0.46.0-dev",
+  flow-php-ext-version,
 }:
 
 let

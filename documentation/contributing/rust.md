@@ -191,6 +191,6 @@ types of flow-batch-frame's `kind::data_type()`, pinned by flow-php-ext phpt 091
 
 ## Releasing
 
-Cutting a minor tag `X.Y.0` includes bumping `flow-php-ext-version` and `arrow-ext-version` in
-`.nix/pkgs/php-{flow-php,arrow}-ext/package.nix` to `X.(Y+1).0-dev` in the commit right after the tag. Untagged builds
-report `X.(Y+1).0-dev+<commits>.g<sha>`; the CI literal check backstops a missed bump.
+Nothing to bump. Untagged builds report `X.(Y+1).0-dev+<commits>.g<sha>` after the tag `X.Y.Z`; the nix packages
+report `X.(Y+1).0-dev`, read from the newest `X.Y.Z` tag in `.git` by `shell.nix`. A checkout
+without tags fails the nix-shell with a pointer to `git fetch --tags`.

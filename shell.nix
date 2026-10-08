@@ -58,8 +58,41 @@ let
     php-lz4 = pkgs.callPackage ./.nix/pkgs/php-lz4/package.nix { php = base-php; };
     php-zstd = pkgs.callPackage ./.nix/pkgs/php-zstd/package.nix { php = base-php; };
     php-pg-query-ext = pkgs.callPackage ./.nix/pkgs/php-pg-query-ext/package.nix { php = base-php; };
-    php-arrow-ext = pkgs.callPackage ./.nix/pkgs/php-arrow-ext/package.nix { php = base-php; };
-    php-flow-php-ext = pkgs.callPackage ./.nix/pkgs/php-flow-php-ext/package.nix { php = base-php; };
+    extension-version = let
+        lib = pkgs.lib;
+        resolve = base: path: if lib.hasPrefix "/" path then /. + path else base + "/${path}";
+        firstLine = file: builtins.head (lib.splitString "\n" (builtins.readFile file));
+
+        dotGit = ./. + "/.git";
+        gitDir =
+            if !(builtins.pathExists dotGit) then
+                throw "cannot determine the extension version: ${toString ./.} is not a git checkout"
+            else if lib.pathIsDirectory dotGit then
+                dotGit
+            else
+                resolve ./. (lib.removePrefix "gitdir: " (firstLine dotGit));
+        commonDir =
+            if builtins.pathExists (gitDir + "/commondir") then resolve gitDir (firstLine (gitDir + "/commondir")) else gitDir;
+
+        looseTags =
+            lib.optionals (lib.pathIsDirectory (commonDir + "/refs/tags"))
+                (builtins.attrNames (builtins.readDir (commonDir + "/refs/tags")));
+        packedTags =
+            lib.optionals (builtins.pathExists (commonDir + "/packed-refs"))
+                (map builtins.head (lib.filter (match: match != null)
+                    (map (builtins.match "[0-9a-f]+ refs/tags/(.+)") (lib.splitString "\n" (builtins.readFile (commonDir + "/packed-refs"))))));
+        tags = lib.filter (tag: builtins.match "[0-9]+\\.[0-9]+\\.[0-9]+" tag != null) (looseTags ++ packedTags);
+        latest = lib.splitString "." (lib.foldl' (a: b: if builtins.compareVersions a b >= 0 then a else b) (builtins.head tags) tags);
+    in
+        if builtins.pathExists (commonDir + "/reftable") then
+            throw "cannot determine the extension version: reftable ref storage is not supported, run `git refs migrate --ref-format=files`"
+        else if tags == [ ] then
+            throw "cannot determine the extension version: no X.Y.Z tags in ${toString commonDir}, run `git fetch --tags`"
+        else
+            "${builtins.elemAt latest 0}.${toString (lib.toInt (builtins.elemAt latest 1) + 1)}.0-dev";
+
+    php-arrow-ext = pkgs.callPackage ./.nix/pkgs/php-arrow-ext/package.nix { php = base-php; arrow-ext-version = extension-version; };
+    php-flow-php-ext = pkgs.callPackage ./.nix/pkgs/php-flow-php-ext/package.nix { php = base-php; flow-php-ext-version = extension-version; };
 
     php = pkgs.callPackage ./.nix/pkgs/flow-php/package.nix {
         php = base-php;

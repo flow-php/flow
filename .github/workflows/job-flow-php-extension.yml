@@ -77,17 +77,6 @@ jobs:
           echo "LIBCLANG_PATH=$(dirname "$LIBCLANG_SO")" >> "$GITHUB_ENV"
           echo "Detected libclang at: $LIBCLANG_SO"
 
-      - name: Verify the nix development version literals
-        run: |
-          if git describe --exact-match --tags --match '[0-9]*' HEAD >/dev/null 2>&1; then
-            exit 0
-          fi
-          tag="$(git describe --tags --abbrev=0 --match '[0-9]*')"
-          expected="$(echo "$tag" | awk -F. '{printf "%d.%d.0-dev", $1, $2 + 1}')"
-          for f in .nix/pkgs/php-flow-php-ext/package.nix .nix/pkgs/php-arrow-ext/package.nix; do
-            grep -q "version ? \"$expected\"" "$f" || { echo "$f: version literal must be $expected"; exit 1; }
-          done
-
       - name: Build arrow extension
         working-directory: src/extension/arrow-ext
         run: make build
