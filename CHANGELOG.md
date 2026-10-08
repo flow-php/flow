@@ -1,11 +1,17 @@
-## [Unreleased] - 2026-10-07
+## [Unreleased] - 2026-10-08
 
 ### Added
+- [#2674](https://github.com/flow-php/flow/pull/2674) - **flow-php/etl - optimizer rule pruning columns a later select()/drop() discards before an expansion** - [@norberttech](https://github.com/norberttech)
 - [#2672](https://github.com/flow-php/flow/pull/2672) - **flow-php/etl - ComparisonFunction contract for comparison functions** - [@norberttech](https://github.com/norberttech)
 - [#2671](https://github.com/flow-php/flow/pull/2671) - **flow-php/etl-adapter-postgresql - keyset reads run a NULL key check query before the first page** - [@norberttech](https://github.com/norberttech)
 - [#2671](https://github.com/flow-php/flow/pull/2671) - **flow-php/etl-adapter-doctrine - keyset reads run a NULL key check query before the first page** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2674](https://github.com/flow-php/flow/pull/2674) - **flow-php/etl - an expanding withEntry() emits batches of at most 1,000 rows** - [@norberttech](https://github.com/norberttech)
+- [#2674](https://github.com/flow-php/flow/pull/2674) - **flow-php/etl - ScalarFunctionTransformer refuses array_expand()** - [@norberttech](https://github.com/norberttech)
+- [#2674](https://github.com/flow-php/flow/pull/2674) - **flow-php/etl - a serialized Rows holds a list of frames** - [@norberttech](https://github.com/norberttech)
+- [#2674](https://github.com/flow-php/flow/pull/2674) - **flow-php/flow-php-ext - native strings use 64-bit offsets (LargeBinary)** - [@norberttech](https://github.com/norberttech)
+- [#2674](https://github.com/flow-php/flow/pull/2674) - **flow-php/arrow-ext - canonical string type is LargeBinary** - [@norberttech](https://github.com/norberttech)
 - [#2672](https://github.com/flow-php/flow/pull/2672) - **flow-php/etl - a string compared with a datetime or date is cast to it** - [@norberttech](https://github.com/norberttech)
 - [#2672](https://github.com/flow-php/flow/pull/2672) - **flow-php/etl - between() refuses incomparable bounds at bind** - [@norberttech](https://github.com/norberttech)
 - [#2672](https://github.com/flow-php/flow/pull/2672) - **flow-php/types - RoundTripPrecision moved here from flow-php/etl** - [@norberttech](https://github.com/norberttech)
@@ -17,6 +23,8 @@
 - [#2671](https://github.com/flow-php/flow/pull/2671) - **flow-php/postgresql - same-direction composite keyset keys use a row comparison** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2674](https://github.com/flow-php/flow/pull/2674) - **flow-php/etl - array_expand() no longer copies every input column once per element** - [@norberttech](https://github.com/norberttech)
+- [#2674](https://github.com/flow-php/flow/pull/2674) - **flow-php/flow-php-ext - a native string column past 2 GiB no longer overflows its offsets** - [@norberttech](https://github.com/norberttech)
 - [#2672](https://github.com/flow-php/flow/pull/2672) - **flow-php/filesystem - datetime and float partition values keep their full value in the path** - [@norberttech](https://github.com/norberttech)
 - [#2672](https://github.com/flow-php/flow/pull/2672) - **flow-php/etl-adapter-parquet - a partition column the file holds is typed from the file in pushed filters** - [@norberttech](https://github.com/norberttech)
 - [#2672](https://github.com/flow-php/flow/pull/2672) - **flow-php/etl - Floe types a partition column the file holds from the file in pushed filters** - [@norberttech](https://github.com/norberttech)
@@ -25,6 +33,9 @@
 - [#2671](https://github.com/flow-php/flow/pull/2671) - **flow-php/etl-adapter-postgresql - quoted keyset keys read their unquoted result columns** - [@norberttech](https://github.com/norberttech)
 - [#2671](https://github.com/flow-php/flow/pull/2671) - **flow-php/postgresql - keyset pagination no longer silently replaces a query's own LIMIT** - [@norberttech](https://github.com/norberttech)
 - [#2671](https://github.com/flow-php/flow/pull/2671) - **flow-php/postgresql - keyset pagination rejects a NULL cursor value** - [@norberttech](https://github.com/norberttech)
+
+### Removed
+- [#2674](https://github.com/flow-php/flow/pull/2674) - **flow-php/etl - NestedExpandTransformer** - [@norberttech](https://github.com/norberttech)
 
 ## [0.45.0] - 2026-10-04
 
