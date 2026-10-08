@@ -122,5 +122,5 @@ EdgeCases/uint64_overflow.parquet 10000: both refuse
 EdgeCases/unsigned.parquet 100: identical
 EdgeCases/unsigned.parquet 10000: identical
 Flow\ETL\Exception\InvalidArgumentException: Parquet column "emptylist" (List(Null)) is read as List(Null), its schema type list<integer> stores List(Int64)
-Flow\ETL\Exception\InvalidArgumentException: Parquet column "int64" (Int64) is read as Int64, its schema type string stores Binary
+Flow\ETL\Exception\InvalidArgumentException: Parquet column "int64" (Int64) is read as Int64, its schema type string stores LargeBinary
 Flow\Parquet\Exception\InvalidArgumentException: Parquet file has no column "missing"

@@ -12,6 +12,7 @@ use Flow\ETL\Plan\Explain\Details;
 use Flow\ETL\Plan\Node\Collect;
 use Flow\ETL\Plan\Node\CollectRefs;
 use Flow\ETL\Plan\Node\CrossJoin;
+use Flow\ETL\Plan\Node\ExpandColumn;
 use Flow\ETL\Plan\Node\Filter;
 use Flow\ETL\Plan\Node\Join as JoinNode;
 use Flow\ETL\Plan\Node\Offset;
@@ -22,6 +23,7 @@ use Flow\ETL\Plan\Node\TopN;
 use Flow\ETL\Plan\Node\Until;
 use Flow\ETL\Plan\Node\WithColumn;
 use Flow\ETL\Plan\Node\Write;
+use Flow\ETL\Plan\RequiredColumns;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\NodeMother;
 use Flow\Filesystem\Path\Filter\KeepAll;
@@ -139,6 +141,27 @@ final class DetailsTest extends FlowTestCase
         static::assertSame(
             ['Buffers all rows before passing them on'],
             (new Details())->lines(new Collect(NodeMother::read())),
+        );
+    }
+
+    public function test_an_expand_column_shows_the_columns_it_keeps(): void
+    {
+        $read = NodeMother::read();
+        $details = new Details();
+        $expand = new ExpandColumn($read, 'item', ref('items')->expand());
+
+        static::assertSame(['Column: item = ArrayExpand'], $details->labelled($expand));
+        static::assertSame(
+            ['Column: item = ArrayExpand', 'Keeps: id, item'],
+            $details->labelled($expand->withCarries(RequiredColumns::only('id', 'item'))),
+        );
+        static::assertSame(
+            ['Column: item = ArrayExpand', 'Keeps: no input column'],
+            $details->labelled($expand->withCarries(RequiredColumns::only())),
+        );
+        static::assertSame(
+            ['Column: item = ArrayExpand', 'Keeps: every column but items, body'],
+            $details->labelled($expand->withCarries(RequiredColumns::allBut('items', 'body'))),
         );
     }
 

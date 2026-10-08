@@ -19,7 +19,6 @@ use crate::date_check::iso_instant_micros;
 use crate::exception::ext_exception;
 use crate::json_check::json_valid;
 use crate::kind_builder::KindBuilder;
-use crate::physical::overflow;
 use crate::plan::{type_plan, TypePlan};
 use crate::render::invalid_argument;
 use crate::uuid_check::is_uuid;
@@ -249,12 +248,20 @@ pub fn native_text(values: &mut KindBuilder, kind: &Kind, cast: &CastKind, bytes
             .map(|value| values.append_fixed(&value.to_le_bytes()))
             .is_some()),
         (Kind::Boolean, CastKind::Boolean) => Ok(bool_from_str(bytes).map(|value| values.append_bool(value)).is_some()),
-        (Kind::Bytes, CastKind::String) => values.append_bytes(bytes).map(|()| true).map_err(overflow),
+        (Kind::Bytes, CastKind::String) => {
+            values.append_bytes(bytes);
+
+            Ok(true)
+        }
         (Kind::Bytes, CastKind::NonEmptyString) if !bytes.is_empty() => {
-            values.append_bytes(bytes).map(|()| true).map_err(overflow)
+            values.append_bytes(bytes);
+
+            Ok(true)
         }
         (Kind::Bytes, CastKind::Json) if json_gate(bytes) && json_valid(bytes) => {
-            values.append_bytes(bytes).map(|()| true).map_err(overflow)
+            values.append_bytes(bytes);
+
+            Ok(true)
         }
         (Kind::Uuid, CastKind::Uuid) if is_uuid(bytes) => {
             Ok(uuid_bytes(bytes).map(|uuid| values.append_fixed(&uuid)).is_some())

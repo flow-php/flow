@@ -44,7 +44,7 @@ echo outcome(static fn() => new Flow\ETL\Adapter\Parquet\RustParquetOpenSource(n
 echo outcome(static fn() => new Flow\ETL\Adapter\Parquet\RustParquetOpenSink(new stdClass())), "\n";
 ?>
 --EXPECT--
-Flow\ETL\Exception\InvalidArgumentException: Parquet column "id" (Int64) is read as Int64, its schema type string stores Binary
-Flow\ETL\Exception\InvalidArgumentException: Parquet column "id" (Int64) is read as Int64, its schema type string stores Binary
+Flow\ETL\Exception\InvalidArgumentException: Parquet column "id" (Int64) is read as Int64, its schema type string stores LargeBinary
+Flow\ETL\Exception\InvalidArgumentException: Parquet column "id" (Int64) is read as Int64, its schema type string stores LargeBinary
 Flow\ETL\Exception\RuntimeException: flow_php expected a Flow\Parquet\Engine\RustParquetFileReader
 Flow\ETL\Exception\RuntimeException: flow_php expected a Flow\Parquet\Engine\RustParquetFileWriter

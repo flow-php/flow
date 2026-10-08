@@ -181,7 +181,7 @@ pub fn data_type(kind: &Kind) -> DataType {
         Kind::Int32 => DataType::Date32,
         Kind::Float64 => DataType::Float64,
         Kind::Uuid => DataType::FixedSizeBinary(16),
-        Kind::Bytes => DataType::Binary,
+        Kind::Bytes => DataType::LargeBinary,
         Kind::Timestamp => DataType::Timestamp(TimeUnit::Microsecond, Some("UTC".into())),
         Kind::Duration => DataType::Duration(TimeUnit::Microsecond),
         Kind::List(element) => DataType::List(field("item", &element.kind)),

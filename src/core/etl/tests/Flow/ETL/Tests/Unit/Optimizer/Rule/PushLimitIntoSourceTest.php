@@ -56,10 +56,10 @@ final class PushLimitIntoSourceTest extends FlowTestCase
     }
 
     #[DataProvider('expanding_expressions')]
-    public function test_a_limit_does_not_pass_a_with_column_that_expands(ScalarFunction $function): void
+    public function test_a_limit_does_not_pass_an_expand_column(ScalarFunction $function): void
     {
         $plan = (new PushLimitIntoSource())->apply(
-            NodeMother::plan(NodeMother::limit(new Node\WithColumn(NodeMother::read(), 'expanded', $function), 10)),
+            NodeMother::plan(NodeMother::limit(new Node\ExpandColumn(NodeMother::read(), 'expanded', $function), 10)),
             NodeMother::context(),
         );
 

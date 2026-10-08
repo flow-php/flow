@@ -7,24 +7,20 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\BoundStep;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ExpandingFunctions;
 use Flow\ETL\Function\ReferenceResolver;
 use Flow\ETL\Function\ScalarFunction;
-use Flow\ETL\Function\ScalarFunction\ExpandResults;
 use Flow\ETL\Function\ScalarFunction\UnpackResults;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Transformer;
-use Flow\Types\Type\Logical\StructureType;
 use Throwable;
 
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\Types\DSL\type_array;
-use function sprintf;
 
 final readonly class ScalarFunctionTransformer implements Transformer
 {
@@ -48,41 +44,24 @@ final readonly class ScalarFunctionTransformer implements Transformer
         // withEntry() cannot describe an N-column result
         if ($this->function instanceof UnpackResults) {
             $resolved = $this->resolve($input);
-            $unpacked = $this->unpacked($resolved);
-            $output = (new UnpackedColumns())->of($input, $this->entryName() . '.', $unpacked);
-            $expansion = NestedExpansion::of($resolved, $input);
-
-            return new BoundStep(
-                $expansion === null
-                    ? new self($this->entry, $this->function, $resolved, null, $output)
-                    : new NestedExpandTransformer($this, $this->entryName(), $expansion, $unpacked, $output),
-                $output,
+            $output = (new UnpackedColumns())->of(
+                $input,
+                $this->entryName() . '.',
+                (new UnpackedColumns())->declared($resolved),
             );
+
+            return new BoundStep(new self($this->entry, $this->function, $resolved, null, $output), $output);
         }
 
         $resolved = $this->resolve($input);
-        $expansion = NestedExpansion::of($resolved, $input);
-        $derived = $this->derived($expansion ?? $resolved);
+        $derived = $this->derived($resolved);
         $output = (new DerivedColumns())->declare($input, $derived);
 
-        return new BoundStep(
-            $expansion === null
-                ? new self($this->entry, $this->function, $resolved, $derived, $output)
-                : new NestedExpandTransformer($this, $this->entryName(), $expansion, $derived, $output),
-            $output,
-        );
+        return new BoundStep(new self($this->entry, $this->function, $resolved, $derived, $output), $output);
     }
 
     public function transform(Rows $rows, FlowContext $context): Rows
     {
-        // only bind() can tell a nested expand from a root one
-        if ($this->resolved === null && (new ExpandingFunctions())->in($this->function) !== []) {
-            /** @var Transformer $bound bind() plans a ScalarFunctionTransformer or a NestedExpandTransformer */
-            $bound = $this->bind($rows->schema())->step;
-
-            return $bound->transform($rows, $context);
-        }
-
         $context->telemetry()->transformationStarted($this, [
             TelemetryAttributes::ATTR_SCALAR_FUNCTION => $this->function::class,
         ]);
@@ -108,7 +87,7 @@ final readonly class ScalarFunctionTransformer implements Transformer
     /**
      * @return Definition<mixed>
      */
-    private function derived(ScalarFunction|NestedExpansion $source): Definition
+    private function derived(ScalarFunction $source): Definition
     {
         return $this->entry instanceof Definition
             ? $this->entry
@@ -124,7 +103,7 @@ final readonly class ScalarFunctionTransformer implements Transformer
         $resolver = new ReferenceResolver();
         $resolved = $resolver->resolve($this->function, $input);
         $resolver->assertResolved($resolved, $input);
-        (new ExpandingFunctions())->refuseNested($resolved);
+        (new ExpandingFunctions())->refuse($resolved, 'transform');
 
         return $resolved;
     }
@@ -141,75 +120,21 @@ final readonly class ScalarFunctionTransformer implements Transformer
         $derived = $this->derived ?? $this->derived($function);
         $declared = $columns->declare($rows->schema(), $derived);
         $output = $this->output ?? $declared;
-        $column = $function->eval($rows, $context);
-
-        if ($function instanceof ExpandResults) {
-            $sources = [];
-            $values = [];
-
-            // @mago-ignore analysis:mixed-assignment
-            foreach ($column->values() as $index => $list) {
-                // @mago-ignore analysis:mixed-assignment
-                foreach (type_array()->assert($list) as $value) {
-                    $sources[] = $index;
-                    $values[] = $value;
-                }
-            }
-
-            $builder = $context->backend()->builder($derived);
-            $builder->appendMany($values);
-
-            return $columns->rows(
-                $rows->gather($sources),
-                $declared,
-                $output,
-                $derived->entry()->name(),
-                $builder->finish(),
-                $context->backend(),
-            );
-        }
-
         return $columns->rows(
             $rows,
             $declared,
             $output,
             $derived->entry()->name(),
-            $columns->stored($derived, $column, $context->backend()),
+            $columns->stored($derived, $function->eval($rows, $context), $context->backend()),
             $context->backend(),
         );
-    }
-
-    /**
-     * The columns unpack declares, read off returns() - the contract every ScalarFunction has.
-     *
-     * @throws InvalidLogicException
-     */
-    private function unpacked(ScalarFunction $resolved): Schema
-    {
-        $returns = $resolved->returns();
-
-        if (!$returns instanceof StructureType) {
-            throw new InvalidLogicException(sprintf(
-                '%s unpacks into N columns, so returns() must be a StructureType, got "%s".',
-                $resolved::class,
-                $returns->toString(),
-            ));
-        }
-
-        $definitions = [];
-
-        foreach ($returns->elements() as $element) {
-            $definitions[] = definition_from_type((string) $element->name, $element->type);
-        }
-
-        return new Schema(...$definitions);
     }
 
     private function unpack(Rows $rows, FlowContext $context): Rows
     {
         /** @var UnpackResults $function */
         $function = $this->resolved ?? $this->resolve($rows->schema());
-        $declared = $this->unpacked($function);
+        $declared = (new UnpackedColumns())->declared($function);
         $columns = new UnpackedColumns();
         $output = $this->output ?? $columns->of($rows->schema(), $this->entryName() . '.', $declared);
         $prefix = $this->entryName() . '.';

@@ -23,6 +23,7 @@ use Flow\ETL\Plan\Node\Discard;
 use Flow\ETL\Plan\Node\Distinct;
 use Flow\ETL\Plan\Node\Drop;
 use Flow\ETL\Plan\Node\DuplicateRow;
+use Flow\ETL\Plan\Node\ExpandColumn;
 use Flow\ETL\Plan\Node\Filter;
 use Flow\ETL\Plan\Node\Join;
 use Flow\ETL\Plan\Node\JoinEach;
@@ -48,6 +49,7 @@ use Flow\ETL\Processor\CachingProcessor;
 use Flow\ETL\Processor\CollectingProcessor;
 use Flow\ETL\Processor\ConstrainedProcessor;
 use Flow\ETL\Processor\CountingProcessor;
+use Flow\ETL\Processor\ExpandingProcessor;
 use Flow\ETL\Processor\GroupByAggregationProcessor;
 use Flow\ETL\Processor\HashJoinProcessor;
 use Flow\ETL\Processor\MemorySortProcessor;
@@ -521,6 +523,21 @@ final class NodeTranslatorTest extends FlowTestCase
                 static fn($step) => $step::class,
                 NodeTranslator::toSteps(
                     new WithColumn(NodeMother::read(), 'doubled', ref('id')->multiply(lit(2))),
+                    NodeMother::context(),
+                    [],
+                ),
+            ),
+        );
+    }
+
+    public function test_expand_column_runs_on_one_expanding_processor(): void
+    {
+        static::assertSame(
+            [ExpandingProcessor::class],
+            array_map(
+                static fn($step) => $step::class,
+                NodeTranslator::toSteps(
+                    new ExpandColumn(NodeMother::read(), 'item', ref('items')->expand()),
                     NodeMother::context(),
                     [],
                 ),

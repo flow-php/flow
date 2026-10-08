@@ -13,13 +13,11 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Exception\SchemaMismatchException;
-use Flow\ETL\Function\ArrayExpand;
 use Flow\ETL\Function\ArrayUnpack;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Tests\Double\NonStructureUnpackStub;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\ListColumnsMother;
-use Flow\ETL\Transformer\NestedExpandTransformer;
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -29,7 +27,6 @@ use function Flow\ETL\DSL\concat;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\rows;
@@ -73,20 +70,6 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
         static::assertEquals(
             schema(str_schema('a')),
             (new ScalarFunctionTransformer('a', lit('x')))->bind(schema(int_schema('a')))->output,
-        );
-    }
-
-    public function test_expand_results(): void
-    {
-        static::assertEquals(
-            [
-                ['array' => 1],
-                ['array' => 2],
-                ['array' => 3],
-            ],
-            (new ScalarFunctionTransformer('array', new ArrayExpand(lit([1, 2, 3]), ArrayExpand\ArrayExpand::VALUES)))
-                ->transform(array_to_rows([[]], schema()), flow_context(config()))
-                ->toArray(),
         );
     }
 
@@ -273,17 +256,6 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
         );
     }
 
-    public function test_an_expanded_null_under_a_not_null_declaration_names_its_row(): void
-    {
-        $this->expectException(SchemaMismatchException::class);
-        $this->expectExceptionMessage('column "out" (row 1)');
-
-        (new ScalarFunctionTransformer(
-            int_schema('out'),
-            new ArrayExpand(lit([1, null]), ArrayExpand\ArrayExpand::VALUES),
-        ))->transform(array_to_rows([[]], schema()), flow_context(config()));
-    }
-
     public function test_an_empty_batch_is_bound_against_its_own_schema(): void
     {
         $this->expectException(SchemaDefinitionNotFoundException::class);
@@ -294,8 +266,8 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
         );
     }
 
-    #[DataProvider('trees_without_a_nested_expand')]
-    public function test_bind_keeps_a_tree_without_a_nested_expand_on_itself(ScalarFunction $function): void
+    #[DataProvider('trees_without_an_expand')]
+    public function test_bind_keeps_a_tree_without_an_expand_on_itself(ScalarFunction $function): void
     {
         static::assertInstanceOf(
             ScalarFunctionTransformer::class,
@@ -306,104 +278,18 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
     /**
      * @return Generator<string, array{ScalarFunction}>
      */
-    public static function trees_without_a_nested_expand(): Generator
+    public static function trees_without_an_expand(): Generator
     {
         yield 'no expand' => [concat(ref('id'), lit('x'))];
-        yield 'root expand' => [ref('tags')->expand()];
     }
 
-    public function test_bind_plans_a_nested_expand_on_nested_expand_transformer(): void
-    {
-        static::assertInstanceOf(
-            NestedExpandTransformer::class,
-            (new ScalarFunctionTransformer('s', structure(['tag' => ref('tags')->expand()])))->bind(
-                ListColumnsMother::schema(),
-            )->step,
-        );
-    }
-
-    public function test_bind_declares_zipped_expands_nullable(): void
-    {
-        static::assertEquals(
-            schema(
-                str_schema('id'),
-                list_schema('tags', type_list(type_string())),
-                list_schema('nums', type_list(type_integer())),
-                structure_schema('s', type_structure([
-                    'n' => type_optional(type_integer()),
-                    'tag' => type_optional(type_string()),
-                ])),
-            ),
-            (new ScalarFunctionTransformer('s', structure([
-                'n' => ref('nums')->expand(),
-                'tag' => ref('tags')->expand(),
-            ])))->bind(schema(
-                str_schema('id'),
-                list_schema('tags', type_list(type_string())),
-                list_schema('nums', type_list(type_integer())),
-            ))->output,
-        );
-    }
-
-    public function test_bind_plans_an_unpack_over_a_nested_expand_on_nested_expand_transformer(): void
-    {
-        $bound = (new ScalarFunctionTransformer(
-            'u',
-            structure(['tag' => ref('tags')->expand()])->unpack(schema(str_schema('tag'))),
-        ))->bind(ListColumnsMother::tagsSchema());
-
-        static::assertInstanceOf(NestedExpandTransformer::class, $bound->step);
-        static::assertEquals(
-            schema(
-                str_schema('id'),
-                list_schema('tags', type_list(type_string())),
-                str_schema('u.tag', nullable: true),
-            ),
-            $bound->output,
-        );
-    }
-
-    public function test_an_unbound_nested_expand_is_expanded(): void
-    {
-        static::assertSame(
-            [
-                ['id' => 'a', 'tags' => ['x', 'y'], 's' => ['tag' => 'x']],
-                ['id' => 'a', 'tags' => ['x', 'y'], 's' => ['tag' => 'y']],
-            ],
-            (new ScalarFunctionTransformer('s', structure(['tag' => ref('tags')->expand()])))
-                ->transform(array_to_rows([[
-                    'id' => 'a',
-                    'tags' => ['x', 'y'],
-                ]], ListColumnsMother::tagsSchema()), flow_context(config()))
-                ->toArray(),
-        );
-    }
-
-    public function test_an_unbound_unpack_over_a_nested_expand_is_expanded(): void
-    {
-        static::assertSame(
-            [
-                ['id' => 'a', 'tags' => ['x', 'y'], 'u.tag' => 'x'],
-                ['id' => 'a', 'tags' => ['x', 'y'], 'u.tag' => 'y'],
-            ],
-            (new ScalarFunctionTransformer(
-                'u',
-                structure(['tag' => ref('tags')->expand()])->unpack(schema(str_schema('tag'))),
-            ))
-                ->transform(array_to_rows([[
-                    'id' => 'a',
-                    'tags' => ['x', 'y'],
-                ]], ListColumnsMother::tagsSchema()), flow_context(config()))
-                ->toArray(),
-        );
-    }
-
-    #[DataProvider('expands_inside_an_expand')]
-    public function test_bind_refuses_an_expand_inside_an_expand(ScalarFunction $function): void
+    #[DataProvider('expanding_functions')]
+    public function test_bind_refuses_an_expanding_function(ScalarFunction $function): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(
-            'array_expand() cannot contain another array_expand(). Expand one level per withEntry().',
+            'transform() cannot contain array_expand(), it turns one row into many rows. '
+            . 'Expand with withEntry() first, then use the new column.',
         );
 
         (new ScalarFunctionTransformer('v', $function))->bind(ListColumnsMother::schema());
@@ -412,20 +298,19 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
     /**
      * @return Generator<string, array{ScalarFunction}>
      */
-    public static function expands_inside_an_expand(): Generator
+    public static function expanding_functions(): Generator
     {
-        yield 'at the root' => [ref('lists')->expand()->expand()];
-        yield 'inside a structure' => [structure(['v' => ref('lists')->expand()->expand()])];
+        yield 'at the root' => [ref('tags')->expand()];
+        yield 'inside a structure' => [structure(['v' => ref('tags')->expand()])];
+        yield 'unpacked' => [structure(['v' => ref('tags')->expand()])->unpack(schema(str_schema('v')))];
     }
 
-    public function test_an_unbound_expand_inside_an_expand_is_refused(): void
+    public function test_transform_refuses_an_expanding_function(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            'array_expand() cannot contain another array_expand(). Expand one level per withEntry().',
-        );
+        $this->expectExceptionMessage('transform() cannot contain array_expand()');
 
-        (new ScalarFunctionTransformer('v', ref('lists')->expand()->expand()))->transform(
+        (new ScalarFunctionTransformer('v', ref('tags')->expand()))->transform(
             ListColumnsMother::rows()->matchTo(ListColumnsMother::schema(), new AdaptiveBackend()),
             flow_context(config()),
         );
@@ -438,22 +323,6 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
         . ' unpacks into N columns, so returns() must be a StructureType, got "string".');
 
         (new ScalarFunctionTransformer('u', new NonStructureUnpackStub()))->bind(schema());
-    }
-
-    public function test_an_expand_explodes_every_row_of_the_batch_in_order(): void
-    {
-        $rows = array_to_rows(
-            [['id' => 1, 'list' => [1, 2]], ['id' => 2, 'list' => []], ['id' => 3, 'list' => [3]]],
-            schema(int_schema('id'), list_schema('list', type_list(type_integer()))),
-        );
-
-        static::assertSame(
-            [['id' => 1, 'value' => 1], ['id' => 1, 'value' => 2], ['id' => 3, 'value' => 3]],
-            (new ScalarFunctionTransformer('value', ref('list')->expand()))
-                ->transform($rows, flow_context())
-                ->project(schema(int_schema('id'), int_schema('value')), new AdaptiveBackend())
-                ->toArray(),
-        );
     }
 
     public function test_an_unpack_fills_one_column_per_declared_element_for_every_row(): void

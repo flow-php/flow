@@ -141,6 +141,28 @@ $df->withEntry('date', ref('date')->cast(type_date()))
 
 `same()` / `notSame()` stay strict.
 
+### 15) `flow-php/etl` - an expanding `withEntry()` emits batches of at most 1,000 rows
+
+| Before                                            | After                                                                            |
+|---------------------------------------------------|----------------------------------------------------------------------------------|
+| one output batch per input batch, of any size     | batches of at most 1,000 rows; an input that expands to nothing: one empty batch |
+| every input column copied into every expanded row | only the columns a later `select()` / `drop()` keeps                             |
+
+### 16) `flow-php/etl` - `ScalarFunctionTransformer` refuses `array_expand()`, `NestedExpandTransformer` removed
+
+```php
+// Before - now throws "transform() cannot contain array_expand() ..."
+$df->transform(new ScalarFunctionTransformer('item', array_expand(ref('items'))));
+
+// After
+$df->withEntry('item', array_expand(ref('items')));
+```
+
+### 17) `flow-php/etl` - a serialized `Rows` holds a list of frames
+
+A `Rows` serialized by 0.45 (e.g. a `FilesystemCache` entry) is not read by 0.46: clear such caches after upgrading. A batch
+over 2 GiB of strings in one column is now split across frames instead of throwing `OffsetOverflow`.
+
 ---
 
 ## Upgrading from 0.44.x to 0.45.x

@@ -13,7 +13,7 @@ use arrow_array::types::{
 };
 use arrow_array::{
     make_array, Array, ArrayRef, ArrowPrimitiveType, BinaryArray, FixedSizeBinaryArray, Float64Array, GenericByteArray,
-    ListArray, MapArray, PrimitiveArray, StructArray,
+    LargeBinaryArray, ListArray, MapArray, PrimitiveArray, StructArray,
 };
 use arrow_buffer::{OffsetBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field, FieldRef, Fields, TimeUnit};
@@ -74,7 +74,7 @@ fn canonical_data_type(data_type: &DataType) -> Result<DataType, Error> {
         | DataType::Binary
         | DataType::LargeUtf8
         | DataType::LargeBinary
-        | DataType::FixedSizeBinary(_) => DataType::Binary,
+        | DataType::FixedSizeBinary(_) => DataType::LargeBinary,
         DataType::Timestamp(_, _) => timestamp(),
         DataType::Time64(TimeUnit::Microsecond | TimeUnit::Nanosecond)
         | DataType::Time32(TimeUnit::Millisecond | TimeUnit::Second) => DataType::Duration(TimeUnit::Microsecond),
@@ -196,6 +196,7 @@ fn narrowed(offsets: &[i64]) -> Result<OffsetBuffer<i32>, Error> {
     Ok(OffsetBuffer::new(ScalarBuffer::from(narrowed)))
 }
 
+/// LargeBinary narrowed to Binary for a writer column: past `i32::MAX` bytes in one write it is refused.
 fn large_binary(array: &ArrayRef) -> Result<ArrayRef, Error> {
     let data = array.to_data();
     let offsets = data.buffers()[0].typed_data::<i64>();
@@ -209,30 +210,31 @@ fn large_binary(array: &ArrayRef) -> Result<ArrayRef, Error> {
     )))
 }
 
-/// Fixed-size values as Binary over the same value buffer: offsets `n·i`.
-fn fixed_binary(array: &ArrayRef) -> Result<ArrayRef, Error> {
-    let fixed = array.as_fixed_size_binary();
-    let size = i32::try_from(fixed.value_size()).map_err(|_| Error::Overflow {
-        column: String::new(),
-        row: 0,
-    })?;
-    let offsets = (0..=fixed.len())
-        .map(|row| {
-            i32::try_from(row)
-                .ok()
-                .and_then(|row| row.checked_mul(size))
-                .ok_or(Error::Overflow {
-                    column: String::new(),
-                    row: row.saturating_sub(1),
-                })
-        })
-        .collect::<Result<Vec<_>, _>>()?;
+/// Binary or Utf8 as LargeBinary over the same value buffer: the offsets widened to i64.
+fn widened_binary(array: &ArrayRef) -> ArrayRef {
+    let data = array.to_data();
+    let offsets = &data.buffers()[0].typed_data::<i32>()[data.offset()..data.offset() + data.len() + 1];
 
-    Ok(Arc::new(BinaryArray::new(
+    Arc::new(LargeBinaryArray::new(
+        OffsetBuffer::new(ScalarBuffer::from(
+            offsets.iter().map(|offset| i64::from(*offset)).collect::<Vec<i64>>(),
+        )),
+        data.buffers()[1].clone(),
+        data.nulls().cloned(),
+    ))
+}
+
+/// Fixed-size values as LargeBinary over the same value buffer: offsets `n·i`.
+fn fixed_binary(array: &ArrayRef) -> ArrayRef {
+    let fixed = array.as_fixed_size_binary();
+    let size = fixed.value_size() as i64;
+    let offsets = (0..=fixed.len() as i64).map(|row| row * size).collect::<Vec<i64>>();
+
+    Arc::new(LargeBinaryArray::new(
         OffsetBuffer::new(ScalarBuffer::from(offsets)),
         fixed.values().clone(),
         fixed.nulls().cloned(),
-    )))
+    ))
 }
 
 fn cast(array: &ArrayRef) -> Result<ArrayRef, Error> {
@@ -254,9 +256,9 @@ fn cast(array: &ArrayRef) -> Result<ArrayRef, Error> {
             i64::try_from(value).ok()
         })?),
         DataType::Float32 => Arc::new(array.as_primitive::<Float32Type>().unary::<_, Float64Type>(f64::from)),
-        DataType::Utf8 | DataType::Binary => retagged(array, DataType::Binary),
-        DataType::LargeUtf8 | DataType::LargeBinary => large_binary(array)?,
-        DataType::FixedSizeBinary(_) => fixed_binary(array)?,
+        DataType::Utf8 | DataType::Binary => widened_binary(array),
+        DataType::LargeUtf8 | DataType::LargeBinary => retagged(array, DataType::LargeBinary),
+        DataType::FixedSizeBinary(_) => fixed_binary(array),
         DataType::Timestamp(TimeUnit::Microsecond, _) => retagged(array, timestamp()),
         DataType::Timestamp(TimeUnit::Millisecond, _) => {
             micros::<TimestampMillisecondType>(array, |ms| ms.checked_mul(1_000))?
@@ -358,7 +360,8 @@ pub fn to_parquet(array: &ArrayRef, target: &DataType) -> Result<ArrayRef, Error
     }
 
     Ok(match (array.data_type(), target) {
-        (DataType::Binary, DataType::Utf8) => utf8(array)?,
+        (DataType::LargeBinary, DataType::Binary) => large_binary(array)?,
+        (DataType::LargeBinary, DataType::Utf8) => utf8(&large_binary(array)?)?,
         (DataType::Int64, DataType::Int8) => Arc::new(narrowed_int::<Int8Type>(array)?),
         (DataType::Int64, DataType::Int16) => Arc::new(narrowed_int::<Int16Type>(array)?),
         (DataType::Int64, DataType::Int32) => Arc::new(narrowed_int::<Int32Type>(array)?),
@@ -375,7 +378,7 @@ pub fn to_parquet(array: &ArrayRef, target: &DataType) -> Result<ArrayRef, Error
             checked_values::<Float64Type, Decimal128Type>(array, |value| decimal_unscaled(value, *precision, *scale))?
                 .with_precision_and_scale(*precision, *scale)?,
         ),
-        (DataType::Binary, DataType::FixedSizeBinary(size)) => fixed_size(array, *size)?,
+        (DataType::LargeBinary, DataType::FixedSizeBinary(size)) => fixed_size(&large_binary(array)?, *size)?,
         (DataType::Duration(TimeUnit::Microsecond), DataType::Time64(TimeUnit::Microsecond)) => {
             retagged(array, target.clone())
         }
@@ -733,7 +736,7 @@ mod tests {
     }
 
     #[test]
-    fn strings_and_binaries_are_binary() {
+    fn strings_and_binaries_are_large_binary() {
         let expected: Vec<Option<&[u8]>> = vec![Some(b"a"), None, Some(b"")];
 
         for array in [
@@ -744,16 +747,26 @@ mod tests {
         ] {
             let canonical = read(array);
 
-            assert_eq!(canonical.as_binary::<i32>().iter().collect::<Vec<_>>(), expected);
+            assert_eq!(canonical.as_binary::<i64>().iter().collect::<Vec<_>>(), expected);
         }
     }
 
     #[test]
-    fn a_sliced_large_string_is_rebased() {
+    fn a_sliced_large_string_keeps_its_rows() {
         let array = LargeStringArray::from(vec!["skipped", "kept", "too"]).slice(1, 2);
 
         assert_eq!(
-            read(Arc::new(array)).as_binary::<i32>().iter().collect::<Vec<_>>(),
+            read(Arc::new(array)).as_binary::<i64>().iter().collect::<Vec<_>>(),
+            vec![Some(&b"kept"[..]), Some(&b"too"[..])]
+        );
+    }
+
+    #[test]
+    fn a_sliced_string_is_widened_to_its_rows() {
+        let array = StringArray::from(vec!["skipped", "kept", "too"]).slice(1, 2);
+
+        assert_eq!(
+            read(Arc::new(array)).as_binary::<i64>().iter().collect::<Vec<_>>(),
             vec![Some(&b"kept"[..]), Some(&b"too"[..])]
         );
     }
@@ -908,7 +921,7 @@ mod tests {
         builder.append(false).unwrap();
         let canonical = read(Arc::new(builder.finish()));
 
-        assert_eq!(canonical.data_type(), &map_of(DataType::Binary, DataType::Int64));
+        assert_eq!(canonical.data_type(), &map_of(DataType::LargeBinary, DataType::Int64));
         assert_eq!(int64(canonical.as_map().values()), vec![Some(1)]);
         assert!(canonical.is_null(1));
     }
@@ -931,7 +944,7 @@ mod tests {
             canonical.data_type(),
             &DataType::Struct(Fields::from(vec![
                 Field::new("id", DataType::Int64, true),
-                Field::new("name", DataType::Binary, true),
+                Field::new("name", DataType::LargeBinary, true),
             ]))
         );
         assert_eq!(int64(canonical.as_struct().column(0)), vec![Some(1), Some(2)]);
@@ -984,7 +997,7 @@ mod tests {
     }
 
     #[test]
-    fn fixed_size_binaries_of_another_size_than_16_are_binary() {
+    fn fixed_size_binaries_of_another_size_than_16_are_large_binary() {
         let array = FixedSizeBinaryArray::try_from_sparse_iter_with_size(
             vec![Some(*b"abcd"), None, Some(*b"wxyz"), Some(*b"skip")].into_iter(),
             4,
@@ -994,7 +1007,7 @@ mod tests {
         let canonical = read(Arc::new(array));
 
         assert_eq!(
-            canonical.as_binary::<i32>().iter().collect::<Vec<_>>(),
+            canonical.as_binary::<i64>().iter().collect::<Vec<_>>(),
             vec![Some(&b"abcd"[..]), None, Some(&b"wxyz"[..])]
         );
     }
@@ -1151,7 +1164,7 @@ mod tests {
 
     #[test]
     fn to_parquet_writes_fixed_size_binaries_of_their_length() {
-        let array: ArrayRef = Arc::new(BinaryArray::from(vec![Some(&b"abcd"[..]), None]));
+        let array: ArrayRef = Arc::new(LargeBinaryArray::from(vec![Some(&b"abcd"[..]), None]));
         let fixed = to_parquet(&array, &DataType::FixedSizeBinary(4)).unwrap();
 
         assert_eq!(
@@ -1269,8 +1282,22 @@ mod tests {
     }
 
     #[test]
+    fn to_parquet_writes_binary_narrowed() {
+        let binary: ArrayRef = Arc::new(LargeBinaryArray::from(vec![Some(&b"zazolc"[..]), None]));
+
+        assert_eq!(
+            to_parquet(&binary, &DataType::Binary)
+                .unwrap()
+                .as_binary::<i32>()
+                .iter()
+                .collect::<Vec<_>>(),
+            vec![Some(&b"zazolc"[..]), None]
+        );
+    }
+
+    #[test]
     fn to_parquet_writes_valid_utf8_as_strings() {
-        let binary: ArrayRef = Arc::new(BinaryArray::from(vec![Some(&b"zazolc"[..]), None]));
+        let binary: ArrayRef = Arc::new(LargeBinaryArray::from(vec![Some(&b"zazolc"[..]), None]));
 
         assert_eq!(
             to_parquet(&binary, &DataType::Utf8)
@@ -1284,7 +1311,11 @@ mod tests {
 
     #[test]
     fn to_parquet_refuses_invalid_utf8_at_its_row() {
-        let binary: ArrayRef = Arc::new(BinaryArray::from(vec![Some(&b"ok"[..]), None, Some(&b"\xff\xfe"[..])]));
+        let binary: ArrayRef = Arc::new(LargeBinaryArray::from(vec![
+            Some(&b"ok"[..]),
+            None,
+            Some(&b"\xff\xfe"[..]),
+        ]));
 
         assert!(matches!(
             to_parquet(&binary, &DataType::Utf8),
@@ -1295,9 +1326,9 @@ mod tests {
     #[test]
     fn to_parquet_refuses_invalid_utf8_at_its_parent_row() {
         let list: ArrayRef = Arc::new(ListArray::new(
-            Arc::new(Field::new("item", DataType::Binary, true)),
+            Arc::new(Field::new("item", DataType::LargeBinary, true)),
             arrow_buffer::OffsetBuffer::new(vec![0, 1, 3].into()),
-            Arc::new(BinaryArray::from(vec![&b"a"[..], b"b", b"\xff"])),
+            Arc::new(LargeBinaryArray::from(vec![&b"a"[..], b"b", b"\xff"])),
             None,
         ));
         let target = DataType::List(Arc::new(Field::new("element", DataType::Utf8, true)));
@@ -1329,7 +1360,7 @@ mod tests {
             false,
         );
 
-        assert_eq!(map.data_type(), &map_of(DataType::Binary, DataType::Int64));
+        assert_eq!(map.data_type(), &map_of(DataType::LargeBinary, DataType::Int64));
         assert_eq!(to_parquet(&map, &target).unwrap().data_type(), &target);
 
         let structure = read(Arc::new(StructArray::from(vec![(

@@ -12,6 +12,7 @@ use Flow\ETL\Optimizer\Rule\CombineSortAndLimit;
 use Flow\ETL\Optimizer\Rule\CountFromStatistics;
 use Flow\ETL\Optimizer\Rule\PushFilterIntoSource;
 use Flow\ETL\Optimizer\Rule\PushLimitIntoSource;
+use Flow\ETL\Optimizer\Rule\PushProjectionIntoExpand;
 use Flow\ETL\Plan\LogicalPlan;
 
 use function array_diff;
@@ -39,6 +40,7 @@ final readonly class Optimizer
             new PushLimitIntoSource(),
             new PushFilterIntoSource(),
             new CountFromStatistics(),
+            new PushProjectionIntoExpand(),
         );
     }
 

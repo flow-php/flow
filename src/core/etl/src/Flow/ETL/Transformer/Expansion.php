@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
+use Flow\ETL\Column\Backend;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ExpandingFunctions;
 use Flow\ETL\Function\FunctionTree;
@@ -20,6 +21,7 @@ use Flow\Types\Type\TypeWidener;
 
 use function array_key_exists;
 use function array_map;
+use function array_slice;
 use function array_values;
 use function count;
 use function Flow\ETL\DSL\definition_from_type;
@@ -27,29 +29,25 @@ use function is_array;
 use function max;
 use function spl_object_id;
 
-final readonly class NestedExpansion
+final readonly class Expansion
 {
     /**
      * @param non-empty-array<string, ExpandResults> $expands keyed by the synthesized column the root reads
      *                                                        each element from
      * @param array<string, Definition<mixed>> $expandDefinitions the synthesized columns, keyed like $expands
-     * @param Schema $elementSchema $input with the synthesized columns, built once
      */
     private function __construct(
         private ScalarFunction $root,
         private array $expands,
-        private Schema $input,
         private array $expandDefinitions,
-        private Schema $elementSchema,
     ) {}
 
+    /**
+     * Null only when the tree holds no expand. A root expand is rewritten too: its root becomes the synthesized
+     * reference, so a root, a nested and an unpacked expand are one shape.
+     */
     public static function of(ScalarFunction $resolved, Schema $input): ?self
     {
-        // a root expand runs in ScalarFunctionTransformer's own loop
-        if ($resolved instanceof ExpandResults) {
-            return null;
-        }
-
         $distinct = [];
 
         foreach ((new ExpandingFunctions())->in($resolved) as $expand) {
@@ -82,24 +80,37 @@ final readonly class NestedExpansion
             $expands[$name] = $expand;
         }
 
-        /** @var ScalarFunction $root the root is not an expand, so rewrite() rebuilds it with its own class */
+        /** @var ScalarFunction $root an expand is rewritten into its ResolvedReference, any other node keeps its class */
         $root = self::rewrite($resolved, $references);
 
-        return new self($root, $expands, $input, $expandDefinitions, $input->add(...array_values($expandDefinitions)));
+        return new self($root, $expands, $expandDefinitions);
     }
 
     /**
-     * @return Type<mixed>
+     * $gathered - the rows of output positions [$offset, $offset + count) - with the synthesized columns appended.
+     *
+     * @param array<string, list<mixed>> $cells from positions()
      */
-    public function returns(): Type
+    public function elements(Rows $gathered, array $cells, int $offset, Backend $backend): Rows
     {
-        return $this->root->returns();
+        $columns = [];
+
+        foreach ($cells as $name => $values) {
+            $builder = $backend->builder($this->expandDefinitions[$name]);
+            $builder->appendMany(array_slice($values, $offset, $gathered->count()));
+            $columns[$name] = $builder->finish();
+        }
+
+        return $gathered->withColumns($gathered->schema()->add(...array_values($this->expandDefinitions)), $columns);
     }
 
     /**
-     * @return array{list<int>, list<mixed>} [$sources, $values]
+     * The expand operands evaluated once: for every output position the row it comes from, and one cell per
+     * synthesized column - zipped to the longest list, the shorter ones padded with null.
+     *
+     * @return array{list<int>, array<string, list<mixed>>} [$sources, $cells]
      */
-    public function eval(Rows $rows, FlowContext $context): array
+    public function positions(Rows $rows, FlowContext $context): array
     {
         $lists = [];
 
@@ -134,19 +145,28 @@ final readonly class NestedExpansion
             }
         }
 
-        $elements = $rows->gather($sources);
-        $schema = $elements->schema()->isSame($this->input)
-            ? $this->elementSchema
-            : $elements->schema()->add(...array_values($this->expandDefinitions));
-        $columns = [];
+        return [$sources, $cells];
+    }
 
-        foreach ($cells as $name => $values) {
-            $builder = $context->backend()->builder($this->expandDefinitions[$name]);
-            $builder->appendMany($values);
-            $columns[$name] = $builder->finish();
-        }
+    /**
+     * @return Type<mixed>
+     */
+    public function returns(): Type
+    {
+        return $this->root->returns();
+    }
 
-        return [$sources, (new Parameter($this->root))->values($elements->withColumns($schema, $columns), $context)];
+    /**
+     * The tree with every expand replaced by the synthesized column it reads its element from.
+     */
+    public function root(): ScalarFunction
+    {
+        return $this->root;
+    }
+
+    public function synthesized(): Schema
+    {
+        return new Schema(...array_values($this->expandDefinitions));
     }
 
     /**

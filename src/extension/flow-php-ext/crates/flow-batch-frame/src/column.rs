@@ -36,7 +36,7 @@ pub fn encode(data: &ArrayData, kind: &Kind) -> Result<Vec<Vec<u8>>, Error> {
         },
         None,
         &mut out,
-    );
+    )?;
 
     Ok(out)
 }
@@ -79,9 +79,15 @@ impl Rows {
     }
 }
 
-fn encode_node(array: &dyn Array, kind: &Kind, rows: &Rows, parent: Option<&[bool]>, out: &mut Vec<Vec<u8>>) {
+fn encode_node(
+    array: &dyn Array,
+    kind: &Kind,
+    rows: &Rows,
+    parent: Option<&[bool]>,
+    out: &mut Vec<Vec<u8>>,
+) -> Result<(), Error> {
     if let Kind::Null = kind {
-        return;
+        return Ok(());
     }
 
     let valid = effective_validity(array, rows, parent);
@@ -122,12 +128,12 @@ fn encode_node(array: &dyn Array, kind: &Kind, rows: &Rows, parent: Option<&[boo
             out.push(bytes);
         }
         Kind::Bytes => {
-            let values = array.as_binary::<i32>();
+            let values = array.as_binary::<i64>();
             let offsets = values.value_offsets();
             let data = values.value_data();
 
             if let (Rows::Range { start, len }, None) = (rows, valid) {
-                out.push(rebased(&offsets[*start..=start + len]));
+                out.push(frame_offsets(&offsets[*start..=start + len])?);
                 out.push(data[offsets[*start] as usize..offsets[start + len] as usize].to_vec());
             } else {
                 let mut packed = Vec::with_capacity((rows.len() + 1) * 4);
@@ -140,7 +146,7 @@ fn encode_node(array: &dyn Array, kind: &Kind, rows: &Rows, parent: Option<&[boo
                         bytes.extend_from_slice(&data[offsets[i] as usize..offsets[i + 1] as usize]);
                     }
 
-                    packed.extend_from_slice(&(bytes.len() as u32).to_le_bytes());
+                    packed.extend_from_slice(&frame_offset(bytes.len() as u64)?.to_le_bytes());
                 }
 
                 out.push(packed);
@@ -151,24 +157,26 @@ fn encode_node(array: &dyn Array, kind: &Kind, rows: &Rows, parent: Option<&[boo
             let list = array.as_list::<i32>();
             let (offsets, children) = compact(list.value_offsets(), rows, valid);
             out.push(offsets);
-            encode_node(list.values().as_ref(), &element.kind, &children, None, out);
+            encode_node(list.values().as_ref(), &element.kind, &children, None, out)?;
         }
         Kind::Map(key, value) => {
             let map = array.as_map();
             let (offsets, children) = compact(map.value_offsets(), rows, valid);
             out.push(offsets);
             out.push(Vec::new());
-            encode_node(map.keys().as_ref(), &key.kind, &children, None, out);
-            encode_node(map.values().as_ref(), &value.kind, &children, None, out);
+            encode_node(map.keys().as_ref(), &key.kind, &children, None, out)?;
+            encode_node(map.values().as_ref(), &value.kind, &children, None, out)?;
         }
         Kind::Struct(fields) => {
             let structure = array.as_struct();
 
             for (i, field) in fields.iter().enumerate() {
-                encode_node(structure.column(i).as_ref(), &field.kind, rows, valid, out);
+                encode_node(structure.column(i).as_ref(), &field.kind, rows, valid, out)?;
             }
         }
     }
+
+    Ok(())
 }
 
 /// The null of a row is its own or its parent structure's; `None` when every row is valid.
@@ -252,6 +260,26 @@ fn compact(offsets: &[i32], rows: &Rows, valid: Option<&[bool]>) -> (Vec<u8>, Ro
     }
 
     (packed, Rows::Indices(children))
+}
+
+/// Native string offsets are i64; a frame's are u32 the PHP decoder reads, capped at i32 like PHP's own encode(). A
+/// longer range is refused, so a writer can split the batch (FloeStreamWriter halves it).
+fn frame_offsets(offsets: &[i64]) -> Result<Vec<u8>, Error> {
+    let mut packed = Vec::with_capacity(offsets.len() * 4);
+
+    for offset in offsets {
+        packed.extend_from_slice(&frame_offset((offset - offsets[0]) as u64)?.to_le_bytes());
+    }
+
+    Ok(packed)
+}
+
+fn frame_offset(offset: u64) -> Result<u32, Error> {
+    if offset > i32::MAX as u64 {
+        return Err(Error::OffsetOverflow { last: offset });
+    }
+
+    Ok(offset as u32)
 }
 
 fn rebased(offsets: &[i32]) -> Vec<u8> {
@@ -351,10 +379,13 @@ fn decode_node(
                 });
             }
 
-            fits_i32(last)?;
+            let widened = offsets
+                .chunks_exact(4)
+                .map(|offset| i64::from(u32::from_le_bytes(offset.try_into().expect("4-byte chunk"))))
+                .collect::<Vec<i64>>();
 
             builder
-                .add_buffer(Buffer::from_slice_ref(offsets))
+                .add_buffer(Buffer::from_vec(widened))
                 .add_buffer(Buffer::from_slice_ref(data))
         }
         Kind::Null | Kind::List(_) | Kind::Map(_, _) | Kind::Struct(_) => {
@@ -532,4 +563,37 @@ fn fits_i32(last: u32) -> Result<(), Error> {
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{frame_offsets, Error};
+
+    #[test]
+    fn frame_offsets_are_rebased_to_the_first() {
+        assert_eq!(
+            frame_offsets(&[10, 12, 17]).expect("a frame range"),
+            [0u32, 2, 7]
+                .iter()
+                .flat_map(|offset| offset.to_le_bytes())
+                .collect::<Vec<u8>>(),
+        );
+    }
+
+    #[test]
+    fn a_frame_range_past_i32_is_refused() {
+        let last = i32::MAX as i64 + 1;
+
+        assert!(matches!(
+            frame_offsets(&[0, last]),
+            Err(Error::OffsetOverflow { last: refused }) if refused == last as u64
+        ));
+    }
+
+    #[test]
+    fn a_large_native_offset_within_an_i32_frame_range_is_accepted() {
+        let start = i64::from(u32::MAX) * 2;
+
+        assert!(frame_offsets(&[start, start + 5]).is_ok());
+    }
 }

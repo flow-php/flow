@@ -20,6 +20,7 @@ use Flow\ETL\Processor\CachingProcessor;
 use Flow\ETL\Processor\CollectingProcessor;
 use Flow\ETL\Processor\ConstrainedProcessor;
 use Flow\ETL\Processor\CountingProcessor;
+use Flow\ETL\Processor\ExpandingProcessor;
 use Flow\ETL\Processor\OffsetProcessor;
 use Flow\ETL\Processor\TopNProcessor;
 use Flow\ETL\Processor\VoidProcessor;
@@ -81,6 +82,9 @@ final readonly class NodeTranslator
             $node instanceof Node\Discard => [new VoidProcessor()],
             $node instanceof Node\Distinct => [new DropDuplicatesTransformer(...$node->entries)],
             $node instanceof Node\Drop => [new DropEntriesTransformer(...$node->entries)],
+            $node instanceof Node\ExpandColumn => [
+                new ExpandingProcessor($node->entry, $node->function, $node->carries),
+            ],
             $node instanceof Node\DuplicateRow => [new DuplicateRowTransformer($node->condition, ...$node->entries)],
             $node instanceof Node\Filter => [new ScalarFunctionFilterTransformer($node->function)],
             $node instanceof Node\JoinEach => match ($node->type) {
