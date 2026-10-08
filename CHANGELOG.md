@@ -1,3 +1,8 @@
+## [Unreleased] - 2026-10-08
+
+### Fixed
+- [b5d097](https://github.com/flow-php/flow/commit/b5d097c5cabde914624be59774dd8a8d6fafe294) - **bump setup-php to 2.40.0 in extension release workflows** - [@norberttech](https://github.com/norberttech)
+
 ## [0.46.0] - 2026-10-08
 
 ### Added
