@@ -7,6 +7,7 @@
 - [#2671](https://github.com/flow-php/flow/pull/2671) - **flow-php/etl-adapter-doctrine - keyset reads run a NULL key check query before the first page** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [ed2431](https://github.com/flow-php/flow/commit/ed2431fb76fdec1aa0a98a1e61d0c47717b2cc33) - **chore(flow-php/flow): derive nix extension versions from git tags** - [@norberttech](https://github.com/norberttech)
 - [#2674](https://github.com/flow-php/flow/pull/2674) - **flow-php/etl - an expanding withEntry() emits batches of at most 1,000 rows** - [@norberttech](https://github.com/norberttech)
 - [#2674](https://github.com/flow-php/flow/pull/2674) - **flow-php/etl - ScalarFunctionTransformer refuses array_expand()** - [@norberttech](https://github.com/norberttech)
 - [#2674](https://github.com/flow-php/flow/pull/2674) - **flow-php/etl - a serialized Rows holds a list of frames** - [@norberttech](https://github.com/norberttech)
