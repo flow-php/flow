@@ -9,16 +9,16 @@
     "packages-dev": [
         {
             "name": "carthage-software/mago",
-            "version": "1.51.2",
+            "version": "1.56.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/carthage-software/mago.git",
-                "reference": "5415d6900d330a5a6a70728aaa7f9c52c7672495"
+                "reference": "d5a5992e265e821fc9e6863971bed3dbe5d6cc98"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/carthage-software/mago/zipball/5415d6900d330a5a6a70728aaa7f9c52c7672495",
-                "reference": "5415d6900d330a5a6a70728aaa7f9c52c7672495",
+                "url": "https://api.github.com/repos/carthage-software/mago/zipball/d5a5992e265e821fc9e6863971bed3dbe5d6cc98",
+                "reference": "d5a5992e265e821fc9e6863971bed3dbe5d6cc98",
                 "shasum": ""
             },
             "require": {
@@ -60,7 +60,7 @@
             ],
             "support": {
                 "issues": "https://github.com/carthage-software/mago/issues",
-                "source": "https://github.com/carthage-software/mago/tree/1.51.2"
+                "source": "https://github.com/carthage-software/mago/tree/1.56.1"
             },
             "funding": [
                 {
@@ -68,7 +68,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-10-03T09:05:17+00:00"
+            "time": "2026-10-11T13:37:01+00:00"
         },
         {
             "name": "revolt/event-loop",
