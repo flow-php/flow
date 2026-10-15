@@ -1,4 +1,11 @@
-## [Unreleased] - 2026-10-08
+## [Unreleased] - 2026-10-15
+
+### Changed
+- [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/types - leaf types are no longer generic** - [@norberttech](https://github.com/norberttech)
+- [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/types - ListType<T> and MapType<TKey, TValue> template their members** - [@norberttech](https://github.com/norberttech)
+- [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/mago-types-bridge - type_structure() members resolved through template-type** - [@norberttech](https://github.com/norberttech)
+- [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/etl - allow brick/math ^1.0** - [@norberttech](https://github.com/norberttech)
+- [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/flow - updated dev dependencies, mago 1.57 and GitHub Actions** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
 - [b5d097](https://github.com/flow-php/flow/commit/b5d097c5cabde914624be59774dd8a8d6fafe294) - **bump setup-php to 2.40.0 in extension release workflows** - [@norberttech](https://github.com/norberttech)
