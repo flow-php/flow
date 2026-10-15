@@ -30,9 +30,7 @@ use function round;
 use function sprintf;
 
 /**
- * @template T of string
- *
- * @implements Type<T>
+ * @implements Type<string>
  */
 final readonly class StringType implements Type
 {

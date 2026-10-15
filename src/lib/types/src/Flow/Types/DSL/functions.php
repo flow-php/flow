@@ -5,10 +5,6 @@ declare(strict_types=1);
 namespace Flow\Types\DSL;
 
 use DateTimeZone;
-use Dom\Element;
-use Dom\HTMLDocument;
-use Dom\HTMLElement;
-use Dom\XMLDocument;
 use DOMDocument;
 use DOMElement;
 use Flow\Documentation\Attribute\DocumentationDSL;
@@ -56,8 +52,6 @@ use Flow\Types\Type\Nullability;
 use Flow\Types\Type\TypeDetector;
 use Flow\Types\Type\TypeFactory;
 use Flow\Types\Type\Types;
-use Flow\Types\Value\Json;
-use Flow\Types\Value\Uuid;
 use UnitEnum;
 
 /**
@@ -130,9 +124,6 @@ function type_intersection(Type $first, Type $second, Type ...$types): Intersect
     return $type;
 }
 
-/**
- * @return NumericStringType<numeric-string>
- */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_numeric_string(): NumericStringType
 {
@@ -218,7 +209,7 @@ function types(Type ...$types): Types
  *
  * @param Type<T> $element
  *
- * @return ListType<list<T>>
+ * @return ListType<T>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_list(Type $element): ListType
@@ -233,7 +224,7 @@ function type_list(Type $element): ListType
  * @param Type<TKey> $key_type
  * @param Type<TValue> $value_type
  *
- * @return MapType<array<TKey, TValue>>
+ * @return MapType<TKey, TValue>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_map(Type $key_type, Type $value_type): MapType
@@ -241,108 +232,72 @@ function type_map(Type $key_type, Type $value_type): MapType
     return new MapType($key_type, $value_type);
 }
 
-/**
- * @return JsonType<Json>
- */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_json(): JsonType
 {
     return new JsonType();
 }
 
-/**
- * @return DateTimeType<\DateTimeInterface>
- */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_datetime(DateTimeZone|string $zone = 'UTC'): DateTimeType
 {
     return new DateTimeType($zone);
 }
 
-/**
- * @return DateType<\DateTimeInterface>
- */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_date(): DateType
 {
     return new DateType();
 }
 
-/**
- * @return TimeType<\DateInterval>
- */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_time(): TimeType
 {
     return new TimeType();
 }
 
-/**
- * @return TimeZoneType<\DateTimeZone>
- */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_time_zone(): TimeZoneType
 {
     return new TimeZoneType();
 }
 
-/**
- * @return XMLType<\DOMDocument|XMLDocument>
- */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_xml(): XMLType
 {
     return new XMLType();
 }
 
-/**
- * @return XMLElementType<\DOMElement|Element>
- */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_xml_element(): XMLElementType
 {
     return new XMLElementType();
 }
 
-/**
- * @return UuidType<Uuid>
- */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_uuid(): UuidType
 {
     return new UuidType();
 }
 
-/**
- * @return IntegerType<int>
- */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_integer(): IntegerType
 {
     return new IntegerType();
 }
 
-/**
- * @return StringType<string>
- */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_string(): StringType
 {
     return new StringType();
 }
 
-/**
- * @return FloatType<float>
- */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_float(): FloatType
 {
     return new FloatType();
 }
 
-/**
- * @return BooleanType<bool>
- */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_boolean(): BooleanType
 {
@@ -362,90 +317,60 @@ function type_instance_of(string $class): InstanceOfType
     return new InstanceOfType($class);
 }
 
-/**
- * @return ObjectType<object>
- */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_object(): ObjectType
 {
     return new ObjectType();
 }
 
-/**
- * @return ScalarType<bool|float|int|string>
- */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_scalar(): ScalarType
 {
     return new ScalarType();
 }
 
-/**
- * @return ResourceType<resource>
- */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_resource(): ResourceType
 {
     return new ResourceType();
 }
 
-/**
- * @return ArrayType<array<mixed>>
- */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_array(): ArrayType
 {
     return new ArrayType();
 }
 
-/**
- * @return CallableType<callable>
- */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_callable(): CallableType
 {
     return new CallableType();
 }
 
-/**
- * @return NullType<null>
- */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_null(): NullType
 {
     return new NullType();
 }
 
-/**
- * @return MixedType<mixed>
- */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_mixed(): MixedType
 {
     return new MixedType();
 }
 
-/**
- * @return PositiveIntegerType<int<0, max>>
- */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_positive_integer(): PositiveIntegerType
 {
     return new PositiveIntegerType();
 }
 
-/**
- * @return NonEmptyStringType<non-empty-string>
- */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_non_empty_string(): NonEmptyStringType
 {
     return new NonEmptyStringType();
 }
 
-/**
- * @return EmptyArrayType<array{}>
- */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_empty_array(): EmptyArrayType
 {
@@ -478,18 +403,12 @@ function type_literal(bool|float|int|string $value): LiteralType
     return new LiteralType($value);
 }
 
-/**
- * @return HTMLType<HTMLDocument>
- */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_html(): HTMLType
 {
     return new HTMLType();
 }
 
-/**
- * @return HTMLElementType<HTMLElement>
- */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_html_element(): HTMLElementType
 {

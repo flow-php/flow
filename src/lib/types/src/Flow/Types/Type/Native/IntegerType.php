@@ -26,9 +26,7 @@ use function substr;
 use function trim;
 
 /**
- * @template T of int
- *
- * @implements Type<T>
+ * @implements Type<int>
  */
 final readonly class IntegerType implements Type
 {

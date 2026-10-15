@@ -19,9 +19,7 @@ use function json_encode;
 use const JSON_THROW_ON_ERROR;
 
 /**
- * @template T of Json
- *
- * @implements Type<T>
+ * @implements Type<Json>
  */
 final readonly class JsonType implements Type
 {

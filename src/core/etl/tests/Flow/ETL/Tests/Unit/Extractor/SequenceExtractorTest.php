@@ -40,6 +40,7 @@ final class SequenceExtractorTest extends FlowTestCase
 
     public function test_extracting_from_date_period(): void
     {
+        // @mago-ignore analysis:mixed-argument
         $extractor = from_sequence_date_period(
             'day',
             new DateTimeImmutable('2023-01-01'),
@@ -66,6 +67,7 @@ final class SequenceExtractorTest extends FlowTestCase
 
     public function test_extracting_from_date_period_recurrences(): void
     {
+        // @mago-ignore analysis:mixed-argument
         $extractor = from_sequence_date_period_recurrences(
             'day',
             new DateTimeImmutable('2023-01-01'),

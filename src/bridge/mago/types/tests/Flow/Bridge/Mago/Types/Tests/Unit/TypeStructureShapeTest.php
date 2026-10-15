@@ -14,17 +14,19 @@ final class TypeStructureShapeTest extends TestCase
 {
     public function test_plain_map_derives_required_keys(): void
     {
-        $id = Type::int();
-        $name = Type::string();
+        $id = InvocationMother::flowType();
+        $name = InvocationMother::flowType('Flow\Types\Type\Native\StringType');
 
         $shape = DerivedShapeContext::shape((new TypeStructureShape())->derive(InvocationMother::typeStructure(InvocationMother::sealedMap(
-            InvocationMother::item('id', InvocationMother::flowType($id)),
-            InvocationMother::item('name', InvocationMother::flowType($name)),
+            InvocationMother::item('id', $id),
+            InvocationMother::item('name', $name),
         ))));
 
         static::assertSame(['id', 'name'], array_keys($shape));
-        static::assertSame([false, $id], $shape['id']);
-        static::assertSame([false, $name], $shape['name']);
+        static::assertFalse($shape['id'][0]);
+        static::assertSame($id, DerivedShapeContext::templateTypeOf($shape['id'][1]));
+        static::assertFalse($shape['name'][0]);
+        static::assertSame($name, DerivedShapeContext::templateTypeOf($shape['name'][1]));
     }
 
     public function test_marker_with_literal_true_derives_an_optional_key(): void
@@ -32,7 +34,7 @@ final class TypeStructureShapeTest extends TestCase
         $nick = Type::string();
 
         $shape = DerivedShapeContext::shape((new TypeStructureShape())->derive(InvocationMother::typeStructure(InvocationMother::sealedMap(
-            InvocationMother::item('id', InvocationMother::flowType(Type::int())),
+            InvocationMother::item('id', InvocationMother::flowType()),
             InvocationMother::item('nick', InvocationMother::marker($nick, Type::true())),
         ))));
 
@@ -55,7 +57,7 @@ final class TypeStructureShapeTest extends TestCase
     {
         $keyedArray = DerivedShapeContext::keyedArray((new TypeStructureShape())->derive(InvocationMother::typeStructure(InvocationMother::sealedMap(InvocationMother::item(
             'id',
-            InvocationMother::flowType(Type::int()),
+            InvocationMother::flowType(),
         )))));
 
         static::assertNull($keyedArray->keyType);

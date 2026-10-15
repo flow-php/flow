@@ -30,6 +30,7 @@ final class DatePeriodSequenceGeneratorTest extends FlowTestCase
 
     public function test_excluding_the_start_date_is_counted(): void
     {
+        // @mago-ignore analysis:mixed-argument
         $generator = new DatePeriodSequenceGenerator(
             new DatePeriod(
                 new DateTimeImmutable('2023-01-01'),
@@ -45,6 +46,7 @@ final class DatePeriodSequenceGeneratorTest extends FlowTestCase
 
     public function test_including_the_end_date_is_counted(): void
     {
+        // @mago-ignore analysis:mixed-argument
         $generator = new DatePeriodSequenceGenerator(
             new DatePeriod(
                 new DateTimeImmutable('2023-01-01'),

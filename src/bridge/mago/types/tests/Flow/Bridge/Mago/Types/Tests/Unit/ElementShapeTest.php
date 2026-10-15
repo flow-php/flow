@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Mago\Types\Tests\Unit;
 
 use Flow\Bridge\Mago\Types\ElementShape;
+use Flow\Bridge\Mago\Types\Tests\Context\DerivedShapeContext;
 use Flow\Bridge\Mago\Types\Tests\Mother\InvocationMother;
 use Mago\Sdk\Analyzer\Type;
 use Mago\Sdk\Analyzer\Type\ArrayItem;
@@ -12,15 +13,15 @@ use PHPUnit\Framework\TestCase;
 
 final class ElementShapeTest extends TestCase
 {
-    public function test_a_plain_flow_type_derives_a_required_member(): void
+    public function test_a_plain_flow_type_derives_a_required_member_resolved_from_its_type_template(): void
     {
-        $member = Type::int();
+        $flowType = InvocationMother::flowType('Flow\Types\Type\Logical\DateTimeType');
 
-        $derived = (new ElementShape())->derive(InvocationMother::item('id', InvocationMother::flowType($member)));
+        $derived = (new ElementShape())->derive(InvocationMother::item('created_at', $flowType));
 
         static::assertNotNull($derived);
         static::assertFalse($derived->optional);
-        static::assertSame($member, $derived->type);
+        static::assertSame($flowType, DerivedShapeContext::templateTypeOf($derived->type));
     }
 
     public function test_a_marker_with_literal_true_derives_an_optional_member(): void
@@ -54,7 +55,7 @@ final class ElementShapeTest extends TestCase
 
     public function test_an_already_optional_item_stays_optional(): void
     {
-        $item = InvocationMother::item('a', InvocationMother::flowType(Type::string()));
+        $item = InvocationMother::item('a', InvocationMother::flowType());
 
         $derived = (new ElementShape())->derive(new ArrayItem($item->key, true, $item->type));
 

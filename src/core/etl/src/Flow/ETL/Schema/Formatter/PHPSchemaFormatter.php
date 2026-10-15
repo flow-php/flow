@@ -187,7 +187,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
      */
     private function mapType(Definition $definition): string
     {
-        /** @var MapType<array<array-key, mixed>> $type */
+        /** @var MapType<array-key, mixed> $type */
         $type = $definition->type();
         $reflection = new ReflectionFunction("\Flow\ETL\DSL\\map_schema");
 

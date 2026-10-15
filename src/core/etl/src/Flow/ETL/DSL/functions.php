@@ -1438,21 +1438,21 @@ function float_schema(string $name, bool $nullable = false, ?Metadata $metadata 
  * @template TKey of array-key
  * @template TValue
  *
- * @param MapType<array<TKey, TValue>>|Type<array<TKey, TValue>> $type
+ * @param MapType<TKey, TValue>|Type<array<TKey, TValue>> $type
  *
  * @return MapDefinition<TKey, TValue>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
 function map_schema(string $name, MapType|Type $type, bool $nullable = false, ?Metadata $metadata = null): MapDefinition
 {
-    /** @var MapType<array<TKey, TValue>> $type */
+    /** @var MapType<TKey, TValue> $type */
     return new MapDefinition($name, $type, $nullable, $metadata);
 }
 
 /**
  * @template T
  *
- * @param ListType<list<T>>|Type<list<T>> $type
+ * @param ListType<T>|Type<list<T>> $type
  *
  * @return ListDefinition<T>
  */
@@ -1463,7 +1463,7 @@ function list_schema(
     bool $nullable = false,
     ?Metadata $metadata = null,
 ): ListDefinition {
-    /** @var ListType<list<T>> $type */
+    /** @var ListType<T> $type */
     return new ListDefinition($name, $type, $nullable, $metadata);
 }
 

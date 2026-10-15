@@ -30,12 +30,12 @@ final readonly class MapDefinition implements Definition
     private Reference $ref;
 
     /**
-     * @var MapType<array<TKey, TValue>>
+     * @var MapType<TKey, TValue>
      */
     private MapType $type;
 
     /**
-     * @param MapType<array<TKey, TValue>> $type
+     * @param MapType<TKey, TValue> $type
      */
     public function __construct(
         string|Reference $ref,
@@ -197,7 +197,7 @@ final readonly class MapDefinition implements Definition
     }
 
     /**
-     * @return MapType<array<TKey, TValue>>
+     * @return MapType<TKey, TValue>
      */
     public function type(): MapType
     {

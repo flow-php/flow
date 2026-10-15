@@ -29,9 +29,9 @@ final readonly class TypeProjection
     ) {}
 
     /**
-     * @param ListType<list<mixed>> $type
+     * @param ListType<mixed> $type
      *
-     * @return ListType<list<mixed>>
+     * @return ListType<mixed>
      */
     public function list(ListType $type): ListType
     {
@@ -41,9 +41,9 @@ final readonly class TypeProjection
     }
 
     /**
-     * @param MapType<array<array-key, mixed>> $type
+     * @param MapType<array-key, mixed> $type
      *
-     * @return MapType<array<array-key, mixed>>
+     * @return MapType<array-key, mixed>
      */
     public function map(MapType $type): MapType
     {

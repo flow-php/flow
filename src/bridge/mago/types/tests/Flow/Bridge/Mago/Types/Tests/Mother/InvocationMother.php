@@ -50,11 +50,11 @@ final class InvocationMother
         return new ArrayItem(new ArrayKey(ArrayKeyKind::String, $key), false, $valueType);
     }
 
-    public static function flowType(Type $member): Type
+    public static function flowType(string $class = 'Flow\Types\Type\Native\IntegerType'): Type
     {
         return Type::fromAtomic(new NamedObjectType(
-            name: 'Flow\Types\Type\Native\IntegerType',
-            parameters: [$member],
+            name: $class,
+            parameters: null,
             variances: null,
             static: false,
             isThis: false,

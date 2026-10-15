@@ -11,9 +11,7 @@ use Flow\Types\Type;
 use function is_resource;
 
 /**
- * @template T of resource
- *
- * @implements Type<T>
+ * @implements Type<resource>
  */
 final readonly class ResourceType implements Type
 {

@@ -30,8 +30,7 @@ final readonly class AdaptiveJsonEncoder implements JsonEncoder
         && (
             $flags
             & ~(JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION)
-        )
-            === 0
+        ) === 0
             ? new RustJsonEncoder($flags, $dateTimeFormat, $dateFormat, $php)
             : $php;
     }

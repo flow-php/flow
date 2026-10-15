@@ -9,6 +9,18 @@ Upgrading from older versions: [0.35.x to 0.40.x](/documentation/upgrading-0.35-
 
 ---
 
+## Upgrading from 0.46.x to 0.47.x
+
+### 1) `flow-php/types` - leaf types are no longer generic
+
+| Before                                                                          | After                                                                                                 |
+|---------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
+| `StringType<string>`, `DateTimeType<\DateTimeInterface>`, `UuidType<Uuid>`, ... | `StringType`, `DateTimeType`, `UuidType` - leaf types implement `Type<string>`, ... directly          |
+| `ListType<list<T>>`, `MapType<array<TKey, TValue>>`                             | `ListType<T>`, `MapType<TKey, TValue>`                                                                |
+| Mago `plugins = ["flow-php"]` infers `type_structure()` shapes                  | Built-in plugin no longer infers them - use `flow-php/mago-types-bridge` (`plugins = ["flow/types"]`) |
+
+---
+
 ## Upgrading from 0.45.x to 0.46.x
 
 ### 1) `flow-php/etl-adapter-postgresql`, `flow-php/etl-adapter-doctrine` - keyset reads reject NULL keys up front

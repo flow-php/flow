@@ -25,9 +25,6 @@ final class Now implements ScalarFunction
 
     private readonly ScalarFunction $timeZone;
 
-    /**
-     * @var DateTimeType<\DateTimeInterface>
-     */
     private readonly DateTimeType $type;
 
     public function __construct(ScalarFunction|DateTimeZone $timeZone = new DateTimeZone('UTC'))

@@ -26,14 +26,14 @@ use function str_starts_with;
 use const JSON_THROW_ON_ERROR;
 
 /**
- * @template-covariant T of list<mixed>
+ * @template-covariant T
  *
- * @implements Type<T>
+ * @implements Type<list<T>>
  */
 final readonly class ListType implements Type
 {
     /**
-     * @param Type<value-of<T>> $element
+     * @param Type<T> $element
      */
     public function __construct(
         private Type $element,
@@ -42,7 +42,7 @@ final readonly class ListType implements Type
     /**
      * @param array<string, mixed> $data
      *
-     * @return ListType<list<mixed>>
+     * @return ListType<mixed>
      */
     public static function fromArray(array $data): self
     {
@@ -55,7 +55,7 @@ final readonly class ListType implements Type
     }
 
     /**
-     * @return T
+     * @return list<T>
      */
     public function assert(mixed $value): array
     {
@@ -67,7 +67,7 @@ final readonly class ListType implements Type
     }
 
     /**
-     * @return T
+     * @return list<T>
      */
     public function cast(mixed $value): array
     {
@@ -109,7 +109,6 @@ final readonly class ListType implements Type
                 throw InvalidTypeException::value($castedList, $this);
             }
 
-            /** @var T $castedList */
             return $castedList;
         } catch (Throwable $e) {
             throw new CastingException($value, $this, $e);
@@ -117,7 +116,7 @@ final readonly class ListType implements Type
     }
 
     /**
-     * @return Type<value-of<T>>
+     * @return Type<T>
      */
     public function element(): Type
     {

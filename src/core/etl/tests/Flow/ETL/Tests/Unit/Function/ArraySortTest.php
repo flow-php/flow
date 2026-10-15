@@ -45,95 +45,95 @@ final class ArraySortTest extends FlowTestCase
     public static function one_document_in_two_orders(): Generator
     {
         yield 'as stored' => [<<<'JSON'
-                [
+            [
+              {
+                "asin": "B00PHQB8EE",
+                "images": [
                   {
-                    "asin": "B00PHQB8EE",
                     "images": [
                       {
-                        "images": [
-                          {
-                            "link": "https://m.media-amazon.com/images/I/419NipwmTaL.jpg",
-                            "width": 190,
-                            "height": 500,
-                            "variant": "MAIN"
-                          },
-                          {
-                            "link": "https://m.media-amazon.com/images/I/419NipwmTaL._SL75_.jpg",
-                            "width": 29,
-                            "height": 75,
-                            "variant": "MAIN"
-                          },
-                          {
-                            "link": "https://m.media-amazon.com/images/I/61AQupUe5pL.jpg",
-                            "width": 418,
-                            "height": 1100,
-                            "variant": "MAIN"
-                          },
-                          {
-                            "link": "https://m.media-amazon.com/images/I/51XvsWDOBuS.jpg",
-                            "width": 500,
-                            "height": 279,
-                            "variant": "PT01"
-                          },
-                          {
-                            "link": "https://m.media-amazon.com/images/I/51XvsWDOBuS._SL75_.jpg",
-                            "width": 75,
-                            "height": 42,
-                            "variant": "PT01"
-                          }
-                        ],
-                        "marketplaceId": "ATVPDKIKX0DER"
+                        "link": "https://m.media-amazon.com/images/I/419NipwmTaL.jpg",
+                        "width": 190,
+                        "height": 500,
+                        "variant": "MAIN"
+                      },
+                      {
+                        "link": "https://m.media-amazon.com/images/I/419NipwmTaL._SL75_.jpg",
+                        "width": 29,
+                        "height": 75,
+                        "variant": "MAIN"
+                      },
+                      {
+                        "link": "https://m.media-amazon.com/images/I/61AQupUe5pL.jpg",
+                        "width": 418,
+                        "height": 1100,
+                        "variant": "MAIN"
+                      },
+                      {
+                        "link": "https://m.media-amazon.com/images/I/51XvsWDOBuS.jpg",
+                        "width": 500,
+                        "height": 279,
+                        "variant": "PT01"
+                      },
+                      {
+                        "link": "https://m.media-amazon.com/images/I/51XvsWDOBuS._SL75_.jpg",
+                        "width": 75,
+                        "height": 42,
+                        "variant": "PT01"
                       }
                     ],
-                    "synchronized_at": "2023-04-21 11:33:25"
+                    "marketplaceId": "ATVPDKIKX0DER"
                   }
-                ]
-                JSON];
+                ],
+                "synchronized_at": "2023-04-21 11:33:25"
+              }
+            ]
+            JSON];
         yield 'reordered' => [<<<'JSON'
-                [
+            [
+              {
+                "asin": "B00PHQB8EE",
+                "images": [
                   {
-                    "asin": "B00PHQB8EE",
                     "images": [
+                    {
+                        "link": "https://m.media-amazon.com/images/I/51XvsWDOBuS._SL75_.jpg",
+                        "width": 75,
+                        "height": 42,
+                        "variant": "PT01"
+                      },
                       {
-                        "images": [
-                        {
-                            "link": "https://m.media-amazon.com/images/I/51XvsWDOBuS._SL75_.jpg",
-                            "width": 75,
-                            "height": 42,
-                            "variant": "PT01"
-                          },
-                          {
-                            "link": "https://m.media-amazon.com/images/I/419NipwmTaL.jpg",
-                            "width": 190,
-                            "height": 500,
-                            "variant": "MAIN"
-                          },
-                          {
-                            "link": "https://m.media-amazon.com/images/I/61AQupUe5pL.jpg",
-                            "width": 418,
-                            "height": 1100,
-                            "variant": "MAIN"
-                          },
-                          {
-                            "link": "https://m.media-amazon.com/images/I/419NipwmTaL._SL75_.jpg",
-                            "width": 29,
-                            "height": 75,
-                            "variant": "MAIN"
-                          },
-                          {
-                            "link": "https://m.media-amazon.com/images/I/51XvsWDOBuS.jpg",
-                            "width": 500,
-                            "height": 279,
-                            "variant": "PT01"
-                          }
-                        ],
-                        "marketplaceId": "ATVPDKIKX0DER"
+                        "link": "https://m.media-amazon.com/images/I/419NipwmTaL.jpg",
+                        "width": 190,
+                        "height": 500,
+                        "variant": "MAIN"
+                      },
+                      {
+                        "link": "https://m.media-amazon.com/images/I/61AQupUe5pL.jpg",
+                        "width": 418,
+                        "height": 1100,
+                        "variant": "MAIN"
+                      },
+                      {
+                        "link": "https://m.media-amazon.com/images/I/419NipwmTaL._SL75_.jpg",
+                        "width": 29,
+                        "height": 75,
+                        "variant": "MAIN"
+                      },
+                      {
+                        "link": "https://m.media-amazon.com/images/I/51XvsWDOBuS.jpg",
+                        "width": 500,
+                        "height": 279,
+                        "variant": "PT01"
                       }
                     ],
-                    "synchronized_at": "2023-04-21 11:33:25"
+                    "marketplaceId": "ATVPDKIKX0DER"
                   }
-                ]
-                JSON];
+                ],
+                "synchronized_at": "2023-04-21 11:33:25"
+              }
+            ]
+            JSON];
     }
 
     #[DataProvider('one_document_in_two_orders')]

@@ -15,9 +15,7 @@ use Throwable;
 use function is_string;
 
 /**
- * @template T of \DateTimeZone
- *
- * @implements Type<T>
+ * @implements Type<\DateTimeZone>
  */
 final readonly class TimeZoneType implements Type
 {

@@ -17,9 +17,7 @@ use function is_string;
 use function strlen;
 
 /**
- * @template T of \DateInterval
- *
- * @implements Type<T>
+ * @implements Type<\DateInterval>
  */
 final readonly class TimeType implements Type
 {
