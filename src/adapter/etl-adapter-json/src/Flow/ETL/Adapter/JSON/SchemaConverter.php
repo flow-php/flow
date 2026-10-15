@@ -1008,7 +1008,7 @@ final class SchemaConverter
     }
 
     /**
-     * @param MapType<array<array-key, mixed>> $type
+     * @param MapType<array-key, mixed> $type
      *
      * @return array<string, mixed>
      */

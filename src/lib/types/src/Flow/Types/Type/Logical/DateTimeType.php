@@ -36,9 +36,7 @@ use function strtolower;
 use function substr;
 
 /**
- * @template T of \DateTimeInterface
- *
- * @implements Type<T>
+ * @implements Type<\DateTimeInterface>
  */
 final readonly class DateTimeType implements Type
 {

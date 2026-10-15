@@ -26,9 +26,6 @@ final class ToTimeZone implements ScalarFunction
 
     private readonly ScalarFunction $value;
 
-    /**
-     * @var DateTimeType<\DateTimeInterface>
-     */
     private readonly DateTimeType $type;
 
     public function __construct(ScalarFunction|DateTimeInterface $value, DateTimeZone|string $timezone)

@@ -6,16 +6,15 @@ namespace Flow\Bridge\Mago\Types;
 
 use Mago\Sdk\Analyzer\Type;
 use Mago\Sdk\Analyzer\Type\ArrayItem;
+use Mago\Sdk\Analyzer\Type\DerivedType;
+use Mago\Sdk\Analyzer\Type\DerivedTypeKind;
 use Mago\Sdk\Analyzer\Type\NamedObjectType;
 
-/**
- * Derives a single shape entry from a `type_structure()` elements-array item. The member type is
- * the value's first type parameter; a `structure_element()` marker whose second parameter
- * (TOptional) is a literal `true` makes the key possibly undefined.
- */
 final readonly class ElementShape
 {
     private const string STRUCTURE_ELEMENT = 'Flow\Types\Type\Logical\StructureElement';
+
+    private const string TYPE = 'Flow\Types\Type';
 
     public function derive(ArrayItem $item): ?ArrayItem
     {
@@ -25,7 +24,14 @@ final readonly class ElementShape
             return null;
         }
 
-        $member = $namedObject->parameters[0] ?? null;
+        // Leaf types like StringType have no type parameters; Mago resolves T via @implements Type<X>.
+        $member = strcasecmp($namedObject->name, self::STRUCTURE_ELEMENT) === 0
+            ? $namedObject->parameters[0] ?? null
+            : Type::fromAtomic(new DerivedType(DerivedTypeKind::TemplateType, [
+                $item->type,
+                Type::namedObject(self::TYPE),
+                Type::literalString('T'),
+            ]));
 
         if ($member === null) {
             return null;

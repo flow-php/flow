@@ -11,9 +11,7 @@ use function is_object;
 use function is_scalar;
 
 /**
- * @template T of object
- *
- * @implements Type<T>
+ * @implements Type<object>
  */
 final class ObjectType implements Type
 {

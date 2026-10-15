@@ -13,9 +13,7 @@ use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_union;
 
 /**
- * @template T of bool|float|int|string
- *
- * @implements Type<T>
+ * @implements Type<bool|float|int|string>
  */
 final readonly class ScalarType implements Type
 {

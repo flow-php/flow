@@ -60,6 +60,8 @@ final class JsonArrayElementsTest extends FlowTestCase
         $stream = $filesystem->readFrom(path('memory://document.json'));
 
         $fallback = static function (int $skip) use ($document, $options): Generator {
+            // @mago-ignore analysis:mixed-assignment
+            // @mago-ignore analysis:mixed-assignment
             foreach (Items::fromString($document, $options) as $key => $item) {
                 if ($skip > 0) {
                     $skip--;

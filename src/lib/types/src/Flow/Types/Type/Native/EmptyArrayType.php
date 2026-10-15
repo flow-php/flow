@@ -12,9 +12,7 @@ use Throwable;
 use function Flow\Types\DSL\type_array;
 
 /**
- * @template T of array{}
- *
- * @implements Type<T>
+ * @implements Type<array{}>
  */
 final readonly class EmptyArrayType implements Type
 {

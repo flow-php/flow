@@ -24,14 +24,8 @@ final readonly class DateTimeDefinition implements Definition
 
     private Reference $ref;
 
-    /**
-     * @var DateTimeType<\DateTimeInterface>
-     */
     private DateTimeType $type;
 
-    /**
-     * @param DateTimeType<\DateTimeInterface> $type
-     */
     public function __construct(
         string|Reference $ref,
         DateTimeType $type = new DateTimeType(),
@@ -168,9 +162,6 @@ final readonly class DateTimeDefinition implements Definition
         return new self($this->ref, $this->type, $this->nullable, $metadata);
     }
 
-    /**
-     * @return DateTimeType<\DateTimeInterface>
-     */
     public function type(): DateTimeType
     {
         return $this->type;

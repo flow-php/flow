@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\Bridge\Mago\Types\Tests\Context;
 
 use Mago\Sdk\Analyzer\Type;
+use Mago\Sdk\Analyzer\Type\DerivedType;
+use Mago\Sdk\Analyzer\Type\DerivedTypeKind;
 use Mago\Sdk\Analyzer\Type\KeyedArrayType;
 use Mago\Sdk\Analyzer\Type\NamedObjectType;
 use PHPUnit\Framework\Assert;
@@ -37,5 +39,20 @@ final class DerivedShapeContext
         }
 
         return $shape;
+    }
+
+    public static function templateTypeOf(Type $member): Type
+    {
+        $derived = $member->atomicTypes[0];
+        Assert::assertInstanceOf(DerivedType::class, $derived);
+        Assert::assertSame(DerivedTypeKind::TemplateType, $derived->kind);
+
+        [$value, $templateOwner, $templateName] = $derived->operands;
+        $owner = $templateOwner->atomicTypes[0];
+        Assert::assertInstanceOf(NamedObjectType::class, $owner);
+        Assert::assertSame('Flow\Types\Type', $owner->name);
+        Assert::assertSame('T', $templateName->getLiteralString());
+
+        return $value;
     }
 }

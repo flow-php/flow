@@ -18,9 +18,7 @@ use function is_numeric;
 use function is_string;
 
 /**
- * @template T of float
- *
- * @implements Type<T>
+ * @implements Type<float>
  */
 final readonly class FloatType implements Type
 {

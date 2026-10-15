@@ -33,9 +33,6 @@ final class ToDateTime implements ScalarFunction
     private readonly ScalarFunction $format;
     private readonly ScalarFunction $timeZone;
 
-    /**
-     * @var DateTimeType<\DateTimeInterface>
-     */
     private readonly DateTimeType $type;
 
     /**

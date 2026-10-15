@@ -25,9 +25,7 @@ use function substr;
 use function trim;
 
 /**
- * @template T of int<0, max>
- *
- * @implements Type<T>
+ * @implements Type<int<0, max>>
  */
 final readonly class PositiveIntegerType implements Type
 {

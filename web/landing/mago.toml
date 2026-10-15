@@ -17,5 +17,8 @@ excludes = [
 [parser]
 enable-short-tags = false
 
+[extension-hosts.flow]
+command = ["php", "../../tools/mago/worker.php"]
+
 [analyzer]
-plugins = ["flow-php"]
+plugins = ["flow/types"]

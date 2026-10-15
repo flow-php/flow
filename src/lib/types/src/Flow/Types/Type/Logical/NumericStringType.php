@@ -16,9 +16,7 @@ use function is_numeric;
 use function is_string;
 
 /**
- * @template T of numeric-string
- *
- * @implements Type<T>
+ * @implements Type<numeric-string>
  */
 final class NumericStringType implements Type
 {

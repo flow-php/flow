@@ -31,15 +31,16 @@ use function str_starts_with;
 use const JSON_THROW_ON_ERROR;
 
 /**
- * @template-covariant T of array<array-key, mixed>
+ * @template-covariant TKey of array-key
+ * @template-covariant TValue
  *
- * @implements Type<T>
+ * @implements Type<array<TKey, TValue>>
  */
 final readonly class MapType implements Type
 {
     /**
-     * @param Type<key-of<T>> $key
-     * @param Type<value-of<T>> $value
+     * @param Type<TKey> $key
+     * @param Type<TValue> $value
      */
     public function __construct(
         private Type $key,
@@ -49,7 +50,7 @@ final readonly class MapType implements Type
     /**
      * @param array<string, mixed> $data
      *
-     * @return MapType<array<array-key, mixed>>
+     * @return MapType<array-key, mixed>
      *
      * @throws InvalidArgumentException
      */
@@ -74,7 +75,7 @@ final readonly class MapType implements Type
     }
 
     /**
-     * @return T
+     * @return array<TKey, TValue>
      */
     public function assert(mixed $value): array
     {
@@ -86,7 +87,7 @@ final readonly class MapType implements Type
     }
 
     /**
-     * @return T
+     * @return array<TKey, TValue>
      */
     public function cast(mixed $value): array
     {
@@ -123,7 +124,6 @@ final readonly class MapType implements Type
                 throw InvalidTypeException::value($castedMap, $this);
             }
 
-            /** @var T $castedMap */
             return $castedMap;
         } catch (Throwable $e) {
             throw new CastingException($value, $this, $e);
@@ -138,9 +138,6 @@ final readonly class MapType implements Type
 
         // @mago-ignore analysis:mixed-assignment
         foreach ($value as $key => $item) {
-            // key-of<T> resolves to array-key here, so isValid()'s @assert-if-true narrows nothing.
-            // The runtime check still matters: a StringType key must reject an integer key.
-            // @mago-ignore analysis:redundant-type-comparison
             if (!$this->key->isValid($key)) {
                 return false;
             }
@@ -154,7 +151,7 @@ final readonly class MapType implements Type
     }
 
     /**
-     * @return Type<key-of<T>>
+     * @return Type<TKey>
      */
     public function key(): Type
     {
@@ -179,7 +176,7 @@ final readonly class MapType implements Type
     }
 
     /**
-     * @return Type<value-of<T>>
+     * @return Type<TValue>
      */
     public function value(): Type
     {

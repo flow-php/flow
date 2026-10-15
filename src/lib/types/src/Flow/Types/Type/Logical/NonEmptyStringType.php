@@ -25,9 +25,7 @@ use function is_string;
 use function json_encode;
 
 /**
- * @template T of non-empty-string
- *
- * @implements Type<T>
+ * @implements Type<non-empty-string>
  */
 final class NonEmptyStringType implements Type
 {

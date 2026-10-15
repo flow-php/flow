@@ -133,10 +133,10 @@ final readonly class TypeWidener
      * @template TLeft
      * @template TRight
      *
-     * @param ListType<list<TLeft>> $left
-     * @param ListType<list<TRight>> $right
+     * @param ListType<TLeft> $left
+     * @param ListType<TRight> $right
      *
-     * @return ListType<list<mixed>>
+     * @return ListType<mixed>
      */
     public function widenLists(ListType $left, ListType $right): ListType
     {
@@ -149,10 +149,10 @@ final readonly class TypeWidener
      * @template TRightKey of array-key
      * @template TRightValue
      *
-     * @param MapType<array<TLeftKey, TLeftValue>> $left
-     * @param MapType<array<TRightKey, TRightValue>> $right
+     * @param MapType<TLeftKey, TLeftValue> $left
+     * @param MapType<TRightKey, TRightValue> $right
      *
-     * @return MapType<array<array-key, mixed>>
+     * @return MapType<array-key, mixed>
      */
     public function widenMaps(MapType $left, MapType $right): MapType
     {
