@@ -6,6 +6,7 @@ namespace Flow\Parquet\Tests\Unit\Engine\Arrow;
 
 use Flow\Parquet\Engine\Arrow\SchemaConverter;
 use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFile\Schema\ConvertedType;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\ListElement;
 use Flow\Parquet\ParquetFile\Schema\LogicalType;
@@ -72,7 +73,14 @@ final class SchemaConverterTest extends TestCase
         $schema = Schema::with(FlatColumn::enum('status'));
         $result = SchemaConverter::toExtension($schema);
 
-        static::assertSame('STRING', $result[0]['type']);
+        static::assertSame('ENUM', $result[0]['type']);
+    }
+
+    public function test_converted_only_enum_column_to_extension(): void
+    {
+        $schema = Schema::with(new FlatColumn('status', PhysicalType::BYTE_ARRAY, ConvertedType::ENUM));
+
+        static::assertSame('ENUM', SchemaConverter::toExtension($schema)[0]['type']);
     }
 
     public function test_fixed_size_byte_array_to_extension(): void

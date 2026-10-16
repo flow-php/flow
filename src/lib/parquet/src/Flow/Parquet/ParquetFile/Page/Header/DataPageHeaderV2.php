@@ -33,8 +33,6 @@ final readonly class DataPageHeaderV2
             (int) $thrift->definition_levels_byte_length,
             (int) $thrift->repetition_levels_byte_length,
             $thrift->is_compressed,
-            // @mago-ignore analysis:redundant-condition
-            // @mago-ignore analysis:redundant-comparison
             $thrift->statistics !== null ? Statistics::fromThrift($thrift->statistics) : null,
         );
     }

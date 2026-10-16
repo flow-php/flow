@@ -188,32 +188,72 @@ pub fn import(batch: &Zval) -> PhpResult<StructArray> {
         )));
     }
 
-    let schema = unsafe { &*(address(object, ce, "arrowSchemaAddress")? as *const FFI_ArrowSchema) };
-    let source = unsafe { &mut *(address(object, ce, "arrowArrayAddress")? as *mut FFI_ArrowArray) };
+    let schema = address(object, ce, "arrowSchemaAddress")? as *const FFI_ArrowSchema;
+    let source = address(object, ce, "arrowArrayAddress")? as *mut FFI_ArrowArray;
 
-    if schema.format.is_null() || unsafe { CStr::from_ptr(schema.format) }.to_bytes() != b"+s" {
-        return Err(refused("Arrow C Data batch must be a struct array".to_string()));
-    }
+    unsafe { check(schema, source) }.map_err(refused)?;
 
-    if source.release.is_none() {
-        return Err(refused("Arrow C Data batch is already imported".to_string()));
-    }
-
-    if source.n_children != schema.n_children || source.length < 0 {
-        return Err(refused(format!(
-            "Arrow C Data batch of {} children does not match its schema of {}",
-            source.n_children, schema.n_children
-        )));
-    }
-
-    let moved = unsafe { std::ptr::read(source) };
-    source.release = None;
+    let schema = unsafe { &*schema };
+    let moved = unsafe { FFI_ArrowArray::from_raw(source) };
 
     let data = unsafe { from_ffi(moved, schema) }
         .and_then(|data| data.validate().map(|()| data))
         .map_err(|error| refused(format!("Arrow C Data batch is not a valid struct array: {error}")))?;
 
     Ok(StructArray::from(data))
+}
+
+/// The leading fields of `struct ArrowSchema` and `struct ArrowArray` as the Arrow C Data Interface specification
+/// declares them (https://arrow.apache.org/docs/format/CDataInterface.html#structure-definitions): read before the
+/// arrow-rs accessors, which panic on a null format and cast a negative count to `usize`.
+#[repr(C)]
+struct SchemaHead {
+    format: *const c_char,
+    name: *const c_char,
+    metadata: *const c_char,
+    flags: i64,
+    n_children: i64,
+}
+
+#[repr(C)]
+struct ArrayHead {
+    length: i64,
+    null_count: i64,
+    offset: i64,
+    n_buffers: i64,
+    n_children: i64,
+}
+
+/// # Safety
+///
+/// `schema` and `array` point to live C Data Interface structs.
+unsafe fn check(schema: *const FFI_ArrowSchema, array: *const FFI_ArrowArray) -> Result<(), String> {
+    let schema_head = unsafe { &*(schema as *const SchemaHead) };
+    let array_head = unsafe { &*(array as *const ArrayHead) };
+
+    if schema_head.format.is_null() || unsafe { CStr::from_ptr(schema_head.format) }.to_bytes() != b"+s" {
+        return Err("Arrow C Data batch must be a struct array".to_string());
+    }
+
+    if unsafe { &*array }.is_released() {
+        return Err("Arrow C Data batch is already imported".to_string());
+    }
+
+    if array_head.length < 0 {
+        return Err(format!(
+            "Arrow C Data batch length must not be negative, {} given",
+            array_head.length
+        ));
+    }
+
+    if array_head.n_children < 0 || schema_head.n_children < 0 || array_head.n_children != schema_head.n_children {
+        return Err(format!(
+            "Arrow C Data batch of {} children does not match its schema of {}",
+            array_head.n_children, schema_head.n_children
+        ));
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]
@@ -270,5 +310,54 @@ mod tests {
         }
 
         assert_eq!(allocated_bytes(), baseline);
+    }
+
+    fn refusal(mutate: impl FnOnce(*mut super::SchemaHead, *mut super::ArrayHead)) -> Result<(), String> {
+        let (mut array, mut schema) = to_ffi(&batch().to_data()).unwrap();
+        let schema_ptr = &mut schema as *mut arrow_array::ffi::FFI_ArrowSchema;
+        let array_ptr = &mut array as *mut arrow_array::ffi::FFI_ArrowArray;
+        let schema_head = schema_ptr as *mut super::SchemaHead;
+        let array_head = array_ptr as *mut super::ArrayHead;
+        let (format, length, children) =
+            unsafe { ((*schema_head).format, (*array_head).length, (*array_head).n_children) };
+
+        mutate(schema_head, array_head);
+        let result = unsafe { super::check(schema_ptr, array_ptr) };
+
+        unsafe {
+            (*schema_head).format = format;
+            (*array_head).length = length;
+            (*array_head).n_children = children;
+        }
+
+        result
+    }
+
+    #[test]
+    fn a_null_format_is_refused_before_the_accessors() {
+        assert_eq!(
+            refusal(|schema, _| unsafe { (*schema).format = std::ptr::null() }),
+            Err("Arrow C Data batch must be a struct array".to_string())
+        );
+    }
+
+    #[test]
+    fn a_negative_length_is_refused() {
+        assert_eq!(
+            refusal(|_, array| unsafe { (*array).length = -1 }),
+            Err("Arrow C Data batch length must not be negative, -1 given".to_string())
+        );
+    }
+
+    #[test]
+    fn a_negative_or_mismatched_child_count_is_refused() {
+        assert_eq!(
+            refusal(|_, array| unsafe { (*array).n_children = -1 }),
+            Err("Arrow C Data batch of -1 children does not match its schema of 2".to_string())
+        );
+        assert_eq!(
+            refusal(|_, array| unsafe { (*array).n_children = 1 }),
+            Err("Arrow C Data batch of 1 children does not match its schema of 2".to_string())
+        );
     }
 }

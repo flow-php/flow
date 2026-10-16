@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\Parquet\ParquetFile\Data\Converter;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Data\Converter;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
@@ -17,20 +16,9 @@ use function sprintf;
 
 final readonly class UnsignedIntegerConverter implements Converter
 {
-    public function __construct(
-        private string $path,
-        private int $bitWidth,
-    ) {}
-
     public static function forColumn(FlatColumn $column, Options $options): ?self
     {
-        $integer = Integer::forColumn($column);
-
-        return $integer !== null
-        && !$integer->isSigned()
-        && ($integer->bitWidth() === 32 || $integer->bitWidth() === 64)
-            ? new self($column->flatPath(), $integer->bitWidth())
-            : null;
+        return Integer::forColumn($column)?->is(32, false) === true ? new self() : null;
     }
 
     public function fromParquetType(mixed $data): int
@@ -39,15 +27,7 @@ final readonly class UnsignedIntegerConverter implements Converter
             throw new InvalidArgumentException(sprintf('Expected int, got %s', get_debug_type($data)));
         }
 
-        if ($data >= 0) {
-            return $data;
-        }
-
-        if ($this->bitWidth === 32) {
-            return $data + 4_294_967_296;
-        }
-
-        throw new RuntimeException(sprintf('Parquet column "%s" holds a UINT_64 value above PHP_INT_MAX', $this->path));
+        return $data >= 0 ? $data : $data + 4_294_967_296;
     }
 
     public function toParquetType(mixed $data): mixed

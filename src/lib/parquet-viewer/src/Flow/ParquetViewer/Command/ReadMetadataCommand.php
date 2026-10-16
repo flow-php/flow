@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ParquetViewer\Command;
 
-use Coduo\PHPHumanizer\StringHumanizer;
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\ParquetFile\Schema\ColumnPrimitiveType;
+use Flow\Parquet\ParquetFile\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\Reader;
+use Flow\ParquetViewer\StatisticFormatter;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\TableCell;
@@ -23,8 +23,6 @@ use function array_map;
 use function count;
 use function file_exists;
 use function Flow\Types\DSL\type_boolean;
-use function Flow\Types\DSL\type_optional;
-use function Flow\Types\DSL\type_scalar;
 use function Flow\Types\DSL\type_string;
 use function implode;
 use function number_format;
@@ -63,7 +61,8 @@ final class ReadMetadataCommand extends Command
         $displayPageHeaders = type_boolean()->cast($input->getOption('page-headers'));
 
         try {
-            $parquetFile = (new Reader())->read($filePath);
+            $reader = new Reader();
+            $parquetFile = $reader->read($filePath);
             $metadata = $parquetFile->metadata();
         } catch (InvalidArgumentException $_e) {
             $style->error(sprintf('File "%s" is not a valid parquet file', $filePath));
@@ -191,6 +190,7 @@ final class ReadMetadataCommand extends Command
                 'distinct count',
             ]);
             $totalChunks = 0;
+            $formatter = new StatisticFormatter(DataConverter::initialize($reader->options));
 
             foreach ($metadata->rowGroups()->all() as $rowGroupIndex => $rowGroup) {
                 if ($totalChunks !== 0) {
@@ -206,25 +206,10 @@ final class ReadMetadataCommand extends Command
                     $column = $metadata->schema()->get($columnChunk->flatPath());
 
                     if ($statistics) {
-                        if (ColumnPrimitiveType::isString($column)) {
-                            $minVal = type_optional(type_scalar())->assert($statistics->min($column));
-                            $min = $minVal ? StringHumanizer::truncate((string) $minVal, 20, '...') : '-';
-                            $maxVal = type_optional(type_scalar())->assert($statistics->max($column));
-                            $max = $maxVal ? StringHumanizer::truncate((string) $maxVal, 20, '...') : '-';
-                            $minValueVal = type_optional(type_scalar())->assert($statistics->minValue($column));
-                            $minValue = $minValueVal
-                                ? StringHumanizer::truncate((string) $minValueVal, 20, '...')
-                                : '-';
-                            $maxValueVal = type_optional(type_scalar())->assert($statistics->maxValue($column));
-                            $maxValue = $maxValueVal
-                                ? StringHumanizer::truncate((string) $maxValueVal, 20, '...')
-                                : '-';
-                        } else {
-                            $min = type_scalar()->assert($statistics->min($column) ?? '-');
-                            $max = type_scalar()->assert($statistics->max($column) ?? '-');
-                            $minValue = type_scalar()->assert($statistics->minValue($column) ?? '-');
-                            $maxValue = type_scalar()->assert($statistics->maxValue($column) ?? '-');
-                        }
+                        $min = $formatter->format($column, $statistics->min($column));
+                        $max = $formatter->format($column, $statistics->max($column));
+                        $minValue = $formatter->format($column, $statistics->minValue($column));
+                        $maxValue = $formatter->format($column, $statistics->maxValue($column));
 
                         $nullCountVal = $statistics->nullCount();
                         $nullCount = $nullCountVal ? number_format($nullCountVal) : '-';

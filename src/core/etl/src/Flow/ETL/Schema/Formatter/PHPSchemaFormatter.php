@@ -19,6 +19,7 @@ use Flow\Types\Type\Logical\HTMLType;
 use Flow\Types\Type\Logical\JsonType;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
+use Flow\Types\Type\Logical\NumericStringType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
 use Flow\Types\Type\Logical\TimeZoneType;
@@ -152,6 +153,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
                 DateTimeType::class => $this->dateTimeType($definition),
                 FloatType::class => $this->floatType($definition),
                 EnumType::class => $this->enumType($definition),
+                NumericStringType::class => $this->numericStringType($definition),
                 ListType::class => $this->listType($definition),
                 MapType::class => $this->mapType($definition),
                 StructureType::class => $this->structureType($definition),
@@ -196,6 +198,23 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
             $reflection->getName(),
             $definition->entry()->name(),
             $this->typeFormatter->format($type),
+            $definition->isNullable() ? 'true' : 'false',
+            $this->formatMetadata($definition->metadata()),
+        );
+    }
+
+    /**
+     * @param Definition<mixed> $definition
+     */
+    private function numericStringType(Definition $definition): string
+    {
+        $reflection = new ReflectionFunction("\Flow\ETL\DSL\\definition_from_type");
+
+        return sprintf(
+            '\%s("%s", type: %s, nullable: %s, metadata: %s)',
+            $reflection->getName(),
+            $definition->entry()->name(),
+            $this->typeFormatter->format($definition->type()),
             $definition->isNullable() ? 'true' : 'false',
             $this->formatMetadata($definition->metadata()),
         );

@@ -30,16 +30,10 @@ final readonly class PageHeader
             Type::from($thrift->type),
             (int) $thrift->compressed_page_size,
             (int) $thrift->uncompressed_page_size,
-            // @mago-ignore analysis:redundant-condition
-            // @mago-ignore analysis:redundant-comparison
             $thrift->data_page_header !== null ? DataPageHeader::fromThrift($thrift->data_page_header) : null,
-            // @mago-ignore analysis:redundant-condition
-            // @mago-ignore analysis:redundant-comparison
             $thrift->data_page_header_v2 !== null
                 ? DataPageHeaderV2::fromThrift($thrift->data_page_header_v2, $options)
                 : null,
-            // @mago-ignore analysis:redundant-condition
-            // @mago-ignore analysis:redundant-comparison
             $thrift->dictionary_page_header !== null
                 ? DictionaryPageHeader::fromThrift($thrift->dictionary_page_header)
                 : null,

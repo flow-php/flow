@@ -9,6 +9,8 @@ use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\ConvertedType;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\LogicalType;
+use Flow\Parquet\ParquetFile\Schema\LogicalType\Time;
+use Flow\Parquet\ParquetFile\Schema\LogicalType\Timestamp;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\ParquetFile\Schema\Repetition;
 use Flow\Parquet\ParquetFile\Schema\TimeUnit;
@@ -17,17 +19,13 @@ use Flow\Parquet\ThriftModel\MicroSeconds;
 use Flow\Parquet\ThriftModel\SchemaElement;
 use Flow\Parquet\ThriftModel\TimestampType;
 use Flow\Parquet\ThriftModel\TimeUnit as ThriftTimeUnit;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
 final class FlatColumnTest extends TestCase
 {
-    #[TestWith([1, 1])]
-    #[TestWith([6, 3])]
-    #[TestWith([7, 4])]
-    #[TestWith([11, 5])]
-    #[TestWith([12, 6])]
-    #[TestWith([18, 8])]
     #[TestWith([19, 9])]
     #[TestWith([23, 10])]
     #[TestWith([24, 11])]
@@ -36,7 +34,24 @@ final class FlatColumnTest extends TestCase
     #[TestWith([38, 16])]
     public function test_decimal_byte_length_follows_the_spec(int $precision, int $length): void
     {
-        static::assertSame($length, FlatColumn::decimal('d', $precision, 0)->typeLength());
+        $column = FlatColumn::decimal('d', $precision, 0);
+
+        static::assertSame(PhysicalType::FIXED_LEN_BYTE_ARRAY, $column->type());
+        static::assertSame($length, $column->typeLength());
+    }
+
+    #[TestWith([1, PhysicalType::INT32])]
+    #[TestWith([9, PhysicalType::INT32])]
+    #[TestWith([10, PhysicalType::INT64])]
+    #[TestWith([18, PhysicalType::INT64])]
+    public function test_decimal_physical_type_follows_precision(int $precision, PhysicalType $type): void
+    {
+        $column = FlatColumn::decimal('d', $precision, 2);
+
+        static::assertSame($type, $column->type());
+        static::assertNull($column->typeLength());
+        static::assertSame($precision, $column->logicalType()?->decimalData()?->precision());
+        static::assertSame(2, $column->logicalType()?->decimalData()?->scale());
     }
 
     #[TestWith([0])]
@@ -116,6 +131,117 @@ final class FlatColumnTest extends TestCase
 
         static::assertSame(ConvertedType::ENUM, $column->convertedType());
         static::assertSame(LogicalType::ENUM, $column->logicalType()?->name());
-        static::assertNotNull($column->toThrift()->logicalType->ENUM);
+        static::assertNotNull($column->toThrift()->logicalType?->ENUM);
+    }
+
+    /**
+     * @return Generator<string, array{LogicalType, ConvertedType}>
+     */
+    public static function agreeing_annotations(): Generator
+    {
+        yield 'string' => [LogicalType::string(), ConvertedType::UTF8];
+        yield 'enum' => [LogicalType::enum(), ConvertedType::ENUM];
+        yield 'json' => [LogicalType::json(), ConvertedType::JSON];
+        yield 'bson' => [LogicalType::bson(), ConvertedType::BSON];
+        yield 'decimal' => [LogicalType::decimal(2, 10), ConvertedType::DECIMAL];
+        yield 'date' => [LogicalType::date(), ConvertedType::DATE];
+        yield 'time millis' => [
+            new LogicalType(LogicalType::TIME, time: new Time(true, TimeUnit::MILLISECONDS)),
+            ConvertedType::TIME_MILLIS,
+        ];
+        yield 'time micros' => [LogicalType::time(), ConvertedType::TIME_MICROS];
+        yield 'timestamp millis' => [
+            new LogicalType(LogicalType::TIMESTAMP, timestamp: new Timestamp(true, TimeUnit::MILLISECONDS)),
+            ConvertedType::TIMESTAMP_MILLIS,
+        ];
+        yield 'timestamp micros' => [LogicalType::timestamp(), ConvertedType::TIMESTAMP_MICROS];
+        yield 'int8' => [LogicalType::integer(8, true), ConvertedType::INT_8];
+        yield 'int16' => [LogicalType::integer(16, true), ConvertedType::INT_16];
+        yield 'int32' => [LogicalType::integer(32, true), ConvertedType::INT_32];
+        yield 'int64' => [LogicalType::integer(64, true), ConvertedType::INT_64];
+        yield 'uint8' => [LogicalType::integer(8, false), ConvertedType::UINT_8];
+        yield 'uint16' => [LogicalType::integer(16, false), ConvertedType::UINT_16];
+        yield 'uint32' => [LogicalType::integer(32, false), ConvertedType::UINT_32];
+        yield 'uint64' => [LogicalType::integer(64, false), ConvertedType::UINT_64];
+    }
+
+    /**
+     * @return Generator<string, array{LogicalType}>
+     */
+    public static function logical_types_without_a_converted_type(): Generator
+    {
+        yield 'uuid' => [LogicalType::uuid()];
+        yield 'float16' => [new LogicalType(LogicalType::FLOAT16)];
+        yield 'time nanos' => [new LogicalType(LogicalType::TIME, time: new Time(true, TimeUnit::NANOSECONDS))];
+        yield 'timestamp nanos' => [
+            new LogicalType(LogicalType::TIMESTAMP, timestamp: new Timestamp(true, TimeUnit::NANOSECONDS)),
+        ];
+        yield 'unknown' => [LogicalType::unknown()];
+    }
+
+    #[DataProvider('agreeing_annotations')]
+    public function test_a_logical_type_writes_its_converted_type(LogicalType $logical, ConvertedType $converted): void
+    {
+        static::assertSame($converted, $logical->convertedType());
+        static::assertSame(
+            $converted->value,
+            (new FlatColumn('c', PhysicalType::BYTE_ARRAY, logicalType: $logical))->toThrift()->converted_type,
+        );
+        static::assertSame(
+            $converted->value,
+            (new FlatColumn('c', PhysicalType::BYTE_ARRAY, $converted, $logical))->toThrift()->converted_type,
+        );
+    }
+
+    #[DataProvider('logical_types_without_a_converted_type')]
+    public function test_a_logical_type_without_a_converted_equivalent_writes_none(LogicalType $logical): void
+    {
+        static::assertNull($logical->convertedType());
+        static::assertNull((new FlatColumn(
+            'c',
+            PhysicalType::BYTE_ARRAY,
+            logicalType: $logical,
+        ))->toThrift()->converted_type);
+    }
+
+    public function test_a_converted_type_alone_is_written_as_given(): void
+    {
+        static::assertSame(
+            ConvertedType::INTERVAL->value,
+            (new FlatColumn(
+                'c',
+                PhysicalType::FIXED_LEN_BYTE_ARRAY,
+                ConvertedType::INTERVAL,
+                typeLength: 12,
+            ))->toThrift()->converted_type,
+        );
+    }
+
+    /**
+     * @return Generator<string, array{ConvertedType, LogicalType}>
+     */
+    public static function contradicting_annotations(): Generator
+    {
+        yield 'UINT_64 with INTEGER(32, signed)' => [ConvertedType::UINT_64, LogicalType::integer(32, true)];
+        yield 'UTF8 with ENUM' => [ConvertedType::UTF8, LogicalType::enum()];
+    }
+
+    #[DataProvider('contradicting_annotations')]
+    public function test_contradicting_annotations_are_refused(ConvertedType $converted, LogicalType $logical): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'Column "c": converted type ' . $converted->name . ' contradicts logical type ' . $logical->name(),
+        );
+
+        new FlatColumn('c', PhysicalType::INT64, $converted, $logical);
+    }
+
+    public function test_a_leaf_without_a_physical_type_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Schema element "c" is a leaf without a physical type');
+
+        FlatColumn::fromThrift(new SchemaElement(['name' => 'c']));
     }
 }

@@ -68,15 +68,9 @@ final class NestedColumn implements Column
     {
         return new self(
             $schemaElement->name,
-            // @mago-ignore analysis:redundant-condition
-            // @mago-ignore analysis:redundant-comparison
             $schemaElement->repetition_type !== null ? Repetition::from($schemaElement->repetition_type) : null,
             $children,
-            // @mago-ignore analysis:redundant-condition
-            // @mago-ignore analysis:redundant-comparison
             $schemaElement->converted_type !== null ? ConvertedType::from($schemaElement->converted_type) : null,
-            // @mago-ignore analysis:redundant-condition
-            // @mago-ignore analysis:redundant-comparison
             $schemaElement->logicalType !== null ? LogicalType::fromThrift($schemaElement->logicalType) : null,
         );
     }

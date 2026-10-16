@@ -30,6 +30,7 @@ use Flow\Parquet\Writer\PageBuilder\RLEBitPackedPacker;
 use Flow\Parquet\Writer\PageContainer;
 use Flow\Parquet\Writer\PageContainers;
 use Flow\Parquet\Writer\StatisticsCounter;
+use Flow\Parquet\Writer\StatisticsTruncation;
 use Flow\Parquet\Writer\ValueStorage\DeltaBinaryPackedValueStorage;
 use Flow\Parquet\Writer\ValueStorage\ValueStorage;
 
@@ -55,6 +56,8 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
 
     private StatisticsCounter $pageStatistics;
 
+    private readonly StatisticsTruncation $truncation;
+
     /**
      * @var array<int>
      */
@@ -69,9 +72,10 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
         private readonly Options $options,
         private readonly Compressions $compression,
     ) {
+        $this->truncation = new StatisticsTruncation($this->options->getInt(Option::STATISTICS_TRUNCATE_LENGTH));
         $this->pages = new PageContainers();
-        $this->chunkStatistics = new StatisticsCounter($this->column);
-        $this->pageStatistics = new StatisticsCounter($this->column);
+        $this->chunkStatistics = new StatisticsCounter($this->column, $this->truncation);
+        $this->pageStatistics = new StatisticsCounter($this->column, $this->truncation);
         $this->valueStorage = new DeltaBinaryPackedValueStorage();
         $this->byteOrder = ByteOrder::LITTLE_ENDIAN;
 
@@ -136,7 +140,7 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
         $this->rowsCount = 0;
         $this->nullCount = 0;
         $this->nonNullValuesCount = 0;
-        $this->pageStatistics = new StatisticsCounter($this->column);
+        $this->pageStatistics = new StatisticsCounter($this->column, $this->truncation);
     }
 
     public function column(): Column
@@ -167,8 +171,8 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
         )];
 
         $this->pages = new PageContainers();
-        $this->chunkStatistics = new StatisticsCounter($this->column);
-        $this->pageStatistics = new StatisticsCounter($this->column);
+        $this->chunkStatistics = new StatisticsCounter($this->column, $this->truncation);
+        $this->pageStatistics = new StatisticsCounter($this->column, $this->truncation);
         $this->repetitionLevels = [];
         $this->definitionLevels = [];
         $this->valueStorage->reset();
@@ -247,7 +251,7 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
 
     private function buildDataPageV2(Codec $codec, Compressions $compression): PageContainer
     {
-        $statistics = $this->pageStatistics->toStatistics();
+        $statistics = $this->pageStatistics->toPageStatistics();
 
         $rleBitPackedHybrid = new RLEBitPackedHybrid();
         $packer = new RLEBitPackedPacker($rleBitPackedHybrid, $this->byteOrder);

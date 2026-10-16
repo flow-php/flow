@@ -4,23 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\RowGroup;
 
-use Flow\Parquet\Binary\ByteOrder;
-use Flow\Parquet\BinaryReader\BinaryBufferReader;
-use Flow\Parquet\Data\PlainValueUnpacker;
-use Flow\Parquet\ParquetFile\Schema\ColumnPrimitiveType;
+use Flow\Parquet\Data\PhysicalCodec;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Statistics;
 
-use function iterator_to_array;
-
 final readonly class StatisticsReader
 {
-    private ByteOrder $byteOrder;
+    private PhysicalCodec $codec;
 
     public function __construct(
         private Statistics $statistics,
     ) {
-        $this->byteOrder = ByteOrder::LITTLE_ENDIAN;
+        $this->codec = new PhysicalCodec();
     }
 
     public function distinctCount(): ?int
@@ -28,80 +23,48 @@ final readonly class StatisticsReader
         return $this->statistics->distinctCount;
     }
 
-    public function max(FlatColumn $column): mixed
+    public function isMaxValueExact(): ?bool
     {
-        $max = $this->statistics->max;
-
-        if ($max === null) {
-            return null;
-        }
-
-        if (ColumnPrimitiveType::isString($column)) {
-            return $max;
-        }
-
-        return iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($max), $this->byteOrder))->unpack(
-            $column,
-            1,
-        ))[0];
+        return $this->statistics->isMaxValueExact;
     }
 
-    public function maxValue(FlatColumn $column): mixed
+    public function isMinValueExact(): ?bool
     {
-        $maxValue = $this->statistics->maxValue;
-
-        if ($maxValue === null) {
-            return null;
-        }
-
-        if (ColumnPrimitiveType::isString($column)) {
-            return $maxValue;
-        }
-
-        return iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($maxValue), $this->byteOrder))->unpack(
-            $column,
-            1,
-        ))[0];
+        return $this->statistics->isMinValueExact;
     }
 
-    public function min(FlatColumn $column): mixed
+    public function max(FlatColumn $column): bool|float|int|string|null
     {
-        $min = $this->statistics->min;
-
-        if ($min === null) {
-            return null;
-        }
-
-        if (ColumnPrimitiveType::isString($column)) {
-            return $min;
-        }
-
-        return iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($min), $this->byteOrder))->unpack(
-            $column,
-            1,
-        ))[0];
+        return $this->decode($column, $this->statistics->max);
     }
 
-    public function minValue(FlatColumn $column): mixed
+    public function maxValue(FlatColumn $column): bool|float|int|string|null
     {
-        $minValue = $this->statistics->minValue;
+        return $this->decode($column, $this->statistics->maxValue);
+    }
 
-        if ($minValue === null) {
-            return null;
-        }
+    public function min(FlatColumn $column): bool|float|int|string|null
+    {
+        return $this->decode($column, $this->statistics->min);
+    }
 
-        if (ColumnPrimitiveType::isString($column)) {
-            return $minValue;
-        }
+    public function minValue(FlatColumn $column): bool|float|int|string|null
+    {
+        return $this->decode($column, $this->statistics->minValue);
+    }
 
-        return iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($minValue), $this->byteOrder))->unpack(
-            $column,
-            1,
-        ))[0];
+    public function nanCount(): ?int
+    {
+        return $this->statistics->nanCount;
     }
 
     public function nullCount(): ?int
     {
         return $this->statistics->nullCount;
+    }
+
+    private function decode(FlatColumn $column, ?string $bytes): bool|float|int|string|null
+    {
+        return $bytes === null ? null : $this->codec->decodeStatistic($column, $bytes);
     }
 }

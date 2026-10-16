@@ -7,6 +7,7 @@ use std::sync::Arc;
 use arrow_array::builder::{
     ArrayBuilder, BooleanBuilder, Date32Builder, DurationMicrosecondBuilder, FixedSizeBinaryBuilder, Float64Builder,
     Int64Builder, LargeBinaryBuilder, ListBuilder, MapBuilder, MapFieldNames, TimestampMicrosecondBuilder,
+    UInt64Builder,
 };
 use arrow_array::cast::AsArray;
 use arrow_array::types::{Date32Type, DurationMicrosecondType, Float64Type, Int64Type, TimestampMicrosecondType};
@@ -381,6 +382,7 @@ pub enum Scalar<'a> {
     Null,
     Bool(bool),
     Int(i64),
+    UInt(u64),
     Float(f64),
     Bytes(&'a [u8]),
     Uuid([u8; 16]),
@@ -396,6 +398,7 @@ impl Scalar<'_> {
             Scalar::Null => Scalar::Null,
             Scalar::Bool(value) => Scalar::Bool(value),
             Scalar::Int(value) => Scalar::Int(value),
+            Scalar::UInt(value) => Scalar::UInt(value),
             Scalar::Float(value) => Scalar::Float(value),
             Scalar::Bytes(_) => Scalar::Bytes(bytes),
             Scalar::Uuid(value) => Scalar::Uuid(value),
@@ -483,6 +486,7 @@ impl<'a> Checked<'a> for Validated<'a> {
 pub enum ColumnBuilder {
     Bool(BooleanBuilder),
     Int(Int64Builder),
+    UInt(UInt64Builder),
     Float(Float64Builder),
     Bytes(LargeBinaryBuilder),
     Uuid(FixedSizeBinaryBuilder),
@@ -532,6 +536,7 @@ impl ColumnBuilder {
         match canonical {
             DataType::Boolean => ColumnBuilder::Bool(BooleanBuilder::with_capacity(capacity)),
             DataType::Int64 => ColumnBuilder::Int(Int64Builder::with_capacity(capacity)),
+            DataType::UInt64 => ColumnBuilder::UInt(UInt64Builder::with_capacity(capacity)),
             DataType::Float64 => ColumnBuilder::Float(Float64Builder::with_capacity(capacity)),
             DataType::LargeBinary => ColumnBuilder::Bytes(LargeBinaryBuilder::with_capacity(capacity, 1024)),
             DataType::FixedSizeBinary(size) => {
@@ -584,6 +589,7 @@ impl ArrayBuilder for ColumnBuilder {
         match self {
             ColumnBuilder::Bool(builder) => builder.len(),
             ColumnBuilder::Int(builder) => builder.len(),
+            ColumnBuilder::UInt(builder) => builder.len(),
             ColumnBuilder::Float(builder) => builder.len(),
             ColumnBuilder::Bytes(builder) => builder.len(),
             ColumnBuilder::Uuid(builder) => builder.len(),
@@ -600,6 +606,7 @@ impl ArrayBuilder for ColumnBuilder {
         match self {
             ColumnBuilder::Bool(builder) => Arc::new(builder.finish()),
             ColumnBuilder::Int(builder) => Arc::new(builder.finish()),
+            ColumnBuilder::UInt(builder) => Arc::new(builder.finish()),
             ColumnBuilder::Float(builder) => Arc::new(builder.finish()),
             ColumnBuilder::Bytes(builder) => Arc::new(builder.finish()),
             ColumnBuilder::Uuid(builder) => Arc::new(builder.finish()),
@@ -616,6 +623,7 @@ impl ArrayBuilder for ColumnBuilder {
         match self {
             ColumnBuilder::Bool(builder) => Arc::new(builder.finish_cloned()),
             ColumnBuilder::Int(builder) => Arc::new(builder.finish_cloned()),
+            ColumnBuilder::UInt(builder) => Arc::new(builder.finish_cloned()),
             ColumnBuilder::Float(builder) => Arc::new(builder.finish_cloned()),
             ColumnBuilder::Bytes(builder) => Arc::new(builder.finish_cloned()),
             ColumnBuilder::Uuid(builder) => Arc::new(builder.finish_cloned()),
@@ -653,6 +661,8 @@ fn offsets_fit(current: usize, added: usize) -> bool {
 pub enum WriteCell {
     Bool,
     Int,
+    /// UINT_64: an int >= 0, or a canonical digit string up to 18446744073709551615.
+    UInt64,
     Float,
     /// DECIMAL: a float or an int.
     Decimal,
@@ -679,8 +689,8 @@ impl WriteCell {
             | DataType::Int64
             | DataType::UInt8
             | DataType::UInt16
-            | DataType::UInt32
-            | DataType::UInt64 => (WriteCell::Int, DataType::Int64),
+            | DataType::UInt32 => (WriteCell::Int, DataType::Int64),
+            DataType::UInt64 => (WriteCell::UInt64, DataType::UInt64),
             DataType::Float32 | DataType::Float64 => (WriteCell::Float, DataType::Float64),
             DataType::Decimal128(_, _) => (WriteCell::Decimal, DataType::Float64),
             DataType::Utf8 | DataType::Binary => (WriteCell::Bytes, DataType::LargeBinary),
@@ -754,6 +764,13 @@ impl WriteCell {
         Ok(match self {
             WriteCell::Bool => Scalar::Bool(value.bool().ok_or_else(|| refused("bool", value))?),
             WriteCell::Int => Scalar::Int(value.long().ok_or_else(|| refused("int", value))?),
+            WriteCell::UInt64 => Scalar::UInt(
+                match value.long() {
+                    Some(int) => u64::try_from(int).ok(),
+                    None => value.zend_str().and_then(|text| unsigned(text.as_bytes())),
+                }
+                .ok_or_else(|| refused(UNSIGNED_EXPECTED, value))?,
+            ),
             WriteCell::Float => Scalar::Float(value.double().ok_or_else(|| refused("float", value))?),
             WriteCell::Decimal => Scalar::Float(match (value.double(), value.long()) {
                 (Some(float), _) => float,
@@ -986,6 +1003,7 @@ impl WriteCell {
             (_, builder, Scalar::Null) => self.append_null(builder),
             (WriteCell::Bool, ColumnBuilder::Bool(builder), Scalar::Bool(value)) => builder.append_value(*value),
             (WriteCell::Int, ColumnBuilder::Int(builder), Scalar::Int(value)) => builder.append_value(*value),
+            (WriteCell::UInt64, ColumnBuilder::UInt(builder), Scalar::UInt(value)) => builder.append_value(*value),
             (WriteCell::Float | WriteCell::Decimal, ColumnBuilder::Float(builder), Scalar::Float(value)) => {
                 builder.append_value(*value);
             }
@@ -1022,6 +1040,7 @@ impl WriteCell {
             }
             (_, ColumnBuilder::Bool(builder)) => builder.append_null(),
             (_, ColumnBuilder::Int(builder)) => builder.append_null(),
+            (_, ColumnBuilder::UInt(builder)) => builder.append_null(),
             (_, ColumnBuilder::Float(builder)) => builder.append_null(),
             (_, ColumnBuilder::Bytes(builder)) => builder.append_null(),
             (_, ColumnBuilder::Uuid(builder)) => builder.append_null(),
@@ -1035,6 +1054,18 @@ impl WriteCell {
             }
         }
     }
+}
+
+/// What a UINT_64 cell takes, as its refusals name it.
+pub const UNSIGNED_EXPECTED: &str = "int >= 0 or digit string";
+
+/// A canonical digit string (no sign, no leading zero) within u64, as `UnsignedInt64Converter::toParquetType()` takes it.
+pub fn unsigned(text: &[u8]) -> Option<u64> {
+    if text.is_empty() || !text.iter().all(u8::is_ascii_digit) || (text.len() > 1 && text[0] == b'0') {
+        return None;
+    }
+
+    std::str::from_utf8(text).ok()?.parse().ok()
 }
 
 /// `UuidConverter::toParquetType()`'s text of an object: `toString()`, else `__toString()`; `None` for neither.

@@ -1,8 +1,6 @@
-//! Ported verbatim from arrow-ext (`src/parquet/type_converter.rs` `parse_time_unit`, `php_schema_entry_to_field`,
-//! `php_schema_to_arrow`; `src/parquet/writer.rs` `parse_compression`, `parse_encoding`, `apply_writer_options` and
-//! the writer constructor's properties): the arrays of `Flow\Parquet\Engine\Arrow\SchemaConverter::toExtension()` and
-//! `OptionsConverter::toExtension()`.
+//! The arrays of `Flow\Parquet\Engine\Arrow\SchemaConverter::toExtension()` and `OptionsConverter::toExtension()`.
 
+use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -16,6 +14,9 @@ use parquet::file::properties::{WriterProperties, WriterVersion};
 use parquet::schema::types::ColumnPath;
 
 use crate::parquet::error::Error;
+
+/// Field metadata key of a Utf8 field written with the ENUM logical type, which no arrow data type carries.
+pub const ENUM_METADATA_KEY: &str = "flow.parquet.enum";
 
 pub fn schema(ht: &ZendHashTable) -> Result<Schema, Error> {
     php_schema_to_arrow(ht).map_err(Error::Options)
@@ -73,6 +74,10 @@ fn php_schema_entry_to_field(entry_ht: &ZendHashTable) -> Result<Field, String> 
         "FLOAT" => DataType::Float32,
         "DOUBLE" => DataType::Float64,
         "STRING" => DataType::Utf8,
+        "ENUM" => {
+            return Ok(Field::new(&name, DataType::Utf8, nullable)
+                .with_metadata(HashMap::from([(ENUM_METADATA_KEY.to_string(), String::new())])));
+        }
         "BINARY" => DataType::Binary,
         "DATE" => DataType::Date32,
         "TIMESTAMP" => {
@@ -174,7 +179,8 @@ fn php_schema_entry_to_field(entry_ht: &ZendHashTable) -> Result<Field, String> 
                     .ok_or_else(|| format!("Column '{}': MAP value child must be an array", name))?,
             )?;
             let entries_struct = DataType::Struct(Fields::from(vec![key_field, val_field]));
-            DataType::Map(Arc::new(Field::new("entries", entries_struct, false)), false)
+            // parquet-format LogicalTypes.md names the repeated group of a MAP `key_value`
+            DataType::Map(Arc::new(Field::new("key_value", entries_struct, false)), false)
         }
         other => {
             return Err(format!("Column '{}': Unsupported type '{}'", name, other));
@@ -270,6 +276,16 @@ fn apply_writer_options(
 
     if let Some(val) = options.get("PAGE_SIZE_BYTES").and_then(|z| z.long()) {
         builder = builder.set_data_page_size_limit(val as usize);
+    }
+
+    if let Some(val) = options.get("STATISTICS_TRUNCATE_LENGTH").and_then(|z| z.long()) {
+        if val < 1 {
+            return Err(format!(
+                "STATISTICS_TRUNCATE_LENGTH must be greater than 0, {val} given"
+            ));
+        }
+
+        builder = builder.set_statistics_truncate_length(Some(val as usize));
     }
 
     if let Some(val) = options.get("DICTIONARY_PAGE_SIZE").and_then(|z| z.long()) {

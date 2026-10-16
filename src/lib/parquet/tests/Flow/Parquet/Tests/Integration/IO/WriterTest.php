@@ -13,19 +13,29 @@ use Flow\Parquet\Consts;
 use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\ColumnOrder;
 use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFile\Schema\ConvertedType;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\ListElement;
+use Flow\Parquet\ParquetFile\Schema\LogicalType;
+use Flow\Parquet\ParquetFile\Schema\LogicalType\Time;
+use Flow\Parquet\ParquetFile\Schema\LogicalType\Timestamp;
 use Flow\Parquet\ParquetFile\Schema\MapKey;
 use Flow\Parquet\ParquetFile\Schema\MapValue;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
+use Flow\Parquet\ParquetFile\Schema\TimeUnit;
 use Flow\Parquet\Reader;
+use Flow\Parquet\Tests\Context\ParquetRows;
 use Flow\Parquet\Tests\Context\TestParquetFile;
 use Flow\Parquet\Tests\Mother\ParquetEngineMother;
 use Flow\Parquet\Writer;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
 
+use function array_combine;
 use function array_map;
 use function Flow\ETL\DSL\generate_random_int;
 use function Flow\Filesystem\DSL\memory_filesystem;
@@ -33,6 +43,9 @@ use function Flow\Filesystem\DSL\path;
 use function fopen;
 use function iterator_to_array;
 use function range;
+use function var_export;
+
+use const NAN;
 
 class WriterTest extends ParquetIntegrationTestCase
 {
@@ -254,6 +267,210 @@ class WriterTest extends ParquetIntegrationTestCase
         static::assertSame(0, $statistics->nullCount());
 
         static::assertFileExists($path);
+    }
+
+    #[DataProvider('engine_provider')]
+    public function test_writing_column_orders_per_leaf(string $engineClass): void
+    {
+        $engine = ParquetEngineMother::create($engineClass);
+        $path = TestParquetFile::path($this);
+        (new Writer(engine: $engine))->write(
+            $path,
+            Schema::with(
+                FlatColumn::string('string'),
+                FlatColumn::double('double'),
+                FlatColumn::float('float'),
+                FlatColumn::int64('int64'),
+                NestedColumn::list('list', ListElement::double()),
+                NestedColumn::map('map', MapKey::string(), MapValue::int32()),
+                NestedColumn::struct('struct', [FlatColumn::double('x'), FlatColumn::boolean('flag')]),
+            ),
+            [[
+                'string' => 'a',
+                'double' => 1.5,
+                'float' => 2.5,
+                'int64' => 1,
+                'list' => [1.5],
+                'map' => ['a' => 1],
+                'struct' => ['x' => 1.5, 'flag' => true],
+            ]],
+        );
+
+        $metadata = (new Reader(engine: $engine))
+            ->read($path)
+            ->metadata();
+
+        static::assertSame(
+            [
+                'string' => ColumnOrder::TypeDefined,
+                'double' => ColumnOrder::Ieee754TotalOrder,
+                'float' => ColumnOrder::Ieee754TotalOrder,
+                'int64' => ColumnOrder::TypeDefined,
+                'list.list.element' => ColumnOrder::Ieee754TotalOrder,
+                'map.key_value.key' => ColumnOrder::TypeDefined,
+                'map.key_value.value' => ColumnOrder::TypeDefined,
+                'struct.x' => ColumnOrder::Ieee754TotalOrder,
+                'struct.flag' => ColumnOrder::TypeDefined,
+            ],
+            array_combine(
+                array_map(
+                    static fn(FlatColumn $column): string => $column->flatPath(),
+                    $metadata->schema()->columnsFlat(),
+                ),
+                array_map($metadata->columnOrder(...), $metadata->schema()->columnsFlat()),
+            ),
+        );
+    }
+
+    #[DataProvider('engine_provider')]
+    public function test_writing_float_statistics_in_total_order_with_nan_count(string $engineClass): void
+    {
+        $engine = ParquetEngineMother::create($engineClass);
+        $path = TestParquetFile::path($this);
+        $column = FlatColumn::double('double');
+
+        (new Writer(engine: $engine))->write(
+            $path,
+            Schema::with($column),
+            array_map(static fn(float $value): array => [
+                'double' => $value,
+            ], [NAN, 0.0, -0.0, 1.5, NAN]),
+        );
+
+        $statistics = (new Reader(engine: $engine))
+            ->read($path)
+            ->metadata()
+            ->columnChunks()[0]->statistics();
+
+        static::assertNotNull($statistics);
+        static::assertSame('-0.0', var_export($statistics->minValue($column), true));
+        static::assertSame(1.5, $statistics->maxValue($column));
+        static::assertSame(2, $statistics->nanCount());
+        static::assertNull($statistics->min($column));
+        static::assertNull($statistics->max($column));
+        static::assertTrue($statistics->isMinValueExact());
+        static::assertTrue($statistics->isMaxValueExact());
+    }
+
+    #[DataProvider('engine_pair_provider')]
+    public function test_writing_uint64_reads_back_as_decimal_strings_on_both_engines(
+        string $writerEngine,
+        string $readerEngine,
+    ): void {
+        $path = TestParquetFile::path($this);
+
+        (new Writer(engine: ParquetEngineMother::create($writerEngine)))->write(
+            $path,
+            Schema::with(new FlatColumn('u', PhysicalType::INT64, logicalType: LogicalType::integer(64, false))),
+            [['u' => 0], ['u' => '9223372036854775808'], ['u' => '18446744073709551615']],
+        );
+
+        static::assertSame(
+            [['u' => '0'], ['u' => '9223372036854775808'], ['u' => '18446744073709551615']],
+            ParquetRows::read((new Reader(engine: ParquetEngineMother::create($readerEngine)))->read($path), 10),
+        );
+    }
+
+    /**
+     * arrow-rs 60 basic.rs `ConvertedType::from(Option<LogicalType>)`, copied by value.
+     *
+     * @return Generator<string, array{FlatColumn, ?ConvertedType}>
+     */
+    public static function converted_types(): Generator
+    {
+        $logical = static fn(
+            PhysicalType $physical,
+            LogicalType $type,
+            ?int $length = null,
+        ): FlatColumn => new FlatColumn('c', $physical, logicalType: $type, typeLength: $length);
+
+        yield 'string' => [$logical(PhysicalType::BYTE_ARRAY, LogicalType::string()), ConvertedType::UTF8];
+        yield 'enum' => [$logical(PhysicalType::BYTE_ARRAY, LogicalType::enum()), ConvertedType::ENUM];
+        yield 'json' => [$logical(PhysicalType::BYTE_ARRAY, LogicalType::json()), ConvertedType::JSON];
+        yield 'bson' => [$logical(PhysicalType::BYTE_ARRAY, LogicalType::bson()), ConvertedType::BSON];
+        yield 'decimal' => [
+            new FlatColumn('c', PhysicalType::INT64, logicalType: LogicalType::decimal(2, 10), precision: 10, scale: 2),
+            ConvertedType::DECIMAL,
+        ];
+        yield 'date' => [$logical(PhysicalType::INT32, LogicalType::date()), ConvertedType::DATE];
+        yield 'time millis' => [
+            $logical(
+                PhysicalType::INT32,
+                new LogicalType(LogicalType::TIME, time: new Time(true, TimeUnit::MILLISECONDS)),
+            ),
+            ConvertedType::TIME_MILLIS,
+        ];
+        yield 'time micros' => [$logical(PhysicalType::INT64, LogicalType::time()), ConvertedType::TIME_MICROS];
+        yield 'time nanos' => [
+            $logical(
+                PhysicalType::INT64,
+                new LogicalType(LogicalType::TIME, time: new Time(true, TimeUnit::NANOSECONDS)),
+            ),
+            null,
+        ];
+        yield 'timestamp millis' => [
+            $logical(
+                PhysicalType::INT64,
+                new LogicalType(LogicalType::TIMESTAMP, timestamp: new Timestamp(true, TimeUnit::MILLISECONDS)),
+            ),
+            ConvertedType::TIMESTAMP_MILLIS,
+        ];
+        yield 'timestamp micros' => [
+            $logical(PhysicalType::INT64, LogicalType::timestamp()),
+            ConvertedType::TIMESTAMP_MICROS,
+        ];
+        yield 'timestamp nanos' => [
+            $logical(
+                PhysicalType::INT64,
+                new LogicalType(LogicalType::TIMESTAMP, timestamp: new Timestamp(true, TimeUnit::NANOSECONDS)),
+            ),
+            null,
+        ];
+        yield 'int8' => [$logical(PhysicalType::INT32, LogicalType::integer(8, true)), ConvertedType::INT_8];
+        yield 'int16' => [$logical(PhysicalType::INT32, LogicalType::integer(16, true)), ConvertedType::INT_16];
+        yield 'int32' => [$logical(PhysicalType::INT32, LogicalType::integer(32, true)), ConvertedType::INT_32];
+        yield 'int64' => [$logical(PhysicalType::INT64, LogicalType::integer(64, true)), ConvertedType::INT_64];
+        yield 'uint8' => [$logical(PhysicalType::INT32, LogicalType::integer(8, false)), ConvertedType::UINT_8];
+        yield 'uint16' => [$logical(PhysicalType::INT32, LogicalType::integer(16, false)), ConvertedType::UINT_16];
+        yield 'uint32' => [$logical(PhysicalType::INT32, LogicalType::integer(32, false)), ConvertedType::UINT_32];
+        yield 'uint64' => [$logical(PhysicalType::INT64, LogicalType::integer(64, false)), ConvertedType::UINT_64];
+        yield 'uuid' => [$logical(PhysicalType::FIXED_LEN_BYTE_ARRAY, LogicalType::uuid(), 16), null];
+        yield 'float16' => [
+            $logical(PhysicalType::FIXED_LEN_BYTE_ARRAY, new LogicalType(LogicalType::FLOAT16), 2),
+            null,
+        ];
+    }
+
+    #[DataProvider('converted_types')]
+    public function test_writing_the_converted_type_of_a_logical_type(
+        FlatColumn $column,
+        ?ConvertedType $expected,
+    ): void {
+        $path = TestParquetFile::path($this);
+
+        (new Writer(engine: new PhpParquetEngine()))->write($path, Schema::with($column), []);
+
+        static::assertSame(
+            $expected?->value,
+            Reader::php()->read($path)->metadata()->toThrift()->schema[1]->converted_type,
+        );
+    }
+
+    #[DataProvider('engine_pair_provider')]
+    public function test_an_int16_column_round_trips(string $writerEngine, string $readerEngine): void
+    {
+        $path = TestParquetFile::path($this);
+
+        (new Writer(engine: ParquetEngineMother::create($writerEngine)))->write(
+            $path,
+            Schema::with(new FlatColumn('s', PhysicalType::INT32, ConvertedType::INT_16)),
+            [['s' => 1], ['s' => -2], ['s' => 32_767], ['s' => null]],
+        );
+
+        static::assertSame(
+            [['s' => 1], ['s' => -2], ['s' => 32_767], ['s' => null]],
+            ParquetRows::read((new Reader(engine: ParquetEngineMother::create($readerEngine)))->read($path), 10),
+        );
     }
 
     #[DataProvider('engine_provider')]

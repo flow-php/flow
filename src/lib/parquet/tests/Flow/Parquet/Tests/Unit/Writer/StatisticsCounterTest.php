@@ -4,537 +4,191 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\Writer;
 
+use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\LogicalType;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
-use Flow\Parquet\Writer\StatisticsCounter;
+use Flow\Parquet\Tests\Mother\FlatColumnMother;
+use Flow\Parquet\Tests\Mother\StatisticsCounterMother;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
+use function Flow\Parquet\Binary\decode_f64;
 use function pack;
+use function str_repeat;
+use function var_export;
+
+use const NAN;
 
 final class StatisticsCounterTest extends TestCase
 {
-    public static function array_values_provider(): Generator
+    /**
+     * @return Generator<string, array{FlatColumn, list<bool|float|int|string>, bool|float|int|string, bool|float|int|string}>
+     */
+    public static function bounds(): Generator
     {
-        yield 'empty array' => [[], 1, 0];
-        yield 'single string array' => [['hello'], 1, 5];
-        yield 'multiple strings array' => [['hello', 'world'], 2, 10];
-        yield 'nested array' => [['hello', ['nested', 'array']], 3, 16];
-    }
-
-    public static function comparison_values_provider(): Generator
-    {
-        yield 'integers' => [[5, 1, 10, 3], 1, 10];
-        yield 'strings' => [['zebra', 'apple', 'banana'], 'apple', 'zebra'];
-        yield 'floats' => [[3.14, 1.41, 2.71], 1.41, 3.14];
-        yield 'booleans' => [[true, false, true], false, true];
-        yield 'single value' => [[42], 42, 42];
-    }
-
-    public static function edge_case_values_provider(): Generator
-    {
-        yield 'zero integer' => [0, 1, 0];
-        yield 'zero float' => [0.0, 1, 0];
-        yield 'empty string' => ['', 1, 0];
-        yield 'false boolean' => [false, 1, 0];
-        yield 'array with null' => [[null], 1, 0];
-        yield 'array with mixed nulls' => [[null, 'value', null], 3, 0];
-    }
-
-    public static function simple_values_provider(): Generator
-    {
-        yield 'string value' => ['hello', 5];
-        yield 'integer value' => [42, 0];
-        yield 'float value' => [3.14, 0];
-        yield 'boolean true' => [true, 0];
-        yield 'boolean false' => [false, 0];
+        yield 'integers' => [FlatColumn::int32('c'), [5, 1, 10, 3], 1, 10];
+        yield 'strings' => [FlatColumn::string('c'), ['zebra', 'apple', 'banana'], 'apple', 'zebra'];
+        yield 'digit strings in byte order' => [FlatColumn::string('c'), ['9', '10', '100'], '10', '9'];
+        yield 'floats' => [FlatColumn::double('c'), [3.14, 1.41, 2.71], 1.41, 3.14];
+        yield 'signed zeros' => [FlatColumn::double('c'), [0.0, -0.0], -0.0, 0.0];
+        yield 'booleans' => [FlatColumn::boolean('c'), [true, false, true], false, true];
+        yield 'single value' => [FlatColumn::int64('c'), [42], 42, 42];
+        yield 'descending' => [FlatColumn::int64('c'), [3, 2, 1], 1, 3];
+        yield 'uint64 above PHP_INT_MAX' => [FlatColumnMother::uint64(), [5, -1, 7], 5, -1];
+        yield 'byte array decimal' => [
+            FlatColumnMother::byteArrayDecimal(),
+            ["\x12\xD6\x87", "\xED\x29\x79"],
+            "\xED\x29\x79",
+            "\x12\xD6\x87",
+        ];
     }
 
     /**
-     * @param array<int|string> $value
+     * @param list<bool|float|int|string> $values
      */
-    #[DataProvider('array_values_provider')]
-    public function test_add_array_values(array $value, int $expectedValuesCount, int $expectedStringLength): void
-    {
-        $column = FlatColumn::string('test_column');
-        $statistics = new StatisticsCounter($column);
+    #[DataProvider('bounds')]
+    public function test_bounds_follow_the_physical_order(
+        FlatColumn $column,
+        array $values,
+        bool|float|int|string $min,
+        bool|float|int|string $max,
+    ): void {
+        $statistics = StatisticsCounterMother::counted($column, $values);
 
-        $statistics->add($value);
-
-        static::assertSame(0, $statistics->nullCount());
-        static::assertSame($expectedValuesCount, $statistics->valuesCount());
-        static::assertSame($expectedValuesCount, $statistics->notNullCount());
+        static::assertSame(var_export($min, true), var_export($statistics->min(), true));
+        static::assertSame(var_export($max, true), var_export($statistics->max(), true));
     }
 
-    public function test_add_duplicate_values_counts_correctly(): void
+    public function test_counts_values_and_nulls(): void
     {
-        $column = FlatColumn::string('test_column');
-        $statistics = new StatisticsCounter($column);
+        $statistics = StatisticsCounterMother::counted(FlatColumn::int32('c'), [5, null, 10, null, 3]);
+        $statistics->addNulls(2);
 
-        $statistics->add('hello');
-        $statistics->add('hello');
-        $statistics->add('world');
-        $statistics->add('hello');
-
-        static::assertSame(0, $statistics->nullCount());
-        static::assertSame(4, $statistics->valuesCount());
-        static::assertSame(4, $statistics->notNullCount());
-        static::assertSame('hello', $statistics->min());
-        static::assertSame('world', $statistics->max());
-    }
-
-    public function test_add_multiple_values_tracks_min_max(): void
-    {
-        $column = FlatColumn::int32('test_column');
-        $statistics = new StatisticsCounter($column);
-
-        $statistics->add(5);
-        $statistics->add(1);
-        $statistics->add(10);
-        $statistics->add(3);
-
-        static::assertSame(0, $statistics->nullCount());
-        static::assertSame(4, $statistics->valuesCount());
-        static::assertSame(4, $statistics->notNullCount());
-        static::assertSame(1, $statistics->min());
-        static::assertSame(10, $statistics->max());
-    }
-
-    public function test_add_multiple_values_with_nulls(): void
-    {
-        $column = FlatColumn::int32('test_column');
-        $statistics = new StatisticsCounter($column);
-
-        $statistics->add(5);
-        $statistics->add(null);
-        $statistics->add(10);
-        $statistics->add(null);
-        $statistics->add(3);
-
-        static::assertSame(2, $statistics->nullCount());
-        static::assertSame(5, $statistics->valuesCount());
+        static::assertSame(4, $statistics->nullCount());
+        static::assertSame(7, $statistics->valuesCount());
         static::assertSame(3, $statistics->notNullCount());
         static::assertSame(3, $statistics->min());
         static::assertSame(10, $statistics->max());
     }
 
-    public function test_add_null_value(): void
+    public function test_negative_null_count_is_refused(): void
     {
-        $column = FlatColumn::string('test_column');
-        $statistics = new StatisticsCounter($column);
-
-        $statistics->add(null);
-
-        static::assertSame(1, $statistics->nullCount());
-        static::assertSame(1, $statistics->valuesCount());
-        static::assertSame(0, $statistics->notNullCount());
-        static::assertNull($statistics->min());
-        static::assertNull($statistics->max());
-    }
-
-    public function test_add_nulls_increments_null_and_values_count(): void
-    {
-        $column = FlatColumn::string('test_column');
-        $statistics = new StatisticsCounter($column);
-
-        $statistics->add('hello');
-        $statistics->addNulls(3);
-
-        static::assertSame(3, $statistics->nullCount());
-        static::assertSame(4, $statistics->valuesCount());
-        static::assertSame(1, $statistics->notNullCount());
-        static::assertSame('hello', $statistics->min());
-        static::assertSame('hello', $statistics->max());
-    }
-
-    public function test_add_nulls_with_negative_throws(): void
-    {
-        $column = FlatColumn::string('test_column');
-        $statistics = new StatisticsCounter($column);
-
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Null count cannot be negative.');
 
-        $statistics->addNulls(-1);
+        StatisticsCounterMother::counted(FlatColumn::int32('c'))->addNulls(-1);
     }
 
-    public function test_add_nulls_with_zero_is_noop(): void
+    public function test_an_object_is_not_a_physical_value(): void
     {
-        $column = FlatColumn::string('test_column');
-        $statistics = new StatisticsCounter($column);
-
-        $statistics->addNulls(0);
-
-        static::assertSame(0, $statistics->nullCount());
-        static::assertSame(0, $statistics->valuesCount());
-    }
-
-    public function test_add_object_value(): void
-    {
-        $column = FlatColumn::string('test_column');
-        $statistics = new StatisticsCounter($column);
-        $object = new stdClass();
-        $object->name = 'test';
-
-        $statistics->add($object);
-
-        static::assertSame(0, $statistics->nullCount());
-        static::assertSame(1, $statistics->valuesCount());
-        static::assertSame(1, $statistics->notNullCount());
-        static::assertSame($object, $statistics->min());
-        static::assertSame($object, $statistics->max());
-    }
-
-    #[DataProvider('simple_values_provider')]
-    public function test_add_simple_values(string|int|float|bool $value, int $expectedStringLength): void
-    {
-        $column = FlatColumn::string('test_column');
-        $statistics = new StatisticsCounter($column);
-
-        $statistics->add($value);
-
-        static::assertSame(0, $statistics->nullCount());
-        static::assertSame(1, $statistics->valuesCount());
-        static::assertSame(1, $statistics->notNullCount());
-        static::assertSame($value, $statistics->min());
-        static::assertSame($value, $statistics->max());
-    }
-
-    public function test_array_flattening(): void
-    {
-        $column = FlatColumn::string('test_column');
-        $statistics = new StatisticsCounter($column);
-
-        /** @var array<null|bool|float|int|object|string> $nestedArray */
-        $nestedArray = [
-            'level1',
-            [
-                'level2a',
-                [
-                    'level3a',
-                    'level3b',
-                ],
-                'level2b',
-            ],
-            'level1b',
-        ];
-
-        $statistics->add($nestedArray);
-
-        static::assertSame(6, $statistics->valuesCount());
-        static::assertSame('level1', $statistics->min());
-        static::assertSame('level3b', $statistics->max());
-    }
-
-    public function test_constructor_initializes_with_empty_values(): void
-    {
-        $column = FlatColumn::string('test_column');
-        $statistics = new StatisticsCounter($column);
-
-        static::assertSame(0, $statistics->nullCount());
-        static::assertSame(0, $statistics->valuesCount());
-        static::assertSame(0, $statistics->notNullCount());
-        static::assertNull($statistics->min());
-        static::assertNull($statistics->max());
-    }
-
-    /**
-     * @param null|array<null|bool|float|int|object|string>|bool|float|int|string $value
-     */
-    #[DataProvider('edge_case_values_provider')]
-    public function test_edge_cases(
-        array|string|int|float|bool|null $value,
-        int $expectedValuesCount,
-        int $expectedNullCount,
-    ): void {
-        $column = FlatColumn::string('test_column');
-        $statistics = new StatisticsCounter($column);
-
-        $statistics->add($value);
-
-        static::assertSame($expectedNullCount, $statistics->nullCount());
-        static::assertSame($expectedValuesCount, $statistics->valuesCount());
-    }
-
-    public function test_merge_preserves_original_statistics(): void
-    {
-        $column = FlatColumn::string('test_column');
-        $statistics1 = new StatisticsCounter($column);
-        $statistics2 = new StatisticsCounter($column);
-
-        $statistics1->add('hello');
-        $statistics1->add(null);
-
-        $statistics2->add('world');
-
-        $originalNullCount = $statistics1->nullCount();
-        $originalValuesCount = $statistics1->valuesCount();
-
-        $merged = $statistics1->merge($statistics2);
-
-        static::assertSame($originalNullCount, $statistics1->nullCount());
-        static::assertSame($originalValuesCount, $statistics1->valuesCount());
-        static::assertNotSame($statistics1, $merged);
-    }
-
-    public function test_merge_with_both_empty_counters(): void
-    {
-        $column = FlatColumn::string('test_column');
-        $statistics1 = new StatisticsCounter($column);
-        $statistics2 = new StatisticsCounter($column);
-
-        $merged = $statistics1->merge($statistics2);
-
-        static::assertSame(0, $merged->nullCount());
-        static::assertSame(0, $merged->valuesCount());
-        static::assertSame(0, $merged->notNullCount());
-        static::assertNull($merged->min());
-        static::assertNull($merged->max());
-    }
-
-    public function test_merge_with_different_column_throws_exception(): void
-    {
-        $column1 = FlatColumn::string('column1');
-        $column2 = FlatColumn::string('column2');
-        $statistics1 = new StatisticsCounter($column1);
-        $statistics2 = new StatisticsCounter($column2);
-
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Cannot merge statistics for different columns.');
+        $this->expectExceptionMessage('Column "c" statistics take physical values, got stdClass');
 
-        $statistics1->merge($statistics2);
+        StatisticsCounterMother::counted(FlatColumn::string('c'))->addBatch([new stdClass()]);
     }
 
-    public function test_merge_with_different_min_max_values(): void
+    public function test_reset_clears_everything(): void
     {
-        $column = FlatColumn::int32('test_column');
-        $statistics1 = new StatisticsCounter($column);
-        $statistics2 = new StatisticsCounter($column);
-
-        $statistics1->add(5);
-        $statistics1->add(10);
-        $statistics1->add(15);
-
-        $statistics2->add(1);
-        $statistics2->add(20);
-        $statistics2->add(8);
-
-        $merged = $statistics1->merge($statistics2);
-
-        static::assertSame(1, $merged->min());
-        static::assertSame(20, $merged->max());
-        static::assertSame(6, $merged->valuesCount());
-        static::assertSame(0, $merged->nullCount());
-    }
-
-    public function test_merge_with_different_null_counts(): void
-    {
-        $column = FlatColumn::string('test_column');
-        $statistics1 = new StatisticsCounter($column);
-        $statistics2 = new StatisticsCounter($column);
-
-        $statistics1->add('hello');
-        $statistics1->add(null);
-        $statistics1->add(null);
-        $statistics1->add('world');
-
-        $statistics2->add('foo');
-        $statistics2->add(null);
-
-        $merged = $statistics1->merge($statistics2);
-
-        static::assertSame(3, $merged->nullCount());
-        static::assertSame(6, $merged->valuesCount());
-        static::assertSame(3, $merged->notNullCount());
-    }
-
-    public function test_merge_with_different_values_counts(): void
-    {
-        $column = FlatColumn::string('test_column');
-        $statistics1 = new StatisticsCounter($column);
-        $statistics2 = new StatisticsCounter($column);
-
-        $statistics1->add('a');
-        $statistics1->add('b');
-
-        $statistics2->add('c');
-        $statistics2->add('d');
-        $statistics2->add('e');
-        $statistics2->add('f');
-
-        $merged = $statistics1->merge($statistics2);
-
-        static::assertSame(0, $merged->nullCount());
-        static::assertSame(6, $merged->valuesCount());
-        static::assertSame(6, $merged->notNullCount());
-    }
-
-    public function test_merge_with_null_only_counters(): void
-    {
-        $column = FlatColumn::string('test_column');
-        $statistics1 = new StatisticsCounter($column);
-        $statistics2 = new StatisticsCounter($column);
-
-        $statistics1->add(null);
-        $statistics1->add(null);
-
-        $statistics2->add(null);
-
-        $merged = $statistics1->merge($statistics2);
-
-        static::assertSame(3, $merged->nullCount());
-        static::assertSame(3, $merged->valuesCount());
-        static::assertSame(0, $merged->notNullCount());
-        static::assertNull($merged->min());
-        static::assertNull($merged->max());
-    }
-
-    public function test_merge_with_one_empty_counter(): void
-    {
-        $column = FlatColumn::string('test_column');
-        $statistics1 = new StatisticsCounter($column);
-        $statistics2 = new StatisticsCounter($column);
-
-        $statistics1->add('hello');
-        $statistics1->add(null);
-        $statistics1->add('world');
-
-        $merged = $statistics1->merge($statistics2);
-
-        static::assertSame(1, $merged->nullCount());
-        static::assertSame(3, $merged->valuesCount());
-        static::assertSame(2, $merged->notNullCount());
-        static::assertSame('hello', $merged->min());
-        static::assertSame('world', $merged->max());
-    }
-
-    public function test_merge_with_one_null_only_counter(): void
-    {
-        $column = FlatColumn::string('test_column');
-        $statistics1 = new StatisticsCounter($column);
-        $statistics2 = new StatisticsCounter($column);
-
-        $statistics1->add('hello');
-        $statistics1->add('world');
-
-        $statistics2->add(null);
-        $statistics2->add(null);
-
-        $merged = $statistics1->merge($statistics2);
-
-        static::assertSame(2, $merged->nullCount());
-        static::assertSame(4, $merged->valuesCount());
-        static::assertSame(2, $merged->notNullCount());
-        static::assertSame('hello', $merged->min());
-        static::assertSame('world', $merged->max());
-    }
-
-    public function test_merge_with_same_column(): void
-    {
-        $column = FlatColumn::string('test_column');
-        $statistics1 = new StatisticsCounter($column);
-        $statistics2 = new StatisticsCounter($column);
-
-        $statistics1->add('hello');
-        $statistics1->add(null);
-        $statistics1->add('world');
-
-        $statistics2->add('foo');
-        $statistics2->add('bar');
-        $statistics2->add(null);
-
-        $merged = $statistics1->merge($statistics2);
-
-        static::assertSame(2, $merged->nullCount());
-        static::assertSame(6, $merged->valuesCount());
-        static::assertSame(4, $merged->notNullCount());
-    }
-
-    /**
-     * @param array<bool|float|int|string> $values
-     */
-    #[DataProvider('comparison_values_provider')]
-    public function test_min_max_with_different_types(array $values, mixed $expectedMin, mixed $expectedMax): void
-    {
-        $column = FlatColumn::string('test_column');
-        $statistics = new StatisticsCounter($column);
-
-        foreach ($values as $value) {
-            /** @var null|array<null|bool|float|int|object|string>|bool|float|int|object|string $value */
-            $statistics->add($value);
-        }
-
-        static::assertSame($expectedMin, $statistics->min());
-        static::assertSame($expectedMax, $statistics->max());
-    }
-
-    public function test_not_null_count(): void
-    {
-        $column = FlatColumn::string('test_column');
-        $statistics = new StatisticsCounter($column);
-
-        $statistics->add('hello');
-        $statistics->add(null);
-        $statistics->add('world');
-        $statistics->add(null);
-        $statistics->add(['a', 'b']);
-
-        static::assertSame(6, $statistics->valuesCount());
-        static::assertSame(2, $statistics->nullCount());
-        static::assertSame(4, $statistics->notNullCount());
-    }
-
-    public function test_reset(): void
-    {
-        $column = FlatColumn::string('test_column');
-        $statistics = new StatisticsCounter($column);
-
-        $statistics->add('hello');
-        $statistics->add(null);
-        $statistics->add('world');
-
-        static::assertSame(1, $statistics->nullCount());
-        static::assertSame(3, $statistics->valuesCount());
+        $statistics = StatisticsCounterMother::counted(FlatColumn::double('c'), [NAN, null, 1.5]);
 
         $statistics->reset();
 
-        static::assertSame(0, $statistics->nullCount());
         static::assertSame(0, $statistics->valuesCount());
-        static::assertSame(0, $statistics->notNullCount());
+        static::assertSame(0, $statistics->nullCount());
+        static::assertNull($statistics->nanCount());
         static::assertNull($statistics->min());
         static::assertNull($statistics->max());
     }
 
-    public function test_to_statistics_encodes_byte_array_without_length_prefix(): void
+    public function test_merge_combines_counts_and_bounds(): void
     {
-        $column = FlatColumn::string('test_column');
-        $statistics = new StatisticsCounter($column);
+        $column = FlatColumn::int64('c');
 
-        $statistics->add('hello');
-        $statistics->add('world');
+        $merged = StatisticsCounterMother::counted($column, [
+            5,
+            null,
+        ])->merge(StatisticsCounterMother::counted($column, [1, 9, null]));
 
-        $result = $statistics->toStatistics();
-
-        static::assertSame('hello', $result->min);
-        static::assertSame('world', $result->max);
-        static::assertSame('hello', $result->minValue);
-        static::assertSame('world', $result->maxValue);
+        static::assertSame(5, $merged->valuesCount());
+        static::assertSame(2, $merged->nullCount());
+        static::assertSame(1, $merged->min());
+        static::assertSame(9, $merged->max());
     }
 
-    public function test_to_statistics_encodes_byte_array_decimal_without_length_prefix(): void
+    public function test_merge_of_a_part_with_a_lower_min_still_checks_its_max(): void
     {
-        $statistics = new StatisticsCounter(
-            new FlatColumn('test_column', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::decimal(2, 9)),
+        $column = FlatColumn::int64('c');
+
+        $merged = StatisticsCounterMother::counted($column, [5, 6])->merge(StatisticsCounterMother::counted($column, [
+            1,
+            9,
+        ]));
+
+        static::assertSame(1, $merged->min());
+        static::assertSame(9, $merged->max());
+    }
+
+    public function test_merge_with_an_empty_counter_keeps_the_bounds(): void
+    {
+        $column = FlatColumn::string('c');
+
+        $merged = StatisticsCounterMother::counted($column)->merge(StatisticsCounterMother::counted($column, [
+            'b',
+            'a',
+        ]));
+
+        static::assertSame('a', $merged->min());
+        static::assertSame('b', $merged->max());
+        static::assertNull(
+            StatisticsCounterMother::counted($column)->merge(StatisticsCounterMother::counted($column))->min(),
         );
+    }
 
-        $statistics->add(12345.67);
-        $statistics->add(-12345.67);
+    public function test_merge_of_different_columns_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot merge statistics for different columns.');
 
-        $result = $statistics->toStatistics();
+        StatisticsCounterMother::counted(FlatColumn::string(
+            'a',
+        ))->merge(StatisticsCounterMother::counted(FlatColumn::string('b')));
+    }
+
+    public function test_merge_sums_nan_counts_and_replaces_nan_bounds(): void
+    {
+        $column = FlatColumn::double('d');
+
+        $merged = StatisticsCounterMother::counted($column, [NAN])->merge(StatisticsCounterMother::counted($column, [
+            2.5,
+            NAN,
+        ]));
+
+        static::assertSame(2, $merged->nanCount());
+        static::assertSame(2.5, $merged->min());
+        static::assertSame(2.5, $merged->max());
+    }
+
+    public function test_string_statistics_hold_no_length_prefix_and_no_deprecated_bounds(): void
+    {
+        $result = StatisticsCounterMother::counted(FlatColumn::string('c'), ['hello', 'world'])->toStatistics();
+
+        static::assertNull($result->min);
+        static::assertNull($result->max);
+        static::assertSame('hello', $result->minValue);
+        static::assertSame('world', $result->maxValue);
+        static::assertTrue($result->isMinValueExact);
+        static::assertTrue($result->isMaxValueExact);
+    }
+
+    public function test_byte_array_decimal_statistics_are_its_unscaled_bytes(): void
+    {
+        $column = new FlatColumn('c', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::decimal(2, 9));
+
+        $result = StatisticsCounterMother::counted($column, ["\x12\xD6\x87", "\xED\x29\x79"])->toStatistics();
 
         static::assertSame("\xED\x29\x79", $result->min);
         static::assertSame("\x12\xD6\x87", $result->max);
@@ -542,48 +196,138 @@ final class StatisticsCounterTest extends TestCase
         static::assertSame("\x12\xD6\x87", $result->maxValue);
     }
 
-    public function test_to_statistics_with_int32_encodes_with_packer(): void
+    public function test_all_null_statistics_hold_no_bounds(): void
     {
-        $column = FlatColumn::int32('test_column');
-        $statistics = new StatisticsCounter($column);
-
-        $statistics->add(5);
-        $statistics->add(10);
-
-        $result = $statistics->toStatistics();
-
-        static::assertSame(pack('l', 5), $result->min);
-        static::assertSame(pack('l', 10), $result->max);
-    }
-
-    public function test_to_statistics_with_null_values_does_not_encode(): void
-    {
-        $column = FlatColumn::string('test_column');
-        $statistics = new StatisticsCounter($column);
-
-        $statistics->add(null);
-        $statistics->add(null);
-
-        $result = $statistics->toStatistics();
+        $result = StatisticsCounterMother::counted(FlatColumn::string('c'), [null, null])->toStatistics();
 
         static::assertNull($result->min);
-        static::assertNull($result->max);
-        static::assertNull($result->minValue);
         static::assertNull($result->maxValue);
         static::assertSame(2, $result->nullCount);
+        static::assertFalse($result->isMinValueExact);
+        static::assertFalse($result->isMaxValueExact);
+        static::assertNull($result->nanCount);
     }
 
-    public function test_values_count_calculation_with_arrays(): void
+    public function test_nan_is_excluded_from_bounds_and_counted(): void
     {
-        $column = FlatColumn::string('test_column');
-        $statistics = new StatisticsCounter($column);
+        $result = StatisticsCounterMother::counted(FlatColumn::double('d'), [
+            NAN,
+            -0.0,
+            NAN,
+            0.0,
+            null,
+        ])->toStatistics();
 
-        $statistics->add(['a', 'b', 'c']);
-        $statistics->add([]);
-        $statistics->add(['d']);
+        static::assertSame(2, $result->nanCount);
+        static::assertSame(pack('e', -0.0), $result->minValue);
+        static::assertSame(pack('e', 0.0), $result->maxValue);
+        static::assertNull($result->min);
+        static::assertNull($result->max);
+    }
 
-        static::assertSame(5, $statistics->valuesCount());
-        static::assertSame(0, $statistics->nullCount());
-        static::assertSame(5, $statistics->notNullCount());
+    public function test_only_nan_values_give_nan_bounds(): void
+    {
+        $result = StatisticsCounterMother::counted(FlatColumn::float('f'), [NAN, NAN])->toStatistics();
+
+        static::assertSame(2, $result->nanCount);
+        static::assertSame(pack('g', NAN), $result->minValue);
+        static::assertSame(pack('g', NAN), $result->maxValue);
+    }
+
+    public function test_float_without_nan_counts_zero_and_all_null_counts_nothing(): void
+    {
+        static::assertSame(
+            0,
+            StatisticsCounterMother::counted(FlatColumn::double('d'), [1.5])->toStatistics()->nanCount,
+        );
+        static::assertNull(StatisticsCounterMother::counted(FlatColumn::double('d'), [null])->toStatistics()->nanCount);
+        static::assertNull(StatisticsCounterMother::counted(FlatColumn::int64('i'), [1])->nanCount());
+    }
+
+    public function test_page_statistics_of_an_all_null_float_page_count_zero_nans(): void
+    {
+        static::assertSame(
+            0,
+            StatisticsCounterMother::counted(FlatColumn::double('d'), [null])->toPageStatistics()->nanCount,
+        );
+        static::assertSame(
+            1,
+            StatisticsCounterMother::counted(FlatColumn::double('d'), [NAN])->toPageStatistics()->nanCount,
+        );
+        static::assertNull(StatisticsCounterMother::counted(
+            FlatColumn::int64('i'),
+            [null],
+        )->toPageStatistics()->nanCount);
+    }
+
+    public function test_nan_bounds_follow_the_total_order_of_nans(): void
+    {
+        $negativeNan = decode_f64(ByteOrder::LITTLE_ENDIAN, "\x00\x00\x00\x00\x00\x00\xf8\xff")[0];
+
+        $rising = StatisticsCounterMother::counted(FlatColumn::double('d'), [$negativeNan, NAN])->toStatistics();
+        $falling = StatisticsCounterMother::counted(FlatColumn::double('d'), [NAN, $negativeNan])->toStatistics();
+
+        static::assertSame(pack('e', $negativeNan), $rising->minValue);
+        static::assertSame(pack('e', NAN), $rising->maxValue);
+        static::assertSame(pack('e', $negativeNan), $falling->minValue);
+        static::assertSame(pack('e', NAN), $falling->maxValue);
+    }
+
+    public function test_float16_nan_after_a_value_keeps_the_value_bounds(): void
+    {
+        $statistics = StatisticsCounterMother::counted(FlatColumnMother::float16(), ["\x00\x3c", "\x00\x7e"]);
+
+        static::assertSame(1, $statistics->nanCount());
+        static::assertSame("\x00\x3c", $statistics->min());
+        static::assertSame("\x00\x3c", $statistics->max());
+    }
+
+    public function test_float16_nan_is_counted(): void
+    {
+        $statistics = StatisticsCounterMother::counted(FlatColumnMother::float16(), ["\x00\x7e", "\x00\x3c"]);
+
+        static::assertSame(1, $statistics->nanCount());
+        static::assertSame("\x00\x3c", $statistics->min());
+        static::assertSame("\x00\x3c", $statistics->max());
+    }
+
+    public function test_deprecated_bounds_are_written_only_for_a_signed_sort_order(): void
+    {
+        $bool = StatisticsCounterMother::counted(FlatColumn::boolean('b'), [true, false])->toStatistics();
+
+        static::assertSame(
+            pack('P', 1),
+            StatisticsCounterMother::counted(FlatColumn::int64('i'), [1, 2])->toStatistics()->min,
+        );
+        static::assertNull(StatisticsCounterMother::counted(FlatColumnMother::uint64(), [1, 2])->toStatistics()->min);
+        static::assertSame(
+            pack('P', 1),
+            StatisticsCounterMother::counted(FlatColumnMother::uint64(), [1, 2])->toStatistics()->minValue,
+        );
+        static::assertNull($bool->min);
+        static::assertSame("\x00", $bool->minValue);
+        static::assertSame("\x01", $bool->maxValue);
+    }
+
+    public function test_long_string_bounds_are_truncated_and_inexact(): void
+    {
+        $result = StatisticsCounterMother::counted(FlatColumn::string('s'), [str_repeat('a', 101)])->toStatistics();
+
+        static::assertSame(str_repeat('a', 64), $result->minValue);
+        static::assertSame(str_repeat('a', 63) . 'b', $result->maxValue);
+        static::assertFalse($result->isMinValueExact);
+        static::assertFalse($result->isMaxValueExact);
+    }
+
+    public function test_interval_writes_no_bounds(): void
+    {
+        $result = StatisticsCounterMother::counted(FlatColumnMother::interval(), [str_repeat(
+            "\x01",
+            12,
+        )])->toStatistics();
+
+        static::assertNull($result->minValue);
+        static::assertNull($result->maxValue);
+        static::assertSame(0, $result->nullCount);
     }
 }

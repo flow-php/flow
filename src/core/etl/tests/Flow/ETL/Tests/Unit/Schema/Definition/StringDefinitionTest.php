@@ -13,9 +13,14 @@ use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\definition_from_array;
+use function Flow\ETL\DSL\definition_from_type;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\null_schema;
 use function Flow\ETL\DSL\string_schema;
+use function Flow\Types\DSL\type_equals;
+use function Flow\Types\DSL\type_numeric_string;
+use function Flow\Types\DSL\type_string;
 
 final class StringDefinitionTest extends FlowTestCase
 {
@@ -65,6 +70,25 @@ final class StringDefinitionTest extends FlowTestCase
             int_schema('col'),
             string_schema('col'),
         ];
+    }
+
+    public function test_a_numeric_string_definition_keeps_its_type_through_every_rebuild(): void
+    {
+        $def = definition_from_type('id', type_numeric_string());
+
+        static::assertInstanceOf(StringDefinition::class, $def);
+        static::assertTrue(type_equals(type_numeric_string(), $def->type()));
+        static::assertTrue(type_equals(type_numeric_string(), $def->makeNullable()->type()));
+        static::assertTrue(type_equals(type_numeric_string(), $def->rename('other')->type()));
+        static::assertTrue(type_equals(type_numeric_string(), $def->setMetadata(Metadata::with('k', 'v'))->type()));
+        static::assertTrue(type_equals(type_numeric_string(), $def->addMetadata('k', 'v')->type()));
+        static::assertTrue(type_equals(
+            type_numeric_string(),
+            $def->merge(definition_from_type('id', type_numeric_string()))->type(),
+        ));
+        static::assertTrue(type_equals(type_numeric_string(), $def->merge(null_schema('id'))->type()));
+        static::assertTrue(type_equals(type_string(), $def->merge(string_schema('id'))->type()));
+        static::assertTrue($def->isSame(definition_from_array($def->normalize())));
     }
 
     public function test_add_metadata(): void

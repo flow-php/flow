@@ -73,3 +73,20 @@ data_frame()
     ->write(to_output())
     ->run();
 ```
+
+A `UINT_64` column reads as `numeric_string` (`'18446744073709551615'` is past `PHP_INT_MAX`). A `numeric_string`
+column is written as a parquet `STRING`; write `UINT_64` through the lib with an explicit schema:
+
+```php
+<?php
+
+use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, PhysicalType};
+use Flow\Parquet\Writer;
+
+(new Writer())->write(
+    __DIR__ . '/ids.parquet',
+    Schema::with(new FlatColumn('id', PhysicalType::INT64, logicalType: LogicalType::integer(64, false))),
+    [['id' => 7], ['id' => '18446744073709551615']],
+);
+```

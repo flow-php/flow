@@ -674,8 +674,10 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         static::assertNotNull($statistics);
         static::assertSame(1, $statistics->nullCount());
-        static::assertSame('x', $statistics->min($column));
-        static::assertSame('z', $statistics->max($column));
+        static::assertSame('x', $statistics->minValue($column));
+        static::assertSame('z', $statistics->maxValue($column));
+        static::assertNull($statistics->min($column));
+        static::assertNull($statistics->max($column));
     }
 
     public function test_uncompressed_size_accumulates_multiple_pages(): void

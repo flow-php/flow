@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\RowGroup;
 
+use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Encodings;
@@ -49,29 +50,25 @@ final readonly class ColumnChunk
 
     public static function fromThrift(ThriftColumnChunk $thrift): self
     {
+        $metadata = $thrift->meta_data ?? throw new InvalidArgumentException(
+            'Column chunk at offset '
+            . $thrift->file_offset
+            . ' has no metadata (an encrypted column is not supported)',
+        );
+
         return new self(
-            PhysicalType::from($thrift->meta_data->type),
-            Compressions::from($thrift->meta_data->codec),
-            (int) $thrift->meta_data->num_values,
+            PhysicalType::from($metadata->type),
+            Compressions::from($metadata->codec),
+            (int) $metadata->num_values,
             (int) $thrift->file_offset,
-            $thrift->meta_data->path_in_schema,
-            array_map(static fn($encoding) => Encodings::from($encoding), $thrift->meta_data->encodings),
-            (int) $thrift->meta_data->total_compressed_size,
-            (int) $thrift->meta_data->total_uncompressed_size,
-            // @mago-ignore analysis:redundant-condition
-            // @mago-ignore analysis:redundant-comparison
-            $thrift->meta_data->dictionary_page_offset !== null
-                ? (int) $thrift->meta_data->dictionary_page_offset
-                : null,
-            // @mago-ignore analysis:redundant-condition
-            // @mago-ignore analysis:redundant-comparison
-            $thrift->meta_data->data_page_offset !== null ? (int) $thrift->meta_data->data_page_offset : null,
-            // @mago-ignore analysis:redundant-condition
-            // @mago-ignore analysis:redundant-comparison
-            $thrift->meta_data->index_page_offset !== null ? (int) $thrift->meta_data->index_page_offset : null,
-            // @mago-ignore analysis:redundant-condition
-            // @mago-ignore analysis:redundant-comparison
-            $thrift->meta_data->statistics !== null ? Statistics::fromThrift($thrift->meta_data->statistics) : null,
+            $metadata->path_in_schema,
+            array_map(static fn($encoding) => Encodings::from($encoding), $metadata->encodings),
+            (int) $metadata->total_compressed_size,
+            (int) $metadata->total_uncompressed_size,
+            $metadata->dictionary_page_offset !== null ? (int) $metadata->dictionary_page_offset : null,
+            (int) $metadata->data_page_offset,
+            $metadata->index_page_offset !== null ? (int) $metadata->index_page_offset : null,
+            $metadata->statistics !== null ? Statistics::fromThrift($metadata->statistics) : null,
         );
     }
 

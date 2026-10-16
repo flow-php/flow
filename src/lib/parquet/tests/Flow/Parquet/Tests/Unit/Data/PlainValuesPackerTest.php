@@ -8,6 +8,8 @@ use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
 use Flow\Parquet\Data\PlainValuesPacker;
 use Flow\Parquet\Data\PlainValueUnpacker;
+use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Data\Converter\DecimalConverter;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\LogicalType;
 use Flow\Parquet\ParquetFile\Schema\LogicalType\Time;
@@ -23,14 +25,19 @@ final class PlainValuesPackerTest extends TestCase
     public function test_byte_array_decimal_round_trip(): void
     {
         $column = new FlatColumn('d', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::decimal(2, 9));
+        $converter = DecimalConverter::forColumn($column, Options::default());
+        static::assertNotNull($converter);
+        $physical = [$converter->toParquetType(12345.67), $converter->toParquetType(-12345.67)];
 
         $buffer = '';
-        (new PlainValuesPacker(new BinaryBufferWriter($buffer)))->packValues($column, [12345.67, -12345.67]);
+        (new PlainValuesPacker(new BinaryBufferWriter($buffer)))->packValues($column, $physical);
+        $unpacked = iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($buffer)))->unpack($column, 2));
 
-        static::assertSame(
-            [12345.67, -12345.67],
-            iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($buffer)))->unpack($column, 2)),
-        );
+        static::assertSame(["\x12\xD6\x87", "\xED\x29\x79"], $unpacked);
+        static::assertSame([12345.67, -12345.67], [
+            $converter->fromParquetType($unpacked[0]),
+            $converter->fromParquetType($unpacked[1]),
+        ]);
     }
 
     public function test_fixed_len_byte_array_decimal_above_int64_round_trip(): void
@@ -43,17 +50,19 @@ final class PlainValuesPackerTest extends TestCase
             Repetition::OPTIONAL,
             typeLength: 21,
         );
+        $converter = DecimalConverter::forColumn($column, Options::default());
+        static::assertNotNull($converter);
+        $physical = [$converter->toParquetType(1.2345678901234568E+39), $converter->toParquetType(-12345.67)];
 
         $buffer = '';
-        (new PlainValuesPacker(new BinaryBufferWriter($buffer)))->packValues($column, [
-            1.2345678901234568E+39,
-            -12345.67,
-        ]);
+        (new PlainValuesPacker(new BinaryBufferWriter($buffer)))->packValues($column, $physical);
+        $unpacked = iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($buffer)))->unpack($column, 2));
 
-        static::assertSame(
-            [1.2345678901234568E+39, -12345.67],
-            iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($buffer)))->unpack($column, 2)),
-        );
+        static::assertSame($physical, $unpacked);
+        static::assertSame([1.2345678901234568E+39, -12345.67], [
+            $converter->fromParquetType($unpacked[0]),
+            $converter->fromParquetType($unpacked[1]),
+        ]);
     }
 
     public function test_int32_decimal_round_trip(): void

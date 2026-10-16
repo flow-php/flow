@@ -36,14 +36,14 @@ final class OptionsConverter
         $result = [];
 
         $mappings = [
-            [Option::ARROW_BATCH_SIZE,         'BATCH_SIZE'],
-            [Option::GZIP_COMPRESSION_LEVEL,   'GZIP_COMPRESSION_LEVEL'],
-            [Option::BROTLI_COMPRESSION_LEVEL, 'BROTLI_COMPRESSION_LEVEL'],
-            [Option::ZSTD_COMPRESSION_LEVEL,   'ZSTD_COMPRESSION_LEVEL'],
-            [Option::ROW_GROUP_SIZE_BYTES,     'ROW_GROUP_SIZE_BYTES'],
-            [Option::PAGE_SIZE_BYTES,          'PAGE_SIZE_BYTES'],
-            [Option::DICTIONARY_PAGE_SIZE,     'DICTIONARY_PAGE_SIZE'],
-            [Option::WRITER_VERSION,           'WRITER_VERSION'],
+            [Option::GZIP_COMPRESSION_LEVEL,     'GZIP_COMPRESSION_LEVEL'],
+            [Option::BROTLI_COMPRESSION_LEVEL,   'BROTLI_COMPRESSION_LEVEL'],
+            [Option::ZSTD_COMPRESSION_LEVEL,     'ZSTD_COMPRESSION_LEVEL'],
+            [Option::ROW_GROUP_SIZE_BYTES,       'ROW_GROUP_SIZE_BYTES'],
+            [Option::PAGE_SIZE_BYTES,            'PAGE_SIZE_BYTES'],
+            [Option::DICTIONARY_PAGE_SIZE,       'DICTIONARY_PAGE_SIZE'],
+            [Option::WRITER_VERSION,             'WRITER_VERSION'],
+            [Option::STATISTICS_TRUNCATE_LENGTH, 'STATISTICS_TRUNCATE_LENGTH'],
         ];
 
         foreach ($mappings as [$option, $extensionKey]) {

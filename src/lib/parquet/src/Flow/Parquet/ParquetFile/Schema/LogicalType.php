@@ -85,6 +85,46 @@ final readonly class LogicalType
         return new self(self::ENUM);
     }
 
+    /**
+     * The converted type a writer annotates this logical type with for older readers (arrow-rs 60
+     * `ConvertedType::from(Option<LogicalType>)`); null where none exists.
+     */
+    public function convertedType(): ?ConvertedType
+    {
+        return match ($this->name) {
+            self::STRING => ConvertedType::UTF8,
+            self::MAP => ConvertedType::MAP,
+            self::LIST => ConvertedType::LIST,
+            self::ENUM => ConvertedType::ENUM,
+            self::DECIMAL => ConvertedType::DECIMAL,
+            self::DATE => ConvertedType::DATE,
+            self::TIME => match ($this->time?->unit()) {
+                TimeUnit::MILLISECONDS => ConvertedType::TIME_MILLIS,
+                TimeUnit::MICROSECONDS => ConvertedType::TIME_MICROS,
+                default => null,
+            },
+            self::TIMESTAMP => match ($this->timestamp?->unit()) {
+                TimeUnit::MILLISECONDS => ConvertedType::TIMESTAMP_MILLIS,
+                TimeUnit::MICROSECONDS => ConvertedType::TIMESTAMP_MICROS,
+                default => null,
+            },
+            self::INTEGER => match ([$this->integer?->bitWidth(), $this->integer?->isSigned()]) {
+                [8, true] => ConvertedType::INT_8,
+                [16, true] => ConvertedType::INT_16,
+                [32, true] => ConvertedType::INT_32,
+                [64, true] => ConvertedType::INT_64,
+                [8, false] => ConvertedType::UINT_8,
+                [16, false] => ConvertedType::UINT_16,
+                [32, false] => ConvertedType::UINT_32,
+                [64, false] => ConvertedType::UINT_64,
+                default => null,
+            },
+            self::JSON => ConvertedType::JSON,
+            self::BSON => ConvertedType::BSON,
+            default => null,
+        };
+    }
+
     public static function fromConvertedType(ConvertedType $convertedType, ?int $scale, ?int $precision): ?self
     {
         return match ($convertedType) {
@@ -108,109 +148,71 @@ final readonly class LogicalType
     {
         $name = null;
 
-        // @mago-ignore analysis:redundant-condition
-        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->STRING !== null) {
             $name = self::STRING;
         }
 
-        // @mago-ignore analysis:redundant-condition
-        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->MAP !== null) {
             $name = self::MAP;
         }
 
-        // @mago-ignore analysis:redundant-condition
-        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->LIST !== null) {
             $name = self::LIST;
         }
 
-        // @mago-ignore analysis:redundant-condition
-        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->ENUM !== null) {
             $name = self::ENUM;
         }
 
-        // @mago-ignore analysis:redundant-condition
-        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->DECIMAL !== null) {
             $name = self::DECIMAL;
         }
 
-        // @mago-ignore analysis:redundant-condition
-        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->DATE !== null) {
             $name = self::DATE;
         }
 
-        // @mago-ignore analysis:redundant-condition
-        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->TIME !== null) {
             $name = self::TIME;
         }
 
-        // @mago-ignore analysis:redundant-condition
-        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->TIMESTAMP !== null) {
             $name = self::TIMESTAMP;
         }
 
-        // @mago-ignore analysis:redundant-condition
-        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->INTEGER !== null) {
             $name = self::INTEGER;
         }
 
-        // @mago-ignore analysis:redundant-condition
-        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->UNKNOWN !== null) {
             $name = self::UNKNOWN;
         }
 
-        // @mago-ignore analysis:redundant-condition
-        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->JSON !== null) {
             $name = self::JSON;
         }
 
-        // @mago-ignore analysis:redundant-condition
-        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->BSON !== null) {
             $name = self::BSON;
         }
 
-        // @mago-ignore analysis:redundant-condition
-        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->UUID !== null) {
             $name = self::UUID;
         }
 
-        // @mago-ignore analysis:redundant-condition
-        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->FLOAT16 !== null) {
             $name = self::FLOAT16;
         }
 
-        // @mago-ignore analysis:impossible-condition
-        // @mago-ignore analysis:redundant-comparison
         if (null === $name) {
             return null;
         }
 
         return new self(
             $name,
-            // @mago-ignore analysis:redundant-condition
-            // @mago-ignore analysis:redundant-comparison
             timestamp: $logicalType->TIMESTAMP !== null ? Timestamp::fromThrift($logicalType->TIMESTAMP) : null,
-            // @mago-ignore analysis:redundant-condition
-            // @mago-ignore analysis:redundant-comparison
             time: $logicalType->TIME !== null ? Time::fromThrift($logicalType->TIME) : null,
-            // @mago-ignore analysis:redundant-condition
-            // @mago-ignore analysis:redundant-comparison
             decimal: $logicalType->DECIMAL !== null ? Decimal::fromThrift($logicalType->DECIMAL) : null,
-            // @mago-ignore analysis:redundant-condition
-            // @mago-ignore analysis:redundant-comparison
             integer: $logicalType->INTEGER !== null ? Integer::fromThrift($logicalType->INTEGER) : null,
         );
     }

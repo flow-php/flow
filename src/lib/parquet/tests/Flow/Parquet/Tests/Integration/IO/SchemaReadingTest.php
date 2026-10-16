@@ -6,11 +6,15 @@ namespace Flow\Parquet\Tests\Integration\IO;
 
 use Flow\Parquet\ParquetFile\RowGroup\StatisticsReader;
 use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFile\Schema\ConvertedType;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\ListElement;
+use Flow\Parquet\ParquetFile\Schema\LogicalType;
 use Flow\Parquet\ParquetFile\Schema\MapKey;
 use Flow\Parquet\ParquetFile\Schema\MapValue;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
+use Flow\Parquet\ParquetFile\Schema\Repetition;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Tests\Mother\ParquetEngineMother;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -140,8 +144,27 @@ class SchemaReadingTest extends ParquetIntegrationTestCase
             FlatColumn::float('float_nullable'),
             FlatColumn::double('double'),
             FlatColumn::double('double_nullable'),
-            FlatColumn::decimal('decimal'),
-            FlatColumn::decimal('decimal_nullable'),
+            // pyarrow stores decimal(10, 2) as FIXED_LEN_BYTE_ARRAY(5)
+            new FlatColumn(
+                'decimal',
+                PhysicalType::FIXED_LEN_BYTE_ARRAY,
+                ConvertedType::DECIMAL,
+                LogicalType::decimal(2, 10),
+                Repetition::OPTIONAL,
+                10,
+                2,
+                5,
+            ),
+            new FlatColumn(
+                'decimal_nullable',
+                PhysicalType::FIXED_LEN_BYTE_ARRAY,
+                ConvertedType::DECIMAL,
+                LogicalType::decimal(2, 10),
+                Repetition::OPTIONAL,
+                10,
+                2,
+                5,
+            ),
         );
 
         static::assertSame(

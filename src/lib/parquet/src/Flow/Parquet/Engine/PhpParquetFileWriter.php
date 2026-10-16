@@ -13,6 +13,7 @@ use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile;
+use Flow\Parquet\ParquetFile\ColumnOrder;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Metadata;
@@ -25,7 +26,9 @@ use Flow\Parquet\Writer\ColumnLists;
 use Flow\Parquet\Writer\RowGroupBuilder;
 
 use function array_chunk;
+use function array_map;
 use function array_slice;
+use function array_values;
 use function fclose;
 use function fopen;
 use function is_array;
@@ -61,6 +64,7 @@ final class PhpParquetFileWriter implements ParquetFileWriter
             0,
             $options->getInt(Option::WRITER_VERSION),
             'flow-php parquet version ' . InstalledVersions::getRootPackage()['pretty_version'],
+            array_map(ColumnOrder::forWriting(...), array_values($schema->columnsFlat())),
         );
         $this->rowGroupBuilder = new RowGroupBuilder(
             $schema,

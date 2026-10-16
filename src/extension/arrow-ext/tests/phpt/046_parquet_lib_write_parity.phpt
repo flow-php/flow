@@ -39,5 +39,5 @@ echo "{$cells} cells: {$accepted} accepted by both, {$refused} refused by both\n
 echo 'every type: ', arrow_outcome(static fn() => ParquetRows::read(MemoryParquetFile::read(Reader::php(), MemoryParquetFile::written(Writer::php(), EveryType::schema(), EveryType::rows())), 3)) === arrow_outcome(static fn() => ParquetRows::read(MemoryParquetFile::read(Reader::php(), MemoryParquetFile::written(new Writer(engine: new RustParquetEngine()), EveryType::schema(), EveryType::rows())), 3)) ? 'identical' : 'DIFFER', "\n";
 ?>
 --EXPECT--
-624 cells: 102 accepted by both, 522 refused by both
+624 cells: 104 accepted by both, 520 refused by both
 every type: identical

@@ -340,6 +340,7 @@ $writer->close();
 - `ROW_GROUP_SIZE_BYTES` - default: `32Mb` - maximum size of row group.
 - `ROW_GROUP_SIZE_CHECK_INTERVAL` default: `1000` - number of rows to write before checking if row group size limit is
   reached.
+- `STATISTICS_TRUNCATE_LENGTH` - default: `64` - bytes a string/binary column chunk's min/max statistics are cut to.
 - `VALIDATE_DATA` - default: `true` - if set to `true` then writer will validate data against schema.
 - `WRITER_VERSION` - default `1` - tells writer which version of parquet format should be used.
 
@@ -368,6 +369,46 @@ more frequently.
 
 Unfortunately, there is no one size fits all solution here.
 You will need to play a bit with those values to find the best one for your use case.
+
+## Statistics
+
+Both engines write the column chunk statistics arrow-rs writes: `min_value`/`max_value` with exactness flags,
+`nan_count` for floats and a column order per leaf.
+
+```php
+<?php
+
+use Flow\Parquet\{Option, Options, Reader, Writer};
+
+(new Writer(options: Options::default()->set(Option::STATISTICS_TRUNCATE_LENGTH, 16)))
+    ->write(__DIR__ . '/orders.parquet', $schema, $rows);
+
+$metadata = (new Reader())->read(__DIR__ . '/orders.parquet')->metadata();
+$column = $metadata->schema()->getFlat('customer');
+
+foreach ($metadata->rowGroups()->all() as $rowGroup) {
+    $statistics = $rowGroup->getColumnChunk($column)->statistics();
+
+    $statistics?->minValue($column);        // physical value: bytes for strings, unscaled int for decimal(10, 2)
+    $statistics?->maxValue($column);
+    $statistics?->isMaxValueExact();        // false when the max was truncated and incremented
+    $statistics?->nullCount();
+    $statistics?->nanCount();               // FLOAT, DOUBLE and FLOAT16 only
+}
+
+$metadata->columnOrder($column);            // ColumnOrder::TypeDefined; ColumnOrder::Absent in files written before it
+```
+
+| Physical type                    | Order of `min_value`/`max_value`                                                       |
+|----------------------------------|----------------------------------------------------------------------------------------|
+| BYTE_ARRAY, FIXED_LEN_BYTE_ARRAY | unsigned bytes (`'10' < '9'`)                                                          |
+| DECIMAL                          | signed (two's complement bytes, or the unscaled INT32/INT64)                           |
+| INT32/INT64 `UINT_*`             | unsigned                                                                               |
+| FLOAT, DOUBLE, FLOAT16           | IEEE 754 total order (`-0.0 < 0.0`); NaN counted, a bound only when every value is NaN |
+| INT96, INTERVAL                  | none: no `min_value`/`max_value` is written                                            |
+
+Strings and binaries longer than `STATISTICS_TRUNCATE_LENGTH` keep a prefix as the min and an incremented prefix as the
+max. Decimals and FLOAT16 are never truncated.
 
 ## Compressions
 

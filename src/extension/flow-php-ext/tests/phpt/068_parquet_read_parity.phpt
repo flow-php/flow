@@ -117,8 +117,8 @@ EdgeCases/nonnullable.impala.parquet 100: identical
 EdgeCases/nonnullable.impala.parquet 10000: identical
 EdgeCases/null_list.parquet 100: both refuse
 EdgeCases/null_list.parquet 10000: both refuse
-EdgeCases/uint64_overflow.parquet 100: both refuse
-EdgeCases/uint64_overflow.parquet 10000: both refuse
+EdgeCases/uint64_overflow.parquet 100: identical
+EdgeCases/uint64_overflow.parquet 10000: identical
 EdgeCases/unsigned.parquet 100: identical
 EdgeCases/unsigned.parquet 10000: identical
 Flow\ETL\Exception\InvalidArgumentException: Parquet column "emptylist" (List(Null)) is read as List(Null), its schema type list<integer> stores List(Int64)

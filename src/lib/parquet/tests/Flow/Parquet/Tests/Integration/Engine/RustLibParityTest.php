@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Integration\Engine;
 
 use Flow\Parquet\Engine\RustParquetEngine;
-use Flow\Parquet\Exception\DataConversionException;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Reader;
@@ -111,21 +110,27 @@ final class RustLibParityTest extends TestCase
         ParquetRows::read((new Reader(engine: new RustParquetEngine()))->read($path), 100);
     }
 
-    public function test_a_uint64_above_php_int_max_is_refused_by_both_engines(): void
+    public function test_a_uint64_above_php_int_max_reads_as_the_same_decimal_string_on_both_engines(): void
     {
         $path = __DIR__ . '/../IO/Fixtures/EdgeCases/uint64_overflow.parquet';
 
-        try {
-            ParquetRows::read(Reader::php()->read($path), 100);
-            static::fail('PhpParquetEngine must refuse a UINT_64 above PHP_INT_MAX');
-        } catch (DataConversionException $exception) {
-            static::assertStringContainsString('holds a UINT_64 value above PHP_INT_MAX', $exception->getMessage());
-        }
+        static::assertSame([['u64' => '18446744073709551615']], ParquetRows::read(Reader::php()->read($path), 100));
+        static::assertSame(
+            ParquetRows::read(Reader::php()->read($path), 100),
+            ParquetRows::read((new Reader(engine: new RustParquetEngine()))->read($path), 100),
+        );
+    }
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Parquet column "u64" row 0 holds a value out of the range arrow stores it in');
+    public function test_the_duckdb_uint64_fixture_reads_as_decimal_strings_on_both_engines(): void
+    {
+        $path = __DIR__ . '/Fixtures/uint64_duckdb.parquet';
+        $expected = [['col0' => '0'], ['col0' => '9223372036854775808'], ['col0' => '18446744073709551615']];
 
-        ParquetRows::read((new Reader(engine: new RustParquetEngine()))->read($path), 100);
+        static::assertSame($expected, ParquetRows::read(Reader::php()->read($path), 10));
+        static::assertSame($expected, ParquetRows::read(
+            (new Reader(engine: new RustParquetEngine()))->read($path),
+            10,
+        ));
     }
 
     #[TestWith(['double_key', 'float'])]

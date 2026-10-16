@@ -130,7 +130,7 @@ final class PhysicalForTest extends TestCase
         foreach (self::types() as $name => [$type]) {
             yield $name => [
                 $type,
-                !in_array($name, ['positive integer', 'non-empty string', 'numeric string', 'class string'], true),
+                !in_array($name, ['positive integer', 'non-empty string', 'class string'], true),
             ];
         }
 

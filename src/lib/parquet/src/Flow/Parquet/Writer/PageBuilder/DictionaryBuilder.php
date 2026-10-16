@@ -32,8 +32,8 @@ final class DictionaryBuilder
                 LogicalType::BSON,
                 LogicalType::UUID,
                 LogicalType::ENUM,
+                LogicalType::DECIMAL,
                     => (new ScalarDictionaryBuilder())->build($data),
-                LogicalType::DECIMAL => (new FloatDictionaryBuilder())->build($data),
                 LogicalType::DATE, LogicalType::TIME, LogicalType::TIMESTAMP => (new ObjectDictionaryBuilder())->build(
                     $data,
                 ),

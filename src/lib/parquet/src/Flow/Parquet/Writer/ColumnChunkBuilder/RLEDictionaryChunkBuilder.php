@@ -32,6 +32,7 @@ use Flow\Parquet\Writer\PageBuilder\RLEBitPackedPacker;
 use Flow\Parquet\Writer\PageContainer;
 use Flow\Parquet\Writer\PageContainers;
 use Flow\Parquet\Writer\StatisticsCounter;
+use Flow\Parquet\Writer\StatisticsTruncation;
 
 use function count;
 use function strlen;
@@ -55,6 +56,8 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
 
     private StatisticsCounter $pageStatistics;
 
+    private readonly StatisticsTruncation $truncation;
+
     /**
      * @var array<null|bool|float|int|object|string>
      */
@@ -72,9 +75,10 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
         private readonly Options $options,
         private readonly Compressions $compression,
     ) {
+        $this->truncation = new StatisticsTruncation($this->options->getInt(Option::STATISTICS_TRUNCATE_LENGTH));
         $this->pages = new PageContainers();
-        $this->chunkStatistics = new StatisticsCounter($this->column);
-        $this->pageStatistics = new StatisticsCounter($this->column);
+        $this->chunkStatistics = new StatisticsCounter($this->column, $this->truncation);
+        $this->pageStatistics = new StatisticsCounter($this->column, $this->truncation);
         $this->byteOrder = ByteOrder::LITTLE_ENDIAN;
     }
 
@@ -147,7 +151,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
         $this->pageValues = [];
         $this->rowsCount = 0;
         $this->nullCount = 0;
-        $this->pageStatistics = new StatisticsCounter($this->column);
+        $this->pageStatistics = new StatisticsCounter($this->column, $this->truncation);
     }
 
     public function column(): Column
@@ -182,8 +186,8 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
         )];
 
         $this->pages = new PageContainers();
-        $this->chunkStatistics = new StatisticsCounter($this->column);
-        $this->pageStatistics = new StatisticsCounter($this->column);
+        $this->chunkStatistics = new StatisticsCounter($this->column, $this->truncation);
+        $this->pageStatistics = new StatisticsCounter($this->column, $this->truncation);
         $this->definitionLevels = [];
         $this->repetitionLevels = [];
         $this->pageValues = [];
@@ -261,7 +265,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
 
     private function buildDataPageV2(Codec $codec, Compressions $compression): PageContainer
     {
-        $statistics = $this->pageStatistics->toStatistics();
+        $statistics = $this->pageStatistics->toPageStatistics();
 
         $rleBitPackedHybrid = new RLEBitPackedHybrid();
         $packer = new RLEBitPackedPacker($rleBitPackedHybrid, $this->byteOrder);

@@ -12,15 +12,11 @@ use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use RuntimeException;
 
 use function array_filter;
-use function array_map;
-use function Flow\Parquet\Binary\encode_decimal;
 use function Flow\Parquet\Binary\encode_f32;
 use function Flow\Parquet\Binary\encode_f64;
 use function Flow\Parquet\Binary\encode_i32;
 use function Flow\Parquet\Binary\encode_i64;
 use function Flow\Parquet\Binary\encode_u32;
-use function hex2bin;
-use function str_replace;
 use function strlen;
 
 final readonly class PlainValuesPacker
@@ -64,28 +60,8 @@ final readonly class PlainValuesPacker
 
                 break;
             case PhysicalType::FIXED_LEN_BYTE_ARRAY:
-                switch ($column->logicalType()?->name()) {
-                    case LogicalType::UUID:
-                        /** @var array<string> $values */
-                        $this->packUuids($values);
-
-                        break;
-                    case LogicalType::DECIMAL:
-                        /** @var array<float> $values */
-                        $this->packDecimals(
-                            $values,
-                            (int) $column->typeLength(),
-                            (int) $column->logicalType()?->decimalData()?->precision(),
-                            (int) $column->logicalType()?->decimalData()?->scale(),
-                        );
-
-                        break;
-                    default:
-                        /** @var array<string> $values */
-                        $this->packFixedLenByteArrays($values);
-
-                        break;
-                }
+                /** @var array<string> $values */
+                $this->packFixedLenByteArrays($values);
 
                 break;
             case PhysicalType::BYTE_ARRAY:
@@ -94,19 +70,6 @@ final readonly class PlainValuesPacker
                     case LogicalType::STRING:
                         /** @var array<string> $values */
                         $this->packStrings($values);
-
-                        break;
-                    case LogicalType::DECIMAL:
-                        $precision = (int) $column->logicalType()?->decimalData()?->precision();
-                        $scale = (int) $column->logicalType()?->decimalData()?->scale();
-
-                        /** @var array<float|int> $values */
-                        $this->packByteArrays(array_map(static fn(float|int $value): string => encode_decimal(
-                            (float) $value,
-                            $precision,
-                            $scale,
-                            null,
-                        ), $values));
 
                         break;
                     default:
@@ -146,16 +109,6 @@ final readonly class PlainValuesPacker
         foreach ($values as $value) {
             $this->writer->append(encode_u32($this->byteOrder, [strlen($value)]));
             $this->writer->append($value);
-        }
-    }
-
-    /**
-     * @param array<float> $decimals
-     */
-    private function packDecimals(array $decimals, int $byteLength, int $precision, int $scale): void
-    {
-        foreach ($decimals as $decimal) {
-            $this->writer->append(encode_decimal($decimal, $precision, $scale, $byteLength));
         }
     }
 
@@ -209,23 +162,6 @@ final readonly class PlainValuesPacker
         foreach ($strings as $string) {
             $this->writer->append(encode_u32($this->byteOrder, [strlen($string)]));
             $this->writer->append($string);
-        }
-    }
-
-    /**
-     * @param array<string> $uuids
-     */
-    private function packUuids(array $uuids): void
-    {
-        foreach ($uuids as $uuid) {
-            $hex = str_replace('-', '', $uuid);
-            $binary = hex2bin($hex);
-
-            if ($binary === false) {
-                throw new RuntimeException('Invalid UUID format: ' . $uuid);
-            }
-
-            $this->writer->append($binary);
         }
     }
 }

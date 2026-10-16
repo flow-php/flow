@@ -35,24 +35,23 @@ final class OptionsConverterTest extends TestCase
         );
     }
 
-    public function test_arrow_batch_size_is_excluded_when_null(): void
+    public function test_arrow_batch_size_is_not_an_extension_option(): void
     {
-        $options = new Options();
-        $options->set(Option::ARROW_BATCH_SIZE, null);
-
-        $result = OptionsConverter::toExtension($options);
-
-        static::assertArrayNotHasKey('BATCH_SIZE', $result);
+        static::assertArrayNotHasKey(
+            'BATCH_SIZE',
+            OptionsConverter::toExtension((new Options())->set(Option::ARROW_BATCH_SIZE, 512)),
+        );
     }
 
-    public function test_arrow_batch_size_is_included_when_set(): void
+    public function test_statistics_truncate_length_is_mapped(): void
     {
-        $options = new Options();
-        $options->set(Option::ARROW_BATCH_SIZE, 512);
-
-        $result = OptionsConverter::toExtension($options);
-
-        static::assertSame(512, $result['BATCH_SIZE']);
+        static::assertSame(
+            8,
+            OptionsConverter::toExtension((new Options())->set(
+                Option::STATISTICS_TRUNCATE_LENGTH,
+                8,
+            ))['STATISTICS_TRUNCATE_LENGTH'],
+        );
     }
 
     public function test_columns_compressions_maps_enum_names(): void
@@ -99,7 +98,7 @@ final class OptionsConverterTest extends TestCase
     {
         $result = OptionsConverter::toExtension(new Options());
 
-        static::assertArrayHasKey('BATCH_SIZE', $result);
+        static::assertArrayHasKey('STATISTICS_TRUNCATE_LENGTH', $result);
         static::assertArrayHasKey('GZIP_COMPRESSION_LEVEL', $result);
         static::assertArrayHasKey('BROTLI_COMPRESSION_LEVEL', $result);
         static::assertArrayHasKey('ZSTD_COMPRESSION_LEVEL', $result);

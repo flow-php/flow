@@ -226,6 +226,7 @@ use Flow\Types\Type\Logical\HTMLType;
 use Flow\Types\Type\Logical\JsonType;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
+use Flow\Types\Type\Logical\NumericStringType;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
@@ -1620,6 +1621,7 @@ function definition_from_type(
         $type instanceof IntegerType => new IntegerDefinition($ref, $nullable, $metadata),
         $type instanceof FloatType => new FloatDefinition($ref, $nullable, $metadata),
         $type instanceof StringType => new StringDefinition($ref, $nullable, $metadata),
+        $type instanceof NumericStringType => new StringDefinition($ref, $nullable, $metadata, $type),
         $type instanceof DateType => new DateDefinition($ref, $nullable, $metadata),
         $type instanceof DateTimeType => new DateTimeDefinition($ref, $type, $nullable, $metadata),
         $type instanceof TimeType => new TimeDefinition($ref, $nullable, $metadata),

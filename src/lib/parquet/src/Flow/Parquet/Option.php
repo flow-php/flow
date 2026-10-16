@@ -163,6 +163,15 @@ enum Option
     case ROW_GROUP_SIZE_CHECK_INTERVAL;
 
     /**
+     * Column chunk and page statistics of BYTE_ARRAY and FIXED_LEN_BYTE_ARRAY columns are truncated to this many bytes,
+     * as arrow-rs does: the min is cut, the max is cut and incremented, and a truncated bound is marked inexact.
+     * Decimals and FLOAT16 are never truncated.
+     *
+     * Default value is 64
+     */
+    case STATISTICS_TRUNCATE_LENGTH;
+
+    /**
      * This option is going to tell the writer to validate data against schema.
      * In most cases that should be enabled, however if performance is critical, it can be disabled.
      */
