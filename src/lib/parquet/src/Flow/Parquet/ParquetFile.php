@@ -63,6 +63,11 @@ final class ParquetFile
         return $this->reader->footer()->metadata();
     }
 
+    public function options(): Options
+    {
+        return $this->options;
+    }
+
     /**
      * @return \Generator<ColumnPageHeader>
      */

@@ -7,9 +7,9 @@ namespace Flow\ETL\Tests\Unit\Executor;
 use Flow\ETL\Executor\Pipeline;
 use Flow\ETL\Executor\Segments;
 use Flow\ETL\Executor\SourceRows;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\NodeMother;
-use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Flow\Filesystem\Tests\Double\RejectingFilter;
 
 use function Flow\ETL\DSL\from_array;
@@ -21,18 +21,16 @@ final class PipelineTest extends FlowTestCase
         $segments = new Segments();
         $context = NodeMother::context();
         $input = new Pipeline(0, new Segments(from_array([['id' => 1]])), $context);
-        $filter = new RejectingFilter();
-
+        $scan = new FileScan(3, new RejectingFilter());
         $sources = new SourceRows();
 
-        $pipeline = new Pipeline(1, $segments, $context, $input, 3, $filter, $sources);
+        $pipeline = new Pipeline(1, $segments, $context, $input, $scan, $sources);
 
         static::assertSame(1, $pipeline->id);
         static::assertSame($segments, $pipeline->segments());
         static::assertSame($context, $pipeline->context());
         static::assertSame($input, $pipeline->input());
-        static::assertSame(3, $pipeline->limit());
-        static::assertSame($filter, $pipeline->pathFilter());
+        static::assertSame($scan, $pipeline->scan());
         static::assertSame($sources, $pipeline->sources());
     }
 
@@ -41,8 +39,7 @@ final class PipelineTest extends FlowTestCase
         $pipeline = new Pipeline(0, new Segments(from_array([['id' => 1]])), NodeMother::context());
 
         static::assertNull($pipeline->input());
-        static::assertNull($pipeline->limit());
-        static::assertInstanceOf(OnlyFiles::class, $pipeline->pathFilter());
+        static::assertEquals(new FileScan(), $pipeline->scan());
         static::assertNull($pipeline->sources());
     }
 }

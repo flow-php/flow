@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Flow\ETL\Adapter\Text\TextExtractor;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Context\MemoryFiles;
@@ -56,7 +57,7 @@ final class TextExtractorTest extends FlowTestCase
         $extractor = from_text(path_real(__DIR__ . '/../Fixtures/orders_flow.csv'));
         $extractor->withBatchSize(1);
 
-        self::assertExtractedRowsCount(2, $extractor, flow_context(config()), limit: 2);
+        self::assertExtractedRowsCount(2, $extractor, flow_context(config()), scan: new FileScan(2));
     }
 
     public function test_partition_columns_are_not_leaking_between_streams(): void
@@ -116,7 +117,7 @@ final class TextExtractorTest extends FlowTestCase
     {
         $extractor = from_text(__DIR__ . '/../Fixtures/cross_stream/*/data.txt')->withBatchSize(10);
 
-        static::assertCount(1, ExtractedRows::of($extractor, limit: 1));
+        static::assertCount(1, ExtractedRows::of($extractor, scan: new FileScan(1)));
     }
 
     public function test_metadata_columns_extend_a_declared_schema(): void

@@ -56,6 +56,18 @@ final class DetailsTest extends FlowTestCase
         );
     }
 
+    public function test_a_read_lists_the_offered_predicate_beside_the_file_filter(): void
+    {
+        static::assertSame(
+            ['Extractor: ArrayExtractor', 'Files: Filters', 'Filter: GreaterThan'],
+            (new Details())->lines(
+                NodeMother::read()
+                    ->withPathFilter(new KeepAll())
+                    ->withFilter(ref('id')->greaterThan(lit(1))),
+            ),
+        );
+    }
+
     public function test_nodes_with_arguments_label_them(): void
     {
         $read = NodeMother::read();

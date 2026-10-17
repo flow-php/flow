@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Plan\Explain;
 
 use Flow\ETL\Extractor\File\FileExtractor;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Join\Comparison\Any;
 use Flow\ETL\Plan\Materialization;
 use Flow\ETL\Plan\Node;
@@ -206,15 +207,30 @@ final readonly class Details
             $lines[] = 'Source: ' . $extractor->source()->uri();
         }
 
-        $limit = $read->limit();
+        return [...$lines, ...$this->scan($read->scan())];
+    }
 
-        if ($limit !== null) {
-            $lines[] = 'Limit: ' . $limit;
+    /**
+     * What the plan pushed into a read: the predicate is the one offered to the source, which may skip only part
+     * of what it cannot match.
+     *
+     * @return list<string>
+     */
+    public function scan(FileScan $scan): array
+    {
+        $lines = [];
+
+        if ($scan->limit !== null) {
+            $lines[] = 'Limit: ' . $scan->limit;
         }
 
         // every file source reads only files unless a filter was pushed into it
-        if (!$read->pathFilter() instanceof OnlyFiles) {
-            $lines[] = 'Files: ' . $this->name($read->pathFilter());
+        if (!$scan->pathFilter instanceof OnlyFiles) {
+            $lines[] = 'Files: ' . $this->name($scan->pathFilter);
+        }
+
+        if ($scan->filter !== null) {
+            $lines[] = 'Filter: ' . $this->name($scan->filter);
         }
 
         return $lines;

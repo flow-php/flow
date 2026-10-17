@@ -269,7 +269,8 @@ it from the file schema (Parquet, Floe), so `filter(ref('date')->between(lit($fr
 ### Partition Pruning
 
 The optimizer pushes a `filter()` that reads only partition columns into the source, so whole directories
-are skipped; a filter on a body column still reads everything and then discards. A partition column renamed
+are skipped; a filter on a body column reads every file and then discards (Parquet skips row groups, see
+[filter pushdown](/documentation/components/adapters/parquet.md#filter-pushdown)). A partition column renamed
 with `rename()` or copied with `withEntry('day', ref('date'))` is still pruned; any other redefinition of it
 stops the push. A filter whose answer can change between two evaluations - `call()`, `now()`, `uuid()`,
 `to_date_time()` with a format that leaves fields out (`'Y-m-d'`) - still filters rows but prunes nothing.

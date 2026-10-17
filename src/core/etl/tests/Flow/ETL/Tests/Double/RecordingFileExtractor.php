@@ -5,33 +5,27 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Double;
 
 use Flow\ETL\Extractor\File\FileExtractor;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
-use Flow\Filesystem\Path\Filter;
-use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Generator;
 
 use function array_values;
 use function Flow\Filesystem\DSL\path;
 
 /**
- * A file source that records the limit and path filter of every read, so a test can prove what the planner
- * pushed reached the read - and that the instance itself was left alone.
+ * A file source that records the scan of every read, so a test can prove what the planner pushed reached the
+ * read - and that the instance itself was left alone.
  */
 final class RecordingFileExtractor implements FileExtractor
 {
     /**
-     * @var list<null|int>
+     * @var list<FileScan>
      */
-    public array $limits = [];
-
-    /**
-     * @var list<Filter>
-     */
-    public array $pathFilters = [];
+    public array $scans = [];
 
     /**
      * @var list<Rows>
@@ -48,10 +42,14 @@ final class RecordingFileExtractor implements FileExtractor
         $this->partitions = new Schema();
     }
 
-    public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
     {
-        $this->limits[] = $limit;
-        $this->pathFilters[] = $pathFilter;
+        return $this->scan($context, new FileScan(limit: $limit));
+    }
+
+    public function scan(FlowContext $context, FileScan $scan): Generator
+    {
+        $this->scans[] = $scan;
 
         foreach ($this->batches as $rows) {
             yield $rows;

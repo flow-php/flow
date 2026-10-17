@@ -11,6 +11,7 @@ use Flow\ETL\Config;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\SchemaMismatchException;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Context\MemoryFiles;
@@ -386,7 +387,7 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
     {
         $extractor = from_xml(__DIR__ . '/../Fixtures/cross_stream/*/file.xml', 'root/item')->withBatchSize(10);
 
-        static::assertCount(1, ExtractedRows::of($extractor, limit: 1));
+        static::assertCount(1, ExtractedRows::of($extractor, scan: new FileScan(1)));
     }
 
     public function test_is_repeatable(): void

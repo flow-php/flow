@@ -1,0 +1,359 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Adapter\Parquet\Pushdown;
+
+use DateTimeInterface;
+use Flow\ETL\Column\ComparableValues;
+use Flow\ETL\Function\All;
+use Flow\ETL\Function\Any;
+use Flow\ETL\Function\Between;
+use Flow\ETL\Function\Between\Boundary;
+use Flow\ETL\Function\Conjuncts;
+use Flow\ETL\Function\Equals;
+use Flow\ETL\Function\FunctionTree;
+use Flow\ETL\Function\GreaterThan;
+use Flow\ETL\Function\GreaterThanEqual;
+use Flow\ETL\Function\IsIn;
+use Flow\ETL\Function\IsNotNull;
+use Flow\ETL\Function\IsNull;
+use Flow\ETL\Function\LessThan;
+use Flow\ETL\Function\LessThanEqual;
+use Flow\ETL\Function\Literal;
+use Flow\ETL\Function\Not;
+use Flow\ETL\Function\NotEquals;
+use Flow\ETL\Function\NotSame;
+use Flow\ETL\Function\ReferencedColumns;
+use Flow\ETL\Function\Same;
+use Flow\ETL\Function\ScalarFunction;
+use Flow\ETL\Function\StartsWith;
+use Flow\ETL\Row\UnresolvedReference;
+use Flow\ETL\Schema;
+use Flow\ETL\Schema\Definition;
+use Flow\Parquet\Filter\Comparison;
+use Flow\Parquet\Filter\Filter;
+use Flow\Parquet\Filter\Operator;
+use Flow\Types\Type;
+use Flow\Types\Type\Logical\DateTimeType;
+use Flow\Types\Type\Logical\DateType;
+use Flow\Types\Type\Logical\JsonType;
+use Flow\Types\Type\Logical\NumericStringType;
+use Flow\Types\Type\Native\FloatType;
+use Flow\Types\Type\Native\IntegerType;
+use Flow\Types\Type\Native\StringType;
+use Flow\Types\Type\TypeDetector;
+use Flow\Types\Value\Uuid;
+
+use function abs;
+use function array_filter;
+use function array_map;
+use function array_values;
+use function ctype_digit;
+use function floor;
+use function Flow\Parquet\DSL\parquet_all;
+use function Flow\Parquet\DSL\parquet_any;
+use function Flow\Parquet\DSL\parquet_column;
+use function Flow\Types\DSL\type_bare;
+use function in_array;
+use function is_array;
+use function is_bool;
+use function is_float;
+use function is_int;
+use function is_nan;
+use function is_string;
+
+/**
+ * A conjunct is pushed only when the parquet filter keeps every row the Flow predicate keeps; anything it cannot
+ * prove that for is left to the Filter node.
+ */
+final readonly class FilterTranslator
+{
+    /**
+     * Integers a float represents exactly: an int literal on a float column, and a float literal on an int column,
+     * compare the same in Flow (PHP converts the int to a float) and in the binder only below this bound.
+     */
+    private const int EXACT_FLOAT_INTEGER = 2 ** 53;
+
+    /**
+     * @return list<TranslatedConjunct> one per translatable conjunct of Conjuncts::of($filter)
+     */
+    public function translate(ScalarFunction $filter, Schema $body): array
+    {
+        $translated = [];
+
+        foreach ((new Conjuncts())->of($filter) as $conjunct) {
+            $parquet = $this->filter($conjunct, $body);
+
+            if ($parquet !== null) {
+                $translated[] = new TranslatedConjunct(
+                    $parquet,
+                    array_values((new ReferencedColumns())->in($conjunct)->names()),
+                );
+            }
+        }
+
+        return $translated;
+    }
+
+    private function filter(ScalarFunction $function, Schema $body): ?Filter
+    {
+        $children = $function->children();
+
+        return match (true) {
+            $function instanceof All, $function instanceof Any => $this->combined($function, $body),
+            $function instanceof Not => $children[0] instanceof ScalarFunction
+                ? $this->filter($children[0], $body)?->negate()
+                : null,
+            $function instanceof Equals => $this->comparison($children[0], $children[1], Operator::Equal, $body, false),
+            $function instanceof NotEquals => $this->comparison(
+                $children[0],
+                $children[1],
+                Operator::Equal,
+                $body,
+                false,
+            )?->negate(),
+            $function instanceof Same => $this->comparison($children[0], $children[1], Operator::Equal, $body, true),
+            $function instanceof NotSame => $this->comparison(
+                $children[0],
+                $children[1],
+                Operator::Equal,
+                $body,
+                true,
+            )?->negate(),
+            $function instanceof LessThan => $this->comparison(
+                $children[0],
+                $children[1],
+                Operator::LessThan,
+                $body,
+                false,
+            ),
+            $function instanceof LessThanEqual => $this->comparison(
+                $children[0],
+                $children[1],
+                Operator::LessThanOrEqual,
+                $body,
+                false,
+            ),
+            $function instanceof GreaterThan => $this->comparison(
+                $children[0],
+                $children[1],
+                Operator::GreaterThan,
+                $body,
+                false,
+            ),
+            $function instanceof GreaterThanEqual => $this->comparison(
+                $children[0],
+                $children[1],
+                Operator::GreaterThanOrEqual,
+                $body,
+                false,
+            ),
+            $function instanceof IsNull => $this->isNull($children[0], $body),
+            $function instanceof IsNotNull => $this->isNull($children[0], $body)?->negate(),
+            $function instanceof IsIn => $this->in($children[0], $children[1], $body),
+            $function instanceof StartsWith => $this->startsWith($children[0], $children[1], $body),
+            $function instanceof Between => $this->between($function, $body),
+            default => null,
+        };
+    }
+
+    private function combined(All|Any $function, Schema $body): ?Filter
+    {
+        $filters = [];
+
+        foreach ($function->children() as $child) {
+            $filter = $this->filter($child, $body);
+
+            if ($filter === null) {
+                return null;
+            }
+
+            $filters[] = $filter;
+        }
+
+        return $function instanceof All ? parquet_all(...$filters) : parquet_any(...$filters);
+    }
+
+    private function comparison(
+        FunctionTree $left,
+        FunctionTree $right,
+        Operator $operator,
+        Schema $body,
+        bool $strict,
+    ): ?Comparison {
+        if ($left instanceof Literal && $right instanceof UnresolvedReference) {
+            return $this->comparison(
+                $right,
+                $left,
+                match ($operator) {
+                    Operator::LessThan => Operator::GreaterThan,
+                    Operator::LessThanOrEqual => Operator::GreaterThanOrEqual,
+                    Operator::GreaterThan => Operator::LessThan,
+                    Operator::GreaterThanOrEqual => Operator::LessThanOrEqual,
+                    Operator::Equal => Operator::Equal,
+                },
+                $body,
+                $strict,
+            );
+        }
+
+        $definition = $this->definition($left, $body);
+
+        if ($definition === null || !$right instanceof Literal) {
+            return null;
+        }
+
+        $value = $this->literal(
+            type_bare($definition->type()),
+            $right->returns(),
+            $right->value(),
+            $operator !== Operator::Equal,
+            $strict,
+        );
+
+        return $value === null ? null : new Comparison(parquet_column($definition->entry()->name()), $operator, $value);
+    }
+
+    private function isNull(FunctionTree $reference, Schema $body): ?Filter
+    {
+        $definition = $this->definition($reference, $body);
+
+        return $definition === null ? null : parquet_column($definition->entry()->name())->isNull();
+    }
+
+    private function in(FunctionTree $haystack, FunctionTree $needle, Schema $body): ?Filter
+    {
+        $definition = $this->definition($needle, $body);
+        // @mago-expect analysis:mixed-assignment
+        $list = $haystack instanceof Literal ? $haystack->value() : null;
+
+        if ($definition === null || !is_array($list)) {
+            return null;
+        }
+
+        // NULL never matches: x IN (1, NULL) keeps what x IN (1) keeps, and NOT (x IN (1, NULL)) is never TRUE
+        $present = array_values(array_filter($list, static fn(mixed $element): bool => $element !== null));
+        $detector = new TypeDetector();
+        $values = array_map(fn(mixed $element): mixed => $this->literal(
+            type_bare($definition->type()),
+            $detector->detectType($element),
+            $element,
+            false,
+            false,
+        ), $present);
+
+        return in_array(null, $values, true) ? null : parquet_column($definition->entry()->name())->in($values);
+    }
+
+    private function startsWith(FunctionTree $haystack, FunctionTree $needle, Schema $body): ?Filter
+    {
+        $definition = $this->definition($haystack, $body);
+        // @mago-expect analysis:mixed-assignment
+        $prefix = $needle instanceof Literal ? $needle->value() : null;
+
+        return $definition !== null && type_bare($definition->type()) instanceof StringType && is_string($prefix)
+            ? parquet_column($definition->entry()->name())->startsWith($prefix)
+            : null;
+    }
+
+    private function between(Between $between, Schema $body): ?Filter
+    {
+        [$value, $lower, $upper, $boundary] = $between->children();
+
+        // @mago-expect analysis:mixed-assignment
+        $kind = $boundary instanceof Literal ? $boundary->value() : null;
+
+        if (!$kind instanceof Boundary) {
+            return null;
+        }
+
+        $lowerBound = $this->comparison(
+            $value,
+            $lower,
+            $kind === Boundary::INCLUSIVE || $kind === Boundary::LEFT_INCLUSIVE
+                ? Operator::GreaterThanOrEqual
+                : Operator::GreaterThan,
+            $body,
+            false,
+        );
+        $upperBound = $this->comparison(
+            $value,
+            $upper,
+            $kind === Boundary::INCLUSIVE || $kind === Boundary::RIGHT_INCLUSIVE
+                ? Operator::LessThanOrEqual
+                : Operator::LessThan,
+            $body,
+            false,
+        );
+
+        return $lowerBound === null || $upperBound === null ? null : parquet_all($lowerBound, $upperBound);
+    }
+
+    /**
+     * @return null|Definition<mixed> the body column $function is a reference to, null when it is none
+     */
+    private function definition(FunctionTree $function, Schema $body): ?Definition
+    {
+        return $function instanceof UnresolvedReference ? $body->findDefinition($function->to()) : null;
+    }
+
+    /**
+     * @param Type<mixed> $column
+     * @param Type<mixed> $literal
+     *
+     * @return null|bool|DateTimeInterface|float|int|string the literal as the parquet filter takes it, null when
+     *                                                         the pair cannot be pushed
+     */
+    private function literal(Type $column, Type $literal, mixed $value, bool $ordering, bool $strict): mixed
+    {
+        $literal = type_bare($literal);
+
+        if (is_float($value) && is_nan($value)) {
+            return null;
+        }
+
+        return match (true) {
+            $column instanceof JsonType => null,
+            $column instanceof NumericStringType => !$strict
+                && $literal instanceof StringType
+                && is_string($value)
+                && ctype_digit($value)
+                && ($value === '0' || $value[0] !== '0')
+                    ? $value
+                    : null,
+            !$strict && $column instanceof FloatType && $literal instanceof IntegerType => is_int($value)
+                && abs($value) <= self::EXACT_FLOAT_INTEGER
+                    ? (float) $value
+                    : null,
+            !$strict && $column instanceof IntegerType && $literal instanceof FloatType => is_float($value)
+                && floor($value) === $value
+                && abs($value) < self::EXACT_FLOAT_INTEGER
+                    ? (int) $value
+                    : null,
+            !$strict
+                && (
+                    $column instanceof DateTimeType
+                    && $literal instanceof DateType
+                    || $column instanceof DateType
+                    && $literal instanceof DateTimeType
+                )
+                => $value instanceof DateTimeInterface ? $value : null,
+            $column::class !== $literal::class,
+            !(
+                $ordering
+                    ? (new ComparableValues())->orderedByPhysical($column)
+                    : (new ComparableValues())->equalByPhysical($column)
+            ),
+                => null,
+            $value instanceof Uuid => $value->toString(),
+            is_bool($value),
+            is_int($value),
+            is_float($value),
+            is_string($value),
+            $value instanceof DateTimeInterface,
+                => $value,
+            default => null,
+        };
+    }
+}

@@ -10,6 +10,7 @@ use Flow\Types\Type\Logical\DateType;
 use Flow\Types\Type\Logical\JsonType;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
+use Flow\Types\Type\Logical\NumericStringType;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
@@ -76,6 +77,13 @@ final readonly class Comparator
 
         if ($left instanceof TimeType && $right instanceof TimeType) {
             return true;
+        }
+
+        if ($left instanceof NumericStringType || $right instanceof NumericStringType) {
+            return (
+                in_array($left::class, [StringType::class, NumericStringType::class], true)
+                && in_array($right::class, [StringType::class, NumericStringType::class], true)
+            );
         }
 
         if (

@@ -13,6 +13,7 @@ use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
 use Flow\ETL\Exception\SchemaMismatchException;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
@@ -1005,7 +1006,7 @@ final class CSVExtractorTest extends FlowTestCase
         $extractor = from_csv(path_real(__DIR__ . '/../Fixtures/orders_flow.csv'));
         $extractor->withBatchSize(1);
 
-        self::assertExtractedRowsCount(2, $extractor, flow_context(config()), limit: 2);
+        self::assertExtractedRowsCount(2, $extractor, flow_context(config()), scan: new FileScan(2));
     }
 
     /**

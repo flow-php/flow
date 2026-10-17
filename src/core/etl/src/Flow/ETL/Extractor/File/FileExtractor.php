@@ -10,8 +10,6 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
-use Flow\Filesystem\Path\Filter;
-use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Generator;
 
 /**
@@ -21,13 +19,16 @@ use Generator;
 interface FileExtractor extends Extractor
 {
     /**
-     * @param null|int<1, max> $limit see Extractor::extract()
-     * @param Filter $pathFilter what this read lists. The Filter step stays in the plan, so a source that lists
-     *                           more, or ignores it, is still correct.
+     * Reads what the plan pushed into this read. Every field of $scan is a hint: the plan still enforces the
+     * limit, lists through the path filter and evaluates the predicate, so a source that reads or lists more, or
+     * ignores a field, is still correct. extract() is scan() with only a limit.
+     *
+     * @param FileScan $scan $scan->limit (see Extractor::extract()), $scan->pathFilter (what this read lists) and
+     *                       $scan->filter (a predicate over the source's columns)
      *
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator;
+    public function scan(FlowContext $context, FileScan $scan): Generator;
 
     public function source(): Path;
 

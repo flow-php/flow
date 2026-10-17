@@ -12,6 +12,7 @@ use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\File\FileExtractor;
 use Flow\ETL\Extractor\File\FileReading;
 use Flow\ETL\Extractor\File\FileReadLoop;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Extractor\File\ListedFiles;
 use Flow\ETL\Extractor\File\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\File\ReadWindow;
@@ -28,8 +29,6 @@ use Flow\ETL\Schema\Inference\SchemaInferrer;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
-use Flow\Filesystem\Path\Filter;
-use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Flow\Types\Type\Logical\InstanceOfTypeNarrower;
 use Generator;
 
@@ -94,11 +93,19 @@ final class JsonExtractor implements
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
+    {
+        return $this->scan($context, new FileScan(limit: $limit));
+    }
+
+    /**
+     * @return Generator<int, Rows, Signal|null, void>
+     */
+    public function scan(FlowContext $context, FileScan $scan): Generator
     {
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
         $schema = $this->schema();
-        $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $pathFilter), false);
+        $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $scan->pathFilter), false);
 
         yield from (new FileReadLoop($fileColumns, $schema))->read(
             $sources,
@@ -116,7 +123,7 @@ final class JsonExtractor implements
             ),
             $this->batchSize(),
             $context->backend(),
-            new ReadWindow(limit: $limit),
+            new ReadWindow(limit: $scan->limit),
         );
     }
 

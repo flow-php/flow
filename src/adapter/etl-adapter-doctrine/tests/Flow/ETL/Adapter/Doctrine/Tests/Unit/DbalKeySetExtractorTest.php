@@ -15,6 +15,7 @@ use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Generator;
@@ -151,7 +152,7 @@ final class DbalKeySetExtractorTest extends FlowTestCase
         );
         $counter->reset();
 
-        self::assertExtractedRowsCount(1500, $extractor, limit: 1500);
+        self::assertExtractedRowsCount(1500, $extractor, scan: new FileScan(1500));
         // the NULL check, 1000, then a page narrowed to the 500 still wanted - and no query for row 1501
         static::assertSame(3, $counter->count);
     }

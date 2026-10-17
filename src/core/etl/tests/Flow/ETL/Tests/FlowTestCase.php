@@ -8,12 +8,11 @@ use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\File\FileExtractor;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
-use Flow\Filesystem\Path\Filter;
-use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Generator;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -110,20 +109,18 @@ abstract class FlowTestCase extends TestCase
 
     /**
      * @param array<array-key, mixed> $expectedArray
-     * @param null|int<1, max> $limit
      */
     final public static function assertExtractedRowsAsArrayEquals(
         array $expectedArray,
         Extractor $extractor,
         ?FlowContext $flowContext = null,
         string $message = '',
-        ?int $limit = null,
-        Filter $pathFilter = new OnlyFiles(),
+        FileScan $scan = new FileScan(),
     ): void {
         $flowContext ??= flow_context();
         $extractedRows = rows(schema());
 
-        foreach (self::extracted($extractor, $flowContext, $limit, $pathFilter) as $nextRows) {
+        foreach (self::extracted($extractor, $flowContext, $scan) as $nextRows) {
             $extractedRows = $extractedRows->isEmpty()
                 ? $nextRows
                 : $extractedRows->concat(new PhpBackend(), $nextRows);
@@ -132,42 +129,34 @@ abstract class FlowTestCase extends TestCase
         static::assertEquals($expectedArray, $extractedRows->toArray(), $message);
     }
 
-    /**
-     * @param null|int<1, max> $limit
-     */
     final public static function assertExtractedRowsCount(
         int $expectedCount,
         Extractor $extractor,
         ?FlowContext $flowContext = null,
         string $message = '',
-        ?int $limit = null,
-        Filter $pathFilter = new OnlyFiles(),
+        FileScan $scan = new FileScan(),
     ): void {
         $flowContext ??= flow_context();
         $totalRows = 0;
 
-        foreach (self::extracted($extractor, $flowContext, $limit, $pathFilter) as $rows) {
+        foreach (self::extracted($extractor, $flowContext, $scan) as $rows) {
             $totalRows += $rows->count();
         }
 
         static::assertSame($expectedCount, $totalRows, $message);
     }
 
-    /**
-     * @param null|int<1, max> $limit
-     */
     final public static function assertExtractedRowsEquals(
         Rows $expectedRows,
         Extractor $extractor,
         ?FlowContext $flowContext = null,
         string $message = '',
-        ?int $limit = null,
-        Filter $pathFilter = new OnlyFiles(),
+        FileScan $scan = new FileScan(),
     ): void {
         $flowContext ??= flow_context();
         $extractedRows = rows(schema());
 
-        foreach (self::extracted($extractor, $flowContext, $limit, $pathFilter) as $nextRows) {
+        foreach (self::extracted($extractor, $flowContext, $scan) as $nextRows) {
             $extractedRows = $extractedRows->isEmpty()
                 ? $nextRows
                 : $extractedRows->concat(new PhpBackend(), $nextRows);
@@ -177,19 +166,13 @@ abstract class FlowTestCase extends TestCase
     }
 
     /**
-     * @param null|int<1, max> $limit
-     *
      * @return Generator<int, Rows>
      */
-    final public static function extracted(
-        Extractor $extractor,
-        FlowContext $context,
-        ?int $limit,
-        Filter $pathFilter,
-    ): Generator {
+    final public static function extracted(Extractor $extractor, FlowContext $context, FileScan $scan): Generator
+    {
         return $extractor instanceof FileExtractor
-            ? $extractor->extract($context, $limit, $pathFilter)
-            : $extractor->extract($context, $limit);
+            ? $extractor->scan($context, $scan)
+            : $extractor->extract($context, $scan->limit);
     }
 
     public function repositoryRoot(): string

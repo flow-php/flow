@@ -12,6 +12,7 @@ use Flow\ETL\Cardinality;
 use Flow\ETL\Config;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Schema\Definition\StringDefinition;
 use Flow\ETL\Tests\Context\ExtractedRows;
@@ -197,7 +198,7 @@ final class JsonExtractorTest extends FlowTestCase
         $extractor = from_json(path(__DIR__ . '/../../Fixtures/timezones.json'));
         $extractor->withBatchSize(1);
 
-        self::assertExtractedRowsCount(2, $extractor, flow_context(config()), limit: 2);
+        self::assertExtractedRowsCount(2, $extractor, flow_context(config()), scan: new FileScan(2));
     }
 
     public function test_schema_appends_the_metadata_column(): void

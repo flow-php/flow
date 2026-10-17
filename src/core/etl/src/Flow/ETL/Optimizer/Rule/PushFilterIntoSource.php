@@ -7,7 +7,7 @@ namespace Flow\ETL\Optimizer\Rule;
 use Flow\ETL\Extractor\File\FileExtractor;
 use Flow\ETL\Filesystem\ScalarFunctionFilter;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Function\All;
+use Flow\ETL\Function\Conjuncts;
 use Flow\ETL\Function\ReferencedColumns;
 use Flow\ETL\Optimizer\FilterWalk;
 use Flow\ETL\Optimizer\Rule;
@@ -18,9 +18,10 @@ use Flow\ETL\Plan\ReplaceLeaf;
 use function array_diff;
 
 /**
- * Evaluate a partition-only predicate once per FILE instead of once per row: the file never opens. The Filter node
- * stays, so a source that lists more than the pushed filter admits still returns the right rows. The parts of an AND
- * that read only partition columns are pushed one by one; an OR is pushed only as a whole.
+ * Offers every deterministic part of an AND to the file source as a predicate it may skip data with, and evaluates a
+ * partition-only part once per FILE instead of once per row: the file never opens. The Filter node stays, so a
+ * source that reads more than the pushed predicate admits still returns the right rows. An OR is pushed only as a
+ * whole.
  */
 final readonly class PushFilterIntoSource implements Rule
 {
@@ -34,14 +35,10 @@ final readonly class PushFilterIntoSource implements Rule
         }
 
         $partitions = $extractor->partitionSchema();
-
-        if ($partitions->count() === 0) {
-            return $plan;
-        }
-
         $consumerInputs = $plan->consumerInputs();
         $walk = new FilterWalk();
         $columns = new ReferencedColumns();
+        $conjuncts = new Conjuncts();
         $names = $partitions->references()->names();
         $read = $leaf;
 
@@ -50,7 +47,7 @@ final readonly class PushFilterIntoSource implements Rule
                 continue;
             }
 
-            foreach ($node->function instanceof All ? $node->function->children() : [$node->function] as $conjunct) {
+            foreach ($conjuncts->of($node->function) as $conjunct) {
                 if (!$conjunct->deterministic()) {
                     continue;
                 }
@@ -63,11 +60,15 @@ final readonly class PushFilterIntoSource implements Rule
 
                 $refs = $columns->in($atLeaf);
 
-                if ($refs->all() === [] || array_diff($refs->names(), $names) !== []) {
+                if ($refs->all() === []) {
                     continue;
                 }
 
-                $read = $read->withPathFilter(new ScalarFunctionFilter($atLeaf, $partitions, $context));
+                if (array_diff($refs->names(), $names) === []) {
+                    $read = $read->withPathFilter(new ScalarFunctionFilter($atLeaf, $partitions, $context));
+                }
+
+                $read = $read->withFilter($atLeaf);
             }
         }
 

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet;
 
+use Flow\ETL\Adapter\Parquet\Pushdown\FilterTranslator;
+use Flow\ETL\Adapter\Parquet\Pushdown\TranslatedConjunct;
 use Flow\ETL\Column\Backend;
 use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Extractor\File\DerivedSchema;
@@ -11,23 +13,38 @@ use Flow\ETL\Extractor\File\FileColumns;
 use Flow\ETL\Extractor\File\OffsetSkippingFileBatches;
 use Flow\ETL\Extractor\File\ReadWindow;
 use Flow\ETL\Extractor\File\SourceFile;
+use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\Parquet\Filter\Binding\BoundFilter;
 use Flow\Parquet\Reader\ReadPlanner;
 use Generator;
+use WeakMap;
+
+use function Flow\Parquet\DSL\parquet_all;
 
 final class ParquetFileBatches implements OffsetSkippingFileBatches
 {
     /**
+     * @var WeakMap<Schema, list<TranslatedConjunct>>
+     */
+    private WeakMap $translated;
+
+    /**
      * @param null|ParquetSourceFile $firstFile the file the schema pass kept open, read instead of opened again
      * @param null|DerivedSchema $derived the schema every file must match; null under unionByName
+     * @param null|ScalarFunction $filter the predicate the plan offered: row groups it proves cannot match are
+     *                                    skipped, the rest is read whole and filtered by the plan
      */
     public function __construct(
         private readonly ParquetSourceFileOpener $opener,
         private readonly FileColumns $fileColumns,
         private ?ParquetSourceFile $firstFile,
         private readonly ?DerivedSchema $derived,
-    ) {}
+        private readonly ?ScalarFunction $filter = null,
+    ) {
+        $this->translated = new WeakMap();
+    }
 
     /**
      * Skips the whole file when the window's offset covers it; otherwise reads from the offset. A file of a narrower
@@ -58,7 +75,8 @@ final class ParquetFileBatches implements OffsetSkippingFileBatches
         $opened = null;
 
         try {
-            $fileRows = $file->file->reader()->footer()->rowsNumber();
+            $footer = $file->file->reader()->footer();
+            $fileRows = $footer->rowsNumber();
 
             if ($window->offset >= $fileRows) {
                 return $fileRows;
@@ -67,12 +85,31 @@ final class ParquetFileBatches implements OffsetSkippingFileBatches
             $this->derived?->refuseDivergence($file->source()->uri(), $file->schema());
 
             $fileBody = $this->fileColumns->withoutTail($file->schema());
+            $translated = $this->filter === null
+                ? []
+                : ($this->translated[$body] ??= (new FilterTranslator())->translate($this->filter, $body));
+            $kept = [];
+
+            foreach ($translated as $conjunct) {
+                if ($conjunct->readsAs($fileBody, $body)) {
+                    $kept[] = $conjunct->filter;
+                }
+            }
+
             $opened = $file->open();
 
+            // a superset plan: the plan's Filter node still drops the rows the kept groups hold that do not match
             foreach ($opened->batches(
                 $fileBody,
                 $batchSize,
-                (new ReadPlanner())->plan($file->file->reader()->footer(), null, $window->offset, $window->limit),
+                (new ReadPlanner())->plan(
+                    $footer,
+                    $kept === []
+                        ? null
+                        : BoundFilter::bind(parquet_all(...$kept), $footer->schema(), $file->file->options()),
+                    $window->offset,
+                    $window->limit,
+                ),
                 $backend,
             ) as $rows) {
                 yield $fileBody->isSame($body) ? $rows : $rows->matchTo($body, $backend);

@@ -8,7 +8,9 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\File\FileExtractor;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Extractor\File\PathFiltering;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
@@ -16,8 +18,6 @@ use Flow\ETL\Schema;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
-use Flow\Filesystem\Path\Filter;
-use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Generator;
 
 final class AvroExtractor implements Extractor, FileExtractor
@@ -35,7 +35,18 @@ final class AvroExtractor implements Extractor, FileExtractor
         );
     }
 
-    public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
+    /**
+     * @return Generator<int, Rows, Signal|null, void>
+     */
+    public function extract(FlowContext $context, ?int $limit = null): Generator
+    {
+        return $this->scan($context, new FileScan(limit: $limit));
+    }
+
+    /**
+     * @return Generator<int, Rows, Signal|null, void>
+     */
+    public function scan(FlowContext $context, FileScan $scan): Generator
     {
         yield Rows::empty(new Schema(), $context->backend());
     }

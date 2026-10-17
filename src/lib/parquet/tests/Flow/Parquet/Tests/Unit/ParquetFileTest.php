@@ -6,6 +6,7 @@ namespace Flow\Parquet\Tests\Unit;
 
 use Flow\Filesystem\Stream\MemorySourceStream;
 use Flow\Parquet\Exception\InvalidArgumentException;
+use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile;
 use Flow\Parquet\ParquetFile\Schema;
@@ -52,6 +53,20 @@ final class ParquetFileTest extends TestCase
         static::assertSame($reader, $file->reader());
         static::assertSame($schema, $file->schema());
         static::assertSame($schema, $file->metadata()->schema());
+    }
+
+    public function test_options_are_the_ones_the_file_was_opened_with(): void
+    {
+        $options = Options::default()->set(Option::INT_96_AS_DATETIME, false);
+
+        static::assertSame(
+            $options,
+            (new ParquetFile(
+                new MemorySourceStream('PAR1'),
+                $options,
+                new SpyParquetFileReader(Schema::with(FlatColumn::int64('id'))),
+            ))->options(),
+        );
     }
 
     public function test_columns_reads_the_selected_columns_of_the_window_through_the_reader(): void

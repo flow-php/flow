@@ -28,7 +28,7 @@ final class JoinSidesTest extends FlowTestCase
         $rewritten = (new JoinSides(Optimizer::default(), NodeMother::context()))->of($join);
 
         static::assertInstanceOf(Join::class, $rewritten);
-        static::assertSame(3, (new LogicalPlan($rewritten->right()))->source()->limit());
+        static::assertSame(3, (new LogicalPlan($rewritten->right()))->source()->scan()->limit);
         static::assertSame($join->children()[0], $rewritten->children()[0]);
     }
 
@@ -42,7 +42,7 @@ final class JoinSidesTest extends FlowTestCase
         $rewritten = (new JoinSides(Optimizer::default(), NodeMother::context()))->of($join);
 
         static::assertInstanceOf(CrossJoin::class, $rewritten);
-        static::assertSame(3, (new LogicalPlan($rewritten->right()))->source()->limit());
+        static::assertSame(3, (new LogicalPlan($rewritten->right()))->source()->scan()->limit);
     }
 
     public function test_a_join_whose_right_side_does_not_change_keeps_its_identity(): void

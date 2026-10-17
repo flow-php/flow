@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Extractor;
 
 use Flow\ETL\Cardinality;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Extractor\FilesExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Schema;
@@ -139,7 +140,7 @@ final class FilesExtractorTest extends FlowTestCase
     {
         $extractor = files(__DIR__ . '/Fixtures/FileListExtractor/**/*')->withBatchSize(1);
 
-        self::assertExtractedRowsCount(2, $extractor, limit: 2);
+        self::assertExtractedRowsCount(2, $extractor, scan: new FileScan(2));
     }
 
     public function test_is_repeatable(): void

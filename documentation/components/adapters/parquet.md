@@ -90,3 +90,51 @@ use Flow\Parquet\Writer;
     [['id' => 7], ['id' => '18446744073709551615']],
 );
 ```
+
+## Filter pushdown
+
+A `filter()` directly over `from_parquet()` is offered to the reader. Row groups whose statistics prove that no row
+matches are skipped; the `Filter` step still runs on the rest, so the result never changes:
+
+```php
+<?php
+
+use function Flow\ETL\Adapter\Parquet\from_parquet;
+use function Flow\ETL\DSL\{data_frame, lit, ref, to_output};
+
+data_frame()
+    ->read(from_parquet(__DIR__ . '/orders/*.parquet'))
+    ->filter(ref('id')->greaterThan(lit(1000))->and(ref('status')->equals(lit('paid'))))
+    ->write(to_output())
+    ->run();
+```
+
+Each part of an `and()` is pushed on its own when it compares a file column with a literal of its type.
+
+Pushed:
+
+- `equals`, `notEquals`, `same`, `notSame`, `lessThan`, `lessThanEqual`, `greaterThan`, `greaterThanEqual`,
+  `between`, `isIn` (literal list), `startsWith`, `isNull`, `isNotNull`, and `not()`/`and()`/`or()` of those
+- an int literal on a float column up to 2^53, an integral float on an int column below 2^53
+- a `date` literal on a `datetime` column and the reverse
+- a digit string (`lit('1000')`) on a `numeric_string` (`UINT_64`) column
+
+Filtered after reading:
+
+- other functions, two columns compared, a literal of another type
+- `json` columns (except `isNull`/`isNotNull`), ordering on `uuid`
+- a column the file stores as another type than the read
+- partition columns, which list fewer files instead ([partitioning](/documentation/components/core/partitioning.md))
+
+`explain()` shows the predicate offered to the reader under `Read`, not what it skipped:
+
+```
+#3 Result
+│  Rows this plan hands out: to the trigger, or to the node reading it
+└─ #2 Filter
+   │  Condition: All
+   └─ #1 Read
+         Extractor: ParquetExtractor
+         Source: file:///orders/*.parquet
+         Filter: All
+```

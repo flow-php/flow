@@ -137,6 +137,30 @@ final class CountFromStatisticsTest extends FlowTestCase
         static::assertSame($plan, (new CountFromStatistics())->apply($plan, NodeMother::context()));
     }
 
+    public function test_a_read_with_a_pushed_filter_is_counted_by_running(): void
+    {
+        $plan = Trigger::count->plan(NodeMother::read()->withFilter(ref('id')->equals(lit(1))));
+
+        static::assertSame($plan, (new CountFromStatistics())->apply($plan, NodeMother::context()));
+    }
+
+    public function test_a_count_over_a_filtered_parquet_read_is_counted_by_running(): void
+    {
+        $memory = memory_filesystem();
+        df()
+            ->read(from_sequence_number('id', 1, 25))
+            ->write(to_parquet(path('memory://count/file.parquet'), filesystem: $memory))
+            ->run();
+        $frame = df()
+            ->read(from_parquet(path('memory://count/file.parquet'), filesystem: $memory))
+            ->filter(ref('id')->greaterThan(lit(20)));
+
+        $plan = $frame->explain(Trigger::count)->logical;
+
+        static::assertSame(5, $frame->count());
+        static::assertSame($plan, (new CountFromStatistics())->apply($plan, NodeMother::context()));
+    }
+
     public static function frames_counted_by_running(): Generator
     {
         yield 'filter' => [df()->read(from_array([['id' => 1], ['id' => 2]]))->filter(ref('id')->equals(lit(1)))];

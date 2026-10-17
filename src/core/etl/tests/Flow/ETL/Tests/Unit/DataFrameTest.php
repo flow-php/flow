@@ -958,9 +958,9 @@ final class DataFrameTest extends FlowTestCase
 
         static::assertSame([['id' => 1, 'doubled' => 2]], $frame->fetch()->toArray());
         static::assertSame([['id' => 1, 'doubled' => 2]], $frame->fetch()->toArray());
-        static::assertCount(2, $extractor->limits);
-        static::assertSame(1, $extractor->limits[0]);
-        static::assertSame(1, $extractor->limits[1]);
+        static::assertCount(2, $extractor->scans);
+        static::assertSame(1, $extractor->scans[0]->limit);
+        static::assertSame(1, $extractor->scans[1]->limit);
         static::assertStringEndsWith(
             "#1 Read\n            Extractor: RecordingFileExtractor\n            Source: file:///dev/null",
             $frame->explain()->toString(Stage::unoptimized),
@@ -985,7 +985,7 @@ final class DataFrameTest extends FlowTestCase
             ->join($right, join_on(['id' => 'id'], 'r_'))
             ->fetch();
 
-        static::assertSame(1, $extractor->limits[0]);
+        static::assertSame(1, $extractor->scans[0]->limit);
     }
 
     public function test_an_empty_fetch_plans_once(): void
@@ -1112,7 +1112,7 @@ final class DataFrameTest extends FlowTestCase
         $inner = df()->read($extractor)->limit(1);
 
         static::assertSame([['id' => 1]], df()->read(from_data_frame($inner))->fetch()->toArray());
-        static::assertSame(1, $extractor->limits[0]);
+        static::assertSame(1, $extractor->scans[0]->limit);
     }
 
     public function test_explain_without_sinks_prints_one_result_over_the_chain(): void
@@ -1210,8 +1210,9 @@ final class DataFrameTest extends FlowTestCase
                └─ #1 Read  source · transparent · streaming
                      Extractor: RecordingFileExtractor
                      Source: file:///dev/null
+                     Filter: IsNotNull
             PLAN, $dataFrame->explain()->toString(format: Format::declarations));
-        static::assertSame([], $extractor->limits);
+        static::assertSame([], $extractor->scans);
     }
 
     public function test_from_data_frame_reads_the_frame_as_a_source(): void

@@ -11,6 +11,7 @@ use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\File\FileExtractor;
 use Flow\ETL\Extractor\File\FileReading;
 use Flow\ETL\Extractor\File\FileReadLoop;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Extractor\File\ListedFiles;
 use Flow\ETL\Extractor\File\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\File\ReadWindow;
@@ -23,8 +24,6 @@ use Flow\ETL\Schema;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
-use Flow\Filesystem\Path\Filter;
-use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Generator;
 
 use function Flow\ETL\DSL\schema;
@@ -74,7 +73,15 @@ final class TextExtractor implements
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
+    {
+        return $this->scan($context, new FileScan(limit: $limit));
+    }
+
+    /**
+     * @return Generator<int, Rows, Signal|null, void>
+     */
+    public function scan(FlowContext $context, FileScan $scan): Generator
     {
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
 
@@ -82,11 +89,11 @@ final class TextExtractor implements
             $fileColumns,
             $fileColumns->declare($this->schema ?? schema(str_schema('text'))),
         ))->read(
-            iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $pathFilter), false),
+            iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $scan->pathFilter), false),
             new TextFileBatches($this->filesystem),
             $this->batchSize(),
             $context->backend(),
-            new ReadWindow(limit: $limit),
+            new ReadWindow(limit: $scan->limit),
         );
     }
 

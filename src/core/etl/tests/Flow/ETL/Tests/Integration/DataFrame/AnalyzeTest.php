@@ -18,12 +18,17 @@ use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\InlineLoader;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\ETL\Tests\Mother\MarketRowsMother;
+use Flow\Parquet\Option;
+use Flow\Parquet\Options;
 
+use function Flow\ETL\Adapter\Parquet\from_parquet;
+use function Flow\ETL\Adapter\Parquet\to_parquet;
 use function Flow\ETL\Adapter\Text\from_text;
 use function Flow\ETL\DSL\analyze;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\infer_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
@@ -31,6 +36,8 @@ use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\Filesystem\DSL\memory_filesystem;
+use function Flow\Filesystem\DSL\path;
 
 final class AnalyzeTest extends FlowIntegrationTestCase
 {
@@ -213,6 +220,35 @@ final class AnalyzeTest extends FlowIntegrationTestCase
             [new SourceStatistics('ArrayExtractor', new Statistics(Cardinality::exact(4)), 4, false)],
             $sources,
         );
+        static::assertNull($sources[0]->rowsError());
+    }
+
+    public function test_a_source_read_under_a_pushed_filter_reports_no_rows_error(): void
+    {
+        $memory = memory_filesystem();
+        df()
+            ->read(from_sequence_number('id', 1, 3000))
+            ->write(to_parquet(
+                path('memory://analyze/ids.parquet'),
+                Options::default()->set(Option::ROW_GROUP_SIZE_BYTES, 1)->set(
+                    Option::ROW_GROUP_SIZE_CHECK_INTERVAL,
+                    1000,
+                ),
+                filesystem: $memory,
+            ))
+            ->run();
+
+        $report = df()
+            ->read(from_parquet(path('memory://analyze/ids.parquet'), filesystem: $memory))
+            ->filter(ref('id')->greaterThan(lit(2500)))
+            ->run(analyze: analyze()->withSourceStatistics());
+
+        static::assertNotNull($report);
+        $sources = $report->sources();
+        static::assertNotNull($sources);
+        static::assertCount(1, $sources);
+        static::assertFalse($sources[0]->complete);
+        static::assertLessThan(3000, $sources[0]->rows);
         static::assertNull($sources[0]->rowsError());
     }
 

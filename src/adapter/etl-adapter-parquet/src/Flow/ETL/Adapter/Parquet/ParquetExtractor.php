@@ -12,6 +12,7 @@ use Flow\ETL\Extractor\File\DerivedSchema;
 use Flow\ETL\Extractor\File\FileExtractor;
 use Flow\ETL\Extractor\File\FileReading;
 use Flow\ETL\Extractor\File\FileReadLoop;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Extractor\File\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\File\ReadWindow;
 use Flow\ETL\Extractor\File\SelfDescribingFile;
@@ -111,9 +112,17 @@ final class ParquetExtractor implements
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
     {
-        $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $pathFilter), false);
+        return $this->scan($context, new FileScan(limit: $limit));
+    }
+
+    /**
+     * @return Generator<int, Rows, Signal|null, void>
+     */
+    public function scan(FlowContext $context, FileScan $scan): Generator
+    {
+        $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $scan->pathFilter), false);
         // every file is read under the first file's schema, or the union of all of them
         $target = $this->schema();
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
@@ -124,6 +133,7 @@ final class ParquetExtractor implements
             $this->unionByName
                 ? null
                 : new DerivedSchema($this->derivedSchema($this->schemaFiles(), $this->unionByName), $this->derivedFrom),
+            $scan->filter,
         );
         $this->firstFile = null;
 
@@ -133,7 +143,7 @@ final class ParquetExtractor implements
                 $batches,
                 $this->batchSize(),
                 $context->backend(),
-                new ReadWindow($this->offset ?? 0, $limit),
+                new ReadWindow($this->offset ?? 0, $scan->limit),
             );
         } finally {
             $batches->close();

@@ -8,9 +8,11 @@ use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\File\FileExtractor;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Extractor\File\ListingPartitions;
 use Flow\ETL\Extractor\File\SourceFile;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Rows;
 use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\Filesystem\FileListing;
@@ -18,7 +20,6 @@ use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Partition;
 use Flow\Filesystem\Path;
-use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Generator;
 
@@ -67,9 +68,17 @@ final class PathPartitionsExtractor implements BatchableExtractor, Extractor, Fi
     }
 
     /**
-     * @return Generator<int, \Flow\ETL\Rows, Signal|null, void>
+     * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
+    {
+        return $this->scan($context, new FileScan(limit: $limit));
+    }
+
+    /**
+     * @return Generator<int, Rows, Signal|null, void>
+     */
+    public function scan(FlowContext $context, FileScan $scan): Generator
     {
         $batchSize = $this->batchSize();
         $backend = $context->backend();
@@ -78,7 +87,7 @@ final class PathPartitionsExtractor implements BatchableExtractor, Extractor, Fi
         $builder = new RowsBuilder($schema, $backend);
         $yielded = 0;
 
-        foreach ((new FileListing($this->filesystem))->list($this->path, $pathFilter) as $fileStatus) {
+        foreach ((new FileListing($this->filesystem))->list($this->path, $scan->pathFilter) as $fileStatus) {
             $builder->append([
                 'path' => $fileStatus->path->uri(),
                 'partitions' => array_merge(...array_values(array_map(static fn(Partition $p) => [
@@ -102,7 +111,7 @@ final class PathPartitionsExtractor implements BatchableExtractor, Extractor, Fi
 
             $builder = new RowsBuilder($schema, $backend);
 
-            if ($limit !== null && $yielded >= $limit) {
+            if ($scan->limit !== null && $yielded >= $scan->limit) {
                 return;
             }
         }

@@ -16,7 +16,6 @@ use Flow\Types\Type\Unifier\StrictUnifier;
 use function array_map;
 use function array_values;
 use function Flow\ETL\DSL\lit;
-use function max;
 
 final class Greatest implements ScalarFunction
 {
@@ -73,23 +72,33 @@ final class Greatest implements ScalarFunction
 
     public function eval(Rows $rows, FlowContext $context): Column
     {
-        $arguments = array_map(static fn(ScalarFunction $value): array => (new Parameter($value))->values(
+        $columns = array_map(static fn(ScalarFunction $value): Column => (new Parameter($value))->column(
             $rows,
             $context,
         ), $this->values);
+        $order = new ValueOrder(...array_map(static fn(Column $column): Type => $column->type(), $columns));
+        $arguments = array_map(static fn(Column $column): array => $column->values(), $columns);
         $results = [];
 
         for ($i = 0, $count = $rows->count(); $i < $count; $i++) {
             // NULL iff every argument is NULL - nulls are skipped, never compared
-            $values = [];
+            $greatest = null;
 
             foreach ($arguments as $argument) {
-                if ($argument[$i] !== null) {
-                    $values[] = $argument[$i];
+                // @mago-ignore analysis:mixed-assignment
+                $value = $argument[$i];
+
+                if ($value === null) {
+                    continue;
+                }
+
+                if ($greatest === null || $order->compare($greatest, $value) < 0) {
+                    // @mago-ignore analysis:mixed-assignment
+                    $greatest = $value;
                 }
             }
 
-            $results[] = $values === [] ? null : max($values);
+            $results[] = $greatest;
         }
 
         return (new ResultColumn($context->backend()))->of($this, $results);

@@ -14,6 +14,7 @@ use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
@@ -387,7 +388,7 @@ final class PostgreSqlKeySetExtractorTest extends FlowTestCase
             pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
         );
 
-        self::assertExtractedRowsCount(1500, $extractor, limit: 1500);
+        self::assertExtractedRowsCount(1500, $extractor, scan: new FileScan(1500));
         // 1000, then a page narrowed to the 500 still wanted - and no third query for row 1501
         static::assertSame(2, $client->callsTo('cursor'));
     }

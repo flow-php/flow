@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Parquet\Tests\Context;
 
 use Flow\ETL\Adapter\Parquet\ParquetOpenSink;
+use Flow\ETL\Adapter\Parquet\ParquetSourceFileOpener;
 use Flow\ETL\Adapter\Parquet\RustParquetOpenSink;
 use Flow\ETL\Adapter\Parquet\SchemaConverter;
 use Flow\ETL\Rows;
@@ -23,6 +24,8 @@ use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\Column;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\LogicalType;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Reader\ReadPlan;
 use Flow\Parquet\Reader\ReadPlanner;
@@ -30,6 +33,7 @@ use Flow\Parquet\Writer;
 
 use function array_count_values;
 use function array_map;
+use function array_sum;
 use function Flow\ETL\Adapter\Parquet\to_parquet;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_rows;
@@ -157,5 +161,64 @@ final class ParquetFilesContext
         return array_count_values(array_map(static fn(ClosingSpySourceStream $stream): string => $stream
             ->path()
             ->path(), $filesystem->openedStreams));
+    }
+
+    /**
+     * Bytes read through every stream the filesystem opened.
+     */
+    public static function bytesRead(CountingFilesystem $filesystem): int
+    {
+        return array_sum(array_map(
+            static fn(ClosingSpySourceStream $stream): int => $stream->readBytes,
+            $filesystem->openedStreams,
+        ));
+    }
+
+    /**
+     * A PHP-engine opener of every column under the default options.
+     */
+    public static function opener(Filesystem $filesystem): ParquetSourceFileOpener
+    {
+        return new ParquetSourceFileOpener(
+            $filesystem,
+            new PhpParquetEngine(),
+            Options::default(),
+            new SchemaConverter(),
+            [],
+        );
+    }
+
+    /**
+     * @param iterable<Rows> $batches
+     */
+    public static function rowCount(iterable $batches): int
+    {
+        $count = 0;
+
+        foreach ($batches as $rows) {
+            $count += $rows->count();
+        }
+
+        return $count;
+    }
+
+    /**
+     * A `UINT_64` column `big`, one row group per value.
+     *
+     * @param list<int|string> $values
+     */
+    public static function unsignedInt64(Filesystem $filesystem, string $uri, array $values): void
+    {
+        $options = Options::default()->set(Option::ROW_GROUP_SIZE_BYTES, 1)->set(
+            Option::ROW_GROUP_SIZE_CHECK_INTERVAL,
+            1,
+        );
+        $writer = new Writer(options: $options, engine: new PhpParquetEngine(options: $options));
+        $writer->openForStream(
+            $filesystem->writeTo(path($uri)),
+            Schema::with(new FlatColumn('big', PhysicalType::INT64, logicalType: LogicalType::integer(64, false))),
+        );
+        $writer->writeBatch(array_map(static fn(int|string $value): array => ['big' => $value], $values));
+        $writer->close();
     }
 }

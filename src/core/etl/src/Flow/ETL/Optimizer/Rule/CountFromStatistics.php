@@ -22,7 +22,12 @@ final readonly class CountFromStatistics implements Rule
         $count = $plan->root instanceof Result ? $plan->root->children()[0] : null;
         $read = $count instanceof Count ? $count->children()[0] : null;
 
-        if (!$read instanceof Read || $read->limit() !== null || !$read->pathFilter() instanceof OnlyFiles) {
+        if (
+            !$read instanceof Read
+            || $read->scan()->limit !== null
+            || !$read->scan()->pathFilter instanceof OnlyFiles
+            || $read->scan()->filter !== null
+        ) {
             return $plan;
         }
 

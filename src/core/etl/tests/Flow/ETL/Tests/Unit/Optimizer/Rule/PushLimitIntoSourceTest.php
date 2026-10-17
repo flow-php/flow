@@ -42,7 +42,7 @@ final class PushLimitIntoSourceTest extends FlowTestCase
             NodeMother::context(),
         );
 
-        static::assertSame(10, $plan->source()->limit());
+        static::assertSame(10, $plan->source()->scan()->limit);
     }
 
     public function test_a_limit_passes_a_select(): void
@@ -52,7 +52,7 @@ final class PushLimitIntoSourceTest extends FlowTestCase
             NodeMother::context(),
         );
 
-        static::assertSame(10, $plan->source()->limit());
+        static::assertSame(10, $plan->source()->scan()->limit);
     }
 
     #[DataProvider('expanding_expressions')]
@@ -63,7 +63,7 @@ final class PushLimitIntoSourceTest extends FlowTestCase
             NodeMother::context(),
         );
 
-        static::assertNull($plan->source()->limit());
+        static::assertNull($plan->source()->scan()->limit);
     }
 
     public static function expanding_expressions(): Generator
@@ -82,7 +82,7 @@ final class PushLimitIntoSourceTest extends FlowTestCase
             NodeMother::context(),
         );
 
-        static::assertNull($plan->source()->limit());
+        static::assertNull($plan->source()->scan()->limit);
     }
 
     public function test_a_limit_does_not_pass_a_write(): void
@@ -92,7 +92,7 @@ final class PushLimitIntoSourceTest extends FlowTestCase
             NodeMother::context(),
         );
 
-        static::assertNull($plan->source()->limit());
+        static::assertNull($plan->source()->scan()->limit);
     }
 
     public function test_a_blocker_discards_the_limit_collected_above_it_and_the_walk_continues(): void
@@ -105,7 +105,7 @@ final class PushLimitIntoSourceTest extends FlowTestCase
             NodeMother::context(),
         );
 
-        static::assertSame(5, $plan->source()->limit());
+        static::assertSame(5, $plan->source()->scan()->limit);
     }
 
     public function test_the_push_rewrites_the_leaf_and_keeps_the_spine(): void
@@ -120,10 +120,10 @@ final class PushLimitIntoSourceTest extends FlowTestCase
         static::assertInstanceOf(Node\Limit::class, $limit);
         static::assertSame(10, $limit->limit);
         static::assertInstanceOf(Node\Select::class, $limit->children()[0]);
-        static::assertSame(10, $pushed->source()->limit());
+        static::assertSame(10, $pushed->source()->scan()->limit);
         static::assertSame($extractor, $pushed->source()->extractor());
-        static::assertNull($plan->source()->limit());
-        static::assertSame([], $extractor->limits);
+        static::assertNull($plan->source()->scan()->limit);
+        static::assertSame([], $extractor->scans);
     }
 
     public function test_the_minimum_of_two_limits_is_pushed(): void
@@ -133,7 +133,7 @@ final class PushLimitIntoSourceTest extends FlowTestCase
             NodeMother::context(),
         );
 
-        static::assertSame(3, $plan->source()->limit());
+        static::assertSame(3, $plan->source()->scan()->limit);
     }
 
     public function test_a_limit_narrows_an_already_pushed_limit(): void
@@ -143,7 +143,7 @@ final class PushLimitIntoSourceTest extends FlowTestCase
             NodeMother::context(),
         );
 
-        static::assertSame(4, $plan->source()->limit());
+        static::assertSame(4, $plan->source()->scan()->limit);
     }
 
     public function test_a_plan_without_a_limit_pushes_nothing(): void
@@ -153,7 +153,7 @@ final class PushLimitIntoSourceTest extends FlowTestCase
             NodeMother::context(),
         );
 
-        static::assertNull($plan->source()->limit());
+        static::assertNull($plan->source()->scan()->limit);
     }
 
     public function test_a_row_input_chain_that_does_not_end_in_a_read_throws(): void
@@ -185,7 +185,7 @@ final class PushLimitIntoSourceTest extends FlowTestCase
             NodeMother::context(),
         );
 
-        static::assertSame(3, $plan->source()->limit());
+        static::assertSame(3, $plan->source()->scan()->limit);
     }
 
     public function test_one_transaction_child_whose_walk_yields_no_limit_blocks_the_push(): void
@@ -207,7 +207,7 @@ final class PushLimitIntoSourceTest extends FlowTestCase
             NodeMother::context(),
         );
 
-        static::assertNull($plan->source()->limit());
+        static::assertNull($plan->source()->scan()->limit);
     }
 
     public function test_a_limit_below_a_sink_is_pushed(): void
@@ -219,7 +219,7 @@ final class PushLimitIntoSourceTest extends FlowTestCase
             NodeMother::context(),
         );
 
-        static::assertSame(3, $plan->source()->limit());
+        static::assertSame(3, $plan->source()->scan()->limit);
     }
 
     public function test_a_limit_above_a_sink_does_not_narrow_the_sink(): void
@@ -233,7 +233,7 @@ final class PushLimitIntoSourceTest extends FlowTestCase
             NodeMother::context(),
         );
 
-        static::assertNull($plan->source()->limit());
+        static::assertNull($plan->source()->scan()->limit);
     }
 
     public function test_the_widest_limit_of_every_root_is_pushed(): void
@@ -247,7 +247,7 @@ final class PushLimitIntoSourceTest extends FlowTestCase
             NodeMother::context(),
         );
 
-        static::assertSame(5, $plan->source()->limit());
+        static::assertSame(5, $plan->source()->scan()->limit);
     }
 
     public function test_a_sink_whose_walk_yields_no_limit_blocks_the_push(): void
@@ -267,7 +267,7 @@ final class PushLimitIntoSourceTest extends FlowTestCase
             NodeMother::context(),
         );
 
-        static::assertNull($plan->source()->limit());
+        static::assertNull($plan->source()->scan()->limit);
     }
 
     public function test_the_push_reaches_the_sinks_through_the_shared_leaf(): void
@@ -289,6 +289,6 @@ final class PushLimitIntoSourceTest extends FlowTestCase
             NodeMother::context(),
         );
 
-        static::assertSame(110, $plan->source()->limit());
+        static::assertSame(110, $plan->source()->scan()->limit);
     }
 }

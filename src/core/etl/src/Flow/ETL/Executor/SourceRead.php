@@ -34,7 +34,7 @@ final class SourceRead
     }
 
     /**
-     * Every read ran to its end and none had a limit or a partition filter pushed into it.
+     * Every read ran to its end and none had a limit, a partition filter or a predicate pushed into it.
      */
     public function isComplete(): bool
     {

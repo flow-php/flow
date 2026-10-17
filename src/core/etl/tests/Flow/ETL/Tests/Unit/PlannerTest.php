@@ -90,7 +90,7 @@ final class PlannerTest extends FlowTestCase
         );
 
         $steps = PipelineSteps::of($plan->root()->segments());
-        static::assertSame(4, $plan->root()->limit());
+        static::assertSame(4, $plan->root()->scan()->limit);
         static::assertSame(
             [SinkFeed::class, LimitTransformer::class, MemoryLoader::class, SelectEntriesTransformer::class],
             array_map(static fn($step) => $step::class, $steps),
@@ -141,8 +141,8 @@ final class PlannerTest extends FlowTestCase
         static::assertSame(['id', 'total'], $plan->schema->references()->names());
 
         static::assertSame($csv, $plan->root()->segments()->extractor());
-        static::assertSame(5, $plan->root()->limit());
-        static::assertNull($logical->source()->limit());
+        static::assertSame(5, $plan->root()->scan()->limit);
+        static::assertNull($logical->source()->scan()->limit);
     }
 
     public function test_a_run_plan_over_one_sink_is_described_with_the_sinks_input_schema(): void
@@ -189,8 +189,8 @@ final class PlannerTest extends FlowTestCase
         static::assertSame(['id', 'total', 'seller_id'], $plan->schema->references()->names());
 
         static::assertSame($csv, $upstream->segments()->extractor());
-        static::assertNull($upstream->limit());
-        static::assertNull($plan->root()->limit());
+        static::assertNull($upstream->scan()->limit);
+        static::assertNull($plan->root()->scan()->limit);
     }
 
     public function test_a_join_each_plan_refuses_its_schema_and_has_no_frame_edge(): void
@@ -234,7 +234,7 @@ final class PlannerTest extends FlowTestCase
         $plan = (new Planner())->plan($logical, NodeMother::context());
 
         static::assertSame($csv, $plan->root()->segments()->extractor());
-        static::assertNull($plan->root()->limit());
+        static::assertNull($plan->root()->scan()->limit);
     }
 
     public function test_a_join_plans_its_right_side_as_a_physical_plan_of_its_own(): void
@@ -316,7 +316,7 @@ final class PlannerTest extends FlowTestCase
             PipelineSteps::classes($plan->root()->segments()),
         );
         static::assertSame($extractor, $plan->root()->segments()->extractor());
-        static::assertSame(5, $plan->root()->limit());
+        static::assertSame(5, $plan->root()->scan()->limit);
     }
 
     public function test_a_read_frame_describes_the_rows_without_reading_them(): void
@@ -412,10 +412,7 @@ final class PlannerTest extends FlowTestCase
 
         static::assertSame(
             1,
-            (new Planner(Optimizer::default()))
-                ->plan($logical, NodeMother::context())
-                ->root()
-                ->limit(),
+            (new Planner(Optimizer::default()))->plan($logical, NodeMother::context())->root()->scan()->limit,
         );
     }
 

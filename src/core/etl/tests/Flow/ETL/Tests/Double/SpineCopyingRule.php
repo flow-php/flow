@@ -26,6 +26,6 @@ final readonly class SpineCopyingRule implements Rewrite, Rule
 
     public function of(Node $node): Node
     {
-        return $node instanceof Read ? new Read($node->extractor(), $node->limit(), $node->pathFilter()) : $node;
+        return $node instanceof Read ? new Read($node->extractor(), $node->scan()) : $node;
     }
 }

@@ -31,6 +31,7 @@ use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_numeric_string;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
@@ -52,6 +53,9 @@ final class ComparatorTest extends TestCase
         yield [type_union(type_integer(), type_null()), type_integer()];
         yield [type_union(type_integer(), type_null()), type_float()];
         yield [type_integer(), type_string()];
+        yield [type_numeric_string(), type_string()];
+        yield [type_string(), type_numeric_string()];
+        yield [type_optional(type_numeric_string()), type_string()];
 
         yield [type_array(), type_array()];
         yield [type_array(), type_list(type_string())];
@@ -182,6 +186,9 @@ final class ComparatorTest extends TestCase
     {
         yield [type_integer(), type_union(type_float(), type_integer())];
         yield [type_integer(), type_boolean()];
+        yield [type_numeric_string(), type_integer()];
+        yield [type_integer(), type_numeric_string()];
+        yield [type_numeric_string(), type_json()];
         yield [type_array(), type_string()];
         yield [type_array(), type_integer()];
         yield [type_array(), type_boolean()];

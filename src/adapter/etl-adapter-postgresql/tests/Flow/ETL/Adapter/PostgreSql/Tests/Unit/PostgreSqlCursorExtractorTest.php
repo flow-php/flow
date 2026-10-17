@@ -11,6 +11,7 @@ use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
@@ -322,7 +323,7 @@ final class PostgreSqlCursorExtractorTest extends FlowTestCase
             );
         $extractor = from_pgsql_cursor($client, 'SELECT id FROM t');
 
-        self::assertExtractedRowsCount(1500, $extractor, limit: 1500);
+        self::assertExtractedRowsCount(1500, $extractor, scan: new FileScan(1500));
         // FETCH 1000, then FETCH 500 - a full narrowed fetch, which only the limit itself can stop
         static::assertSame(2, $client->callsTo('cursor'));
     }

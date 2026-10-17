@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Plan\Node;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Extractor\File\FileScan;
+use Flow\ETL\Function\All;
 use Flow\ETL\Plan\Materialization;
 use Flow\ETL\Plan\Node\Read;
 use Flow\ETL\Plan\Redefined;
@@ -17,6 +19,8 @@ use Flow\Filesystem\Tests\Double\RejectingFilter;
 
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 
 final class ReadTest extends FlowTestCase
@@ -37,34 +41,33 @@ final class ReadTest extends FlowTestCase
     {
         $read = new Read(from_array([['id' => 1]]));
 
-        static::assertNull($read->limit());
-        static::assertInstanceOf(OnlyFiles::class, $read->pathFilter());
+        static::assertNull($read->scan()->limit);
+        static::assertInstanceOf(OnlyFiles::class, $read->scan()->pathFilter);
     }
 
-    public function test_extractor_limit_and_path_filter_are_the_values_it_was_built_with(): void
+    public function test_extractor_and_scan_are_the_values_it_was_built_with(): void
     {
         $extractor = from_array([['id' => 1]]);
-        $filter = new RejectingFilter();
+        $scan = new FileScan(5, new RejectingFilter());
 
-        $read = new Read($extractor, 5, $filter);
+        $read = new Read($extractor, $scan);
 
         static::assertSame($extractor, $read->extractor());
-        static::assertSame(5, $read->limit());
-        static::assertSame($filter, $read->pathFilter());
+        static::assertSame($scan, $read->scan());
     }
 
     public function test_with_path_filter_composes_with_the_filters_already_held(): void
     {
         $extractor = from_array([['id' => 1]]);
-        $read = new Read($extractor, 3);
+        $read = new Read($extractor, new FileScan(3));
         $first = new RejectingFilter();
         $second = new RejectingFilter();
 
         $filtered = $read->withPathFilter($first)->withPathFilter($second);
 
-        static::assertInstanceOf(OnlyFiles::class, $read->pathFilter());
-        static::assertEquals(new Filters(new OnlyFiles(), $first, $second), $filtered->pathFilter());
-        static::assertSame(3, $filtered->limit());
+        static::assertInstanceOf(OnlyFiles::class, $read->scan()->pathFilter);
+        static::assertEquals(new Filters(new OnlyFiles(), $first, $second), $filtered->scan()->pathFilter);
+        static::assertSame(3, $filtered->scan()->limit);
         static::assertSame($extractor, $filtered->extractor());
     }
 
@@ -74,17 +77,17 @@ final class ReadTest extends FlowTestCase
 
         $limited = $read->withLimit(5);
 
-        static::assertNull($read->limit());
-        static::assertSame(5, $limited->limit());
-        static::assertEquals(new Filters(new OnlyFiles(), $filter), $limited->pathFilter());
+        static::assertNull($read->scan()->limit);
+        static::assertSame(5, $limited->scan()->limit);
+        static::assertEquals(new Filters(new OnlyFiles(), $filter), $limited->scan()->pathFilter);
     }
 
     public function test_with_limit_narrows_and_never_widens(): void
     {
         $read = new Read(from_array([['id' => 1]]));
 
-        static::assertSame(10, $read->withLimit(10)->withLimit(100)->limit());
-        static::assertSame(10, $read->withLimit(100)->withLimit(10)->limit());
+        static::assertSame(10, $read->withLimit(10)->withLimit(100)->scan()->limit);
+        static::assertSame(10, $read->withLimit(100)->withLimit(10)->scan()->limit);
     }
 
     public function test_with_limit_refuses_zero_or_less(): void
@@ -93,6 +96,65 @@ final class ReadTest extends FlowTestCase
         $this->expectExceptionMessage('Limit must be greater than 0');
 
         (new Read(from_array([['id' => 1]])))->withLimit(0);
+    }
+
+    public function test_with_filter_pushes_the_first_predicate_as_is(): void
+    {
+        $predicate = ref('id')->greaterThan(lit(1));
+
+        static::assertSame($predicate, (new Read(from_array([['id' => 1]])))->withFilter($predicate)->scan()->filter);
+    }
+
+    public function test_with_filter_combines_with_all(): void
+    {
+        $read = new Read(from_array([['id' => 1]]));
+        $first = ref('id')->greaterThan(lit(1));
+        $second = ref('id')->lessThan(lit(10));
+        $third = ref('id')->notEquals(lit(5));
+
+        $filtered = $read
+            ->withPathFilter($pathFilter = new RejectingFilter())
+            ->withFilter($first)
+            ->withFilter($second);
+
+        static::assertNull($read->scan()->filter);
+        static::assertEquals(new All($first, $second), $filtered->scan()->filter);
+        static::assertEquals(new All($first, $second, $third), $filtered->withFilter($third)->scan()->filter);
+        static::assertEquals(new Filters(new OnlyFiles(), $pathFilter), $filtered->scan()->pathFilter);
+    }
+
+    public function test_with_filter_after_a_limit_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('A file scan cannot carry a limit beside a filter');
+
+        (new Read(from_array([['id' => 1]])))
+            ->withLimit(5)
+            ->withFilter(ref('id')->greaterThan(lit(1)));
+    }
+
+    public function test_with_limit_after_a_filter_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('A file scan cannot carry a limit beside a filter');
+
+        (new Read(from_array([['id' => 1]])))
+            ->withFilter(ref('id')->greaterThan(lit(1)))
+            ->withLimit(5);
+    }
+
+    public function test_with_path_filter_keeps_the_pushed_filter(): void
+    {
+        $predicate = ref('id')->greaterThan(lit(1));
+
+        static::assertSame(
+            $predicate,
+            (new Read(from_array([['id' => 1]])))
+                ->withFilter($predicate)
+                ->withPathFilter(new RejectingFilter())
+                ->scan()
+                ->filter,
+        );
     }
 
     public function test_schema_delegates_to_the_extractor(): void

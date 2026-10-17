@@ -66,6 +66,46 @@ Upgrading from older versions: [0.35.x to 0.40.x](/documentation/upgrading-0.35-
 | `RustBatchReader` / `RustColumnsReader::__construct(..., int $batchSize, ?int $offset, ?int $limit)`       | `__construct(..., int $batchSize, ReadPlan $plan)`                                                                        |
 | `FLOW_ARROW_ABI` / `ArrowExtension::ABI` 2, `FLOW_PHP_ABI` / `FlowPhpExtension::ABI` 1                     | 3 and 2: rebuild both the `arrow` and the `flow_php` extension; an older build is refused by `available()`                |
 
+### 6) `flow-php/etl`, `flow-php/types` - string comparisons in filters use byte order, as sort already does
+
+| Before                                                                                         | After                                                                                                                                                                |
+|------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `ref('a')->lessThan(lit('10'))` on `'9'`: `true` (PHP `<` compares numeric strings as numbers) | `false`: `lessThan`, `lessThanEqual`, `greaterThan`, `greaterThanEqual`, `between`, `greatest` and `least` order two strings by bytes (`strcmp`), as `sortBy()` does |
+| `greatest(lit('9'), lit('10'))`: `'10'`                                                        | `'9'`                                                                                                                                                                |
+| a `numeric_string` column was comparable only with another `numeric_string`                    | comparable with a `string` literal too (`ref('id')->greaterThan(lit('1000'))`), and ordered numerically; still not comparable with an `integer`                      |
+| `Between\Boundary::compareValues(mixed $left, mixed $right)`                                   | removed: `(new ValueOrder(...$operandTypes))->compare($left, $right)`; `Boundary::compare($value, $lower, $upper, ValueOrder $order = new ValueOrder())`             |
+
+### 7) `flow-php/etl` - a file extractor reads a `FileScan`; `Read` and `Executor\Pipeline` carry it
+
+| Before                                                                                                   | After                                                                                                                                                       |
+|----------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `FileExtractor::extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles())` | `FileExtractor::scan(FlowContext $context, FileScan $scan)`; `extract(FlowContext $context, ?int $limit = null)` is `Extractor`'s and delegates to `scan()` |
+| `$extractor->extract($context, pathFilter: $filter)`                                                     | `$extractor->scan($context, new FileScan(pathFilter: $filter))`                                                                                             |
+| `Read::limit()`, `Read::pathFilter()`, `new Read($extractor, $limit, $pathFilter)`                       | `Read::scan()->limit`, `->pathFilter`, `->filter`; `new Read($extractor, new FileScan($limit, $pathFilter))`                                                |
+| `Executor\Pipeline::limit()`, `pathFilter()`, `new Pipeline(..., $limit, $pathFilter, $sources)`         | `Pipeline::scan()`; `new Pipeline(..., $scan, $sources)`                                                                                                    |
+| a filter on a body column reached no extractor                                                           | pushed as `FileScan::$filter` (a hint, the `Filter` step stays); `explain()` prints it as `Filter: …` under `Read`                                          |
+
+A custom file extractor:
+
+```php
+// before
+public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
+{
+    // reads with $limit and $pathFilter
+}
+
+// after
+public function extract(FlowContext $context, ?int $limit = null): Generator
+{
+    return $this->scan($context, new FileScan(limit: $limit));
+}
+
+public function scan(FlowContext $context, FileScan $scan): Generator
+{
+    // reads with $scan->limit and $scan->pathFilter; $scan->filter may be ignored
+}
+```
+
 ---
 
 ## Upgrading from 0.45.x to 0.46.x

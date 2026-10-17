@@ -10,12 +10,15 @@ use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Tests\Context\FunctionContext;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\definition_from_type;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\greatest;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\Types\DSL\type_numeric_string;
 
 final class GreatestTest extends FlowTestCase
 {
@@ -87,6 +90,24 @@ final class GreatestTest extends FlowTestCase
                 'int' => 55,
             ],
             schema(int_schema('int')),
+        ));
+    }
+
+    public function test_greatest_orders_strings_by_bytes(): void
+    {
+        static::assertSame('9', (new FunctionContext(flow_context()))->eval(
+            greatest(ref('a'), lit('10'), lit('9')),
+            ['a' => null],
+            schema(str_schema('a', nullable: true)),
+        ));
+    }
+
+    public function test_greatest_orders_a_numeric_string_column_numerically(): void
+    {
+        static::assertSame('10', (new FunctionContext(flow_context()))->eval(
+            greatest(ref('a'), ref('b')),
+            ['a' => '9', 'b' => '10'],
+            schema(definition_from_type('a', type_numeric_string()), definition_from_type('b', type_numeric_string())),
         ));
     }
 }

@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
 use DateTimeImmutable;
 use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetFilesContext;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Function\Between\Boundary;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\CountingFilesystem;
@@ -113,8 +114,11 @@ final class ParquetExtractorFooterTest extends FlowTestCase
         $extractor = from_parquet(path(self::PAGINATION . '/*.parquet'), filesystem: $filesystem);
 
         $extractor->schema();
-        $rows = iterator_to_array($extractor->extract(flow_context(), pathFilter: new KeepPaths([path(self::PAGINATION
-        . '/02_500.parquet')])), false);
+        $rows = iterator_to_array(
+            $extractor->scan(flow_context(), new FileScan(pathFilter: new KeepPaths([path(self::PAGINATION
+            . '/02_500.parquet')]))),
+            false,
+        );
 
         static::assertSame(500, array_sum(array_map(static fn(Rows $batch): int => $batch->count(), $rows)));
         static::assertSame(

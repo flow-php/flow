@@ -13,6 +13,7 @@ use Flow\ETL\Extractor\File\DerivedSchema;
 use Flow\ETL\Extractor\File\FileExtractor;
 use Flow\ETL\Extractor\File\FileReading;
 use Flow\ETL\Extractor\File\FileReadLoop;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Extractor\File\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\File\ReadWindow;
 use Flow\ETL\Extractor\RewindableExtractor;
@@ -24,8 +25,6 @@ use Flow\ETL\Schema;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
-use Flow\Filesystem\Path\Filter;
-use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Flow\Floe\Codec\NoopCodec;
 use Generator;
 
@@ -78,12 +77,20 @@ final class FloeExtractor implements
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
+    public function extract(FlowContext $context, ?int $limit = null): Generator
+    {
+        return $this->scan($context, new FileScan(limit: $limit));
+    }
+
+    /**
+     * @return Generator<int, Rows, Signal|null, void>
+     */
+    public function scan(FlowContext $context, FileScan $scan): Generator
     {
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
 
         yield from (new FileReadLoop($fileColumns, $this->schema()))->read(
-            iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $pathFilter), false),
+            iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $scan->pathFilter), false),
             new FloeFileBatches(
                 $this->filesystem,
                 $this->codec,
@@ -95,7 +102,7 @@ final class FloeExtractor implements
             ),
             $this->batchSize(),
             $context->backend(),
-            new ReadWindow($this->offset ?? 0, $limit),
+            new ReadWindow($this->offset ?? 0, $scan->limit),
         );
     }
 
