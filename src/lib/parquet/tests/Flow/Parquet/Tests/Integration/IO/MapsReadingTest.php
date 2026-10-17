@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
+use Flow\Parquet\Query;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Tests\Mother\ParquetEngineMother;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -24,7 +25,7 @@ class MapsReadingTest extends ParquetIntegrationTestCase
 
         $count = 0;
 
-        foreach ($file->values(['map']) as $row) {
+        foreach ($file->values(new Query(['map'])) as $row) {
             /** @var array<array-key, mixed> $map */
             $map = $row['map'];
             static::assertIsArray($map);
@@ -49,7 +50,7 @@ class MapsReadingTest extends ParquetIntegrationTestCase
 
         $count = 0;
 
-        foreach ($file->values(['map_nullable']) as $rowIndex => $row) {
+        foreach ($file->values(new Query(['map_nullable'])) as $rowIndex => $row) {
             if (($rowIndex % 2) === 0) {
                 /** @var array<array-key, mixed> $map */
                 $map = $row['map_nullable'];
@@ -78,7 +79,7 @@ class MapsReadingTest extends ParquetIntegrationTestCase
 
         $count = 0;
 
-        foreach ($file->values(['map_of_complex_lists']) as $row) {
+        foreach ($file->values(new Query(['map_of_complex_lists'])) as $row) {
             /** @var array<array-key, mixed> $map */
             $map = $row['map_of_complex_lists'];
             static::assertIsArray($map);
@@ -112,7 +113,7 @@ class MapsReadingTest extends ParquetIntegrationTestCase
 
         $count = 0;
 
-        foreach ($file->values(['map_of_list_of_map_of_lists']) as $row) {
+        foreach ($file->values(new Query(['map_of_list_of_map_of_lists'])) as $row) {
             /** @var array<array-key, mixed> $map */
             $map = $row['map_of_list_of_map_of_lists'];
             static::assertIsArray($map);
@@ -145,7 +146,7 @@ class MapsReadingTest extends ParquetIntegrationTestCase
 
         $count = 0;
 
-        foreach ($file->values(['map_of_lists']) as $row) {
+        foreach ($file->values(new Query(['map_of_lists'])) as $row) {
             /** @var array<array-key, mixed> $map */
             $map = $row['map_of_lists'];
             static::assertIsArray($map);
@@ -172,7 +173,7 @@ class MapsReadingTest extends ParquetIntegrationTestCase
 
         $count = 0;
 
-        foreach ($file->values(['map_of_maps']) as $row) {
+        foreach ($file->values(new Query(['map_of_maps'])) as $row) {
             /** @var array<array-key, mixed> $outerMap */
             $outerMap = $row['map_of_maps'];
             static::assertIsArray($outerMap);
@@ -201,7 +202,7 @@ class MapsReadingTest extends ParquetIntegrationTestCase
 
         $count = 0;
 
-        foreach ($file->values(['map_of_struct_of_structs']) as $row) {
+        foreach ($file->values(new Query(['map_of_struct_of_structs'])) as $row) {
             /** @var array<array-key, mixed> $map */
             $map = $row['map_of_struct_of_structs'];
             static::assertIsArray($map);
@@ -237,7 +238,7 @@ class MapsReadingTest extends ParquetIntegrationTestCase
 
         $count = 0;
 
-        foreach ($file->values(['map_of_struct_of_structs'], $limit = 50) as $row) {
+        foreach ($file->values(new Query(['map_of_struct_of_structs'], limit: $limit = 50)) as $row) {
             /** @var array<array-key, mixed> $map */
             $map = $row['map_of_struct_of_structs'];
             static::assertIsArray($map);
@@ -269,7 +270,7 @@ class MapsReadingTest extends ParquetIntegrationTestCase
 
         $count = 0;
 
-        foreach ($file->values(['map_of_structs']) as $row) {
+        foreach ($file->values(new Query(['map_of_structs'])) as $row) {
             /** @var array<array-key, mixed> $map */
             $map = $row['map_of_structs'];
             static::assertIsArray($map);

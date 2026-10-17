@@ -8,11 +8,15 @@ use Flow\Filesystem\Stream\MemorySourceStream;
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Dremel\DremelAssembler;
 use Flow\Parquet\Engine\PhpParquetFileReader;
+use Flow\Parquet\Exception\InvalidArgumentException;
+use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Data\DataConverter;
 use Flow\Parquet\Reader\ColumnChunkReader;
 use Flow\Parquet\Reader\ColumnReader;
 use Flow\Parquet\Reader\PageReader;
+use Flow\Parquet\Reader\RowSelection;
+use Flow\Parquet\Reader\RowSelector;
 use Flow\Parquet\Tests\Context\MemoryParquetFile;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
@@ -25,16 +29,16 @@ final class ColumnReaderTest extends TestCase
     /**
      * @param list<int> $ids
      */
-    #[TestWith([null, null, [1, 2, 3, 4, 5, 6]])]
+    #[TestWith([null, 0, [1, 2, 3, 4, 5, 6]])]
     #[TestWith([null, 3, [4, 5, 6]])]
     #[TestWith([2, 1, [2, 3]])]
     #[TestWith([3, 2, [3, 4, 5]])]
     #[TestWith([1, 5, [6]])]
     #[TestWith([null, 6, []])]
-    public function test_a_flat_column_reads_across_row_groups(?int $limit, ?int $offset, array $ids): void
+    public function test_a_flat_column_reads_a_window_across_row_groups(?int $limit, int $offset, array $ids): void
     {
         $stream = new MemorySourceStream(MemoryParquetFile::threeRowGroups());
-        $metadata = (new PhpParquetFileReader($stream, ByteOrder::LITTLE_ENDIAN, new Options()))->metadata();
+        $metadata = (new PhpParquetFileReader($stream, ByteOrder::LITTLE_ENDIAN, new Options()))->footer()->metadata();
 
         $reader = new ColumnReader(
             new ColumnChunkReader(new PageReader(ByteOrder::LITTLE_ENDIAN, new Options()), new Options()),
@@ -44,7 +48,41 @@ final class ColumnReaderTest extends TestCase
         static::assertSame(
             array_map(static fn(int $id): array => ['id' => $id], $ids),
             iterator_to_array(
-                $reader->read($metadata->schema()->get('id'), $metadata, $stream, $limit, $offset),
+                $reader->read(
+                    $metadata->schema()->get('id'),
+                    $metadata,
+                    $stream,
+                    RowSelection::window(6, $offset, $limit)->split([2, 2, 2]),
+                ),
+                false,
+            ),
+        );
+    }
+
+    public function test_a_flat_column_reads_only_the_selected_rows_of_each_row_group(): void
+    {
+        $stream = new MemorySourceStream(MemoryParquetFile::threeRowGroups());
+        $metadata = (new PhpParquetFileReader($stream, ByteOrder::LITTLE_ENDIAN, new Options()))->footer()->metadata();
+
+        $reader = new ColumnReader(
+            new ColumnChunkReader(new PageReader(ByteOrder::LITTLE_ENDIAN, new Options()), new Options()),
+            new DremelAssembler(DataConverter::initialize(new Options())),
+        );
+
+        static::assertSame(
+            [['id' => 2], ['id' => 5], ['id' => 6]],
+            iterator_to_array(
+                $reader->read(
+                    $metadata->schema()->get('id'),
+                    $metadata,
+                    $stream,
+                    (new RowSelection(
+                        new RowSelector(1, true),
+                        new RowSelector(1, false),
+                        new RowSelector(2, true),
+                        new RowSelector(2, false),
+                    ))->split([2, 2, 2]),
+                ),
                 false,
             ),
         );
@@ -53,7 +91,7 @@ final class ColumnReaderTest extends TestCase
     public function test_a_nested_column_reads_across_row_groups(): void
     {
         $stream = new MemorySourceStream(MemoryParquetFile::threeRowGroups());
-        $metadata = (new PhpParquetFileReader($stream, ByteOrder::LITTLE_ENDIAN, new Options()))->metadata();
+        $metadata = (new PhpParquetFileReader($stream, ByteOrder::LITTLE_ENDIAN, new Options()))->footer()->metadata();
 
         $reader = new ColumnReader(
             new ColumnChunkReader(new PageReader(ByteOrder::LITTLE_ENDIAN, new Options()), new Options()),
@@ -62,7 +100,54 @@ final class ColumnReaderTest extends TestCase
 
         static::assertSame(
             array_map(static fn(int $id): array => ['tags' => ['t' . $id]], [2, 3, 4]),
-            iterator_to_array($reader->read($metadata->schema()->get('tags'), $metadata, $stream, 3, 1), false),
+            iterator_to_array(
+                $reader->read(
+                    $metadata->schema()->get('tags'),
+                    $metadata,
+                    $stream,
+                    RowSelection::window(6, 1, 3)->split([2, 2, 2]),
+                ),
+                false,
+            ),
         );
+    }
+
+    public function test_a_selection_of_another_row_group_count_is_refused(): void
+    {
+        $stream = new MemorySourceStream(MemoryParquetFile::threeRowGroups());
+        $metadata = (new PhpParquetFileReader($stream, ByteOrder::LITTLE_ENDIAN, new Options()))->footer()->metadata();
+        $reader = new ColumnReader(
+            new ColumnChunkReader(new PageReader(ByteOrder::LITTLE_ENDIAN, new Options()), new Options()),
+            new DremelAssembler(DataConverter::initialize(new Options())),
+        );
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('A selection of 2 row groups cannot read a file of 3 row groups');
+
+        iterator_to_array($reader->read(
+            $metadata->schema()->get('id'),
+            $metadata,
+            $stream,
+            RowSelection::all(6)->split([3, 3]),
+        ));
+    }
+
+    public function test_a_row_group_decoding_more_rows_than_its_selection_is_refused(): void
+    {
+        $stream = new MemorySourceStream(MemoryParquetFile::threeRowGroups());
+        $metadata = (new PhpParquetFileReader($stream, ByteOrder::LITTLE_ENDIAN, new Options()))->footer()->metadata();
+        $reader = new ColumnReader(
+            new ColumnChunkReader(new PageReader(ByteOrder::LITTLE_ENDIAN, new Options()), new Options()),
+            new DremelAssembler(DataConverter::initialize(new Options())),
+        );
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Row group 0 decodes more than the 1 rows its metadata declares');
+
+        iterator_to_array($reader->read($metadata->schema()->get('id'), $metadata, $stream, [
+            RowSelection::all(1),
+            RowSelection::all(2),
+            RowSelection::all(2),
+        ]));
     }
 }

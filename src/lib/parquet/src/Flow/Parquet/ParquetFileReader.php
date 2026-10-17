@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Parquet;
 
-use Flow\Parquet\ParquetFile\Metadata;
-use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFile\Footer;
+use Flow\Parquet\Reader\ReadPlan;
 use Iterator;
 
 use function interface_exists;
@@ -22,27 +22,15 @@ interface ParquetFileReader
     public function close(): void;
 
     /**
-     * The whole footer as Metadata, built on the first call.
+     * The file's footer, read on the first call; it stays readable after close().
      */
-    public function metadata(): Metadata;
+    public function footer(): Footer;
 
     /**
      * @param list<string> $columns resolved names, never empty
-     * @param int<1, max> $batchSize upper bound of rows per chunk
+     * @param int $batchSize upper bound of rows per chunk, refused below 1
      *
      * @return Iterator<int, array<string, list<mixed>>> chunks keyed by column, every list the same length (>0)
      */
-    public function readColumns(array $columns, int $batchSize, ?int $limit, ?int $offset): Iterator;
-
-    public function rowsNumber(): int;
-
-    /**
-     * The file schema, without building the row-group metadata.
-     */
-    public function schema(): Schema;
-
-    /**
-     * Σ row group total_byte_size (uncompressed), without building the row-group metadata.
-     */
-    public function totalByteSize(): int;
+    public function readColumns(array $columns, int $batchSize, ReadPlan $plan): Iterator;
 }

@@ -10,6 +10,7 @@ use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
 use Flow\Parquet\ParquetFile;
+use Flow\Parquet\Reader\ReadPlan;
 use Generator;
 
 use function array_map;
@@ -24,13 +25,13 @@ final class PhpParquetOpenSource implements ParquetOpenSource
     /**
      * @return Generator<int, Rows>
      */
-    public function batches(Schema $schema, int $batchSize, ?int $offset, ?int $limit, Backend $backend): Generator
+    public function batches(Schema $schema, int $batchSize, ReadPlan $plan, Backend $backend): Generator
     {
         $names = array_values(array_map(static fn(Definition $definition): string => $definition
             ->entry()
             ->name(), $schema->definitions()));
 
-        foreach ($this->file->columns($batchSize, $names, $limit, $offset) as $chunk) {
+        foreach ($this->file->reader()->readColumns($names, $batchSize, $plan) as $chunk) {
             $builder = new RowsBuilder($schema, $backend);
 
             foreach ($names as $name) {

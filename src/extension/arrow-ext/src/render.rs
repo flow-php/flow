@@ -81,6 +81,8 @@ pub fn parquet_exception(error: Error, stream: &PhpStream, side: Side) -> PhpExc
             exception(INVALID_ARGUMENT, format!("Parquet file has no column \"{name}\""))
         }
         (Error::Options(message), _) => exception(INVALID_ARGUMENT, message),
+        (Error::Plan(message), _) => exception(INVALID_ARGUMENT, message),
+        (Error::Encrypted, _) => failure("arrow does not read encrypted Parquet files".to_string()),
         (Error::NotParquet(message), _) => exception(
             INVALID_ARGUMENT,
             format!("Given file is not valid Parquet file: {message}"),

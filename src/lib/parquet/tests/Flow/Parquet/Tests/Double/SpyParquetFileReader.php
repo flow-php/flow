@@ -4,21 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Double;
 
-use Flow\Parquet\ParquetFile\Metadata;
-use Flow\Parquet\ParquetFile\RowGroups;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFileReader;
+use Flow\Parquet\Reader\ReadPlan;
 use Generator;
 
 /**
- * Answers from a schema, records close() and every readColumns() call.
+ * Answers from a SpyFooter, records close(), every readColumns() call and the chunks read.
  */
 final class SpyParquetFileReader implements ParquetFileReader
 {
+    public int $chunksRead = 0;
+
     public int $closes = 0;
 
+    public readonly SpyFooter $footer;
+
     /**
-     * @var list<array{list<string>, int, ?int, ?int}>
+     * @var list<array{list<string>, int, ReadPlan}>
      */
     public array $reads = [];
 
@@ -26,39 +29,31 @@ final class SpyParquetFileReader implements ParquetFileReader
      * @param list<array<string, list<mixed>>> $chunks
      */
     public function __construct(
-        private readonly Schema $schema,
+        Schema $schema,
         private readonly array $chunks = [],
-    ) {}
+        int $rows = 0,
+    ) {
+        $this->footer = new SpyFooter($schema, $rows);
+    }
 
     public function close(): void
     {
         $this->closes++;
     }
 
-    public function metadata(): Metadata
+    public function footer(): SpyFooter
     {
-        return new Metadata($this->schema, new RowGroups([]), 0, 1, null);
+        return $this->footer;
     }
 
-    public function readColumns(array $columns, int $batchSize, ?int $limit, ?int $offset): Generator
+    public function readColumns(array $columns, int $batchSize, ReadPlan $plan): Generator
     {
-        $this->reads[] = [$columns, $batchSize, $limit, $offset];
+        $this->reads[] = [$columns, $batchSize, $plan];
 
-        yield from $this->chunks;
-    }
+        foreach ($this->chunks as $chunk) {
+            $this->chunksRead++;
 
-    public function rowsNumber(): int
-    {
-        return 0;
-    }
-
-    public function schema(): Schema
-    {
-        return $this->schema;
-    }
-
-    public function totalByteSize(): int
-    {
-        return 0;
+            yield $chunk;
+        }
     }
 }

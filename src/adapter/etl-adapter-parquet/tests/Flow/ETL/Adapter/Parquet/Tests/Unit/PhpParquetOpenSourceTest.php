@@ -9,6 +9,7 @@ use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetFilesContext;
 use Flow\ETL\Column\PhpBackend;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Parquet\Engine\PhpParquetEngine;
+use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Reader;
 use PHPUnit\Framework\Attributes\TestWith;
 
@@ -18,6 +19,7 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
+use function iterator_to_array;
 use function range;
 
 final class PhpParquetOpenSourceTest extends FlowTestCase
@@ -25,11 +27,11 @@ final class PhpParquetOpenSourceTest extends FlowTestCase
     /**
      * @param list<int> $ids
      */
-    #[TestWith([null, null, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]])]
+    #[TestWith([0, null, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]])]
     #[TestWith([3, 5, [3, 4, 5, 6, 7]])]
     #[TestWith([6, null, [6, 7, 8, 9]])]
     #[TestWith([0, 1, [0]])]
-    public function test_offset_and_limit_cross_row_groups(?int $offset, ?int $limit, array $ids): void
+    public function test_a_planned_window_crosses_row_groups(int $offset, ?int $limit, array $ids): void
     {
         $filesystem = memory_filesystem();
         ParquetFilesContext::rowGroups($filesystem, 'memory://groups.parquet', 10, 4);
@@ -41,8 +43,7 @@ final class PhpParquetOpenSourceTest extends FlowTestCase
         ))->readStream($filesystem->readFrom(path('memory://groups.parquet')))))->batches(
             schema(int_schema('id')),
             3,
-            $offset,
-            $limit,
+            ParquetFilesContext::plan($filesystem, 'memory://groups.parquet', $offset, $limit),
             new PhpBackend(),
         ) as $rows) {
             static::assertLessThanOrEqual(3, $rows->count());
@@ -62,7 +63,12 @@ final class PhpParquetOpenSourceTest extends FlowTestCase
 
         $names = [];
 
-        foreach ($source->batches(schema(str_schema('name')), 100, null, null, new PhpBackend()) as $rows) {
+        foreach ($source->batches(
+            schema(str_schema('name')),
+            100,
+            ParquetFilesContext::plan($filesystem, 'memory://groups.parquet'),
+            new PhpBackend(),
+        ) as $rows) {
             static::assertEquals(schema(str_schema('name')), $rows->schema());
             $names = [...$names, ...$rows->column('name')->values()];
         }
@@ -70,5 +76,41 @@ final class PhpParquetOpenSourceTest extends FlowTestCase
         $source->close();
 
         static::assertSame(array_map(static fn(int $id): string => 'n' . $id, range(0, 9)), $names);
+    }
+
+    public function test_a_column_the_file_lacks_is_refused(): void
+    {
+        $filesystem = memory_filesystem();
+        ParquetFilesContext::rowGroups($filesystem, 'memory://groups.parquet', 10, 4);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Parquet file has no column "missing"');
+
+        iterator_to_array((new PhpParquetOpenSource((new Reader(
+            engine: new PhpParquetEngine(),
+        ))->readStream($filesystem->readFrom(path('memory://groups.parquet')))))->batches(
+            schema(int_schema('missing')),
+            10,
+            ParquetFilesContext::plan($filesystem, 'memory://groups.parquet'),
+            new PhpBackend(),
+        ));
+    }
+
+    public function test_a_batch_size_below_one_is_refused(): void
+    {
+        $filesystem = memory_filesystem();
+        ParquetFilesContext::rowGroups($filesystem, 'memory://groups.parquet', 10, 4);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Parquet batch size must be greater than 0');
+
+        iterator_to_array((new PhpParquetOpenSource((new Reader(
+            engine: new PhpParquetEngine(),
+        ))->readStream($filesystem->readFrom(path('memory://groups.parquet')))))->batches(
+            schema(int_schema('id')),
+            0,
+            ParquetFilesContext::plan($filesystem, 'memory://groups.parquet'),
+            new PhpBackend(),
+        ));
     }
 }

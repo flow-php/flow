@@ -1,4 +1,4 @@
-//! `Flow\Parquet\{ParquetEngine, ParquetFileReader, ParquetFileWriter}`: registered at MINIT with the package files'
+//! `Flow\Parquet\{ParquetEngine, ParquetFileReader, ParquetFileWriter}` and `Flow\Parquet\ParquetFile\Footer`: registered at MINIT with the package files'
 //! exact signatures, so the extension's classes implement them and the package files (autoloaded only without arrow)
 //! stay unused.
 
@@ -14,20 +14,29 @@ const SOURCE_STREAM: DataType = DataType::object("Flow\\Filesystem\\SourceStream
 const DESTINATION_STREAM: DataType = DataType::object("Flow\\Filesystem\\DestinationStream");
 const SCHEMA: DataType = DataType::object("Flow\\Parquet\\ParquetFile\\Schema");
 const METADATA: DataType = DataType::object("Flow\\Parquet\\ParquetFile\\Metadata");
+const READ_PLAN: DataType = DataType::object("Flow\\Parquet\\Reader\\ReadPlan");
+const ROW_GROUP_CHUNKS: DataType = DataType::object("Flow\\Parquet\\ParquetFile\\RowGroupChunks");
 const COMPRESSIONS: DataType = DataType::object("Flow\\Parquet\\ParquetFile\\Compressions");
 const OPTIONS: DataType = DataType::object("Flow\\Parquet\\Options");
+const FOOTER: DataType = DataType::object("Flow\\Parquet\\ParquetFile\\Footer");
 const PARQUET_FILE_READER: DataType = DataType::object("Flow\\Parquet\\ParquetFileReader");
 const PARQUET_FILE_WRITER: DataType = DataType::object("Flow\\Parquet\\ParquetFileWriter");
 const ITERATOR: DataType = DataType::object("Iterator");
 
 // ClassEntry::try_find reads EG(class_table), which MINIT has not set, so each CE is kept from its registration
 static PARQUET_ENGINE_CE: AtomicPtr<ClassEntry> = AtomicPtr::new(std::ptr::null_mut());
+static FOOTER_CE: AtomicPtr<ClassEntry> = AtomicPtr::new(std::ptr::null_mut());
 static PARQUET_FILE_READER_CE: AtomicPtr<ClassEntry> = AtomicPtr::new(std::ptr::null_mut());
 static PARQUET_FILE_WRITER_CE: AtomicPtr<ClassEntry> = AtomicPtr::new(std::ptr::null_mut());
 
 fn store_parquet_engine(ce: &'static mut ClassEntry, arg_info: ArgInfoTables) {
     keep(arg_info);
     PARQUET_ENGINE_CE.store(ce, Ordering::Release);
+}
+
+fn store_footer(ce: &'static mut ClassEntry, arg_info: ArgInfoTables) {
+    keep(arg_info);
+    FOOTER_CE.store(ce, Ordering::Release);
 }
 
 fn store_parquet_file_reader(ce: &'static mut ClassEntry, arg_info: ArgInfoTables) {
@@ -51,6 +60,10 @@ fn load(ce: &AtomicPtr<ClassEntry>, name: &str) -> &'static ClassEntry {
 
 pub fn parquet_engine_ce() -> &'static ClassEntry {
     load(&PARQUET_ENGINE_CE, "Flow\\Parquet\\ParquetEngine")
+}
+
+pub fn footer_ce() -> &'static ClassEntry {
+    load(&FOOTER_CE, "Flow\\Parquet\\ParquetFile\\Footer")
 }
 
 pub fn parquet_file_reader_ce() -> &'static ClassEntry {
@@ -83,24 +96,35 @@ fn interface(
 
 pub fn register() -> Result<()> {
     interface(
+        "Flow\\Parquet\\ParquetFile\\Footer",
+        store_footer,
+        vec![
+            method("metadata", vec![], METADATA),
+            method(
+                "rowGroupChunks",
+                vec![Arg::new("columns", DataType::Array)],
+                ROW_GROUP_CHUNKS,
+            ),
+            method("rowsNumber", vec![], DataType::Long),
+            method("schema", vec![], SCHEMA),
+            method("totalByteSize", vec![], DataType::Long),
+        ],
+    )?;
+    interface(
         "Flow\\Parquet\\ParquetFileReader",
         store_parquet_file_reader,
         vec![
             method("close", vec![], DataType::Void),
-            method("metadata", vec![], METADATA),
+            method("footer", vec![], FOOTER),
             method(
                 "readColumns",
                 vec![
                     Arg::new("columns", DataType::Array),
                     Arg::new("batchSize", DataType::Long),
-                    Arg::new("limit", DataType::Long).allow_null(),
-                    Arg::new("offset", DataType::Long).allow_null(),
+                    Arg::new("plan", READ_PLAN),
                 ],
                 ITERATOR,
             ),
-            method("rowsNumber", vec![], DataType::Long),
-            method("schema", vec![], SCHEMA),
-            method("totalByteSize", vec![], DataType::Long),
         ],
     )?;
     interface(

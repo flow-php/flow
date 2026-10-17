@@ -6,12 +6,8 @@ namespace Flow\Parquet\Tests\Unit\Writer;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Encodings;
-use Flow\Parquet\ParquetFile\Page\Header\DataPageHeader;
-use Flow\Parquet\ParquetFile\Page\Header\DataPageHeaderV2;
-use Flow\Parquet\ParquetFile\Page\Header\DictionaryPageHeader;
 use Flow\Parquet\ParquetFile\Page\Header\Type;
-use Flow\Parquet\ParquetFile\Page\PageHeader;
-use Flow\Parquet\Writer\PageContainer;
+use Flow\Parquet\Tests\Mother\PageContainerMother;
 use Flow\Parquet\Writer\PageContainers;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -54,7 +50,7 @@ final class PageContainersTest extends TestCase
     public function test_add_data_page_container(): void
     {
         $containers = new PageContainers();
-        $pageContainer = $this->createDataPageContainer();
+        $pageContainer = PageContainerMother::dataPage();
 
         $containers->add($pageContainer);
 
@@ -66,7 +62,7 @@ final class PageContainersTest extends TestCase
     public function test_add_dictionary_page_container(): void
     {
         $containers = new PageContainers();
-        $pageContainer = $this->createDictionaryPageContainer();
+        $pageContainer = PageContainerMother::dictionaryPage();
 
         $containers->add($pageContainer);
 
@@ -77,8 +73,8 @@ final class PageContainersTest extends TestCase
     public function test_add_duplicate_dictionary_page_throws_exception(): void
     {
         $containers = new PageContainers();
-        $pageContainer1 = $this->createDictionaryPageContainer();
-        $pageContainer2 = $this->createDictionaryPageContainer();
+        $pageContainer1 = PageContainerMother::dictionaryPage();
+        $pageContainer2 = PageContainerMother::dictionaryPage();
 
         $containers->add($pageContainer1);
 
@@ -91,9 +87,9 @@ final class PageContainersTest extends TestCase
     public function test_add_mixed_page_containers(): void
     {
         $containers = new PageContainers();
-        $dataContainer1 = $this->createDataPageContainer();
-        $dictionaryContainer = $this->createDictionaryPageContainer();
-        $dataContainer2 = $this->createDataPageContainer();
+        $dataContainer1 = PageContainerMother::dataPage();
+        $dictionaryContainer = PageContainerMother::dictionaryPage();
+        $dataContainer2 = PageContainerMother::dataPage();
 
         $containers->add($dataContainer1);
         $containers->add($dictionaryContainer);
@@ -108,9 +104,9 @@ final class PageContainersTest extends TestCase
     public function test_add_multiple_data_page_containers(): void
     {
         $containers = new PageContainers();
-        $pageContainer1 = $this->createDataPageContainer(10);
-        $pageContainer2 = $this->createDataPageContainer(20);
-        $pageContainer3 = $this->createDataPageContainer(30);
+        $pageContainer1 = PageContainerMother::dataPage(10);
+        $pageContainer2 = PageContainerMother::dataPage(20);
+        $pageContainer3 = PageContainerMother::dataPage(30);
 
         $containers->add($pageContainer1);
         $containers->add($pageContainer2);
@@ -125,8 +121,8 @@ final class PageContainersTest extends TestCase
     public function test_buffer_with_data_pages_only(): void
     {
         $containers = new PageContainers();
-        $pageContainer1 = $this->createDataPageContainer(valuesCount: 10, pageBuffer: 'data1');
-        $pageContainer2 = $this->createDataPageContainer(valuesCount: 20, pageBuffer: 'data2');
+        $pageContainer1 = PageContainerMother::dataPage(valuesCount: 10, pageBuffer: 'data1');
+        $pageContainer2 = PageContainerMother::dataPage(valuesCount: 20, pageBuffer: 'data2');
 
         $containers->add($pageContainer1);
         $containers->add($pageContainer2);
@@ -142,8 +138,8 @@ final class PageContainersTest extends TestCase
     public function test_buffer_with_dictionary_and_data_pages(): void
     {
         $containers = new PageContainers();
-        $dataContainer = $this->createDataPageContainer(valuesCount: 10, pageBuffer: 'datadata');
-        $dictionaryContainer = $this->createDictionaryPageContainer(valuesCount: 5, pageBuffer: 'dictdata');
+        $dataContainer = PageContainerMother::dataPage(valuesCount: 10, pageBuffer: 'datadata');
+        $dictionaryContainer = PageContainerMother::dictionaryPage(valuesCount: 5, pageBuffer: 'dictdata');
 
         $containers->add($dataContainer);
         $containers->add($dictionaryContainer);
@@ -161,7 +157,7 @@ final class PageContainersTest extends TestCase
     public function test_buffer_with_dictionary_page_only(): void
     {
         $containers = new PageContainers();
-        $dictionaryContainer = $this->createDictionaryPageContainer(valuesCount: 5, pageBuffer: 'data');
+        $dictionaryContainer = PageContainerMother::dictionaryPage(valuesCount: 5, pageBuffer: 'data');
 
         $containers->add($dictionaryContainer);
 
@@ -184,8 +180,8 @@ final class PageContainersTest extends TestCase
     public function test_compressed_size_with_data_pages_only(): void
     {
         $containers = new PageContainers();
-        $pageContainer1 = $this->createDataPageContainer(valuesCount: 10, pageBuffer: 'data1');
-        $pageContainer2 = $this->createDataPageContainer(valuesCount: 20, pageBuffer: 'data2');
+        $pageContainer1 = PageContainerMother::dataPage(valuesCount: 10, pageBuffer: 'data1');
+        $pageContainer2 = PageContainerMother::dataPage(valuesCount: 20, pageBuffer: 'data2');
 
         $containers->add($pageContainer1);
         $containers->add($pageContainer2);
@@ -199,8 +195,8 @@ final class PageContainersTest extends TestCase
     public function test_compressed_size_with_dictionary_and_data_pages(): void
     {
         $containers = new PageContainers();
-        $dataContainer = $this->createDataPageContainer();
-        $dictionaryContainer = $this->createDictionaryPageContainer();
+        $dataContainer = PageContainerMother::dataPage();
+        $dictionaryContainer = PageContainerMother::dictionaryPage();
 
         $containers->add($dataContainer);
         $containers->add($dictionaryContainer);
@@ -222,9 +218,9 @@ final class PageContainersTest extends TestCase
 
     public function test_constructor_with_multiple_data_containers(): void
     {
-        $container1 = $this->createDataPageContainer(10);
-        $container2 = $this->createDataPageContainer(20);
-        $container3 = $this->createDataPageContainer(30);
+        $container1 = PageContainerMother::dataPage(10);
+        $container2 = PageContainerMother::dataPage(20);
+        $container3 = PageContainerMother::dataPage(30);
 
         $containers = new PageContainers([$container1, $container2, $container3]);
 
@@ -240,7 +236,7 @@ final class PageContainersTest extends TestCase
         $pageContainers = [];
 
         for ($i = 0; $i < $count; $i++) {
-            $pageContainers[] = $this->createDataPageContainer($i + 1);
+            $pageContainers[] = PageContainerMother::dataPage($i + 1);
         }
 
         $containers = new PageContainers($pageContainers);
@@ -274,7 +270,7 @@ final class PageContainersTest extends TestCase
     public function test_encodings_with_data_page_header(): void
     {
         $containers = new PageContainers();
-        $pageContainer = $this->createDataPageContainer();
+        $pageContainer = PageContainerMother::dataPage();
 
         $containers->add($pageContainer);
 
@@ -287,7 +283,7 @@ final class PageContainersTest extends TestCase
     public function test_encodings_with_data_page_header_v2(): void
     {
         $containers = new PageContainers();
-        $pageContainer = $this->createDataPageV2Container();
+        $pageContainer = PageContainerMother::dataPageV2();
 
         $containers->add($pageContainer);
 
@@ -299,7 +295,7 @@ final class PageContainersTest extends TestCase
     public function test_encodings_with_dictionary_page(): void
     {
         $containers = new PageContainers();
-        $pageContainer = $this->createDictionaryPageContainer();
+        $pageContainer = PageContainerMother::dictionaryPage();
 
         $containers->add($pageContainer);
 
@@ -320,9 +316,9 @@ final class PageContainersTest extends TestCase
     public function test_encodings_with_mixed_page_types(): void
     {
         $containers = new PageContainers();
-        $dataContainer = $this->createDataPageContainer();
-        $dictionaryContainer = $this->createDictionaryPageContainer();
-        $dataV2Container = $this->createDataPageV2Container();
+        $dataContainer = PageContainerMother::dataPage();
+        $dictionaryContainer = PageContainerMother::dictionaryPage();
+        $dataV2Container = PageContainerMother::dataPageV2();
 
         $containers->add($dataContainer);
         $containers->add($dictionaryContainer);
@@ -338,8 +334,8 @@ final class PageContainersTest extends TestCase
     public function test_encodings_with_multiple_data_pages(): void
     {
         $containers = new PageContainers();
-        $pageContainer1 = $this->createDataPageContainer(encoding: Encodings::PLAIN);
-        $pageContainer2 = $this->createDataPageContainer(encoding: Encodings::BIT_PACKED);
+        $pageContainer1 = PageContainerMother::dataPage(encoding: Encodings::PLAIN);
+        $pageContainer2 = PageContainerMother::dataPage(encoding: Encodings::BIT_PACKED);
 
         $containers->add($pageContainer1);
         $containers->add($pageContainer2);
@@ -354,8 +350,8 @@ final class PageContainersTest extends TestCase
     public function test_encodings_with_unique_values_only(): void
     {
         $containers = new PageContainers();
-        $pageContainer1 = $this->createDataPageContainer(encoding: Encodings::PLAIN);
-        $pageContainer2 = $this->createDataPageContainer(encoding: Encodings::PLAIN);
+        $pageContainer1 = PageContainerMother::dataPage(encoding: Encodings::PLAIN);
+        $pageContainer2 = PageContainerMother::dataPage(encoding: Encodings::PLAIN);
 
         $containers->add($pageContainer1);
         $containers->add($pageContainer2);
@@ -370,8 +366,8 @@ final class PageContainersTest extends TestCase
     public function test_uncompressed_size_with_data_pages_only(): void
     {
         $containers = new PageContainers();
-        $pageContainer1 = $this->createDataPageContainer(valuesCount: 10, pageBuffer: 'data1');
-        $pageContainer2 = $this->createDataPageContainer(valuesCount: 20, pageBuffer: 'data2');
+        $pageContainer1 = PageContainerMother::dataPage(valuesCount: 10, pageBuffer: 'data1');
+        $pageContainer2 = PageContainerMother::dataPage(valuesCount: 20, pageBuffer: 'data2');
 
         $containers->add($pageContainer1);
         $containers->add($pageContainer2);
@@ -385,8 +381,8 @@ final class PageContainersTest extends TestCase
     public function test_uncompressed_size_with_dictionary_and_data_pages(): void
     {
         $containers = new PageContainers();
-        $dataContainer = $this->createDataPageContainer();
-        $dictionaryContainer = $this->createDictionaryPageContainer();
+        $dataContainer = PageContainerMother::dataPage();
+        $dictionaryContainer = PageContainerMother::dictionaryPage();
 
         $containers->add($dataContainer);
         $containers->add($dictionaryContainer);
@@ -409,9 +405,9 @@ final class PageContainersTest extends TestCase
     public function test_values_count_with_data_pages_only(): void
     {
         $containers = new PageContainers();
-        $pageContainer1 = $this->createDataPageContainer(valuesCount: 10);
-        $pageContainer2 = $this->createDataPageContainer(valuesCount: 20);
-        $pageContainer3 = $this->createDataPageContainer(valuesCount: 30);
+        $pageContainer1 = PageContainerMother::dataPage(valuesCount: 10);
+        $pageContainer2 = PageContainerMother::dataPage(valuesCount: 20);
+        $pageContainer3 = PageContainerMother::dataPage(valuesCount: 30);
 
         $containers->add($pageContainer1);
         $containers->add($pageContainer2);
@@ -425,8 +421,8 @@ final class PageContainersTest extends TestCase
     public function test_values_count_with_dictionary_and_data_pages(): void
     {
         $containers = new PageContainers();
-        $dataContainer = $this->createDataPageContainer(valuesCount: 15);
-        $dictionaryContainer = $this->createDictionaryPageContainer(valuesCount: 5);
+        $dataContainer = PageContainerMother::dataPage(valuesCount: 15);
+        $dictionaryContainer = PageContainerMother::dictionaryPage(valuesCount: 5);
 
         $containers->add($dataContainer);
         $containers->add($dictionaryContainer);
@@ -448,8 +444,8 @@ final class PageContainersTest extends TestCase
     public function test_values_count_with_zero_value_pages(): void
     {
         $containers = new PageContainers();
-        $pageContainer1 = $this->createDataPageContainer(valuesCount: 0);
-        $pageContainer2 = $this->createDataPageContainer(valuesCount: 0);
+        $pageContainer1 = PageContainerMother::dataPage(valuesCount: 0);
+        $pageContainer2 = PageContainerMother::dataPage(valuesCount: 0);
 
         $containers->add($pageContainer1);
         $containers->add($pageContainer2);
@@ -462,9 +458,9 @@ final class PageContainersTest extends TestCase
     public function test_workflow_add_dictionary_then_data_pages(): void
     {
         $containers = new PageContainers();
-        $dictionaryContainer = $this->createDictionaryPageContainer(valuesCount: 3);
-        $dataContainer1 = $this->createDataPageContainer(valuesCount: 10);
-        $dataContainer2 = $this->createDataPageContainer(valuesCount: 20);
+        $dictionaryContainer = PageContainerMother::dictionaryPage(valuesCount: 3);
+        $dataContainer1 = PageContainerMother::dataPage(valuesCount: 10);
+        $dataContainer2 = PageContainerMother::dataPage(valuesCount: 20);
 
         $containers->add($dictionaryContainer);
         $containers->add($dataContainer1);
@@ -481,9 +477,9 @@ final class PageContainersTest extends TestCase
     public function test_workflow_data_pages_only(): void
     {
         $containers = new PageContainers();
-        $dataContainer1 = $this->createDataPageContainer(valuesCount: 5);
-        $dataContainer2 = $this->createDataPageContainer(valuesCount: 10);
-        $dataContainer3 = $this->createDataPageContainer(valuesCount: 15);
+        $dataContainer1 = PageContainerMother::dataPage(valuesCount: 5);
+        $dataContainer2 = PageContainerMother::dataPage(valuesCount: 10);
+        $dataContainer3 = PageContainerMother::dataPage(valuesCount: 15);
 
         $containers->add($dataContainer1);
         $containers->add($dataContainer2);
@@ -496,76 +492,5 @@ final class PageContainersTest extends TestCase
         static::assertGreaterThan(0, $containers->compressedSize());
         static::assertGreaterThan(0, $containers->uncompressedSize());
         static::assertNotEmpty($containers->encodings());
-    }
-
-    private function createDataPageContainer(
-        int $valuesCount = 10,
-        string $pageBuffer = 'pagedata',
-        Encodings $encoding = Encodings::PLAIN,
-    ): PageContainer {
-        $dataPageHeader = new DataPageHeader(
-            encoding: $encoding,
-            repetitionLevelEncoding: Encodings::RLE,
-            definitionLevelEncoding: Encodings::RLE,
-            valuesCount: $valuesCount,
-        );
-
-        $pageHeader = new PageHeader(
-            Type::DATA_PAGE,
-            strlen($pageBuffer),
-            strlen($pageBuffer),
-            dataPageHeader: $dataPageHeader,
-            dataPageHeaderV2: null,
-            dictionaryPageHeader: null,
-        );
-
-        return new PageContainer($pageBuffer, $pageHeader);
-    }
-
-    private function createDataPageV2Container(
-        int $valuesCount = 10,
-        string $pageBuffer = 'pagedata',
-        Encodings $encoding = Encodings::PLAIN,
-    ): PageContainer {
-        $dataPageHeaderV2 = new DataPageHeaderV2(
-            valuesCount: $valuesCount,
-            nullsCount: 0,
-            rowsCount: $valuesCount,
-            encoding: $encoding,
-            definitionsByteLength: 0,
-            repetitionsByteLength: 0,
-            isCompressed: false,
-            statistics: null,
-        );
-
-        $pageHeader = new PageHeader(
-            Type::DATA_PAGE_V2,
-            strlen($pageBuffer),
-            strlen($pageBuffer),
-            dataPageHeader: null,
-            dataPageHeaderV2: $dataPageHeaderV2,
-            dictionaryPageHeader: null,
-        );
-
-        return new PageContainer($pageBuffer, $pageHeader);
-    }
-
-    private function createDictionaryPageContainer(
-        int $valuesCount = 5,
-        string $pageBuffer = 'dictdata',
-        Encodings $encoding = Encodings::RLE_DICTIONARY,
-    ): PageContainer {
-        $dictionaryPageHeader = new DictionaryPageHeader(encoding: $encoding, valuesCount: $valuesCount);
-
-        $pageHeader = new PageHeader(
-            Type::DICTIONARY_PAGE,
-            strlen($pageBuffer),
-            strlen($pageBuffer),
-            dataPageHeader: null,
-            dataPageHeaderV2: null,
-            dictionaryPageHeader: $dictionaryPageHeader,
-        );
-
-        return new PageContainer($pageBuffer, $pageHeader);
     }
 }

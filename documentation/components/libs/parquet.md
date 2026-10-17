@@ -148,10 +148,10 @@ invalid file throws `InvalidArgumentException` `Given file is not valid Parquet 
 
 There are several things we can read from parquet file:
 
-- `ParquetFile::values(array $columns = [], ?int $limit = null, ?int $offset = null) : \Generator`
-- `ParquetFile::columns(int $batchSize, array $columns = [], ?int $limit = null, ?int $offset = null) : \Generator`
+- `ParquetFile::values(Query $query = new Query()) : \Generator` - rows, one by one
+- `ParquetFile::columns(Query $query = new Query(), int $batchSize = 1024) : \Generator` - columns, in batches
 - `ParquetFile::metadata() : Metadata`
-- `ParquetFile::schema() : Schema` - shortcut for `ParquetFile::metadata()->schema()`
+- `ParquetFile::schema() : Schema` - the file schema, without building row-group metadata
 - `ParquetFile::close() : void` - closes the reader and its stream
 
 ### Reading the whole file:
@@ -171,12 +171,12 @@ foreach ($file->values() as $row) {
 
 ```php
 use Flow\Parquet\Reader;
+use function Flow\Parquet\DSL\parquet_query;
 
-$reader = new Reader();
+$file = (new Reader())->read('path/to/file.parquet');
 
-$file = $reader->read('path/to/file.parquet');
-foreach ($file->values(["column_1", "column_2"]) as $row) {
-    // do something with $row
+foreach ($file->values(parquet_query()->select('column_1', 'column_2')) as $row) {
+    // ['column_1' => ..., 'column_2' => ...]
 }
 ```
 
@@ -187,29 +187,64 @@ foreach ($file->values(["column_1", "column_2"]) as $row) {
 > To achieve the best results, we will need to play a bit with Writer options (covered later).
 
 ```php
-use Flow\Parquet\Reader;
-
-$reader = new Reader();
-
-$file = $reader->read('path/to/file.parquet');
-foreach ($file->values(["column_1", "column_2"], limit: 100, offset: 1000) as $row) {
-    // do something with $row
+foreach ($file->values(parquet_query()->select('column_1')->offset(1000)->limit(100)) as $row) {
+    // rows 1000-1099
 }
 ```
 
 ### Reading columns in batches
 
 ```php
-use Flow\Parquet\Reader;
-
-$file = (new Reader())->read('path/to/file.parquet');
-
-foreach ($file->columns(batchSize: 1000, columns: ["column_1", "column_2"]) as $chunk) {
-    // $chunk = ['column_1' => [...up to 1000 values], 'column_2' => [...]]
+foreach ($file->columns(parquet_query()->select('column_1', 'column_2'), batchSize: 1000) as $chunk) {
+    // ['column_1' => [...up to 1000 values], 'column_2' => [...]]
 }
 ```
 
-`limit` and `offset` work as in `values()`.
+### Filtering reads
+
+```php
+use Flow\Parquet\Reader;
+use function Flow\Parquet\DSL\{parquet_all, parquet_any, parquet_column, parquet_not, parquet_query};
+
+$file = (new Reader())->read('path/to/file.parquet');
+
+$query = parquet_query()
+    ->select('id', 'country')
+    ->where(parquet_all(
+        parquet_column('country')->equals('PL'),
+        parquet_not(parquet_column('user.age')->lessThan(18)),
+        parquet_any(parquet_column('status')->in(['new', 'paid']), parquet_column('note')->isNull()),
+    ))
+    ->offset(20)
+    ->limit(10);
+
+foreach ($file->values($query) as $row) {
+    // only matching rows: the 21st to the 30th match
+}
+```
+
+The rows returned are exactly the matching ones; offset and limit count matching rows. Row groups whose statistics
+prove no row matches are never read (both engines skip the same groups), and the read stops at the limit. A second
+`where()` narrows the first.
+
+| Method on `parquet_column($path)`                                            | Filter                   |
+|------------------------------------------------------------------------------|--------------------------|
+| `equals`, `lessThan`, `lessThanOrEqual`, `greaterThan`, `greaterThanOrEqual` | `Comparison`             |
+| `notEquals`                                                                  | `Not` of `equals`        |
+| `in(array)`, `notIn(array)`                                                  | `In`, `Not` of `In`      |
+| `isNull()`, `isNotNull()`                                                    | `IsNull`, its `Not`      |
+| `startsWith(string)`                                                         | `StartsWith`             |
+
+- `parquet_all()`, `parquet_any()`, `parquet_not()` build `All`, `Any`, `Not` (namespace `Flow\Parquet\Filter`).
+- `$path` names a leaf through structs (`'user.address.city'`); a column the file lacks reads as null. A leaf inside a
+  list or a map is refused (`InvalidArgumentException`): a row holds no single value there.
+- Semantics are SQL's: a comparison on null is null, `NOT` null is null, only true keeps a row. Floats follow IEEE 754
+  (`NaN` matches nothing, `-0.0` equals `0.0`), strings compare in byte order (`'10' < '9'`), `UINT_64` values
+  numerically, date-times by instant. A literal of another kind than the column's values (a string on an `INT64`
+  column) matches nothing, under `parquet_not()` too.
+- Literals: scalars, `DateTimeInterface`, `Stringable` (uuids); `null` (use `isNull()`) and `NaN` are refused.
+- Files written without `column_orders` (older flow-php versions) are never pruned, only filtered. The statistics a file
+  holds are set by the writer options in [Statistics](#statistics).
 
 ## Writing Parquet Files
 

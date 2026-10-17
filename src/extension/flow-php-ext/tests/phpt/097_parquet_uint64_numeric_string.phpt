@@ -34,7 +34,7 @@ $writer->close();
 $schema = (new SchemaConverter())->toFlow($parquet);
 var_dump(type_equals(type_numeric_string(), $schema->get('u')->type()));
 
-foreach (rust_parquet_batches($filesystem->readFrom(path('memory://uint64.parquet')), $schema, 10, null, null) as $batch) {
+foreach (rust_parquet_batches($filesystem->readFrom(path('memory://uint64.parquet')), $schema, 10) as $batch) {
     var_dump(type_equals(type_numeric_string(), $batch->column('u')->type()) || type_equals(type_optional(type_numeric_string()), $batch->column('u')->type()));
     var_dump($batch->column('u')->values());
 }

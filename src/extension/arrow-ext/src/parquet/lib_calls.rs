@@ -11,6 +11,8 @@ pub const SCHEMA_FROM_THRIFT: &str = "Flow\\Parquet\\ParquetFile\\Schema::fromTh
 pub const SCHEMA_TO_EXTENSION: &str = "Flow\\Parquet\\Engine\\Arrow\\SchemaConverter::toExtension";
 pub const OPTIONS_TO_EXTENSION: &str = "Flow\\Parquet\\Engine\\Arrow\\OptionsConverter::toExtension";
 pub const OPTIONS_TO_ENGINE: &str = "Flow\\Parquet\\Engine\\Arrow\\OptionsConverter::toEngine";
+pub const READ_PLAN_TO_EXTENSION: &str = "Flow\\Parquet\\Engine\\Arrow\\ReadPlanConverter::toExtension";
+pub const ROW_GROUP_CHUNKS_FROM_THRIFT: &str = "Flow\\Parquet\\Engine\\Arrow\\RustRowGroupChunks::fromThrift";
 
 /// `Class::method(...$args)`; an exception the method throws surfaces as itself.
 pub fn call_static(name: &str, args: &mut [Zval]) -> PhpResult<Zval> {

@@ -6,12 +6,16 @@ namespace Flow\Parquet;
 
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Exception\InvalidArgumentException;
+use Flow\Parquet\Filter\Binding\BoundFilter;
+use Flow\Parquet\Filter\Evaluation\FilterEvaluator;
 use Flow\Parquet\ParquetFile\Metadata;
 use Flow\Parquet\ParquetFile\Page\ColumnPageHeader;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\Column;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\Reader\ColumnChunkViewer;
+use Flow\Parquet\Reader\FilteredBatches;
+use Flow\Parquet\Reader\ReadPlanner;
 use Generator;
 
 use function array_keys;
@@ -26,7 +30,7 @@ final class ParquetFile
 {
     public const string PARQUET_MAGIC_NUMBER = 'PAR1';
 
-    private const int VALUES_BATCH_SIZE = 1024;
+    private const int BATCH_SIZE = 1024;
 
     private bool $closed = false;
 
@@ -56,7 +60,7 @@ final class ParquetFile
 
     public function metadata(): Metadata
     {
-        return $this->reader->metadata();
+        return $this->reader->footer()->metadata();
     }
 
     /**
@@ -81,49 +85,67 @@ final class ParquetFile
 
     public function schema(): Schema
     {
-        return $this->reader->schema();
+        return $this->reader->footer()->schema();
     }
 
     /**
-     * @param array<string> $columns
+     * Statistics only skip row groups; the filter decides each row, so the rows are exact.
      *
      * @return Generator<int, array<string, list<mixed>>>
      */
-    public function columns(int $batchSize, array $columns = [], ?int $limit = null, ?int $offset = null): Generator
+    public function columns(Query $query = new Query(), int $batchSize = self::BATCH_SIZE): Generator
     {
         if ($batchSize < 1) {
             throw new InvalidArgumentException('Batch size must be greater than 0');
         }
 
-        if ($limit !== null && $limit <= 0) {
-            throw new InvalidArgumentException('Limit must be greater than 0');
-        }
+        $schema = $this->schema();
+        $columns = $query->columns === []
+            ? array_values(array_map(static fn(Column $column): string => $column->name(), $schema->columns()))
+            : $query->columns;
 
-        if ($offset !== null && $offset < 0) {
-            throw new InvalidArgumentException('Offset must be greater than or equal to 0');
-        }
-
-        if (!count($columns)) {
-            $columns = array_map(static fn(Column $c) => $c->name(), $this->schema()->columns());
-        }
-
-        foreach ($columns as $columnName) {
-            if (!$this->schema()->has($columnName)) {
-                throw new InvalidArgumentException("Column \"{$columnName}\" does not exist");
+        foreach ($columns as $column) {
+            if (!$schema->has($column)) {
+                throw new InvalidArgumentException("Column \"{$column}\" does not exist");
             }
         }
 
-        yield from $this->reader->readColumns(array_values($columns), $batchSize, $limit, $offset);
+        if ($query->filter === null) {
+            yield from $this->reader->readColumns(
+                $columns,
+                $batchSize,
+                (new ReadPlanner())->plan($this->reader->footer(), null, $query->offset, $query->limit),
+            );
+
+            return;
+        }
+
+        $filtered = new FilteredBatches(
+            new FilterEvaluator($query->filter, $schema, $this->options),
+            $columns,
+            $query->offset,
+            $query->limit,
+            $batchSize,
+        );
+
+        yield from $filtered->filter($this->reader->readColumns(
+            $filtered->columns(),
+            $batchSize,
+            (new ReadPlanner())->plan(
+                $this->reader->footer(),
+                BoundFilter::bind($query->filter, $schema, $this->options),
+            ),
+        ));
     }
 
     /**
-     * @param array<string> $columns
+     * The query's rows one by one, keyed by column.
      *
      * @return Generator<int, array<string, mixed>>
      */
-    public function values(array $columns = [], ?int $limit = null, ?int $offset = null): Generator
+    public function values(Query $query = new Query()): Generator
     {
-        foreach ($this->columns(self::VALUES_BATCH_SIZE, $columns, $limit, $offset) as $chunk) {
+        foreach ($this->columns($query) as $chunk) {
             $names = array_keys($chunk);
             $count = count($chunk[$names[0]]);
 

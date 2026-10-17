@@ -38,8 +38,8 @@ for ($group = 0; $group < 8; $group++) {
 $groups->close();
 
 $mismatched = schema(str_schema('id'));
-echo outcome(static fn() => rust_parquet_batches($filesystem->readFrom(path('memory://empty.parquet')), $mismatched, 10, null, null)), "\n";
-echo outcome(static fn() => rust_parquet_batches($filesystem->readFrom(path('memory://groups.parquet')), $mismatched, 10, 1_000, null)), "\n";
+echo outcome(static fn() => rust_parquet_batches($filesystem->readFrom(path('memory://empty.parquet')), $mismatched, 10)), "\n";
+echo outcome(static fn() => rust_parquet_batches($filesystem->readFrom(path('memory://groups.parquet')), $mismatched, 10, 1_000)), "\n";
 echo outcome(static fn() => new Flow\ETL\Adapter\Parquet\RustParquetOpenSource(new stdClass())), "\n";
 echo outcome(static fn() => new Flow\ETL\Adapter\Parquet\RustParquetOpenSink(new stdClass())), "\n";
 ?>

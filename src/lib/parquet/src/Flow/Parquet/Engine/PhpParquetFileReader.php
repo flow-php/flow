@@ -12,25 +12,28 @@ use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile;
 use Flow\Parquet\ParquetFile\Data\DataConverter;
-use Flow\Parquet\ParquetFile\Metadata;
-use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFile\RowGroup;
 use Flow\Parquet\ParquetFileReader;
 use Flow\Parquet\Reader\ColumnChunkReader;
 use Flow\Parquet\Reader\ColumnReader;
 use Flow\Parquet\Reader\PageReader;
+use Flow\Parquet\Reader\ReadPlan;
 use Flow\Parquet\Thrift\CompactProtocol;
 use Flow\Parquet\Thrift\MemoryBuffer;
 use Flow\Parquet\ThriftModel\FileMetaData;
 use Generator;
 
+use function array_map;
+use function array_values;
 use function count;
 use function is_array;
 use function min;
+use function sprintf;
 use function unpack;
 
 final class PhpParquetFileReader implements ParquetFileReader
 {
-    private ?Metadata $metadata = null;
+    private ?PhpParquetFooter $footer = null;
 
     private bool $open = true;
 
@@ -48,12 +51,12 @@ final class PhpParquetFileReader implements ParquetFileReader
         $this->stream->close();
     }
 
-    public function metadata(): Metadata
+    public function footer(): PhpParquetFooter
     {
         $this->open || throw new RuntimeException('Reader is not open');
 
-        if ($this->metadata !== null) {
-            return $this->metadata;
+        if ($this->footer !== null) {
+            return $this->footer;
         }
 
         $fileTotalSize = $this->stream->size();
@@ -83,48 +86,56 @@ final class PhpParquetFileReader implements ParquetFileReader
         $thriftMetadata = new FileMetaData();
         $thriftMetadata->read(new CompactProtocol(new MemoryBuffer($metadata)));
 
-        $this->metadata = Metadata::fromThrift($thriftMetadata);
+        $this->footer = new PhpParquetFooter($thriftMetadata);
 
-        return $this->metadata;
+        return $this->footer;
     }
 
     /**
      * @param list<string> $columns
-     * @param int<1, max> $batchSize
+     * @param int $batchSize refused below 1, as the arrow engine refuses it
      *
      * @return Generator<int, array<string, list<mixed>>>
      */
-    public function readColumns(array $columns, int $batchSize, ?int $limit, ?int $offset): Generator
+    public function readColumns(array $columns, int $batchSize, ReadPlan $plan): Generator
     {
         $this->open || throw new RuntimeException('Reader is not open');
+
+        if ($batchSize < 1) {
+            throw new InvalidArgumentException('Parquet batch size must be greater than 0');
+        }
+
+        $metadata = $this->footer()->metadata();
+
+        foreach ($columns as $columnName) {
+            if (!$metadata->schema()->has($columnName)) {
+                throw new InvalidArgumentException('Parquet file has no column "' . $columnName . '"');
+            }
+        }
 
         $columnReader = new ColumnReader(
             new ColumnChunkReader(new PageReader($this->byteOrder, $this->options), $this->options),
             new DremelAssembler(DataConverter::initialize($this->options)),
         );
 
-        $metadata = $this->metadata();
-
-        $totalRows = $metadata->rowsNumber();
-
-        if ($offset !== null && $offset > $totalRows) {
-            return;
+        if ($plan->selection->totalRows() !== $metadata->rowsNumber()) {
+            throw new InvalidArgumentException(sprintf(
+                'A read plan over %d rows cannot read a file of %d rows',
+                $plan->selection->totalRows(),
+                $metadata->rowsNumber(),
+            ));
         }
 
-        if ($offset !== null) {
-            if ($totalRows > $offset) {
-                $totalRows -= $offset;
-            } else {
-                $totalRows = 0;
-            }
-        }
-
-        $totalRows = min($totalRows, $limit ?? $totalRows);
+        $totalRows = $plan->selection->rowCount();
 
         if ($totalRows === 0) {
             return;
         }
 
+        $rowGroups = $plan->selection->split(array_values(array_map(
+            static fn(RowGroup $rowGroup): int => $rowGroup->rowsCount(),
+            $metadata->rowGroups()->all(),
+        )));
         $generators = [];
 
         foreach ($columns as $columnName) {
@@ -132,8 +143,7 @@ final class PhpParquetFileReader implements ParquetFileReader
                 $metadata->schema()->get($columnName),
                 $metadata,
                 $this->stream,
-                $limit,
-                $offset,
+                $rowGroups,
             );
         }
 
@@ -172,26 +182,5 @@ final class PhpParquetFileReader implements ParquetFileReader
             yield $chunk;
             $remaining -= $read;
         }
-    }
-
-    public function rowsNumber(): int
-    {
-        return $this->metadata()->rowsNumber();
-    }
-
-    public function schema(): Schema
-    {
-        return $this->metadata()->schema();
-    }
-
-    public function totalByteSize(): int
-    {
-        $bytes = 0;
-
-        foreach ($this->metadata()->rowGroups()->all() as $rowGroup) {
-            $bytes += $rowGroup->totalByteSize();
-        }
-
-        return $bytes;
     }
 }

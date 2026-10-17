@@ -6,7 +6,6 @@ namespace Flow\Documentation\Models;
 
 use InvalidArgumentException;
 use ReflectionParameter;
-use Throwable;
 
 use function addslashes;
 use function Flow\Types\DSL\type_array;
@@ -69,16 +68,7 @@ final readonly class ParameterModel
 
     public static function fromReflection(ReflectionParameter $reflectionParameter): self
     {
-        $defaultValue = null;
-        $hasDefaultValue = false;
-
-        try {
-            $defaultValue = self::exportDefaultValue($reflectionParameter->getDefaultValue());
-            $hasDefaultValue = true;
-        } catch (Throwable) {
-            $hasDefaultValue = false;
-        }
-
+        $hasDefaultValue = $reflectionParameter->isDefaultValueAvailable();
         $reflectionType = $reflectionParameter->getType();
 
         if ($reflectionType === null) {
@@ -91,7 +81,7 @@ final readonly class ParameterModel
             $hasDefaultValue,
             $reflectionParameter->allowsNull(),
             $reflectionParameter->isVariadic(),
-            $defaultValue,
+            $hasDefaultValue ? self::exportDefaultValue($reflectionParameter->getDefaultValue()) : null,
         );
     }
 

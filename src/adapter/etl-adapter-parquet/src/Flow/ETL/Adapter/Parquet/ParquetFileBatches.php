@@ -13,6 +13,7 @@ use Flow\ETL\Extractor\File\ReadWindow;
 use Flow\ETL\Extractor\File\SourceFile;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\Parquet\Reader\ReadPlanner;
 use Generator;
 
 final class ParquetFileBatches implements OffsetSkippingFileBatches
@@ -57,7 +58,7 @@ final class ParquetFileBatches implements OffsetSkippingFileBatches
         $opened = null;
 
         try {
-            $fileRows = $file->file->reader()->rowsNumber();
+            $fileRows = $file->file->reader()->footer()->rowsNumber();
 
             if ($window->offset >= $fileRows) {
                 return $fileRows;
@@ -68,7 +69,12 @@ final class ParquetFileBatches implements OffsetSkippingFileBatches
             $fileBody = $this->fileColumns->withoutTail($file->schema());
             $opened = $file->open();
 
-            foreach ($opened->batches($fileBody, $batchSize, $window->offset, $window->limit, $backend) as $rows) {
+            foreach ($opened->batches(
+                $fileBody,
+                $batchSize,
+                (new ReadPlanner())->plan($file->file->reader()->footer(), null, $window->offset, $window->limit),
+                $backend,
+            ) as $rows) {
                 yield $fileBody->isSame($body) ? $rows : $rows->matchTo($body, $backend);
             }
 

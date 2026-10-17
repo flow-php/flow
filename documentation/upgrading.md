@@ -52,6 +52,20 @@ Upgrading from older versions: [0.35.x to 0.40.x](/documentation/upgrading-0.35-
 |---------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
 | arrow-ext built against arrow-rs 59, `FLOW_ARROW_ABI` 1 | arrow-rs 60, `FLOW_ARROW_ABI` / `ArrowExtension::ABI` 2: an older build is refused by `ArrowExtension::available()` |
 
+### 5) `flow-php/parquet`, `flow-php/etl-adapter-parquet` - reads take a `Query` (or, below the file, a `ReadPlan`) instead of limit/offset, the reader exposes its `Footer`; the `arrow` and `flow_php` extensions must be rebuilt
+
+| Before                                                                                                     | After                                                                                                                     |
+|------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| `ParquetFile::values(array $columns, ?int $limit, ?int $offset)`                                           | `values(Query $query)`: `$file->values(parquet_query()->select(...$columns)->offset($offset)->limit($limit))`             |
+| `ParquetFile::columns(int $batchSize, array $columns, ?int $limit, ?int $offset)`                          | `columns(Query $query, int $batchSize = 1024)`                                                                            |
+| a limit of `0` refused (`Limit must be greater than 0`); a negative offset or limit refused by `columns()` | `limit(0)` reads no row; a negative offset or limit is refused by `Query`                                                 |
+| `ParquetFileReader::metadata()`, `schema()`, `rowsNumber()`, `totalByteSize()`                             | `ParquetFileReader::footer(): Footer` holds them (and `rowGroupChunks()`); a footer taken before `close()` stays readable |
+| `ParquetFileReader::readColumns(array $columns, int $batchSize, ?int $limit, ?int $offset)`                | `readColumns(array $columns, int $batchSize, ReadPlan $plan)`                                                             |
+| `RustParquetFileReader::thrift()`                                                                          | `RustParquetFileReader::footer()->thrift()` (`RustParquetFooter`)                                                         |
+| `ParquetOpenSource::batches(Schema $schema, int $batchSize, ?int $offset, ?int $limit, Backend $backend)`  | `batches(Schema $schema, int $batchSize, ReadPlan $plan, Backend $backend)`                                               |
+| `RustBatchReader` / `RustColumnsReader::__construct(..., int $batchSize, ?int $offset, ?int $limit)`       | `__construct(..., int $batchSize, ReadPlan $plan)`                                                                        |
+| `FLOW_ARROW_ABI` / `ArrowExtension::ABI` 2, `FLOW_PHP_ABI` / `FlowPhpExtension::ABI` 1                     | 3 and 2: rebuild both the `arrow` and the `flow_php` extension; an older build is refused by `available()`                |
+
 ---
 
 ## Upgrading from 0.45.x to 0.46.x

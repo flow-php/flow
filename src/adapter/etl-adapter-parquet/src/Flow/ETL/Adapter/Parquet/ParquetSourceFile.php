@@ -74,8 +74,8 @@ final readonly class ParquetSourceFile implements SelfDescribingFile
     public function statistics(): Statistics
     {
         return new Statistics(
-            rows: Cardinality::exact($this->file->reader()->rowsNumber()),
-            size: Cardinality::exact($this->file->reader()->totalByteSize()),
+            rows: Cardinality::exact($this->file->reader()->footer()->rowsNumber()),
+            size: Cardinality::exact($this->file->reader()->footer()->totalByteSize()),
         );
     }
 }

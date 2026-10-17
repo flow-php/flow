@@ -13,6 +13,7 @@ use Flow\ETL\Adapter\Parquet\{RustParquetOpenSink, SchemaConverter};
 use Flow\ETL\Column\RustBackend;
 use Flow\Parquet\Engine\Arrow\{OptionsConverter, SchemaConverter as ArrowSchemaConverter};
 use Flow\Parquet\Options;
+use Flow\Parquet\Reader\ReadPlan;
 use Flow\Parquet\ParquetFile\Compressions;
 
 use function Flow\ETL\DSL\{int_schema, list_schema, schema, str_schema};
@@ -35,16 +36,17 @@ $cycle = static function () use ($schema, $extension, $options, $rows, $invalid,
     $writer->write($rows);
     $writer->close();
 
-    $reader = rust_parquet_batches($filesystem->readFrom(path('memory://leaks.parquet')), $schema, 30, null, null);
+    $reader = rust_parquet_batches($filesystem->readFrom(path('memory://leaks.parquet')), $schema, 30);
 
     foreach ($reader as $_) {
     }
 
-    $abandoned = rust_parquet_batches($filesystem->readFrom(path('memory://leaks.parquet')), $schema, 30, null, null);
+    $abandoned = rust_parquet_batches($filesystem->readFrom(path('memory://leaks.parquet')), $schema, 30);
     $abandoned->rewind();
     unset($abandoned);
 
-    $batches = new RustBatchReader(new RustParquetFileReader($filesystem->readFrom(path('memory://leaks.parquet'))), ['id', 'name', 'tags'], 30, null, null);
+    $file = new RustParquetFileReader($filesystem->readFrom(path('memory://leaks.parquet')));
+    $batches = new RustBatchReader($file, ['id', 'name', 'tags'], 30, ReadPlan::window($file->footer()->rowsNumber()));
     $batches->next();
     $twice = $batches->next();
     $copy = new RustParquetFileWriter($filesystem->writeTo(path('memory://copy.parquet')), $extension, Compressions::SNAPPY, $options, 30);
@@ -59,7 +61,7 @@ $cycle = static function () use ($schema, $extension, $options, $rows, $invalid,
     $copy->close();
 
     try {
-        rust_parquet_batches($filesystem->readFrom(path('memory://leaks.parquet')), $mismatched, 30, null, null);
+        rust_parquet_batches($filesystem->readFrom(path('memory://leaks.parquet')), $mismatched, 30);
         throw new LogicException('a string schema read an int column');
     } catch (Flow\ETL\Exception\InvalidArgumentException) {
     }

@@ -1,5 +1,5 @@
 --TEST--
-RustParquetOpenSource reads offset/limit windows of an 8-row-group file, and refuses a batch size, offset or limit out of range
+RustParquetOpenSource reads the planned windows of an 8-row-group file, and refuses a batch size out of range or a plan over other rows
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 <?php extension_loaded('arrow') || die('skip arrow'); ?>
@@ -7,12 +7,14 @@ RustParquetOpenSource reads offset/limit windows of an 8-row-group file, and ref
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\Parquet\Engine\RustParquetFileWriter;
+use Flow\ETL\Column\RustBackend;
+use Flow\Parquet\Engine\{RustParquetFileReader, RustParquetFileWriter};
 
-use Flow\ETL\Adapter\Parquet\{RustParquetOpenSink, SchemaConverter};
+use Flow\ETL\Adapter\Parquet\{RustParquetOpenSink, RustParquetOpenSource, SchemaConverter};
 use Flow\Parquet\Engine\Arrow\{OptionsConverter, SchemaConverter as ArrowSchemaConverter};
 use Flow\Parquet\{Option, Options, Reader};
 use Flow\Parquet\ParquetFile\Compressions;
+use Flow\Parquet\Reader\ReadPlan;
 
 use function Flow\ETL\DSL\{array_to_rows, int_schema, schema};
 use function Flow\Filesystem\DSL\{memory_filesystem, path};
@@ -50,9 +52,11 @@ foreach ([[0, 10], [5399, 3], [20000, 15000], [65000, 100], [65046, 1], [65536, 
     var_dump($ids === ($ids === [] ? [] : range($offset, $offset + count($ids) - 1)));
 }
 
-foreach ([[0, null, null], [-1, null, null], [10, -1, null], [10, null, -1]] as [$batchSize, $offset, $limit]) {
-    echo outcome(static fn() => rust_parquet_batches($filesystem->readFrom(path('memory://groups.parquet')), $schema, $batchSize, $offset, $limit)), "\n";
+foreach ([0, -1] as $batchSize) {
+    echo outcome(static fn() => rust_parquet_batches($filesystem->readFrom(path('memory://groups.parquet')), $schema, $batchSize)), "\n";
 }
+
+echo outcome(static fn() => (new RustParquetOpenSource(new RustParquetFileReader($filesystem->readFrom(path('memory://groups.parquet')))))->batches($schema, 10, ReadPlan::window(100), new RustBackend())), "\n";
 ?>
 --EXPECT--
 row groups: 8192,8192,8192,8192,8192,8192,8192,8192
@@ -72,5 +76,4 @@ bool(true)
 bool(true)
 Flow\Parquet\Exception\InvalidArgumentException: arrow Parquet batch size must be greater than 0
 Flow\Parquet\Exception\InvalidArgumentException: arrow Parquet batch size must be greater than 0
-Flow\Parquet\Exception\InvalidArgumentException: arrow Parquet offset must be greater or equal to 0
-Flow\Parquet\Exception\InvalidArgumentException: arrow Parquet limit must be greater or equal to 0
+Flow\Parquet\Exception\InvalidArgumentException: A read plan over 100 rows cannot read a file of 65536 rows

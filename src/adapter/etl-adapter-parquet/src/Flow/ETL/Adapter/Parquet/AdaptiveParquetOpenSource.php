@@ -9,6 +9,7 @@ use Flow\ETL\FlowPhpExtension;
 use Flow\ETL\Schema;
 use Flow\Parquet\Engine\RustParquetFileReader;
 use Flow\Parquet\ParquetFile;
+use Flow\Parquet\Reader\ReadPlan;
 use Iterator;
 
 final readonly class AdaptiveParquetOpenSource implements ParquetOpenSource
@@ -25,9 +26,9 @@ final readonly class AdaptiveParquetOpenSource implements ParquetOpenSource
             : new PhpParquetOpenSource($file);
     }
 
-    public function batches(Schema $schema, int $batchSize, ?int $offset, ?int $limit, Backend $backend): Iterator
+    public function batches(Schema $schema, int $batchSize, ReadPlan $plan, Backend $backend): Iterator
     {
-        return $this->source->batches($schema, $batchSize, $offset, $limit, $backend);
+        return $this->source->batches($schema, $batchSize, $plan, $backend);
     }
 
     public function close(): void

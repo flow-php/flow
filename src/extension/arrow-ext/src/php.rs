@@ -68,6 +68,13 @@ pub fn zval_str(bytes: &[u8]) -> Zval {
     zv
 }
 
+pub fn zval_array(table: ZBox<ZendHashTable>) -> Zval {
+    let mut zv = Zval::new();
+    zv.set_hashtable(table);
+
+    zv
+}
+
 pub fn zval_long(value: i64) -> Zval {
     let mut zv = Zval::new();
     zv.set_long(value);

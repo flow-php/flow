@@ -30,7 +30,7 @@ use ext_php_rs::{info_table_end, info_table_row, info_table_start};
 
 /// The contract version flow-php/etl expects (`Flow\ETL\FlowPhpExtension::ABI`); both change together whenever a
 /// registered class or interface changes.
-const FLOW_PHP_ABI: i64 = 1;
+const FLOW_PHP_ABI: i64 = 2;
 
 pub extern "C" fn php_module_info(_module: *mut ModuleEntry) {
     info_table_start!();

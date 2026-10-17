@@ -14,6 +14,7 @@ use Flow\Parquet\ParquetFile\Schema\MapValue;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\ParquetFile\Schema\Repetition;
 use Flow\Parquet\Tests\Context\TestParquetFile;
+use Flow\Parquet\Tests\Mother\ReadPlanMother;
 use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -63,8 +64,7 @@ final class RustParquetEngineReadTest extends TestCase
             $engine->openForRead(NativeLocalSourceStream::open(path_real($path)))->readColumns(
                 ['id', 'name', 'active', 'score'],
                 batchSize: 2,
-                limit: null,
-                offset: null,
+                plan: ReadPlanMother::window(count($inputData)),
             ),
             false,
         );
@@ -99,8 +99,7 @@ final class RustParquetEngineReadTest extends TestCase
             $engine->openForRead(NativeLocalSourceStream::open(path_real($path)))->readColumns(
                 ['id', 'tags'],
                 batchSize: 2,
-                limit: null,
-                offset: null,
+                plan: ReadPlanMother::window(count($inputData)),
             ),
             false,
         );
@@ -129,8 +128,7 @@ final class RustParquetEngineReadTest extends TestCase
             $engine->openForRead(NativeLocalSourceStream::open(path_real($path)))->readColumns(
                 ['id', 'metadata'],
                 batchSize: 2,
-                limit: null,
-                offset: null,
+                plan: ReadPlanMother::window(count($inputData)),
             ),
             false,
         );
@@ -165,8 +163,7 @@ final class RustParquetEngineReadTest extends TestCase
             $engine->openForRead(NativeLocalSourceStream::open(path_real($path)))->readColumns(
                 ['id', 'address'],
                 batchSize: 2,
-                limit: null,
-                offset: null,
+                plan: ReadPlanMother::window(count($inputData)),
             ),
             false,
         );
@@ -199,8 +196,7 @@ final class RustParquetEngineReadTest extends TestCase
             $engine->openForRead(NativeLocalSourceStream::open(path_real($path)))->readColumns(
                 ['top_uuid', 'body', 'uuid_list'],
                 batchSize: 2,
-                limit: null,
-                offset: null,
+                plan: ReadPlanMother::window(1),
             ),
             false,
         );
@@ -237,8 +233,7 @@ final class RustParquetEngineReadTest extends TestCase
             $engine->openForRead(NativeLocalSourceStream::open(path_real($path)))->readColumns(
                 ['id', 'name'],
                 batchSize: 2,
-                limit: null,
-                offset: null,
+                plan: ReadPlanMother::window(count($inputData)),
             ),
             false,
         );
@@ -261,8 +256,7 @@ final class RustParquetEngineReadTest extends TestCase
             $engine->openForRead(NativeLocalSourceStream::open(path_real($path)))->readColumns(
                 ['id'],
                 batchSize: 2,
-                limit: 5,
-                offset: null,
+                plan: ReadPlanMother::window(count($inputData), 0, 5),
             ),
             false,
         );
@@ -285,8 +279,7 @@ final class RustParquetEngineReadTest extends TestCase
             $engine->openForRead(NativeLocalSourceStream::open(path_real($path)))->readColumns(
                 ['id'],
                 batchSize: 2,
-                limit: 5,
-                offset: 10,
+                plan: ReadPlanMother::window(count($inputData), 10, 5),
             ),
             false,
         );
@@ -309,8 +302,7 @@ final class RustParquetEngineReadTest extends TestCase
             $engine->openForRead(NativeLocalSourceStream::open(path_real($path)))->readColumns(
                 ['id'],
                 batchSize: 2,
-                limit: null,
-                offset: 96,
+                plan: ReadPlanMother::window(count($inputData), 96),
             ),
             false,
         );

@@ -18,7 +18,7 @@ final readonly class FlowPhpExtension
      * The contract version this package expects from flow_php, equal to the extension's FLOW_PHP_ABI. Both sides change
      * together whenever a class or interface the extension registers changes.
      */
-    public const int ABI = 1;
+    public const int ABI = 2;
 
     public function __construct(
         public bool $loaded,

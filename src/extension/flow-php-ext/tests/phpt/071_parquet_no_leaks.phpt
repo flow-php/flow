@@ -48,7 +48,7 @@ $cycle = static function () use ($schema, $values, $extension, $options, $mismat
     }
 
     try {
-        rust_parquet_batches($filesystem->readFrom(path('memory://leaks.parquet')), $mismatched, 30, null, null);
+        rust_parquet_batches($filesystem->readFrom(path('memory://leaks.parquet')), $mismatched, 30);
         throw new LogicException('a mismatched schema was accepted');
     } catch (Flow\ETL\Exception\InvalidArgumentException) {
     }

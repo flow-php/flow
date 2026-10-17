@@ -15,8 +15,8 @@ use ext_php_rs::types::{ZendObject, Zval};
 use ext_php_rs::zend::ClassEntry;
 
 use crate::parquet::error::Error;
-use crate::parquet::library::{batch_size, rows, RustParquetFileReader, INVALID_ARGUMENT};
-use crate::parquet::read::{ParquetReader, ReadPlan};
+use crate::parquet::library::{batch_size, read_plan, RustParquetFileReader, INVALID_ARGUMENT};
+use crate::parquet::read::ParquetReader;
 use crate::parquet::source::PhpStream;
 use crate::php::{call_handle_transparent, ce_method_ref};
 use crate::render::{exception, parquet_exception, Side};
@@ -83,22 +83,14 @@ impl RustBatchReader {
         file: &RustParquetFileReader,
         columns: Vec<String>,
         batch_size: i64,
-        offset: Option<i64>,
-        limit: Option<i64>,
+        plan: &Zval,
     ) -> PhpResult<Self> {
         let batch_size = self::batch_size(batch_size)?;
-        let (offset, limit) = (rows(offset, "offset")?.unwrap_or(0), rows(limit, "limit")?);
         let (stream, size, meta) = file.read()?;
         let stream = Arc::clone(stream);
-        let reader = ParquetReader::open(
-            Arc::clone(&stream),
-            size,
-            meta,
-            &columns,
-            ReadPlan::new(meta, offset, limit),
-            batch_size,
-        )
-        .map_err(|error| parquet_exception(error, &stream, Side::Read))?;
+        let plan = read_plan(meta, plan, &stream)?;
+        let reader = ParquetReader::open(Arc::clone(&stream), size, meta, &columns, plan, batch_size)
+            .map_err(|error| parquet_exception(error, &stream, Side::Read))?;
         let fields = columns
             .iter()
             .zip(reader.fields())

@@ -1,5 +1,5 @@
-//! Row groups of a Parquet file as canonical arrays: only the groups an offset/limit window overlaps are decoded, and
-//! every projected column is checked against the cast table before the first batch.
+//! Row groups of a Parquet file as canonical arrays: only the groups a read plan selects rows of are fetched and
+//! decoded, and every projected column is checked against the cast table before the first batch.
 
 use std::sync::Arc;
 
@@ -8,11 +8,12 @@ use arrow_array::{make_array, Array, ArrayRef, RecordBatchReader};
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field, FieldRef, Fields, Schema, SchemaRef, TimeUnit};
 use parquet::arrow::arrow_reader::{
-    ArrowReaderMetadata, ArrowReaderOptions, ParquetRecordBatchReader, ParquetRecordBatchReaderBuilder,
+    ArrowReaderMetadata, ArrowReaderOptions, ParquetRecordBatchReader, ParquetRecordBatchReaderBuilder, RowSelection,
+    RowSelector,
 };
 use parquet::arrow::ProjectionMask;
 use parquet::basic::{Compression, Type};
-use parquet::file::metadata::{PageIndexPolicy, ParquetMetaData, ParquetMetaDataReader};
+use parquet::file::metadata::ParquetMetaData;
 use parquet::schema::types::SchemaDescriptor;
 
 use crate::parquet::canonical::{canonical, canonical_type};
@@ -20,37 +21,73 @@ use crate::parquet::error::Error;
 use crate::parquet::fetch::ChunkFetch;
 use crate::parquet::source::ReadAt;
 
-/// The row groups overlapping [offset, offset + limit) and the rows to skip in the first of them.
+/// The row groups holding a selected row and the selection rebased onto them.
 #[derive(Debug, PartialEq, Eq)]
 pub struct ReadPlan {
     pub row_groups: Vec<usize>,
-    pub skip: usize,
-    pub limit: Option<usize>,
+    pub selection: RowSelection,
 }
 
 impl ReadPlan {
-    pub fn new(meta: &ParquetMetaData, offset: u64, limit: Option<u64>) -> Self {
-        let (mut row_groups, mut skip, mut start) = (Vec::new(), 0, 0);
+    /// `selectors`: (row count, skip) over every row of the file, as `ReadPlanConverter::toExtension()` sends them.
+    pub fn from_selection(meta: &ParquetMetaData, selectors: Vec<(usize, bool)>) -> Result<Self, Error> {
+        let total = selectors
+            .iter()
+            .try_fold(0usize, |total, (count, _)| total.checked_add(*count))
+            .ok_or_else(|| Error::Plan("A read plan's row counts overflow".to_string()))?;
+        let rows = meta
+            .row_groups()
+            .iter()
+            .try_fold(0usize, |rows, group| {
+                rows.checked_add(usize::try_from(group.num_rows()).ok()?)
+            })
+            .ok_or_else(|| {
+                Error::NotParquet("Invalid Parquet file. The row groups' row counts overflow".to_string())
+            })?;
+
+        if total != rows {
+            return Err(Error::Plan(format!(
+                "A read plan over {total} rows cannot read a file of {rows} rows"
+            )));
+        }
+
+        let (mut row_groups, mut rebased) = (Vec::new(), Vec::new());
+        let mut selectors = selectors.into_iter().filter(|(count, _)| *count > 0);
+        let mut current = selectors.next();
 
         for (index, group) in meta.row_groups().iter().enumerate() {
-            let end = start + group.num_rows() as u64;
+            let mut remaining = group.num_rows() as usize;
+            let mut kept = Vec::new();
 
-            if end > offset && limit.is_none_or(|limit| start < offset + limit) {
-                if row_groups.is_empty() {
-                    skip = (offset - start) as usize;
+            while remaining > 0 {
+                // the totals are equal: a selector is left while a group has rows
+                let Some((count, skip)) = current.as_mut() else {
+                    break;
+                };
+                let taken = (*count).min(remaining);
+                kept.push(if *skip {
+                    RowSelector::skip(taken)
+                } else {
+                    RowSelector::select(taken)
+                });
+                *count -= taken;
+                remaining -= taken;
+
+                if *count == 0 {
+                    current = selectors.next();
                 }
-
-                row_groups.push(index);
             }
 
-            start = end;
+            if kept.iter().any(|selector| !selector.skip) {
+                row_groups.push(index);
+                rebased.extend(kept);
+            }
         }
 
-        Self {
+        Ok(Self {
             row_groups,
-            skip,
-            limit: limit.map(|limit| limit as usize),
-        }
+            selection: RowSelection::from(rebased),
+        })
     }
 }
 
@@ -116,8 +153,7 @@ pub struct ParquetReader {
 
 impl ParquetReader {
     /// `source`: the file's bytes (`PhpStream`), `size` long; `meta`: its footer, which `plan` was built from. Only
-    /// the projected column chunks of the planned row groups are fetched (`ChunkFetch`); the page index is read on a
-    /// copy of `meta`, only when the plan skips rows inside its first row group.
+    /// the projected column chunks of the planned row groups are fetched (`ChunkFetch`).
     pub fn open<R: ReadAt + Send + Sync + 'static>(
         source: Arc<R>,
         size: u64,
@@ -160,27 +196,13 @@ impl ParquetReader {
             })
             .collect::<Vec<_>>();
         let fetch = ChunkFetch::new(source, size, meta, &plan.row_groups, &leaves);
-        let meta = if plan.skip > 0 {
-            let mut reader = ParquetMetaDataReader::new_with_metadata(meta.as_ref().clone())
-                .with_page_index_policy(PageIndexPolicy::Optional);
-            reader.read_page_indexes(&fetch)?;
-            ArrowReaderMetadata::try_new(Arc::new(reader.finish()?), options)?
-        } else {
-            ArrowReaderMetadata::try_new(Arc::clone(meta), options)?
-        };
+        let meta = ArrowReaderMetadata::try_new(Arc::clone(meta), options)?;
         let mask = ProjectionMask::leaves(meta.metadata().file_metadata().schema_descr(), leaves);
-        let mut builder = ParquetRecordBatchReaderBuilder::new_with_metadata(fetch, meta)
+        let builder = ParquetRecordBatchReaderBuilder::new_with_metadata(fetch, meta)
             .with_row_groups(plan.row_groups)
+            .with_row_selection(plan.selection)
             .with_projection(mask)
             .with_batch_size(batch_size);
-
-        if plan.skip > 0 {
-            builder = builder.with_offset(plan.skip);
-        }
-
-        if let Some(limit) = plan.limit {
-            builder = builder.with_limit(limit);
-        }
 
         let batches = builder.build()?;
         let schema = batches.schema();
@@ -317,10 +339,11 @@ mod tests {
     use arrow_buffer::NullBuffer;
     use arrow_schema::{DataType, Field, Fields, Schema, TimeUnit};
     use bytes::Bytes;
+    use parquet::arrow::arrow_reader::{RowSelection, RowSelector};
     use parquet::arrow::ArrowWriter;
     use parquet::basic::Compression;
     use parquet::data_type::{Int64Type, Int96, Int96Type};
-    use parquet::file::metadata::{ParquetMetaData, ParquetMetaDataReader};
+    use parquet::file::metadata::{FileMetaData, ParquetMetaData, ParquetMetaDataReader};
     use parquet::file::properties::WriterProperties;
     use parquet::file::writer::SerializedFileWriter;
     use parquet::schema::parser::parse_message_type;
@@ -331,7 +354,8 @@ mod tests {
     use crate::parquet::footer::Footer;
     use crate::parquet::source::fake::Counting;
 
-    fn eight_groups_of_8192() -> parquet::file::metadata::ParquetMetaData {
+    /// Three row groups of 100 rows.
+    fn three_groups() -> ParquetMetaData {
         let schema = Arc::new(Schema::new(vec![Field::new("id", DataType::Int64, false)]));
         let mut file = Vec::new();
         let mut writer = ArrowWriter::try_new(
@@ -339,13 +363,13 @@ mod tests {
             Arc::clone(&schema),
             Some(
                 WriterProperties::builder()
-                    .set_max_row_group_row_count(Some(8_192))
+                    .set_max_row_group_row_count(Some(100))
                     .build(),
             ),
         )
         .unwrap();
         writer
-            .write(&RecordBatch::try_new(schema, vec![Arc::new(Int64Array::from_iter_values(0..65_536))]).unwrap())
+            .write(&RecordBatch::try_new(schema, vec![Arc::new(Int64Array::from_iter_values(0..300))]).unwrap())
             .unwrap();
         writer.close().unwrap();
 
@@ -354,36 +378,108 @@ mod tests {
             .unwrap()
     }
 
-    fn plan(offset: u64, limit: u64) -> (Vec<usize>, usize) {
-        let plan = ReadPlan::new(&eight_groups_of_8192(), offset, Some(limit));
-
-        assert_eq!(plan.limit, Some(limit as usize));
-
-        (plan.row_groups, plan.skip)
-    }
-
     #[test]
-    fn plan_reads_the_groups_a_window_overlaps() {
-        assert_eq!(eight_groups_of_8192().row_groups().len(), 8);
-        assert_eq!(plan(0, 10), (vec![0], 0));
-        assert_eq!(plan(5_399, 3), (vec![0], 5_399));
-        assert_eq!(plan(20_000, 15_000), (vec![2, 3, 4], 3_616));
-        assert_eq!(plan(65_000, 100), (vec![7], 7_656));
-        assert_eq!(plan(65_046, 1), (vec![7], 7_702));
-    }
+    fn a_selection_keeps_the_groups_it_selects_rows_of_and_is_rebased_onto_them() {
+        let plan = ReadPlan::from_selection(&three_groups(), vec![(150, true), (20, false), (130, true)]).unwrap();
 
-    #[test]
-    fn plan_without_limit_reads_every_group_from_the_offset() {
-        let plan = ReadPlan::new(&eight_groups_of_8192(), 16_384, None);
-
+        assert_eq!(plan.row_groups, vec![1]);
         assert_eq!(
-            plan,
-            ReadPlan {
-                row_groups: vec![2, 3, 4, 5, 6, 7],
-                skip: 0,
-                limit: None
-            }
+            plan.selection,
+            RowSelection::from(vec![
+                RowSelector::skip(50),
+                RowSelector::select(20),
+                RowSelector::skip(30)
+            ])
         );
+    }
+
+    #[test]
+    fn a_group_with_no_selected_row_is_dropped_from_the_rebased_selection() {
+        let plan = ReadPlan::from_selection(
+            &three_groups(),
+            vec![
+                (10, true),
+                (90, false),
+                (100, true),
+                (50, false),
+                (0, false),
+                (50, true),
+            ],
+        )
+        .unwrap();
+
+        assert_eq!(plan.row_groups, vec![0, 2]);
+        assert_eq!(
+            plan.selection,
+            RowSelection::from(vec![
+                RowSelector::skip(10),
+                RowSelector::select(140),
+                RowSelector::skip(50)
+            ])
+        );
+    }
+
+    #[test]
+    fn a_selection_of_no_row_reads_no_group() {
+        let plan = ReadPlan::from_selection(&three_groups(), vec![(300, true)]).unwrap();
+
+        assert!(plan.row_groups.is_empty());
+        assert!(!plan.selection.selects_any());
+    }
+
+    #[test]
+    fn a_selection_that_does_not_cover_the_file_is_refused() {
+        for selectors in [vec![(299, false)], vec![(300, false), (1, true)], vec![]] {
+            assert!(matches!(
+                ReadPlan::from_selection(&three_groups(), selectors),
+                Err(Error::Plan(message)) if message.ends_with("cannot read a file of 300 rows")
+            ));
+        }
+    }
+
+    #[test]
+    fn selector_counts_that_overflow_are_refused() {
+        assert!(matches!(
+            ReadPlan::from_selection(&three_groups(), vec![(usize::MAX, false), (301, true)]),
+            Err(Error::Plan(message)) if message == "A read plan's row counts overflow"
+        ));
+    }
+
+    /// `three_groups()` whose file metadata claims `num_rows` rows.
+    fn claiming(num_rows: i64) -> ParquetMetaData {
+        let meta = three_groups();
+        let file = meta.file_metadata();
+
+        ParquetMetaData::new(
+            FileMetaData::new(
+                file.version(),
+                num_rows,
+                file.created_by().map(str::to_string),
+                file.key_value_metadata().cloned(),
+                file.schema_descr_ptr(),
+                file.column_orders().cloned(),
+            ),
+            meta.row_groups().to_vec(),
+        )
+    }
+
+    #[test]
+    fn a_plan_covers_the_row_groups_rows_whatever_the_file_row_count_claims() {
+        for claimed in [200, 400] {
+            assert_eq!(
+                ReadPlan::from_selection(&claiming(claimed), vec![(300, false)])
+                    .unwrap()
+                    .row_groups,
+                vec![0, 1, 2]
+            );
+
+            for selectors in [vec![(claimed as usize, false)], vec![(299, false)], vec![(301, false)]] {
+                assert!(matches!(
+                    ReadPlan::from_selection(&claiming(claimed), selectors),
+                    Err(Error::Plan(message)) if message.ends_with("cannot read a file of 300 rows")
+                ));
+            }
+        }
     }
 
     fn with_lzo_names() -> ParquetMetaData {
@@ -455,14 +551,14 @@ mod tests {
     fn open(
         file: Vec<u8>,
         columns: &[&str],
-        offset: u64,
-        limit: Option<u64>,
+        selectors: Option<Vec<(usize, bool)>>,
     ) -> Result<(ParquetReader, Arc<Counting>), Error> {
         let footer = Footer::read(&Bytes::from(file.clone()))?;
         let source = Arc::new(Counting::new(file));
         let size = source.data.len() as u64;
         let columns = columns.iter().map(|column| column.to_string()).collect::<Vec<_>>();
-        let plan = ReadPlan::new(footer.meta(), offset, limit);
+        let rows = footer.meta().file_metadata().num_rows() as usize;
+        let plan = ReadPlan::from_selection(footer.meta(), selectors.unwrap_or(vec![(rows, false)]))?;
 
         Ok((
             ParquetReader::open(Arc::clone(&source), size, footer.meta(), &columns, plan, 1_024)?,
@@ -471,7 +567,7 @@ mod tests {
     }
 
     fn read(file: Vec<u8>, columns: &[&str]) -> Result<Vec<ArrayRef>, Error> {
-        let (mut reader, _) = open(file, columns, 0, None)?;
+        let (mut reader, _) = open(file, columns, None)?;
         let (_, arrays) = reader.next().unwrap()?;
 
         assert!(reader.next().is_none());
@@ -620,7 +716,7 @@ mod tests {
 
     #[test]
     fn a_struct_path_is_named_as_asked() {
-        let (reader, _) = open(struct_file(), &["structure.name"], 0, None).unwrap();
+        let (reader, _) = open(struct_file(), &["structure.name"], None).unwrap();
 
         assert_eq!(reader.fields()[0].name(), "structure.name");
         assert!(reader.fields()[0].is_nullable());
@@ -695,7 +791,7 @@ mod tests {
     #[test]
     fn a_full_read_fetches_each_row_group_once() {
         let file = four_groups();
-        let (reader, source) = open(file.clone(), &["a", "b", "c"], 0, None).unwrap();
+        let (reader, source) = open(file.clone(), &["a", "b", "c"], None).unwrap();
 
         assert_eq!(drained(reader), 400);
         assert_eq!(source.counted(), (4, chunk_bytes(&file, &[0, 1, 2, 3], &[0, 1, 2])));
@@ -704,39 +800,37 @@ mod tests {
     #[test]
     fn a_projected_read_fetches_only_the_projected_chunks() {
         let file = four_groups();
-        let (reader, source) = open(file.clone(), &["b"], 0, None).unwrap();
+        let (reader, source) = open(file.clone(), &["b"], None).unwrap();
 
         assert_eq!(drained(reader), 400);
         assert_eq!(source.counted(), (4, chunk_bytes(&file, &[0, 1, 2, 3], &[1])));
     }
 
     #[test]
-    fn an_offset_read_fetches_only_the_planned_row_group_and_the_page_index() {
+    fn a_window_read_fetches_only_the_projected_chunks_of_its_row_group() {
         let file = four_groups();
-        let (reader, source) = open(file.clone(), &["a", "c"], 250, Some(10)).unwrap();
-        let meta = Footer::read(&Bytes::from(file.clone())).unwrap();
-        let index = meta
-            .meta()
-            .row_groups()
-            .iter()
-            .flat_map(|group| group.columns())
-            .map(|chunk| {
-                chunk.column_index_length().unwrap_or(0) as usize + chunk.offset_index_length().unwrap_or(0) as usize
-            })
-            .sum::<usize>();
+        let (reader, source) = open(
+            file.clone(),
+            &["a", "c"],
+            Some(vec![(250, true), (10, false), (140, true)]),
+        )
+        .unwrap();
 
         assert_eq!(drained(reader), 10);
-
-        let (reads, bytes) = source.counted();
-
-        assert!(reads <= 3, "{reads} reads");
-        assert!(bytes >= chunk_bytes(&file, &[2], &[0, 2]), "{bytes} bytes");
-        assert!(bytes <= chunk_bytes(&file, &[2], &[0, 1, 2]) + index, "{bytes} bytes");
+        assert_eq!(source.counted().1, chunk_bytes(&file, &[2], &[0, 2]));
     }
 
     #[test]
-    fn plan_past_the_end_reads_nothing() {
-        assert_eq!(plan(65_536, 10), (vec![], 0));
-        assert_eq!(plan(0, 0), (vec![], 0));
+    fn a_pruned_plan_fetches_only_the_kept_groups_chunks() {
+        let file = four_groups();
+        let (reader, source) = open(
+            file.clone(),
+            &["a", "b", "c"],
+            Some(vec![(100, true), (100, false), (100, true), (100, false)]),
+        )
+        .unwrap();
+
+        assert_eq!(drained(reader), 200);
+        assert_eq!(source.counted(), (2, chunk_bytes(&file, &[1, 3], &[0, 1, 2])));
     }
 }

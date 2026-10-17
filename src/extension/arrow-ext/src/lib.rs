@@ -30,7 +30,7 @@ pub extern "C" fn php_module_info(_module: *mut ModuleEntry) {
 
 /// The contract version flow-php/parquet expects (`Flow\Parquet\Engine\ArrowExtension::ABI`); both change together
 /// whenever a registered class or interface, or the schema, options or values crossing them, change.
-const FLOW_ARROW_ABI: i64 = 2;
+const FLOW_ARROW_ABI: i64 = 3;
 
 /// # Safety
 ///
@@ -55,6 +55,7 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .request_startup_function(php::request_startup)
         .request_shutdown_function(php::request_shutdown)
         .class::<parquet::library::RustColumnsReader>()
+        .class::<parquet::library::RustParquetFooter>()
         .class::<parquet::library::RustParquetFileReader>()
         .class::<parquet::library::RustParquetFileWriter>()
         .class::<parquet::engine::RustParquetEngine>()

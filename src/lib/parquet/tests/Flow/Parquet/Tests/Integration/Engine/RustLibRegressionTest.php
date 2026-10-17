@@ -14,6 +14,7 @@ use Flow\Parquet\ParquetFile\Schema\ConvertedType;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\LogicalType;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
+use Flow\Parquet\Query;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Tests\Context\MemoryParquetFile;
 use Flow\Parquet\Tests\Context\ParquetRows;
@@ -52,12 +53,8 @@ final class RustLibRegressionTest extends TestCase
         }
 
         $stream = new ReadCountingSourceStream(NativeLocalSourceStream::open(path_real(self::PAGINATION)));
-        $rows = iterator_to_array(
-            (new Reader(engine: new RustParquetEngine()))
-                ->readStream($stream)
-                ->values([], 10, 4990),
-            false,
-        );
+        $file = (new Reader(engine: new RustParquetEngine()))->readStream($stream);
+        $rows = iterator_to_array($file->values(new Query(offset: 4990, limit: 10)), false);
 
         static::assertCount(10, $rows);
         static::assertLessThanOrEqual($footer + 8 + $group, $stream->bytes);

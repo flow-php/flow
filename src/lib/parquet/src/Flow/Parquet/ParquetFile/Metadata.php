@@ -34,7 +34,7 @@ final class Metadata
         private readonly array $columnOrders = [],
     ) {}
 
-    // called by name from arrow-ext RustParquetFileReader::metadata(), pinned by phpts 047, 052
+    // called by name from arrow-ext RustParquetFooter::metadata(), pinned by phpts 047, 052
     public static function fromThrift(FileMetaData $thrift): self
     {
         $schema = Schema::fromThrift($thrift->schema);

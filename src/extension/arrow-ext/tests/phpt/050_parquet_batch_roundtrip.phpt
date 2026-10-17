@@ -41,7 +41,8 @@ $roundTrip = static function (Filesystem $filesystem) use ($source, $target, $op
     $writer->writeRows($rows);
     $writer->close();
 
-    $batches = new RustBatchReader(new RustParquetFileReader($filesystem->readFrom(path('memory://source.parquet'))), ['id', 'name', 'tags'], 100, null, null);
+    $source = new RustParquetFileReader($filesystem->readFrom(path('memory://source.parquet')));
+    $batches = new RustBatchReader($source, ['id', 'name', 'tags'], 100, arrow_read_plan($source));
     $schema = $batches->schema();
     $copy = new RustParquetFileWriter($filesystem->writeTo(path('memory://copy.parquet')), SchemaConverter::toExtension($target), Compressions::SNAPPY, $options, 100);
     $counts = [];
@@ -64,7 +65,8 @@ echo get_class($schema), ' ', $schema->arrowSchemaAddress() > 0 ? 'has an addres
 echo 'batches: ', implode(',', $counts), "\n";
 echo 'round trip: ', iterator_to_array(Reader::php()->readStream($filesystem->readFrom(path('memory://copy.parquet')))->values(), false) === $expected ? 'identical' : 'DIFFER', "\n";
 
-$batches = new RustBatchReader(new RustParquetFileReader($filesystem->readFrom(path('memory://source.parquet'))), ['id', 'name', 'tags'], 100, null, null);
+$source = new RustParquetFileReader($filesystem->readFrom(path('memory://source.parquet')));
+$batches = new RustBatchReader($source, ['id', 'name', 'tags'], 100, arrow_read_plan($source));
 $batch = $batches->next();
 $twice = new RustParquetFileWriter($filesystem->writeTo(path('memory://twice.parquet')), SchemaConverter::toExtension($target), Compressions::SNAPPY, $options, 100);
 $twice->writeArrowBatch($batch);

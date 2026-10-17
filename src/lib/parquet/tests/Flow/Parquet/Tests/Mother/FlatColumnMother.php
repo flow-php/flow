@@ -7,7 +7,9 @@ namespace Flow\Parquet\Tests\Mother;
 use Flow\Parquet\ParquetFile\Schema\ConvertedType;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\LogicalType;
+use Flow\Parquet\ParquetFile\Schema\LogicalType\Timestamp;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
+use Flow\Parquet\ParquetFile\Schema\TimeUnit;
 
 final class FlatColumnMother
 {
@@ -62,8 +64,17 @@ final class FlatColumnMother
         return new FlatColumn('u', PhysicalType::INT32, logicalType: LogicalType::integer(8, false));
     }
 
-    public static function uint64(): FlatColumn
+    public static function uint64(string $name = 'u'): FlatColumn
     {
-        return new FlatColumn('u', PhysicalType::INT64, logicalType: LogicalType::integer(64, false));
+        return new FlatColumn($name, PhysicalType::INT64, logicalType: LogicalType::integer(64, false));
+    }
+
+    public static function timestamp(TimeUnit $unit): FlatColumn
+    {
+        return new FlatColumn(
+            'ts',
+            PhysicalType::INT64,
+            logicalType: new LogicalType(LogicalType::TIMESTAMP, timestamp: new Timestamp(true, $unit)),
+        );
     }
 }

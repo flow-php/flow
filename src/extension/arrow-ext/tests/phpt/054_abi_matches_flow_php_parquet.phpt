@@ -17,7 +17,7 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
 use function Flow\Filesystem\DSL\path;
 
-var_dump(FLOW_ARROW_ABI === ArrowExtension::ABI);
+var_dump(FLOW_ARROW_ABI === ArrowExtension::ABI, FLOW_ARROW_ABI);
 var_dump(ArrowExtension::detect()->available());
 
 $writer = (new AdaptiveParquetEngine())->openForWrite(
@@ -31,5 +31,6 @@ $writer->close();
 ?>
 --EXPECT--
 bool(true)
+int(3)
 bool(true)
 bool(true)

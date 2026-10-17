@@ -6,6 +6,7 @@ namespace Flow\Parquet\Tests\Context;
 
 use Flow\Parquet\ParquetFile;
 use Flow\Parquet\ParquetFileReader;
+use Flow\Parquet\Query;
 
 use function array_keys;
 use function count;
@@ -31,7 +32,7 @@ final class ParquetRows
     ): array {
         $rows = [];
 
-        foreach ($file->columns($batchSize, $columns, $limit, $offset) as $chunk) {
+        foreach ($file->columns(new Query($columns, offset: $offset ?? 0, limit: $limit), $batchSize) as $chunk) {
             $names = array_keys($chunk);
 
             for ($i = 0, $count = count($chunk[$names[0]]); $i < $count; $i++) {

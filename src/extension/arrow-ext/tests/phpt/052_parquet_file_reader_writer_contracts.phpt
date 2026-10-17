@@ -36,17 +36,18 @@ $open = static fn(string $name, bool $int96AsDatetime = true): RustParquetFileRe
 
 echo "-- reader\n";
 $file = $open('structs.parquet');
-$metadata = $file->metadata();
+$footer = $file->footer();
+$metadata = $footer->metadata();
 $bytes = array_sum(array_map(static fn($group): int => $group->totalByteSize(), $metadata->rowGroups()->all()));
-var_dump($file instanceof ParquetFileReader);
+var_dump($file instanceof ParquetFileReader, $footer instanceof Flow\Parquet\ParquetFile\Footer, $file->footer() === $footer);
 var_dump(serialize($metadata) === serialize(Reader::php()->read("{$fixtures}/structs.parquet")->metadata()));
-var_dump(serialize($open('structs.parquet')->schema()) === serialize($metadata->schema()), $file->schema() === $metadata->schema());
-var_dump($file->rowsNumber() === $metadata->rowsNumber(), $file->totalByteSize() === $bytes);
+var_dump(serialize($open('structs.parquet')->footer()->schema()) === serialize($metadata->schema()), $footer->schema() === $metadata->schema());
+var_dump($footer->rowsNumber() === $metadata->rowsNumber(), $footer->totalByteSize() === $bytes);
 
-$chunks = $file->readColumns(['struct_flat', 'struct_flat.int'], 30, 70, 5);
+$chunks = $file->readColumns(['struct_flat', 'struct_flat.int'], 30, arrow_read_plan($file, 5, 70));
 $php = (new PhpParquetEngine(ByteOrder::LITTLE_ENDIAN, new Options()))
     ->openForRead(NativeLocalSourceStream::open(path_real("{$fixtures}/structs.parquet")))
-    ->readColumns(['struct_flat', 'struct_flat.int'], 30, 70, 5);
+    ->readColumns(['struct_flat', 'struct_flat.int'], 30, arrow_read_plan($file, 5, 70));
 var_dump($chunks instanceof Iterator);
 $read = [];
 
@@ -57,24 +58,26 @@ foreach ($chunks as $key => $chunk) {
 echo json_encode(array_map(static fn(array $chunk): int => count($chunk['struct_flat.int']), $read)), "\n";
 var_dump($read == iterator_to_array($php));
 echo arrow_outcome(static fn() => $chunks->rewind()), "\n";
-echo arrow_outcome(static fn() => iterator_to_array($open('EdgeCases/int96.parquet', false)->readColumns(['ts'], 10, null, null))), "\n";
-var_dump(count(iterator_to_array($open('EdgeCases/int96.parquet')->readColumns(['ts'], 10, null, null))) > 0);
-echo arrow_outcome(static fn() => $open('lists.parquet')->readColumns(['list.list.element'], 10, null, null)), "\n";
+$int96 = $open('EdgeCases/int96.parquet', false);
+echo arrow_outcome(static fn() => iterator_to_array($int96->readColumns(['ts'], 10, arrow_read_plan($int96)))), "\n";
+$int96 = $open('EdgeCases/int96.parquet');
+var_dump(count(iterator_to_array($int96->readColumns(['ts'], 10, arrow_read_plan($int96)))) > 0);
+$lists = $open('lists.parquet');
+echo arrow_outcome(static fn() => $lists->readColumns(['list.list.element'], 10, arrow_read_plan($lists))), "\n";
 echo arrow_outcome(static fn() => new RustParquetFileReader(new MemorySourceStream('{"not": "parquet"}'))), "\n";
 
+$plan = arrow_read_plan($file);
 $file->close();
 
 foreach ([
-    static fn() => $file->metadata(),
-    static fn() => $file->schema(),
-    static fn() => $file->rowsNumber(),
-    static fn() => $file->totalByteSize(),
-    static fn() => $file->thrift(),
-    static fn() => $file->readColumns(['struct_flat'], 1, null, null),
+    static fn() => $file->footer(),
+    static fn() => $file->readColumns(['struct_flat'], 1, $plan),
     static fn() => $file->close(),
 ] as $call) {
     echo arrow_outcome($call), "\n";
 }
+
+var_dump($footer->rowsNumber() === $metadata->rowsNumber());
 
 echo "-- writer\n";
 $filesystem = memory_filesystem();
@@ -169,6 +172,8 @@ bool(true)
 bool(true)
 bool(true)
 bool(true)
+bool(true)
+bool(true)
 [30,30,10]
 bool(true)
 Flow\Parquet\Exception\RuntimeException: RustColumnsReader cannot rewind
@@ -179,10 +184,7 @@ Flow\Parquet\Exception\InvalidArgumentException: Given file is not valid Parquet
 Flow\Parquet\Exception\RuntimeException: Reader is not open
 Flow\Parquet\Exception\RuntimeException: Reader is not open
 Flow\Parquet\Exception\RuntimeException: Reader is not open
-Flow\Parquet\Exception\RuntimeException: Reader is not open
-Flow\Parquet\Exception\RuntimeException: Reader is not open
-Flow\Parquet\Exception\RuntimeException: Reader is not open
-Flow\Parquet\Exception\RuntimeException: Reader is not open
+bool(true)
 -- writer
 bool(true)
 Flow\Parquet\Exception\ValidationException: Column "id" row 1: expected int, got string

@@ -73,6 +73,7 @@ $application->addCommand(new class extends Command {
             __DIR__ . '/../src/adapter/etl-adapter-xml/src/Flow/ETL/Adapter/XML/functions.php',
             __DIR__ . '/../src/lib/filesystem/src/Flow/Filesystem/DSL/functions.php',
             __DIR__ . '/../src/lib/types/src/Flow/Types/DSL/functions.php',
+            __DIR__ . '/../src/lib/parquet/src/Flow/Parquet/DSL/functions.php',
             __DIR__ . '/../src/lib/postgresql/src/Flow/PostgreSql/DSL/schema.php',
             __DIR__ . '/../src/lib/postgresql/src/Flow/PostgreSql/DSL/query.php',
             __DIR__ . '/../src/lib/postgresql/src/Flow/PostgreSql/DSL/condition.php',

@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Integration\IO;
 
 use Composer\InstalledVersions;
-use Faker\Factory;
 use Flow\Filesystem\Exception\RuntimeException as FilesystemRuntimeException;
 use Flow\Filesystem\Stream\NativeLocalDestinationStream;
 use Flow\Filesystem\Tests\Double\FailingCloseDestinationStream;
-use Flow\Parquet\Consts;
 use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
@@ -28,6 +26,7 @@ use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\ParquetFile\Schema\TimeUnit;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Tests\Context\ParquetRows;
+use Flow\Parquet\Tests\Context\StructWithLists;
 use Flow\Parquet\Tests\Context\TestParquetFile;
 use Flow\Parquet\Tests\Mother\ParquetEngineMother;
 use Flow\Parquet\Writer;
@@ -37,7 +36,6 @@ use RuntimeException;
 
 use function array_combine;
 use function array_map;
-use function Flow\ETL\DSL\generate_random_int;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function fopen;
@@ -93,7 +91,7 @@ class WriterTest extends ParquetIntegrationTestCase
 
         $path = TestParquetFile::path($this);
 
-        $schema = $this->createSchema();
+        $schema = StructWithLists::schema();
         $writer->open($path, $schema);
         $writer->close();
 
@@ -113,7 +111,7 @@ class WriterTest extends ParquetIntegrationTestCase
 
         $path = TestParquetFile::path($this);
 
-        $schema = $this->createSchema();
+        $schema = StructWithLists::schema();
 
         $writer->open($path, $schema);
 
@@ -238,7 +236,7 @@ class WriterTest extends ParquetIntegrationTestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Writer is not open');
 
-        $writer->writeBatch([$this->createRow()]);
+        $writer->writeBatch([StructWithLists::row()]);
     }
 
     #[DataProvider('engine_provider')]
@@ -543,9 +541,9 @@ class WriterTest extends ParquetIntegrationTestCase
 
         $path = TestParquetFile::path($this);
 
-        $schema = $this->createSchema();
+        $schema = StructWithLists::schema();
 
-        $row = $this->createRow();
+        $row = StructWithLists::row();
 
         $writer->open($path, $schema);
         $writer->writeBatch([$row, $row]);
@@ -575,9 +573,9 @@ class WriterTest extends ParquetIntegrationTestCase
 
         $path = TestParquetFile::path($this);
 
-        $schema = $this->createSchema();
+        $schema = StructWithLists::schema();
 
-        $row = $this->createRow();
+        $row = StructWithLists::row();
         $writer->open($path, $schema);
         $writer->writeBatch([$row, $row]);
         $writer->writeBatch([$row, $row]);
@@ -606,9 +604,9 @@ class WriterTest extends ParquetIntegrationTestCase
 
         $path = TestParquetFile::path($this);
 
-        $schema = $this->createSchema();
+        $schema = StructWithLists::schema();
 
-        $row = $this->createRow();
+        $row = StructWithLists::row();
 
         $stream = fopen($path, 'wb+');
         $writer->openForStream(new NativeLocalDestinationStream(path($path), $stream), $schema);
@@ -684,7 +682,7 @@ class WriterTest extends ParquetIntegrationTestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Writer is not open');
 
-        $writer->writeRow($this->createRow());
+        $writer->writeRow(StructWithLists::row());
     }
 
     #[DataProvider('engine_provider')]
@@ -695,8 +693,8 @@ class WriterTest extends ParquetIntegrationTestCase
 
         $path = TestParquetFile::path($this);
 
-        $schema = $this->createSchema();
-        $row = $this->createRow();
+        $schema = StructWithLists::schema();
+        $row = StructWithLists::row();
 
         $writer->write($path, $schema, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
 
@@ -719,8 +717,8 @@ class WriterTest extends ParquetIntegrationTestCase
 
         $path = TestParquetFile::path($this);
 
-        $schema = $this->createSchema();
-        $row = $this->createRow();
+        $schema = StructWithLists::schema();
+        $row = StructWithLists::row();
 
         $writer->write($path, $schema, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
 
@@ -750,8 +748,8 @@ class WriterTest extends ParquetIntegrationTestCase
 
         $path = TestParquetFile::path($this);
 
-        $schema = $this->createSchema();
-        $row = $this->createRow();
+        $schema = StructWithLists::schema();
+        $row = StructWithLists::row();
 
         $stream = fopen($path, 'wb+');
 
@@ -861,39 +859,5 @@ class WriterTest extends ParquetIntegrationTestCase
                     ->values(),
             ),
         );
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function createRow(): array
-    {
-        $faker = Factory::create();
-
-        return [
-            'struct' => [
-                'int64' => $faker->numberBetween(0, Consts::PHP_INT64_MAX),
-                'boolean' => $faker->boolean(),
-                'string' => $faker->text(150),
-                'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                'list_of_int' => array_map(
-                    static fn($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                    range(1, generate_random_int(2, 10)),
-                ),
-                'list_of_string' => array_map(static fn($i) => $faker->text(10), range(1, generate_random_int(2, 10))),
-            ],
-        ];
-    }
-
-    private function createSchema(): Schema
-    {
-        return Schema::with(NestedColumn::struct('struct', [
-            FlatColumn::int64('int64'),
-            FlatColumn::boolean('boolean'),
-            FlatColumn::string('string'),
-            FlatColumn::int32('int32'),
-            NestedColumn::list('list_of_int', ListElement::int32()),
-            NestedColumn::list('list_of_string', ListElement::string()),
-        ]));
     }
 }

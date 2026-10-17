@@ -24,6 +24,8 @@ use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\Column;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\Reader;
+use Flow\Parquet\Reader\ReadPlan;
+use Flow\Parquet\Reader\ReadPlanner;
 use Flow\Parquet\Writer;
 
 use function array_count_values;
@@ -37,6 +39,13 @@ use function range;
 
 final class ParquetFilesContext
 {
+    public static function plan(Filesystem $filesystem, string $uri, int $offset = 0, ?int $limit = null): ReadPlan
+    {
+        $file = (new Reader())->readStream($filesystem->readFrom(path($uri)));
+
+        return (new ReadPlanner())->plan($file->reader()->footer(), null, $offset, $limit);
+    }
+
     /**
      * @return array<string>
      */

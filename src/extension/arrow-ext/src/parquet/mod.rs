@@ -4,6 +4,7 @@
 pub mod batch;
 pub mod canonical;
 pub mod cells;
+pub mod chunks;
 pub mod engine;
 pub mod error;
 pub mod fetch;
