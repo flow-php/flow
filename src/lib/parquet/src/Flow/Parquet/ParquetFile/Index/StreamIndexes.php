@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\Parquet\ParquetFile\Index;
 
 use Flow\Filesystem\SourceStream;
+use Flow\Parquet\BloomFilter\BloomFilterReader;
+use Flow\Parquet\BloomFilter\Sbbf;
 use Flow\Parquet\ParquetFile\Footer;
 use Flow\Parquet\ParquetFile\PageIndex\ColumnIndex;
 use Flow\Parquet\ParquetFile\PageIndex\OffsetIndex;
@@ -24,6 +26,11 @@ use function array_key_exists;
 final class StreamIndexes implements Indexes
 {
     /**
+     * @var array<string, array<int, null|Sbbf>>
+     */
+    private array $bloomFilters = [];
+
+    /**
      * @var array<string, RowGroupChunks>
      */
     private array $chunks = [];
@@ -42,6 +49,19 @@ final class StreamIndexes implements Indexes
         private readonly Footer $footer,
         private readonly SourceStream $stream,
     ) {}
+
+    public function bloomFilter(int $rowGroup, FlatColumn $column): ?Sbbf
+    {
+        $path = $column->flatPath();
+
+        if (!array_key_exists($rowGroup, $this->bloomFilters[$path] ?? [])) {
+            $this->bloomFilters[$path][$rowGroup] = (new BloomFilterReader($this->stream))->read($this->chunks(
+                $column,
+            )->chunk($rowGroup, $column));
+        }
+
+        return $this->bloomFilters[$path][$rowGroup];
+    }
 
     public function columnIndex(int $rowGroup, FlatColumn $column): ?ColumnIndex
     {

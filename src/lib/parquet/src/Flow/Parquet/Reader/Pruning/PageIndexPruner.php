@@ -38,11 +38,7 @@ final readonly class PageIndexPruner implements Pruner
             return $rows;
         }
 
-        $rowCounts = [];
-
-        for ($rowGroup = 0; $rowGroup < $this->chunks->count(); $rowGroup++) {
-            $rowCounts[] = $this->chunks->rowCount($rowGroup);
-        }
+        $rowCounts = $this->chunks->rowCounts();
 
         $kept = [];
         $proven = [];

@@ -28,8 +28,8 @@ final class StatisticsParityTest extends TestCase
     }
 
     /**
-     * DuckDB v1.5.2 `parquet_metadata()` of both engines' files (Fixtures/statistics_parity.php, Fixtures/duckdb.sql),
-     * as physical values. DuckDB shows no nan_count; those are arrow-rs 60's.
+     * DuckDB v1.5.2 `parquet_metadata()` of both engines' files, as physical values. DuckDB shows no nan_count; those
+     * are arrow-rs 60's.
      */
     public function test_both_engines_write_the_statistics_duckdb_reads(): void
     {

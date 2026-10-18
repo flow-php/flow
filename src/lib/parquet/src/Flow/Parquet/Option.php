@@ -52,6 +52,23 @@ enum Option
     case COLUMNS_COMPRESSIONS;
 
     /**
+     * Per-column bloom filter configuration using flat path notation.
+     * Accepts array<string, BloomFilterOptions> where key is column flat path and value is the filter's false positive
+     * probability and expected distinct values.
+     *
+     * Flat path examples:
+     * - Simple columns: 'column_name'
+     * - Nested structs: 'user.address.street'
+     * - List elements: 'items.list.element'
+     * - Map keys/values: 'metadata.key_value.key', 'metadata.key_value.value'
+     *
+     * Values must be BloomFilterOptions instances. Readers use the filters for equality and in predicates only.
+     *
+     * Default: null (no bloom filters)
+     */
+    case COLUMNS_BLOOM_FILTERS;
+
+    /**
      * Per-column encoding configuration using flat path notation.
      * Accepts array<string, Encodings> where key is column flat path and value is encoding enum.
      *

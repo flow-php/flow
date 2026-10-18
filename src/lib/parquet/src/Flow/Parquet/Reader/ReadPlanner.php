@@ -8,6 +8,7 @@ use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Filter\Binding\BoundFilter;
 use Flow\Parquet\ParquetFile\Footer;
 use Flow\Parquet\ParquetFile\Index\Indexes;
+use Flow\Parquet\Reader\Pruning\BloomFilterPruner;
 use Flow\Parquet\Reader\Pruning\PageIndexPruner;
 use Flow\Parquet\Reader\Pruning\PrunedRows;
 use Flow\Parquet\Reader\Pruning\RowGroupStatisticsPruner;
@@ -16,8 +17,8 @@ final readonly class ReadPlanner
 {
     /**
      * The rows to read: from $offset on (raw rows), $limit of them, minus the row groups and pages whose statistics
-     * prove no row matches $filter. A filtered plan reads a superset of the matching rows, so the caller evaluates the
-     * filter; it refuses a limit, which counts the rows the caller returns.
+     * or bloom filters prove no row matches $filter. A filtered plan reads a superset of the matching rows, so the caller
+     * evaluates the filter; it refuses a limit, which counts the rows the caller returns.
      */
     public function plan(
         Footer $footer,
@@ -41,7 +42,11 @@ final readonly class ReadPlanner
         $chunks = $footer->rowGroupChunks($filter->columns());
         $pruned = new PrunedRows(RowSelection::window($rows, $offset), RowSelection::none($rows));
 
-        foreach ([new RowGroupStatisticsPruner($chunks), new PageIndexPruner($chunks, $indexes)] as $pruner) {
+        foreach ([
+            new RowGroupStatisticsPruner($chunks),
+            new BloomFilterPruner($chunks, $indexes),
+            new PageIndexPruner($chunks, $indexes),
+        ] as $pruner) {
             $pruned = $pruner->prune($filter, $pruned);
         }
 

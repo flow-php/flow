@@ -8,6 +8,8 @@ use Composer\InstalledVersions;
 use Flow\Filesystem\Exception\RuntimeException as FilesystemRuntimeException;
 use Flow\Filesystem\Stream\NativeLocalDestinationStream;
 use Flow\Filesystem\Tests\Double\FailingCloseDestinationStream;
+use Flow\Parquet\BloomFilter\BloomFilterOptions;
+use Flow\Parquet\BloomFilter\BloomHash;
 use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Engine\RustParquetEngine;
 use Flow\Parquet\Option;
@@ -926,6 +928,64 @@ class WriterTest extends ParquetIntegrationTestCase
                     MemoryParquetFile::read(new Reader(engine: new RustParquetEngine()), $bytes)->values(),
                     false,
                 ),
+            );
+        }
+    }
+
+    public function test_bloom_filters_are_written_after_each_row_group_for_the_columns_asked(): void
+    {
+        $bytes = MemoryParquetFile::written(Writer::php(options: (new Options())
+            ->set(Option::ROW_GROUP_SIZE_BYTES, 1)
+            ->set(Option::ROW_GROUP_SIZE_CHECK_INTERVAL, 3)
+            ->set(Option::PAGE_SIZE_BYTES, 1)
+            ->set(Option::PAGE_SIZE_CHECK_INTERVAL, 3)
+            ->set(Option::COLUMNS_BLOOM_FILTERS, [
+                'id' => new BloomFilterOptions(),
+            ])), Schema::with($id = FlatColumn::int64('id'), $name = FlatColumn::string('name')), array_map(static fn(int $i): array => ['id' => $i, 'name' => 'n' . $i], range(0, 5)));
+        $file = MemoryParquetFile::read(Reader::php(), $bytes);
+
+        foreach ([[0, 1, 2], [3, 4, 5]] as $rowGroup => $ids) {
+            $chunks = $file->metadata()->rowGroups()->all()[$rowGroup]->columnChunks();
+            $bloomFilter = $file->indexes()->bloomFilter($rowGroup, $id);
+
+            static::assertNotNull($bloomFilter);
+            static::assertGreaterThan($chunks[1]->fileOffset(), $chunks[0]->bloomFilterOffset());
+
+            foreach ($ids as $value) {
+                static::assertTrue($bloomFilter->check((new BloomHash())->of($id, $value)));
+            }
+
+            static::assertNull($file->indexes()->bloomFilter($rowGroup, $name));
+        }
+    }
+
+    public function test_both_engines_write_the_same_bloom_filter_bytes(): void
+    {
+        if (!extension_loaded('arrow')) {
+            static::markTestSkipped('arrow is not loaded');
+        }
+
+        $options = (new Options())->set(Option::COLUMNS_BLOOM_FILTERS, [
+            'id' => new BloomFilterOptions(0.05, 5000),
+            'name' => new BloomFilterOptions(0.01),
+        ]);
+        $schema = Schema::with($id = FlatColumn::int64('id'), $name = FlatColumn::string('name'));
+        $rows = array_map(static fn(int $i): array => ['id' => $i * 7, 'name' => 'n' . $i], range(0, 2999));
+        $php = MemoryParquetFile::read(Reader::php(), MemoryParquetFile::written(
+            Writer::php(options: $options),
+            $schema,
+            $rows,
+        ));
+        $arrow = MemoryParquetFile::read(Reader::php(), MemoryParquetFile::written(
+            new Writer(options: $options, engine: new RustParquetEngine()),
+            $schema,
+            $rows,
+        ));
+
+        foreach ([$id, $name] as $column) {
+            static::assertSame(
+                $php->indexes()->bloomFilter(0, $column)?->bytes(),
+                $arrow->indexes()->bloomFilter(0, $column)?->bytes(),
             );
         }
     }

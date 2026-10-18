@@ -106,4 +106,9 @@ final class RustRowGroupChunks implements RowGroupChunks
             $this->rowCounts[$rowGroup] ?? throw new OutOfBoundsException('Row group ' . $rowGroup . ' does not exist')
         );
     }
+
+    public function rowCounts(): array
+    {
+        return $this->rowCounts;
+    }
 }

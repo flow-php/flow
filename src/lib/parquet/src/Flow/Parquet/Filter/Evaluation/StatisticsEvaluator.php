@@ -18,6 +18,7 @@ use Flow\Parquet\Filter\Not;
 use Flow\Parquet\Filter\Operator;
 use Flow\Parquet\Filter\StartsWith;
 use Flow\Parquet\Filter\Truth;
+use Generator;
 
 /**
  * @implements FilterVisitor<Truth>
@@ -42,12 +43,12 @@ final readonly class StatisticsEvaluator implements FilterVisitor
 
     public function all(All $all): Truth
     {
-        return $this->negated ? $this->some($all->filters) : $this->every($all->filters);
+        return $this->negated ? Truth::some($this->truths($all->filters)) : Truth::every($this->truths($all->filters));
     }
 
     public function any(Any $any): Truth
     {
-        return $this->negated ? $this->every($any->filters) : $this->some($any->filters);
+        return $this->negated ? Truth::every($this->truths($any->filters)) : Truth::some($this->truths($any->filters));
     }
 
     public function in(In $in): Truth
@@ -104,50 +105,6 @@ final readonly class StatisticsEvaluator implements FilterVisitor
         $noNull = $zone->nullCount === 0;
 
         return $this->negated ? self::truth($all, $noNull && $none) : self::truth($none, $noNull && $all);
-    }
-
-    /**
-     * @param list<Filter> $filters
-     */
-    private function every(array $filters): Truth
-    {
-        $truth = Truth::Always;
-
-        foreach ($filters as $filter) {
-            $child = $filter->accept($this);
-
-            if ($child === Truth::Never) {
-                return Truth::Never;
-            }
-
-            if ($child === Truth::Maybe) {
-                $truth = Truth::Maybe;
-            }
-        }
-
-        return $truth;
-    }
-
-    /**
-     * @param list<Filter> $filters
-     */
-    private function some(array $filters): Truth
-    {
-        $truth = Truth::Never;
-
-        foreach ($filters as $filter) {
-            $child = $filter->accept($this);
-
-            if ($child === Truth::Always) {
-                return Truth::Always;
-            }
-
-            if ($child === Truth::Maybe) {
-                $truth = Truth::Maybe;
-            }
-        }
-
-        return $truth;
     }
 
     /**
@@ -216,5 +173,19 @@ final readonly class StatisticsEvaluator implements FilterVisitor
             $always => Truth::Always,
             default => Truth::Maybe,
         };
+    }
+
+    /**
+     * Each filter's truth, evaluated only when the combinator asks for it.
+     *
+     * @param list<Filter> $filters
+     *
+     * @return Generator<Truth>
+     */
+    private function truths(array $filters): Generator
+    {
+        foreach ($filters as $filter) {
+            yield $filter->accept($this);
+        }
     }
 }

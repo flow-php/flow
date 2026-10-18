@@ -16,6 +16,7 @@ use function array_chunk;
 use function array_slice;
 use function count;
 use function min;
+use function strlen;
 
 final class RowGroupBuilder
 {
@@ -121,6 +122,9 @@ final class RowGroupBuilder
         }
     }
 
+    /**
+     * The row group's column chunks, then their bloom filters (arrow-rs BloomFilterPosition::AfterRowGroup).
+     */
     public function flush(int $fileOffset): RowGroupContainer
     {
         $this->flushBuffer();
@@ -134,11 +138,24 @@ final class RowGroupBuilder
         $this->flushedRows += $rowsCount;
         $this->rowsCount = 0;
 
+        $bloomFilters = [];
+
         foreach ($this->columnChunkBuilders->flush($offset) as $container) {
             $chunks[] = $container->columnChunk;
             $columnIndexes[] = $container->columnIndex;
             $offsetIndexes[] = $container->offsetIndex;
+            $bloomFilters[] = $container->bloomFilter;
             $buffer .= $container->binaryBuffer;
+        }
+
+        foreach ($bloomFilters as $index => $bloomFilter) {
+            if ($bloomFilter === null) {
+                continue;
+            }
+
+            $bytes = $bloomFilter->serialized();
+            $chunks[$index] = $chunks[$index]->withBloomFilter($fileOffset + strlen($buffer), strlen($bytes));
+            $buffer .= $bytes;
         }
 
         return new RowGroupContainer($buffer, new RowGroup($chunks, $rowsCount), $columnIndexes, $offsetIndexes);

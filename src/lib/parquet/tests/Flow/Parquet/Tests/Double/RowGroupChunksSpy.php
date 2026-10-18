@@ -44,4 +44,9 @@ final class RowGroupChunksSpy implements RowGroupChunks
     {
         return $this->chunks->rowCount($rowGroup);
     }
+
+    public function rowCounts(): array
+    {
+        return $this->chunks->rowCounts();
+    }
 }

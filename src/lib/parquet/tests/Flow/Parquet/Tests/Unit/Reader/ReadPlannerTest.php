@@ -18,6 +18,7 @@ use Flow\Parquet\Tests\Double\SpyFooter;
 use Flow\Parquet\Tests\Mother\FooterMother;
 use Flow\Parquet\Tests\Mother\PageIndexMother;
 use Flow\Parquet\Tests\Mother\ReadPlanMother;
+use Flow\Parquet\Tests\Mother\SbbfMother;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\Parquet\DSL\parquet_all;
@@ -70,6 +71,35 @@ final class ReadPlannerTest extends TestCase
             ),
         );
         static::assertSame([], $footer->rowGroupChunkReads);
+    }
+
+    public function test_a_group_the_bloom_filter_drops_reads_no_page_index(): void
+    {
+        $footer = FooterMother::idGroups([0, 10], [0, 10]);
+        $id = FlatColumn::int64('id');
+        $indexes = new InMemoryIndexes(
+            ['id' => [PageIndexMother::int64([[0, 10]]), PageIndexMother::int64([[0, 10]])]],
+            ['id' => [PageIndexMother::pagesAt(0), PageIndexMother::pagesAt(0)]],
+            ['id' => [SbbfMother::with($id, 0, 10), SbbfMother::with($id, 4)]],
+        );
+
+        static::assertEquals(
+            new RowSelection(new RowSelector(2, true), new RowSelector(2, false)),
+            (new ReadPlanner())->plan(
+                $footer,
+                $indexes,
+                BoundFilter::bind(parquet_column('id')->equals(4), $footer->schema(), new Options()),
+            )->selection,
+        );
+        static::assertSame(
+            [
+                ['bloomFilter', 'id', 0],
+                ['bloomFilter', 'id', 1],
+                ['columnIndex', 'id', 1],
+                ['offsetIndex', 'id', 1],
+            ],
+            $indexes->reads,
+        );
     }
 
     public function test_a_filter_asks_the_footer_for_the_bound_columns_only(): void

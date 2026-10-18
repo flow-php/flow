@@ -18,6 +18,7 @@ use Flow\Parquet\Tests\Context\ThriftBytes;
 use Flow\Parquet\Tests\Double\ReadCountingSourceStream;
 use Flow\Parquet\Tests\Double\SpyFooter;
 use Flow\Parquet\Tests\Mother\ColumnChunkMother;
+use Flow\Parquet\Tests\Mother\SbbfMother;
 use PHPUnit\Framework\TestCase;
 
 use function pack;
@@ -53,6 +54,22 @@ final class StreamIndexesTest extends TestCase
         static::assertEquals([[$id]], $footer->rowGroupChunkReads);
     }
 
+    public function test_a_bloom_filter_is_read_once(): void
+    {
+        $id = FlatColumn::int64('id');
+        $sbbf = SbbfMother::with($id, 3);
+        $bytes = $sbbf->serialized();
+        $stream = new ReadCountingSourceStream(new MemorySourceStream('PAR1' . $bytes));
+        $indexes = new StreamIndexes(new SpyFooter(Schema::with($id), 2, [new RowGroup(
+            [ColumnChunkMother::withBloomFilter($id, 4, strlen($bytes))],
+            2,
+        )]), $stream);
+
+        static::assertEquals($sbbf, $indexes->bloomFilter(0, $id));
+        static::assertEquals($sbbf, $indexes->bloomFilter(0, $id));
+        static::assertSame(1, $stream->reads);
+    }
+
     public function test_a_chunk_without_indexes_reads_nothing(): void
     {
         $name = FlatColumn::string('name');
@@ -64,6 +81,7 @@ final class StreamIndexesTest extends TestCase
 
         static::assertNull($indexes->columnIndex(0, $name));
         static::assertNull($indexes->offsetIndex(0, $name));
+        static::assertNull($indexes->bloomFilter(0, $name));
         static::assertSame(0, $stream->reads);
     }
 }

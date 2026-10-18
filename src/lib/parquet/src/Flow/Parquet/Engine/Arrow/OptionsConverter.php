@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Engine\Arrow;
 
+use Flow\Parquet\BloomFilter\BloomFilterOptions;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\Writer\StatisticsLevel;
+
+use function array_map;
 
 final class OptionsConverter
 {
@@ -92,6 +95,15 @@ final class OptionsConverter
             if ($mapped !== []) {
                 $result['COLUMNS_ENCODINGS'] = $mapped;
             }
+        }
+
+        $bloomFilters = BloomFilterOptions::forColumns($options);
+
+        if ($bloomFilters !== []) {
+            $result['COLUMNS_BLOOM_FILTERS'] = array_map(static fn(BloomFilterOptions $bloomFilter): array => [
+                'fpp' => $bloomFilter->fpp,
+                'ndv' => $bloomFilter->ndv,
+            ], $bloomFilters);
         }
 
         return $result;

@@ -8,7 +8,9 @@ use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Index\IndexLocation;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
+use Flow\Parquet\Tests\Mother\ColumnChunkMother;
 use Flow\Parquet\ThriftModel\ColumnChunk as ThriftColumnChunk;
 use PHPUnit\Framework\TestCase;
 
@@ -45,6 +47,34 @@ final class ColumnChunkTest extends TestCase
 
         static::assertEquals($chunk, ColumnChunk::fromThrift($chunk->toThrift()));
         static::assertEquals(new IndexLocation(100, 20), $chunk->columnIndex());
+        static::assertEquals(new IndexLocation(120, 15), $chunk->offsetIndex());
+    }
+
+    public function test_a_bloom_filter_location_round_trips_through_thrift_and_survives_page_index_locations(): void
+    {
+        $chunk = ColumnChunkMother::withBloomFilter(FlatColumn::int64('id'), 200, 48);
+
+        static::assertEquals($chunk, ColumnChunk::fromThrift($chunk->toThrift()));
+        static::assertSame(200, $chunk->bloomFilterOffset());
+        static::assertSame(48, $chunk->bloomFilterLength());
+
+        $indexed = $chunk->withIndexLocations(null, new IndexLocation(120, 15));
+
+        static::assertSame(200, $indexed->bloomFilterOffset());
+        static::assertSame(48, $indexed->bloomFilterLength());
+        static::assertEquals(new IndexLocation(120, 15), $indexed->offsetIndex());
+    }
+
+    public function test_a_chunk_records_the_bloom_filter_written_for_it(): void
+    {
+        $chunk = ColumnChunkMother::withIndexes(
+            FlatColumn::int64('id'),
+            null,
+            new IndexLocation(120, 15),
+        )->withBloomFilter(300, 64);
+
+        static::assertSame(300, $chunk->bloomFilterOffset());
+        static::assertSame(64, $chunk->bloomFilterLength());
         static::assertEquals(new IndexLocation(120, 15), $chunk->offsetIndex());
     }
 

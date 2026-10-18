@@ -470,6 +470,28 @@ $file->indexes()->columnIndex(0, $column);       // ?ColumnIndex of row group 0:
 $file->indexes()->offsetIndex(0, $column);       // ?OffsetIndex: pages[i]->offset, compressedPageSize, firstRowIndex
 ```
 
+### Bloom filters
+
+A bloom filter per column chunk lets a read skip the row groups that cannot hold a value, where min/max cannot (an id
+inside every group's range). Only `equals()` and `in()` use them. Both writers write them after each row group, for the
+columns asked only.
+
+```php
+<?php
+
+use Flow\Parquet\{Option, Options, Reader, Writer};
+use Flow\Parquet\BloomFilter\BloomFilterOptions;
+use function Flow\Parquet\DSL\{parquet_column, parquet_query};
+
+(new Writer(options: Options::default()->set(Option::COLUMNS_BLOOM_FILTERS, [
+    'id' => new BloomFilterOptions(),                  // fpp 0.05, ndv 1 048 576 (the arrow-rs defaults)
+    'user.email' => new BloomFilterOptions(0.01, 10_000),
+])))->write(__DIR__ . '/users.parquet', $schema, $rows);
+
+(new Reader())->read(__DIR__ . '/users.parquet')
+    ->values(parquet_query()->select('id')->where(parquet_column('id')->in([42, 1337])));
+```
+
 ## Compressions
 
 > [!NOTE]

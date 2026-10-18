@@ -389,6 +389,53 @@ final class FilterParityTest extends TestCase
     }
 
     /**
+     * Even ids only, so every odd id lies inside a group's min/max: only a bloom filter drops its group.
+     *
+     * @return Generator<string, array{string, Filter, RowSelection, list<int>}>
+     */
+    public static function bloom_filters(): Generator
+    {
+        foreach (['bloom_php.parquet', 'bloom_arrow.parquet'] as $fixture) {
+            yield $fixture . ': absent id' => [$fixture, parquet_column('id')->equals(33), RowSelection::none(40), []];
+            yield $fixture . ': in, present and absent' => [
+                $fixture,
+                parquet_column('id')->in([24, 33]),
+                new RowSelection(new RowSelector(10, true), new RowSelector(10, false), new RowSelector(20, true)),
+                [24],
+            ];
+            yield $fixture . ': present key' => [
+                $fixture,
+                parquet_column('key')->equals('k50'),
+                new RowSelection(new RowSelector(20, true), new RowSelector(10, false), new RowSelector(10, true)),
+                [50],
+            ];
+        }
+
+        yield 'bloom_duckdb.parquet: absent id' => [
+            'bloom_duckdb.parquet',
+            parquet_column('id')->equals(40_001),
+            RowSelection::none(FilterRows::DUCKDB_BLOOM_ROWS),
+            [],
+        ];
+        yield 'bloom_duckdb.parquet: in, present and absent' => [
+            'bloom_duckdb.parquet',
+            parquet_column('id')->in([40_000, 40_001]),
+            new RowSelection(new RowSelector(20_480, false), new RowSelector(79_520, true)),
+            [40_000],
+        ];
+        yield 'bloom_duckdb.parquet: present key' => [
+            'bloom_duckdb.parquet',
+            parquet_column('key')->equals('k100000'),
+            new RowSelection(
+                new RowSelector(40_960, true),
+                new RowSelector(20_480, false),
+                new RowSelector(38_560, true),
+            ),
+            [100_000],
+        ];
+    }
+
+    /**
      * @return Generator<string, array{string, Filter, RowSelection, RowSelection, list<int>}>
      */
     public static function page_filters(): Generator
@@ -445,6 +492,24 @@ final class FilterParityTest extends TestCase
 
         static::assertSame($rows[PhpParquetEngine::class], $rows[RustParquetEngine::class]);
         static::assertSame(array_slice($all, 0, $selection->rowCount()), $rows[PhpParquetEngine::class]);
+    }
+
+    /**
+     * @param list<int> $ids
+     */
+    #[DataProvider('bloom_filters')]
+    public function test_both_engines_skip_the_row_groups_whose_bloom_filters_lack_every_literal(
+        string $fixture,
+        Filter $filter,
+        RowSelection $selection,
+        array $ids,
+    ): void {
+        foreach ([PhpParquetEngine::class, RustParquetEngine::class] as $engine) {
+            $file = (new Reader(engine: ParquetEngineMother::create($engine)))->read(self::FIXTURES . $fixture);
+
+            static::assertEquals($selection, FilePlan::of($file, $filter)->selection);
+            static::assertSame($ids, FilterExpectations::ids($file->values(new Query(['id'], $filter))));
+        }
     }
 
     /**

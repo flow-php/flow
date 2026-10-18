@@ -25,6 +25,8 @@ use const NAN;
  */
 final class FilterRows
 {
+    public const int DUCKDB_BLOOM_ROWS = 100_000;
+
     public const int DUCKDB_ROWS_PER_GROUP = 2048;
 
     public const int ROWS_PER_GROUP = 10;
@@ -97,6 +99,28 @@ final class FilterRows
             FlatColumn::float('ratio'),
             FlatColumn::string('word'),
         );
+    }
+
+    /**
+     * The rows of Fixtures/Filters/bloom_*.parquet: even ids only, so an odd id lies inside every group's min/max and
+     * only a bloom filter proves it absent; key is 'k' followed by id.
+     *
+     * @return list<array{id: int, key: string}>
+     */
+    public static function bloomRows(int $rows = 4 * self::ROWS_PER_GROUP): array
+    {
+        $bloomRows = [];
+
+        for ($i = 0; $i < $rows; $i++) {
+            $bloomRows[] = ['id' => $i * 2, 'key' => 'k' . ($i * 2)];
+        }
+
+        return $bloomRows;
+    }
+
+    public static function bloomSchema(): Schema
+    {
+        return Schema::with(FlatColumn::int64('id'), FlatColumn::string('key'));
     }
 
     /**

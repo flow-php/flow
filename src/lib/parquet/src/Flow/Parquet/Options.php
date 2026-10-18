@@ -47,6 +47,7 @@ final class Options
             Option::VALIDATE_DATA->name => true,
             Option::COLUMNS_ENCODINGS->name => null,
             Option::COLUMNS_COMPRESSIONS->name => null,
+            Option::COLUMNS_BLOOM_FILTERS->name => null,
         ];
     }
 

@@ -16,4 +16,11 @@ interface RowGroupChunks
     public function count(): int;
 
     public function rowCount(int $rowGroup): int;
+
+    /**
+     * Every row group's row count, in file order.
+     *
+     * @return list<int>
+     */
+    public function rowCounts(): array;
 }

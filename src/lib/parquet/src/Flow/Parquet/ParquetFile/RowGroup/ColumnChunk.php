@@ -49,6 +49,8 @@ final readonly class ColumnChunk
         private ?Statistics $statistics,
         private ?IndexLocation $columnIndex = null,
         private ?IndexLocation $offsetIndex = null,
+        private ?int $bloomFilterOffset = null,
+        private ?int $bloomFilterLength = null,
     ) {}
 
     public static function fromThrift(ThriftColumnChunk $thrift): self
@@ -74,7 +76,25 @@ final readonly class ColumnChunk
             $metadata->statistics !== null ? Statistics::fromThrift($metadata->statistics) : null,
             IndexLocation::fromThrift($thrift->column_index_offset, $thrift->column_index_length),
             IndexLocation::fromThrift($thrift->offset_index_offset, $thrift->offset_index_length),
+            $metadata->bloom_filter_offset !== null ? (int) $metadata->bloom_filter_offset : null,
+            $metadata->bloom_filter_length !== null ? (int) $metadata->bloom_filter_length : null,
         );
+    }
+
+    /**
+     * Null when the writer did not record it: the header is then read before the bitset.
+     */
+    public function bloomFilterLength(): ?int
+    {
+        return $this->bloomFilterLength;
+    }
+
+    /**
+     * Null when the chunk has no bloom filter.
+     */
+    public function bloomFilterOffset(): ?int
+    {
+        return $this->bloomFilterOffset;
     }
 
     public function codec(): Compressions
@@ -173,6 +193,8 @@ final readonly class ColumnChunk
                 'index_page_offset' => $this->indexPageOffset,
                 'dictionary_page_offset' => $this->dictionaryPageOffset,
                 'statistics' => $this->statistics?->toThrift(),
+                'bloom_filter_offset' => $this->bloomFilterOffset,
+                'bloom_filter_length' => $this->bloomFilterLength,
             ]),
             'column_index_offset' => $this->columnIndex?->offset,
             'column_index_length' => $this->columnIndex?->length,
@@ -184,6 +206,31 @@ final readonly class ColumnChunk
     public function type(): PhysicalType
     {
         return $this->type;
+    }
+
+    /**
+     * This chunk with its bloom filter, header and bitset, written at the given location.
+     */
+    public function withBloomFilter(int $offset, int $length): self
+    {
+        return new self(
+            $this->type,
+            $this->codec,
+            $this->valuesCount,
+            $this->fileOffset,
+            $this->path,
+            $this->encodings,
+            $this->totalCompressedSize,
+            $this->totalUncompressedSize,
+            $this->dictionaryPageOffset,
+            $this->dataPageOffset,
+            $this->indexPageOffset,
+            $this->statistics,
+            $this->columnIndex,
+            $this->offsetIndex,
+            $offset,
+            $length,
+        );
     }
 
     /**
@@ -206,6 +253,8 @@ final readonly class ColumnChunk
             $this->statistics,
             $columnIndex,
             $offsetIndex,
+            $this->bloomFilterOffset,
+            $this->bloomFilterLength,
         );
     }
 

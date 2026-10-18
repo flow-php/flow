@@ -13,6 +13,29 @@ use Flow\Parquet\ParquetFile\Statistics;
 final class ColumnChunkMother
 {
     /**
+     * A chunk of two values of the column without statistics, its bloom filter at the given location.
+     */
+    public static function withBloomFilter(FlatColumn $column, int $offset, ?int $length): ColumnChunk
+    {
+        return new ColumnChunk(
+            $column->type(),
+            Compressions::UNCOMPRESSED,
+            2,
+            4,
+            [$column->flatPath()],
+            [],
+            0,
+            0,
+            null,
+            4,
+            null,
+            null,
+            bloomFilterOffset: $offset,
+            bloomFilterLength: $length,
+        );
+    }
+
+    /**
      * A chunk of two values of the column without statistics, its page indexes at the given locations.
      */
     public static function withIndexes(

@@ -364,5 +364,31 @@ fn apply_writer_options(
         }
     }
 
+    if let Some(col_bloom_zval) = options.get("COLUMNS_BLOOM_FILTERS") {
+        if let Some(col_bloom_ht) = col_bloom_zval.array() {
+            for (key, val) in col_bloom_ht.iter() {
+                let col_path_str = String::try_from(key)
+                    .map_err(|e| format!("COLUMNS_BLOOM_FILTERS has a key that is not a column path: {}", e))?;
+                let Some(bloom_ht) = val.array() else {
+                    return Err(format!("COLUMNS_BLOOM_FILTERS['{}'] must be an array", col_path_str));
+                };
+                let fpp = bloom_ht
+                    .get("fpp")
+                    .and_then(|z| z.double())
+                    .ok_or_else(|| format!("COLUMNS_BLOOM_FILTERS['{}'] has no float fpp", col_path_str))?;
+                let parts: Vec<String> = col_path_str.split('.').map(|s| s.to_string()).collect();
+                let col_path = ColumnPath::new(parts);
+                builder = builder
+                    .set_column_bloom_filter_enabled(col_path.clone(), true)
+                    .set_column_bloom_filter_fpp(col_path.clone(), fpp);
+                if let Some(ndv) = bloom_ht.get("ndv").and_then(|z| z.long()) {
+                    let ndv = u64::try_from(ndv)
+                        .map_err(|_| format!("COLUMNS_BLOOM_FILTERS['{}'] ndv must not be negative", col_path_str))?;
+                    builder = builder.set_column_bloom_filter_max_ndv(col_path, ndv);
+                }
+            }
+        }
+    }
+
     Ok(builder)
 }

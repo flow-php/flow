@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\Engine\Arrow;
 
+use Flow\Parquet\BloomFilter\BloomFilterOptions;
 use Flow\Parquet\Engine\Arrow\OptionsConverter;
+use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
@@ -94,6 +96,33 @@ final class OptionsConverterTest extends TestCase
         static::assertSame(['col_a' => 'PLAIN', 'col_b' => 'RLE_DICTIONARY'], $result['COLUMNS_ENCODINGS']);
     }
 
+    public function test_columns_bloom_filters_map_to_fpp_and_ndv(): void
+    {
+        $options = new Options();
+        $options->set(Option::COLUMNS_BLOOM_FILTERS, [
+            'id' => new BloomFilterOptions(0.01, 1000),
+            'user.name' => new BloomFilterOptions(),
+        ]);
+
+        static::assertSame(
+            ['id' => ['fpp' => 0.01, 'ndv' => 1000], 'user.name' => ['fpp' => 0.05, 'ndv' => null]],
+            OptionsConverter::toExtension($options)['COLUMNS_BLOOM_FILTERS'],
+        );
+    }
+
+    public function test_columns_bloom_filters_refuse_a_value_that_is_not_bloom_filter_options(): void
+    {
+        $options = new Options();
+        $options->set(Option::COLUMNS_BLOOM_FILTERS, ['id' => 0.01]);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'Option COLUMNS_BLOOM_FILTERS takes BloomFilterOptions, got float for column "id"',
+        );
+
+        OptionsConverter::toExtension($options);
+    }
+
     public function test_custom_compression_levels(): void
     {
         $options = new Options();
@@ -122,5 +151,6 @@ final class OptionsConverterTest extends TestCase
         static::assertArrayHasKey('WRITER_VERSION', $result);
         static::assertArrayNotHasKey('COLUMNS_COMPRESSIONS', $result);
         static::assertArrayNotHasKey('COLUMNS_ENCODINGS', $result);
+        static::assertArrayNotHasKey('COLUMNS_BLOOM_FILTERS', $result);
     }
 }
