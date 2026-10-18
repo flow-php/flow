@@ -52,7 +52,7 @@ final readonly class DataPageHeaderV2
         return $this->repetitionsByteLength;
     }
 
-    public function statistics(Options $options): ?StatisticsReader
+    public function statistics(): ?StatisticsReader
     {
         if ($this->statistics === null) {
             return null;

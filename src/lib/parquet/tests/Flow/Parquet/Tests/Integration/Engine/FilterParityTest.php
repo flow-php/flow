@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\Engine;
 
+use Closure;
 use DateTimeImmutable;
 use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Engine\RustParquetEngine;
@@ -22,11 +23,18 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 use function array_diff;
+use function array_filter;
+use function array_map;
+use function array_slice;
+use function array_values;
 use function extension_loaded;
 use function Flow\Parquet\DSL\parquet_all;
 use function Flow\Parquet\DSL\parquet_any;
 use function Flow\Parquet\DSL\parquet_column;
 use function Flow\Parquet\DSL\parquet_not;
+use function is_float;
+use function is_int;
+use function iterator_to_array;
 use function range;
 
 #[Group('native-extension')]
@@ -230,7 +238,8 @@ final class FilterParityTest extends TestCase
             );
         }
 
-        static::assertEquals($plans[PhpParquetEngine::class], $plans[RustParquetEngine::class]);
+        static::assertEquals($plans[PhpParquetEngine::class]->selection, $plans[RustParquetEngine::class]->selection);
+        static::assertEquals($plans[PhpParquetEngine::class]->matched, $plans[RustParquetEngine::class]->matched);
         static::assertSame($kept, FilterExpectations::keptGroups(
             $plans[PhpParquetEngine::class]->selection,
             FilterRows::ROWS_PER_GROUP,
@@ -296,7 +305,8 @@ final class FilterParityTest extends TestCase
             $offset,
         );
 
-        static::assertEquals($plans[PhpParquetEngine::class], $plans[RustParquetEngine::class]);
+        static::assertEquals($plans[PhpParquetEngine::class]->selection, $plans[RustParquetEngine::class]->selection);
+        static::assertEquals($plans[PhpParquetEngine::class]->matched, $plans[RustParquetEngine::class]->matched);
         static::assertSame(
             [],
             array_diff($matching, FilterExpectations::keptGroups(
@@ -354,6 +364,124 @@ final class FilterParityTest extends TestCase
                         5,
                     )->selection,
                 );
+            }
+        }
+    }
+
+    /**
+     * Pages of the parquet-mr file start at other rows per column: int64 at 0, 200, 428, 628, 828; float at 0, 300,
+     * 628, 928. Each filter keeps pages the other column's boundaries cut through.
+     *
+     * @return Generator<string, array{Filter, RowSelection, Closure(array<string, mixed>): bool}>
+     */
+    public static function parquet_mr_page_filters(): Generator
+    {
+        yield 'int64 range' => [
+            parquet_column('int64_column')->lessThan(300),
+            new RowSelection(new RowSelector(428, false), new RowSelector(572, true)),
+            static fn(array $row): bool => is_int($row['int64_column']) && $row['int64_column'] < 300,
+        ];
+        yield 'float range' => [
+            parquet_column('float_column')->lessThan(400.0),
+            new RowSelection(new RowSelector(628, false), new RowSelector(372, true)),
+            static fn(array $row): bool => is_float($row['float_column']) && $row['float_column'] < 400.0,
+        ];
+    }
+
+    /**
+     * @return Generator<string, array{string, Filter, RowSelection, RowSelection, list<int>}>
+     */
+    public static function page_filters(): Generator
+    {
+        foreach (['pages_php.parquet', 'pages_arrow.parquet'] as $fixture) {
+            yield $fixture . ': string prefix' => [
+                $fixture,
+                parquet_column('label')->startsWith('10'),
+                new RowSelection(new RowSelector(10, true), new RowSelector(30, false)),
+                new RowSelection(new RowSelector(10, true), new RowSelector(20, false), new RowSelector(10, true)),
+                [...range(10, 29), 31, 32, 34, 35, 37, 38],
+            ];
+            yield $fixture . ': not less than on NaN' => [
+                $fixture,
+                parquet_not(parquet_column('score')->lessThan(100.0)),
+                new RowSelection(
+                    new RowSelector(10, true),
+                    new RowSelector(5, false),
+                    new RowSelector(5, true),
+                    new RowSelector(10, false),
+                    new RowSelector(10, true),
+                ),
+                new RowSelection(new RowSelector(20, true), new RowSelector(10, false), new RowSelector(10, true)),
+                [11, ...range(20, 29)],
+            ];
+        }
+    }
+
+    /**
+     * @param Closure(array<string, mixed>): bool $matches
+     */
+    #[DataProvider('parquet_mr_page_filters')]
+    public function test_both_engines_page_prune_a_file_whose_columns_break_pages_at_other_rows(
+        Filter $filter,
+        RowSelection $selection,
+        Closure $matches,
+    ): void {
+        $fixture = __DIR__ . '/../IO/Fixtures/delta_binary_acked_encoded_integers.parquet';
+        $columns = ['int32_column', 'int64_column', 'float_column'];
+        $all = iterator_to_array(Reader::php()->read($fixture)->values(), false);
+        $rows = [];
+
+        foreach ([PhpParquetEngine::class, RustParquetEngine::class] as $engine) {
+            $file = (new Reader(engine: ParquetEngineMother::create($engine)))->read($fixture);
+            $plan = FilePlan::of($file, $filter);
+
+            static::assertEquals($selection, $plan->selection);
+            $rows[$engine] = FilePlan::rows($file, $columns, $plan);
+            static::assertSame(
+                array_values(array_filter($all, $matches)),
+                iterator_to_array($file->values(new Query($columns, $filter)), false),
+            );
+        }
+
+        static::assertSame($rows[PhpParquetEngine::class], $rows[RustParquetEngine::class]);
+        static::assertSame(array_slice($all, 0, $selection->rowCount()), $rows[PhpParquetEngine::class]);
+    }
+
+    /**
+     * @param list<int> $ids
+     */
+    #[DataProvider('page_filters')]
+    public function test_both_engines_select_and_match_the_same_pages(
+        string $fixture,
+        Filter $filter,
+        RowSelection $selection,
+        RowSelection $matched,
+        array $ids,
+    ): void {
+        foreach ([PhpParquetEngine::class, RustParquetEngine::class] as $engine) {
+            $file = (new Reader(engine: ParquetEngineMother::create($engine)))->read(self::FIXTURES . $fixture);
+            $plan = FilePlan::of($file, $filter);
+
+            static::assertEquals($selection, $plan->selection);
+            static::assertEquals($matched, $plan->matched);
+            static::assertSame($ids, FilterExpectations::ids($file->values(new Query(['id'], $filter))));
+        }
+    }
+
+    public function test_both_engines_trim_a_list_inside_a_struct_to_the_selected_rows_of_a_page(): void
+    {
+        $expected = array_map(
+            static fn(array $row): array => ['id' => $row['id'], 'address' => $row['address']],
+            array_slice(FilterRows::pageRows(), 12),
+        );
+
+        foreach (['pages_php.parquet', 'pages_arrow.parquet'] as $fixture) {
+            foreach ([PhpParquetEngine::class, RustParquetEngine::class] as $engine) {
+                $file = (new Reader(engine: ParquetEngineMother::create($engine)))->read(self::FIXTURES . $fixture);
+                $plan = FilePlan::of($file, parquet_column('id')->greaterThanOrEqual(12), 12);
+
+                static::assertEquals(RowSelection::window(40, 12), $plan->selection);
+                static::assertEquals($expected, FilePlan::rows($file, ['id', 'address'], $plan));
             }
         }
     }

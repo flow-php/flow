@@ -104,6 +104,7 @@ final class ParquetFileBatches implements OffsetSkippingFileBatches
                 $batchSize,
                 (new ReadPlanner())->plan(
                     $footer,
+                    $file->file->indexes(),
                     $kept === []
                         ? null
                         : BoundFilter::bind(parquet_all(...$kept), $footer->schema(), $file->file->options()),

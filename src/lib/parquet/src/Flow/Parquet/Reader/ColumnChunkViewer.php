@@ -56,6 +56,13 @@ final readonly class ColumnChunkViewer
                 );
             }
 
+            $currentPosition = ftell($pageStream);
+
+            if ($currentPosition === false) {
+                throw new RuntimeException('Cannot determine current page stream position');
+            }
+            fseek($pageStream, $currentPosition + $dictionaryHeader->compressedPageSize());
+
             yield $dictionaryHeader;
         }
 

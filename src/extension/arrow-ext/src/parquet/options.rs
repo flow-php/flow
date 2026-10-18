@@ -10,7 +10,7 @@ use arrow_schema::{
 };
 use ext_php_rs::types::{ArrayKey, ZendHashTable};
 use parquet::basic::{BrotliLevel, Compression, Encoding, GzipLevel, ZstdLevel};
-use parquet::file::properties::{WriterProperties, WriterVersion};
+use parquet::file::properties::{EnabledStatistics, WriterProperties, WriterVersion};
 use parquet::schema::types::ColumnPath;
 
 use crate::parquet::error::Error;
@@ -286,6 +286,33 @@ fn apply_writer_options(
         }
 
         builder = builder.set_statistics_truncate_length(Some(val as usize));
+    }
+
+    if let Some(val) = options.get("COLUMN_INDEX_TRUNCATE_LENGTH").and_then(|z| z.long()) {
+        if val < 1 {
+            return Err(format!(
+                "COLUMN_INDEX_TRUNCATE_LENGTH must be greater than 0, {val} given"
+            ));
+        }
+
+        builder = builder.set_column_index_truncate_length(Some(val as usize));
+    }
+
+    if let Some(level) = options.get("STATISTICS_LEVEL").and_then(|z| z.str()) {
+        builder = builder.set_statistics_enabled(match level {
+            "NONE" => EnabledStatistics::None,
+            "CHUNK" => EnabledStatistics::Chunk,
+            "PAGE" => EnabledStatistics::Page,
+            other => {
+                return Err(format!(
+                    "Invalid STATISTICS_LEVEL '{other}'. Must be NONE, CHUNK or PAGE"
+                ))
+            }
+        });
+    }
+
+    if let Some(enabled) = options.get("PAGE_HEADER_STATISTICS").and_then(|z| z.bool()) {
+        builder = builder.set_write_page_header_statistics(enabled);
     }
 
     if let Some(val) = options.get("DICTIONARY_PAGE_SIZE").and_then(|z| z.long()) {

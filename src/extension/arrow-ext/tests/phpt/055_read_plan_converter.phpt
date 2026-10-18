@@ -12,9 +12,10 @@ use Flow\Parquet\Engine\Arrow\ReadPlanConverter;
 use Flow\Parquet\Engine\RustParquetFileReader;
 use Flow\Parquet\Reader\{ReadPlan, RowSelection, RowSelector};
 use Flow\Parquet\Tests\Context\MemoryParquetFile;
+use Flow\Parquet\Tests\Double\InMemoryIndexes;
 
 $selection = new RowSelection(new RowSelector(1, true), new RowSelector(2, false), new RowSelector(2, true), new RowSelector(1, false));
-$plan = new ReadPlan($selection, $selection);
+$plan = new ReadPlan($selection, $selection, new InMemoryIndexes());
 
 var_dump(is_callable([ReadPlanConverter::class, 'toExtension']));
 echo json_encode(ReadPlanConverter::toExtension($plan)), "\n";
@@ -28,7 +29,7 @@ foreach (new RustColumnsReader($file, ['id'], 10, $plan) as $chunk) {
 
 echo json_encode($ids), "\n";
 
-echo arrow_outcome(static fn() => new RustColumnsReader($file, ['id'], 10, ReadPlan::window(5))), "\n";
+echo arrow_outcome(static fn() => new RustColumnsReader($file, ['id'], 10, ReadPlan::window(5, new InMemoryIndexes()))), "\n";
 ?>
 --EXPECT--
 bool(true)

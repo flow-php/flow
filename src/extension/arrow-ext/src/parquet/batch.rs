@@ -86,10 +86,10 @@ impl RustBatchReader {
         plan: &Zval,
     ) -> PhpResult<Self> {
         let batch_size = self::batch_size(batch_size)?;
-        let (stream, size, meta) = file.read()?;
+        let (stream, meta) = file.read()?;
         let stream = Arc::clone(stream);
         let plan = read_plan(meta, plan, &stream)?;
-        let reader = ParquetReader::open(Arc::clone(&stream), size, meta, &columns, plan, batch_size)
+        let reader = ParquetReader::open(Arc::clone(&stream), meta, &columns, plan, batch_size)
             .map_err(|error| parquet_exception(error, &stream, Side::Read))?;
         let fields = columns
             .iter()

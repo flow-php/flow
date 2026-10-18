@@ -12,12 +12,15 @@ use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Data\DataConverter;
+use Flow\Parquet\ParquetFile\Index\StreamIndexes;
 use Flow\Parquet\Reader\ColumnChunkReader;
 use Flow\Parquet\Reader\ColumnReader;
 use Flow\Parquet\Reader\PageReader;
 use Flow\Parquet\Reader\RowSelection;
 use Flow\Parquet\Reader\RowSelector;
 use Flow\Parquet\Tests\Context\MemoryParquetFile;
+use Flow\Parquet\Tests\Double\InMemoryIndexes;
+use Flow\Parquet\Tests\Mother\PageIndexMother;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
@@ -53,6 +56,7 @@ final class ColumnReaderTest extends TestCase
                     $metadata,
                     $stream,
                     RowSelection::window(6, $offset, $limit)->split([2, 2, 2]),
+                    new InMemoryIndexes(),
                 ),
                 false,
             ),
@@ -82,6 +86,7 @@ final class ColumnReaderTest extends TestCase
                         new RowSelector(2, true),
                         new RowSelector(2, false),
                     ))->split([2, 2, 2]),
+                    new InMemoryIndexes(),
                 ),
                 false,
             ),
@@ -106,6 +111,7 @@ final class ColumnReaderTest extends TestCase
                     $metadata,
                     $stream,
                     RowSelection::window(6, 1, 3)->split([2, 2, 2]),
+                    new InMemoryIndexes(),
                 ),
                 false,
             ),
@@ -129,6 +135,7 @@ final class ColumnReaderTest extends TestCase
             $metadata,
             $stream,
             RowSelection::all(6)->split([3, 3]),
+            new InMemoryIndexes(),
         ));
     }
 
@@ -144,10 +151,85 @@ final class ColumnReaderTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Row group 0 decodes more than the 1 rows its metadata declares');
 
-        iterator_to_array($reader->read($metadata->schema()->get('id'), $metadata, $stream, [
-            RowSelection::all(1),
-            RowSelection::all(2),
-            RowSelection::all(2),
-        ]));
+        iterator_to_array($reader->read(
+            $metadata->schema()->get('id'),
+            $metadata,
+            $stream,
+            [
+                RowSelection::all(1),
+                RowSelection::all(2),
+                RowSelection::all(2),
+            ],
+            new InMemoryIndexes(),
+        ));
+    }
+
+    public function test_a_nested_leaf_keeps_only_the_selected_rows_inside_a_page(): void
+    {
+        $stream = new MemorySourceStream(MemoryParquetFile::pagedColumns());
+        $footer = (new PhpParquetFileReader($stream, ByteOrder::LITTLE_ENDIAN, new Options()))->footer();
+        $metadata = $footer->metadata();
+        $reader = new ColumnReader(
+            new ColumnChunkReader(new PageReader(ByteOrder::LITTLE_ENDIAN, new Options()), new Options()),
+            new DremelAssembler(DataConverter::initialize(new Options())),
+        );
+        $selection = [new RowSelection(
+            new RowSelector(3, true),
+            new RowSelector(1, false),
+            new RowSelector(1, true),
+            new RowSelector(1, false),
+            new RowSelector(6, true),
+        )];
+
+        static::assertSame(
+            [['tags' => [3]], ['tags' => [5, 5, 5]]],
+            iterator_to_array(
+                $reader->read(
+                    $metadata->schema()->get('tags'),
+                    $metadata,
+                    $stream,
+                    $selection,
+                    new StreamIndexes($footer, $stream),
+                ),
+                false,
+            ),
+        );
+        static::assertSame(
+            [['id' => 3], ['id' => 5]],
+            iterator_to_array(
+                $reader->read(
+                    $metadata->schema()->get('id'),
+                    $metadata,
+                    $stream,
+                    $selection,
+                    new StreamIndexes($footer, $stream),
+                ),
+                false,
+            ),
+        );
+    }
+
+    public function test_an_offset_index_that_does_not_split_the_group_is_not_used(): void
+    {
+        $stream = new MemorySourceStream(MemoryParquetFile::pagedColumns());
+        $metadata = (new PhpParquetFileReader($stream, ByteOrder::LITTLE_ENDIAN, new Options()))->footer()->metadata();
+        $reader = new ColumnReader(
+            new ColumnChunkReader(new PageReader(ByteOrder::LITTLE_ENDIAN, new Options()), new Options()),
+            new DremelAssembler(DataConverter::initialize(new Options())),
+        );
+
+        static::assertSame(
+            [['id' => 5], ['id' => 6]],
+            iterator_to_array(
+                $reader->read(
+                    $metadata->schema()->get('id'),
+                    $metadata,
+                    $stream,
+                    [RowSelection::window(12, 5, 2)],
+                    new InMemoryIndexes([], ['id' => [PageIndexMother::pagesAt(0, 6, 2)]]),
+                ),
+                false,
+            ),
+        );
     }
 }

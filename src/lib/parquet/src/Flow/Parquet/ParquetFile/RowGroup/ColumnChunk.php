@@ -8,6 +8,7 @@ use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Encodings;
+use Flow\Parquet\ParquetFile\Index\IndexLocation;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\ParquetFile\Statistics;
 use Flow\Parquet\ThriftModel\ColumnChunk as ThriftColumnChunk;
@@ -46,6 +47,8 @@ final readonly class ColumnChunk
         private ?int $dataPageOffset,
         private ?int $indexPageOffset,
         private ?Statistics $statistics,
+        private ?IndexLocation $columnIndex = null,
+        private ?IndexLocation $offsetIndex = null,
     ) {}
 
     public static function fromThrift(ThriftColumnChunk $thrift): self
@@ -69,12 +72,19 @@ final readonly class ColumnChunk
             (int) $metadata->data_page_offset,
             $metadata->index_page_offset !== null ? (int) $metadata->index_page_offset : null,
             $metadata->statistics !== null ? Statistics::fromThrift($metadata->statistics) : null,
+            IndexLocation::fromThrift($thrift->column_index_offset, $thrift->column_index_length),
+            IndexLocation::fromThrift($thrift->offset_index_offset, $thrift->offset_index_length),
         );
     }
 
     public function codec(): Compressions
     {
         return $this->codec;
+    }
+
+    public function columnIndex(): ?IndexLocation
+    {
+        return $this->columnIndex;
     }
 
     public function dataPageOffset(): ?int
@@ -103,6 +113,11 @@ final readonly class ColumnChunk
     public function flatPath(): string
     {
         return implode('.', $this->path);
+    }
+
+    public function offsetIndex(): ?IndexLocation
+    {
+        return $this->offsetIndex;
     }
 
     public function pageOffset(): int
@@ -159,12 +174,39 @@ final readonly class ColumnChunk
                 'dictionary_page_offset' => $this->dictionaryPageOffset,
                 'statistics' => $this->statistics?->toThrift(),
             ]),
+            'column_index_offset' => $this->columnIndex?->offset,
+            'column_index_length' => $this->columnIndex?->length,
+            'offset_index_offset' => $this->offsetIndex?->offset,
+            'offset_index_length' => $this->offsetIndex?->length,
         ]);
     }
 
     public function type(): PhysicalType
     {
         return $this->type;
+    }
+
+    /**
+     * This chunk with its page index written at the given locations.
+     */
+    public function withIndexLocations(?IndexLocation $columnIndex, IndexLocation $offsetIndex): self
+    {
+        return new self(
+            $this->type,
+            $this->codec,
+            $this->valuesCount,
+            $this->fileOffset,
+            $this->path,
+            $this->encodings,
+            $this->totalCompressedSize,
+            $this->totalUncompressedSize,
+            $this->dictionaryPageOffset,
+            $this->dataPageOffset,
+            $this->indexPageOffset,
+            $this->statistics,
+            $columnIndex,
+            $offsetIndex,
+        );
     }
 
     public function valuesCount(): int

@@ -46,11 +46,11 @@ Upgrading from older versions: [0.35.x to 0.40.x](/documentation/upgrading-0.35-
 | writes accepted an int from 0 to `PHP_INT_MAX` into `UINT_64`                           | an int >= 0 or a canonical digit string up to `18446744073709551615`                             |
 | `to_parquet()` refused a `numeric_string` column (`NumericStringType is not supported`) | written as a parquet `STRING`                                                                    |
 
-### 4) `flow-php/parquet` - the `arrow` extension must be rebuilt (arrow-rs 60)
+### 4) `flow-php/parquet` - the `arrow` extension must be rebuilt (arrow-rs 60, ABI 2)
 
-| Before                                                  | After                                                                                                               |
-|---------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
-| arrow-ext built against arrow-rs 59, `FLOW_ARROW_ABI` 1 | arrow-rs 60, `FLOW_ARROW_ABI` / `ArrowExtension::ABI` 2: an older build is refused by `ArrowExtension::available()` |
+| Before                                                  | After                                                                                                                                                                            |
+|---------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| arrow-ext built against arrow-rs 59, `FLOW_ARROW_ABI` 1 | arrow-rs 60, `FLOW_ARROW_ABI` / `ArrowExtension::ABI` 2 (the one bump of 0.47, covering every contract change below): an older build is refused by `ArrowExtension::available()` |
 
 ### 5) `flow-php/parquet`, `flow-php/etl-adapter-parquet` - reads take a `Query` (or, below the file, a `ReadPlan`) instead of limit/offset, the reader exposes its `Footer`; the `arrow` and `flow_php` extensions must be rebuilt
 
@@ -64,7 +64,7 @@ Upgrading from older versions: [0.35.x to 0.40.x](/documentation/upgrading-0.35-
 | `RustParquetFileReader::thrift()`                                                                          | `RustParquetFileReader::footer()->thrift()` (`RustParquetFooter`)                                                         |
 | `ParquetOpenSource::batches(Schema $schema, int $batchSize, ?int $offset, ?int $limit, Backend $backend)`  | `batches(Schema $schema, int $batchSize, ReadPlan $plan, Backend $backend)`                                               |
 | `RustBatchReader` / `RustColumnsReader::__construct(..., int $batchSize, ?int $offset, ?int $limit)`       | `__construct(..., int $batchSize, ReadPlan $plan)`                                                                        |
-| `FLOW_ARROW_ABI` / `ArrowExtension::ABI` 2, `FLOW_PHP_ABI` / `FlowPhpExtension::ABI` 1                     | 3 and 2: rebuild both the `arrow` and the `flow_php` extension; an older build is refused by `available()`                |
+| `FLOW_PHP_ABI` / `FlowPhpExtension::ABI` 1                                                                 | 2: rebuild the `flow_php` extension (and `arrow`, item 4); an older build is refused by `available()`                     |
 
 ### 6) `flow-php/etl`, `flow-php/types` - string comparisons in filters use byte order, as sort already does
 
@@ -105,6 +105,26 @@ public function scan(FlowContext $context, FileScan $scan): Generator
     // reads with $scan->limit and $scan->pathFilter; $scan->filter may be ignored
 }
 ```
+
+### 8) `flow-php/parquet` - the PHP writer writes the page index, readers prune and read pages; the `arrow` extension must be rebuilt
+
+| Before                                                                                                                                                                  | After                                                                                                                                                                           |
+|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| the PHP writer wrote no column index or offset index                                                                                                                    | both, by default (`Option::STATISTICS_LEVEL`, `StatisticsLevel::PAGE`; `CHUNK` drops the column index, `NONE` all statistics)                                                   |
+| the PHP writer wrote page-header statistics on `DATA_PAGE_V2`                                                                                                           | none, as arrow-rs: `Option::PAGE_HEADER_STATISTICS` (`true`) writes them, on v1 and v2 pages                                                                                    |
+| files with an `RLE_DICTIONARY` column spanning more than one page, written by the PHP writer                                                                            | were corrupt (later pages decoded to wrong values): rewrite them; one dictionary per chunk, `PLAIN` past `Option::DICTIONARY_PAGE_SIZE`                                         |
+| `ReadPlanner::plan(Footer $footer, ?BoundFilter $filter, int $offset, ?int $limit)`                                                                                     | `plan(Footer $footer, Indexes $indexes, ?BoundFilter $filter, int $offset, ?int $limit)`; pass `$parquetFile->indexes()`                                                        |
+| `Options::set()` / `get()` took scalars and arrays                                                                                                                      | also a `UnitEnum`; `Options::getEnum(Option $option, string $class)`                                                                                                            |
+| `ColumnReader::read(Column, Metadata, SourceStream, array $rowGroups)`                                                                                                  | `read(Column, Metadata, SourceStream, array $rowGroups, Indexes $indexes)`                                                                                                      |
+| `ColumnChunkReader::read(ColumnChunk, FlatColumn, SourceStream)`                                                                                                        | `read(ColumnChunk, FlatColumn, SourceStream, ?OffsetIndex, RowSelection $rowGroupSelection)`, pages keyed by their first row in the group                                       |
+| `ColumnChunkContainer(string, ColumnChunk)`, `RowGroupContainer(string, RowGroup)`                                                                                      | `ColumnChunkContainer(string, ColumnChunk, ?ColumnIndex, OffsetIndex)`, `RowGroupContainer(string, RowGroup, list<?ColumnIndex>, list<OffsetIndex>)`                            |
+| `new PlainFlatColumnChunkBuilder($column, $options, $compression)` (and the RLE_DICTIONARY, DELTA_BINARY_PACKED builders, `ColumnChunkBuilderFactory::createBuilder()`) | a 4th argument, `StatisticsOptions::fromOptions($options)`                                                                                                                      |
+| `Option::DICTIONARY_PAGE_MIN_CARDINALITY_RATION`                                                                                                                        | removed: it was never read; the dictionary falls back to `PLAIN` on `Option::DICTIONARY_PAGE_SIZE` only, as arrow-rs                                                            |
+| `DataPageHeaderV2::statistics(Options $options)`                                                                                                                        | `statistics()`, as `DataPageHeader::statistics()`                                                                                                                               |
+| `new ReadPlan($selection, $matched)`, `ReadPlan::window($rows, $offset, $limit)`                                                                                        | `new ReadPlan($selection, $matched, $indexes)`, `ReadPlan::window($rows, $indexes, $offset, $limit)`: a plan carries the page indexes its reads use (`$parquetFile->indexes()`) |
+| `ParquetFile::pageHeaders()` repeated every chunk of a row group under each column                                                                                      | each column's own chunk pages, once                                                                                                                                             |
+| no column index truncation option                                                                                                                                       | `Option::COLUMN_INDEX_TRUNCATE_LENGTH` (64): BYTE_ARRAY/FIXED_LEN_BYTE_ARRAY page bounds in the column index                                                                    |
+| arrow-ext read row groups through arrow-rs's sync reader                                                                                                                | its push decoder, fetching only the selected pages: rebuild the `arrow` extension (item 4)                                                                                      |
 
 ---
 

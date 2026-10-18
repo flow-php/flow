@@ -28,6 +28,7 @@ final class FilePlan
 
         return (new ReadPlanner())->plan(
             $footer,
+            $file->indexes(),
             $filter === null ? null : BoundFilter::bind($filter, $footer->schema(), new Options()),
             $offset,
         );

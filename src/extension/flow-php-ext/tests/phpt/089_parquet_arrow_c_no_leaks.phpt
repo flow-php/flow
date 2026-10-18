@@ -19,6 +19,7 @@ use Flow\Parquet\ParquetFile\Compressions;
 use function Flow\ETL\DSL\{int_schema, list_schema, schema, str_schema};
 use function Flow\Filesystem\DSL\{memory_filesystem, path};
 use function Flow\Types\DSL\{type_integer, type_list, type_optional};
+use Flow\Parquet\Tests\Double\InMemoryIndexes;
 
 $schema = schema(int_schema('id'), str_schema('name', nullable: true), list_schema('tags', type_list(type_optional(type_integer())), nullable: true));
 $extension = ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquet($schema));
@@ -46,7 +47,7 @@ $cycle = static function () use ($schema, $extension, $options, $rows, $invalid,
     unset($abandoned);
 
     $file = new RustParquetFileReader($filesystem->readFrom(path('memory://leaks.parquet')));
-    $batches = new RustBatchReader($file, ['id', 'name', 'tags'], 30, ReadPlan::window($file->footer()->rowsNumber()));
+    $batches = new RustBatchReader($file, ['id', 'name', 'tags'], 30, ReadPlan::window($file->footer()->rowsNumber(), new InMemoryIndexes()));
     $batches->next();
     $twice = $batches->next();
     $copy = new RustParquetFileWriter($filesystem->writeTo(path('memory://copy.parquet')), $extension, Compressions::SNAPPY, $options, 30);

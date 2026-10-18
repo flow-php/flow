@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 /*
- * Writes row_groups_{php,arrow}.parquet: FilterRows through both engines, four row groups of 10 rows, the files
- * FilterParityTest prunes. row_groups_duckdb.parquet comes from ../duckdb.sql. Run with the arrow extension loaded:
- * php generate.php
+ * Writes row_groups_{php,arrow}.parquet: FilterRows through both engines, four row groups of 10 rows, and
+ * pages_{php,arrow}.parquet: FilterRows::pageRows(), one row group of pages of 5 rows - the files FilterParityTest prunes.
+ * row_groups_duckdb.parquet comes from ../duckdb.sql. Run with the arrow extension loaded: php generate.php
  */
 
 use Flow\Parquet\Engine\PhpParquetEngine;
@@ -32,4 +32,23 @@ foreach (['php' => new PhpParquetEngine(), 'arrow' => new RustParquetEngine($opt
     }
 
     (new Writer(options: $options, engine: $engine))->write($path, FilterRows::schema(), FilterRows::rows());
+}
+
+$pageOptions = Options::default()->set(Option::PAGE_SIZE_BYTES, 1)->set(
+    Option::PAGE_SIZE_CHECK_INTERVAL,
+    FilterRows::ROWS_PER_PAGE,
+)->set(Option::ARROW_WRITE_BATCH_SIZE, FilterRows::ROWS_PER_PAGE);
+
+foreach (['php' => new PhpParquetEngine(), 'arrow' => new RustParquetEngine($pageOptions)] as $name => $engine) {
+    $path = __DIR__ . '/pages_' . $name . '.parquet';
+
+    if (file_exists($path)) {
+        unlink($path);
+    }
+
+    (new Writer(options: $pageOptions, engine: $engine))->write(
+        $path,
+        FilterRows::pageSchema(),
+        FilterRows::pageRows(),
+    );
 }

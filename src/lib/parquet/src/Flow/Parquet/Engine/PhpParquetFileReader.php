@@ -144,6 +144,7 @@ final class PhpParquetFileReader implements ParquetFileReader
                 $metadata,
                 $this->stream,
                 $rowGroups,
+                $plan->indexes,
             );
         }
 

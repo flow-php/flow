@@ -268,7 +268,12 @@ function rust_parquet_batches(
     return (new RustParquetOpenSource($file))->batches(
         $schema,
         $batchSize,
-        ReadPlan::window($file->footer()->rowsNumber(), $offset, $limit),
+        ReadPlan::window(
+            $file->footer()->rowsNumber(),
+            new Flow\Parquet\Tests\Double\InMemoryIndexes(),
+            $offset,
+            $limit,
+        ),
         new RustBackend(),
     );
 }

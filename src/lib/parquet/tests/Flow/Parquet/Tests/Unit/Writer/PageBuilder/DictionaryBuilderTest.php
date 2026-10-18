@@ -339,4 +339,38 @@ final class DictionaryBuilderTest extends TestCase
 
         $this->builder->build($column, $data);
     }
+
+    public function test_a_dictionary_is_extended_with_new_values_and_indexes_old_ones_where_they_are(): void
+    {
+        $column = FlatColumn::string('s');
+        $builder = new DictionaryBuilder();
+        $first = $builder->build($column, new WriteFlatColumnValues($column, values: ['a', 'b']));
+        $second = $builder->build($column, new WriteFlatColumnValues($column, values: ['c', 'a', 'd']), $first);
+
+        static::assertSame(['a', 'b', 'c', 'd'], $second->dictionary);
+        static::assertSame([2, 0, 3], $second->indices);
+    }
+
+    public function test_float_and_object_dictionaries_are_extended_too(): void
+    {
+        $double = FlatColumn::double('d');
+        $builder = new DictionaryBuilder();
+        $floats = $builder->build(
+            $double,
+            new WriteFlatColumnValues($double, values: [2.5, 1.5]),
+            $builder->build($double, new WriteFlatColumnValues($double, values: [1.5])),
+        );
+        $date = FlatColumn::date('day');
+        $first = new DateTimeImmutable('2024-01-01');
+        $dates = $builder->build(
+            $date,
+            new WriteFlatColumnValues($date, values: [new DateTimeImmutable('2024-01-02'), $first]),
+            $builder->build($date, new WriteFlatColumnValues($date, values: [$first])),
+        );
+
+        static::assertSame([1.5, 2.5], $floats->dictionary);
+        static::assertSame([1, 0], $floats->indices);
+        static::assertCount(2, $dates->dictionary);
+        static::assertSame([1, 0], $dates->indices);
+    }
 }

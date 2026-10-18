@@ -8,6 +8,8 @@ use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Filter\Binding\BoundFilter;
 use Flow\Parquet\Filter\Evaluation\FilterEvaluator;
+use Flow\Parquet\ParquetFile\Index\Indexes;
+use Flow\Parquet\ParquetFile\Index\StreamIndexes;
 use Flow\Parquet\ParquetFile\Metadata;
 use Flow\Parquet\ParquetFile\Page\ColumnPageHeader;
 use Flow\Parquet\ParquetFile\Schema;
@@ -34,6 +36,8 @@ final class ParquetFile
 
     private bool $closed = false;
 
+    private ?Indexes $indexes = null;
+
     /**
      * @param R $reader opened on $stream
      */
@@ -56,6 +60,14 @@ final class ParquetFile
 
         $this->closed = true;
         $this->reader->close();
+    }
+
+    /**
+     * The page indexes, read from the file on first access.
+     */
+    public function indexes(): Indexes
+    {
+        return $this->indexes ??= new StreamIndexes($this->reader->footer(), $this->stream);
     }
 
     public function metadata(): Metadata
@@ -119,7 +131,13 @@ final class ParquetFile
             yield from $this->reader->readColumns(
                 $columns,
                 $batchSize,
-                (new ReadPlanner())->plan($this->reader->footer(), null, $query->offset, $query->limit),
+                (new ReadPlanner())->plan(
+                    $this->reader->footer(),
+                    $this->indexes(),
+                    null,
+                    $query->offset,
+                    $query->limit,
+                ),
             );
 
             return;
@@ -138,6 +156,7 @@ final class ParquetFile
             $batchSize,
             (new ReadPlanner())->plan(
                 $this->reader->footer(),
+                $this->indexes(),
                 BoundFilter::bind($query->filter, $schema, $this->options),
             ),
         ));
@@ -174,10 +193,10 @@ final class ParquetFile
         $viewer = new ColumnChunkViewer($this->options);
 
         foreach ($this->metadata()->rowGroups()->all() as $rowGroup) {
-            foreach ($rowGroup->columnChunks() as $columnChunk) {
-                foreach ($viewer->view($columnChunk, $this->stream) as $pageHeader) {
-                    yield new ColumnPageHeader($column, $columnChunk, $pageHeader);
-                }
+            $columnChunk = $rowGroup->getColumnChunk($column);
+
+            foreach ($viewer->view($columnChunk, $this->stream) as $pageHeader) {
+                yield new ColumnPageHeader($column, $columnChunk, $pageHeader);
             }
         }
     }

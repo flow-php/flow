@@ -9,6 +9,7 @@ use Flow\Parquet\Dremel\ColumnData\ReadFlatColumnValues;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Page\PageHeader;
+use Flow\Parquet\ParquetFile\PageIndex\OffsetIndex;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\Thrift\CompactProtocol;
@@ -17,7 +18,10 @@ use Flow\Parquet\ThriftModel\PageHeader as ThriftPageHeader;
 use Generator;
 use Throwable;
 
+use function array_key_last;
+use function array_keys;
 use function fclose;
+use function fopen;
 use function fseek;
 use function ftell;
 use function fwrite;
@@ -33,9 +37,110 @@ final readonly class ColumnChunkReader
     ) {}
 
     /**
-     * @return \Generator<ReadFlatColumnValues>
+     * The chunk's data pages keyed by the row of the row group each starts at. With an offset index only the
+     * dictionary page and the pages holding a row $rowGroupSelection selects are read, one SourceStream::read per run
+     * of adjacent pages; without one the whole chunk is read.
+     *
+     * @return Generator<int, ReadFlatColumnValues>
      */
-    public function read(ColumnChunk $columnChunk, FlatColumn $column, SourceStream $stream): Generator
+    public function read(
+        ColumnChunk $columnChunk,
+        FlatColumn $column,
+        SourceStream $stream,
+        ?OffsetIndex $offsetIndex,
+        RowSelection $rowGroupSelection,
+    ): Generator {
+        if ($offsetIndex === null || $offsetIndex->pages === []) {
+            yield from $this->readChunk($columnChunk, $column, $stream);
+
+            return;
+        }
+
+        $pages = $offsetIndex->pages;
+        $pageRows = [];
+
+        foreach (array_keys($pages) as $page) {
+            $pageRows[] = $offsetIndex->pageRows($page, $rowGroupSelection->totalRows());
+        }
+
+        $leadingRegion = $columnChunk->pageOffset() < $pages[0]->offset;
+        $runs = $leadingRegion ? [new PageRun($columnChunk->pageOffset(), $pages[0]->offset)] : [];
+        $selected = [];
+
+        foreach ($rowGroupSelection->split($pageRows) as $page => $pageSelection) {
+            if (!$pageSelection->selectsAny()) {
+                continue;
+            }
+
+            $selected[] = $page;
+            $start = $pages[$page]->offset;
+            $end = $start + $pages[$page]->compressedPageSize;
+            $last = array_key_last($runs);
+
+            if ($last !== null && $runs[$last]->end === $start) {
+                $runs[$last] = $runs[$last]->extendedTo($end);
+            } else {
+                $runs[] = new PageRun($start, $end);
+            }
+        }
+
+        $pageStream = fopen('php://temp', 'rb+');
+
+        if ($pageStream === false) {
+            throw new RuntimeException('Cannot open temporary stream');
+        }
+
+        $buffered = [];
+        $read = 0;
+
+        foreach ($runs as $pageRun) {
+            $buffered[] = $read;
+            $read += (int) fwrite($pageStream, $stream->read($pageRun->length, $pageRun->start));
+        }
+
+        $dictionary = null;
+
+        if ($leadingRegion) {
+            rewind($pageStream);
+            $header = $this->readHeader($pageStream);
+
+            if ($header !== null && $header->type()->isDictionaryPage()) {
+                $dictionary = $this->pageReader->readDictionary($column, $header, $columnChunk->codec(), $pageStream);
+            }
+        }
+
+        $run = 0;
+
+        foreach ($selected as $page) {
+            while ($runs[$run]->end <= $pages[$page]->offset) {
+                $run++;
+            }
+
+            fseek($pageStream, $buffered[$run] + $pages[$page]->offset - $runs[$run]->start);
+            $header = $this->readHeader($pageStream);
+
+            if ($header === null || !$header->type()->isDataPage()) {
+                throw new RuntimeException(
+                    'No data page header at offset ' . $pages[$page]->offset . ' the offset index locates',
+                );
+            }
+
+            yield $pages[$page]->firstRowIndex => $this->pageReader->readData(
+                $column,
+                $header,
+                $columnChunk->codec(),
+                $dictionary,
+                $pageStream,
+            );
+        }
+
+        fclose($pageStream);
+    }
+
+    /**
+     * @return Generator<int, ReadFlatColumnValues>
+     */
+    private function readChunk(ColumnChunk $columnChunk, FlatColumn $column, SourceStream $stream): Generator
     {
         $pageStream = fopen('php://temp', 'rb+');
 
@@ -95,9 +200,9 @@ final readonly class ColumnChunkReader
 
             $data = $this->pageReader->readData($column, $dataHeader, $columnChunk->codec(), $dictionary, $pageStream);
 
-            $yieldedRows += $data->rowsCount();
+            yield $yieldedRows => $data;
 
-            yield $data;
+            $yieldedRows += $data->rowsCount();
 
             if ($dictionary === null) {
                 $header = $this->readHeader($pageStream);

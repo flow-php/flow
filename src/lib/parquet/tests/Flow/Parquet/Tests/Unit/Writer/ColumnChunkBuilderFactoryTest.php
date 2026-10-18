@@ -16,6 +16,7 @@ use Flow\Parquet\Writer\ColumnChunkBuilder\DeltaBinaryPackedColumnChunkBuilder;
 use Flow\Parquet\Writer\ColumnChunkBuilder\PlainFlatColumnChunkBuilder;
 use Flow\Parquet\Writer\ColumnChunkBuilder\RLEDictionaryChunkBuilder;
 use Flow\Parquet\Writer\ColumnChunkBuilderFactory;
+use Flow\Parquet\Writer\StatisticsOptions;
 use PHPUnit\Framework\TestCase;
 
 final class ColumnChunkBuilderFactoryTest extends TestCase
@@ -28,7 +29,12 @@ final class ColumnChunkBuilderFactoryTest extends TestCase
         ]);
         $compressions = Compressions::UNCOMPRESSED;
 
-        $builder = ColumnChunkBuilderFactory::createBuilder($column, $options, $compressions);
+        $builder = ColumnChunkBuilderFactory::createBuilder(
+            $column,
+            $options,
+            $compressions,
+            StatisticsOptions::fromOptions($options),
+        );
 
         static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $builder);
     }
@@ -39,7 +45,12 @@ final class ColumnChunkBuilderFactoryTest extends TestCase
         $options = Options::default();
         $compressions = Compressions::UNCOMPRESSED;
 
-        $builder = ColumnChunkBuilderFactory::createBuilder($column, $options, $compressions);
+        $builder = ColumnChunkBuilderFactory::createBuilder(
+            $column,
+            $options,
+            $compressions,
+            StatisticsOptions::fromOptions($options),
+        );
 
         static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $builder);
     }
@@ -50,7 +61,12 @@ final class ColumnChunkBuilderFactoryTest extends TestCase
         $options = Options::default()->set(Option::WRITER_VERSION, 2);
         $compressions = Compressions::UNCOMPRESSED;
 
-        $builder = ColumnChunkBuilderFactory::createBuilder($column, $options, $compressions);
+        $builder = ColumnChunkBuilderFactory::createBuilder(
+            $column,
+            $options,
+            $compressions,
+            StatisticsOptions::fromOptions($options),
+        );
 
         static::assertInstanceOf(DeltaBinaryPackedColumnChunkBuilder::class, $builder);
     }
@@ -61,7 +77,12 @@ final class ColumnChunkBuilderFactoryTest extends TestCase
         $options = Options::default()->set(Option::WRITER_VERSION, 2);
         $compressions = Compressions::UNCOMPRESSED;
 
-        $builder = ColumnChunkBuilderFactory::createBuilder($column, $options, $compressions);
+        $builder = ColumnChunkBuilderFactory::createBuilder(
+            $column,
+            $options,
+            $compressions,
+            StatisticsOptions::fromOptions($options),
+        );
 
         static::assertInstanceOf(DeltaBinaryPackedColumnChunkBuilder::class, $builder);
     }
@@ -72,7 +93,12 @@ final class ColumnChunkBuilderFactoryTest extends TestCase
         $options = Options::default();
         $compressions = Compressions::UNCOMPRESSED;
 
-        $builder = ColumnChunkBuilderFactory::createBuilder($column, $options, $compressions);
+        $builder = ColumnChunkBuilderFactory::createBuilder(
+            $column,
+            $options,
+            $compressions,
+            StatisticsOptions::fromOptions($options),
+        );
 
         static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $builder);
     }
@@ -85,7 +111,12 @@ final class ColumnChunkBuilderFactoryTest extends TestCase
         ]);
         $compressions = Compressions::UNCOMPRESSED;
 
-        $builder = ColumnChunkBuilderFactory::createBuilder($column, $options, $compressions);
+        $builder = ColumnChunkBuilderFactory::createBuilder(
+            $column,
+            $options,
+            $compressions,
+            StatisticsOptions::fromOptions($options),
+        );
 
         static::assertInstanceOf(DeltaBinaryPackedColumnChunkBuilder::class, $builder);
     }
@@ -98,7 +129,12 @@ final class ColumnChunkBuilderFactoryTest extends TestCase
         ]);
         $compressions = Compressions::UNCOMPRESSED;
 
-        $builder = ColumnChunkBuilderFactory::createBuilder($column, $options, $compressions);
+        $builder = ColumnChunkBuilderFactory::createBuilder(
+            $column,
+            $options,
+            $compressions,
+            StatisticsOptions::fromOptions($options),
+        );
 
         static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $builder);
     }
@@ -111,7 +147,12 @@ final class ColumnChunkBuilderFactoryTest extends TestCase
         ]);
         $compressions = Compressions::UNCOMPRESSED;
 
-        $builder = ColumnChunkBuilderFactory::createBuilder($column, $options, $compressions);
+        $builder = ColumnChunkBuilderFactory::createBuilder(
+            $column,
+            $options,
+            $compressions,
+            StatisticsOptions::fromOptions($options),
+        );
 
         static::assertInstanceOf(RLEDictionaryChunkBuilder::class, $builder);
     }
@@ -125,7 +166,12 @@ final class ColumnChunkBuilderFactoryTest extends TestCase
         ]);
         $compressions = Compressions::UNCOMPRESSED;
 
-        $builder = ColumnChunkBuilderFactory::createBuilder($column, $options, $compressions);
+        $builder = ColumnChunkBuilderFactory::createBuilder(
+            $column,
+            $options,
+            $compressions,
+            StatisticsOptions::fromOptions($options),
+        );
 
         static::assertInstanceOf(DeltaBinaryPackedColumnChunkBuilder::class, $builder);
     }
@@ -138,7 +184,12 @@ final class ColumnChunkBuilderFactoryTest extends TestCase
         ]);
         $compressions = Compressions::UNCOMPRESSED;
 
-        $builder = ColumnChunkBuilderFactory::createBuilder($column, $options, $compressions);
+        $builder = ColumnChunkBuilderFactory::createBuilder(
+            $column,
+            $options,
+            $compressions,
+            StatisticsOptions::fromOptions($options),
+        );
 
         static::assertInstanceOf(RLEDictionaryChunkBuilder::class, $builder);
     }
@@ -149,7 +200,12 @@ final class ColumnChunkBuilderFactoryTest extends TestCase
         $options = Options::default()->set(Option::COLUMNS_ENCODINGS, []);
         $compressions = Compressions::UNCOMPRESSED;
 
-        $builder = ColumnChunkBuilderFactory::createBuilder($column, $options, $compressions);
+        $builder = ColumnChunkBuilderFactory::createBuilder(
+            $column,
+            $options,
+            $compressions,
+            StatisticsOptions::fromOptions($options),
+        );
 
         static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $builder);
     }
@@ -162,7 +218,12 @@ final class ColumnChunkBuilderFactoryTest extends TestCase
         ]);
         $compressions = Compressions::UNCOMPRESSED;
 
-        $builder = ColumnChunkBuilderFactory::createBuilder($column, $options, $compressions);
+        $builder = ColumnChunkBuilderFactory::createBuilder(
+            $column,
+            $options,
+            $compressions,
+            StatisticsOptions::fromOptions($options),
+        );
 
         static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $builder);
     }
@@ -180,7 +241,12 @@ final class ColumnChunkBuilderFactoryTest extends TestCase
         ]);
         $compressions = Compressions::UNCOMPRESSED;
 
-        ColumnChunkBuilderFactory::createBuilder($column, $options, $compressions);
+        ColumnChunkBuilderFactory::createBuilder(
+            $column,
+            $options,
+            $compressions,
+            StatisticsOptions::fromOptions($options),
+        );
     }
 
     public function test_invalid_rle_dictionary_encoding_for_fixed_len_byte_array_throws_exception(): void
@@ -196,7 +262,12 @@ final class ColumnChunkBuilderFactoryTest extends TestCase
         ]);
         $compressions = Compressions::UNCOMPRESSED;
 
-        ColumnChunkBuilderFactory::createBuilder($column, $options, $compressions);
+        ColumnChunkBuilderFactory::createBuilder(
+            $column,
+            $options,
+            $compressions,
+            StatisticsOptions::fromOptions($options),
+        );
     }
 
     public function test_non_enum_encoding_value_is_ignored(): void
@@ -207,7 +278,12 @@ final class ColumnChunkBuilderFactoryTest extends TestCase
         ]);
         $compressions = Compressions::UNCOMPRESSED;
 
-        $builder = ColumnChunkBuilderFactory::createBuilder($column, $options, $compressions);
+        $builder = ColumnChunkBuilderFactory::createBuilder(
+            $column,
+            $options,
+            $compressions,
+            StatisticsOptions::fromOptions($options),
+        );
 
         // Should fallback to default behavior since non-enum is ignored
         static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $builder);

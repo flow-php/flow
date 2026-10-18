@@ -1,31 +1,35 @@
-//! Row groups of a Parquet file as canonical arrays: only the groups a read plan selects rows of are fetched and
-//! decoded, and every projected column is checked against the cast table before the first batch.
+//! Row groups of a Parquet file as canonical arrays: only the groups a read plan selects rows of are decoded, and only
+//! the byte ranges arrow-rs's push decoder asks for are read - the selected pages when a plan skips rows inside a
+//! group, whole projected chunks otherwise. Every projected column is checked against the cast table before the first
+//! batch.
 
+use std::ops::Range;
 use std::sync::Arc;
 
 use arrow_array::cast::AsArray;
-use arrow_array::{make_array, Array, ArrayRef, RecordBatchReader};
+use arrow_array::{make_array, Array, ArrayRef};
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field, FieldRef, Fields, Schema, SchemaRef, TimeUnit};
-use parquet::arrow::arrow_reader::{
-    ArrowReaderMetadata, ArrowReaderOptions, ParquetRecordBatchReader, ParquetRecordBatchReaderBuilder, RowSelection,
-    RowSelector,
-};
+use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions, RowSelection, RowSelector};
+use parquet::arrow::push_decoder::{ParquetPushDecoder, ParquetPushDecoderBuilder, RowGroupSelection};
 use parquet::arrow::ProjectionMask;
 use parquet::basic::{Compression, Type};
+use parquet::file::metadata::page_index::PageIndexBuilder;
 use parquet::file::metadata::ParquetMetaData;
+use parquet::file::page_index::index_reader::decode_offset_index;
 use parquet::schema::types::SchemaDescriptor;
+use parquet::DecodeResult;
 
 use crate::parquet::canonical::{canonical, canonical_type};
 use crate::parquet::error::Error;
-use crate::parquet::fetch::ChunkFetch;
-use crate::parquet::source::ReadAt;
+use crate::parquet::fetch::coalesced;
+use crate::parquet::source::{exact, ReadAt};
 
-/// The row groups holding a selected row and the selection rebased onto them.
+/// The row groups holding a selected row, each with its row-group-local selection - `None` when every row of the
+/// group is selected.
 #[derive(Debug, PartialEq, Eq)]
 pub struct ReadPlan {
-    pub row_groups: Vec<usize>,
-    pub selection: RowSelection,
+    pub selections: Vec<RowGroupSelection>,
 }
 
 impl ReadPlan {
@@ -51,7 +55,7 @@ impl ReadPlan {
             )));
         }
 
-        let (mut row_groups, mut rebased) = (Vec::new(), Vec::new());
+        let mut selections = Vec::new();
         let mut selectors = selectors.into_iter().filter(|(count, _)| *count > 0);
         let mut current = selectors.next();
 
@@ -78,16 +82,18 @@ impl ReadPlan {
                 }
             }
 
-            if kept.iter().any(|selector| !selector.skip) {
-                row_groups.push(index);
-                rebased.extend(kept);
+            if kept.iter().all(|selector| !selector.skip) {
+                selections.push(RowGroupSelection::new(index, None));
+            } else if kept.iter().any(|selector| !selector.skip) {
+                selections.push(RowGroupSelection::new(index, Some(RowSelection::from(kept))));
             }
         }
 
-        Ok(Self {
-            row_groups,
-            selection: RowSelection::from(rebased),
-        })
+        Ok(Self { selections })
+    }
+
+    pub fn row_groups(&self) -> Vec<usize> {
+        self.selections.iter().map(RowGroupSelection::row_group_index).collect()
     }
 }
 
@@ -142,7 +148,8 @@ impl Projected {
 }
 
 pub struct ParquetReader {
-    batches: ParquetRecordBatchReader,
+    decoder: ParquetPushDecoder,
+    source: Arc<dyn ReadAt + Send + Sync>,
     /// Each column's field as the file stores it, named as it was asked for.
     fields: Vec<FieldRef>,
     /// `canonical_type()` of each of `fields`.
@@ -152,11 +159,9 @@ pub struct ParquetReader {
 }
 
 impl ParquetReader {
-    /// `source`: the file's bytes (`PhpStream`), `size` long; `meta`: its footer, which `plan` was built from. Only
-    /// the projected column chunks of the planned row groups are fetched (`ChunkFetch`).
+    /// `source`: the file's bytes (`PhpStream`); `meta`: its footer without page indexes, which `plan` was built from. Offset indexes are loaded only for the projected leaves of the groups the plan reads in part.
     pub fn open<R: ReadAt + Send + Sync + 'static>(
         source: Arc<R>,
-        size: u64,
         meta: &Arc<ParquetMetaData>,
         columns: &[String],
         plan: ReadPlan,
@@ -183,10 +188,11 @@ impl ParquetReader {
             .map(|field| canonical_type(field))
             .collect::<Result<Vec<_>, _>>()?;
 
-        if let Some(codec) = unsupported_codec(meta, &plan.row_groups, &projected) {
+        if let Some(codec) = unsupported_codec(meta, &plan.row_groups(), &projected) {
             return Err(codec);
         }
 
+        let source: Arc<dyn ReadAt + Send + Sync> = source;
         let descr = meta.file_metadata().schema_descr();
         let leaves = (0..descr.num_columns())
             .filter(|leaf| {
@@ -195,31 +201,35 @@ impl ParquetReader {
                     .any(|column| column.reads_leaf(descr.column(*leaf).path().parts()))
             })
             .collect::<Vec<_>>();
-        let fetch = ChunkFetch::new(source, size, meta, &plan.row_groups, &leaves);
-        let meta = ArrowReaderMetadata::try_new(Arc::clone(meta), options)?;
+        let meta = ArrowReaderMetadata::try_new(with_offset_index(source.as_ref(), meta, &plan, &leaves)?, options)?;
         let mask = ProjectionMask::leaves(meta.metadata().file_metadata().schema_descr(), leaves);
-        let builder = ParquetRecordBatchReaderBuilder::new_with_metadata(fetch, meta)
-            .with_row_groups(plan.row_groups)
-            .with_row_selection(plan.selection)
+        let decoder = ParquetPushDecoderBuilder::new_with_metadata(meta)
+            .with_row_group_selections(plan.selections)
             .with_projection(mask)
-            .with_batch_size(batch_size);
-
-        let batches = builder.build()?;
-        let schema = batches.schema();
+            .with_batch_size(batch_size)
+            .build()?;
+        // a batch holds the roots with a projected leaf, in the file's order
+        let roots = schema
+            .fields()
+            .iter()
+            .map(|field| field.name())
+            .filter(|name| projected.iter().any(|column| &column.path[0] == *name))
+            .collect::<Vec<_>>();
         let positions = projected
-            .into_iter()
-            .map(|mut column| {
-                let root = schema
-                    .index_of(&column.path[0])
-                    .map_err(|_| Error::MissingColumn(column.field.name().clone()))?;
-                column.path.remove(0);
+            .iter()
+            .map(|column| {
+                let root = roots
+                    .iter()
+                    .position(|name| *name == &column.path[0])
+                    .ok_or_else(|| Error::MissingColumn(column.field.name().clone()))?;
 
-                Ok((root, column.path))
+                Ok((root, column.path[1..].to_vec()))
             })
             .collect::<Result<Vec<_>, Error>>()?;
 
         Ok(Self {
-            batches,
+            decoder,
+            source,
             fields,
             types,
             positions,
@@ -236,9 +246,19 @@ impl ParquetReader {
     }
 
     pub fn next(&mut self) -> Option<Result<(usize, Vec<ArrayRef>), Error>> {
-        let batch = match self.batches.next()? {
-            Ok(batch) => batch,
-            Err(error) => return Some(Err(error.into())),
+        let batch = loop {
+            match self.decoder.try_decode() {
+                Ok(DecodeResult::NeedsData(ranges)) => {
+                    if let Err(error) = read_ranges(self.source.as_ref(), ranges)
+                        .and_then(|(ranges, bytes)| Ok(self.decoder.push_ranges(ranges, bytes)?))
+                    {
+                        return Some(Err(error));
+                    }
+                }
+                Ok(DecodeResult::Data(batch)) => break batch,
+                Ok(DecodeResult::Finished) => return None,
+                Err(error) => return Some(Err(error.into())),
+            }
         };
 
         Some(
@@ -250,6 +270,61 @@ impl ParquetReader {
                 .map(|columns| (batch.num_rows(), columns)),
         )
     }
+}
+
+/// The bytes of `ranges`, read adjacent runs at a time and handed back per range asked: the decoder releases a pushed
+/// buffer only when its range is one it asked for.
+fn read_ranges(source: &dyn ReadAt, ranges: Vec<Range<u64>>) -> Result<(Vec<Range<u64>>, Vec<bytes::Bytes>), Error> {
+    let reads = coalesced(ranges.clone())
+        .into_iter()
+        .map(|read| Ok((read.start, exact(source, read.start, (read.end - read.start) as usize)?)))
+        .collect::<Result<Vec<_>, Error>>()?;
+    let bytes = ranges
+        .iter()
+        .map(|range| {
+            let (start, bytes) = &reads[reads.partition_point(|(start, _)| *start <= range.start) - 1];
+
+            bytes.slice((range.start - start) as usize..(range.end - start) as usize)
+        })
+        .collect();
+
+    Ok((ranges, bytes))
+}
+
+/// `meta` with the offset index of each projected leaf of the row groups `plan` reads in part, where the selected pages
+/// are worth finding; every other chunk is fetched whole, as without an index.
+fn with_offset_index(
+    source: &dyn ReadAt,
+    meta: &Arc<ParquetMetaData>,
+    plan: &ReadPlan,
+    leaves: &[usize],
+) -> Result<Arc<ParquetMetaData>, Error> {
+    let indexed = plan
+        .selections
+        .iter()
+        .filter(|group| group.selection().is_some())
+        .flat_map(|group| leaves.iter().map(move |leaf| (group.row_group_index(), *leaf)))
+        .filter_map(|(group, leaf)| Some((group, leaf, meta.row_group(group).column(leaf).offset_index_range()?)))
+        .collect::<Vec<_>>();
+
+    if indexed.is_empty() {
+        return Ok(Arc::clone(meta));
+    }
+
+    let (_, bytes) = read_ranges(source, indexed.iter().map(|(_, _, range)| range.clone()).collect())?;
+    let mut page_index =
+        PageIndexBuilder::new(meta.num_row_groups(), meta.file_metadata().schema_descr().num_columns());
+
+    for ((group, leaf, _), bytes) in indexed.into_iter().zip(bytes) {
+        page_index.put_offset_index(decode_offset_index(&bytes)?, group, leaf);
+    }
+
+    Ok(Arc::new(
+        ParquetMetaData::clone(meta)
+            .into_builder()
+            .set_page_index(Some(Arc::new(page_index.build())))
+            .build(),
+    ))
 }
 
 /// The struct child at `path` under `array`, null wherever a struct above it is.
@@ -340,10 +415,11 @@ mod tests {
     use arrow_schema::{DataType, Field, Fields, Schema, TimeUnit};
     use bytes::Bytes;
     use parquet::arrow::arrow_reader::{RowSelection, RowSelector};
+    use parquet::arrow::push_decoder::RowGroupSelection;
     use parquet::arrow::ArrowWriter;
     use parquet::basic::Compression;
     use parquet::data_type::{Int64Type, Int96, Int96Type};
-    use parquet::file::metadata::{FileMetaData, ParquetMetaData, ParquetMetaDataReader};
+    use parquet::file::metadata::{FileMetaData, PageIndexPolicy, ParquetMetaData, ParquetMetaDataReader};
     use parquet::file::properties::WriterProperties;
     use parquet::file::writer::SerializedFileWriter;
     use parquet::schema::parser::parse_message_type;
@@ -379,22 +455,24 @@ mod tests {
     }
 
     #[test]
-    fn a_selection_keeps_the_groups_it_selects_rows_of_and_is_rebased_onto_them() {
+    fn a_selection_keeps_the_groups_it_selects_rows_of_each_with_its_local_selection() {
         let plan = ReadPlan::from_selection(&three_groups(), vec![(150, true), (20, false), (130, true)]).unwrap();
 
-        assert_eq!(plan.row_groups, vec![1]);
         assert_eq!(
-            plan.selection,
-            RowSelection::from(vec![
-                RowSelector::skip(50),
-                RowSelector::select(20),
-                RowSelector::skip(30)
-            ])
+            plan.selections,
+            vec![RowGroupSelection::new(
+                1,
+                Some(RowSelection::from(vec![
+                    RowSelector::skip(50),
+                    RowSelector::select(20),
+                    RowSelector::skip(30)
+                ]))
+            )]
         );
     }
 
     #[test]
-    fn a_group_with_no_selected_row_is_dropped_from_the_rebased_selection() {
+    fn a_group_with_no_selected_row_is_dropped_and_a_whole_group_has_no_selection() {
         let plan = ReadPlan::from_selection(
             &three_groups(),
             vec![
@@ -408,14 +486,24 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(plan.row_groups, vec![0, 2]);
         assert_eq!(
-            plan.selection,
-            RowSelection::from(vec![
-                RowSelector::skip(10),
-                RowSelector::select(140),
-                RowSelector::skip(50)
-            ])
+            plan.selections,
+            vec![
+                RowGroupSelection::new(
+                    0,
+                    Some(RowSelection::from(vec![RowSelector::skip(10), RowSelector::select(90)]))
+                ),
+                RowGroupSelection::new(
+                    2,
+                    Some(RowSelection::from(vec![RowSelector::select(50), RowSelector::skip(50)]))
+                ),
+            ]
+        );
+        assert_eq!(
+            ReadPlan::from_selection(&three_groups(), vec![(100, true), (200, false)])
+                .unwrap()
+                .selections,
+            vec![RowGroupSelection::new(1, None), RowGroupSelection::new(2, None)]
         );
     }
 
@@ -423,8 +511,7 @@ mod tests {
     fn a_selection_of_no_row_reads_no_group() {
         let plan = ReadPlan::from_selection(&three_groups(), vec![(300, true)]).unwrap();
 
-        assert!(plan.row_groups.is_empty());
-        assert!(!plan.selection.selects_any());
+        assert!(plan.selections.is_empty());
     }
 
     #[test]
@@ -469,7 +556,7 @@ mod tests {
             assert_eq!(
                 ReadPlan::from_selection(&claiming(claimed), vec![(300, false)])
                     .unwrap()
-                    .row_groups,
+                    .row_groups(),
                 vec![0, 1, 2]
             );
 
@@ -555,13 +642,12 @@ mod tests {
     ) -> Result<(ParquetReader, Arc<Counting>), Error> {
         let footer = Footer::read(&Bytes::from(file.clone()))?;
         let source = Arc::new(Counting::new(file));
-        let size = source.data.len() as u64;
         let columns = columns.iter().map(|column| column.to_string()).collect::<Vec<_>>();
         let rows = footer.meta().file_metadata().num_rows() as usize;
         let plan = ReadPlan::from_selection(footer.meta(), selectors.unwrap_or(vec![(rows, false)]))?;
 
         Ok((
-            ParquetReader::open(Arc::clone(&source), size, footer.meta(), &columns, plan, 1_024)?,
+            ParquetReader::open(Arc::clone(&source), footer.meta(), &columns, plan, 1_024)?,
             source,
         ))
     }
@@ -807,7 +893,7 @@ mod tests {
     }
 
     #[test]
-    fn a_window_read_fetches_only_the_projected_chunks_of_its_row_group() {
+    fn a_window_read_fetches_the_offset_index_and_the_projected_chunks_of_its_row_group() {
         let file = four_groups();
         let (reader, source) = open(
             file.clone(),
@@ -817,7 +903,136 @@ mod tests {
         .unwrap();
 
         assert_eq!(drained(reader), 10);
-        assert_eq!(source.counted().1, chunk_bytes(&file, &[2], &[0, 2]));
+        assert_eq!(
+            source.counted().1,
+            offset_index_bytes(&file, &[(2, 0), (2, 2)]) + chunk_bytes(&file, &[2], &[0, 2])
+        );
+    }
+
+    /// The bytes of the offset indexes of the given (group, leaf) chunks.
+    fn offset_index_bytes(file: &[u8], chunks: &[(usize, usize)]) -> usize {
+        let footer = Footer::read(&Bytes::from(file.to_vec())).unwrap();
+
+        chunks
+            .iter()
+            .map(|(group, leaf)| {
+                footer
+                    .meta()
+                    .row_group(*group)
+                    .column(*leaf)
+                    .offset_index_length()
+                    .unwrap() as usize
+            })
+            .sum()
+    }
+
+    /// `s` (Utf8 "v{i % 5}", dictionary encoded) in groups of 100 rows, pages of 10 rows.
+    fn paged_groups(groups: usize) -> Vec<u8> {
+        let schema = Arc::new(Schema::new(vec![Field::new("s", DataType::Utf8, false)]));
+        let mut file = Vec::new();
+        let mut writer = ArrowWriter::try_new(
+            &mut file,
+            Arc::clone(&schema),
+            Some(
+                WriterProperties::builder()
+                    .set_max_row_group_row_count(Some(100))
+                    .set_data_page_row_count_limit(10)
+                    .set_write_batch_size(10)
+                    .build(),
+            ),
+        )
+        .unwrap();
+        writer
+            .write(
+                &RecordBatch::try_new(
+                    schema,
+                    vec![Arc::new(StringArray::from_iter_values(
+                        (0..groups * 100).map(|i| format!("v{}", i % 5)),
+                    ))],
+                )
+                .unwrap(),
+            )
+            .unwrap();
+        writer.close().unwrap();
+
+        file
+    }
+
+    /// Per (group, pages), the group's offset index, its dictionary page and those data pages.
+    fn page_bytes(file: &[u8], pages: &[(usize, &[usize])]) -> usize {
+        let meta = ParquetMetaDataReader::new()
+            .with_offset_index_policy(PageIndexPolicy::Required)
+            .parse_and_finish(&Bytes::from(file.to_vec()))
+            .unwrap();
+
+        offset_index_bytes(file, &pages.iter().map(|(group, _)| (*group, 0)).collect::<Vec<_>>())
+            + pages
+                .iter()
+                .map(|(group, pages)| {
+                    let locations = meta
+                        .page_index()
+                        .unwrap()
+                        .offset_index(*group, 0)
+                        .unwrap()
+                        .page_locations();
+                    let dictionary = locations[0].offset - meta.row_group(*group).column(0).byte_range().0 as i64;
+
+                    dictionary as usize
+                        + pages
+                            .iter()
+                            .map(|page| locations[*page].compressed_page_size as usize)
+                            .sum::<usize>()
+                })
+                .sum::<usize>()
+    }
+
+    fn strings(mut reader: ParquetReader) -> Vec<String> {
+        let mut values = Vec::new();
+
+        while let Some(batch) = reader.next() {
+            let (_, arrays) = batch.unwrap();
+            values.extend(
+                arrays[0]
+                    .as_binary::<i64>()
+                    .iter()
+                    .map(|value| String::from_utf8(value.unwrap().to_vec()).unwrap()),
+            );
+        }
+
+        values
+    }
+
+    #[test]
+    fn a_selection_inside_one_group_fetches_only_the_selected_pages_and_the_dictionary() {
+        let file = paged_groups(1);
+        let (reader, source) = open(file.clone(), &["s"], Some(vec![(35, true), (10, false), (55, true)])).unwrap();
+
+        assert_eq!(
+            strings(reader),
+            (35..45).map(|i| format!("v{}", i % 5)).collect::<Vec<_>>()
+        );
+        assert_eq!(source.counted().1, page_bytes(&file, &[(0, &[3, 4])]));
+    }
+
+    #[test]
+    fn a_selection_spanning_groups_fetches_the_selected_pages_of_each() {
+        let file = paged_groups(3);
+        let (reader, source) = open(file.clone(), &["s"], Some(vec![(95, true), (10, false), (195, true)])).unwrap();
+
+        assert_eq!(
+            strings(reader),
+            (95..105).map(|i| format!("v{}", i % 5)).collect::<Vec<_>>()
+        );
+        assert_eq!(source.counted().1, page_bytes(&file, &[(0, &[9]), (1, &[0])]));
+    }
+
+    #[test]
+    fn an_empty_selection_fetches_nothing() {
+        let file = paged_groups(3);
+        let (reader, source) = open(file, &["s"], Some(vec![(300, true)])).unwrap();
+
+        assert_eq!(drained(reader), 0);
+        assert_eq!(source.counted(), (0, 0));
     }
 
     #[test]

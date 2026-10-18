@@ -71,5 +71,10 @@ function arrow_read_plan(
     int $offset = 0,
     ?int $limit = null,
 ): Flow\Parquet\Reader\ReadPlan {
-    return Flow\Parquet\Reader\ReadPlan::window($file->footer()->rowsNumber(), $offset, $limit);
+    return Flow\Parquet\Reader\ReadPlan::window(
+        $file->footer()->rowsNumber(),
+        new Flow\Parquet\Tests\Double\InMemoryIndexes(),
+        $offset,
+        $limit,
+    );
 }

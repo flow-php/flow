@@ -7,6 +7,7 @@ namespace Flow\Parquet\Writer\PageBuilder\DictionaryBuilder;
 use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\Writer\PageBuilder\Dictionary;
 
+use function count;
 use function is_bool;
 use function is_float;
 use function is_int;
@@ -16,12 +17,12 @@ use function serialize;
 
 final class ScalarDictionaryBuilder
 {
-    public function build(WriteFlatColumnValues $data): Dictionary
+    public function build(WriteFlatColumnValues $data, Dictionary $dictionary = new Dictionary([], [])): Dictionary
     {
-        $dictionary = [];
+        $entries = $dictionary->dictionary;
         $indices = [];
-        $valueToIndex = [];
-        $dictionarySize = 0;
+        $valueToIndex = $dictionary->keys;
+        $dictionarySize = count($entries);
 
         foreach ($data->values() as $value) {
             if ($value === null) {
@@ -39,7 +40,7 @@ final class ScalarDictionaryBuilder
             }
 
             if (!isset($valueToIndex[$key])) {
-                $dictionary[] = $value;
+                $entries[] = $value;
                 $valueToIndex[$key] = $dictionarySize;
                 $dictionarySize++;
             }
@@ -47,6 +48,6 @@ final class ScalarDictionaryBuilder
             $indices[] = $valueToIndex[$key];
         }
 
-        return new Dictionary($dictionary, $indices);
+        return new Dictionary($entries, $indices, $valueToIndex);
     }
 }

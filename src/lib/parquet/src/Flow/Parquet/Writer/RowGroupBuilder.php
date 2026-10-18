@@ -129,15 +129,19 @@ final class RowGroupBuilder
         $offset = $fileOffset;
         $buffer = '';
         $chunks = [];
+        $columnIndexes = [];
+        $offsetIndexes = [];
         $this->flushedRows += $rowsCount;
         $this->rowsCount = 0;
 
         foreach ($this->columnChunkBuilders->flush($offset) as $container) {
             $chunks[] = $container->columnChunk;
+            $columnIndexes[] = $container->columnIndex;
+            $offsetIndexes[] = $container->offsetIndex;
             $buffer .= $container->binaryBuffer;
         }
 
-        return new RowGroupContainer($buffer, new RowGroup($chunks, $rowsCount));
+        return new RowGroupContainer($buffer, new RowGroup($chunks, $rowsCount), $columnIndexes, $offsetIndexes);
     }
 
     public function isEmpty(): bool

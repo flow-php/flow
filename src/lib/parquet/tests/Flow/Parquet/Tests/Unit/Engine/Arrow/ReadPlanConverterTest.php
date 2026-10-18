@@ -6,6 +6,7 @@ namespace Flow\Parquet\Tests\Unit\Engine\Arrow;
 
 use Flow\Parquet\Engine\Arrow\ReadPlanConverter;
 use Flow\Parquet\Reader\ReadPlan;
+use Flow\Parquet\Tests\Double\InMemoryIndexes;
 use PHPUnit\Framework\TestCase;
 
 final class ReadPlanConverterTest extends TestCase
@@ -14,7 +15,7 @@ final class ReadPlanConverterTest extends TestCase
     {
         static::assertSame(
             ['selectors' => [[2, true], [3, false]]],
-            ReadPlanConverter::toExtension(ReadPlan::window(5, 2)),
+            ReadPlanConverter::toExtension(ReadPlan::window(5, new InMemoryIndexes(), 2)),
         );
     }
 }

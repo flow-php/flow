@@ -12,6 +12,7 @@ use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Writer\ColumnChunkBuilder\DeltaBinaryPackedColumnChunkBuilder;
+use Flow\Parquet\Writer\StatisticsOptions;
 use PHPUnit\Framework\TestCase;
 
 final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
@@ -20,7 +21,12 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
     {
         $options = (new Options())->set(Option::WRITER_VERSION, 2);
         $column = new FlatColumn('negative_col', PhysicalType::INT32);
-        $builder = new DeltaBinaryPackedColumnChunkBuilder($column, $options, Compressions::UNCOMPRESSED);
+        $builder = new DeltaBinaryPackedColumnChunkBuilder(
+            $column,
+            $options,
+            Compressions::UNCOMPRESSED,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $negativeValues = [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8];
 
@@ -42,7 +48,12 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
     {
         $options = (new Options())->set(Option::WRITER_VERSION, 2);
         $column = new FlatColumn('sequential_col', PhysicalType::INT32);
-        $builder = new DeltaBinaryPackedColumnChunkBuilder($column, $options, Compressions::UNCOMPRESSED);
+        $builder = new DeltaBinaryPackedColumnChunkBuilder(
+            $column,
+            $options,
+            Compressions::UNCOMPRESSED,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $sequentialValues = range(1, 100);
 
@@ -64,7 +75,12 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
     {
         $options = (new Options())->set(Option::WRITER_VERSION, 2);
         $column = new FlatColumn('timestamp_col', PhysicalType::INT64);
-        $builder = new DeltaBinaryPackedColumnChunkBuilder($column, $options, Compressions::UNCOMPRESSED);
+        $builder = new DeltaBinaryPackedColumnChunkBuilder(
+            $column,
+            $options,
+            Compressions::UNCOMPRESSED,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $baseTimestamp = 1609459200; // 2021-01-01 00:00:00
 
@@ -87,7 +103,12 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
     {
         $options = (new Options())->set(Option::WRITER_VERSION, 2);
         $column = new FlatColumn('workflow_col', PhysicalType::INT32);
-        $builder = new DeltaBinaryPackedColumnChunkBuilder($column, $options, Compressions::UNCOMPRESSED);
+        $builder = new DeltaBinaryPackedColumnChunkBuilder(
+            $column,
+            $options,
+            Compressions::UNCOMPRESSED,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $values = range(1, 50);
 
@@ -113,7 +134,12 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = (new Options())->set(Option::WRITER_VERSION, 2);
-        $builder = new DeltaBinaryPackedColumnChunkBuilder($column, $options, Compressions::UNCOMPRESSED);
+        $builder = new DeltaBinaryPackedColumnChunkBuilder(
+            $column,
+            $options,
+            Compressions::UNCOMPRESSED,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
@@ -136,7 +162,12 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
     {
         $column = new FlatColumn('timestamp_col', PhysicalType::INT64);
         $options = (new Options())->set(Option::WRITER_VERSION, 2);
-        $builder = new DeltaBinaryPackedColumnChunkBuilder($column, $options, Compressions::UNCOMPRESSED);
+        $builder = new DeltaBinaryPackedColumnChunkBuilder(
+            $column,
+            $options,
+            Compressions::UNCOMPRESSED,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $baseTimestamp = 1609459200; // 2021-01-01 00:00:00
         $values = [];
@@ -161,7 +192,12 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
     {
         $column = new FlatColumn('negative_col', PhysicalType::INT32);
         $options = (new Options())->set(Option::WRITER_VERSION, 2);
-        $builder = new DeltaBinaryPackedColumnChunkBuilder($column, $options, Compressions::UNCOMPRESSED);
+        $builder = new DeltaBinaryPackedColumnChunkBuilder(
+            $column,
+            $options,
+            Compressions::UNCOMPRESSED,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $values = [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8];
 
@@ -181,7 +217,12 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
     {
         $column = new FlatColumn('compressed_col', PhysicalType::INT32);
         $options = (new Options())->set(Option::WRITER_VERSION, 2);
-        $builder = new DeltaBinaryPackedColumnChunkBuilder($column, $options, Compressions::GZIP);
+        $builder = new DeltaBinaryPackedColumnChunkBuilder(
+            $column,
+            $options,
+            Compressions::GZIP,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $values = range(100, 200);
 

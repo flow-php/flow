@@ -8,16 +8,17 @@ use DateTimeInterface;
 use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\Writer\PageBuilder\Dictionary;
 
+use function count;
 use function serialize;
 
 final class ObjectDictionaryBuilder
 {
-    public function build(WriteFlatColumnValues $data): Dictionary
+    public function build(WriteFlatColumnValues $data, Dictionary $dictionary = new Dictionary([], [])): Dictionary
     {
-        $dictionary = [];
+        $entries = $dictionary->dictionary;
         $indices = [];
-        $valueToIndex = [];
-        $dictionarySize = 0;
+        $valueToIndex = $dictionary->keys;
+        $dictionarySize = count($entries);
 
         foreach ($data->values() as $value) {
             if ($value === null) {
@@ -31,7 +32,7 @@ final class ObjectDictionaryBuilder
             }
 
             if (!isset($valueToIndex[$hash])) {
-                $dictionary[] = $value;
+                $entries[] = $value;
                 $valueToIndex[$hash] = $dictionarySize;
                 $dictionarySize++;
             }
@@ -39,6 +40,6 @@ final class ObjectDictionaryBuilder
             $indices[] = $valueToIndex[$hash];
         }
 
-        return new Dictionary($dictionary, $indices);
+        return new Dictionary($entries, $indices, $valueToIndex);
     }
 }

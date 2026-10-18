@@ -31,7 +31,7 @@ final class AdaptiveParquetOpenSourceTest extends FlowTestCase
         static::assertInstanceOf(Generator::class, $source->batches(
             schema(int_schema('id')),
             10,
-            (new ReadPlanner())->plan($file->reader()->footer(), null),
+            (new ReadPlanner())->plan($file->reader()->footer(), $file->indexes(), null),
             new PhpBackend(),
         ));
         $source->close();
@@ -48,7 +48,7 @@ final class AdaptiveParquetOpenSourceTest extends FlowTestCase
         static::assertInstanceOf(RustIterator::class, $source->batches(
             schema(int_schema('id')),
             10,
-            (new ReadPlanner())->plan($file->reader()->footer(), null),
+            (new ReadPlanner())->plan($file->reader()->footer(), $file->indexes(), null),
             new PhpBackend(),
         ));
         $source->close();
@@ -68,7 +68,7 @@ final class AdaptiveParquetOpenSourceTest extends FlowTestCase
         static::assertInstanceOf(Generator::class, $source->batches(
             schema(int_schema('id')),
             10,
-            (new ReadPlanner())->plan($file->reader()->footer(), null),
+            (new ReadPlanner())->plan($file->reader()->footer(), $file->indexes(), null),
             new PhpBackend(),
         ));
         $source->close();

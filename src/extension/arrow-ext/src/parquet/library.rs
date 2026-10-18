@@ -15,7 +15,6 @@ use ext_php_rs::types::{ZendClassObject, ZendHashTable, Zval};
 use ext_php_rs::zend::ce;
 use parquet::basic::Type as PhysicalType;
 use parquet::file::metadata::ParquetMetaData;
-use parquet::file::reader::Length;
 
 use crate::interfaces::{footer_ce, parquet_file_reader_ce, parquet_file_writer_ce};
 use crate::parquet::batch;
@@ -150,7 +149,6 @@ impl IntoZval for FooterObject {
 )]
 pub struct RustParquetFileReader {
     stream: Arc<PhpStream>,
-    source: PhpSource,
     footer: Arc<Footer>,
     /// Each leaf's dotted path and its index among the schema's leaves.
     leaves: Arc<HashMap<String, usize>>,
@@ -168,11 +166,11 @@ impl RustParquetFileReader {
         Ok(())
     }
 
-    /// The file's stream, size and footer, for a reader of it: the lib's `RustColumnsReader` or a `RustBatchReader`.
-    pub fn read(&self) -> PhpResult<(&Arc<PhpStream>, u64, &Arc<ParquetMetaData>)> {
+    /// The file's stream and footer, for a reader of it: the lib's `RustColumnsReader` or a `RustBatchReader`.
+    pub fn read(&self) -> PhpResult<(&Arc<PhpStream>, &Arc<ParquetMetaData>)> {
         self.open()?;
 
-        Ok((&self.stream, self.source.len(), self.footer.meta()))
+        Ok((&self.stream, self.footer.meta()))
     }
 
     /// Without `int96AsDatetime`, a requested column (a leaf path, or the path of its parent) holding INT96.
@@ -230,7 +228,6 @@ impl RustParquetFileReader {
 
         Ok(Self {
             stream,
-            source,
             footer: Arc::new(footer),
             leaves: Arc::new(leaves),
             int96_as_datetime: int96AsDatetime,
@@ -527,7 +524,7 @@ impl RustColumnsReader {
         plan: &Zval,
     ) -> PhpResult<Self> {
         let batch_size = self::batch_size(batch_size)?;
-        let (stream, size, meta) = file.read()?;
+        let (stream, meta) = file.read()?;
         let stream = Arc::clone(stream);
         let plan = read_plan(meta, plan, &stream)?;
         let refused = |error| parquet_exception(error, &stream, Side::Read);
@@ -548,7 +545,7 @@ impl RustColumnsReader {
             Ok(())
         })?;
 
-        let reader = ParquetReader::open(Arc::clone(&stream), size, meta, &names, plan, batch_size).map_err(refused)?;
+        let reader = ParquetReader::open(Arc::clone(&stream), meta, &names, plan, batch_size).map_err(refused)?;
         let cells = reader
             .fields()
             .iter()

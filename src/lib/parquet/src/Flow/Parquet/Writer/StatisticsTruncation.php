@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\Writer;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
+use Flow\Parquet\Option;
 use Flow\Parquet\ParquetFile\Schema\ConvertedType;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\LogicalType;
@@ -25,11 +26,10 @@ final readonly class StatisticsTruncation
 {
     public function __construct(
         private int $length,
+        Option $option = Option::STATISTICS_TRUNCATE_LENGTH,
     ) {
         if ($length < 1) {
-            throw new InvalidArgumentException(
-                'STATISTICS_TRUNCATE_LENGTH must be greater than 0, ' . $length . ' given',
-            );
+            throw new InvalidArgumentException($option->name . ' must be greater than 0, ' . $length . ' given');
         }
     }
 

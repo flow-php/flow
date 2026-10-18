@@ -19,6 +19,22 @@ use function pack;
 final class FooterMother
 {
     /**
+     * One row group of $rows rows, the columns' chunks without statistics, under TYPE_DEFINED_ORDER.
+     */
+    public static function oneGroup(int $rows, FlatColumn ...$columns): SpyFooter
+    {
+        return new SpyFooter(
+            Schema::with(...$columns),
+            $rows,
+            [new RowGroup(array_map(static fn(FlatColumn $column) => ColumnChunkMother::withStatistics(
+                $column,
+                null,
+            ), array_values($columns)), $rows)],
+            array_map(static fn(): ColumnOrder => ColumnOrder::TypeDefined, array_values($columns)),
+        );
+    }
+
+    /**
      * An INT64 column `id` in row groups of two rows, one [min, max] per group, under TYPE_DEFINED_ORDER.
      *
      * @param array{int, int} ...$bounds

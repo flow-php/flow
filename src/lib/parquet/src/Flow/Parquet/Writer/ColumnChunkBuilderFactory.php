@@ -23,6 +23,7 @@ final class ColumnChunkBuilderFactory
         FlatColumn $column,
         Options $options,
         Compressions $compressions,
+        StatisticsOptions $statistics,
     ): ColumnChunkBuilder {
         $columnCompression = $compressions;
         $flatPath = $column->flatPath();
@@ -49,7 +50,7 @@ final class ColumnChunkBuilderFactory
                 $encoding = $columnsEncodings[$flatPath];
 
                 if ($encoding instanceof Encodings) {
-                    return self::createForEncoding($column, $encoding, $options, $columnCompression);
+                    return self::createForEncoding($column, $encoding, $options, $columnCompression, $statistics);
                 }
             }
         }
@@ -58,10 +59,10 @@ final class ColumnChunkBuilderFactory
             ($column->type() === PhysicalType::INT32 || $column->type() === PhysicalType::INT64)
             && $options->getInt(Option::WRITER_VERSION) === 2
         ) {
-            return new DeltaBinaryPackedColumnChunkBuilder($column, $options, $columnCompression);
+            return new DeltaBinaryPackedColumnChunkBuilder($column, $options, $columnCompression, $statistics);
         }
 
-        return new PlainFlatColumnChunkBuilder($column, $options, $columnCompression);
+        return new PlainFlatColumnChunkBuilder($column, $options, $columnCompression, $statistics);
     }
 
     private static function createForEncoding(
@@ -69,13 +70,19 @@ final class ColumnChunkBuilderFactory
         Encodings $encoding,
         Options $options,
         Compressions $compressions,
+        StatisticsOptions $statistics,
     ): ColumnChunkBuilder {
         self::validateEncodingForColumn($column, $encoding);
 
         return match ($encoding) {
-            Encodings::PLAIN => new PlainFlatColumnChunkBuilder($column, $options, $compressions),
-            Encodings::RLE_DICTIONARY => new RLEDictionaryChunkBuilder($column, $options, $compressions),
-            Encodings::DELTA_BINARY_PACKED => new DeltaBinaryPackedColumnChunkBuilder($column, $options, $compressions),
+            Encodings::PLAIN => new PlainFlatColumnChunkBuilder($column, $options, $compressions, $statistics),
+            Encodings::RLE_DICTIONARY => new RLEDictionaryChunkBuilder($column, $options, $compressions, $statistics),
+            Encodings::DELTA_BINARY_PACKED => new DeltaBinaryPackedColumnChunkBuilder(
+                $column,
+                $options,
+                $compressions,
+                $statistics,
+            ),
             default => throw new InvalidArgumentException("Unsupported encoding for column builder: {$encoding->name}"),
         };
     }

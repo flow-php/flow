@@ -30,54 +30,69 @@ use function Flow\Filesystem\DSL\path;
 final class PushdownParityTest extends FlowTestCase
 {
     /**
-     * @return Generator<string, array{?ParquetEngine, ScalarFunction, bool}>
+     * @return Generator<string, array{?ParquetEngine, ScalarFunction, bool, array<string, array<string, list<int>>>}>
      */
     public static function predicates(): Generator
     {
         $predicates = [
-            'string range' => [ref('name')->greaterThan(lit('3')), true],
-            'NaN column' => [ref('score')->lessThanEqual(lit(20.0)), true],
-            'decimal(9,2)' => [ref('d92')->greaterThan(lit(15.25)), true],
-            'decimal(18,2)' => [ref('d182')->greaterThan(lit(15.25)), false],
-            'date' => [ref('day')->greaterThanEqual(lit(new DateTimeImmutable('2024-01-21'))), true],
-            'timestamp micros' => [ref('ts_us')->greaterThan(lit(new DateTimeImmutable('2024-01-01 20:30:00'))), true],
+            'string range' => [ref('name')->greaterThan(lit('3')), true, []],
+            'NaN column' => [ref('score')->lessThanEqual(lit(20.0)), true, []],
+            'decimal(9,2)' => [ref('d92')->greaterThan(lit(15.25)), true, []],
+            'decimal(18,2)' => [ref('d182')->greaterThan(lit(15.25)), false, []],
+            'date' => [ref('day')->greaterThanEqual(lit(new DateTimeImmutable('2024-01-21'))), true, []],
+            'timestamp micros' => [
+                ref('ts_us')->greaterThan(lit(new DateTimeImmutable('2024-01-01 20:30:00'))),
+                true,
+                [],
+            ],
             'a date literal on a timestamp column' => [
                 ref('ts_us')->greaterThanEqual(lit(new DateTimeImmutable('2024-01-02'))),
                 true,
+                [],
             ],
             'a datetime literal above a date column' => [
                 ref('day')->greaterThan(lit(new DateTimeImmutable('2024-01-20 12:00:00'))),
                 true,
+                [],
             ],
             'a datetime literal below a date column' => [
                 ref('day')->lessThanEqual(lit(new DateTimeImmutable('2024-01-20 12:00:00'))),
                 true,
+                [],
             ],
-            'timestamp nanos' => [ref('ts_ns')->greaterThan(lit(new DateTimeImmutable('2024-01-01 20:30:00'))), true],
-            'uuid' => [ref('uuid')->equals(lit(new Uuid('00000000-0000-4000-8000-000000000025'))), true],
+            'timestamp nanos' => [
+                ref('ts_ns')->greaterThan(lit(new DateTimeImmutable('2024-01-01 20:30:00'))),
+                true,
+                [],
+            ],
+            'uuid' => [ref('uuid')->equals(lit(new Uuid('00000000-0000-4000-8000-000000000025'))), true, []],
             'a negated is in holding null, or an equality' => [
                 not(ref('id')->isIn(lit([1, null])))->or(ref('id')->equals(lit(5))),
                 false,
+                ['memory://parity/a.parquet' => ['id' => [0]]],
             ],
-            'absent column equals' => [ref('extra')->equals(lit('x')), true],
-            'absent column is null' => [ref('extra')->isNull(), true],
+            'absent column equals' => [ref('extra')->equals(lit('x')), true, []],
+            'absent column is null' => [ref('extra')->isNull(), true, []],
         ];
 
         foreach (['default engine' => null, 'php engine' => new PhpParquetEngine()] as $engineName => $engine) {
-            foreach ($predicates as $name => [$predicate, $prunes]) {
-                yield $engineName . ', ' . $name => [$engine, $predicate, $prunes];
+            foreach ($predicates as $name => [$predicate, $prunes, $pageIndexed]) {
+                yield $engineName . ', ' . $name => [$engine, $predicate, $prunes, $pageIndexed];
             }
         }
     }
 
     /**
      * @param bool $prunes true when the predicate skips a row group, false when it skips none
+     * @param array<string, array<string, list<int>>> $pageIndexed by file, the predicate columns and the row groups whose
+     *                                                page index the plan reads although it skips nothing
      */
     #[DataProvider('predicates')]
     public function test_a_pushed_predicate_returns_what_the_unpushed_one_returns(
         ?ParquetEngine $engine,
         ScalarFunction $predicate,
         bool $prunes,
+        array $pageIndexed,
     ): void {
         $memory = memory_filesystem();
         PushdownParityContext::write($memory);
@@ -115,7 +130,8 @@ final class PushdownParityTest extends FlowTestCase
             );
         } else {
             static::assertSame(
-                ParquetFilesContext::bytesRead($plainFilesystem),
+                ParquetFilesContext::bytesRead($plainFilesystem)
+                + ParquetFilesContext::pageIndexBytes($memory, $pageIndexed),
                 ParquetFilesContext::bytesRead($pushedFilesystem),
             );
         }

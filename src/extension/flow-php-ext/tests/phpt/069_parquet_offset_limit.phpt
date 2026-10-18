@@ -18,6 +18,7 @@ use Flow\Parquet\Reader\ReadPlan;
 
 use function Flow\ETL\DSL\{array_to_rows, int_schema, schema};
 use function Flow\Filesystem\DSL\{memory_filesystem, path};
+use Flow\Parquet\Tests\Double\InMemoryIndexes;
 
 $filesystem = memory_filesystem();
 $schema = schema(int_schema('id'));
@@ -56,7 +57,7 @@ foreach ([0, -1] as $batchSize) {
     echo outcome(static fn() => rust_parquet_batches($filesystem->readFrom(path('memory://groups.parquet')), $schema, $batchSize)), "\n";
 }
 
-echo outcome(static fn() => (new RustParquetOpenSource(new RustParquetFileReader($filesystem->readFrom(path('memory://groups.parquet')))))->batches($schema, 10, ReadPlan::window(100), new RustBackend())), "\n";
+echo outcome(static fn() => (new RustParquetOpenSource(new RustParquetFileReader($filesystem->readFrom(path('memory://groups.parquet')))))->batches($schema, 10, ReadPlan::window(100, new InMemoryIndexes()), new RustBackend())), "\n";
 ?>
 --EXPECT--
 row groups: 8192,8192,8192,8192,8192,8192,8192,8192

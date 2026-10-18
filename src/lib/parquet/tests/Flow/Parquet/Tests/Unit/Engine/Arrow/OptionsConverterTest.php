@@ -9,6 +9,7 @@ use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Encodings;
+use Flow\Parquet\Writer\StatisticsLevel;
 use PHPUnit\Framework\TestCase;
 
 final class OptionsConverterTest extends TestCase
@@ -52,6 +53,19 @@ final class OptionsConverterTest extends TestCase
                 8,
             ))['STATISTICS_TRUNCATE_LENGTH'],
         );
+    }
+
+    public function test_page_index_options_are_mapped_with_the_statistics_level_by_name(): void
+    {
+        $result = OptionsConverter::toExtension((new Options())->set(
+            Option::STATISTICS_LEVEL,
+            StatisticsLevel::CHUNK,
+        )->set(Option::COLUMN_INDEX_TRUNCATE_LENGTH, 16)->set(Option::PAGE_HEADER_STATISTICS, true));
+
+        static::assertSame('CHUNK', $result['STATISTICS_LEVEL']);
+        static::assertSame(16, $result['COLUMN_INDEX_TRUNCATE_LENGTH']);
+        static::assertTrue($result['PAGE_HEADER_STATISTICS']);
+        static::assertSame('PAGE', OptionsConverter::toExtension(new Options())['STATISTICS_LEVEL']);
     }
 
     public function test_columns_compressions_maps_enum_names(): void

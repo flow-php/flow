@@ -9,16 +9,24 @@ use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile;
+use Flow\Parquet\ParquetFile\Page\ColumnPageHeader;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Flow\Parquet\Reader;
+use Flow\Parquet\Reader\ReadPlan;
+use Flow\Parquet\Tests\Context\MemoryParquetFile;
+use Flow\Parquet\Tests\Double\ReadCountingSourceStream;
 use Flow\Parquet\Tests\Double\SpyParquetFileReader;
-use Flow\Parquet\Tests\Mother\ReadPlanMother;
+use Flow\Parquet\Writer;
 use PHPUnit\Framework\TestCase;
 
+use function array_column;
+use function array_map;
 use function Flow\Parquet\DSL\parquet_column;
 use function Flow\Parquet\DSL\parquet_query;
 use function iterator_to_array;
+use function range;
 
 final class ParquetFileTest extends TestCase
 {
@@ -85,7 +93,7 @@ final class ParquetFileTest extends TestCase
             [['name' => ['a'], 'id' => [1]]],
             iterator_to_array($file->columns(parquet_query()->select('name', 'id')->offset(2)->limit(5), 10), false),
         );
-        static::assertEquals([[['name', 'id'], 10, ReadPlanMother::window(10, 2, 5)]], $reader->reads);
+        static::assertEquals([[['name', 'id'], 10, ReadPlan::window(10, $file->indexes(), 2, 5)]], $reader->reads);
     }
 
     public function test_columns_without_a_selection_reads_every_root_column(): void
@@ -95,7 +103,7 @@ final class ParquetFileTest extends TestCase
 
         iterator_to_array($file->columns());
 
-        static::assertEquals([[['id', 'name'], 1024, ReadPlanMother::window(4)]], $reader->reads);
+        static::assertEquals([[['id', 'name'], 1024, ReadPlan::window(4, $file->indexes())]], $reader->reads);
     }
 
     public function test_columns_refuses_a_column_the_schema_lacks(): void
@@ -219,5 +227,100 @@ final class ParquetFileTest extends TestCase
         $this->expectExceptionMessage('Column "id" (INT64) cannot hold the string literal \'1\'');
 
         iterator_to_array($file->values(parquet_query()->where(parquet_column('id')->equals('1'))));
+    }
+
+    public function test_page_headers_are_each_column_chunk_pages_labelled_with_its_column(): void
+    {
+        $file = MemoryParquetFile::read(Reader::php(), MemoryParquetFile::written(
+            Writer::php(),
+            Schema::with(FlatColumn::int64('id'), FlatColumn::string('name')),
+            [['id' => 1, 'name' => 'a'], ['id' => 2, 'name' => 'b']],
+        ));
+
+        static::assertSame(
+            [['id', 'id'], ['name', 'name']],
+            array_map(
+                static fn(ColumnPageHeader $header): array => [
+                    $header->column->flatPath(),
+                    $header->columnChunk->flatPath(),
+                ],
+                iterator_to_array($file->pageHeaders(), false),
+            ),
+        );
+    }
+
+    public function test_the_page_indexes_are_built_once(): void
+    {
+        $file = new ParquetFile(
+            new MemorySourceStream('PAR1'),
+            new Options(),
+            new SpyParquetFileReader(Schema::with(FlatColumn::int64('id'))),
+        );
+
+        static::assertSame($file->indexes(), $file->indexes());
+    }
+
+    public function test_a_filtered_read_reads_each_offset_index_once(): void
+    {
+        $bytes = MemoryParquetFile::pagedColumns();
+        $footerOnly = new ReadCountingSourceStream(new MemorySourceStream($bytes));
+        $footerFile = Reader::php()->readStream($footerOnly);
+        $footerFile->reader()->footer();
+        $stream = new ReadCountingSourceStream(new MemorySourceStream($bytes));
+        $file = Reader::php()->readStream($stream);
+        $id = $file->schema()->getFlat('id');
+        $chunk = $file->metadata()->rowGroups()->all()[0]->getColumnChunk($id);
+        $pages = $file->indexes()->offsetIndex(0, $id)->pages ?? static::fail('No offset index');
+        $read = $stream->bytes;
+
+        static::assertSame(
+            range(5, 11),
+            array_column(
+                iterator_to_array(
+                    $file->values(parquet_query()->select('id')->where(parquet_column('id')->greaterThanOrEqual(5))),
+                    false,
+                ),
+                'id',
+            ),
+        );
+        static::assertSame(
+            $footerOnly->bytes
+            + (int) $chunk->columnIndex()?->length
+            + (int) $chunk->offsetIndex()?->length
+            + $pages[2]->compressedPageSize
+            + $pages[3]->compressedPageSize
+            + $pages[4]->compressedPageSize
+            + $pages[5]->compressedPageSize,
+            $stream->bytes,
+        );
+        static::assertSame($footerOnly->bytes + (int) $chunk->offsetIndex()?->length, $read);
+    }
+
+    public function test_an_unfiltered_window_reads_only_the_pages_it_selects(): void
+    {
+        $bytes = MemoryParquetFile::pagedColumns();
+        $footerOnly = new ReadCountingSourceStream(new MemorySourceStream($bytes));
+        $footerFile = Reader::php()->readStream($footerOnly);
+        $footerFile->reader()->footer();
+        $stream = new ReadCountingSourceStream(new MemorySourceStream($bytes));
+        $file = Reader::php()->readStream($stream);
+        $id = $file->schema()->getFlat('id');
+        $chunk = $file->metadata()->rowGroups()->all()[0]->getColumnChunk($id);
+        $pages = $file->indexes()->offsetIndex(0, $id)->pages ?? static::fail('No offset index');
+
+        static::assertSame(
+            [5, 6],
+            array_column(
+                iterator_to_array($file->values(parquet_query()->select('id')->offset(5)->limit(2)), false),
+                'id',
+            ),
+        );
+        static::assertSame(
+            $footerOnly->bytes
+            + (int) $chunk->offsetIndex()?->length
+            + $pages[2]->compressedPageSize
+            + $pages[3]->compressedPageSize,
+            $stream->bytes,
+        );
     }
 }

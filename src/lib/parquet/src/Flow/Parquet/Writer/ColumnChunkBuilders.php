@@ -32,13 +32,19 @@ final class ColumnChunkBuilders
     {
         $builders = [];
         $flatBuilders = [];
+        $statistics = StatisticsOptions::fromOptions($options);
 
         foreach ($schema->columns() as $column) {
             if ($column instanceof NestedColumn) {
                 $childBuilders = [];
 
                 foreach ($column->childrenFlat() as $flatChild) {
-                    $builder = ColumnChunkBuilderFactory::createBuilder($flatChild, $options, $compressions);
+                    $builder = ColumnChunkBuilderFactory::createBuilder(
+                        $flatChild,
+                        $options,
+                        $compressions,
+                        $statistics,
+                    );
                     $childBuilders[$flatChild->flatPath()] = $builder;
                     $flatBuilders[$flatChild->flatPath()] = $builder;
                 }
@@ -46,7 +52,7 @@ final class ColumnChunkBuilders
                 $builders[$column->name()] = new NestedColumnChunkBuilder($column, $childBuilders);
             } else {
                 /** @var FlatColumn $column */
-                $builder = ColumnChunkBuilderFactory::createBuilder($column, $options, $compressions);
+                $builder = ColumnChunkBuilderFactory::createBuilder($column, $options, $compressions, $statistics);
                 $builders[$column->name()] = $builder;
                 $flatBuilders[$column->flatPath()] = $builder;
             }

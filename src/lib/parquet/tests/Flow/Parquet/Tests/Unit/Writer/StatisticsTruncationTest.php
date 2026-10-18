@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Unit\Writer;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
+use Flow\Parquet\Option;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Tests\Mother\FlatColumnMother;
@@ -134,6 +135,14 @@ final class StatisticsTruncationTest extends TestCase
         $this->expectExceptionMessage('STATISTICS_TRUNCATE_LENGTH must be greater than 0, ' . $length . ' given');
 
         new StatisticsTruncation($length);
+    }
+
+    public function test_a_refused_length_names_the_option_it_came_from(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('COLUMN_INDEX_TRUNCATE_LENGTH must be greater than 0, 0 given');
+
+        new StatisticsTruncation(0, Option::COLUMN_INDEX_TRUNCATE_LENGTH);
     }
 
     #[DataProvider('not_incrementable_utf8')]

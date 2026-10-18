@@ -9,9 +9,15 @@ use Flow\Filesystem\Exception\RuntimeException as FilesystemRuntimeException;
 use Flow\Filesystem\Stream\NativeLocalDestinationStream;
 use Flow\Filesystem\Tests\Double\FailingCloseDestinationStream;
 use Flow\Parquet\Engine\PhpParquetEngine;
+use Flow\Parquet\Engine\RustParquetEngine;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile;
 use Flow\Parquet\ParquetFile\ColumnOrder;
+use Flow\Parquet\ParquetFile\Page\ColumnPageHeader;
+use Flow\Parquet\ParquetFile\PageIndex\BoundaryOrder;
+use Flow\Parquet\ParquetFile\PageIndex\ColumnIndex;
+use Flow\Parquet\ParquetFile\PageIndex\PageLocation;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\ConvertedType;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
@@ -25,22 +31,31 @@ use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\ParquetFile\Schema\TimeUnit;
 use Flow\Parquet\Reader;
+use Flow\Parquet\Tests\Context\MemoryParquetFile;
 use Flow\Parquet\Tests\Context\ParquetRows;
 use Flow\Parquet\Tests\Context\StructWithLists;
 use Flow\Parquet\Tests\Context\TestParquetFile;
 use Flow\Parquet\Tests\Mother\ParquetEngineMother;
 use Flow\Parquet\Writer;
+use Flow\Parquet\Writer\StatisticsLevel;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
 
 use function array_combine;
 use function array_map;
+use function array_unique;
+use function array_values;
+use function count;
+use function extension_loaded;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function fopen;
 use function iterator_to_array;
+use function pack;
 use function range;
+use function str_repeat;
+use function unpack;
 use function var_export;
 
 use const NAN;
@@ -507,7 +522,7 @@ class WriterTest extends ParquetIntegrationTestCase
 
     public function test_writing_data_page_v2_statistics(): void
     {
-        $options = Options::default()->set(Option::WRITER_VERSION, 2);
+        $options = Options::default()->set(Option::WRITER_VERSION, 2)->set(Option::PAGE_HEADER_STATISTICS, true);
         $writer = Writer::php(options: $options);
 
         $path = TestParquetFile::path($this);
@@ -521,7 +536,7 @@ class WriterTest extends ParquetIntegrationTestCase
             ->pageHeaders() as $pageHeader) {
             $dataPageHeaderV2 = $pageHeader->pageHeader->dataPageHeaderV2();
             static::assertNotNull($dataPageHeaderV2);
-            $statistics = $dataPageHeaderV2->statistics($options);
+            $statistics = $dataPageHeaderV2->statistics();
             static::assertNotNull($statistics);
 
             static::assertSame(1, $statistics->min($column));
@@ -858,6 +873,153 @@ class WriterTest extends ParquetIntegrationTestCase
                     ->read($path)
                     ->values(),
             ),
+        );
+    }
+
+    public function test_the_page_index_is_written_and_reads_back_on_both_engines(): void
+    {
+        $bytes = MemoryParquetFile::written(
+            Writer::php(options: (new Options())->set(Option::PAGE_SIZE_BYTES, 8)->set(
+                Option::PAGE_SIZE_CHECK_INTERVAL,
+                2,
+            )),
+            Schema::with($id = FlatColumn::int64('id'), $name = FlatColumn::string('name')),
+            array_map(
+                static fn(int $i): array => ['id' => $i, 'name' => ($i % 3) === 0 ? null : 'n' . $i],
+                range(0, 5),
+            ),
+        );
+        $file = MemoryParquetFile::read(Reader::php(), $bytes);
+
+        static::assertEquals(
+            new ColumnIndex(
+                [false, false, false],
+                [pack('P', 0), pack('P', 2), pack('P', 4)],
+                [pack('P', 1), pack('P', 3), pack('P', 5)],
+                BoundaryOrder::ASCENDING,
+                [0, 0, 0],
+            ),
+            $file->indexes()->columnIndex(0, $id),
+        );
+        static::assertEquals(
+            new ColumnIndex(
+                [false, false, false],
+                ['n1', 'n2', 'n4'],
+                ['n1', 'n2', 'n5'],
+                BoundaryOrder::ASCENDING,
+                [1, 1, 0],
+            ),
+            $file->indexes()->columnIndex(0, $name),
+        );
+        static::assertSame(
+            [0, 2, 4],
+            array_map(
+                static fn(PageLocation $page): int => $page->firstRowIndex,
+                $file->indexes()->offsetIndex(0, $name)->pages ?? [],
+            ),
+        );
+
+        if (extension_loaded('arrow')) {
+            static::assertSame(
+                iterator_to_array($file->values(), false),
+                iterator_to_array(
+                    MemoryParquetFile::read(new Reader(engine: new RustParquetEngine()), $bytes)->values(),
+                    false,
+                ),
+            );
+        }
+    }
+
+    public function test_pages_of_a_list_column_start_at_row_boundaries(): void
+    {
+        $file = MemoryParquetFile::read(Reader::php(), MemoryParquetFile::written(
+            Writer::php(options: (new Options())->set(Option::PAGE_SIZE_BYTES, 16)->set(
+                Option::PAGE_SIZE_CHECK_INTERVAL,
+                1,
+            )),
+            Schema::with($id = FlatColumn::int64('id'), NestedColumn::list('tags', ListElement::int64())),
+            array_map(static fn(int $i): array => ['id' => $i, 'tags' => range(0, $i % 4)], range(0, 19)),
+        ));
+        $element = $file->schema()->getFlat('tags.list.element');
+        $pages = $file->indexes()->offsetIndex(0, $element)->pages ?? [];
+        $firstRows = array_map(static fn(PageLocation $page): int => $page->firstRowIndex, $pages);
+        $ids = $file->indexes()->columnIndex(0, $id);
+
+        static::assertGreaterThan(1, count($pages));
+        static::assertSame($firstRows, array_values(array_unique($firstRows)));
+        static::assertSame($firstRows, array_map(
+            static fn(PageLocation $page): int => $page->firstRowIndex,
+            $file->indexes()->offsetIndex(0, $id)->pages ?? [],
+        ));
+        static::assertSame($firstRows, array_map(
+            static fn(string $min): int => unpack('P', $min)[1],
+            $ids->minValues ?? [],
+        ));
+    }
+
+    public function test_column_index_bounds_are_truncated_to_64_bytes(): void
+    {
+        $file = MemoryParquetFile::read(Reader::php(), MemoryParquetFile::written(
+            Writer::php(),
+            Schema::with($name = FlatColumn::string('name')),
+            [['name' => str_repeat('a', 100)], ['name' => str_repeat('b', 100)]],
+        ));
+
+        static::assertSame([str_repeat('a', 64)], $file->indexes()->columnIndex(0, $name)?->minValues);
+        static::assertSame([str_repeat('b', 63) . 'c'], $file->indexes()->columnIndex(0, $name)?->maxValues);
+    }
+
+    public function test_the_statistics_level_decides_chunk_statistics_and_the_column_index(): void
+    {
+        $written =
+            static fn(StatisticsLevel $level): ParquetFile => MemoryParquetFile::read(Reader::php(), MemoryParquetFile::written(
+                Writer::php(options: (new Options())->set(Option::STATISTICS_LEVEL, $level)),
+                Schema::with(FlatColumn::int64('id')),
+                [['id' => 1], ['id' => 2]],
+            ));
+        $id = FlatColumn::int64('id');
+
+        foreach ([
+            [StatisticsLevel::NONE,  false, false],
+            [StatisticsLevel::CHUNK, true,  false],
+            [StatisticsLevel::PAGE,  true,  true],
+        ] as [$level, $chunk, $page]) {
+            $file = $written($level);
+
+            static::assertSame(
+                $chunk,
+                $file->metadata()->rowGroups()->all()[0]->columnChunks()[0]->statistics() !== null,
+            );
+            static::assertSame($page, $file->indexes()->columnIndex(0, $id) !== null);
+            static::assertNotNull($file->indexes()->offsetIndex(0, $id));
+        }
+    }
+
+    public function test_page_header_statistics_are_written_only_when_asked(): void
+    {
+        $headers = static fn(Options $options): array => array_map(
+            static fn(ColumnPageHeader $header) => $header->pageHeader->dataPageHeader()?->statistics(),
+            iterator_to_array(
+                MemoryParquetFile::read(Reader::php(), MemoryParquetFile::written(
+                    Writer::php(options: $options),
+                    Schema::with(FlatColumn::int64('id')),
+                    [['id' => 1], ['id' => 2]],
+                ))->pageHeaders(),
+                false,
+            ),
+        );
+
+        static::assertSame([null], $headers(new Options()));
+        static::assertSame(
+            2,
+            $headers((new Options())->set(Option::PAGE_HEADER_STATISTICS, true))[0]?->maxValue(FlatColumn::int64('id')),
+        );
+        static::assertSame(
+            [null],
+            $headers((new Options())->set(Option::PAGE_HEADER_STATISTICS, true)->set(
+                Option::STATISTICS_LEVEL,
+                StatisticsLevel::CHUNK,
+            )),
         );
     }
 }

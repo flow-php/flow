@@ -68,14 +68,12 @@ enum Option
     case COLUMNS_ENCODINGS;
 
     /**
-     * Whenever cardinality ratio of the dictionary goes below this value, PagesBuilders is going to fallback to PLAIN encoding.
-     * Cardinality ration is calculated as distinct values / total values.
-     * Please notice that even when cardinality ration is above this value, PageBuilder will still fallback to PLAIN encoding
-     * when dictionary size gets above DICTIONARY_PAGE_SIZE.
+     * Column index bounds of BYTE_ARRAY and FIXED_LEN_BYTE_ARRAY columns are truncated to this many bytes, as
+     * STATISTICS_TRUNCATE_LENGTH truncates column chunk statistics (arrow-rs set_column_index_truncate_length).
      *
-     * Default value 0.4 (40% of the total values is distinct)
+     * Default value is 64
      */
-    case DICTIONARY_PAGE_MIN_CARDINALITY_RATION;
+    case COLUMN_INDEX_TRUNCATE_LENGTH;
 
     /**
      * Whenever size of the dictionary goes above this value, PagesBuilders is going to fallback to PLAIN encoding.
@@ -113,6 +111,14 @@ enum Option
      * Default value is 4
      */
     case LZ4_COMPRESSION_LEVEL;
+
+    /**
+     * Data page headers carry the page's statistics when the statistics level is PAGE, as arrow-rs
+     * set_write_page_header_statistics. Readers prune pages through the column index instead.
+     *
+     * Default value is false
+     */
+    case PAGE_HEADER_STATISTICS;
 
     /**
      * PageBuilder is going to use this value to determine how many rows should be stored in one page.
@@ -161,6 +167,14 @@ enum Option
      * Default value is 1000
      */
     case ROW_GROUP_SIZE_CHECK_INTERVAL;
+
+    /**
+     * A Writer\StatisticsLevel: NONE writes no statistics, CHUNK writes column chunk statistics, PAGE also writes a
+     * column index (per page min, max, null and NaN counts). The offset index is written at every level.
+     *
+     * Default value is StatisticsLevel::PAGE
+     */
+    case STATISTICS_LEVEL;
 
     /**
      * Column chunk and page statistics of BYTE_ARRAY and FIXED_LEN_BYTE_ARRAY columns are truncated to this many bytes,

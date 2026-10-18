@@ -14,6 +14,7 @@ use Flow\Parquet\Reader\ReadPlan;
 use Flow\Parquet\Reader\RowSelection;
 use Flow\Parquet\Reader\RowSelector;
 use Flow\Parquet\Tests\Context\MemoryParquetFile;
+use Flow\Parquet\Tests\Double\InMemoryIndexes;
 use Flow\Parquet\Tests\Double\ReadCountingSourceStream;
 use Flow\Parquet\Tests\Mother\ReadPlanMother;
 use PHPUnit\Framework\Attributes\TestWith;
@@ -74,7 +75,10 @@ final class PhpParquetFileReaderTest extends TestCase
         static::assertSame(
             [[1, 2, 5, 6]],
             array_column(
-                iterator_to_array($prunedReader->readColumns(['id'], 10, new ReadPlan($selection, $selection)), false),
+                iterator_to_array(
+                    $prunedReader->readColumns(['id'], 10, new ReadPlan($selection, $selection, new InMemoryIndexes())),
+                    false,
+                ),
                 'id',
             ),
         );

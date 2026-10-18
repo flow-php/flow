@@ -6,7 +6,10 @@ namespace Flow\Parquet;
 
 use Flow\Filesystem\SizeUnits;
 use Flow\Parquet\Exception\InvalidArgumentException;
+use Flow\Parquet\Writer\StatisticsLevel;
+use UnitEnum;
 
+use function get_debug_type;
 use function gettype;
 use function is_array;
 use function is_bool;
@@ -16,7 +19,7 @@ use function is_string;
 final class Options
 {
     /**
-     * @var array<string, null|array<mixed>|bool|float|int|string>
+     * @var array<string, null|array<mixed>|bool|float|int|string|UnitEnum>
      */
     private array $options;
 
@@ -31,9 +34,11 @@ final class Options
             Option::PAGE_SIZE_CHECK_INTERVAL->name => 100,
             Option::ROW_GROUP_SIZE_BYTES->name => SizeUnits::MiB_SIZE * 32,
             Option::ROW_GROUP_SIZE_CHECK_INTERVAL->name => 1000,
+            Option::STATISTICS_LEVEL->name => StatisticsLevel::PAGE,
             Option::STATISTICS_TRUNCATE_LENGTH->name => 64,
+            Option::COLUMN_INDEX_TRUNCATE_LENGTH->name => 64,
+            Option::PAGE_HEADER_STATISTICS->name => false,
             Option::DICTIONARY_PAGE_SIZE->name => SizeUnits::MiB_SIZE,
-            Option::DICTIONARY_PAGE_MIN_CARDINALITY_RATION->name => 0.4,
             Option::BROTLI_COMPRESSION_LEVEL->name => 11,
             Option::GZIP_COMPRESSION_LEVEL->name => 9,
             Option::LZ4_COMPRESSION_LEVEL->name => 4,
@@ -51,9 +56,9 @@ final class Options
     }
 
     /**
-     * @return null|array<mixed>|bool|float|int|string
+     * @return null|array<mixed>|bool|float|int|string|UnitEnum
      */
-    public function get(Option $option): bool|int|float|string|array|null
+    public function get(Option $option): bool|int|float|string|array|UnitEnum|null
     {
         return $this->options[$option->name];
     }
@@ -82,6 +87,26 @@ final class Options
 
         if (!is_bool($value)) {
             throw new InvalidArgumentException("Option {$option->name} is not a boolean, but: " . gettype($value));
+        }
+
+        return $value;
+    }
+
+    /**
+     * @template T of UnitEnum
+     *
+     * @param class-string<T> $class
+     *
+     * @return T
+     */
+    public function getEnum(Option $option, string $class): UnitEnum
+    {
+        $value = $this->options[$option->name];
+
+        if (!$value instanceof $class) {
+            throw new InvalidArgumentException(
+                "Option {$option->name} is not a {$class}, but: " . get_debug_type($value),
+            );
         }
 
         return $value;
@@ -117,9 +142,9 @@ final class Options
     }
 
     /**
-     * @param null|array<mixed>|bool|float|int|string $value
+     * @param null|array<mixed>|bool|float|int|string|UnitEnum $value
      */
-    public function set(Option $option, bool|int|float|string|array|null $value): self
+    public function set(Option $option, bool|int|float|string|array|UnitEnum|null $value): self
     {
         $this->options[$option->name] = $value;
 

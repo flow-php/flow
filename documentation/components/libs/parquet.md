@@ -223,9 +223,10 @@ foreach ($file->values($query) as $row) {
 }
 ```
 
-The rows returned are exactly the matching ones; offset and limit count matching rows. Row groups whose statistics
-prove no row matches are never read (both engines skip the same groups), and the read stops at the limit. A second
-`where()` narrows the first.
+The rows returned are exactly the matching ones; offset and limit count matching rows. Row groups and pages whose
+statistics (column chunk statistics, the [page index](#page-index)) prove no row matches are never read - both engines
+skip the same ones and read a kept page's bytes alone - and the read stops at the limit. A second `where()` narrows the
+first.
 
 | Method on `parquet_column($path)`                                            | Filter                   |
 |------------------------------------------------------------------------------|--------------------------|
@@ -366,15 +367,18 @@ $writer->close();
 
 ### Writer Options
 
-- `DICTIONARY_PAGE_MIN_CARDINALITY_RATION` - default '0.4' - minimum ratio of unique values to total values for a column
-  to have dictionary encoding.
-- `DICTIONARY_PAGE_SIZE` - default: `1Mb` - maximum size of dictionary page.
+- `COLUMN_INDEX_TRUNCATE_LENGTH` - default: `64` - bytes a string/binary page's min/max in the column index are cut to.
+- `DICTIONARY_PAGE_SIZE` - default: `1Mb` - maximum size of dictionary page; the pages of a column chunk after it is
+  reached are written `PLAIN`.
 - `GZIP_COMPRESSION_LEVEL` - default: `9` - compression level for GZIP compression (applied only when GZIP compression
   is enabled).
+- `PAGE_HEADER_STATISTICS` - default: `false` - data page headers carry the page's statistics (at `StatisticsLevel::PAGE`).
 - `PAGE_SIZE_BYTES` - default: `128Kb` - maximum size of data page.
 - `ROW_GROUP_SIZE_BYTES` - default: `32Mb` - maximum size of row group.
 - `ROW_GROUP_SIZE_CHECK_INTERVAL` default: `1000` - number of rows to write before checking if row group size limit is
   reached.
+- `STATISTICS_LEVEL` - default: `StatisticsLevel::PAGE` - `NONE`, `CHUNK` (column chunk statistics) or `PAGE` (also a
+  column index); the offset index is written at every level.
 - `STATISTICS_TRUNCATE_LENGTH` - default: `64` - bytes a string/binary column chunk's min/max statistics are cut to.
 - `VALIDATE_DATA` - default: `true` - if set to `true` then writer will validate data against schema.
 - `WRITER_VERSION` - default `1` - tells writer which version of parquet format should be used.
@@ -444,6 +448,27 @@ $metadata->columnOrder($column);            // ColumnOrder::TypeDefined; ColumnO
 
 Strings and binaries longer than `STATISTICS_TRUNCATE_LENGTH` keep a prefix as the min and an incremented prefix as the
 max. Decimals and FLOAT16 are never truncated.
+
+### Page index
+
+Both writers write a column index (each page's min, max, null and NaN counts) and an offset index (where each page
+starts, and its first row) by default. Pages start on row boundaries, lists included.
+
+```php
+<?php
+
+use Flow\Parquet\{Option, Options, Reader, Writer};
+use Flow\Parquet\Writer\StatisticsLevel;
+
+(new Writer(options: Options::default()->set(Option::STATISTICS_LEVEL, StatisticsLevel::CHUNK)))
+    ->write(__DIR__ . '/orders.parquet', $schema, $rows);   // no column index; NONE also drops chunk statistics
+
+$file = (new Reader())->read(__DIR__ . '/orders.parquet');
+$column = $file->schema()->getFlat('customer');
+
+$file->indexes()->columnIndex(0, $column);       // ?ColumnIndex of row group 0: nullPages, minValues, maxValues, ...
+$file->indexes()->offsetIndex(0, $column);       // ?OffsetIndex: pages[i]->offset, compressedPageSize, firstRowIndex
+```
 
 ## Compressions
 

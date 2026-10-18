@@ -8,6 +8,7 @@ use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Encodings;
+use Flow\Parquet\Writer\StatisticsLevel;
 
 final class OptionsConverter
 {
@@ -36,14 +37,16 @@ final class OptionsConverter
         $result = [];
 
         $mappings = [
-            [Option::GZIP_COMPRESSION_LEVEL,     'GZIP_COMPRESSION_LEVEL'],
-            [Option::BROTLI_COMPRESSION_LEVEL,   'BROTLI_COMPRESSION_LEVEL'],
-            [Option::ZSTD_COMPRESSION_LEVEL,     'ZSTD_COMPRESSION_LEVEL'],
-            [Option::ROW_GROUP_SIZE_BYTES,       'ROW_GROUP_SIZE_BYTES'],
-            [Option::PAGE_SIZE_BYTES,            'PAGE_SIZE_BYTES'],
-            [Option::DICTIONARY_PAGE_SIZE,       'DICTIONARY_PAGE_SIZE'],
-            [Option::WRITER_VERSION,             'WRITER_VERSION'],
-            [Option::STATISTICS_TRUNCATE_LENGTH, 'STATISTICS_TRUNCATE_LENGTH'],
+            [Option::GZIP_COMPRESSION_LEVEL,       'GZIP_COMPRESSION_LEVEL'],
+            [Option::BROTLI_COMPRESSION_LEVEL,     'BROTLI_COMPRESSION_LEVEL'],
+            [Option::ZSTD_COMPRESSION_LEVEL,       'ZSTD_COMPRESSION_LEVEL'],
+            [Option::ROW_GROUP_SIZE_BYTES,         'ROW_GROUP_SIZE_BYTES'],
+            [Option::PAGE_SIZE_BYTES,              'PAGE_SIZE_BYTES'],
+            [Option::DICTIONARY_PAGE_SIZE,         'DICTIONARY_PAGE_SIZE'],
+            [Option::WRITER_VERSION,               'WRITER_VERSION'],
+            [Option::STATISTICS_TRUNCATE_LENGTH,   'STATISTICS_TRUNCATE_LENGTH'],
+            [Option::COLUMN_INDEX_TRUNCATE_LENGTH, 'COLUMN_INDEX_TRUNCATE_LENGTH'],
+            [Option::PAGE_HEADER_STATISTICS,       'PAGE_HEADER_STATISTICS'],
         ];
 
         foreach ($mappings as [$option, $extensionKey]) {
@@ -53,6 +56,8 @@ final class OptionsConverter
                 $result[$extensionKey] = $value;
             }
         }
+
+        $result['STATISTICS_LEVEL'] = $options->getEnum(Option::STATISTICS_LEVEL, StatisticsLevel::class)->name;
 
         $columnsCompressions = $options->getArray(Option::COLUMNS_COMPRESSIONS);
 

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\Parquet\ParquetFile\Page\Header;
 
 use Flow\Parquet\ParquetFile\Encodings;
+use Flow\Parquet\ParquetFile\RowGroup\StatisticsReader;
+use Flow\Parquet\ParquetFile\Statistics;
 use Flow\Parquet\ThriftModel\DataPageHeader as ThriftDataPageHeader;
 
 final readonly class DataPageHeader
@@ -14,6 +16,7 @@ final readonly class DataPageHeader
         private Encodings $repetitionLevelEncoding,
         private Encodings $definitionLevelEncoding,
         private int $valuesCount,
+        private ?Statistics $statistics = null,
     ) {}
 
     public static function fromThrift(ThriftDataPageHeader $thrift): self
@@ -23,6 +26,7 @@ final readonly class DataPageHeader
             Encodings::from($thrift->repetition_level_encoding),
             Encodings::from($thrift->definition_level_encoding),
             (int) $thrift->num_values,
+            $thrift->statistics !== null ? Statistics::fromThrift($thrift->statistics) : null,
         );
     }
 
@@ -41,6 +45,11 @@ final readonly class DataPageHeader
         return $this->repetitionLevelEncoding;
     }
 
+    public function statistics(): ?StatisticsReader
+    {
+        return $this->statistics === null ? null : new StatisticsReader($this->statistics);
+    }
+
     public function toThrift(): ThriftDataPageHeader
     {
         return new ThriftDataPageHeader([
@@ -48,6 +57,7 @@ final readonly class DataPageHeader
             'encoding' => $this->encoding->value,
             'definition_level_encoding' => $this->definitionLevelEncoding->value,
             'repetition_level_encoding' => $this->repetitionLevelEncoding->value,
+            'statistics' => $this->statistics?->toThrift(),
         ]);
     }
 

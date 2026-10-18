@@ -18,7 +18,7 @@ final readonly class ArrowExtension
      * The contract version this package expects from arrow-ext, equal to the extension's FLOW_ARROW_ABI. Both sides
      * change together whenever a registered class or interface, or the schema, options or values crossing them, change.
      */
-    public const int ABI = 3;
+    public const int ABI = 2;
 
     public function __construct(
         public bool $loaded,

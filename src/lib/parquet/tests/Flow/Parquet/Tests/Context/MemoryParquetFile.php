@@ -10,6 +10,7 @@ use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile;
+use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\ListElement;
@@ -18,8 +19,11 @@ use Flow\Parquet\ParquetFileReader;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Writer;
 
+use function array_column;
 use function array_map;
+use function array_values;
 use function Flow\Filesystem\DSL\path;
+use function iterator_to_array;
 use function range;
 
 /**
@@ -44,6 +48,66 @@ final class MemoryParquetFile
             ),
             Schema::with(FlatColumn::int64('id'), NestedColumn::list('tags', ListElement::string())),
             array_map(static fn(int $id): array => ['id' => $id, 'tags' => ['t' . $id]], range(1, 6)),
+        );
+    }
+
+    /**
+     * The values of one column of the file, read through $reader.
+     *
+     * @param non-empty-string $bytes
+     *
+     * @return list<mixed>
+     */
+    public static function column(Reader $reader, string $bytes, string $column): array
+    {
+        return array_values(array_column(iterator_to_array(self::read($reader, $bytes)->values(), false), $column));
+    }
+
+    /**
+     * A string column `s`, RLE_DICTIONARY encoded, two values per page.
+     *
+     * @param list<?string> $values
+     *
+     * @return non-empty-string
+     */
+    public static function dictionaryColumn(array $values, Options $options): string
+    {
+        return self::written(
+            Writer::php(options: $options->set(Option::PAGE_SIZE_BYTES, 8)->set(
+                Option::PAGE_SIZE_CHECK_INTERVAL,
+                2,
+            )->set(Option::COLUMNS_ENCODINGS, ['s' => Encodings::RLE_DICTIONARY])),
+            Schema::with(FlatColumn::string('s')),
+            array_map(static fn(?string $value): array => ['s' => $value], $values),
+        );
+    }
+
+    /**
+     * One row group of 12 rows, two rows per page: `id` (INT64 0-11, PLAIN), `word` (RLE_DICTIONARY, "w{id % 3}") and
+     * `tags` (a list of id % 3 + 1 ints, `id` repeated).
+     *
+     * @return non-empty-string
+     */
+    public static function pagedColumns(): string
+    {
+        return self::written(
+            Writer::php(options: (new Options())->set(Option::PAGE_SIZE_BYTES, 16)->set(
+                Option::PAGE_SIZE_CHECK_INTERVAL,
+                2,
+            )->set(Option::COLUMNS_ENCODINGS, ['word' => Encodings::RLE_DICTIONARY])),
+            Schema::with(
+                FlatColumn::int64('id'),
+                FlatColumn::string('word'),
+                NestedColumn::list('tags', ListElement::int64()),
+            ),
+            array_map(
+                static fn(int $id): array => [
+                    'id' => $id,
+                    'word' => 'w' . ($id % 3),
+                    'tags' => array_map(static fn(): int => $id, range(0, $id % 3)),
+                ],
+                range(0, 11),
+            ),
         );
     }
 

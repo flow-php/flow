@@ -158,7 +158,7 @@ class CompactProtocol
     }
 
     /**
-     * @param-out bool|int $bool
+     * @param-out bool $bool
      */
     public function readBool(&$bool): int
     {
@@ -169,7 +169,12 @@ class CompactProtocol
         }
 
         if ($this->state === self::STATE_CONTAINER_READ) {
-            return $this->readByte($bool);
+            // a container element is one byte: 1 is true, writers send false as 2 (Apache Thrift) or 0
+            $byte = 0;
+            $read = $this->readByte($byte);
+            $bool = $byte === self::COMPACT_TRUE;
+
+            return $read;
         }
 
         throw new TProtocolException('Invalid state in compact protocol');
@@ -671,7 +676,7 @@ class CompactProtocol
         }
 
         if ($this->state === self::STATE_CONTAINER_WRITE) {
-            return $this->writeByte($bool ? 1 : 0);
+            return $this->writeByte($bool ? self::COMPACT_TRUE : self::COMPACT_FALSE);
         }
 
         throw new TProtocolException('Invalid state in compact protocol');

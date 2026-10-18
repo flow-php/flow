@@ -36,7 +36,7 @@ final class ParquetSourceFileTest extends FlowTestCase
         foreach ($source->batches(
             schema(int_schema('id')),
             400,
-            (new ReadPlanner())->plan($file->file->reader()->footer(), null, 100, 850),
+            (new ReadPlanner())->plan($file->file->reader()->footer(), $file->file->indexes(), null, 100, 850),
             new PhpBackend(),
         ) as $rows) {
             $counts[] = $rows->count();

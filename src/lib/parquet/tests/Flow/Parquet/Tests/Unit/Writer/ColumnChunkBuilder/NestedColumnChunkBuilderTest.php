@@ -15,6 +15,7 @@ use Flow\Parquet\Writer\ColumnChunkBuilder;
 use Flow\Parquet\Writer\ColumnChunkBuilder\NestedColumnChunkBuilder;
 use Flow\Parquet\Writer\ColumnChunkBuilder\PlainFlatColumnChunkBuilder;
 use Flow\Parquet\Writer\ColumnChunkContainer;
+use Flow\Parquet\Writer\StatisticsOptions;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -61,7 +62,12 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
+        $childBuilder = new PlainFlatColumnChunkBuilder(
+            $childColumn,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
         for ($i = 0; $i < 5; $i++) {
@@ -81,9 +87,24 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $childBuilder1 = new PlainFlatColumnChunkBuilder($childColumn1, $options, $compression);
-        $childBuilder2 = new PlainFlatColumnChunkBuilder($childColumn2, $options, $compression);
-        $childBuilder3 = new PlainFlatColumnChunkBuilder($childColumn3, $options, $compression);
+        $childBuilder1 = new PlainFlatColumnChunkBuilder(
+            $childColumn1,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
+        $childBuilder2 = new PlainFlatColumnChunkBuilder(
+            $childColumn2,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
+        $childBuilder3 = new PlainFlatColumnChunkBuilder(
+            $childColumn3,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder1, $childBuilder2, $childBuilder3]);
 
         $childBuilder2->addColumn(new WriteFlatColumnValues($childColumn2, [0], [1], ['middle_child']));
@@ -98,7 +119,12 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
+        $childBuilder = new PlainFlatColumnChunkBuilder(
+            $childColumn,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
         $childBuilder->addColumn(new WriteFlatColumnValues($childColumn, [], [], []));
@@ -115,8 +141,18 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $childBuilder1 = new PlainFlatColumnChunkBuilder($childColumn1, $options, $compression);
-        $childBuilder2 = new PlainFlatColumnChunkBuilder($childColumn2, $options, $compression);
+        $childBuilder1 = new PlainFlatColumnChunkBuilder(
+            $childColumn1,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
+        $childBuilder2 = new PlainFlatColumnChunkBuilder(
+            $childColumn2,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder1, $childBuilder2]);
 
         $childBuilder1->addColumn(new WriteFlatColumnValues($childColumn1, [0], [1], [42]));
@@ -133,7 +169,12 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
+        $childBuilder = new PlainFlatColumnChunkBuilder(
+            $childColumn,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
         $childBuilder->addColumn(new WriteFlatColumnValues($childColumn, [0], [0], []));
@@ -150,8 +191,18 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $childBuilder1 = new PlainFlatColumnChunkBuilder($childColumn1, $options, $compression);
-        $childBuilder2 = new PlainFlatColumnChunkBuilder($childColumn2, $options, $compression);
+        $childBuilder1 = new PlainFlatColumnChunkBuilder(
+            $childColumn1,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
+        $childBuilder2 = new PlainFlatColumnChunkBuilder(
+            $childColumn2,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder1, $childBuilder2]);
 
         $childBuilder1->addColumn(new WriteFlatColumnValues($childColumn1, [0], [1], [42]));
@@ -167,7 +218,12 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
+        $childBuilder = new PlainFlatColumnChunkBuilder(
+            $childColumn,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
         $childBuilder->addColumn(new WriteFlatColumnValues($childColumn, [0], [1], [42]));
@@ -195,8 +251,18 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $childBuilder1 = new PlainFlatColumnChunkBuilder($childColumn1, $options, $compression);
-        $childBuilder2 = new PlainFlatColumnChunkBuilder($childColumn2, $options, $compression);
+        $childBuilder1 = new PlainFlatColumnChunkBuilder(
+            $childColumn1,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
+        $childBuilder2 = new PlainFlatColumnChunkBuilder(
+            $childColumn2,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder1, $childBuilder2]);
 
         $childBuilder1->addColumn(new WriteFlatColumnValues($childColumn1, [0], [1], [42]));
@@ -215,7 +281,12 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
+        $childBuilder = new PlainFlatColumnChunkBuilder(
+            $childColumn,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
         $childBuilder->addColumn(new WriteFlatColumnValues($childColumn, [0], [1], [42]));
@@ -233,7 +304,12 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
+        $childBuilder = new PlainFlatColumnChunkBuilder(
+            $childColumn,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
         $result = $builder->column();
@@ -249,7 +325,12 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
+        $childBuilder = new PlainFlatColumnChunkBuilder(
+            $childColumn,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
         $childrenBuilders = [$childBuilder];
 
         $builder = new NestedColumnChunkBuilder($nestedColumn, $childrenBuilders);
@@ -273,7 +354,12 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $childrenBuilders = [];
 
         foreach ($children as $child) {
-            $childrenBuilders[] = new PlainFlatColumnChunkBuilder($child, $options, $compression);
+            $childrenBuilders[] = new PlainFlatColumnChunkBuilder(
+                $child,
+                $options,
+                $compression,
+                StatisticsOptions::fromOptions($options),
+            );
         }
 
         $builder = new NestedColumnChunkBuilder($nestedColumn, $childrenBuilders);
@@ -304,8 +390,18 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $childBuilder1 = new PlainFlatColumnChunkBuilder($childColumn1, $options, $compression);
-        $childBuilder2 = new PlainFlatColumnChunkBuilder($childColumn2, $options, $compression);
+        $childBuilder1 = new PlainFlatColumnChunkBuilder(
+            $childColumn1,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
+        $childBuilder2 = new PlainFlatColumnChunkBuilder(
+            $childColumn2,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder1, $childBuilder2]);
 
         $childBuilder1->addColumn(new WriteFlatColumnValues($childColumn1, [0], [1], [42]));
@@ -327,8 +423,18 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $childBuilder1 = new PlainFlatColumnChunkBuilder($childColumn1, $options, $compression);
-        $childBuilder2 = new PlainFlatColumnChunkBuilder($childColumn2, $options, $compression);
+        $childBuilder1 = new PlainFlatColumnChunkBuilder(
+            $childColumn1,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
+        $childBuilder2 = new PlainFlatColumnChunkBuilder(
+            $childColumn2,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder1, $childBuilder2]);
 
         $childBuilder1->addColumn(new WriteFlatColumnValues($childColumn1, [0], [1], [42]));
@@ -348,7 +454,12 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
+        $childBuilder = new PlainFlatColumnChunkBuilder(
+            $childColumn,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
         $childBuilder->addColumn(new WriteFlatColumnValues($childColumn, [0], [1], [42]));
@@ -370,9 +481,24 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $childBuilder1 = new PlainFlatColumnChunkBuilder($childColumn1, $options, $compression);
-        $childBuilder2 = new PlainFlatColumnChunkBuilder($childColumn2, $options, $compression);
-        $childBuilder3 = new PlainFlatColumnChunkBuilder($childColumn3, $options, $compression);
+        $childBuilder1 = new PlainFlatColumnChunkBuilder(
+            $childColumn1,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
+        $childBuilder2 = new PlainFlatColumnChunkBuilder(
+            $childColumn2,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
+        $childBuilder3 = new PlainFlatColumnChunkBuilder(
+            $childColumn3,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder1, $childBuilder2, $childBuilder3]);
 
         $childBuilder1->addColumn(new WriteFlatColumnValues($childColumn1, [0], [1], [42]));
@@ -406,7 +532,12 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $nestedColumn = NestedColumn::create('nested', [$childColumn]);
         $options = new Options();
 
-        $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
+        $childBuilder = new PlainFlatColumnChunkBuilder(
+            $childColumn,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
         $childBuilder->addColumn(new WriteFlatColumnValues($childColumn, [0, 0], [1, 1], [42, 84]));
@@ -433,7 +564,12 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
+        $childBuilder = new PlainFlatColumnChunkBuilder(
+            $childColumn,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
         $offsets = [0, 100, 1000, 50000];
@@ -466,8 +602,18 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $childBuilder1 = new PlainFlatColumnChunkBuilder($childColumn1, $options, $compression);
-        $childBuilder2 = new PlainFlatColumnChunkBuilder($childColumn2, $options, $compression);
+        $childBuilder1 = new PlainFlatColumnChunkBuilder(
+            $childColumn1,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
+        $childBuilder2 = new PlainFlatColumnChunkBuilder(
+            $childColumn2,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder1, $childBuilder2]);
 
         $childBuilder1->addColumn(new WriteFlatColumnValues($childColumn1, [0], [1], [42]));
@@ -490,7 +636,12 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
+        $childBuilder = new PlainFlatColumnChunkBuilder(
+            $childColumn,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
         $childBuilder->addColumn(new WriteFlatColumnValues($childColumn, [0], [1], [42]));
@@ -510,7 +661,12 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
+        $childBuilder = new PlainFlatColumnChunkBuilder(
+            $childColumn,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
         static::assertFalse($builder->isFull());
@@ -524,8 +680,18 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $childBuilder1 = new PlainFlatColumnChunkBuilder($childColumn1, $options, $compression);
-        $childBuilder2 = new PlainFlatColumnChunkBuilder($childColumn2, $options, $compression);
+        $childBuilder1 = new PlainFlatColumnChunkBuilder(
+            $childColumn1,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
+        $childBuilder2 = new PlainFlatColumnChunkBuilder(
+            $childColumn2,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder1, $childBuilder2]);
 
         static::assertFalse($builder->isFull());
@@ -539,7 +705,12 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $childBuilder2 = new PlainFlatColumnChunkBuilder($childColumn2, $options, $compression);
+        $childBuilder2 = new PlainFlatColumnChunkBuilder(
+            $childColumn2,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $mockFullChildBuilder = $this->createStub(ColumnChunkBuilder::class);
         $mockFullChildBuilder->method('isFull')->willReturn(true);
@@ -565,7 +736,12 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
+        $childBuilder = new PlainFlatColumnChunkBuilder(
+            $childColumn,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
         $childBuilder->addColumn(new WriteFlatColumnValues($childColumn, [0], [1], [42]));
@@ -584,7 +760,12 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
+        $childBuilder = new PlainFlatColumnChunkBuilder(
+            $childColumn,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
         static::assertSame(0, $builder->uncompressedSize());
@@ -598,8 +779,18 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $childBuilder1 = new PlainFlatColumnChunkBuilder($childColumn1, $options, $compression);
-        $childBuilder2 = new PlainFlatColumnChunkBuilder($childColumn2, $options, $compression);
+        $childBuilder1 = new PlainFlatColumnChunkBuilder(
+            $childColumn1,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
+        $childBuilder2 = new PlainFlatColumnChunkBuilder(
+            $childColumn2,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder1, $childBuilder2]);
 
         $childBuilder1->addColumn(new WriteFlatColumnValues($childColumn1, [0], [1], [42]));
@@ -649,8 +840,18 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $childBuilder1 = new PlainFlatColumnChunkBuilder($childColumn1, $options, $compression);
-        $childBuilder2 = new PlainFlatColumnChunkBuilder($childColumn2, $options, $compression);
+        $childBuilder1 = new PlainFlatColumnChunkBuilder(
+            $childColumn1,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
+        $childBuilder2 = new PlainFlatColumnChunkBuilder(
+            $childColumn2,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder1, $childBuilder2]);
 
         for ($i = 0; $i < 3; $i++) {
@@ -676,7 +877,12 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
+        $childBuilder = new PlainFlatColumnChunkBuilder(
+            $childColumn,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
         for ($cycle = 0; $cycle < 3; $cycle++) {
@@ -699,7 +905,12 @@ final class NestedColumnChunkBuilderTest extends TestCase
         $nestedColumn = NestedColumn::create('nested', [$childColumn]);
         $options = new Options();
 
-        $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
+        $childBuilder = new PlainFlatColumnChunkBuilder(
+            $childColumn,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
         $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
 
         $childBuilder->addColumn(new WriteFlatColumnValues($childColumn, [0], [1], [42]));

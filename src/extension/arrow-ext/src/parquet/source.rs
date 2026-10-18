@@ -132,7 +132,7 @@ impl ChunkReader for PhpSource {
 }
 
 /// Exactly `length` bytes at `start`, in one read.
-pub fn exact<R: ReadAt>(source: &R, start: u64, length: usize) -> Result<Bytes, ParquetError> {
+pub fn exact<R: ReadAt + ?Sized>(source: &R, start: u64, length: usize) -> Result<Bytes, ParquetError> {
     if length == 0 {
         return Ok(Bytes::new());
     }

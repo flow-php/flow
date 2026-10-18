@@ -47,7 +47,7 @@ final class ParquetFilesContext
     {
         $file = (new Reader())->readStream($filesystem->readFrom(path($uri)));
 
-        return (new ReadPlanner())->plan($file->reader()->footer(), null, $offset, $limit);
+        return (new ReadPlanner())->plan($file->reader()->footer(), $file->indexes(), null, $offset, $limit);
     }
 
     /**
@@ -172,6 +172,30 @@ final class ParquetFilesContext
             static fn(ClosingSpySourceStream $stream): int => $stream->readBytes,
             $filesystem->openedStreams,
         ));
+    }
+
+    /**
+     * The bytes of the column and offset indexes of the given columns in the given row groups, by file uri.
+     *
+     * @param array<string, array<string, list<int>>> $groups
+     */
+    public static function pageIndexBytes(Filesystem $filesystem, array $groups): int
+    {
+        $bytes = 0;
+
+        foreach ($groups as $uri => $columns) {
+            $file = Reader::php()->readStream($filesystem->readFrom(path($uri)));
+            $rowGroups = $file->metadata()->rowGroups()->all();
+
+            foreach ($columns as $column => $indexes) {
+                foreach ($indexes as $index) {
+                    $chunk = $rowGroups[$index]->getColumnChunk($file->schema()->getFlat($column));
+                    $bytes += (int) $chunk->columnIndex()?->length + (int) $chunk->offsetIndex()?->length;
+                }
+            }
+        }
+
+        return $bytes;
     }
 
     /**
