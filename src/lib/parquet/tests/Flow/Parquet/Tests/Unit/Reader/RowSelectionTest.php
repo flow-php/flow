@@ -96,6 +96,73 @@ final class RowSelectionTest extends TestCase
         static::assertEquals(new RowSelection(), RowSelection::all(0)->union(RowSelection::none(0)));
     }
 
+    public function test_the_difference_selects_the_rows_only_the_first_selects(): void
+    {
+        $left = new RowSelection(new RowSelector(4, false), new RowSelector(4, true), new RowSelector(2, false));
+        $right = new RowSelection(new RowSelector(2, true), new RowSelector(7, false), new RowSelector(1, true));
+
+        static::assertEquals(
+            new RowSelection(new RowSelector(2, false), new RowSelector(7, true), new RowSelector(1, false)),
+            $left->difference($right),
+        );
+        static::assertEquals(RowSelection::none(10), $left->difference($left));
+    }
+
+    public function test_a_mask_narrows_the_selected_rows_in_order(): void
+    {
+        $selection = new RowSelection(
+            new RowSelector(2, true),
+            new RowSelector(4, false),
+            new RowSelector(3, true),
+            new RowSelector(2, false),
+        );
+
+        static::assertEquals(
+            new RowSelection(
+                new RowSelector(3, true),
+                new RowSelector(2, false),
+                new RowSelector(4, true),
+                new RowSelector(1, false),
+                new RowSelector(1, true),
+            ),
+            $selection->masked([false, true, true, false, true, false]),
+        );
+        static::assertEquals($selection, $selection->masked([true, true, true, true, true, true]));
+        static::assertEquals(RowSelection::none(11), $selection->masked([false, false, false, false, false, false]));
+    }
+
+    public function test_the_head_selects_the_first_selected_rows(): void
+    {
+        $selection = new RowSelection(
+            new RowSelector(2, true),
+            new RowSelector(3, false),
+            new RowSelector(1, true),
+            new RowSelector(4, false),
+        );
+
+        static::assertEquals(
+            new RowSelection(
+                new RowSelector(2, true),
+                new RowSelector(3, false),
+                new RowSelector(1, true),
+                new RowSelector(1, false),
+                new RowSelector(3, true),
+            ),
+            $selection->head(4),
+        );
+        static::assertEquals($selection, $selection->head(7));
+        static::assertEquals($selection, $selection->head(9));
+        static::assertEquals(RowSelection::none(10), $selection->head(0));
+    }
+
+    public function test_a_mask_of_another_row_count_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('A mask of 2 rows cannot narrow a selection of 3 rows');
+
+        RowSelection::window(5, 1, 3)->masked([true, false]);
+    }
+
     public function test_selections_of_other_row_counts_cannot_be_united(): void
     {
         $this->expectException(InvalidArgumentException::class);

@@ -30,7 +30,8 @@ interface ParquetFileReader
      * @param list<string> $columns resolved names, never empty
      * @param int $batchSize upper bound of rows per chunk, refused below 1
      *
-     * @return Iterator<int, array<string, list<mixed>>> chunks keyed by column, every list the same length (>0)
+     * @return Iterator<int, array<string, list<mixed>>> chunks keyed by column, every list the same length (>0): the rows
+     *         $plan selects that match $plan->rowFilter, at most $plan->limit
      */
     public function readColumns(array $columns, int $batchSize, ReadPlan $plan): Iterator;
 }

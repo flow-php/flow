@@ -44,6 +44,8 @@ pub enum Error {
     Options(String),
     /// A read plan that does not cover the file's rows.
     Plan(String),
+    /// A row filter whose shape is not the one `ReadPlanConverter::toExtension()` sends.
+    Filter(String),
     /// A footer or a column chunk encrypted with Parquet modular encryption.
     Encrypted,
     Stream(String),

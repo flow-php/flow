@@ -247,6 +247,32 @@ first.
 - Files written without `column_orders` (older flow-php versions) are never pruned, only filtered. The statistics a file
   holds are set by the writer options in [Statistics](#statistics).
 
+#### Reading with a ReadPlan
+
+```php
+use Flow\Parquet\Filter\Binding\BoundFilter;
+use Flow\Parquet\Reader\ReadPlanner;
+
+$plan = (new ReadPlanner())->plan(
+    $file->reader()->footer(),
+    $file->indexes(),
+    BoundFilter::bind($query->filter, $file->schema(), $file->options()),
+    limit: 10,                     // rows kept by $plan->rowFilter, refused unless it is the whole filter
+);
+
+foreach ($file->reader()->readColumns(['id'], 1024, $plan) as $batch) {
+    // only rows matching $plan->rowFilter
+}
+```
+
+`ReadPlan::$rowFilter` holds the root conjuncts whose every leaf the file binds exactly. Both engines decode those
+columns first and the other columns only at the rows they keep. A conjunct the file cannot compare exactly (`INT96`, a
+`DECIMAL` above precision 15, a float literal beyond 2^53 on an integer column, a JSON column) stays out of it: its rows
+come back as a superset, which `ParquetFile::values()` filters afterwards.
+
+With a row filter the arrow engine loads the offset index of every planned row group before it reads, even beside a
+limit that stops in the first one.
+
 ## Writing Parquet Files
 
 Since parquet is a binary format, we need to provide a schema for the writer so it can know how

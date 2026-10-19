@@ -21,6 +21,7 @@ use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
 use function array_column;
+use function Flow\Parquet\DSL\parquet_column;
 use function iterator_to_array;
 
 final class PhpParquetFileReaderTest extends TestCase
@@ -87,6 +88,128 @@ final class PhpParquetFileReaderTest extends TestCase
             - $fullReader->footer()->metadata()->rowGroups()->all()[1]->getColumnChunk($id)->totalCompressedSize(),
             $pruned->bytes,
         );
+    }
+
+    /**
+     * @param int<1, max> $batchSize
+     * @param list<list<mixed>> $values
+     */
+    #[TestWith(['id', 10, [[2, 3, 6]]])]
+    #[TestWith(['id', 2, [[2, 3], [6]]])]
+    #[TestWith(['tags', 1, [[['t2']], [['t3']], [['t6']]]])]
+    public function test_a_row_filter_returns_exactly_the_matching_rows_in_batches_across_row_groups(
+        string $column,
+        int $batchSize,
+        array $values,
+    ): void {
+        $reader = new PhpParquetFileReader(
+            new MemorySourceStream(MemoryParquetFile::threeRowGroups()),
+            ByteOrder::LITTLE_ENDIAN,
+            new Options(),
+        );
+
+        static::assertSame($values, array_column(
+            iterator_to_array(
+                $reader->readColumns(
+                    [$column],
+                    $batchSize,
+                    ReadPlanMother::rowFiltered(6, parquet_column('id')->in([2, 3, 6]), $reader->footer()->schema()),
+                ),
+                false,
+            ),
+            $column,
+        ));
+    }
+
+    public function test_a_limit_stops_the_read_inside_a_row_group_and_the_next_group_is_never_read(): void
+    {
+        $limited = new ReadCountingSourceStream(new MemorySourceStream(MemoryParquetFile::threeRowGroups()));
+        $limitedReader = new PhpParquetFileReader($limited, ByteOrder::LITTLE_ENDIAN, new Options());
+        $filter = parquet_column('id')->greaterThanOrEqual(2);
+
+        static::assertSame(
+            [[2, 3]],
+            array_column(
+                iterator_to_array(
+                    $limitedReader->readColumns(
+                        ['id'],
+                        10,
+                        ReadPlanMother::rowFiltered(6, $filter, $limitedReader->footer()->schema(), 2),
+                    ),
+                    false,
+                ),
+                'id',
+            ),
+        );
+
+        $twoGroups = new ReadCountingSourceStream(new MemorySourceStream(MemoryParquetFile::threeRowGroups()));
+        $twoGroupsReader = new PhpParquetFileReader($twoGroups, ByteOrder::LITTLE_ENDIAN, new Options());
+        iterator_to_array(
+            $twoGroupsReader->readColumns(
+                ['id'],
+                10,
+                ReadPlanMother::rowFiltered(
+                    6,
+                    $filter,
+                    $twoGroupsReader->footer()->schema(),
+                    selection: RowSelection::window(6, 0, 4),
+                ),
+            ),
+            false,
+        );
+
+        static::assertSame($twoGroups->bytes, $limited->bytes);
+    }
+
+    public function test_rows_proven_to_match_are_returned_without_evaluating_the_row_filter(): void
+    {
+        $reader = new PhpParquetFileReader(
+            new MemorySourceStream(MemoryParquetFile::threeRowGroups()),
+            ByteOrder::LITTLE_ENDIAN,
+            new Options(),
+        );
+
+        static::assertSame(
+            [[1, 2, 5, 6]],
+            array_column(
+                iterator_to_array(
+                    $reader->readColumns(
+                        ['id'],
+                        10,
+                        ReadPlanMother::rowFiltered(
+                            6,
+                            parquet_column('id')->greaterThan(4),
+                            $reader->footer()->schema(),
+                            matched: RowSelection::window(6, 0, 2),
+                        ),
+                    ),
+                    false,
+                ),
+                'id',
+            ),
+        );
+    }
+
+    public function test_a_limit_of_zero_or_no_column_reads_nothing(): void
+    {
+        $reader = new PhpParquetFileReader(
+            new MemorySourceStream(MemoryParquetFile::threeRowGroups()),
+            ByteOrder::LITTLE_ENDIAN,
+            new Options(),
+        );
+
+        static::assertSame(
+            [],
+            iterator_to_array(
+                $reader->readColumns(
+                    ['id'],
+                    10,
+                    ReadPlanMother::rowFiltered(6, parquet_column('id')->isNull(), $reader->footer()->schema(), 0),
+                ),
+                false,
+            ),
+        );
+        static::assertSame([], iterator_to_array($reader->readColumns([], 10, ReadPlanMother::window(6)), false));
     }
 
     public function test_a_plan_over_another_row_count_is_refused(): void

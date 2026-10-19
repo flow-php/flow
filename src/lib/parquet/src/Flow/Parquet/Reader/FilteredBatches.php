@@ -11,6 +11,7 @@ use Generator;
 use function array_fill_keys;
 use function array_flip;
 use function array_intersect_key;
+use function array_keys;
 use function array_slice;
 use function array_values;
 use function count;
@@ -18,8 +19,8 @@ use function in_array;
 use function min;
 
 /**
- * The matching rows of a read's batches, offset and limit counted over them, rechunked to the batch size; it stops
- * pulling batches at the limit.
+ * The matching rows of a read's batches (every row without an evaluator), offset and limit counted over them,
+ * rechunked to the batch size; it stops pulling batches at the limit.
  */
 final readonly class FilteredBatches
 {
@@ -28,7 +29,7 @@ final readonly class FilteredBatches
      * @param int<1, max> $batchSize
      */
     public function __construct(
-        private FilterEvaluator $evaluator,
+        private ?FilterEvaluator $evaluator,
         private array $columns,
         private int $offset = 0,
         private ?int $limit = null,
@@ -48,7 +49,7 @@ final readonly class FilteredBatches
     {
         $columns = $this->columns;
 
-        foreach ($this->evaluator->roots() as $root) {
+        foreach ($this->evaluator?->roots() ?? [] as $root) {
             if (!in_array($root, $columns, true)) {
                 $columns[] = $root;
             }
@@ -74,7 +75,7 @@ final readonly class FilteredBatches
         $buffered = 0;
 
         foreach ($batches as $batch) {
-            $mask = $this->evaluator->mask($batch);
+            $mask = $this->evaluator?->mask($batch) ?? array_keys($batch[$this->columns[0]]);
 
             if ($skip > 0) {
                 $skipped = min($skip, count($mask));

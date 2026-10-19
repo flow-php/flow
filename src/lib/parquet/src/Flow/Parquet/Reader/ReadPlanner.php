@@ -17,8 +17,9 @@ final readonly class ReadPlanner
 {
     /**
      * The rows to read: from $offset on (raw rows), $limit of them, minus the row groups and pages whose statistics
-     * or bloom filters prove no row matches $filter. A filtered plan reads a superset of the matching rows, so the caller
-     * evaluates the filter; it refuses a limit, which counts the rows the caller returns.
+     * or bloom filters prove no row matches $filter. The conjuncts of $filter bound in the file are evaluated on rows
+     * (ReadPlan::$rowFilter); the caller evaluates the rest. A limit counts the rows returned, so beside a filter it is
+     * accepted only when every conjunct is evaluated on rows.
      */
     public function plan(
         Footer $footer,
@@ -33,9 +34,12 @@ final readonly class ReadPlanner
             return ReadPlan::window($rows, $indexes, $offset, $limit);
         }
 
-        if ($limit !== null) {
+        $rowFilter = $filter->rowFilter();
+
+        if ($limit !== null && $rowFilter !== $filter) {
             throw new InvalidArgumentException(
-                'A limit counts the rows returned, which a plan filtered by statistics cannot honour',
+                'A limit counts the rows returned, which a plan cannot honour unless every conjunct of its filter is '
+                . 'bound in the file',
             );
         }
 
@@ -50,6 +54,6 @@ final readonly class ReadPlanner
             $pruned = $pruner->prune($filter, $pruned);
         }
 
-        return new ReadPlan($pruned->selected, $pruned->matched, $indexes);
+        return new ReadPlan($pruned->selected, $pruned->matched, $indexes, $rowFilter, $limit);
     }
 }

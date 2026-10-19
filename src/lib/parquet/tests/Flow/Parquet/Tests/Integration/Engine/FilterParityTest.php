@@ -9,6 +9,9 @@ use DateTimeImmutable;
 use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Engine\RustParquetEngine;
 use Flow\Parquet\Filter\Filter;
+use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\TimeUnit;
 use Flow\Parquet\Query;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Reader\RowSelection;
@@ -16,7 +19,10 @@ use Flow\Parquet\Reader\RowSelector;
 use Flow\Parquet\Tests\Context\FilePlan;
 use Flow\Parquet\Tests\Context\FilterExpectations;
 use Flow\Parquet\Tests\Context\FilterRows;
+use Flow\Parquet\Tests\Context\MemoryParquetFile;
+use Flow\Parquet\Tests\Mother\FlatColumnMother;
 use Flow\Parquet\Tests\Mother\ParquetEngineMother;
+use Flow\Parquet\Writer;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -36,6 +42,7 @@ use function is_float;
 use function is_int;
 use function iterator_to_array;
 use function range;
+use function serialize;
 
 #[Group('native-extension')]
 final class FilterParityTest extends TestCase
@@ -203,10 +210,186 @@ final class FilterParityTest extends TestCase
         }
     }
 
+    /**
+     * arrow-rs reads the file's day (INT32 DATE) as Date64 milliseconds and its ts (plain INT64) as Timestamp(Second),
+     * as the file's arrow schema hints; seconds (TIMESTAMP(MILLIS) hinted Timestamp(Second), as pyarrow writes it) it
+     * reads in milliseconds.
+     *
+     * @return Generator<string, array{Filter, list<int>}>
+     */
+    public static function hinted_filters(): Generator
+    {
+        yield 'date64 at least' => [
+            parquet_column('day')->greaterThanOrEqual(new DateTimeImmutable('2024-01-05 UTC')),
+            [5, 6, 7, 8, 9],
+        ];
+        yield 'date64 not in' => [
+            parquet_not(parquet_column('day')->in([
+                new DateTimeImmutable('2024-01-08 UTC'),
+                new DateTimeImmutable('2024-01-02 UTC'),
+            ])),
+            [0, 2, 3, 5, 6, 8, 9],
+        ];
+        yield 'pyarrow seconds stored as milliseconds' => [
+            parquet_not(parquet_column('seconds')->lessThanOrEqual(new DateTimeImmutable('2024-01-01 04:00:00 UTC'))),
+            [5, 6, 7, 8, 9],
+        ];
+        yield 'seconds below' => [parquet_column('ts')->lessThan(1_704_067_200 + (5 * 3600)), [0, 1, 2, 3, 4]];
+        yield 'seconds null or above' => [
+            parquet_any(parquet_column('ts')->isNull(), parquet_column('ts')->greaterThan(1_704_067_200 + (7 * 3600))),
+            [6, 8, 9],
+        ];
+    }
+
+    /**
+     * Row-level cases: every operator and its negation over NaN and -0.0, nulls, a struct leaf under null structs, a
+     * decimal, a timestamp, an absent column, and conjuncts bound beside one that is not.
+     *
+     * @return Generator<string, array{string, Filter}>
+     */
+    public static function row_filters(): Generator
+    {
+        $filters = [
+            'NaN equal' => parquet_column('score')->equals(5.0),
+            'NaN not equal' => parquet_column('score')->notEquals(5.0),
+            'NaN less than' => parquet_column('score')->lessThan(15.0),
+            'NaN not less than' => parquet_not(parquet_column('score')->lessThan(15.0)),
+            'NaN less than or equal' => parquet_column('score')->lessThanOrEqual(15.0),
+            'NaN not less than or equal' => parquet_not(parquet_column('score')->lessThanOrEqual(15.0)),
+            'NaN greater than' => parquet_column('score')->greaterThan(15.0),
+            'NaN not greater than' => parquet_not(parquet_column('score')->greaterThan(15.0)),
+            'NaN greater than or equal' => parquet_column('score')->greaterThanOrEqual(15.0),
+            'NaN not greater than or equal' => parquet_not(parquet_column('score')->greaterThanOrEqual(15.0)),
+            'NaN in' => parquet_column('score')->in([1.0, 33.0]),
+            'NaN not in' => parquet_column('score')->notIn([1.0, 33.0]),
+            'negative zero equal' => parquet_column('score')->equals(-0.0),
+            'negative zero not greater than' => parquet_not(parquet_column('score')->greaterThan(0.0)),
+            'nulls under not and any' => parquet_not(parquet_any(
+                parquet_column('maybe')->lessThan(14),
+                parquet_column('maybe')->isNull(),
+            )),
+            'struct leaf under null structs' => parquet_not(parquet_column('address.city')->equals('c3')),
+            'struct leaf is null' => parquet_column('address.city')->isNull(),
+            'decimal' => parquet_not(parquet_column('amount')->greaterThan(12.25)),
+            'timestamp' => parquet_column('ts')->greaterThan(new DateTimeImmutable('2024-01-02 09:00:00.123456 UTC')),
+            'absent column' => parquet_not(parquet_column('missing')->equals(1)),
+            'absent column is not null' => parquet_column('missing')->isNotNull(),
+            'bound beside unbound' => parquet_all(
+                parquet_column('id')->lessThan(25),
+                parquet_column('big')->lessThan(1.0e18),
+                parquet_not(parquet_column('score')->lessThan(5.0)),
+            ),
+        ];
+
+        foreach (['row_groups_php.parquet', 'row_groups_arrow.parquet'] as $fixture) {
+            foreach ($filters as $name => $filter) {
+                yield $fixture . ': ' . $name => [$fixture, $filter];
+            }
+        }
+    }
+
     protected function setUp(): void
     {
         if (!extension_loaded('arrow')) {
             self::markTestSkipped('arrow is not loaded');
+        }
+    }
+
+    #[DataProvider('row_filters')]
+    public function test_both_engines_read_exactly_the_rows_the_row_filter_keeps(string $fixture, Filter $filter): void
+    {
+        $all = Reader::php()->read(self::FIXTURES . $fixture);
+        $columns = ['id', 'score', 'maybe', 'address'];
+        $rows = [];
+
+        foreach ([PhpParquetEngine::class, RustParquetEngine::class] as $engine) {
+            $file = (new Reader(engine: ParquetEngineMother::create($engine)))->read(self::FIXTURES . $fixture);
+            $plan = FilePlan::of($file, $filter);
+            $rowFilter = $plan->rowFilter ?? static::fail('The filter has no bound conjunct');
+            $rows[$engine] = FilePlan::rows($file, $columns, $plan);
+
+            static::assertSame(
+                FilterExpectations::matchingIds($all->values(), $rowFilter->filter(), $all->schema()),
+                FilterExpectations::ids($rows[$engine]),
+            );
+            static::assertSame(
+                [],
+                array_diff(
+                    FilterExpectations::matchingIds($all->values(), $filter, $all->schema()),
+                    FilterExpectations::ids($rows[$engine]),
+                ),
+            );
+        }
+
+        // serialized: NaN equals itself and -0.0 differs from +0.0
+        static::assertSame(serialize($rows[PhpParquetEngine::class]), serialize($rows[RustParquetEngine::class]));
+    }
+
+    /**
+     * @param list<int> $ids
+     */
+    #[DataProvider('hinted_filters')]
+    public function test_both_engines_filter_the_columns_an_arrow_schema_hints_alike(Filter $filter, array $ids): void
+    {
+        foreach ([PhpParquetEngine::class, RustParquetEngine::class] as $engine) {
+            $file = (new Reader(engine: ParquetEngineMother::create($engine)))->read(self::FIXTURES
+            . 'row_filter_hints_arrow.parquet');
+
+            static::assertSame(
+                $ids,
+                FilterExpectations::ids(FilePlan::rows($file, ['id'], FilePlan::of($file, $filter))),
+            );
+        }
+    }
+
+    public function test_an_unbound_conjunct_is_left_out_of_the_row_filter_and_read_as_a_superset(): void
+    {
+        $bound = parquet_column('id')->lessThan(25);
+        // a float beyond 2^53 has no exact pre-image on UINT_64: the conjunct is unbound, FilterEvaluator still answers it
+        $filter = parquet_all($bound, parquet_column('big')->lessThan(1.0e18));
+
+        foreach (['row_groups_php.parquet', 'row_groups_arrow.parquet'] as $fixture) {
+            foreach ([PhpParquetEngine::class, RustParquetEngine::class] as $engine) {
+                $file = (new Reader(engine: ParquetEngineMother::create($engine)))->read(self::FIXTURES . $fixture);
+                $plan = FilePlan::of($file, $filter);
+
+                static::assertSame($bound, $plan->rowFilter?->filter());
+                static::assertSame(range(0, 24), FilterExpectations::ids(FilePlan::rows($file, ['id'], $plan)));
+                static::assertSame(range(0, 19), FilterExpectations::ids($file->values(new Query(['id'], $filter))));
+            }
+        }
+    }
+
+    public function test_both_engines_filter_nanosecond_timestamps_by_the_microsecond_they_decode_to(): void
+    {
+        $schema = Schema::with(FlatColumn::int64('id'), FlatColumnMother::timestamp(TimeUnit::NANOSECONDS));
+        $rows = array_map(
+            static fn(int $id): array => [
+                'id' => $id,
+                'ts' => (new DateTimeImmutable('2024-01-01 00:00:00.000001 UTC'))->modify('+' . $id . ' microseconds'),
+            ],
+            range(0, 9),
+        );
+        $filter = parquet_any(
+            parquet_column('ts')->equals(new DateTimeImmutable('2024-01-01 00:00:00.000003 UTC')),
+            parquet_column('ts')->greaterThan(new DateTimeImmutable('2024-01-01 00:00:00.000008 UTC')),
+        );
+
+        foreach ([PhpParquetEngine::class, RustParquetEngine::class] as $writer) {
+            $bytes = MemoryParquetFile::written(
+                new Writer(engine: ParquetEngineMother::create($writer)),
+                $schema,
+                $rows,
+            );
+
+            foreach ([PhpParquetEngine::class, RustParquetEngine::class] as $engine) {
+                $file = MemoryParquetFile::read(new Reader(engine: ParquetEngineMother::create($engine)), $bytes);
+
+                static::assertSame(
+                    [2, 8, 9],
+                    FilterExpectations::ids(FilePlan::rows($file, ['id'], FilePlan::of($file, $filter))),
+                );
+            }
         }
     }
 
@@ -491,7 +674,7 @@ final class FilterParityTest extends TestCase
         }
 
         static::assertSame($rows[PhpParquetEngine::class], $rows[RustParquetEngine::class]);
-        static::assertSame(array_slice($all, 0, $selection->rowCount()), $rows[PhpParquetEngine::class]);
+        static::assertSame(array_values(array_filter($all, $matches)), $rows[PhpParquetEngine::class]);
     }
 
     /**

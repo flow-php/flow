@@ -27,19 +27,20 @@ use PHPUnit\Framework\TestCase;
 use function Flow\Parquet\Binary\encode_decimal;
 
 use const INF;
+use const NAN;
 use const PHP_INT_MAX;
 use const PHP_INT_MIN;
 
 final class PhysicalIntervalsTest extends TestCase
 {
-    public function test_a_set_is_the_union_of_its_equalities(): void
+    public function test_a_set_is_the_union_of_its_equalities_sorted_each_once(): void
     {
         static::assertSame(
             [[1, true, 1, true], [3, true, 3, true]],
             PhysicalIntervalEdges::of(PhysicalIntervals::preImageOfSet(
                 new IntegerPreImage(PHP_INT_MIN, PHP_INT_MAX),
                 PhysicalOrder::Signed,
-                [1, 3],
+                [3, 1, 3],
             )),
         );
         static::assertSame(
@@ -62,6 +63,44 @@ final class PhysicalIntervalsTest extends TestCase
                 [],
             )?->isEmpty(),
         );
+    }
+
+    #[TestWith([0, true])]
+    #[TestWith([1, false])]
+    #[TestWith([2, false])]
+    #[TestWith([3, true])]
+    #[TestWith([5, false])]
+    #[TestWith([6, true])]
+    #[TestWith([8, true])]
+    #[TestWith([9, false])]
+    #[TestWith([10, true])]
+    #[TestWith([99, true])]
+    public function test_contains_finds_the_value_among_sorted_intervals(int $value, bool $contained): void
+    {
+        $intervals = new PhysicalIntervals([
+            new PhysicalInterval(null, false, 1, false),
+            new PhysicalInterval(3, true, 3, true),
+            new PhysicalInterval(5, false, 8, true),
+            new PhysicalInterval(10, true, null, false),
+        ]);
+
+        static::assertSame($contained, $intervals->contains(PhysicalOrder::Signed, $value));
+    }
+
+    public function test_contains_compares_floats_as_ieee_754(): void
+    {
+        static::assertFalse((new PhysicalIntervals([PhysicalInterval::unbounded()]))->contains(
+            PhysicalOrder::Double,
+            NAN,
+        ));
+        static::assertTrue((new PhysicalIntervals([new PhysicalInterval(0.0, true, 0.0, true)]))->contains(
+            PhysicalOrder::Double,
+            -0.0,
+        ));
+        static::assertFalse((new PhysicalIntervals([new PhysicalInterval(-0.0, false, null, false)]))->contains(
+            PhysicalOrder::Double,
+            0.0,
+        ));
     }
 
     public function test_covers_and_disjoint_honour_each_bound_and_its_inclusion(): void

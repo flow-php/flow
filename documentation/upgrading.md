@@ -46,11 +46,11 @@ Upgrading from older versions: [0.35.x to 0.40.x](/documentation/upgrading-0.35-
 | writes accepted an int from 0 to `PHP_INT_MAX` into `UINT_64`                           | an int >= 0 or a canonical digit string up to `18446744073709551615`                             |
 | `to_parquet()` refused a `numeric_string` column (`NumericStringType is not supported`) | written as a parquet `STRING`                                                                    |
 
-### 4) `flow-php/parquet` - the `arrow` extension must be rebuilt (arrow-rs 60, ABI 2)
+### 4) `flow-php/parquet` - the `arrow` extension must be rebuilt (arrow-rs 60, ABI 3)
 
-| Before                                                  | After                                                                                                                                                                            |
-|---------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| arrow-ext built against arrow-rs 59, `FLOW_ARROW_ABI` 1 | arrow-rs 60, `FLOW_ARROW_ABI` / `ArrowExtension::ABI` 2 (the one bump of 0.47, covering every contract change below): an older build is refused by `ArrowExtension::available()` |
+| Before                                                  | After                                                                                                                                                      |
+|---------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| arrow-ext built against arrow-rs 59, `FLOW_ARROW_ABI` 1 | arrow-rs 60, `FLOW_ARROW_ABI` / `ArrowExtension::ABI` 3 (covering every contract change below): an older build is refused by `ArrowExtension::available()` |
 
 ### 5) `flow-php/parquet`, `flow-php/etl-adapter-parquet` - reads take a `Query` (or, below the file, a `ReadPlan`) instead of limit/offset, the reader exposes its `Footer`; the `arrow` and `flow_php` extensions must be rebuilt
 
@@ -125,6 +125,19 @@ public function scan(FlowContext $context, FileScan $scan): Generator
 | `ParquetFile::pageHeaders()` repeated every chunk of a row group under each column                                                                                      | each column's own chunk pages, once                                                                                                                                             |
 | no column index truncation option                                                                                                                                       | `Option::COLUMN_INDEX_TRUNCATE_LENGTH` (64): BYTE_ARRAY/FIXED_LEN_BYTE_ARRAY page bounds in the column index                                                                    |
 | arrow-ext read row groups through arrow-rs's sync reader                                                                                                                | its push decoder, fetching only the selected pages: rebuild the `arrow` extension (item 4)                                                                                      |
+
+### 9) `flow-php/parquet` - filtered reads filter rows during decoding on both engines; the `arrow` extension must be rebuilt
+
+| Before                                                                                       | After                                                                                                                                                                                                                                    |
+|----------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `new ReadPlan($selection, $matched, $indexes)`                                               | `new ReadPlan($selection, $matched, $indexes, ?BoundFilter $rowFilter = null, ?int $limit = null)`; `ReadPlanner::plan()` fills both                                                                                                     |
+| a filtered plan read below the file returned the rows of every kept row group and page       | exactly the rows matching `ReadPlan::$rowFilter`, the conjuncts the file binds; rows of the others are still a superset                                                                                                                  |
+| `ReadPlanner::plan()` refused a limit beside a filter                                        | accepts it when every conjunct is in `ReadPlan::$rowFilter`, counting the rows kept; refuses it otherwise                                                                                                                                |
+| `ColumnReader::read(Column, Metadata, SourceStream, array $rowGroups, Indexes $indexes)`     | `readRowGroup(Column, RowGroup, int $group, SourceStream, RowSelection, Indexes, array $decoded = [])`, one row group at a time                                                                                                          |
+| `ColumnChunkReader::read(ColumnChunk, FlatColumn, SourceStream, ?OffsetIndex, RowSelection)` | a 6th argument, `array $decoded = []`: pages decoded already, keyed by their first row, are served instead of read; a 7th, `?Dictionary $dictionary = null`, is used instead of reading the dictionary page, which the generator returns |
+| `ReadPlanConverter::toExtension()` returned `['selectors' => ...]`                           | also `'limit'`, and `'filter'` with a row filter: rebuild the `arrow` extension, which filters rows with arrow-rs's `RowFilter`                                                                                                          |
+| a custom `ParquetFileReader::readColumns()` returned the rows `ReadPlan::$selection` selects | those matching `ReadPlan::$rowFilter` too, at most `ReadPlan::$limit`                                                                                                                                                                    |
+| `new ReadPlanConverter()`                                                                    | removed: the constructor is private, `ReadPlanConverter::toExtension()` is the entry point                                                                                                                                               |
 
 ---
 

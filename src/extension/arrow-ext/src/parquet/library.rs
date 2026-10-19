@@ -21,6 +21,7 @@ use crate::parquet::batch;
 use crate::parquet::cells::{Checked, Classes, ReadCell, Refusal, Scalar, Times, Validated, WriteColumn};
 use crate::parquet::chunks::chunk_spans;
 use crate::parquet::error::Error;
+use crate::parquet::filter::{FilterNode, Raw};
 use crate::parquet::footer::Footer;
 use crate::parquet::lib_calls::{
     call_static, METADATA_FROM_THRIFT, READ_PLAN_TO_EXTENSION, ROW_GROUP_CHUNKS_FROM_THRIFT, SCHEMA_FROM_THRIFT,
@@ -94,9 +95,8 @@ impl IntoZval for RowGroupChunksObject {
 pub fn read_plan(meta: &ParquetMetaData, plan: &Zval, stream: &PhpStream) -> PhpResult<ReadPlan> {
     let converted = call_static(READ_PLAN_TO_EXTENSION, &mut [plan.shallow_clone()])?;
     let malformed = || exception(RUNTIME, "arrow received a malformed read plan".to_string());
-    let selectors = converted
-        .array()
-        .and_then(|plan| ht_get(plan, b"selectors"))
+    let converted = converted.array().ok_or_else(malformed)?;
+    let selectors = ht_get(converted, b"selectors")
         .and_then(Zval::array)
         .ok_or_else(malformed)?;
     let mut planned = Vec::with_capacity(selectors.len());
@@ -114,7 +114,83 @@ pub fn read_plan(meta: &ParquetMetaData, plan: &Zval, stream: &PhpStream) -> Php
         Ok(())
     })?;
 
-    ReadPlan::from_selection(meta, planned).map_err(|error| parquet_exception(error, stream, Side::Read))
+    let limit = match ht_get(converted, b"limit") {
+        Some(limit) if limit.is_null() => None,
+        Some(limit) => Some(
+            limit
+                .long()
+                .and_then(|limit| usize::try_from(limit).ok())
+                .ok_or_else(malformed)?,
+        ),
+        None => return Err(malformed()),
+    };
+    let filter = ht_get(converted, b"filter")
+        .map(|filter| raw(filter).and_then(|filter| FilterNode::parse(&filter)))
+        .transpose()
+        .map_err(|error| parquet_exception(error, stream, Side::Read))?;
+    let mut plan =
+        ReadPlan::from_selection(meta, planned).map_err(|error| parquet_exception(error, stream, Side::Read))?;
+    plan.filter = filter;
+    plan.limit = limit;
+
+    Ok(plan)
+}
+
+/// A converter array as data: a map keyed by its keys' bytes when a key is a string, else a list of its values.
+fn raw(value: &Zval) -> Result<Raw, Error> {
+    if value.is_null() {
+        return Ok(Raw::Null);
+    }
+
+    if let Some(value) = value.bool() {
+        return Ok(Raw::Bool(value));
+    }
+
+    if let Some(value) = value.long() {
+        return Ok(Raw::Int(value));
+    }
+
+    if let Some(value) = value.double() {
+        return Ok(Raw::Float(value));
+    }
+
+    if let Some(value) = value.zend_str() {
+        return Ok(Raw::Bytes(value.as_bytes().to_vec()));
+    }
+
+    let Some(table) = value.array() else {
+        return Err(Error::Filter(format!("a {} is no row filter value", value.get_type())));
+    };
+    let mut entries = Vec::new();
+    let mut keyed = false;
+    let mut failure = None;
+    ht_for_each(table, |key, index, value| {
+        if failure.is_none() {
+            match raw(value) {
+                Ok(value) => {
+                    keyed |= key.is_some();
+                    entries.push((
+                        key.map_or_else(|| index.to_string().into_bytes(), |key| key.as_bytes().to_vec()),
+                        value,
+                    ));
+                }
+                Err(error) => failure = Some(error),
+            }
+        }
+
+        Ok(())
+    })
+    .map_err(|_| Error::Filter("a row filter array could not be iterated".to_string()))?;
+
+    if let Some(error) = failure {
+        return Err(error);
+    }
+
+    Ok(if keyed {
+        Raw::Map(entries)
+    } else {
+        Raw::List(entries.into_iter().map(|(_, value)| value).collect())
+    })
 }
 
 pub fn batch_size(value: i64) -> PhpResult<usize> {

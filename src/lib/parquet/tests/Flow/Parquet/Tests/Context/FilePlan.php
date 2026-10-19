@@ -15,7 +15,7 @@ use Flow\Parquet\Reader\ReadPlanner;
 use function array_keys;
 
 /**
- * The superset read the adapter does: ReadPlanner's plan, read through the reader.
+ * The read the adapter does: ReadPlanner's plan, its bound conjuncts filtered row by row, read through the reader.
  */
 final class FilePlan
 {

@@ -106,7 +106,8 @@ final class ParquetFile
     }
 
     /**
-     * Statistics only skip row groups; the filter decides each row, so the rows are exact.
+     * The reader keeps the rows of the filter's bound conjuncts, the rest are evaluated here; offset and limit count the
+     * rows returned.
      *
      * @return Generator<int, array<string, list<mixed>>>
      */
@@ -143,8 +144,10 @@ final class ParquetFile
             return;
         }
 
+        $filter = BoundFilter::bind($query->filter, $schema, $this->options);
+        $residual = $filter->residual();
         $filtered = new FilteredBatches(
-            new FilterEvaluator($query->filter, $schema, $this->options),
+            $residual === null ? null : new FilterEvaluator($residual, $schema, $this->options),
             $columns,
             $query->offset,
             $query->limit,
@@ -157,7 +160,9 @@ final class ParquetFile
             (new ReadPlanner())->plan(
                 $this->reader->footer(),
                 $this->indexes(),
-                BoundFilter::bind($query->filter, $schema, $this->options),
+                $filter,
+                0,
+                $residual === null && $query->limit !== null ? $query->offset + $query->limit : null,
             ),
         ));
     }

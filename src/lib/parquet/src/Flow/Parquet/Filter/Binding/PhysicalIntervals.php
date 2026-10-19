@@ -8,7 +8,11 @@ use DateTimeImmutable;
 use Flow\Parquet\Data\PhysicalOrder;
 use Flow\Parquet\Filter\Operator;
 
+use function array_key_last;
+use function count;
 use function is_float;
+use function is_nan;
+use function usort;
 
 /**
  * The physical values whose decoded value satisfies a leaf, as a union of intervals.
@@ -16,7 +20,7 @@ use function is_float;
 final readonly class PhysicalIntervals
 {
     /**
-     * @param list<PhysicalInterval> $intervals
+     * @param list<PhysicalInterval> $intervals sorted by lower bound, disjoint
      */
     public function __construct(
         public array $intervals,
@@ -49,6 +53,8 @@ final readonly class PhysicalIntervals
     }
 
     /**
+     * Sorted by lower bound, each once: the pre-images of distinct values are disjoint, of equal values the same.
+     *
      * @param list<bool|DateTimeImmutable|float|int|string> $literals
      */
     public static function preImageOfSet(PreImage $preImage, PhysicalOrder $order, array $literals): ?self
@@ -67,7 +73,67 @@ final readonly class PhysicalIntervals
             }
         }
 
-        return new self($intervals);
+        usort($intervals, static fn(PhysicalInterval $a, PhysicalInterval $b): int => self::compareLower(
+            $order,
+            $a,
+            $b,
+        ));
+        $distinct = [];
+
+        foreach ($intervals as $interval) {
+            $last = array_key_last($distinct);
+
+            if ($last === null || self::compareLower($order, $distinct[$last], $interval) !== 0) {
+                $distinct[] = $interval;
+            }
+        }
+
+        return new self($distinct);
+    }
+
+    /**
+     * The value lies in an interval: only the last one starting at or below it can hold it. NaN lies in none, -0.0 and
+     * +0.0 compare equal.
+     */
+    public function contains(PhysicalOrder $order, bool|float|int|string $value): bool
+    {
+        if (is_float($value) && is_nan($value)) {
+            return false;
+        }
+
+        $low = 0;
+        $high = count($this->intervals);
+
+        while ($low < $high) {
+            $middle = ($low + $high) >> 1;
+            $lower = $this->intervals[$middle]->lower;
+
+            if ($lower === null || self::compare($order, $lower, $value) <= 0) {
+                $low = $middle + 1;
+            } else {
+                $high = $middle;
+            }
+        }
+
+        if ($low === 0) {
+            return false;
+        }
+
+        $interval = $this->intervals[$low - 1];
+
+        return (
+            (
+                $interval->lowerInclusive
+                || $interval->lower === null
+                || self::compare($order, $interval->lower, $value) < 0
+            )
+            && (
+                $interval->upper === null
+                || self::compare($order, $value, $interval->upper) < 0
+                || $interval->upperInclusive
+                && self::compare($order, $value, $interval->upper) === 0
+            )
+        );
     }
 
     /**
@@ -155,10 +221,17 @@ final readonly class PhysicalIntervals
         return new PhysicalInterval($lower, $lowerInclusive, $upper, $upperInclusive);
     }
 
+    private static function compareLower(PhysicalOrder $order, PhysicalInterval $a, PhysicalInterval $b): int
+    {
+        return $a->lower === null || $b->lower === null
+            ? ($b->lower === null) <=> ($a->lower === null)
+            : self::compare($order, $a->lower, $b->lower);
+    }
+
     private static function compare(PhysicalOrder $order, bool|float|int|string $a, bool|float|int|string $b): int
     {
-        if (is_float($a) && is_float($b) && $order->isZero($a) && $order->isZero($b)) {
-            return 0;
+        if (is_float($a) && is_float($b) && !is_nan($a) && !is_nan($b)) {
+            return $a <=> $b;
         }
 
         return $order->compare($a, $b);

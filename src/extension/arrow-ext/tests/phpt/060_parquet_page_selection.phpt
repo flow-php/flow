@@ -1,5 +1,5 @@
 --TEST--
-arrow reads a page-pruned plan over a parquet-mr file whose columns break pages at other rows (int64 at 0, 200, 428, 628, 828; float at 0, 300, 628, 928): the same rows as the PHP engine
+arrow reads a page-pruned, row-filtered plan over a parquet-mr file whose columns break pages at other rows (int64 at 0, 200, 428, 628, 828; float at 0, 300, 628, 928): exactly the matching rows, the same as the PHP engine
 --SKIPIF--
 <?php if (!extension_loaded("arrow")) die("skip arrow extension not loaded"); ?>
 --FILE--
@@ -46,5 +46,5 @@ foreach ([parquet_column('int64_column')->lessThan(300), parquet_column('float_c
 
 ?>
 --EXPECT--
-[[428,false],[572,true]] 428 true
-[[628,false],[372,true]] 628 true
+[[428,false],[572,true]] 270 true
+[[628,false],[372,true]] 342 true

@@ -9,6 +9,7 @@ use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Dremel\DremelAssembler;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Exception\RuntimeException;
+use Flow\Parquet\Filter\Evaluation\RowEvaluator;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile;
 use Flow\Parquet\ParquetFile\Data\DataConverter;
@@ -23,9 +24,9 @@ use Flow\Parquet\Thrift\MemoryBuffer;
 use Flow\Parquet\ThriftModel\FileMetaData;
 use Generator;
 
+use function array_fill_keys;
 use function array_map;
 use function array_values;
-use function count;
 use function is_array;
 use function min;
 use function sprintf;
@@ -126,62 +127,128 @@ final class PhpParquetFileReader implements ParquetFileReader
             ));
         }
 
-        $totalRows = $plan->selection->rowCount();
-
-        if ($totalRows === 0) {
+        if ($columns === [] || !$plan->selection->selectsAny() || $plan->limit === 0) {
             return;
         }
 
-        $rowGroups = $plan->selection->split(array_values(array_map(
-            static fn(RowGroup $rowGroup): int => $rowGroup->rowsCount(),
-            $metadata->rowGroups()->all(),
-        )));
-        $generators = [];
+        $rowGroups = array_values($metadata->rowGroups()->all());
+        $rowCounts = array_map(static fn(RowGroup $rowGroup): int => $rowGroup->rowsCount(), $rowGroups);
+        $selections = $plan->selection->split($rowCounts);
+        $matches = $plan->matched->split($rowCounts);
+        $remaining = $plan->limit;
+        $batch = array_fill_keys($columns, []);
+        $batched = 0;
 
-        foreach ($columns as $columnName) {
-            $generators[$columnName] = $columnReader->read(
-                $metadata->schema()->get($columnName),
-                $metadata,
-                $this->stream,
-                $rowGroups,
-                $plan->indexes,
-            );
-        }
+        foreach ($rowGroups as $group => $rowGroup) {
+            $selection = $selections[$group];
 
-        $remaining = $totalRows;
+            if (!$selection->selectsAny()) {
+                continue;
+            }
 
-        while ($remaining > 0) {
-            $take = min($batchSize, $remaining);
-            $chunk = [];
-            $read = 0;
+            $decoded = [];
 
-            foreach ($generators as $name => $generator) {
-                $values = [];
+            if ($plan->rowFilter !== null) {
+                $unmatched = $selection->difference($matches[$group]);
 
-                while (count($values) < $take && $generator->valid()) {
-                    // @mago-ignore analysis:mixed-assignment
-                    $entry = $generator->current();
+                if ($unmatched->selectsAny()) {
+                    $physical = [];
 
-                    if (is_array($entry)) {
-                        // @mago-ignore analysis:mixed-assignment
-                        foreach ($entry as $value) {
-                            $values[] = $value;
-                        }
+                    foreach ($plan->rowFilter->columns() as $leaf) {
+                        ['chunk' => $decoded[$leaf->flatPath()], 'values' => $physical[$leaf->flatPath()]] =
+                            $columnReader->readPhysical(
+                                $leaf,
+                                $rowGroup,
+                                $group,
+                                $this->stream,
+                                $unmatched,
+                                $plan->indexes,
+                            );
                     }
 
-                    $generator->next();
+                    $selection = $matches[$group]->union($unmatched->masked(RowEvaluator::evaluate(
+                        $plan->rowFilter,
+                        $physical,
+                        $unmatched->rowCount(),
+                    )));
+                }
+            }
+
+            $rows = $selection->rowCount();
+
+            if ($remaining !== null && $rows > $remaining) {
+                $selection = $selection->head($remaining);
+                $rows = $remaining;
+            }
+
+            if ($rows === 0) {
+                continue;
+            }
+
+            $generators = [];
+
+            foreach ($columns as $columnName) {
+                $generators[$columnName] = $columnReader->readRowGroup(
+                    $metadata->schema()->get($columnName),
+                    $rowGroup,
+                    $group,
+                    $this->stream,
+                    $selection,
+                    $plan->indexes,
+                    $decoded,
+                );
+            }
+
+            $left = $rows;
+
+            while ($left > 0) {
+                $take = min($batchSize - $batched, $left);
+
+                foreach ($generators as $name => $generator) {
+                    for ($taken = 0; $taken < $take && $generator->valid(); $taken++) {
+                        // @mago-ignore analysis:mixed-assignment
+                        $entry = $generator->current();
+
+                        if (is_array($entry)) {
+                            // @mago-ignore analysis:mixed-assignment
+                            foreach ($entry as $value) {
+                                $batch[$name][] = $value;
+                            }
+                        }
+
+                        $generator->next();
+                    }
+
+                    if ($taken < $take) {
+                        throw new RuntimeException(sprintf(
+                            'Column "%s" decodes fewer rows of row group %d than its metadata declares',
+                            $name,
+                            $group,
+                        ));
+                    }
                 }
 
-                $chunk[$name] = $values;
-                $read = count($values);
+                $batched += $take;
+                $left -= $take;
+
+                if ($batched === $batchSize) {
+                    yield $batch;
+                    $batch = array_fill_keys($columns, []);
+                    $batched = 0;
+                }
             }
 
-            if ($read === 0) {
-                return;
-            }
+            if ($remaining !== null) {
+                $remaining -= $rows;
 
-            yield $chunk;
-            $remaining -= $read;
+                if ($remaining === 0) {
+                    break;
+                }
+            }
+        }
+
+        if ($batched > 0) {
+            yield $batch;
         }
     }
 }

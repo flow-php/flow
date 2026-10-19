@@ -21,6 +21,7 @@ use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Encodings;
+use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\Column;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
@@ -175,13 +176,15 @@ final class ParquetFilesContext
     }
 
     /**
-     * The bytes of the column and offset indexes of the given columns in the given row groups, by file uri.
+     * The chunks of the given columns in the given row groups, by file uri.
      *
      * @param array<string, array<string, list<int>>> $groups
+     *
+     * @return list<ColumnChunk>
      */
-    public static function pageIndexBytes(Filesystem $filesystem, array $groups): int
+    public static function chunks(Filesystem $filesystem, array $groups): array
     {
-        $bytes = 0;
+        $chunks = [];
 
         foreach ($groups as $uri => $columns) {
             $file = Reader::php()->readStream($filesystem->readFrom(path($uri)));
@@ -189,13 +192,40 @@ final class ParquetFilesContext
 
             foreach ($columns as $column => $indexes) {
                 foreach ($indexes as $index) {
-                    $chunk = $rowGroups[$index]->getColumnChunk($file->schema()->getFlat($column));
-                    $bytes += (int) $chunk->columnIndex()?->length + (int) $chunk->offsetIndex()?->length;
+                    $chunks[] = $rowGroups[$index]->getColumnChunk($file->schema()->getFlat($column));
                 }
             }
         }
 
-        return $bytes;
+        return $chunks;
+    }
+
+    /**
+     * The bytes of the offset indexes of the given columns in the given row groups, by file uri.
+     *
+     * @param array<string, array<string, list<int>>> $groups
+     */
+    public static function offsetIndexBytes(Filesystem $filesystem, array $groups): int
+    {
+        return array_sum(array_map(
+            static fn(ColumnChunk $chunk): int => (int) $chunk->offsetIndex()?->length,
+            self::chunks($filesystem, $groups),
+        ));
+    }
+
+    /**
+     * The bytes of the column and offset indexes of the given columns in the given row groups, by file uri.
+     *
+     * @param array<string, array<string, list<int>>> $groups
+     */
+    public static function pageIndexBytes(Filesystem $filesystem, array $groups): int
+    {
+        return array_sum(array_map(
+            static fn(ColumnChunk $chunk): int => (
+                (int) $chunk->columnIndex()?->length + (int) $chunk->offsetIndex()?->length
+            ),
+            self::chunks($filesystem, $groups),
+        ));
     }
 
     /**

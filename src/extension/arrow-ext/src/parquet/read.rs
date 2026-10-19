@@ -10,7 +10,9 @@ use arrow_array::cast::AsArray;
 use arrow_array::{make_array, Array, ArrayRef};
 use arrow_buffer::NullBuffer;
 use arrow_schema::{DataType, Field, FieldRef, Fields, Schema, SchemaRef, TimeUnit};
-use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions, RowSelection, RowSelector};
+use parquet::arrow::arrow_reader::{
+    ArrowPredicate, ArrowReaderMetadata, ArrowReaderOptions, RowFilter, RowSelection, RowSelector,
+};
 use parquet::arrow::push_decoder::{ParquetPushDecoder, ParquetPushDecoderBuilder, RowGroupSelection};
 use parquet::arrow::ProjectionMask;
 use parquet::basic::{Compression, Type};
@@ -23,13 +25,16 @@ use parquet::DecodeResult;
 use crate::parquet::canonical::{canonical, canonical_type};
 use crate::parquet::error::Error;
 use crate::parquet::fetch::coalesced;
+use crate::parquet::filter::{FilterNode, PlanPredicate};
 use crate::parquet::source::{exact, ReadAt};
 
 /// The row groups holding a selected row, each with its row-group-local selection - `None` when every row of the
-/// group is selected.
-#[derive(Debug, PartialEq, Eq)]
+/// group is selected - the row filter evaluated on the selected rows, and the rows returned at most, counted after it.
+#[derive(Debug, PartialEq)]
 pub struct ReadPlan {
     pub selections: Vec<RowGroupSelection>,
+    pub filter: Option<FilterNode>,
+    pub limit: Option<usize>,
 }
 
 impl ReadPlan {
@@ -89,7 +94,11 @@ impl ReadPlan {
             }
         }
 
-        Ok(Self { selections })
+        Ok(Self {
+            selections,
+            filter: None,
+            limit: None,
+        })
     }
 
     pub fn row_groups(&self) -> Vec<usize> {
@@ -159,7 +168,7 @@ pub struct ParquetReader {
 }
 
 impl ParquetReader {
-    /// `source`: the file's bytes (`PhpStream`); `meta`: its footer without page indexes, which `plan` was built from. Offset indexes are loaded only for the projected leaves of the groups the plan reads in part.
+    /// `source`: the file's bytes (`PhpStream`); `meta`: its footer without page indexes, which `plan` was built from. Offset indexes are loaded for the projected and predicate leaves of the groups the plan reads in part, and of every planned group when the plan has a row filter.
     pub fn open<R: ReadAt + Send + Sync + 'static>(
         source: Arc<R>,
         meta: &Arc<ParquetMetaData>,
@@ -188,12 +197,21 @@ impl ParquetReader {
             .map(|field| canonical_type(field))
             .collect::<Result<Vec<_>, _>>()?;
 
-        if let Some(codec) = unsupported_codec(meta, &plan.row_groups(), &projected) {
+        let descr = meta.file_metadata().schema_descr();
+        let predicates = plan.filter.as_ref().map_or_else(
+            || Ok(Vec::new()),
+            |filter| PlanPredicate::conjuncts(filter, &schema, descr),
+        )?;
+        let predicated = predicates
+            .iter()
+            .flat_map(|predicate| predicate.leaves().iter().copied())
+            .collect::<Vec<_>>();
+
+        if let Some(codec) = unsupported_codec(meta, &plan.row_groups(), &projected, &predicated) {
             return Err(codec);
         }
 
         let source: Arc<dyn ReadAt + Send + Sync> = source;
-        let descr = meta.file_metadata().schema_descr();
         let leaves = (0..descr.num_columns())
             .filter(|leaf| {
                 projected
@@ -201,13 +219,30 @@ impl ParquetReader {
                     .any(|column| column.reads_leaf(descr.column(*leaf).path().parts()))
             })
             .collect::<Vec<_>>();
-        let meta = ArrowReaderMetadata::try_new(with_offset_index(source.as_ref(), meta, &plan, &leaves)?, options)?;
+        let fetched = (0..descr.num_columns())
+            .filter(|leaf| leaves.contains(leaf) || predicated.contains(leaf))
+            .collect::<Vec<_>>();
+        let meta = ArrowReaderMetadata::try_new(with_offset_index(source.as_ref(), meta, &plan, &fetched)?, options)?;
         let mask = ProjectionMask::leaves(meta.metadata().file_metadata().schema_descr(), leaves);
-        let decoder = ParquetPushDecoderBuilder::new_with_metadata(meta)
+        let mut builder = ParquetPushDecoderBuilder::new_with_metadata(meta)
             .with_row_group_selections(plan.selections)
             .with_projection(mask)
-            .with_batch_size(batch_size)
-            .build()?;
+            .with_batch_size(batch_size);
+
+        if !predicates.is_empty() {
+            builder = builder.with_row_filter(RowFilter::new(
+                predicates
+                    .into_iter()
+                    .map(|predicate| Box::new(predicate) as Box<dyn ArrowPredicate>)
+                    .collect(),
+            ));
+        }
+
+        if let Some(limit) = plan.limit {
+            builder = builder.with_limit(limit);
+        }
+
+        let decoder = builder.build()?;
         // a batch holds the roots with a projected leaf, in the file's order
         let roots = schema
             .fields()
@@ -291,8 +326,9 @@ fn read_ranges(source: &dyn ReadAt, ranges: Vec<Range<u64>>) -> Result<(Vec<Rang
     Ok((ranges, bytes))
 }
 
-/// `meta` with the offset index of each projected leaf of the row groups `plan` reads in part, where the selected pages
-/// are worth finding; every other chunk is fetched whole, as without an index.
+/// `meta` with the offset index of each fetched leaf of the row groups `plan` reads in part, or of every planned group
+/// when a row filter can narrow it, where the selected pages are worth finding; every other chunk is fetched whole, as
+/// without an index.
 fn with_offset_index(
     source: &dyn ReadAt,
     meta: &Arc<ParquetMetaData>,
@@ -302,7 +338,7 @@ fn with_offset_index(
     let indexed = plan
         .selections
         .iter()
-        .filter(|group| group.selection().is_some())
+        .filter(|group| plan.filter.is_some() || group.selection().is_some())
         .flat_map(|group| leaves.iter().map(move |leaf| (group.row_group_index(), *leaf)))
         .filter_map(|(group, leaf)| Some((group, leaf, meta.row_group(group).column(leaf).offset_index_range()?)))
         .collect::<Vec<_>>();
@@ -328,7 +364,7 @@ fn with_offset_index(
 }
 
 /// The struct child at `path` under `array`, null wherever a struct above it is.
-fn child(array: &ArrayRef, path: &[String]) -> Result<ArrayRef, Error> {
+pub fn child(array: &ArrayRef, path: &[String]) -> Result<ArrayRef, Error> {
     let mut array = Arc::clone(array);
 
     for name in path {
@@ -387,19 +423,33 @@ fn int96_hinted(field: &FieldRef, descr: &SchemaDescriptor, leaf: &mut usize, hi
     Arc::new(Field::clone(field).with_data_type(data_type))
 }
 
-/// A codec the parquet crate is built without, in a projected column chunk of the planned row groups.
-fn unsupported_codec(meta: &ParquetMetaData, row_groups: &[usize], columns: &[Projected]) -> Option<Error> {
+/// A codec the parquet crate is built without, in a projected or `predicated` leaf's chunk of the planned row groups.
+fn unsupported_codec(
+    meta: &ParquetMetaData,
+    row_groups: &[usize],
+    columns: &[Projected],
+    predicated: &[usize],
+) -> Option<Error> {
     row_groups.iter().find_map(|group| {
-        meta.row_group(*group).columns().iter().find_map(|chunk| {
-            let column = columns
-                .iter()
-                .find(|column| column.reads_leaf(chunk.column_path().parts()))?;
+        meta.row_group(*group)
+            .columns()
+            .iter()
+            .enumerate()
+            .find_map(|(leaf, chunk)| {
+                let column = match columns
+                    .iter()
+                    .find(|column| column.reads_leaf(chunk.column_path().parts()))
+                {
+                    Some(column) => column.field.name().clone(),
+                    None if predicated.contains(&leaf) => chunk.column_path().string(),
+                    None => return None,
+                };
 
-            (chunk.compression() == Compression::LZO).then(|| Error::Unsupported {
-                column: column.field.name().clone(),
-                parquet: "LZO".to_string(),
+                (chunk.compression() == Compression::LZO).then(|| Error::Unsupported {
+                    column,
+                    parquet: "LZO".to_string(),
+                })
             })
-        })
     })
 }
 
@@ -417,7 +467,7 @@ mod tests {
     use parquet::arrow::arrow_reader::{RowSelection, RowSelector};
     use parquet::arrow::push_decoder::RowGroupSelection;
     use parquet::arrow::ArrowWriter;
-    use parquet::basic::Compression;
+    use parquet::basic::{Compression, Type};
     use parquet::data_type::{Int64Type, Int96, Int96Type};
     use parquet::file::metadata::{FileMetaData, PageIndexPolicy, ParquetMetaData, ParquetMetaDataReader};
     use parquet::file::properties::WriterProperties;
@@ -427,6 +477,7 @@ mod tests {
 
     use super::{int96_hint, unsupported_codec, ParquetReader, Projected, ReadPlan};
     use crate::parquet::error::Error;
+    use crate::parquet::filter::{FilterNode, Interval, Scalar};
     use crate::parquet::footer::Footer;
     use crate::parquet::source::fake::Counting;
 
@@ -629,10 +680,10 @@ mod tests {
         let column = |name: &str| Projected::resolve(&schema, name).unwrap();
 
         assert!(matches!(
-            unsupported_codec(&meta, &[0], &[column("id"), column("name")]),
+            unsupported_codec(&meta, &[0], &[column("id"), column("name")], &[]),
             Some(Error::Unsupported { column, parquet }) if column == "name" && parquet == "LZO"
         ));
-        assert!(unsupported_codec(&meta, &[0], &[column("id")]).is_none());
+        assert!(unsupported_codec(&meta, &[0], &[column("id")], &[]).is_none());
     }
 
     fn open(
@@ -824,6 +875,72 @@ mod tests {
         for path in ["structure.missing", "missing.int64", "structure.int64.deeper"] {
             assert!(matches!(read(struct_file(), &[path]), Err(Error::MissingColumn(column)) if column == path));
         }
+    }
+
+    /// `a >= 150` read for `b`, from `selectors`, `limit` rows at most.
+    fn filtered(selectors: Vec<(usize, bool)>, limit: Option<usize>) -> (Vec<i64>, Arc<Counting>) {
+        let file = four_groups();
+        let footer = Footer::read(&Bytes::from(file.clone())).unwrap();
+        let source = Arc::new(Counting::new(file));
+        let mut plan = ReadPlan::from_selection(footer.meta(), selectors).unwrap();
+        plan.filter = Some(FilterNode::Intervals {
+            path: vec!["a".to_string()],
+            physical: Type::INT64,
+            intervals: vec![Interval {
+                lower: Some(Scalar::Int(150)),
+                lower_inclusive: true,
+                upper: None,
+                upper_inclusive: false,
+            }],
+        });
+        plan.limit = limit;
+        let mut reader =
+            ParquetReader::open(Arc::clone(&source), footer.meta(), &["b".to_string()], plan, 1_024).unwrap();
+        let mut values = Vec::new();
+
+        while let Some(batch) = reader.next() {
+            values.extend(
+                batch.unwrap().1[0]
+                    .as_primitive::<arrow_array::types::Int64Type>()
+                    .values()
+                    .iter(),
+            );
+        }
+
+        (values, source)
+    }
+
+    #[test]
+    fn a_row_filter_reads_only_the_matching_rows_of_the_unprojected_predicate_column() {
+        let (values, _) = filtered(vec![(400, false)], None);
+
+        assert_eq!(values, (150..400).collect::<Vec<_>>());
+    }
+
+    #[test]
+    fn a_row_filter_loads_the_offset_index_of_every_planned_group_and_skips_the_projection_of_a_group_it_empties() {
+        let (_, source) = filtered(vec![(400, false)], None);
+        let file = four_groups();
+
+        assert_eq!(
+            source.counted().1,
+            offset_index_bytes(&file, &[(0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1), (3, 0), (3, 1)])
+                + chunk_bytes(&file, &[0, 1, 2, 3], &[0])
+                + chunk_bytes(&file, &[1, 2, 3], &[1])
+        );
+    }
+
+    #[test]
+    fn a_limit_counts_the_rows_the_filter_keeps_and_no_page_of_the_next_group_is_fetched() {
+        let (values, limited) = filtered(vec![(400, false)], Some(60));
+        let (_, three_groups) = filtered(vec![(300, false), (100, true)], None);
+
+        assert_eq!(values, (150..210).collect::<Vec<_>>());
+        // the offset index of the last group is loaded with the plan, none of its pages
+        assert_eq!(
+            limited.counted().1,
+            three_groups.counted().1 + offset_index_bytes(&four_groups(), &[(3, 0), (3, 1)])
+        );
     }
 
     /// Columns `a`, `b`, `c` (Int64) in four row groups of 100 rows.

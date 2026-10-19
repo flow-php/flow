@@ -6,6 +6,7 @@ namespace Flow\Parquet\Tests\Unit\Reader;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Filter\Binding\BoundFilter;
+use Flow\Parquet\Filter\Filter;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
@@ -19,6 +20,8 @@ use Flow\Parquet\Tests\Mother\FooterMother;
 use Flow\Parquet\Tests\Mother\PageIndexMother;
 use Flow\Parquet\Tests\Mother\ReadPlanMother;
 use Flow\Parquet\Tests\Mother\SbbfMother;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\Parquet\DSL\parquet_all;
@@ -39,19 +42,57 @@ final class ReadPlannerTest extends TestCase
         static::assertSame([], $indexes->reads);
     }
 
-    public function test_a_limit_beside_a_filter_is_refused(): void
+    public function test_a_limit_beside_a_wholly_bound_filter_counts_the_rows_the_row_filter_keeps(): void
+    {
+        $footer = FooterMother::idGroups([1, 2], [3, 4], [5, 6]);
+        $filter = BoundFilter::bind(parquet_column('id')->greaterThan(1), $footer->schema(), new Options());
+
+        $plan = (new ReadPlanner())->plan($footer, new InMemoryIndexes(), $filter, 1, 3);
+
+        static::assertEquals(RowSelection::window(6, 1), $plan->selection);
+        static::assertSame($filter, $plan->rowFilter);
+        static::assertSame(3, $plan->limit);
+    }
+
+    public function test_a_filtered_plan_without_a_limit_carries_the_row_filter_and_no_limit(): void
+    {
+        $footer = FooterMother::idGroups([1, 2], [3, 4], [5, 6]);
+        $kept = parquet_column('id')->equals(1);
+
+        $plan = (new ReadPlanner())->plan(
+            $footer,
+            new InMemoryIndexes(),
+            BoundFilter::bind(parquet_all($kept, parquet_column('id')->equals('1')), $footer->schema(), new Options()),
+        );
+
+        static::assertSame($kept, $plan->rowFilter?->filter());
+        static::assertNull($plan->limit);
+    }
+
+    /**
+     * @return Generator<string, array{Filter}>
+     */
+    public static function filters_not_wholly_bound(): Generator
+    {
+        yield 'partly bound' => [parquet_all(parquet_column('id')->equals(1), parquet_column('id')->equals('1'))];
+        yield 'unbound' => [parquet_column('id')->equals('1')];
+    }
+
+    #[DataProvider('filters_not_wholly_bound')]
+    public function test_a_limit_beside_a_filter_not_wholly_bound_is_refused(Filter $filter): void
     {
         $footer = new SpyFooter(Schema::with(FlatColumn::int64('id')), 10);
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(
-            'A limit counts the rows returned, which a plan filtered by statistics cannot honour',
+            'A limit counts the rows returned, which a plan cannot honour unless every conjunct of its filter is bound '
+            . 'in the file',
         );
 
         (new ReadPlanner())->plan(
             $footer,
             new InMemoryIndexes(),
-            BoundFilter::bind(parquet_column('id')->equals(1), $footer->schema(), new Options()),
+            BoundFilter::bind($filter, $footer->schema(), new Options()),
             0,
             10,
         );
@@ -129,11 +170,11 @@ final class ReadPlannerTest extends TestCase
         $indexes = new InMemoryIndexes();
 
         static::assertEquals(
-            new ReadPlan($kept, $kept, $indexes),
+            new ReadPlan($kept, $kept, $indexes, $filter),
             (new ReadPlanner())->plan($footer, $indexes, $filter),
         );
         static::assertEquals(
-            new ReadPlan($fromThird, $fromThird, $indexes),
+            new ReadPlan($fromThird, $fromThird, $indexes, $filter),
             (new ReadPlanner())->plan($footer, $indexes, $filter, 3),
         );
     }
@@ -147,13 +188,10 @@ final class ReadPlannerTest extends TestCase
             [0, 4],
             [5, 9],
         ])]], ['a' => [PageIndexMother::pagesAt(0, 5)]]);
-        $plan = (new ReadPlanner())->plan(
-            $footer,
-            $indexes,
-            BoundFilter::bind(parquet_column('a')->greaterThanOrEqual(5), $footer->schema(), new Options()),
-        );
+        $filter = BoundFilter::bind(parquet_column('a')->greaterThanOrEqual(5), $footer->schema(), new Options());
+        $plan = (new ReadPlanner())->plan($footer, $indexes, $filter);
 
-        static::assertEquals(new ReadPlan($pages, $pages, $indexes), $plan);
+        static::assertEquals(new ReadPlan($pages, $pages, $indexes, $filter), $plan);
         static::assertSame($indexes, $plan->indexes);
     }
 }

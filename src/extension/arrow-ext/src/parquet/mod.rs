@@ -8,6 +8,7 @@ pub mod chunks;
 pub mod engine;
 pub mod error;
 pub mod fetch;
+pub mod filter;
 pub mod footer;
 pub mod lib_calls;
 #[allow(

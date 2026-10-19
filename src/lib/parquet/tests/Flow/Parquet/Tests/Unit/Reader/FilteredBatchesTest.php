@@ -54,6 +54,17 @@ final class FilteredBatchesTest extends TestCase
         );
     }
 
+    public function test_without_an_evaluator_every_row_is_kept_and_only_the_offset_and_the_limit_apply(): void
+    {
+        $batches = new FilteredBatches(null, ['id'], 1, 2);
+
+        static::assertSame(['id'], $batches->columns());
+        static::assertSame(
+            [['id' => [2, 3]]],
+            iterator_to_array($batches->filter([['id' => [1, 2]], ['id' => [3, 4]]]), false),
+        );
+    }
+
     public function test_offset_and_limit_count_the_matching_rows_across_batches_and_no_batch_is_pulled_past_the_limit(): void
     {
         $pulled = 0;

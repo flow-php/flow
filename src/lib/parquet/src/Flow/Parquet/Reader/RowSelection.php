@@ -82,18 +82,83 @@ final readonly class RowSelection
         return $other->intersection($this)->rowCount() === $other->rowCount();
     }
 
+    public function difference(self $other): self
+    {
+        return $this->combine($other, static fn(bool $left, bool $right): bool => $left || !$right);
+    }
+
+    public function head(int $rows): self
+    {
+        $selectors = [];
+
+        foreach ($this->selectors as $selector) {
+            $taken = $selector->skip ? 0 : min($rows, $selector->rowCount);
+            $selectors[] = new RowSelector($taken, false);
+            $selectors[] = new RowSelector($selector->rowCount - $taken, true);
+            $rows -= $taken;
+        }
+
+        return new self(...$selectors);
+    }
+
     public function intersection(self $other): self
     {
-        return $this->combine($other, false);
+        return $this->combine($other, static fn(bool $left, bool $right): bool => $left || $right);
+    }
+
+    /**
+     * The selected rows whose entry is true, one entry per selected row in order.
+     *
+     * @param list<bool> $mask
+     */
+    public function masked(array $mask): self
+    {
+        if (count($mask) !== $this->rowCount()) {
+            throw new InvalidArgumentException(sprintf(
+                'A mask of %d rows cannot narrow a selection of %d rows',
+                count($mask),
+                $this->rowCount(),
+            ));
+        }
+
+        $selectors = [];
+        $row = 0;
+
+        foreach ($this->selectors as $selector) {
+            if ($selector->skip) {
+                $selectors[] = $selector;
+
+                continue;
+            }
+
+            $run = 0;
+            $skip = !$mask[$row];
+
+            for ($end = $row + $selector->rowCount; $row < $end; $row++) {
+                if (!$mask[$row] !== $skip) {
+                    $selectors[] = new RowSelector($run, $skip);
+                    $run = 0;
+                    $skip = !$skip;
+                }
+
+                $run++;
+            }
+
+            $selectors[] = new RowSelector($run, $skip);
+        }
+
+        return new self(...$selectors);
     }
 
     public function union(self $other): self
     {
-        return $this->combine($other, true);
+        return $this->combine($other, static fn(bool $left, bool $right): bool => $left && $right);
     }
 
     /**
      * Rows selected.
+     *
+     * @return non-negative-int
      */
     public function rowCount(): int
     {
@@ -187,9 +252,9 @@ final readonly class RowSelection
     }
 
     /**
-     * Each row selected in both ($union false) or in either ($union true).
+     * @param callable(bool, bool): bool $skip whether a row is skipped, from whether each selection skips it
      */
-    private function combine(self $other, bool $union): self
+    private function combine(self $other, callable $skip): self
     {
         if ($this->totalRows() !== $other->totalRows()) {
             throw new InvalidArgumentException(sprintf(
@@ -214,10 +279,7 @@ final readonly class RowSelection
 
         while ($i < count($left) && $j < count($right)) {
             $rows = min($leftRemaining, $rightRemaining);
-            $combined[] = new RowSelector(
-                $rows,
-                $union ? $left[$i]->skip && $right[$j]->skip : $left[$i]->skip || $right[$j]->skip,
-            );
+            $combined[] = new RowSelector($rows, $skip($left[$i]->skip, $right[$j]->skip));
             $leftRemaining -= $rows;
             $rightRemaining -= $rows;
 

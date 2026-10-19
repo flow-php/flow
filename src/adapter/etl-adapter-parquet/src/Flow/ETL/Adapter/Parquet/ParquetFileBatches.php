@@ -98,7 +98,7 @@ final class ParquetFileBatches implements OffsetSkippingFileBatches
 
             $opened = $file->open();
 
-            // a superset plan: the plan's Filter node still drops the rows the kept groups hold that do not match
+            // rows matching the conjuncts the file binds; the plan's Filter node drops those the rest do not match
             foreach ($opened->batches(
                 $fileBody,
                 $batchSize,
