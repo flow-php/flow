@@ -169,4 +169,51 @@ final class PushdownParityTest extends FlowTestCase
             );
         }
     }
+
+    /**
+     * @return Generator<string, array{?ParquetEngine}>
+     */
+    public static function engines(): Generator
+    {
+        yield 'default engine' => [null];
+        yield 'php engine' => [new PhpParquetEngine()];
+    }
+
+    #[DataProvider('engines')]
+    public function test_a_limit_beside_a_pushed_filter_reads_fewer_bytes_than_the_unlimited_read(?ParquetEngine $engine): void
+    {
+        $memory = memory_filesystem();
+        PushdownParityContext::write($memory);
+        $limitedFilesystem = new CountingFilesystem($memory);
+        $unlimitedFilesystem = new CountingFilesystem($memory);
+
+        $limited = df()
+            ->read(
+                from_parquet(
+                    path(PushdownParityContext::GLOB),
+                    engine: $engine,
+                    filesystem: $limitedFilesystem,
+                )->unionByName(),
+            )
+            ->filter(ref('id')->lessThan(lit(35)))
+            ->limit(10)
+            ->fetch();
+        $unlimited = df()
+            ->read(
+                from_parquet(
+                    path(PushdownParityContext::GLOB),
+                    engine: $engine,
+                    filesystem: $unlimitedFilesystem,
+                )->unionByName(),
+            )
+            ->filter(ref('id')->lessThan(lit(35)))
+            ->fetch();
+
+        static::assertCount(10, $limited);
+        static::assertCount(35, $unlimited);
+        static::assertLessThan(
+            ParquetFilesContext::bytesRead($unlimitedFilesystem),
+            ParquetFilesContext::bytesRead($limitedFilesystem),
+        );
+    }
 }

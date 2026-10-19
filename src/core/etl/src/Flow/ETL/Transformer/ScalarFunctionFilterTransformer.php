@@ -34,7 +34,15 @@ final readonly class ScalarFunctionFilterTransformer implements Transformer
 
     public function bind(Schema $input): BoundStep
     {
-        return new BoundStep(new self($this->function, $this->resolve($input)), $input);
+        return new BoundStep($this->bound($input), $input);
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function bound(Schema $input): self
+    {
+        return new self($this->function, $this->resolve($input));
     }
 
     public function transform(Rows $rows, FlowContext $context): Rows

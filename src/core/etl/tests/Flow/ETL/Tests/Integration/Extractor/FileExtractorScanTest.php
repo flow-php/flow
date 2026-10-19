@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Extractor;
 
+use Flow\ETL\Extractor\File\FileExtractor;
 use Flow\ETL\Extractor\File\FileScan;
+use Flow\ETL\Optimizer;
+use Flow\ETL\Optimizer\Rule\PushFilterIntoSource;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use PHPUnit\Framework\Attributes\TestWith;
@@ -21,11 +24,14 @@ use function Flow\ETL\Adapter\Text\from_text;
 use function Flow\ETL\Adapter\Text\to_text;
 use function Flow\ETL\Adapter\XML\from_xml;
 use function Flow\ETL\Adapter\XML\to_xml;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\files;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_path_partitions;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\path;
@@ -78,5 +84,72 @@ final class FileExtractorScanTest extends FlowIntegrationTestCase
 
         static::assertNotSame([], $scanned->toArray());
         static::assertEquals(ExtractedRows::of($extractor, $context, new FileScan(2))->toArray(), $scanned->toArray());
+    }
+
+    #[TestWith(['csv'])]
+    #[TestWith(['json'])]
+    #[TestWith(['text'])]
+    #[TestWith(['xml'])]
+    #[TestWith(['excel'])]
+    #[TestWith(['parquet'])]
+    #[TestWith(['floe'])]
+    #[TestWith(['files'])]
+    #[TestWith(['path_partitions'])]
+    public function test_a_pushed_filter_returns_what_the_filter_node_returns(string $family): void
+    {
+        $directory = $this->cacheDir->path() . '/pushed-' . $family;
+        $uri = path($directory . '/rows.' . $family);
+        $xlsx = path($directory . '/rows.xlsx');
+
+        [$sink, $extractor, $predicate] = match ($family) {
+            'csv' => [to_csv($uri), static fn(): FileExtractor => from_csv($uri), ref('id')->notEquals(lit('b'))],
+            'json' => [to_json($uri), static fn(): FileExtractor => from_json($uri), ref('id')->notEquals(lit('b'))],
+            'text' => [to_text($uri), static fn(): FileExtractor => from_text($uri), ref('text')->notEquals(lit('b'))],
+            'xml' => [
+                to_xml($uri),
+                static fn(): FileExtractor => from_xml($uri, 'rows/row'),
+                ref('node')->xpath('id')->domElementValue()->notEquals(lit('b')),
+            ],
+            'excel' => [
+                to_excel($xlsx),
+                static fn(): FileExtractor => from_excel($xlsx),
+                ref('id')->notEquals(lit('b')),
+            ],
+            'parquet' => [
+                to_parquet($uri),
+                static fn(): FileExtractor => from_parquet($uri),
+                ref('id')->notEquals(lit('b')),
+            ],
+            'floe' => [to_floe($uri), static fn(): FileExtractor => from_floe($uri), ref('id')->notEquals(lit('b'))],
+            'files' => [null, static fn(): FileExtractor => files($directory . '/*/*'), ref('id')->notEquals(lit('b'))],
+            default => [
+                null,
+                static fn(): FileExtractor => from_path_partitions($directory . '/*/*'),
+                ref('id')->notEquals(lit('b')),
+            ],
+        };
+
+        if ($sink === null) {
+            foreach (['a', 'b', 'c'] as $id) {
+                df()
+                    ->read(from_array([['id' => $id]]))
+                    ->write(to_csv(path($directory . '/id=' . $id . '/rows.csv')))
+                    ->run();
+            }
+        } else {
+            df()
+                ->read(from_array([['id' => 'a'], ['id' => 'b'], ['id' => 'c']]))
+                ->write($sink)
+                ->run();
+        }
+
+        $pushed = df()->read($extractor())->filter($predicate)->fetch();
+        $plain = df(config_builder()->optimizer(Optimizer::default()->without(PushFilterIntoSource::class)))
+            ->read($extractor())
+            ->filter($predicate)
+            ->fetch();
+
+        static::assertCount(2, $plain);
+        static::assertEquals($plain->toArray(), $pushed->toArray());
     }
 }

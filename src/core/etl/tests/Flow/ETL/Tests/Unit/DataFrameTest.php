@@ -1203,14 +1203,12 @@ final class DataFrameTest extends FlowTestCase
         $dataFrame = df()->read($extractor)->filter(ref('id')->isNotNull())->write(to_memory(new ArrayMemory()));
 
         static::assertSame(<<<'PLAN'
-            #3 Write  preserving · opaque · streaming
+            #2 Write  preserving · opaque · streaming
             │  Loader: MemoryLoader
-            └─ #2 Filter  reducing · transparent · streaming
-               │  Condition: IsNotNull
-               └─ #1 Read  source · transparent · streaming
-                     Extractor: RecordingFileExtractor
-                     Source: file:///dev/null
-                     Filter: IsNotNull
+            └─ #1 Read  source · transparent · streaming
+                  Extractor: RecordingFileExtractor
+                  Source: file:///dev/null
+                  Filter: IsNotNull
             PLAN, $dataFrame->explain()->toString(format: Format::declarations));
         static::assertSame([], $extractor->scans);
     }

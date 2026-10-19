@@ -33,8 +33,8 @@ final class ParquetFileBatches implements OffsetSkippingFileBatches
     /**
      * @param null|ParquetSourceFile $firstFile the file the schema pass kept open, read instead of opened again
      * @param null|DerivedSchema $derived the schema every file must match; null under unionByName
-     * @param null|ScalarFunction $filter the predicate the plan offered: row groups it proves cannot match are
-     *                                    skipped, the rest is read whole and filtered by the plan
+     * @param null|ScalarFunction $filter the scan's predicate: what its conjuncts bound in a file prove cannot
+     *                                    match is skipped, FileReadLoop drops the rest that does not match it
      */
     public function __construct(
         private readonly ParquetSourceFileOpener $opener,
@@ -98,7 +98,7 @@ final class ParquetFileBatches implements OffsetSkippingFileBatches
 
             $opened = $file->open();
 
-            // rows matching the conjuncts the file binds; the plan's Filter node drops those the rest do not match
+            // rows matching the conjuncts the file binds; FileReadLoop drops those the rest do not match
             foreach ($opened->batches(
                 $fileBody,
                 $batchSize,

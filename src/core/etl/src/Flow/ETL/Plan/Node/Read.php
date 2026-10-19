@@ -57,9 +57,6 @@ final readonly class Read implements Node
         );
     }
 
-    /**
-     * @throws InvalidArgumentException when a limit was already pushed
-     */
     public function withFilter(ScalarFunction $filter): self
     {
         return new self($this->extractor, new FileScan($this->scan->limit, $this->scan->pathFilter, match (true) {
@@ -72,7 +69,7 @@ final readonly class Read implements Node
     /**
      * Narrowing only: a second push may lower the limit, never raise it.
      *
-     * @throws InvalidArgumentException when $limit is not greater than 0, or a filter was already pushed
+     * @throws InvalidArgumentException when $limit is not greater than 0
      */
     public function withLimit(int $limit): self
     {

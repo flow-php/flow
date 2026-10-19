@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Plan;
 
-final readonly class ReplaceLeaf implements Rewrite
+final readonly class ReplaceNode implements Rewrite
 {
     public function __construct(
         private Node $target,

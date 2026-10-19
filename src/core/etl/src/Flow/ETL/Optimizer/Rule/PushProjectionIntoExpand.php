@@ -9,7 +9,7 @@ use Flow\ETL\Optimizer\ProjectionWalk;
 use Flow\ETL\Optimizer\Rule;
 use Flow\ETL\Plan\LogicalPlan;
 use Flow\ETL\Plan\Node;
-use Flow\ETL\Plan\ReplaceLeaf;
+use Flow\ETL\Plan\ReplaceNode;
 use Flow\ETL\Plan\RequiredColumns;
 use SplObjectStorage;
 
@@ -63,7 +63,7 @@ final readonly class PushProjectionIntoExpand implements Rule
 
         foreach ($depths as $id => $_) {
             $plan = $plan->transformUp(
-                new ReplaceLeaf($targets[$id], $targets[$id]->withCarries($demands[$targets[$id]])),
+                new ReplaceNode($targets[$id], $targets[$id]->withCarries($demands[$targets[$id]])),
             );
         }
 

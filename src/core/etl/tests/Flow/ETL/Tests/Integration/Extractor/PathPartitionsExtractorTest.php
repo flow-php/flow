@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Integration\Extractor;
 
 use Flow\ETL\Cardinality;
 use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Extractor\PathPartitionsExtractor;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Context\ExtractedRows;
@@ -16,7 +17,9 @@ use Flow\Filesystem\Tests\OperatingSystem;
 
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_path_partitions;
+use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\map_schema;
+use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -242,5 +245,24 @@ final class PathPartitionsExtractorTest extends FlowIntegrationTestCase
                 from_path_partitions(path_real(__DIR__ . '/Fixtures/multi_partitioned/**/*'))->withBatchSize(1),
             ),
         );
+    }
+
+    public function test_a_scan_returns_only_the_files_matching_its_filter(): void
+    {
+        $batches = iterator_to_array(
+            from_path_partitions('memory://dir/**/*.txt', MemoryFiles::with([
+                'memory://dir/year=2021/a.txt' => 'a',
+                'memory://dir/year=2022/b.txt' => 'b',
+                'memory://dir/year=2023/c.txt' => 'c',
+                'memory://dir/year=2024/d.txt' => 'd',
+                'memory://dir/year=2025/e.txt' => 'e',
+            ]))
+                ->withBatchSize(2)
+                ->scan(flow_context(), new FileScan(filter: ref('year')->isIn(lit(['2023', '2024'])))),
+            false,
+        );
+
+        static::assertCount(1, $batches);
+        static::assertSame(['2023', '2024'], $batches[0]->column('year')->values());
     }
 }

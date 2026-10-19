@@ -88,11 +88,12 @@ final class TextExtractor implements
         yield from (new FileReadLoop(
             $fileColumns,
             $fileColumns->declare($this->schema ?? schema(str_schema('text'))),
+            $scan->filter,
         ))->read(
             iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $scan->pathFilter), false),
             new TextFileBatches($this->filesystem),
             $this->batchSize(),
-            $context->backend(),
+            $context,
             new ReadWindow(limit: $scan->limit),
         );
     }

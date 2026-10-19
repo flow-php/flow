@@ -138,11 +138,11 @@ final class ParquetExtractor implements
         $this->firstFile = null;
 
         try {
-            yield from (new FileReadLoop($fileColumns, $target))->read(
+            yield from (new FileReadLoop($fileColumns, $target, $scan->filter))->read(
                 $sources,
                 $batches,
                 $this->batchSize(),
-                $context->backend(),
+                $context,
                 new ReadWindow($this->offset ?? 0, $scan->limit),
             );
         } finally {

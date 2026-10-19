@@ -22,8 +22,8 @@ final class PartitionedSourceMother
     }
 
     /**
-     * One row per partition. The double ignores the pushed path filter, so only a Filter node the planner kept can
-     * drop the other partition's row.
+     * One row per partition. The double ignores the pushed path filter, so only the scan's filter or a Filter node
+     * the planner kept can drop the other partition's row.
      */
     public static function yearMonth(): RecordingFileExtractor
     {

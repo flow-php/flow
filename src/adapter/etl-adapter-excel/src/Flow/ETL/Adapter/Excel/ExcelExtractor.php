@@ -148,11 +148,11 @@ final class ExcelExtractor implements
         $this->sampled = null;
 
         try {
-            yield from (new FileReadLoop($fileColumns, $schema))->read(
+            yield from (new FileReadLoop($fileColumns, $schema, $scan->filter))->read(
                 iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $scan->pathFilter), false),
                 $batches,
                 $this->batchSize(),
-                $context->backend(),
+                $context,
                 new ReadWindow(limit: $scan->limit),
             );
         } finally {

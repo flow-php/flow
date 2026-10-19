@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor\File;
 
-use Flow\ETL\Column\Backend;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Function\Conjuncts;
+use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
 use Generator;
 
 use function min;
@@ -17,6 +20,7 @@ final readonly class FileReadLoop
     public function __construct(
         private FileColumns $fileColumns,
         private Schema $schema,
+        private ?ScalarFunction $filter = null,
     ) {}
 
     /**
@@ -29,17 +33,25 @@ final readonly class FileReadLoop
         array $sources,
         FileBatches $batches,
         int $batchSize,
-        Backend $backend,
+        FlowContext $context,
         ReadWindow $window,
     ): Generator {
         $body = $this->fileColumns->withoutTail($this->schema);
+        $backend = $context->backend();
+        $filters = [];
+
+        // one conjunct at a time, each on the rows the one before kept: a lower filter guards the one above it
+        foreach ($this->filter === null ? [] : (new Conjuncts())->of($this->filter) as $conjunct) {
+            $filters[] = (new ScalarFunctionFilterTransformer($conjunct))->bound($this->schema);
+        }
         $offset = $window->offset;
         $skips = $batches instanceof OffsetSkippingFileBatches;
         $yielded = 0;
 
         foreach ($sources as $source) {
             $constants = $this->fileColumns->forFile($source, $this->schema);
-            $wanted = $window->limit === null ? null : $window->limit - $yielded;
+            // a limit counts the rows the filter keeps, which a format would count before it
+            $wanted = $window->limit === null || $filters !== [] ? null : $window->limit - $yielded;
             $file = $batches->batches(
                 $source,
                 $body,
@@ -63,11 +75,20 @@ final readonly class FileReadLoop
                     $batch = $batch->slice($skipped, $batch->count() - $skipped);
                 }
 
-                if ($window->limit !== null && $batch->count() > ($window->limit - $yielded)) {
-                    $batch = $batch->slice(0, $window->limit - $yielded);
+                $rows = $constants->fillRows($batch, $this->schema, $backend);
+
+                foreach ($filters as $filter) {
+                    $rows = $filter->transform($rows, $context);
                 }
 
-                $rows = $constants->fillRows($batch, $this->schema, $backend);
+                if ($rows->isEmpty()) {
+                    continue;
+                }
+
+                if ($window->limit !== null && $rows->count() > ($window->limit - $yielded)) {
+                    $rows = $rows->slice(0, $window->limit - $yielded);
+                }
+
                 $yielded += $rows->count();
                 $signal = yield $rows;
 

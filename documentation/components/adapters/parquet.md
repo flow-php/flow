@@ -93,8 +93,9 @@ use Flow\Parquet\Writer;
 
 ## Filter pushdown
 
-A `filter()` directly over `from_parquet()` is offered to the reader. Row groups whose statistics prove that no row
-matches are skipped; the `Filter` step still runs on the rest, so the result never changes:
+A `filter()` directly over `from_parquet()` moves into the reader, which returns only matching rows: row groups whose
+statistics prove that no row matches are skipped, and a `limit()` after the filter stops the read at that many
+matching rows:
 
 ```php
 <?php
@@ -105,6 +106,7 @@ use function Flow\ETL\DSL\{data_frame, lit, ref, to_output};
 data_frame()
     ->read(from_parquet(__DIR__ . '/orders/*.parquet'))
     ->filter(ref('id')->greaterThan(lit(1000))->and(ref('status')->equals(lit('paid'))))
+    ->limit(10)
     ->write(to_output())
     ->run();
 ```
@@ -119,22 +121,23 @@ Pushed:
 - a `date` literal on a `datetime` column and the reverse
 - a digit string (`lit('1000')`) on a `numeric_string` (`UINT_64`) column
 
-Filtered after reading:
+Evaluated on the rows read:
 
 - other functions, two columns compared, a literal of another type
 - `json` columns (except `isNull`/`isNotNull`), ordering on `uuid`
 - a column the file stores as another type than the read
 - partition columns, which list fewer files instead ([partitioning](/documentation/components/core/partitioning.md))
 
-`explain()` shows the predicate offered to the reader under `Read`, not what it skipped:
+`explain()` shows the filter and the limit under `Read`, not what the reader skipped:
 
 ```
 #3 Result
 │  Rows this plan hands out: to the trigger, or to the node reading it
-└─ #2 Filter
-   │  Condition: All
+└─ #2 Limit
+   │  Limit: 10
    └─ #1 Read
          Extractor: ParquetExtractor
          Source: file:///orders/*.parquet
+         Limit: 10
          Filter: All
 ```

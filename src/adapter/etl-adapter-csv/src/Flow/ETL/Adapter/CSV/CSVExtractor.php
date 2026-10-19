@@ -110,7 +110,7 @@ final class CSVExtractor implements
         $schema = $this->schema();
         $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $scan->pathFilter), false);
 
-        yield from (new FileReadLoop($fileColumns, $schema))->read(
+        yield from (new FileReadLoop($fileColumns, $schema, $scan->filter))->read(
             $sources,
             new CSVFileBatches(
                 new CSVFileReader($this->filesystem, $this->readOptions, $sources),
@@ -124,7 +124,7 @@ final class CSVExtractor implements
                     : null,
             ),
             $this->batchSize(),
-            $context->backend(),
+            $context,
             new ReadWindow(limit: $scan->limit),
         );
     }

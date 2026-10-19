@@ -65,7 +65,7 @@ use function is_string;
 
 /**
  * A conjunct is pushed only when the parquet filter keeps every row the Flow predicate keeps; anything it cannot
- * prove that for is left to the Filter node.
+ * prove that for is left to FileReadLoop.
  */
 final readonly class FilterTranslator
 {

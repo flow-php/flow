@@ -89,7 +89,7 @@ final class FloeExtractor implements
     {
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
 
-        yield from (new FileReadLoop($fileColumns, $this->schema()))->read(
+        yield from (new FileReadLoop($fileColumns, $this->schema(), $scan->filter))->read(
             iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $scan->pathFilter), false),
             new FloeFileBatches(
                 $this->filesystem,
@@ -101,7 +101,7 @@ final class FloeExtractor implements
                     : new DerivedSchema($this->derivedSchema($this->files(), $this->unionByName), $this->derivedFrom),
             ),
             $this->batchSize(),
-            $context->backend(),
+            $context,
             new ReadWindow($this->offset ?? 0, $scan->limit),
         );
     }

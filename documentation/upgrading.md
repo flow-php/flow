@@ -83,7 +83,7 @@ Upgrading from older versions: [0.35.x to 0.40.x](/documentation/upgrading-0.35-
 | `$extractor->extract($context, pathFilter: $filter)`                                                     | `$extractor->scan($context, new FileScan(pathFilter: $filter))`                                                                                             |
 | `Read::limit()`, `Read::pathFilter()`, `new Read($extractor, $limit, $pathFilter)`                       | `Read::scan()->limit`, `->pathFilter`, `->filter`; `new Read($extractor, new FileScan($limit, $pathFilter))`                                                |
 | `Executor\Pipeline::limit()`, `pathFilter()`, `new Pipeline(..., $limit, $pathFilter, $sources)`         | `Pipeline::scan()`; `new Pipeline(..., $scan, $sources)`                                                                                                    |
-| a filter on a body column reached no extractor                                                           | pushed as `FileScan::$filter` (a hint, the `Filter` step stays); `explain()` prints it as `Filter: …` under `Read`                                          |
+| a filter on a body column reached no extractor                                                           | pushed as `FileScan::$filter` (see item 10); `explain()` prints it as `Filter: …` under `Read`                                                              |
 
 A custom file extractor:
 
@@ -102,7 +102,7 @@ public function extract(FlowContext $context, ?int $limit = null): Generator
 
 public function scan(FlowContext $context, FileScan $scan): Generator
 {
-    // reads with $scan->limit and $scan->pathFilter; $scan->filter may be ignored
+    // reads with $scan->limit and $scan->pathFilter, returns only rows matching $scan->filter (item 10)
 }
 ```
 
@@ -138,6 +138,18 @@ public function scan(FlowContext $context, FileScan $scan): Generator
 | `ReadPlanConverter::toExtension()` returned `['selectors' => ...]`                           | also `'limit'`, and `'filter'` with a row filter: rebuild the `arrow` extension, which filters rows with arrow-rs's `RowFilter`                                                                                                          |
 | a custom `ParquetFileReader::readColumns()` returned the rows `ReadPlan::$selection` selects | those matching `ReadPlan::$rowFilter` too, at most `ReadPlan::$limit`                                                                                                                                                                    |
 | `new ReadPlanConverter()`                                                                    | removed: the constructor is private, `ReadPlanConverter::toExtension()` is the entry point                                                                                                                                               |
+
+### 10) `flow-php/etl` - a file extractor returns only rows matching `FileScan::$filter`; a limit is pushed beside it
+
+| Before                                                                                                              | After                                                                                                                                                                                                                         |
+|---------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `FileScan::$filter` was a hint; the `Filter` step stayed in the plan                                                | `FileExtractor::scan()` returns only rows matching it, each conjunct of `Conjuncts::of($scan->filter)` on the rows the one before kept; each pushed part of a `filter()` leaves the `Filter` step, an emptied step is removed |
+| every `Filter` step was offered to the source                                                                       | steps are pushed leaf first; a kept part (non-deterministic, not pushable) keeps every part after it and every step above                                                                                                     |
+| `new FileScan($limit, filter: $filter)`, `Read::withLimit()` beside `withFilter()` threw `InvalidArgumentException` | accepted: `read → filter → limit(10)` pushes the limit beside the filter, the read stops after 10 matching rows                                                                                                               |
+| `explain()` printed a pushed filter under `Read` and as a `Filter` step                                             | under `Read` only                                                                                                                                                                                                             |
+| `new FileReadLoop($fileColumns, $schema)`, `read($sources, $batches, $batchSize, Backend $backend, $window)`        | `new FileReadLoop($fileColumns, $schema, ?ScalarFunction $filter = null)` (pass `$scan->filter`), `read($sources, $batches, $batchSize, FlowContext $context, $window)`                                                       |
+| `Optimizer::default()` ran `PushLimitIntoSource` before `PushFilterIntoSource`                                      | after it                                                                                                                                                                                                                      |
+| `Flow\ETL\Plan\ReplaceLeaf`                                                                                         | `Flow\ETL\Plan\ReplaceNode` (same constructor)                                                                                                                                                                                |
 
 ---
 

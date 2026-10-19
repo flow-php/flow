@@ -123,24 +123,28 @@ final class ReadTest extends FlowTestCase
         static::assertEquals(new Filters(new OnlyFiles(), $pathFilter), $filtered->scan()->pathFilter);
     }
 
-    public function test_with_filter_after_a_limit_is_refused(): void
+    public function test_with_filter_after_a_limit_keeps_the_limit(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('A file scan cannot carry a limit beside a filter');
-
-        (new Read(from_array([['id' => 1]])))
+        $predicate = ref('id')->greaterThan(lit(1));
+        $scan = (new Read(from_array([['id' => 1]])))
             ->withLimit(5)
-            ->withFilter(ref('id')->greaterThan(lit(1)));
+            ->withFilter($predicate)
+            ->scan();
+
+        static::assertSame(5, $scan->limit);
+        static::assertSame($predicate, $scan->filter);
     }
 
-    public function test_with_limit_after_a_filter_is_refused(): void
+    public function test_with_limit_after_a_filter_keeps_the_filter(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('A file scan cannot carry a limit beside a filter');
+        $predicate = ref('id')->greaterThan(lit(1));
+        $scan = (new Read(from_array([['id' => 1]])))
+            ->withFilter($predicate)
+            ->withLimit(5)
+            ->scan();
 
-        (new Read(from_array([['id' => 1]])))
-            ->withFilter(ref('id')->greaterThan(lit(1)))
-            ->withLimit(5);
+        static::assertSame(5, $scan->limit);
+        static::assertSame($predicate, $scan->filter);
     }
 
     public function test_with_path_filter_keeps_the_pushed_filter(): void

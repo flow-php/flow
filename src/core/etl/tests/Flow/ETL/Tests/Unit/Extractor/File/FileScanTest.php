@@ -34,12 +34,13 @@ final class FileScanTest extends FlowTestCase
         new FileScan($limit);
     }
 
-    public function test_a_limit_beside_a_filter_is_refused(): void
+    public function test_a_limit_beside_a_filter_is_kept(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('A file scan cannot carry a limit beside a filter');
+        $filter = ref('id')->greaterThan(lit(1));
+        $scan = new FileScan(5, filter: $filter);
 
-        new FileScan(5, filter: ref('id')->greaterThan(lit(1)));
+        static::assertSame(5, $scan->limit);
+        static::assertSame($filter, $scan->filter);
     }
 
     public function test_a_filter_without_a_limit_is_kept(): void

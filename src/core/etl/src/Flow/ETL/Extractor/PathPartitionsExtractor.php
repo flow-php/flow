@@ -12,10 +12,13 @@ use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Extractor\File\ListingPartitions;
 use Flow\ETL\Extractor\File\SourceFile;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Function\Conjuncts;
 use Flow\ETL\Rows;
 use Flow\ETL\Rows\RowsBuilder;
 use Flow\ETL\Schema;
+use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
 use Flow\Filesystem\FileListing;
+use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Partition;
@@ -29,6 +32,7 @@ use function array_values;
 use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function iterator_count;
@@ -85,9 +89,19 @@ final class PathPartitionsExtractor implements BatchableExtractor, Extractor, Fi
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
         $schema = $this->schema();
         $builder = new RowsBuilder($schema, $backend);
-        $yielded = 0;
+        $filters = [];
 
-        foreach ((new FileListing($this->filesystem))->list($this->path, $scan->pathFilter) as $fileStatus) {
+        foreach ($scan->filter === null ? [] : (new Conjuncts())->of($scan->filter) as $conjunct) {
+            $filters[] = (new ScalarFunctionFilterTransformer($conjunct))->bound($schema);
+        }
+
+        $yielded = 0;
+        $listing = (new FileListing($this->filesystem))->list($this->path, $scan->pathFilter);
+
+        while ($listing->valid()) {
+            $fileStatus = type_instance_of(FileStatus::class)->assert($listing->current());
+            $listing->next();
+
             $builder->append([
                 'path' => $fileStatus->path->uri(),
                 'partitions' => array_merge(...array_values(array_map(static fn(Partition $p) => [
@@ -96,11 +110,21 @@ final class PathPartitionsExtractor implements BatchableExtractor, Extractor, Fi
                 ...$fileColumns->forFile(new SourceFile($fileStatus->path, $fileStatus->size), $schema)->values(),
             ]);
 
-            if ($builder->count() < $batchSize) {
+            if ($builder->count() < $batchSize && $listing->valid()) {
                 continue;
             }
 
             $rows = $builder->finish();
+            $builder = new RowsBuilder($schema, $backend);
+
+            foreach ($filters as $filter) {
+                $rows = $filter->transform($rows, $context);
+            }
+
+            if ($rows->isEmpty()) {
+                continue;
+            }
+
             $yielded += $rows->count();
 
             $signal = yield $rows;
@@ -109,15 +133,9 @@ final class PathPartitionsExtractor implements BatchableExtractor, Extractor, Fi
                 return;
             }
 
-            $builder = new RowsBuilder($schema, $backend);
-
             if ($scan->limit !== null && $yielded >= $scan->limit) {
                 return;
             }
-        }
-
-        if ($builder->count() > 0) {
-            yield $builder->finish();
         }
     }
 

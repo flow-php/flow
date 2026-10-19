@@ -6,8 +6,11 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
+use function Flow\ETL\Adapter\CSV\from_csv;
+use function Flow\ETL\Adapter\CSV\to_csv;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 
 final class FilterTest extends FlowIntegrationTestCase
@@ -57,5 +60,23 @@ final class FilterTest extends FlowIntegrationTestCase
             ],
             $rows->toArray(),
         );
+    }
+
+    public function test_a_filter_over_a_file_source_guards_the_filter_above_it(): void
+    {
+        $file = $this->cacheDir->path() . '/guarded-filters.csv';
+
+        df()
+            ->read(from_array([['a' => 1, 'b' => 0], ['a' => 2, 'b' => 2]]))
+            ->write(to_csv($file))
+            ->run();
+
+        $rows = df()
+            ->read(from_csv($file))
+            ->filter(ref('b')->notEquals(lit(0)))
+            ->filter(ref('a')->divide(ref('b'))->greaterThan(lit(0)))
+            ->fetch();
+
+        static::assertSame([['a' => 2, 'b' => 2]], $rows->toArray());
     }
 }

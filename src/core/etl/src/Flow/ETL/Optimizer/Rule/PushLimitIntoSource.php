@@ -8,7 +8,7 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Optimizer\LimitWalk;
 use Flow\ETL\Optimizer\Rule;
 use Flow\ETL\Plan\LogicalPlan;
-use Flow\ETL\Plan\ReplaceLeaf;
+use Flow\ETL\Plan\ReplaceNode;
 
 use function max;
 
@@ -34,6 +34,6 @@ final readonly class PushLimitIntoSource implements Rule
             $limits[] = $limit;
         }
 
-        return $plan->transformUp(new ReplaceLeaf($leaf, $leaf->withLimit(max($limits))));
+        return $plan->transformUp(new ReplaceNode($leaf, $leaf->withLimit(max($limits))));
     }
 }

@@ -110,11 +110,12 @@ final class XMLParserExtractor implements
         yield from (new FileReadLoop(
             $fileColumns,
             $fileColumns->declare($this->schema ?? schema(xml_schema('node'))),
+            $scan->filter,
         ))->read(
             iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $scan->pathFilter), false),
             new XMLFileBatches($this->filesystem, $this->xmlNodePath, $this->bufferSize),
             $this->batchSize(),
-            $context->backend(),
+            $context,
             new ReadWindow(limit: $scan->limit),
         );
     }

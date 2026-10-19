@@ -37,8 +37,8 @@ final readonly class Optimizer
         return new self(
             new CombineLimits(),
             new CombineSortAndLimit(),
-            new PushLimitIntoSource(),
             new PushFilterIntoSource(),
+            new PushLimitIntoSource(),
             new CountFromStatistics(),
             new PushProjectionIntoExpand(),
         );

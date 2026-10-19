@@ -13,7 +13,7 @@ use Flow\ETL\Plan\Node\Outputs;
 use Flow\ETL\Plan\Node\Result;
 use Flow\ETL\Plan\Node\Transaction;
 use Flow\ETL\Plan\Node\Write;
-use Flow\ETL\Plan\ReplaceLeaf;
+use Flow\ETL\Plan\ReplaceNode;
 use Flow\ETL\Plan\Rewrite;
 use Flow\ETL\Tests\Double\ChildlessNode;
 use Flow\ETL\Tests\Double\RecordingTransaction;
@@ -112,7 +112,7 @@ final class LogicalPlanTest extends FlowTestCase
         $replacement = NodeMother::read(from_array([['id' => 2]]));
         $plan = NodeMother::plan(NodeMother::select(NodeMother::read()));
 
-        $rewritten = $plan->transformUp(new ReplaceLeaf($plan->source(), $replacement));
+        $rewritten = $plan->transformUp(new ReplaceNode($plan->source(), $replacement));
 
         static::assertSame($replacement, $rewritten->source());
         $select = $rewritten->root->children()[0];

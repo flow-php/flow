@@ -8,8 +8,10 @@ use Flow\ETL\Extractor\File\FileExtractor;
 use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Function\Conjuncts;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
 use Flow\Filesystem\Path;
 use Generator;
 
@@ -18,7 +20,7 @@ use function Flow\Filesystem\DSL\path;
 
 /**
  * A file source that records the scan of every read, so a test can prove what the planner pushed reached the
- * read - and that the instance itself was left alone.
+ * read - and that the instance itself was left alone. It returns only the rows matching the scan's filter.
  */
 final class RecordingFileExtractor implements FileExtractor
 {
@@ -50,8 +52,17 @@ final class RecordingFileExtractor implements FileExtractor
     public function scan(FlowContext $context, FileScan $scan): Generator
     {
         $this->scans[] = $scan;
+        $filters = [];
+
+        foreach ($scan->filter === null ? [] : (new Conjuncts())->of($scan->filter) as $conjunct) {
+            $filters[] = (new ScalarFunctionFilterTransformer($conjunct))->bound($this->schema);
+        }
 
         foreach ($this->batches as $rows) {
+            foreach ($filters as $filter) {
+                $rows = $filter->transform($rows, $context);
+            }
+
             yield $rows;
         }
     }

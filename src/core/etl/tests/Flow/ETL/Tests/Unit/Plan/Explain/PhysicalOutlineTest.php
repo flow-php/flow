@@ -129,7 +129,6 @@ final class PhysicalOutlineTest extends FlowTestCase
             [
                 'Extractor: RecordingFileExtractor',
                 '   Filter: GreaterThan',
-                'Transformer: ScalarFunctionFilterTransformer',
             ],
             $root->children[0]->lines,
         );
