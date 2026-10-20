@@ -2,6 +2,12 @@ name: PHPUnit Telemetry Bridge Tests
 
 on:
   workflow_call:
+    inputs:
+      full-matrix:
+        description: "Every PHPUnit x PHP combination; otherwise one PHP version per PHPUnit major"
+        type: boolean
+        required: false
+        default: true
     secrets:
       CODECOV_TOKEN:
         required: false
@@ -22,7 +28,7 @@ jobs:
           POSTGRES_DB: postgres
         ports:
           - 5432/tcp
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        options: --health-cmd pg_isready --health-interval 2s --health-timeout 5s --health-retries 25
     strategy:
       fail-fast: false
       matrix:
@@ -34,10 +40,8 @@ jobs:
           - "8.3"
           - "8.4"
           - "8.5"
-        exclude:
-          # PHPUnit 13 requires PHP >= 8.4.1.
-          - phpunit-version: "13"
-            php-version: "8.3"
+        # PHPUnit 13 requires PHP >= 8.4.1, so 13 x 8.3 is always excluded.
+        exclude: ${{ fromJSON(inputs.full-matrix && '[{"phpunit-version":"13","php-version":"8.3"}]' || '[{"phpunit-version":"13","php-version":"8.3"},{"phpunit-version":"13","php-version":"8.4"},{"phpunit-version":"12","php-version":"8.3"},{"phpunit-version":"12","php-version":"8.5"},{"phpunit-version":"11","php-version":"8.4"},{"phpunit-version":"11","php-version":"8.5"}]') }}
 
     steps:
       - name: "Checkout"
@@ -53,7 +57,6 @@ jobs:
           coverage: ${{ matrix.php-version == '8.3' && 'pcov' || 'none' }}
           extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, curl, pgsql, grpc, protobuf'
           ini-values: 'memory_limit=-1'
-          apt-packages: "build-essential autoconf automake libtool protobuf-compiler libprotobuf-c-dev"
 
       - name: "Build pg-query-ext from source"
         uses: "./.github/actions/pg-query-ext"

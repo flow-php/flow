@@ -1,0 +1,33 @@
+name: Flow PHP Extension
+
+on:
+  pull_request:
+    paths:
+      - 'src/extension/flow-php-ext/**'
+      # the flow-php-ext build and PHPT tests load arrow-ext
+      - 'src/extension/arrow-ext/**'
+      - '.github/workflows/test-flow-php-extension.yml'
+      - '.github/workflows/job-flow-php-extension.yml'
+      - '.github/actions/setup-php-env/**'
+      - '.github/actions/composer-install/**'
+      - '.github/actions/rust-extension-toolchain/**'
+  push:
+    branches: [ 1.x ]
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  flow-php-extension:
+    uses: ./.github/workflows/job-flow-php-extension.yml
+    with:
+      full-matrix: ${{ github.event_name != 'pull_request' }}
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

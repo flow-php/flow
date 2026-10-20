@@ -22,7 +22,7 @@ jobs:
           POSTGRES_DB: postgres
         ports:
           - 5432/tcp
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        options: --health-cmd pg_isready --health-interval 2s --health-timeout 5s --health-retries 25
       mysql:
         image: mysql:8.0.31-debian
         ports:
@@ -40,9 +40,9 @@ jobs:
           ES_JAVA_OPTS: "-Xms512m -Xmx512m"
         options: >-
           --health-cmd "curl http://localhost:9200/_cluster/health"
-          --health-interval 10s
+          --health-interval 2s
           --health-timeout 5s
-          --health-retries 10
+          --health-retries 50
         ports:
           - 9200/tcp
     strategy:
@@ -112,7 +112,6 @@ jobs:
           coverage: ${{ (matrix.php-version == '8.3' && matrix.dependencies == 'locked') && 'pcov' || 'none' }}
           extensions: ':psr, apcu, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, curl, pgsql, grpc, protobuf'
           ini-values: 'memory_limit=-1, post_max_size=32M, upload_max_filesize=32M, apc.enable_cli=1'
-          apt-packages: "build-essential autoconf automake libtool protobuf-compiler libprotobuf-c-dev"
 
       - name: "Build pg-query-ext from source"
         uses: "./.github/actions/pg-query-ext"
@@ -131,15 +130,9 @@ jobs:
         shell: bash
         run: |
           azurite-blob --blobHost 0.0.0.0 --blobPort 10000 > azurite.log 2>&1 &
-          for i in {1..30}; do
-            if curl -f http://localhost:10000/ 2>/dev/null; then
-              echo "Azurite is ready"
-              break
-            fi
-            echo "Waiting for Azurite... ($i/30)"
-            sleep 1
-          done
-          cat azurite.log
+          # any HTTP response means the endpoint is up; Azurite answers the bare root with an error status
+          timeout 30 sh -c 'until curl -s -o /dev/null http://localhost:10000/; do sleep 1; done' \
+            || { echo "Azurite did not become ready"; cat azurite.log; exit 1; }
         env:
           AZURITE_ACCOUNTS: flowphpaccount01:flowphpkey01
 
@@ -148,7 +141,7 @@ jobs:
       - name: "Test"
         timeout-minutes: 15
         run: "just test --exclude-group grpc --log-junit ./var/phpunit/logs/junit.xml ${{ (matrix.php-version == '8.3' && matrix.dependencies == 'locked') && '--coverage-clover=./var/phpunit/coverage/clover/coverage.xml' || '' }}"
-        env:
+        env: &test-env
           PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/postgres?serverVersion=18&charset=utf8
           MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports['3306'] }}/mysql
           ELASTICSEARCH_URL: http://127.0.0.1:${{ job.services.elasticsearch.ports['9200'] }}
@@ -178,22 +171,7 @@ jobs:
         timeout-minutes: 10
         continue-on-error: ${{ matrix.php-version == '8.5' }}
         run: "just test --group grpc --log-junit ./var/phpunit/logs/grpc-junit.xml ${{ (matrix.php-version == '8.3' && matrix.dependencies == 'locked') && '--coverage-clover=./var/phpunit/coverage/clover/grpc-coverage.xml' || '' }}"
-        env:
-          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/postgres?serverVersion=18&charset=utf8
-          MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports['3306'] }}/mysql
-          SQLITE_DATABASE_URL: "sqlite:///:memory:"
-          AZURITE_HOST: "localhost"
-          AZURITE_BLOB_PORT: "10000"
-          AZURITE_ACCOUNT_NAME: "flowphpaccount01"
-          AZURITE_ACCOUNT_KEY: "flowphpkey01"
-          S3_ENDPOINT: "http://localhost:9000"
-          S3_REGION: "us-east-1"
-          S3_ACCESS_KEY_ID: "flowphpaccess01"
-          S3_SECRET_ACCESS_KEY: "flowphpsecret01"
-          OTEL_RECEIVER_HTTP_ENDPOINT: "http://localhost:4318"
-          OTEL_RECEIVER_GRPC_ENDPOINT: "localhost:4317"
-          OTEL_COLLECTOR_METRICS_ENDPOINT: "http://localhost:8888/metrics"
-          FLOW_PARQUET_TESTS_DEBUG: "0"
+        env: *test-env
 
       - name: Upload to Codecov
         uses: ./.github/actions/codecov-report
