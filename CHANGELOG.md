@@ -1,6 +1,8 @@
 ## [Unreleased] - 2026-10-20
 
 ### Added
+- [#2696](https://github.com/flow-php/flow/pull/2696) - **flow-php/etl-adapter-parquet - from_parquet()->withSchema() reads every file by name against a declared schema** - [@norberttech](https://github.com/norberttech)
+- [#2696](https://github.com/flow-php/flow/pull/2696) - **flow-php/etl - from_floe()->withSchema() reads every file by name against a declared schema** - [@norberttech](https://github.com/norberttech)
 - [#2695](https://github.com/flow-php/flow/pull/2695) - **flow-php/telemetry - UrlSanitizer with url_sanitizer() DSL** - [@norberttech](https://github.com/norberttech)
 - [#2695](https://github.com/flow-php/flow/pull/2695) - **flow-php/telemetry - ClientUrlAttributes for HTTP client span attributes** - [@norberttech](https://github.com/norberttech)
 - [#2695](https://github.com/flow-php/flow/pull/2695) - **flow-php/symfony-telemetry-bundle - instrumentation.sanitization.url.sensitive_query_parameters config** - [@norberttech](https://github.com/norberttech)
@@ -14,6 +16,9 @@
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/arrow-ext - page-range reads and row filtering through arrow-rs** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2696](https://github.com/flow-php/flow/pull/2696) - **flow-php/etl - an empty source without a declared schema throws InferredSchemaException** - [@norberttech](https://github.com/norberttech)
+- [#2696](https://github.com/flow-php/flow/pull/2696) - **flow-php/etl - from_cache() without a cache instance throws SchemaNotDerivableException** - [@norberttech](https://github.com/norberttech)
+- [#2696](https://github.com/flow-php/flow/pull/2696) - **flow-php/etl-adapter-csv, flow-php/etl-adapter-json, flow-php/etl-adapter-excel, flow-php/etl-adapter-google-sheet - an empty file, sheet or glob without a declared schema throws InferredSchemaException** - [@norberttech](https://github.com/norberttech)
 - [#2695](https://github.com/flow-php/flow/pull/2695) - **flow-php/psr18-telemetry-bridge - PSR18TraceableClient accepts a UrlSanitizer** - [@norberttech](https://github.com/norberttech)
 - [#2694](https://github.com/flow-php/flow/pull/2694) - **flow-php/etl - explain() renders filters, conditions and columns as expressions instead of class names** - [@norberttech](https://github.com/norberttech)
 - [#2694](https://github.com/flow-php/flow/pull/2694) - **flow-php/etl - explain() lists each pushed path filter on its own Files: line** - [@norberttech](https://github.com/norberttech)
@@ -30,6 +35,7 @@
 - [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/flow - updated dev dependencies, mago 1.57 and GitHub Actions** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2696](https://github.com/flow-php/flow/pull/2696) - **flow-php/etl - an empty source under a declared schema reads 0 rows instead of failing at plan time** - [@norberttech](https://github.com/norberttech)
 - [#2695](https://github.com/flow-php/flow/pull/2695) - **flow-php/symfony-telemetry-bundle - HTTP client spans record the effective URL (base_uri, query option)** - [@norberttech](https://github.com/norberttech)
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/parquet - corrupt multi-page RLE_DICTIONARY columns written by the PHP writer** - [@norberttech](https://github.com/norberttech)
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/parquet - UINT_64 values above PHP_INT_MAX read as numeric strings** - [@norberttech](https://github.com/norberttech)
