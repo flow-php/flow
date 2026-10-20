@@ -30,6 +30,7 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_agg;
 use function Flow\ETL\DSL\sum;
+use function Flow\Types\DSL\type_string;
 
 final class PivotProcessorTest extends FlowTestCase
 {
@@ -191,7 +192,7 @@ final class PivotProcessorTest extends FlowTestCase
 
         foreach ($result as $batch) {
             foreach ($batch->toArray() as $pivotRow) {
-                $pivoted[$pivotRow['date']] = $pivotRow;
+                $pivoted[type_string()->assert($pivotRow['date'])] = $pivotRow;
             }
         }
 

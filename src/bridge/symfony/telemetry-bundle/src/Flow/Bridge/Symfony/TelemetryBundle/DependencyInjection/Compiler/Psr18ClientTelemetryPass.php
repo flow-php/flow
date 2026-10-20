@@ -63,6 +63,7 @@ final class Psr18ClientTelemetryPass implements CompilerPassInterface
             $decoratorDefinition->setDecoratedService($serviceId);
             $decoratorDefinition->setArgument(0, new Reference($decoratedId));
             $decoratorDefinition->setArgument(1, new Reference(Telemetry::class));
+            $decoratorDefinition->setArgument(2, new Reference('flow.telemetry.url_sanitizer'));
 
             $container->setDefinition($decoratorId, $decoratorDefinition);
 

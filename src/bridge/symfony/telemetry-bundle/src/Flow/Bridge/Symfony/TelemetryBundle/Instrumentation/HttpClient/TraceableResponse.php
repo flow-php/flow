@@ -6,6 +6,7 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpClient;
 
 use DateTimeImmutable;
 use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
+use Flow\Telemetry\Sanitizer\UrlSanitizer;
 use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanStatus;
@@ -20,6 +21,7 @@ use TypeError;
 
 use function get_debug_type;
 use function is_int;
+use function is_string;
 use function method_exists;
 use function sprintf;
 
@@ -36,6 +38,7 @@ final class TraceableResponse implements ResponseInterface
         private readonly Tracer $tracer,
         private readonly ResponseInterface $response,
         private readonly Span $span,
+        private readonly UrlSanitizer $urlSanitizer = new UrlSanitizer(),
     ) {}
 
     public function __destruct()
@@ -184,8 +187,14 @@ final class TraceableResponse implements ResponseInterface
 
     private function failAndComplete(Throwable $exception): void
     {
-        $this->span->recordException($exception, new DateTimeImmutable());
-        $this->span->setStatus(SpanStatus::error($exception->getMessage()));
+        // @mago-expect analysis:mixed-assignment
+        $url = $this->response->getInfo('url');
+        $message = is_string($url)
+            ? $this->urlSanitizer->message($exception->getMessage(), $url)
+            : $exception->getMessage();
+
+        $this->span->recordException($exception, new DateTimeImmutable(), ['exception.message' => $message]);
+        $this->span->setStatus(SpanStatus::error($message));
         $this->complete();
     }
 

@@ -474,6 +474,26 @@ final class SpanTest extends TestCase
         static::assertArrayHasKey('exception.stacktrace', $attributes);
     }
 
+    public function test_record_exception_stacktrace_has_no_argument_values(): void
+    {
+        $span = $this->createSpan();
+        $previous = ini_set('zend.exception_ignore_args', '0');
+        $previousMaxLength = ini_set('zend.exception_string_param_max_len', '15');
+
+        try {
+            (static fn(string $argument): never => throw new RuntimeException('failure'))('SECRET_ARGUMENT');
+        } catch (RuntimeException $exception) {
+            $span->recordException($exception, new DateTimeImmutable());
+        } finally {
+            ini_set('zend.exception_ignore_args', (string) $previous);
+            ini_set('zend.exception_string_param_max_len', (string) $previousMaxLength);
+        }
+
+        $stacktrace = $span->events()[0]->attributesObject()->get('exception.stacktrace');
+        static::assertIsString($stacktrace);
+        static::assertStringNotContainsString('SECRET_', $stacktrace);
+    }
+
     public function test_record_exception_with_additional_attributes(): void
     {
         $span = $this->createSpan();

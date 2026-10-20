@@ -17,6 +17,10 @@ use Flow\Telemetry\Tracer\SpanKind;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
+
+use function Flow\Telemetry\DSL\url_sanitizer;
 
 #[CoversClass(TracableHttpClient::class)]
 #[CoversClass(TraceableResponse::class)]
@@ -90,6 +94,28 @@ final class TracableHttpClientTest extends TestCase
         $response->getContent();
 
         static::assertCount(1, $spanProcessor->endedSpans());
+    }
+
+    public function test_request_records_sanitized_effective_url_built_from_base_uri_and_query_option(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
+        $tracable = new TracableHttpClient(
+            new MockHttpClient(new MockResponse('{}'), 'https://u:p@graph.facebook.com:8443'),
+            TelemetryMother::withSpanProcessor($spanProcessor),
+            'test.client',
+            url_sanitizer(['access_token']),
+        );
+
+        $tracable->request('GET', '/me', ['query' => ['access_token' => 'SECRET', 'fields' => 'id']])->getContent();
+
+        $attributes = $spanProcessor->endedSpans()[0]->attributes();
+        static::assertSame(
+            'https://REDACTED:REDACTED@graph.facebook.com:8443/me?access_token=REDACTED&fields=id',
+            $attributes['url.full'],
+        );
+        static::assertSame('https', $attributes['url.scheme']);
+        static::assertSame('graph.facebook.com', $attributes['server.address']);
+        static::assertSame(8443, $attributes['server.port']);
     }
 
     public function test_request_extracts_host_from_url(): void
@@ -171,6 +197,33 @@ final class TracableHttpClientTest extends TestCase
         static::assertCount(1, $spans);
         static::assertSame('POST', $spans[0]->attributes()['http.request.method']);
         static::assertSame('https://api.example.com/users', $spans[0]->attributes()['url.full']);
+    }
+
+    public function test_request_records_redacted_url_in_synchronous_failure_message(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
+        $tracable = new TracableHttpClient(
+            new FailingHttpClient('Invalid URL "https://graph.facebook.com/me?access_token=SECRET".'),
+            TelemetryMother::withSpanProcessor($spanProcessor),
+            'test.client',
+            url_sanitizer(['access_token']),
+        );
+
+        $this->expectException(RuntimeException::class);
+
+        try {
+            $tracable->request('GET', 'https://graph.facebook.com/me?access_token=SECRET');
+        } finally {
+            $span = $spanProcessor->endedSpans()[0];
+            static::assertSame(
+                'Invalid URL "https://graph.facebook.com/me?access_token=REDACTED".',
+                $span->events()[0]->attributes()['exception.message'],
+            );
+            static::assertSame(
+                'Invalid URL "https://graph.facebook.com/me?access_token=REDACTED".',
+                $span->status()?->description,
+            );
+        }
     }
 
     public function test_request_records_exception_on_synchronous_failure(): void

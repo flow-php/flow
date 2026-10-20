@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Unit\DependencyInjection;
 
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Context\ConfigurationContext;
+use Flow\Telemetry\Sanitizer\UrlSanitizer;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
@@ -823,6 +824,51 @@ final class ConfigurationTest extends TestCase
             'resource' => [],
             'instrumentation' => ['http_kernel' => ['enabled' => true, 'route_naming' => 'controller']],
         ]);
+    }
+
+    public function test_sensitive_query_parameters_default_to_url_sanitizer_defaults(): void
+    {
+        $config = $this->context->processConfig(['resource' => []]);
+
+        static::assertSame(
+            UrlSanitizer::DEFAULT_SENSITIVE_QUERY_PARAMETERS,
+            $config['instrumentation']['sanitization']['url']['sensitive_query_parameters'],
+        );
+    }
+
+    public function test_sensitive_query_parameters_from_later_config_replace_earlier_list(): void
+    {
+        $config = $this->context->processConfigs([
+            'resource' => [],
+            'instrumentation' => ['sanitization' => ['url' => ['sensitive_query_parameters' => ['access_token']]]],
+        ], ['instrumentation' => ['sanitization' => ['url' => ['sensitive_query_parameters' => ['code']]]]]);
+
+        static::assertSame(['code'], $config['instrumentation']['sanitization']['url']['sensitive_query_parameters']);
+    }
+
+    public function test_sensitive_query_parameters_reject_empty_key(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => ['sanitization' => ['url' => ['sensitive_query_parameters' => ['']]]],
+        ]);
+    }
+
+    public function test_sensitive_query_parameters_replace_default_list(): void
+    {
+        $config = $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => [
+                'sanitization' => ['url' => ['sensitive_query_parameters' => ['access_token', 'code']]],
+            ],
+        ]);
+
+        static::assertSame(
+            ['access_token', 'code'],
+            $config['instrumentation']['sanitization']['url']['sensitive_query_parameters'],
+        );
     }
 
     public function test_security_is_disabled_by_default(): void

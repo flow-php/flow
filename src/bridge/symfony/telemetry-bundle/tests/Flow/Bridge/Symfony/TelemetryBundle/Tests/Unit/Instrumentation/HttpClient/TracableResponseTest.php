@@ -15,7 +15,14 @@ use Flow\Telemetry\Tracer\SpanKind;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use Symfony\Component\HttpClient\Exception\ClientException;
+use Symfony\Component\HttpClient\Exception\JsonException;
+use Symfony\Component\HttpClient\Exception\TransportException;
+use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse as SymfonyMockResponse;
 use TypeError;
+
+use function Flow\Telemetry\DSL\url_sanitizer;
 
 #[CoversClass(TraceableResponse::class)]
 final class TracableResponseTest extends TestCase
@@ -85,6 +92,32 @@ final class TracableResponseTest extends TestCase
         static::assertNotNull($status);
         static::assertTrue($status->isError());
         static::assertSame('HTTP 404', $status->description);
+    }
+
+    public function test_get_content_exception_message_holds_redacted_url(): void
+    {
+        $processor = new MemorySpanProcessor(new MemoryExporter());
+        $tracer = TelemetryMother::withSpanProcessor($processor)->tracer('test');
+        $span = $tracer->span('GET', SpanKind::CLIENT);
+        $client = new MockHttpClient(new SymfonyMockResponse('', ['http_code' => 400]));
+
+        $response = new TraceableResponse(
+            $tracer,
+            $client->request('GET', 'https://graph.facebook.com/me?access_token=SECRET'),
+            $span,
+            url_sanitizer(['access_token']),
+        );
+
+        $this->expectException(ClientException::class);
+
+        try {
+            $response->getContent();
+        } finally {
+            static::assertSame(
+                'HTTP 400 returned for "https://graph.facebook.com/me?access_token=REDACTED".',
+                $span->events()[0]->attributes()['exception.message'],
+            );
+        }
     }
 
     public function test_get_content_completes_span_with_unset_status_on_success(): void
@@ -245,6 +278,40 @@ final class TracableResponseTest extends TestCase
         static::assertSame('boom', $status->description);
     }
 
+    public function test_stream_chunk_error_holds_redacted_url(): void
+    {
+        $processor = new MemorySpanProcessor(new MemoryExporter());
+        $tracer = TelemetryMother::withSpanProcessor($processor)->tracer('test');
+        $span = $tracer->span('GET', SpanKind::CLIENT);
+        $client = new MockHttpClient(new SymfonyMockResponse('', [
+            'error' => 'Idle timeout reached for "https://graph.facebook.com/me?access_token=SECRET".',
+        ]));
+
+        $response = new TraceableResponse(
+            $tracer,
+            $client->request('GET', 'https://graph.facebook.com/me?access_token=SECRET'),
+            $span,
+            url_sanitizer(['access_token']),
+        );
+
+        $this->expectException(TransportException::class);
+
+        try {
+            foreach (TraceableResponse::stream($client, [$response], null) as $chunk) {
+                $chunk->getContent();
+            }
+        } finally {
+            static::assertSame(
+                'Idle timeout reached for "https://graph.facebook.com/me?access_token=REDACTED".',
+                $span->events()[0]->attributes()['exception.message'],
+            );
+            static::assertSame(
+                'Idle timeout reached for "https://graph.facebook.com/me?access_token=REDACTED".',
+                $span->status()?->description,
+            );
+        }
+    }
+
     public function test_stream_rejects_non_tracable_response(): void
     {
         $this->expectException(TypeError::class);
@@ -266,6 +333,36 @@ final class TracableResponseTest extends TestCase
         static::assertTrue($span->isEnded());
         static::assertCount(1, $processor->endedSpans());
         static::assertSame(200, $span->attributes()['http.response.status_code']);
+    }
+
+    public function test_to_array_invalid_json_exception_message_and_status_hold_redacted_url(): void
+    {
+        $processor = new MemorySpanProcessor(new MemoryExporter());
+        $tracer = TelemetryMother::withSpanProcessor($processor)->tracer('test');
+        $span = $tracer->span('GET', SpanKind::CLIENT);
+        $client = new MockHttpClient(new SymfonyMockResponse('{invalid'));
+
+        $response = new TraceableResponse(
+            $tracer,
+            $client->request('GET', 'https://graph.facebook.com/me?access_token=SECRET'),
+            $span,
+            url_sanitizer(['access_token']),
+        );
+
+        $this->expectException(JsonException::class);
+
+        try {
+            $response->toArray();
+        } finally {
+            static::assertSame(
+                'Syntax error for "https://graph.facebook.com/me?access_token=REDACTED".',
+                $span->events()[0]->attributes()['exception.message'],
+            );
+            static::assertSame(
+                'Syntax error for "https://graph.facebook.com/me?access_token=REDACTED".',
+                $span->status()?->description,
+            );
+        }
     }
 
     public function test_to_array_throwable_records_exception_and_completes(): void

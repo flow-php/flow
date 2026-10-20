@@ -349,6 +349,40 @@ try {
 Use `withoutSuppressedTracing()` to lift suppression for a nested region (e.g. to trace real work inside an otherwise
 suppressed loop).
 
+### URL sanitization
+
+HTTP instrumentations (PSR-18 client, Symfony HttpClient, Symfony HttpKernel) write `url.full`, `url.query` and
+exception messages through a `UrlSanitizer`: userinfo and the values of sensitive query parameters become `REDACTED`,
+keys stay.
+
+```php
+<?php
+
+use Flow\Telemetry\Sanitizer\UrlSanitizer;
+
+use function Flow\Telemetry\DSL\url_sanitizer;
+
+url_sanitizer()->url('https://u:p@graph.facebook.com/me?access_token=T&fields=id');
+// https://REDACTED:REDACTED@graph.facebook.com/me?access_token=REDACTED&fields=id
+
+url_sanitizer([...UrlSanitizer::DEFAULT_SENSITIVE_QUERY_PARAMETERS, 'fb_exchange_token'])->url('https://h/me?fb_exchange_token=T');
+// https://h/me?fb_exchange_token=REDACTED
+```
+
+`UrlSanitizer::DEFAULT_SENSITIVE_QUERY_PARAMETERS` holds:
+
+| Source                                                                   | Keys                                                                                                                                                                                                            |
+|--------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| OpenTelemetry semantic conventions                                       | `AWSAccessKeyId`, `Signature`, `sig`, `X-Amz-Signature`, `X-Amz-Credential`, `X-Amz-Security-Token`, `X-Goog-Signature`                                                                                         |
+| OAuth 2.0 (RFC 6749, 6750, 7009, 7521, 7636, 8628, 8693), OpenID Connect | `access_token`, `refresh_token`, `id_token`, `id_token_hint`, `logout_token`, `client_secret`, `client_assertion`, `assertion`, `code`, `code_verifier`, `device_code`, `subject_token`, `actor_token`, `token` |
+| API keys, credentials, sessions (Sentry and Datadog scrubbing defaults)  | `api_key`, `apikey`, `api-key`, `key`, `access_key`, `secret_key`, `private_key`, `secret`, `signature`, `password`, `passwd`, `pwd`, `auth`, `jwt`, `session`, `sessionid`, `PHPSESSID`                        |
+
+The list goes beyond the OpenTelemetry default, which covers only signed cloud-storage URLs. Keys are case-sensitive.
+A given list replaces the default, it does not extend it; `[]` keeps only the userinfo redaction.
+
+`exception.stacktrace` (spans, log records, `Throwable` attribute values) never carries function argument values,
+whatever `zend.exception_ignore_args` is set to.
+
 ### Metrics
 
 Metrics are numerical measurements that track the state and performance of your application over time. Flow Telemetry

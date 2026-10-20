@@ -130,6 +130,14 @@ public function scan(FlowContext $context, FileScan $scan): Generator
 }
 ```
 
+### 8) `flow-php/telemetry`, `flow-php/psr18-telemetry-bridge`, `flow-php/symfony-telemetry-bundle` - HTTP URLs are redacted, stack traces carry no argument values
+
+| Before                                                                                                                                            | After                                                                                                                                                                                                                                                                                                                        |
+|---------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `url.full` (PSR-18 and Symfony HttpClient), `url.query` (HttpKernel), `exception.message` and the client span status description held the raw URL | userinfo and the values of `UrlSanitizer::DEFAULT_SENSITIVE_QUERY_PARAMETERS` (OpenTelemetry, OAuth 2.0 / OpenID Connect, API key and credential keys) are `REDACTED`; configure the list with `url_sanitizer([...])` or `flow_telemetry.instrumentation.sanitization.url.sensitive_query_parameters` (replaces the default) |
+| Symfony HttpClient `url.full`, `url.scheme`, `server.address`, `server.port` came from the `$url` argument (`/me`, `unknown` with `base_uri`)     | they come from the effective URL, `base_uri` and the `query` option included                                                                                                                                                                                                                                                 |
+| `exception.stacktrace` was `getTraceAsString()`, with argument values when `zend.exception_ignore_args` is off                                    | `StackTrace::format()`: every frame renders `()`, whatever `zend.exception_ignore_args` is                                                                                                                                                                                                                                   |
+
 ---
 
 ## Upgrading from 0.45.x to 0.46.x

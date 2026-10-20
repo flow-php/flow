@@ -10,6 +10,7 @@ use Flow\Telemetry\AttributeLimitsEnforcer;
 use Flow\Telemetry\Attributes;
 use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Resource;
+use Flow\Telemetry\Sanitizer\StackTrace;
 use Throwable;
 
 use function array_map;
@@ -454,7 +455,7 @@ final class Span
         $eventAttributes = Attributes::create([
             'exception.type' => $exception::class,
             'exception.message' => $exception->getMessage(),
-            'exception.stacktrace' => $exception->getTraceAsString(),
+            'exception.stacktrace' => StackTrace::format($exception),
         ])->merge($attrs);
 
         $this->events[] = GenericEvent::create('exception', $timestamp, $eventAttributes);

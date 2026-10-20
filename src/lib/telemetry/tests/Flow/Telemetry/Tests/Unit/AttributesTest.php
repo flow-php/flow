@@ -6,6 +6,7 @@ namespace Flow\Telemetry\Tests\Unit;
 
 use DateTimeImmutable;
 use Flow\Telemetry\Attributes;
+use Flow\Telemetry\Sanitizer\StackTrace;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -383,7 +384,7 @@ final class AttributesTest extends TestCase
                 [
                     'type' => RuntimeException::class,
                     'message' => 'nested error',
-                    'stacktrace' => $exception->getTraceAsString(),
+                    'stacktrace' => StackTrace::format($exception),
                 ],
             ],
             $normalized['errors'],

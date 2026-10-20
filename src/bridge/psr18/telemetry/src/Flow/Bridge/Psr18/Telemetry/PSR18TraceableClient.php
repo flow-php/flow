@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Flow\Bridge\Psr18\Telemetry;
 
 use DateTimeImmutable;
+use Flow\Telemetry\ClientUrlAttributes;
 use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\Sanitizer\UrlSanitizer;
 use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanKind;
@@ -18,12 +20,16 @@ use Throwable;
 
 final readonly class PSR18TraceableClient implements ClientInterface
 {
+    private ClientUrlAttributes $clientUrlAttributes;
+
     private Tracer $tracer;
 
     public function __construct(
         private ClientInterface $client,
         Telemetry $telemetry,
+        private UrlSanitizer $urlSanitizer = new UrlSanitizer(),
     ) {
+        $this->clientUrlAttributes = new ClientUrlAttributes($urlSanitizer);
         $this->tracer = $telemetry->tracer(
             'flow.psr18.http_client',
             PackageVersion::get('flow-php/psr18-telemetry-bridge'),
@@ -32,22 +38,9 @@ final readonly class PSR18TraceableClient implements ClientInterface
 
     public function sendRequest(RequestInterface $request): ResponseInterface
     {
-        $uri = $request->getUri();
         $method = $request->getMethod();
-        $scheme = $uri->getScheme() ?: 'http';
-        $host = $uri->getHost() ?: 'unknown';
-        $port = $uri->getPort();
-        $url = (string) $uri;
-
-        $attributes = [
-            SemConvAttributes::HTTP_REQUEST_METHOD => $method,
-            SemConvAttributes::URL_FULL => $url,
-            SemConvAttributes::URL_SCHEME => $scheme,
-            SemConvAttributes::SERVER_ADDRESS => $host,
-            // OTEL HTTP semconv: server.port is Required on client spans; fall back to the
-            // scheme default when the URI carries no explicit port.
-            SemConvAttributes::SERVER_PORT => $port ?? ($scheme === 'https' ? 443 : 80),
-        ];
+        $url = (string) $request->getUri();
+        $attributes = [SemConvAttributes::HTTP_REQUEST_METHOD => $method] + $this->clientUrlAttributes->of($url);
 
         // OTEL HTTP semconv: client span name is "{method}" - host would be per-host cardinality.
         $span = $this->tracer->span($method, SpanKind::CLIENT, $attributes);
@@ -67,9 +60,11 @@ final readonly class PSR18TraceableClient implements ClientInterface
 
             return $response;
         } catch (Throwable $exception) {
-            $span->recordException($exception, new DateTimeImmutable());
+            $message = $this->urlSanitizer->message($exception->getMessage(), $url);
+
+            $span->recordException($exception, new DateTimeImmutable(), ['exception.message' => $message]);
             $span->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class);
-            $span->setStatus(SpanStatus::error($exception->getMessage()));
+            $span->setStatus(SpanStatus::error($message));
 
             throw $exception;
         } finally {

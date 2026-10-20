@@ -7,6 +7,7 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel;
 use Closure;
 
 use function count;
+use function get_class;
 use function is_object;
 use function is_string;
 
@@ -41,11 +42,12 @@ final readonly class ControllerName
                 return new self('Closure');
             }
 
-            return new self($controller::class . '::__invoke', $controller::class, '__invoke');
+            $class = get_class($controller);
+
+            return new self($class . '::__invoke', $class, '__invoke');
         }
 
         if (is_string($controller)) {
-            // @mago-expect analysis:no-value
             return new self($controller);
         }
 

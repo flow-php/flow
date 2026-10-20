@@ -38,16 +38,16 @@ final class SealEngine
     public static function recreateIndex(EngineInterface $engine, string $index): void
     {
         if ($engine->existIndex($index)) {
-            $engine->dropIndex($index, ['return_slow_promise_result' => true])?->wait();
+            $engine->dropIndex($index, ['return_slow_promise_result' => true])->wait();
         }
 
-        $engine->createIndex($index, ['return_slow_promise_result' => true])?->wait();
+        $engine->createIndex($index, ['return_slow_promise_result' => true])->wait();
     }
 
     public static function dropIndex(EngineInterface $engine, string $index): void
     {
         if ($engine->existIndex($index)) {
-            $engine->dropIndex($index, ['return_slow_promise_result' => true])?->wait();
+            $engine->dropIndex($index, ['return_slow_promise_result' => true])->wait();
         }
     }
 }

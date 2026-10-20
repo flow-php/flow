@@ -11,6 +11,7 @@ use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
+use function Flow\Types\DSL\type_string;
 use function ksort;
 use function serialize;
 use function sort;
@@ -84,7 +85,7 @@ final class GroupedRows
 
         foreach ($batches as $batch) {
             foreach ($batch->toArray() as $row) {
-                $sums[$row['category']] = $row['amount_sum'];
+                $sums[type_string()->assert($row['category'])] = $row['amount_sum'];
             }
         }
 

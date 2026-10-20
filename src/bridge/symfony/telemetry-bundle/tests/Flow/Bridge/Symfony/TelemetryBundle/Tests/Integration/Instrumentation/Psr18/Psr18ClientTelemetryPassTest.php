@@ -275,6 +275,49 @@ final class Psr18ClientTelemetryPassTest extends KernelTestCase
         static::assertNull($span->status());
     }
 
+    public function test_wrapped_client_redacts_configured_query_parameter(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container->register('test.api_client', MockPsr18Client::class)->addArgument(200)->setPublic(true);
+                });
+
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => 'memory',
+                        ],
+                    ],
+                    'instrumentation' => [
+                        'sanitization' => ['url' => ['sensitive_query_parameters' => ['access_token']]],
+                        'http_kernel' => false,
+                        'console' => false,
+                        'messenger' => false,
+                        'psr18_client' => true,
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var ClientInterface $client */
+        $client = $container->get('test.api_client');
+        $client->sendRequest(new Request('GET', 'https://graph.facebook.com/me?access_token=SECRET&fields=id'));
+
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+
+        static::assertSame(
+            'https://graph.facebook.com/me?access_token=REDACTED&fields=id',
+            $processor->endedSpans()[0]->attributes()['url.full'],
+        );
+    }
+
     public function test_wrapped_client_records_exception_and_creates_error_span(): void
     {
         $this->bootKernel([

@@ -37,6 +37,7 @@ return static function (ContainerConfigurator $container): void {
             service('flow.telemetry.http_kernel.route_name_path_map'),
             // arg $routeNaming (RouteNaming enum) is set in FlowTelemetryBundle::registerInstrumentation.
         ])
+        ->arg('$urlSanitizer', service('flow.telemetry.url_sanitizer'))
         ->tag('kernel.event_subscriber');
 
     $services

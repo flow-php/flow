@@ -1435,6 +1435,9 @@ flow_telemetry:
         - '/^debug\..*/'
 ```
 
+`url.full`, `url.scheme`, `server.address` and `server.port` describe the effective URL the client sends
+(`$response->getInfo('url')`), so `base_uri` and the `query` option are included.
+
 #### PSR-18 Client
 
 Traces PSR-18 HTTP client requests.
@@ -1446,6 +1449,34 @@ flow_telemetry:
       enabled: true
       exclude_clients:
         - 'app.internal_client'
+```
+
+#### Sensitive query parameters
+
+`http_kernel` (`url.query`), `http_client` and `psr18_client` (`url.full`, `exception.message`) replace userinfo and
+the values of listed query parameters with `REDACTED`. The default is `UrlSanitizer::DEFAULT_SENSITIVE_QUERY_PARAMETERS`
+(OpenTelemetry, OAuth 2.0 / OpenID Connect, API key and credential keys, see
+[URL sanitization](/documentation/components/libs/telemetry.md#url-sanitization)).
+
+A configured list **replaces** the default. Keys are case-sensitive. To add keys, extend the constant in a PHP config
+file:
+
+```php
+// config/packages/flow_telemetry.php
+use Flow\Telemetry\Sanitizer\UrlSanitizer;
+use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+
+return static function (ContainerConfigurator $container): void {
+    $container->extension('flow_telemetry', [
+        'instrumentation' => [
+            'sanitization' => [
+                'url' => [
+                    'sensitive_query_parameters' => [...UrlSanitizer::DEFAULT_SENSITIVE_QUERY_PARAMETERS, 'fb_exchange_token'],
+                ],
+            ],
+        ],
+    ]);
+};
 ```
 
 #### Doctrine DBAL

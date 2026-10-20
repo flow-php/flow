@@ -57,23 +57,41 @@ $request = new Request('GET', 'https://api.example.com/users');
 $response = $traceableClient->sendRequest($request);
 
 // A span is automatically created with:
-// - Name: "GET api.example.com"
+// - Name: "GET"
 // - Kind: CLIENT
-// - Attributes: http.method, http.url, http.scheme, http.host, http.status_code
-// - Status: OK for 2xx/3xx, ERROR for 4xx/5xx
+// - Attributes: http.request.method, url.full, url.scheme, server.address, server.port, http.response.status_code
+// - Status: unset for 1xx-3xx, ERROR for 4xx/5xx
 ```
 
 ### Span Attributes
 
 The traceable client automatically records the following span attributes:
 
-| Attribute | Description | Example |
-|-----------|-------------|---------|
-| `http.method` | HTTP method | `GET`, `POST` |
-| `http.url` | Full request URL | `https://api.example.com/users` |
-| `http.scheme` | URL scheme | `https` |
-| `http.host` | Target host | `api.example.com` |
-| `http.status_code` | Response status code | `200`, `404`, `500` |
+| Attribute                   | Description                                               | Example                                      |
+|-----------------------------|-----------------------------------------------------------|----------------------------------------------|
+| `http.request.method`       | HTTP method                                               | `GET`, `POST`                                |
+| `url.full`                  | Full request URL, redacted                                | `https://api.example.com/users?sig=REDACTED` |
+| `url.scheme`                | URL scheme                                                | `https`                                      |
+| `server.address`            | Target host                                               | `api.example.com`                            |
+| `server.port`               | Target port, the scheme default when the URL has none     | `443`                                        |
+| `http.response.status_code` | Response status code                                      | `200`, `404`, `500`                          |
+| `error.type`                | Status code of a 4xx/5xx response, or the exception class | `404`, `RuntimeException`                    |
+
+`url.full` and `exception.message` carry the URL with userinfo and the values of sensitive query parameters replaced by
+`REDACTED` (see [URL sanitization](/documentation/components/libs/telemetry.md#url-sanitization)):
+
+```php
+use Flow\Telemetry\Sanitizer\UrlSanitizer;
+
+use function Flow\Bridge\Psr18\Telemetry\DSL\psr18_traceable_client;
+use function Flow\Telemetry\DSL\url_sanitizer;
+
+$traceableClient = psr18_traceable_client(
+    $httpClient,
+    $telemetry,
+    url_sanitizer([...UrlSanitizer::DEFAULT_SENSITIVE_QUERY_PARAMETERS, 'fb_exchange_token']),
+);
+```
 
 ### Error Handling
 

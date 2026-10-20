@@ -506,13 +506,13 @@ final class TypeWidenerTest extends TestCase
             'datetime<Europe/Warsaw>',
             (new TypeWidener())
                 ->widen(type_date(), type_datetime('Europe/Warsaw'))
-                ?->toString(),
+                ->toString(),
         );
         static::assertSame(
             'datetime<Europe/Warsaw>',
             (new TypeWidener())
                 ->widen(type_datetime('Europe/Warsaw'), type_date())
-                ?->toString(),
+                ->toString(),
         );
     }
 
@@ -522,7 +522,7 @@ final class TypeWidenerTest extends TestCase
             'datetime',
             (new TypeWidener())
                 ->widen(type_datetime('Europe/Warsaw'), type_datetime('+02:00'))
-                ?->toString(),
+                ->toString(),
         );
     }
 }
