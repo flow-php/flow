@@ -1208,7 +1208,7 @@ final class DataFrameTest extends FlowTestCase
             └─ #1 Read  source · transparent · streaming
                   Extractor: RecordingFileExtractor
                   Source: file:///dev/null
-                  Filter: IsNotNull
+                  Filter: id IS NOT NULL
             PLAN, $dataFrame->explain()->toString(format: Format::declarations));
         static::assertSame([], $extractor->scans);
     }
@@ -1371,7 +1371,7 @@ final class DataFrameTest extends FlowTestCase
             └─ #6 Write  preserving · opaque · streaming
                │  Loader: MemoryLoader
                └─ #5 Filter  reducing · transparent · streaming
-                  │  Condition: Equals
+                  │  Condition: id = 1
                   └─ #1 Read (shared)
             PLAN, $dataFrame->explain()->toString(format: Format::declarations));
     }

@@ -8,6 +8,7 @@ use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Path\Filter;
 
 use function array_merge;
+use function array_values;
 
 final readonly class Filters implements Filter
 {
@@ -35,5 +36,13 @@ final readonly class Filters implements Filter
     public function add(Filter $filter): self
     {
         return new self(...array_merge($this->filters, [$filter]));
+    }
+
+    /**
+     * @return list<Filter>
+     */
+    public function filters(): array
+    {
+        return array_values($this->filters);
     }
 }

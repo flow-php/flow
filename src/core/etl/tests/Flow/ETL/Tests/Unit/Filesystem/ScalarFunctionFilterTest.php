@@ -20,6 +20,16 @@ use function Flow\Filesystem\DSL\path;
 
 final class ScalarFunctionFilterTest extends FlowTestCase
 {
+    public function test_function_is_the_one_given_not_its_resolved_copy(): void
+    {
+        $function = ref('year')->equals(lit(2024));
+
+        static::assertSame(
+            $function,
+            (new ScalarFunctionFilter($function, schema(int_schema('year')), flow_context(config())))->function(),
+        );
+    }
+
     public function test_accept_evaluates_the_resolved_function(): void
     {
         static::assertTrue((new ScalarFunctionFilter(

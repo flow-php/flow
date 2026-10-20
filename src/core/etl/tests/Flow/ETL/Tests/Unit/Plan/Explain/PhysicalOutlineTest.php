@@ -128,7 +128,7 @@ final class PhysicalOutlineTest extends FlowTestCase
         static::assertSame(
             [
                 'Extractor: RecordingFileExtractor',
-                '   Filter: GreaterThan',
+                '   Filter: id > 1',
             ],
             $root->children[0]->lines,
         );

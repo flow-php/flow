@@ -47,7 +47,7 @@ final class FlowLayoutTest extends FlowTestCase
             #1 Read
             │  Extractor: ArrayExtractor
             └─ #2 Filter
-               │  Condition: IsNotNull
+               │  Condition: id IS NOT NULL
                ├─ #3 Result
                │     Rows this plan hands out: to the trigger, or to the node reading it
                └─ #4 Write

@@ -140,5 +140,6 @@ Partition columns list fewer files instead ([partitioning](/documentation/compon
          Extractor: ParquetExtractor
          Source: file:///orders/*.parquet
          Limit: 10
-         Filter: All
+         Filter: id > 1000
+         Filter: status = 'paid'
 ```

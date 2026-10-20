@@ -290,6 +290,21 @@ data_frame()
     ->run();
 ```
 
+`explain()` lists what each file's path must pass under `Files:`, what each row must pass under `Filter:`:
+
+```text
+#3 Write
+│  Loader: StreamLoader
+└─ #2 Limit
+   │  Limit: 10
+   └─ #1 Read
+         Extractor: CSVExtractor
+         Source: file:///output/date=*/department=*/*.csv
+         Limit: 10
+         Files: date >= '2024-01-01'
+         Filter: date >= '2024-01-01'
+```
+
 ### Path Partitions
 
 `from_path_partitions()` reads partition metadata without opening the files.

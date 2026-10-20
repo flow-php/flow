@@ -88,7 +88,7 @@ final class TransformedTest extends FlowTestCase
             └─ #5 Write  preserving · opaque · streaming
                │  Loader: MemoryLoader
                └─ #4 Filter  reducing · transparent · streaming
-                  │  Condition: Equals
+                  │  Condition: id = 1
                   └─ #3 Transform  unknown · opaque · streaming · redefines unknown
                      └─ #1 Read (shared)
             PLAN, $dataFrame->explain()->toString(format: Format::declarations));
