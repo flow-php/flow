@@ -1,6 +1,20 @@
-## [Unreleased] - 2026-10-15
+## [Unreleased] - 2026-10-20
+
+### Added
+- [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/parquet - filtered reads with row group, page index and bloom filter pruning** - [@norberttech](https://github.com/norberttech)
+- [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/parquet - row filtering during decode, with a limit beside the filter** - [@norberttech](https://github.com/norberttech)
+- [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/parquet - column index, offset index and bloom filter writing** - [@norberttech](https://github.com/norberttech)
+- [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/etl - DataFrame filters pushed into file sources** - [@norberttech](https://github.com/norberttech)
+- [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/etl-adapter-parquet - pushed filters translated into parquet reads** - [@norberttech](https://github.com/norberttech)
+- [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/arrow-ext - page-range reads and row filtering through arrow-rs** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/parquet - column statistics aligned with arrow-rs** - [@norberttech](https://github.com/norberttech)
+- [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/parquet - ParquetFile reads take a Query** - [@norberttech](https://github.com/norberttech)
+- [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/parquet - PAGE_MAXIMUM_ROWS_COUNT and ROW_GROUP_SIZE_BYTES enforced by both writers** - [@norberttech](https://github.com/norberttech)
+- [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/etl - file extractors read through FileScan** - [@norberttech](https://github.com/norberttech)
+- [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/etl - explain() shows pushed filters and limits under Read** - [@norberttech](https://github.com/norberttech)
+- [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/arrow-ext - built against arrow-rs 60** - [@norberttech](https://github.com/norberttech)
 - [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/types - leaf types are no longer generic** - [@norberttech](https://github.com/norberttech)
 - [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/types - ListType<T> and MapType<TKey, TValue> template their members** - [@norberttech](https://github.com/norberttech)
 - [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/mago-types-bridge - type_structure() members resolved through template-type** - [@norberttech](https://github.com/norberttech)
@@ -8,7 +22,14 @@
 - [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/flow - updated dev dependencies, mago 1.57 and GitHub Actions** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/parquet - corrupt multi-page RLE_DICTIONARY columns written by the PHP writer** - [@norberttech](https://github.com/norberttech)
+- [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/parquet - UINT_64 values above PHP_INT_MAX read as numeric strings** - [@norberttech](https://github.com/norberttech)
+- [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/etl - string comparisons order by bytes instead of numerically** - [@norberttech](https://github.com/norberttech)
+- [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/arrow-ext - digit-only column option keys no longer ignored** - [@norberttech](https://github.com/norberttech)
 - [b5d097](https://github.com/flow-php/flow/commit/b5d097c5cabde914624be59774dd8a8d6fafe294) - **bump setup-php to 2.40.0 in extension release workflows** - [@norberttech](https://github.com/norberttech)
+
+### Removed
+- [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/parquet - unused DICTIONARY_PAGE_MIN_CARDINALITY_RATION option** - [@norberttech](https://github.com/norberttech)
 
 ## [0.46.0] - 2026-10-08
 
