@@ -10,6 +10,8 @@ use Flow\ETL\Cache\Implementation\InMemoryCache;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Column\AdaptiveBackend;
 use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Exception\InferredSchemaException;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\CountingCache;
@@ -299,14 +301,27 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
      * A cache entry that has not been written yet has no columns, which is an answer. Reaching into
      * the FlowContext for a cache would make describing a source need a running pipeline.
      */
-    public function test_schema_returns_empty_schema_on_cache_id_miss(): void
+    public function test_schema_is_not_derivable_without_a_cache_instance(): void
     {
-        static::assertEquals(schema(), from_cache('non_existing_cache_key')->schema());
+        $this->expectException(SchemaNotDerivableException::class);
+        $this->expectExceptionMessage(
+            'Flow\\ETL\\Extractor\\CacheExtractor cannot describe what it will produce before producing it: no cache was '
+            . 'handed to from_cache(), and the one in the FlowContext is known only when the pipeline runs. Declare the '
+            . 'schema with ->withSchema().',
+        );
+
+        from_cache('non_existing_cache_key')->schema();
     }
 
-    public function test_schema_returns_empty_schema_when_the_injected_cache_does_not_hold_the_id(): void
+    public function test_schema_refuses_to_infer_when_the_injected_cache_does_not_hold_the_id(): void
     {
-        static::assertEquals(schema(), from_cache('non_existing_cache_key', cache: new InMemoryCache())->schema());
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'from_cache() has nothing to infer a schema from: the cache holds no entry "non_existing_cache_key" and '
+            . 'no fallback extractor is set. Declare the schema with ->withSchema(...).',
+        );
+
+        from_cache('non_existing_cache_key', cache: new InMemoryCache())->schema();
     }
 
     public function test_a_cache_hit_is_not_matched_to_the_fallback_extractors_schema(): void

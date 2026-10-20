@@ -27,6 +27,29 @@ use function range;
 
 final class MemoryExtractorTest extends FlowTestCase
 {
+    public function test_an_empty_source_refuses_to_infer_a_schema(): void
+    {
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'from_memory() has nothing to infer a schema from: no row carries a column. Declare the schema with ->withSchema(...).',
+        );
+
+        from_memory(new ArrayMemory())->schema();
+    }
+
+    public function test_an_empty_source_with_a_declared_schema_answers_it(): void
+    {
+        static::assertEquals(
+            schema(int_schema('id')),
+            from_memory(new ArrayMemory())->withSchema(schema(int_schema('id')))->schema(),
+        );
+    }
+
+    public function test_an_empty_source_extracts_nothing_without_a_declared_schema(): void
+    {
+        static::assertSame([], iterator_to_array(from_memory(new ArrayMemory())->extract(flow_context()), false));
+    }
+
     public function test_declared_schema_is_used_to_hydrate_extracted_rows(): void
     {
         $memory = new ArrayMemory();
@@ -89,7 +112,11 @@ final class MemoryExtractorTest extends FlowTestCase
         $memory = new ArrayMemory();
         $extractor = from_memory($memory);
 
-        static::assertSame([], $extractor->schema()->references()->names());
+        try {
+            $extractor->schema();
+            static::fail('an empty memory must refuse to infer a schema');
+        } catch (InferredSchemaException) {
+        }
 
         $memory->save([['number' => 1, 'name' => 'one']]);
 

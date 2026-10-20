@@ -28,6 +28,7 @@ use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\execution_context;
+use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\infer_schema;
 use function Flow\ETL\DSL\int_schema;
@@ -40,6 +41,40 @@ use function range;
 
 final class ArrayExtractorTest extends FlowTestCase
 {
+    public function test_an_empty_source_refuses_to_infer_a_schema(): void
+    {
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'from_array() has nothing to infer a schema from: no row carries a column. Declare the schema with ->withSchema(...).',
+        );
+
+        from_array([])->schema();
+    }
+
+    public function test_an_empty_source_with_a_declared_schema_answers_it(): void
+    {
+        static::assertEquals(schema(int_schema('id')), from_array([])->withSchema(schema(int_schema('id')))->schema());
+    }
+
+    public function test_an_empty_source_extracts_nothing_without_a_declared_schema(): void
+    {
+        static::assertSame([], iterator_to_array(from_array([])->extract(flow_context()), false));
+    }
+
+    public function test_an_empty_generator_refuses_to_infer_a_schema(): void
+    {
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'from_array() has nothing to infer a schema from: no row carries a column. Declare the schema with '
+            . '->withSchema(...).',
+        );
+
+        /** @var callable(): Generator<int, array<string, mixed>> $generator */
+        $generator = static fn(): Generator => yield from [];
+
+        from_array($generator())->schema();
+    }
+
     public function test_a_declared_schema_writes_no_spill(): void
     {
         /** @var callable(): Generator<int, array<string, mixed>> $generator */

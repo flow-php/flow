@@ -9,6 +9,7 @@ use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
 use Flow\ETL\Adapter\JSON\Tests\Context\JsonFixtureContext;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Config;
+use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Extractor\File\FileScan;
@@ -458,12 +459,20 @@ final class JsonLinesExtractorTest extends FlowTestCase
         );
     }
 
-    public function test_an_empty_document_infers_an_empty_schema(): void
+    public function test_an_empty_document_refuses_to_infer_a_schema_and_extracts_nothing(): void
     {
         $extractor = from_json_lines(JsonFixtureContext::path('empty.jsonl'));
 
-        static::assertSame([], $extractor->schema()->definitions());
         static::assertSame([], iterator_to_array($extractor->extract(flow_context(config())), false));
+
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'from_json_lines() has nothing to infer a schema from: no file matching "'
+            . path_real(JsonFixtureContext::path('empty.jsonl'))->uri()
+            . '" carries a column. Declare the schema with ->withSchema(...).',
+        );
+
+        $extractor->schema();
     }
 
     /**
@@ -503,16 +512,22 @@ final class JsonLinesExtractorTest extends FlowTestCase
         static::assertSame([['id' => 1], ['id' => 2]], df(config())->read($extractor)->fetch()->toArray());
     }
 
-    public function test_an_empty_listing_infers_an_empty_schema(): void
+    public function test_an_empty_listing_refuses_to_infer_a_schema_without_opening_a_file(): void
     {
         $counting = new CountingFilesystem(new NativeLocalFilesystem());
 
-        static::assertSame(
-            [],
-            from_json_lines(JsonFixtureContext::path('no_such_dir/*.jsonl'), filesystem: $counting)
-                ->schema()
-                ->definitions(),
-        );
+        try {
+            from_json_lines(JsonFixtureContext::path('no_such_dir/*.jsonl'), filesystem: $counting)->schema();
+            static::fail('an empty listing must refuse to infer a schema');
+        } catch (InferredSchemaException $e) {
+            static::assertSame(
+                'from_json_lines() has nothing to infer a schema from: no file matching "'
+                . path_real(JsonFixtureContext::path('no_such_dir/*.jsonl'))->uri()
+                . '" carries a column. Declare the schema with ->withSchema(...).',
+                $e->getMessage(),
+            );
+        }
+
         static::assertSame(0, $counting->readFromCalls);
     }
 

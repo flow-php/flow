@@ -7,6 +7,8 @@ namespace Flow\Floe\Tests\Integration;
 use DateTimeImmutable;
 use DateTimeZone;
 use Flow\ETL\Cardinality;
+use Flow\ETL\Exception\InferredSchemaException;
+use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Function\Between\Boundary;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Context\ExtractedRows;
@@ -39,6 +41,118 @@ use function iterator_to_array;
 
 final class FloeExtractorTest extends FlowIntegrationTestCase
 {
+    public function test_a_declared_schema_reads_files_by_name(): void
+    {
+        df()
+            ->read(from_array([['id' => 1, 'name' => 'one']]))
+            ->write(to_floe($this->cacheDir->suffix('by-name.floe')))
+            ->run();
+
+        static::assertSame(
+            [['id' => 1]],
+            df()
+                ->read(from_floe(
+                    $this->cacheDir->suffix('by-name.floe'),
+                    filesystem: $this->fs(),
+                )->withSchema(schema(int_schema('id'))))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    public function test_a_declared_nullable_column_a_file_lacks_reads_as_null(): void
+    {
+        df()
+            ->read(from_array([['id' => 1]]))
+            ->write(to_floe($this->cacheDir->suffix('nullable.floe')))
+            ->run();
+
+        static::assertSame(
+            [['id' => 1, 'name' => null]],
+            df()
+                ->read(from_floe($this->cacheDir->suffix('nullable.floe'), filesystem: $this->fs())->withSchema(schema(
+                    int_schema('id'),
+                    str_schema('name', nullable: true),
+                )))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    public function test_a_declared_non_nullable_column_a_file_lacks_fails(): void
+    {
+        df()
+            ->read(from_array([['id' => 1]]))
+            ->write(to_floe($this->cacheDir->suffix('not-null.floe')))
+            ->run();
+
+        $this->expectException(SchemaMismatchException::class);
+
+        df()
+            ->read(from_floe($this->cacheDir->suffix('not-null.floe'), filesystem: $this->fs())->withSchema(schema(
+                int_schema('id'),
+                str_schema('name'),
+            )))
+            ->fetch();
+    }
+
+    public function test_a_declared_schema_skips_the_divergence_check(): void
+    {
+        df()
+            ->read(from_array([['id' => 1, 'a' => 'x']]))
+            ->write(to_floe($this->cacheDir->suffix('diverging/a.floe')))
+            ->run();
+        df()
+            ->read(from_array([['id' => 2, 'b' => 'y']]))
+            ->write(to_floe($this->cacheDir->suffix('diverging/b.floe')))
+            ->run();
+
+        static::assertSame(
+            [['id' => 1, 'a' => 'x', 'b' => null], ['id' => 2, 'a' => null, 'b' => 'y']],
+            df()
+                ->read(from_floe(
+                    $this->cacheDir->suffix('diverging/*.floe'),
+                    filesystem: $this->fs(),
+                )->withSchema(schema(
+                    int_schema('id', nullable: true),
+                    str_schema('a', nullable: true),
+                    str_schema('b', nullable: true),
+                )))
+                ->sortBy(ref('id'))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    public function test_a_glob_without_files_refuses_to_infer(): void
+    {
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'from_floe() has nothing to infer a schema from: no file matching "'
+            . $this->cacheDir->suffix('**/*.floe')->uri()
+            . '" carries a column. Declare the schema with ->withSchema(...).',
+        );
+
+        df()
+            ->read(from_floe($this->cacheDir->suffix('**/*.floe'), filesystem: $this->fs()))
+            ->select('id')
+            ->fetch();
+    }
+
+    public function test_a_glob_without_files_reads_nothing_under_a_declared_schema(): void
+    {
+        static::assertCount(
+            0,
+            df()
+                ->read(from_floe(
+                    $this->cacheDir->suffix('**/*.floe'),
+                    filesystem: $this->fs(),
+                )->withSchema(schema(int_schema('id'))))
+                ->select('id')
+                ->fetch(),
+        );
+    }
+
     public function test_a_glob_declares_an_approximate_row_count(): void
     {
         FloeStreamReaderContext::write(

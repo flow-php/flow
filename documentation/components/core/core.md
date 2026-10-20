@@ -236,6 +236,20 @@ $dataFrame = data_frame()
 
 > **Note**: Flow PHP supports many data sources through specialized adapters. See individual adapter documentation for specific extractor usage (CSV, JSON, Parquet, databases, APIs, etc.).
 
+An empty source has no column to infer a schema from and throws `InferredSchemaException`. Declare the schema to read it:
+
+```php
+<?php
+
+use function Flow\ETL\DSL\{data_frame, from_array, int_schema, schema, str_schema, to_output};
+
+data_frame()
+    ->read(from_array([], schema(int_schema('id'), str_schema('name'))))
+    ->select('id')
+    ->write(to_output())
+    ->run();
+```
+
 ## Memory Management Best Practices
 
 1. **Prefer Generator Methods**: Use `get()`, `getEachAsArray()` over `fetch()` for large datasets

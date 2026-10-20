@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\JSON\JSONMachine;
 
 use Flow\ETL\Cardinality;
+use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
@@ -98,7 +99,7 @@ final class JsonExtractor implements
     public function scan(FlowContext $context, FileScan $scan): Generator
     {
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
-        $schema = $this->schema();
+        $schema = $this->describe();
         $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $scan->pathFilter), false);
 
         yield from (new FileReadLoop($fileColumns, $schema, $scan->conjuncts))->read(
@@ -132,6 +133,21 @@ final class JsonExtractor implements
     }
 
     public function schema(): Schema
+    {
+        $schema = $this->describe();
+        $fileColumns = $this->fileColumns($this->filesystem, $this->path);
+
+        if ($this->schema === null && $fileColumns->withoutTail($schema)->count() === 0) {
+            throw InferredSchemaException::nothingToInferFrom(
+                $this->format === JsonFormat::Lines ? 'from_json_lines()' : 'from_json()',
+                sprintf('no file matching "%s" carries a column', $this->path->uri()),
+            );
+        }
+
+        return $schema;
+    }
+
+    private function describe(): Schema
     {
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
 

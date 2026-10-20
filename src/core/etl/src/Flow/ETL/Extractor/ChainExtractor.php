@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Extractor;
 
 use Flow\ETL\Cardinality;
+use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
@@ -40,11 +41,12 @@ final class ChainExtractor implements Extractor, OverridingExtractor, Rewindable
         // Every child's batches are projected onto the folded shape, so each yields the union
         // rather than only the columns its own source happens to carry. A child that cannot
         // describe itself makes the chain unable to promise one shape, so the fold is allowed to
-        // throw.
-        $schema = $this->schema();
+        // throw - on the first batch, so a chain that yields nothing reads under any declared parent.
+        $schema = null;
 
         foreach ($this->extractors as $extractor) {
             foreach ($extractor->extract($context) as $rows) {
+                $schema ??= $this->schema();
                 $signal = yield $rows->matchTo($schema, $context->backend());
 
                 if ($signal === Signal::STOP) {
@@ -63,6 +65,10 @@ final class ChainExtractor implements Extractor, OverridingExtractor, Rewindable
     {
         if ($this->schema !== null) {
             return $this->schema;
+        }
+
+        if ($this->extractors === []) {
+            throw InferredSchemaException::nothingToInferFrom('from_all()', 'it chains no extractor');
         }
 
         $schema = new Schema();

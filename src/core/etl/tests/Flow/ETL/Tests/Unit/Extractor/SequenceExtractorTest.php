@@ -24,12 +24,59 @@ use function Flow\ETL\DSL\from_sequence_date_period;
 use function Flow\ETL\DSL\from_sequence_date_period_recurrences;
 use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\infer_schema;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function iterator_to_array;
 
 final class SequenceExtractorTest extends FlowTestCase
 {
+    public function test_an_empty_source_refuses_to_infer_a_schema(): void
+    {
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'the sequence has nothing to infer a schema from: it generates no item. Declare the schema with ->withSchema(...).',
+        );
+
+        from_sequence_date_period(
+            'id',
+            new DateTimeImmutable('2024-01-01'),
+            new DateInterval('P1D'),
+            new DateTimeImmutable('2024-01-01'),
+        )->schema();
+    }
+
+    public function test_an_empty_source_with_a_declared_schema_answers_it(): void
+    {
+        static::assertEquals(
+            schema(int_schema('id')),
+            from_sequence_date_period(
+                'id',
+                new DateTimeImmutable('2024-01-01'),
+                new DateInterval('P1D'),
+                new DateTimeImmutable('2024-01-01'),
+            )
+                ->withSchema(schema(int_schema('id')))
+                ->schema(),
+        );
+    }
+
+    public function test_an_empty_source_extracts_nothing_without_a_declared_schema(): void
+    {
+        static::assertSame(
+            [],
+            iterator_to_array(
+                from_sequence_date_period(
+                    'id',
+                    new DateTimeImmutable('2024-01-01'),
+                    new DateInterval('P1D'),
+                    new DateTimeImmutable('2024-01-01'),
+                )->extract(flow_context()),
+                false,
+            ),
+        );
+    }
+
     public function test_declared_schema_is_used_to_hydrate_extracted_rows(): void
     {
         self::assertExtractedRowsEquals(

@@ -292,14 +292,14 @@ final class FloeExtractorTest extends FlowTestCase
         static::assertSame($path->uri(), $batches[0]->column('_input_file_uri')->value(0));
     }
 
-    public function test_with_schema_is_refused(): void
+    public function test_a_declared_schema_answers_without_opening_a_file(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            'Floe is a self-describing format and does not accept a schema; declaring one is not supported yet.',
+        static::assertEquals(
+            schema(int_schema('id')),
+            from_floe(path('memory://no-match/*.floe'), filesystem: memory_filesystem())
+                ->withSchema(schema(int_schema('id')))
+                ->schema(),
         );
-
-        from_floe(path('memory://x.floe'), filesystem: memory_filesystem())->withSchema(schema(int_schema('id')));
     }
 
     public function test_extract_builds_through_the_config_backend(): void

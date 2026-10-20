@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
@@ -35,6 +36,7 @@ interface Extractor
      * Called once per RUN - every run plans afresh - so it MUST be idempotent and cheap on repeat: memoise
      * what it sniffs, as CSVExtractor and ArrayExtractor do.
      *
+     * @throws InferredSchemaException when no schema was declared and the source has no column to infer one from
      * @throws SchemaNotDerivableException when the source cannot describe what it will produce
      */
     public function schema(): Schema;

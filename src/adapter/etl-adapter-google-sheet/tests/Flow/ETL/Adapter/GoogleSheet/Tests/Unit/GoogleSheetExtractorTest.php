@@ -525,8 +525,15 @@ final class GoogleSheetExtractorTest extends FlowTestCase
             $values,
         ))->withRowsPerPage(20);
 
-        static::assertCount(0, $extractor->schema()->definitions());
         static::assertCount(0, iterator_to_array($extractor->extract(flow_context())));
+
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'from_google_sheet() has nothing to infer a schema from: spreadsheet "spread-id" sheet "sheet" carries no '
+            . 'column. Declare the schema with ->withSchema(...).',
+        );
+
+        $extractor->schema();
     }
 
     public function test_extract_without_a_header_row_infers_generated_names(): void

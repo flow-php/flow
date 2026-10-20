@@ -76,6 +76,38 @@ final class ExcelExtractorTest extends FlowTestCase
         yield 'xlsx' => [__DIR__ . '/../Fixtures/nullable_fixture.xlsx'];
     }
 
+    public function test_an_empty_glob_refuses_to_infer_a_schema(): void
+    {
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'from_excel() has nothing to infer a schema from: no file matching "'
+            . path_real(ExcelFixtureContext::file('*.no-match'))->uri()
+            . '" carries a column. Declare the schema with ->withSchema(...).',
+        );
+
+        from_excel(ExcelFixtureContext::file('*.no-match'))->schema();
+    }
+
+    public function test_an_empty_glob_with_metadata_columns_refuses_to_infer_a_schema(): void
+    {
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'from_excel() has nothing to infer a schema from: no file matching "'
+            . path_real(ExcelFixtureContext::file('*.no-match'))->uri()
+            . '" carries a column. Declare the schema with ->withSchema(...).',
+        );
+
+        from_excel(ExcelFixtureContext::file('*.no-match'))->withMetadataColumns(true)->schema();
+    }
+
+    public function test_an_empty_glob_with_a_declared_schema_answers_it_and_extracts_nothing(): void
+    {
+        $extractor = from_excel(ExcelFixtureContext::file('*.no-match'))->withSchema(schema(int_schema('id')));
+
+        static::assertEquals(schema(int_schema('id')), $extractor->schema());
+        static::assertSame([], iterator_to_array($extractor->extract(flow_context()), false));
+    }
+
     #[DataProvider('provide_fixtures')]
     public function test_extract_excel_file(string $fixtureName): void
     {
@@ -463,16 +495,32 @@ final class ExcelExtractorTest extends FlowTestCase
         );
     }
 
-    #[TestWith(['empty_sheet.xlsx', []])]
-    #[TestWith(['empty_sheet.ods', []])]
     #[TestWith(['header_only.xlsx', ['id', 'name']])]
     #[TestWith(['header_only.ods', ['id', 'name']])]
-    public function test_header_only_and_empty_sheets(string $fixture, array $names): void
+    public function test_header_only_sheets(string $fixture, array $names): void
     {
         $extractor = from_excel(ExcelFixtureContext::file($fixture));
 
         static::assertSame($names, $extractor->schema()->references()->names());
         static::assertCount(0, df()->extract($extractor)->fetch()->toArray());
+    }
+
+    #[TestWith(['empty_sheet.xlsx'])]
+    #[TestWith(['empty_sheet.ods'])]
+    public function test_an_empty_sheet_refuses_to_infer_a_schema_and_extracts_nothing(string $fixture): void
+    {
+        $extractor = from_excel(ExcelFixtureContext::file($fixture));
+
+        static::assertSame([], iterator_to_array($extractor->extract(flow_context()), false));
+
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'from_excel() has nothing to infer a schema from: no file matching "'
+            . path_real(ExcelFixtureContext::file($fixture))->uri()
+            . '" carries a column. Declare the schema with ->withSchema(...).',
+        );
+
+        $extractor->schema();
     }
 
     /**

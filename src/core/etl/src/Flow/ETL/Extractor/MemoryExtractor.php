@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
+use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Memory\InferredRows;
 use Flow\ETL\Extractor\Memory\InMemoryRows;
@@ -45,7 +46,7 @@ final class MemoryExtractor implements BatchableExtractor, Extractor, InfersSche
     public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         $batchSize = $this->batchSize();
-        $schema = $this->schema();
+        $schema = $this->describe();
         $buffer = [];
         $batches = new InferredRows('from_memory()', $this->schema === null ? $this->inference : null);
 
@@ -79,6 +80,17 @@ final class MemoryExtractor implements BatchableExtractor, Extractor, InfersSche
     }
 
     public function schema(): Schema
+    {
+        $schema = $this->describe();
+
+        if ($this->schema === null && $schema->count() === 0) {
+            throw InferredSchemaException::nothingToInferFrom('from_memory()', 'no row carries a column');
+        }
+
+        return $schema;
+    }
+
+    private function describe(): Schema
     {
         if ($this->schema !== null) {
             return $this->schema;

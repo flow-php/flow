@@ -10,6 +10,7 @@ use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
 use Flow\ETL\Adapter\JSON\Tests\Context\JsonFixtureContext;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Config;
+use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Extractor\File\FileScan;
@@ -30,6 +31,7 @@ use function array_keys;
 use function array_sum;
 use function count;
 use function Flow\ETL\Adapter\JSON\from_json;
+use function Flow\ETL\Adapter\JSON\from_json_lines;
 use function Flow\ETL\Adapter\JSON\to_json;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
@@ -55,6 +57,74 @@ use function max;
 
 final class JsonExtractorTest extends FlowTestCase
 {
+    public function test_an_empty_glob_refuses_to_infer_a_schema(): void
+    {
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'from_json() has nothing to infer a schema from: no file matching "memory://empty/*.json" carries a column. '
+            . 'Declare the schema with ->withSchema(...).',
+        );
+
+        from_json(path('memory://empty/*.json'), filesystem: memory_filesystem())->schema();
+    }
+
+    public function test_an_empty_glob_with_metadata_columns_refuses_to_infer_a_schema(): void
+    {
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'from_json() has nothing to infer a schema from: no file matching "memory://empty/*.json" carries a column. '
+            . 'Declare the schema with ->withSchema(...).',
+        );
+
+        from_json(path('memory://empty/*.json'), filesystem: memory_filesystem())->withMetadataColumns(true)->schema();
+    }
+
+    public function test_an_empty_glob_with_a_declared_schema_answers_it_and_extracts_nothing(): void
+    {
+        $extractor = from_json(
+            path('memory://empty/*.json'),
+            filesystem: memory_filesystem(),
+        )->withSchema(schema(int_schema('id')));
+
+        static::assertEquals(schema(int_schema('id')), $extractor->schema());
+        static::assertSame([], iterator_to_array($extractor->extract(flow_context()), false));
+    }
+
+    public function test_an_empty_lines_glob_refuses_to_infer_a_schema(): void
+    {
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'from_json_lines() has nothing to infer a schema from: no file matching "memory://empty/*.jsonl" carries a column. '
+            . 'Declare the schema with ->withSchema(...).',
+        );
+
+        from_json_lines(path('memory://empty/*.jsonl'), filesystem: memory_filesystem())->schema();
+    }
+
+    public function test_an_empty_lines_glob_with_metadata_columns_refuses_to_infer_a_schema(): void
+    {
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'from_json_lines() has nothing to infer a schema from: no file matching "memory://empty/*.jsonl" carries a column. '
+            . 'Declare the schema with ->withSchema(...).',
+        );
+
+        from_json_lines(path('memory://empty/*.jsonl'), filesystem: memory_filesystem())
+            ->withMetadataColumns(true)
+            ->schema();
+    }
+
+    public function test_an_empty_lines_glob_with_a_declared_schema_answers_it_and_extracts_nothing(): void
+    {
+        $extractor = from_json_lines(
+            path('memory://empty/*.jsonl'),
+            filesystem: memory_filesystem(),
+        )->withSchema(schema(int_schema('id')));
+
+        static::assertEquals(schema(int_schema('id')), $extractor->schema());
+        static::assertSame([], iterator_to_array($extractor->extract(flow_context()), false));
+    }
+
     public function test_extract_does_not_mutate_user_provided_schema(): void
     {
         $schema = schema(int_schema('id'), str_schema('value'));
@@ -464,12 +534,20 @@ final class JsonExtractorTest extends FlowTestCase
     #[TestWith(['empty_array.json'])]
     #[TestWith(['array_of_empty_object.json'])]
     #[TestWith(['empty.json'])]
-    public function test_an_empty_document_infers_an_empty_schema(string $fixture): void
+    public function test_an_empty_document_refuses_to_infer_a_schema_and_extracts_nothing(string $fixture): void
     {
         $extractor = from_json(JsonFixtureContext::path($fixture));
 
-        static::assertSame([], $extractor->schema()->definitions());
         static::assertSame([], iterator_to_array($extractor->extract(flow_context(config())), false));
+
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'from_json() has nothing to infer a schema from: no file matching "'
+            . path_real(JsonFixtureContext::path($fixture))->uri()
+            . '" carries a column. Declare the schema with ->withSchema(...).',
+        );
+
+        $extractor->schema();
     }
 
     /**
@@ -492,14 +570,22 @@ final class JsonExtractorTest extends FlowTestCase
         static::assertSame([['id' => 1, 'name' => 'a']], df(config())->read($extractor)->fetch()->toArray());
     }
 
-    public function test_an_empty_listing_infers_an_empty_schema(): void
+    public function test_an_empty_listing_refuses_to_infer_a_schema_without_opening_a_file(): void
     {
         $counting = new CountingFilesystem(new NativeLocalFilesystem());
 
-        static::assertSame(
-            [],
-            from_json(JsonFixtureContext::path('no_such_dir/*.json'), filesystem: $counting)->schema()->definitions(),
-        );
+        try {
+            from_json(JsonFixtureContext::path('no_such_dir/*.json'), filesystem: $counting)->schema();
+            static::fail('an empty listing must refuse to infer a schema');
+        } catch (InferredSchemaException $e) {
+            static::assertSame(
+                'from_json() has nothing to infer a schema from: no file matching "'
+                . path_real(JsonFixtureContext::path('no_such_dir/*.json'))->uri()
+                . '" carries a column. Declare the schema with ->withSchema(...).',
+                $e->getMessage(),
+            );
+        }
+
         static::assertSame(0, $counting->readFromCalls);
     }
 

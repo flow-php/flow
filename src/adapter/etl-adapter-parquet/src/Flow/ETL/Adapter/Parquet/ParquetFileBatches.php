@@ -21,6 +21,8 @@ use Flow\Parquet\Filter\Binding\BoundFilter;
 use Flow\Parquet\Reader\ReadPlanner;
 use Generator;
 
+use function array_diff;
+
 final class ParquetFileBatches implements OffsetSkippingFileBatches
 {
     /**
@@ -84,6 +86,10 @@ final class ParquetFileBatches implements OffsetSkippingFileBatches
             $this->derived?->refuseDivergence($file->source()->uri(), $file->schema());
 
             $fileBody = $this->fileColumns->withoutTail($file->schema());
+            $fileBody = $fileBody->gracefulRemove(...array_diff(
+                $fileBody->references()->names(),
+                $body->references()->names(),
+            ));
             $kept = [];
 
             foreach ($this->conjuncts as $conjunct) {

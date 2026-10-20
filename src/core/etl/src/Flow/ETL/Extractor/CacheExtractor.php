@@ -7,11 +7,15 @@ namespace Flow\ETL\Extractor;
 use Flow\ETL\Cache;
 use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Cardinality;
+use Flow\ETL\Exception\InferredSchemaException;
+use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
+
+use function sprintf;
 
 final class CacheExtractor implements Extractor, RewindableExtractor
 {
@@ -120,10 +124,17 @@ final class CacheExtractor implements Extractor, RewindableExtractor
             return $this->fallbackExtractor->schema();
         }
 
-        // A cache entry that does not exist yet has no columns. That is an answer, not an
-        // unanswerable question, and threading a cache in from the FlowContext to look harder
-        // would break the rule the comment above states.
-        return new Schema();
+        if ($this->cache !== null) {
+            throw InferredSchemaException::nothingToInferFrom('from_cache()', sprintf(
+                'the cache holds no entry "%s" and no fallback extractor is set',
+                $this->id,
+            ));
+        }
+
+        throw SchemaNotDerivableException::extractor(
+            self::class,
+            'no cache was handed to from_cache(), and the one in the FlowContext is known only when the pipeline runs',
+        );
     }
 
     /**

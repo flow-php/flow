@@ -138,6 +138,15 @@ public function scan(FlowContext $context, FileScan $scan): Generator
 | Symfony HttpClient `url.full`, `url.scheme`, `server.address`, `server.port` came from the `$url` argument (`/me`, `unknown` with `base_uri`)     | they come from the effective URL, `base_uri` and the `query` option included                                                                                                                                                                                                                                                 |
 | `exception.stacktrace` was `getTraceAsString()`, with argument values when `zend.exception_ignore_args` is off                                    | `StackTrace::format()`: every frame renders `()`, whatever `zend.exception_ignore_args` is                                                                                                                                                                                                                                   |
 
+### 9) `flow-php/etl`, `flow-php/etl-adapter-*` - an empty source without a declared schema fails at the source; Parquet and Floe accept `withSchema()`
+
+| Before                                                                                                  | After                                                                                                                   |
+|---------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------|
+| an empty source (`from_all()`, `from_array([])`, a glob that matches no file) described an empty schema | `schema()` throws `InferredSchemaException`; declare the schema with `->withSchema(...)` to read an empty source        |
+| `df()->read(from_array([]))->fetch()` returned 0 rows                                                   | throws `InferredSchemaException`; `from_array([], schema: $schema)` returns 0 rows                                      |
+| `from_parquet(...)->withSchema()`, `from_floe(...)->withSchema()` threw `InvalidArgumentException`      | read every file by name against the declared schema: undeclared columns are not read, a missing nullable column is null |
+| `from_cache($id)` without a cache instance described an empty schema                                    | `SchemaNotDerivableException`; the plan runs unbound                                                                    |
+
 ---
 
 ## Upgrading from 0.45.x to 0.46.x

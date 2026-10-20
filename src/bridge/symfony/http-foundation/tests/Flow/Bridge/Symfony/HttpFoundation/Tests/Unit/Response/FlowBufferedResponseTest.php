@@ -18,7 +18,7 @@ final class FlowBufferedResponseTest extends FlowTestCase
 {
     public function test_response_from_empty_dataset(): void
     {
-        $response = http_stream_open(from_array([]))->response(http_json_output());
+        $response = http_stream_open(from_array([], schema(int_schema('id'))))->response(http_json_output());
 
         static::assertEquals('', $response->getContent());
         static::assertEquals(204, $response->getStatusCode());

@@ -15,6 +15,15 @@ use function Flow\ETL\DSL\string_schema;
 
 final class InferredSchemaExceptionTest extends FlowTestCase
 {
+    public function test_nothing_to_infer_from_names_the_source_the_reason_and_the_fix(): void
+    {
+        static::assertSame(
+            'from_array() has nothing to infer a schema from: no row carries a column. Declare the schema with '
+            . '->withSchema(...).',
+            InferredSchemaException::nothingToInferFrom('from_array()', 'no row carries a column')->getMessage(),
+        );
+    }
+
     public function test_columns_diverge_names_the_source_both_diffs_the_knobs_and_both_remedies(): void
     {
         $exception = InferredSchemaException::columnsDiverge(

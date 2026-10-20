@@ -54,6 +54,19 @@ final class InferredSchemaException extends InvalidArgumentException
     }
 
     /**
+     * @param string $source the DSL call that built the source, e.g. 'from_parquet()'
+     * @param string $reason why nothing was there, e.g. 'no row carries a column'
+     */
+    public static function nothingToInferFrom(string $source, string $reason): self
+    {
+        return new self(sprintf(
+            '%s has nothing to infer a schema from: %s. Declare the schema with ->withSchema(...).',
+            $source,
+            $reason,
+        ));
+    }
+
+    /**
      * @param int $row - the row's 0-based position in the whole source, not in the batch the gate refused
      */
     public static function pastTheSample(

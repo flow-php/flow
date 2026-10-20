@@ -56,8 +56,7 @@ Flow `float` columns are written as Parquet `DOUBLE`.
 
 ## Schema
 
-The file footer is the schema: `from_parquet(...)->withSchema()` throws. Project with `columns:`, change types after
-reading:
+The file footer is the schema. Project with `columns:`, change types after reading:
 
 ```php
 <?php
@@ -90,6 +89,28 @@ use Flow\Parquet\Writer;
     [['id' => 7], ['id' => '18446744073709551615']],
 );
 ```
+
+### Declared schema
+
+```php
+<?php
+
+use function Flow\ETL\Adapter\Parquet\from_parquet;
+use function Flow\ETL\DSL\{data_frame, int_schema, schema, str_schema, to_output};
+
+data_frame()
+    ->read(from_parquet(__DIR__ . '/orders/**/*.parquet')->withSchema(schema(
+        int_schema('id'),
+        str_schema('name', nullable: true),
+    )))
+    ->select('id')
+    ->write(to_output())
+    ->run();
+```
+
+- A glob that matches no file reads 0 rows; without `withSchema()` it throws `InferredSchemaException`.
+- Columns match by name: an undeclared file column is not read, a declared nullable column a file lacks is `null`, a
+  declared non-nullable one fails.
 
 ## Filter pushdown
 

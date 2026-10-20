@@ -241,7 +241,7 @@ final class HashJoinProcessorTest extends FlowTestCase
     public function test_handles_empty_right_side(): void
     {
         $processor = HashJoinProcessorMother::grace(
-            PhysicalPlanMother::reading(from_rows(rows(schema()))),
+            PhysicalPlanMother::reading(from_rows(rows(schema()))->withSchema(schema(int_schema('user_id')))),
             Expression::on(['id' => 'user_id']),
             Join::inner,
         );

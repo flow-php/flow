@@ -26,6 +26,8 @@ use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\files;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_path_partitions;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\to_array;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
@@ -211,7 +213,9 @@ final class FileSourceFilesystemTest extends FlowIntegrationTestCase
 
         $unpaired = [];
         df()
-            ->read(from_csv(path('memory://s1.csv'), filesystem: memory_filesystem()))
+            ->read(from_csv(path('memory://s1.csv'), filesystem: memory_filesystem())->withSchema(schema(int_schema(
+                'id',
+            ))))
             ->write(to_array($unpaired))
             ->run();
 
