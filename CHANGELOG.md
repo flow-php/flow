@@ -1,6 +1,8 @@
 ## [Unreleased] - 2026-10-20
 
 ### Added
+- [#2694](https://github.com/flow-php/flow/pull/2694) - **flow-php/filesystem - Filters::filters() exposes the filters it combines** - [@norberttech](https://github.com/norberttech)
+- [#2694](https://github.com/flow-php/flow/pull/2694) - **flow-php/etl - ScalarFunctionFilter::function() exposes the filtering function** - [@norberttech](https://github.com/norberttech)
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/parquet - filtered reads with row group, page index and bloom filter pruning** - [@norberttech](https://github.com/norberttech)
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/parquet - row filtering during decode, with a limit beside the filter** - [@norberttech](https://github.com/norberttech)
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/parquet - column index, offset index and bloom filter writing** - [@norberttech](https://github.com/norberttech)
@@ -9,6 +11,8 @@
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/arrow-ext - page-range reads and row filtering through arrow-rs** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2694](https://github.com/flow-php/flow/pull/2694) - **flow-php/etl - explain() renders filters, conditions and columns as expressions instead of class names** - [@norberttech](https://github.com/norberttech)
+- [#2694](https://github.com/flow-php/flow/pull/2694) - **flow-php/etl - explain() lists each pushed path filter on its own Files: line** - [@norberttech](https://github.com/norberttech)
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/parquet - column statistics aligned with arrow-rs** - [@norberttech](https://github.com/norberttech)
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/parquet - ParquetFile reads take a Query** - [@norberttech](https://github.com/norberttech)
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/parquet - PAGE_MAXIMUM_ROWS_COUNT and ROW_GROUP_SIZE_BYTES enforced by both writers** - [@norberttech](https://github.com/norberttech)
