@@ -26,7 +26,6 @@ final class Options
     public function __construct()
     {
         $this->options = [
-            Option::ARROW_BATCH_SIZE->name => 1024,
             Option::ARROW_WRITE_BATCH_SIZE->name => 1000,
             Option::INT_96_AS_DATETIME->name => true,
             Option::PAGE_MAXIMUM_ROWS_COUNT->name => 1000,

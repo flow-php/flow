@@ -41,6 +41,6 @@ final readonly class TransformUp
             $children[$i] = $this->of($children[$i], $rewrite);
         }
 
-        return $this->memo[$node] = $rewrite->of($node->withChildren($children));
+        return $this->memo[$node] = $rewrite->of($node, $node->withChildren($children));
     }
 }

@@ -6,21 +6,23 @@ namespace Flow\ETL\Extractor\File;
 
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Function\Conjuncts;
+use Flow\ETL\Function\Evaluation\Filter;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
-use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
 use Generator;
 
 use function min;
 
 final readonly class FileReadLoop
 {
+    /**
+     * @param list<ScalarFunction> $conjuncts FileScan::$conjuncts
+     */
     public function __construct(
         private FileColumns $fileColumns,
         private Schema $schema,
-        private ?ScalarFunction $filter = null,
+        private array $conjuncts = [],
     ) {}
 
     /**
@@ -38,12 +40,7 @@ final readonly class FileReadLoop
     ): Generator {
         $body = $this->fileColumns->withoutTail($this->schema);
         $backend = $context->backend();
-        $filters = [];
-
-        // one conjunct at a time, each on the rows the one before kept: a lower filter guards the one above it
-        foreach ($this->filter === null ? [] : (new Conjuncts())->of($this->filter) as $conjunct) {
-            $filters[] = (new ScalarFunctionFilterTransformer($conjunct))->bound($this->schema);
-        }
+        $filter = Filter::bind($this->schema, ...$this->conjuncts);
         $offset = $window->offset;
         $skips = $batches instanceof OffsetSkippingFileBatches;
         $yielded = 0;
@@ -51,7 +48,7 @@ final readonly class FileReadLoop
         foreach ($sources as $source) {
             $constants = $this->fileColumns->forFile($source, $this->schema);
             // a limit counts the rows the filter keeps, which a format would count before it
-            $wanted = $window->limit === null || $filters !== [] ? null : $window->limit - $yielded;
+            $wanted = $window->limit === null || $this->conjuncts !== [] ? null : $window->limit - $yielded;
             $file = $batches->batches(
                 $source,
                 $body,
@@ -75,11 +72,7 @@ final readonly class FileReadLoop
                     $batch = $batch->slice($skipped, $batch->count() - $skipped);
                 }
 
-                $rows = $constants->fillRows($batch, $this->schema, $backend);
-
-                foreach ($filters as $filter) {
-                    $rows = $filter->transform($rows, $context);
-                }
+                $rows = $filter->filter($constants->fillRows($batch, $this->schema, $backend), $context);
 
                 if ($rows->isEmpty()) {
                     continue;

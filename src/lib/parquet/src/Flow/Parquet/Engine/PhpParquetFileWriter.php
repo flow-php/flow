@@ -234,9 +234,9 @@ final class PhpParquetFileWriter implements ParquetFileWriter
             $chunks = [];
 
             foreach (array_values($group->columnChunks()) as $chunk => $columnChunk) {
-                $chunks[] = $columnChunk->withIndexLocations(
-                    $columnIndexLocations[$rowGroup][$chunk] ?? null,
-                    $offsetIndexLocations[$rowGroup][$chunk],
+                $chunks[] = $columnChunk->withLocations(
+                    columnIndex: $columnIndexLocations[$rowGroup][$chunk] ?? null,
+                    offsetIndex: $offsetIndexLocations[$rowGroup][$chunk],
                 );
             }
 

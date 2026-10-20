@@ -3,7 +3,7 @@
 use std::sync::Arc;
 
 use arrow_array::{ArrayRef, RecordBatch, RecordBatchOptions};
-use arrow_schema::{DataType, Field, Schema, SchemaRef};
+use arrow_schema::{DataType, Field, Fields, Schema, SchemaRef};
 use parquet::arrow::arrow_writer::ArrowWriterOptions;
 use parquet::arrow::{ArrowSchemaConverter, ArrowWriter};
 use parquet::basic::{ConvertedType, LogicalType};
@@ -107,17 +107,18 @@ fn annotate_enums(parquet_type: &Type, field: &Field) -> Result<Type, ParquetErr
             .iter()
             .map(|entries_type| annotate_enums(entries_type, entries))
             .collect::<Result<Vec<_>, _>>()?,
+        // arrow-rs writes a list in three levels: the repeated group holds the element as a struct holds its child
         DataType::List(element) => fields
             .iter()
-            .map(|repeated| match repeated.as_ref() {
-                Type::GroupType { basic_info, fields } => group(
-                    basic_info,
-                    fields
-                        .iter()
-                        .map(|element_type| annotate_enums(element_type, element))
-                        .collect::<Result<Vec<_>, _>>()?,
-                ),
-                primitive => annotate_enums(primitive, element),
+            .map(|repeated| {
+                annotate_enums(
+                    repeated,
+                    &Field::new(
+                        repeated.name(),
+                        DataType::Struct(Fields::from(vec![Arc::clone(element)])),
+                        false,
+                    ),
+                )
             })
             .collect::<Result<Vec<_>, _>>()?,
         _ => return Ok(parquet_type.clone()),

@@ -14,7 +14,7 @@ use function get_debug_type;
 use function is_int;
 use function sprintf;
 
-final readonly class UnsignedIntegerConverter implements Converter
+final readonly class UnsignedInt32Converter implements Converter
 {
     public static function forColumn(FlatColumn $column, Options $options): ?self
     {

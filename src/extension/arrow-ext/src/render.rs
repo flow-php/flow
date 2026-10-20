@@ -82,7 +82,6 @@ pub fn parquet_exception(error: Error, stream: &PhpStream, side: Side) -> PhpExc
         }
         (Error::Options(message), _) => exception(INVALID_ARGUMENT, message),
         (Error::Plan(message), _) => exception(INVALID_ARGUMENT, message),
-        (Error::Filter(message), _) => failure(format!("arrow received a malformed row filter: {message}")),
         (Error::Encrypted, _) => failure("arrow does not read encrypted Parquet files".to_string()),
         (Error::NotParquet(message), _) => exception(
             INVALID_ARGUMENT,

@@ -11,10 +11,7 @@ use Flow\Parquet\Tests\Double\InMemoryIndexes;
 use Flow\Parquet\Tests\Mother\SbbfMother;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\Parquet\DSL\parquet_all;
-use function Flow\Parquet\DSL\parquet_any;
 use function Flow\Parquet\DSL\parquet_column;
-use function Flow\Parquet\DSL\parquet_not;
 
 final class BloomEvaluatorTest extends TestCase
 {
@@ -50,15 +47,15 @@ final class BloomEvaluatorTest extends TestCase
     {
         $indexes = new InMemoryIndexes(bloomFilters: ['i' => [SbbfMother::with(FlatColumn::int64('i'), 1)]]);
 
-        static::assertSame(Truth::Maybe, BloomTruth::of(parquet_not(parquet_column('i')->equals(4)), $indexes));
-        static::assertSame(Truth::Maybe, BloomTruth::of(parquet_not(parquet_column('i')->in([4, 5])), $indexes));
+        static::assertSame(Truth::Maybe, BloomTruth::of(parquet_column('i')->equals(4)->negate(), $indexes));
+        static::assertSame(Truth::Maybe, BloomTruth::of(parquet_column('i')->in([4, 5])->negate(), $indexes));
         static::assertSame([], $indexes->reads);
     }
 
     public function test_a_doubly_negated_equality_is_positive_again(): void
     {
         static::assertSame(Truth::Never, BloomTruth::of(
-            parquet_not(parquet_not(parquet_column('i')->equals(4))),
+            parquet_column('i')->equals(4)->negate()->negate(),
             new InMemoryIndexes(bloomFilters: ['i' => [SbbfMother::with(FlatColumn::int64('i'), 1)]]),
         ));
     }
@@ -72,6 +69,7 @@ final class BloomEvaluatorTest extends TestCase
 
         static::assertSame(Truth::Maybe, BloomTruth::of(parquet_column('i')->greaterThan(4), $indexes));
         static::assertSame(Truth::Maybe, BloomTruth::of(parquet_column('i')->isNull(), $indexes));
+        static::assertSame(Truth::Maybe, BloomTruth::of(parquet_column('i')->isNotNull(), $indexes));
         static::assertSame(Truth::Maybe, BloomTruth::of(parquet_column('s')->startsWith('b'), $indexes));
         static::assertSame([], $indexes->reads);
     }
@@ -112,13 +110,10 @@ final class BloomEvaluatorTest extends TestCase
         $absent = parquet_column('i')->equals(4);
         $present = parquet_column('i')->equals(1);
 
-        static::assertSame(Truth::Never, BloomTruth::of(parquet_all($present, $absent), $indexes));
-        static::assertSame(Truth::Maybe, BloomTruth::of(parquet_any($present, $absent), $indexes));
-        static::assertSame(Truth::Never, BloomTruth::of(
-            parquet_any($absent, parquet_column('i')->equals(5)),
-            $indexes,
-        ));
-        static::assertSame(Truth::Maybe, BloomTruth::of(parquet_not(parquet_all($present, $absent)), $indexes));
-        static::assertSame(Truth::Maybe, BloomTruth::of(parquet_not(parquet_any($present, $absent)), $indexes));
+        static::assertSame(Truth::Never, BloomTruth::of($present->and($absent), $indexes));
+        static::assertSame(Truth::Maybe, BloomTruth::of($present->or($absent), $indexes));
+        static::assertSame(Truth::Never, BloomTruth::of($absent->or(parquet_column('i')->equals(5)), $indexes));
+        static::assertSame(Truth::Maybe, BloomTruth::of($present->and($absent)->negate(), $indexes));
+        static::assertSame(Truth::Maybe, BloomTruth::of($present->or($absent)->negate(), $indexes));
     }
 }

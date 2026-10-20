@@ -254,10 +254,10 @@ const HASH_FLAG_PACKED: u8 = 1 << 2;
 
 /// Raw order-preserving iteration over packed and bucket layouts, binary-safe
 /// for arbitrary keys (ext-php-rs's `iter()` panics on non-UTF-8 string keys).
-pub fn ht_for_each<'a>(
+pub fn ht_for_each<'a, E>(
     ht: &'a ZendHashTable,
-    mut f: impl FnMut(Option<&'a ZendStr>, zend_ulong, &'a Zval) -> Result<(), PhpException>,
-) -> Result<(), PhpException> {
+    mut f: impl FnMut(Option<&'a ZendStr>, zend_ulong, &'a Zval) -> Result<(), E>,
+) -> Result<(), E> {
     let packed = unsafe { ht.u.v.flags } & HASH_FLAG_PACKED != 0;
 
     for index in 0..ht.nNumUsed {

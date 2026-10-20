@@ -36,7 +36,7 @@ final readonly class ColumnRef
      */
     public function in(array $values): In
     {
-        return new In($this, ...$values);
+        return new In($this, $values);
     }
 
     public function isNotNull(): Not

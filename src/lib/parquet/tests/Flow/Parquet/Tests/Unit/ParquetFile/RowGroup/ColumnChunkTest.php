@@ -12,6 +12,7 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Tests\Mother\ColumnChunkMother;
 use Flow\Parquet\ThriftModel\ColumnChunk as ThriftColumnChunk;
+use Flow\Parquet\ThriftModel\ColumnMetaData;
 use PHPUnit\Framework\TestCase;
 
 final class ColumnChunkTest extends TestCase
@@ -58,7 +59,7 @@ final class ColumnChunkTest extends TestCase
         static::assertSame(200, $chunk->bloomFilterOffset());
         static::assertSame(48, $chunk->bloomFilterLength());
 
-        $indexed = $chunk->withIndexLocations(null, new IndexLocation(120, 15));
+        $indexed = $chunk->withLocations(offsetIndex: new IndexLocation(120, 15));
 
         static::assertSame(200, $indexed->bloomFilterOffset());
         static::assertSame(48, $indexed->bloomFilterLength());
@@ -71,7 +72,7 @@ final class ColumnChunkTest extends TestCase
             FlatColumn::int64('id'),
             null,
             new IndexLocation(120, 15),
-        )->withBloomFilter(300, 64);
+        )->withLocations(bloomFilterOffset: 300, bloomFilterLength: 64);
 
         static::assertSame(300, $chunk->bloomFilterOffset());
         static::assertSame(64, $chunk->bloomFilterLength());
@@ -101,5 +102,48 @@ final class ColumnChunkTest extends TestCase
 
         static::assertNull(ColumnChunk::fromThrift($thrift)->columnIndex());
         static::assertNull(ColumnChunk::fromThrift($thrift)->offsetIndex());
+    }
+
+    public function test_a_bloom_filter_length_without_its_offset_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('A column chunk records a bloom filter length without its offset');
+
+        new ColumnChunk(
+            PhysicalType::INT64,
+            Compressions::UNCOMPRESSED,
+            2,
+            4,
+            ['id'],
+            [],
+            10,
+            10,
+            null,
+            4,
+            null,
+            null,
+            bloomFilterLength: 48,
+        );
+    }
+
+    public function test_a_bloom_filter_length_read_without_its_offset_is_dropped(): void
+    {
+        $chunk = ColumnChunk::fromThrift(new ThriftColumnChunk([
+            'file_offset' => 4,
+            'meta_data' => new ColumnMetaData([
+                'type' => 2,
+                'encodings' => [],
+                'path_in_schema' => ['id'],
+                'codec' => 0,
+                'num_values' => 2,
+                'total_uncompressed_size' => 0,
+                'total_compressed_size' => 0,
+                'data_page_offset' => 4,
+                'bloom_filter_length' => 48,
+            ]),
+        ]));
+
+        static::assertNull($chunk->bloomFilterOffset());
+        static::assertNull($chunk->bloomFilterLength());
     }
 }

@@ -232,21 +232,15 @@ final class ScalarFunctionFilterTransformerTest extends FlowTestCase
         (new ScalarFunctionFilterTransformer(ref('flags')->expand()))->bind(ListColumnsMother::schema());
     }
 
-    public function test_bound_refuses_a_non_boolean_predicate(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-
-        (new ScalarFunctionFilterTransformer(ref('a')))->bound(schema(int_schema('a')));
-    }
-
-    public function test_bound_keeps_the_rows_its_predicate_matches(): void
+    public function test_the_bound_transformer_keeps_the_rows_its_predicate_matches(): void
     {
         $input = schema(int_schema('a'));
+        $bound = (new ScalarFunctionFilterTransformer(ref('a')->greaterThan(lit(1))))->bind($input)->step;
 
+        static::assertInstanceOf(ScalarFunctionFilterTransformer::class, $bound);
         static::assertSame(
             [['a' => 2], ['a' => 3]],
-            (new ScalarFunctionFilterTransformer(ref('a')->greaterThan(lit(1))))
-                ->bound($input)
+            $bound
                 ->transform(array_to_rows([['a' => 1], ['a' => 2], ['a' => 3]], $input), flow_context(config()))
                 ->toArray(),
         );

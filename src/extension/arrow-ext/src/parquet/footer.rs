@@ -7,6 +7,7 @@ use bytes::{Bytes, BytesMut};
 use parquet::file::metadata::{ParquetMetaData, ParquetMetaDataReader};
 use parquet::file::reader::ChunkReader;
 
+use crate::parquet::chunks::refuse_encrypted;
 use crate::parquet::error::Error;
 
 /// What the first read takes from the end of the file: the whole footer of every file it is shorter than.
@@ -65,6 +66,7 @@ impl Footer {
             bytes.freeze()
         };
         let meta = ParquetMetaDataReader::decode_metadata(&bytes)?;
+        refuse_encrypted(&bytes)?;
 
         Ok(Self {
             bytes,

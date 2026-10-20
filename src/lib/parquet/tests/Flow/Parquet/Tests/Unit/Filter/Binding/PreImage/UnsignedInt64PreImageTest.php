@@ -26,8 +26,6 @@ final class UnsignedInt64PreImageTest extends TestCase
     #[TestWith(['Equal', '18446744073709551616', []])]
     #[TestWith(['GreaterThan', '18446744073709551616', []])]
     #[TestWith(['LessThan', '18446744073709551616', [[null, false, null, false]]])]
-    #[TestWith(['Equal', '007', null])]
-    #[TestWith(['Equal', '1.0', null])]
     #[TestWith(['Equal', 1.0, [[1, true, 1, true]]])]
     #[TestWith(['Equal', 2.5, []])]
     #[TestWith(['GreaterThan', 2.5, [[2, false, null, false]]])]

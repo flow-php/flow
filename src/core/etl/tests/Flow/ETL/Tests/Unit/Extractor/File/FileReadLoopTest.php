@@ -220,17 +220,11 @@ final class FileReadLoopTest extends FlowTestCase
     public function test_a_filter_drops_the_rows_it_does_not_match_and_skips_a_batch_it_empties(): void
     {
         $rows = iterator_to_array(
-            (new FileReadLoop(
-                FileColumnsContext::discovering(names: []),
-                schema(int_schema('id')),
-                ref('id')->greaterThan(lit(2)),
-            ))->read(
-                [new SourceFile(path('memory://a.csv'))],
-                new InMemoryFileBatches(['memory://a.csv' => [1, 2, 3, 4, 5]]),
+            (new FileReadLoop(FileColumnsContext::discovering(names: []), schema(int_schema('id')), [ref(
+                'id',
+            )->greaterThan(lit(
                 2,
-                flow_context(),
-                new ReadWindow(),
-            ),
+            ))]))->read([new SourceFile(path('memory://a.csv'))], new InMemoryFileBatches(['memory://a.csv' => [1, 2, 3, 4, 5]]), 2, flow_context(), new ReadWindow()),
             false,
         );
 
@@ -243,23 +237,16 @@ final class FileReadLoopTest extends FlowTestCase
     public function test_a_filter_mixing_a_body_and_a_partition_column_sees_the_partition_values(): void
     {
         $rows = iterator_to_array(
-            (new FileReadLoop(
-                FileColumnsContext::discovering(),
-                schema(int_schema('id'), str_schema('year')),
-                ref('year')->equals(lit('2024'))->and(ref('id')->greaterThan(lit(3))),
-            ))->read(
-                [
-                    new SourceFile(path('memory://orders/year=2023/a.csv')),
-                    new SourceFile(path('memory://orders/year=2024/b.csv')),
-                ],
-                new InMemoryFileBatches([
-                    'memory://orders/year=2023/a.csv' => [4, 5],
-                    'memory://orders/year=2024/b.csv' => [3, 4],
-                ]),
-                10,
-                flow_context(),
-                new ReadWindow(),
-            ),
+            (new FileReadLoop(FileColumnsContext::discovering(), schema(int_schema('id'), str_schema('year')), [
+                ref('year')->equals(lit('2024')),
+                ref('id')->greaterThan(lit(3)),
+            ]))->read([
+                new SourceFile(path('memory://orders/year=2023/a.csv')),
+                new SourceFile(path('memory://orders/year=2024/b.csv')),
+            ], new InMemoryFileBatches([
+                'memory://orders/year=2023/a.csv' => [4, 5],
+                'memory://orders/year=2024/b.csv' => [3, 4],
+            ]), 10, flow_context(), new ReadWindow()),
             false,
         );
 
@@ -274,17 +261,11 @@ final class FileReadLoopTest extends FlowTestCase
         $batches = new InMemoryFileBatches(['memory://a.csv' => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]]);
 
         $rows = iterator_to_array(
-            (new FileReadLoop(
-                FileColumnsContext::discovering(names: []),
-                schema(int_schema('id')),
-                ref('id')->greaterThan(lit(5)),
-            ))->read(
-                [new SourceFile(path('memory://a.csv'))],
-                $batches,
-                10,
-                flow_context(),
-                new ReadWindow(offset: 6, limit: 2),
-            ),
+            (new FileReadLoop(FileColumnsContext::discovering(names: []), schema(int_schema('id')), [ref(
+                'id',
+            )->greaterThan(lit(
+                5,
+            ))]))->read([new SourceFile(path('memory://a.csv'))], $batches, 10, flow_context(), new ReadWindow(offset: 6, limit: 2)),
             false,
         );
 
@@ -300,17 +281,11 @@ final class FileReadLoopTest extends FlowTestCase
         $batches = new InMemoryUnskippableFileBatches(['memory://a.csv' => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]]);
 
         $rows = iterator_to_array(
-            (new FileReadLoop(
-                FileColumnsContext::discovering(names: []),
-                schema(int_schema('id')),
-                ref('id')->greaterThan(lit(5)),
-            ))->read(
-                [new SourceFile(path('memory://a.csv'))],
-                $batches,
-                10,
-                flow_context(),
-                new ReadWindow(offset: 6, limit: 2),
-            ),
+            (new FileReadLoop(FileColumnsContext::discovering(names: []), schema(int_schema('id')), [ref(
+                'id',
+            )->greaterThan(lit(
+                5,
+            ))]))->read([new SourceFile(path('memory://a.csv'))], $batches, 10, flow_context(), new ReadWindow(offset: 6, limit: 2)),
             false,
         );
 
@@ -330,21 +305,15 @@ final class FileReadLoopTest extends FlowTestCase
         ]);
 
         $rows = iterator_to_array(
-            (new FileReadLoop(
-                FileColumnsContext::discovering(names: []),
-                schema(int_schema('id')),
-                ref('id')->greaterThan(lit(1)),
-            ))->read(
-                [
-                    new SourceFile(path('memory://a.csv')),
-                    new SourceFile(path('memory://b.csv')),
-                    new SourceFile(path('memory://c.csv')),
-                ],
-                $batches,
-                10,
-                flow_context(),
-                new ReadWindow(limit: 2),
-            ),
+            (new FileReadLoop(FileColumnsContext::discovering(names: []), schema(int_schema('id')), [ref(
+                'id',
+            )->greaterThan(lit(
+                1,
+            ))]))->read([
+                new SourceFile(path('memory://a.csv')),
+                new SourceFile(path('memory://b.csv')),
+                new SourceFile(path('memory://c.csv')),
+            ], $batches, 10, flow_context(), new ReadWindow(limit: 2)),
             false,
         );
 
@@ -361,17 +330,10 @@ final class FileReadLoopTest extends FlowTestCase
     public function test_each_conjunct_of_the_filter_sees_only_the_rows_the_ones_before_it_kept(): void
     {
         $rows = iterator_to_array(
-            (new FileReadLoop(
-                FileColumnsContext::discovering(names: []),
-                schema(int_schema('id')),
-                ref('id')->notEquals(lit(0))->and(lit(10)->divide(ref('id'))->greaterThan(lit(1))),
-            ))->read(
-                [new SourceFile(path('memory://a.csv'))],
-                new InMemoryFileBatches(['memory://a.csv' => [0, 2, 10]]),
-                10,
-                flow_context(),
-                new ReadWindow(),
-            ),
+            (new FileReadLoop(FileColumnsContext::discovering(names: []), schema(int_schema('id')), [
+                ref('id')->notEquals(lit(0)),
+                lit(10)->divide(ref('id'))->greaterThan(lit(1)),
+            ]))->read([new SourceFile(path('memory://a.csv'))], new InMemoryFileBatches(['memory://a.csv' => [0, 2, 10]]), 10, flow_context(), new ReadWindow()),
             false,
         );
 

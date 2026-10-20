@@ -271,7 +271,7 @@ it from the file schema (Parquet, Floe), so `filter(ref('date')->between(lit($fr
 The optimizer moves a `filter()` into the file source, which returns only matching rows. A filter that reads only
 partition columns skips whole directories; a filter on a body column reads every file and drops the rows it does not
 match (Parquet skips row groups, see [filter pushdown](/documentation/components/adapters/parquet.md#filter-pushdown)).
-A `limit()` after the filter reaches the source too, which stops at that many matching rows. A partition column renamed
+A `limit()` after the filter reaches the source with it ([filter pushdown](/documentation/components/adapters/parquet.md#filter-pushdown)). A partition column renamed
 with `rename()` or copied with `withEntry('day', ref('date'))` is still pruned; any other redefinition of it
 stops the push. A filter whose answer can change between two evaluations - `call()`, `now()`, `uuid()`,
 `to_date_time()` with a format that leaves fields out (`'Y-m-d'`) - still filters rows but prunes nothing.

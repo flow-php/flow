@@ -16,39 +16,38 @@ use Flow\ETL\Extractor\File\SourceFile;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\Parquet\Filter\All;
 use Flow\Parquet\Filter\Binding\BoundFilter;
 use Flow\Parquet\Reader\ReadPlanner;
 use Generator;
-use WeakMap;
-
-use function Flow\Parquet\DSL\parquet_all;
 
 final class ParquetFileBatches implements OffsetSkippingFileBatches
 {
     /**
-     * @var WeakMap<Schema, list<TranslatedConjunct>>
+     * @var list<TranslatedConjunct>
      */
-    private WeakMap $translated;
+    private readonly array $conjuncts;
 
     /**
      * @param null|ParquetSourceFile $firstFile the file the schema pass kept open, read instead of opened again
      * @param null|DerivedSchema $derived the schema every file must match; null under unionByName
-     * @param null|ScalarFunction $filter the scan's predicate: what its conjuncts bound in a file prove cannot
-     *                                    match is skipped, FileReadLoop drops the rest that does not match it
+     * @param list<ScalarFunction> $conjuncts FileScan::$conjuncts
      */
     public function __construct(
         private readonly ParquetSourceFileOpener $opener,
         private readonly FileColumns $fileColumns,
         private ?ParquetSourceFile $firstFile,
         private readonly ?DerivedSchema $derived,
-        private readonly ?ScalarFunction $filter = null,
+        Schema $body,
+        array $conjuncts = [],
     ) {
-        $this->translated = new WeakMap();
+        $this->conjuncts = (new FilterTranslator())->translate($conjuncts, $body);
     }
 
     /**
      * Skips the whole file when the window's offset covers it; otherwise reads from the offset. A file of a narrower
-     * schema is matched to $body.
+     * schema is matched to $body. What the conjuncts a file answers exactly prove cannot match is skipped; FileReadLoop
+     * drops the rest that does not match them.
      *
      * @param int<1, max> $batchSize
      *
@@ -85,12 +84,9 @@ final class ParquetFileBatches implements OffsetSkippingFileBatches
             $this->derived?->refuseDivergence($file->source()->uri(), $file->schema());
 
             $fileBody = $this->fileColumns->withoutTail($file->schema());
-            $translated = $this->filter === null
-                ? []
-                : ($this->translated[$body] ??= (new FilterTranslator())->translate($this->filter, $body));
             $kept = [];
 
-            foreach ($translated as $conjunct) {
+            foreach ($this->conjuncts as $conjunct) {
                 if ($conjunct->readsAs($fileBody, $body)) {
                     $kept[] = $conjunct->filter;
                 }
@@ -107,7 +103,7 @@ final class ParquetFileBatches implements OffsetSkippingFileBatches
                     $file->file->indexes(),
                     $kept === []
                         ? null
-                        : BoundFilter::bind(parquet_all(...$kept), $footer->schema(), $file->file->options()),
+                        : BoundFilter::bind(new All(...$kept), $footer->schema(), $file->file->options()),
                     $window->offset,
                     $window->limit,
                 ),

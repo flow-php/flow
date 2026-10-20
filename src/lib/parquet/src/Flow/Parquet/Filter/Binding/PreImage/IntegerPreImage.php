@@ -6,6 +6,7 @@ namespace Flow\Parquet\Filter\Binding\PreImage;
 
 use DateTimeImmutable;
 use Flow\Parquet\Filter\Binding\EqualRange;
+use Flow\Parquet\Filter\Binding\LiteralDomain;
 use Flow\Parquet\Filter\Binding\PreImage;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\LogicalType\Integer;
@@ -25,8 +26,6 @@ use const PHP_INT_MIN;
  */
 final readonly class IntegerPreImage implements PreImage
 {
-    private const int EXACT_FLOAT_INTEGER = 2 ** 53;
-
     public function __construct(
         private int $min,
         private int $max,
@@ -50,7 +49,7 @@ final readonly class IntegerPreImage implements PreImage
             return EqualRange::integers((string) $literal, (string) $literal, $this->min, $this->max);
         }
 
-        if (!is_float($literal) || abs($literal) > self::EXACT_FLOAT_INTEGER) {
+        if (!is_float($literal) || abs($literal) > LiteralDomain::EXACT_FLOAT_INTEGER) {
             return null;
         }
 

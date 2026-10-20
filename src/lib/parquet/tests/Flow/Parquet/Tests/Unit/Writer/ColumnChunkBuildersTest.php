@@ -89,7 +89,7 @@ final class ColumnChunkBuildersTest extends TestCase
         $ids->addRaw(0, 0, null);
         $builders->addColumnByFlatPath('id', $ids);
 
-        static::assertSame(str_repeat("\0", Sbbf::BLOCK_BYTES), $builders->flush(4)[0]->bloomFilter?->bytes());
+        static::assertEquals(Sbbf::fromBytes(str_repeat("\0", Sbbf::BLOCK_BYTES)), $builders->flush(4)[0]->bloomFilter);
     }
 
     public function test_a_bloom_filter_option_that_is_not_bloom_filter_options_is_refused(): void

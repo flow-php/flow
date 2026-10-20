@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\PageIndex;
 
+use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ThriftModel\OffsetIndex as ThriftOffsetIndex;
 use Flow\Parquet\ThriftModel\PageLocation as ThriftPageLocation;
 
@@ -25,24 +26,35 @@ final readonly class OffsetIndex
     {
         return new self(array_values(array_map(
             static fn(ThriftPageLocation $location): PageLocation => PageLocation::fromThrift($location),
-            $index->page_locations,
+            $index->page_locations ?? [],
         )));
     }
 
     /**
-     * Whether the pages split a row group of $rows rows: the first starts at row 0, each later one after the previous,
-     * all before the group's end.
+     * Whether the pages lie inside the chunk, each after the previous and a byte at least, and split a row group of
+     * $rows rows: the first starts at row 0, each later one after the previous, all before the group's end.
      */
-    public function coversRows(int $rows): bool
+    public function fits(ColumnChunk $chunk, int $rows): bool
     {
-        $previous = -1;
+        $previousRow = -1;
+        $previousEnd = $chunk->pageOffset();
+        $chunkEnd = $chunk->pageOffset() + $chunk->totalCompressedSize();
 
         foreach ($this->pages as $page) {
-            if ($page->firstRowIndex <= $previous || $page->firstRowIndex >= $rows) {
+            $end = $page->offset + $page->compressedPageSize;
+
+            if (
+                $page->firstRowIndex <= $previousRow
+                || $page->firstRowIndex >= $rows
+                || $page->compressedPageSize < 1
+                || $page->offset < $previousEnd
+                || $end > $chunkEnd
+            ) {
                 return false;
             }
 
-            $previous = $page->firstRowIndex;
+            $previousRow = $page->firstRowIndex;
+            $previousEnd = $end;
         }
 
         return $this->pages !== [] && $this->pages[0]->firstRowIndex === 0;

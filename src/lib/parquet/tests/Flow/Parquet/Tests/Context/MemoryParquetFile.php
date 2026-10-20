@@ -17,6 +17,9 @@ use Flow\Parquet\ParquetFile\Schema\ListElement;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\ParquetFileReader;
 use Flow\Parquet\Reader;
+use Flow\Parquet\Thrift\CompactProtocol;
+use Flow\Parquet\Thrift\MemoryBuffer;
+use Flow\Parquet\ThriftModel\FileMetaData;
 use Flow\Parquet\Writer;
 
 use function array_column;
@@ -24,7 +27,11 @@ use function array_map;
 use function array_values;
 use function Flow\Filesystem\DSL\path;
 use function iterator_to_array;
+use function pack;
 use function range;
+use function strlen;
+use function substr;
+use function unpack;
 
 /**
  * Parquet files written to and read from memory, never the filesystem.
@@ -109,6 +116,32 @@ final class MemoryParquetFile
                 range(0, 11),
             ),
         );
+    }
+
+    /**
+     * The file with every column chunk recording a bloom filter length but no offset.
+     *
+     * @param non-empty-string $bytes
+     *
+     * @return non-empty-string
+     */
+    public static function bloomFilterLengthWithoutOffset(string $bytes): string
+    {
+        $footerLength = unpack('V', substr($bytes, -8, 4))[1];
+        $metadata = new FileMetaData();
+        $metadata->read(new CompactProtocol(new MemoryBuffer(substr($bytes, -8 - $footerLength, $footerLength))));
+
+        foreach ($metadata->row_groups as $rowGroup) {
+            foreach ($rowGroup->columns as $column) {
+                $chunk = $column->meta_data ?? throw new RuntimeException('No column metadata');
+                $chunk->bloom_filter_offset = null;
+                $chunk->bloom_filter_length = 48;
+            }
+        }
+
+        $metadata->write(new CompactProtocol($buffer = new MemoryBuffer()));
+
+        return substr($bytes, 0, -8 - $footerLength) . $buffer->data() . pack('V', strlen($buffer->data())) . 'PAR1';
     }
 
     /**

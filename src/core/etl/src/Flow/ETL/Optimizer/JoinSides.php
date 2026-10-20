@@ -21,15 +21,15 @@ final readonly class JoinSides implements Rewrite
         private FlowContext $context,
     ) {}
 
-    public function of(Node $node): Node
+    public function of(Node $original, Node $rebuilt): Node
     {
-        if (!$node instanceof JoinsFrame) {
-            return $node;
+        if (!$rebuilt instanceof JoinsFrame) {
+            return $rebuilt;
         }
 
-        return $node->withChildren([
-            $node->children()[0],
-            $this->optimizer->optimize(new LogicalPlan($node->right()), $this->context)->root,
+        return $rebuilt->withChildren([
+            $rebuilt->children()[0],
+            $this->optimizer->optimize(new LogicalPlan($rebuilt->right()), $this->context)->root,
         ]);
     }
 }

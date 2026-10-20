@@ -15,6 +15,8 @@ use function sprintf;
 
 final readonly class ReadFlatColumnValues
 {
+    private int $rowsCount;
+
     /**
      * @param FlatColumn $column
      * @param \Generator<mixed, mixed, mixed, mixed> $values
@@ -26,7 +28,15 @@ final readonly class ReadFlatColumnValues
         private Generator $values,
         private array $repetitionLevels,
         private array $definitionLevels,
-    ) {}
+    ) {
+        $rowsCount = 0;
+
+        foreach ($repetitionLevels as $repetitionLevel) {
+            $rowsCount += $repetitionLevel === 0 ? 1 : 0;
+        }
+
+        $this->rowsCount = $rowsCount;
+    }
 
     /**
      * @return \Generator<array-key, mixed>
@@ -165,14 +175,6 @@ final readonly class ReadFlatColumnValues
 
     public function rowsCount(): int
     {
-        $rowsCount = 0;
-
-        foreach ($this->repetitionLevels as $repetitionLevel) {
-            if ($repetitionLevel === 0) {
-                $rowsCount++;
-            }
-        }
-
-        return $rowsCount;
+        return $this->rowsCount;
     }
 }

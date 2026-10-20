@@ -54,7 +54,7 @@ interface Node
     public function materialization(): Materialization;
 
     /**
-     * Columns this node introduces or renames on its output. A predicate that references one of them means a
+     * Columns this node introduces, renames or removes on its output. A predicate that references one of them means a
      * different column below this node, so it cannot be pushed past it. Answered from what the node holds,
      * never from a class list.
      */

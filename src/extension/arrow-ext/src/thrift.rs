@@ -227,37 +227,81 @@ impl Field {
     }
 }
 
-/// A struct's fields as they arrive, nothing decoded.
-pub fn struct_fields(bytes: &[u8]) -> Result<Vec<Field>, Malformed> {
-    let mut reader = Reader { bytes, position: 0 };
-    let (mut fields, mut last) = (Vec::new(), 0);
-
-    while let Some((id, wire)) = reader.field_header(&mut last)? {
-        let start = reader.position;
-        reader.skip(wire, 0)?;
-        fields.push(Field {
-            id,
-            wire,
-            value: start..reader.position,
-        });
+/// A struct's fields one at a time, nothing decoded; the first malformed field ends them.
+pub fn fields(bytes: &[u8]) -> Fields<'_> {
+    Fields {
+        reader: Reader { bytes, position: 0 },
+        last: 0,
+        done: false,
     }
-
-    Ok(fields)
 }
 
-/// The byte range of each element of the list `bytes` starts with, nothing decoded.
-pub fn list_elements(bytes: &[u8]) -> Result<Vec<Range<usize>>, Malformed> {
-    let mut reader = Reader { bytes, position: 0 };
-    let (size, element) = reader.list_header()?;
-    let mut elements = Vec::with_capacity(size.min(bytes.len()));
+pub struct Fields<'a> {
+    reader: Reader<'a>,
+    last: i16,
+    done: bool,
+}
 
-    for _ in 0..size {
-        let start = reader.position;
-        reader.skip_element(element, 1)?;
-        elements.push(start..reader.position);
+impl Iterator for Fields<'_> {
+    type Item = Result<Field, Malformed>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.done {
+            return None;
+        }
+
+        let field = (|| {
+            let Some((id, wire)) = self.reader.field_header(&mut self.last)? else {
+                return Ok(None);
+            };
+            let start = self.reader.position;
+            self.reader.skip(wire, 0)?;
+
+            Ok(Some(Field {
+                id,
+                wire,
+                value: start..self.reader.position,
+            }))
+        })();
+
+        self.done = !matches!(field, Ok(Some(_)));
+
+        field.transpose()
     }
+}
 
-    Ok(elements)
+/// The byte ranges of the list's elements one at a time, nothing decoded; the first malformed element ends them.
+pub fn elements(bytes: &[u8]) -> Result<Elements<'_>, Malformed> {
+    let mut reader = Reader { bytes, position: 0 };
+    let (remaining, element) = reader.list_header()?;
+
+    Ok(Elements {
+        reader,
+        remaining,
+        element,
+    })
+}
+
+pub struct Elements<'a> {
+    reader: Reader<'a>,
+    remaining: usize,
+    element: u8,
+}
+
+impl Iterator for Elements<'_> {
+    type Item = Result<Range<usize>, Malformed>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.remaining == 0 {
+            return None;
+        }
+
+        let start = self.reader.position;
+        let element = self.reader.skip_element(self.element, 1);
+        self.remaining = if element.is_ok() { self.remaining - 1 } else { 0 };
+
+        Some(element.map(|()| start..self.reader.position))
+    }
 }
 
 struct Reader<'a> {

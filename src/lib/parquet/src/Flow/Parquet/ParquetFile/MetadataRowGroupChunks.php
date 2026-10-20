@@ -11,13 +11,22 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use function array_key_exists;
 use function array_map;
 use function array_values;
-use function count;
 
 final readonly class MetadataRowGroupChunks implements RowGroupChunks
 {
+    /**
+     * @var list<int>
+     */
+    private array $rowCounts;
+
     public function __construct(
         private Metadata $metadata,
-    ) {}
+    ) {
+        $this->rowCounts = array_values(array_map(
+            static fn(RowGroup $rowGroup): int => $rowGroup->rowsCount(),
+            $this->metadata->rowGroups()->all(),
+        ));
+    }
 
     public function chunk(int $rowGroup, FlatColumn $column): ColumnChunk
     {
@@ -29,22 +38,9 @@ final readonly class MetadataRowGroupChunks implements RowGroupChunks
         return $this->metadata->columnOrder($column);
     }
 
-    public function count(): int
-    {
-        return count($this->metadata->rowGroups()->all());
-    }
-
-    public function rowCount(int $rowGroup): int
-    {
-        return $this->rowGroup($rowGroup)->rowsCount();
-    }
-
     public function rowCounts(): array
     {
-        return array_values(array_map(
-            static fn(RowGroup $rowGroup): int => $rowGroup->rowsCount(),
-            $this->metadata->rowGroups()->all(),
-        ));
+        return $this->rowCounts;
     }
 
     private function rowGroup(int $rowGroup): RowGroup

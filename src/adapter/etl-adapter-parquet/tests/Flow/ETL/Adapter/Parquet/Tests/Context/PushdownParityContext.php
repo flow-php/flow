@@ -26,12 +26,34 @@ use const NAN;
 
 final class PushdownParityContext
 {
+    public const array CHUNKS = [
+        'memory://parity/a.parquet' => [
+            'id' => [0, 1, 2],
+            'name' => [0, 1, 2],
+            'score' => [0, 1, 2],
+            'd92' => [0, 1, 2],
+            'd182' => [0, 1, 2],
+            'day' => [0, 1, 2],
+            'ts_us' => [0, 1, 2],
+            'ts_ns' => [0, 1, 2],
+            'uuid' => [0, 1, 2],
+            'extra' => [0, 1, 2],
+        ],
+        'memory://parity/b.parquet' => [
+            'id' => [0],
+            'name' => [0],
+            'score' => [0],
+            'd92' => [0],
+            'd182' => [0],
+            'day' => [0],
+            'ts_us' => [0],
+            'ts_ns' => [0],
+            'uuid' => [0],
+        ],
+    ];
+
     public const string GLOB = 'memory://parity/*.parquet';
 
-    /**
-     * `memory://parity/a.parquet`: `id` 0..29 in row groups of 10, a column of every pushable kind and `extra`;
-     * `memory://parity/b.parquet`: `id` 30..39 without `extra`, so a union-by-name read sees it absent there.
-     */
     public static function write(Filesystem $filesystem): void
     {
         $options = Options::default()->set(Option::ROW_GROUP_SIZE_BYTES, 1)->set(

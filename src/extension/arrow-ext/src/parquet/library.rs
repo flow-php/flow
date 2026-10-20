@@ -21,7 +21,7 @@ use crate::parquet::batch;
 use crate::parquet::cells::{Checked, Classes, ReadCell, Refusal, Scalar, Times, Validated, WriteColumn};
 use crate::parquet::chunks::chunk_spans;
 use crate::parquet::error::Error;
-use crate::parquet::filter::{FilterNode, Raw};
+use crate::parquet::filter::Raw;
 use crate::parquet::footer::Footer;
 use crate::parquet::lib_calls::{
     call_static, METADATA_FROM_THRIFT, READ_PLAN_TO_EXTENSION, ROW_GROUP_CHUNKS_FROM_THRIFT, SCHEMA_FROM_THRIFT,
@@ -94,24 +94,35 @@ impl IntoZval for RowGroupChunksObject {
 /// `$plan` (a `Flow\Parquet\Reader\ReadPlan`) through `ReadPlanConverter::toExtension()`, checked against `meta`.
 pub fn read_plan(meta: &ParquetMetaData, plan: &Zval, stream: &PhpStream) -> PhpResult<ReadPlan> {
     let converted = call_static(READ_PLAN_TO_EXTENSION, &mut [plan.shallow_clone()])?;
-    let malformed = || exception(RUNTIME, "arrow received a malformed read plan".to_string());
-    let converted = converted.array().ok_or_else(malformed)?;
+
+    converted_plan(meta, &converted).map_err(|error| parquet_exception(error, stream, Side::Read))
+}
+
+fn converted_plan(meta: &ParquetMetaData, converted: &Zval) -> Result<ReadPlan, Error> {
+    let malformed = |what: &str| Error::Plan(format!("arrow received a malformed read plan: {what}"));
+    let converted = converted.array().ok_or_else(|| malformed("not an array"))?;
     let selectors = ht_get(converted, b"selectors")
         .and_then(Zval::array)
-        .ok_or_else(malformed)?;
+        .ok_or_else(|| malformed("no 'selectors' list"))?;
     let mut planned = Vec::with_capacity(selectors.len());
 
     ht_for_each(selectors, |_, _, selector| {
-        let selector = selector.array().ok_or_else(malformed)?;
+        let selector = selector
+            .array()
+            .ok_or_else(|| malformed("a selector is not an array"))?;
         let count = selector
             .get_index(0)
             .and_then(Zval::long)
-            .and_then(|count| usize::try_from(count).ok());
-        let skip = selector.get_index(1).and_then(Zval::bool);
+            .and_then(|count| usize::try_from(count).ok())
+            .ok_or_else(|| malformed("a selector's row count is not an int of 0 or more"))?;
+        let skip = selector
+            .get_index(1)
+            .and_then(Zval::bool)
+            .ok_or_else(|| malformed("a selector's skip is not a bool"))?;
 
-        planned.push((count.ok_or_else(malformed)?, skip.ok_or_else(malformed)?));
+        planned.push((count, skip));
 
-        Ok(())
+        Ok::<(), Error>(())
     })?;
 
     let limit = match ht_get(converted, b"limit") {
@@ -120,20 +131,13 @@ pub fn read_plan(meta: &ParquetMetaData, plan: &Zval, stream: &PhpStream) -> Php
             limit
                 .long()
                 .and_then(|limit| usize::try_from(limit).ok())
-                .ok_or_else(malformed)?,
+                .ok_or_else(|| malformed("'limit' is not an int of 0 or more"))?,
         ),
-        None => return Err(malformed()),
+        None => return Err(malformed("no 'limit'")),
     };
-    let filter = ht_get(converted, b"filter")
-        .map(|filter| raw(filter).and_then(|filter| FilterNode::parse(&filter)))
-        .transpose()
-        .map_err(|error| parquet_exception(error, stream, Side::Read))?;
-    let mut plan =
-        ReadPlan::from_selection(meta, planned).map_err(|error| parquet_exception(error, stream, Side::Read))?;
-    plan.filter = filter;
-    plan.limit = limit;
+    let filter = ht_get(converted, b"filter").map(raw).transpose()?;
 
-    Ok(plan)
+    ReadPlan::from_selection(meta, planned, filter, limit)
 }
 
 /// A converter array as data: a map keyed by its keys' bytes when a key is a string, else a list of its values.
@@ -159,32 +163,23 @@ fn raw(value: &Zval) -> Result<Raw, Error> {
     }
 
     let Some(table) = value.array() else {
-        return Err(Error::Filter(format!("a {} is no row filter value", value.get_type())));
+        return Err(Error::Plan(format!(
+            "arrow received a malformed row filter: a {} is no row filter value",
+            value.get_type()
+        )));
     };
     let mut entries = Vec::new();
     let mut keyed = false;
-    let mut failure = None;
+
     ht_for_each(table, |key, index, value| {
-        if failure.is_none() {
-            match raw(value) {
-                Ok(value) => {
-                    keyed |= key.is_some();
-                    entries.push((
-                        key.map_or_else(|| index.to_string().into_bytes(), |key| key.as_bytes().to_vec()),
-                        value,
-                    ));
-                }
-                Err(error) => failure = Some(error),
-            }
-        }
+        keyed |= key.is_some();
+        entries.push((
+            key.map_or_else(|| index.to_string().into_bytes(), |key| key.as_bytes().to_vec()),
+            raw(value)?,
+        ));
 
-        Ok(())
-    })
-    .map_err(|_| Error::Filter("a row filter array could not be iterated".to_string()))?;
-
-    if let Some(error) = failure {
-        return Err(error);
-    }
+        Ok::<(), Error>(())
+    })?;
 
     Ok(if keyed {
         Raw::Map(entries)
@@ -417,7 +412,7 @@ impl RustParquetFooter {
             paths.push(path);
             leaves.push(leaf);
 
-            Ok(())
+            Ok::<(), PhpException>(())
         })?;
 
         let bytes = self.footer.bytes();
@@ -583,10 +578,7 @@ impl RustColumnsReader {
             ht_insert(&mut chunk, name, cell.values(array, self.times.as_ref())?);
         }
 
-        let mut zv = Zval::new();
-        zv.set_hashtable(chunk);
-
-        Ok(Some(zv))
+        Ok(Some(zval_array(chunk)))
     }
 }
 
@@ -618,7 +610,7 @@ impl RustColumnsReader {
                     .to_string(),
             );
 
-            Ok(())
+            Ok::<(), PhpException>(())
         })?;
 
         let reader = ParquetReader::open(Arc::clone(&stream), meta, &names, plan, batch_size).map_err(refused)?;

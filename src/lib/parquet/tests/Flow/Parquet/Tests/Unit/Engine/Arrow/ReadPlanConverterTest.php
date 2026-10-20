@@ -21,10 +21,7 @@ use Flow\Parquet\Tests\Mother\ReadPlanMother;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\Parquet\DSL\parquet_all;
-use function Flow\Parquet\DSL\parquet_any;
 use function Flow\Parquet\DSL\parquet_column;
-use function Flow\Parquet\DSL\parquet_not;
 
 final class ReadPlanConverterTest extends TestCase
 {
@@ -38,7 +35,6 @@ final class ReadPlanConverterTest extends TestCase
             [
                 'leaf' => 'intervals',
                 'path' => ['id'],
-                'physical' => 'INT64',
                 'intervals' => [[3, true, 3, true]],
             ],
         ];
@@ -47,7 +43,6 @@ final class ReadPlanConverterTest extends TestCase
             [
                 'leaf' => 'intervals',
                 'path' => ['id'],
-                'physical' => 'INT64',
                 'intervals' => [[null, false, 3, false]],
             ],
         ];
@@ -56,7 +51,6 @@ final class ReadPlanConverterTest extends TestCase
             [
                 'leaf' => 'intervals',
                 'path' => ['id'],
-                'physical' => 'INT64',
                 'intervals' => [[1, true, 1, true], [5, true, 5, true]],
             ],
         ];
@@ -65,7 +59,6 @@ final class ReadPlanConverterTest extends TestCase
             [
                 'leaf' => 'intervals',
                 'path' => ['id'],
-                'physical' => 'INT64',
                 'intervals' => [],
             ],
         ];
@@ -74,7 +67,6 @@ final class ReadPlanConverterTest extends TestCase
             [
                 'leaf' => 'intervals',
                 'path' => ['score'],
-                'physical' => 'DOUBLE',
                 'intervals' => [[0.0, true, null, false]],
             ],
         ];
@@ -83,7 +75,6 @@ final class ReadPlanConverterTest extends TestCase
             [
                 'leaf' => 'intervals',
                 'path' => ['d'],
-                'physical' => 'FIXED_LEN_BYTE_ARRAY',
                 'intervals' => [["\x00\x00\x00\x00\x00\x00\x04\xD2", true, "\x00\x00\x00\x00\x00\x00\x04\xD2", true]],
             ],
         ];
@@ -92,7 +83,6 @@ final class ReadPlanConverterTest extends TestCase
             [
                 'leaf' => 'intervals',
                 'path' => ['day'],
-                'physical' => 'INT32',
                 'intervals' => [[2, true, 2, true]],
             ],
         ];
@@ -101,7 +91,6 @@ final class ReadPlanConverterTest extends TestCase
             [
                 'leaf' => 'intervals',
                 'path' => ['address', 'city'],
-                'physical' => 'BYTE_ARRAY',
                 'intervals' => [['a', true, 'a', true]],
             ],
         ];
@@ -120,10 +109,9 @@ final class ReadPlanConverterTest extends TestCase
             ['leaf' => 'absent', 'is_null' => true],
         ];
         yield 'nested not and or' => [
-            parquet_all(
-                parquet_column('id')->isNull(),
-                parquet_not(parquet_any(parquet_column('id')->isNull(), parquet_column('missing')->startsWith('a'))),
-            ),
+            parquet_column('id')
+                ->isNull()
+                ->and(parquet_column('id')->isNull()->or(parquet_column('missing')->startsWith('a'))->negate()),
             [
                 'and' => [
                     ['leaf' => 'is_null', 'path' => ['id']],
@@ -156,13 +144,13 @@ final class ReadPlanConverterTest extends TestCase
         );
     }
 
-    public function test_only_the_bound_conjuncts_cross(): void
+    public function test_only_the_row_conjuncts_cross(): void
     {
         static::assertSame(
             ['leaf' => 'is_null', 'path' => ['id']],
             ReadPlanConverter::toExtension(ReadPlanMother::rowFiltered(
                 4,
-                parquet_all(parquet_column('id')->isNull(), parquet_column('id')->equals('x')),
+                parquet_column('id')->isNull()->and(parquet_column('id')->equals('x')),
                 Schema::with(FlatColumn::int64('id')),
             ))['filter'] ?? null,
         );
@@ -181,10 +169,10 @@ final class ReadPlanConverterTest extends TestCase
         );
     }
 
-    public function test_a_row_filter_holding_an_unbound_leaf_is_refused(): void
+    public function test_a_row_filter_holding_a_leaf_not_answered_exactly_is_refused(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Rows are evaluated on bound leaves only, the leaf on "id" is not bound');
+        $this->expectExceptionMessage('Rows are evaluated on leaves answered exactly, the leaf on "id" is not');
 
         ReadPlanConverter::toExtension(
             new ReadPlan(

@@ -15,19 +15,19 @@ use Flow\ETL\Plan\Rewrite;
  */
 final readonly class TopNRewrite implements Rewrite
 {
-    public function of(Node $node): Node
+    public function of(Node $original, Node $rebuilt): Node
     {
-        if (!$node instanceof Limit) {
-            return $node;
+        if (!$rebuilt instanceof Limit) {
+            return $rebuilt;
         }
 
-        $sort = $node->children()[0];
+        $sort = $rebuilt->children()[0];
 
         if (!$sort instanceof Sort) {
-            return $node;
+            return $rebuilt;
         }
 
         // a TopN past its memory limit falls back to the sort's own spilling path, so any limit is safe to rewrite
-        return new TopN($sort->children()[0], $sort->refs, $node->limit, $sort->algorithm);
+        return new TopN($sort->children()[0], $sort->refs, $rebuilt->limit, $sort->algorithm);
     }
 }

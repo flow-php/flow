@@ -34,32 +34,23 @@ final class PageZoneMapsTest extends TestCase
             10,
         )];
 
-        static::assertEquals(
-            new ZoneMap(4, 6, true, true, 1, null, 3, false),
-            (new PageZoneMaps($chunks, $pageIndexes, 5))->zone($a),
-        );
-        static::assertEquals(
-            new ZoneMap(7, 9, true, true, 0, null, 3, false),
-            (new PageZoneMaps($chunks, $pageIndexes, 9))->zone($a),
-        );
+        $zones = new PageZoneMaps($chunks, $pageIndexes);
+
+        static::assertEquals(new ZoneMap(4, 6, true, true, 1, null, 3, false), $zones->at(5)->zone($a));
+        static::assertEquals(new ZoneMap(7, 9, true, true, 0, null, 3, false), $zones->at(9)->zone($a));
     }
 
     public function test_a_null_page_is_all_null_whatever_its_bounds_hold(): void
     {
         $chunks = new MetadataRowGroupChunks(FooterMother::oneGroup(10, $a = FlatColumn::int64('a'))->metadata());
 
-        static::assertEquals(
-            new ZoneMap(null, null, true, true, 6, null, 6, false),
-            (new PageZoneMaps(
-                $chunks,
-                ['a' => PageIndexMother::consistent(
-                    PageIndexMother::int64([[0, 3], null], [0, 0]),
-                    PageIndexMother::pagesAt(0, 4),
-                    10,
-                )],
-                4,
-            ))->zone($a),
-        );
+        $zones = new PageZoneMaps($chunks, ['a' => PageIndexMother::consistent(
+            PageIndexMother::int64([[0, 3], null], [0, 0]),
+            PageIndexMother::pagesAt(0, 4),
+            10,
+        )]);
+
+        static::assertEquals(new ZoneMap(null, null, true, true, 6, null, 6, false), $zones->at(4)->zone($a));
     }
 
     public function test_bytes_bounds_are_inexact(): void
@@ -69,15 +60,11 @@ final class PageZoneMapsTest extends TestCase
 
         static::assertEquals(
             new ZoneMap('a', 'b', false, false, 0, null, 4, false),
-            (new PageZoneMaps(
-                $chunks,
-                ['name' => PageIndexMother::consistent(
-                    new ColumnIndex([false], ['a'], ['b'], BoundaryOrder::ASCENDING, [0]),
-                    PageIndexMother::pagesAt(0),
-                    4,
-                )],
-                0,
-            ))->zone($name),
+            (new PageZoneMaps($chunks, ['name' => PageIndexMother::consistent(
+                new ColumnIndex([false], ['a'], ['b'], BoundaryOrder::ASCENDING, [0]),
+                PageIndexMother::pagesAt(0),
+                4,
+            )]))->at(0)->zone($name),
         );
     }
 
@@ -107,9 +94,9 @@ final class PageZoneMapsTest extends TestCase
 
         static::assertEquals(
             new ZoneMap(1.5, 2.5, true, true, 0, 1, 2, false),
-            (new PageZoneMaps($chunks, $pageIndexes, 0))->zone($ratio),
+            (new PageZoneMaps($chunks, $pageIndexes))->at(0)->zone($ratio),
         );
-        static::assertTrue((new PageZoneMaps($chunks, $pageIndexes, 3))->zone($ratio)?->allNaN);
+        static::assertTrue((new PageZoneMaps($chunks, $pageIndexes))->at(3)->zone($ratio)?->allNaN);
     }
 
     public function test_bounds_an_order_does_not_trust_are_absent(): void
@@ -122,11 +109,11 @@ final class PageZoneMapsTest extends TestCase
 
         static::assertEquals(
             new ZoneMap(null, null, true, true, 0, null, 4, false),
-            (new PageZoneMaps(
-                $chunks,
-                ['a' => PageIndexMother::consistent(PageIndexMother::int64([[0, 3]]), PageIndexMother::pagesAt(0), 4)],
-                0,
-            ))->zone($a),
+            (new PageZoneMaps($chunks, ['a' => PageIndexMother::consistent(
+                PageIndexMother::int64([[0, 3]]),
+                PageIndexMother::pagesAt(0),
+                4,
+            )]))->at(0)->zone($a),
         );
     }
 
@@ -134,18 +121,20 @@ final class PageZoneMapsTest extends TestCase
     {
         $chunks = new MetadataRowGroupChunks(FooterMother::oneGroup(4, $a = FlatColumn::int64('a'))->metadata());
 
-        static::assertNull((new PageZoneMaps($chunks, [], 0))->zone($a));
+        static::assertNull((new PageZoneMaps($chunks, []))->at(0)->zone($a));
     }
 
-    public function test_a_column_is_decoded_once(): void
+    public function test_each_page_is_decoded_once(): void
     {
         $chunks = new MetadataRowGroupChunks(FooterMother::oneGroup(4, $a = FlatColumn::int64('a'))->metadata());
-        $zones = new PageZoneMaps(
-            $chunks,
-            ['a' => PageIndexMother::consistent(PageIndexMother::int64([[0, 3]]), PageIndexMother::pagesAt(0), 4)],
-            0,
-        );
+        $zones = new PageZoneMaps($chunks, ['a' => PageIndexMother::consistent(
+            PageIndexMother::int64([[0, 1], [2, 3]]),
+            PageIndexMother::pagesAt(0, 2),
+            4,
+        )]);
+        $first = $zones->at(0)->zone($a);
 
-        static::assertSame($zones->zone($a), $zones->zone($a));
+        static::assertNotSame($first, $zones->at(3)->zone($a));
+        static::assertSame($first, $zones->at(1)->zone($a));
     }
 }

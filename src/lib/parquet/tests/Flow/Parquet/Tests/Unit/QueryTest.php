@@ -44,14 +44,14 @@ final class QueryTest extends TestCase
         static::assertEquals(new All($first, $second), parquet_query()->where($first)->where($second)->filter);
     }
 
-    public function test_a_third_filter_extends_the_all_instead_of_nesting_one(): void
+    public function test_each_filter_narrows_the_ones_before(): void
     {
         $first = parquet_column('id')->greaterThan(1);
         $second = parquet_column('id')->lessThan(9);
         $third = parquet_column('id')->notEquals(5);
 
         static::assertEquals(
-            new All($first, $second, $third),
+            new All(new All($first, $second), $third),
             parquet_query()->where($first)->where($second)->where($third)->filter,
         );
     }

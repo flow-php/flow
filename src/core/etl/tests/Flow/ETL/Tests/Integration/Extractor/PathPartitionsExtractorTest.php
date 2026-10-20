@@ -249,18 +249,15 @@ final class PathPartitionsExtractorTest extends FlowIntegrationTestCase
 
     public function test_a_scan_returns_only_the_files_matching_its_filter(): void
     {
-        $batches = iterator_to_array(
-            from_path_partitions('memory://dir/**/*.txt', MemoryFiles::with([
-                'memory://dir/year=2021/a.txt' => 'a',
-                'memory://dir/year=2022/b.txt' => 'b',
-                'memory://dir/year=2023/c.txt' => 'c',
-                'memory://dir/year=2024/d.txt' => 'd',
-                'memory://dir/year=2025/e.txt' => 'e',
-            ]))
-                ->withBatchSize(2)
-                ->scan(flow_context(), new FileScan(filter: ref('year')->isIn(lit(['2023', '2024'])))),
-            false,
-        );
+        $batches = iterator_to_array(from_path_partitions('memory://dir/**/*.txt', MemoryFiles::with([
+            'memory://dir/year=2021/a.txt' => 'a',
+            'memory://dir/year=2022/b.txt' => 'b',
+            'memory://dir/year=2023/c.txt' => 'c',
+            'memory://dir/year=2024/d.txt' => 'd',
+            'memory://dir/year=2025/e.txt' => 'e',
+        ]))
+            ->withBatchSize(2)
+            ->scan(flow_context(), new FileScan(conjuncts: [ref('year')->isIn(lit(['2023', '2024']))])), false);
 
         static::assertCount(1, $batches);
         static::assertSame(['2023', '2024'], $batches[0]->column('year')->values());

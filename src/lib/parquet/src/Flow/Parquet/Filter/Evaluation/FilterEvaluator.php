@@ -5,20 +5,15 @@ declare(strict_types=1);
 namespace Flow\Parquet\Filter\Evaluation;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\Filter\Binding\LeafResolver;
-use Flow\Parquet\Filter\Binding\LiteralDomain;
+use Flow\Parquet\Filter\Binding\BoundFilter;
 use Flow\Parquet\Filter\Binding\RefusedLeaf;
 use Flow\Parquet\Filter\Binding\ResolvedLeaf;
 use Flow\Parquet\Filter\Comparison;
-use Flow\Parquet\Filter\Filter;
 use Flow\Parquet\Filter\In;
 use Flow\Parquet\Filter\IsNull;
 use Flow\Parquet\Filter\StartsWith;
-use Flow\Parquet\Options;
-use Flow\Parquet\ParquetFile\Schema;
 use WeakMap;
 
-use function array_fill_keys;
 use function array_values;
 use function count;
 use function reset;
@@ -29,7 +24,7 @@ use function reset;
 final readonly class FilterEvaluator
 {
     /**
-     * @var WeakMap<In, array<string, true>>
+     * @var WeakMap<In, array<int|string, true>>
      */
     private WeakMap $keys;
 
@@ -42,16 +37,16 @@ final readonly class FilterEvaluator
      * Refuses at once what no row could answer, instead of matching nothing silently.
      */
     public function __construct(
-        private Filter $filter,
-        Schema $schema,
-        Options $options,
+        private BoundFilter $filter,
     ) {
         /** @var WeakMap<Comparison|In|IsNull|StartsWith, ResolvedLeaf> $leaves */
         $leaves = new WeakMap();
-        /** @var WeakMap<In, array<string, true>> $keys */
+        /** @var WeakMap<In, array<int|string, true>> $keys */
         $keys = new WeakMap();
 
-        foreach (LeafResolver::resolve($filter, $schema, $options) as $node => $resolution) {
+        foreach ($filter->leaves() as $node) {
+            $resolution = $filter->leaf($node);
+
             if ($resolution instanceof RefusedLeaf) {
                 throw new InvalidArgumentException($resolution->reason);
             }
@@ -62,13 +57,20 @@ final readonly class FilterEvaluator
 
             $leaves[$node] = $resolution;
 
-            if (
-                $node instanceof In
-                && ($resolution->domain === LiteralDomain::Bytes || $resolution->domain === LiteralDomain::Uuid)
-            ) {
-                /** @var list<string> $values */
-                $values = $resolution->literals;
-                $keys[$node] = array_fill_keys($values, true);
+            if ($node instanceof In) {
+                $literalKeys = [];
+
+                foreach ($resolution->literals as $literal) {
+                    $key = $resolution->domain->key($literal);
+
+                    if ($key === null) {
+                        continue 2;
+                    }
+
+                    $literalKeys[$key] = true;
+                }
+
+                $keys[$node] = $literalKeys;
             }
         }
 
@@ -88,9 +90,11 @@ final readonly class FilterEvaluator
         $first = reset($batch);
         $matching = [];
 
-        foreach ($this->filter->accept(
-            new BatchTruth($this->leaves, $this->keys, $batch, $first === false ? 0 : count($first)),
-        ) as $row => $truth) {
+        foreach ($this->filter
+            ->filter()
+            ->accept(
+                new BatchTruth($this->leaves, $this->keys, $batch, $first === false ? 0 : count($first)),
+            ) as $row => $truth) {
             if ($truth === true) {
                 $matching[] = $row;
             }
@@ -108,8 +112,8 @@ final readonly class FilterEvaluator
     {
         $roots = [];
 
-        foreach ($this->leaves as $leaf) {
-            $roots[$leaf->root] = $leaf->root;
+        foreach ($this->leaves as $resolution) {
+            $roots[$resolution->root] = $resolution->root;
         }
 
         return array_values($roots);

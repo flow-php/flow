@@ -9,12 +9,9 @@ use Flow\ETL\Optimizer\ProjectionWalk;
 use Flow\ETL\Optimizer\Rule;
 use Flow\ETL\Plan\LogicalPlan;
 use Flow\ETL\Plan\Node;
-use Flow\ETL\Plan\ReplaceNode;
+use Flow\ETL\Plan\ReplaceNodes;
 use Flow\ETL\Plan\RequiredColumns;
 use SplObjectStorage;
-
-use function arsort;
-use function spl_object_id;
 
 /**
  * Columns no consumer reads are not copied into the rows an expand emits (Spark: ColumnPruning setting
@@ -40,33 +37,15 @@ final readonly class PushProjectionIntoExpand implements Rule
             }
         }
 
-        $depths = [];
-        $targets = [];
+        /** @var SplObjectStorage<Node, Node> $replacements */
+        $replacements = new SplObjectStorage();
 
         foreach ($demands as $node) {
-            if ($demands[$node]->isAll()) {
-                continue;
-            }
-
-            $id = spl_object_id($node);
-            $targets[$id] = $node;
-            $depths[$id] = 0;
-
-            for ($below = $node; $below->children() !== []; $below = $below->children()[0]) {
-                $depths[$id]++;
+            if (!$demands[$node]->isAll()) {
+                $replacements[$node] = $node->withCarries($demands[$node]);
             }
         }
 
-        // TransformUp hands Rewrite::of() the node rebuilt over its new children, so a node whose descendant was
-        // replaced first would no longer be the target; the one farthest from the leaf goes first
-        arsort($depths);
-
-        foreach ($depths as $id => $_) {
-            $plan = $plan->transformUp(
-                new ReplaceNode($targets[$id], $targets[$id]->withCarries($demands[$targets[$id]])),
-            );
-        }
-
-        return $plan;
+        return $replacements->count() === 0 ? $plan : $plan->transformUp(new ReplaceNodes($replacements));
     }
 }

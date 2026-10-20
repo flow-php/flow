@@ -35,7 +35,7 @@ final class ColumnRefTest extends TestCase
         $column = parquet_column('id');
 
         static::assertEquals(new Not($column->equals(1)), $column->notEquals(1));
-        static::assertEquals(new Not(new In($column, 1, 2)), $column->notIn([1, 2]));
+        static::assertEquals(new Not(new In($column, [1, 2])), $column->notIn([1, 2]));
         static::assertEquals(new Not(new IsNull($column)), $column->isNotNull());
     }
 

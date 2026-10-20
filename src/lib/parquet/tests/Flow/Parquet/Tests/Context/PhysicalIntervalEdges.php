@@ -6,9 +6,9 @@ namespace Flow\Parquet\Tests\Context;
 
 use DateTimeImmutable;
 use Flow\Parquet\Data\PhysicalOrder;
+use Flow\Parquet\Filter\Binding\LiteralDomain;
 use Flow\Parquet\Filter\Binding\PhysicalInterval;
 use Flow\Parquet\Filter\Binding\PhysicalIntervals;
-use Flow\Parquet\Filter\Binding\PreImages;
 use Flow\Parquet\Filter\Operator;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Data\DataConverter;
@@ -53,7 +53,10 @@ final class PhysicalIntervalEdges
         Operator $operator,
         bool|DateTimeImmutable|float|int|string $literal,
     ): ?PhysicalIntervals {
-        $preImage = PreImages::forColumn($column, DataConverter::initialize(new Options())->resolveConverter($column));
+        [, $preImage] = LiteralDomain::forColumn(
+            $column,
+            DataConverter::initialize(new Options())->resolveConverter($column),
+        );
 
         return $preImage === null
             ? null

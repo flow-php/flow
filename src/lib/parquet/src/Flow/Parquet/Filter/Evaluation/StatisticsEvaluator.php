@@ -6,9 +6,9 @@ namespace Flow\Parquet\Filter\Evaluation;
 
 use Flow\Parquet\Filter\All;
 use Flow\Parquet\Filter\Any;
-use Flow\Parquet\Filter\Binding\Absent;
-use Flow\Parquet\Filter\Binding\Bound;
+use Flow\Parquet\Filter\Binding\AbsentLeaf;
 use Flow\Parquet\Filter\Binding\BoundFilter;
+use Flow\Parquet\Filter\Binding\ResolvedLeaf;
 use Flow\Parquet\Filter\Comparison;
 use Flow\Parquet\Filter\Filter;
 use Flow\Parquet\Filter\FilterVisitor;
@@ -25,7 +25,7 @@ use Generator;
  */
 final readonly class StatisticsEvaluator implements FilterVisitor
 {
-    public function __construct(
+    private function __construct(
         private BoundFilter $filter,
         private ZoneMaps $zones,
         private bool $negated = false,
@@ -58,13 +58,13 @@ final readonly class StatisticsEvaluator implements FilterVisitor
 
     public function isNull(IsNull $isNull): Truth
     {
-        $leaf = $this->filter->leaf($isNull);
+        $resolution = $this->filter->leaf($isNull);
 
-        if ($leaf instanceof Absent) {
+        if ($resolution instanceof AbsentLeaf) {
             return $this->negated ? Truth::Never : Truth::Always;
         }
 
-        $zone = $leaf instanceof Bound ? $this->zones->zone($leaf->column) : null;
+        $zone = $resolution instanceof ResolvedLeaf ? $this->zones->zone($resolution->column) : null;
 
         if ($zone === null) {
             return Truth::Maybe;
@@ -84,24 +84,29 @@ final readonly class StatisticsEvaluator implements FilterVisitor
 
     public function startsWith(StartsWith $startsWith): Truth
     {
-        $leaf = $this->filter->leaf($startsWith);
+        $resolution = $this->filter->leaf($startsWith);
 
-        if ($leaf instanceof Absent) {
+        if ($resolution instanceof AbsentLeaf) {
             return Truth::Never;
         }
 
-        $zone = $leaf instanceof Bound ? $this->zones->zone($leaf->column) : null;
+        if (!$resolution instanceof ResolvedLeaf || $resolution->intervals === null) {
+            return Truth::Maybe;
+        }
+
+        $intervals = $resolution->intervals;
+        $zone = $this->zones->zone($resolution->column);
 
         if ($zone !== null && self::allNull($zone)) {
             return Truth::Never;
         }
 
-        if (!$leaf instanceof Bound || $zone === null || $zone->min === null || $zone->max === null) {
+        if ($zone === null || $zone->min === null || $zone->max === null) {
             return Truth::Maybe;
         }
 
-        $none = $leaf->intervals->disjoint($leaf->order, $zone->min, $zone->max);
-        $all = $leaf->intervals->covers($leaf->order, $zone->min, $zone->max);
+        $none = $intervals->disjoint($zone->min, $zone->max);
+        $all = $intervals->covers($zone->min, $zone->max);
         $noNull = $zone->nullCount === 0;
 
         return $this->negated ? self::truth($all, $noNull && $none) : self::truth($none, $noNull && $all);
@@ -110,21 +115,22 @@ final readonly class StatisticsEvaluator implements FilterVisitor
     /**
      * Comparison and In: the zone against the leaf's pre-image I.
      */
-    private function membership(Comparison|In $leaf, bool $equality): Truth
+    private function membership(Comparison|In $node, bool $equality): Truth
     {
-        $bound = $this->filter->leaf($leaf);
+        $resolution = $this->filter->leaf($node);
 
-        if ($bound instanceof Absent) {
+        if ($resolution instanceof AbsentLeaf) {
             return Truth::Never;
         }
 
-        if (!$bound instanceof Bound) {
+        if (!$resolution instanceof ResolvedLeaf || $resolution->intervals === null) {
             return Truth::Maybe;
         }
 
-        $zone = $this->zones->zone($bound->column);
+        $intervals = $resolution->intervals;
+        $zone = $this->zones->zone($resolution->column);
 
-        if ($bound->intervals->isEmpty()) {
+        if ($intervals->isEmpty()) {
             if (!$this->negated) {
                 return Truth::Never;
             }
@@ -150,11 +156,9 @@ final readonly class StatisticsEvaluator implements FilterVisitor
             return Truth::Maybe;
         }
 
-        $noNan = !$bound->order->isFloatingPoint() || $zone->nanCount === 0;
-        $none = $bound->intervals->disjoint($bound->order, $zone->min, $zone->max);
-        $all =
-            (!$equality || $zone->minExact && $zone->maxExact)
-            && $bound->intervals->covers($bound->order, $zone->min, $zone->max);
+        $noNan = !$intervals->order->isFloatingPoint() || $zone->nanCount === 0;
+        $none = $intervals->disjoint($zone->min, $zone->max);
+        $all = (!$equality || $zone->minExact && $zone->maxExact) && $intervals->covers($zone->min, $zone->max);
 
         return $this->negated
             ? self::truth($noNan && $all, $noNull && $none)

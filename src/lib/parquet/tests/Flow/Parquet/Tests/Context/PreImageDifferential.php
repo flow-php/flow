@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Context;
 
 use DateTimeImmutable;
-use Flow\Parquet\Data\PhysicalOrder;
+use Flow\Parquet\Filter\Binding\BoundFilter;
 use Flow\Parquet\Filter\Comparison;
 use Flow\Parquet\Filter\Evaluation\FilterEvaluator;
 use Flow\Parquet\Filter\Operator;
@@ -36,7 +36,6 @@ final class PreImageDifferential
     public static function mismatches(FlatColumn $column, array $physicals, array $literals): array
     {
         $converter = DataConverter::initialize(new Options())->resolveConverter($column);
-        $order = PhysicalOrder::forColumn($column);
         $mismatches = [];
 
         foreach ($literals as $literal) {
@@ -50,11 +49,15 @@ final class PreImageDifferential
                 $comparison = new Comparison(parquet_column($column->name()), $operator, $literal);
 
                 foreach ($physicals as $physical) {
-                    $matches = (new FilterEvaluator($comparison, Schema::with($column), new Options()))->mask([
+                    $matches = (new FilterEvaluator(BoundFilter::bind(
+                        $comparison,
+                        Schema::with($column),
+                        new Options(),
+                    )))->mask([
                         $column->name() => [$converter === null ? $physical : $converter->fromParquetType($physical)],
                     ]) === [0];
 
-                    if ($matches !== $intervals->covers($order, $physical, $physical)) {
+                    if ($matches !== $intervals->covers($physical, $physical)) {
                         $mismatches[] = sprintf(
                             '%s %s: %s',
                             $operator->name,

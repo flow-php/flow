@@ -17,8 +17,7 @@ final readonly class DatePreImage implements PreImage
 
     public function equal(bool|DateTimeImmutable|float|int|string $literal): ?EqualRange
     {
-        return $literal instanceof DateTimeImmutable
-            ? EqualRange::grid(TimestampPreImage::micros($literal), self::MICROS_PER_DAY, -2 ** 31, 2 ** 31 - 1)
-            : null;
+        /** @var DateTimeImmutable $literal LiteralDomain::DateTime holds only date times */
+        return EqualRange::grid(TimestampPreImage::micros($literal), self::MICROS_PER_DAY, -2 ** 31, 2 ** 31 - 1);
     }
 }

@@ -11,6 +11,7 @@ use Flow\Parquet\BloomFilter\SbbfBuilder;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use PHPUnit\Framework\TestCase;
 
+use function str_repeat;
 use function strlen;
 
 final class SbbfBuilderTest extends TestCase
@@ -39,7 +40,10 @@ final class SbbfBuilderTest extends TestCase
             $builder->insert((new BloomHash())->of(FlatColumn::int64('id'), $id));
         }
 
-        static::assertSame(2048, strlen($builder->build()->bytes()));
+        static::assertSame(
+            strlen(Sbbf::fromBytes(str_repeat("\0", 2048))->serialized()),
+            strlen($builder->build()->serialized()),
+        );
     }
 
     public function test_a_folded_filter_equals_one_built_at_its_size(): void
@@ -52,8 +56,11 @@ final class SbbfBuilderTest extends TestCase
             $fresh->insert((new BloomHash())->of(FlatColumn::int64('id'), $id));
         }
 
-        static::assertSame(4096, strlen($folded->build()->bytes()));
-        static::assertSame($fresh->build()->bytes(), $folded->build()->bytes());
+        static::assertSame(
+            strlen(Sbbf::fromBytes(str_repeat("\0", 4096))->serialized()),
+            strlen($folded->build()->serialized()),
+        );
+        static::assertEquals($fresh->build(), $folded->build());
     }
 
     public function test_an_ndv_left_out_is_the_arrow_rs_default(): void
@@ -66,14 +73,14 @@ final class SbbfBuilderTest extends TestCase
             $explicit->insert((new BloomHash())->of(FlatColumn::int64('id'), $id));
         }
 
-        static::assertSame($explicit->build()->bytes(), $default->build()->bytes());
+        static::assertEquals($explicit->build(), $default->build());
     }
 
     public function test_an_empty_filter_folds_to_one_block(): void
     {
-        static::assertSame(
-            Sbbf::BLOCK_BYTES,
-            strlen(SbbfBuilder::for(new BloomFilterOptions(0.05, 1_048_576))->build()->bytes()),
+        static::assertEquals(
+            Sbbf::fromBytes(str_repeat("\0", Sbbf::BLOCK_BYTES)),
+            SbbfBuilder::for(new BloomFilterOptions(0.05, 1_048_576))->build(),
         );
     }
 
@@ -82,7 +89,10 @@ final class SbbfBuilderTest extends TestCase
         $builder = SbbfBuilder::for(new BloomFilterOptions(0.05, 1));
         $builder->insert(-1);
 
-        static::assertSame(Sbbf::BLOCK_BYTES, strlen($builder->build()->bytes()));
+        static::assertSame(
+            strlen(Sbbf::fromBytes(str_repeat("\0", Sbbf::BLOCK_BYTES))->serialized()),
+            strlen($builder->build()->serialized()),
+        );
         static::assertTrue($builder->build()->check(-1));
     }
 }

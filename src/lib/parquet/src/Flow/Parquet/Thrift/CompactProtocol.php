@@ -137,7 +137,12 @@ class CompactProtocol
 
     public function getTType(int $byte): int
     {
-        return self::$ttypes[$byte & 0x0F];
+        return (
+            self::$ttypes[$byte & 0x0F] ?? throw new TProtocolException(
+                'Unknown compact type ' . ($byte & 0x0F),
+                TProtocolException::INVALID_DATA,
+            )
+        );
     }
 
     public function getVarint(int $data): string

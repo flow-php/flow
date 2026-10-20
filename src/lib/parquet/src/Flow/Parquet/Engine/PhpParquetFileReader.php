@@ -19,6 +19,7 @@ use Flow\Parquet\Reader\ColumnChunkReader;
 use Flow\Parquet\Reader\ColumnReader;
 use Flow\Parquet\Reader\PageReader;
 use Flow\Parquet\Reader\ReadPlan;
+use Flow\Parquet\Reader\SelectedPages;
 use Flow\Parquet\Thrift\CompactProtocol;
 use Flow\Parquet\Thrift\MemoryBuffer;
 use Flow\Parquet\ThriftModel\FileMetaData;
@@ -115,7 +116,7 @@ final class PhpParquetFileReader implements ParquetFileReader
         }
 
         $columnReader = new ColumnReader(
-            new ColumnChunkReader(new PageReader($this->byteOrder, $this->options), $this->options),
+            new SelectedPages(new ColumnChunkReader(new PageReader($this->byteOrder, $this->options), $this->options)),
             new DremelAssembler(DataConverter::initialize($this->options)),
         );
 

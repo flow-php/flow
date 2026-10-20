@@ -8,41 +8,29 @@ use Flow\ETL\BoundStep;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Function\ExpandingFunctions;
-use Flow\ETL\Function\ReferenceResolver;
+use Flow\ETL\Function\Evaluation\Filter;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 use Throwable;
 
-use function array_keys;
-use function Flow\Types\DSL\type_bare;
-use function Flow\Types\DSL\type_boolean;
-use function Flow\Types\DSL\type_equals;
-use function sprintf;
-
 final readonly class ScalarFunctionFilterTransformer implements Transformer
 {
     /**
-     * @param null|ScalarFunction $resolved the predicate resolved against the bound schema; only bind() sets it
+     * @param null|Filter $filter the predicate bound to the input schema; only bind() sets it
      */
     public function __construct(
         public ScalarFunction $function,
-        private ?ScalarFunction $resolved = null,
+        private ?Filter $filter = null,
     ) {}
-
-    public function bind(Schema $input): BoundStep
-    {
-        return new BoundStep($this->bound($input), $input);
-    }
 
     /**
      * @throws InvalidArgumentException
      */
-    public function bound(Schema $input): self
+    public function bind(Schema $input): BoundStep
     {
-        return new self($this->function, $this->resolve($input));
+        return new BoundStep(new self($this->function, Filter::bind($input, $this->function)), $input);
     }
 
     public function transform(Rows $rows, FlowContext $context): Rows
@@ -50,8 +38,7 @@ final readonly class ScalarFunctionFilterTransformer implements Transformer
         $context->telemetry()->transformationStarted($this);
 
         try {
-            $function = $this->resolved ?? $this->resolve($rows->schema());
-            $result = $rows->gather(array_keys($function->eval($rows, $context)->physicals(), true, true));
+            $result = ($this->filter ?? Filter::bind($rows->schema(), $this->function))->filter($rows, $context);
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),
@@ -64,29 +51,5 @@ final readonly class ScalarFunctionFilterTransformer implements Transformer
 
             throw $e;
         }
-    }
-
-    /**
-     * @throws InvalidArgumentException
-     */
-    private function resolve(Schema $input): ScalarFunction
-    {
-        $resolver = new ReferenceResolver();
-        $resolved = $resolver->resolve($this->function, $input);
-        $resolver->assertResolved($resolved, $input);
-        (new ExpandingFunctions())->refuse($resolved, 'filter');
-
-        // type_bare() keeps the gate blind to nullability - a null-propagating predicate declares
-        // ?boolean, and (bool) null === false is how a NULL row is dropped.
-        if (!type_equals(type_bare($resolved->returns()), type_boolean())) {
-            throw new InvalidArgumentException(sprintf(
-                'filter() requires a predicate returning boolean, "%s" returns "%s". '
-                . 'Use an explicit comparison, e.g. ->notEquals(lit(0)).',
-                $resolved::class,
-                $resolved->returns()->toString(),
-            ));
-        }
-
-        return $resolved;
     }
 }

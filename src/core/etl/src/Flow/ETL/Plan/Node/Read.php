@@ -7,8 +7,8 @@ namespace Flow\ETL\Plan\Node;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaNotDerivableException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\File\FileExtractor;
 use Flow\ETL\Extractor\File\FileScan;
-use Flow\ETL\Function\All;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Plan\Materialization;
 use Flow\ETL\Plan\Node;
@@ -17,9 +17,6 @@ use Flow\ETL\Plan\RowCount;
 use Flow\ETL\Plan\Transparency;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Path\Filter;
-use Flow\Filesystem\Path\Filter\Filters;
-
-use function min;
 
 final readonly class Read implements Node
 {
@@ -43,27 +40,12 @@ final readonly class Read implements Node
         return $this->scan;
     }
 
-    public function withPathFilter(Filter $filter): self
-    {
-        return new self(
-            $this->extractor,
-            new FileScan(
-                $this->scan->limit,
-                $this->scan->pathFilter instanceof Filters
-                    ? $this->scan->pathFilter->add($filter)
-                    : new Filters($this->scan->pathFilter, $filter),
-                $this->scan->filter,
-            ),
-        );
-    }
-
+    /**
+     * @throws InvalidArgumentException when the extractor is no FileExtractor, which has nowhere to apply it
+     */
     public function withFilter(ScalarFunction $filter): self
     {
-        return new self($this->extractor, new FileScan($this->scan->limit, $this->scan->pathFilter, match (true) {
-            $this->scan->filter === null => $filter,
-            $this->scan->filter instanceof All => $this->scan->filter->and($filter),
-            default => new All($this->scan->filter, $filter),
-        }));
+        return new self($this->fileExtractor(), $this->scan->withFilter($filter));
     }
 
     /**
@@ -73,14 +55,15 @@ final readonly class Read implements Node
      */
     public function withLimit(int $limit): self
     {
-        return new self(
-            $this->extractor,
-            new FileScan(
-                $this->scan->limit === null ? $limit : min($this->scan->limit, $limit),
-                $this->scan->pathFilter,
-                $this->scan->filter,
-            ),
-        );
+        return new self($this->extractor, $this->scan->withLimit($limit));
+    }
+
+    /**
+     * @throws InvalidArgumentException when the extractor is no FileExtractor, which has nowhere to apply it
+     */
+    public function withPathFilter(Filter $filter): self
+    {
+        return new self($this->fileExtractor(), $this->scan->withPathFilter($filter));
     }
 
     /**
@@ -122,5 +105,14 @@ final readonly class Read implements Node
     public function redefines(): Redefined
     {
         return Redefined::none();
+    }
+
+    private function fileExtractor(): FileExtractor
+    {
+        return $this->extractor instanceof FileExtractor
+            ? $this->extractor
+            : throw new InvalidArgumentException(
+                'Only a FileExtractor reads a pushed filter, ' . $this->extractor::class . ' does not',
+            );
     }
 }

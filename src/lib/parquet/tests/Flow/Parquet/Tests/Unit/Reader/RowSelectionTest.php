@@ -200,7 +200,7 @@ final class RowSelectionTest extends TestCase
         static::assertFalse(RowSelection::all(0)->selectsAny());
     }
 
-    public function test_a_split_is_one_selection_per_part_in_one_pass(): void
+    public function test_a_split_is_one_selection_per_part(): void
     {
         $selection = new RowSelection(new RowSelector(2, true), new RowSelector(3, false), new RowSelector(4, true));
 
@@ -229,5 +229,39 @@ final class RowSelectionTest extends TestCase
         $this->expectExceptionMessage('A selection of 9 rows cannot be split into parts of');
 
         RowSelection::all(9)->split($rowCounts);
+    }
+
+    public function test_a_slice_is_the_rows_from_an_offset_its_first_row_being_row_0(): void
+    {
+        $selection = new RowSelection(
+            new RowSelector(2, true),
+            new RowSelector(3, false),
+            new RowSelector(4, true),
+            new RowSelector(1, false),
+        );
+
+        static::assertEquals(
+            new RowSelection(new RowSelector(1, true), new RowSelector(2, false)),
+            $selection->slice(1, 3),
+        );
+        static::assertEquals(new RowSelection(new RowSelector(2, false)), $selection->slice(3, 2));
+        static::assertEquals(
+            new RowSelection(new RowSelector(1, false), new RowSelector(4, true), new RowSelector(1, false)),
+            $selection->slice(4, 6),
+        );
+        static::assertEquals(new RowSelection(), $selection->slice(10, 0));
+        static::assertEquals($selection, $selection->slice(0, 10));
+        static::assertEquals(new RowSelection(), RowSelection::all(0)->slice(0, 0));
+    }
+
+    #[TestWith([-1, 1])]
+    #[TestWith([0, -1])]
+    #[TestWith([8, 3])]
+    public function test_a_slice_outside_the_selection_is_refused(int $offset, int $rows): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('lie outside a selection of 10 rows');
+
+        RowSelection::all(10)->slice($offset, $rows);
     }
 }

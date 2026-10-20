@@ -11,17 +11,13 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Page\Dictionary;
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\PageIndex\OffsetIndex;
+use Flow\Parquet\ParquetFile\PageIndex\PageLocation;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\Thrift\CompactProtocol;
-use Flow\Parquet\Thrift\PhpFileStream;
-use Flow\Parquet\ThriftModel\PageHeader as ThriftPageHeader;
 use Generator;
-use Throwable;
 
-use function array_key_exists;
 use function array_key_last;
-use function array_keys;
+use function array_map;
 use function fclose;
 use function fopen;
 use function fseek;
@@ -31,9 +27,6 @@ use function rewind;
 
 use const SEEK_END;
 
-/**
- * @type DecodedPage = array{values: list<mixed>, repetitionLevels: array<int>, definitionLevels: array<int>}
- */
 final readonly class ColumnChunkReader
 {
     public function __construct(
@@ -42,13 +35,12 @@ final readonly class ColumnChunkReader
     ) {}
 
     /**
-     * The chunk's data pages keyed by the row of the row group each starts at. With an offset index only the
-     * dictionary page and the pages holding a row $rowGroupSelection selects are read, one SourceStream::read per run
-     * of adjacent pages; without one the whole chunk is read. A page in $decoded, keyed by its first row, is served
-     * from it and never read; without an offset index $decoded holds every page of the chunk. A given $dictionary is
-     * used instead of reading the dictionary page. Returns the dictionary the read pages were decoded with.
+     * The chunk's data pages keyed by the row of the row group each starts at: the $pages of $offsetIndex, one
+     * SourceStream::read per run of adjacent pages, or every page without an offset index. The dictionary is read from
+     * the chunk's start up to the first indexed page, wherever `dictionary_page_offset` points (PARQUET-816), unless
+     * $dictionary is given. Returns the dictionary the pages were decoded with.
      *
-     * @param array<int, DecodedPage> $decoded
+     * @param list<int> $pages ascending positions in $offsetIndex
      *
      * @return Generator<int, ReadFlatColumnValues, mixed, ?Dictionary>
      */
@@ -56,55 +48,31 @@ final readonly class ColumnChunkReader
         ColumnChunk $columnChunk,
         FlatColumn $column,
         SourceStream $stream,
-        ?OffsetIndex $offsetIndex,
-        RowSelection $rowGroupSelection,
-        array $decoded = [],
+        ?OffsetIndex $offsetIndex = null,
+        array $pages = [],
         ?Dictionary $dictionary = null,
     ): Generator {
-        if ($offsetIndex === null || $offsetIndex->pages === []) {
-            if ($decoded === []) {
-                return yield from $this->readChunk($columnChunk, $column, $stream);
-            }
+        if ($offsetIndex === null) {
+            return yield from $this->readChunk($columnChunk, $column, $stream);
+        }
 
-            foreach ($decoded as $firstRow => $page) {
-                yield $firstRow => self::page($column, $page);
-            }
-
+        if ($pages === []) {
             return $dictionary;
         }
 
-        $pages = $offsetIndex->pages;
-        $pageRows = [];
+        $firstPage = $offsetIndex->pages[0]->offset;
+        $leadingRegion = $dictionary === null && $columnChunk->pageOffset() < $firstPage;
+        $runs = $leadingRegion ? [new PageRun($columnChunk->pageOffset(), $firstPage)] : [];
+        $locations = array_map(static fn(int $page): PageLocation => $offsetIndex->pages[$page], $pages);
 
-        foreach (array_keys($pages) as $page) {
-            $pageRows[] = $offsetIndex->pageRows($page, $rowGroupSelection->totalRows());
-        }
-
-        $selected = [];
-        $fetched = [];
-
-        foreach ($rowGroupSelection->split($pageRows) as $page => $pageSelection) {
-            if ($pageSelection->selectsAny()) {
-                $selected[] = $page;
-
-                if (!array_key_exists($pages[$page]->firstRowIndex, $decoded)) {
-                    $fetched[] = $page;
-                }
-            }
-        }
-
-        $leadingRegion = $dictionary === null && $fetched !== [] && $columnChunk->pageOffset() < $pages[0]->offset;
-        $runs = $leadingRegion ? [new PageRun($columnChunk->pageOffset(), $pages[0]->offset)] : [];
-
-        foreach ($fetched as $page) {
-            $start = $pages[$page]->offset;
-            $end = $start + $pages[$page]->compressedPageSize;
+        foreach ($locations as $page) {
+            $end = $page->offset + $page->compressedPageSize;
             $last = array_key_last($runs);
 
-            if ($last !== null && $runs[$last]->end === $start) {
+            if ($last !== null && $runs[$last]->end === $page->offset) {
                 $runs[$last] = $runs[$last]->extendedTo($end);
             } else {
-                $runs[] = new PageRun($start, $end);
+                $runs[] = new PageRun($page->offset, $end);
             }
         }
 
@@ -124,7 +92,7 @@ final readonly class ColumnChunkReader
 
         if ($leadingRegion) {
             rewind($pageStream);
-            $header = $this->readHeader($pageStream);
+            $header = PageHeader::read($pageStream, $this->options);
 
             if ($header !== null && $header->type()->isDictionaryPage()) {
                 $dictionary = $this->pageReader->readDictionary($column, $header, $columnChunk->codec(), $pageStream);
@@ -133,27 +101,21 @@ final readonly class ColumnChunkReader
 
         $run = 0;
 
-        foreach ($selected as $page) {
-            if (array_key_exists($pages[$page]->firstRowIndex, $decoded)) {
-                yield $pages[$page]->firstRowIndex => self::page($column, $decoded[$pages[$page]->firstRowIndex]);
-
-                continue;
-            }
-
-            while ($runs[$run]->end <= $pages[$page]->offset) {
+        foreach ($locations as $page) {
+            while ($runs[$run]->end <= $page->offset) {
                 $run++;
             }
 
-            fseek($pageStream, $buffered[$run] + $pages[$page]->offset - $runs[$run]->start);
-            $header = $this->readHeader($pageStream);
+            fseek($pageStream, $buffered[$run] + $page->offset - $runs[$run]->start);
+            $header = PageHeader::read($pageStream, $this->options);
 
             if ($header === null || !$header->type()->isDataPage()) {
                 throw new RuntimeException(
-                    'No data page header at offset ' . $pages[$page]->offset . ' the offset index locates',
+                    'No data page header at offset ' . $page->offset . ' the offset index locates',
                 );
             }
 
-            yield $pages[$page]->firstRowIndex => $this->pageReader->readData(
+            yield $page->firstRowIndex => $this->pageReader->readData(
                 $column,
                 $header,
                 $columnChunk->codec(),
@@ -165,23 +127,6 @@ final readonly class ColumnChunkReader
         fclose($pageStream);
 
         return $dictionary;
-    }
-
-    /**
-     * @param DecodedPage $page
-     */
-    private static function page(FlatColumn $column, array $page): ReadFlatColumnValues
-    {
-        $values = $page['values'];
-
-        return new ReadFlatColumnValues(
-            $column,
-            (static function () use ($values): Generator {
-                yield from $values;
-            })(),
-            $page['repetitionLevels'],
-            $page['definitionLevels'],
-        );
     }
 
     /**
@@ -204,7 +149,7 @@ final readonly class ColumnChunkReader
         fwrite($pageStream, $stream->read($compressedSize, $columnChunk->pageOffset()));
         rewind($pageStream);
 
-        $header = $this->readHeader($pageStream);
+        $header = PageHeader::read($pageStream, $this->options);
 
         if ($header === null) {
             throw new RuntimeException('Cannot read first page header');
@@ -235,7 +180,7 @@ final readonly class ColumnChunkReader
         $yieldedRows = 0;
 
         while (true) {
-            $dataHeader = $dictionary ? $this->readHeader($pageStream) : $header;
+            $dataHeader = $dictionary ? PageHeader::read($pageStream, $this->options) : $header;
 
             if ($dataHeader === null || $dataHeader->type()->isDataPage() === false) {
                 break;
@@ -252,33 +197,12 @@ final readonly class ColumnChunkReader
             $yieldedRows += $data->rowsCount();
 
             if ($dictionary === null) {
-                $header = $this->readHeader($pageStream);
+                $header = PageHeader::read($pageStream, $this->options);
             }
         }
 
         fclose($pageStream);
 
         return $dictionary;
-    }
-
-    /**
-     * @param resource $stream
-     */
-    private function readHeader($stream): ?PageHeader
-    {
-        $currentOffset = ftell($stream);
-
-        try {
-            $thriftHeader = new ThriftPageHeader();
-            @$thriftHeader->read(new CompactProtocol(new PhpFileStream($stream)));
-
-            return PageHeader::fromThrift($thriftHeader, $this->options);
-        } catch (Throwable) {
-            if ($currentOffset !== false) {
-                fseek($stream, $currentOffset);
-            }
-
-            return null;
-        }
     }
 }

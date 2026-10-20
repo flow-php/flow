@@ -12,7 +12,8 @@ final readonly class ReadPlan
 {
     /**
      * @param RowSelection $selection rows to read
-     * @param RowSelection $matched rows proven to match the filter, within $selection
+     * @param RowSelection $matched rows proven to match the filter, within $selection: a hint an engine may ignore,
+     *                              evaluating $rowFilter on them as well (arrow does)
      * @param Indexes $indexes the file's page indexes, read once for planning and reading
      * @param null|BoundFilter $rowFilter evaluated on every selected row outside $matched; a row is read when true
      * @param null|int $limit the rows returned at most, counted after $rowFilter

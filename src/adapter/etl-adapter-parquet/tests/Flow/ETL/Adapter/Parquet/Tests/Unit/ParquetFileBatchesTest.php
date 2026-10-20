@@ -47,7 +47,13 @@ final class ParquetFileBatchesTest extends FlowTestCase
             new SchemaConverter(),
             [],
         );
-        $file = (new ParquetFileBatches($opener, FileColumnsContext::discovering(names: []), null, null))->batches(
+        $file = (new ParquetFileBatches(
+            $opener,
+            FileColumnsContext::discovering(names: []),
+            null,
+            null,
+            schema(int_schema('id', nullable: true)),
+        ))->batches(
             new SourceFile(path('memory://a.parquet')),
             schema(int_schema('id', nullable: true)),
             10,
@@ -74,7 +80,13 @@ final class ParquetFileBatchesTest extends FlowTestCase
             new SchemaConverter(),
             [],
         );
-        $file = (new ParquetFileBatches($opener, FileColumnsContext::discovering(names: []), null, null))->batches(
+        $file = (new ParquetFileBatches(
+            $opener,
+            FileColumnsContext::discovering(names: []),
+            null,
+            null,
+            schema(int_schema('id', nullable: true)),
+        ))->batches(
             new SourceFile(path('memory://a.parquet')),
             schema(int_schema('id', nullable: true)),
             10,
@@ -110,6 +122,7 @@ final class ParquetFileBatchesTest extends FlowTestCase
             FileColumnsContext::discovering(names: []),
             $kept,
             null,
+            schema(int_schema('id', nullable: true)),
         ))->batches(
             new SourceFile(path('memory://a.parquet')),
             schema(int_schema('id', nullable: true)),
@@ -139,7 +152,13 @@ final class ParquetFileBatchesTest extends FlowTestCase
         $kept = $opener->open(new SourceFile(path('memory://a.parquet')));
 
         $rows = iterator_to_array(
-            (new ParquetFileBatches($opener, FileColumnsContext::discovering(names: []), $kept, null))->batches(
+            (new ParquetFileBatches(
+                $opener,
+                FileColumnsContext::discovering(names: []),
+                $kept,
+                null,
+                schema(int_schema('id', nullable: true)),
+            ))->batches(
                 new SourceFile(path('memory://b.parquet')),
                 schema(int_schema('id', nullable: true)),
                 10,
@@ -168,7 +187,13 @@ final class ParquetFileBatchesTest extends FlowTestCase
         );
         $kept = $opener->open(new SourceFile(path('memory://a.parquet')));
 
-        (new ParquetFileBatches($opener, FileColumnsContext::discovering(names: []), $kept, null))->close();
+        (new ParquetFileBatches(
+            $opener,
+            FileColumnsContext::discovering(names: []),
+            $kept,
+            null,
+            schema(int_schema('id', nullable: true)),
+        ))->close();
 
         static::assertSame($filesystem->readFromCalls, $filesystem->closedStreams());
     }
@@ -193,6 +218,7 @@ final class ParquetFileBatchesTest extends FlowTestCase
                 FileColumnsContext::discovering(names: []),
                 null,
                 new DerivedSchema(schema(int_schema('id', nullable: true)), 'memory://a.parquet'),
+                schema(int_schema('id')),
             ))->batches(
                 new SourceFile(path('memory://b.parquet')),
                 schema(int_schema('id')),
@@ -215,7 +241,8 @@ final class ParquetFileBatchesTest extends FlowTestCase
             FileColumnsContext::discovering(names: []),
             null,
             null,
-            ref('id')->greaterThan(lit(5)),
+            schema(int_schema('id', nullable: true), str_schema('name', nullable: true)),
+            [ref('id')->greaterThan(lit(5))],
         ))->batches(
             new SourceFile(path('memory://groups.parquet')),
             schema(int_schema('id', nullable: true), str_schema('name', nullable: true)),
@@ -237,7 +264,8 @@ final class ParquetFileBatchesTest extends FlowTestCase
             FileColumnsContext::discovering(names: []),
             null,
             null,
-            ref('big')->lessThan(lit('2')),
+            schema(str_schema('big', nullable: true)),
+            [ref('big')->lessThan(lit('2'))],
         ))->batches(
             new SourceFile(path('memory://uint64.parquet')),
             schema(str_schema('big', nullable: true)),
@@ -258,7 +286,12 @@ final class ParquetFileBatchesTest extends FlowTestCase
             FileColumnsContext::discovering(names: []),
             null,
             null,
-            ref('missing')->equals(lit('x')),
+            schema(
+                int_schema('id', nullable: true),
+                str_schema('name', nullable: true),
+                str_schema('missing', nullable: true),
+            ),
+            [ref('missing')->equals(lit('x'))],
         ))->batches(
             new SourceFile(path('memory://groups.parquet')),
             schema(
@@ -283,7 +316,12 @@ final class ParquetFileBatchesTest extends FlowTestCase
             FileColumnsContext::discovering(names: []),
             null,
             null,
-            ref('missing')->isNull(),
+            schema(
+                int_schema('id', nullable: true),
+                str_schema('name', nullable: true),
+                str_schema('missing', nullable: true),
+            ),
+            [ref('missing')->isNull()],
         ))->batches(
             new SourceFile(path('memory://groups.parquet')),
             schema(
@@ -308,7 +346,8 @@ final class ParquetFileBatchesTest extends FlowTestCase
             FileColumnsContext::discovering(names: []),
             null,
             null,
-            ref('id')->greaterThan(lit(100)),
+            schema(int_schema('id', nullable: true), str_schema('name', nullable: true)),
+            [ref('id')->greaterThan(lit(100))],
         ))->batches(
             new SourceFile(path('memory://groups.parquet')),
             schema(int_schema('id', nullable: true), str_schema('name', nullable: true)),

@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\Engine;
 
+use Flow\Filesystem\Stream\MemorySourceStream;
 use Flow\Filesystem\Stream\NativeLocalSourceStream;
 use Flow\Parquet\Engine\RustParquetFileReader;
 use Flow\Parquet\Filter\Evaluation\RowGroupZoneMaps;
 use Flow\Parquet\Reader;
+use Flow\Parquet\Tests\Context\FilterRows;
+use Flow\Parquet\Tests\Context\MemoryParquetFile;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
+use function array_keys;
 use function array_values;
 use function extension_loaded;
 use function Flow\Filesystem\DSL\path_real;
@@ -27,25 +31,24 @@ final class RowGroupChunksParityTest extends TestCase
         }
     }
 
-    #[TestWith(['Engine/Fixtures/Filters/row_groups_php.parquet'])]
-    #[TestWith(['Engine/Fixtures/Filters/row_groups_arrow.parquet'])]
-    #[TestWith(['Engine/Fixtures/Filters/row_groups_duckdb.parquet'])]
-    #[TestWith(['IO/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet'])]
-    #[TestWith(['IO/Fixtures/EdgeCases/datapage_v2.snappy.parquet'])]
+    #[TestWith(['row_groups_php'])]
+    #[TestWith(['row_groups_arrow'])]
+    #[TestWith(['row_groups_duckdb'])]
+    #[TestWith(['../../../IO/Fixtures/pagination_row_group_1kb_5k_rows.snappy'])]
+    #[TestWith(['../../../IO/Fixtures/EdgeCases/datapage_v2.snappy'])]
     public function test_the_arrow_footer_slices_give_the_zone_maps_of_the_php_footer(string $fixture): void
     {
-        $file = Reader::php()->read(__DIR__ . '/../' . $fixture);
+        $bytes = FilterRows::bytes($fixture);
+        $file = MemoryParquetFile::read(Reader::php(), $bytes);
         $columns = array_values($file->schema()->columnsFlat());
         $php = $file->reader()->footer()->rowGroupChunks($columns);
-        $rust = (new RustParquetFileReader(NativeLocalSourceStream::open(path_real(__DIR__ . '/../' . $fixture))))
+        $rust = (new RustParquetFileReader(new MemorySourceStream($bytes)))
             ->footer()
             ->rowGroupChunks($columns);
 
-        static::assertSame($php->count(), $rust->count());
+        static::assertSame($php->rowCounts(), $rust->rowCounts());
 
-        for ($group = 0; $group < $php->count(); $group++) {
-            static::assertSame($php->rowCount($group), $rust->rowCount($group));
-
+        foreach (array_keys($php->rowCounts()) as $group) {
             foreach ($columns as $column) {
                 static::assertSame($php->columnOrder($column), $rust->columnOrder($column));
                 // var_export: a NaN bound never equals itself

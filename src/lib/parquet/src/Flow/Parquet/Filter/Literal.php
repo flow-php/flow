@@ -19,6 +19,8 @@ use function sprintf;
 
 final readonly class Literal
 {
+    private function __construct() {}
+
     public static function of(mixed $value): bool|DateTimeImmutable|float|int|string
     {
         return match (true) {

@@ -7,9 +7,10 @@ namespace Flow\Parquet\Filter\Evaluation;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Filter\All;
 use Flow\Parquet\Filter\Any;
-use Flow\Parquet\Filter\Binding\Absent;
-use Flow\Parquet\Filter\Binding\Bound;
+use Flow\Parquet\Filter\Binding\AbsentLeaf;
 use Flow\Parquet\Filter\Binding\BoundFilter;
+use Flow\Parquet\Filter\Binding\PhysicalIntervals;
+use Flow\Parquet\Filter\Binding\ResolvedLeaf;
 use Flow\Parquet\Filter\Comparison;
 use Flow\Parquet\Filter\Filter;
 use Flow\Parquet\Filter\FilterVisitor;
@@ -21,9 +22,6 @@ use Flow\Parquet\Filter\StartsWith;
 use function array_fill;
 use function array_key_exists;
 use function count;
-use function is_bool;
-use function is_float;
-use function is_int;
 use function is_string;
 use function sprintf;
 use function str_starts_with;
@@ -41,7 +39,7 @@ final readonly class RowEvaluator implements FilterVisitor
      * @param array<string, list<mixed>> $physicalByPath one physical value or null per row, keyed by FlatColumn::flatPath()
      * @param non-negative-int $rows
      */
-    public function __construct(
+    private function __construct(
         private BoundFilter $filter,
         private array $physicalByPath,
         private int $rows,
@@ -81,16 +79,16 @@ final readonly class RowEvaluator implements FilterVisitor
 
     public function isNull(IsNull $isNull): array
     {
-        $leaf = $this->filter->bound($isNull);
+        $resolution = $this->filter->rowLeaf($isNull);
 
-        if ($leaf instanceof Absent) {
+        if ($resolution instanceof AbsentLeaf) {
             return array_fill(0, $this->rows, !$this->negated);
         }
 
         $result = [];
 
         // @mago-ignore analysis:mixed-assignment
-        foreach ($this->values($leaf) as $value) {
+        foreach ($this->values($resolution) as $value) {
             $result[] = ($value === null) !== $this->negated;
         }
 
@@ -104,16 +102,16 @@ final readonly class RowEvaluator implements FilterVisitor
 
     public function startsWith(StartsWith $startsWith): array
     {
-        $leaf = $this->filter->bound($startsWith);
+        $resolution = $this->filter->rowLeaf($startsWith);
 
-        if ($leaf instanceof Absent) {
+        if ($resolution instanceof AbsentLeaf) {
             return array_fill(0, $this->rows, false);
         }
 
         $result = [];
 
         // @mago-ignore analysis:mixed-assignment
-        foreach ($this->values($leaf) as $value) {
+        foreach ($this->values($resolution) as $value) {
             $result[] = is_string($value) && str_starts_with($value, $startsWith->prefix) !== $this->negated;
         }
 
@@ -149,30 +147,19 @@ final readonly class RowEvaluator implements FilterVisitor
      */
     private function membership(Comparison|In $node): array
     {
-        $leaf = $this->filter->bound($node);
+        $resolution = $this->filter->rowLeaf($node);
 
-        if ($leaf instanceof Absent) {
+        if ($resolution instanceof AbsentLeaf) {
             return array_fill(0, $this->rows, false);
         }
 
+        /** @var PhysicalIntervals $intervals rowLeaf() resolves only leaves answered exactly */
+        $intervals = $resolution->intervals;
         $result = [];
 
-        // @mago-ignore analysis:mixed-assignment
-        foreach ($this->values($leaf) as $value) {
-            if ($value === null) {
-                $result[] = false;
-
-                continue;
-            }
-
-            if (!is_bool($value) && !is_float($value) && !is_int($value) && !is_string($value)) {
-                throw new InvalidArgumentException(sprintf(
-                    'Column "%s" holds a value that is no physical value',
-                    $leaf->column->flatPath(),
-                ));
-            }
-
-            $result[] = $leaf->intervals->contains($leaf->order, $value) !== $this->negated;
+        /** @var null|bool|float|int|string $value contains() refuses any other */
+        foreach ($this->values($resolution) as $value) {
+            $result[] = $value !== null && $intervals->contains($value) !== $this->negated;
         }
 
         return $result;
@@ -181,9 +168,9 @@ final readonly class RowEvaluator implements FilterVisitor
     /**
      * @return list<mixed>
      */
-    private function values(Bound $leaf): array
+    private function values(ResolvedLeaf $resolution): array
     {
-        $path = $leaf->column->flatPath();
+        $path = $resolution->column->flatPath();
 
         if (!array_key_exists($path, $this->physicalByPath)) {
             throw new InvalidArgumentException('No physical values of column "' . $path . '"');

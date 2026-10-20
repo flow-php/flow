@@ -205,6 +205,58 @@ final class ParquetFileTest extends TestCase
         static::assertNull($reader->reads[0][2]->limit);
     }
 
+    public function test_a_footer_recording_a_bloom_filter_length_without_its_offset_opens_and_reads(): void
+    {
+        $file = MemoryParquetFile::read(
+            Reader::php(),
+            MemoryParquetFile::bloomFilterLengthWithoutOffset(MemoryParquetFile::threeRowGroups()),
+        );
+
+        static::assertSame(
+            [1, 2, 3, 4, 5, 6],
+            array_column(iterator_to_array($file->values(parquet_query()->select('id')), false), 'id'),
+        );
+        static::assertSame(
+            [3],
+            array_column(
+                iterator_to_array(
+                    $file->values(parquet_query()->select('id')->where(parquet_column('id')->equals(3))),
+                    false,
+                ),
+                'id',
+            ),
+        );
+    }
+
+    public function test_an_in_beyond_2_pow_53_matches_ids_exactly(): void
+    {
+        $reader = new SpyParquetFileReader(Schema::with(FlatColumn::int64('id')), [[
+            'id' => [9_007_199_254_740_995, 9_007_199_254_740_996, 1],
+        ]]);
+        $file = new ParquetFile(new MemorySourceStream('PAR1'), new Options(), $reader);
+
+        static::assertSame(
+            [['id' => 9_007_199_254_740_996]],
+            iterator_to_array(
+                $file->values(parquet_query()->where(parquet_column('id')->in([9_007_199_254_740_996, 1.0e300]))),
+                false,
+            ),
+        );
+    }
+
+    public function test_an_in_inside_2_pow_53_matches_by_key(): void
+    {
+        $reader = new SpyParquetFileReader(Schema::with(FlatColumn::decimal('amount', 20, 2)), [[
+            'amount' => [1.25, 2.5, 3.75],
+        ]]);
+        $file = new ParquetFile(new MemorySourceStream('PAR1'), new Options(), $reader);
+
+        static::assertSame(
+            [['amount' => 1.25], ['amount' => 3.75]],
+            iterator_to_array($file->values(parquet_query()->where(parquet_column('amount')->in([1.25, 3.75]))), false),
+        );
+    }
+
     public function test_a_filtered_read_chunks_the_matching_rows_by_the_batch_size(): void
     {
         $reader = new SpyParquetFileReader(Schema::with(FlatColumn::int64('id')), [

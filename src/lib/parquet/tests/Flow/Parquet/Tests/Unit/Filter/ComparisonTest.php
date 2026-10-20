@@ -14,12 +14,11 @@ use function Flow\Parquet\DSL\parquet_column;
 
 final class ComparisonTest extends TestCase
 {
-    public function test_it_visits_as_its_kind_over_its_column(): void
+    public function test_it_visits_as_its_kind(): void
     {
         $leaf = parquet_column('id')->equals(1);
 
         static::assertSame('comparison', $leaf->accept(new NodeNameVisitor()));
-        static::assertEquals([parquet_column('id')], $leaf->columns());
     }
 
     public function test_it_combines_and_negates(): void

@@ -9,6 +9,7 @@ use Flow\ETL\DataFrame;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Optimizer\Rule\CountFromStatistics;
+use Flow\ETL\Plan\Node\Read;
 use Flow\ETL\Plan\Trigger;
 use Flow\ETL\Tests\Double\DeclaringExtractor;
 use Flow\ETL\Tests\FlowTestCase;
@@ -130,16 +131,44 @@ final class CountFromStatisticsTest extends FlowTestCase
         static::assertSame($plan, (new CountFromStatistics())->apply($plan, NodeMother::context()));
     }
 
-    public function test_a_read_with_a_pushed_partition_filter_is_counted_by_running(): void
+    public function test_a_parquet_read_of_exact_statistics_is_counted_from_them(): void
     {
-        $plan = Trigger::count->plan(NodeMother::read()->withPathFilter(new RejectingFilter()));
+        $memory = memory_filesystem();
+        df()
+            ->read(from_sequence_number('id', 1, 25))
+            ->write(to_parquet(path('memory://count/file.parquet'), filesystem: $memory))
+            ->run();
+        $plan = Trigger::count->plan(new Read(from_parquet(path('memory://count/file.parquet'), filesystem: $memory)));
+
+        static::assertNotSame($plan, (new CountFromStatistics())->apply($plan, NodeMother::context()));
+    }
+
+    public function test_a_read_with_a_pushed_path_filter_is_counted_by_running(): void
+    {
+        $memory = memory_filesystem();
+        df()
+            ->read(from_sequence_number('id', 1, 25))
+            ->write(to_parquet(path('memory://count/file.parquet'), filesystem: $memory))
+            ->run();
+        $plan = Trigger::count->plan((new Read(from_parquet(
+            path('memory://count/file.parquet'),
+            filesystem: $memory,
+        )))->withPathFilter(new RejectingFilter()));
 
         static::assertSame($plan, (new CountFromStatistics())->apply($plan, NodeMother::context()));
     }
 
     public function test_a_read_with_a_pushed_filter_is_counted_by_running(): void
     {
-        $plan = Trigger::count->plan(NodeMother::read()->withFilter(ref('id')->equals(lit(1))));
+        $memory = memory_filesystem();
+        df()
+            ->read(from_sequence_number('id', 1, 25))
+            ->write(to_parquet(path('memory://count/file.parquet'), filesystem: $memory))
+            ->run();
+        $plan = Trigger::count->plan((new Read(from_parquet(
+            path('memory://count/file.parquet'),
+            filesystem: $memory,
+        )))->withFilter(ref('id')->greaterThan(lit(20))));
 
         static::assertSame($plan, (new CountFromStatistics())->apply($plan, NodeMother::context()));
     }

@@ -6,11 +6,9 @@ namespace Flow\Parquet\Reader;
 
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Dremel\ColumnData\PagedFlatColumnValues;
-use Flow\Parquet\Dremel\ColumnData\ReadFlatColumnValues;
 use Flow\Parquet\Dremel\DremelAssembler;
 use Flow\Parquet\Dremel\ReadColumnData;
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Index\Indexes;
 use Flow\Parquet\ParquetFile\Page\Dictionary;
 use Flow\Parquet\ParquetFile\RowGroup;
@@ -20,19 +18,17 @@ use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Generator;
 
 use function iterator_to_array;
-use function sprintf;
 
 /**
  * One column's values in a row group, the selected rows only.
  *
- * @import-type DecodedPage from ColumnChunkReader
- *
+ * @type DecodedPage = array{values: list<mixed>, definitionLevels: array<int>}
  * @type DecodedChunk = array{pages: array<int, DecodedPage>, dictionary: ?Dictionary}
  */
 final readonly class ColumnReader
 {
     public function __construct(
-        private ColumnChunkReader $chunks,
+        private SelectedPages $pages,
         private DremelAssembler $assembler,
     ) {}
 
@@ -55,7 +51,7 @@ final readonly class ColumnReader
         }
 
         if ($column instanceof FlatColumn) {
-            foreach ($this->pages(
+            foreach ($this->pages->trimmed(
                 $column,
                 $rowGroup,
                 $group,
@@ -79,7 +75,7 @@ final readonly class ColumnReader
         $flatData = [];
 
         foreach ($column->childrenFlat() as $child) {
-            $flatData[] = new PagedFlatColumnValues($child, $this->pages(
+            $flatData[] = new PagedFlatColumnValues($child, $this->pages->trimmed(
                 $child,
                 $rowGroup,
                 $group,
@@ -121,115 +117,31 @@ final readonly class ColumnReader
             return ['chunk' => $chunk, 'values' => $values];
         }
 
-        $read = $this->chunkPages($leaf, $rowGroup, $group, $stream, $selection, $indexes, $chunk);
+        $maxDefinitionLevel = $leaf->repetitions()->maxDefinitionLevel();
+        $pages = $this->pages->read($leaf, $rowGroup, $group, $stream, $selection, $indexes, $chunk);
 
-        foreach ($read as $firstRow => $page) {
-            $chunk['pages'][$firstRow] = [
-                'values' => iterator_to_array($page->rawValues(), false),
-                'repetitionLevels' => $page->repetitionLevels(),
-                'definitionLevels' => $page->definitionLevels(),
-            ];
-        }
+        foreach ($pages as $firstRow => [$page, $pageSelection]) {
+            $pageValues = iterator_to_array($page->rawValues(), false);
+            $definitionLevels = $page->definitionLevels();
+            $chunk['pages'][$firstRow] = ['values' => $pageValues, 'definitionLevels' => $definitionLevels];
+            $row = 0;
+            $valueIndex = 0;
 
-        $chunk['dictionary'] = $read->getReturn();
+            foreach ($pageSelection->selectors() as $selector) {
+                for ($end = $row + $selector->rowCount; $row < $end; $row++) {
+                    $defined = $definitionLevels[$row] === $maxDefinitionLevel;
 
-        foreach ($this->pages($leaf, $rowGroup, $group, $stream, $selection, $indexes, $chunk) as $page) {
-            foreach ($page->iterator() as $value) {
-                $values[] = $value->value;
+                    if (!$selector->skip) {
+                        $values[] = $defined ? $pageValues[$valueIndex] : null;
+                    }
+
+                    $valueIndex += $defined ? 1 : 0;
+                }
             }
         }
+
+        $chunk['dictionary'] = $pages->getReturn();
 
         return ['chunk' => $chunk, 'values' => $values];
-    }
-
-    /**
-     * The leaf's whole pages, keyed by the row of the group each starts at: with the offset index those holding a
-     * selected row, without it every page. The offset index is read only when the selection skips rows of the group or
-     * decoded pages can spare reads, and used only when it splits the group's rows. Returns the pages' dictionary.
-     *
-     * @param DecodedChunk $decoded
-     *
-     * @return Generator<int, ReadFlatColumnValues, mixed, ?Dictionary>
-     */
-    private function chunkPages(
-        FlatColumn $leaf,
-        RowGroup $rowGroup,
-        int $group,
-        SourceStream $stream,
-        RowSelection $selection,
-        Indexes $indexes,
-        array $decoded,
-    ): Generator {
-        $rows = $selection->totalRows();
-        $whole = $selection->rowCount() === $rows;
-        $offsetIndex = $whole && $decoded['pages'] === [] ? null : $indexes->offsetIndex($group, $leaf);
-        $pages = $this->chunks->read(
-            $rowGroup->getColumnChunk($leaf),
-            $leaf,
-            $stream,
-            $offsetIndex?->coversRows($rows) === true ? $offsetIndex : null,
-            $selection,
-            $decoded['pages'],
-            $decoded['dictionary'],
-        );
-
-        foreach ($pages as $firstRow => $page) {
-            $pageRows = $page->rowsCount();
-
-            if (($firstRow + $pageRows) > $rows) {
-                throw new RuntimeException(sprintf(
-                    'Row group %d decodes more than the %d rows its metadata declares',
-                    $group,
-                    $rows,
-                ));
-            }
-
-            yield $firstRow => $page;
-        }
-
-        return $pages->getReturn();
-    }
-
-    /**
-     * The leaf's pages trimmed to the selected rows, so every leaf of every column yields the same rows.
-     *
-     * @param DecodedChunk $decoded
-     *
-     * @return Generator<int, ReadFlatColumnValues>
-     */
-    private function pages(
-        FlatColumn $leaf,
-        RowGroup $rowGroup,
-        int $group,
-        SourceStream $stream,
-        RowSelection $selection,
-        Indexes $indexes,
-        array $decoded,
-    ): Generator {
-        $rows = $selection->totalRows();
-        $whole = $selection->rowCount() === $rows;
-
-        foreach ($this->chunkPages(
-            $leaf,
-            $rowGroup,
-            $group,
-            $stream,
-            $selection,
-            $indexes,
-            $decoded,
-        ) as $firstRow => $page) {
-            if ($whole) {
-                yield $page;
-
-                continue;
-            }
-
-            $pageRows = $page->rowsCount();
-            $pageSelection = $selection->split([$firstRow, $pageRows, $rows - $firstRow - $pageRows])[1];
-
-            if ($pageSelection->selectsAny()) {
-                yield $page->select($pageSelection);
-            }
-        }
     }
 }

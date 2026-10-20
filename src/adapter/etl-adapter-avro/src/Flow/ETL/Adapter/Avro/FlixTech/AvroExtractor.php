@@ -10,6 +10,7 @@ use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\File\FileExtractor;
 use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Extractor\File\PathFiltering;
+use Flow\ETL\Extractor\File\Scanning;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
@@ -22,6 +23,8 @@ use Generator;
 
 final class AvroExtractor implements Extractor, FileExtractor
 {
+    use Scanning;
+
     private ?Schema $schema = null;
 
     use PathFiltering;
@@ -33,14 +36,6 @@ final class AvroExtractor implements Extractor, FileExtractor
         throw new RuntimeException(
             'Avro integration was abandoned due to lack of availability of good Avro libraries.',
         );
-    }
-
-    /**
-     * @return Generator<int, Rows, Signal|null, void>
-     */
-    public function extract(FlowContext $context, ?int $limit = null): Generator
-    {
-        return $this->scan($context, new FileScan(limit: $limit));
     }
 
     /**

@@ -20,11 +20,6 @@ final readonly class Not implements Filter
         return new All($this, $other);
     }
 
-    public function columns(): array
-    {
-        return $this->filter->columns();
-    }
-
     public function negate(): Filter
     {
         return $this->filter;

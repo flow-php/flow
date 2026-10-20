@@ -30,8 +30,7 @@ final class RustRowGroupChunksTest extends TestCase
             ['id' => ThriftBytes::of(ColumnOrder::TypeDefined->toThrift())],
         );
 
-        static::assertSame(2, $chunks->count());
-        static::assertSame(2, $chunks->rowCount(1));
+        static::assertSame([2, 2], $chunks->rowCounts());
         static::assertEquals($metadata->rowGroups()->all()[0]->getColumnChunk($id), $chunks->chunk(0, $id));
         static::assertSame($chunks->chunk(0, $id), $chunks->chunk(0, $id));
         static::assertSame(ColumnOrder::TypeDefined, $chunks->columnOrder($id));
@@ -72,13 +71,6 @@ final class RustRowGroupChunksTest extends TestCase
     public function test_a_row_group_the_file_lacks_is_refused(): void
     {
         $chunks = RustRowGroupChunks::fromThrift([1], ['id' => ['']], ['id' => null]);
-
-        try {
-            $chunks->rowCount(1);
-            static::fail('An unknown row group must be refused');
-        } catch (OutOfBoundsException $exception) {
-            static::assertSame('Row group 1 does not exist', $exception->getMessage());
-        }
 
         $this->expectException(OutOfBoundsException::class);
         $this->expectExceptionMessage('Row group 1 does not exist');

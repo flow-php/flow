@@ -10,27 +10,25 @@ use Flow\Parquet\Filter\Not;
 use Flow\Parquet\Tests\Double\NodeNameVisitor;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\Parquet\DSL\parquet_all;
 use function Flow\Parquet\DSL\parquet_column;
 
 final class AllTest extends TestCase
 {
-    public function test_it_visits_as_its_kind_over_each_column_once(): void
+    public function test_it_visits_as_its_kind(): void
     {
-        $composite = parquet_all(
+        $composite = new All(
             parquet_column('a')->equals(1),
             parquet_column('b')->isNull(),
             parquet_column('a')->lessThan(3),
         );
 
         static::assertSame('all', $composite->accept(new NodeNameVisitor()));
-        static::assertEquals([parquet_column('a'), parquet_column('b')], $composite->columns());
         static::assertCount(3, $composite->filters);
     }
 
     public function test_it_combines_and_negates(): void
     {
-        $composite = parquet_all(parquet_column('a')->equals(1));
+        $composite = new All(parquet_column('a')->equals(1));
         $other = parquet_column('other')->isNull();
 
         static::assertEquals(new All($composite, $other), $composite->and($other));

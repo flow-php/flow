@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 817
+ * Total functions: 814
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -7218,36 +7218,6 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Telemetry\\DSL\\parent_based_sampler(" + "$" + "{" + "1:root" + "}" + ")"),
         boost: 10
     },                {
-        label: "parquet_all",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">parquet_all</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Filter</span> <span class=\"fn-param\">$filters</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">All</span>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\Parquet\\DSL\\parquet_all(" + "$" + "{" + "1:filters" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "parquet_any",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">parquet_any</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Filter</span> <span class=\"fn-param\">$filters</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Any</span>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\Parquet\\DSL\\parquet_any(" + "$" + "{" + "1:filters" + "}" + ")"),
-        boost: 10
-    },                {
         label: "parquet_column",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -7261,21 +7231,6 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\Parquet\\DSL\\parquet_column(" + "$" + "{" + "1:path" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "parquet_not",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">parquet_not</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Filter</span> <span class=\"fn-param\">$filter</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Filter</span>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\Parquet\\DSL\\parquet_not(" + "$" + "{" + "1:filter" + "}" + ")"),
         boost: 10
     },                {
         label: "parquet_query",

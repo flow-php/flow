@@ -44,8 +44,7 @@ final class PhpParquetFooterTest extends TestCase
         $id = $footer->schema()->getFlat('id');
         $chunks = $footer->rowGroupChunks([$id]);
 
-        static::assertSame(3, $chunks->count());
-        static::assertSame(2, $chunks->rowCount(1));
+        static::assertSame([2, 2, 2], $chunks->rowCounts());
         static::assertSame(3, $chunks->chunk(1, $id)->statistics()?->minValue($id));
         static::assertSame($footer->metadata()->columnOrder($id), $chunks->columnOrder($id));
     }

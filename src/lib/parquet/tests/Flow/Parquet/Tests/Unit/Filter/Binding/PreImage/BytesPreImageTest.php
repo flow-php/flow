@@ -13,13 +13,12 @@ use PHPUnit\Framework\TestCase;
 
 final class BytesPreImageTest extends TestCase
 {
-    public function test_a_string_column_binds_a_string_and_nothing_else(): void
+    public function test_a_string_binds_its_bytes_and_json_has_no_pre_image(): void
     {
         static::assertSame(
             [[null, false, 'b', false]],
             PhysicalIntervalEdges::ofComparison(FlatColumn::string('s'), Operator::LessThan, 'b'),
         );
-        static::assertNull(PhysicalIntervalEdges::intervals(FlatColumn::string('s'), Operator::Equal, 1));
         static::assertNull(PhysicalIntervalEdges::intervals(FlatColumn::json('j'), Operator::Equal, '{}'));
     }
 

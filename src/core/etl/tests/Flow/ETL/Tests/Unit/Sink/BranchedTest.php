@@ -72,8 +72,8 @@ final class BranchedTest extends FlowTestCase
             │        Extractor: ArrayExtractor
             └─ #5 Write  preserving · opaque · streaming
                │  Loader: MemoryLoader
-               └─ #4 Select  preserving · transparent · streaming
-                  │  Columns: id
+               └─ #4 Select  preserving · transparent · streaming · redefines all but id
+                  │  Keeps only: id
                   └─ #3 Filter  reducing · transparent · streaming
                      │  Condition: Equals
                      └─ #1 Read (shared)

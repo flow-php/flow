@@ -259,7 +259,7 @@ final class FlatColumn implements Column
     }
 
     /**
-     * @return array<array-key, mixed>
+     * @return array{type: string, optional: bool}
      */
     public function ddl(): array
     {

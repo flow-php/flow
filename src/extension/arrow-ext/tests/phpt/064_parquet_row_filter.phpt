@@ -7,37 +7,32 @@ arrow reads exactly the rows a mixed row filter keeps from the filter parity fix
 require __DIR__ . '/bootstrap.php';
 
 use Flow\Parquet\Engine\RustParquetEngine;
+use Flow\Parquet\Filter\All;
 use Flow\Parquet\Filter\Binding\BoundFilter;
 use Flow\Parquet\Options;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Reader\ReadPlanner;
+use Flow\Parquet\Tests\Context\FilterRows;
+use Flow\Parquet\Tests\Context\MemoryParquetFile;
 
-use function Flow\Parquet\DSL\{parquet_all, parquet_any, parquet_column, parquet_not};
+use function Flow\Parquet\DSL\parquet_column;
 
-$path = __DIR__ . '/../../../../lib/parquet/tests/Flow/Parquet/Tests/Integration/Engine/Fixtures/Filters/row_groups_arrow.parquet';
+$bytes = FilterRows::bytes('row_groups_arrow');
 
 foreach ([
-    parquet_all(
-        parquet_not(parquet_column('score')->lessThan(30.0)),
-        parquet_any(parquet_column('maybe')->isNull(), parquet_column('address.city')->equals('c3')),
-        parquet_column('label')->equals(10),
-    ),
-    parquet_all(
-        parquet_column('score')->equals(0.0),
-        parquet_not(parquet_column('amount')->greaterThan(20.25)),
-        parquet_column('ts')->greaterThanOrEqual(new DateTimeImmutable('2024-01-01 00:00:00 UTC')),
-    ),
+    new All(parquet_column('score')->lessThan(30.0)->negate(), parquet_column('maybe')->isNull()->or(parquet_column('address.city')->equals('c3')), parquet_column('label')->equals(10)),
+    new All(parquet_column('score')->equals(0.0), parquet_column('amount')->greaterThan(20.25)->negate(), parquet_column('ts')->greaterThanOrEqual(new DateTimeImmutable('2024-01-01 00:00:00 UTC'))),
     parquet_column('missing')->isNull()->and(parquet_column('id')->lessThan(3)),
 ] as $filter) {
-    $php = Reader::php()->read($path);
+    $php = MemoryParquetFile::read(Reader::php(), $bytes);
     $plan = (new ReadPlanner())->plan(
         $php->reader()->footer(),
         $php->indexes(),
         BoundFilter::bind($filter, $php->schema(), new Options()),
     );
-    $ids = static function (Reader $reader) use ($path, $plan): array {
+    $ids = static function (Reader $reader) use ($bytes, $plan): array {
         $ids = [];
-        $file = $reader->read($path);
+        $file = MemoryParquetFile::read($reader, $bytes);
 
         foreach ($file->reader()->readColumns(['id'], 7, $plan) as $chunk) {
             array_push($ids, ...$chunk['id']);

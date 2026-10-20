@@ -51,6 +51,28 @@ final class PageIndexPrunerTest extends TestCase
         );
     }
 
+    public function test_is_null_keeps_every_page_holding_a_null_and_is_not_null_every_page_holding_a_value(): void
+    {
+        $indexes = new InMemoryIndexes(['a' => [PageIndexMother::int64([[0, 3], [4, 5], null], [0, 1, 3])]], [
+            'a' => [PageIndexMother::pagesAt(0, 4, 7)],
+        ]);
+
+        static::assertEquals(
+            new PrunedRows(
+                new RowSelection(new RowSelector(4, true), new RowSelector(6, false)),
+                new RowSelection(new RowSelector(7, true), new RowSelector(3, false)),
+            ),
+            OneGroupPagePruning::pruned(parquet_column('a')->isNull(), $indexes),
+        );
+        static::assertEquals(
+            new PrunedRows(
+                new RowSelection(new RowSelector(7, false), new RowSelector(3, true)),
+                new RowSelection(new RowSelector(4, false), new RowSelector(6, true)),
+            ),
+            OneGroupPagePruning::pruned(parquet_column('a')->isNotNull(), $indexes),
+        );
+    }
+
     public function test_a_null_page_never_matches_a_comparison(): void
     {
         static::assertEquals(
@@ -140,21 +162,6 @@ final class PageIndexPrunerTest extends TestCase
                 3,
                 5,
             )]]),
-            $rows,
-        ));
-    }
-
-    public function test_an_offset_index_out_of_row_order_keeps_the_whole_group(): void
-    {
-        $rows = new PrunedRows(RowSelection::all(10), RowSelection::none(10));
-
-        static::assertEquals($rows, OneGroupPagePruning::pruned(
-            parquet_column('a')->greaterThanOrEqual(5),
-            new InMemoryIndexes(['a' => [PageIndexMother::int64([
-                [0, 4],
-                [5, 9],
-                [0, 0],
-            ])]], ['a' => [PageIndexMother::pagesAt(0, 5, 3)]]),
             $rows,
         ));
     }

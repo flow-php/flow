@@ -99,12 +99,11 @@ final readonly class PageIndexPruner implements Pruner
                 $parts[] = $starts[$i + 1] - $starts[$i];
             }
 
+            $zones = new PageZoneMaps($this->chunks, $pageIndexes);
+
             foreach ($groupSelection->split($parts) as $part => $partSelection) {
                 $truth = $partSelection->selectsAny()
-                    ? StatisticsEvaluator::evaluate(
-                        $filter,
-                        new PageZoneMaps($this->chunks, $pageIndexes, $starts[$part]),
-                    )
+                    ? StatisticsEvaluator::evaluate($filter, $zones->at($starts[$part]))
                     : Truth::Never;
                 $kept[] = new RowSelector($parts[$part], $truth === Truth::Never);
                 $proven[] = new RowSelector($parts[$part], $truth !== Truth::Always);

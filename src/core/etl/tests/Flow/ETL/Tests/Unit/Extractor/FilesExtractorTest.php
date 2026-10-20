@@ -208,18 +208,15 @@ final class FilesExtractorTest extends FlowTestCase
 
     public function test_a_scan_returns_only_the_files_matching_its_filter(): void
     {
-        $batches = iterator_to_array(
-            files('memory://dir/*.txt', MemoryFiles::with([
-                'memory://dir/a.txt' => 'a',
-                'memory://dir/b.txt' => 'b',
-                'memory://dir/c.txt' => 'c',
-                'memory://dir/d.txt' => 'd',
-                'memory://dir/e.txt' => 'e',
-            ]))
-                ->withBatchSize(2)
-                ->scan(flow_context(), new FileScan(filter: ref('base_name')->isIn(lit(['c.txt', 'd.txt'])))),
-            false,
-        );
+        $batches = iterator_to_array(files('memory://dir/*.txt', MemoryFiles::with([
+            'memory://dir/a.txt' => 'a',
+            'memory://dir/b.txt' => 'b',
+            'memory://dir/c.txt' => 'c',
+            'memory://dir/d.txt' => 'd',
+            'memory://dir/e.txt' => 'e',
+        ]))
+            ->withBatchSize(2)
+            ->scan(flow_context(), new FileScan(conjuncts: [ref('base_name')->isIn(lit(['c.txt', 'd.txt']))])), false);
 
         static::assertCount(1, $batches);
         static::assertSame(['c.txt', 'd.txt'], $batches[0]->column('base_name')->values());

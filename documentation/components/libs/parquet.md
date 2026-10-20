@@ -204,17 +204,17 @@ foreach ($file->columns(parquet_query()->select('column_1', 'column_2'), batchSi
 
 ```php
 use Flow\Parquet\Reader;
-use function Flow\Parquet\DSL\{parquet_all, parquet_any, parquet_column, parquet_not, parquet_query};
+use function Flow\Parquet\DSL\{parquet_column, parquet_query};
 
 $file = (new Reader())->read('path/to/file.parquet');
 
 $query = parquet_query()
     ->select('id', 'country')
-    ->where(parquet_all(
-        parquet_column('country')->equals('PL'),
-        parquet_not(parquet_column('user.age')->lessThan(18)),
-        parquet_any(parquet_column('status')->in(['new', 'paid']), parquet_column('note')->isNull()),
-    ))
+    ->where(
+        parquet_column('country')->equals('PL')
+            ->and(parquet_column('user.age')->lessThan(18)->negate())
+            ->and(parquet_column('status')->in(['new', 'paid'])->or(parquet_column('note')->isNull())),
+    )
     ->offset(20)
     ->limit(10);
 
@@ -225,8 +225,7 @@ foreach ($file->values($query) as $row) {
 
 The rows returned are exactly the matching ones; offset and limit count matching rows. Row groups and pages whose
 statistics (column chunk statistics, the [page index](#page-index)) prove no row matches are never read - both engines
-skip the same ones and read a kept page's bytes alone - and the read stops at the limit. A second `where()` narrows the
-first.
+skip the same ones and read a kept page's bytes alone. A second `where()` narrows the first.
 
 | Method on `parquet_column($path)`                                            | Filter                   |
 |------------------------------------------------------------------------------|--------------------------|
@@ -236,13 +235,14 @@ first.
 | `isNull()`, `isNotNull()`                                                    | `IsNull`, its `Not`      |
 | `startsWith(string)`                                                         | `StartsWith`             |
 
-- `parquet_all()`, `parquet_any()`, `parquet_not()` build `All`, `Any`, `Not` (namespace `Flow\Parquet\Filter`).
+- `->and()`, `->or()`, `->negate()` on any filter build `All`, `Any`, `Not`; `new All(...$filters)` and
+  `new Any(...$filters)` combine a list (namespace `Flow\Parquet\Filter`).
 - `$path` names a leaf through structs (`'user.address.city'`); a column the file lacks reads as null. A leaf inside a
   list or a map is refused (`InvalidArgumentException`): a row holds no single value there.
 - Semantics are SQL's: a comparison on null is null, `NOT` null is null, only true keeps a row. Floats follow IEEE 754
   (`NaN` matches nothing, `-0.0` equals `0.0`), strings compare in byte order (`'10' < '9'`), `UINT_64` values
   numerically, date-times by instant. A literal of another kind than the column's values (a string on an `INT64`
-  column) matches nothing, under `parquet_not()` too.
+  column) matches nothing, under `->negate()` too.
 - Literals: scalars, `DateTimeInterface`, `Stringable` (uuids); `null` (use `isNull()`) and `NaN` are refused.
 - Files written without `column_orders` (older flow-php versions) are never pruned, only filtered. The statistics a file
   holds are set by the writer options in [Statistics](#statistics).
@@ -252,11 +252,13 @@ first.
 ```php
 use Flow\Parquet\Filter\Binding\BoundFilter;
 use Flow\Parquet\Reader\ReadPlanner;
+use function Flow\Parquet\DSL\parquet_column;
 
+$filter = parquet_column('id')->greaterThan(100);
 $plan = (new ReadPlanner())->plan(
     $file->reader()->footer(),
     $file->indexes(),
-    BoundFilter::bind($query->filter, $file->schema(), $file->options()),
+    BoundFilter::bind($filter, $file->schema(), $file->options()),
     limit: 10,                     // rows kept by $plan->rowFilter, refused unless it is the whole filter
 );
 
@@ -265,13 +267,8 @@ foreach ($file->reader()->readColumns(['id'], 1024, $plan) as $batch) {
 }
 ```
 
-`ReadPlan::$rowFilter` holds the root conjuncts whose every leaf the file binds exactly. Both engines decode those
-columns first and the other columns only at the rows they keep. A conjunct the file cannot compare exactly (`INT96`, a
-`DECIMAL` above precision 15, a float literal beyond 2^53 on an integer column, a JSON column) stays out of it: its rows
-come back as a superset, which `ParquetFile::values()` filters afterwards.
-
-With a row filter the arrow engine loads the offset index of every planned row group before it reads, even beside a
-limit that stops in the first one.
+`ReadPlan::$rowFilter` holds the conjuncts the file compares exactly; rows come back matching them, a superset of the
+query's matches when they are not the whole filter.
 
 ## Writing Parquet Files
 
@@ -398,7 +395,12 @@ $writer->close();
   reached are written `PLAIN`.
 - `GZIP_COMPRESSION_LEVEL` - default: `9` - compression level for GZIP compression (applied only when GZIP compression
   is enabled).
+- `COLUMNS_BLOOM_FILTERS` - default: `null` - `BloomFilterOptions` by column flat path: those columns get a bloom filter
+  per row group ([Bloom filters](#bloom-filters)).
 - `PAGE_HEADER_STATISTICS` - default: `false` - data page headers carry the page's statistics (at `StatisticsLevel::PAGE`).
+- `PAGE_MAXIMUM_ROWS_COUNT` - default: `1000` - rows per data page: the PHP writer closes a page at exactly that many;
+  the arrow writer treats it as a target, checked between write batches, so its pages can hold more. Smaller pages let
+  the page index skip more of a filtered read.
 - `PAGE_SIZE_BYTES` - default: `128Kb` - maximum size of data page.
 - `ROW_GROUP_SIZE_BYTES` - default: `32Mb` - maximum size of row group.
 - `ROW_GROUP_SIZE_CHECK_INTERVAL` default: `1000` - number of rows to write before checking if row group size limit is

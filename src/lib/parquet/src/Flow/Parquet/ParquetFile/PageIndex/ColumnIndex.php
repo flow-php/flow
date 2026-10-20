@@ -47,10 +47,11 @@ final readonly class ColumnIndex
     public static function fromThrift(ThriftColumnIndex $index): self
     {
         return new self(
-            array_values($index->null_pages),
-            array_values($index->min_values),
-            array_values($index->max_values),
-            BoundaryOrder::from((int) $index->boundary_order),
+            array_values($index->null_pages ?? []),
+            array_values($index->min_values ?? []),
+            array_values($index->max_values ?? []),
+            BoundaryOrder::tryFrom((int) $index->boundary_order) ?? throw new InvalidArgumentException('Unknown column index boundary order '
+            . $index->boundary_order),
             $index->null_counts === null
                 ? null
                 : array_values(array_map(static fn($count): int => (int) $count, $index->null_counts)),

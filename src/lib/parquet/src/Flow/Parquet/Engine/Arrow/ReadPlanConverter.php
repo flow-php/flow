@@ -6,8 +6,9 @@ namespace Flow\Parquet\Engine\Arrow;
 
 use Flow\Parquet\Filter\All;
 use Flow\Parquet\Filter\Any;
-use Flow\Parquet\Filter\Binding\Absent;
+use Flow\Parquet\Filter\Binding\AbsentLeaf;
 use Flow\Parquet\Filter\Binding\BoundFilter;
+use Flow\Parquet\Filter\Binding\PhysicalIntervals;
 use Flow\Parquet\Filter\Comparison;
 use Flow\Parquet\Filter\Filter;
 use Flow\Parquet\Filter\FilterVisitor;
@@ -75,12 +76,12 @@ final readonly class ReadPlanConverter implements FilterVisitor
 
     public function isNull(IsNull $isNull): array
     {
-        $leaf = $this->filter->bound($isNull);
+        $resolution = $this->filter->rowLeaf($isNull);
 
         return (
-            $leaf instanceof Absent
+            $resolution instanceof AbsentLeaf
                 ? ['leaf' => 'absent', 'is_null' => true]
-                : ['leaf' => 'is_null', 'path' => $leaf->column->path()]
+                : ['leaf' => 'is_null', 'path' => $resolution->column->path()]
         );
     }
 
@@ -91,12 +92,12 @@ final readonly class ReadPlanConverter implements FilterVisitor
 
     public function startsWith(StartsWith $startsWith): array
     {
-        $leaf = $this->filter->bound($startsWith);
+        $resolution = $this->filter->rowLeaf($startsWith);
 
         return (
-            $leaf instanceof Absent
+            $resolution instanceof AbsentLeaf
                 ? ['leaf' => 'absent', 'is_null' => false]
-                : ['leaf' => 'starts_with', 'path' => $leaf->column->path(), 'prefix' => $startsWith->prefix]
+                : ['leaf' => 'starts_with', 'path' => $resolution->column->path(), 'prefix' => $startsWith->prefix]
         );
     }
 
@@ -115,22 +116,24 @@ final readonly class ReadPlanConverter implements FilterVisitor
      */
     private function intervals(Comparison|In $node): array
     {
-        $leaf = $this->filter->bound($node);
+        $resolution = $this->filter->rowLeaf($node);
 
-        return (
-            $leaf instanceof Absent
-                ? ['leaf' => 'absent', 'is_null' => false]
-                : [
-                    'leaf' => 'intervals',
-                    'path' => $leaf->column->path(),
-                    'physical' => $leaf->column->type()->name,
-                    'intervals' => array_map(static fn($interval): array => [
-                        $interval->lower,
-                        $interval->lowerInclusive,
-                        $interval->upper,
-                        $interval->upperInclusive,
-                    ], $leaf->intervals->intervals),
-                ]
-        );
+        if ($resolution instanceof AbsentLeaf) {
+            return ['leaf' => 'absent', 'is_null' => false];
+        }
+
+        /** @var PhysicalIntervals $intervals rowLeaf() resolves only leaves answered exactly */
+        $intervals = $resolution->intervals;
+
+        return [
+            'leaf' => 'intervals',
+            'path' => $resolution->column->path(),
+            'intervals' => array_map(static fn($interval): array => [
+                $interval->lower,
+                $interval->lowerInclusive,
+                $interval->upper,
+                $interval->upperInclusive,
+            ], $intervals->intervals),
+        ];
     }
 }

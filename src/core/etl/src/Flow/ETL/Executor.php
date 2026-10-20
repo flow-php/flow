@@ -10,7 +10,6 @@ use Flow\ETL\Executor\AdoptedBatches;
 use Flow\ETL\Executor\PhysicalPlan;
 use Flow\ETL\Executor\Pipeline;
 use Flow\ETL\Extractor\File\FileExtractor;
-use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Generator;
 use Throwable;
 use WeakMap;
@@ -151,11 +150,7 @@ final readonly class Executor
         $sources = $leaf->sources();
 
         if ($sources !== null) {
-            $generator = $sources->count(
-                $source,
-                $generator,
-                $scan->limit !== null || !$scan->pathFilter instanceof OnlyFiles || $scan->filter !== null,
-            );
+            $generator = $sources->count($source, $generator, $scan->narrows());
         }
 
         foreach ($chain as $stage) {

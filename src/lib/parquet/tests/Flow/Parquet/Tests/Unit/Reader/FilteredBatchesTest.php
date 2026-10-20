@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Unit\Reader;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
+use Flow\Parquet\Filter\Binding\BoundFilter;
 use Flow\Parquet\Filter\Evaluation\FilterEvaluator;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Schema;
@@ -23,11 +24,11 @@ final class FilteredBatchesTest extends TestCase
     public function test_the_batches_hold_the_returned_columns_and_the_filters_root_columns(): void
     {
         $batches = new FilteredBatches(
-            new FilterEvaluator(
+            new FilterEvaluator(BoundFilter::bind(
                 parquet_column('address.city')->equals('x'),
                 Schema::with(FlatColumn::int64('id'), NestedColumn::struct('address', [FlatColumn::string('city')])),
                 new Options(),
-            ),
+            )),
             ['id'],
         );
 
@@ -37,11 +38,11 @@ final class FilteredBatchesTest extends TestCase
     public function test_only_the_matching_rows_of_the_returned_columns_are_kept(): void
     {
         $batches = new FilteredBatches(
-            new FilterEvaluator(
+            new FilterEvaluator(BoundFilter::bind(
                 parquet_column('id')->in([2, 4]),
                 Schema::with(FlatColumn::int64('id'), FlatColumn::string('name')),
                 new Options(),
-            ),
+            )),
             ['name'],
         );
 
@@ -80,11 +81,11 @@ final class FilteredBatchesTest extends TestCase
         )();
 
         $batches = new FilteredBatches(
-            new FilterEvaluator(
+            new FilterEvaluator(BoundFilter::bind(
                 parquet_column('id')->greaterThan(1),
                 Schema::with(FlatColumn::int64('id'), FlatColumn::string('name')),
                 new Options(),
-            ),
+            )),
             ['id'],
             offset: 2,
             limit: 3,
@@ -97,11 +98,11 @@ final class FilteredBatchesTest extends TestCase
     public function test_the_matching_rows_are_rechunked_to_the_batch_size(): void
     {
         $batches = new FilteredBatches(
-            new FilterEvaluator(
+            new FilterEvaluator(BoundFilter::bind(
                 parquet_column('id')->greaterThan(1),
                 Schema::with(FlatColumn::int64('id'), FlatColumn::string('name')),
                 new Options(),
-            ),
+            )),
             ['id'],
             batchSize: 2,
         );
@@ -128,11 +129,11 @@ final class FilteredBatchesTest extends TestCase
         )();
 
         $batches = new FilteredBatches(
-            new FilterEvaluator(
+            new FilterEvaluator(BoundFilter::bind(
                 parquet_column('id')->greaterThan(1),
                 Schema::with(FlatColumn::int64('id'), FlatColumn::string('name')),
                 new Options(),
-            ),
+            )),
             ['id'],
             limit: 0,
         );
@@ -147,11 +148,11 @@ final class FilteredBatchesTest extends TestCase
         $this->expectExceptionMessage('A filtered read returns at least one column');
 
         new FilteredBatches(
-            new FilterEvaluator(
+            new FilterEvaluator(BoundFilter::bind(
                 parquet_column('id')->isNull(),
                 Schema::with(FlatColumn::int64('id'), FlatColumn::string('name')),
                 new Options(),
-            ),
+            )),
             [],
         );
     }

@@ -1,5 +1,5 @@
 --TEST--
-arrow refuses Parquet modular encryption: an encrypted footer when the file is opened, an encrypted column chunk when its statistics are sliced
+arrow refuses Parquet modular encryption when the file is opened: an encrypted footer, and a plaintext footer holding an encrypted column chunk
 --SKIPIF--
 <?php if (!extension_loaded("arrow")) die("skip arrow extension not loaded"); ?>
 --FILE--
@@ -8,7 +8,6 @@ require __DIR__ . '/bootstrap.php';
 
 use Flow\Filesystem\Stream\MemorySourceStream;
 use Flow\Parquet\Engine\RustParquetFileReader;
-use Flow\Parquet\Reader;
 use Flow\Parquet\Tests\Context\MemoryParquetFile;
 use Flow\Parquet\Thrift\{CompactProtocol, MemoryBuffer};
 use Flow\Parquet\ThriftModel\{ColumnCryptoMetaData, EncryptionWithFooterKey, FileMetaData};
@@ -22,10 +21,8 @@ $footer->read(new CompactProtocol(new MemoryBuffer(substr($bytes, -8 - $length, 
 $footer->row_groups[1]->columns[0]->crypto_metadata = new ColumnCryptoMetaData(['ENCRYPTION_WITH_FOOTER_KEY' => new EncryptionWithFooterKey()]);
 $footer->write(new CompactProtocol($encrypted = new MemoryBuffer()));
 $file = substr($bytes, 0, -8 - $length) . $encrypted->data() . pack('V', strlen($encrypted->data())) . 'PAR1';
-$phpFile = MemoryParquetFile::read(Reader::php(), $bytes);
-$id = $phpFile->reader()->footer()->schema()->getFlat('id');
 
-echo arrow_outcome(static fn() => (new RustParquetFileReader(new MemorySourceStream($file)))->footer()->rowGroupChunks([$id])), "\n";
+echo arrow_outcome(static fn() => new RustParquetFileReader(new MemorySourceStream($file))), "\n";
 ?>
 --EXPECT--
 Flow\Parquet\Exception\RuntimeException: arrow does not read encrypted Parquet files

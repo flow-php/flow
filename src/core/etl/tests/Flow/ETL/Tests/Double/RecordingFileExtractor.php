@@ -6,12 +6,12 @@ namespace Flow\ETL\Tests\Double;
 
 use Flow\ETL\Extractor\File\FileExtractor;
 use Flow\ETL\Extractor\File\FileScan;
+use Flow\ETL\Extractor\File\Scanning;
 use Flow\ETL\Extractor\Statistics;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Function\Conjuncts;
+use Flow\ETL\Function\Evaluation\Filter;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
-use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
 use Flow\Filesystem\Path;
 use Generator;
 
@@ -24,6 +24,8 @@ use function Flow\Filesystem\DSL\path;
  */
 final class RecordingFileExtractor implements FileExtractor
 {
+    use Scanning;
+
     /**
      * @var list<FileScan>
      */
@@ -44,26 +46,13 @@ final class RecordingFileExtractor implements FileExtractor
         $this->partitions = new Schema();
     }
 
-    public function extract(FlowContext $context, ?int $limit = null): Generator
-    {
-        return $this->scan($context, new FileScan(limit: $limit));
-    }
-
     public function scan(FlowContext $context, FileScan $scan): Generator
     {
         $this->scans[] = $scan;
-        $filters = [];
-
-        foreach ($scan->filter === null ? [] : (new Conjuncts())->of($scan->filter) as $conjunct) {
-            $filters[] = (new ScalarFunctionFilterTransformer($conjunct))->bound($this->schema);
-        }
+        $filter = Filter::bind($this->schema, ...$scan->conjuncts);
 
         foreach ($this->batches as $rows) {
-            foreach ($filters as $filter) {
-                $rows = $filter->transform($rows, $context);
-            }
-
-            yield $rows;
+            yield $filter->filter($rows, $context);
         }
     }
 

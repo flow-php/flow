@@ -13,7 +13,6 @@ use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\Parquet\DSL\parquet_column;
-use function Flow\Parquet\DSL\parquet_not;
 
 use const NAN;
 
@@ -23,16 +22,15 @@ final class NotTest extends TestCase
     {
         $child = parquet_column('id')->lessThan(5);
 
-        static::assertSame($child, parquet_not(parquet_not($child)));
+        static::assertSame($child, $child->negate()->negate());
         static::assertSame($child, (new Not($child))->negate());
     }
 
-    public function test_a_not_visits_as_a_not_over_its_child_columns(): void
+    public function test_a_not_visits_as_a_not(): void
     {
-        $not = parquet_not(parquet_column('id')->lessThan(5));
+        $not = parquet_column('id')->lessThan(5)->negate();
 
         static::assertSame('not', $not->accept(new NodeNameVisitor()));
-        static::assertEquals([parquet_column('id')], $not->columns());
         static::assertEquals(new All($not, parquet_column('a')->isNull()), $not->and(parquet_column('a')->isNull()));
         static::assertEquals(new Any($not, parquet_column('a')->isNull()), $not->or(parquet_column('a')->isNull()));
     }

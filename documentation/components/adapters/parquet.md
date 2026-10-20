@@ -111,7 +111,7 @@ data_frame()
     ->run();
 ```
 
-Each part of an `and()` is pushed on its own when it compares a file column with a literal of its type.
+Each part of an `and()` is pushed on its own when it compares a file column with a literal it can compare exactly.
 
 Pushed:
 
@@ -126,7 +126,8 @@ Evaluated on the rows read:
 - other functions, two columns compared, a literal of another type
 - `json` columns (except `isNull`/`isNotNull`), ordering on `uuid`
 - a column the file stores as another type than the read
-- partition columns, which list fewer files instead ([partitioning](/documentation/components/core/partitioning.md))
+
+Partition columns list fewer files instead ([partitioning](/documentation/components/core/partitioning.md)).
 
 `explain()` shows the filter and the limit under `Read`, not what the reader skipped:
 

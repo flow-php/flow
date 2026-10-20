@@ -38,11 +38,14 @@ final class OptionsConverterTest extends TestCase
         );
     }
 
-    public function test_arrow_batch_size_is_not_an_extension_option(): void
+    public function test_page_maximum_rows_count_is_mapped(): void
     {
-        static::assertArrayNotHasKey(
-            'BATCH_SIZE',
-            OptionsConverter::toExtension((new Options())->set(Option::ARROW_BATCH_SIZE, 512)),
+        static::assertSame(
+            50,
+            OptionsConverter::toExtension((new Options())->set(
+                Option::PAGE_MAXIMUM_ROWS_COUNT,
+                50,
+            ))['PAGE_MAXIMUM_ROWS_COUNT'],
         );
     }
 

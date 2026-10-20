@@ -1122,8 +1122,8 @@ final class DataFrameTest extends FlowTestCase
         static::assertSame(<<<'PLAN'
             #3 Result  preserving · transparent · streaming
             │  Rows this plan hands out: to the trigger, or to the node reading it
-            └─ #2 Select  preserving · transparent · streaming
-               │  Columns: id
+            └─ #2 Select  preserving · transparent · streaming · redefines all but id
+               │  Keeps only: id
                └─ #1 Read  source · transparent · streaming
                      Extractor: ArrayExtractor
             PLAN, $dataFrame->explain()->toString(format: Format::declarations));
@@ -1140,8 +1140,8 @@ final class DataFrameTest extends FlowTestCase
             Outputs  preserving · opaque · streaming
             ├─ #3 Result  preserving · transparent · streaming
             │  │  Rows this plan hands out: to the trigger, or to the node reading it
-            │  └─ #2 Select  preserving · transparent · streaming
-            │     │  Columns: id
+            │  └─ #2 Select  preserving · transparent · streaming · redefines all but id
+            │     │  Keeps only: id
             │     └─ #1 Read  source · transparent · streaming
             │           Extractor: ArrayExtractor
             └─ #4 Write  preserving · opaque · streaming
@@ -1173,8 +1173,8 @@ final class DataFrameTest extends FlowTestCase
             Outputs  preserving · opaque · streaming
             ├─ #3 Result  preserving · transparent · streaming
             │  │  Rows this plan hands out: to the trigger, or to the node reading it
-            │  └─ #2 Select  preserving · transparent · streaming
-            │     │  Columns: id
+            │  └─ #2 Select  preserving · transparent · streaming · redefines all but id
+            │     │  Keeps only: id
             │     └─ #1 Read  source · transparent · streaming
             │           Extractor: ArrayExtractor
             └─ #4 Write  preserving · opaque · streaming

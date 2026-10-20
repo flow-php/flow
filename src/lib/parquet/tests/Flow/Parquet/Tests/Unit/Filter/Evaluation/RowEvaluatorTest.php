@@ -15,11 +15,9 @@ use Flow\Parquet\ParquetFile\Schema\TimeUnit;
 use Flow\Parquet\Tests\Mother\FlatColumnMother;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
+use TypeError;
 
-use function Flow\Parquet\DSL\parquet_all;
-use function Flow\Parquet\DSL\parquet_any;
 use function Flow\Parquet\DSL\parquet_column;
-use function Flow\Parquet\DSL\parquet_not;
 
 use const NAN;
 
@@ -56,11 +54,11 @@ final class RowEvaluatorTest extends TestCase
                 BoundFilter::bind(
                     match ($filter) {
                         'lt' => $lt,
-                        'not lt' => parquet_not($lt),
-                        'not not lt' => parquet_not(parquet_not($lt)),
-                        'any lt null' => parquet_any($lt, $null),
-                        'not all lt not null' => parquet_not(parquet_all($lt, parquet_not($null))),
-                        'not any lt null' => parquet_not(parquet_any($lt, $null)),
+                        'not lt' => $lt->negate(),
+                        'not not lt' => $lt->negate()->negate(),
+                        'any lt null' => $lt->or($null),
+                        'not all lt not null' => $lt->and($null->negate())->negate(),
+                        'not any lt null' => $lt->or($null)->negate(),
                     },
                     Schema::with(FlatColumn::int64('i')),
                     new Options(),
@@ -98,7 +96,7 @@ final class RowEvaluatorTest extends TestCase
                 BoundFilter::bind(
                     match ($filter) {
                         'lt' => parquet_column('f')->lessThan(5.0),
-                        'not lt' => parquet_not(parquet_column('f')->lessThan(5.0)),
+                        'not lt' => parquet_column('f')->lessThan(5.0)->negate(),
                         'not equals' => parquet_column('f')->notEquals(5.0),
                         'not in' => parquet_column('f')->notIn([1.0, 5.0]),
                     },
@@ -265,10 +263,10 @@ final class RowEvaluatorTest extends TestCase
                 BoundFilter::bind(
                     match ($filter) {
                         'is null' => parquet_column('missing')->isNull(),
-                        'not is null' => parquet_not(parquet_column('missing')->isNull()),
+                        'not is null' => parquet_column('missing')->isNull()->negate(),
                         'equals' => parquet_column('missing')->equals(1),
-                        'not equals' => parquet_not(parquet_column('missing')->equals(1)),
-                        'not starts with' => parquet_not(parquet_column('missing')->startsWith('a')),
+                        'not equals' => parquet_column('missing')->equals(1)->negate(),
+                        'not starts with' => parquet_column('missing')->startsWith('a')->negate(),
                     },
                     Schema::with(FlatColumn::int64('i')),
                     new Options(),
@@ -297,7 +295,7 @@ final class RowEvaluatorTest extends TestCase
         static::assertSame(
             [false],
             RowEvaluator::evaluate(
-                BoundFilter::bind(parquet_not(parquet_column('s')->startsWith('')), $schema, new Options()),
+                BoundFilter::bind(parquet_column('s')->startsWith('')->negate(), $schema, new Options()),
                 ['s' => [$value]],
                 1,
             ),
@@ -323,15 +321,37 @@ final class RowEvaluatorTest extends TestCase
         );
     }
 
-    public function test_an_unbound_leaf_is_refused(): void
+    public function test_a_leaf_not_answered_exactly_is_refused(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Rows are evaluated on bound leaves only, the leaf on "i" is not bound');
+        $this->expectExceptionMessage('Rows are evaluated on leaves answered exactly, the leaf on "i" is not');
 
         RowEvaluator::evaluate(
             BoundFilter::bind(parquet_column('i')->equals('1'), Schema::with(FlatColumn::int64('i')), new Options()),
             ['i' => [1]],
             1,
+        );
+    }
+
+    public function test_is_null_is_true_on_a_null_row_and_is_not_null_on_a_value(): void
+    {
+        $schema = Schema::with(FlatColumn::int64('i'));
+
+        static::assertSame(
+            [true, false, true],
+            RowEvaluator::evaluate(
+                BoundFilter::bind(parquet_column('i')->isNull(), $schema, new Options()),
+                ['i' => [null, 3, null]],
+                3,
+            ),
+        );
+        static::assertSame(
+            [false, true, false],
+            RowEvaluator::evaluate(
+                BoundFilter::bind(parquet_column('i')->isNotNull(), $schema, new Options()),
+                ['i' => [null, 3, null]],
+                3,
+            ),
         );
     }
 
@@ -361,8 +381,7 @@ final class RowEvaluatorTest extends TestCase
 
     public function test_a_value_that_is_no_physical_value_is_refused(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Column "i" holds a value that is no physical value');
+        $this->expectException(TypeError::class);
 
         RowEvaluator::evaluate(
             BoundFilter::bind(parquet_column('i')->equals(1), Schema::with(FlatColumn::int64('i')), new Options()),

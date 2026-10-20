@@ -31,7 +31,7 @@ final readonly class ColumnChunk
      * @param int $totalCompressedSize
      * @param int $totalUncompressedSize
      * @param null|int $dictionaryPageOffset
-     * @param null|int $dataPageOffset
+     * @param int $dataPageOffset
      * @param null|int $indexPageOffset
      */
     public function __construct(
@@ -44,14 +44,18 @@ final readonly class ColumnChunk
         private int $totalCompressedSize,
         private int $totalUncompressedSize,
         private ?int $dictionaryPageOffset,
-        private ?int $dataPageOffset,
+        private int $dataPageOffset,
         private ?int $indexPageOffset,
         private ?Statistics $statistics,
         private ?IndexLocation $columnIndex = null,
         private ?IndexLocation $offsetIndex = null,
         private ?int $bloomFilterOffset = null,
         private ?int $bloomFilterLength = null,
-    ) {}
+    ) {
+        if ($bloomFilterLength !== null && $bloomFilterOffset === null) {
+            throw new InvalidArgumentException('A column chunk records a bloom filter length without its offset');
+        }
+    }
 
     public static function fromThrift(ThriftColumnChunk $thrift): self
     {
@@ -77,7 +81,9 @@ final readonly class ColumnChunk
             IndexLocation::fromThrift($thrift->column_index_offset, $thrift->column_index_length),
             IndexLocation::fromThrift($thrift->offset_index_offset, $thrift->offset_index_length),
             $metadata->bloom_filter_offset !== null ? (int) $metadata->bloom_filter_offset : null,
-            $metadata->bloom_filter_length !== null ? (int) $metadata->bloom_filter_length : null,
+            $metadata->bloom_filter_offset !== null && $metadata->bloom_filter_length !== null
+                ? (int) $metadata->bloom_filter_length
+                : null,
         );
     }
 
@@ -107,7 +113,7 @@ final readonly class ColumnChunk
         return $this->columnIndex;
     }
 
-    public function dataPageOffset(): ?int
+    public function dataPageOffset(): int
     {
         return $this->dataPageOffset;
     }
@@ -209,10 +215,15 @@ final readonly class ColumnChunk
     }
 
     /**
-     * This chunk with its bloom filter, header and bitset, written at the given location.
+     * This chunk with its page index and its bloom filter (header and bitset) written at the given locations; a
+     * location left out is kept.
      */
-    public function withBloomFilter(int $offset, int $length): self
-    {
+    public function withLocations(
+        ?IndexLocation $columnIndex = null,
+        ?IndexLocation $offsetIndex = null,
+        ?int $bloomFilterOffset = null,
+        ?int $bloomFilterLength = null,
+    ): self {
         return new self(
             $this->type,
             $this->codec,
@@ -226,35 +237,10 @@ final readonly class ColumnChunk
             $this->dataPageOffset,
             $this->indexPageOffset,
             $this->statistics,
-            $this->columnIndex,
-            $this->offsetIndex,
-            $offset,
-            $length,
-        );
-    }
-
-    /**
-     * This chunk with its page index written at the given locations.
-     */
-    public function withIndexLocations(?IndexLocation $columnIndex, IndexLocation $offsetIndex): self
-    {
-        return new self(
-            $this->type,
-            $this->codec,
-            $this->valuesCount,
-            $this->fileOffset,
-            $this->path,
-            $this->encodings,
-            $this->totalCompressedSize,
-            $this->totalUncompressedSize,
-            $this->dictionaryPageOffset,
-            $this->dataPageOffset,
-            $this->indexPageOffset,
-            $this->statistics,
-            $columnIndex,
-            $offsetIndex,
-            $this->bloomFilterOffset,
-            $this->bloomFilterLength,
+            $columnIndex ?? $this->columnIndex,
+            $offsetIndex ?? $this->offsetIndex,
+            $bloomFilterOffset ?? $this->bloomFilterOffset,
+            $bloomFilterLength ?? $this->bloomFilterLength,
         );
     }
 

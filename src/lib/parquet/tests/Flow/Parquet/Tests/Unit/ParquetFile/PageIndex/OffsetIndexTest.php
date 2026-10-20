@@ -6,6 +6,8 @@ namespace Flow\Parquet\Tests\Unit\ParquetFile\PageIndex;
 
 use Flow\Parquet\ParquetFile\PageIndex\OffsetIndex;
 use Flow\Parquet\ParquetFile\PageIndex\PageLocation;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\Tests\Mother\ColumnChunkMother;
 use Flow\Parquet\Tests\Mother\PageIndexMother;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
@@ -47,10 +49,36 @@ final class OffsetIndexTest extends TestCase
     #[TestWith([[0, 5, 3], false])]
     #[TestWith([[0, 4, 4], false])]
     #[TestWith([[0, 10], false])]
-    public function test_pages_split_a_row_group_when_they_start_at_row_zero_and_increase_inside_it(
+    public function test_pages_fit_a_row_group_when_they_start_at_row_zero_and_increase_inside_it(
         array $firstRows,
-        bool $covers,
+        bool $fits,
     ): void {
-        static::assertSame($covers, PageIndexMother::pagesAt(...$firstRows)->coversRows(10));
+        static::assertSame($fits, PageIndexMother::pagesAt(...$firstRows)->fits(
+            ColumnChunkMother::spanning(FlatColumn::int64('id'), 100, 30),
+            10,
+        ));
+    }
+
+    /**
+     * @param list<array{int, int}> $pages offset and size of pages starting at rows 0, 5, ...
+     */
+    #[TestWith([[[100, 10], [110, 20]], true])]
+    #[TestWith([[[99, 10], [110, 10]], false])]
+    #[TestWith([[[100, 10], [125, 10]], false])]
+    #[TestWith([[[100, 0], [110, 10]], false])]
+    #[TestWith([[[110, 10], [100, 10]], false])]
+    #[TestWith([[[100, 15], [110, 10]], false])]
+    public function test_pages_fit_a_chunk_when_they_lie_inside_it_one_after_another(array $pages, bool $fits): void
+    {
+        $locations = [];
+
+        foreach ($pages as $page => [$offset, $size]) {
+            $locations[] = new PageLocation($offset, $size, $page * 5);
+        }
+
+        static::assertSame($fits, (new OffsetIndex($locations))->fits(
+            ColumnChunkMother::spanning(FlatColumn::int64('id'), 100, 30),
+            10,
+        ));
     }
 }

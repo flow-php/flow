@@ -24,16 +24,19 @@ var_dump(is_callable([RustRowGroupChunks::class, 'fromThrift']));
 $rust = (new RustParquetFileReader(new MemorySourceStream($bytes)))->footer()->rowGroupChunks([$id, $tag]);
 $expected = $php->rowGroupChunks([$id, $tag]);
 
-echo get_class($rust), ' ', $rust->count(), "\n";
+$rowGroups = $php->metadata()->rowGroups()->all();
+$groups = count($rowGroups);
 
-for ($group = 0; $group < $rust->count(); $group++) {
+echo get_class($rust), ' ', $groups, "\n";
+
+for ($group = 0; $group < $groups; $group++) {
     foreach ([$id, $tag] as $column) {
         $statistics = $rust->chunk($group, $column)->statistics();
         printf(
             "%d %s: %d rows, %s..%s, %s\n",
             $group,
             $column->flatPath(),
-            $rust->rowCount($group),
+            $rowGroups[$group]->rowsCount(),
             var_export($statistics?->minValue($column), true),
             var_export($statistics?->maxValue($column), true),
             $rust->chunk($group, $column) == $expected->chunk($group, $column) ? 'as PHP decodes it' : 'NOT as PHP decodes it',

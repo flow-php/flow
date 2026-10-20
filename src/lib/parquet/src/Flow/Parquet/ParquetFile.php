@@ -128,43 +128,37 @@ final class ParquetFile
             }
         }
 
-        if ($query->filter === null) {
-            yield from $this->reader->readColumns(
-                $columns,
-                $batchSize,
-                (new ReadPlanner())->plan(
-                    $this->reader->footer(),
-                    $this->indexes(),
-                    null,
-                    $query->offset,
-                    $query->limit,
-                ),
-            );
+        $filter = $query->filter === null ? null : BoundFilter::bind($query->filter, $schema, $this->options);
+        // a filtered plan counts matching rows from the start, so the offset is applied here; it takes the limit only
+        // when it answers every conjunct, otherwise the residual ones below decide which rows count
+        $plan = (new ReadPlanner())->plan(
+            $this->reader->footer(),
+            $this->indexes(),
+            $filter,
+            $filter === null ? $query->offset : 0,
+            match (true) {
+                $filter === null => $query->limit,
+                $filter->answersEveryConjunct() && $query->limit !== null => $query->offset + $query->limit,
+                default => null,
+            },
+        );
+
+        if ($filter === null) {
+            yield from $this->reader->readColumns($columns, $batchSize, $plan);
 
             return;
         }
 
-        $filter = BoundFilter::bind($query->filter, $schema, $this->options);
         $residual = $filter->residual();
         $filtered = new FilteredBatches(
-            $residual === null ? null : new FilterEvaluator($residual, $schema, $this->options),
+            $residual === null ? null : new FilterEvaluator($residual),
             $columns,
             $query->offset,
             $query->limit,
             $batchSize,
         );
 
-        yield from $filtered->filter($this->reader->readColumns(
-            $filtered->columns(),
-            $batchSize,
-            (new ReadPlanner())->plan(
-                $this->reader->footer(),
-                $this->indexes(),
-                $filter,
-                0,
-                $residual === null && $query->limit !== null ? $query->offset + $query->limit : null,
-            ),
-        ));
+        yield from $filtered->filter($this->reader->readColumns($filtered->columns(), $batchSize, $plan));
     }
 
     /**

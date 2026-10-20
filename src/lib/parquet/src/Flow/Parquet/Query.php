@@ -79,11 +79,7 @@ final readonly class Query
     {
         return new self(
             $this->columns,
-            match (true) {
-                $this->filter === null => $filter,
-                $this->filter instanceof All => new All(...$this->filter->filters, ...[$filter]),
-                default => new All($this->filter, $filter),
-            },
+            $this->filter === null ? $filter : new All($this->filter, $filter),
             $this->offset,
             $this->limit,
         );

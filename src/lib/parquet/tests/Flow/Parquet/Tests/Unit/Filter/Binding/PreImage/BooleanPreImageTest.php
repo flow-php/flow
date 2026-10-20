@@ -11,12 +11,11 @@ use PHPUnit\Framework\TestCase;
 
 final class BooleanPreImageTest extends TestCase
 {
-    public function test_a_boolean_binds_a_boolean_only(): void
+    public function test_a_boolean_binds_its_physical_value(): void
     {
         static::assertSame(
             [[null, false, true, false]],
             PhysicalIntervalEdges::ofComparison(FlatColumn::boolean('b'), Operator::LessThan, true),
         );
-        static::assertNull(PhysicalIntervalEdges::intervals(FlatColumn::boolean('b'), Operator::Equal, 1));
     }
 }

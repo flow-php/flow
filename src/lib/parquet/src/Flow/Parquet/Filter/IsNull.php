@@ -20,11 +20,6 @@ final readonly class IsNull implements Filter
         return new All($this, $other);
     }
 
-    public function columns(): array
-    {
-        return [$this->column];
-    }
-
     public function negate(): Filter
     {
         return new Not($this);

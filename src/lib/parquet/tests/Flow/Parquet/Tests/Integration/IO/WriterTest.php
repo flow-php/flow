@@ -983,10 +983,7 @@ class WriterTest extends ParquetIntegrationTestCase
         ));
 
         foreach ([$id, $name] as $column) {
-            static::assertSame(
-                $php->indexes()->bloomFilter(0, $column)?->bytes(),
-                $arrow->indexes()->bloomFilter(0, $column)?->bytes(),
-            );
+            static::assertEquals($php->indexes()->bloomFilter(0, $column), $arrow->indexes()->bloomFilter(0, $column));
         }
     }
 

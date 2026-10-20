@@ -7,8 +7,8 @@ namespace Flow\Parquet\Filter\Evaluation;
 use Flow\Parquet\BloomFilter\BloomHash;
 use Flow\Parquet\Filter\All;
 use Flow\Parquet\Filter\Any;
-use Flow\Parquet\Filter\Binding\Bound;
 use Flow\Parquet\Filter\Binding\BoundFilter;
+use Flow\Parquet\Filter\Binding\ResolvedLeaf;
 use Flow\Parquet\Filter\Comparison;
 use Flow\Parquet\Filter\Filter;
 use Flow\Parquet\Filter\FilterVisitor;
@@ -31,11 +31,10 @@ use function is_float;
  */
 final readonly class BloomEvaluator implements FilterVisitor
 {
-    public function __construct(
+    private function __construct(
         private BoundFilter $filter,
         private Indexes $indexes,
         private int $rowGroup,
-        private bool $negated = false,
     ) {}
 
     public static function evaluate(BoundFilter $filter, Indexes $indexes, int $rowGroup): Truth
@@ -50,12 +49,12 @@ final readonly class BloomEvaluator implements FilterVisitor
 
     public function all(All $all): Truth
     {
-        return $this->negated ? Truth::some($this->truths($all->filters)) : Truth::every($this->truths($all->filters));
+        return Truth::every($this->truths($all->filters));
     }
 
     public function any(Any $any): Truth
     {
-        return $this->negated ? Truth::every($this->truths($any->filters)) : Truth::some($this->truths($any->filters));
+        return Truth::some($this->truths($any->filters));
     }
 
     public function in(In $in): Truth
@@ -68,9 +67,12 @@ final readonly class BloomEvaluator implements FilterVisitor
         return Truth::Maybe;
     }
 
+    /**
+     * Under a negation every leaf is Maybe: a bloom filter proves only absence.
+     */
     public function not(Not $not): Truth
     {
-        return $not->filter->accept(new self($this->filter, $this->indexes, $this->rowGroup, !$this->negated));
+        return Truth::Maybe;
     }
 
     public function startsWith(StartsWith $startsWith): Truth
@@ -82,17 +84,17 @@ final readonly class BloomEvaluator implements FilterVisitor
      * Never when no point of the leaf's pre-image is in the filter. A zero is checked as both -0.0 and +0.0, which
      * compare equal but hash apart.
      */
-    private function membership(Comparison|In $leaf): Truth
+    private function membership(Comparison|In $node): Truth
     {
-        $bound = $this->filter->leaf($leaf);
+        $resolution = $this->filter->leaf($node);
 
-        if ($this->negated || !$bound instanceof Bound) {
+        if (!$resolution instanceof ResolvedLeaf || $resolution->intervals === null) {
             return Truth::Maybe;
         }
 
         $points = [];
 
-        foreach ($bound->intervals->intervals as $interval) {
+        foreach ($resolution->intervals->intervals as $interval) {
             if (
                 $interval->lower === null
                 || $interval->lower !== $interval->upper
@@ -113,7 +115,7 @@ final readonly class BloomEvaluator implements FilterVisitor
             return Truth::Never;
         }
 
-        $bloomFilter = $this->indexes->bloomFilter($this->rowGroup, $bound->column);
+        $bloomFilter = $this->indexes->bloomFilter($this->rowGroup, $resolution->column);
 
         if ($bloomFilter === null) {
             return Truth::Maybe;
@@ -122,7 +124,7 @@ final readonly class BloomEvaluator implements FilterVisitor
         $hash = new BloomHash();
 
         foreach ($points as $point) {
-            if ($bloomFilter->check($hash->of($bound->column, $point))) {
+            if ($bloomFilter->check($hash->of($resolution->column, $point))) {
                 return Truth::Maybe;
             }
         }

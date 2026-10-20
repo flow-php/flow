@@ -9,11 +9,7 @@ use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
-use Flow\Parquet\Thrift\CompactProtocol;
-use Flow\Parquet\Thrift\PhpFileStream;
-use Flow\Parquet\ThriftModel\PageHeader as ThriftPageHeader;
 use Generator;
-use Throwable;
 
 use function fclose;
 use function fseek;
@@ -48,7 +44,7 @@ final readonly class ColumnChunkViewer
         rewind($pageStream);
 
         if ($columnChunk->dictionaryPageOffset()) {
-            $dictionaryHeader = $this->readHeader($pageStream);
+            $dictionaryHeader = PageHeader::read($pageStream, $this->options);
 
             if ($dictionaryHeader === null) {
                 throw new RuntimeException(
@@ -67,7 +63,7 @@ final readonly class ColumnChunkViewer
         }
 
         while (true) {
-            $dataHeader = $this->readHeader($pageStream);
+            $dataHeader = PageHeader::read($pageStream, $this->options);
 
             /** There are no more pages in given column chunk */
             if ($dataHeader === null || $dataHeader->type()->isDataPage() === false) {
@@ -85,26 +81,5 @@ final readonly class ColumnChunkViewer
         }
 
         fclose($pageStream);
-    }
-
-    /**
-     * @param resource $stream
-     */
-    private function readHeader($stream): ?PageHeader
-    {
-        $currentOffset = ftell($stream);
-
-        try {
-            $thriftHeader = new ThriftPageHeader();
-            @$thriftHeader->read(new CompactProtocol(new PhpFileStream($stream)));
-
-            return PageHeader::fromThrift($thriftHeader, $this->options);
-        } catch (Throwable) {
-            if ($currentOffset !== false) {
-                fseek($stream, $currentOffset);
-            }
-
-            return null;
-        }
     }
 }

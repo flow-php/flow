@@ -138,10 +138,7 @@ docs-api:
 
 # Regenerate Parquet Thrift PHP classes.
 gen-thrift: && fix
-    grep -q 'namespace php Flow.Parquet.ThriftModel' src/lib/parquet/src/Flow/Parquet/Resources/Thrift/parquet.thrift || { echo "Flow php namespace not found in thrift definition!"; exit 1; }
-    rm src/lib/parquet/src/Flow/Parquet/ThriftModel/*.php
-    thrift --gen php --out src/lib/parquet/src src/lib/parquet/src/Flow/Parquet/Resources/Thrift/parquet.thrift
-    php src/lib/parquet/bin/thrift-nullable-optional-fields.php
+    php bin/thrift.php parquet
 
 # Regenerate PostgreSQL pg_query Protobuf PHP classes.
 gen-protobuf-pg: && fix

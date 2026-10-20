@@ -35,16 +35,6 @@ final class RowGroupChunksSpy implements RowGroupChunks
         return $this->chunks->columnOrder($column);
     }
 
-    public function count(): int
-    {
-        return $this->chunks->count();
-    }
-
-    public function rowCount(int $rowGroup): int
-    {
-        return $this->chunks->rowCount($rowGroup);
-    }
-
     public function rowCounts(): array
     {
         return $this->chunks->rowCounts();

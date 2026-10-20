@@ -24,8 +24,7 @@ use parquet::DecodeResult;
 
 use crate::parquet::canonical::{canonical, canonical_type};
 use crate::parquet::error::Error;
-use crate::parquet::fetch::coalesced;
-use crate::parquet::filter::{FilterNode, PlanPredicate};
+use crate::parquet::filter::{PlanPredicate, Raw};
 use crate::parquet::source::{exact, ReadAt};
 
 /// The row groups holding a selected row, each with its row-group-local selection - `None` when every row of the
@@ -33,13 +32,19 @@ use crate::parquet::source::{exact, ReadAt};
 #[derive(Debug, PartialEq)]
 pub struct ReadPlan {
     pub selections: Vec<RowGroupSelection>,
-    pub filter: Option<FilterNode>,
+    pub filter: Option<Raw>,
     pub limit: Option<usize>,
 }
 
 impl ReadPlan {
-    /// `selectors`: (row count, skip) over every row of the file, as `ReadPlanConverter::toExtension()` sends them.
-    pub fn from_selection(meta: &ParquetMetaData, selectors: Vec<(usize, bool)>) -> Result<Self, Error> {
+    /// `selectors`: (row count, skip) over every row of the file, `filter` the row filter and `limit` the rows returned
+    /// at most, as `ReadPlanConverter::toExtension()` sends them.
+    pub fn from_selection(
+        meta: &ParquetMetaData,
+        selectors: Vec<(usize, bool)>,
+        filter: Option<Raw>,
+        limit: Option<usize>,
+    ) -> Result<Self, Error> {
         let total = selectors
             .iter()
             .try_fold(0usize, |total, (count, _)| total.checked_add(*count))
@@ -96,8 +101,8 @@ impl ReadPlan {
 
         Ok(Self {
             selections,
-            filter: None,
-            limit: None,
+            filter,
+            limit,
         })
     }
 
@@ -123,27 +128,16 @@ impl Projected {
             });
         }
 
-        let missing = || Error::MissingColumn(name.to_string());
-        let mut segments = name.split('.');
-        let root = segments.next().ok_or_else(missing)?;
-        let mut field = schema.field_with_name(root).map_err(|_| missing())?;
-        let mut nullable = field.is_nullable();
-        let mut path = vec![root.to_string()];
-
-        for segment in segments {
-            field = match field.data_type() {
-                DataType::Struct(children) => children.find(segment).ok_or_else(missing)?.1,
-                DataType::List(_) | DataType::LargeList(_) | DataType::FixedSizeList(_, _) | DataType::Map(_, _) => {
-                    return Err(Error::Unsupported {
-                        column: name.to_string(),
-                        parquet: "a path into LIST/MAP".to_string(),
-                    })
+        let path = name.split('.').map(str::to_string).collect::<Vec<_>>();
+        let (field, nullable) = struct_field(schema, &path).map_err(|parent| match parent.map(Field::data_type) {
+            Some(DataType::List(_) | DataType::LargeList(_) | DataType::FixedSizeList(_, _) | DataType::Map(_, _)) => {
+                Error::Unsupported {
+                    column: name.to_string(),
+                    parquet: "a path into LIST/MAP".to_string(),
                 }
-                _ => return Err(missing()),
-            };
-            nullable |= field.is_nullable();
-            path.push(segment.to_string());
-        }
+            }
+            _ => Error::MissingColumn(name.to_string()),
+        })?;
 
         Ok(Self {
             path,
@@ -198,10 +192,10 @@ impl ParquetReader {
             .collect::<Result<Vec<_>, _>>()?;
 
         let descr = meta.file_metadata().schema_descr();
-        let predicates = plan.filter.as_ref().map_or_else(
-            || Ok(Vec::new()),
-            |filter| PlanPredicate::conjuncts(filter, &schema, descr),
-        )?;
+        let predicates = match &plan.filter {
+            Some(filter) => PlanPredicate::conjuncts(filter, &schema, descr)?,
+            None => Vec::new(),
+        };
         let predicated = predicates
             .iter()
             .flat_map(|predicate| predicate.leaves().iter().copied())
@@ -212,13 +206,7 @@ impl ParquetReader {
         }
 
         let source: Arc<dyn ReadAt + Send + Sync> = source;
-        let leaves = (0..descr.num_columns())
-            .filter(|leaf| {
-                projected
-                    .iter()
-                    .any(|column| column.reads_leaf(descr.column(*leaf).path().parts()))
-            })
-            .collect::<Vec<_>>();
+        let leaves = projected_leaves(descr, &projected);
         let fetched = (0..descr.num_columns())
             .filter(|leaf| leaves.contains(leaf) || predicated.contains(leaf))
             .collect::<Vec<_>>();
@@ -243,24 +231,7 @@ impl ParquetReader {
         }
 
         let decoder = builder.build()?;
-        // a batch holds the roots with a projected leaf, in the file's order
-        let roots = schema
-            .fields()
-            .iter()
-            .map(|field| field.name())
-            .filter(|name| projected.iter().any(|column| &column.path[0] == *name))
-            .collect::<Vec<_>>();
-        let positions = projected
-            .iter()
-            .map(|column| {
-                let root = roots
-                    .iter()
-                    .position(|name| *name == &column.path[0])
-                    .ok_or_else(|| Error::MissingColumn(column.field.name().clone()))?;
-
-                Ok((root, column.path[1..].to_vec()))
-            })
-            .collect::<Result<Vec<_>, Error>>()?;
+        let positions = positions(&schema, &projected)?;
 
         Ok(Self {
             decoder,
@@ -363,25 +334,105 @@ fn with_offset_index(
     ))
 }
 
-/// The struct child at `path` under `array`, null wherever a struct above it is.
-pub fn child(array: &ArrayRef, path: &[String]) -> Result<ArrayRef, Error> {
-    let mut array = Arc::clone(array);
+/// The parquet leaves a projected column reads, in the file's order.
+fn projected_leaves(descr: &SchemaDescriptor, projected: &[Projected]) -> Vec<usize> {
+    (0..descr.num_columns())
+        .filter(|leaf| {
+            projected
+                .iter()
+                .any(|column| column.reads_leaf(descr.column(*leaf).path().parts()))
+        })
+        .collect()
+}
 
-    for name in path {
-        let structure = array.as_struct();
-        let child = structure
-            .column_by_name(name)
-            .ok_or_else(|| Error::MissingColumn(name.clone()))?;
+/// Where each projected column sits in a batch, which holds the roots with a projected leaf in the file's order: its
+/// root, then the struct children down to it.
+fn positions(schema: &Schema, projected: &[Projected]) -> Result<Vec<(usize, Vec<String>)>, Error> {
+    let roots = schema
+        .fields()
+        .iter()
+        .map(|field| field.name())
+        .filter(|name| projected.iter().any(|column| &column.path[0] == *name))
+        .collect::<Vec<_>>();
 
-        array = match NullBuffer::union(structure.nulls(), child.nulls()) {
-            Some(nulls) if structure.nulls().is_some() => {
-                make_array(child.to_data().into_builder().nulls(Some(nulls)).build()?)
-            }
-            _ => Arc::clone(child),
-        };
+    projected
+        .iter()
+        .map(|column| {
+            let root = roots
+                .iter()
+                .position(|name| *name == &column.path[0])
+                .ok_or_else(|| Error::MissingColumn(column.field.name().clone()))?;
+
+            Ok((root, column.path[1..].to_vec()))
+        })
+        .collect()
+}
+
+/// Sorted ranges with every run of adjacent or overlapping ones merged.
+fn coalesced(mut ranges: Vec<Range<u64>>) -> Vec<Range<u64>> {
+    ranges.sort_by_key(|range| range.start);
+    let mut merged: Vec<Range<u64>> = Vec::with_capacity(ranges.len());
+
+    for range in ranges {
+        match merged.last_mut() {
+            Some(last) if last.end >= range.start => last.end = last.end.max(range.end),
+            _ => merged.push(range),
+        }
     }
 
-    Ok(array)
+    merged
+}
+
+/// The struct child at `path` under `schema`'s roots and whether it or a struct above it is nullable; `Err` holds the
+/// field a segment is no child of, `None` when no root is named `path[0]`.
+pub fn struct_field<'a>(schema: &'a Schema, path: &[String]) -> Result<(&'a Field, bool), Option<&'a Field>> {
+    let mut field = schema.field_with_name(&path[0]).map_err(|_| None)?;
+    let mut nullable = field.is_nullable();
+
+    for name in &path[1..] {
+        field = match field.data_type() {
+            DataType::Struct(children) => children.find(name).ok_or(Some(field))?.1,
+            _ => return Err(Some(field)),
+        };
+        nullable |= field.is_nullable();
+    }
+
+    Ok((field, nullable))
+}
+
+/// The struct child at `path` under `array`, with the nulls of it and of every struct above it.
+pub fn struct_child(array: &ArrayRef, path: &[String]) -> Result<(ArrayRef, Option<NullBuffer>), Error> {
+    let mut array = Arc::clone(array);
+    let mut nulls = array.nulls().cloned();
+
+    for name in path {
+        let child = Arc::clone(
+            array
+                .as_struct()
+                .column_by_name(name)
+                .ok_or_else(|| Error::MissingColumn(name.clone()))?,
+        );
+        nulls = NullBuffer::union(nulls.as_ref(), child.nulls());
+        array = child;
+    }
+
+    Ok((array, nulls))
+}
+
+/// The struct child at `path` under `array`, null wherever a struct above it is.
+fn child(array: &ArrayRef, path: &[String]) -> Result<ArrayRef, Error> {
+    let (child, nulls) = struct_child(array, path)?;
+
+    // a union only adds nulls: as many as the child's own means none was added
+    if nulls.as_ref().map(NullBuffer::null_count) == child.nulls().map(NullBuffer::null_count) {
+        return Ok(child);
+    }
+
+    // SAFETY: the union of the structs' and the child's null buffers has the child's length, and nulling a slot keeps
+    // every other buffer of the child valid
+    Ok(make_array(unsafe {
+        child.to_data().into_builder().nulls(nulls).build_unchecked()
+    }))
 }
 
 /// The inferred schema with every INT96 leaf read as `Timestamp(µs, "UTC")` - exact over years 1 to 9999, where
@@ -467,7 +518,7 @@ mod tests {
     use parquet::arrow::arrow_reader::{RowSelection, RowSelector};
     use parquet::arrow::push_decoder::RowGroupSelection;
     use parquet::arrow::ArrowWriter;
-    use parquet::basic::{Compression, Type};
+    use parquet::basic::Compression;
     use parquet::data_type::{Int64Type, Int96, Int96Type};
     use parquet::file::metadata::{FileMetaData, PageIndexPolicy, ParquetMetaData, ParquetMetaDataReader};
     use parquet::file::properties::WriterProperties;
@@ -475,9 +526,9 @@ mod tests {
     use parquet::schema::parser::parse_message_type;
     use parquet::schema::types::SchemaDescriptor;
 
-    use super::{int96_hint, unsupported_codec, ParquetReader, Projected, ReadPlan};
+    use super::{coalesced, int96_hint, unsupported_codec, ParquetReader, Projected, ReadPlan};
     use crate::parquet::error::Error;
-    use crate::parquet::filter::{FilterNode, Interval, Scalar};
+    use crate::parquet::filter::Raw;
     use crate::parquet::footer::Footer;
     use crate::parquet::source::fake::Counting;
 
@@ -507,7 +558,8 @@ mod tests {
 
     #[test]
     fn a_selection_keeps_the_groups_it_selects_rows_of_each_with_its_local_selection() {
-        let plan = ReadPlan::from_selection(&three_groups(), vec![(150, true), (20, false), (130, true)]).unwrap();
+        let plan =
+            ReadPlan::from_selection(&three_groups(), vec![(150, true), (20, false), (130, true)], None, None).unwrap();
 
         assert_eq!(
             plan.selections,
@@ -534,6 +586,8 @@ mod tests {
                 (0, false),
                 (50, true),
             ],
+            None,
+            None,
         )
         .unwrap();
 
@@ -551,7 +605,7 @@ mod tests {
             ]
         );
         assert_eq!(
-            ReadPlan::from_selection(&three_groups(), vec![(100, true), (200, false)])
+            ReadPlan::from_selection(&three_groups(), vec![(100, true), (200, false)], None, None)
                 .unwrap()
                 .selections,
             vec![RowGroupSelection::new(1, None), RowGroupSelection::new(2, None)]
@@ -560,7 +614,7 @@ mod tests {
 
     #[test]
     fn a_selection_of_no_row_reads_no_group() {
-        let plan = ReadPlan::from_selection(&three_groups(), vec![(300, true)]).unwrap();
+        let plan = ReadPlan::from_selection(&three_groups(), vec![(300, true)], None, None).unwrap();
 
         assert!(plan.selections.is_empty());
     }
@@ -569,7 +623,7 @@ mod tests {
     fn a_selection_that_does_not_cover_the_file_is_refused() {
         for selectors in [vec![(299, false)], vec![(300, false), (1, true)], vec![]] {
             assert!(matches!(
-                ReadPlan::from_selection(&three_groups(), selectors),
+                ReadPlan::from_selection(&three_groups(), selectors, None, None),
                 Err(Error::Plan(message)) if message.ends_with("cannot read a file of 300 rows")
             ));
         }
@@ -578,7 +632,7 @@ mod tests {
     #[test]
     fn selector_counts_that_overflow_are_refused() {
         assert!(matches!(
-            ReadPlan::from_selection(&three_groups(), vec![(usize::MAX, false), (301, true)]),
+            ReadPlan::from_selection(&three_groups(), vec![(usize::MAX, false), (301, true)], None, None),
             Err(Error::Plan(message)) if message == "A read plan's row counts overflow"
         ));
     }
@@ -605,7 +659,7 @@ mod tests {
     fn a_plan_covers_the_row_groups_rows_whatever_the_file_row_count_claims() {
         for claimed in [200, 400] {
             assert_eq!(
-                ReadPlan::from_selection(&claiming(claimed), vec![(300, false)])
+                ReadPlan::from_selection(&claiming(claimed), vec![(300, false)], None, None)
                     .unwrap()
                     .row_groups(),
                 vec![0, 1, 2]
@@ -613,7 +667,7 @@ mod tests {
 
             for selectors in [vec![(claimed as usize, false)], vec![(299, false)], vec![(301, false)]] {
                 assert!(matches!(
-                    ReadPlan::from_selection(&claiming(claimed), selectors),
+                    ReadPlan::from_selection(&claiming(claimed), selectors, None, None),
                     Err(Error::Plan(message)) if message.ends_with("cannot read a file of 300 rows")
                 ));
             }
@@ -695,7 +749,7 @@ mod tests {
         let source = Arc::new(Counting::new(file));
         let columns = columns.iter().map(|column| column.to_string()).collect::<Vec<_>>();
         let rows = footer.meta().file_metadata().num_rows() as usize;
-        let plan = ReadPlan::from_selection(footer.meta(), selectors.unwrap_or(vec![(rows, false)]))?;
+        let plan = ReadPlan::from_selection(footer.meta(), selectors.unwrap_or(vec![(rows, false)]), None, None)?;
 
         Ok((
             ParquetReader::open(Arc::clone(&source), footer.meta(), &columns, plan, 1_024)?,
@@ -882,18 +936,21 @@ mod tests {
         let file = four_groups();
         let footer = Footer::read(&Bytes::from(file.clone())).unwrap();
         let source = Arc::new(Counting::new(file));
-        let mut plan = ReadPlan::from_selection(footer.meta(), selectors).unwrap();
-        plan.filter = Some(FilterNode::Intervals {
-            path: vec!["a".to_string()],
-            physical: Type::INT64,
-            intervals: vec![Interval {
-                lower: Some(Scalar::Int(150)),
-                lower_inclusive: true,
-                upper: None,
-                upper_inclusive: false,
-            }],
-        });
-        plan.limit = limit;
+        let bytes = |value: &str| Raw::Bytes(value.as_bytes().to_vec());
+        let filter = Raw::Map(vec![
+            (b"leaf".to_vec(), bytes("intervals")),
+            (b"path".to_vec(), Raw::List(vec![bytes("a")])),
+            (
+                b"intervals".to_vec(),
+                Raw::List(vec![Raw::List(vec![
+                    Raw::Int(150),
+                    Raw::Bool(true),
+                    Raw::Null,
+                    Raw::Bool(false),
+                ])]),
+            ),
+        ]);
+        let plan = ReadPlan::from_selection(footer.meta(), selectors, Some(filter), limit).unwrap();
         let mut reader =
             ParquetReader::open(Arc::clone(&source), footer.meta(), &["b".to_string()], plan, 1_024).unwrap();
         let mut values = Vec::new();
@@ -1164,5 +1221,12 @@ mod tests {
 
         assert_eq!(drained(reader), 200);
         assert_eq!(source.counted(), (2, chunk_bytes(&file, &[1, 3], &[0, 1, 2])));
+    }
+
+    #[test]
+    fn adjacent_ranges_are_coalesced() {
+        assert_eq!(coalesced(vec![10..20, 0..10, 30..40, 20..25]), vec![0..25, 30..40]);
+        assert_eq!(coalesced(vec![0..10, 5..8, 8..12]), vec![0..12]);
+        assert!(coalesced(vec![]).is_empty());
     }
 }

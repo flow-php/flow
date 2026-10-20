@@ -18,16 +18,11 @@ final readonly class PageIndex
     ) {}
 
     /**
-     * Null without both indexes or when they are inconsistent: a malformed index is no index.
+     * Null without both indexes or when they disagree on the pages.
      */
     public static function of(?ColumnIndex $columnIndex, ?OffsetIndex $offsetIndex, int $rowGroupRows): ?self
     {
-        if (
-            $columnIndex === null
-            || $offsetIndex === null
-            || !$offsetIndex->coversRows($rowGroupRows)
-            || $columnIndex->pages() !== count($offsetIndex->pages)
-        ) {
+        if ($columnIndex === null || $offsetIndex === null || $columnIndex->pages() !== count($offsetIndex->pages)) {
             return null;
         }
 

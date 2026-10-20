@@ -17,12 +17,12 @@ interface Indexes
     public function bloomFilter(int $rowGroup, FlatColumn $column): ?Sbbf;
 
     /**
-     * Null when the chunk has no column index.
+     * Null when the chunk has no column index, or one that fails to decode.
      */
     public function columnIndex(int $rowGroup, FlatColumn $column): ?ColumnIndex;
 
     /**
-     * Null when the chunk has no offset index.
+     * Null when the chunk has no offset index, or one that fails to decode or does not fit the chunk and its row group.
      */
     public function offsetIndex(int $rowGroup, FlatColumn $column): ?OffsetIndex;
 }

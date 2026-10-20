@@ -4,4 +4,4 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Filter\Binding;
 
-final readonly class AbsentLeaf implements LeafResolution {}
+final readonly class AbsentLeaf {}

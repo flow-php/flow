@@ -27,13 +27,4 @@ final class PageIndexTest extends TestCase
     {
         static::assertNull(PageIndex::of(PageIndexMother::int64([[0, 9]]), PageIndexMother::pagesAt(0, 5), 10));
     }
-
-    public function test_an_offset_index_that_does_not_split_the_row_group_is_no_page_index(): void
-    {
-        static::assertNull(PageIndex::of(
-            PageIndexMother::int64([[0, 4], [5, 9]]),
-            PageIndexMother::pagesAt(0, 10),
-            10,
-        ));
-    }
 }

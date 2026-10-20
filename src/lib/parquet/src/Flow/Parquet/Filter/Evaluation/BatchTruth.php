@@ -47,7 +47,7 @@ final readonly class BatchTruth implements FilterVisitor
 {
     /**
      * @param WeakMap<Comparison|In|IsNull|StartsWith, ResolvedLeaf> $leaves
-     * @param WeakMap<In, array<string, true>> $keys
+     * @param WeakMap<In, array<int|string, true>> $keys
      * @param array<string, list<mixed>> $batch
      * @param non-negative-int $rows
      */
@@ -148,8 +148,10 @@ final readonly class BatchTruth implements FilterVisitor
                 continue;
             }
 
-            if ($keys !== null) {
-                $result[] = is_string($value) && array_key_exists($value, $keys);
+            $key = $keys === null ? null : $leaf->domain->key($value);
+
+            if ($keys !== null && $key !== null) {
+                $result[] = array_key_exists($key, $keys);
 
                 continue;
             }

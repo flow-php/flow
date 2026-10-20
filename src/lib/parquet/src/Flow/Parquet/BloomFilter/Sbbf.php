@@ -82,11 +82,6 @@ final readonly class Sbbf
         return $bits;
     }
 
-    public function bytes(): string
-    {
-        return $this->bitset;
-    }
-
     /**
      * As a file holds it, the form BloomFilterReader reads: the thrift header, then the bitset.
      */

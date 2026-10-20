@@ -34,11 +34,11 @@ final class TransformUpTest extends FlowTestCase
                 private array &$visited,
             ) {}
 
-            public function of(Node $node): Node
+            public function of(Node $original, Node $rebuilt): Node
             {
-                $this->visited[] = $node::class;
+                $this->visited[] = $rebuilt::class;
 
-                return $node;
+                return $rebuilt;
             }
         });
 
@@ -50,9 +50,9 @@ final class TransformUpTest extends FlowTestCase
         $root = NodeMother::limit(NodeMother::select(NodeMother::read()), 5);
 
         static::assertSame($root, (new TransformUp())->of($root, new class implements Rewrite {
-            public function of(Node $node): Node
+            public function of(Node $original, Node $rebuilt): Node
             {
-                return $node;
+                return $rebuilt;
             }
         }));
     }

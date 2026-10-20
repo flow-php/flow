@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\Filter\Evaluation;
 
+use Flow\Parquet\Filter\All;
+use Flow\Parquet\Filter\Any;
 use Flow\Parquet\Filter\Truth;
 use Flow\Parquet\Tests\Context\ZoneTruth;
 use Flow\Parquet\Tests\Mother\ZoneMapMother;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\Parquet\DSL\parquet_all;
-use function Flow\Parquet\DSL\parquet_any;
 use function Flow\Parquet\DSL\parquet_column;
-use function Flow\Parquet\DSL\parquet_not;
 
 use const INF;
 
@@ -38,7 +37,7 @@ final class StatisticsEvaluatorTest extends TestCase
 
     public function test_comparison_negated_never_when_all_null_or_every_value_matches(): void
     {
-        $notLt = parquet_not(parquet_column('i')->lessThan(5));
+        $notLt = parquet_column('i')->lessThan(5)->negate();
 
         static::assertSame(Truth::Never, ZoneTruth::of($notLt, ['i' => ZoneMapMother::allNull()]));
         static::assertSame(Truth::Never, ZoneTruth::of($notLt, ['i' => ZoneMapMother::withNulls(1, 4)]));
@@ -47,7 +46,7 @@ final class StatisticsEvaluatorTest extends TestCase
 
     public function test_comparison_negated_always_when_no_null_and_the_bounds_miss_the_interval(): void
     {
-        $notLt = parquet_not(parquet_column('i')->lessThan(5));
+        $notLt = parquet_column('i')->lessThan(5)->negate();
 
         static::assertSame(Truth::Always, ZoneTruth::of($notLt, ['i' => ZoneMapMother::clean(5, 9)]));
         static::assertSame(Truth::Maybe, ZoneTruth::of($notLt, ['i' => ZoneMapMother::withNulls(5, 9)]));
@@ -179,7 +178,7 @@ final class StatisticsEvaluatorTest extends TestCase
 
     public function test_starts_with_negated_never_when_all_null_or_both_bounds_start_with_the_prefix(): void
     {
-        $notPrefix = parquet_not(parquet_column('s')->startsWith('ab'));
+        $notPrefix = parquet_column('s')->startsWith('ab')->negate();
 
         static::assertSame(Truth::Never, ZoneTruth::of($notPrefix, ['s' => ZoneMapMother::allNull()]));
         static::assertSame(Truth::Never, ZoneTruth::of($notPrefix, ['s' => ZoneMapMother::withNulls('ab', 'abz')]));
@@ -187,7 +186,7 @@ final class StatisticsEvaluatorTest extends TestCase
 
     public function test_starts_with_negated_always_when_no_null_and_the_bounds_miss_the_prefix(): void
     {
-        $notPrefix = parquet_not(parquet_column('s')->startsWith('ab'));
+        $notPrefix = parquet_column('s')->startsWith('ab')->negate();
 
         static::assertSame(Truth::Always, ZoneTruth::of($notPrefix, ['s' => ZoneMapMother::clean('b', 'c')]));
         static::assertSame(Truth::Maybe, ZoneTruth::of($notPrefix, ['s' => ZoneMapMother::withNulls('b', 'c')]));
@@ -223,18 +222,18 @@ final class StatisticsEvaluatorTest extends TestCase
         $zones = ['i' => ZoneMapMother::clean(1, 4), 's' => ZoneMapMother::withNulls('a', 'b')];
 
         static::assertSame(Truth::Never, ZoneTruth::of(
-            parquet_all(parquet_column('i')->lessThan(5), parquet_column('i')->greaterThan(9)),
+            parquet_column('i')->lessThan(5)->and(parquet_column('i')->greaterThan(9)),
             $zones,
         ));
         static::assertSame(Truth::Always, ZoneTruth::of(
-            parquet_all(parquet_column('i')->lessThan(5), parquet_column('i')->greaterThan(0)),
+            parquet_column('i')->lessThan(5)->and(parquet_column('i')->greaterThan(0)),
             $zones,
         ));
         static::assertSame(Truth::Maybe, ZoneTruth::of(
-            parquet_all(parquet_column('i')->lessThan(5), parquet_column('s')->equals('a')),
+            parquet_column('i')->lessThan(5)->and(parquet_column('s')->equals('a')),
             $zones,
         ));
-        static::assertSame(Truth::Always, ZoneTruth::of(parquet_all(), $zones));
+        static::assertSame(Truth::Always, ZoneTruth::of(new All(), $zones));
     }
 
     public function test_any_is_never_with_all_never_and_always_with_any_always(): void
@@ -242,18 +241,18 @@ final class StatisticsEvaluatorTest extends TestCase
         $zones = ['i' => ZoneMapMother::clean(1, 4), 's' => ZoneMapMother::withNulls('a', 'b')];
 
         static::assertSame(Truth::Never, ZoneTruth::of(
-            parquet_any(parquet_column('i')->greaterThan(5), parquet_column('i')->lessThan(0)),
+            parquet_column('i')->greaterThan(5)->or(parquet_column('i')->lessThan(0)),
             $zones,
         ));
         static::assertSame(Truth::Always, ZoneTruth::of(
-            parquet_any(parquet_column('s')->equals('a'), parquet_column('i')->lessThan(5)),
+            parquet_column('s')->equals('a')->or(parquet_column('i')->lessThan(5)),
             $zones,
         ));
         static::assertSame(Truth::Maybe, ZoneTruth::of(
-            parquet_any(parquet_column('i')->greaterThan(5), parquet_column('s')->equals('a')),
+            parquet_column('i')->greaterThan(5)->or(parquet_column('s')->equals('a')),
             $zones,
         ));
-        static::assertSame(Truth::Never, ZoneTruth::of(parquet_any(), $zones));
+        static::assertSame(Truth::Never, ZoneTruth::of(new Any(), $zones));
     }
 
     public function test_a_negated_all_is_the_any_of_its_negated_children(): void
@@ -261,11 +260,11 @@ final class StatisticsEvaluatorTest extends TestCase
         $zones = ['i' => ZoneMapMother::clean(1, 4)];
 
         static::assertSame(Truth::Always, ZoneTruth::of(
-            parquet_not(parquet_all(parquet_column('i')->lessThan(5), parquet_column('i')->greaterThan(9))),
+            parquet_column('i')->lessThan(5)->and(parquet_column('i')->greaterThan(9))->negate(),
             $zones,
         ));
         static::assertSame(Truth::Never, ZoneTruth::of(
-            parquet_not(parquet_all(parquet_column('i')->lessThan(5), parquet_column('i')->greaterThan(0))),
+            parquet_column('i')->lessThan(5)->and(parquet_column('i')->greaterThan(0))->negate(),
             $zones,
         ));
     }
@@ -275,11 +274,11 @@ final class StatisticsEvaluatorTest extends TestCase
         $zones = ['i' => ZoneMapMother::clean(1, 4)];
 
         static::assertSame(Truth::Always, ZoneTruth::of(
-            parquet_not(parquet_any(parquet_column('i')->greaterThan(5), parquet_column('i')->lessThan(0))),
+            parquet_column('i')->greaterThan(5)->or(parquet_column('i')->lessThan(0))->negate(),
             $zones,
         ));
         static::assertSame(Truth::Never, ZoneTruth::of(
-            parquet_not(parquet_any(parquet_column('i')->greaterThan(5), parquet_column('i')->lessThan(5))),
+            parquet_column('i')->greaterThan(5)->or(parquet_column('i')->lessThan(5))->negate(),
             $zones,
         ));
     }
@@ -288,10 +287,7 @@ final class StatisticsEvaluatorTest extends TestCase
     {
         $zones = ['i' => ZoneMapMother::clean(1, 4)];
 
-        static::assertSame(Truth::Always, ZoneTruth::of(
-            parquet_not(parquet_not(parquet_column('i')->lessThan(5))),
-            $zones,
-        ));
+        static::assertSame(Truth::Always, ZoneTruth::of(parquet_column('i')->lessThan(5)->negate()->negate(), $zones));
     }
 
     public function test_an_all_nan_zone_never_matches_and_its_negation_follows_the_nulls(): void
@@ -299,10 +295,10 @@ final class StatisticsEvaluatorTest extends TestCase
         static::assertSame(Truth::Never, ZoneTruth::of(parquet_column('f')->lessThan(5.0), [
             'f' => ZoneMapMother::allNaN(),
         ]));
-        static::assertSame(Truth::Always, ZoneTruth::of(parquet_not(parquet_column('f')->lessThan(5.0)), [
+        static::assertSame(Truth::Always, ZoneTruth::of(parquet_column('f')->lessThan(5.0)->negate(), [
             'f' => ZoneMapMother::allNaN(),
         ]));
-        static::assertSame(Truth::Maybe, ZoneTruth::of(parquet_not(parquet_column('f')->lessThan(5.0)), [
+        static::assertSame(Truth::Maybe, ZoneTruth::of(parquet_column('f')->lessThan(5.0)->negate(), [
             'f' => ZoneMapMother::allNaN(2),
         ]));
     }
@@ -313,18 +309,18 @@ final class StatisticsEvaluatorTest extends TestCase
 
         static::assertSame(Truth::Maybe, ZoneTruth::of(parquet_column('f')->equals(INF), $toInfinity));
         static::assertSame(Truth::Maybe, ZoneTruth::of(parquet_column('f')->greaterThanOrEqual(INF), $toInfinity));
-        static::assertSame(Truth::Maybe, ZoneTruth::of(parquet_not(parquet_column('f')->equals(INF)), $toInfinity));
+        static::assertSame(Truth::Maybe, ZoneTruth::of(parquet_column('f')->equals(INF)->negate(), $toInfinity));
         static::assertSame(Truth::Maybe, ZoneTruth::of(parquet_column('f')->greaterThan(-INF), [
             'f' => ZoneMapMother::ieee(-INF, 1.0, nanCount: 0),
         ]));
-        static::assertSame(Truth::Never, ZoneTruth::of(parquet_not(parquet_column('f')->equals(INF)), [
+        static::assertSame(Truth::Never, ZoneTruth::of(parquet_column('f')->equals(INF)->negate(), [
             'f' => ZoneMapMother::ieee(INF, INF, nanCount: 0),
         ]));
     }
 
     public function test_not_less_than_needs_no_nan_to_be_never(): void
     {
-        $notLt = parquet_not(parquet_column('f')->lessThan(5.0));
+        $notLt = parquet_column('f')->lessThan(5.0)->negate();
 
         static::assertSame(Truth::Maybe, ZoneTruth::of($notLt, ['f' => ZoneMapMother::unknownNaN(1.0, 4.0)]));
         static::assertSame(Truth::Maybe, ZoneTruth::of($notLt, ['f' => ZoneMapMother::ieee(1.0, 4.0, nanCount: 1)]));
@@ -394,7 +390,7 @@ final class StatisticsEvaluatorTest extends TestCase
 
         static::assertSame(Truth::Maybe, ZoneTruth::of(parquet_column('i')->equals('1'), $zones));
         static::assertSame(Truth::Maybe, ZoneTruth::of(parquet_column('i')->notEquals('1'), $zones));
-        static::assertSame(Truth::Maybe, ZoneTruth::of(parquet_not(parquet_column('i')->startsWith('1')), $zones));
+        static::assertSame(Truth::Maybe, ZoneTruth::of(parquet_column('i')->startsWith('1')->negate(), $zones));
         static::assertSame(Truth::Maybe, ZoneTruth::of(parquet_column('i')->startsWith('1'), $zones));
     }
 
@@ -403,7 +399,7 @@ final class StatisticsEvaluatorTest extends TestCase
         static::assertSame(Truth::Never, ZoneTruth::of(parquet_column('missing')->equals(1), []));
         static::assertSame(Truth::Never, ZoneTruth::of(parquet_column('missing')->notEquals(1), []));
         static::assertSame(Truth::Never, ZoneTruth::of(parquet_column('missing')->startsWith('a'), []));
-        static::assertSame(Truth::Never, ZoneTruth::of(parquet_not(parquet_column('missing')->startsWith('a')), []));
+        static::assertSame(Truth::Never, ZoneTruth::of(parquet_column('missing')->startsWith('a')->negate(), []));
         static::assertSame(Truth::Always, ZoneTruth::of(parquet_column('missing')->isNull(), []));
         static::assertSame(Truth::Never, ZoneTruth::of(parquet_column('missing')->isNotNull(), []));
     }

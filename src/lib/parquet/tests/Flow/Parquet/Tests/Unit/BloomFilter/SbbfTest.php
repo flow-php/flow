@@ -64,11 +64,11 @@ final class SbbfTest extends TestCase
         static::assertFalse(Sbbf::fromBytes(str_repeat("\0", 64))->check(-1));
     }
 
-    public function test_bytes_round_trip(): void
+    public function test_the_bitset_is_serialized_after_its_header(): void
     {
         $bytes = str_repeat("\x01\x80", 32);
 
-        static::assertSame($bytes, Sbbf::fromBytes($bytes)->bytes());
+        static::assertStringEndsWith($bytes, Sbbf::fromBytes($bytes)->serialized());
     }
 
     public function test_a_hash_with_the_top_bit_set_lands_in_the_block_and_bits_of_the_unsigned_formulas(): void

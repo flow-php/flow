@@ -7,17 +7,6 @@ namespace Flow\Parquet;
 enum Option
 {
     /**
-     * When using the Arrow engine, controls how many rows are returned per internal read call.
-     * Reduces peak memory usage for large row groups by streaming batches of this size.
-     *
-     * Only affects the Arrow engine. Ignored by the PHP engine.
-     * Set to null to read entire row groups at once (maximum throughput).
-     *
-     * Default: 1024
-     */
-    case ARROW_BATCH_SIZE;
-
-    /**
      * When using the Arrow engine, controls how many rows are buffered in PHP
      * before sending them to the extension's writeBatch() in a single call.
      * Larger values reduce call overhead but increase PHP memory usage.
@@ -138,8 +127,9 @@ enum Option
     case PAGE_HEADER_STATISTICS;
 
     /**
-     * PageBuilder is going to use this value to determine how many rows should be stored in one page.
-     * Smaller pages will reduce memory usage, but will increase the number of pages in the file increasing the IO operations.
+     * The rows a data page holds at most, beside PAGE_SIZE_BYTES (arrow-rs data_page_row_count_limit). The PHP writer
+     * checks it every PAGE_SIZE_CHECK_INTERVAL rows, the arrow writer every write batch. Smaller pages let the page
+     * index skip more of a filtered read, at the cost of more page headers.
      *
      * Default value is 1000 rows
      */

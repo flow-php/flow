@@ -19,12 +19,9 @@ use Generator;
 interface FileExtractor extends Extractor
 {
     /**
-     * Reads what the plan pushed into this read and returns only rows matching $scan->filter. The limit and the
-     * path filter are hints: the plan still enforces the limit and every path filter is part of $scan->filter, so a
-     * source that reads or lists more is still correct. extract() is scan() with only a limit.
-     *
-     * @param FileScan $scan $scan->limit (see Extractor::extract()), $scan->pathFilter (what this read lists) and
-     *                       $scan->filter (a predicate over the source's columns the returned rows match)
+     * Reads what the plan pushed into this read and returns only rows matching every one of $scan->conjuncts. The
+     * limit and the path filter are hints: the plan still enforces the limit, and every path filter is also one of
+     * the conjuncts, so a source that reads or lists more is still correct. extract() is scan() with only a limit.
      *
      * @return Generator<int, Rows, Signal|null, void>
      */

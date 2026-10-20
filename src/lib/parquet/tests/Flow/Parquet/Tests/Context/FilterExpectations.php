@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Context;
 
+use Flow\Parquet\Filter\Binding\BoundFilter;
 use Flow\Parquet\Filter\Evaluation\FilterEvaluator;
 use Flow\Parquet\Filter\Filter;
 use Flow\Parquet\Options;
@@ -87,7 +88,7 @@ final class FilterExpectations
 
         $ids = [];
 
-        foreach ((new FilterEvaluator($filter, $schema, new Options()))->mask($batch) as $row) {
+        foreach ((new FilterEvaluator(BoundFilter::bind($filter, $schema, new Options())))->mask($batch) as $row) {
             /** @var int $id */
             $id = $batch['id'][$row];
             $ids[] = $id;

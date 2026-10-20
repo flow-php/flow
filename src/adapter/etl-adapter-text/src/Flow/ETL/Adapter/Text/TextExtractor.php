@@ -15,6 +15,7 @@ use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Extractor\File\ListedFiles;
 use Flow\ETL\Extractor\File\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\File\ReadWindow;
+use Flow\ETL\Extractor\File\Scanning;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
@@ -39,6 +40,8 @@ final class TextExtractor implements
     MetadataColumnsExtractor,
     RewindableExtractor
 {
+    use Scanning;
+
     private ?Schema $schema = null;
 
     use Batches;
@@ -73,14 +76,6 @@ final class TextExtractor implements
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context, ?int $limit = null): Generator
-    {
-        return $this->scan($context, new FileScan(limit: $limit));
-    }
-
-    /**
-     * @return Generator<int, Rows, Signal|null, void>
-     */
     public function scan(FlowContext $context, FileScan $scan): Generator
     {
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
@@ -88,7 +83,7 @@ final class TextExtractor implements
         yield from (new FileReadLoop(
             $fileColumns,
             $fileColumns->declare($this->schema ?? schema(str_schema('text'))),
-            $scan->filter,
+            $scan->conjuncts,
         ))->read(
             iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $scan->pathFilter), false),
             new TextFileBatches($this->filesystem),

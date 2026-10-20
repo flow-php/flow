@@ -77,63 +77,96 @@ final class PhysicalIntervalsTest extends TestCase
     #[TestWith([99, true])]
     public function test_contains_finds_the_value_among_sorted_intervals(int $value, bool $contained): void
     {
-        $intervals = new PhysicalIntervals([
+        $intervals = new PhysicalIntervals(PhysicalOrder::Signed, [
             new PhysicalInterval(null, false, 1, false),
             new PhysicalInterval(3, true, 3, true),
             new PhysicalInterval(5, false, 8, true),
             new PhysicalInterval(10, true, null, false),
         ]);
 
-        static::assertSame($contained, $intervals->contains(PhysicalOrder::Signed, $value));
+        static::assertSame($contained, $intervals->contains($value));
     }
 
     public function test_contains_compares_floats_as_ieee_754(): void
     {
-        static::assertFalse((new PhysicalIntervals([PhysicalInterval::unbounded()]))->contains(
-            PhysicalOrder::Double,
+        static::assertFalse((new PhysicalIntervals(PhysicalOrder::Double, [PhysicalInterval::unbounded()]))->contains(
             NAN,
         ));
-        static::assertTrue((new PhysicalIntervals([new PhysicalInterval(0.0, true, 0.0, true)]))->contains(
-            PhysicalOrder::Double,
-            -0.0,
-        ));
-        static::assertFalse((new PhysicalIntervals([new PhysicalInterval(-0.0, false, null, false)]))->contains(
-            PhysicalOrder::Double,
+        static::assertTrue((new PhysicalIntervals(PhysicalOrder::Double, [new PhysicalInterval(
             0.0,
-        ));
+            true,
+            0.0,
+            true,
+        )]))->contains(-0.0));
+        static::assertFalse((new PhysicalIntervals(PhysicalOrder::Double, [new PhysicalInterval(
+            -0.0,
+            false,
+            null,
+            false,
+        )]))->contains(0.0));
+        static::assertTrue((new PhysicalIntervals(PhysicalOrder::Double, [new PhysicalInterval(
+            -0.0,
+            true,
+            1.0,
+            false,
+        )]))->contains(0.0));
     }
 
     public function test_covers_and_disjoint_honour_each_bound_and_its_inclusion(): void
     {
-        $intervals = new PhysicalIntervals([
+        $intervals = new PhysicalIntervals(PhysicalOrder::Signed, [
             new PhysicalInterval(1, true, 5, false),
             new PhysicalInterval(8, false, null, false),
         ]);
 
-        static::assertTrue($intervals->covers(PhysicalOrder::Signed, 1, 4));
-        static::assertFalse($intervals->covers(PhysicalOrder::Signed, 1, 5));
-        static::assertFalse($intervals->covers(PhysicalOrder::Signed, 0, 4));
-        static::assertFalse($intervals->covers(PhysicalOrder::Signed, 8, 9));
-        static::assertTrue($intervals->covers(PhysicalOrder::Signed, 9, PHP_INT_MAX));
-        static::assertTrue($intervals->disjoint(PhysicalOrder::Signed, 5, 8));
-        static::assertTrue($intervals->disjoint(PhysicalOrder::Signed, -3, 0));
-        static::assertFalse($intervals->disjoint(PhysicalOrder::Signed, 4, 6));
-        static::assertFalse($intervals->disjoint(PhysicalOrder::Signed, 7, 9));
-        static::assertTrue((new PhysicalIntervals([]))->disjoint(PhysicalOrder::Signed, 1, 1));
-        static::assertFalse((new PhysicalIntervals([]))->covers(PhysicalOrder::Signed, 1, 1));
-        static::assertTrue((new PhysicalIntervals([PhysicalInterval::unbounded()]))->covers(
-            PhysicalOrder::Signed,
+        static::assertTrue($intervals->covers(1, 4));
+        static::assertFalse($intervals->covers(1, 5));
+        static::assertFalse($intervals->covers(0, 4));
+        static::assertFalse($intervals->covers(8, 9));
+        static::assertTrue($intervals->covers(9, PHP_INT_MAX));
+        static::assertTrue($intervals->disjoint(5, 8));
+        static::assertTrue($intervals->disjoint(-3, 0));
+        static::assertFalse($intervals->disjoint(4, 6));
+        static::assertFalse($intervals->disjoint(7, 9));
+        static::assertTrue((new PhysicalIntervals(PhysicalOrder::Signed, []))->disjoint(1, 1));
+        static::assertFalse((new PhysicalIntervals(PhysicalOrder::Signed, []))->covers(1, 1));
+        static::assertTrue((new PhysicalIntervals(PhysicalOrder::Signed, [PhysicalInterval::unbounded()]))->covers(
             1,
             1,
         ));
     }
 
+    public function test_covers_and_disjoint_search_among_many_intervals_and_ones_meeting_at_an_exclusive_bound(): void
+    {
+        $intervals = new PhysicalIntervals(PhysicalOrder::Signed, [
+            new PhysicalInterval(0, true, 2, true),
+            new PhysicalInterval(10, true, 12, true),
+            new PhysicalInterval(20, true, 25, true),
+            new PhysicalInterval(25, false, 30, true),
+            new PhysicalInterval(40, true, 42, true),
+        ]);
+
+        static::assertTrue($intervals->covers(11, 12));
+        static::assertTrue($intervals->covers(25, 25));
+        static::assertTrue($intervals->covers(26, 30));
+        static::assertFalse($intervals->covers(24, 26));
+        static::assertFalse($intervals->covers(12, 13));
+        static::assertTrue($intervals->contains(25));
+        static::assertTrue($intervals->disjoint(31, 39));
+        static::assertTrue($intervals->disjoint(-5, -1));
+        static::assertTrue($intervals->disjoint(43, 50));
+        static::assertFalse($intervals->disjoint(30, 35));
+        static::assertFalse($intervals->disjoint(35, 40));
+        static::assertFalse($intervals->disjoint(-5, 0));
+        static::assertFalse($intervals->disjoint(25, 25));
+    }
+
     public function test_covers_and_disjoint_compare_in_the_column_order(): void
     {
-        $intervals = new PhysicalIntervals([new PhysicalInterval(null, false, -1, true)]);
+        $intervals = new PhysicalIntervals(PhysicalOrder::Unsigned64, [new PhysicalInterval(null, false, -1, true)]);
 
-        static::assertTrue($intervals->covers(PhysicalOrder::Unsigned64, 0, PHP_INT_MAX));
-        static::assertFalse($intervals->disjoint(PhysicalOrder::Unsigned64, PHP_INT_MIN, -2));
+        static::assertTrue($intervals->covers(0, PHP_INT_MAX));
+        static::assertFalse($intervals->disjoint(PHP_INT_MIN, -2));
     }
 
     /**

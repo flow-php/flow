@@ -6,6 +6,7 @@ namespace Flow\Parquet\Writer;
 
 use Flow\Parquet\Dremel\DremelShredder;
 use Flow\Parquet\Dremel\RowGroupContainer;
+use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
@@ -30,9 +31,18 @@ final class RowGroupBuilder
     private int $rowsCount = 0;
 
     /**
+     * Rows in the pages not closed yet: every column closes its page at the same row.
+     */
+    private int $pageRows = 0;
+
+    /**
      * Rows of the row groups flushed before this one: the writer's index of this group's first row.
      */
     private int $flushedRows = 0;
+
+    private readonly int $pageMaximumRows;
+
+    private readonly int $rowGroupSizeBytes;
 
     public function __construct(
         private readonly Schema $schema,
@@ -40,6 +50,22 @@ final class RowGroupBuilder
         private readonly Options $options,
         private readonly DremelShredder $shredder,
     ) {
+        $this->pageMaximumRows = $this->options->getInt(Option::PAGE_MAXIMUM_ROWS_COUNT);
+
+        if ($this->pageMaximumRows < 1) {
+            throw new InvalidArgumentException(
+                Option::PAGE_MAXIMUM_ROWS_COUNT->name . ' must be greater than 0, ' . $this->pageMaximumRows . ' given',
+            );
+        }
+
+        $this->rowGroupSizeBytes = $this->options->getInt(Option::ROW_GROUP_SIZE_BYTES);
+
+        if ($this->rowGroupSizeBytes < 1) {
+            throw new InvalidArgumentException(
+                Option::ROW_GROUP_SIZE_BYTES->name . ' must be greater than 0, ' . $this->rowGroupSizeBytes . ' given',
+            );
+        }
+
         $this->columnChunkBuilders = ColumnChunkBuilders::initialize($this->schema, $this->options, $this->compression);
     }
 
@@ -77,10 +103,7 @@ final class RowGroupBuilder
             }
 
             $this->rowsCount += count($chunk);
-
-            if ($this->columnChunkBuilders->isAnyPageFull()) {
-                $this->columnChunkBuilders->closePages();
-            }
+            $this->closeFullPages(count($chunk));
         }
     }
 
@@ -115,10 +138,7 @@ final class RowGroupBuilder
             }
 
             $this->rowsCount += $length;
-
-            if ($this->columnChunkBuilders->isAnyPageFull()) {
-                $this->columnChunkBuilders->closePages();
-            }
+            $this->closeFullPages($length);
         }
     }
 
@@ -137,6 +157,7 @@ final class RowGroupBuilder
         $offsetIndexes = [];
         $this->flushedRows += $rowsCount;
         $this->rowsCount = 0;
+        $this->pageRows = 0;
 
         $bloomFilters = [];
 
@@ -154,7 +175,10 @@ final class RowGroupBuilder
             }
 
             $bytes = $bloomFilter->serialized();
-            $chunks[$index] = $chunks[$index]->withBloomFilter($fileOffset + strlen($buffer), strlen($bytes));
+            $chunks[$index] = $chunks[$index]->withLocations(
+                bloomFilterOffset: $fileOffset + strlen($buffer),
+                bloomFilterLength: strlen($bytes),
+            );
             $buffer .= $bytes;
         }
 
@@ -168,7 +192,7 @@ final class RowGroupBuilder
 
     public function isFull(): bool
     {
-        return $this->columnChunkBuilders->uncompressedSize() >= $this->options->getInt(Option::ROW_GROUP_SIZE_BYTES);
+        return $this->columnChunkBuilders->uncompressedSize() >= $this->rowGroupSizeBytes;
     }
 
     public function rowsCount(): int
@@ -192,10 +216,21 @@ final class RowGroupBuilder
             $this->columnChunkBuilders->addColumnByFlatPath($flatPath, $columnValues);
         }
 
-        if ($this->columnChunkBuilders->isAnyPageFull()) {
-            $this->columnChunkBuilders->closePages();
-        }
-
+        $this->closeFullPages(count($this->rowBuffer));
         $this->rowBuffer = [];
+    }
+
+    /**
+     * Pages close once one reaches PAGE_SIZE_BYTES or they hold PAGE_MAXIMUM_ROWS_COUNT rows, checked every
+     * PAGE_SIZE_CHECK_INTERVAL rows.
+     */
+    private function closeFullPages(int $rows): void
+    {
+        $this->pageRows += $rows;
+
+        if ($this->columnChunkBuilders->isAnyPageFull() || $this->pageRows >= $this->pageMaximumRows) {
+            $this->columnChunkBuilders->closePages();
+            $this->pageRows = 0;
+        }
     }
 }

@@ -18,8 +18,7 @@ final class MetadataRowGroupChunksTest extends TestCase
         $id = $metadata->schema()->getFlat('id');
         $chunks = new MetadataRowGroupChunks($metadata);
 
-        static::assertSame(3, $chunks->count());
-        static::assertSame(2, $chunks->rowCount(2));
+        static::assertSame([2, 2, 2], $chunks->rowCounts());
         static::assertEquals($metadata->rowGroups()->all()[2]->getColumnChunk($id), $chunks->chunk(2, $id));
         static::assertSame($metadata->columnOrder($id), $chunks->columnOrder($id));
     }
@@ -31,6 +30,6 @@ final class MetadataRowGroupChunksTest extends TestCase
         $this->expectException(OutOfBoundsException::class);
         $this->expectExceptionMessage('Row group 3 does not exist');
 
-        (new MetadataRowGroupChunks($metadata))->rowCount(3);
+        (new MetadataRowGroupChunks($metadata))->chunk(3, $metadata->schema()->getFlat('id'));
     }
 }

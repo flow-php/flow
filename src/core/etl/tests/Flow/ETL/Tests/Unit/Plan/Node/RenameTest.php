@@ -45,6 +45,6 @@ final class RenameTest extends FlowTestCase
         static::assertSame(RowCount::preserving, $node->rowCount());
         static::assertSame(Transparency::transparent, $node->transparency());
         static::assertSame(Materialization::streaming, $node->materialization());
-        static::assertEquals(Redefined::alias('user_id', 'id'), $node->redefines());
+        static::assertEquals(Redefined::rename('id', 'user_id'), $node->redefines());
     }
 }

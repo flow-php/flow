@@ -6,7 +6,9 @@ namespace Flow\Parquet\Reader;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
 
+use function array_key_last;
 use function array_pop;
+use function array_sum;
 use function count;
 use function min;
 use function sprintf;
@@ -20,6 +22,11 @@ final readonly class RowSelection
      * @var list<RowSelector>
      */
     private array $selectors;
+
+    /**
+     * @var list<int> the first row of each selector
+     */
+    private array $starts;
 
     public function __construct(RowSelector ...$selectors)
     {
@@ -46,7 +53,16 @@ final readonly class RowSelection
             $merged[] = $selector;
         }
 
+        $starts = [];
+        $row = 0;
+
+        foreach ($merged as $selector) {
+            $starts[] = $row;
+            $row += $selector->rowCount;
+        }
+
         $this->selectors = $merged;
+        $this->starts = $starts;
     }
 
     public static function all(int $rows): self
@@ -84,7 +100,7 @@ final readonly class RowSelection
 
     public function difference(self $other): self
     {
-        return $this->combine($other, static fn(bool $left, bool $right): bool => $left || !$right);
+        return $this->combine($other, static fn(bool $leftSkips, bool $rightSkips): bool => $leftSkips || !$rightSkips);
     }
 
     public function head(int $rows): self
@@ -103,7 +119,7 @@ final readonly class RowSelection
 
     public function intersection(self $other): self
     {
-        return $this->combine($other, static fn(bool $left, bool $right): bool => $left || $right);
+        return $this->combine($other, static fn(bool $leftSkips, bool $rightSkips): bool => $leftSkips || $rightSkips);
     }
 
     /**
@@ -152,7 +168,7 @@ final readonly class RowSelection
 
     public function union(self $other): self
     {
-        return $this->combine($other, static fn(bool $left, bool $right): bool => $left && $right);
+        return $this->combine($other, static fn(bool $leftSkips, bool $rightSkips): bool => $leftSkips && $rightSkips);
     }
 
     /**
@@ -180,6 +196,44 @@ final readonly class RowSelection
     }
 
     /**
+     * $rows rows from row $offset on, row 0 being row $offset.
+     */
+    public function slice(int $offset, int $rows): self
+    {
+        if ($offset < 0 || $rows < 0 || ($offset + $rows) > $this->totalRows()) {
+            throw new InvalidArgumentException(sprintf(
+                'Rows %d to %d lie outside a selection of %d rows',
+                $offset,
+                $offset + $rows,
+                $this->totalRows(),
+            ));
+        }
+
+        $low = 0;
+        $high = count($this->starts) - 1;
+
+        while ($low < $high) {
+            $middle = ($low + $high + 1) >> 1;
+
+            if ($this->starts[$middle] <= $offset) {
+                $low = $middle;
+            } else {
+                $high = $middle - 1;
+            }
+        }
+
+        $selectors = [];
+
+        for ($index = $low, $row = $offset, $end = $offset + $rows; $row < $end; $index++) {
+            $taken = min($end, $this->starts[$index] + $this->selectors[$index]->rowCount) - $row;
+            $selectors[] = new RowSelector($taken, $this->selectors[$index]->skip);
+            $row += $taken;
+        }
+
+        return new self(...$selectors);
+    }
+
+    /**
      * One selection per consecutive part of the given row counts, row 0 of each being the part's first row.
      *
      * @param list<int> $rowCounts
@@ -188,39 +242,20 @@ final readonly class RowSelection
      */
     public function split(array $rowCounts): array
     {
-        $total = 0;
-
-        foreach ($rowCounts as $rowCount) {
-            $total += $rowCount;
-        }
-
-        if ($total !== $this->totalRows()) {
+        if (array_sum($rowCounts) !== $this->totalRows()) {
             throw new InvalidArgumentException(sprintf(
                 'A selection of %d rows cannot be split into parts of %d rows',
                 $this->totalRows(),
-                $total,
+                array_sum($rowCounts),
             ));
         }
 
         $parts = [];
-        $index = 0;
-        $remaining = $this->selectors === [] ? 0 : $this->selectors[0]->rowCount;
+        $offset = 0;
 
         foreach ($rowCounts as $rowCount) {
-            $part = [];
-
-            while ($rowCount > 0) {
-                $rows = min($rowCount, $remaining);
-                $part[] = new RowSelector($rows, $this->selectors[$index]->skip);
-                $rowCount -= $rows;
-                $remaining -= $rows;
-
-                if ($remaining === 0 && ++$index < count($this->selectors)) {
-                    $remaining = $this->selectors[$index]->rowCount;
-                }
-            }
-
-            $parts[] = new self(...$part);
+            $parts[] = $this->slice($offset, $rowCount);
+            $offset += $rowCount;
         }
 
         return $parts;
@@ -242,13 +277,9 @@ final readonly class RowSelection
      */
     public function totalRows(): int
     {
-        $rows = 0;
+        $last = array_key_last($this->selectors);
 
-        foreach ($this->selectors as $selector) {
-            $rows += $selector->rowCount;
-        }
-
-        return $rows;
+        return $last === null ? 0 : $this->starts[$last] + $this->selectors[$last]->rowCount;
     }
 
     /**

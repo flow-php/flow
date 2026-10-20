@@ -81,7 +81,7 @@ final readonly class Details
             $node instanceof Offset => ['Skip: ' . $node->offset],
             $node instanceof TopN => ['Top: ' . $node->limit],
             $node instanceof Rename => [sprintf('Rename: %s → %s', $node->from, $node->to)],
-            $node instanceof Select => ['Columns: ' . $this->columns($node->entries)],
+            $node instanceof Select => ['Keeps only: ' . $this->columns($node->entries)],
             $node instanceof Drop => ['Drops: ' . $this->columns($node->entries)],
             $node instanceof Distinct => [
                 'Distinct on: ' . ($node->entries === [] ? 'every column' : $this->columns($node->entries)),
@@ -211,8 +211,7 @@ final readonly class Details
     }
 
     /**
-     * What the plan pushed into a read: the predicate is the one offered to the source, which may skip only part
-     * of what it cannot match.
+     * What the plan pushed into a read, each conjunct the source applies on its own line.
      *
      * @return list<string>
      */
@@ -229,8 +228,8 @@ final readonly class Details
             $lines[] = 'Files: ' . $this->name($scan->pathFilter);
         }
 
-        if ($scan->filter !== null) {
-            $lines[] = 'Filter: ' . $this->name($scan->filter);
+        foreach ($scan->conjuncts as $conjunct) {
+            $lines[] = 'Filter: ' . $this->name($conjunct);
         }
 
         return $lines;
@@ -250,10 +249,10 @@ final readonly class Details
             $notes[] = 'Buffers all rows before passing them on';
         }
 
-        if ($redefines->unknown) {
-            $notes[] = 'Defines columns known only at run time';
-        } elseif ($redefines->names !== []) {
-            $notes[] = 'Defines columns: ' . implode(', ', $redefines->names);
+        if ($redefines->isUnknown()) {
+            $notes[] = 'Changes columns known only at run time';
+        } elseif (!$redefines->isAllBut() && $redefines->names !== []) {
+            $notes[] = 'Changes columns: ' . implode(', ', $redefines->names);
         }
 
         return $notes;
@@ -271,8 +270,10 @@ final readonly class Details
             $node->materialization()->name,
         ];
 
-        if ($redefines->unknown) {
+        if ($redefines->isUnknown()) {
             $declarations[] = 'redefines unknown';
+        } elseif ($redefines->isAllBut()) {
+            $declarations[] = 'redefines all but ' . implode(', ', $redefines->names);
         } elseif ($redefines->names !== []) {
             $declarations[] = 'redefines ' . implode(', ', $redefines->names);
         }

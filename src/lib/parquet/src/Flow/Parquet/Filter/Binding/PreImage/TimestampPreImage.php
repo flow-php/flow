@@ -45,10 +45,7 @@ final readonly class TimestampPreImage implements PreImage
 
     public function equal(bool|DateTimeImmutable|float|int|string $literal): ?EqualRange
     {
-        if (!$literal instanceof DateTimeImmutable) {
-            return null;
-        }
-
+        /** @var DateTimeImmutable $literal LiteralDomain::DateTime holds only date times */
         $micros = self::micros($literal);
         $nanos = bcmul($micros, '1000');
 

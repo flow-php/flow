@@ -16,9 +16,12 @@ final readonly class In implements Filter
      */
     public array $values;
 
+    /**
+     * @param array<mixed> $values
+     */
     public function __construct(
         public ColumnRef $column,
-        mixed ...$values,
+        array $values,
     ) {
         $this->values = array_map(Literal::of(...), array_values($values));
     }
@@ -31,11 +34,6 @@ final readonly class In implements Filter
     public function and(Filter $other): All
     {
         return new All($this, $other);
-    }
-
-    public function columns(): array
-    {
-        return [$this->column];
     }
 
     public function negate(): Filter

@@ -44,6 +44,6 @@ final class DropTest extends FlowTestCase
         static::assertSame(RowCount::preserving, $node->rowCount());
         static::assertSame(Transparency::transparent, $node->transparency());
         static::assertSame(Materialization::streaming, $node->materialization());
-        static::assertEquals(Redefined::none(), $node->redefines());
+        static::assertEquals(Redefined::names('id'), $node->redefines());
     }
 }

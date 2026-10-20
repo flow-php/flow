@@ -19,10 +19,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\not;
 use function Flow\ETL\DSL\ref;
-use function Flow\Parquet\DSL\parquet_all;
-use function Flow\Parquet\DSL\parquet_any;
 use function Flow\Parquet\DSL\parquet_column;
-use function Flow\Parquet\DSL\parquet_not;
 
 use const NAN;
 
@@ -46,44 +43,43 @@ final class FilterTranslatorTest extends FlowTestCase
         yield 'is true' => [ref('flag')->isTrue(), parquet_column('flag')->equals(true)];
         yield 'is null' => [ref('id')->isNull(), parquet_column('id')->isNull()];
         yield 'is not null' => [ref('id')->isNotNull(), parquet_column('id')->isNotNull()];
-        yield 'not' => [not(ref('id')->equals(lit(5))), parquet_not(parquet_column('id')->equals(5))];
+        yield 'not' => [not(ref('id')->equals(lit(5))), parquet_column('id')->equals(5)->negate()];
         yield 'an or' => [
             ref('id')->equals(lit(5))->or(ref('name')->equals(lit('a'))),
-            parquet_any(parquet_column('id')->equals(5), parquet_column('name')->equals('a')),
+            parquet_column('id')->equals(5)->or(parquet_column('name')->equals('a')),
         ];
         yield 'an and inside an or' => [
             ref('id')->equals(lit(5))->or(ref('id')->greaterThan(lit(1))->and(ref('name')->equals(lit('a')))),
-            parquet_any(
-                parquet_column('id')->equals(5),
-                parquet_all(parquet_column('id')->greaterThan(1), parquet_column('name')->equals('a')),
+            parquet_column('id')->equals(5)->or(
+                parquet_column('id')->greaterThan(1)->and(parquet_column('name')->equals('a')),
             ),
         ];
         yield 'is in' => [ref('id')->isIn(lit([1, 2])), parquet_column('id')->in([1, 2])];
         yield 'is in drops null elements' => [ref('id')->isIn(lit([1, null, 2])), parquet_column('id')->in([1, 2])];
         yield 'a negated is in without null' => [
             not(ref('id')->isIn(lit([1, 2]))),
-            parquet_not(parquet_column('id')->in([1, 2])),
+            parquet_column('id')->in([1, 2])->negate(),
         ];
         yield 'a negated is in holding null drops the null' => [
             not(ref('id')->isIn(lit([1, null]))),
-            parquet_not(parquet_column('id')->in([1])),
+            parquet_column('id')->in([1])->negate(),
         ];
         yield 'starts with' => [ref('name')->startsWith(lit('ab')), parquet_column('name')->startsWith('ab')];
         yield 'between left inclusive' => [
             ref('id')->between(lit(1), lit(5)),
-            parquet_all(parquet_column('id')->greaterThanOrEqual(1), parquet_column('id')->lessThan(5)),
+            parquet_column('id')->greaterThanOrEqual(1)->and(parquet_column('id')->lessThan(5)),
         ];
         yield 'between inclusive' => [
             ref('id')->between(lit(1), lit(5), lit(Boundary::INCLUSIVE)),
-            parquet_all(parquet_column('id')->greaterThanOrEqual(1), parquet_column('id')->lessThanOrEqual(5)),
+            parquet_column('id')->greaterThanOrEqual(1)->and(parquet_column('id')->lessThanOrEqual(5)),
         ];
         yield 'between right inclusive' => [
             ref('id')->between(lit(1), lit(5), lit(Boundary::RIGHT_INCLUSIVE)),
-            parquet_all(parquet_column('id')->greaterThan(1), parquet_column('id')->lessThanOrEqual(5)),
+            parquet_column('id')->greaterThan(1)->and(parquet_column('id')->lessThanOrEqual(5)),
         ];
         yield 'between exclusive' => [
             ref('id')->between(lit(1), lit(5), lit(Boundary::EXCLUSIVE)),
-            parquet_all(parquet_column('id')->greaterThan(1), parquet_column('id')->lessThan(5)),
+            parquet_column('id')->greaterThan(1)->and(parquet_column('id')->lessThan(5)),
         ];
         yield 'an int literal on a float column becomes a float' => [
             ref('price')->greaterThan(lit(10)),
@@ -133,7 +129,7 @@ final class FilterTranslatorTest extends FlowTestCase
     #[DataProvider('translated')]
     public function test_a_pushable_conjunct_is_translated(ScalarFunction $function, Filter $expected): void
     {
-        $translated = (new FilterTranslator())->translate($function, BodySchemaMother::everyLeafType());
+        $translated = (new FilterTranslator())->translate([$function], BodySchemaMother::everyLeafType());
 
         static::assertCount(1, $translated);
         static::assertEquals($expected, $translated[0]->filter);
@@ -174,24 +170,22 @@ final class FilterTranslatorTest extends FlowTestCase
     #[DataProvider('refused')]
     public function test_a_conjunct_that_cannot_be_pushed_is_refused(ScalarFunction $function): void
     {
-        static::assertSame([], (new FilterTranslator())->translate($function, BodySchemaMother::everyLeafType()));
+        static::assertSame([], (new FilterTranslator())->translate([$function], BodySchemaMother::everyLeafType()));
     }
 
-    public function test_every_conjunct_of_an_and_is_translated_on_its_own(): void
+    public function test_every_conjunct_is_translated_on_its_own(): void
     {
-        $translated = (new FilterTranslator())->translate(
-            ref('id')
-                ->greaterThan(lit(1))
-                ->and(ref('name')->endsWith(lit('a')))
-                ->and(ref('name')->equals(lit('b'))->or(ref('price')->lessThan(lit(2.0)))),
-            BodySchemaMother::everyLeafType(),
-        );
+        $translated = (new FilterTranslator())->translate([
+            ref('id')->greaterThan(lit(1)),
+            ref('name')->endsWith(lit('a')),
+            ref('name')->equals(lit('b'))->or(ref('price')->lessThan(lit(2.0))),
+        ], BodySchemaMother::everyLeafType());
 
         static::assertEquals(
             [
                 new TranslatedConjunct(parquet_column('id')->greaterThan(1), ['id']),
                 new TranslatedConjunct(
-                    parquet_any(parquet_column('name')->equals('b'), parquet_column('price')->lessThan(2.0)),
+                    parquet_column('name')->equals('b')->or(parquet_column('price')->lessThan(2.0)),
                     ['name', 'price'],
                 ),
             ],

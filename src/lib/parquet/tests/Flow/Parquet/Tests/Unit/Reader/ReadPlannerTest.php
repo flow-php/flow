@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Unit\Reader;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
+use Flow\Parquet\Filter\All;
 use Flow\Parquet\Filter\Binding\BoundFilter;
 use Flow\Parquet\Filter\Filter;
 use Flow\Parquet\Options;
@@ -24,7 +25,6 @@ use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\Parquet\DSL\parquet_all;
 use function Flow\Parquet\DSL\parquet_column;
 
 final class ReadPlannerTest extends TestCase
@@ -54,6 +54,23 @@ final class ReadPlannerTest extends TestCase
         static::assertSame(3, $plan->limit);
     }
 
+    public function test_a_limit_beside_an_empty_all_reads_the_window_without_a_row_filter(): void
+    {
+        $footer = FooterMother::idGroups([1, 2], [3, 4], [5, 6]);
+
+        $plan = (new ReadPlanner())->plan(
+            $footer,
+            new InMemoryIndexes(),
+            BoundFilter::bind(new All(), $footer->schema(), new Options()),
+            0,
+            2,
+        );
+
+        static::assertEquals(RowSelection::all(6), $plan->selection);
+        static::assertNull($plan->rowFilter);
+        static::assertSame(2, $plan->limit);
+    }
+
     public function test_a_filtered_plan_without_a_limit_carries_the_row_filter_and_no_limit(): void
     {
         $footer = FooterMother::idGroups([1, 2], [3, 4], [5, 6]);
@@ -62,7 +79,7 @@ final class ReadPlannerTest extends TestCase
         $plan = (new ReadPlanner())->plan(
             $footer,
             new InMemoryIndexes(),
-            BoundFilter::bind(parquet_all($kept, parquet_column('id')->equals('1')), $footer->schema(), new Options()),
+            BoundFilter::bind($kept->and(parquet_column('id')->equals('1')), $footer->schema(), new Options()),
         );
 
         static::assertSame($kept, $plan->rowFilter?->filter());
@@ -74,7 +91,7 @@ final class ReadPlannerTest extends TestCase
      */
     public static function filters_not_wholly_bound(): Generator
     {
-        yield 'partly bound' => [parquet_all(parquet_column('id')->equals(1), parquet_column('id')->equals('1'))];
+        yield 'partly bound' => [parquet_column('id')->equals(1)->and(parquet_column('id')->equals('1'))];
         yield 'unbound' => [parquet_column('id')->equals('1')];
     }
 
@@ -85,8 +102,8 @@ final class ReadPlannerTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(
-            'A limit counts the rows returned, which a plan cannot honour unless every conjunct of its filter is bound '
-            . 'in the file',
+            'A limit counts the rows returned, which a plan cannot honour unless the file answers every conjunct of '
+            . 'its filter exactly',
         );
 
         (new ReadPlanner())->plan(
@@ -152,7 +169,7 @@ final class ReadPlannerTest extends TestCase
             $footer,
             new InMemoryIndexes(),
             BoundFilter::bind(
-                parquet_all(parquet_column('id')->greaterThan(1), parquet_column('missing')->isNull()),
+                parquet_column('id')->greaterThan(1)->and(parquet_column('missing')->isNull()),
                 $footer->schema(),
                 new Options(),
             ),

@@ -11,7 +11,13 @@ use Flow\Parquet\ParquetFile\Page\Header\DataPageHeader;
 use Flow\Parquet\ParquetFile\Page\Header\DataPageHeaderV2;
 use Flow\Parquet\ParquetFile\Page\Header\DictionaryPageHeader;
 use Flow\Parquet\ParquetFile\Page\Header\Type;
+use Flow\Parquet\Thrift\CompactProtocol;
+use Flow\Parquet\Thrift\PhpFileStream;
 use Flow\Parquet\ThriftModel\PageHeader as ThriftPageHeader;
+use Throwable;
+
+use function fseek;
+use function ftell;
 
 final readonly class PageHeader
 {
@@ -23,6 +29,29 @@ final readonly class PageHeader
         private ?DataPageHeaderV2 $dataPageHeaderV2,
         private ?DictionaryPageHeader $dictionaryPageHeader,
     ) {}
+
+    /**
+     * The header at the stream's position, which is left after it; null, the position kept, when none is there.
+     *
+     * @param resource $stream
+     */
+    public static function read($stream, Options $options): ?self
+    {
+        $currentOffset = ftell($stream);
+
+        try {
+            $thriftHeader = new ThriftPageHeader();
+            @$thriftHeader->read(new CompactProtocol(new PhpFileStream($stream)));
+
+            return self::fromThrift($thriftHeader, $options);
+        } catch (Throwable) {
+            if ($currentOffset !== false) {
+                fseek($stream, $currentOffset);
+            }
+
+            return null;
+        }
+    }
 
     public static function fromThrift(ThriftPageHeader $thrift, Options $options): self
     {

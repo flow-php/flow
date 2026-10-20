@@ -20,11 +20,7 @@ final readonly class RowGroupStatisticsPruner implements Pruner
 
     public function prune(BoundFilter $filter, PrunedRows $rows): PrunedRows
     {
-        $rowCounts = [];
-
-        for ($rowGroup = 0; $rowGroup < $this->chunks->count(); $rowGroup++) {
-            $rowCounts[] = $this->chunks->rowCount($rowGroup);
-        }
+        $rowCounts = $this->chunks->rowCounts();
 
         $kept = [];
         $proven = [];

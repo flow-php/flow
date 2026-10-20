@@ -10,7 +10,6 @@ use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Dremel\DremelAssembler;
 use Flow\Parquet\Engine\PhpParquetFileReader;
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Index\StreamIndexes;
@@ -21,10 +20,10 @@ use Flow\Parquet\Reader\ColumnChunkReader;
 use Flow\Parquet\Reader\ColumnReader;
 use Flow\Parquet\Reader\PageReader;
 use Flow\Parquet\Reader\RowSelection;
+use Flow\Parquet\Reader\SelectedPages;
 use Flow\Parquet\Tests\Context\MemoryParquetFile;
 use Flow\Parquet\Tests\Double\InMemoryIndexes;
 use Flow\Parquet\Tests\Double\ReadCountingSourceStream;
-use Flow\Parquet\Tests\Mother\PageIndexMother;
 use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
@@ -45,7 +44,9 @@ final class ColumnReaderTest extends TestCase
         $stream = new MemorySourceStream(MemoryParquetFile::threeRowGroups());
         $metadata = (new PhpParquetFileReader($stream, ByteOrder::LITTLE_ENDIAN, new Options()))->footer()->metadata();
         $reader = new ColumnReader(
-            new ColumnChunkReader(new PageReader(ByteOrder::LITTLE_ENDIAN, new Options()), new Options()),
+            new SelectedPages(
+                new ColumnChunkReader(new PageReader(ByteOrder::LITTLE_ENDIAN, new Options()), new Options()),
+            ),
             new DremelAssembler(DataConverter::initialize(new Options())),
         );
 
@@ -79,7 +80,9 @@ final class ColumnReaderTest extends TestCase
         $stream = new MemorySourceStream(MemoryParquetFile::threeRowGroups());
         $metadata = (new PhpParquetFileReader($stream, ByteOrder::LITTLE_ENDIAN, new Options()))->footer()->metadata();
         $reader = new ColumnReader(
-            new ColumnChunkReader(new PageReader(ByteOrder::LITTLE_ENDIAN, new Options()), new Options()),
+            new SelectedPages(
+                new ColumnChunkReader(new PageReader(ByteOrder::LITTLE_ENDIAN, new Options()), new Options()),
+            ),
             new DremelAssembler(DataConverter::initialize(new Options())),
         );
 
@@ -104,7 +107,9 @@ final class ColumnReaderTest extends TestCase
         $stream = new MemorySourceStream(MemoryParquetFile::threeRowGroups());
         $metadata = (new PhpParquetFileReader($stream, ByteOrder::LITTLE_ENDIAN, new Options()))->footer()->metadata();
         $reader = new ColumnReader(
-            new ColumnChunkReader(new PageReader(ByteOrder::LITTLE_ENDIAN, new Options()), new Options()),
+            new SelectedPages(
+                new ColumnChunkReader(new PageReader(ByteOrder::LITTLE_ENDIAN, new Options()), new Options()),
+            ),
             new DremelAssembler(DataConverter::initialize(new Options())),
         );
 
@@ -124,35 +129,15 @@ final class ColumnReaderTest extends TestCase
         );
     }
 
-    public function test_a_row_group_decoding_more_rows_than_its_selection_is_refused(): void
-    {
-        $stream = new MemorySourceStream(MemoryParquetFile::threeRowGroups());
-        $metadata = (new PhpParquetFileReader($stream, ByteOrder::LITTLE_ENDIAN, new Options()))->footer()->metadata();
-        $reader = new ColumnReader(
-            new ColumnChunkReader(new PageReader(ByteOrder::LITTLE_ENDIAN, new Options()), new Options()),
-            new DremelAssembler(DataConverter::initialize(new Options())),
-        );
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Row group 0 decodes more than the 1 rows its metadata declares');
-
-        iterator_to_array($reader->readRowGroup(
-            $metadata->schema()->get('id'),
-            $metadata->rowGroups()->all()[0],
-            0,
-            $stream,
-            RowSelection::all(1),
-            new InMemoryIndexes(),
-        ));
-    }
-
     public function test_a_nested_leaf_keeps_only_the_masked_rows_inside_a_page(): void
     {
         $stream = new MemorySourceStream(MemoryParquetFile::pagedColumns());
         $footer = (new PhpParquetFileReader($stream, ByteOrder::LITTLE_ENDIAN, new Options()))->footer();
         $metadata = $footer->metadata();
         $reader = new ColumnReader(
-            new ColumnChunkReader(new PageReader(ByteOrder::LITTLE_ENDIAN, new Options()), new Options()),
+            new SelectedPages(
+                new ColumnChunkReader(new PageReader(ByteOrder::LITTLE_ENDIAN, new Options()), new Options()),
+            ),
             new DremelAssembler(DataConverter::initialize(new Options())),
         );
         $selection = RowSelection::window(12, 2, 5)->masked([false, true, false, true, false]);
@@ -187,31 +172,6 @@ final class ColumnReaderTest extends TestCase
         );
     }
 
-    public function test_an_offset_index_that_does_not_split_the_group_is_not_used(): void
-    {
-        $stream = new MemorySourceStream(MemoryParquetFile::pagedColumns());
-        $metadata = (new PhpParquetFileReader($stream, ByteOrder::LITTLE_ENDIAN, new Options()))->footer()->metadata();
-        $reader = new ColumnReader(
-            new ColumnChunkReader(new PageReader(ByteOrder::LITTLE_ENDIAN, new Options()), new Options()),
-            new DremelAssembler(DataConverter::initialize(new Options())),
-        );
-
-        static::assertSame(
-            [['id' => 5], ['id' => 6]],
-            iterator_to_array(
-                $reader->readRowGroup(
-                    $metadata->schema()->get('id'),
-                    $metadata->rowGroups()->all()[0],
-                    0,
-                    $stream,
-                    RowSelection::window(12, 5, 2),
-                    new InMemoryIndexes([], ['id' => [PageIndexMother::pagesAt(0, 6, 2)]]),
-                ),
-                false,
-            ),
-        );
-    }
-
     public function test_physical_values_are_undecoded_and_null_where_the_leaf_or_its_struct_is_null_beside_the_pages_decoded(): void
     {
         $stream = new MemorySourceStream(MemoryParquetFile::written(
@@ -226,7 +186,9 @@ final class ColumnReaderTest extends TestCase
         ));
         $metadata = (new PhpParquetFileReader($stream, ByteOrder::LITTLE_ENDIAN, new Options()))->footer()->metadata();
         $reader = new ColumnReader(
-            new ColumnChunkReader(new PageReader(ByteOrder::LITTLE_ENDIAN, new Options()), new Options()),
+            new SelectedPages(
+                new ColumnChunkReader(new PageReader(ByteOrder::LITTLE_ENDIAN, new Options()), new Options()),
+            ),
             new DremelAssembler(DataConverter::initialize(new Options())),
         );
         $selection = RowSelection::window(4, 0, 3);
@@ -243,7 +205,6 @@ final class ColumnReaderTest extends TestCase
             [
                 0 => [
                     'values' => [1, 3, 4],
-                    'repetitionLevels' => [0, 0, 0, 0],
                     'definitionLevels' => [1, 0, 1, 1],
                 ],
             ],
@@ -288,7 +249,9 @@ final class ColumnReaderTest extends TestCase
         $offsetIndex = $indexes->offsetIndex(0, $word) ?? static::fail('No offset index');
         $stream = new ReadCountingSourceStream(new MemorySourceStream($bytes));
         $reader = new ColumnReader(
-            new ColumnChunkReader(new PageReader(ByteOrder::LITTLE_ENDIAN, new Options()), new Options()),
+            new SelectedPages(
+                new ColumnChunkReader(new PageReader(ByteOrder::LITTLE_ENDIAN, new Options()), new Options()),
+            ),
             new DremelAssembler(DataConverter::initialize(new Options())),
         );
 
@@ -315,7 +278,9 @@ final class ColumnReaderTest extends TestCase
         $stream = new MemorySourceStream(MemoryParquetFile::threeRowGroups());
         $metadata = (new PhpParquetFileReader($stream, ByteOrder::LITTLE_ENDIAN, new Options()))->footer()->metadata();
         $reader = new ColumnReader(
-            new ColumnChunkReader(new PageReader(ByteOrder::LITTLE_ENDIAN, new Options()), new Options()),
+            new SelectedPages(
+                new ColumnChunkReader(new PageReader(ByteOrder::LITTLE_ENDIAN, new Options()), new Options()),
+            ),
             new DremelAssembler(DataConverter::initialize(new Options())),
         );
 

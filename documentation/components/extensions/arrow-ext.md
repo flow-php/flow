@@ -92,6 +92,7 @@ use Flow\Parquet\Engine\{RustParquetFileReader, RustParquetFileWriter};
 use Flow\Parquet\Engine\Arrow\{OptionsConverter, SchemaConverter};
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
+use Flow\Parquet\ParquetFile\Index\StreamIndexes;
 use Flow\Parquet\Reader\ReadPlan;
 
 use function Flow\Filesystem\DSL\{native_local_filesystem, path};
@@ -104,7 +105,8 @@ $footer->rowsNumber();
 $footer->schema();                                                    // Flow\Parquet\ParquetFile\Schema
 $footer->metadata();                                                  // Flow\Parquet\ParquetFile\Metadata
 $footer->thrift();                                                    // Flow\Parquet\ThriftModel\FileMetaData
-$plan = ReadPlan::window($footer->rowsNumber(), offset: 10, limit: 100);  // rows 10-109
+$indexes = new StreamIndexes($footer, $filesystem->readFrom(path('data.parquet')));  // page indexes, read on demand
+$plan = ReadPlan::window($footer->rowsNumber(), $indexes, offset: 10, limit: 100);  // rows 10-109
 
 foreach ($file->readColumns(['id', 'name'], 1_000, $plan) as $chunk) { // RustColumnsReader, an Iterator that streams once
     // ['id' => [1, 2, ...], 'name' => ['a', 'b', ...]]

@@ -28,11 +28,6 @@ final readonly class Comparison implements Filter
         return new All($this, $other);
     }
 
-    public function columns(): array
-    {
-        return [$this->column];
-    }
-
     public function negate(): Filter
     {
         return new Not($this);

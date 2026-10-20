@@ -28,19 +28,6 @@ final readonly class Any implements Filter
         return new All($this, $other);
     }
 
-    public function columns(): array
-    {
-        $columns = [];
-
-        foreach ($this->filters as $filter) {
-            foreach ($filter->columns() as $column) {
-                $columns[$column->path] = $column;
-            }
-        }
-
-        return array_values($columns);
-    }
-
     public function negate(): Filter
     {
         return new Not($this);

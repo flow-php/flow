@@ -12,8 +12,8 @@ use Flow\Parquet\ParquetFile\Data\Converter\Int64DateTimeConverter;
 use Flow\Parquet\ParquetFile\Data\Converter\Int96DateTimeConverter;
 use Flow\Parquet\ParquetFile\Data\Converter\JsonConverter;
 use Flow\Parquet\ParquetFile\Data\Converter\TimeConverter;
+use Flow\Parquet\ParquetFile\Data\Converter\UnsignedInt32Converter;
 use Flow\Parquet\ParquetFile\Data\Converter\UnsignedInt64Converter;
-use Flow\Parquet\ParquetFile\Data\Converter\UnsignedIntegerConverter;
 use Flow\Parquet\ParquetFile\Data\Converter\UuidConverter;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Throwable;
@@ -47,7 +47,7 @@ final class DataConverter
             DecimalConverter::class,
             UuidConverter::class,
             JsonConverter::class,
-            UnsignedIntegerConverter::class,
+            UnsignedInt32Converter::class,
             UnsignedInt64Converter::class,
         ], $options);
     }

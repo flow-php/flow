@@ -7,6 +7,8 @@ namespace Flow\Parquet\ParquetFile\Index;
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\BloomFilter\BloomFilterReader;
 use Flow\Parquet\BloomFilter\Sbbf;
+use Flow\Parquet\Exception\InvalidArgumentException;
+use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Footer;
 use Flow\Parquet\ParquetFile\PageIndex\ColumnIndex;
 use Flow\Parquet\ParquetFile\PageIndex\OffsetIndex;
@@ -16,6 +18,7 @@ use Flow\Parquet\Thrift\CompactProtocol;
 use Flow\Parquet\Thrift\MemoryBuffer;
 use Flow\Parquet\ThriftModel\ColumnIndex as ThriftColumnIndex;
 use Flow\Parquet\ThriftModel\OffsetIndex as ThriftOffsetIndex;
+use Thrift\Exception\TException;
 
 use function array_key_exists;
 
@@ -55,9 +58,13 @@ final class StreamIndexes implements Indexes
         $path = $column->flatPath();
 
         if (!array_key_exists($rowGroup, $this->bloomFilters[$path] ?? [])) {
-            $this->bloomFilters[$path][$rowGroup] = (new BloomFilterReader($this->stream))->read($this->chunks(
-                $column,
-            )->chunk($rowGroup, $column));
+            try {
+                $this->bloomFilters[$path][$rowGroup] = (new BloomFilterReader($this->stream))->read($this->chunks(
+                    $column,
+                )->chunk($rowGroup, $column));
+            } catch (InvalidArgumentException|RuntimeException|TException) {
+                $this->bloomFilters[$path][$rowGroup] = null;
+            }
         }
 
         return $this->bloomFilters[$path][$rowGroup];
@@ -68,11 +75,18 @@ final class StreamIndexes implements Indexes
         $path = $column->flatPath();
 
         if (!array_key_exists($rowGroup, $this->columnIndexes[$path] ?? [])) {
-            $chunk = $this->chunks($column)->chunk($rowGroup, $column);
             $thrift = new ThriftColumnIndex();
-            $this->columnIndexes[$path][$rowGroup] = $this->read($thrift, $chunk->columnIndex())
-                ? ColumnIndex::fromThrift($thrift)
-                : null;
+
+            try {
+                $this->columnIndexes[$path][$rowGroup] = $this->read(
+                    $thrift,
+                    $this->chunks($column)->chunk($rowGroup, $column)->columnIndex(),
+                )
+                    ? ColumnIndex::fromThrift($thrift)
+                    : null;
+            } catch (InvalidArgumentException|TException) {
+                $this->columnIndexes[$path][$rowGroup] = null;
+            }
         }
 
         return $this->columnIndexes[$path][$rowGroup];
@@ -83,10 +97,19 @@ final class StreamIndexes implements Indexes
         $path = $column->flatPath();
 
         if (!array_key_exists($rowGroup, $this->offsetIndexes[$path] ?? [])) {
-            $chunk = $this->chunks($column)->chunk($rowGroup, $column);
+            $chunks = $this->chunks($column);
+            $chunk = $chunks->chunk($rowGroup, $column);
             $thrift = new ThriftOffsetIndex();
-            $this->offsetIndexes[$path][$rowGroup] = $this->read($thrift, $chunk->offsetIndex())
-                ? OffsetIndex::fromThrift($thrift)
+
+            try {
+                $offsetIndex = $this->read($thrift, $chunk->offsetIndex()) ? OffsetIndex::fromThrift($thrift) : null;
+            } catch (TException) {
+                $offsetIndex = null;
+            }
+
+            $this->offsetIndexes[$path][$rowGroup] = $offsetIndex !== null
+            && $offsetIndex->fits($chunk, $chunks->rowCounts()[$rowGroup])
+                ? $offsetIndex
                 : null;
         }
 

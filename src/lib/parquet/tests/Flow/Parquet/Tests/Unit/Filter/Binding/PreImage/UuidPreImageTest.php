@@ -25,11 +25,5 @@ final class UuidPreImageTest extends TestCase
                 'f6d6e0e8-4b7e-4b0e-8d7a-ff0a0c9c9a5a',
             ),
         );
-        static::assertNull(PhysicalIntervalEdges::intervals(
-            FlatColumn::uuid('u'),
-            Operator::Equal,
-            'F6D6E0E8-4B7E-4B0E-8D7A-FF0A0C9C9A5A',
-        ));
-        static::assertNull(PhysicalIntervalEdges::intervals(FlatColumn::uuid('u'), Operator::Equal, 1));
     }
 }

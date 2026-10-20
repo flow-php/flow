@@ -847,7 +847,7 @@ impl WriteCell {
                         }
                     }
 
-                    Ok(())
+                    Ok::<(), PhpException>(())
                 })?;
 
                 if let Some(refusal) = failure {
@@ -863,7 +863,7 @@ impl WriteCell {
 
                 ht_for_each(items, |name, index, item| {
                     if failure.is_some() {
-                        return Ok(());
+                        return Ok::<(), PhpException>(());
                     }
 
                     let entry_key = match name {

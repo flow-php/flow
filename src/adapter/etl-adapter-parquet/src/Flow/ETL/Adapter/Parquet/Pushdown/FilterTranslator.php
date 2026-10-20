@@ -10,7 +10,6 @@ use Flow\ETL\Function\All;
 use Flow\ETL\Function\Any;
 use Flow\ETL\Function\Between;
 use Flow\ETL\Function\Between\Boundary;
-use Flow\ETL\Function\Conjuncts;
 use Flow\ETL\Function\Equals;
 use Flow\ETL\Function\FunctionTree;
 use Flow\ETL\Function\GreaterThan;
@@ -31,6 +30,9 @@ use Flow\ETL\Function\StartsWith;
 use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
+use Flow\Parquet\Filter\All as ParquetAll;
+use Flow\Parquet\Filter\Any as ParquetAny;
+use Flow\Parquet\Filter\Binding\LiteralDomain;
 use Flow\Parquet\Filter\Comparison;
 use Flow\Parquet\Filter\Filter;
 use Flow\Parquet\Filter\Operator;
@@ -51,8 +53,6 @@ use function array_map;
 use function array_values;
 use function ctype_digit;
 use function floor;
-use function Flow\Parquet\DSL\parquet_all;
-use function Flow\Parquet\DSL\parquet_any;
 use function Flow\Parquet\DSL\parquet_column;
 use function Flow\Types\DSL\type_bare;
 use function in_array;
@@ -70,19 +70,15 @@ use function is_string;
 final readonly class FilterTranslator
 {
     /**
-     * Integers a float represents exactly: an int literal on a float column, and a float literal on an int column,
-     * compare the same in Flow (PHP converts the int to a float) and in the binder only below this bound.
+     * @param list<ScalarFunction> $conjuncts
+     *
+     * @return list<TranslatedConjunct> one per translatable conjunct
      */
-    private const int EXACT_FLOAT_INTEGER = 2 ** 53;
-
-    /**
-     * @return list<TranslatedConjunct> one per translatable conjunct of Conjuncts::of($filter)
-     */
-    public function translate(ScalarFunction $filter, Schema $body): array
+    public function translate(array $conjuncts, Schema $body): array
     {
         $translated = [];
 
-        foreach ((new Conjuncts())->of($filter) as $conjunct) {
+        foreach ($conjuncts as $conjunct) {
             $parquet = $this->filter($conjunct, $body);
 
             if ($parquet !== null) {
@@ -172,7 +168,7 @@ final readonly class FilterTranslator
             $filters[] = $filter;
         }
 
-        return $function instanceof All ? parquet_all(...$filters) : parquet_any(...$filters);
+        return $function instanceof All ? new ParquetAll(...$filters) : new ParquetAny(...$filters);
     }
 
     private function comparison(
@@ -287,7 +283,7 @@ final readonly class FilterTranslator
             false,
         );
 
-        return $lowerBound === null || $upperBound === null ? null : parquet_all($lowerBound, $upperBound);
+        return $lowerBound === null || $upperBound === null ? null : $lowerBound->and($upperBound);
     }
 
     /**
@@ -323,12 +319,12 @@ final readonly class FilterTranslator
                     ? $value
                     : null,
             !$strict && $column instanceof FloatType && $literal instanceof IntegerType => is_int($value)
-                && abs($value) <= self::EXACT_FLOAT_INTEGER
+                && abs($value) <= LiteralDomain::EXACT_FLOAT_INTEGER
                     ? (float) $value
                     : null,
             !$strict && $column instanceof IntegerType && $literal instanceof FloatType => is_float($value)
                 && floor($value) === $value
-                && abs($value) < self::EXACT_FLOAT_INTEGER
+                && abs($value) < LiteralDomain::EXACT_FLOAT_INTEGER
                     ? (int) $value
                     : null,
             !$strict

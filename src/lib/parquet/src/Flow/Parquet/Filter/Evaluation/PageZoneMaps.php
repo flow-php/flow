@@ -5,23 +5,20 @@ declare(strict_types=1);
 namespace Flow\Parquet\Filter\Evaluation;
 
 use Flow\Parquet\Data\PhysicalCodec;
-use Flow\Parquet\Data\PhysicalOrder;
-use Flow\Parquet\ParquetFile\ColumnOrder;
 use Flow\Parquet\ParquetFile\PageIndex\PageIndex;
 use Flow\Parquet\ParquetFile\RowGroupChunks;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 
 use function array_key_exists;
 
 /**
- * Each column's zone is the page holding row $row of the row group, so columns whose pages break at other rows are
- * evaluated together over the rows their pages share.
+ * One row group's page statistics, each page decoded once. at() views the pages holding one row, so columns whose pages
+ * break at other rows are evaluated together over the rows their pages share.
  */
-final class PageZoneMaps implements ZoneMaps
+final class PageZoneMaps
 {
     /**
-     * @var array<string, null|ZoneMap>
+     * @var array<string, array<int, ZoneMap>> by flat path, then page
      */
     private array $zones = [];
 
@@ -31,29 +28,33 @@ final class PageZoneMaps implements ZoneMaps
     public function __construct(
         private readonly RowGroupChunks $chunks,
         private readonly array $pageIndexes,
-        private readonly int $row,
     ) {}
 
-    public function zone(FlatColumn $column): ?ZoneMap
+    public function at(int $row): ZoneMaps
+    {
+        return new PageZoneMapsAtRow($this, $row);
+    }
+
+    public function zone(FlatColumn $column, int $row): ?ZoneMap
     {
         $path = $column->flatPath();
 
-        if (!array_key_exists($path, $this->zones)) {
-            $this->zones[$path] = array_key_exists($path, $this->pageIndexes)
-                ? $this->decode($column, $this->pageIndexes[$path])
-                : null;
+        if (!array_key_exists($path, $this->pageIndexes)) {
+            return null;
         }
 
-        return $this->zones[$path];
+        $pageIndex = $this->pageIndexes[$path];
+        $page = $pageIndex->pageOf($row);
+
+        return $this->zones[$path][$page] ??= $this->decode($column, $pageIndex, $page);
     }
 
     /**
-     * Column index bounds carry no exactness flag: BYTE_ARRAY and FIXED_LEN_BYTE_ARRAY ones may be truncated.
+     * Column index bounds carry no exactness flag.
      */
-    private function decode(FlatColumn $column, PageIndex $pageIndex): ZoneMap
+    private function decode(FlatColumn $column, PageIndex $pageIndex, int $page): ZoneMap
     {
         $columnIndex = $pageIndex->columnIndex;
-        $page = $pageIndex->pageOf($this->row);
         $rows = $pageIndex->pageRows($page);
         $nanCount = $columnIndex->nanCounts[$page] ?? null;
 
@@ -62,22 +63,17 @@ final class PageZoneMaps implements ZoneMaps
         }
 
         $codec = new PhysicalCodec();
-        $columnOrder = $this->chunks->columnOrder($column);
-        $order = PhysicalOrder::forColumn($column);
-        $min = $columnOrder->trustedMin($column, $codec->decodeStatistic($column, $columnIndex->minValues[$page]));
-        $max = $columnOrder->trustedMax($column, $codec->decodeStatistic($column, $columnIndex->maxValues[$page]));
-        $exact = $column->type() !== PhysicalType::BYTE_ARRAY && $column->type() !== PhysicalType::FIXED_LEN_BYTE_ARRAY;
 
-        return new ZoneMap(
-            $min,
-            $max,
-            $exact,
-            $exact,
-            $columnIndex->nullCounts[$page] ?? null,
-            $nanCount,
-            $rows,
-            $columnOrder === ColumnOrder::Ieee754TotalOrder
-            && ($min !== null && $order->isNan($min) || $max !== null && $order->isNan($max)),
+        return ZoneMap::fromStatistics(
+            column: $column,
+            columnOrder: $this->chunks->columnOrder($column),
+            min: $codec->decodeStatistic($column, $columnIndex->minValues[$page]),
+            max: $codec->decodeStatistic($column, $columnIndex->maxValues[$page]),
+            minExact: null,
+            maxExact: null,
+            nullCount: $columnIndex->nullCounts[$page] ?? null,
+            nanCount: $nanCount,
+            rowCount: $rows,
         );
     }
 }

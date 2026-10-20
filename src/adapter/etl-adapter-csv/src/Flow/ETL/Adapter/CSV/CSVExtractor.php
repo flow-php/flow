@@ -17,6 +17,7 @@ use Flow\ETL\Extractor\File\InferredColumns;
 use Flow\ETL\Extractor\File\ListedFiles;
 use Flow\ETL\Extractor\File\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\File\ReadWindow;
+use Flow\ETL\Extractor\File\Scanning;
 use Flow\ETL\Extractor\InfersSchema;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
@@ -46,6 +47,7 @@ final class CSVExtractor implements
 {
     use Batches;
     use FileReading;
+    use Scanning;
 
     private SchemaInference $inference;
 
@@ -96,21 +98,13 @@ final class CSVExtractor implements
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context, ?int $limit = null): Generator
-    {
-        return $this->scan($context, new FileScan(limit: $limit));
-    }
-
-    /**
-     * @return Generator<int, Rows, Signal|null, void>
-     */
     public function scan(FlowContext $context, FileScan $scan): Generator
     {
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
         $schema = $this->schema();
         $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $scan->pathFilter), false);
 
-        yield from (new FileReadLoop($fileColumns, $schema, $scan->filter))->read(
+        yield from (new FileReadLoop($fileColumns, $schema, $scan->conjuncts))->read(
             $sources,
             new CSVFileBatches(
                 new CSVFileReader($this->filesystem, $this->readOptions, $sources),

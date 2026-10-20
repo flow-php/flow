@@ -16,6 +16,7 @@ use Flow\ETL\Extractor\File\FileReadLoop;
 use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Extractor\File\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\File\ReadWindow;
+use Flow\ETL\Extractor\File\Scanning;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
@@ -41,6 +42,7 @@ final class FloeExtractor implements
 {
     use Batches;
     use FileReading;
+    use Scanning;
 
     private ?int $offset = null;
 
@@ -77,19 +79,11 @@ final class FloeExtractor implements
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context, ?int $limit = null): Generator
-    {
-        return $this->scan($context, new FileScan(limit: $limit));
-    }
-
-    /**
-     * @return Generator<int, Rows, Signal|null, void>
-     */
     public function scan(FlowContext $context, FileScan $scan): Generator
     {
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
 
-        yield from (new FileReadLoop($fileColumns, $this->schema(), $scan->filter))->read(
+        yield from (new FileReadLoop($fileColumns, $this->schema(), $scan->conjuncts))->read(
             iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $scan->pathFilter), false),
             new FloeFileBatches(
                 $this->filesystem,

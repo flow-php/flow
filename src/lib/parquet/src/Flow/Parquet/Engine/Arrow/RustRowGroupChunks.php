@@ -16,7 +16,6 @@ use Flow\Parquet\ThriftModel\ColumnChunk as ThriftColumnChunk;
 use Flow\Parquet\ThriftModel\ColumnOrder as ThriftColumnOrder;
 
 use function array_key_exists;
-use function count;
 
 final class RustRowGroupChunks implements RowGroupChunks
 {
@@ -93,18 +92,6 @@ final class RustRowGroupChunks implements RowGroupChunks
         }
 
         return $this->decodedOrders[$path];
-    }
-
-    public function count(): int
-    {
-        return count($this->rowCounts);
-    }
-
-    public function rowCount(int $rowGroup): int
-    {
-        return (
-            $this->rowCounts[$rowGroup] ?? throw new OutOfBoundsException('Row group ' . $rowGroup . ' does not exist')
-        );
     }
 
     public function rowCounts(): array

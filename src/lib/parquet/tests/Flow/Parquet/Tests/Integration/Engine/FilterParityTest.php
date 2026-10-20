@@ -8,6 +8,7 @@ use Closure;
 use DateTimeImmutable;
 use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Engine\RustParquetEngine;
+use Flow\Parquet\Filter\All;
 use Flow\Parquet\Filter\Filter;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
@@ -34,10 +35,7 @@ use function array_map;
 use function array_slice;
 use function array_values;
 use function extension_loaded;
-use function Flow\Parquet\DSL\parquet_all;
-use function Flow\Parquet\DSL\parquet_any;
 use function Flow\Parquet\DSL\parquet_column;
-use function Flow\Parquet\DSL\parquet_not;
 use function is_float;
 use function is_int;
 use function iterator_to_array;
@@ -47,8 +45,6 @@ use function serialize;
 #[Group('native-extension')]
 final class FilterParityTest extends TestCase
 {
-    public const string FIXTURES = __DIR__ . '/Fixtures/Filters/';
-
     /**
      * Each filter, the raw rows a plan skips first, the row groups of 10 rows FilterRows keeps and the ids of the rows
      * matching it, worked out from the data FilterRows writes.
@@ -58,116 +54,33 @@ final class FilterParityTest extends TestCase
     public static function filters(): Generator
     {
         yield 'equal' => [parquet_column('id')->equals(7), 0, [0], [7]];
-        yield 'less than' => [parquet_column('id')->lessThan(5), 0, [0], range(0, 4)];
-        yield 'less than or equal' => [parquet_column('id')->lessThanOrEqual(9), 0, [0], range(0, 9)];
-        yield 'greater than' => [parquet_column('id')->greaterThan(30), 0, [3], range(31, 39)];
-        yield 'greater than or equal' => [parquet_column('id')->greaterThanOrEqual(35), 0, [3], range(35, 39)];
         yield 'in' => [parquet_column('id')->in([3, 33]), 0, [0, 3], [3, 33]];
-        yield 'mixed in' => [parquet_column('id')->in([3, 33.0, 7]), 0, [0, 3], [3, 7, 33]];
-        yield 'not less than' => [parquet_not(parquet_column('id')->lessThan(20)), 0, [2, 3], range(20, 39)];
-        yield 'not equals on NaN' => [
-            parquet_column('score')->notEquals(5.0),
-            0,
-            [0, 1, 2, 3],
-            [...range(0, 4), ...range(6, 39)],
-        ];
-        yield 'not in on NaN' => [
-            parquet_column('score')->notIn([1.0, 2.0]),
-            0,
-            [0, 1, 2, 3],
-            [0, ...range(3, 39)],
-        ];
-        yield 'not less than on NaN' => [
-            parquet_not(parquet_column('score')->lessThan(100.0)),
-            0,
-            [1, 2],
-            [11, ...range(20, 29)],
-        ];
-        yield 'equal to zero holds negative zero' => [parquet_column('score')->equals(0.0), 0, [0, 1], [0, 10]];
-        yield 'string range in byte order' => [parquet_column('label')->lessThan('10'), 0, [], []];
         yield 'starts with' => [
             parquet_column('label')->startsWith('10'),
             0,
             [1, 2, 3],
             [...range(10, 29), 31, 32, 34, 35, 37, 38],
         ];
-        yield 'starts with a non-ASCII prefix' => [
-            parquet_column('word')->startsWith('ź'),
+        yield 'struct leaf' => [parquet_column('address.city')->equals('c2'), 0, [2], range(20, 29)];
+        yield 'absent column is null' => [parquet_column('missing')->isNull(), 0, [0, 1, 2, 3], range(0, 39)];
+        yield 'is null on a column holding nulls' => [
+            parquet_column('maybe')->isNull(),
             0,
-            [1, 3],
-            [...range(10, 19), 31, 34, 37],
+            [0, 1],
+            [...range(0, 9), 11, 13, 15, 17, 19],
         ];
-        yield 'is null' => [parquet_column('maybe')->isNull(), 0, [0, 1], [...range(0, 9), 11, 13, 15, 17, 19]];
-        yield 'is not null' => [
+        yield 'is not null on a column holding nulls' => [
             parquet_column('maybe')->isNotNull(),
             0,
             [1, 2, 3],
             [10, 12, 14, 16, 18, ...range(20, 39)],
         ];
-        yield 'struct leaf' => [parquet_column('address.city')->equals('c2'), 0, [2], range(20, 29)];
-        yield 'negated struct leaf under null structs' => [
-            parquet_not(parquet_column('address.city')->equals('c3')),
-            0,
-            [0, 1, 2],
-            range(0, 29),
-        ];
-        yield 'absent column' => [parquet_column('missing')->equals(1), 0, [], []];
-        yield 'absent column is null' => [parquet_column('missing')->isNull(), 0, [0, 1, 2, 3], range(0, 39)];
-        yield 'date' => [
-            parquet_column('day')->greaterThan(new DateTimeImmutable('2024-01-25 UTC')),
-            0,
-            [2, 3],
-            range(25, 39),
-        ];
-        yield 'date off midnight' => [
-            parquet_column('day')->equals(new DateTimeImmutable('2024-01-03 12:00 UTC')),
-            0,
-            [],
-            [],
-        ];
-        yield 'timestamp' => [
-            parquet_column('ts')->lessThanOrEqual(new DateTimeImmutable('2024-01-01 05:00 UTC')),
-            0,
-            [0],
-            range(0, 4),
-        ];
-        yield 'decimal' => [parquet_column('amount')->equals(12.25), 0, [1], [12]];
-        yield 'uint64 above a digit string' => [
-            parquet_column('big')->greaterThan('18446744073709551600'),
-            0,
-            [2, 3],
-            range(25, 39),
-        ];
-        yield 'uint64 equal to an int' => [parquet_column('big')->equals(5), 0, [0], [5]];
-        yield 'uint64 against a float' => [
-            parquet_column('big')->greaterThanOrEqual(10.0),
-            0,
-            [1, 2, 3],
-            range(10, 39),
-        ];
-        yield 'uint64 below a fraction' => [parquet_column('big')->lessThan(2.5), 0, [0], [0, 1, 2]];
-        yield 'uuid' => [parquet_column('uid')->equals('00000001-0000-4000-8000-00000000000d'), 0, [1], [13]];
-        yield 'boolean' => [
-            parquet_column('flag')->equals(true),
-            0,
-            [1, 2, 3],
-            [...range(10, 19), 20, 22, 24, 26, 28, 30, 32, 34, 36, 38],
-        ];
-        yield 'float32 equal' => [parquet_column('ratio')->equals(20.5), 0, [2], [20]];
-        yield 'float32 above' => [parquet_column('ratio')->greaterThan(37.0), 0, [3], [37, 38, 39]];
         yield 'any' => [
-            parquet_any(parquet_column('id')->equals(1), parquet_column('label')->equals('100')),
+            parquet_column('id')->equals(1)->or(parquet_column('label')->equals('100')),
             0,
             [0, 2, 3],
             [1, ...range(20, 29), 32, 35, 38],
         ];
-        yield 'all' => [
-            parquet_all(parquet_column('id')->greaterThan(10), parquet_column('maybe')->isNull()),
-            0,
-            [1],
-            [11, 13, 15, 17, 19],
-        ];
-        yield 'offset with a filter' => [parquet_column('id')->greaterThanOrEqual(15), 25, [2, 3], range(15, 39)];
         yield 'offset inside a kept group, then a pruned group' => [
             parquet_column('id')->in([3, 33]),
             5,
@@ -181,7 +94,7 @@ final class FilterParityTest extends TestCase
      */
     public static function fixtures_and_filters(): Generator
     {
-        foreach (['row_groups_php.parquet', 'row_groups_arrow.parquet'] as $fixture) {
+        foreach (['row_groups_php', 'row_groups_arrow'] as $fixture) {
             foreach (self::filters() as $name => [$filter, $offset, $kept]) {
                 yield $fixture . ': ' . $name => [$fixture, $filter, $offset, $kept];
             }
@@ -193,7 +106,7 @@ final class FilterParityTest extends TestCase
      */
     public static function fixture_filters(): Generator
     {
-        foreach (['row_groups_php.parquet', 'row_groups_arrow.parquet'] as $fixture) {
+        foreach (['row_groups_php', 'row_groups_arrow'] as $fixture) {
             foreach (self::filters() as $name => [$filter, , , $ids]) {
                 yield $fixture . ': ' . $name => [$fixture, $filter, $ids];
             }
@@ -224,64 +137,48 @@ final class FilterParityTest extends TestCase
             [5, 6, 7, 8, 9],
         ];
         yield 'date64 not in' => [
-            parquet_not(parquet_column('day')->in([
+            parquet_column('day')->in([
                 new DateTimeImmutable('2024-01-08 UTC'),
                 new DateTimeImmutable('2024-01-02 UTC'),
-            ])),
+            ])->negate(),
             [0, 2, 3, 5, 6, 8, 9],
         ];
         yield 'pyarrow seconds stored as milliseconds' => [
-            parquet_not(parquet_column('seconds')->lessThanOrEqual(new DateTimeImmutable('2024-01-01 04:00:00 UTC'))),
+            parquet_column('seconds')->lessThanOrEqual(new DateTimeImmutable('2024-01-01 04:00:00 UTC'))->negate(),
             [5, 6, 7, 8, 9],
         ];
         yield 'seconds below' => [parquet_column('ts')->lessThan(1_704_067_200 + (5 * 3600)), [0, 1, 2, 3, 4]];
         yield 'seconds null or above' => [
-            parquet_any(parquet_column('ts')->isNull(), parquet_column('ts')->greaterThan(1_704_067_200 + (7 * 3600))),
+            parquet_column('ts')->isNull()->or(parquet_column('ts')->greaterThan(1_704_067_200 + (7 * 3600))),
             [6, 8, 9],
         ];
     }
 
     /**
-     * Row-level cases: every operator and its negation over NaN and -0.0, nulls, a struct leaf under null structs, a
-     * decimal, a timestamp, an absent column, and conjuncts bound beside one that is not.
+     * Row-level cases: nulls, a struct leaf under null structs, a decimal, a timestamp, an absent column, and conjuncts
+     * bound beside one that is not. NaN, -0.0 and each operator's negation are RowEvaluatorTest's.
      *
      * @return Generator<string, array{string, Filter}>
      */
     public static function row_filters(): Generator
     {
         $filters = [
-            'NaN equal' => parquet_column('score')->equals(5.0),
-            'NaN not equal' => parquet_column('score')->notEquals(5.0),
-            'NaN less than' => parquet_column('score')->lessThan(15.0),
-            'NaN not less than' => parquet_not(parquet_column('score')->lessThan(15.0)),
-            'NaN less than or equal' => parquet_column('score')->lessThanOrEqual(15.0),
-            'NaN not less than or equal' => parquet_not(parquet_column('score')->lessThanOrEqual(15.0)),
-            'NaN greater than' => parquet_column('score')->greaterThan(15.0),
-            'NaN not greater than' => parquet_not(parquet_column('score')->greaterThan(15.0)),
-            'NaN greater than or equal' => parquet_column('score')->greaterThanOrEqual(15.0),
-            'NaN not greater than or equal' => parquet_not(parquet_column('score')->greaterThanOrEqual(15.0)),
-            'NaN in' => parquet_column('score')->in([1.0, 33.0]),
-            'NaN not in' => parquet_column('score')->notIn([1.0, 33.0]),
-            'negative zero equal' => parquet_column('score')->equals(-0.0),
-            'negative zero not greater than' => parquet_not(parquet_column('score')->greaterThan(0.0)),
-            'nulls under not and any' => parquet_not(parquet_any(
-                parquet_column('maybe')->lessThan(14),
-                parquet_column('maybe')->isNull(),
-            )),
-            'struct leaf under null structs' => parquet_not(parquet_column('address.city')->equals('c3')),
-            'struct leaf is null' => parquet_column('address.city')->isNull(),
-            'decimal' => parquet_not(parquet_column('amount')->greaterThan(12.25)),
+            'nulls under not and any' => parquet_column('maybe')
+                ->lessThan(14)
+                ->or(parquet_column('maybe')->isNull())
+                ->negate(),
+            'struct leaf under null structs' => parquet_column('address.city')->equals('c3')->negate(),
+            'decimal' => parquet_column('amount')->greaterThan(12.25)->negate(),
             'timestamp' => parquet_column('ts')->greaterThan(new DateTimeImmutable('2024-01-02 09:00:00.123456 UTC')),
-            'absent column' => parquet_not(parquet_column('missing')->equals(1)),
-            'absent column is not null' => parquet_column('missing')->isNotNull(),
-            'bound beside unbound' => parquet_all(
+            'absent column' => parquet_column('missing')->equals(1)->negate(),
+            'bound beside unbound' => new All(
                 parquet_column('id')->lessThan(25),
                 parquet_column('big')->lessThan(1.0e18),
-                parquet_not(parquet_column('score')->lessThan(5.0)),
+                parquet_column('score')->lessThan(5.0)->negate(),
             ),
         ];
 
-        foreach (['row_groups_php.parquet', 'row_groups_arrow.parquet'] as $fixture) {
+        foreach (['row_groups_php', 'row_groups_arrow'] as $fixture) {
             foreach ($filters as $name => $filter) {
                 yield $fixture . ': ' . $name => [$fixture, $filter];
             }
@@ -298,12 +195,12 @@ final class FilterParityTest extends TestCase
     #[DataProvider('row_filters')]
     public function test_both_engines_read_exactly_the_rows_the_row_filter_keeps(string $fixture, Filter $filter): void
     {
-        $all = Reader::php()->read(self::FIXTURES . $fixture);
+        $all = FilterRows::file($fixture, PhpParquetEngine::class);
         $columns = ['id', 'score', 'maybe', 'address'];
         $rows = [];
 
         foreach ([PhpParquetEngine::class, RustParquetEngine::class] as $engine) {
-            $file = (new Reader(engine: ParquetEngineMother::create($engine)))->read(self::FIXTURES . $fixture);
+            $file = FilterRows::file($fixture, $engine);
             $plan = FilePlan::of($file, $filter);
             $rowFilter = $plan->rowFilter ?? static::fail('The filter has no bound conjunct');
             $rows[$engine] = FilePlan::rows($file, $columns, $plan);
@@ -332,8 +229,7 @@ final class FilterParityTest extends TestCase
     public function test_both_engines_filter_the_columns_an_arrow_schema_hints_alike(Filter $filter, array $ids): void
     {
         foreach ([PhpParquetEngine::class, RustParquetEngine::class] as $engine) {
-            $file = (new Reader(engine: ParquetEngineMother::create($engine)))->read(self::FIXTURES
-            . 'row_filter_hints_arrow.parquet');
+            $file = FilterRows::file('row_filter_hints_arrow', $engine);
 
             static::assertSame(
                 $ids,
@@ -346,11 +242,11 @@ final class FilterParityTest extends TestCase
     {
         $bound = parquet_column('id')->lessThan(25);
         // a float beyond 2^53 has no exact pre-image on UINT_64: the conjunct is unbound, FilterEvaluator still answers it
-        $filter = parquet_all($bound, parquet_column('big')->lessThan(1.0e18));
+        $filter = $bound->and(parquet_column('big')->lessThan(1.0e18));
 
-        foreach (['row_groups_php.parquet', 'row_groups_arrow.parquet'] as $fixture) {
+        foreach (['row_groups_php', 'row_groups_arrow'] as $fixture) {
             foreach ([PhpParquetEngine::class, RustParquetEngine::class] as $engine) {
-                $file = (new Reader(engine: ParquetEngineMother::create($engine)))->read(self::FIXTURES . $fixture);
+                $file = FilterRows::file($fixture, $engine);
                 $plan = FilePlan::of($file, $filter);
 
                 static::assertSame($bound, $plan->rowFilter?->filter());
@@ -370,10 +266,9 @@ final class FilterParityTest extends TestCase
             ],
             range(0, 9),
         );
-        $filter = parquet_any(
-            parquet_column('ts')->equals(new DateTimeImmutable('2024-01-01 00:00:00.000003 UTC')),
-            parquet_column('ts')->greaterThan(new DateTimeImmutable('2024-01-01 00:00:00.000008 UTC')),
-        );
+        $filter = parquet_column('ts')->equals(
+            new DateTimeImmutable('2024-01-01 00:00:00.000003 UTC'),
+        )->or(parquet_column('ts')->greaterThan(new DateTimeImmutable('2024-01-01 00:00:00.000008 UTC')));
 
         foreach ([PhpParquetEngine::class, RustParquetEngine::class] as $writer) {
             $bytes = MemoryParquetFile::written(
@@ -403,7 +298,7 @@ final class FilterParityTest extends TestCase
         int $offset,
         array $kept,
     ): void {
-        $all = Reader::php()->read(self::FIXTURES . $fixture);
+        $all = FilterRows::file($fixture, PhpParquetEngine::class);
         $matching = FilterExpectations::matchingGroups(
             $all->values(),
             $filter,
@@ -414,11 +309,7 @@ final class FilterParityTest extends TestCase
         $plans = [];
 
         foreach ([PhpParquetEngine::class, RustParquetEngine::class] as $engine) {
-            $plans[$engine] = FilePlan::of(
-                (new Reader(engine: ParquetEngineMother::create($engine)))->read(self::FIXTURES . $fixture),
-                $filter,
-                $offset,
-            );
+            $plans[$engine] = FilePlan::of(FilterRows::file($fixture, $engine), $filter, $offset);
         }
 
         static::assertEquals($plans[PhpParquetEngine::class]->selection, $plans[RustParquetEngine::class]->selection);
@@ -439,11 +330,7 @@ final class FilterParityTest extends TestCase
         foreach ([PhpParquetEngine::class, RustParquetEngine::class] as $engine) {
             static::assertSame(
                 $ids,
-                FilterExpectations::ids(
-                    (new Reader(engine: ParquetEngineMother::create($engine)))
-                        ->read(self::FIXTURES . $fixture)
-                        ->values(new Query(['id'], $filter)),
-                ),
+                FilterExpectations::ids(FilterRows::file($fixture, $engine)->values(new Query(['id'], $filter))),
             );
         }
     }
@@ -452,15 +339,13 @@ final class FilterParityTest extends TestCase
     {
         $filter = parquet_column('id')->in([3, 7, 33, 35, 38]);
 
-        foreach (['row_groups_php.parquet', 'row_groups_arrow.parquet'] as $fixture) {
+        foreach (['row_groups_php', 'row_groups_arrow'] as $fixture) {
             foreach ([PhpParquetEngine::class, RustParquetEngine::class] as $engine) {
                 static::assertSame(
                     [7, 33],
-                    FilterExpectations::ids(
-                        (new Reader(engine: ParquetEngineMother::create($engine)))
-                            ->read(self::FIXTURES . $fixture)
-                            ->values(new Query(['id'], $filter, offset: 1, limit: 2)),
-                    ),
+                    FilterExpectations::ids(FilterRows::file($fixture, $engine)->values(
+                        new Query(['id'], $filter, offset: 1, limit: 2),
+                    )),
                 );
             }
         }
@@ -472,12 +357,7 @@ final class FilterParityTest extends TestCase
         $plans = [];
 
         foreach ([PhpParquetEngine::class, RustParquetEngine::class] as $engine) {
-            $plans[$engine] = FilePlan::of(
-                (new Reader(engine: ParquetEngineMother::create($engine)))->read(self::FIXTURES
-                . 'row_groups_duckdb.parquet'),
-                $filter,
-                $offset,
-            );
+            $plans[$engine] = FilePlan::of(FilterRows::file('row_groups_duckdb', $engine), $filter, $offset);
         }
 
         $matching = FilterExpectations::matchingGroups(
@@ -504,8 +384,7 @@ final class FilterParityTest extends TestCase
         $filter = parquet_column('id')->lessThan(100);
 
         foreach ([PhpParquetEngine::class, RustParquetEngine::class] as $engine) {
-            $file = (new Reader(engine: ParquetEngineMother::create($engine)))->read(self::FIXTURES
-            . 'row_groups_duckdb.parquet');
+            $file = FilterRows::file('row_groups_duckdb', $engine);
             static::assertSame(
                 [0],
                 FilterExpectations::keptGroups(
@@ -532,7 +411,7 @@ final class FilterParityTest extends TestCase
 
     public function test_an_offset_from_inside_a_kept_group_reads_its_rest_and_skips_the_pruned_groups(): void
     {
-        foreach (['row_groups_php.parquet', 'row_groups_arrow.parquet'] as $fixture) {
+        foreach (['row_groups_php', 'row_groups_arrow'] as $fixture) {
             foreach ([PhpParquetEngine::class, RustParquetEngine::class] as $engine) {
                 static::assertEquals(
                     new RowSelection(
@@ -541,11 +420,7 @@ final class FilterParityTest extends TestCase
                         new RowSelector(20, true),
                         new RowSelector(10, false),
                     ),
-                    FilePlan::of(
-                        (new Reader(engine: ParquetEngineMother::create($engine)))->read(self::FIXTURES . $fixture),
-                        parquet_column('id')->in([3, 33]),
-                        5,
-                    )->selection,
+                    FilePlan::of(FilterRows::file($fixture, $engine), parquet_column('id')->in([3, 33]), 5)->selection,
                 );
             }
         }
@@ -578,7 +453,7 @@ final class FilterParityTest extends TestCase
      */
     public static function bloom_filters(): Generator
     {
-        foreach (['bloom_php.parquet', 'bloom_arrow.parquet'] as $fixture) {
+        foreach (['bloom_php', 'bloom_arrow'] as $fixture) {
             yield $fixture . ': absent id' => [$fixture, parquet_column('id')->equals(33), RowSelection::none(40), []];
             yield $fixture . ': in, present and absent' => [
                 $fixture,
@@ -594,27 +469,23 @@ final class FilterParityTest extends TestCase
             ];
         }
 
-        yield 'bloom_duckdb.parquet: absent id' => [
-            'bloom_duckdb.parquet',
-            parquet_column('id')->equals(40_001),
+        yield 'bloom_duckdb: absent id' => [
+            'bloom_duckdb',
+            parquet_column('id')->equals(4_001),
             RowSelection::none(FilterRows::DUCKDB_BLOOM_ROWS),
             [],
         ];
-        yield 'bloom_duckdb.parquet: in, present and absent' => [
-            'bloom_duckdb.parquet',
-            parquet_column('id')->in([40_000, 40_001]),
-            new RowSelection(new RowSelector(20_480, false), new RowSelector(79_520, true)),
-            [40_000],
+        yield 'bloom_duckdb: in, present and absent' => [
+            'bloom_duckdb',
+            parquet_column('id')->in([4_000, 4_001]),
+            new RowSelection(new RowSelector(2048, false), new RowSelector(6144, true)),
+            [4_000],
         ];
-        yield 'bloom_duckdb.parquet: present key' => [
-            'bloom_duckdb.parquet',
-            parquet_column('key')->equals('k100000'),
-            new RowSelection(
-                new RowSelector(40_960, true),
-                new RowSelector(20_480, false),
-                new RowSelector(38_560, true),
-            ),
-            [100_000],
+        yield 'bloom_duckdb: present key' => [
+            'bloom_duckdb',
+            parquet_column('key')->equals('k10000'),
+            new RowSelection(new RowSelector(4096, true), new RowSelector(2048, false), new RowSelector(2048, true)),
+            [10_000],
         ];
     }
 
@@ -623,7 +494,7 @@ final class FilterParityTest extends TestCase
      */
     public static function page_filters(): Generator
     {
-        foreach (['pages_php.parquet', 'pages_arrow.parquet'] as $fixture) {
+        foreach (['pages_php', 'pages_arrow'] as $fixture) {
             yield $fixture . ': string prefix' => [
                 $fixture,
                 parquet_column('label')->startsWith('10'),
@@ -633,7 +504,7 @@ final class FilterParityTest extends TestCase
             ];
             yield $fixture . ': not less than on NaN' => [
                 $fixture,
-                parquet_not(parquet_column('score')->lessThan(100.0)),
+                parquet_column('score')->lessThan(100.0)->negate(),
                 new RowSelection(
                     new RowSelector(10, true),
                     new RowSelector(5, false),
@@ -645,6 +516,39 @@ final class FilterParityTest extends TestCase
                 [11, ...range(20, 29)],
             ];
         }
+
+        $nullable = [...range(0, 9), 11, 13, 15, 17, 19];
+        $defined = [10, 12, 14, 16, 18, ...range(20, 39)];
+
+        yield 'pages_php: is null on a column holding nulls' => [
+            'pages_php',
+            parquet_column('maybe')->isNull(),
+            new RowSelection(new RowSelector(20, false), new RowSelector(20, true)),
+            new RowSelection(new RowSelector(10, false), new RowSelector(30, true)),
+            $nullable,
+        ];
+        yield 'pages_php: is not null on a column holding nulls' => [
+            'pages_php',
+            parquet_column('maybe')->isNotNull(),
+            new RowSelection(new RowSelector(10, true), new RowSelector(30, false)),
+            new RowSelection(new RowSelector(20, true), new RowSelector(20, false)),
+            $defined,
+        ];
+        // the arrow writer's pages break at other rows: none holds only nulls
+        yield 'pages_arrow: is null on a column holding nulls' => [
+            'pages_arrow',
+            parquet_column('maybe')->isNull(),
+            new RowSelection(new RowSelector(20, false), new RowSelector(20, true)),
+            RowSelection::none(40),
+            $nullable,
+        ];
+        yield 'pages_arrow: is not null on a column holding nulls' => [
+            'pages_arrow',
+            parquet_column('maybe')->isNotNull(),
+            RowSelection::all(40),
+            new RowSelection(new RowSelector(20, true), new RowSelector(20, false)),
+            $defined,
+        ];
     }
 
     /**
@@ -688,7 +592,7 @@ final class FilterParityTest extends TestCase
         array $ids,
     ): void {
         foreach ([PhpParquetEngine::class, RustParquetEngine::class] as $engine) {
-            $file = (new Reader(engine: ParquetEngineMother::create($engine)))->read(self::FIXTURES . $fixture);
+            $file = FilterRows::file($fixture, $engine);
 
             static::assertEquals($selection, FilePlan::of($file, $filter)->selection);
             static::assertSame($ids, FilterExpectations::ids($file->values(new Query(['id'], $filter))));
@@ -707,7 +611,7 @@ final class FilterParityTest extends TestCase
         array $ids,
     ): void {
         foreach ([PhpParquetEngine::class, RustParquetEngine::class] as $engine) {
-            $file = (new Reader(engine: ParquetEngineMother::create($engine)))->read(self::FIXTURES . $fixture);
+            $file = FilterRows::file($fixture, $engine);
             $plan = FilePlan::of($file, $filter);
 
             static::assertEquals($selection, $plan->selection);
@@ -723,9 +627,9 @@ final class FilterParityTest extends TestCase
             array_slice(FilterRows::pageRows(), 12),
         );
 
-        foreach (['pages_php.parquet', 'pages_arrow.parquet'] as $fixture) {
+        foreach (['pages_php', 'pages_arrow'] as $fixture) {
             foreach ([PhpParquetEngine::class, RustParquetEngine::class] as $engine) {
-                $file = (new Reader(engine: ParquetEngineMother::create($engine)))->read(self::FIXTURES . $fixture);
+                $file = FilterRows::file($fixture, $engine);
                 $plan = FilePlan::of($file, parquet_column('id')->greaterThanOrEqual(12), 12);
 
                 static::assertEquals(RowSelection::window(40, 12), $plan->selection);
