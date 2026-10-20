@@ -11,6 +11,7 @@ use Flow\ETL\Adapter\Doctrine\Tests\Context\SelectQueryCounter;
 use Flow\ETL\Adapter\Doctrine\Tests\Double\NativeHandleStub;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\SchemaNotDerivableException;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
@@ -213,7 +214,7 @@ final class DbalLimitOffsetExtractorTest extends FlowTestCase
         ))->withBatchSize(2);
         $counter->reset();
 
-        self::assertExtractedRowsCount(5, $extractor, limit: 5);
+        self::assertExtractedRowsCount(5, $extractor, scan: new FileScan(5));
         // the three pages of the unlimited read, without the COUNT(*) in front of them
         static::assertSame(3, $counter->count);
         static::assertStringNotContainsString('COUNT(*)', implode(' ', $counter->queries));

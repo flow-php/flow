@@ -6,10 +6,8 @@ namespace Flow\Parquet\Engine;
 
 use Flow\Arrow\Parquet\RustColumnsReader;
 use Flow\Filesystem\SourceStream;
-use Flow\Parquet\ParquetFile\Metadata;
-use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFileReader;
-use Flow\Parquet\ThriftModel\FileMetaData;
+use Flow\Parquet\Reader\ReadPlan;
 use RuntimeException;
 
 use function extension_loaded;
@@ -30,49 +28,27 @@ final class RustParquetFileReader implements ParquetFileReader
     }
 
     /**
-     * Closes the stream; any later call throws \Flow\Parquet\Exception\RuntimeException('Reader is not open').
+     * Closes the stream; any later call throws \Flow\Parquet\Exception\RuntimeException('Reader is not open'). A
+     * footer taken before stays readable.
      */
     public function close(): void
     {
         throw new RuntimeException('arrow extension is not loaded');
     }
 
-    public function metadata(): Metadata
+    /**
+     * Created on the first call.
+     */
+    public function footer(): RustParquetFooter
     {
         throw new RuntimeException('arrow extension is not loaded');
     }
 
     /**
      * @param list<string> $columns resolved names, never empty
-     * @param int<1, max> $batchSize upper bound of rows per chunk
+     * @param int $batchSize upper bound of rows per chunk, refused below 1
      */
-    public function readColumns(array $columns, int $batchSize, ?int $limit, ?int $offset): RustColumnsReader
-    {
-        throw new RuntimeException('arrow extension is not loaded');
-    }
-
-    public function rowsNumber(): int
-    {
-        throw new RuntimeException('arrow extension is not loaded');
-    }
-
-    public function schema(): Schema
-    {
-        throw new RuntimeException('arrow extension is not loaded');
-    }
-
-    /**
-     * The whole footer, decoded on the first call.
-     */
-    public function thrift(): FileMetaData
-    {
-        throw new RuntimeException('arrow extension is not loaded');
-    }
-
-    /**
-     * Σ row group total_byte_size (uncompressed).
-     */
-    public function totalByteSize(): int
+    public function readColumns(array $columns, int $batchSize, ReadPlan $plan): RustColumnsReader
     {
         throw new RuntimeException('arrow extension is not loaded');
     }

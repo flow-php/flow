@@ -20,6 +20,7 @@ const ROWS: DataType = DataType::object("Flow\\ETL\\Rows");
 const SCHEMA: DataType = DataType::object("Flow\\ETL\\Schema");
 const BACKEND: DataType = DataType::object("Flow\\ETL\\Column\\Backend");
 const ITERATOR: DataType = DataType::object("Iterator");
+const READ_PLAN: DataType = DataType::object("Flow\\Parquet\\Reader\\ReadPlan");
 const COLUMN_TYPES: DataType = DataType::object("Flow\\ETL\\Schema\\Inference\\ColumnTypes");
 const SCHEMA_INFERENCE: DataType = DataType::object("Flow\\ETL\\Schema\\Inference\\SchemaInference");
 const TYPE_NARROWER: DataType = DataType::object("Flow\\Types\\Type\\TypeNarrower");
@@ -318,8 +319,7 @@ pub fn register() -> Result<()> {
                 vec![
                     Arg::new("schema", SCHEMA),
                     Arg::new("batchSize", DataType::Long),
-                    Arg::new("offset", DataType::Long).allow_null(),
-                    Arg::new("limit", DataType::Long).allow_null(),
+                    Arg::new("plan", READ_PLAN),
                     Arg::new("backend", BACKEND),
                 ],
                 ITERATOR,

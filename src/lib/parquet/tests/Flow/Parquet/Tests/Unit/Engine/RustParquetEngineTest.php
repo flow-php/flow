@@ -14,6 +14,7 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\Tests\Mother\ReadPlanMother;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 
@@ -31,7 +32,11 @@ final class RustParquetEngineTest extends TestCase
         $this->expectExceptionMessage('Parquet column "ts" holds INT96');
 
         $engine->openForRead(NativeLocalSourceStream::open(path_real(__DIR__
-        . '/../../Integration/IO/Fixtures/EdgeCases/int96.parquet')))->readColumns(['ts'], 10, null, null);
+        . '/../../Integration/IO/Fixtures/EdgeCases/int96.parquet')))->readColumns(
+            ['ts'],
+            10,
+            ReadPlanMother::window(2),
+        );
     }
 
     public function test_lzo_is_refused(): void

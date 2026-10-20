@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use Flow\ETL\ErrorHandler\IgnoreError;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Optimizer;
 use Flow\ETL\Tests\Double\RecordingFileExtractor;
@@ -13,7 +14,6 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\PartitionedSourceMother;
 use Flow\ETL\Transformation\AddRowIndex\StartFrom;
 use Flow\ETL\Transformer\AddRowIndexTransformer;
-use Flow\Filesystem\Path\Filter;
 use RuntimeException;
 
 use function array_filter;
@@ -97,7 +97,8 @@ final class SinglePlanTest extends FlowTestCase
             ->join($right, join_on(['id' => 'id'], 'r_'))
             ->fetch();
 
-        static::assertSame([1], $source->limits);
+        static::assertCount(1, $source->scans);
+        static::assertSame(1, $source->scans[0]->limit);
     }
 
     public function test_a_joined_frames_own_error_handler_is_ignored(): void
@@ -145,11 +146,11 @@ final class SinglePlanTest extends FlowTestCase
             ->crossJoin($joined, 'j_')
             ->fetch();
 
-        $accepts2024 = static fn(Filter $filter): bool => $filter->accept(PartitionedSourceMother::file(
+        $accepts2024 = static fn(FileScan $scan): bool => $scan->pathFilter->accept(PartitionedSourceMother::file(
             'year=2024/month=08',
         ));
 
-        static::assertCount(2, $source->pathFilters);
-        static::assertCount(1, array_filter($source->pathFilters, $accepts2024));
+        static::assertCount(2, $source->scans);
+        static::assertCount(1, array_filter($source->scans, $accepts2024));
     }
 }

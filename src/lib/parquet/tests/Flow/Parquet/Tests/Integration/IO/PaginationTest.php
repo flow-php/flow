@@ -4,16 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
-use DateTimeImmutable;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\ListElement;
-use Flow\Parquet\ParquetFile\Schema\MapKey;
-use Flow\Parquet\ParquetFile\Schema\MapValue;
-use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Flow\Parquet\Query;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Tests\Context\TestParquetFile;
 use Flow\Parquet\Tests\Mother\ParquetEngineMother;
@@ -23,11 +19,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 use function array_map;
 use function array_merge;
-use function file_exists;
-use function Flow\ETL\DSL\generate_random_int;
 use function iterator_to_array;
 use function range;
-use function unlink;
 
 class PaginationTest extends ParquetIntegrationTestCase
 {
@@ -68,13 +61,11 @@ class PaginationTest extends ParquetIntegrationTestCase
             array_map(static fn(int $i): array => ['id' => $i], range(0, 99)),
         );
 
+        $file = (new Reader(engine: $engine))->read($path);
+
         static::assertSame(
             array_map(static fn(int $i): array => ['id' => $i], range(30, 99)),
-            iterator_to_array(
-                (new Reader(engine: $engine))
-                    ->read($path)
-                    ->values(['id'], offset: 30),
-            ),
+            iterator_to_array($file->values(new Query(['id'], offset: 30))),
         );
     }
 
@@ -89,16 +80,14 @@ class PaginationTest extends ParquetIntegrationTestCase
             ->metadata()
             ->rowsNumber();
 
+        $file = (new Reader(engine: $engine))->read($path);
+
         static::assertEquals(
             array_merge(...array_map(
                 static fn(int $i): array => [['id' => $i]],
                 range($totalRows - 100, $totalRows - 1),
             )),
-            iterator_to_array(
-                (new Reader(engine: $engine))
-                    ->read($path)
-                    ->values(['id'], offset: $totalRows - 100),
-            ),
+            iterator_to_array($file->values(new Query(['id'], offset: $totalRows - 100))),
         );
     }
 
@@ -112,45 +101,11 @@ class PaginationTest extends ParquetIntegrationTestCase
         $engine = ParquetEngineMother::create($engineClass);
         $path = __DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet';
 
+        $file = (new Reader(engine: $engine))->read($path);
+
         static::assertCount(
             $results,
-            iterator_to_array(
-                (new Reader(engine: $engine))
-                    ->read($path)
-                    ->values(['id'], offset: $offset, limit: $limit),
-            ),
-        );
-    }
-
-    #[DataProvider('engine_provider')]
-    public function test_setting_setting_limit_to_negative(string $engineClass): void
-    {
-        $engine = ParquetEngineMother::create($engineClass);
-        $path = __DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet';
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Limit must be greater than 0');
-
-        iterator_to_array(
-            (new Reader(engine: $engine))
-                ->read($path)
-                ->values(['id'], limit: -2),
-        );
-    }
-
-    #[DataProvider('engine_provider')]
-    public function test_setting_setting_offset_to_negative(string $engineClass): void
-    {
-        $engine = ParquetEngineMother::create($engineClass);
-        $path = __DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet';
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Offset must be greater than or equal to 0');
-
-        iterator_to_array(
-            (new Reader(engine: $engine))
-                ->read($path)
-                ->values(['id'], offset: -2, limit: 2),
+            iterator_to_array($file->values(new Query(['id'], offset: $offset, limit: $limit))),
         );
     }
 
@@ -164,36 +119,17 @@ class PaginationTest extends ParquetIntegrationTestCase
         iterator_to_array(
             (new Reader(engine: $engine))
                 ->read(__DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet')
-                ->columns(0, ['id']),
+                ->columns(new Query(['id']), 0),
         );
     }
 
     #[DataProvider('engine_provider')]
-    public function test_columns_refuses_a_limit_of_zero(string $engineClass): void
+    public function test_columns_with_a_limit_of_zero_read_no_row(string $engineClass): void
     {
-        $engine = ParquetEngineMother::create($engineClass);
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Limit must be greater than 0');
+        $file = (new Reader(engine: ParquetEngineMother::create($engineClass)))->read(__DIR__
+        . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet');
 
-        iterator_to_array(
-            (new Reader(engine: $engine))
-                ->read(__DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet')
-                ->columns(2, ['id'], limit: 0),
-        );
-    }
-
-    #[DataProvider('engine_provider')]
-    public function test_columns_refuses_a_negative_offset_without_a_limit(string $engineClass): void
-    {
-        $engine = ParquetEngineMother::create($engineClass);
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Offset must be greater than or equal to 0');
-
-        iterator_to_array(
-            (new Reader(engine: $engine))
-                ->read(__DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet')
-                ->columns(2, ['id'], offset: -1),
-        );
+        static::assertSame([], iterator_to_array($file->columns(new Query(['id'], limit: 0), 2)));
     }
 
     #[DataProvider('engine_provider')]
@@ -206,7 +142,7 @@ class PaginationTest extends ParquetIntegrationTestCase
         iterator_to_array(
             (new Reader(engine: $engine))
                 ->read(__DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet')
-                ->columns(2, ['nope']),
+                ->columns(new Query(['nope']), 2),
         );
     }
 
@@ -219,14 +155,16 @@ class PaginationTest extends ParquetIntegrationTestCase
 
         $zipped = [];
 
-        foreach ($file->columns(3, ['id', 'name'], limit: 7, offset: 1020) as $chunk) {
+        $query = new Query(['id', 'name'], offset: 1020, limit: 7);
+
+        foreach ($file->columns($query, 3) as $chunk) {
             // @mago-ignore analysis:mixed-assignment
             foreach ($chunk['id'] as $i => $id) {
                 $zipped[] = ['id' => $id, 'name' => $chunk['name'][$i]];
             }
         }
 
-        static::assertSame($zipped, iterator_to_array($file->values(['id', 'name'], limit: 7, offset: 1020), false));
+        static::assertSame($zipped, iterator_to_array($file->values($query), false));
         static::assertCount(7, $zipped);
     }
 
@@ -239,71 +177,11 @@ class PaginationTest extends ParquetIntegrationTestCase
         // Uncomment only to apply changes to the dataset
         // $this->generateDataset($path);
 
+        $file = (new Reader(engine: $engine))->read($path);
+
         static::assertEquals(
             array_merge(...array_map(static fn(int $i): array => [['id' => $i]], range(1020, 1029))),
-            iterator_to_array(
-                (new Reader(engine: $engine))
-                    ->read($path)
-                    ->values(['id'], offset: 1020, limit: 10),
-            ),
+            iterator_to_array($file->values(new Query(['id'], offset: 1020, limit: 10))),
         );
-    }
-
-    private function _generateDataset(string $path): void
-    {
-        $writer = new Writer(options: Options::default()->set(Option::ROW_GROUP_SIZE_BYTES, 1024)->set(
-            Option::ROW_GROUP_SIZE_CHECK_INTERVAL,
-            100,
-        ));
-        $schema = Schema::with(
-            FlatColumn::int64('id'),
-            FlatColumn::string('name'),
-            FlatColumn::boolean('active'),
-            FlatColumn::dateTime('created_at'),
-            NestedColumn::list('list_of_int', ListElement::int32()),
-            NestedColumn::map('map_of_int_string', MapKey::int32(), MapValue::string()),
-            NestedColumn::struct('struct', [
-                FlatColumn::int64('id'),
-                FlatColumn::string('name'),
-                FlatColumn::boolean('active'),
-                FlatColumn::dateTime('created_at'),
-                NestedColumn::list('list_of_int', ListElement::int32()),
-                NestedColumn::map('map_of_int_string', MapKey::int32(), MapValue::string()),
-            ]),
-        );
-
-        $inputData = array_merge(...array_map(
-            static fn(int $i): array => [
-                [
-                    'id' => $i,
-                    'name' => 'name-' . $i,
-                    'active' => ($i % 2) === 0,
-                    'created_at' => new DateTimeImmutable('2024-01-01 + ' . $i . ' days'),
-                    'list_of_int' => array_map(static fn(int $i) => $i, range(1, generate_random_int(2, 10))),
-                    'map_of_int_string' => array_merge(...array_map(
-                        static fn(int $i) => [$i => 'value-' . $i],
-                        range(1, generate_random_int(2, 10)),
-                    )),
-                    'struct' => [
-                        'id' => $i,
-                        'name' => 'name-' . $i,
-                        'active' => ($i % 2) === 0,
-                        'created_at' => new DateTimeImmutable('2024-01-01 + ' . $i . ' days'),
-                        'list_of_int' => array_map(static fn(int $i) => $i, range(1, generate_random_int(2, 10))),
-                        'map_of_int_string' => array_merge(...array_map(
-                            static fn(int $i) => [$i => 'value-' . $i],
-                            range(1, generate_random_int(2, 10)),
-                        )),
-                    ],
-                ],
-            ],
-            range(0, 4999),
-        ));
-
-        if (file_exists($path)) {
-            unlink($path);
-        }
-
-        $writer->write($path, $schema, $inputData);
     }
 }

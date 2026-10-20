@@ -35,9 +35,9 @@ final readonly class FilterWalk
 
     /**
      * $predicate as $leaf sees it, or null when it may not be evaluated there instead of above $filter.
-     * Another Filter is TRANSPARENT here: it only removes rows, and the pushed Filter node stays, so pruning a
-     * file drops rows that filter would have dropped anyway. Limit/Offset/Until/Distinct/Discard are not: they
-     * make WHICH rows arrive depend on what the source read.
+     * Another Filter is TRANSPARENT here: it only removes rows, so the order two filters drop rows in does not change
+     * which rows survive both. Limit/Offset/Until/Distinct/Discard are not: they make WHICH rows arrive depend on
+     * what the source read.
      *
      * A node that redefines a column the predicate reads blocks it, unless the column is a plain alias of a
      * column below (Rename, a WithColumn of a bare reference): the predicate is rewritten to read that column.

@@ -10,8 +10,6 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
-use Flow\Filesystem\Path\Filter;
-use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Generator;
 
 /**
@@ -21,13 +19,13 @@ use Generator;
 interface FileExtractor extends Extractor
 {
     /**
-     * @param null|int<1, max> $limit see Extractor::extract()
-     * @param Filter $pathFilter what this read lists. The Filter step stays in the plan, so a source that lists
-     *                           more, or ignores it, is still correct.
+     * Reads what the plan pushed into this read and returns only rows matching every one of $scan->conjuncts. The
+     * limit and the path filter are hints: the plan still enforces the limit, and every path filter is also one of
+     * the conjuncts, so a source that reads or lists more is still correct. extract() is scan() with only a limit.
      *
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator;
+    public function scan(FlowContext $context, FileScan $scan): Generator;
 
     public function source(): Path;
 

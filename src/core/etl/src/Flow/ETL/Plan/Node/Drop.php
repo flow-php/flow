@@ -10,6 +10,7 @@ use Flow\ETL\Plan\Redefined;
 use Flow\ETL\Plan\RowCount;
 use Flow\ETL\Plan\Transparency;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\References;
 
 final readonly class Drop implements Node
 {
@@ -51,6 +52,6 @@ final readonly class Drop implements Node
 
     public function redefines(): Redefined
     {
-        return Redefined::none();
+        return Redefined::names(...References::init(...$this->entries)->names());
     }
 }

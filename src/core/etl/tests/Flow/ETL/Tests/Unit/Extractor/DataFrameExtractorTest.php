@@ -162,7 +162,8 @@ final class DataFrameExtractorTest extends FlowTestCase
 
         $batches = iterator_to_array(from_data_frame(df()->read($source))->extract(flow_context(config()), 2), false);
 
-        static::assertSame([2], $source->limits);
+        static::assertCount(1, $source->scans);
+        static::assertSame(2, $source->scans[0]->limit);
         static::assertSame(
             [['id' => 1], ['id' => 2]],
             array_merge(...array_map(static fn($rows) => $rows->toArray(), $batches)),

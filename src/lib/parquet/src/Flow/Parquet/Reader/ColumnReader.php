@@ -9,96 +9,139 @@ use Flow\Parquet\Dremel\ColumnData\PagedFlatColumnValues;
 use Flow\Parquet\Dremel\DremelAssembler;
 use Flow\Parquet\Dremel\ReadColumnData;
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\ParquetFile\Metadata;
+use Flow\Parquet\ParquetFile\Index\Indexes;
+use Flow\Parquet\ParquetFile\Page\Dictionary;
+use Flow\Parquet\ParquetFile\RowGroup;
 use Flow\Parquet\ParquetFile\Schema\Column;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Generator;
 
+use function iterator_to_array;
+
 /**
- * One column's values across the row groups of a file, from $offset for at most $limit rows.
+ * One column's values in a row group, the selected rows only.
+ *
+ * @type DecodedPage = array{values: list<mixed>, definitionLevels: array<int>}
+ * @type DecodedChunk = array{pages: array<int, DecodedPage>, dictionary: ?Dictionary}
  */
 final readonly class ColumnReader
 {
     public function __construct(
-        private ColumnChunkReader $chunks,
+        private SelectedPages $pages,
         private DremelAssembler $assembler,
     ) {}
 
-    public function read(Column $column, Metadata $metadata, SourceStream $stream, ?int $limit, ?int $offset): Generator
-    {
-        $yieldedRows = 0;
-        $rowGroupOffset = 0;
-
-        foreach ($metadata->rowGroups()->all() as $rowGroup) {
-            if ($offset !== null) {
-                if (($rowGroupOffset + $rowGroup->rowsCount()) <= $offset) {
-                    $rowGroupOffset += $rowGroup->rowsCount();
-
-                    continue;
-                }
-            }
-            $skipRows = $offset !== null ? $offset - $rowGroupOffset : 0;
-
-            if ($column instanceof FlatColumn) {
-                $rowsSkipped = 0;
-
-                foreach ($this->chunks->read(
-                    $rowGroup->getColumnChunk($column),
-                    $column,
-                    $stream,
-                ) as $flatColumnValues) {
-                    $columnData = new ReadColumnData($column, [$flatColumnValues->flatPath() => $flatColumnValues]);
-
-                    // @mago-ignore analysis:mixed-assignment
-                    foreach ($this->assembler->assemble($column, $columnData) as $row) {
-                        if ($skipRows > 0 && $rowsSkipped < $skipRows) {
-                            $rowsSkipped++;
-
-                            continue;
-                        }
-
-                        if ($limit !== null && $yieldedRows >= $limit) {
-                            return;
-                        }
-                        yield $row;
-                        $yieldedRows++;
-                    }
-                }
-            } elseif ($column instanceof NestedColumn) {
-                $flatData = [];
-
-                foreach ($column->childrenFlat() as $child) {
-                    $flatData[] = new PagedFlatColumnValues($child, $this->chunks->read(
-                        $rowGroup->getColumnChunk($child),
-                        $child,
-                        $stream,
-                    ));
-                }
-
-                $columnData = new ReadColumnData($column, $flatData);
-
-                $rowsSkipped = 0;
-
-                // @mago-ignore analysis:mixed-assignment
-                foreach ($this->assembler->assemble($column, $columnData) as $row) {
-                    if ($skipRows > 0 && $rowsSkipped < $skipRows) {
-                        $rowsSkipped++;
-
-                        continue;
-                    }
-
-                    if ($limit !== null && $yieldedRows >= $limit) {
-                        return;
-                    }
-                    yield $row;
-                    $yieldedRows++;
-                }
-            } else {
-                throw new InvalidArgumentException('Column must be instance of FlatColumn or NestedColumn');
-            }
-
-            $rowGroupOffset += $rowGroup->rowsCount();
+    /**
+     * The column's values at the rows $selection selects, row 0 being the group's first row.
+     *
+     * @param array<string, DecodedChunk> $decoded chunks readPhysical() returned, by leaf flat path
+     */
+    public function readRowGroup(
+        Column $column,
+        RowGroup $rowGroup,
+        int $group,
+        SourceStream $stream,
+        RowSelection $selection,
+        Indexes $indexes,
+        array $decoded = [],
+    ): Generator {
+        if (!$selection->selectsAny()) {
+            return;
         }
+
+        if ($column instanceof FlatColumn) {
+            foreach ($this->pages->trimmed(
+                $column,
+                $rowGroup,
+                $group,
+                $stream,
+                $selection,
+                $indexes,
+                $decoded[$column->flatPath()] ?? ['pages' => [], 'dictionary' => null],
+            ) as $page) {
+                yield from $this->assembler->assemble($column, new ReadColumnData($column, [
+                    $page->flatPath() => $page,
+                ]));
+            }
+
+            return;
+        }
+
+        if (!$column instanceof NestedColumn) {
+            throw new InvalidArgumentException('Column must be instance of FlatColumn or NestedColumn');
+        }
+
+        $flatData = [];
+
+        foreach ($column->childrenFlat() as $child) {
+            $flatData[] = new PagedFlatColumnValues($child, $this->pages->trimmed(
+                $child,
+                $rowGroup,
+                $group,
+                $stream,
+                $selection,
+                $indexes,
+                $decoded[$child->flatPath()] ?? ['pages' => [], 'dictionary' => null],
+            ));
+        }
+
+        yield from $this->assembler->assemble($column, new ReadColumnData($column, $flatData));
+    }
+
+    /**
+     * The leaf's undecoded physical values at the rows $selection selects, null where the leaf or an ancestor is null,
+     * and the whole decoded pages it read, keyed by the row of the group each starts at, with their dictionary, for
+     * readRowGroup() to serve without reading them again.
+     *
+     * @return array{chunk: DecodedChunk, values: list<mixed>}
+     */
+    public function readPhysical(
+        FlatColumn $leaf,
+        RowGroup $rowGroup,
+        int $group,
+        SourceStream $stream,
+        RowSelection $selection,
+        Indexes $indexes,
+    ): array {
+        if ($leaf->maxRepetitionsLevel() > 0) {
+            throw new InvalidArgumentException(
+                'Column "' . $leaf->flatPath() . '" lies inside a list or a map, where a row holds no single value',
+            );
+        }
+
+        $chunk = ['pages' => [], 'dictionary' => null];
+        $values = [];
+
+        if (!$selection->selectsAny()) {
+            return ['chunk' => $chunk, 'values' => $values];
+        }
+
+        $maxDefinitionLevel = $leaf->repetitions()->maxDefinitionLevel();
+        $pages = $this->pages->read($leaf, $rowGroup, $group, $stream, $selection, $indexes, $chunk);
+
+        foreach ($pages as $firstRow => [$page, $pageSelection]) {
+            $pageValues = iterator_to_array($page->rawValues(), false);
+            $definitionLevels = $page->definitionLevels();
+            $chunk['pages'][$firstRow] = ['values' => $pageValues, 'definitionLevels' => $definitionLevels];
+            $row = 0;
+            $valueIndex = 0;
+
+            foreach ($pageSelection->selectors() as $selector) {
+                for ($end = $row + $selector->rowCount; $row < $end; $row++) {
+                    $defined = $definitionLevels[$row] === $maxDefinitionLevel;
+
+                    if (!$selector->skip) {
+                        $values[] = $defined ? $pageValues[$valueIndex] : null;
+                    }
+
+                    $valueIndex += $defined ? 1 : 0;
+                }
+            }
+        }
+
+        $chunk['dictionary'] = $pages->getReturn();
+
+        return ['chunk' => $chunk, 'values' => $values];
     }
 }

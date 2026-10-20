@@ -58,6 +58,9 @@
         <testsuite name="lib-parquet-integration">
             <directory>src/lib/parquet/tests/Flow/Parquet/Tests/Integration</directory>
         </testsuite>
+        <testsuite name="lib-parquet-viewer-unit">
+            <directory>src/lib/parquet-viewer/tests/Flow/ParquetViewer/Tests/Unit</directory>
+        </testsuite>
         <testsuite name="lib-parquet-viewer-integration">
             <directory>src/lib/parquet-viewer/tests/Flow/ParquetViewer/Tests/Integration</directory>
         </testsuite>

@@ -12,11 +12,14 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Exception\InvalidArgumentException as TypesInvalidArgumentException;
 
 use function Flow\ETL\DSL\between;
+use function Flow\ETL\DSL\definition_from_type;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\Types\DSL\type_numeric_string;
 
 final class BetweenTest extends FlowTestCase
 {
@@ -164,5 +167,35 @@ final class BetweenTest extends FlowTestCase
             ->resolve(int_schema('a'))
             ->between(lit(1), lit(new DateTimeImmutable('2024-01-01')))
             ->returns();
+    }
+
+    public function test_between_orders_strings_by_bytes(): void
+    {
+        static::assertTrue((new FunctionContext(flow_context()))->eval(
+            ref('a')->between(lit('10'), lit('9')),
+            ['a' => '100'],
+            schema(str_schema('a')),
+        ));
+    }
+
+    public function test_between_orders_a_numeric_string_column_numerically(): void
+    {
+        $context = flow_context();
+
+        static::assertFalse((new FunctionContext($context))->eval(
+            ref('a')->between(lit('10'), lit('9')),
+            ['a' => '100'],
+            schema(definition_from_type('a', type_numeric_string())),
+        ));
+        static::assertTrue((new FunctionContext($context))->eval(
+            ref('a')->between(lit('9'), lit('18446744073709551615'), lit(Boundary::INCLUSIVE)),
+            ['a' => '18446744073709551615'],
+            schema(definition_from_type('a', type_numeric_string())),
+        ));
+        static::assertFalse((new FunctionContext($context))->eval(
+            ref('a')->between(lit('9'), lit('18446744073709551614'), lit(Boundary::INCLUSIVE)),
+            ['a' => '18446744073709551615'],
+            schema(definition_from_type('a', type_numeric_string())),
+        ));
     }
 }

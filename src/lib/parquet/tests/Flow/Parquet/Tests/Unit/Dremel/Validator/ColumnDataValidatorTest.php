@@ -67,7 +67,7 @@ final class ColumnDataValidatorTest extends TestCase
             '-32769 is out of the INT_16 range [-32768, 32767]',
         ];
         yield 'INT_32 above' => [
-            FlatColumn::int32('c'),
+            new FlatColumn('c', PhysicalType::INT32, ConvertedType::INT_32),
             4_000_000_000,
             '4000000000 is out of the INT_32 range [-2147483648, 2147483647]',
         ];
@@ -94,7 +94,7 @@ final class ColumnDataValidatorTest extends TestCase
         yield 'UINT_64 negative' => [
             new FlatColumn('c', PhysicalType::INT64, ConvertedType::UINT_64),
             -1,
-            '-1 is out of the UINT_64 range [0, 9223372036854775807]',
+            '-1 is out of the UINT_64 range [0, 18446744073709551615]',
         ];
         yield 'logical INTEGER(8, signed) above' => [
             new FlatColumn('c', PhysicalType::INT32, logicalType: LogicalType::integer(8, true)),
@@ -113,6 +113,58 @@ final class ColumnDataValidatorTest extends TestCase
         $this->expectExceptionMessage('Column "c" row 3: ' . $message);
 
         (new ColumnDataValidator())->validate($column, $value, 3);
+    }
+
+    /**
+     * @return Generator<string, array{FlatColumn, int|string}>
+     */
+    public static function uint64_values(): Generator
+    {
+        $converted = new FlatColumn('c', PhysicalType::INT64, ConvertedType::UINT_64);
+        $logical = new FlatColumn('c', PhysicalType::INT64, logicalType: LogicalType::integer(64, false));
+
+        yield 'int zero' => [$converted, 0];
+        yield 'digit string zero' => [$converted, '0'];
+        yield 'digit string above PHP_INT_MAX' => [$converted, '9223372036854775808'];
+        yield 'digit string max' => [$logical, '18446744073709551615'];
+    }
+
+    #[DataProvider('uint64_values')]
+    public function test_a_uint64_int_or_digit_string_is_accepted(FlatColumn $column, int|string $value): void
+    {
+        (new ColumnDataValidator())->validate($column, $value, 0);
+
+        $this->expectNotToPerformAssertions();
+    }
+
+    /**
+     * @return Generator<string, array{mixed, string}>
+     */
+    public static function not_uint64_values(): Generator
+    {
+        yield 'digit string above max' => ['18446744073709551616', '18446744073709551616'];
+        yield 'leading zero' => ['007', '007'];
+        yield 'not digits' => ['abc', 'abc'];
+        yield 'signed digit string' => ['-1', '-1'];
+        yield 'empty string' => ['', ''];
+        yield 'float' => [1.5, 'float'];
+    }
+
+    #[DataProvider('not_uint64_values')]
+    public function test_a_uint64_value_that_is_neither_int_nor_digit_string_is_refused(
+        mixed $value,
+        string $shown,
+    ): void {
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage(
+            'Column "c" row 2: ' . $shown . ' is out of the UINT_64 range [0, 18446744073709551615]',
+        );
+
+        (new ColumnDataValidator())->validate(
+            new FlatColumn('c', PhysicalType::INT64, logicalType: LogicalType::integer(64, false)),
+            $value,
+            2,
+        );
     }
 
     /**

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Arrow\Parquet;
 
 use Flow\Parquet\Engine\RustParquetFileReader;
+use Flow\Parquet\Reader\ReadPlan;
 use Iterator;
 use RuntimeException;
 
@@ -25,7 +26,7 @@ final class RustColumnsReader implements Iterator
      * @param list<string> $columns root names or struct paths
      * @param int<1, max> $batchSize
      */
-    public function __construct(RustParquetFileReader $file, array $columns, int $batchSize, ?int $offset, ?int $limit)
+    public function __construct(RustParquetFileReader $file, array $columns, int $batchSize, ReadPlan $plan)
     {
         throw new RuntimeException('arrow extension is not loaded');
     }

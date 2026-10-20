@@ -8,10 +8,10 @@ crate-type = ["cdylib"]
 
 [dependencies]
 ext-php-rs = "0.16"
-parquet = { version = "59", default-features = false, features = ["arrow", "arrow_canonical_extension_types", "snap", "flate2", "flate2-zlib-rs", "zstd", "lz4", "brotli", "simdutf8"] }
-arrow-array = { version = "59", features = ["ffi"] }
-arrow-buffer = "59"
-arrow-schema = { version = "59", features = ["canonical_extension_types"] }
+parquet = { version = "60", default-features = false, features = ["arrow", "arrow_canonical_extension_types", "snap", "flate2", "flate2-zlib-rs", "zstd", "lz4", "brotli", "simdutf8"] }
+arrow-array = { version = "60", features = ["ffi"] }
+arrow-buffer = "60"
+arrow-schema = { version = "60", features = ["canonical_extension_types"] }
 bytes = "1"
 
 [build-dependencies]

@@ -13,6 +13,7 @@ use Flow\ETL\RustIterator;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Parquet\Engine\RustParquetEngine;
+use Flow\Parquet\Reader\ReadPlanner;
 use Generator;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 
@@ -30,8 +31,7 @@ final class AdaptiveParquetOpenSourceTest extends FlowTestCase
         static::assertInstanceOf(Generator::class, $source->batches(
             schema(int_schema('id')),
             10,
-            null,
-            null,
+            (new ReadPlanner())->plan($file->reader()->footer(), $file->indexes(), null),
             new PhpBackend(),
         ));
         $source->close();
@@ -48,8 +48,7 @@ final class AdaptiveParquetOpenSourceTest extends FlowTestCase
         static::assertInstanceOf(RustIterator::class, $source->batches(
             schema(int_schema('id')),
             10,
-            null,
-            null,
+            (new ReadPlanner())->plan($file->reader()->footer(), $file->indexes(), null),
             new PhpBackend(),
         ));
         $source->close();
@@ -69,8 +68,7 @@ final class AdaptiveParquetOpenSourceTest extends FlowTestCase
         static::assertInstanceOf(Generator::class, $source->batches(
             schema(int_schema('id')),
             10,
-            null,
-            null,
+            (new ReadPlanner())->plan($file->reader()->footer(), $file->indexes(), null),
             new PhpBackend(),
         ));
         $source->close();

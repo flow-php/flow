@@ -13,6 +13,7 @@ use Flow\ETL\Schema;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Engine\RustParquetFileReader;
+use Flow\Parquet\Reader\ReadPlan;
 
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\date_schema;
@@ -250,17 +251,29 @@ function comparable(mixed $value): string
 }
 
 /**
- * `RustParquetOpenSource::batches()` of `$schema`'s columns of the Parquet file in `$stream`, adopted by `RustBackend`.
+ * `RustParquetOpenSource::batches()` of `$schema`'s columns of the Parquet file in `$stream`, `$limit` rows from `$offset`,
+ * adopted by `RustBackend`.
  *
  * @param int<1, max> $batchSize
  */
-function rust_parquet_batches(SourceStream $stream, Schema $schema, int $batchSize, ?int $offset, ?int $limit): Iterator
-{
-    return (new RustParquetOpenSource(new RustParquetFileReader($stream)))->batches(
+function rust_parquet_batches(
+    SourceStream $stream,
+    Schema $schema,
+    int $batchSize,
+    int $offset = 0,
+    ?int $limit = null,
+): Iterator {
+    $file = new RustParquetFileReader($stream);
+
+    return (new RustParquetOpenSource($file))->batches(
         $schema,
         $batchSize,
-        $offset,
-        $limit,
+        ReadPlan::window(
+            $file->footer()->rowsNumber(),
+            new Flow\Parquet\Tests\Double\InMemoryIndexes(),
+            $offset,
+            $limit,
+        ),
         new RustBackend(),
     );
 }

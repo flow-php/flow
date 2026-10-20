@@ -169,9 +169,10 @@ holds the same number:
 | flow_php  | `FLOW_PHP_ABI`           | `Flow\ETL\FlowPhpExtension::ABI`          |
 | arrow     | `FLOW_ARROW_ABI`         | `Flow\Parquet\Engine\ArrowExtension::ABI` |
 
-Bump both, in one change, whenever a class or interface the extension registers changes. Every `Adaptive*` pick calls
-`available()`: an extension that is loaded with another ABI, or with none, is refused with a `RuntimeException`
-naming the extension and its version. phpt `099` (flow_php) and `054` (arrow) pin that the two numbers are equal.
+Bump both, in one change, whenever the contract changes: a class or interface the extension registers, or the
+schema, options or values that cross it. Every `Adaptive*` pick calls `available()`: an extension that is loaded with
+another ABI, or with none, is refused with a `RuntimeException` naming the extension and its version. phpt `099`
+(flow_php) and `054` (arrow) pin that the two numbers are equal.
 
 The PHP interfaces an extension also registers are guarded by `interface_exists(X::class, false)`, so an extension
 that does not register one still gets the PHP declaration and fails at the ABI check, not with "Class not found".

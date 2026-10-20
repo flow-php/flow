@@ -91,7 +91,7 @@ final class TreeLayoutTest extends FlowTestCase
             └─ #5 Write
                │  Loader: MemoryLoader
                └─ #4 Select
-                  │  Columns: id
+                  │  Keeps only: id
                   └─ #1 Read (shared)
             PLAN, (new TreeLayout())->render((new Outline())->of($plan)));
     }
@@ -105,8 +105,8 @@ final class TreeLayoutTest extends FlowTestCase
             │  Rows this plan hands out: to the trigger, or to the node reading it
             └─ #3 Limit  reducing · transparent · streaming
                │  Limit: 5
-               └─ #2 Select  preserving · transparent · streaming
-                  │  Columns: id
+               └─ #2 Select  preserving · transparent · streaming · redefines all but id
+                  │  Keeps only: id
                   └─ #1 Read  source · transparent · streaming
                         Extractor: ArrayExtractor
             PLAN, (new TreeLayout())->render((new Outline(declarations: true))->of($plan->root)));
@@ -155,7 +155,7 @@ final class TreeLayoutTest extends FlowTestCase
                │  Until: Literal
                └─ #5 Offset  reducing · transparent · streaming
                   │  Skip: 2
-                  └─ #4 Rename  preserving · transparent · streaming · redefines m
+                  └─ #4 Rename  preserving · transparent · streaming · redefines m, n
                      │  Rename: n → m
                      └─ #3 WithColumn  preserving · transparent · streaming · redefines n
                         │  Column: n = Literal
@@ -202,8 +202,8 @@ final class TreeLayoutTest extends FlowTestCase
             Outputs  preserving · opaque · streaming
             ├─ #3 Result  preserving · transparent · streaming
             │  │  Rows this plan hands out: to the trigger, or to the node reading it
-            │  └─ #2 Select  preserving · transparent · streaming
-            │     │  Columns: id
+            │  └─ #2 Select  preserving · transparent · streaming · redefines all but id
+            │     │  Keeps only: id
             │     └─ #1 Read  source · transparent · streaming
             │           Extractor: ArrayExtractor
             └─ #4 Write  preserving · opaque · streaming
@@ -241,8 +241,8 @@ final class TreeLayoutTest extends FlowTestCase
                │  └─ #1 Read (shared)
                └─ #5 Write  preserving · opaque · streaming
                   │  Loader: MemoryLoader
-                  └─ #4 Select  preserving · transparent · streaming
-                     │  Columns: id
+                  └─ #4 Select  preserving · transparent · streaming · redefines all but id
+                     │  Keeps only: id
                      └─ #1 Read (shared)
             PLAN, (new TreeLayout())->render((new Outline(declarations: true))->of($plan->root)));
     }

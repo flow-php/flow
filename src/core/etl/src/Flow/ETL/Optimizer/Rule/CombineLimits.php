@@ -23,14 +23,16 @@ final readonly class CombineLimits implements Rewrite, Rule
         return $plan->transformUp($this);
     }
 
-    public function of(Node $node): Node
+    public function of(Node $original, Node $rebuilt): Node
     {
-        if (!$node instanceof Limit) {
-            return $node;
+        if (!$rebuilt instanceof Limit) {
+            return $rebuilt;
         }
 
-        $child = $node->children()[0];
+        $child = $rebuilt->children()[0];
 
-        return $child instanceof Limit ? new Limit($child->children()[0], min($node->limit, $child->limit)) : $node;
+        return $child instanceof Limit
+            ? new Limit($child->children()[0], min($rebuilt->limit, $child->limit))
+            : $rebuilt;
     }
 }

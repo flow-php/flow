@@ -13,19 +13,29 @@ use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile;
+use Flow\Parquet\ParquetFile\ColumnOrder;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Data\DataConverter;
+use Flow\Parquet\ParquetFile\Index\IndexLocation;
 use Flow\Parquet\ParquetFile\Metadata;
+use Flow\Parquet\ParquetFile\PageIndex\ColumnIndex;
+use Flow\Parquet\ParquetFile\PageIndex\OffsetIndex;
+use Flow\Parquet\ParquetFile\RowGroup;
 use Flow\Parquet\ParquetFile\RowGroups;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFileWriter;
 use Flow\Parquet\Thrift\CompactProtocol;
+use Flow\Parquet\Thrift\MemoryBuffer;
 use Flow\Parquet\Thrift\PhpFileStream;
+use Flow\Parquet\ThriftModel\ColumnIndex as ThriftColumnIndex;
+use Flow\Parquet\ThriftModel\OffsetIndex as ThriftOffsetIndex;
 use Flow\Parquet\Writer\ColumnLists;
 use Flow\Parquet\Writer\RowGroupBuilder;
 
 use function array_chunk;
+use function array_map;
 use function array_slice;
+use function array_values;
 use function fclose;
 use function fopen;
 use function is_array;
@@ -42,6 +52,23 @@ final class PhpParquetFileWriter implements ParquetFileWriter
     private readonly Metadata $metadata;
 
     private readonly RowGroupBuilder $rowGroupBuilder;
+
+    /**
+     * @var list<list<?ColumnIndex>>
+     */
+    private array $columnIndexes = [];
+
+    /**
+     * @var list<list<OffsetIndex>>
+     */
+    private array $offsetIndexes = [];
+
+    /**
+     * Written row groups, added to the metadata once their page indexes are written after the last of them.
+     *
+     * @var list<RowGroup>
+     */
+    private array $rowGroups = [];
 
     private ?DestinationStream $stream;
 
@@ -61,6 +88,7 @@ final class PhpParquetFileWriter implements ParquetFileWriter
             0,
             $options->getInt(Option::WRITER_VERSION),
             'flow-php parquet version ' . InstalledVersions::getRootPackage()['pretty_version'],
+            array_map(ColumnOrder::forWriting(...), array_values($schema->columnsFlat())),
         );
         $this->rowGroupBuilder = new RowGroupBuilder(
             $schema,
@@ -81,6 +109,8 @@ final class PhpParquetFileWriter implements ParquetFileWriter
             if (!$this->rowGroupBuilder->isEmpty()) {
                 $this->flushRowGroup($stream);
             }
+
+            $this->writePageIndexes($stream);
 
             $metadataHandle = fopen('php://temp/maxmemory:' . (5 * 1024 * 1024), 'rb+');
 
@@ -171,7 +201,57 @@ final class PhpParquetFileWriter implements ParquetFileWriter
     {
         $rowGroupContainer = $this->rowGroupBuilder->flush($this->fileOffset);
         $stream->append($rowGroupContainer->binaryBuffer);
-        $this->metadata->rowGroups()->add($rowGroupContainer->rowGroup);
+        $this->rowGroups[] = $rowGroupContainer->rowGroup;
+        $this->columnIndexes[] = $rowGroupContainer->columnIndexes;
+        $this->offsetIndexes[] = $rowGroupContainer->offsetIndexes;
         $this->fileOffset += strlen($rowGroupContainer->binaryBuffer);
+    }
+
+    /**
+     * Every column index, then every offset index, between the last row group and the footer (parquet.thrift
+     * PageIndex layout); each chunk is given its indexes' locations.
+     */
+    private function writePageIndexes(DestinationStream $stream): void
+    {
+        $columnIndexLocations = [];
+        $offsetIndexLocations = [];
+
+        foreach ($this->columnIndexes as $rowGroup => $columnIndexes) {
+            foreach ($columnIndexes as $chunk => $columnIndex) {
+                $columnIndexLocations[$rowGroup][$chunk] = $columnIndex === null
+                    ? null
+                    : $this->writeThrift($stream, $columnIndex->toThrift());
+            }
+        }
+
+        foreach ($this->offsetIndexes as $rowGroup => $offsetIndexes) {
+            foreach ($offsetIndexes as $chunk => $offsetIndex) {
+                $offsetIndexLocations[$rowGroup][$chunk] = $this->writeThrift($stream, $offsetIndex->toThrift());
+            }
+        }
+
+        foreach ($this->rowGroups as $rowGroup => $group) {
+            $chunks = [];
+
+            foreach (array_values($group->columnChunks()) as $chunk => $columnChunk) {
+                $chunks[] = $columnChunk->withLocations(
+                    columnIndex: $columnIndexLocations[$rowGroup][$chunk] ?? null,
+                    offsetIndex: $offsetIndexLocations[$rowGroup][$chunk],
+                );
+            }
+
+            $this->metadata->rowGroups()->add(new RowGroup($chunks, $group->rowsCount()));
+        }
+    }
+
+    private function writeThrift(DestinationStream $stream, ThriftColumnIndex|ThriftOffsetIndex $struct): IndexLocation
+    {
+        $struct->write(new CompactProtocol($buffer = new MemoryBuffer()));
+        $bytes = $buffer->data();
+        $stream->append($bytes);
+        $location = new IndexLocation($this->fileOffset, strlen($bytes));
+        $this->fileOffset += strlen($bytes);
+
+        return $location;
     }
 }

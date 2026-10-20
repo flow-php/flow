@@ -39,18 +39,18 @@ $cycle = static function () use ($schema, $options, $rows, $columns): void {
     $writer->close();
 
     $file = new RustParquetFileReader($filesystem->readFrom(path('memory://leaks.parquet')));
-    $file->thrift();
-    $file->schema();
-    $file->metadata();
+    $file->footer()->thrift();
+    $file->footer()->schema();
+    $file->footer()->metadata();
 
-    foreach (new RustColumnsReader($file, $columns, 2, 1, 3) as $chunk) {
+    foreach (new RustColumnsReader($file, $columns, 2, arrow_read_plan($file, 1, 3)) as $chunk) {
     }
 
-    foreach ($file->readColumns($columns, 2, 3, 1) as $chunk) {
+    foreach ($file->readColumns($columns, 2, arrow_read_plan($file, 1, 3)) as $chunk) {
     }
 
     try {
-        new RustColumnsReader($file, ['missing'], 2, null, null);
+        new RustColumnsReader($file, ['missing'], 2, arrow_read_plan($file));
         throw new LogicException('a missing column was read');
     } catch (Flow\Parquet\Exception\InvalidArgumentException) {
     }

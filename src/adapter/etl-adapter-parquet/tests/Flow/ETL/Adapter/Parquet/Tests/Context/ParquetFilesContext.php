@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Parquet\Tests\Context;
 
 use Flow\ETL\Adapter\Parquet\ParquetOpenSink;
+use Flow\ETL\Adapter\Parquet\ParquetSourceFileOpener;
 use Flow\ETL\Adapter\Parquet\RustParquetOpenSink;
 use Flow\ETL\Adapter\Parquet\SchemaConverter;
 use Flow\ETL\Rows;
@@ -20,14 +21,20 @@ use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Encodings;
+use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\Column;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\LogicalType;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Reader;
+use Flow\Parquet\Reader\ReadPlan;
+use Flow\Parquet\Reader\ReadPlanner;
 use Flow\Parquet\Writer;
 
 use function array_count_values;
 use function array_map;
+use function array_sum;
 use function Flow\ETL\Adapter\Parquet\to_parquet;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_rows;
@@ -37,6 +44,13 @@ use function range;
 
 final class ParquetFilesContext
 {
+    public static function plan(Filesystem $filesystem, string $uri, int $offset = 0, ?int $limit = null): ReadPlan
+    {
+        $file = (new Reader())->readStream($filesystem->readFrom(path($uri)));
+
+        return (new ReadPlanner())->plan($file->reader()->footer(), $file->indexes(), null, $offset, $limit);
+    }
+
     /**
      * @return array<string>
      */
@@ -148,5 +162,117 @@ final class ParquetFilesContext
         return array_count_values(array_map(static fn(ClosingSpySourceStream $stream): string => $stream
             ->path()
             ->path(), $filesystem->openedStreams));
+    }
+
+    /**
+     * Bytes read through every stream the filesystem opened.
+     */
+    public static function bytesRead(CountingFilesystem $filesystem): int
+    {
+        return array_sum(array_map(
+            static fn(ClosingSpySourceStream $stream): int => $stream->readBytes,
+            $filesystem->openedStreams,
+        ));
+    }
+
+    /**
+     * The chunks of the given columns in the given row groups, by file uri.
+     *
+     * @param array<string, array<string, list<int>>> $groups
+     *
+     * @return list<ColumnChunk>
+     */
+    public static function chunks(Filesystem $filesystem, array $groups): array
+    {
+        $chunks = [];
+
+        foreach ($groups as $uri => $columns) {
+            $file = Reader::php()->readStream($filesystem->readFrom(path($uri)));
+            $rowGroups = $file->metadata()->rowGroups()->all();
+
+            foreach ($columns as $column => $indexes) {
+                foreach ($indexes as $index) {
+                    $chunks[] = $rowGroups[$index]->getColumnChunk($file->schema()->getFlat($column));
+                }
+            }
+        }
+
+        return $chunks;
+    }
+
+    /**
+     * The bytes of the offset indexes of the given columns in the given row groups, by file uri.
+     *
+     * @param array<string, array<string, list<int>>> $groups
+     */
+    public static function offsetIndexBytes(Filesystem $filesystem, array $groups): int
+    {
+        return array_sum(array_map(
+            static fn(ColumnChunk $chunk): int => (int) $chunk->offsetIndex()?->length,
+            self::chunks($filesystem, $groups),
+        ));
+    }
+
+    /**
+     * The bytes of the column and offset indexes of the given columns in the given row groups, by file uri.
+     *
+     * @param array<string, array<string, list<int>>> $groups
+     */
+    public static function pageIndexBytes(Filesystem $filesystem, array $groups): int
+    {
+        return array_sum(array_map(
+            static fn(ColumnChunk $chunk): int => (
+                (int) $chunk->columnIndex()?->length + (int) $chunk->offsetIndex()?->length
+            ),
+            self::chunks($filesystem, $groups),
+        ));
+    }
+
+    /**
+     * A PHP-engine opener of every column under the default options.
+     */
+    public static function opener(Filesystem $filesystem): ParquetSourceFileOpener
+    {
+        return new ParquetSourceFileOpener(
+            $filesystem,
+            new PhpParquetEngine(),
+            Options::default(),
+            new SchemaConverter(),
+            [],
+        );
+    }
+
+    /**
+     * @param iterable<Rows> $batches
+     */
+    public static function rowCount(iterable $batches): int
+    {
+        $count = 0;
+
+        foreach ($batches as $rows) {
+            $count += $rows->count();
+        }
+
+        return $count;
+    }
+
+    /**
+     * A `UINT_64` column `big`, one row group per value.
+     *
+     * @param list<int|string> $values
+     */
+    public static function unsignedInt64(Filesystem $filesystem, string $uri, array $values): void
+    {
+        $options = Options::default()->set(Option::ROW_GROUP_SIZE_BYTES, 1)->set(
+            Option::ROW_GROUP_SIZE_CHECK_INTERVAL,
+            1,
+        );
+        $writer = new Writer(options: $options, engine: new PhpParquetEngine(options: $options));
+        $writer->openForStream(
+            $filesystem->writeTo(path($uri)),
+            Schema::with(new FlatColumn('big', PhysicalType::INT64, logicalType: LogicalType::integer(64, false))),
+        );
+        $writer->writeBatch(array_map(static fn(int|string $value): array => ['big' => $value], $values));
+        $writer->close();
     }
 }

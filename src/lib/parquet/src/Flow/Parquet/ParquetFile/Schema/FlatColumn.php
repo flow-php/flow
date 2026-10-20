@@ -15,6 +15,7 @@ use function explode;
 use function floor;
 use function implode;
 use function log10;
+use function sprintf;
 
 final class FlatColumn implements Column
 {
@@ -39,7 +40,16 @@ final class FlatColumn implements Column
         private readonly ?int $precision = null,
         private readonly ?int $scale = null,
         private readonly ?int $typeLength = null,
-    ) {}
+    ) {
+        if ($convertedType !== null && $logicalType !== null && $logicalType->convertedType() !== $convertedType) {
+            throw new InvalidArgumentException(sprintf(
+                'Column "%s": converted type %s contradicts logical type %s',
+                $name,
+                $convertedType->name,
+                $logicalType->name(),
+            ));
+        }
+    }
 
     public static function boolean(string $name, Repetition $repetition = Repetition::OPTIONAL): self
     {
@@ -82,6 +92,19 @@ final class FlatColumn implements Column
 
         if ($precision < 1 || $precision > 38) {
             throw new InvalidArgumentException('Precision must be between 1 and 38, ' . $precision . ' given.');
+        }
+
+        // arrow-rs, parquet-mr and DuckDB: INT32 up to precision 9, INT64 up to 18, FIXED_LEN_BYTE_ARRAY above
+        if ($precision <= 18) {
+            return new self(
+                $name,
+                $precision <= 9 ? PhysicalType::INT32 : PhysicalType::INT64,
+                ConvertedType::DECIMAL,
+                LogicalType::decimal($scale, $precision),
+                $repetition,
+                $precision,
+                $scale,
+            );
         }
 
         // Parquet LogicalTypes.md, DECIMAL
@@ -132,41 +155,31 @@ final class FlatColumn implements Column
 
     public static function fromThrift(SchemaElement $thrift): self
     {
-        // @mago-ignore analysis:redundant-comparison
-        // @mago-ignore analysis:impossible-condition
         $convertedType = $thrift->converted_type === null ? null : ConvertedType::from($thrift->converted_type);
-        // @mago-ignore analysis:redundant-comparison
-        // @mago-ignore analysis:redundant-condition
         $precision = $thrift->precision !== null ? (int) $thrift->precision : null;
-        // @mago-ignore analysis:redundant-comparison
-        // @mago-ignore analysis:redundant-condition
         $scale = $thrift->scale !== null ? (int) $thrift->scale : null;
-        // @mago-ignore analysis:redundant-comparison
-        // @mago-ignore analysis:impossible-condition
         $logicalType = $thrift->logicalType === null ? null : LogicalType::fromThrift($thrift->logicalType);
 
         return new self(
             $thrift->name,
-            PhysicalType::from($thrift->type),
+            PhysicalType::from(
+                $thrift->type ?? throw new InvalidArgumentException(
+                    'Schema element "' . $thrift->name . '" is a leaf without a physical type',
+                ),
+            ),
             $convertedType,
             $logicalType
-            // @mago-ignore analysis:redundant-comparison
-            // @mago-ignore analysis:impossible-condition
             ?? ($convertedType === null ? null : LogicalType::fromConvertedType($convertedType, $scale, $precision)),
-            // @mago-ignore analysis:redundant-comparison
-            // @mago-ignore analysis:impossible-condition
             $thrift->repetition_type === null ? null : Repetition::from($thrift->repetition_type),
             $precision,
             $scale,
-            // @mago-ignore analysis:redundant-comparison
-            // @mago-ignore analysis:redundant-condition
             $thrift->type_length !== null ? (int) $thrift->type_length : null,
         );
     }
 
     public static function int32(string $name, Repetition $repetition = Repetition::OPTIONAL): self
     {
-        return new self($name, PhysicalType::INT32, ConvertedType::INT_32, null, $repetition);
+        return new self($name, PhysicalType::INT32, null, null, $repetition);
     }
 
     public static function int64(string $name, Repetition $repetition = Repetition::OPTIONAL): self
@@ -179,7 +192,7 @@ final class FlatColumn implements Column
             );
         }
 
-        return new self($name, PhysicalType::INT64, ConvertedType::INT_64, null, $repetition);
+        return new self($name, PhysicalType::INT64, null, null, $repetition);
     }
 
     public static function json(string $string, Repetition $repetition = Repetition::OPTIONAL): self
@@ -246,7 +259,7 @@ final class FlatColumn implements Column
     }
 
     /**
-     * @return array<array-key, mixed>
+     * @return array{type: string, optional: bool}
      */
     public function ddl(): array
     {
@@ -440,7 +453,7 @@ final class FlatColumn implements Column
         return new SchemaElement([
             'name' => $this->name,
             'type' => $this->type->value,
-            'converted_type' => $this->convertedType?->value,
+            'converted_type' => ($this->convertedType ?? $this->logicalType?->convertedType())?->value,
             'repetition_type' => $this->repetition?->value,
             'logicalType' => $this->logicalType?->toThrift(),
             'precision' => $this->precision,

@@ -9,28 +9,33 @@ use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Dremel\DremelAssembler;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Exception\RuntimeException;
+use Flow\Parquet\Filter\Evaluation\RowEvaluator;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile;
 use Flow\Parquet\ParquetFile\Data\DataConverter;
-use Flow\Parquet\ParquetFile\Metadata;
-use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFile\RowGroup;
 use Flow\Parquet\ParquetFileReader;
 use Flow\Parquet\Reader\ColumnChunkReader;
 use Flow\Parquet\Reader\ColumnReader;
 use Flow\Parquet\Reader\PageReader;
+use Flow\Parquet\Reader\ReadPlan;
+use Flow\Parquet\Reader\SelectedPages;
 use Flow\Parquet\Thrift\CompactProtocol;
 use Flow\Parquet\Thrift\MemoryBuffer;
 use Flow\Parquet\ThriftModel\FileMetaData;
 use Generator;
 
-use function count;
+use function array_fill_keys;
+use function array_map;
+use function array_values;
 use function is_array;
 use function min;
+use function sprintf;
 use function unpack;
 
 final class PhpParquetFileReader implements ParquetFileReader
 {
-    private ?Metadata $metadata = null;
+    private ?PhpParquetFooter $footer = null;
 
     private bool $open = true;
 
@@ -48,12 +53,12 @@ final class PhpParquetFileReader implements ParquetFileReader
         $this->stream->close();
     }
 
-    public function metadata(): Metadata
+    public function footer(): PhpParquetFooter
     {
         $this->open || throw new RuntimeException('Reader is not open');
 
-        if ($this->metadata !== null) {
-            return $this->metadata;
+        if ($this->footer !== null) {
+            return $this->footer;
         }
 
         $fileTotalSize = $this->stream->size();
@@ -83,115 +88,168 @@ final class PhpParquetFileReader implements ParquetFileReader
         $thriftMetadata = new FileMetaData();
         $thriftMetadata->read(new CompactProtocol(new MemoryBuffer($metadata)));
 
-        $this->metadata = Metadata::fromThrift($thriftMetadata);
+        $this->footer = new PhpParquetFooter($thriftMetadata);
 
-        return $this->metadata;
+        return $this->footer;
     }
 
     /**
      * @param list<string> $columns
-     * @param int<1, max> $batchSize
+     * @param int $batchSize refused below 1, as the arrow engine refuses it
      *
      * @return Generator<int, array<string, list<mixed>>>
      */
-    public function readColumns(array $columns, int $batchSize, ?int $limit, ?int $offset): Generator
+    public function readColumns(array $columns, int $batchSize, ReadPlan $plan): Generator
     {
         $this->open || throw new RuntimeException('Reader is not open');
 
+        if ($batchSize < 1) {
+            throw new InvalidArgumentException('Parquet batch size must be greater than 0');
+        }
+
+        $metadata = $this->footer()->metadata();
+
+        foreach ($columns as $columnName) {
+            if (!$metadata->schema()->has($columnName)) {
+                throw new InvalidArgumentException('Parquet file has no column "' . $columnName . '"');
+            }
+        }
+
         $columnReader = new ColumnReader(
-            new ColumnChunkReader(new PageReader($this->byteOrder, $this->options), $this->options),
+            new SelectedPages(new ColumnChunkReader(new PageReader($this->byteOrder, $this->options), $this->options)),
             new DremelAssembler(DataConverter::initialize($this->options)),
         );
 
-        $metadata = $this->metadata();
+        if ($plan->selection->totalRows() !== $metadata->rowsNumber()) {
+            throw new InvalidArgumentException(sprintf(
+                'A read plan over %d rows cannot read a file of %d rows',
+                $plan->selection->totalRows(),
+                $metadata->rowsNumber(),
+            ));
+        }
 
-        $totalRows = $metadata->rowsNumber();
-
-        if ($offset !== null && $offset > $totalRows) {
+        if ($columns === [] || !$plan->selection->selectsAny() || $plan->limit === 0) {
             return;
         }
 
-        if ($offset !== null) {
-            if ($totalRows > $offset) {
-                $totalRows -= $offset;
-            } else {
-                $totalRows = 0;
+        $rowGroups = array_values($metadata->rowGroups()->all());
+        $rowCounts = array_map(static fn(RowGroup $rowGroup): int => $rowGroup->rowsCount(), $rowGroups);
+        $selections = $plan->selection->split($rowCounts);
+        $matches = $plan->matched->split($rowCounts);
+        $remaining = $plan->limit;
+        $batch = array_fill_keys($columns, []);
+        $batched = 0;
+
+        foreach ($rowGroups as $group => $rowGroup) {
+            $selection = $selections[$group];
+
+            if (!$selection->selectsAny()) {
+                continue;
             }
-        }
 
-        $totalRows = min($totalRows, $limit ?? $totalRows);
+            $decoded = [];
 
-        if ($totalRows === 0) {
-            return;
-        }
+            if ($plan->rowFilter !== null) {
+                $unmatched = $selection->difference($matches[$group]);
 
-        $generators = [];
+                if ($unmatched->selectsAny()) {
+                    $physical = [];
 
-        foreach ($columns as $columnName) {
-            $generators[$columnName] = $columnReader->read(
-                $metadata->schema()->get($columnName),
-                $metadata,
-                $this->stream,
-                $limit,
-                $offset,
-            );
-        }
-
-        $remaining = $totalRows;
-
-        while ($remaining > 0) {
-            $take = min($batchSize, $remaining);
-            $chunk = [];
-            $read = 0;
-
-            foreach ($generators as $name => $generator) {
-                $values = [];
-
-                while (count($values) < $take && $generator->valid()) {
-                    // @mago-ignore analysis:mixed-assignment
-                    $entry = $generator->current();
-
-                    if (is_array($entry)) {
-                        // @mago-ignore analysis:mixed-assignment
-                        foreach ($entry as $value) {
-                            $values[] = $value;
-                        }
+                    foreach ($plan->rowFilter->columns() as $leaf) {
+                        ['chunk' => $decoded[$leaf->flatPath()], 'values' => $physical[$leaf->flatPath()]] =
+                            $columnReader->readPhysical(
+                                $leaf,
+                                $rowGroup,
+                                $group,
+                                $this->stream,
+                                $unmatched,
+                                $plan->indexes,
+                            );
                     }
 
-                    $generator->next();
+                    $selection = $matches[$group]->union($unmatched->masked(RowEvaluator::evaluate(
+                        $plan->rowFilter,
+                        $physical,
+                        $unmatched->rowCount(),
+                    )));
+                }
+            }
+
+            $rows = $selection->rowCount();
+
+            if ($remaining !== null && $rows > $remaining) {
+                $selection = $selection->head($remaining);
+                $rows = $remaining;
+            }
+
+            if ($rows === 0) {
+                continue;
+            }
+
+            $generators = [];
+
+            foreach ($columns as $columnName) {
+                $generators[$columnName] = $columnReader->readRowGroup(
+                    $metadata->schema()->get($columnName),
+                    $rowGroup,
+                    $group,
+                    $this->stream,
+                    $selection,
+                    $plan->indexes,
+                    $decoded,
+                );
+            }
+
+            $left = $rows;
+
+            while ($left > 0) {
+                $take = min($batchSize - $batched, $left);
+
+                foreach ($generators as $name => $generator) {
+                    for ($taken = 0; $taken < $take && $generator->valid(); $taken++) {
+                        // @mago-ignore analysis:mixed-assignment
+                        $entry = $generator->current();
+
+                        if (is_array($entry)) {
+                            // @mago-ignore analysis:mixed-assignment
+                            foreach ($entry as $value) {
+                                $batch[$name][] = $value;
+                            }
+                        }
+
+                        $generator->next();
+                    }
+
+                    if ($taken < $take) {
+                        throw new RuntimeException(sprintf(
+                            'Column "%s" decodes fewer rows of row group %d than its metadata declares',
+                            $name,
+                            $group,
+                        ));
+                    }
                 }
 
-                $chunk[$name] = $values;
-                $read = count($values);
+                $batched += $take;
+                $left -= $take;
+
+                if ($batched === $batchSize) {
+                    yield $batch;
+                    $batch = array_fill_keys($columns, []);
+                    $batched = 0;
+                }
             }
 
-            if ($read === 0) {
-                return;
+            if ($remaining !== null) {
+                $remaining -= $rows;
+
+                if ($remaining === 0) {
+                    break;
+                }
             }
-
-            yield $chunk;
-            $remaining -= $read;
-        }
-    }
-
-    public function rowsNumber(): int
-    {
-        return $this->metadata()->rowsNumber();
-    }
-
-    public function schema(): Schema
-    {
-        return $this->metadata()->schema();
-    }
-
-    public function totalByteSize(): int
-    {
-        $bytes = 0;
-
-        foreach ($this->metadata()->rowGroups()->all() as $rowGroup) {
-            $bytes += $rowGroup->totalByteSize();
         }
 
-        return $bytes;
+        if ($batched > 0) {
+            yield $batch;
+        }
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
+use Flow\Parquet\Query;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Tests\Mother\ParquetEngineMother;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -22,7 +23,7 @@ class ListsReadingTest extends ParquetIntegrationTestCase
 
         $count = 0;
 
-        foreach ($file->values(['list']) as $row) {
+        foreach ($file->values(new Query(['list'])) as $row) {
             /** @var array<array-key, mixed> $list */
             $list = $row['list'];
             static::assertIsArray($list);
@@ -47,7 +48,7 @@ class ListsReadingTest extends ParquetIntegrationTestCase
 
         $count = 0;
 
-        foreach ($file->values(['list'], $limit = 50) as $row) {
+        foreach ($file->values(new Query(['list'], limit: $limit = 50)) as $row) {
             /** @var array<array-key, mixed> $list */
             $list = $row['list'];
             static::assertIsArray($list);
@@ -71,7 +72,7 @@ class ListsReadingTest extends ParquetIntegrationTestCase
 
         $count = 0;
 
-        foreach ($file->values(['list_nested']) as $row) {
+        foreach ($file->values(new Query(['list_nested'])) as $row) {
             /** @var array<array-key, mixed> $outer */
             $outer = $row['list_nested'];
             static::assertIsArray($outer);
@@ -103,7 +104,7 @@ class ListsReadingTest extends ParquetIntegrationTestCase
 
         $count = 0;
 
-        foreach ($file->values(['list_nullable']) as $rowIndex => $row) {
+        foreach ($file->values(new Query(['list_nullable'])) as $rowIndex => $row) {
             if (($rowIndex % 2) === 0) {
                 /** @var array<array-key, mixed> $list */
                 $list = $row['list_nullable'];
@@ -132,7 +133,7 @@ class ListsReadingTest extends ParquetIntegrationTestCase
 
         $count = 0;
 
-        foreach ($file->values(['list_mixed_types']) as $row) {
+        foreach ($file->values(new Query(['list_mixed_types'])) as $row) {
             /** @var array<array-key, mixed> $list */
             $list = $row['list_mixed_types'];
             static::assertIsArray($list);
@@ -168,7 +169,7 @@ class ListsReadingTest extends ParquetIntegrationTestCase
 
         $count = 0;
 
-        foreach ($file->values(['list_of_structs_nullable']) as $rowIndex => $row) {
+        foreach ($file->values(new Query(['list_of_structs_nullable'])) as $rowIndex => $row) {
             if (($rowIndex % 2) === 0) {
                 // @mago-ignore analysis:mixed-assignment
                 /** @var array<array-key, mixed> $list */

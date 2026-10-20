@@ -13,6 +13,7 @@ use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\definition_from_type;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\integer_schema;
 use function Flow\ETL\DSL\json_schema;
@@ -26,6 +27,7 @@ use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_numeric_string;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 
@@ -121,5 +123,13 @@ final class FlowToParquetSchemaTest extends FlowTestCase
         (new SchemaConverter())->toParquet(schema(structure_schema('structure', type_structure([
             'a' => type_structure(['b' => type_string(), 'c' => structure_element('c', type_string(), optional: true)]),
         ]))));
+    }
+
+    public function test_a_numeric_string_column_is_written_as_a_string(): void
+    {
+        static::assertEquals(
+            ParquetSchema::with(FlatColumn::string('id')),
+            (new SchemaConverter())->toParquet(schema(definition_from_type('id', type_numeric_string(), true))),
+        );
     }
 }

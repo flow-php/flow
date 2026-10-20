@@ -2,8 +2,10 @@
 //! storage (the layout flow_php's columns store), keyed on the arrow `DataType` alone. Temporal and decimal
 //! casts are this module's own - `arrow_cast` rounds toward zero and nulls out overflows.
 
+use std::fmt::Write;
 use std::sync::Arc;
 
+use arrow_array::builder::LargeBinaryBuilder;
 use arrow_array::cast::AsArray;
 use arrow_array::types::{
     Date32Type, Date64Type, Decimal128Type, Decimal256Type, DecimalType, DurationMicrosecondType, Float32Type,
@@ -13,11 +15,12 @@ use arrow_array::types::{
 };
 use arrow_array::{
     make_array, Array, ArrayRef, ArrowPrimitiveType, BinaryArray, FixedSizeBinaryArray, Float64Array, GenericByteArray,
-    LargeBinaryArray, ListArray, MapArray, PrimitiveArray, StructArray,
+    LargeBinaryArray, ListArray, MapArray, PrimitiveArray, StructArray, UInt64Array,
 };
 use arrow_buffer::{OffsetBuffer, ScalarBuffer};
 use arrow_schema::{DataType, Field, FieldRef, Fields, TimeUnit};
 
+use crate::parquet::cells::{unsigned, UNSIGNED_EXPECTED};
 use crate::parquet::error::{parent_row, Error};
 
 const UTC: &str = "UTC";
@@ -62,19 +65,16 @@ fn canonical_data_type(data_type: &DataType) -> Result<DataType, Error> {
         | DataType::Float64
         | DataType::Date32
         | DataType::FixedSizeBinary(16) => data_type.clone(),
-        DataType::Int8
-        | DataType::Int16
-        | DataType::Int32
-        | DataType::UInt8
-        | DataType::UInt16
-        | DataType::UInt32
-        | DataType::UInt64 => DataType::Int64,
+        DataType::Int8 | DataType::Int16 | DataType::Int32 | DataType::UInt8 | DataType::UInt16 | DataType::UInt32 => {
+            DataType::Int64
+        }
         DataType::Float32 | DataType::Decimal128(_, _) | DataType::Decimal256(_, _) => DataType::Float64,
         DataType::Utf8
         | DataType::Binary
         | DataType::LargeUtf8
         | DataType::LargeBinary
-        | DataType::FixedSizeBinary(_) => DataType::LargeBinary,
+        | DataType::FixedSizeBinary(_)
+        | DataType::UInt64 => DataType::LargeBinary,
         DataType::Timestamp(_, _) => timestamp(),
         DataType::Time64(TimeUnit::Microsecond | TimeUnit::Nanosecond)
         | DataType::Time32(TimeUnit::Millisecond | TimeUnit::Second) => DataType::Duration(TimeUnit::Microsecond),
@@ -144,6 +144,47 @@ fn checked<T: ArrowPrimitiveType, O: ArrowPrimitiveType>(
     }
 
     Ok(PrimitiveArray::new(ScalarBuffer::from(values), input.nulls().cloned()))
+}
+
+/// UINT_64 from its decimal text (a `numeric_string` column): a canonical digit string up to u64::MAX, refused at its
+/// row otherwise.
+fn unsigned_from_text(array: &ArrayRef) -> Result<UInt64Array, Error> {
+    let input = array.as_binary::<i64>();
+    let mut values = Vec::with_capacity(input.len());
+
+    for row in 0..input.len() {
+        values.push(if input.is_null(row) {
+            0
+        } else {
+            unsigned(input.value(row)).ok_or_else(|| Error::Value {
+                column: String::new(),
+                row,
+                expected: UNSIGNED_EXPECTED,
+                got: "string".to_string(),
+            })?
+        });
+    }
+
+    Ok(UInt64Array::new(ScalarBuffer::from(values), input.nulls().cloned()))
+}
+
+/// UINT_64 as its decimal text: one PHP type for the column, lossless above `PHP_INT_MAX`.
+fn decimal_text(array: &ArrayRef) -> ArrayRef {
+    let input = array.as_primitive::<UInt64Type>();
+    let mut builder = LargeBinaryBuilder::with_capacity(input.len(), input.len() * 20);
+    let mut text = String::with_capacity(20);
+
+    for (row, value) in input.values().iter().enumerate() {
+        if input.is_null(row) {
+            builder.append_null();
+        } else {
+            text.clear();
+            write!(text, "{value}").expect("writing to a String does not fail");
+            builder.append_value(&text);
+        }
+    }
+
+    Arc::new(builder.finish())
 }
 
 fn retagged(array: &ArrayRef, to: DataType) -> ArrayRef {
@@ -252,9 +293,7 @@ fn cast(array: &ArrayRef) -> Result<ArrayRef, Error> {
         DataType::UInt8 => widened::<UInt8Type>(array),
         DataType::UInt16 => widened::<UInt16Type>(array),
         DataType::UInt32 => widened::<UInt32Type>(array),
-        DataType::UInt64 => Arc::new(checked::<UInt64Type, Int64Type>(array, |value| {
-            i64::try_from(value).ok()
-        })?),
+        DataType::UInt64 => decimal_text(array),
         DataType::Float32 => Arc::new(array.as_primitive::<Float32Type>().unary::<_, Float64Type>(f64::from)),
         DataType::Utf8 | DataType::Binary => widened_binary(array),
         DataType::LargeUtf8 | DataType::LargeBinary => retagged(array, DataType::LargeBinary),
@@ -369,6 +408,7 @@ pub fn to_parquet(array: &ArrayRef, target: &DataType) -> Result<ArrayRef, Error
         (DataType::Int64, DataType::UInt16) => Arc::new(narrowed_int::<UInt16Type>(array)?),
         (DataType::Int64, DataType::UInt32) => Arc::new(narrowed_int::<UInt32Type>(array)?),
         (DataType::Int64, DataType::UInt64) => Arc::new(narrowed_int::<UInt64Type>(array)?),
+        (DataType::LargeBinary, DataType::UInt64) => Arc::new(unsigned_from_text(array)?),
         (DataType::Float64, DataType::Float32) => Arc::new(
             array
                 .as_primitive::<Float64Type>()
@@ -701,28 +741,39 @@ mod tests {
             int64(&read(Arc::new(UInt32Array::from(vec![Some(u32::MAX), None])))),
             vec![Some(i64::from(u32::MAX)), None]
         );
+    }
+
+    #[test]
+    fn uint64_reads_as_its_decimal_text() {
+        let canonical = read(Arc::new(UInt64Array::from(vec![
+            Some(0),
+            None,
+            Some(1 << 63),
+            Some(u64::MAX),
+        ])));
+
         assert_eq!(
-            int64(&read(Arc::new(UInt64Array::from(vec![Some(i64::MAX as u64), None])))),
-            vec![Some(i64::MAX), None]
+            canonical.as_binary::<i64>().iter().collect::<Vec<_>>(),
+            vec![
+                Some(&b"0"[..]),
+                None,
+                Some(&b"9223372036854775808"[..]),
+                Some(&b"18446744073709551615"[..]),
+            ]
         );
     }
 
     #[test]
-    fn uint64_above_int64_is_refused_at_its_row() {
-        let error = refusal(Arc::new(UInt64Array::from(vec![
-            Some(1),
-            None,
-            Some(i64::MAX as u64 + 1),
-        ])));
-
-        assert!(matches!(error, Error::Overflow { column, row: 2 } if column == "column"));
-    }
-
-    #[test]
     fn a_null_slot_never_overflows() {
-        let values = UInt64Array::new(vec![1, u64::MAX].into(), Some(vec![true, false].into()));
+        let values = TimestampMillisecondArray::new(vec![1, i64::MAX].into(), Some(vec![true, false].into()));
 
-        assert_eq!(int64(&read(Arc::new(values))), vec![Some(1), None]);
+        assert_eq!(
+            read(Arc::new(values))
+                .as_primitive::<TimestampMicrosecondType>()
+                .iter()
+                .collect::<Vec<_>>(),
+            vec![Some(1_000), None]
+        );
     }
 
     #[test]
@@ -952,9 +1003,13 @@ mod tests {
 
     #[test]
     fn a_nested_overflow_is_refused_at_its_parent_row() {
-        let values = Arc::new(UInt64Array::from(vec![1, 2, u64::MAX]));
+        let values = Arc::new(TimestampMillisecondArray::from(vec![1, 2, i64::MAX]));
         let list = ListArray::new(
-            Arc::new(Field::new("element", DataType::UInt64, false)),
+            Arc::new(Field::new(
+                "element",
+                DataType::Timestamp(TimeUnit::Millisecond, None),
+                false,
+            )),
             arrow_buffer::OffsetBuffer::new(vec![0, 2, 3].into()),
             values,
             None,
@@ -1025,15 +1080,16 @@ mod tests {
             vec![Some(-128), None, Some(127)]
         );
 
-        let unsigned: ArrayRef = Arc::new(Int64Array::from(vec![Some(4_000_000_000), Some(i64::MAX)]));
-
         assert_eq!(
-            to_parquet(&unsigned, &DataType::UInt64)
-                .unwrap()
-                .as_primitive::<UInt64Type>()
-                .values()
-                .to_vec(),
-            vec![4_000_000_000, i64::MAX as u64]
+            to_parquet(
+                &(Arc::new(Int64Array::from(vec![Some(4_000_000_000), None])) as ArrayRef),
+                &DataType::UInt64
+            )
+            .unwrap()
+            .as_primitive::<UInt64Type>()
+            .iter()
+            .collect::<Vec<_>>(),
+            vec![Some(4_000_000_000), None]
         );
 
         for target in [
@@ -1380,5 +1436,36 @@ mod tests {
             to_parquet(&array, &DataType::Float32),
             Err(Error::Unsupported { parquet, .. }) if parquet == "Float32"
         ));
+    }
+
+    #[test]
+    fn to_parquet_reads_uint64_from_digit_text() {
+        let text: ArrayRef = Arc::new(LargeBinaryArray::from(vec![
+            Some(&b"18446744073709551615"[..]),
+            None,
+            Some(&b"0"[..]),
+        ]));
+
+        assert_eq!(
+            to_parquet(&text, &DataType::UInt64)
+                .unwrap()
+                .as_primitive::<UInt64Type>()
+                .iter()
+                .collect::<Vec<_>>(),
+            vec![Some(u64::MAX), None, Some(0)]
+        );
+    }
+
+    #[test]
+    fn to_parquet_refuses_uint64_text_that_is_not_a_canonical_digit_string() {
+        for text in [&b"18446744073709551616"[..], b"007", b"-1", b"abc", b""] {
+            let array: ArrayRef = Arc::new(LargeBinaryArray::from(vec![Some(&b"1"[..]), Some(text)]));
+
+            assert!(
+                matches!(to_parquet(&array, &DataType::UInt64), Err(Error::Value { row: 1, .. })),
+                "{:?}",
+                text
+            );
+        }
     }
 }

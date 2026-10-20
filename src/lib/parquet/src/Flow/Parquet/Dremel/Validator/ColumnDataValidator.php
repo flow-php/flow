@@ -8,6 +8,7 @@ use DateInterval;
 use DateTimeInterface;
 use Flow\Parquet\Dremel\Validator;
 use Flow\Parquet\Exception\ValidationException;
+use Flow\Parquet\ParquetFile\Data\Converter\UnsignedInt64Converter;
 use Flow\Parquet\ParquetFile\Schema\Column;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\LogicalType;
@@ -142,6 +143,21 @@ final class ColumnDataValidator implements Validator
 
         $type = $column->type();
         $logicalTypeName = $column->logicalType()?->name();
+        $integer = Integer::forColumn($column);
+
+        if ($type === PhysicalType::INT64 && $integer?->is(64, false) === true) {
+            if (!UnsignedInt64Converter::accepts($data)) {
+                throw new ValidationException(sprintf(
+                    'Column "%s" row %d: %s is out of the UINT_64 range [0, %s]',
+                    $column->flatPath(),
+                    $row,
+                    is_int($data) || is_string($data) ? $data : get_debug_type($data),
+                    UnsignedInt64Converter::MAX,
+                ));
+            }
+
+            return;
+        }
 
         match ($type) {
             PhysicalType::BOOLEAN => is_bool($data)
@@ -187,7 +203,6 @@ final class ColumnDataValidator implements Validator
         };
 
         if (is_int($data) && ($type === PhysicalType::INT32 || $type === PhysicalType::INT64)) {
-            $integer = Integer::forColumn($column);
             [$name, $min, $max] = match (true) {
                 $integer === null && $type === PhysicalType::INT32 && $column->logicalType() === null => [
                     'INT32',
@@ -200,11 +215,7 @@ final class ColumnDataValidator implements Validator
                     $integer->bitWidth() === 64 ? PHP_INT_MIN : -(1 << ($integer->bitWidth() - 1)),
                     $integer->bitWidth() === 64 ? PHP_INT_MAX : (1 << ($integer->bitWidth() - 1)) - 1,
                 ],
-                default => [
-                    'UINT_' . $integer->bitWidth(),
-                    0,
-                    $integer->bitWidth() === 64 ? PHP_INT_MAX : (1 << $integer->bitWidth()) - 1,
-                ],
+                default => ['UINT_' . $integer->bitWidth(), 0, (1 << $integer->bitWidth()) - 1],
             };
 
             if ($data < $min || $data > $max) {

@@ -1,8 +1,9 @@
-//! `Flow\Parquet\Engine\{RustParquetFileReader, RustParquetFileWriter}` and `Flow\Arrow\Parquet\RustColumnsReader`: the
+//! `Flow\Parquet\Engine\{RustParquetFileReader, RustParquetFooter, RustParquetFileWriter}` and `Flow\Arrow\Parquet\RustColumnsReader`: the
 //! `flow-php/parquet` lib's values over the core -
 //! one footer read per file, columns as lists of the values `PhpParquetEngine` returns, rows written as it accepts
 //! them, and struct batches written as another extension exports them.
 
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use arrow_array::{new_null_array, Array, ArrayRef};
@@ -10,25 +11,29 @@ use ext_php_rs::convert::IntoZval;
 use ext_php_rs::error::Result as ZvalResult;
 use ext_php_rs::flags::{ClassFlags, DataType};
 use ext_php_rs::prelude::*;
-use ext_php_rs::types::{ZendHashTable, Zval};
+use ext_php_rs::types::{ZendClassObject, ZendHashTable, Zval};
 use ext_php_rs::zend::ce;
 use parquet::basic::Type as PhysicalType;
 use parquet::file::metadata::ParquetMetaData;
-use parquet::file::reader::Length;
 
-use crate::interfaces::{parquet_file_reader_ce, parquet_file_writer_ce};
+use crate::interfaces::{footer_ce, parquet_file_reader_ce, parquet_file_writer_ce};
 use crate::parquet::batch;
 use crate::parquet::cells::{Checked, Classes, ReadCell, Refusal, Scalar, Times, Validated, WriteColumn};
+use crate::parquet::chunks::chunk_spans;
 use crate::parquet::error::Error;
+use crate::parquet::filter::Raw;
 use crate::parquet::footer::Footer;
-use crate::parquet::lib_calls::{call_static, METADATA_FROM_THRIFT, SCHEMA_FROM_THRIFT};
+use crate::parquet::lib_calls::{
+    call_static, METADATA_FROM_THRIFT, READ_PLAN_TO_EXTENSION, ROW_GROUP_CHUNKS_FROM_THRIFT, SCHEMA_FROM_THRIFT,
+};
 use crate::parquet::options;
 use crate::parquet::read::{ParquetReader, ReadPlan};
 use crate::parquet::sink::PhpSink;
 use crate::parquet::source::{PhpSource, PhpStream};
 use crate::parquet::write::ParquetWriter;
 use crate::php::{
-    call_method, expect_object, for_each_value, ht_for_each, ht_get, ht_insert, read_property, IterableArg,
+    call_method, expect_object, for_each_value, ht_for_each, ht_get, ht_insert, ht_insert_long, read_property,
+    zval_array, zval_long, zval_str, IterableArg,
 };
 use crate::render::{exception, parquet_exception, Side};
 use crate::thrift;
@@ -71,17 +76,116 @@ impl IntoZval for SchemaObject {
     }
 }
 
-pub fn rows(value: Option<i64>, name: &str) -> PhpResult<Option<u64>> {
-    value
-        .map(|value| {
-            u64::try_from(value).map_err(|_| {
-                exception(
-                    INVALID_ARGUMENT,
-                    format!("arrow Parquet {name} must be greater or equal to 0"),
-                )
-            })
-        })
-        .transpose()
+/// `ParquetFileReader::rowGroupChunks()`'s return, a `Flow\Parquet\Engine\Arrow\RustRowGroupChunks` typed as the
+/// interface: a covariant userland return type cannot be checked when the class registers.
+pub struct RowGroupChunksObject(Zval);
+
+impl IntoZval for RowGroupChunksObject {
+    const TYPE: DataType = DataType::object("Flow\\Parquet\\ParquetFile\\RowGroupChunks");
+    const NULLABLE: bool = false;
+
+    fn set_zval(self, zv: &mut Zval, _persistent: bool) -> ZvalResult<()> {
+        *zv = self.0;
+
+        Ok(())
+    }
+}
+
+/// `$plan` (a `Flow\Parquet\Reader\ReadPlan`) through `ReadPlanConverter::toExtension()`, checked against `meta`.
+pub fn read_plan(meta: &ParquetMetaData, plan: &Zval, stream: &PhpStream) -> PhpResult<ReadPlan> {
+    let converted = call_static(READ_PLAN_TO_EXTENSION, &mut [plan.shallow_clone()])?;
+
+    converted_plan(meta, &converted).map_err(|error| parquet_exception(error, stream, Side::Read))
+}
+
+fn converted_plan(meta: &ParquetMetaData, converted: &Zval) -> Result<ReadPlan, Error> {
+    let malformed = |what: &str| Error::Plan(format!("arrow received a malformed read plan: {what}"));
+    let converted = converted.array().ok_or_else(|| malformed("not an array"))?;
+    let selectors = ht_get(converted, b"selectors")
+        .and_then(Zval::array)
+        .ok_or_else(|| malformed("no 'selectors' list"))?;
+    let mut planned = Vec::with_capacity(selectors.len());
+
+    ht_for_each(selectors, |_, _, selector| {
+        let selector = selector
+            .array()
+            .ok_or_else(|| malformed("a selector is not an array"))?;
+        let count = selector
+            .get_index(0)
+            .and_then(Zval::long)
+            .and_then(|count| usize::try_from(count).ok())
+            .ok_or_else(|| malformed("a selector's row count is not an int of 0 or more"))?;
+        let skip = selector
+            .get_index(1)
+            .and_then(Zval::bool)
+            .ok_or_else(|| malformed("a selector's skip is not a bool"))?;
+
+        planned.push((count, skip));
+
+        Ok::<(), Error>(())
+    })?;
+
+    let limit = match ht_get(converted, b"limit") {
+        Some(limit) if limit.is_null() => None,
+        Some(limit) => Some(
+            limit
+                .long()
+                .and_then(|limit| usize::try_from(limit).ok())
+                .ok_or_else(|| malformed("'limit' is not an int of 0 or more"))?,
+        ),
+        None => return Err(malformed("no 'limit'")),
+    };
+    let filter = ht_get(converted, b"filter").map(raw).transpose()?;
+
+    ReadPlan::from_selection(meta, planned, filter, limit)
+}
+
+/// A converter array as data: a map keyed by its keys' bytes when a key is a string, else a list of its values.
+fn raw(value: &Zval) -> Result<Raw, Error> {
+    if value.is_null() {
+        return Ok(Raw::Null);
+    }
+
+    if let Some(value) = value.bool() {
+        return Ok(Raw::Bool(value));
+    }
+
+    if let Some(value) = value.long() {
+        return Ok(Raw::Int(value));
+    }
+
+    if let Some(value) = value.double() {
+        return Ok(Raw::Float(value));
+    }
+
+    if let Some(value) = value.zend_str() {
+        return Ok(Raw::Bytes(value.as_bytes().to_vec()));
+    }
+
+    let Some(table) = value.array() else {
+        return Err(Error::Plan(format!(
+            "arrow received a malformed row filter: a {} is no row filter value",
+            value.get_type()
+        )));
+    };
+    let mut entries = Vec::new();
+    let mut keyed = false;
+
+    ht_for_each(table, |key, index, value| {
+        keyed |= key.is_some();
+        entries.push((
+            key.map_or_else(|| index.to_string().into_bytes(), |key| key.as_bytes().to_vec()),
+            raw(value)?,
+        ));
+
+        Ok::<(), Error>(())
+    })?;
+
+    Ok(if keyed {
+        Raw::Map(entries)
+    } else {
+        Raw::List(entries.into_iter().map(|(_, value)| value).collect())
+    })
 }
 
 pub fn batch_size(value: i64) -> PhpResult<usize> {
@@ -93,6 +197,21 @@ pub fn batch_size(value: i64) -> PhpResult<usize> {
     })
 }
 
+/// `ParquetFileReader::footer()`'s return, typed `Flow\Parquet\Engine\RustParquetFooter`: the class registers before
+/// the reader, so the covariant return type is checked.
+pub struct FooterObject(Zval);
+
+impl IntoZval for FooterObject {
+    const TYPE: DataType = DataType::object("Flow\\Parquet\\Engine\\RustParquetFooter");
+    const NULLABLE: bool = false;
+
+    fn set_zval(self, zv: &mut Zval, _persistent: bool) -> ZvalResult<()> {
+        *zv = self.0;
+
+        Ok(())
+    }
+}
+
 #[php_class]
 #[php(
     name = "Flow\\Parquet\\Engine\\RustParquetFileReader",
@@ -101,12 +220,11 @@ pub fn batch_size(value: i64) -> PhpResult<usize> {
 )]
 pub struct RustParquetFileReader {
     stream: Arc<PhpStream>,
-    source: PhpSource,
-    footer: Footer,
+    footer: Arc<Footer>,
+    /// Each leaf's dotted path and its index among the schema's leaves.
+    leaves: Arc<HashMap<String, usize>>,
     int96_as_datetime: bool,
-    metadata: Option<Zval>,
-    schema: Option<Zval>,
-    thrift: Option<Zval>,
+    footer_object: Option<Zval>,
     closed: bool,
 }
 
@@ -119,16 +237,11 @@ impl RustParquetFileReader {
         Ok(())
     }
 
-    /// The file's stream, size and footer, for a reader of it: the lib's `RustColumnsReader` or a `RustBatchReader`.
-    pub fn read(&self) -> PhpResult<(&Arc<PhpStream>, u64, &Arc<ParquetMetaData>)> {
+    /// The file's stream and footer, for a reader of it: the lib's `RustColumnsReader` or a `RustBatchReader`.
+    pub fn read(&self) -> PhpResult<(&Arc<PhpStream>, &Arc<ParquetMetaData>)> {
         self.open()?;
 
-        Ok((&self.stream, self.source.len(), self.footer.meta()))
-    }
-
-    /// `FileMetaData::$schema`: the list of `SchemaElement`s.
-    fn elements(&self) -> PhpResult<Zval> {
-        thrift::decode(self.footer.bytes(), FILE_META_DATA, Some(SCHEMA))
+        Ok((&self.stream, self.footer.meta()))
     }
 
     /// Without `int96AsDatetime`, a requested column (a leaf path, or the path of its parent) holding INT96.
@@ -137,21 +250,18 @@ impl RustParquetFileReader {
             return Ok(());
         }
 
-        let leaves = self
-            .footer
-            .meta()
-            .file_metadata()
-            .schema_descr()
-            .columns()
+        let descr = self.footer.meta().file_metadata().schema_descr();
+        let int96 = self
+            .leaves
             .iter()
-            .filter(|leaf| leaf.physical_type() == PhysicalType::INT96)
-            .map(|leaf| leaf.path().string())
+            .filter(|(_, leaf)| descr.column(**leaf).physical_type() == PhysicalType::INT96)
+            .map(|(path, _)| path)
             .collect::<Vec<_>>();
 
         for column in columns.values().filter_map(Zval::str) {
-            if leaves
+            if int96
                 .iter()
-                .any(|leaf| leaf == column || leaf.starts_with(&format!("{column}.")))
+                .any(|leaf| *leaf == column || leaf.starts_with(&format!("{column}.")))
             {
                 return Err(exception(
                     INVALID_ARGUMENT,
@@ -177,26 +287,31 @@ impl RustParquetFileReader {
         let refused = |error| parquet_exception(error, &stream, Side::Read);
         let source = PhpSource::new(Arc::clone(&stream)).map_err(refused)?;
         let footer = Footer::read(&source).map_err(refused)?;
+        let leaves = footer
+            .meta()
+            .file_metadata()
+            .schema_descr()
+            .columns()
+            .iter()
+            .enumerate()
+            .map(|(index, leaf)| (leaf.path().string(), index))
+            .collect();
 
         Ok(Self {
             stream,
-            source,
-            footer,
+            footer: Arc::new(footer),
+            leaves: Arc::new(leaves),
             int96_as_datetime: int96AsDatetime,
-            metadata: None,
-            schema: None,
-            thrift: None,
+            footer_object: None,
             closed: false,
         })
     }
 
-    /// Closes the stream; any later call throws.
+    /// Closes the stream; any later call throws. A footer taken before stays readable.
     pub fn close(&mut self) -> PhpResult<()> {
         self.open()?;
         self.closed = true;
-        self.metadata = None;
-        self.schema = None;
-        self.thrift = None;
+        self.footer_object = None;
 
         match self.stream.call("close", &mut []) {
             Some(_) => Ok(()),
@@ -208,10 +323,65 @@ impl RustParquetFileReader {
         }
     }
 
-    /// The whole footer as `Metadata`, built on the first call.
-    pub fn metadata(&mut self) -> PhpResult<MetadataObject> {
+    /// The footer the constructor read, as a `RustParquetFooter` created on the first call.
+    pub fn footer(&mut self) -> PhpResult<FooterObject> {
         self.open()?;
 
+        if let Some(footer) = &self.footer_object {
+            return Ok(FooterObject(footer.shallow_clone()));
+        }
+
+        let footer = ZendClassObject::new(RustParquetFooter {
+            stream: Arc::clone(&self.stream),
+            footer: Arc::clone(&self.footer),
+            leaves: Arc::clone(&self.leaves),
+            metadata: None,
+            schema: None,
+            thrift: None,
+        })
+        .into_zval(false)?;
+        self.footer_object = Some(footer.shallow_clone());
+
+        Ok(FooterObject(footer))
+    }
+
+    /// `$columns` (resolved names) in chunks of at most `$batchSize` rows, keyed by column, the rows `$plan` selects.
+    #[php(name = "readColumns")]
+    pub fn read_columns(&self, columns: &ZendHashTable, batchSize: i64, plan: &Zval) -> PhpResult<RustColumnsReader> {
+        self.open()?;
+        self.refuse_int96(columns)?;
+
+        RustColumnsReader::__construct(self, columns, batchSize, plan)
+    }
+}
+
+#[php_class]
+#[php(
+    name = "Flow\\Parquet\\Engine\\RustParquetFooter",
+    flags = ClassFlags::Final,
+    implements(ce = footer_ce, stub = "Flow\\Parquet\\ParquetFile\\Footer")
+)]
+pub struct RustParquetFooter {
+    /// The stream the footer was read from, named in refusals.
+    stream: Arc<PhpStream>,
+    footer: Arc<Footer>,
+    leaves: Arc<HashMap<String, usize>>,
+    metadata: Option<Zval>,
+    schema: Option<Zval>,
+    thrift: Option<Zval>,
+}
+
+impl RustParquetFooter {
+    /// `FileMetaData::$schema`: the list of `SchemaElement`s.
+    fn elements(&self) -> PhpResult<Zval> {
+        thrift::decode(self.footer.bytes(), FILE_META_DATA, Some(SCHEMA))
+    }
+}
+
+#[php_impl]
+impl RustParquetFooter {
+    /// The whole footer as `Metadata`, built on the first call.
+    pub fn metadata(&mut self) -> PhpResult<MetadataObject> {
         if let Some(metadata) = &self.metadata {
             return Ok(MetadataObject(metadata.shallow_clone()));
         }
@@ -222,32 +392,71 @@ impl RustParquetFileReader {
         Ok(MetadataObject(metadata))
     }
 
-    /// `$columns` (resolved names) in chunks of at most `$batchSize` rows, keyed by column.
-    #[php(name = "readColumns")]
-    pub fn read_columns(
-        &self,
-        columns: &ZendHashTable,
-        batchSize: i64,
-        limit: Option<i64>,
-        offset: Option<i64>,
-    ) -> PhpResult<RustColumnsReader> {
-        self.open()?;
-        self.refuse_int96(columns)?;
+    /// `$columns` (`FlatColumn`s) as `RustRowGroupChunks`: each leaf's column chunks and column order sliced from
+    /// the footer, decoded by PHP on first access.
+    #[php(name = "rowGroupChunks")]
+    pub fn row_group_chunks(&self, columns: &ZendHashTable) -> PhpResult<RowGroupChunksObject> {
+        let meta = self.footer.meta();
+        let mut paths = Vec::with_capacity(columns.len());
+        let mut leaves = Vec::with_capacity(columns.len());
 
-        RustColumnsReader::__construct(self, columns, batchSize, offset, limit)
+        ht_for_each(columns, |_, _, column| {
+            let path = call_method(column, "flatPath", &mut [])?
+                .str()
+                .ok_or_else(|| exception(INVALID_ARGUMENT, "arrow expected a FlatColumn flat path".to_string()))?
+                .to_string();
+            let leaf = *self
+                .leaves
+                .get(&path)
+                .ok_or_else(|| exception(INVALID_ARGUMENT, format!("Parquet file has no leaf column \"{path}\"")))?;
+            paths.push(path);
+            leaves.push(leaf);
+
+            Ok::<(), PhpException>(())
+        })?;
+
+        let bytes = self.footer.bytes();
+        let spans = chunk_spans(bytes, &leaves).map_err(|error| parquet_exception(error, &self.stream, Side::Read))?;
+        let mut row_counts = ZendHashTable::with_capacity(meta.num_row_groups() as u32);
+
+        for (index, group) in meta.row_groups().iter().enumerate() {
+            ht_insert_long(&mut row_counts, index as i64, zval_long(group.num_rows()));
+        }
+
+        let mut chunks = ZendHashTable::with_capacity(paths.len() as u32);
+        let mut orders = ZendHashTable::with_capacity(paths.len() as u32);
+
+        for (position, (path, ranges)) in paths.iter().zip(spans.chunks).enumerate() {
+            let mut list = ZendHashTable::with_capacity(ranges.len() as u32);
+
+            for (group, range) in ranges.into_iter().enumerate() {
+                ht_insert_long(&mut list, group as i64, zval_str(&bytes[range]));
+            }
+
+            ht_insert(&mut chunks, path.as_bytes(), zval_array(list));
+            ht_insert(
+                &mut orders,
+                path.as_bytes(),
+                spans
+                    .orders
+                    .as_ref()
+                    .map_or_else(Zval::new, |orders| zval_str(&bytes[orders[position].clone()])),
+            );
+        }
+
+        Ok(RowGroupChunksObject(call_static(
+            ROW_GROUP_CHUNKS_FROM_THRIFT,
+            &mut [zval_array(row_counts), zval_array(chunks), zval_array(orders)],
+        )?))
     }
 
     #[php(name = "rowsNumber")]
-    pub fn rows_number(&self) -> PhpResult<i64> {
-        self.open()?;
-
-        Ok(self.footer.meta().file_metadata().num_rows())
+    pub fn rows_number(&self) -> i64 {
+        self.footer.meta().file_metadata().num_rows()
     }
 
     /// The file schema, without building the row-group metadata.
     pub fn schema(&mut self) -> PhpResult<SchemaObject> {
-        self.open()?;
-
         if let Some(metadata) = &self.metadata {
             return Ok(SchemaObject(call_method(metadata, "schema", &mut [])?));
         }
@@ -264,22 +473,17 @@ impl RustParquetFileReader {
 
     /// Σ row group `total_byte_size` (uncompressed).
     #[php(name = "totalByteSize")]
-    pub fn total_byte_size(&self) -> PhpResult<i64> {
-        self.open()?;
-
-        Ok(self
-            .footer
+    pub fn total_byte_size(&self) -> i64 {
+        self.footer
             .meta()
             .row_groups()
             .iter()
             .map(|group| group.total_byte_size())
-            .sum())
+            .sum()
     }
 
     /// The whole footer as `FileMetaData`, decoded on the first call.
     pub fn thrift(&mut self) -> PhpResult<Zval> {
-        self.open()?;
-
         if let Some(thrift) = &self.thrift {
             return Ok(thrift.shallow_clone());
         }
@@ -374,10 +578,7 @@ impl RustColumnsReader {
             ht_insert(&mut chunk, name, cell.values(array, self.times.as_ref())?);
         }
 
-        let mut zv = Zval::new();
-        zv.set_hashtable(chunk);
-
-        Ok(Some(zv))
+        Ok(Some(zval_array(chunk)))
     }
 }
 
@@ -388,13 +589,12 @@ impl RustColumnsReader {
         file: &RustParquetFileReader,
         columns: &ZendHashTable,
         batch_size: i64,
-        offset: Option<i64>,
-        limit: Option<i64>,
+        plan: &Zval,
     ) -> PhpResult<Self> {
         let batch_size = self::batch_size(batch_size)?;
-        let (offset, limit) = (rows(offset, "offset")?.unwrap_or(0), rows(limit, "limit")?);
-        let (stream, size, meta) = file.read()?;
+        let (stream, meta) = file.read()?;
         let stream = Arc::clone(stream);
+        let plan = read_plan(meta, plan, &stream)?;
         let refused = |error| parquet_exception(error, &stream, Side::Read);
         let mut names = Vec::with_capacity(columns.len());
 
@@ -410,18 +610,10 @@ impl RustColumnsReader {
                     .to_string(),
             );
 
-            Ok(())
+            Ok::<(), PhpException>(())
         })?;
 
-        let reader = ParquetReader::open(
-            Arc::clone(&stream),
-            size,
-            meta,
-            &names,
-            ReadPlan::new(meta, offset, limit),
-            batch_size,
-        )
-        .map_err(refused)?;
+        let reader = ParquetReader::open(Arc::clone(&stream), meta, &names, plan, batch_size).map_err(refused)?;
         let cells = reader
             .fields()
             .iter()

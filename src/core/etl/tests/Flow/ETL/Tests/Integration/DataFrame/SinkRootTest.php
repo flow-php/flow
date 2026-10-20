@@ -414,7 +414,7 @@ final class SinkRootTest extends FlowIntegrationTestCase
         $rows = df()->read($extractor)->write($spy)->limit(2)->fetch();
 
         static::assertCount(2, $rows);
-        static::assertNull($extractor->limits[0]);
+        static::assertNull($extractor->scans[0]->limit);
         static::assertSame([3], $spy->loadedRowCounts());
     }
 

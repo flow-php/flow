@@ -18,17 +18,17 @@ final class JoinSidesTest extends FlowTestCase
     {
         $limit = NodeMother::limit(NodeMother::read(), 5);
 
-        static::assertSame($limit, (new JoinSides(Optimizer::default(), NodeMother::context()))->of($limit));
+        static::assertSame($limit, (new JoinSides(Optimizer::default(), NodeMother::context()))->of($limit, $limit));
     }
 
     public function test_a_joins_right_side_is_optimized_as_its_own_plan(): void
     {
         $join = NodeMother::join(NodeMother::read(), NodeMother::plan(NodeMother::limit(NodeMother::read(), 3))->root);
 
-        $rewritten = (new JoinSides(Optimizer::default(), NodeMother::context()))->of($join);
+        $rewritten = (new JoinSides(Optimizer::default(), NodeMother::context()))->of($join, $join);
 
         static::assertInstanceOf(Join::class, $rewritten);
-        static::assertSame(3, (new LogicalPlan($rewritten->right()))->source()->limit());
+        static::assertSame(3, (new LogicalPlan($rewritten->right()))->source()->scan()->limit);
         static::assertSame($join->children()[0], $rewritten->children()[0]);
     }
 
@@ -39,16 +39,16 @@ final class JoinSidesTest extends FlowTestCase
             NodeMother::plan(NodeMother::limit(NodeMother::read(), 3))->root,
         );
 
-        $rewritten = (new JoinSides(Optimizer::default(), NodeMother::context()))->of($join);
+        $rewritten = (new JoinSides(Optimizer::default(), NodeMother::context()))->of($join, $join);
 
         static::assertInstanceOf(CrossJoin::class, $rewritten);
-        static::assertSame(3, (new LogicalPlan($rewritten->right()))->source()->limit());
+        static::assertSame(3, (new LogicalPlan($rewritten->right()))->source()->scan()->limit);
     }
 
     public function test_a_join_whose_right_side_does_not_change_keeps_its_identity(): void
     {
         $join = NodeMother::crossJoin(NodeMother::read(), NodeMother::plan(NodeMother::read())->root);
 
-        static::assertSame($join, (new JoinSides(new Optimizer(), NodeMother::context()))->of($join));
+        static::assertSame($join, (new JoinSides(new Optimizer(), NodeMother::context()))->of($join, $join));
     }
 }

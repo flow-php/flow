@@ -11,11 +11,11 @@ use Flow\ETL\Executor\Pipeline;
 use Flow\ETL\Executor\Raw;
 use Flow\ETL\Executor\Segments;
 use Flow\ETL\Executor\SourceRows;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Plan\LogicalPlan;
 use Flow\ETL\Plan\Materialization;
 use Flow\ETL\Plan\Node;
-use Flow\Filesystem\Path\Filter\OnlyFiles;
 use SplObjectStorage;
 
 use function array_reverse;
@@ -59,8 +59,7 @@ final readonly class PipelineSplit
         $read = $logical->source();
         $input = null;
         $segments = new Segments($read->extractor());
-        $limit = $read->limit();
-        $pathFilter = $read->pathFilter();
+        $scan = $read->scan();
 
         $attachment = new SinkAttachment($planned, $context);
         $remembered = $attachment->attach($logical->sinksOnSpine(), $onSpine);
@@ -76,15 +75,14 @@ final readonly class PipelineSplit
             }
 
             if ($node->materialization() === Materialization::blocking && $node !== $top) {
-                $input = new Pipeline($id++, $segments, $context, $input, $limit, $pathFilter, $sources);
+                $input = new Pipeline($id++, $segments, $context, $input, $scan, $sources);
                 $segments = new Segments();
-                $limit = null;
-                $pathFilter = new OnlyFiles();
+                $scan = new FileScan();
                 $sources = null;
             }
         }
 
-        $pipeline = new Pipeline($id, $segments, $context, $input, $limit, $pathFilter, $sources);
+        $pipeline = new Pipeline($id, $segments, $context, $input, $scan, $sources);
         $refusal = $planned->refusal();
 
         return $refusal === null

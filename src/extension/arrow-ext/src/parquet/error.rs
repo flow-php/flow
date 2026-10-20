@@ -42,6 +42,11 @@ pub enum Error {
     /// Bytes that are not a Parquet file: no footer where it must be.
     NotParquet(String),
     Options(String),
+    /// A read plan arrow cannot follow: selectors that do not cover the file's rows, a malformed limit or row filter,
+    /// a row filter path that is no leaf of the file or bounds its column cannot take.
+    Plan(String),
+    /// A footer or a column chunk encrypted with Parquet modular encryption.
+    Encrypted,
     Stream(String),
 }
 

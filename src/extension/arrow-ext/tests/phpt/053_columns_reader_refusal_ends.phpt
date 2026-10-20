@@ -28,7 +28,7 @@ $writer->close();
 
 $bytes = $filesystem->readFrom(path('memory://groups.parquet'))->content();
 $open = static fn(string $bytes): RustParquetFileReader => new RustParquetFileReader(new StringSourceStream(path('memory://groups.parquet'), $bytes));
-$chunk = $open($bytes)->metadata()->rowGroups()->all()[1]->columnChunks()[0];
+$chunk = $open($bytes)->footer()->metadata()->rowGroups()->all()[1]->columnChunks()[0];
 $corrupt = substr_replace($bytes, str_repeat("\xFF", $chunk->totalCompressedSize()), $chunk->pageOffset(), $chunk->totalCompressedSize());
 
 $step = static function (string $label, callable $call): void {
@@ -41,7 +41,8 @@ $step = static function (string $label, callable $call): void {
     echo $label, ': ', $result, "\n";
 };
 
-$reader = new RustColumnsReader($open($corrupt), ['id'], 2, null, null);
+$corrupted = $open($corrupt);
+$reader = new RustColumnsReader($corrupted, ['id'], 2, arrow_read_plan($corrupted));
 $step('key before rewind', static fn() => $reader->key());
 $step('current', static fn() => $reader->current());
 $step('rewind', static fn() => $reader->rewind());
@@ -54,7 +55,8 @@ $step('rewind', static fn() => $reader->rewind());
 
 // refused before the first chunk: rewind() throws once, then the reader is empty and rewinds freely
 $corrupt = substr_replace($bytes, str_repeat("\xFF", 8), 4, 8);
-$reader = new RustColumnsReader($open($corrupt), ['id'], 2, null, null);
+$corrupted = $open($corrupt);
+$reader = new RustColumnsReader($corrupted, ['id'], 2, arrow_read_plan($corrupted));
 $step('rewind (chunk refused)', static fn() => $reader->rewind());
 $step('valid', static fn() => $reader->valid());
 $step('rewind', static fn() => $reader->rewind());

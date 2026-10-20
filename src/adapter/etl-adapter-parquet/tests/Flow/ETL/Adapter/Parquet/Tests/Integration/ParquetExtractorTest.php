@@ -9,6 +9,7 @@ use Flow\ETL\Adapter\Parquet\ParquetExtractor;
 use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetFilesContext;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InferredSchemaException;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Plan\Stage;
 use Flow\ETL\Schema\Definition;
@@ -21,6 +22,7 @@ use Flow\Filesystem\Tests\Double\RejectingFilter;
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Options;
+use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\Reader;
 use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid;
@@ -43,9 +45,11 @@ use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\partition_types;
+use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
@@ -64,6 +68,37 @@ use function iterator_to_array;
 
 final class ParquetExtractorTest extends FlowTestCase
 {
+    /**
+     * @return Generator<string, array{?ParquetEngine}>
+     */
+    public static function engines(): Generator
+    {
+        yield 'default engine' => [null];
+        yield 'php engine' => [new PhpParquetEngine()];
+    }
+
+    #[DataProvider('engines')]
+    public function test_a_body_predicate_skips_row_groups(?ParquetEngine $engine): void
+    {
+        $memory = memory_filesystem();
+        ParquetFilesContext::rowGroups($memory, 'memory://groups.parquet', 3000, 1000);
+        $filtered = new CountingFilesystem($memory);
+        $unfiltered = new CountingFilesystem($memory);
+        $predicate = ref('id')->greaterThanEqual(lit(2500));
+
+        $rows = df()
+            ->read(from_parquet(path('memory://groups.parquet'), filesystem: $filtered, engine: $engine))
+            ->filter($predicate)
+            ->fetch();
+        $all = df()
+            ->read(from_parquet(path('memory://groups.parquet'), filesystem: $unfiltered, engine: $engine))
+            ->fetch();
+
+        static::assertCount(500, $rows);
+        static::assertSame(df()->read(from_rows($all))->filter($predicate)->fetch()->toArray(), $rows->toArray());
+        static::assertLessThan(ParquetFilesContext::bytesRead($unfiltered), ParquetFilesContext::bytesRead($filtered));
+    }
+
     public function test_limit(): void
     {
         $extractor = from_parquet(path(__DIR__ . '/Fixtures/orders_1k.parquet'));
@@ -447,7 +482,10 @@ final class ParquetExtractorTest extends FlowTestCase
         );
         $schema = $extractor->schema();
 
-        $batches = iterator_to_array($extractor->extract(flow_context(config()), pathFilter: new RejectingFilter()));
+        $batches = iterator_to_array($extractor->scan(
+            flow_context(config()),
+            new FileScan(pathFilter: new RejectingFilter()),
+        ));
 
         static::assertSame([], $batches);
         static::assertSame(1, $filesystem->readFromCalls);
@@ -482,7 +520,7 @@ final class ParquetExtractorTest extends FlowTestCase
     {
         $extractor = from_parquet(path(__DIR__ . '/Fixtures/Pagination/*.parquet'))->withBatchSize(1500);
 
-        static::assertCount(1000, ExtractedRows::of($extractor, limit: 1000));
+        static::assertCount(1000, ExtractedRows::of($extractor, scan: new FileScan(1000)));
     }
 
     public function test_the_second_file_is_asked_for_the_remainder_of_the_limit(): void
@@ -501,7 +539,7 @@ final class ParquetExtractorTest extends FlowTestCase
     {
         $extractor = from_parquet(path(__DIR__ . '/Fixtures/Pagination/*.parquet'))->withBatchSize(500);
 
-        static::assertCount(1000, ExtractedRows::of($extractor, limit: 1000));
+        static::assertCount(1000, ExtractedRows::of($extractor, scan: new FileScan(1000)));
     }
 
     public function test_is_repeatable(): void

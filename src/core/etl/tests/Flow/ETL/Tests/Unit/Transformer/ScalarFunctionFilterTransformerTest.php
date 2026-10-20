@@ -231,4 +231,18 @@ final class ScalarFunctionFilterTransformerTest extends FlowTestCase
 
         (new ScalarFunctionFilterTransformer(ref('flags')->expand()))->bind(ListColumnsMother::schema());
     }
+
+    public function test_the_bound_transformer_keeps_the_rows_its_predicate_matches(): void
+    {
+        $input = schema(int_schema('a'));
+        $bound = (new ScalarFunctionFilterTransformer(ref('a')->greaterThan(lit(1))))->bind($input)->step;
+
+        static::assertInstanceOf(ScalarFunctionFilterTransformer::class, $bound);
+        static::assertSame(
+            [['a' => 2], ['a' => 3]],
+            $bound
+                ->transform(array_to_rows([['a' => 1], ['a' => 2], ['a' => 3]], $input), flow_context(config()))
+                ->toArray(),
+        );
+    }
 }

@@ -31,11 +31,11 @@ final class RustParquetOpenSourceTest extends FlowTestCase
     /**
      * @param list<int> $ids
      */
-    #[TestWith([null, null, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]])]
+    #[TestWith([0, null, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]])]
     #[TestWith([3, 5, [3, 4, 5, 6, 7]])]
     #[TestWith([6, null, [6, 7, 8, 9]])]
     #[TestWith([0, 1, [0]])]
-    public function test_offset_and_limit_cross_row_groups(?int $offset, ?int $limit, array $ids): void
+    public function test_a_planned_window_crosses_row_groups(int $offset, ?int $limit, array $ids): void
     {
         $filesystem = memory_filesystem();
         ParquetFilesContext::rowGroups($filesystem, 'memory://groups.parquet', 10, 4);
@@ -44,7 +44,12 @@ final class RustParquetOpenSourceTest extends FlowTestCase
 
         foreach ((new RustParquetOpenSource(new RustParquetFileReader($filesystem->readFrom(path(
             'memory://groups.parquet',
-        )))))->batches(schema(int_schema('id')), 3, $offset, $limit, new AdaptiveBackend()) as $rows) {
+        )))))->batches(
+            schema(int_schema('id')),
+            3,
+            ParquetFilesContext::plan($filesystem, 'memory://groups.parquet', $offset, $limit),
+            new AdaptiveBackend(),
+        ) as $rows) {
             static::assertLessThanOrEqual(3, $rows->count());
             $read = [...$read, ...$rows->column('id')->values()];
         }
@@ -62,7 +67,12 @@ final class RustParquetOpenSourceTest extends FlowTestCase
 
         $names = [];
 
-        foreach ($source->batches(schema(str_schema('name')), 100, null, null, new PhpBackend()) as $rows) {
+        foreach ($source->batches(
+            schema(str_schema('name')),
+            100,
+            ParquetFilesContext::plan($filesystem, 'memory://groups.parquet'),
+            new PhpBackend(),
+        ) as $rows) {
             static::assertEquals(schema(str_schema('name')), $rows->schema());
             static::assertInstanceOf(ScalarColumn::class, $rows->column('name'));
             $names = [...$names, ...$rows->column('name')->values()];
@@ -80,13 +90,23 @@ final class RustParquetOpenSourceTest extends FlowTestCase
         $source = new RustParquetOpenSource(new RustParquetFileReader($filesystem->readFrom(path(
             'memory://groups.parquet',
         ))));
-        $first = $source->batches(schema(int_schema('id')), 3, null, null, new AdaptiveBackend());
+        $first = $source->batches(
+            schema(int_schema('id')),
+            3,
+            ParquetFilesContext::plan($filesystem, 'memory://groups.parquet'),
+            new AdaptiveBackend(),
+        );
         $first->rewind();
         static::assertSame([0, 1, 2], $first->current()->column('id')->values());
 
         $second = [];
 
-        foreach ($source->batches(schema(int_schema('id')), 3, null, null, new AdaptiveBackend()) as $rows) {
+        foreach ($source->batches(
+            schema(int_schema('id')),
+            3,
+            ParquetFilesContext::plan($filesystem, 'memory://groups.parquet'),
+            new AdaptiveBackend(),
+        ) as $rows) {
             $second = [...$second, ...$rows->column('id')->values()];
         }
 

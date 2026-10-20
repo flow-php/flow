@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Engine\Arrow;
 
+use Flow\Parquet\BloomFilter\BloomFilterOptions;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Encodings;
+use Flow\Parquet\Writer\StatisticsLevel;
+
+use function array_map;
 
 final class OptionsConverter
 {
@@ -36,14 +40,17 @@ final class OptionsConverter
         $result = [];
 
         $mappings = [
-            [Option::ARROW_BATCH_SIZE,         'BATCH_SIZE'],
-            [Option::GZIP_COMPRESSION_LEVEL,   'GZIP_COMPRESSION_LEVEL'],
-            [Option::BROTLI_COMPRESSION_LEVEL, 'BROTLI_COMPRESSION_LEVEL'],
-            [Option::ZSTD_COMPRESSION_LEVEL,   'ZSTD_COMPRESSION_LEVEL'],
-            [Option::ROW_GROUP_SIZE_BYTES,     'ROW_GROUP_SIZE_BYTES'],
-            [Option::PAGE_SIZE_BYTES,          'PAGE_SIZE_BYTES'],
-            [Option::DICTIONARY_PAGE_SIZE,     'DICTIONARY_PAGE_SIZE'],
-            [Option::WRITER_VERSION,           'WRITER_VERSION'],
+            [Option::GZIP_COMPRESSION_LEVEL,       'GZIP_COMPRESSION_LEVEL'],
+            [Option::BROTLI_COMPRESSION_LEVEL,     'BROTLI_COMPRESSION_LEVEL'],
+            [Option::ZSTD_COMPRESSION_LEVEL,       'ZSTD_COMPRESSION_LEVEL'],
+            [Option::ROW_GROUP_SIZE_BYTES,         'ROW_GROUP_SIZE_BYTES'],
+            [Option::PAGE_SIZE_BYTES,              'PAGE_SIZE_BYTES'],
+            [Option::PAGE_MAXIMUM_ROWS_COUNT,      'PAGE_MAXIMUM_ROWS_COUNT'],
+            [Option::DICTIONARY_PAGE_SIZE,         'DICTIONARY_PAGE_SIZE'],
+            [Option::WRITER_VERSION,               'WRITER_VERSION'],
+            [Option::STATISTICS_TRUNCATE_LENGTH,   'STATISTICS_TRUNCATE_LENGTH'],
+            [Option::COLUMN_INDEX_TRUNCATE_LENGTH, 'COLUMN_INDEX_TRUNCATE_LENGTH'],
+            [Option::PAGE_HEADER_STATISTICS,       'PAGE_HEADER_STATISTICS'],
         ];
 
         foreach ($mappings as [$option, $extensionKey]) {
@@ -53,6 +60,8 @@ final class OptionsConverter
                 $result[$extensionKey] = $value;
             }
         }
+
+        $result['STATISTICS_LEVEL'] = $options->getEnum(Option::STATISTICS_LEVEL, StatisticsLevel::class)->name;
 
         $columnsCompressions = $options->getArray(Option::COLUMNS_COMPRESSIONS);
 
@@ -87,6 +96,15 @@ final class OptionsConverter
             if ($mapped !== []) {
                 $result['COLUMNS_ENCODINGS'] = $mapped;
             }
+        }
+
+        $bloomFilters = BloomFilterOptions::forColumns($options);
+
+        if ($bloomFilters !== []) {
+            $result['COLUMNS_BLOOM_FILTERS'] = array_map(static fn(BloomFilterOptions $bloomFilter): array => [
+                'fpp' => $bloomFilter->fpp,
+                'ndv' => $bloomFilter->ndv,
+            ], $bloomFilters);
         }
 
         return $result;

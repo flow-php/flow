@@ -7,11 +7,15 @@ namespace Flow\ETL\Adapter\Parquet\Tests\Unit;
 use Flow\ETL\Adapter\Parquet\SchemaConverter;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFile\Schema\ConvertedType;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\ListElement;
+use Flow\Parquet\ParquetFile\Schema\LogicalType;
 use Flow\Parquet\ParquetFile\Schema\MapKey;
 use Flow\Parquet\ParquetFile\Schema\MapValue;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
+use Flow\Parquet\ParquetFile\Schema\Repetition;
 
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\date_schema;
@@ -27,9 +31,11 @@ use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\time_schema;
 use function Flow\ETL\DSL\uuid_schema;
 use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_numeric_string;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
@@ -122,5 +128,32 @@ final class ParquetToFlowSchemaTest extends FlowTestCase
             )),
             $flowSchema,
         );
+    }
+
+    public function test_uint64_columns_are_numeric_strings(): void
+    {
+        $flowSchema = (new SchemaConverter())->toFlow(Schema::with(
+            new FlatColumn('converted', PhysicalType::INT64, ConvertedType::UINT_64, repetition: Repetition::REQUIRED),
+            new FlatColumn('logical', PhysicalType::INT64, logicalType: LogicalType::integer(64, false)),
+            new FlatColumn('uint32', PhysicalType::INT32, ConvertedType::UINT_32),
+        ));
+
+        static::assertTrue(type_equals(type_numeric_string(), $flowSchema->get('converted')->type()));
+        static::assertFalse($flowSchema->get('converted')->isNullable());
+        static::assertTrue(type_equals(type_numeric_string(), $flowSchema->get('logical')->type()));
+        static::assertTrue($flowSchema->get('logical')->isNullable());
+        static::assertTrue(type_equals(type_integer(), $flowSchema->get('uint32')->type()));
+        static::assertTrue(type_equals(
+            type_optional(type_numeric_string()),
+            (new SchemaConverter())->parquetToFlowType(
+                new FlatColumn('u', PhysicalType::INT64, logicalType: LogicalType::integer(64, false)),
+            ),
+        ));
+        static::assertTrue(type_equals(
+            type_numeric_string(),
+            (new SchemaConverter())->parquetToFlowType(
+                new FlatColumn('u', PhysicalType::INT64, ConvertedType::UINT_64, repetition: Repetition::REQUIRED),
+            ),
+        ));
     }
 }

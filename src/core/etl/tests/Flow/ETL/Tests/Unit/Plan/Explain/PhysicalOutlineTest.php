@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Plan\Explain;
 use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\Plan\Explain\PhysicalOutline;
 use Flow\ETL\Plan\Explain\TreeLayout;
+use Flow\ETL\Tests\Double\RecordingFileExtractor;
 use Flow\ETL\Tests\Double\UndescribableRowLessExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\PhysicalPlanMother;
@@ -14,7 +15,11 @@ use Flow\ETL\Tests\Mother\PhysicalPlanMother;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\hash_join;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\to_output;
 
 final class PhysicalOutlineTest extends FlowTestCase
@@ -107,6 +112,23 @@ final class PhysicalOutlineTest extends FlowTestCase
                 '   Statistics: rows exact 2 · size unknown',
                 '   Limit: 1',
                 'Transformer: LimitTransformer',
+            ],
+            $root->children[0]->lines,
+        );
+    }
+
+    public function test_a_pushed_filter_is_listed_under_the_file_source_that_was_offered_it(): void
+    {
+        $root = (new PhysicalOutline())->of(PhysicalPlanMother::of(
+            data_frame()
+                ->read(new RecordingFileExtractor(schema(int_schema('id'))))
+                ->filter(ref('id')->greaterThan(lit(1))),
+        ));
+
+        static::assertSame(
+            [
+                'Extractor: RecordingFileExtractor',
+                '   Filter: GreaterThan',
             ],
             $root->children[0]->lines,
         );

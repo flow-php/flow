@@ -92,18 +92,23 @@ use Flow\Parquet\Engine\{RustParquetFileReader, RustParquetFileWriter};
 use Flow\Parquet\Engine\Arrow\{OptionsConverter, SchemaConverter};
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
+use Flow\Parquet\ParquetFile\Index\StreamIndexes;
+use Flow\Parquet\Reader\ReadPlan;
 
 use function Flow\Filesystem\DSL\{native_local_filesystem, path};
 
 $filesystem = native_local_filesystem();
 
 $file = new RustParquetFileReader($filesystem->readFrom(path('data.parquet'))); // Flow\Parquet\ParquetFileReader, one footer read
-$file->rowsNumber();
-$file->schema();                                                      // Flow\Parquet\ParquetFile\Schema
-$file->metadata();                                                    // Flow\Parquet\ParquetFile\Metadata
-$file->thrift();                                                      // Flow\Parquet\ThriftModel\FileMetaData
+$footer = $file->footer();                                            // Flow\Parquet\Engine\RustParquetFooter, readable after close()
+$footer->rowsNumber();
+$footer->schema();                                                    // Flow\Parquet\ParquetFile\Schema
+$footer->metadata();                                                  // Flow\Parquet\ParquetFile\Metadata
+$footer->thrift();                                                    // Flow\Parquet\ThriftModel\FileMetaData
+$indexes = new StreamIndexes($footer, $filesystem->readFrom(path('data.parquet')));  // page indexes, read on demand
+$plan = ReadPlan::window($footer->rowsNumber(), $indexes, offset: 10, limit: 100);  // rows 10-109
 
-foreach ($file->readColumns(['id', 'name'], 1_000, null, null) as $chunk) { // RustColumnsReader, an Iterator that streams once
+foreach ($file->readColumns(['id', 'name'], 1_000, $plan) as $chunk) { // RustColumnsReader, an Iterator that streams once
     // ['id' => [1, 2, ...], 'name' => ['a', 'b', ...]]
 }
 
@@ -118,7 +123,7 @@ $writer->writeBatch([['id' => 1, 'name' => 'a']]);   // an array or any Traversa
 $writer->writeColumns(['id' => [2, 3], 'name' => ['b', null]]);
 $writer->close();                              // footer, then the stream closed
 
-$batches = new RustBatchReader($file, ['id', 'name'], 1_000, null, null); // batch size, offset, limit
+$batches = new RustBatchReader($file, ['id', 'name'], 1_000, $plan); // batch size, rows to read
 $batches->schema();                            // Flow\Arrow\RustArrowSchema
 $batches->next();                              // Flow\Arrow\RustParquetBatch, null after the last
 ```

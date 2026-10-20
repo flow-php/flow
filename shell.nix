@@ -114,6 +114,7 @@ pkgs.mkShell {
         pkgs.just
         pkgs.oxipng
         pkgs.jpegoptim
+        pkgs.thrift
     ]
         ++ pkgs.lib.optional with-blackfire pkgs.blackfire
         ++ pkgs.lib.optionals with-wasm [

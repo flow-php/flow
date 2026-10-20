@@ -14,6 +14,7 @@ use Flow\ETL\Config;
 use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaMismatchException;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Context\ExtractedRows;
@@ -759,7 +760,7 @@ final class ExcelExtractorTest extends FlowTestCase
     {
         $extractor = from_excel(ExcelFixtureContext::file('cross_stream/*/*.xlsx'))->withBatchSize(10);
 
-        static::assertCount(2, ExtractedRows::of($extractor, limit: 2));
+        static::assertCount(2, ExtractedRows::of($extractor, scan: new FileScan(2)));
     }
 
     /**
@@ -877,9 +878,9 @@ final class ExcelExtractorTest extends FlowTestCase
         $filtered = from_excel(ExcelFixtureContext::path('sniff/*'));
         $whole = from_excel(ExcelFixtureContext::path('sniff/*'));
 
-        iterator_to_array($filtered->extract(flow_context(), null, new KeepPaths([ExcelFixtureContext::path(
-            'sniff/a',
-        )])), false);
+        iterator_to_array($filtered->scan(flow_context(), new FileScan(pathFilter: new KeepPaths([
+            ExcelFixtureContext::path('sniff/a'),
+        ]))), false);
         $whole->schema();
 
         static::assertEquals($whole->statistics()->rows, $filtered->statistics()->rows);

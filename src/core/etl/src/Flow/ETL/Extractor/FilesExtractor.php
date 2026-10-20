@@ -8,17 +8,19 @@ use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\File\FileExtractor;
+use Flow\ETL\Extractor\File\FileMetadataRow;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Extractor\File\ListedFiles;
 use Flow\ETL\Extractor\File\ListingPartitions;
-use Flow\ETL\Extractor\File\SourceFile;
+use Flow\ETL\Extractor\File\ListingScan;
+use Flow\ETL\Extractor\File\Scanning;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Rows\RowsBuilder;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\Filesystem\FileListing;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
-use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Generator;
 
@@ -34,6 +36,7 @@ final class FilesExtractor implements BatchableExtractor, Extractor, FileExtract
     private ?Statistics $statistics = null;
 
     use Batches;
+    use Scanning;
     use ListingPartitions;
 
     private readonly Filesystem $filesystem;
@@ -61,56 +64,16 @@ final class FilesExtractor implements BatchableExtractor, Extractor, FileExtract
     }
 
     /**
-     * @return Generator<int, \Flow\ETL\Rows, Signal|null, void>
+     * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
+    public function scan(FlowContext $context, FileScan $scan): Generator
     {
-        $batchSize = $this->batchSize();
-        $backend = $context->backend();
-        $fileColumns = $this->fileColumns($this->filesystem, $this->path);
-        $schema = $this->schema();
-        $builder = new RowsBuilder($schema, $backend);
-        $yielded = 0;
-
-        foreach ((new FileListing($this->filesystem))->list($this->path, $pathFilter) as $fileStatus) {
-            $extension = $fileStatus->path->extension();
-
-            $builder->append([
-                'path' => $fileStatus->path->path(),
-                'protocol' => $fileStatus->path->protocol(),
-                'file_name' => $fileStatus->path->filename(),
-                'base_name' => $fileStatus->path->basename(),
-                'is_file' => $fileStatus->isFile(),
-                'is_dir' => $fileStatus->isDirectory(),
-                // Path::extension() answers false for an extensionless file; the column is one
-                // type, so the absence is spelled null rather than a boolean in a string column.
-                'extension' => $extension === false ? null : $extension,
-                ...$fileColumns->forFile(new SourceFile($fileStatus->path, $fileStatus->size), $schema)->values(),
-            ]);
-
-            if ($builder->count() < $batchSize) {
-                continue;
-            }
-
-            $rows = $builder->finish();
-            $yielded += $rows->count();
-
-            $signal = yield $rows;
-
-            if ($signal === Signal::STOP) {
-                return;
-            }
-
-            $builder = new RowsBuilder($schema, $backend);
-
-            if ($limit !== null && $yielded >= $limit) {
-                return;
-            }
-        }
-
-        if ($builder->count() > 0) {
-            yield $builder->finish();
-        }
+        return (new ListingScan(
+            $this->filesystem,
+            $this->path,
+            $this->fileColumns($this->filesystem, $this->path),
+            new FileMetadataRow(),
+        ))->scan($context, $scan, $this->schema(), $this->batchSize());
     }
 
     public function partitionSchema(): Schema

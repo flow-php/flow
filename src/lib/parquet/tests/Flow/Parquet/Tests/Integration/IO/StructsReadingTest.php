@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
+use Flow\Parquet\Query;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Tests\Mother\ParquetEngineMother;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -22,7 +23,7 @@ class StructsReadingTest extends ParquetIntegrationTestCase
 
         $count = 0;
 
-        foreach ($file->values(['struct_deeply_nested']) as $row) {
+        foreach ($file->values(new Query(['struct_deeply_nested'])) as $row) {
             /** @var array<array-key, mixed> $deep */
             $deep = $row['struct_deeply_nested'];
             static::assertIsArray($deep);
@@ -70,7 +71,7 @@ class StructsReadingTest extends ParquetIntegrationTestCase
 
         $count = 0;
 
-        foreach ($file->values(['struct_deeply_nested'], $limit = 50) as $row) {
+        foreach ($file->values(new Query(['struct_deeply_nested'], limit: $limit = 50)) as $row) {
             /** @var array<array-key, mixed> $deep */
             $deep = $row['struct_deeply_nested'];
             static::assertIsArray($deep);
@@ -117,7 +118,7 @@ class StructsReadingTest extends ParquetIntegrationTestCase
 
         $count = 0;
 
-        foreach ($file->values(['struct_flat']) as $row) {
+        foreach ($file->values(new Query(['struct_flat'])) as $row) {
             /** @var array<array-key, mixed> $flat */
             $flat = $row['struct_flat'];
             static::assertIsArray($flat);
@@ -143,7 +144,7 @@ class StructsReadingTest extends ParquetIntegrationTestCase
 
         $count = 0;
 
-        foreach ($file->values(['struct_flat_nullable']) as $i => $row) {
+        foreach ($file->values(new Query(['struct_flat_nullable'])) as $i => $row) {
             if (($i % 2) === 0) {
                 /** @var array<array-key, mixed> $flat */
                 $flat = $row['struct_flat_nullable'];
@@ -173,7 +174,7 @@ class StructsReadingTest extends ParquetIntegrationTestCase
 
         $count = 0;
 
-        foreach ($file->values(['struct_nested']) as $row) {
+        foreach ($file->values(new Query(['struct_nested'])) as $row) {
             /** @var array<array-key, mixed> $nested */
             $nested = $row['struct_nested'];
             static::assertIsArray($nested);
@@ -203,7 +204,7 @@ class StructsReadingTest extends ParquetIntegrationTestCase
 
         $count = 0;
 
-        foreach ($file->values(['struct_nested_with_list_of_lists']) as $row) {
+        foreach ($file->values(new Query(['struct_nested_with_list_of_lists'])) as $row) {
             /** @var array<array-key, mixed> $outer */
             $outer = $row['struct_nested_with_list_of_lists'];
             static::assertIsArray($outer);
@@ -232,7 +233,7 @@ class StructsReadingTest extends ParquetIntegrationTestCase
 
         $count = 0;
 
-        foreach ($file->values(['struct_nested_with_list_of_maps']) as $row) {
+        foreach ($file->values(new Query(['struct_nested_with_list_of_maps'])) as $row) {
             /** @var array<array-key, mixed> $outer */
             $outer = $row['struct_nested_with_list_of_maps'];
             static::assertIsArray($outer);
@@ -261,7 +262,7 @@ class StructsReadingTest extends ParquetIntegrationTestCase
 
         $count = 0;
 
-        foreach ($file->values(['struct_nested_with_map_of_list_of_ints']) as $row) {
+        foreach ($file->values(new Query(['struct_nested_with_map_of_list_of_ints'])) as $row) {
             /** @var array<array-key, mixed> $outer */
             $outer = $row['struct_nested_with_map_of_list_of_ints'];
             static::assertIsArray($outer);
@@ -298,7 +299,7 @@ class StructsReadingTest extends ParquetIntegrationTestCase
 
         $count = 0;
 
-        foreach ($file->values(['struct_nested_with_map_of_string_map_of_string_string']) as $row) {
+        foreach ($file->values(new Query(['struct_nested_with_map_of_string_map_of_string_string'])) as $row) {
             /** @var array<array-key, mixed> $outer */
             $outer = $row['struct_nested_with_map_of_string_map_of_string_string'];
             static::assertIsArray($outer);
@@ -339,7 +340,9 @@ class StructsReadingTest extends ParquetIntegrationTestCase
 
         $count = 0;
 
-        foreach ($file->values(['struct_nested_with_map_of_string_map_of_string_string'], $limit = 50) as $row) {
+        foreach ($file->values(
+            new Query(['struct_nested_with_map_of_string_map_of_string_string'], limit: $limit = 50),
+        ) as $row) {
             /** @var array<array-key, mixed> $outer */
             $outer = $row['struct_nested_with_map_of_string_map_of_string_string'];
             static::assertIsArray($outer);
@@ -375,7 +378,7 @@ class StructsReadingTest extends ParquetIntegrationTestCase
 
         $count = 0;
 
-        foreach ($file->values(['struct_with_list_and_map_of_structs']) as $row) {
+        foreach ($file->values(new Query(['struct_with_list_and_map_of_structs'])) as $row) {
             /** @var array<array-key, mixed> $outer */
             $outer = $row['struct_with_list_and_map_of_structs'];
             static::assertIsArray($outer);

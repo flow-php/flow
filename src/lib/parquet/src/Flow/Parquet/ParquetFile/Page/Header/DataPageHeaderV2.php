@@ -33,8 +33,6 @@ final readonly class DataPageHeaderV2
             (int) $thrift->definition_levels_byte_length,
             (int) $thrift->repetition_levels_byte_length,
             $thrift->is_compressed,
-            // @mago-ignore analysis:redundant-condition
-            // @mago-ignore analysis:redundant-comparison
             $thrift->statistics !== null ? Statistics::fromThrift($thrift->statistics) : null,
         );
     }
@@ -54,7 +52,7 @@ final readonly class DataPageHeaderV2
         return $this->repetitionsByteLength;
     }
 
-    public function statistics(Options $options): ?StatisticsReader
+    public function statistics(): ?StatisticsReader
     {
         if ($this->statistics === null) {
             return null;

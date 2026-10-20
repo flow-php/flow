@@ -67,7 +67,7 @@ Outputs
 ├─ #4 Result
 │  │  Rows this plan hands out: to the trigger, or to the node reading it
 │  └─ #3 Select
-│     │  Columns: id, email
+│     │  Keeps only: id, email
 │     └─ #2 Filter
 │        │  Condition: IsNotNull
 │        └─ #1 Read
@@ -129,7 +129,7 @@ echo $dataFrame->explain()->toString(format: Format::flow);
 └─ #2 Filter
    │  Condition: IsNotNull
    ├─ #3 Select
-   │  │  Columns: id, email
+   │  │  Keeps only: id, email
    │  └─ #4 Result
    │        Rows this plan hands out: to the trigger, or to the node reading it
    └─ #5 Write
@@ -154,7 +154,7 @@ echo $dataFrame->explain()->toString(format: Format::boxes);
 ┌─────────────┴─────────────┐┌─────────────┴─────────────┐
 │         #3 Select         ││         #2 Filter         │
 │   ────────────────────    ││         (shared)          │
-│    Columns: id, email     ││                           │
+│   Keeps only: id, email   ││                           │
 └─────────────┬─────────────┘└───────────────────────────┘
 ┌─────────────┴─────────────┐
 │         #2 Filter         │

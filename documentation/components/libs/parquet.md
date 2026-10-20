@@ -148,10 +148,10 @@ invalid file throws `InvalidArgumentException` `Given file is not valid Parquet 
 
 There are several things we can read from parquet file:
 
-- `ParquetFile::values(array $columns = [], ?int $limit = null, ?int $offset = null) : \Generator`
-- `ParquetFile::columns(int $batchSize, array $columns = [], ?int $limit = null, ?int $offset = null) : \Generator`
+- `ParquetFile::values(Query $query = new Query()) : \Generator` - rows, one by one
+- `ParquetFile::columns(Query $query = new Query(), int $batchSize = 1024) : \Generator` - columns, in batches
 - `ParquetFile::metadata() : Metadata`
-- `ParquetFile::schema() : Schema` - shortcut for `ParquetFile::metadata()->schema()`
+- `ParquetFile::schema() : Schema` - the file schema, without building row-group metadata
 - `ParquetFile::close() : void` - closes the reader and its stream
 
 ### Reading the whole file:
@@ -171,12 +171,12 @@ foreach ($file->values() as $row) {
 
 ```php
 use Flow\Parquet\Reader;
+use function Flow\Parquet\DSL\parquet_query;
 
-$reader = new Reader();
+$file = (new Reader())->read('path/to/file.parquet');
 
-$file = $reader->read('path/to/file.parquet');
-foreach ($file->values(["column_1", "column_2"]) as $row) {
-    // do something with $row
+foreach ($file->values(parquet_query()->select('column_1', 'column_2')) as $row) {
+    // ['column_1' => ..., 'column_2' => ...]
 }
 ```
 
@@ -187,29 +187,88 @@ foreach ($file->values(["column_1", "column_2"]) as $row) {
 > To achieve the best results, we will need to play a bit with Writer options (covered later).
 
 ```php
-use Flow\Parquet\Reader;
-
-$reader = new Reader();
-
-$file = $reader->read('path/to/file.parquet');
-foreach ($file->values(["column_1", "column_2"], limit: 100, offset: 1000) as $row) {
-    // do something with $row
+foreach ($file->values(parquet_query()->select('column_1')->offset(1000)->limit(100)) as $row) {
+    // rows 1000-1099
 }
 ```
 
 ### Reading columns in batches
 
 ```php
-use Flow\Parquet\Reader;
-
-$file = (new Reader())->read('path/to/file.parquet');
-
-foreach ($file->columns(batchSize: 1000, columns: ["column_1", "column_2"]) as $chunk) {
-    // $chunk = ['column_1' => [...up to 1000 values], 'column_2' => [...]]
+foreach ($file->columns(parquet_query()->select('column_1', 'column_2'), batchSize: 1000) as $chunk) {
+    // ['column_1' => [...up to 1000 values], 'column_2' => [...]]
 }
 ```
 
-`limit` and `offset` work as in `values()`.
+### Filtering reads
+
+```php
+use Flow\Parquet\Reader;
+use function Flow\Parquet\DSL\{parquet_column, parquet_query};
+
+$file = (new Reader())->read('path/to/file.parquet');
+
+$query = parquet_query()
+    ->select('id', 'country')
+    ->where(
+        parquet_column('country')->equals('PL')
+            ->and(parquet_column('user.age')->lessThan(18)->negate())
+            ->and(parquet_column('status')->in(['new', 'paid'])->or(parquet_column('note')->isNull())),
+    )
+    ->offset(20)
+    ->limit(10);
+
+foreach ($file->values($query) as $row) {
+    // only matching rows: the 21st to the 30th match
+}
+```
+
+The rows returned are exactly the matching ones; offset and limit count matching rows. Row groups and pages whose
+statistics (column chunk statistics, the [page index](#page-index)) prove no row matches are never read - both engines
+skip the same ones and read a kept page's bytes alone. A second `where()` narrows the first.
+
+| Method on `parquet_column($path)`                                            | Filter                   |
+|------------------------------------------------------------------------------|--------------------------|
+| `equals`, `lessThan`, `lessThanOrEqual`, `greaterThan`, `greaterThanOrEqual` | `Comparison`             |
+| `notEquals`                                                                  | `Not` of `equals`        |
+| `in(array)`, `notIn(array)`                                                  | `In`, `Not` of `In`      |
+| `isNull()`, `isNotNull()`                                                    | `IsNull`, its `Not`      |
+| `startsWith(string)`                                                         | `StartsWith`             |
+
+- `->and()`, `->or()`, `->negate()` on any filter build `All`, `Any`, `Not`; `new All(...$filters)` and
+  `new Any(...$filters)` combine a list (namespace `Flow\Parquet\Filter`).
+- `$path` names a leaf through structs (`'user.address.city'`); a column the file lacks reads as null. A leaf inside a
+  list or a map is refused (`InvalidArgumentException`): a row holds no single value there.
+- Semantics are SQL's: a comparison on null is null, `NOT` null is null, only true keeps a row. Floats follow IEEE 754
+  (`NaN` matches nothing, `-0.0` equals `0.0`), strings compare in byte order (`'10' < '9'`), `UINT_64` values
+  numerically, date-times by instant. A literal of another kind than the column's values (a string on an `INT64`
+  column) matches nothing, under `->negate()` too.
+- Literals: scalars, `DateTimeInterface`, `Stringable` (uuids); `null` (use `isNull()`) and `NaN` are refused.
+- Files written without `column_orders` (older flow-php versions) are never pruned, only filtered. The statistics a file
+  holds are set by the writer options in [Statistics](#statistics).
+
+#### Reading with a ReadPlan
+
+```php
+use Flow\Parquet\Filter\Binding\BoundFilter;
+use Flow\Parquet\Reader\ReadPlanner;
+use function Flow\Parquet\DSL\parquet_column;
+
+$filter = parquet_column('id')->greaterThan(100);
+$plan = (new ReadPlanner())->plan(
+    $file->reader()->footer(),
+    $file->indexes(),
+    BoundFilter::bind($filter, $file->schema(), $file->options()),
+    limit: 10,                     // rows kept by $plan->rowFilter, refused unless it is the whole filter
+);
+
+foreach ($file->reader()->readColumns(['id'], 1024, $plan) as $batch) {
+    // only rows matching $plan->rowFilter
+}
+```
+
+`ReadPlan::$rowFilter` holds the conjuncts the file compares exactly; rows come back matching them, a superset of the
+query's matches when they are not the whole filter.
 
 ## Writing Parquet Files
 
@@ -331,15 +390,24 @@ $writer->close();
 
 ### Writer Options
 
-- `DICTIONARY_PAGE_MIN_CARDINALITY_RATION` - default '0.4' - minimum ratio of unique values to total values for a column
-  to have dictionary encoding.
-- `DICTIONARY_PAGE_SIZE` - default: `1Mb` - maximum size of dictionary page.
+- `COLUMN_INDEX_TRUNCATE_LENGTH` - default: `64` - bytes a string/binary page's min/max in the column index are cut to.
+- `DICTIONARY_PAGE_SIZE` - default: `1Mb` - maximum size of dictionary page; the pages of a column chunk after it is
+  reached are written `PLAIN`.
 - `GZIP_COMPRESSION_LEVEL` - default: `9` - compression level for GZIP compression (applied only when GZIP compression
   is enabled).
+- `COLUMNS_BLOOM_FILTERS` - default: `null` - `BloomFilterOptions` by column flat path: those columns get a bloom filter
+  per row group ([Bloom filters](#bloom-filters)).
+- `PAGE_HEADER_STATISTICS` - default: `false` - data page headers carry the page's statistics (at `StatisticsLevel::PAGE`).
+- `PAGE_MAXIMUM_ROWS_COUNT` - default: `1000` - rows per data page: the PHP writer closes a page at exactly that many;
+  the arrow writer treats it as a target, checked between write batches, so its pages can hold more. Smaller pages let
+  the page index skip more of a filtered read.
 - `PAGE_SIZE_BYTES` - default: `128Kb` - maximum size of data page.
 - `ROW_GROUP_SIZE_BYTES` - default: `32Mb` - maximum size of row group.
 - `ROW_GROUP_SIZE_CHECK_INTERVAL` default: `1000` - number of rows to write before checking if row group size limit is
   reached.
+- `STATISTICS_LEVEL` - default: `StatisticsLevel::PAGE` - `NONE`, `CHUNK` (column chunk statistics) or `PAGE` (also a
+  column index); the offset index is written at every level.
+- `STATISTICS_TRUNCATE_LENGTH` - default: `64` - bytes a string/binary column chunk's min/max statistics are cut to.
 - `VALIDATE_DATA` - default: `true` - if set to `true` then writer will validate data against schema.
 - `WRITER_VERSION` - default `1` - tells writer which version of parquet format should be used.
 
@@ -368,6 +436,89 @@ more frequently.
 
 Unfortunately, there is no one size fits all solution here.
 You will need to play a bit with those values to find the best one for your use case.
+
+## Statistics
+
+Both engines write the column chunk statistics arrow-rs writes: `min_value`/`max_value` with exactness flags,
+`nan_count` for floats and a column order per leaf.
+
+```php
+<?php
+
+use Flow\Parquet\{Option, Options, Reader, Writer};
+
+(new Writer(options: Options::default()->set(Option::STATISTICS_TRUNCATE_LENGTH, 16)))
+    ->write(__DIR__ . '/orders.parquet', $schema, $rows);
+
+$metadata = (new Reader())->read(__DIR__ . '/orders.parquet')->metadata();
+$column = $metadata->schema()->getFlat('customer');
+
+foreach ($metadata->rowGroups()->all() as $rowGroup) {
+    $statistics = $rowGroup->getColumnChunk($column)->statistics();
+
+    $statistics?->minValue($column);        // physical value: bytes for strings, unscaled int for decimal(10, 2)
+    $statistics?->maxValue($column);
+    $statistics?->isMaxValueExact();        // false when the max was truncated and incremented
+    $statistics?->nullCount();
+    $statistics?->nanCount();               // FLOAT, DOUBLE and FLOAT16 only
+}
+
+$metadata->columnOrder($column);            // ColumnOrder::TypeDefined; ColumnOrder::Absent in files written before it
+```
+
+| Physical type                    | Order of `min_value`/`max_value`                                                       |
+|----------------------------------|----------------------------------------------------------------------------------------|
+| BYTE_ARRAY, FIXED_LEN_BYTE_ARRAY | unsigned bytes (`'10' < '9'`)                                                          |
+| DECIMAL                          | signed (two's complement bytes, or the unscaled INT32/INT64)                           |
+| INT32/INT64 `UINT_*`             | unsigned                                                                               |
+| FLOAT, DOUBLE, FLOAT16           | IEEE 754 total order (`-0.0 < 0.0`); NaN counted, a bound only when every value is NaN |
+| INT96, INTERVAL                  | none: no `min_value`/`max_value` is written                                            |
+
+Strings and binaries longer than `STATISTICS_TRUNCATE_LENGTH` keep a prefix as the min and an incremented prefix as the
+max. Decimals and FLOAT16 are never truncated.
+
+### Page index
+
+Both writers write a column index (each page's min, max, null and NaN counts) and an offset index (where each page
+starts, and its first row) by default. Pages start on row boundaries, lists included.
+
+```php
+<?php
+
+use Flow\Parquet\{Option, Options, Reader, Writer};
+use Flow\Parquet\Writer\StatisticsLevel;
+
+(new Writer(options: Options::default()->set(Option::STATISTICS_LEVEL, StatisticsLevel::CHUNK)))
+    ->write(__DIR__ . '/orders.parquet', $schema, $rows);   // no column index; NONE also drops chunk statistics
+
+$file = (new Reader())->read(__DIR__ . '/orders.parquet');
+$column = $file->schema()->getFlat('customer');
+
+$file->indexes()->columnIndex(0, $column);       // ?ColumnIndex of row group 0: nullPages, minValues, maxValues, ...
+$file->indexes()->offsetIndex(0, $column);       // ?OffsetIndex: pages[i]->offset, compressedPageSize, firstRowIndex
+```
+
+### Bloom filters
+
+A bloom filter per column chunk lets a read skip the row groups that cannot hold a value, where min/max cannot (an id
+inside every group's range). Only `equals()` and `in()` use them. Both writers write them after each row group, for the
+columns asked only.
+
+```php
+<?php
+
+use Flow\Parquet\{Option, Options, Reader, Writer};
+use Flow\Parquet\BloomFilter\BloomFilterOptions;
+use function Flow\Parquet\DSL\{parquet_column, parquet_query};
+
+(new Writer(options: Options::default()->set(Option::COLUMNS_BLOOM_FILTERS, [
+    'id' => new BloomFilterOptions(),                  // fpp 0.05, ndv 1 048 576 (the arrow-rs defaults)
+    'user.email' => new BloomFilterOptions(0.01, 10_000),
+])))->write(__DIR__ . '/users.parquet', $schema, $rows);
+
+(new Reader())->read(__DIR__ . '/users.parquet')
+    ->values(parquet_query()->select('id')->where(parquet_column('id')->in([42, 1337])));
+```
 
 ## Compressions
 

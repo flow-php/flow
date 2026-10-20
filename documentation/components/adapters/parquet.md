@@ -73,3 +73,72 @@ data_frame()
     ->write(to_output())
     ->run();
 ```
+
+A `UINT_64` column reads as `numeric_string` (`'18446744073709551615'` is past `PHP_INT_MAX`). A `numeric_string`
+column is written as a parquet `STRING`; write `UINT_64` through the lib with an explicit schema:
+
+```php
+<?php
+
+use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, PhysicalType};
+use Flow\Parquet\Writer;
+
+(new Writer())->write(
+    __DIR__ . '/ids.parquet',
+    Schema::with(new FlatColumn('id', PhysicalType::INT64, logicalType: LogicalType::integer(64, false))),
+    [['id' => 7], ['id' => '18446744073709551615']],
+);
+```
+
+## Filter pushdown
+
+A `filter()` directly over `from_parquet()` moves into the reader, which returns only matching rows: row groups whose
+statistics prove that no row matches are skipped, and a `limit()` after the filter stops the read at that many
+matching rows:
+
+```php
+<?php
+
+use function Flow\ETL\Adapter\Parquet\from_parquet;
+use function Flow\ETL\DSL\{data_frame, lit, ref, to_output};
+
+data_frame()
+    ->read(from_parquet(__DIR__ . '/orders/*.parquet'))
+    ->filter(ref('id')->greaterThan(lit(1000))->and(ref('status')->equals(lit('paid'))))
+    ->limit(10)
+    ->write(to_output())
+    ->run();
+```
+
+Each part of an `and()` is pushed on its own when it compares a file column with a literal it can compare exactly.
+
+Pushed:
+
+- `equals`, `notEquals`, `same`, `notSame`, `lessThan`, `lessThanEqual`, `greaterThan`, `greaterThanEqual`,
+  `between`, `isIn` (literal list), `startsWith`, `isNull`, `isNotNull`, and `not()`/`and()`/`or()` of those
+- an int literal on a float column up to 2^53, an integral float on an int column below 2^53
+- a `date` literal on a `datetime` column and the reverse
+- a digit string (`lit('1000')`) on a `numeric_string` (`UINT_64`) column
+
+Evaluated on the rows read:
+
+- other functions, two columns compared, a literal of another type
+- `json` columns (except `isNull`/`isNotNull`), ordering on `uuid`
+- a column the file stores as another type than the read
+
+Partition columns list fewer files instead ([partitioning](/documentation/components/core/partitioning.md)).
+
+`explain()` shows the filter and the limit under `Read`, not what the reader skipped:
+
+```
+#3 Result
+│  Rows this plan hands out: to the trigger, or to the node reading it
+└─ #2 Limit
+   │  Limit: 10
+   └─ #1 Read
+         Extractor: ParquetExtractor
+         Source: file:///orders/*.parquet
+         Limit: 10
+         Filter: All
+```

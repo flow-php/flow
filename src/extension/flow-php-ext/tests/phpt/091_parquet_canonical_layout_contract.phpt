@@ -58,7 +58,7 @@ $writer->write(php_rows($schema, $values));
 $writer->close();
 
 $read = [];
-$reader = rust_parquet_batches($filesystem->readFrom(path('memory://layout.parquet')), $schema, 10, null, null);
+$reader = rust_parquet_batches($filesystem->readFrom(path('memory://layout.parquet')), $schema, 10);
 
 foreach ($reader as $batch) {
     array_push($read, ...$batch->toArray());

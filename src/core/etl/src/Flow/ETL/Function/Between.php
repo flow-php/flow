@@ -111,6 +111,7 @@ final class Between implements ComparisonFunction
         [$values, $lowerBounds, $upperBounds] = array_map(static fn(Column $column): array => $sameType
             ? $comparable->ordering($column)
             : $column->values(), $columns);
+        $order = new ValueOrder(...array_map(static fn(Column $column): Type => $column->type(), $columns));
         $results = [];
         $i = 0;
 
@@ -120,7 +121,7 @@ final class Between implements ComparisonFunction
                     throw new InvalidArgumentException('Between function requires valid boundary');
                 }
 
-                $results[] = $boundary->compare($values[$i], $lowerBounds[$i], $upperBounds[$i]);
+                $results[] = $boundary->compare($values[$i], $lowerBounds[$i], $upperBounds[$i], $order);
             }
         } catch (Exception $e) {
             throw EvaluationException::at($i, $e);

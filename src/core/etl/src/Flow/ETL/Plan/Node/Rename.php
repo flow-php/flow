@@ -48,6 +48,6 @@ final readonly class Rename implements Node
 
     public function redefines(): Redefined
     {
-        return Redefined::alias($this->to, $this->from);
+        return Redefined::rename($this->from, $this->to);
     }
 }

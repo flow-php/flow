@@ -11,11 +11,9 @@ use Flow\Parquet\Dremel\ReadColumnData;
 use Flow\Parquet\Dremel\Validator\ColumnDataValidator;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Data\DataConverter;
-use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\ListElement;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
-use Flow\Parquet\ParquetFile\Schema\Repetition;
+use Flow\Parquet\Tests\Context\DremelPaperDocuments;
 use PHPUnit\Framework\TestCase;
 
 use function iterator_to_array;
@@ -24,18 +22,16 @@ final class SchemaTest extends TestCase
 {
     public function test_dremel_paper_data_schema(): void
     {
-        $schema = $this->dremelPaperDataSchema();
+        $schema = DremelPaperDocuments::schema();
 
-        $rows = $this->dremelPaperDataStructure();
+        $rows = DremelPaperDocuments::rows();
         $shredder = new DremelShredder(
             new ColumnDataValidator(),
             $converter = DataConverter::initialize(Options::default()),
         );
         $assembler = new DremelAssembler($converter);
 
-        // @mago-ignore analysis:mixed-assignment
         foreach ($rows as $row) {
-            /** @var array<string, mixed> $row */
             static::assertIsArray($row);
             $shredResult = $shredder->shred($schema, [$row], 0);
 
@@ -72,80 +68,5 @@ final class SchemaTest extends TestCase
                 static::assertEquals($row[$column->name()], $firstAssembled[$column->name()]);
             }
         }
-    }
-
-    private function dremelPaperDataSchema(): Schema
-    {
-        return Schema::with(
-            FlatColumn::int32('DocId', Repetition::REQUIRED),
-            NestedColumn::list('Links', ListElement::structure([
-                NestedColumn::list('Backward', ListElement::int32()),
-                NestedColumn::list('Forward', ListElement::int32()),
-            ])),
-            NestedColumn::list(
-                'Name',
-                ListElement::structure([
-                    NestedColumn::list(
-                        'Language',
-                        ListElement::structure([
-                            FlatColumn::string('Code', Repetition::REQUIRED),
-                            FlatColumn::string('Country'),
-                        ]),
-                        Repetition::OPTIONAL,
-                    ),
-                    FlatColumn::string('Url', Repetition::OPTIONAL),
-                ]),
-                Repetition::OPTIONAL,
-            ),
-        );
-    }
-
-    private function dremelPaperDataStructure(): array
-    {
-        return [
-            [
-                'DocId' => 10,
-                'Links' => [
-                    [
-                        'Forward' => [20, 40, 60],
-                        'Backward' => null,
-                    ],
-                ],
-                'Name' => [
-                    [
-                        'Url' => 'http://A',
-                        'Language' => [
-                            ['Code' => 'en-us', 'Country' => 'us'],
-                            ['Code' => 'en', 'Country' => null],
-                        ],
-                    ],
-                    [
-                        'Url' => 'http://B',
-                        'Language' => null,
-                    ],
-                    [
-                        'Url' => null,
-                        'Language' => [
-                            ['Code' => 'en-gb', 'Country' => 'gb'],
-                        ],
-                    ],
-                ],
-            ],
-            [
-                'DocId' => 20,
-                'Links' => [
-                    [
-                        'Backward' => [10, 30],
-                        'Forward' => [80],
-                    ],
-                ],
-                'Name' => [
-                    [
-                        'Url' => 'http://C',
-                        'Language' => null,
-                    ],
-                ],
-            ],
-        ];
     }
 }

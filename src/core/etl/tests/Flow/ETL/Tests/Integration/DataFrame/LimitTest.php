@@ -448,6 +448,7 @@ final class LimitTest extends FlowIntegrationTestCase
         $rows = df()->read($nested)->offset(1)->limit(2)->fetch();
 
         static::assertSame([['id' => 2], ['id' => 3]], $rows->toArray());
-        static::assertSame([3], $source->limits);
+        static::assertCount(1, $source->scans);
+        static::assertSame(3, $source->scans[0]->limit);
     }
 }

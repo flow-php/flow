@@ -12,9 +12,11 @@ use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\File\FileExtractor;
 use Flow\ETL\Extractor\File\FileReading;
 use Flow\ETL\Extractor\File\FileReadLoop;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Extractor\File\ListedFiles;
 use Flow\ETL\Extractor\File\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\File\ReadWindow;
+use Flow\ETL\Extractor\File\Scanning;
 use Flow\ETL\Extractor\InfersSchema;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
@@ -28,8 +30,6 @@ use Flow\ETL\Schema\Inference\SchemaInferrer;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
-use Flow\Filesystem\Path\Filter;
-use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Flow\Types\Type\Logical\InstanceOfTypeNarrower;
 use Generator;
 
@@ -46,6 +46,7 @@ final class JsonExtractor implements
 {
     use Batches;
     use FileReading;
+    use Scanning;
 
     private SchemaInference $inference;
 
@@ -94,13 +95,13 @@ final class JsonExtractor implements
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
+    public function scan(FlowContext $context, FileScan $scan): Generator
     {
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
         $schema = $this->schema();
-        $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $pathFilter), false);
+        $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $scan->pathFilter), false);
 
-        yield from (new FileReadLoop($fileColumns, $schema))->read(
+        yield from (new FileReadLoop($fileColumns, $schema, $scan->conjuncts))->read(
             $sources,
             new JsonFileBatches(
                 $this->filesystem,
@@ -115,8 +116,8 @@ final class JsonExtractor implements
                 $this->pointer,
             ),
             $this->batchSize(),
-            $context->backend(),
-            new ReadWindow(limit: $limit),
+            $context,
+            new ReadWindow(limit: $scan->limit),
         );
     }
 

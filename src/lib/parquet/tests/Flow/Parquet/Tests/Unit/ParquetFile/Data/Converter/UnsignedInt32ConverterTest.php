@@ -1,0 +1,76 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\Parquet\Tests\Unit\ParquetFile\Data\Converter;
+
+use Flow\Parquet\Exception\InvalidArgumentException;
+use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Data\Converter\UnsignedInt32Converter;
+use Flow\Parquet\ParquetFile\Schema\ConvertedType;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\LogicalType;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
+use PHPUnit\Framework\Attributes\TestWith;
+use PHPUnit\Framework\TestCase;
+
+final class UnsignedInt32ConverterTest extends TestCase
+{
+    #[TestWith([-294_967_296, 4_000_000_000])]
+    #[TestWith([-1, 4_294_967_295])]
+    #[TestWith([0, 0])]
+    #[TestWith([2_147_483_647, 2_147_483_647])]
+    public function test_uint32_reads_back_as_itself(int $stored, int $value): void
+    {
+        static::assertSame($value, (new UnsignedInt32Converter())->fromParquetType($stored));
+    }
+
+    public function test_a_value_that_is_not_an_int_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Expected int, got string');
+
+        (new UnsignedInt32Converter())->fromParquetType('1');
+    }
+
+    public function test_writes_are_the_value_itself(): void
+    {
+        static::assertSame(4_000_000_000, (new UnsignedInt32Converter())->toParquetType(4_000_000_000));
+    }
+
+    public function test_for_column_reads_the_converted_type(): void
+    {
+        static::assertEquals(
+            new UnsignedInt32Converter(),
+            UnsignedInt32Converter::forColumn(
+                new FlatColumn('u', PhysicalType::INT32, ConvertedType::UINT_32),
+                Options::default(),
+            ),
+        );
+    }
+
+    public function test_for_column_reads_a_logical_unsigned_integer(): void
+    {
+        static::assertEquals(
+            new UnsignedInt32Converter(),
+            UnsignedInt32Converter::forColumn(
+                new FlatColumn('u', PhysicalType::INT32, logicalType: LogicalType::integer(32, false)),
+                Options::default(),
+            ),
+        );
+    }
+
+    #[TestWith([ConvertedType::UINT_8])]
+    #[TestWith([ConvertedType::UINT_16])]
+    #[TestWith([ConvertedType::UINT_64])]
+    #[TestWith([ConvertedType::INT_32])]
+    #[TestWith([ConvertedType::INT_64])]
+    public function test_for_column_skips_what_it_does_not_convert(ConvertedType $convertedType): void
+    {
+        static::assertNull(UnsignedInt32Converter::forColumn(
+            new FlatColumn('u', PhysicalType::INT32, $convertedType),
+            Options::default(),
+        ));
+        static::assertNull(UnsignedInt32Converter::forColumn(FlatColumn::int64('i'), Options::default()));
+    }
+}

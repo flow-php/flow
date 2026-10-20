@@ -61,7 +61,7 @@ final class FilterWalkTest extends FlowTestCase
         $read = NodeMother::read();
 
         static::assertNotNull((new FilterWalk())->predicateAtLeaf(
-            new Filter(NodeMother::select($read), lit(true)),
+            new Filter(NodeMother::select($read, 'year'), lit(true)),
             $read,
             ref('year')->isNotNull(),
         ));

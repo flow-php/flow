@@ -38,8 +38,6 @@ foreach ([...glob($fixtures . '/*.parquet'), ...glob($fixtures . '/EdgeCases/*.p
                 $filesystem->readFrom(path($file)),
                 (new SchemaConverter())->toFlow((new Reader(engine: new PhpParquetEngine()))->read($file)->schema()),
                 $batchSize,
-                null,
-                null,
             );
             $rows = [];
 
@@ -66,22 +64,16 @@ echo outcome(static fn() => rust_parquet_batches(
     $filesystem->readFrom(path($emptylist)),
     schema(list_schema('emptylist', type_list(type_integer()))),
     100,
-    null,
-    null,
 )), "\n";
 echo outcome(static fn() => rust_parquet_batches(
     $filesystem->readFrom(path($fixtures . '/multiple_pages.parquet')),
     schema(str_schema('int64')),
     100,
-    null,
-    null,
 )), "\n";
 echo outcome(static fn() => rust_parquet_batches(
     $filesystem->readFrom(path($fixtures . '/multiple_pages.parquet')),
     schema(str_schema('missing')),
     100,
-    null,
-    null,
 )), "\n";
 ?>
 --EXPECT--
@@ -117,8 +109,8 @@ EdgeCases/nonnullable.impala.parquet 100: identical
 EdgeCases/nonnullable.impala.parquet 10000: identical
 EdgeCases/null_list.parquet 100: both refuse
 EdgeCases/null_list.parquet 10000: both refuse
-EdgeCases/uint64_overflow.parquet 100: both refuse
-EdgeCases/uint64_overflow.parquet 10000: both refuse
+EdgeCases/uint64_overflow.parquet 100: identical
+EdgeCases/uint64_overflow.parquet 10000: identical
 EdgeCases/unsigned.parquet 100: identical
 EdgeCases/unsigned.parquet 10000: identical
 Flow\ETL\Exception\InvalidArgumentException: Parquet column "emptylist" (List(Null)) is read as List(Null), its schema type list<integer> stores List(Int64)

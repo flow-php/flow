@@ -990,8 +990,8 @@ final class TelemetryContextTest extends FlowTestCase
             [
                 CombineLimits::class,
                 CombineSortAndLimit::class,
-                PushLimitIntoSource::class,
                 PushFilterIntoSource::class,
+                PushLimitIntoSource::class,
                 CountFromStatistics::class,
                 PushProjectionIntoExpand::class,
             ],

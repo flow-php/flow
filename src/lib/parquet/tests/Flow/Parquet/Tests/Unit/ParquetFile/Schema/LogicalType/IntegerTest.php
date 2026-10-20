@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\ParquetFile\Schema\LogicalType;
 
+use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Schema\ConvertedType;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\LogicalType;
 use Flow\Parquet\ParquetFile\Schema\LogicalType\Integer;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\ThriftModel\IntType;
+use Flow\Parquet\ThriftModel\SchemaElement;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
@@ -34,12 +36,12 @@ final class IntegerTest extends TestCase
         );
     }
 
-    public function test_for_column_prefers_the_converted_type_over_the_logical_integer(): void
+    public function test_for_column_reads_agreeing_converted_and_logical_annotations(): void
     {
         static::assertEquals(
             new Integer(32, false),
             Integer::forColumn(
-                new FlatColumn('i', PhysicalType::INT32, ConvertedType::UINT_32, LogicalType::integer(32, true)),
+                new FlatColumn('i', PhysicalType::INT32, ConvertedType::UINT_32, LogicalType::integer(32, false)),
             ),
         );
     }
@@ -74,5 +76,18 @@ final class IntegerTest extends TestCase
         static::assertEquals(new Integer($bitWidth, $isSigned), Integer::fromThrift($thrift));
         static::assertSame($bitWidth, Integer::fromThrift($thrift)->bitWidth());
         static::assertSame($isSigned, Integer::fromThrift($thrift)->isSigned());
+    }
+
+    public function test_a_footer_whose_converted_and_logical_integers_disagree_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Column "i": converted type UINT_32 contradicts logical type INTEGER');
+
+        FlatColumn::fromThrift(new SchemaElement([
+            'name' => 'i',
+            'type' => PhysicalType::INT32->value,
+            'converted_type' => ConvertedType::UINT_32->value,
+            'logicalType' => LogicalType::integer(32, true)->toThrift(),
+        ]));
     }
 }

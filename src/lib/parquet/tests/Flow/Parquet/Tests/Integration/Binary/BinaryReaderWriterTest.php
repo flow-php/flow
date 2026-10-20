@@ -7,7 +7,6 @@ namespace Flow\Parquet\Tests\Integration\Binary;
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -106,22 +105,23 @@ final class BinaryReaderWriterTest extends TestCase
     #[DataProvider('decimalProvider')]
     public function test_writing_and_reading_decimals_with_functions(array $decimals, int $precision, int $scale): void
     {
-        $byteLength = (int) FlatColumn::decimal('decimal', $precision, $scale)->typeLength();
-
         $buffer = '';
         $writer = new BinaryBufferWriter($buffer);
+        $lengths = [];
 
         // @mago-ignore analysis:mixed-assignment
         foreach ($decimals as $decimal) {
             static::assertIsFloat($decimal);
-            $writer->append(encode_decimal($decimal, $precision, $scale, $byteLength));
+            $bytes = encode_decimal($decimal, $precision, $scale, null);
+            $lengths[] = strlen($bytes);
+            $writer->append($bytes);
         }
 
         $reader = new BinaryBufferReader($buffer);
         $decoded = [];
 
-        foreach ($decimals as $_ignored) {
-            $decoded[] = decode_decimal($reader->readBytes($byteLength), $scale);
+        foreach ($lengths as $length) {
+            $decoded[] = decode_decimal($reader->readBytes($length), $scale);
         }
 
         static::assertSame($decimals, $decoded);

@@ -260,6 +260,7 @@
             "src/lib/filesystem/src/Flow/Filesystem/DSL/functions.php",
             "src/lib/parquet/src/Flow/Parquet/functions.php",
             "src/lib/parquet/src/Flow/Parquet/Binary/functions.php",
+            "src/lib/parquet/src/Flow/Parquet/DSL/functions.php",
             "src/lib/parquet/src/stubs.php",
             "src/lib/postgresql/src/Flow/PostgreSql/DSL/client.php",
             "src/lib/postgresql/src/Flow/PostgreSql/DSL/condition.php",

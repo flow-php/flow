@@ -6,9 +6,12 @@ namespace Flow\ETL\Tests\Unit\Optimizer\Rule;
 
 use DateTimeImmutable;
 use Flow\ETL\Exception\EvaluationException;
+use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
+use Flow\ETL\Function\All;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Optimizer;
 use Flow\ETL\Optimizer\Rule\PushFilterIntoSource;
+use Flow\ETL\Plan\Node;
 use Flow\ETL\Plan\Node\Filter;
 use Flow\ETL\Plan\Node\Read;
 use Flow\ETL\Plan\Stage;
@@ -21,6 +24,7 @@ use Flow\ETL\Tests\Mother\PartitionedSourceMother;
 use Flow\ETL\WithEntry;
 use Flow\Filesystem\Path\Filter\Filters;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\df;
@@ -45,11 +49,11 @@ final class PushFilterIntoSourceTest extends FlowTestCase
             ->filter(ref('year')->equals(lit(2023)))
             ->fetch();
 
-        $pathFilter = $extractor->pathFilters[0];
+        $pathFilter = $extractor->scans[0]->pathFilter;
         static::assertInstanceOf(Filters::class, $pathFilter);
         static::assertTrue($pathFilter->accept(PartitionedSourceMother::file('year=2023/month=07')));
         static::assertFalse($pathFilter->accept(PartitionedSourceMother::file('year=2024/month=07')));
-        // the double reads every partition anyway, so only the Filter node the rule kept drops 2024
+        // the double lists every partition, so only the scan's filter drops 2024
         static::assertSame([2023], $rows->reduceToArray('year'));
     }
 
@@ -63,7 +67,7 @@ final class PushFilterIntoSourceTest extends FlowTestCase
             ->filter(ref('month')->equals(lit('07')))
             ->fetch();
 
-        $pathFilter = $extractor->pathFilters[0];
+        $pathFilter = $extractor->scans[0]->pathFilter;
         static::assertTrue($pathFilter->accept(PartitionedSourceMother::file('year=2023/month=07')));
         static::assertFalse($pathFilter->accept(PartitionedSourceMother::file('year=2024/month=07')));
         static::assertFalse($pathFilter->accept(PartitionedSourceMother::file('year=2023/month=08')));
@@ -80,7 +84,7 @@ final class PushFilterIntoSourceTest extends FlowTestCase
             ->filter(ref('month')->equals(lit('07')))
             ->fetch();
 
-        $pathFilter = $extractor->pathFilters[0];
+        $pathFilter = $extractor->scans[0]->pathFilter;
         static::assertTrue($pathFilter->accept(PartitionedSourceMother::file('year=2023/month=07')));
         static::assertFalse($pathFilter->accept(PartitionedSourceMother::file('year=2022/month=07')));
         static::assertFalse($pathFilter->accept(PartitionedSourceMother::file('year=2024/month=07')));
@@ -97,38 +101,53 @@ final class PushFilterIntoSourceTest extends FlowTestCase
             ->filter(ref('year')->equals(lit(2023)))
             ->fetch();
 
-        $pathFilter = $extractor->pathFilters[0];
+        $pathFilter = $extractor->scans[0]->pathFilter;
         static::assertTrue($pathFilter->accept(PartitionedSourceMother::file('year=2023/month=07')));
         static::assertFalse($pathFilter->accept(PartitionedSourceMother::file('year=2024/month=07')));
         static::assertSame(['a'], $rows->reduceToArray('value'));
     }
 
-    public function test_a_body_column_predicate_is_not_pushed(): void
+    public function test_a_body_column_predicate_is_pushed_as_a_filter_and_never_as_a_path_filter(): void
     {
         $extractor = PartitionedSourceMother::yearMonth();
 
         df()
             ->read($extractor)
-            ->filter(ref('value')->equals(lit('a')))
+            ->filter($predicate = ref('value')->equals(lit('a')))
             ->fetch();
 
-        static::assertEquals(new OnlyFiles(), $extractor->pathFilters[0]);
+        static::assertEquals(new OnlyFiles(), $extractor->scans[0]->pathFilter);
+        static::assertSame([$predicate], $extractor->scans[0]->conjuncts);
     }
 
-    public function test_a_mixed_predicate_pushes_only_its_partition_conjunct(): void
+    public function test_a_predicate_referencing_no_column_is_pushed_as_a_filter_and_never_as_a_path_filter(): void
+    {
+        $extractor = PartitionedSourceMother::yearMonth();
+
+        df()
+            ->read($extractor)
+            ->filter($predicate = lit(1)->equals(lit(1)))
+            ->fetch();
+
+        static::assertEquals(new OnlyFiles(), $extractor->scans[0]->pathFilter);
+        static::assertSame([$predicate], $extractor->scans[0]->conjuncts);
+    }
+
+    public function test_a_mixed_predicate_pushes_both_conjuncts_and_only_the_partition_one_as_a_path_filter(): void
     {
         $extractor = PartitionedSourceMother::yearMonth();
 
         $rows = df()
             ->read($extractor)
-            ->filter(ref('year')->equals(lit(2023))->and(ref('value')->notEquals(lit('a'))))
+            ->filter(($year = ref('year')->equals(lit(2023)))->and($value = ref('value')->notEquals(lit('a'))))
             ->fetch();
 
-        $pathFilter = $extractor->pathFilters[0];
+        $pathFilter = $extractor->scans[0]->pathFilter;
         static::assertInstanceOf(Filters::class, $pathFilter);
         static::assertTrue($pathFilter->accept(PartitionedSourceMother::file('year=2023/month=07')));
         static::assertFalse($pathFilter->accept(PartitionedSourceMother::file('year=2024/month=07')));
-        // the body conjunct still runs in the Filter node: the only 2023 row has value "a"
+        static::assertEquals([$year, $value], $extractor->scans[0]->conjuncts);
+        // the scan applies the body conjunct too: the only 2023 row has value "a"
         static::assertCount(0, $rows);
     }
 
@@ -146,7 +165,7 @@ final class PushFilterIntoSourceTest extends FlowTestCase
             )
             ->fetch();
 
-        $pathFilter = $extractor->pathFilters[0];
+        $pathFilter = $extractor->scans[0]->pathFilter;
         static::assertTrue($pathFilter->accept(PartitionedSourceMother::file('year=2023/month=07')));
         static::assertFalse($pathFilter->accept(PartitionedSourceMother::file('year=2024/month=07')));
         static::assertFalse($pathFilter->accept(PartitionedSourceMother::file('year=2023/month=08')));
@@ -165,7 +184,7 @@ final class PushFilterIntoSourceTest extends FlowTestCase
             )
             ->fetch();
 
-        $pathFilter = $extractor->pathFilters[0];
+        $pathFilter = $extractor->scans[0]->pathFilter;
         static::assertTrue($pathFilter->accept(PartitionedSourceMother::file('year=2023/month=07')));
         static::assertFalse($pathFilter->accept(PartitionedSourceMother::file('year=2024/month=07')));
     }
@@ -179,22 +198,23 @@ final class PushFilterIntoSourceTest extends FlowTestCase
             ->filter(ref('year')->equals(lit(2023))->or(ref('year')->equals(lit(2024))))
             ->fetch();
 
-        $pathFilter = $extractor->pathFilters[0];
+        $pathFilter = $extractor->scans[0]->pathFilter;
         static::assertTrue($pathFilter->accept(PartitionedSourceMother::file('year=2023/month=07')));
         static::assertTrue($pathFilter->accept(PartitionedSourceMother::file('year=2024/month=07')));
         static::assertFalse($pathFilter->accept(PartitionedSourceMother::file('year=2025/month=07')));
     }
 
-    public function test_an_or_mixing_a_body_column_is_not_pushed(): void
+    public function test_an_or_mixing_a_body_column_is_pushed_whole_as_a_filter_and_never_as_a_path_filter(): void
     {
         $extractor = PartitionedSourceMother::yearMonth();
 
         df()
             ->read($extractor)
-            ->filter(ref('year')->equals(lit(2023))->or(ref('value')->equals(lit('x'))))
+            ->filter($predicate = ref('year')->equals(lit(2023))->or(ref('value')->equals(lit('x'))))
             ->fetch();
 
-        static::assertEquals(new OnlyFiles(), $extractor->pathFilters[0]);
+        static::assertEquals(new OnlyFiles(), $extractor->scans[0]->pathFilter);
+        static::assertSame([$predicate], $extractor->scans[0]->conjuncts);
     }
 
     public function test_a_nested_and_inside_an_and_pushes_the_partition_conjuncts(): void
@@ -211,7 +231,7 @@ final class PushFilterIntoSourceTest extends FlowTestCase
             )
             ->fetch();
 
-        $pathFilter = $extractor->pathFilters[0];
+        $pathFilter = $extractor->scans[0]->pathFilter;
         static::assertTrue($pathFilter->accept(PartitionedSourceMother::file('year=2023/month=07')));
         static::assertFalse($pathFilter->accept(PartitionedSourceMother::file('year=2024/month=07')));
         static::assertFalse($pathFilter->accept(PartitionedSourceMother::file('year=2023/month=08')));
@@ -228,7 +248,7 @@ final class PushFilterIntoSourceTest extends FlowTestCase
             ->filter(ref('year')->equals(lit(2023)))
             ->fetch();
 
-        static::assertEquals(new OnlyFiles(), $extractor->pathFilters[0]);
+        static::assertEquals(new OnlyFiles(), $extractor->scans[0]->pathFilter);
     }
 
     public function test_a_with_entry_redefining_the_partition_column_blocks_the_push(): void
@@ -241,7 +261,7 @@ final class PushFilterIntoSourceTest extends FlowTestCase
             ->filter(ref('year')->equals(lit(2023)))
             ->fetch();
 
-        static::assertEquals(new OnlyFiles(), $extractor->pathFilters[0]);
+        static::assertEquals(new OnlyFiles(), $extractor->scans[0]->pathFilter);
     }
 
     public function test_a_duplicate_row_defining_the_partition_column_blocks_the_push(): void
@@ -254,7 +274,7 @@ final class PushFilterIntoSourceTest extends FlowTestCase
             ->filter(ref('year')->equals(lit(2023)))
             ->fetch();
 
-        static::assertEquals(new OnlyFiles(), $extractor->pathFilters[0]);
+        static::assertEquals(new OnlyFiles(), $extractor->scans[0]->pathFilter);
         // the 2024 row's duplicate carries year=2023: pruning its partition would lose it
         static::assertCount(3, $rows);
     }
@@ -269,7 +289,7 @@ final class PushFilterIntoSourceTest extends FlowTestCase
             ->filter(ref('year')->equals(lit(2023)))
             ->fetch();
 
-        static::assertInstanceOf(Filters::class, $extractor->pathFilters[0]);
+        static::assertInstanceOf(Filters::class, $extractor->scans[0]->pathFilter);
     }
 
     public function test_a_filter_a_sink_root_does_not_consume_through_is_not_pushed(): void
@@ -282,7 +302,7 @@ final class PushFilterIntoSourceTest extends FlowTestCase
             ->filter(ref('year')->equals(lit(2023)))
             ->fetch();
 
-        static::assertEquals(new OnlyFiles(), $extractor->pathFilters[0]);
+        static::assertEquals(new OnlyFiles(), $extractor->scans[0]->pathFilter);
     }
 
     public function test_a_non_file_extractor_is_never_pushed_into(): void
@@ -294,7 +314,7 @@ final class PushFilterIntoSourceTest extends FlowTestCase
         static::assertSame($plan, (new PushFilterIntoSource())->apply($plan, NodeMother::context()));
     }
 
-    public function test_a_source_without_partition_columns_is_never_pushed_into(): void
+    public function test_a_data_conjunct_is_pushed_into_a_source_without_partition_columns(): void
     {
         $extractor = new RecordingFileExtractor(
             schema(int_schema('year')),
@@ -303,10 +323,37 @@ final class PushFilterIntoSourceTest extends FlowTestCase
 
         df()
             ->read($extractor)
-            ->filter(ref('year')->equals(lit(2023)))
+            ->filter($predicate = ref('year')->equals(lit(2023)))
             ->fetch();
 
-        static::assertEquals(new OnlyFiles(), $extractor->pathFilters[0]);
+        static::assertEquals(new OnlyFiles(), $extractor->scans[0]->pathFilter);
+        static::assertSame([$predicate], $extractor->scans[0]->conjuncts);
+    }
+
+    public function test_a_non_deterministic_data_conjunct_is_not_pushed(): void
+    {
+        $extractor = PartitionedSourceMother::yearMonth();
+
+        df()
+            ->read($extractor)
+            ->filter(ref('value')->equals(random_string(2)))
+            ->fetch();
+
+        static::assertSame([], $extractor->scans[0]->conjuncts);
+    }
+
+    public function test_a_data_conjunct_under_a_reducing_node_is_not_pushed(): void
+    {
+        $extractor = PartitionedSourceMother::yearMonth();
+
+        df()
+            ->read($extractor)
+            ->limit(5)
+            ->filter(ref('value')->equals(lit('a')))
+            ->fetch();
+
+        static::assertSame(5, $extractor->scans[0]->limit);
+        static::assertSame([], $extractor->scans[0]->conjuncts);
     }
 
     public function test_a_non_deterministic_predicate_is_not_pushed(): void
@@ -318,7 +365,7 @@ final class PushFilterIntoSourceTest extends FlowTestCase
             ->filter(ref('month')->equals(random_string(2)))
             ->fetch();
 
-        static::assertEquals(new OnlyFiles(), $extractor->pathFilters[0]);
+        static::assertEquals(new OnlyFiles(), $extractor->scans[0]->pathFilter);
     }
 
     public function test_a_predicate_calling_a_user_callable_is_not_pushed(): void
@@ -330,16 +377,26 @@ final class PushFilterIntoSourceTest extends FlowTestCase
             ->filter(ref('year')->call(lit('is_string'), type_boolean()))
             ->fetch();
 
-        static::assertEquals(new OnlyFiles(), $extractor->pathFilters[0]);
+        static::assertEquals(new OnlyFiles(), $extractor->scans[0]->pathFilter);
     }
 
-    public function test_a_literal_only_predicate_is_not_pushed(): void
+    public function test_a_constant_conjunct_is_pushed_and_stops_nothing_above_it(): void
     {
         $extractor = PartitionedSourceMother::yearMonth();
 
-        df()->read($extractor)->filter(lit(true))->fetch();
+        $rows = df()
+            ->read($extractor)
+            ->filter($constant = lit(true))
+            ->filter($year = ref('year')->equals(lit(2023)))
+            ->fetch();
 
-        static::assertEquals(new OnlyFiles(), $extractor->pathFilters[0]);
+        static::assertSame([$constant, $year], $extractor->scans[0]->conjuncts);
+        static::assertSame([2023], $rows->reduceToArray('year'));
+    }
+
+    public function test_a_constant_false_conjunct_returns_no_row(): void
+    {
+        static::assertSame(0, df()->read(PartitionedSourceMother::yearMonth())->filter(lit(false))->fetch()->count());
     }
 
     public function test_a_filter_inside_a_joined_frame_is_pushed_with_that_frames_context(): void
@@ -351,7 +408,7 @@ final class PushFilterIntoSourceTest extends FlowTestCase
             ->join(df()->read($right)->filter(ref('year')->equals(lit(2023))), join_on(['id' => 'year'], 'r_'))
             ->fetch();
 
-        $pathFilter = $right->pathFilters[0];
+        $pathFilter = $right->scans[0]->pathFilter;
         static::assertTrue($pathFilter->accept(PartitionedSourceMother::file('year=2023/month=07')));
         static::assertFalse($pathFilter->accept(PartitionedSourceMother::file('year=2024/month=07')));
     }
@@ -379,7 +436,7 @@ final class PushFilterIntoSourceTest extends FlowTestCase
             $frame->explain()->toString(Stage::unoptimized),
         );
         static::assertStringEndsWith(
-            "Extractor: RecordingFileExtractor\n         Source: file:///dev/null\n         Files: Filters",
+            "Extractor: RecordingFileExtractor\n      Source: file:///dev/null\n      Files: Filters\n      Filter: Equals",
             $frame->explain()->toString(),
         );
     }
@@ -394,7 +451,7 @@ final class PushFilterIntoSourceTest extends FlowTestCase
             ->filter(ref('y')->equals(lit(2023)))
             ->fetch();
 
-        $pathFilter = $extractor->pathFilters[0];
+        $pathFilter = $extractor->scans[0]->pathFilter;
         static::assertInstanceOf(Filters::class, $pathFilter);
         static::assertTrue($pathFilter->accept(PartitionedSourceMother::file('year=2023/month=07')));
         static::assertFalse($pathFilter->accept(PartitionedSourceMother::file('year=2024/month=07')));
@@ -411,23 +468,228 @@ final class PushFilterIntoSourceTest extends FlowTestCase
             ->filter(ref('y')->equals(lit(2023)))
             ->fetch();
 
-        $pathFilter = $extractor->pathFilters[0];
+        $pathFilter = $extractor->scans[0]->pathFilter;
         static::assertInstanceOf(Filters::class, $pathFilter);
         static::assertTrue($pathFilter->accept(PartitionedSourceMother::file('year=2023/month=07')));
         static::assertFalse($pathFilter->accept(PartitionedSourceMother::file('year=2024/month=07')));
         static::assertSame([2023], $rows->reduceToArray('y'));
     }
 
-    public function test_a_filter_on_an_alias_of_a_body_column_is_not_pushed(): void
+    public function test_a_filter_on_an_alias_of_a_body_column_is_pushed_as_the_original_column_and_never_as_a_path_filter(): void
     {
         $extractor = PartitionedSourceMother::yearMonth();
 
         df()
             ->read($extractor)
             ->withEntry('v', ref('value'))
-            ->filter(ref('v')->equals(lit('a')))
+            ->filter(ref('v')->equals($literal = lit('a')))
             ->fetch();
 
-        static::assertEquals(new OnlyFiles(), $extractor->pathFilters[0]);
+        static::assertEquals(new OnlyFiles(), $extractor->scans[0]->pathFilter);
+        static::assertEquals([ref('value')->equals($literal)], $extractor->scans[0]->conjuncts);
+    }
+
+    public function test_a_filter_node_whose_only_conjunct_is_pushed_is_removed(): void
+    {
+        $plan = NodeMother::plan(
+            new Filter(new Read(PartitionedSourceMother::yearMonth()), $year = ref('year')->equals(lit(2023))),
+        );
+
+        $read = (new PushFilterIntoSource())->apply($plan, NodeMother::context())->root->children()[0];
+
+        static::assertInstanceOf(Read::class, $read);
+        static::assertSame([$year], $read->scan()->conjuncts);
+    }
+
+    public function test_a_pushed_conjunct_leaves_its_filter_node_and_the_rest_stays_in_it(): void
+    {
+        $plan = NodeMother::plan(
+            new Filter(
+                new Read(PartitionedSourceMother::yearMonth()),
+                ($year = ref('year')->equals(lit(2023)))->and($random = ref('value')->equals(random_string(2))),
+            ),
+        );
+
+        $filter = (new PushFilterIntoSource())->apply($plan, NodeMother::context())->root->children()[0];
+
+        static::assertInstanceOf(Filter::class, $filter);
+        static::assertSame($random, $filter->function);
+        $read = $filter->children()[0];
+        static::assertInstanceOf(Read::class, $read);
+        static::assertSame([$year], $read->scan()->conjuncts);
+    }
+
+    public function test_stacked_filter_nodes_are_pushed_leaf_first(): void
+    {
+        $plan = NodeMother::plan(
+            new Filter(
+                new Filter(new Read(PartitionedSourceMother::yearMonth()), $year = ref('year')->equals(lit(2023))),
+                $month = ref('month')->equals(lit('07')),
+            ),
+        );
+
+        $read = (new PushFilterIntoSource())->apply($plan, NodeMother::context())->root->children()[0];
+
+        static::assertInstanceOf(Read::class, $read);
+        static::assertEquals([$year, $month], $read->scan()->conjuncts);
+    }
+
+    public function test_a_filter_node_that_keeps_a_conjunct_stops_the_push_of_the_filters_above_it(): void
+    {
+        $plan = NodeMother::plan(
+            new Filter(
+                new Filter(
+                    new Read(PartitionedSourceMother::yearMonth()),
+                    ($year = ref('year')->equals(lit(2023)))->and($random = ref('value')->equals(random_string(2))),
+                ),
+                $month = ref('month')->equals(lit('07')),
+            ),
+        );
+
+        $top = (new PushFilterIntoSource())->apply($plan, NodeMother::context())->root->children()[0];
+
+        static::assertInstanceOf(Filter::class, $top);
+        static::assertSame($month, $top->function);
+        $bottom = $top->children()[0];
+        static::assertInstanceOf(Filter::class, $bottom);
+        static::assertSame($random, $bottom->function);
+        $read = $bottom->children()[0];
+        static::assertInstanceOf(Read::class, $read);
+        static::assertSame([$year], $read->scan()->conjuncts);
+    }
+
+    public function test_a_filter_node_keeping_two_conjuncts_keeps_them_as_one_all(): void
+    {
+        $plan = NodeMother::plan(
+            new Filter(
+                new Read(PartitionedSourceMother::yearMonth()),
+                ref('year')
+                    ->equals(lit(2023))
+                    ->and($first = ref('value')->equals(random_string(2)))
+                    ->and($second = ref('value')->notEquals(random_string(3))),
+            ),
+        );
+
+        $filter = (new PushFilterIntoSource())->apply($plan, NodeMother::context())->root->children()[0];
+
+        static::assertInstanceOf(Filter::class, $filter);
+        static::assertEquals(new All($first, $second), $filter->function);
+    }
+
+    public function test_a_limit_above_a_fully_pushed_filter_is_pushed_beside_it(): void
+    {
+        $extractor = PartitionedSourceMother::yearMonth();
+
+        $rows = df()
+            ->read($extractor)
+            ->filter($year = ref('year')->equals(lit(2023)))
+            ->limit(1)
+            ->fetch();
+
+        static::assertSame(1, $extractor->scans[0]->limit);
+        static::assertSame([$year], $extractor->scans[0]->conjuncts);
+        static::assertSame([2023], $rows->reduceToArray('year'));
+    }
+
+    public function test_a_limit_above_a_filter_node_that_keeps_a_conjunct_is_not_pushed(): void
+    {
+        $extractor = PartitionedSourceMother::yearMonth();
+
+        df()
+            ->read($extractor)
+            ->filter(ref('year')->equals(lit(2023))->and(ref('value')->equals(random_string(2))))
+            ->limit(1)
+            ->fetch();
+
+        static::assertNull($extractor->scans[0]->limit);
+    }
+
+    public function test_a_kept_conjunct_keeps_every_conjunct_after_it_in_its_node(): void
+    {
+        $plan = NodeMother::plan(
+            new Filter(
+                new Read(PartitionedSourceMother::yearMonth()),
+                ($year = ref('year')->equals(lit(2023)))->and($random = ref('value')->equals(random_string(2)))->and(
+                    $month = ref('month')->equals(lit('07')),
+                ),
+            ),
+        );
+
+        $filter = (new PushFilterIntoSource())->apply($plan, NodeMother::context())->root->children()[0];
+
+        static::assertInstanceOf(Filter::class, $filter);
+        static::assertEquals(new All($random, $month), $filter->function);
+        $read = $filter->children()[0];
+        static::assertInstanceOf(Read::class, $read);
+        static::assertSame([$year], $read->scan()->conjuncts);
+    }
+
+    /**
+     * @return iterable<string, array{Node}>
+     */
+    public static function nodes_removing_year(): iterable
+    {
+        $read = new Read(PartitionedSourceMother::yearMonth());
+
+        yield 'rename' => [new Node\Rename($read, 'year', 'y')];
+        yield 'drop' => [new Node\Drop($read, ['year'])];
+        yield 'select' => [new Node\Select($read, ['month', 'value'])];
+    }
+
+    #[DataProvider('nodes_removing_year')]
+    public function test_a_filter_on_a_column_a_node_removes_is_not_pushed_past_it(Node $node): void
+    {
+        $plan = NodeMother::plan(new Filter($node, $year = ref('year')->equals(lit(2023))));
+
+        $filter = (new PushFilterIntoSource())->apply($plan, NodeMother::context())->root->children()[0];
+
+        static::assertInstanceOf(Filter::class, $filter);
+        static::assertSame($year, $filter->function);
+    }
+
+    public function test_a_filter_on_a_renamed_away_column_fails(): void
+    {
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+
+        df()
+            ->read(PartitionedSourceMother::yearMonth())
+            ->rename('year', 'y')
+            ->filter(ref('year')->equals(lit(2023)))
+            ->fetch();
+    }
+
+    public function test_a_filter_on_a_dropped_column_fails(): void
+    {
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+
+        df()
+            ->read(PartitionedSourceMother::yearMonth())
+            ->drop('year')
+            ->filter(ref('year')->equals(lit(2023)))
+            ->fetch();
+    }
+
+    public function test_a_filter_on_a_column_select_does_not_keep_fails(): void
+    {
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+
+        df()
+            ->read(PartitionedSourceMother::yearMonth())
+            ->select('month')
+            ->filter(ref('year')->equals(lit(2023)))
+            ->fetch();
+    }
+
+    public function test_a_filter_on_a_column_select_keeps_is_pushed(): void
+    {
+        $extractor = PartitionedSourceMother::yearMonth();
+
+        df()
+            ->read($extractor)
+            ->select('year')
+            ->filter($year = ref('year')->equals(lit(2023)))
+            ->fetch();
+
+        static::assertSame([$year], $extractor->scans[0]->conjuncts);
     }
 }

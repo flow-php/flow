@@ -120,7 +120,6 @@ final readonly class PhysicalFor
             $base instanceof EmptyArrayType,
             $base instanceof PositiveIntegerType,
             $base instanceof NonEmptyStringType,
-            $base instanceof NumericStringType,
             $base instanceof ClassStringType,
                 => false,
             default => $this->supportsChild($base),

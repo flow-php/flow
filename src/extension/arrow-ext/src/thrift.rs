@@ -3,6 +3,7 @@
 //! knowledge here.
 
 use std::collections::HashMap;
+use std::ops::Range;
 use std::rc::Rc;
 
 use ext_php_rs::exception::PhpException;
@@ -202,24 +203,125 @@ pub fn decode(bytes: &[u8], class: &str, field: Option<i16>) -> Result<Zval, Php
     }
 }
 
+/// Bytes that are not the compact protocol: what was wrong with them.
+#[derive(Debug, PartialEq, Eq)]
+pub struct Malformed(pub String);
+
+impl From<Malformed> for PhpException {
+    fn from(malformed: Malformed) -> Self {
+        ext_exception(format!("arrow failed to decode thrift: {}", malformed.0))
+    }
+}
+
+/// A struct field as it arrives: its id, its compact wire type and the byte range of its value.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Field {
+    pub id: i16,
+    wire: u8,
+    pub value: Range<usize>,
+}
+
+impl Field {
+    pub fn is_list(&self) -> bool {
+        self.wire == LIST
+    }
+}
+
+/// A struct's fields one at a time, nothing decoded; the first malformed field ends them.
+pub fn fields(bytes: &[u8]) -> Fields<'_> {
+    Fields {
+        reader: Reader { bytes, position: 0 },
+        last: 0,
+        done: false,
+    }
+}
+
+pub struct Fields<'a> {
+    reader: Reader<'a>,
+    last: i16,
+    done: bool,
+}
+
+impl Iterator for Fields<'_> {
+    type Item = Result<Field, Malformed>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.done {
+            return None;
+        }
+
+        let field = (|| {
+            let Some((id, wire)) = self.reader.field_header(&mut self.last)? else {
+                return Ok(None);
+            };
+            let start = self.reader.position;
+            self.reader.skip(wire, 0)?;
+
+            Ok(Some(Field {
+                id,
+                wire,
+                value: start..self.reader.position,
+            }))
+        })();
+
+        self.done = !matches!(field, Ok(Some(_)));
+
+        field.transpose()
+    }
+}
+
+/// The byte ranges of the list's elements one at a time, nothing decoded; the first malformed element ends them.
+pub fn elements(bytes: &[u8]) -> Result<Elements<'_>, Malformed> {
+    let mut reader = Reader { bytes, position: 0 };
+    let (remaining, element) = reader.list_header()?;
+
+    Ok(Elements {
+        reader,
+        remaining,
+        element,
+    })
+}
+
+pub struct Elements<'a> {
+    reader: Reader<'a>,
+    remaining: usize,
+    element: u8,
+}
+
+impl Iterator for Elements<'_> {
+    type Item = Result<Range<usize>, Malformed>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.remaining == 0 {
+            return None;
+        }
+
+        let start = self.reader.position;
+        let element = self.reader.skip_element(self.element, 1);
+        self.remaining = if element.is_ok() { self.remaining - 1 } else { 0 };
+
+        Some(element.map(|()| start..self.reader.position))
+    }
+}
+
 struct Reader<'a> {
     bytes: &'a [u8],
     position: usize,
 }
 
-fn truncated() -> PhpException {
-    ext_exception("arrow failed to decode thrift: the bytes end inside a value")
+fn truncated() -> Malformed {
+    Malformed("the bytes end inside a value".to_string())
 }
 
 impl Reader<'_> {
-    fn byte(&mut self) -> Result<u8, PhpException> {
+    fn byte(&mut self) -> Result<u8, Malformed> {
         let byte = *self.bytes.get(self.position).ok_or_else(truncated)?;
         self.position += 1;
 
         Ok(byte)
     }
 
-    fn take(&mut self, length: usize) -> Result<&[u8], PhpException> {
+    fn take(&mut self, length: usize) -> Result<&[u8], Malformed> {
         let end = self
             .position
             .checked_add(length)
@@ -231,7 +333,7 @@ impl Reader<'_> {
         Ok(taken)
     }
 
-    fn varint(&mut self) -> Result<u64, PhpException> {
+    fn varint(&mut self) -> Result<u64, Malformed> {
         let mut value = 0u64;
 
         for shift in (0..70).step_by(7) {
@@ -243,19 +345,17 @@ impl Reader<'_> {
             }
         }
 
-        Err(ext_exception(
-            "arrow failed to decode thrift: a varint longer than 10 bytes",
-        ))
+        Err(Malformed("a varint longer than 10 bytes".to_string()))
     }
 
-    fn zigzag(&mut self) -> Result<i64, PhpException> {
+    fn zigzag(&mut self) -> Result<i64, Malformed> {
         let value = self.varint()?;
 
         Ok((value >> 1) as i64 ^ -((value & 1) as i64))
     }
 
     /// The next field's id and compact type, `None` at the struct's STOP.
-    fn field_header(&mut self, last: &mut i16) -> Result<Option<(i16, u8)>, PhpException> {
+    fn field_header(&mut self, last: &mut i16) -> Result<Option<(i16, u8)>, Malformed> {
         let header = self.byte()?;
 
         if header == 0 {
@@ -264,7 +364,7 @@ impl Reader<'_> {
 
         let delta = header >> 4;
         *last = if delta == 0 {
-            i16::try_from(self.zigzag()?).map_err(|_| ext_exception("arrow failed to decode thrift: a field id"))?
+            i16::try_from(self.zigzag()?).map_err(|_| Malformed("a field id".to_string()))?
         } else {
             last.wrapping_add(i16::from(delta))
         };
@@ -273,7 +373,7 @@ impl Reader<'_> {
     }
 
     /// A list or set header: its size and element type.
-    fn list_header(&mut self) -> Result<(usize, u8), PhpException> {
+    fn list_header(&mut self) -> Result<(usize, u8), Malformed> {
         let header = self.byte()?;
         let size = match header >> 4 {
             15 => usize::try_from(self.varint()?).map_err(|_| truncated())?,
@@ -283,9 +383,9 @@ impl Reader<'_> {
         Ok((size, header & 0x0f))
     }
 
-    fn skip(&mut self, wire: u8, depth: usize) -> Result<(), PhpException> {
+    fn skip(&mut self, wire: u8, depth: usize) -> Result<(), Malformed> {
         if depth > DEPTH {
-            return Err(ext_exception("arrow failed to decode thrift: nested deeper than 64"));
+            return Err(Malformed("nested deeper than 64".to_string()));
         }
 
         match wire {
@@ -329,18 +429,14 @@ impl Reader<'_> {
                     self.skip(wire, depth + 1)?;
                 }
             }
-            other => {
-                return Err(ext_exception(format!(
-                    "arrow failed to decode thrift: compact type {other}"
-                )))
-            }
+            other => return Err(Malformed(format!("compact type {other}"))),
         }
 
         Ok(())
     }
 
     /// A container element: a bool is one byte there, not a field-header type.
-    fn skip_element(&mut self, wire: u8, depth: usize) -> Result<(), PhpException> {
+    fn skip_element(&mut self, wire: u8, depth: usize) -> Result<(), Malformed> {
         match wire {
             BOOLEAN_TRUE | BOOLEAN_FALSE => self.byte().map(|_| ()),
             wire => self.skip(wire, depth),

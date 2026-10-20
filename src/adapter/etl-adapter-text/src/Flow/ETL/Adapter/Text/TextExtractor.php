@@ -11,9 +11,11 @@ use Flow\ETL\Extractor\Batches;
 use Flow\ETL\Extractor\File\FileExtractor;
 use Flow\ETL\Extractor\File\FileReading;
 use Flow\ETL\Extractor\File\FileReadLoop;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Extractor\File\ListedFiles;
 use Flow\ETL\Extractor\File\MetadataColumnsExtractor;
 use Flow\ETL\Extractor\File\ReadWindow;
+use Flow\ETL\Extractor\File\Scanning;
 use Flow\ETL\Extractor\RewindableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Extractor\Statistics;
@@ -23,8 +25,6 @@ use Flow\ETL\Schema;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
-use Flow\Filesystem\Path\Filter;
-use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Generator;
 
 use function Flow\ETL\DSL\schema;
@@ -40,6 +40,8 @@ final class TextExtractor implements
     MetadataColumnsExtractor,
     RewindableExtractor
 {
+    use Scanning;
+
     private ?Schema $schema = null;
 
     use Batches;
@@ -74,19 +76,20 @@ final class TextExtractor implements
     /**
      * @return Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context, ?int $limit = null, Filter $pathFilter = new OnlyFiles()): Generator
+    public function scan(FlowContext $context, FileScan $scan): Generator
     {
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
 
         yield from (new FileReadLoop(
             $fileColumns,
             $fileColumns->declare($this->schema ?? schema(str_schema('text'))),
+            $scan->conjuncts,
         ))->read(
-            iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $pathFilter), false),
+            iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $scan->pathFilter), false),
             new TextFileBatches($this->filesystem),
             $this->batchSize(),
-            $context->backend(),
-            new ReadWindow(limit: $limit),
+            $context,
+            new ReadWindow(limit: $scan->limit),
         );
     }
 

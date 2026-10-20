@@ -29,14 +29,18 @@ final readonly class StringDefinition implements Definition
      */
     private Type $type;
 
+    /**
+     * @param null|Type<string> $type
+     */
     public function __construct(
         string|Reference $ref,
         private bool $nullable = false,
         ?Metadata $metadata = null,
+        ?Type $type = null,
     ) {
         $this->ref = UnresolvedReference::init($ref);
         $this->metadata = $metadata ?? Metadata::empty();
-        $this->type = type_string();
+        $this->type = $type ?? type_string();
     }
 
     /**
@@ -44,7 +48,7 @@ final readonly class StringDefinition implements Definition
      */
     public function addMetadata(string $key, int|string|bool|float|array $value): static
     {
-        return new self($this->ref, $this->nullable, $this->metadata->add($key, $value));
+        return new self($this->ref, $this->nullable, $this->metadata->add($key, $value), $this->type);
     }
 
     public function entry(): Reference
@@ -85,7 +89,7 @@ final readonly class StringDefinition implements Definition
 
     public function makeNullable(bool $nullable = true): static
     {
-        return new self($this->ref, $nullable, $this->metadata);
+        return new self($this->ref, $nullable, $this->metadata, $this->type);
     }
 
     public function matches(mixed $value): bool
@@ -111,6 +115,7 @@ final readonly class StringDefinition implements Definition
             $this->ref,
             $this->nullable || $definition->isNullable(),
             $this->metadata->merge($definition->metadata()),
+            type_equals($this->type, $definition->type()) ? $this->type : type_string(),
         );
     }
 
@@ -134,12 +139,12 @@ final readonly class StringDefinition implements Definition
 
     public function rename(string $newName): static
     {
-        return new self($newName, $this->nullable, $this->metadata);
+        return new self($newName, $this->nullable, $this->metadata, $this->type);
     }
 
     public function setMetadata(Metadata $metadata): static
     {
-        return new self($this->ref, $this->nullable, $metadata);
+        return new self($this->ref, $this->nullable, $metadata, $this->type);
     }
 
     public function type(): Type

@@ -7,16 +7,17 @@ namespace Flow\Parquet\Writer\PageBuilder\DictionaryBuilder;
 use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\Writer\PageBuilder\Dictionary;
 
+use function count;
 use function pack;
 
 final class FloatDictionaryBuilder
 {
-    public function build(WriteFlatColumnValues $data): Dictionary
+    public function build(WriteFlatColumnValues $data, Dictionary $dictionary = new Dictionary([], [])): Dictionary
     {
-        $dictionary = [];
+        $entries = $dictionary->dictionary;
         $indices = [];
-        $valueToIndex = [];
-        $dictionarySize = 0;
+        $valueToIndex = $dictionary->keys;
+        $dictionarySize = count($entries);
 
         foreach ($data->values() as $value) {
             if ($value === null) {
@@ -26,7 +27,7 @@ final class FloatDictionaryBuilder
             $hash = pack('E', $value);
 
             if (!isset($valueToIndex[$hash])) {
-                $dictionary[] = $value;
+                $entries[] = $value;
                 $valueToIndex[$hash] = $dictionarySize;
                 $dictionarySize++;
             }
@@ -34,6 +35,6 @@ final class FloatDictionaryBuilder
             $indices[] = $valueToIndex[$hash];
         }
 
-        return new Dictionary($dictionary, $indices);
+        return new Dictionary($entries, $indices, $valueToIndex);
     }
 }

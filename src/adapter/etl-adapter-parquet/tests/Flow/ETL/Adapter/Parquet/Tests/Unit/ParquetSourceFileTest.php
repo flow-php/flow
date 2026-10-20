@@ -10,6 +10,7 @@ use Flow\ETL\Extractor\File\SourceFile;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
+use Flow\Parquet\Reader\ReadPlanner;
 
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
@@ -32,7 +33,12 @@ final class ParquetSourceFileTest extends FlowTestCase
         $source = $file->open();
         $counts = [];
 
-        foreach ($source->batches(schema(int_schema('id')), 400, 100, 850, new PhpBackend()) as $rows) {
+        foreach ($source->batches(
+            schema(int_schema('id')),
+            400,
+            (new ReadPlanner())->plan($file->file->reader()->footer(), $file->file->indexes(), null, 100, 850),
+            new PhpBackend(),
+        ) as $rows) {
             $counts[] = $rows->count();
         }
 

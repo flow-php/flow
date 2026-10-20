@@ -8,21 +8,26 @@ use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
-use Flow\Parquet\ParquetFile\Data\Codec;
 use Flow\Parquet\ParquetFile\Encodings;
+use Flow\Parquet\ParquetFile\PageIndex\BoundaryOrder;
+use Flow\Parquet\ParquetFile\PageIndex\ColumnIndex;
+use Flow\Parquet\ParquetFile\PageIndex\PageLocation;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\LogicalType;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Writer\ColumnChunkBuilder\RLEDictionaryChunkBuilder;
 use Flow\Parquet\Writer\ColumnChunkContainer;
+use Flow\Parquet\Writer\StatisticsOptions;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
 use RuntimeException;
 
+use function array_map;
 use function is_object;
 use function is_scalar;
+use function pack;
+use function strlen;
 
 final class RLEDictionaryChunkBuilderTest extends TestCase
 {
@@ -89,7 +94,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         for ($i = 0; $i < 5; $i++) {
             $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], ["value_{$i}"]));
@@ -108,7 +118,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $repLevels = [];
         $defLevels = [];
@@ -140,7 +155,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [], [], []));
 
@@ -153,7 +173,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [0], []));
 
@@ -166,7 +191,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $builder->addColumn(
             new WriteFlatColumnValues(
@@ -186,7 +216,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], ['hello']));
 
@@ -194,23 +229,19 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         static::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
     }
 
-    public function test_build_dictionary_page_without_dictionary_throws_exception(): void
+    public function test_a_chunk_without_values_writes_no_dictionary_page(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
-        $options = new Options();
-        $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            new Options(),
+            Compressions::UNCOMPRESSED,
+            StatisticsOptions::fromOptions(new Options()),
+        );
 
-        $builder->addColumn(new WriteFlatColumnValues($column, [], [], []));
+        $builder->addColumn(new WriteFlatColumnValues($column, [0], [0], []));
 
-        $reflectionClass = new ReflectionClass($builder);
-        $buildDictionaryPageMethod = $reflectionClass->getMethod('buildDictionaryPage');
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Cannot build dictionary page without dictionary');
-
-        $codec = new Codec($options);
-        $buildDictionaryPageMethod->invoke($builder, $codec, $compression);
+        static::assertNull($builder->flush(4)[0]->columnChunk->dictionaryPageOffset());
     }
 
     public function test_close_page_resets_internal_state(): void
@@ -218,7 +249,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], ['test']));
 
@@ -234,7 +270,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $builder->addColumn(
             new WriteFlatColumnValues($column, [0, 0, 0, 0], [1, 1, 1, 1], ['apple', 'banana', 'apple', 'cherry']),
@@ -253,7 +294,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $options = new Options();
         $options->set(Option::WRITER_VERSION, $writerVersion);
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], ['test']));
 
@@ -267,7 +313,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $builder->closePage();
 
@@ -281,7 +332,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $options = new Options();
         $options->set(Option::WRITER_VERSION, 3);
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], ['test']));
 
@@ -298,7 +354,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $result = $builder->column();
 
@@ -311,7 +372,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         static::assertInstanceOf(RLEDictionaryChunkBuilder::class, $builder);
         static::assertSame($column, $builder->column());
@@ -325,7 +391,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
 
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         static::assertInstanceOf(RLEDictionaryChunkBuilder::class, $builder);
     }
@@ -342,7 +413,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         static::assertInstanceOf(RLEDictionaryChunkBuilder::class, $builder);
         static::assertSame($column, $builder->column());
@@ -353,7 +429,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $repeatedValues = ['apple', 'banana', 'cherry'];
         $repLevels = [];
@@ -383,7 +464,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], ['test']));
 
@@ -399,7 +485,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('bool_col', PhysicalType::BOOLEAN);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [false]));
 
@@ -415,7 +506,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('str_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], ['']));
 
@@ -431,7 +527,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('str_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $largeString = str_repeat('x', 10000);
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [$largeString]));
@@ -448,7 +549,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [0]));
 
@@ -464,7 +570,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], ['test']));
 
@@ -481,7 +592,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0, 0], [1, 1], ['hello', 'world']));
 
@@ -505,7 +621,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::GZIP;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], ['test']));
 
@@ -523,7 +644,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], ['test']));
 
@@ -541,7 +667,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $builder->addColumn(
             new WriteFlatColumnValues($column, [0, 0, 0, 0], [1, 1, 1, 1], ['apple', 'banana', 'apple', 'cherry']),
@@ -563,7 +694,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $offsets = [0, 100, 1000, 50000];
 
@@ -581,7 +717,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $containers = $builder->flush(0);
 
@@ -596,7 +737,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         static::assertFalse($builder->isFull());
     }
@@ -608,7 +754,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $options = new Options();
         $options->set(Option::PAGE_SIZE_BYTES, $pageSize);
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         static::assertFalse($builder->isFull());
 
@@ -629,7 +780,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $options = new Options();
         $options->set(Option::PAGE_SIZE_BYTES, 100);
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         for ($i = 0; $i < 30; $i++) {
             $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], ["value_{$i}"]));
@@ -643,7 +799,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0, 0, 0], [1, 0, 1], ['hello', 'world']));
 
@@ -659,7 +820,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], ['test']));
 
@@ -675,7 +841,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0, 0, 0], [1, 1, 1], ['apple', 'zebra', 'banana']));
 
@@ -690,7 +861,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $sizes = [];
 
@@ -710,7 +886,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $initialSize = $builder->uncompressedSize();
 
@@ -727,7 +908,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         static::assertSame(0, $builder->uncompressedSize());
     }
@@ -737,7 +923,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], ['test']));
 
@@ -755,7 +946,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         for ($i = 0; $i < 5; $i++) {
             $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], ["value_{$i}"]));
@@ -776,7 +972,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+        );
 
         for ($cycle = 0; $cycle < 3; $cycle++) {
             $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], ["cycle_{$cycle}"]));
@@ -789,5 +990,32 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         static::assertCount(1, $containers);
         static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
         static::assertSame(3, $containers[0]->columnChunk->valuesCount());
+    }
+
+    public function test_each_page_gets_a_column_index_entry_and_an_offset_index_location(): void
+    {
+        $column = FlatColumn::int64('id');
+        $builder = new RLEDictionaryChunkBuilder(
+            $column,
+            new Options(),
+            Compressions::UNCOMPRESSED,
+            StatisticsOptions::fromOptions(new Options()),
+        );
+        $builder->addColumn(new WriteFlatColumnValues($column, [0, 0], [1, 1], [1, 2]));
+        $builder->closePage();
+        $builder->addColumn(new WriteFlatColumnValues($column, [0], [0], []));
+        $container = $builder->flush(4)[0];
+        $last = $container->offsetIndex->pages[1];
+
+        static::assertEquals(
+            new ColumnIndex([false, true], [pack('P', 1), ''], [pack('P', 2), ''], BoundaryOrder::ASCENDING, [0, 1]),
+            $container->columnIndex,
+        );
+        static::assertSame(
+            [0, 2],
+            array_map(static fn(PageLocation $page): int => $page->firstRowIndex, $container->offsetIndex->pages),
+        );
+        static::assertSame($container->columnChunk->dataPageOffset(), $container->offsetIndex->pages[0]->offset);
+        static::assertSame(4 + strlen($container->binaryBuffer), $last->offset + $last->compressedPageSize);
     }
 }

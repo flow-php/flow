@@ -665,8 +665,8 @@ final class PipelineSplitTest extends FlowTestCase
 
         $plan = (new PipelineSplit())->of($logical, $planned, NodeMother::context());
 
-        static::assertSame(5, $plan->root()->input()?->limit());
-        static::assertNull($plan->root()->limit());
+        static::assertSame(5, $plan->root()->input()?->scan()->limit);
+        static::assertNull($plan->root()->scan()->limit);
     }
 
     public function test_only_the_pipeline_that_reads_the_source_counts_its_rows(): void

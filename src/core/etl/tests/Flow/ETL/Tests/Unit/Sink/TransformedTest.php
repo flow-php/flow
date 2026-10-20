@@ -62,8 +62,8 @@ final class TransformedTest extends FlowTestCase
             │        Extractor: ArrayExtractor
             └─ #4 Write  preserving · opaque · streaming
                │  Loader: MemoryLoader
-               └─ #3 Select  preserving · transparent · streaming
-                  │  Columns: id
+               └─ #3 Select  preserving · transparent · streaming · redefines all but id
+                  │  Keeps only: id
                   └─ #1 Read (shared)
             PLAN, $dataFrame->explain()->toString(format: Format::declarations));
     }

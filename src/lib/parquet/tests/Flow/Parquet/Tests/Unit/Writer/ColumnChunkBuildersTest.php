@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\Writer;
 
+use Flow\Parquet\BloomFilter\BloomFilterOptions;
+use Flow\Parquet\BloomFilter\BloomHash;
+use Flow\Parquet\BloomFilter\Sbbf;
 use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
+use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
@@ -26,8 +30,82 @@ use Flow\Parquet\Writer\ColumnChunkContainer;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
+use function str_repeat;
+
 final class ColumnChunkBuildersTest extends TestCase
 {
+    public function test_bloom_filters_hold_the_non_null_values_of_the_columns_asked_by_flat_path(): void
+    {
+        $city = FlatColumn::string('city');
+        $id = FlatColumn::int64('id');
+        $schema = Schema::with($id, NestedColumn::struct('address', [$city]), FlatColumn::int64('other'));
+        $builders = ColumnChunkBuilders::initialize(
+            $schema,
+            (new Options())->set(Option::COLUMNS_BLOOM_FILTERS, [
+                'id' => new BloomFilterOptions(),
+                'address.city' => new BloomFilterOptions(),
+            ]),
+            Compressions::UNCOMPRESSED,
+        );
+        $ids = new WriteFlatColumnValues($schema->getFlat('id'));
+        $ids->addRaw(0, 1, 7);
+        $ids->addRaw(0, 0, null);
+        $cities = new WriteFlatColumnValues($schema->getFlat('address.city'));
+        $cities->addRaw(0, 2, 'Oslo');
+        $cities->addRaw(0, 0, null);
+        $others = new WriteFlatColumnValues($schema->getFlat('other'));
+        $others->addRaw(0, 1, 1);
+        $others->addRaw(0, 1, 2);
+        $builders->addColumnByFlatPath('id', $ids);
+        $builders->addColumnByFlatPath('address.city', $cities);
+        $builders->addColumnByFlatPath('other', $others);
+
+        $bloomFilters = [];
+
+        foreach ($builders->flush(4) as $container) {
+            $bloomFilters[$container->columnChunk->flatPath()] = $container->bloomFilter;
+        }
+
+        static::assertTrue($bloomFilters['id']?->check((new BloomHash())->of($id, 7)));
+        static::assertTrue($bloomFilters['address.city']?->check((new BloomHash())->of($city, 'Oslo')));
+        static::assertNull($bloomFilters['other']);
+
+        foreach ($builders->flush(4) as $container) {
+            $bloomFilters[$container->columnChunk->flatPath()] = $container->bloomFilter;
+        }
+
+        static::assertFalse($bloomFilters['id']?->check((new BloomHash())->of($id, 7)));
+    }
+
+    public function test_a_chunk_without_a_non_null_value_gets_one_empty_block(): void
+    {
+        $schema = Schema::with(FlatColumn::int64('id'));
+        $builders = ColumnChunkBuilders::initialize(
+            $schema,
+            (new Options())->set(Option::COLUMNS_BLOOM_FILTERS, ['id' => new BloomFilterOptions()]),
+            Compressions::UNCOMPRESSED,
+        );
+        $ids = new WriteFlatColumnValues($schema->getFlat('id'));
+        $ids->addRaw(0, 0, null);
+        $builders->addColumnByFlatPath('id', $ids);
+
+        static::assertEquals(Sbbf::fromBytes(str_repeat("\0", Sbbf::BLOCK_BYTES)), $builders->flush(4)[0]->bloomFilter);
+    }
+
+    public function test_a_bloom_filter_option_that_is_not_bloom_filter_options_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'Option COLUMNS_BLOOM_FILTERS takes BloomFilterOptions, got float for column "id"',
+        );
+
+        ColumnChunkBuilders::initialize(
+            Schema::with(FlatColumn::int64('id')),
+            (new Options())->set(Option::COLUMNS_BLOOM_FILTERS, ['id' => 0.05]),
+            Compressions::UNCOMPRESSED,
+        );
+    }
+
     public function test_add_multiple_times_with_same_column(): void
     {
         $options = new Options();

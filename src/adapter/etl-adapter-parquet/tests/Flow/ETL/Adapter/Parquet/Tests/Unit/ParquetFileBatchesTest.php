@@ -23,6 +23,8 @@ use Flow\Parquet\Options;
 use function array_map;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
@@ -45,7 +47,13 @@ final class ParquetFileBatchesTest extends FlowTestCase
             new SchemaConverter(),
             [],
         );
-        $file = (new ParquetFileBatches($opener, FileColumnsContext::discovering(names: []), null, null))->batches(
+        $file = (new ParquetFileBatches(
+            $opener,
+            FileColumnsContext::discovering(names: []),
+            null,
+            null,
+            schema(int_schema('id', nullable: true)),
+        ))->batches(
             new SourceFile(path('memory://a.parquet')),
             schema(int_schema('id', nullable: true)),
             10,
@@ -72,7 +80,13 @@ final class ParquetFileBatchesTest extends FlowTestCase
             new SchemaConverter(),
             [],
         );
-        $file = (new ParquetFileBatches($opener, FileColumnsContext::discovering(names: []), null, null))->batches(
+        $file = (new ParquetFileBatches(
+            $opener,
+            FileColumnsContext::discovering(names: []),
+            null,
+            null,
+            schema(int_schema('id', nullable: true)),
+        ))->batches(
             new SourceFile(path('memory://a.parquet')),
             schema(int_schema('id', nullable: true)),
             10,
@@ -108,6 +122,7 @@ final class ParquetFileBatchesTest extends FlowTestCase
             FileColumnsContext::discovering(names: []),
             $kept,
             null,
+            schema(int_schema('id', nullable: true)),
         ))->batches(
             new SourceFile(path('memory://a.parquet')),
             schema(int_schema('id', nullable: true)),
@@ -137,7 +152,13 @@ final class ParquetFileBatchesTest extends FlowTestCase
         $kept = $opener->open(new SourceFile(path('memory://a.parquet')));
 
         $rows = iterator_to_array(
-            (new ParquetFileBatches($opener, FileColumnsContext::discovering(names: []), $kept, null))->batches(
+            (new ParquetFileBatches(
+                $opener,
+                FileColumnsContext::discovering(names: []),
+                $kept,
+                null,
+                schema(int_schema('id', nullable: true)),
+            ))->batches(
                 new SourceFile(path('memory://b.parquet')),
                 schema(int_schema('id', nullable: true)),
                 10,
@@ -166,7 +187,13 @@ final class ParquetFileBatchesTest extends FlowTestCase
         );
         $kept = $opener->open(new SourceFile(path('memory://a.parquet')));
 
-        (new ParquetFileBatches($opener, FileColumnsContext::discovering(names: []), $kept, null))->close();
+        (new ParquetFileBatches(
+            $opener,
+            FileColumnsContext::discovering(names: []),
+            $kept,
+            null,
+            schema(int_schema('id', nullable: true)),
+        ))->close();
 
         static::assertSame($filesystem->readFromCalls, $filesystem->closedStreams());
     }
@@ -191,6 +218,7 @@ final class ParquetFileBatchesTest extends FlowTestCase
                 FileColumnsContext::discovering(names: []),
                 null,
                 new DerivedSchema(schema(int_schema('id', nullable: true)), 'memory://a.parquet'),
+                schema(int_schema('id')),
             ))->batches(
                 new SourceFile(path('memory://b.parquet')),
                 schema(int_schema('id')),
@@ -202,5 +230,133 @@ final class ParquetFileBatchesTest extends FlowTestCase
         } catch (InferredSchemaException) {
             static::assertSame($filesystem->readFromCalls, $filesystem->closedStreams());
         }
+    }
+
+    public function test_a_body_predicate_skips_the_row_groups_it_proves_cannot_match(): void
+    {
+        $filesystem = memory_filesystem();
+        ParquetFilesContext::rowGroups($filesystem, 'memory://groups.parquet', 9, 3);
+        $file = (new ParquetFileBatches(
+            ParquetFilesContext::opener($filesystem),
+            FileColumnsContext::discovering(names: []),
+            null,
+            null,
+            schema(int_schema('id', nullable: true), str_schema('name', nullable: true)),
+            [ref('id')->greaterThan(lit(5))],
+        ))->batches(
+            new SourceFile(path('memory://groups.parquet')),
+            schema(int_schema('id', nullable: true), str_schema('name', nullable: true)),
+            10,
+            new PhpBackend(),
+            new ReadWindow(0),
+        );
+
+        static::assertSame(3, ParquetFilesContext::rowCount($file));
+    }
+
+    public function test_the_conjunct_on_a_column_the_file_stores_as_another_type_is_dropped(): void
+    {
+        $filesystem = memory_filesystem();
+        ParquetFilesContext::unsignedInt64($filesystem, 'memory://uint64.parquet', ['9', '10', '100']);
+        // the body reads the UINT_64 leaf as a string, ordered by bytes: '10' and '100' are below '2', numerically none is
+        $file = (new ParquetFileBatches(
+            ParquetFilesContext::opener($filesystem),
+            FileColumnsContext::discovering(names: []),
+            null,
+            null,
+            schema(str_schema('big', nullable: true)),
+            [ref('big')->lessThan(lit('2'))],
+        ))->batches(
+            new SourceFile(path('memory://uint64.parquet')),
+            schema(str_schema('big', nullable: true)),
+            10,
+            new PhpBackend(),
+            new ReadWindow(0),
+        );
+
+        static::assertSame(3, ParquetFilesContext::rowCount($file));
+    }
+
+    public function test_equality_on_a_column_absent_from_the_file_reads_no_row(): void
+    {
+        $filesystem = memory_filesystem();
+        ParquetFilesContext::rowGroups($filesystem, 'memory://groups.parquet', 9, 3);
+        $file = (new ParquetFileBatches(
+            ParquetFilesContext::opener($filesystem),
+            FileColumnsContext::discovering(names: []),
+            null,
+            null,
+            schema(
+                int_schema('id', nullable: true),
+                str_schema('name', nullable: true),
+                str_schema('missing', nullable: true),
+            ),
+            [ref('missing')->equals(lit('x'))],
+        ))->batches(
+            new SourceFile(path('memory://groups.parquet')),
+            schema(
+                int_schema('id', nullable: true),
+                str_schema('name', nullable: true),
+                str_schema('missing', nullable: true),
+            ),
+            10,
+            new PhpBackend(),
+            new ReadWindow(0),
+        );
+
+        static::assertSame(0, ParquetFilesContext::rowCount($file));
+    }
+
+    public function test_is_null_on_a_column_absent_from_the_file_reads_every_row(): void
+    {
+        $filesystem = memory_filesystem();
+        ParquetFilesContext::rowGroups($filesystem, 'memory://groups.parquet', 9, 3);
+        $file = (new ParquetFileBatches(
+            ParquetFilesContext::opener($filesystem),
+            FileColumnsContext::discovering(names: []),
+            null,
+            null,
+            schema(
+                int_schema('id', nullable: true),
+                str_schema('name', nullable: true),
+                str_schema('missing', nullable: true),
+            ),
+            [ref('missing')->isNull()],
+        ))->batches(
+            new SourceFile(path('memory://groups.parquet')),
+            schema(
+                int_schema('id', nullable: true),
+                str_schema('name', nullable: true),
+                str_schema('missing', nullable: true),
+            ),
+            10,
+            new PhpBackend(),
+            new ReadWindow(0),
+        );
+
+        static::assertSame(9, ParquetFilesContext::rowCount($file));
+    }
+
+    public function test_every_group_pruned_still_consumes_the_raw_offset(): void
+    {
+        $filesystem = memory_filesystem();
+        ParquetFilesContext::rowGroups($filesystem, 'memory://groups.parquet', 9, 3);
+        $file = (new ParquetFileBatches(
+            ParquetFilesContext::opener($filesystem),
+            FileColumnsContext::discovering(names: []),
+            null,
+            null,
+            schema(int_schema('id', nullable: true), str_schema('name', nullable: true)),
+            [ref('id')->greaterThan(lit(100))],
+        ))->batches(
+            new SourceFile(path('memory://groups.parquet')),
+            schema(int_schema('id', nullable: true), str_schema('name', nullable: true)),
+            10,
+            new PhpBackend(),
+            new ReadWindow(2),
+        );
+
+        static::assertSame(0, ParquetFilesContext::rowCount($file));
+        static::assertSame(2, $file->getReturn());
     }
 }

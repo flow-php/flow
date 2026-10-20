@@ -9,8 +9,8 @@ use Flow\ETL\Executor\PhysicalPlan;
 use Flow\ETL\Executor\Pipeline;
 use Flow\ETL\Processor\HashJoinProcessor;
 use Flow\ETL\Transformer\CrossJoinRowsTransformer;
-use Flow\Filesystem\Path\Filter\OnlyFiles;
 
+use function array_map;
 use function implode;
 
 final readonly class PhysicalOutline
@@ -94,18 +94,7 @@ final readonly class PhysicalOutline
      */
     public function source(Pipeline $pipeline): array
     {
-        $lines = [];
-        $limit = $pipeline->limit();
-
-        if ($limit !== null) {
-            $lines[] = '   Limit: ' . $limit;
-        }
-
-        if (!$pipeline->pathFilter() instanceof OnlyFiles) {
-            $lines[] = '   Files: ' . $this->details->name($pipeline->pathFilter());
-        }
-
-        return $lines;
+        return array_map(static fn(string $line): string => '   ' . $line, $this->details->scan($pipeline->scan()));
     }
 
     /**

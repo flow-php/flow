@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Extractor;
 
 use Flow\ETL\Cardinality;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Extractor\FilesExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Schema;
@@ -16,6 +17,8 @@ use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\files;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function iterator_to_array;
@@ -139,7 +142,7 @@ final class FilesExtractorTest extends FlowTestCase
     {
         $extractor = files(__DIR__ . '/Fixtures/FileListExtractor/**/*')->withBatchSize(1);
 
-        self::assertExtractedRowsCount(2, $extractor, limit: 2);
+        self::assertExtractedRowsCount(2, $extractor, scan: new FileScan(2));
     }
 
     public function test_is_repeatable(): void
@@ -201,5 +204,21 @@ final class FilesExtractorTest extends FlowTestCase
             static fn(): FilesExtractor => files(__DIR__ . '/Fixtures/FileListExtractor/**/*'),
             ExtractedRows::of(files(__DIR__ . '/Fixtures/FileListExtractor/**/*')->withBatchSize(1)),
         );
+    }
+
+    public function test_a_scan_returns_only_the_files_matching_its_filter(): void
+    {
+        $batches = iterator_to_array(files('memory://dir/*.txt', MemoryFiles::with([
+            'memory://dir/a.txt' => 'a',
+            'memory://dir/b.txt' => 'b',
+            'memory://dir/c.txt' => 'c',
+            'memory://dir/d.txt' => 'd',
+            'memory://dir/e.txt' => 'e',
+        ]))
+            ->withBatchSize(2)
+            ->scan(flow_context(), new FileScan(conjuncts: [ref('base_name')->isIn(lit(['c.txt', 'd.txt']))])), false);
+
+        static::assertCount(1, $batches);
+        static::assertSame(['c.txt', 'd.txt'], $batches[0]->column('base_name')->values());
     }
 }

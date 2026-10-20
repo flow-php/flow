@@ -7,6 +7,7 @@ namespace Flow\Arrow\Parquet;
 use Flow\Arrow\RustArrowSchema;
 use Flow\Arrow\RustParquetBatch;
 use Flow\Parquet\Engine\RustParquetFileReader;
+use Flow\Parquet\Reader\ReadPlan;
 use RuntimeException;
 
 use function extension_loaded;
@@ -21,7 +22,7 @@ final class RustBatchReader
      * @param list<string> $columns root column names
      * @param int<1, max> $batchSize
      */
-    public function __construct(RustParquetFileReader $file, array $columns, int $batchSize, ?int $offset, ?int $limit)
+    public function __construct(RustParquetFileReader $file, array $columns, int $batchSize, ReadPlan $plan)
     {
         throw new RuntimeException('arrow extension is not loaded');
     }

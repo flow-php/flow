@@ -15,6 +15,7 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\Repetition;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Tests\Context\TestParquetFile;
+use Flow\Parquet\Tests\Mother\ReadPlanMother;
 use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -63,8 +64,7 @@ final class CrossEngineTest extends TestCase
             $engine->openForRead($readStream)->readColumns(
                 ['id', 'label', 'big_number'],
                 batchSize: 2,
-                limit: null,
-                offset: null,
+                plan: ReadPlanMother::window(count($inputData)),
             ),
             false,
         );
@@ -156,8 +156,7 @@ final class CrossEngineTest extends TestCase
             $engine->openForRead(NativeLocalSourceStream::open(path_real($path)))->readColumns(
                 ['id', 'name', 'value'],
                 batchSize: 2,
-                limit: null,
-                offset: null,
+                plan: ReadPlanMother::window(count($inputData)),
             ),
             false,
         );

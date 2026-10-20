@@ -14,9 +14,7 @@ use crate::arrow_c;
 use crate::backend::{adopt_batch, native_column};
 use crate::batch_columns::HeldBatch;
 use crate::column::RustColumn;
-use crate::ctx::{
-    call_method, column_key, construct, find_class, ht_for_each, ht_insert, null_zval, zval_long, zval_str,
-};
+use crate::ctx::{call_method, column_key, construct, find_class, ht_for_each, ht_insert, zval_long, zval_str};
 use crate::exception::ext_exception;
 use crate::interfaces::{parquet_open_sink_ce, parquet_open_source_ce};
 use crate::iterator::RustIterator;
@@ -99,16 +97,9 @@ impl RustParquetOpenSource {
         })
     }
 
-    /// Batches of at most `$batchSize` rows of `$schema`'s columns, every column adopted by `$backend`; the file's
-    /// schema is checked before any batch.
-    pub fn batches(
-        &self,
-        schema: &Zval,
-        batchSize: i64,
-        offset: Option<i64>,
-        limit: Option<i64>,
-        backend: &Zval,
-    ) -> PhpResult<RustIterator> {
+    /// Batches of at most `$batchSize` rows of `$schema`'s columns, the rows `$plan` selects, every column adopted by
+    /// `$backend`; the file's schema is checked before any batch.
+    pub fn batches(&self, schema: &Zval, batchSize: i64, plan: &Zval, backend: &Zval) -> PhpResult<RustIterator> {
         let mut columns = Vec::new();
         let mut names = ZendHashTable::new();
 
@@ -119,7 +110,6 @@ impl RustParquetOpenSource {
 
         let mut names_zv = Zval::new();
         names_zv.set_hashtable(names);
-        let optional = |value: Option<i64>| value.map_or_else(null_zval, zval_long);
 
         self.close()?;
 
@@ -129,8 +119,7 @@ impl RustParquetOpenSource {
                 self.file.shallow_clone(),
                 names_zv,
                 zval_long(batchSize),
-                optional(offset),
-                optional(limit),
+                plan.shallow_clone(),
             ],
         )?
         .into_zval(false)?;

@@ -20,6 +20,7 @@ use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\Tests\Context\MemoryParquetFile;
 use Flow\Parquet\Tests\Mother\ParquetFileWriterMother;
+use Flow\Parquet\Tests\Mother\ReadPlanMother;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 
@@ -49,8 +50,7 @@ final class AdaptiveParquetEngineTest extends TestCase
                 $engine->openForRead($filesystem->readFrom(path('memory://out.parquet')))->readColumns(
                     ['id'],
                     10,
-                    null,
-                    null,
+                    ReadPlanMother::window(2),
                 ),
                 false,
             ),

@@ -14,6 +14,7 @@ use Flow\Parquet\ParquetFile\Schema\Repetition;
 use Flow\Parquet\Tests\Context\TestParquetFile;
 use Flow\Parquet\Tests\Integration\IO\ParquetIntegrationTestCase;
 use Flow\Parquet\Tests\Mother\ParquetEngineMother;
+use Flow\Parquet\Tests\Mother\ReadPlanMother;
 use Flow\Parquet\Writer;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -69,8 +70,7 @@ final class ReadColumnsTest extends ParquetIntegrationTestCase
             $engine->openForRead(NativeLocalSourceStream::open(path_real($path)))->readColumns(
                 ['id', 'tags'],
                 $batchSize,
-                $limit,
-                $offset,
+                ReadPlanMother::window(5, $offset ?? 0, $limit),
             ),
             false,
         );

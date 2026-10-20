@@ -24,8 +24,8 @@ final readonly class SpineCopyingRule implements Rewrite, Rule
         return new LogicalPlan((new TransformUp())->of($plan->root, $this));
     }
 
-    public function of(Node $node): Node
+    public function of(Node $original, Node $rebuilt): Node
     {
-        return $node instanceof Read ? new Read($node->extractor(), $node->limit(), $node->pathFilter()) : $node;
+        return $rebuilt instanceof Read ? new Read($rebuilt->extractor(), $rebuilt->scan()) : $rebuilt;
     }
 }

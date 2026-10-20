@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use DateInterval;
-use DateTimeImmutable;
 use Exception;
 use Flow\ETL\Column\Column;
 use Flow\ETL\Column\ComparableValues;
@@ -85,6 +83,7 @@ final class LessThan implements ComparisonFunction
         [$lefts, $rights] = type_bare($leftColumn->type())::class === type_bare($rightColumn->type())::class
             ? [$comparable->ordering($leftColumn), $comparable->ordering($rightColumn)]
             : [$leftColumn->values(), $rightColumn->values()];
+        $order = new ValueOrder($leftColumn->type(), $rightColumn->type());
         $results = [];
         $i = 0;
 
@@ -100,17 +99,7 @@ final class LessThan implements ComparisonFunction
                     continue;
                 }
 
-                // The dispatch picks a comparison strategy from the values, never a column type - bind has
-                // already proved the pair comparable in returns().
-                if ($left instanceof DateInterval && $right instanceof DateInterval) {
-                    $reference = new DateTimeImmutable('@0');
-                    $results[] = $reference->add($left) < $reference->add($right);
-
-                    continue;
-                }
-
-                // @mago-expect analysis:mixed-operand(2)
-                $results[] = $left < $right;
+                $results[] = $order->compare($left, $right) < 0;
             }
         } catch (Exception $e) {
             throw EvaluationException::at($i, $e);

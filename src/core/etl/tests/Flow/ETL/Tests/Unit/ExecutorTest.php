@@ -12,6 +12,7 @@ use Flow\ETL\Executor\Described;
 use Flow\ETL\Executor\Pipeline;
 use Flow\ETL\Executor\Raw;
 use Flow\ETL\Executor\Segments;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Optimizer;
 use Flow\ETL\Plan\Node\Transform;
 use Flow\ETL\Processor\BatchingProcessor;
@@ -186,17 +187,16 @@ final class ExecutorTest extends FlowTestCase
         iterator_to_array((new Executor())->executePipeline(new Pipeline(7, new Segments(), NodeMother::context())));
     }
 
-    public function test_a_file_source_receives_the_pipelines_limit_and_path_filter(): void
+    public function test_a_file_source_receives_the_pipelines_scan(): void
     {
         $extractor = new RecordingFileExtractor(schema(int_schema('id')), RowsMother::sequentialIds(1));
-        $filter = new RejectingFilter();
+        $scan = new FileScan(7, new RejectingFilter());
 
         iterator_to_array((new Executor())->executePipeline(
-            new Pipeline(0, new Segments($extractor), NodeMother::context(), limit: 7, pathFilter: $filter),
+            new Pipeline(0, new Segments($extractor), NodeMother::context(), scan: $scan),
         ));
 
-        static::assertSame([7], $extractor->limits);
-        static::assertSame([$filter], $extractor->pathFilters);
+        static::assertSame([$scan], $extractor->scans);
     }
 
     public function test_a_source_that_lists_no_files_receives_the_pipelines_limit(): void
@@ -204,7 +204,7 @@ final class ExecutorTest extends FlowTestCase
         $extractor = new RecordingExtractor(schema(int_schema('id')), RowsMother::sequentialIds(1));
 
         iterator_to_array((new Executor())->executePipeline(
-            new Pipeline(0, new Segments($extractor), NodeMother::context(), limit: 7),
+            new Pipeline(0, new Segments($extractor), NodeMother::context(), scan: new FileScan(7)),
         ));
 
         static::assertSame([7], $extractor->limits);

@@ -4,14 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Dremel\ColumnData;
 
+use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\Reader\RowSelection;
 use Generator;
 
 use function count;
+use function sprintf;
 
 final readonly class ReadFlatColumnValues
 {
+    private int $rowsCount;
+
     /**
      * @param FlatColumn $column
      * @param \Generator<mixed, mixed, mixed, mixed> $values
@@ -23,7 +28,15 @@ final readonly class ReadFlatColumnValues
         private Generator $values,
         private array $repetitionLevels,
         private array $definitionLevels,
-    ) {}
+    ) {
+        $rowsCount = 0;
+
+        foreach ($repetitionLevels as $repetitionLevel) {
+            $rowsCount += $repetitionLevel === 0 ? 1 : 0;
+        }
+
+        $this->rowsCount = $rowsCount;
+    }
 
     /**
      * @return \Generator<array-key, mixed>
@@ -100,16 +113,68 @@ final readonly class ReadFlatColumnValues
         return $this->repetitionLevels;
     }
 
-    public function rowsCount(): int
+    /**
+     * The rows $rows selects, its row 0 being this page's first row; a row starts at each repetition level 0.
+     */
+    public function select(RowSelection $rows): self
     {
-        $rowsCount = 0;
+        if ($rows->totalRows() !== $this->rowsCount()) {
+            throw new InvalidArgumentException(sprintf(
+                'A selection of %d rows cannot select from a page of %d rows',
+                $rows->totalRows(),
+                $this->rowsCount(),
+            ));
+        }
 
-        foreach ($this->repetitionLevels as $repetitionLevel) {
+        $maxDefinitionLevel = $this->column->repetitions()->maxDefinitionLevel();
+        $selectors = $rows->selectors();
+        $selector = -1;
+        $remaining = 0;
+        $skip = true;
+        $repetitionLevels = [];
+        $definitionLevels = [];
+        $keptValues = [];
+
+        foreach ($this->repetitionLevels as $index => $repetitionLevel) {
             if ($repetitionLevel === 0) {
-                $rowsCount++;
+                if ($remaining === 0) {
+                    $remaining = $selectors[++$selector]->rowCount;
+                }
+
+                $remaining--;
+                $skip = $selectors[$selector]->skip;
+            }
+
+            if ($this->definitionLevels[$index] === $maxDefinitionLevel) {
+                $keptValues[] = !$skip;
+            }
+
+            if (!$skip) {
+                $repetitionLevels[] = $repetitionLevel;
+                $definitionLevels[] = $this->definitionLevels[$index];
             }
         }
 
-        return $rowsCount;
+        $values = $this->values;
+
+        return new self(
+            $this->column,
+            (static function () use ($values, $keptValues): Generator {
+                foreach ($keptValues as $kept) {
+                    if ($kept) {
+                        yield $values->current();
+                    }
+
+                    $values->next();
+                }
+            })(),
+            $repetitionLevels,
+            $definitionLevels,
+        );
+    }
+
+    public function rowsCount(): int
+    {
+        return $this->rowsCount;
     }
 }

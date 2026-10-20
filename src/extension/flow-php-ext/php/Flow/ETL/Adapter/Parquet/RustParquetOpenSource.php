@@ -9,6 +9,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\RustIterator;
 use Flow\ETL\Schema;
 use Flow\Parquet\Engine\RustParquetFileReader;
+use Flow\Parquet\Reader\ReadPlan;
 use RuntimeException;
 
 use function extension_loaded;
@@ -30,7 +31,7 @@ final class RustParquetOpenSource implements ParquetOpenSource
      *
      * @return RustIterator<Rows>
      */
-    public function batches(Schema $schema, int $batchSize, ?int $offset, ?int $limit, Backend $backend): RustIterator
+    public function batches(Schema $schema, int $batchSize, ReadPlan $plan, Backend $backend): RustIterator
     {
         throw new RuntimeException('flow_php extension is not loaded');
     }

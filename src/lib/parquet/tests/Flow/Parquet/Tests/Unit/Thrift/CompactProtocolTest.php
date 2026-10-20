@@ -569,8 +569,8 @@ final class CompactProtocolTest extends TestCase
         $readProtocol->readBool($bool2);
         $readProtocol->readCollectionEnd();
 
-        static::assertSame(1, $bool1);
-        static::assertSame(0, $bool2);
+        static::assertTrue($bool1);
+        static::assertFalse($bool2);
     }
 
     public function test_write_read_bool_throws_exception_in_invalid_state(): void
@@ -1091,5 +1091,34 @@ final class CompactProtocolTest extends TestCase
 
         $decoded = $protocol->fromZigZag($zigzag);
         static::assertSame($value, $decoded);
+    }
+
+    public function test_a_bool_list_element_is_true_only_for_one(): void
+    {
+        $protocol = new CompactProtocol(new MemoryBuffer("\x31\x01\x02\x00"));
+        $type = 0;
+        $size = 0;
+        $protocol->readListBegin($type, $size);
+        $values = [];
+
+        for ($i = 0; $i < $size; $i++) {
+            $value = false;
+            $protocol->readBool($value);
+            $values[] = $value;
+        }
+
+        static::assertSame(TType::BOOL, $type);
+        static::assertSame([true, false, false], $values);
+    }
+
+    public function test_a_false_bool_list_element_is_written_as_two(): void
+    {
+        $protocol = new CompactProtocol($buffer = new MemoryBuffer());
+        $protocol->writeListBegin(TType::BOOL, 2);
+        $protocol->writeBool(true);
+        $protocol->writeBool(false);
+        $protocol->writeListEnd();
+
+        static::assertSame("\x21\x01\x02", $buffer->data());
     }
 }

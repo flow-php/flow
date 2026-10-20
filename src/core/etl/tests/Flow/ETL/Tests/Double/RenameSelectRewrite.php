@@ -11,8 +11,8 @@ use Flow\ETL\Tests\Mother\NodeMother;
 
 final readonly class RenameSelectRewrite implements Rewrite
 {
-    public function of(Node $node): Node
+    public function of(Node $original, Node $rebuilt): Node
     {
-        return $node instanceof Select ? NodeMother::select($node->children()[0], 'name') : $node;
+        return $rebuilt instanceof Select ? NodeMother::select($rebuilt->children()[0], 'name') : $rebuilt;
     }
 }

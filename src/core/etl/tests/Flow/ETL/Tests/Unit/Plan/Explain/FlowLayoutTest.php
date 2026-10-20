@@ -72,7 +72,7 @@ final class FlowLayoutTest extends FlowTestCase
             ├─ #3 Write
             │     Loader: MemoryLoader
             └─ #4 Select
-               │  Columns: id
+               │  Keeps only: id
                └─ #5 Write
                      Loader: MemoryLoader
             PLAN, (new FlowLayout())->render((new Outline())->of($plan)));
@@ -89,7 +89,7 @@ final class FlowLayoutTest extends FlowTestCase
             │  Extractor: ArrayExtractor
             └─ #3 CrossJoin
                │  Type: cross
-               │  Defines columns known only at run time
+               │  Changes columns known only at run time
                └─ #4 Result
                      Rows this plan hands out: to the trigger, or to the node reading it
             #2 Read

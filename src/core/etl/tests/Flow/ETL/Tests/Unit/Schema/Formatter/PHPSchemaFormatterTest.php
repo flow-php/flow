@@ -12,6 +12,7 @@ use Flow\ETL\Tests\Unit\Schema\Formatter\Fixtures\StringEnum;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\definition_from_type;
 use function Flow\ETL\DSL\enum_schema;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\html_element_schema;
@@ -31,6 +32,7 @@ use function Flow\ETL\DSL\xml_schema;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_numeric_string;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
@@ -86,6 +88,15 @@ final class PHPSchemaFormatterTest extends FlowTestCase
             nullable: false,
             metadata: null,
         ))));
+    }
+
+    public function test_formatting_numeric_string_schema(): void
+    {
+        static::assertEquals(<<<'PHP'
+            \Flow\ETL\DSL\schema(
+                \Flow\ETL\DSL\definition_from_type("id", type: \Flow\Types\DSL\type_numeric_string(), nullable: true, metadata: \Flow\ETL\DSL\schema_metadata()),
+            );
+            PHP, (new PHPSchemaFormatter())->format(schema(definition_from_type('id', type_numeric_string(), true))));
     }
 
     public function test_formatting_simple_schema(): void

@@ -10,6 +10,7 @@ use Flow\Parquet\ParquetFile\Schema\ConvertedType;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\ParquetFile\Schema\Repetition;
+use Flow\Parquet\Query;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Tests\Context\TemporalValues;
 use Flow\Parquet\Tests\Context\TestParquetFile;
@@ -85,7 +86,7 @@ final class LogicalTypesReadingTest extends ParquetIntegrationTestCase
             TemporalValues::format(
                 (new Reader(engine: $engine))
                     ->read(__DIR__ . '/Fixtures/logical_types.parquet')
-                    ->values(['d']),
+                    ->values(new Query(['d'])),
             ),
         );
     }
@@ -126,7 +127,7 @@ final class LogicalTypesReadingTest extends ParquetIntegrationTestCase
             iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read(__DIR__ . '/Fixtures/logical_types.parquet')
-                    ->values(['dec9', 'dec18']),
+                    ->values(new Query(['dec9', 'dec18'])),
             ),
         );
     }
@@ -144,7 +145,7 @@ final class LogicalTypesReadingTest extends ParquetIntegrationTestCase
             TemporalValues::format(
                 (new Reader(engine: $engine))
                     ->read(__DIR__ . '/Fixtures/logical_types.parquet')
-                    ->values(['t_ms', 't_us', 't_ns']),
+                    ->values(new Query(['t_ms', 't_us', 't_ns'])),
             ),
         );
     }
@@ -173,7 +174,7 @@ final class LogicalTypesReadingTest extends ParquetIntegrationTestCase
             ],
             TemporalValues::format((new Reader(engine: $engine))
                 ->read(__DIR__ . '/Fixtures/logical_types.parquet')
-                ->values(['ts_ms', 'ts_us', 'ts_ns', 'ts_us_utc', 'ts_us_far'])),
+                ->values(new Query(['ts_ms', 'ts_us', 'ts_ns', 'ts_us_utc', 'ts_us_far']))),
         );
     }
 }

@@ -17,6 +17,7 @@ final readonly class Statistics
         public ?string $minValue,
         public ?bool $isMaxValueExact = null,
         public ?bool $isMinValueExact = null,
+        public ?int $nanCount = null,
     ) {}
 
     public static function fromThrift(ThriftStatistics $thrift): self
@@ -24,16 +25,13 @@ final readonly class Statistics
         return new self(
             $thrift->max,
             $thrift->min,
-            // @mago-ignore analysis:redundant-condition
-            // @mago-ignore analysis:redundant-comparison
             $thrift->null_count !== null ? (int) $thrift->null_count : null,
-            // @mago-ignore analysis:redundant-condition
-            // @mago-ignore analysis:redundant-comparison
             $thrift->distinct_count !== null ? (int) $thrift->distinct_count : null,
             $thrift->max_value,
             $thrift->min_value,
             $thrift->is_max_value_exact,
             $thrift->is_min_value_exact,
+            $thrift->nan_count,
         );
     }
 
@@ -48,6 +46,7 @@ final readonly class Statistics
             'min_value' => $this->minValue,
             'is_max_value_exact' => $this->isMaxValueExact,
             'is_min_value_exact' => $this->isMinValueExact,
+            'nan_count' => $this->nanCount,
         ]);
     }
 }

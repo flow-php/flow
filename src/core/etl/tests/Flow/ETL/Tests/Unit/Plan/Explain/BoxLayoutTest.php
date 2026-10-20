@@ -118,7 +118,7 @@ final class BoxLayoutTest extends FlowTestCase
             ┌─────────────┴─────────────┐┌─────────────┴─────────────┐┌─────────────┴─────────────┐
             │          #1 Read          ││          #1 Read          ││         #4 Select         │
             │   ────────────────────    ││         (shared)          ││   ────────────────────    │
-            │ Extractor: ArrayExtractor ││                           ││        Columns: id        │
+            │ Extractor: ArrayExtractor ││                           ││      Keeps only: id       │
             └───────────────────────────┘└───────────────────────────┘└─────────────┬─────────────┘
                                                                       ┌─────────────┴─────────────┐
                                                                       │          #1 Read          │
@@ -138,9 +138,9 @@ final class BoxLayoutTest extends FlowTestCase
             │       Rename: id →        │
             │ identifier_of_the_custome │
             │          r_order          │
-            │     Defines columns:      │
+            │     Changes columns:      │
             │ identifier_of_the_custome │
-            │          r_order          │
+            │        r_order, id        │
             └─────────────┬─────────────┘
             ┌─────────────┴─────────────┐
             │          #1 Read          │

@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration;
 
+use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Encodings;
+use Flow\Parquet\Writer\StatisticsLevel;
 use PHPUnit\Framework\TestCase;
 
 use function count;
@@ -207,5 +209,30 @@ final class OptionsTest extends TestCase
         static::assertIsArray($columnsEncodings);
         static::assertSame(0, count($columnsEncodings));
         static::assertTrue($options->has(Option::COLUMNS_ENCODINGS));
+    }
+
+    public function test_an_enum_option_is_read_as_its_enum_class(): void
+    {
+        static::assertSame(StatisticsLevel::PAGE, (new Options())->getEnum(
+            Option::STATISTICS_LEVEL,
+            StatisticsLevel::class,
+        ));
+        static::assertSame(StatisticsLevel::NONE, (new Options())->set(
+            Option::STATISTICS_LEVEL,
+            StatisticsLevel::NONE,
+        )->getEnum(Option::STATISTICS_LEVEL, StatisticsLevel::class));
+    }
+
+    public function test_an_enum_option_of_another_class_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'Option STATISTICS_LEVEL is not a Flow\\Parquet\\Writer\\StatisticsLevel, but: Flow\\Parquet\\ParquetFile\\Compressions',
+        );
+
+        (new Options())->set(Option::STATISTICS_LEVEL, Compressions::GZIP)->getEnum(
+            Option::STATISTICS_LEVEL,
+            StatisticsLevel::class,
+        );
     }
 }

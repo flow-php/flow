@@ -1,8 +1,6 @@
-//! Ported verbatim from arrow-ext (`src/parquet/type_converter.rs` `parse_time_unit`, `php_schema_entry_to_field`,
-//! `php_schema_to_arrow`; `src/parquet/writer.rs` `parse_compression`, `parse_encoding`, `apply_writer_options` and
-//! the writer constructor's properties): the arrays of `Flow\Parquet\Engine\Arrow\SchemaConverter::toExtension()` and
-//! `OptionsConverter::toExtension()`.
+//! The arrays of `Flow\Parquet\Engine\Arrow\SchemaConverter::toExtension()` and `OptionsConverter::toExtension()`.
 
+use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -10,12 +8,17 @@ use arrow_schema::{
     extension::{Json, Uuid},
     DataType, Field, Fields, Schema, TimeUnit,
 };
-use ext_php_rs::types::{ArrayKey, ZendHashTable};
+use ext_php_rs::ffi::zend_ulong;
+use ext_php_rs::types::{ZendHashTable, ZendStr};
 use parquet::basic::{BrotliLevel, Compression, Encoding, GzipLevel, ZstdLevel};
-use parquet::file::properties::{WriterProperties, WriterVersion};
+use parquet::file::properties::{EnabledStatistics, WriterProperties, WriterVersion, DEFAULT_WRITE_BATCH_SIZE};
 use parquet::schema::types::ColumnPath;
 
 use crate::parquet::error::Error;
+use crate::php::ht_for_each;
+
+/// Field metadata key of a Utf8 field written with the ENUM logical type, which no arrow data type carries.
+pub const ENUM_METADATA_KEY: &str = "flow.parquet.enum";
 
 pub fn schema(ht: &ZendHashTable) -> Result<Schema, Error> {
     php_schema_to_arrow(ht).map_err(Error::Options)
@@ -73,6 +76,10 @@ fn php_schema_entry_to_field(entry_ht: &ZendHashTable) -> Result<Field, String> 
         "FLOAT" => DataType::Float32,
         "DOUBLE" => DataType::Float64,
         "STRING" => DataType::Utf8,
+        "ENUM" => {
+            return Ok(Field::new(&name, DataType::Utf8, nullable)
+                .with_metadata(HashMap::from([(ENUM_METADATA_KEY.to_string(), String::new())])));
+        }
         "BINARY" => DataType::Binary,
         "DATE" => DataType::Date32,
         "TIMESTAMP" => {
@@ -174,7 +181,8 @@ fn php_schema_entry_to_field(entry_ht: &ZendHashTable) -> Result<Field, String> 
                     .ok_or_else(|| format!("Column '{}': MAP value child must be an array", name))?,
             )?;
             let entries_struct = DataType::Struct(Fields::from(vec![key_field, val_field]));
-            DataType::Map(Arc::new(Field::new("entries", entries_struct, false)), false)
+            // parquet-format LogicalTypes.md names the repeated group of a MAP `key_value`
+            DataType::Map(Arc::new(Field::new("key_value", entries_struct, false)), false)
         }
         other => {
             return Err(format!("Column '{}': Unsupported type '{}'", name, other));
@@ -265,11 +273,63 @@ fn apply_writer_options(
     builder = builder.set_compression(codec);
 
     if let Some(val) = options.get("ROW_GROUP_SIZE_BYTES").and_then(|z| z.long()) {
+        if val < 1 {
+            return Err(format!("ROW_GROUP_SIZE_BYTES must be greater than 0, {val} given"));
+        }
+
         builder = builder.set_max_row_group_bytes(Some(val as usize));
     }
 
     if let Some(val) = options.get("PAGE_SIZE_BYTES").and_then(|z| z.long()) {
         builder = builder.set_data_page_size_limit(val as usize);
+    }
+
+    if let Some(val) = options.get("PAGE_MAXIMUM_ROWS_COUNT").and_then(|z| z.long()) {
+        if val < 1 {
+            return Err(format!("PAGE_MAXIMUM_ROWS_COUNT must be greater than 0, {val} given"));
+        }
+
+        // arrow-rs checks the page row limit once per write batch: a smaller batch closes pages where PHP does
+        builder = builder
+            .set_data_page_row_count_limit(val as usize)
+            .set_write_batch_size((val as usize).min(DEFAULT_WRITE_BATCH_SIZE));
+    }
+
+    if let Some(val) = options.get("STATISTICS_TRUNCATE_LENGTH").and_then(|z| z.long()) {
+        if val < 1 {
+            return Err(format!(
+                "STATISTICS_TRUNCATE_LENGTH must be greater than 0, {val} given"
+            ));
+        }
+
+        builder = builder.set_statistics_truncate_length(Some(val as usize));
+    }
+
+    if let Some(val) = options.get("COLUMN_INDEX_TRUNCATE_LENGTH").and_then(|z| z.long()) {
+        if val < 1 {
+            return Err(format!(
+                "COLUMN_INDEX_TRUNCATE_LENGTH must be greater than 0, {val} given"
+            ));
+        }
+
+        builder = builder.set_column_index_truncate_length(Some(val as usize));
+    }
+
+    if let Some(level) = options.get("STATISTICS_LEVEL").and_then(|z| z.str()) {
+        builder = builder.set_statistics_enabled(match level {
+            "NONE" => EnabledStatistics::None,
+            "CHUNK" => EnabledStatistics::Chunk,
+            "PAGE" => EnabledStatistics::Page,
+            other => {
+                return Err(format!(
+                    "Invalid STATISTICS_LEVEL '{other}'. Must be NONE, CHUNK or PAGE"
+                ))
+            }
+        });
+    }
+
+    if let Some(enabled) = options.get("PAGE_HEADER_STATISTICS").and_then(|z| z.bool()) {
+        builder = builder.set_write_page_header_statistics(enabled);
     }
 
     if let Some(val) = options.get("DICTIONARY_PAGE_SIZE").and_then(|z| z.long()) {
@@ -285,41 +345,108 @@ fn apply_writer_options(
         builder = builder.set_writer_version(version);
     }
 
-    if let Some(col_comp_zval) = options.get("COLUMNS_COMPRESSIONS") {
-        if let Some(col_comp_ht) = col_comp_zval.array() {
-            for (key, val) in col_comp_ht.iter() {
-                let col_path_str = match key {
-                    ArrayKey::String(ref s) => s.clone(),
-                    ArrayKey::Str(s) => s.to_string(),
-                    _ => continue,
-                };
-                if let Some(codec_str) = val.str() {
-                    let parts: Vec<String> = col_path_str.split('.').map(|s| s.to_string()).collect();
-                    let col_path = ColumnPath::new(parts);
-                    let col_codec = parse_compression(codec_str, gzip_level, brotli_level, zstd_level)?;
-                    builder = builder.set_column_compression(col_path, col_codec);
-                }
-            }
+    if let Some(columns) = options.get("COLUMNS_COMPRESSIONS").and_then(|z| z.array()) {
+        let mut compressions = Vec::new();
+
+        ht_for_each(columns, |key, index, value| {
+            let path = column_key("COLUMNS_COMPRESSIONS", key, index)?;
+            let codec = value
+                .str()
+                .ok_or_else(|| format!("COLUMNS_COMPRESSIONS['{path}'] must be a string"))?;
+            compressions.push((
+                column_path(&path),
+                parse_compression(codec, gzip_level, brotli_level, zstd_level)?,
+            ));
+
+            Ok::<(), String>(())
+        })?;
+
+        for (path, codec) in compressions {
+            builder = builder.set_column_compression(path, codec);
         }
     }
 
-    if let Some(col_enc_zval) = options.get("COLUMNS_ENCODINGS") {
-        if let Some(col_enc_ht) = col_enc_zval.array() {
-            for (key, val) in col_enc_ht.iter() {
-                let col_path_str = match key {
-                    ArrayKey::String(ref s) => s.clone(),
-                    ArrayKey::Str(s) => s.to_string(),
-                    _ => continue,
-                };
-                if let Some(enc_str) = val.str() {
-                    let parts: Vec<String> = col_path_str.split('.').map(|s| s.to_string()).collect();
-                    let col_path = ColumnPath::new(parts);
-                    let encoding = parse_encoding(enc_str)?;
-                    builder = builder.set_column_encoding(col_path, encoding);
+    if let Some(columns) = options.get("COLUMNS_ENCODINGS").and_then(|z| z.array()) {
+        let mut encodings = Vec::new();
+
+        ht_for_each(columns, |key, index, value| {
+            let path = column_key("COLUMNS_ENCODINGS", key, index)?;
+            let encoding = value
+                .str()
+                .ok_or_else(|| format!("COLUMNS_ENCODINGS['{path}'] must be a string"))?;
+            encodings.push((column_path(&path), parse_encoding(encoding)?));
+
+            Ok::<(), String>(())
+        })?;
+
+        for (path, encoding) in encodings {
+            // arrow-rs panics on a dictionary encoding set as the column encoding: the dictionary is its own flag
+            builder = match encoding {
+                Encoding::PLAIN_DICTIONARY | Encoding::RLE_DICTIONARY => {
+                    builder.set_column_dictionary_enabled(path, true)
                 }
+                encoding => builder.set_column_encoding(path, encoding),
+            };
+        }
+    }
+
+    if let Some(columns) = options.get("COLUMNS_BLOOM_FILTERS").and_then(|z| z.array()) {
+        let mut filters = Vec::new();
+
+        ht_for_each(columns, |key, index, value| {
+            let path = column_key("COLUMNS_BLOOM_FILTERS", key, index)?;
+            let filter = value
+                .array()
+                .ok_or_else(|| format!("COLUMNS_BLOOM_FILTERS['{path}'] must be an array"))?;
+            let fpp = filter
+                .get("fpp")
+                .and_then(|z| z.double())
+                .ok_or_else(|| format!("COLUMNS_BLOOM_FILTERS['{path}'] has no float fpp"))?;
+
+            if !(fpp > 0.0 && fpp < 1.0) {
+                return Err(format!(
+                    "COLUMNS_BLOOM_FILTERS['{path}'] fpp must be greater than 0 and less than 1, {fpp} given"
+                ));
+            }
+
+            let ndv = filter
+                .get("ndv")
+                .and_then(|z| z.long())
+                .map(|ndv| {
+                    u64::try_from(ndv).map_err(|_| format!("COLUMNS_BLOOM_FILTERS['{path}'] ndv must not be negative"))
+                })
+                .transpose()?;
+
+            filters.push((column_path(&path), fpp, ndv));
+
+            Ok::<(), String>(())
+        })?;
+
+        for (path, fpp, ndv) in filters {
+            builder = builder
+                .set_column_bloom_filter_enabled(path.clone(), true)
+                .set_column_bloom_filter_fpp(path.clone(), fpp);
+
+            if let Some(ndv) = ndv {
+                builder = builder.set_column_bloom_filter_max_ndv(path, ndv);
             }
         }
     }
 
     Ok(builder)
+}
+
+/// A `COLUMNS_*` option's key as a column path; PHP keys a digit-only path by its integer.
+fn column_key(option: &str, key: Option<&ZendStr>, index: zend_ulong) -> Result<String, String> {
+    match key {
+        Some(key) => key
+            .as_str()
+            .map(str::to_string)
+            .map_err(|_| format!("{option} has a key that is not a column path")),
+        None => Ok(index.to_string()),
+    }
+}
+
+fn column_path(path: &str) -> ColumnPath {
+    ColumnPath::new(path.split('.').map(str::to_string).collect())
 }

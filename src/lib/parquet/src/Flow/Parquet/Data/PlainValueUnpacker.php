@@ -7,22 +7,15 @@ namespace Flow\Parquet\Data;
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\BinaryReader;
 use Flow\Parquet\Exception\RuntimeException;
-use Flow\Parquet\ParquetFile\Schema\ConvertedType;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\LogicalType;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Generator;
 
-use function bin2hex;
-use function Flow\Parquet\Binary\decode_decimal;
 use function Flow\Parquet\Binary\decode_f32;
 use function Flow\Parquet\Binary\decode_f64;
-use function Flow\Parquet\Binary\decode_i16;
 use function Flow\Parquet\Binary\decode_i32;
 use function Flow\Parquet\Binary\decode_i64;
 use function Flow\Parquet\Binary\decode_u32;
-use function sprintf;
-use function substr;
 
 final readonly class PlainValueUnpacker
 {
@@ -42,28 +35,14 @@ final readonly class PlainValueUnpacker
 
         yield from match ($column->type()) {
             PhysicalType::BOOLEAN => $this->unpackBooleans($total),
-            PhysicalType::INT32 => $this->unpackInt32($column, $total),
+            PhysicalType::INT32 => $this->unpackInt32($total),
             PhysicalType::INT64 => $this->unpackInt64($total),
             PhysicalType::INT96 => $this->unpackInt96($total),
             PhysicalType::FLOAT => $this->unpackFloats($total),
             PhysicalType::DOUBLE => $this->unpackDoubles($total),
-            PhysicalType::BYTE_ARRAY => $this->unpackByteArray($column, $total),
+            PhysicalType::BYTE_ARRAY => $this->unpackByteArray($total),
             PhysicalType::FIXED_LEN_BYTE_ARRAY => $this->unpackFixedLenByteArray($column, $total),
         };
-    }
-
-    private function rawBytesToUuidString(string $raw): string
-    {
-        $hex = bin2hex($raw);
-
-        return sprintf(
-            '%s-%s-%s-%s-%s',
-            substr($hex, 0, 8),
-            substr($hex, 8, 4),
-            substr($hex, 12, 4),
-            substr($hex, 16, 4),
-            substr($hex, 20, 12),
-        );
     }
 
     /**
@@ -77,16 +56,12 @@ final readonly class PlainValueUnpacker
     }
 
     /**
-     * @return \Generator<float|string>
+     * @return \Generator<string>
      */
-    private function unpackByteArray(FlatColumn $column, int $total): Generator
+    private function unpackByteArray(int $total): Generator
     {
-        $decimal = $column->logicalType()?->decimalData();
-
         for ($i = 0; $i < $total; $i++) {
-            $bytes = $this->reader->readBytes(decode_u32($this->byteOrder, $this->reader->readBytes(4))[0]);
-
-            yield $decimal === null ? $bytes : decode_decimal($bytes, $decimal->scale());
+            yield $this->reader->readBytes(decode_u32($this->byteOrder, $this->reader->readBytes(4))[0]);
         }
     }
 
@@ -99,7 +74,7 @@ final readonly class PlainValueUnpacker
     }
 
     /**
-     * @return \Generator<float|string>
+     * @return \Generator<string>
      */
     private function unpackFixedLenByteArray(FlatColumn $column, int $total): Generator
     {
@@ -109,17 +84,8 @@ final readonly class PlainValueUnpacker
             throw new RuntimeException('FIXED_LEN_BYTE_ARRAY requires typeLength in schema');
         }
 
-        $logicalType = $column->logicalType();
-        $decimalData = $logicalType?->decimalData();
-
         for ($i = 0; $i < $total; $i++) {
-            $raw = $this->reader->readBytes($typeLength);
-
-            yield match ($logicalType?->name()) {
-                LogicalType::DECIMAL => decode_decimal($raw, $decimalData?->scale() ?? 0),
-                LogicalType::UUID => $this->rawBytesToUuidString($raw),
-                default => $raw,
-            };
+            yield $this->reader->readBytes($typeLength);
         }
     }
 
@@ -134,14 +100,8 @@ final readonly class PlainValueUnpacker
     /**
      * @return \Generator<int>
      */
-    private function unpackInt32(FlatColumn $column, int $total): Generator
+    private function unpackInt32(int $total): Generator
     {
-        if ($column->convertedType() === ConvertedType::INT_16) {
-            yield from decode_i16($this->byteOrder, $this->reader->readBytes($total * 2));
-
-            return;
-        }
-
         yield from decode_i32($this->byteOrder, $this->reader->readBytes($total * 4));
     }
 

@@ -268,8 +268,10 @@ it from the file schema (Parquet, Floe), so `filter(ref('date')->between(lit($fr
 
 ### Partition Pruning
 
-The optimizer pushes a `filter()` that reads only partition columns into the source, so whole directories
-are skipped; a filter on a body column still reads everything and then discards. A partition column renamed
+The optimizer moves a `filter()` into the file source, which returns only matching rows. A filter that reads only
+partition columns skips whole directories; a filter on a body column reads every file and drops the rows it does not
+match (Parquet skips row groups, see [filter pushdown](/documentation/components/adapters/parquet.md#filter-pushdown)).
+A `limit()` after the filter reaches the source with it ([filter pushdown](/documentation/components/adapters/parquet.md#filter-pushdown)). A partition column renamed
 with `rename()` or copied with `withEntry('day', ref('date'))` is still pruned; any other redefinition of it
 stops the push. A filter whose answer can change between two evaluations - `call()`, `now()`, `uuid()`,
 `to_date_time()` with a format that leaves fields out (`'Y-m-d'`) - still filters rows but prunes nothing.
@@ -283,6 +285,7 @@ use function Flow\ETL\DSL\{data_frame, lit, ref, to_output};
 data_frame()
     ->read(from_csv(__DIR__ . '/output/date=*/department=*/*.csv'))
     ->filter(ref('date')->greaterThanEqual(lit('2024-01-01')))
+    ->limit(10)
     ->write(to_output())
     ->run();
 ```

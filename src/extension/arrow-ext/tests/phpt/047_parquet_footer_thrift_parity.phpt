@@ -35,8 +35,8 @@ foreach ([...glob($fixtures . '/*.parquet'), ...glob($fixtures . '/EdgeCases/*.p
     printf(
         "%s: thrift %s, schema %s, footer reads %d\n",
         substr($path, strlen($fixtures) + 1),
-        serialize($file->thrift()) === serialize($php) ? 'identical' : 'DIFFER',
-        serialize($file->schema()) === serialize(Schema::fromThrift($php->schema)) ? 'identical' : 'DIFFER',
+        serialize($file->footer()->thrift()) === serialize($php) ? 'identical' : 'DIFFER',
+        serialize($file->footer()->schema()) === serialize(Schema::fromThrift($php->schema)) ? 'identical' : 'DIFFER',
         $reads,
     );
     $file->close();
@@ -57,8 +57,8 @@ $file = new RustParquetFileReader(new MemorySourceStream($units));
 
 printf(
     "temporal units: thrift %s, schema %s\n",
-    serialize($file->thrift()) === serialize($php) ? 'identical' : 'DIFFER',
-    serialize($file->schema()) === serialize(Schema::fromThrift($php->schema)) ? 'identical' : 'DIFFER',
+    serialize($file->footer()->thrift()) === serialize($php) ? 'identical' : 'DIFFER',
+    serialize($file->footer()->schema()) === serialize(Schema::fromThrift($php->schema)) ? 'identical' : 'DIFFER',
 );
 $file->close();
 ?>

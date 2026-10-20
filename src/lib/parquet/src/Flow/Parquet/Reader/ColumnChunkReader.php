@@ -8,16 +8,18 @@ use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Dremel\ColumnData\ReadFlatColumnValues;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Page\Dictionary;
 use Flow\Parquet\ParquetFile\Page\PageHeader;
+use Flow\Parquet\ParquetFile\PageIndex\OffsetIndex;
+use Flow\Parquet\ParquetFile\PageIndex\PageLocation;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\Thrift\CompactProtocol;
-use Flow\Parquet\Thrift\PhpFileStream;
-use Flow\Parquet\ThriftModel\PageHeader as ThriftPageHeader;
 use Generator;
-use Throwable;
 
+use function array_key_last;
+use function array_map;
 use function fclose;
+use function fopen;
 use function fseek;
 use function ftell;
 use function fwrite;
@@ -33,9 +35,104 @@ final readonly class ColumnChunkReader
     ) {}
 
     /**
-     * @return \Generator<ReadFlatColumnValues>
+     * The chunk's data pages keyed by the row of the row group each starts at: the $pages of $offsetIndex, one
+     * SourceStream::read per run of adjacent pages, or every page without an offset index. The dictionary is read from
+     * the chunk's start up to the first indexed page, wherever `dictionary_page_offset` points (PARQUET-816), unless
+     * $dictionary is given. Returns the dictionary the pages were decoded with.
+     *
+     * @param list<int> $pages ascending positions in $offsetIndex
+     *
+     * @return Generator<int, ReadFlatColumnValues, mixed, ?Dictionary>
      */
-    public function read(ColumnChunk $columnChunk, FlatColumn $column, SourceStream $stream): Generator
+    public function read(
+        ColumnChunk $columnChunk,
+        FlatColumn $column,
+        SourceStream $stream,
+        ?OffsetIndex $offsetIndex = null,
+        array $pages = [],
+        ?Dictionary $dictionary = null,
+    ): Generator {
+        if ($offsetIndex === null) {
+            return yield from $this->readChunk($columnChunk, $column, $stream);
+        }
+
+        if ($pages === []) {
+            return $dictionary;
+        }
+
+        $firstPage = $offsetIndex->pages[0]->offset;
+        $leadingRegion = $dictionary === null && $columnChunk->pageOffset() < $firstPage;
+        $runs = $leadingRegion ? [new PageRun($columnChunk->pageOffset(), $firstPage)] : [];
+        $locations = array_map(static fn(int $page): PageLocation => $offsetIndex->pages[$page], $pages);
+
+        foreach ($locations as $page) {
+            $end = $page->offset + $page->compressedPageSize;
+            $last = array_key_last($runs);
+
+            if ($last !== null && $runs[$last]->end === $page->offset) {
+                $runs[$last] = $runs[$last]->extendedTo($end);
+            } else {
+                $runs[] = new PageRun($page->offset, $end);
+            }
+        }
+
+        $pageStream = fopen('php://temp', 'rb+');
+
+        if ($pageStream === false) {
+            throw new RuntimeException('Cannot open temporary stream');
+        }
+
+        $buffered = [];
+        $read = 0;
+
+        foreach ($runs as $pageRun) {
+            $buffered[] = $read;
+            $read += (int) fwrite($pageStream, $stream->read($pageRun->length, $pageRun->start));
+        }
+
+        if ($leadingRegion) {
+            rewind($pageStream);
+            $header = PageHeader::read($pageStream, $this->options);
+
+            if ($header !== null && $header->type()->isDictionaryPage()) {
+                $dictionary = $this->pageReader->readDictionary($column, $header, $columnChunk->codec(), $pageStream);
+            }
+        }
+
+        $run = 0;
+
+        foreach ($locations as $page) {
+            while ($runs[$run]->end <= $page->offset) {
+                $run++;
+            }
+
+            fseek($pageStream, $buffered[$run] + $page->offset - $runs[$run]->start);
+            $header = PageHeader::read($pageStream, $this->options);
+
+            if ($header === null || !$header->type()->isDataPage()) {
+                throw new RuntimeException(
+                    'No data page header at offset ' . $page->offset . ' the offset index locates',
+                );
+            }
+
+            yield $page->firstRowIndex => $this->pageReader->readData(
+                $column,
+                $header,
+                $columnChunk->codec(),
+                $dictionary,
+                $pageStream,
+            );
+        }
+
+        fclose($pageStream);
+
+        return $dictionary;
+    }
+
+    /**
+     * @return Generator<int, ReadFlatColumnValues, mixed, ?Dictionary>
+     */
+    private function readChunk(ColumnChunk $columnChunk, FlatColumn $column, SourceStream $stream): Generator
     {
         $pageStream = fopen('php://temp', 'rb+');
 
@@ -52,7 +149,7 @@ final readonly class ColumnChunkReader
         fwrite($pageStream, $stream->read($compressedSize, $columnChunk->pageOffset()));
         rewind($pageStream);
 
-        $header = $this->readHeader($pageStream);
+        $header = PageHeader::read($pageStream, $this->options);
 
         if ($header === null) {
             throw new RuntimeException('Cannot read first page header');
@@ -83,7 +180,7 @@ final readonly class ColumnChunkReader
         $yieldedRows = 0;
 
         while (true) {
-            $dataHeader = $dictionary ? $this->readHeader($pageStream) : $header;
+            $dataHeader = $dictionary ? PageHeader::read($pageStream, $this->options) : $header;
 
             if ($dataHeader === null || $dataHeader->type()->isDataPage() === false) {
                 break;
@@ -95,36 +192,17 @@ final readonly class ColumnChunkReader
 
             $data = $this->pageReader->readData($column, $dataHeader, $columnChunk->codec(), $dictionary, $pageStream);
 
+            yield $yieldedRows => $data;
+
             $yieldedRows += $data->rowsCount();
 
-            yield $data;
-
             if ($dictionary === null) {
-                $header = $this->readHeader($pageStream);
+                $header = PageHeader::read($pageStream, $this->options);
             }
         }
 
         fclose($pageStream);
-    }
 
-    /**
-     * @param resource $stream
-     */
-    private function readHeader($stream): ?PageHeader
-    {
-        $currentOffset = ftell($stream);
-
-        try {
-            $thriftHeader = new ThriftPageHeader();
-            @$thriftHeader->read(new CompactProtocol(new PhpFileStream($stream)));
-
-            return PageHeader::fromThrift($thriftHeader, $this->options);
-        } catch (Throwable) {
-            if ($currentOffset !== false) {
-                fseek($stream, $currentOffset);
-            }
-
-            return null;
-        }
+        return $dictionary;
     }
 }

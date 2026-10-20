@@ -36,7 +36,7 @@ $writer->close();
 gc_collect_cycles();
 
 $before = (new RustBackend())->allocatedBytes();
-$reader = rust_parquet_batches($filesystem->readFrom(path('memory://held.parquet')), $schema, 1_000, null, null);
+$reader = rust_parquet_batches($filesystem->readFrom(path('memory://held.parquet')), $schema, 1_000);
 $held = [];
 
 foreach ($reader as $batch) {

@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\Parquet;
 use Flow\ETL\Column\Backend;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\Parquet\Reader\ReadPlan;
 use Iterator;
 
 use function interface_exists;
@@ -20,11 +21,11 @@ interface ParquetOpenSource
     /**
      * Batches of at most $batchSize rows under $schema, every column adopted by $backend.
      *
-     * @param int<1, max> $batchSize
+     * @param int $batchSize refused below 1
      *
      * @return Iterator<int, Rows>
      */
-    public function batches(Schema $schema, int $batchSize, ?int $offset, ?int $limit, Backend $backend): Iterator;
+    public function batches(Schema $schema, int $batchSize, ReadPlan $plan, Backend $backend): Iterator;
 
     public function close(): void;
 }

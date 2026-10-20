@@ -62,3 +62,19 @@ function arrow_interfaces_reflection(): string
 
     return (string) json_encode($interfaces);
 }
+
+/**
+ * The plan of the rows [`$offset`, `$offset + $limit`) of `$file`, as `ReadPlanner::plan()` builds it without a filter.
+ */
+function arrow_read_plan(
+    Flow\Parquet\ParquetFileReader $file,
+    int $offset = 0,
+    ?int $limit = null,
+): Flow\Parquet\Reader\ReadPlan {
+    return Flow\Parquet\Reader\ReadPlan::window(
+        $file->footer()->rowsNumber(),
+        new Flow\Parquet\Tests\Double\InMemoryIndexes(),
+        $offset,
+        $limit,
+    );
+}

@@ -16,6 +16,7 @@ use Flow\ETL\Plan\Node\ExpandColumn;
 use Flow\ETL\Plan\Node\Filter;
 use Flow\ETL\Plan\Node\Join as JoinNode;
 use Flow\ETL\Plan\Node\Offset;
+use Flow\ETL\Plan\Node\Read;
 use Flow\ETL\Plan\Node\Rename;
 use Flow\ETL\Plan\Node\RenameEach;
 use Flow\ETL\Plan\Node\Result;
@@ -26,6 +27,7 @@ use Flow\ETL\Plan\Node\Write;
 use Flow\ETL\Plan\RequiredColumns;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\NodeMother;
+use Flow\ETL\Tests\Mother\PartitionedSourceMother;
 use Flow\Filesystem\Path\Filter\KeepAll;
 
 use function Flow\ETL\DSL\hash_join;
@@ -48,11 +50,23 @@ final class DetailsTest extends FlowTestCase
         static::assertSame(['Extractor: ArrayExtractor'], (new Details())->lines(NodeMother::read()));
     }
 
-    public function test_a_read_lists_a_pushed_limit_and_file_filter(): void
+    public function test_a_read_lists_a_pushed_limit_file_filter_and_each_conjunct(): void
     {
         static::assertSame(
-            ['Extractor: ArrayExtractor', 'Limit: 3', 'Files: Filters'],
-            (new Details())->lines(NodeMother::read()->withLimit(3)->withPathFilter(new KeepAll())),
+            [
+                'Extractor: RecordingFileExtractor',
+                'Source: file:///dev/null',
+                'Limit: 3',
+                'Files: Filters',
+                'Filter: GreaterThan',
+                'Filter: IsNotNull',
+            ],
+            (new Details())->lines(
+                (new Read(PartitionedSourceMother::yearMonth()))
+                    ->withLimit(3)
+                    ->withPathFilter(new KeepAll())
+                    ->withFilter(ref('year')->greaterThan(lit(1))->and(ref('month')->isNotNull())),
+            ),
         );
     }
 
@@ -80,7 +94,7 @@ final class DetailsTest extends FlowTestCase
                 'Left on: id',
                 'Right on: id',
                 'Buffers all rows before passing them on',
-                'Defines columns known only at run time',
+                'Changes columns known only at run time',
             ],
             (new Details())->lines(NodeMother::join(
                 NodeMother::read(),
@@ -171,12 +185,12 @@ final class DetailsTest extends FlowTestCase
         $details = new Details();
 
         static::assertSame(
-            ['Column: n = Literal', 'Defines columns: n'],
+            ['Column: n = Literal', 'Changes columns: n'],
             $details->lines(new WithColumn($read, int_schema('n'), lit(1))),
         );
-        static::assertSame(['Rename: n → m', 'Defines columns: m'], $details->lines(new Rename($read, 'n', 'm')));
+        static::assertSame(['Rename: n → m', 'Changes columns: m, n'], $details->lines(new Rename($read, 'n', 'm')));
         static::assertSame(
-            ['Defines columns known only at run time'],
+            ['Changes columns known only at run time'],
             $details->lines(new RenameEach($read, [rename_replace('_', '-')])),
         );
     }
@@ -188,7 +202,7 @@ final class DetailsTest extends FlowTestCase
 
         static::assertSame('preserving · transparent · blocking', $details->declarations(new Collect($read)));
         static::assertSame(
-            'preserving · transparent · streaming · redefines m',
+            'preserving · transparent · streaming · redefines m, n',
             $details->declarations(new Rename($read, 'n', 'm')),
         );
         static::assertSame('preserving · transparent · streaming · redefines unknown', $details->declarations(

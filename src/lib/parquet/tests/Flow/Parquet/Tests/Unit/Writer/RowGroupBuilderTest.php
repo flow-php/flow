@@ -7,10 +7,12 @@ namespace Flow\Parquet\Tests\Unit\Writer;
 use Flow\Parquet\Dremel\DremelShredder;
 use Flow\Parquet\Dremel\RowGroupContainer;
 use Flow\Parquet\Dremel\Validator\ColumnDataValidator;
+use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Data\DataConverter;
+use Flow\Parquet\ParquetFile\PageIndex\PageLocation;
 use Flow\Parquet\ParquetFile\RowGroup;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
@@ -18,7 +20,11 @@ use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Writer\RowGroupBuilder;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
+
+use function array_map;
+use function range;
 
 final class RowGroupBuilderTest extends TestCase
 {
@@ -388,6 +394,84 @@ final class RowGroupBuilderTest extends TestCase
         }
 
         static::assertSame($interval * 2, $builder->rowsCount());
+    }
+
+    public function test_pages_close_at_the_maximum_rows_count(): void
+    {
+        $options = (new Options())->set(Option::PAGE_MAXIMUM_ROWS_COUNT, 10)->set(Option::PAGE_SIZE_CHECK_INTERVAL, 5);
+        $builder = new RowGroupBuilder(
+            Schema::with(FlatColumn::int32('id')),
+            Compressions::UNCOMPRESSED,
+            $options,
+            new DremelShredder(new ColumnDataValidator(), DataConverter::initialize($options)),
+        );
+
+        $builder->addRows(array_map(static fn(int $id): array => ['id' => $id], range(1, 25)));
+
+        static::assertSame(
+            [0, 10, 20],
+            array_map(
+                static fn(PageLocation $page): int => $page->firstRowIndex,
+                $builder->flush(0)->offsetIndexes[0]->pages,
+            ),
+        );
+    }
+
+    public function test_a_flushed_row_group_counts_the_next_groups_page_rows_from_zero(): void
+    {
+        $options = (new Options())->set(Option::PAGE_MAXIMUM_ROWS_COUNT, 10)->set(Option::PAGE_SIZE_CHECK_INTERVAL, 5);
+        $builder = new RowGroupBuilder(
+            Schema::with(FlatColumn::int32('id')),
+            Compressions::UNCOMPRESSED,
+            $options,
+            new DremelShredder(new ColumnDataValidator(), DataConverter::initialize($options)),
+        );
+
+        $builder->addRows(array_map(static fn(int $id): array => ['id' => $id], range(1, 25)));
+        $builder->flush(0);
+        $builder->addRows(array_map(static fn(int $id): array => ['id' => $id], range(26, 50)));
+
+        static::assertSame(
+            [0, 10, 20],
+            array_map(
+                static fn(PageLocation $page): int => $page->firstRowIndex,
+                $builder->flush(0)->offsetIndexes[0]->pages,
+            ),
+        );
+    }
+
+    #[TestWith([0])]
+    #[TestWith([-1])]
+    public function test_a_page_maximum_rows_count_below_one_is_refused(int $rows): void
+    {
+        $options = (new Options())->set(Option::PAGE_MAXIMUM_ROWS_COUNT, $rows);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('PAGE_MAXIMUM_ROWS_COUNT must be greater than 0, ' . $rows . ' given');
+
+        new RowGroupBuilder(
+            Schema::with(FlatColumn::int32('id')),
+            Compressions::UNCOMPRESSED,
+            $options,
+            new DremelShredder(new ColumnDataValidator(), DataConverter::initialize($options)),
+        );
+    }
+
+    #[TestWith([0])]
+    #[TestWith([-1])]
+    public function test_a_row_group_size_below_one_byte_is_refused(int $bytes): void
+    {
+        $options = (new Options())->set(Option::ROW_GROUP_SIZE_BYTES, $bytes);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('ROW_GROUP_SIZE_BYTES must be greater than 0, ' . $bytes . ' given');
+
+        new RowGroupBuilder(
+            Schema::with(FlatColumn::int32('id')),
+            Compressions::UNCOMPRESSED,
+            $options,
+            new DremelShredder(new ColumnDataValidator(), DataConverter::initialize($options)),
+        );
     }
 
     public function test_rows_count_increases_with_each_row(): void

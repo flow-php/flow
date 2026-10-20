@@ -12,6 +12,7 @@ use Flow\Types\Type\Logical\HTMLType;
 use Flow\Types\Type\Logical\JsonType;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
+use Flow\Types\Type\Logical\NumericStringType;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Logical\TimeType;
@@ -109,6 +110,7 @@ final class TypeFormatter
         $reflection = match ($type::class) {
             ArrayType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_array'),
             StringType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_string'),
+            NumericStringType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_numeric_string'),
             IntegerType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_integer'),
             BooleanType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_boolean'),
             FloatType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_float'),

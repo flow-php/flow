@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Unit\ParquetFile\Schema;
 
 use Flow\Parquet\ParquetFile\Schema\MapKey;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use PHPUnit\Framework\TestCase;
 
 final class MapKeyTest extends TestCase
@@ -15,6 +16,6 @@ final class MapKeyTest extends TestCase
 
         static::assertSame(18, $key->logicalType()?->decimalData()?->precision());
         static::assertSame(2, $key->logicalType()?->decimalData()?->scale());
-        static::assertSame(8, $key->typeLength());
+        static::assertSame(PhysicalType::INT64, $key->type());
     }
 }

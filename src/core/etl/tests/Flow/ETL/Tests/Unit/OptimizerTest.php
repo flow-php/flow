@@ -57,14 +57,14 @@ final class OptimizerTest extends FlowTestCase
         static::assertSame($plan, (new Optimizer())->optimize($plan, NodeMother::context()));
     }
 
-    public function test_default_registers_combine_limits_combine_sort_and_limit_push_limit_push_filter_then_count_from_statistics(): void
+    public function test_default_registers_combine_limits_combine_sort_and_limit_push_filter_push_limit_then_count_from_statistics(): void
     {
         static::assertSame(
             [
                 CombineLimits::class,
                 CombineSortAndLimit::class,
-                PushLimitIntoSource::class,
                 PushFilterIntoSource::class,
+                PushLimitIntoSource::class,
                 CountFromStatistics::class,
                 PushProjectionIntoExpand::class,
             ],

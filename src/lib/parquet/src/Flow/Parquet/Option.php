@@ -7,17 +7,6 @@ namespace Flow\Parquet;
 enum Option
 {
     /**
-     * When using the Arrow engine, controls how many rows are returned per internal read call.
-     * Reduces peak memory usage for large row groups by streaming batches of this size.
-     *
-     * Only affects the Arrow engine. Ignored by the PHP engine.
-     * Set to null to read entire row groups at once (maximum throughput).
-     *
-     * Default: 1024
-     */
-    case ARROW_BATCH_SIZE;
-
-    /**
      * When using the Arrow engine, controls how many rows are buffered in PHP
      * before sending them to the extension's writeBatch() in a single call.
      * Larger values reduce call overhead but increase PHP memory usage.
@@ -52,6 +41,23 @@ enum Option
     case COLUMNS_COMPRESSIONS;
 
     /**
+     * Per-column bloom filter configuration using flat path notation.
+     * Accepts array<string, BloomFilterOptions> where key is column flat path and value is the filter's false positive
+     * probability and expected distinct values.
+     *
+     * Flat path examples:
+     * - Simple columns: 'column_name'
+     * - Nested structs: 'user.address.street'
+     * - List elements: 'items.list.element'
+     * - Map keys/values: 'metadata.key_value.key', 'metadata.key_value.value'
+     *
+     * Values must be BloomFilterOptions instances. Readers use the filters for equality and in predicates only.
+     *
+     * Default: null (no bloom filters)
+     */
+    case COLUMNS_BLOOM_FILTERS;
+
+    /**
      * Per-column encoding configuration using flat path notation.
      * Accepts array<string, Encodings> where key is column flat path and value is encoding enum.
      *
@@ -68,14 +74,12 @@ enum Option
     case COLUMNS_ENCODINGS;
 
     /**
-     * Whenever cardinality ratio of the dictionary goes below this value, PagesBuilders is going to fallback to PLAIN encoding.
-     * Cardinality ration is calculated as distinct values / total values.
-     * Please notice that even when cardinality ration is above this value, PageBuilder will still fallback to PLAIN encoding
-     * when dictionary size gets above DICTIONARY_PAGE_SIZE.
+     * Column index bounds of BYTE_ARRAY and FIXED_LEN_BYTE_ARRAY columns are truncated to this many bytes, as
+     * STATISTICS_TRUNCATE_LENGTH truncates column chunk statistics (arrow-rs set_column_index_truncate_length).
      *
-     * Default value 0.4 (40% of the total values is distinct)
+     * Default value is 64
      */
-    case DICTIONARY_PAGE_MIN_CARDINALITY_RATION;
+    case COLUMN_INDEX_TRUNCATE_LENGTH;
 
     /**
      * Whenever size of the dictionary goes above this value, PagesBuilders is going to fallback to PLAIN encoding.
@@ -115,8 +119,17 @@ enum Option
     case LZ4_COMPRESSION_LEVEL;
 
     /**
-     * PageBuilder is going to use this value to determine how many rows should be stored in one page.
-     * Smaller pages will reduce memory usage, but will increase the number of pages in the file increasing the IO operations.
+     * Data page headers carry the page's statistics when the statistics level is PAGE, as arrow-rs
+     * set_write_page_header_statistics. Readers prune pages through the column index instead.
+     *
+     * Default value is false
+     */
+    case PAGE_HEADER_STATISTICS;
+
+    /**
+     * The rows a data page holds at most, beside PAGE_SIZE_BYTES (arrow-rs data_page_row_count_limit). The PHP writer
+     * checks it every PAGE_SIZE_CHECK_INTERVAL rows, the arrow writer every write batch. Smaller pages let the page
+     * index skip more of a filtered read, at the cost of more page headers.
      *
      * Default value is 1000 rows
      */
@@ -161,6 +174,23 @@ enum Option
      * Default value is 1000
      */
     case ROW_GROUP_SIZE_CHECK_INTERVAL;
+
+    /**
+     * A Writer\StatisticsLevel: NONE writes no statistics, CHUNK writes column chunk statistics, PAGE also writes a
+     * column index (per page min, max, null and NaN counts). The offset index is written at every level.
+     *
+     * Default value is StatisticsLevel::PAGE
+     */
+    case STATISTICS_LEVEL;
+
+    /**
+     * Column chunk and page statistics of BYTE_ARRAY and FIXED_LEN_BYTE_ARRAY columns are truncated to this many bytes,
+     * as arrow-rs does: the min is cut, the max is cut and incremented, and a truncated bound is marked inexact.
+     * Decimals and FLOAT16 are never truncated.
+     *
+     * Default value is 64
+     */
+    case STATISTICS_TRUNCATE_LENGTH;
 
     /**
      * This option is going to tell the writer to validate data against schema.

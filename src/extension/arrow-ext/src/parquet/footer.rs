@@ -7,12 +7,16 @@ use bytes::{Bytes, BytesMut};
 use parquet::file::metadata::{ParquetMetaData, ParquetMetaDataReader};
 use parquet::file::reader::ChunkReader;
 
+use crate::parquet::chunks::refuse_encrypted;
 use crate::parquet::error::Error;
 
 /// What the first read takes from the end of the file: the whole footer of every file it is shorter than.
 const TAIL: u64 = 64 * 1024;
 
 const MAGIC: &[u8; 4] = b"PAR1";
+
+/// The magic of a file whose footer is encrypted (Parquet modular encryption).
+const ENCRYPTED_MAGIC: &[u8; 4] = b"PARE";
 
 pub struct Footer {
     /// The thrift `FileMetaData`.
@@ -34,6 +38,10 @@ impl Footer {
         let read = size.min(TAIL);
         let tail = source.get_bytes(size - read, read as usize)?;
         let trailer = &tail[tail.len() - 8..];
+
+        if &trailer[4..] == ENCRYPTED_MAGIC {
+            return Err(Error::Encrypted);
+        }
 
         if &trailer[4..] != MAGIC {
             return Err(corrupt("Invalid Parquet file. Corrupt footer".to_string()));
@@ -58,6 +66,7 @@ impl Footer {
             bytes.freeze()
         };
         let meta = ParquetMetaDataReader::decode_metadata(&bytes)?;
+        refuse_encrypted(&bytes)?;
 
         Ok(Self {
             bytes,
@@ -174,6 +183,18 @@ mod tests {
         assert!(matches!(
             Footer::read(&Source(Arc::new(Counting::new(vec![1, 2, 3])))),
             Err(Error::NotParquet(_))
+        ));
+    }
+
+    #[test]
+    fn a_file_with_an_encrypted_footer_is_refused() {
+        let mut data = file(10);
+        let end = data.len();
+        data[end - 1] = b'E';
+
+        assert!(matches!(
+            Footer::read(&Source(Arc::new(Counting::new(data)))),
+            Err(Error::Encrypted)
         ));
     }
 }

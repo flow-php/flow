@@ -6,6 +6,7 @@ namespace Flow\Floe\Tests\Unit;
 
 use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\Double\SpyBackend;
@@ -489,7 +490,10 @@ final class FloeExtractorTest extends FlowTestCase
         $extractor = from_floe(path('memory://parts/*/*.floe'), filesystem: $counting);
         $schema = $extractor->schema();
 
-        $batches = iterator_to_array($extractor->extract(flow_context(config()), pathFilter: new RejectingFilter()));
+        $batches = iterator_to_array($extractor->scan(
+            flow_context(config()),
+            new FileScan(pathFilter: new RejectingFilter()),
+        ));
 
         static::assertSame([], $batches);
         static::assertSame(1, $counting->readFromCalls);

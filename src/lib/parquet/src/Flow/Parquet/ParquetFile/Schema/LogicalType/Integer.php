@@ -43,6 +43,11 @@ final readonly class Integer
         return $this->bitWidth;
     }
 
+    public function is(int $bitWidth, bool $signed): bool
+    {
+        return $this->bitWidth === $bitWidth && $this->isSigned === $signed;
+    }
+
     public function isSigned(): bool
     {
         return $this->isSigned;

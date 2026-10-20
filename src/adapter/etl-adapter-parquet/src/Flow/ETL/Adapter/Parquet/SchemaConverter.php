@@ -11,6 +11,7 @@ use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
 use Flow\Parquet\ParquetFile\Schema\Column;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\ListElement;
+use Flow\Parquet\ParquetFile\Schema\LogicalType\Integer;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateTimeType;
@@ -20,6 +21,7 @@ use Flow\Types\Type\Logical\HTMLType;
 use Flow\Types\Type\Logical\JsonType;
 use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\MapType;
+use Flow\Types\Type\Logical\NumericStringType;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Logical\StructureElement;
 use Flow\Types\Type\Logical\StructureType;
@@ -38,6 +40,7 @@ use function array_map;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\definition_from_type;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\json_schema;
@@ -56,6 +59,7 @@ use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_numeric_string;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
@@ -118,6 +122,7 @@ final class SchemaConverter
             XMLElementType::class,
             XMLType::class,
             StringType::class,
+            NumericStringType::class,
             NullType::class,
                 => FlatColumn::string($name, $repetition),
             BooleanType::class => FlatColumn::boolean($name, $repetition),
@@ -170,6 +175,10 @@ final class SchemaConverter
             $logicalType = $column->logicalType();
 
             $nullable = $column->repetition() === ParquetSchema\Repetition::OPTIONAL;
+
+            if (Integer::forColumn($column)?->is(64, false) === true) {
+                return definition_from_type($column->name(), type_numeric_string(), $nullable);
+            }
 
             if ($logicalType === null) {
                 return match ($column->type()) {
@@ -246,6 +255,10 @@ final class SchemaConverter
             $logicalType = $column->logicalType();
 
             $nullable = $column->repetition() === ParquetSchema\Repetition::OPTIONAL;
+
+            if (Integer::forColumn($column)?->is(64, false) === true) {
+                return $nullable ? type_optional(type_numeric_string()) : type_numeric_string();
+            }
 
             if ($logicalType === null) {
                 $type = match ($column->type()) {

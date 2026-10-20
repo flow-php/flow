@@ -12,6 +12,7 @@ use Flow\ETL\Adapter\Doctrine\Tests\Context\SelectQueryCounter;
 use Flow\ETL\Adapter\Doctrine\Tests\Double\NativeHandleStub;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\SchemaNotDerivableException;
+use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
@@ -131,7 +132,7 @@ final class DbalQueryExtractorTest extends FlowTestCase
         $counter->reset();
 
         // at 100 the first set is one batch that overshoots the limit - trimming it is the limit operator's job
-        self::assertExtractedRowsCount($extractedRows, $extractor, limit: 5);
+        self::assertExtractedRowsCount($extractedRows, $extractor, scan: new FileScan(5));
         static::assertSame(1, $counter->count);
     }
 

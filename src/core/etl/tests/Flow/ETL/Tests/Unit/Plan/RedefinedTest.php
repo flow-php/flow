@@ -13,7 +13,8 @@ final class RedefinedTest extends FlowTestCase
     {
         static::assertFalse(Redefined::none()->defines('year'));
         static::assertSame([], Redefined::none()->names);
-        static::assertFalse(Redefined::none()->unknown);
+        static::assertFalse(Redefined::none()->isUnknown());
+        static::assertFalse(Redefined::none()->isAllBut());
     }
 
     public function test_names_define_exactly_those_names_and_alias_none(): void
@@ -30,7 +31,8 @@ final class RedefinedTest extends FlowTestCase
     {
         static::assertTrue(Redefined::unknown()->defines('anything'));
         static::assertNull(Redefined::unknown()->aliasOf('anything'));
-        static::assertTrue(Redefined::unknown()->unknown);
+        static::assertTrue(Redefined::unknown()->isUnknown());
+        static::assertFalse(Redefined::unknown()->isAllBut());
     }
 
     public function test_names_with_no_names_defines_nothing(): void
@@ -48,5 +50,28 @@ final class RedefinedTest extends FlowTestCase
         static::assertSame('year', $redefined->aliasOf('y'));
         static::assertNull($redefined->aliasOf('year'));
         static::assertSame(['y'], $redefined->names);
+    }
+
+    public function test_all_but_defines_every_name_except_the_kept_ones(): void
+    {
+        $redefined = Redefined::allBut('year');
+
+        static::assertFalse($redefined->defines('year'));
+        static::assertTrue($redefined->defines('month'));
+        static::assertNull($redefined->aliasOf('month'));
+        static::assertSame(['year'], $redefined->names);
+        static::assertTrue($redefined->isAllBut());
+        static::assertFalse($redefined->isUnknown());
+    }
+
+    public function test_a_rename_defines_both_names_and_points_the_new_one_at_the_old_one(): void
+    {
+        $redefined = Redefined::rename('year', 'y');
+
+        static::assertTrue($redefined->defines('y'));
+        static::assertTrue($redefined->defines('year'));
+        static::assertSame('year', $redefined->aliasOf('y'));
+        static::assertNull($redefined->aliasOf('year'));
+        static::assertSame(['y', 'year'], $redefined->names);
     }
 }

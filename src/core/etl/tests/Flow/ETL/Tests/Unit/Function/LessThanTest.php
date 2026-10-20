@@ -11,6 +11,7 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Exception\InvalidArgumentException;
 
 use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\definition_from_type;
 use function Flow\ETL\DSL\float_schema;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_schema;
@@ -22,6 +23,9 @@ use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\time_schema;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_numeric_string;
+
+use const NAN;
 
 final class LessThanTest extends FlowTestCase
 {
@@ -215,6 +219,47 @@ final class LessThanTest extends FlowTestCase
             ref('v')->lessThan(lit(new DateInterval('PT1H'))),
             ['v' => new DateInterval('PT1H')],
             schema(time_schema('v')),
+        ));
+    }
+
+    public function test_less_than_orders_strings_by_bytes(): void
+    {
+        static::assertFalse((new FunctionContext(flow_context()))->eval(
+            ref('a')->lessThan(lit('10')),
+            ['a' => '9'],
+            schema(str_schema('a')),
+        ));
+    }
+
+    public function test_less_than_orders_a_numeric_string_column_numerically(): void
+    {
+        $context = flow_context();
+
+        static::assertTrue((new FunctionContext($context))->eval(
+            ref('a')->lessThan(lit('10')),
+            ['a' => '9'],
+            schema(definition_from_type('a', type_numeric_string())),
+        ));
+        static::assertFalse((new FunctionContext($context))->eval(
+            ref('a')->lessThan(lit('18446744073709551614')),
+            ['a' => '18446744073709551615'],
+            schema(definition_from_type('a', type_numeric_string())),
+        ));
+    }
+
+    public function test_less_than_is_false_against_nan_in_either_direction(): void
+    {
+        $context = flow_context();
+
+        static::assertFalse((new FunctionContext($context))->eval(
+            ref('a')->lessThan(lit(1.0)),
+            ['a' => NAN],
+            schema(float_schema('a')),
+        ));
+        static::assertFalse((new FunctionContext($context))->eval(
+            lit(1.0)->lessThan(ref('a')),
+            ['a' => NAN],
+            schema(float_schema('a')),
         ));
     }
 }

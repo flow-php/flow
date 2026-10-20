@@ -13,7 +13,7 @@ use Flow\ETL\Plan\Node\Outputs;
 use Flow\ETL\Plan\Node\Result;
 use Flow\ETL\Plan\Node\Transaction;
 use Flow\ETL\Plan\Node\Write;
-use Flow\ETL\Plan\ReplaceLeaf;
+use Flow\ETL\Plan\ReplaceNodes;
 use Flow\ETL\Plan\Rewrite;
 use Flow\ETL\Tests\Double\ChildlessNode;
 use Flow\ETL\Tests\Double\RecordingTransaction;
@@ -107,12 +107,12 @@ final class LogicalPlanTest extends FlowTestCase
         static::assertSame([$select, $limit], NodeMother::plan($select)->consumerInputs());
     }
 
-    public function test_transform_up_with_replace_leaf_rewrites_the_leaf_and_keeps_the_spine(): void
+    public function test_transform_up_with_replace_nodes_rewrites_the_leaf_and_keeps_the_spine(): void
     {
         $replacement = NodeMother::read(from_array([['id' => 2]]));
         $plan = NodeMother::plan(NodeMother::select(NodeMother::read()));
 
-        $rewritten = $plan->transformUp(new ReplaceLeaf($plan->source(), $replacement));
+        $rewritten = $plan->transformUp(ReplaceNodes::one($plan->source(), $replacement));
 
         static::assertSame($replacement, $rewritten->source());
         $select = $rewritten->root->children()[0];
@@ -148,9 +148,9 @@ final class LogicalPlanTest extends FlowTestCase
         );
 
         $plan->transformUp(new class implements Rewrite {
-            public function of(Node $node): Node
+            public function of(Node $original, Node $rebuilt): Node
             {
-                return $node instanceof Write ? $node->children()[0] : $node;
+                return $rebuilt instanceof Write ? $rebuilt->children()[0] : $rebuilt;
             }
         });
     }
@@ -186,9 +186,9 @@ final class LogicalPlanTest extends FlowTestCase
         $plan = NodeMother::plan(NodeMother::limit(NodeMother::select($read), 5));
 
         $rewritten = $plan->transformUp(new class implements Rewrite {
-            public function of(Node $node): Node
+            public function of(Node $original, Node $rebuilt): Node
             {
-                return $node instanceof Limit ? new Limit($node->children()[0], 1) : $node;
+                return $rebuilt instanceof Limit ? new Limit($rebuilt->children()[0], 1) : $rebuilt;
             }
         });
 
@@ -205,9 +205,9 @@ final class LogicalPlanTest extends FlowTestCase
         $plan = NodeMother::plan(NodeMother::limit(NodeMother::select(NodeMother::read()), 5));
 
         $rewritten = $plan->transformUp(new class implements Rewrite {
-            public function of(Node $node): Node
+            public function of(Node $original, Node $rebuilt): Node
             {
-                return $node;
+                return $rebuilt;
             }
         });
 
