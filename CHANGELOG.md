@@ -1,6 +1,9 @@
 ## [Unreleased] - 2026-10-20
 
 ### Added
+- [#2695](https://github.com/flow-php/flow/pull/2695) - **flow-php/telemetry - UrlSanitizer with url_sanitizer() DSL** - [@norberttech](https://github.com/norberttech)
+- [#2695](https://github.com/flow-php/flow/pull/2695) - **flow-php/telemetry - ClientUrlAttributes for HTTP client span attributes** - [@norberttech](https://github.com/norberttech)
+- [#2695](https://github.com/flow-php/flow/pull/2695) - **flow-php/symfony-telemetry-bundle - instrumentation.sanitization.url.sensitive_query_parameters config** - [@norberttech](https://github.com/norberttech)
 - [#2694](https://github.com/flow-php/flow/pull/2694) - **flow-php/filesystem - Filters::filters() exposes the filters it combines** - [@norberttech](https://github.com/norberttech)
 - [#2694](https://github.com/flow-php/flow/pull/2694) - **flow-php/etl - ScalarFunctionFilter::function() exposes the filtering function** - [@norberttech](https://github.com/norberttech)
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/parquet - filtered reads with row group, page index and bloom filter pruning** - [@norberttech](https://github.com/norberttech)
@@ -11,6 +14,7 @@
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/arrow-ext - page-range reads and row filtering through arrow-rs** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2695](https://github.com/flow-php/flow/pull/2695) - **flow-php/psr18-telemetry-bridge - PSR18TraceableClient accepts a UrlSanitizer** - [@norberttech](https://github.com/norberttech)
 - [#2694](https://github.com/flow-php/flow/pull/2694) - **flow-php/etl - explain() renders filters, conditions and columns as expressions instead of class names** - [@norberttech](https://github.com/norberttech)
 - [#2694](https://github.com/flow-php/flow/pull/2694) - **flow-php/etl - explain() lists each pushed path filter on its own Files: line** - [@norberttech](https://github.com/norberttech)
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/parquet - column statistics aligned with arrow-rs** - [@norberttech](https://github.com/norberttech)
@@ -26,6 +30,7 @@
 - [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/flow - updated dev dependencies, mago 1.57 and GitHub Actions** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2695](https://github.com/flow-php/flow/pull/2695) - **flow-php/symfony-telemetry-bundle - HTTP client spans record the effective URL (base_uri, query option)** - [@norberttech](https://github.com/norberttech)
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/parquet - corrupt multi-page RLE_DICTIONARY columns written by the PHP writer** - [@norberttech](https://github.com/norberttech)
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/parquet - UINT_64 values above PHP_INT_MAX read as numeric strings** - [@norberttech](https://github.com/norberttech)
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/etl - string comparisons order by bytes instead of numerically** - [@norberttech](https://github.com/norberttech)
@@ -34,6 +39,11 @@
 
 ### Removed
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/parquet - unused DICTIONARY_PAGE_MIN_CARDINALITY_RATION option** - [@norberttech](https://github.com/norberttech)
+
+### Security
+- [#2695](https://github.com/flow-php/flow/pull/2695) - **flow-php/telemetry - exception.stacktrace no longer carries function argument values** - [@norberttech](https://github.com/norberttech)
+- [#2695](https://github.com/flow-php/flow/pull/2695) - **flow-php/psr18-telemetry-bridge - credentials and sensitive query values redacted in url.full and exception messages** - [@norberttech](https://github.com/norberttech)
+- [#2695](https://github.com/flow-php/flow/pull/2695) - **flow-php/symfony-telemetry-bundle - credentials and sensitive query values redacted in url.full, url.query and exception messages** - [@norberttech](https://github.com/norberttech)
 
 ## [0.46.0] - 2026-10-08
 
