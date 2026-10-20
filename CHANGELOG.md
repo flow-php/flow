@@ -1,6 +1,8 @@
 ## [Unreleased] - 2026-10-20
 
 ### Added
+- [#2697](https://github.com/flow-php/flow/pull/2697) - **flow-php/flow - CI cache for compiled PHP extensions** - [@norberttech](https://github.com/norberttech)
+- [#2697](https://github.com/flow-php/flow/pull/2697) - **flow-php/flow - shared Rust extension toolchain action** - [@norberttech](https://github.com/norberttech)
 - [#2696](https://github.com/flow-php/flow/pull/2696) - **flow-php/etl-adapter-parquet - from_parquet()->withSchema() reads every file by name against a declared schema** - [@norberttech](https://github.com/norberttech)
 - [#2696](https://github.com/flow-php/flow/pull/2696) - **flow-php/etl - from_floe()->withSchema() reads every file by name against a declared schema** - [@norberttech](https://github.com/norberttech)
 - [#2695](https://github.com/flow-php/flow/pull/2695) - **flow-php/telemetry - UrlSanitizer with url_sanitizer() DSL** - [@norberttech](https://github.com/norberttech)
@@ -16,6 +18,10 @@
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/arrow-ext - page-range reads and row filtering through arrow-rs** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2697](https://github.com/flow-php/flow/pull/2697) - **flow-php/flow - extension workflows run on pull requests only when their code changes** - [@norberttech](https://github.com/norberttech)
+- [#2697](https://github.com/flow-php/flow/pull/2697) - **flow-php/flow - reduced macOS and telemetry matrices on pull requests, full matrix on 1.x and nightly** - [@norberttech](https://github.com/norberttech)
+- [#2697](https://github.com/flow-php/flow/pull/2697) - **flow-php/flow - Rust builds cached with rust-cache** - [@norberttech](https://github.com/norberttech)
+- [#2697](https://github.com/flow-php/flow/pull/2697) - **flow-php/flow - shorter service health check intervals in CI** - [@norberttech](https://github.com/norberttech)
 - [#2696](https://github.com/flow-php/flow/pull/2696) - **flow-php/etl - an empty source without a declared schema throws InferredSchemaException** - [@norberttech](https://github.com/norberttech)
 - [#2696](https://github.com/flow-php/flow/pull/2696) - **flow-php/etl - from_cache() without a cache instance throws SchemaNotDerivableException** - [@norberttech](https://github.com/norberttech)
 - [#2696](https://github.com/flow-php/flow/pull/2696) - **flow-php/etl-adapter-csv, flow-php/etl-adapter-json, flow-php/etl-adapter-excel, flow-php/etl-adapter-google-sheet - an empty file, sheet or glob without a declared schema throws InferredSchemaException** - [@norberttech](https://github.com/norberttech)
@@ -35,6 +41,7 @@
 - [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/flow - updated dev dependencies, mago 1.57 and GitHub Actions** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2697](https://github.com/flow-php/flow/pull/2697) - **flow-php/flow - CI Azurite readiness check that always waited 30 seconds** - [@norberttech](https://github.com/norberttech)
 - [#2696](https://github.com/flow-php/flow/pull/2696) - **flow-php/etl - an empty source under a declared schema reads 0 rows instead of failing at plan time** - [@norberttech](https://github.com/norberttech)
 - [#2695](https://github.com/flow-php/flow/pull/2695) - **flow-php/symfony-telemetry-bundle - HTTP client spans record the effective URL (base_uri, query option)** - [@norberttech](https://github.com/norberttech)
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/parquet - corrupt multi-page RLE_DICTIONARY columns written by the PHP writer** - [@norberttech](https://github.com/norberttech)
@@ -44,6 +51,7 @@
 - [b5d097](https://github.com/flow-php/flow/commit/b5d097c5cabde914624be59774dd8a8d6fafe294) - **bump setup-php to 2.40.0 in extension release workflows** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2697](https://github.com/flow-php/flow/pull/2697) - **flow-php/flow - redundant apt installs from CI jobs** - [@norberttech](https://github.com/norberttech)
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/parquet - unused DICTIONARY_PAGE_MIN_CARDINALITY_RATION option** - [@norberttech](https://github.com/norberttech)
 
 ### Security
