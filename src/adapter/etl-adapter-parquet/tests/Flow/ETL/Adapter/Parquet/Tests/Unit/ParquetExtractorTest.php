@@ -7,7 +7,6 @@ namespace Flow\ETL\Adapter\Parquet\Tests\Unit;
 use Closure;
 use Flow\ETL\Adapter\Parquet\ParquetExtractor;
 use Flow\ETL\Cardinality;
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\Double\SpyBackend;
 use Flow\ETL\Tests\FlowTestCase;
@@ -189,16 +188,14 @@ final class ParquetExtractorTest extends FlowTestCase
         static::assertSame(1, $filesystem->readFromCalls);
     }
 
-    public function test_with_schema_is_refused(): void
+    public function test_a_declared_schema_answers_without_opening_a_file(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            'Parquet is a self-describing format and does not accept a schema; declaring one is not supported yet.',
+        static::assertEquals(
+            schema(int_schema('id')),
+            from_parquet(path('memory://no-match/*.parquet'), filesystem: memory_filesystem())
+                ->withSchema(schema(int_schema('id')))
+                ->schema(),
         );
-
-        from_parquet(__DIR__ . '/../Integration/Fixtures/Pagination/01_1000.parquet')->withSchema(schema(int_schema(
-            'id',
-        )));
     }
 
     public function test_extract_builds_through_the_config_backend(): void

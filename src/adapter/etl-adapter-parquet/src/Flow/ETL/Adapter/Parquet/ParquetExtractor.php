@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet;
 
+use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
@@ -73,6 +74,8 @@ final class ParquetExtractor implements
 
     private Options $options;
 
+    private ?Schema $schema = null;
+
     private SchemaConverter $schemaConverter;
 
     private ?Statistics $statistics = null;
@@ -117,16 +120,23 @@ final class ParquetExtractor implements
     public function scan(FlowContext $context, FileScan $scan): Generator
     {
         $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $scan->pathFilter), false);
-        // every file is read under the first file's schema, or the union of all of them
+
+        if ($sources === []) {
+            $this->closeFirstFile();
+
+            return;
+        }
+
+        // every file is read under the declared schema, the first file's schema, or the union of all of them
         $target = $this->schema();
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
         $batches = new ParquetFileBatches(
             $this->opener(),
             $fileColumns,
             $this->firstFile,
-            $this->unionByName
-                ? null
-                : new DerivedSchema($this->derivedSchema($this->schemaFiles(), $this->unionByName), $this->derivedFrom),
+            $this->schema === null && !$this->unionByName
+                ? new DerivedSchema($this->derivedSchema($this->schemaFiles(), $this->unionByName), $this->derivedFrom)
+                : null,
             $fileColumns->withoutTail($target),
             $scan->conjuncts,
         );
@@ -147,10 +157,24 @@ final class ParquetExtractor implements
 
     public function schema(): Schema
     {
-        return $this->fileColumns($this->filesystem, $this->path)->declare($this->derivedSchema(
-            $this->schemaFiles(),
-            $this->unionByName,
-        ));
+        $fileColumns = $this->fileColumns($this->filesystem, $this->path);
+
+        if ($this->schema !== null) {
+            return $fileColumns->declare(
+                $this->columns === [] ? $this->schema : $this->schema->keep(...$this->columns),
+            );
+        }
+
+        $derived = $this->derivedSchema($this->schemaFiles(), $this->unionByName);
+
+        if ($fileColumns->withoutTail($derived)->count() === 0) {
+            throw InferredSchemaException::nothingToInferFrom('from_parquet()', sprintf(
+                'no file matching "%s" carries a column',
+                $this->path->uri(),
+            ));
+        }
+
+        return $fileColumns->declare($derived);
     }
 
     public function statistics(): Statistics
@@ -325,8 +349,8 @@ final class ParquetExtractor implements
 
     public function withSchema(Schema $schema): static
     {
-        throw new InvalidArgumentException(
-            'Parquet is a self-describing format and does not accept a schema; declaring one is not supported yet.',
-        );
+        $this->schema = $schema;
+
+        return $this;
     }
 }

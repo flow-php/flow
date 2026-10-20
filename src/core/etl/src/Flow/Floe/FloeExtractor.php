@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Floe;
 
 use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
@@ -46,6 +47,8 @@ final class FloeExtractor implements
 
     private ?int $offset = null;
 
+    private ?Schema $schema = null;
+
     private ?Statistics $statistics = null;
 
     private bool $unionByName = false;
@@ -81,18 +84,24 @@ final class FloeExtractor implements
      */
     public function scan(FlowContext $context, FileScan $scan): Generator
     {
+        $sources = iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $scan->pathFilter), false);
+
+        if ($sources === []) {
+            return;
+        }
+
         $fileColumns = $this->fileColumns($this->filesystem, $this->path);
 
         yield from (new FileReadLoop($fileColumns, $this->schema(), $scan->conjuncts))->read(
-            iterator_to_array($this->sourceFiles($this->filesystem, $this->path, $scan->pathFilter), false),
+            $sources,
             new FloeFileBatches(
                 $this->filesystem,
                 $this->codec,
                 $this->chunkSize,
                 $fileColumns,
-                $this->unionByName
-                    ? null
-                    : new DerivedSchema($this->derivedSchema($this->files(), $this->unionByName), $this->derivedFrom),
+                $this->schema === null && !$this->unionByName
+                    ? new DerivedSchema($this->derivedSchema($this->files(), $this->unionByName), $this->derivedFrom)
+                    : null,
             ),
             $this->batchSize(),
             $context,
@@ -100,16 +109,24 @@ final class FloeExtractor implements
         );
     }
 
-    /**
-     * Footer-only source schema (two ranged reads per file, no row scan). One file unless
-     * unionByName() asks for the fold, and memoised, so repeated calls cost nothing.
-     */
     public function schema(): Schema
     {
-        return $this->fileColumns($this->filesystem, $this->path)->declare($this->derivedSchema(
-            $this->files(),
-            $this->unionByName,
-        ));
+        $fileColumns = $this->fileColumns($this->filesystem, $this->path);
+
+        if ($this->schema !== null) {
+            return $fileColumns->declare($this->schema);
+        }
+
+        $derived = $this->derivedSchema($this->files(), $this->unionByName);
+
+        if ($fileColumns->withoutTail($derived)->count() === 0) {
+            throw InferredSchemaException::nothingToInferFrom('from_floe()', sprintf(
+                'no file matching "%s" carries a column',
+                $this->path->uri(),
+            ));
+        }
+
+        return $fileColumns->declare($derived);
     }
 
     public function statistics(): Statistics
@@ -184,8 +201,8 @@ final class FloeExtractor implements
 
     public function withSchema(Schema $schema): static
     {
-        throw new InvalidArgumentException(
-            'Floe is a self-describing format and does not accept a schema; declaring one is not supported yet.',
-        );
+        $this->schema = $schema;
+
+        return $this;
     }
 }

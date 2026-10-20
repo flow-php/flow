@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Extractor;
 
 use Flow\ETL\Cardinality;
+use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
@@ -37,7 +38,7 @@ final class RowsExtractor implements Extractor, RewindableExtractor
      */
     public function extract(FlowContext $context, ?int $limit = null): Generator
     {
-        $schema = $this->schema();
+        $schema = $this->describe();
 
         foreach ($this->rows as $rows) {
             $signal = yield $rows->matchTo($schema, $context->backend());
@@ -49,6 +50,17 @@ final class RowsExtractor implements Extractor, RewindableExtractor
     }
 
     public function schema(): Schema
+    {
+        $schema = $this->describe();
+
+        if ($this->schema === null && $schema->count() === 0) {
+            throw InferredSchemaException::nothingToInferFrom('from_rows()', 'no row carries a column');
+        }
+
+        return $schema;
+    }
+
+    private function describe(): Schema
     {
         if ($this->schema !== null) {
             return $this->schema;

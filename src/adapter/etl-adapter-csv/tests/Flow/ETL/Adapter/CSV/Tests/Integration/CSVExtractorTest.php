@@ -71,6 +71,39 @@ final class CSVExtractorTest extends FlowTestCase
 {
     use OperatingSystem;
 
+    public function test_an_empty_glob_refuses_to_infer_a_schema(): void
+    {
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'from_csv() has nothing to infer a schema from: no file matching "memory://empty/*.csv" carries a column. '
+            . 'Declare the schema with ->withSchema(...).',
+        );
+
+        from_csv(path('memory://empty/*.csv'), filesystem: memory_filesystem())->schema();
+    }
+
+    public function test_an_empty_glob_with_metadata_columns_refuses_to_infer_a_schema(): void
+    {
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'from_csv() has nothing to infer a schema from: no file matching "memory://empty/*.csv" carries a column. '
+            . 'Declare the schema with ->withSchema(...).',
+        );
+
+        from_csv(path('memory://empty/*.csv'), filesystem: memory_filesystem())->withMetadataColumns(true)->schema();
+    }
+
+    public function test_an_empty_glob_with_a_declared_schema_answers_it_and_extracts_nothing(): void
+    {
+        $extractor = from_csv(
+            path('memory://empty/*.csv'),
+            filesystem: memory_filesystem(),
+        )->withSchema(schema(int_schema('id')));
+
+        static::assertEquals(schema(int_schema('id')), $extractor->schema());
+        static::assertSame([], iterator_to_array($extractor->extract(flow_context()), false));
+    }
+
     public function test_a_hive_null_partition_value_reads_back_as_null(): void
     {
         $dir = __DIR__ . '/var/test_a_hive_null_partition_value_reads_back_as_null';
@@ -484,17 +517,32 @@ final class CSVExtractorTest extends FlowTestCase
         static::assertSame([], iterator_to_array($extractor->extract(flow_context(config()))));
     }
 
-    public function test_an_empty_file_infers_an_empty_schema(): void
+    public function test_an_empty_file_refuses_to_infer_a_schema_and_extracts_nothing(): void
     {
         $extractor = from_csv(CSVFixtureContext::path('empty.csv'));
 
-        static::assertSame([], $extractor->schema()->definitions());
         static::assertSame([], iterator_to_array($extractor->extract(flow_context(config()))));
+
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'from_csv() has nothing to infer a schema from: no file matching "'
+            . path_real(CSVFixtureContext::path('empty.csv'))->uri()
+            . '" carries a column. Declare the schema with ->withSchema(...).',
+        );
+
+        $extractor->schema();
     }
 
-    public function test_a_glob_of_only_empty_files_infers_an_empty_schema(): void
+    public function test_a_glob_of_only_empty_files_refuses_to_infer_a_schema(): void
     {
-        static::assertSame([], from_csv(CSVFixtureContext::path('two_empty/*.csv'))->schema()->definitions());
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'from_csv() has nothing to infer a schema from: no file matching "'
+            . path_real(CSVFixtureContext::path('two_empty/*.csv'))->uri()
+            . '" carries a column. Declare the schema with ->withSchema(...).',
+        );
+
+        from_csv(CSVFixtureContext::path('two_empty/*.csv'))->schema();
     }
 
     public function test_an_empty_file_in_a_glob_is_skipped(): void
@@ -1224,17 +1272,12 @@ final class CSVExtractorTest extends FlowTestCase
 
         fclose($handle);
 
-        static::assertSame(
+        self::assertExtractedRowsCount(
             max(0, $records - 1),
-            df()
-                ->read(
-                    from_csv($path)
-                        ->withSeparator($dialect->separator)
-                        ->withEnclosure($dialect->enclosure)
-                        ->withEscape($dialect->escape),
-                )
-                ->fetch()
-                ->count(),
+            from_csv($path)
+                ->withSeparator($dialect->separator)
+                ->withEnclosure($dialect->enclosure)
+                ->withEscape($dialect->escape),
         );
     }
 

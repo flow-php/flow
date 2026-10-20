@@ -197,6 +197,14 @@ final class GoogleSheetExtractor implements
             $this->gridRowCount = $sampler->gridRowCount();
         }
 
+        if ($this->schema === null && $base->count() === 0) {
+            throw InferredSchemaException::nothingToInferFrom('from_google_sheet()', sprintf(
+                'spreadsheet "%s" sheet "%s" carries no column',
+                $this->spreadsheetId,
+                $this->columnRange->sheetName,
+            ));
+        }
+
         return $this->addMetadataColumns
             ? $base->add(str_schema('_spread_sheet_id'), str_schema('_sheet_name'))
             : $base;

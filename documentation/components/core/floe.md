@@ -41,7 +41,8 @@ data_frame()
 
 Batches hold at most `withBatchSize()` rows, never spanning two BATCH frames.
 
-The footer is the schema: `from_floe(...)->withSchema()` throws. Change a column's type or zone after reading:
+The footer is the schema; `withSchema()` reads every file by name against a declared one, as
+[Parquet](/documentation/components/adapters/parquet.md) does. Change a column's type or zone after reading:
 
 ```php
 <?php

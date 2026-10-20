@@ -16,10 +16,12 @@ use function Flow\ETL\Adapter\XML\to_xml;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_sequence_number;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\to_transformation;
 use function Flow\Filesystem\DSL\memory_filesystem;
@@ -93,7 +95,7 @@ final class XMLLoaderTest extends FlowIntegrationTestCase
     public function test_writing_empty_rows(): void
     {
         df()
-            ->read(from_array([]))
+            ->read(from_array([], schema(int_schema('id'))))
             ->write(to_xml($path = $this->cacheDir->suffix('test_xml_loader.xml')))
             ->run();
 

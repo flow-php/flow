@@ -65,7 +65,7 @@ final class ExecutorTest extends FlowTestCase
             }
         })();
 
-        $merged = (new Executor())->merge($batches, PhysicalPlanMother::reading(from_array([])));
+        $merged = (new Executor())->merge($batches, PhysicalPlanMother::reading(from_array([], $schema)));
 
         static::assertSame([1, 2, 3, 4, 5], $merged->reduceToArray('id'));
         static::assertSame(
@@ -85,7 +85,7 @@ final class ExecutorTest extends FlowTestCase
             ['other'],
             array_keys(
                 (new Executor())
-                    ->merge($batches, PhysicalPlanMother::reading(from_array([])))
+                    ->merge($batches, PhysicalPlanMother::reading(from_array([], schema(int_schema('other')))))
                     ->schema()
                     ->definitions(),
             ),

@@ -16,6 +16,8 @@ use Flow\ETL\Schema;
 use Flow\Filesystem\Filesystem;
 use Generator;
 
+use function array_diff;
+
 final readonly class FloeFileBatches implements OffsetSkippingFileBatches
 {
     /**
@@ -60,6 +62,10 @@ final readonly class FloeFileBatches implements OffsetSkippingFileBatches
             $this->derived?->refuseDivergence($file->source()->uri(), $file->schema());
 
             $fileBody = $this->fileColumns->withoutTail($file->schema());
+            $fileBody = $fileBody->gracefulRemove(...array_diff(
+                $fileBody->references()->names(),
+                $body->references()->names(),
+            ));
 
             foreach ($file->reader->rows($batchSize, $window->offset, $window->limit) as $rows) {
                 if (!$fileBody->isSame($file->schema())) {

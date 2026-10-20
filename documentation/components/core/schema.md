@@ -210,8 +210,8 @@ The HTTP extractors accept a schema the same way - see
 [Typing the row with a schema](/documentation/components/adapters/http.md) for declaring the response body as a
 `structure`.
 
-Self-descriptive formats carry their schema in the file itself, so their extractors read it from there and have no
-`withSchema()` - Parquet and Floe in this repository.
+Self-descriptive formats carry their schema in the file itself - Parquet and Floe in this repository. Their extractors
+read it from there unless `withSchema()` declares one, which reads every file by name.
 
 ### PostgreSQL sources describe themselves, and keep `withSchema()`
 

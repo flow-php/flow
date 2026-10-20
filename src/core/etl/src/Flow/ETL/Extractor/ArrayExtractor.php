@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Extractor;
 
 use Flow\ETL\Cardinality;
+use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Memory\InferredRows;
@@ -71,7 +72,7 @@ final class ArrayExtractor implements BatchableExtractor, Extractor, InfersSchem
     public function extract(FlowContext $context, ?int $limit = null): Generator
     {
         $batchSize = $this->batchSize();
-        $schema = $this->schema();
+        $schema = $this->describe();
         $buffer = [];
 
         // a one-shot dataset is typed from every row it spills, so only an array's bounded sample can be outrun
@@ -123,6 +124,17 @@ final class ArrayExtractor implements BatchableExtractor, Extractor, InfersSchem
     }
 
     public function schema(): Schema
+    {
+        $schema = $this->describe();
+
+        if ($this->schema === null && $schema->count() === 0) {
+            throw InferredSchemaException::nothingToInferFrom('from_array()', 'no row carries a column');
+        }
+
+        return $schema;
+    }
+
+    private function describe(): Schema
     {
         if ($this->schema !== null) {
             return $this->schema;

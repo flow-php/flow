@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Extractor;
 
 use Flow\ETL\Cardinality;
+use Flow\ETL\Exception\InferredSchemaException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\BatchableExtractor;
 use Flow\ETL\Extractor\Statistics;
@@ -31,6 +32,44 @@ use function iterator_to_array;
 
 final class ChainExtractorTest extends FlowTestCase
 {
+    public function test_a_chain_without_extractors_refuses_to_infer_a_schema(): void
+    {
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage('from_all() has nothing to infer a schema from: it chains no extractor. Declare the schema with '
+        . '->withSchema(...).');
+
+        from_all()->schema();
+    }
+
+    public function test_a_chain_without_extractors_answers_a_declared_schema(): void
+    {
+        static::assertEquals(schema(int_schema('id')), from_all()->withSchema(schema(int_schema('id')))->schema());
+    }
+
+    public function test_an_empty_nested_chain_reads_nothing_under_a_declared_schema(): void
+    {
+        static::assertSame(
+            [],
+            iterator_to_array(
+                from_all(from_all(), from_all(from_array([])))
+                    ->withSchema(schema(int_schema('id')))
+                    ->extract(flow_context()),
+                false,
+            ),
+        );
+    }
+
+    public function test_a_declared_chain_schema_reads_an_empty_child_without_asking_it(): void
+    {
+        static::assertSame(
+            [],
+            iterator_to_array(
+                from_all(from_array([]))->withSchema(schema(int_schema('id')))->extract(flow_context()),
+                false,
+            ),
+        );
+    }
+
     public function test_a_chain_containing_a_data_frame_source_folds_its_schema(): void
     {
         static::assertEquals(

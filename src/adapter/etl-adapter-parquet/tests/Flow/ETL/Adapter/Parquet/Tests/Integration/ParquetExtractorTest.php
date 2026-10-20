@@ -9,6 +9,7 @@ use Flow\ETL\Adapter\Parquet\ParquetExtractor;
 use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetFilesContext;
 use Flow\ETL\Cardinality;
 use Flow\ETL\Exception\InferredSchemaException;
+use Flow\ETL\Exception\SchemaMismatchException;
 use Flow\ETL\Extractor\File\FileScan;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Plan\Stage;
@@ -16,7 +17,7 @@ use Flow\ETL\Schema\Definition;
 use Flow\ETL\Tests\Context\ExtractedRows;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\Double\RecordingFilesystem;
-use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Tests\Double\RejectingFilter;
 use Flow\Parquet\Binary\ByteOrder;
@@ -66,7 +67,7 @@ use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_uuid;
 use function iterator_to_array;
 
-final class ParquetExtractorTest extends FlowTestCase
+final class ParquetExtractorTest extends FlowIntegrationTestCase
 {
     /**
      * @return Generator<string, array{?ParquetEngine}>
@@ -75,6 +76,144 @@ final class ParquetExtractorTest extends FlowTestCase
     {
         yield 'default engine' => [null];
         yield 'php engine' => [new PhpParquetEngine()];
+    }
+
+    public function test_a_declared_schema_reads_files_by_name(): void
+    {
+        df()
+            ->read(from_array([['id' => 1, 'name' => 'one']]))
+            ->write(to_parquet($this->cacheDir->suffix('by-name.parquet')))
+            ->run();
+
+        static::assertSame(
+            [['id' => 1]],
+            df()
+                ->read(from_parquet(
+                    $this->cacheDir->suffix('by-name.parquet'),
+                    filesystem: $this->fs(),
+                )->withSchema(schema(int_schema('id'))))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    public function test_a_declared_nullable_column_a_file_lacks_reads_as_null(): void
+    {
+        df()
+            ->read(from_array([['id' => 1]]))
+            ->write(to_parquet($this->cacheDir->suffix('nullable.parquet')))
+            ->run();
+
+        static::assertSame(
+            [['id' => 1, 'name' => null]],
+            df()
+                ->read(from_parquet(
+                    $this->cacheDir->suffix('nullable.parquet'),
+                    filesystem: $this->fs(),
+                )->withSchema(schema(int_schema('id'), str_schema('name', nullable: true))))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    public function test_a_declared_non_nullable_column_a_file_lacks_fails(): void
+    {
+        df()
+            ->read(from_array([['id' => 1]]))
+            ->write(to_parquet($this->cacheDir->suffix('not-null.parquet')))
+            ->run();
+
+        $this->expectException(SchemaMismatchException::class);
+
+        df()
+            ->read(from_parquet(
+                $this->cacheDir->suffix('not-null.parquet'),
+                filesystem: $this->fs(),
+            )->withSchema(schema(int_schema('id'), str_schema('name'))))
+            ->fetch();
+    }
+
+    public function test_a_declared_schema_skips_the_divergence_check(): void
+    {
+        df()
+            ->read(from_array([['id' => 1, 'a' => 'x']]))
+            ->write(to_parquet($this->cacheDir->suffix('diverging/a.parquet')))
+            ->run();
+        df()
+            ->read(from_array([['id' => 2, 'b' => 'y']]))
+            ->write(to_parquet($this->cacheDir->suffix('diverging/b.parquet')))
+            ->run();
+
+        static::assertSame(
+            [['id' => 1, 'a' => 'x', 'b' => null], ['id' => 2, 'a' => null, 'b' => 'y']],
+            df()
+                ->read(from_parquet(
+                    $this->cacheDir->suffix('diverging/*.parquet'),
+                    filesystem: $this->fs(),
+                )->withSchema(schema(
+                    int_schema('id', nullable: true),
+                    str_schema('a', nullable: true),
+                    str_schema('b', nullable: true),
+                )))
+                ->sortBy(ref('id'))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    public function test_with_columns_narrows_a_declared_schema(): void
+    {
+        static::assertEquals(
+            schema(int_schema('id')),
+            from_parquet($this->cacheDir->suffix('narrowed/*.parquet'), filesystem: $this->fs())
+                ->withSchema(schema(int_schema('id'), str_schema('name')))
+                ->withColumns(['id'])
+                ->schema(),
+        );
+    }
+
+    public function test_a_read_whose_path_filter_rejects_every_file_closes_the_file_the_schema_kept_open(): void
+    {
+        $filesystem = new CountingFilesystem(new NativeLocalFilesystem());
+        $extractor = from_parquet(path(__DIR__ . '/Fixtures/orders_1k.parquet'), filesystem: $filesystem);
+        $extractor->schema();
+
+        iterator_to_array(
+            $extractor->scan(flow_context(config()), new FileScan(pathFilter: new RejectingFilter())),
+            false,
+        );
+
+        static::assertCount(1, $filesystem->openedStreams);
+        static::assertSame(1, $filesystem->closedStreams());
+    }
+
+    public function test_a_glob_without_files_refuses_to_infer(): void
+    {
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'from_parquet() has nothing to infer a schema from: no file matching "'
+            . $this->cacheDir->suffix('**/*.parquet')->uri()
+            . '" carries a column. Declare the schema with ->withSchema(...).',
+        );
+
+        df()
+            ->read(from_parquet($this->cacheDir->suffix('**/*.parquet'), filesystem: $this->fs()))
+            ->select('id')
+            ->fetch();
+    }
+
+    public function test_a_glob_without_files_reads_nothing_under_a_declared_schema(): void
+    {
+        static::assertCount(
+            0,
+            df()
+                ->read(from_parquet(
+                    $this->cacheDir->suffix('**/*.parquet'),
+                    filesystem: $this->fs(),
+                )->withSchema(schema(int_schema('id'))))
+                ->select('id')
+                ->fetch(),
+        );
     }
 
     #[DataProvider('engines')]

@@ -282,7 +282,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         static::assertCount(0, df()->extract($extractor)->fetch());
     }
 
-    public function test_an_empty_sheet_infers_an_empty_schema(): void
+    public function test_an_empty_sheet_refuses_to_infer_a_schema_and_extracts_nothing(): void
     {
         $extractor = from_google_sheet(
             $this->context->sheets(
@@ -293,8 +293,15 @@ final class GoogleSheetExtractorTest extends FlowTestCase
             'Sheet',
         );
 
-        static::assertCount(0, $extractor->schema()->definitions());
-        static::assertCount(0, df()->extract($extractor)->fetch());
+        static::assertCount(0, iterator_to_array($extractor->extract(flow_context())));
+
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'from_google_sheet() has nothing to infer a schema from: spreadsheet "1234567890" sheet "Sheet" carries no '
+            . 'column. Declare the schema with ->withSchema(...).',
+        );
+
+        $extractor->schema();
     }
 
     public function test_unformatted_values_keep_the_types_the_api_gave_them(): void

@@ -123,7 +123,7 @@ final class CSVExtractorTest extends FlowTestCase
     public function test_an_empty_file_declares_zero_rows_exactly(): void
     {
         $extractor = from_csv(CSVFixtureContext::path('empty.csv'));
-        $extractor->schema();
+        self::assertExtractedRowsCount(0, $extractor);
 
         static::assertEquals(Cardinality::exact(0), $extractor->statistics()->rows);
         static::assertEquals(Cardinality::unknown(), $extractor->statistics()->size);

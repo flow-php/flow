@@ -23,7 +23,7 @@ final class JoinStepsTest extends FlowTestCase
     public function test_builds_a_hash_join_processor(): void
     {
         $steps = JoinSteps::of(
-            PhysicalPlanMother::reading(from_rows(rows(schema()))),
+            PhysicalPlanMother::reading(from_rows(rows(schema()))->withSchema(schema(int_schema('user_id')))),
             Expression::on(['id' => 'user_id']),
             Join::left,
             config_builder()->build(),
