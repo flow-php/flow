@@ -86,6 +86,7 @@ final class StackTraceTest extends TestCase
     public function test_trace_has_no_argument_values_when_arguments_are_collected(): void
     {
         $previous = ini_set('zend.exception_ignore_args', '0');
+        $previousMaxLength = ini_set('zend.exception_string_param_max_len', '15');
         $line = __LINE__ + 3;
 
         try {
@@ -97,6 +98,7 @@ final class StackTraceTest extends TestCase
             static::assertStringContainsString('}()' . "\n#1 ", StackTrace::format($exception));
         } finally {
             ini_set('zend.exception_ignore_args', (string) $previous);
+            ini_set('zend.exception_string_param_max_len', (string) $previousMaxLength);
         }
     }
 }

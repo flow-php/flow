@@ -194,6 +194,7 @@ final class LogRecordTest extends TestCase
     {
         $record = new LogRecord();
         $previous = ini_set('zend.exception_ignore_args', '0');
+        $previousMaxLength = ini_set('zend.exception_string_param_max_len', '15');
 
         try {
             (static fn(string $argument): never => throw new RuntimeException('failure'))('SECRET_ARGUMENT');
@@ -201,6 +202,7 @@ final class LogRecordTest extends TestCase
             $record = $record->setException($exception);
         } finally {
             ini_set('zend.exception_ignore_args', (string) $previous);
+            ini_set('zend.exception_string_param_max_len', (string) $previousMaxLength);
         }
 
         $stacktrace = $record->attributes->get('exception.stacktrace');
