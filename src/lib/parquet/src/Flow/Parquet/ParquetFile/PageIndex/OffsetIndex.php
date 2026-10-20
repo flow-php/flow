@@ -26,6 +26,7 @@ final readonly class OffsetIndex
     {
         return new self(array_values(array_map(
             static fn(ThriftPageLocation $location): PageLocation => PageLocation::fromThrift($location),
+            // @mago-expect analysis:redundant-null-coalesce
             $index->page_locations ?? [],
         )));
     }

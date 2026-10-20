@@ -90,6 +90,7 @@ use Flow\Telemetry\Resource\Detector\ManualDetector;
 use Flow\Telemetry\Resource\Detector\OsDetector;
 use Flow\Telemetry\Resource\Detector\ProcessDetector;
 use Flow\Telemetry\Resource\ResourceDetector;
+use Flow\Telemetry\Sanitizer\UrlSanitizer;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\GenericEvent;
 use Flow\Telemetry\Tracer\Processor\AttributeFilteringSpanProcessor;
@@ -1151,4 +1152,15 @@ function composite_error_handler(ErrorHandler ...$handlers): CompositeErrorHandl
 function null_error_handler(): NullErrorHandler
 {
     return new NullErrorHandler();
+}
+
+/**
+ * Create a UrlSanitizer. The given list replaces the OpenTelemetry semantic-convention default list.
+ *
+ * @param list<string> $sensitiveQueryParameters Case-sensitive query parameter keys whose values are replaced with REDACTED
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function url_sanitizer(array $sensitiveQueryParameters = UrlSanitizer::DEFAULT_SENSITIVE_QUERY_PARAMETERS): UrlSanitizer
+{
+    return new UrlSanitizer($sensitiveQueryParameters);
 }

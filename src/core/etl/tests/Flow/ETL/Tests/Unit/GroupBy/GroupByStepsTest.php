@@ -30,6 +30,8 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\sum;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_string;
 
 final class GroupByStepsTest extends FlowTestCase
 {
@@ -85,7 +87,7 @@ final class GroupByStepsTest extends FlowTestCase
 
         foreach ($result as $batch) {
             foreach ($batch->toArray() as $groupRow) {
-                $aggregated[$groupRow['category']] = $groupRow['amount_sum'];
+                $aggregated[type_string()->assert($groupRow['category'])] = $groupRow['amount_sum'];
             }
         }
 
@@ -160,7 +162,7 @@ final class GroupByStepsTest extends FlowTestCase
 
         foreach ($result as $batch) {
             foreach ($batch->toArray() as $groupRow) {
-                $aggregated[$groupRow['id']] = $groupRow['amount_sum'];
+                $aggregated[type_integer()->assert($groupRow['id'])] = $groupRow['amount_sum'];
             }
         }
 
@@ -209,7 +211,7 @@ final class GroupByStepsTest extends FlowTestCase
 
         foreach ($result as $batch) {
             foreach ($batch->toArray() as $groupRow) {
-                $aggregated[$groupRow['category'] ?? '__null__'] = $groupRow['_count'];
+                $aggregated[type_string()->assert($groupRow['category'] ?? '__null__')] = $groupRow['_count'];
             }
         }
 

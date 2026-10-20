@@ -15,9 +15,47 @@ use Psr\Http\Client\ClientInterface;
 use RuntimeException;
 
 use function Flow\Bridge\Psr18\Telemetry\DSL\psr18_traceable_client;
+use function Flow\Telemetry\DSL\url_sanitizer;
 
 final class PSR18TraceableClientTest extends TestCase
 {
+    public function test_custom_sanitizer_redacts_configured_query_parameters_and_userinfo(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+
+        $client = $this->createStub(ClientInterface::class);
+        $client->method('sendRequest')->willReturn(new Response(200));
+
+        psr18_traceable_client(
+            $client,
+            TelemetryMother::withSpanProcessor($spanProcessor),
+            url_sanitizer(['access_token']),
+        )->sendRequest(new Request('GET', 'https://u:p@graph.facebook.com/me?access_token=SECRET&fields=id'));
+
+        static::assertSame(
+            'https://REDACTED:REDACTED@graph.facebook.com/me?access_token=REDACTED&fields=id',
+            $spanProcessor->endedSpans()[0]->attributes()['url.full'],
+        );
+    }
+
+    public function test_default_sanitizer_redacts_sensitive_query_parameters(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+
+        $client = $this->createStub(ClientInterface::class);
+        $client->method('sendRequest')->willReturn(new Response(200));
+
+        psr18_traceable_client($client, TelemetryMother::withSpanProcessor($spanProcessor))->sendRequest(new Request(
+            'GET',
+            'https://bucket.s3.amazonaws.com/file?X-Amz-Signature=SECRET&access_token=SECRET&fields=id',
+        ));
+
+        static::assertSame(
+            'https://bucket.s3.amazonaws.com/file?X-Amz-Signature=REDACTED&access_token=REDACTED&fields=id',
+            $spanProcessor->endedSpans()[0]->attributes()['url.full'],
+        );
+    }
+
     public function test_emits_no_spans_when_tracing_is_suppressed(): void
     {
         $spanProcessor = new MemorySpanProcessor(new VoidExporter());
@@ -33,6 +71,38 @@ final class PSR18TraceableClientTest extends TestCase
             $spanProcessor->endedSpans(),
             'PSR-18 client instrumentation must emit no spans while tracing is suppressed',
         );
+    }
+
+    public function test_exception_message_and_status_description_hold_redacted_url(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new VoidExporter());
+
+        $client = $this->createStub(ClientInterface::class);
+        $client
+            ->method('sendRequest')
+            ->willThrowException(
+                new RuntimeException('Could not reach "https://graph.facebook.com/me?access_token=SECRET".'),
+            );
+
+        $this->expectException(RuntimeException::class);
+
+        try {
+            psr18_traceable_client(
+                $client,
+                TelemetryMother::withSpanProcessor($spanProcessor),
+                url_sanitizer(['access_token']),
+            )->sendRequest(new Request('GET', 'https://graph.facebook.com/me?access_token=SECRET'));
+        } finally {
+            $span = $spanProcessor->endedSpans()[0];
+            static::assertSame(
+                'Could not reach "https://graph.facebook.com/me?access_token=REDACTED".',
+                $span->events()[0]->attributes()['exception.message'],
+            );
+            static::assertSame(
+                'Could not reach "https://graph.facebook.com/me?access_token=REDACTED".',
+                $span->status()?->description,
+            );
+        }
     }
 
     public function test_exception_is_recorded_and_rethrown(): void

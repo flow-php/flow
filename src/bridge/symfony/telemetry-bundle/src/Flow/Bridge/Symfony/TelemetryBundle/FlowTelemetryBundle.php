@@ -58,6 +58,7 @@ use Flow\Telemetry\ErrorHandler\SyslogSeverity;
 use Flow\Telemetry\ErrorHandler\UdpSyslogHandler;
 use Flow\Telemetry\Logger\Logger;
 use Flow\Telemetry\Logger\LoggerProvider;
+use Flow\Telemetry\Sanitizer\UrlSanitizer;
 use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\Logger\Middleware\AttributeFilteringLogMiddleware;
 use Flow\Telemetry\Logger\Middleware\EnrichingLogMiddleware;
@@ -143,7 +144,7 @@ use function ucfirst;
 use const LOG_PID;
 
 /**
- * @type FlowTelemetryInstrumentationConfig = array{http_kernel?: array{enabled?: bool, exclude_paths?: array<array{path: string, method?: null|string}>, context_propagation?: bool, context_propagation_query?: bool, require_trace_context?: bool, route_naming?: 'path'|'name', trace_controller?: bool, trace_controller_resolution?: bool, trace_controller_arguments?: bool, trace_controller_argument_resolvers?: bool}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool, trace?: bool, metrics?: bool, span_naming?: 'message_fqcn'|'message_name'|'transport'}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, security?: array{enabled?: bool, fields?: array{id?: array{enabled?: bool, attribute?: string}, roles?: array{enabled?: bool, attribute?: string}, email?: array{enabled?: bool, attribute?: string, getter?: string}}}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, max_sql_length?: int, collect_metrics?: bool, include_parameters?: bool, max_parameters?: int, max_parameter_length?: int, transaction_spans?: 'grouped'|'per_operation'|'off', exclude_connections?: array<string>, exclude_tables?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>, flush_deferred?: bool}}
+ * @type FlowTelemetryInstrumentationConfig = array{sanitization?: array{url?: array{sensitive_query_parameters?: list<string>}}, http_kernel?: array{enabled?: bool, exclude_paths?: array<array{path: string, method?: null|string}>, context_propagation?: bool, context_propagation_query?: bool, require_trace_context?: bool, route_naming?: 'path'|'name', trace_controller?: bool, trace_controller_resolution?: bool, trace_controller_arguments?: bool, trace_controller_argument_resolvers?: bool}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool, trace?: bool, metrics?: bool, span_naming?: 'message_fqcn'|'message_name'|'transport'}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, security?: array{enabled?: bool, fields?: array{id?: array{enabled?: bool, attribute?: string}, roles?: array{enabled?: bool, attribute?: string}, email?: array{enabled?: bool, attribute?: string, getter?: string}}}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, max_sql_length?: int, collect_metrics?: bool, include_parameters?: bool, max_parameters?: int, max_parameter_length?: int, transaction_spans?: 'grouped'|'per_operation'|'off', exclude_connections?: array<string>, exclude_tables?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>, flush_deferred?: bool}}
  */
 final class FlowTelemetryBundle extends AbstractBundle
 {
@@ -553,6 +554,26 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->info('Auto-instrumentation configuration')
             ->addDefaultsIfNotSet()
             ->children()
+            ->arrayNode('sanitization')
+            ->info('Sanitization of sensitive data in instrumentation attributes (OpenTelemetry semconv "instrumentation general sanitization")')
+            ->addDefaultsIfNotSet()
+            ->children()
+            ->arrayNode('url')
+            ->info('URL sanitization for url.full / url.query of http_kernel, http_client and psr18_client spans')
+            ->addDefaultsIfNotSet()
+            ->children()
+            ->arrayNode('sensitive_query_parameters')
+            ->info('Query parameter keys whose values are replaced with REDACTED. Case-sensitive. Replaces the OpenTelemetry semantic-convention default list, it does not extend it.')
+            ->scalarPrototype()
+            ->cannotBeEmpty()
+            ->end()
+            ->defaultValue(UrlSanitizer::DEFAULT_SENSITIVE_QUERY_PARAMETERS)
+            ->performNoDeepMerging()
+            ->end()
+            ->end()
+            ->end()
+            ->end()
+            ->end()
             ->arrayNode('http_kernel')
             ->info('HTTP kernel request tracing configuration')
             ->canBeEnabled()
@@ -2980,6 +3001,10 @@ final class FlowTelemetryBundle extends AbstractBundle
      */
     private function registerInstrumentation(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
+        $builder->setDefinition('flow.telemetry.url_sanitizer', new Definition(UrlSanitizer::class, [
+            $config['sanitization']['url']['sensitive_query_parameters'] ?? UrlSanitizer::DEFAULT_SENSITIVE_QUERY_PARAMETERS,
+        ]));
+
         $httpKernelConfig = $config['http_kernel'] ?? [];
 
         if ((bool) ($httpKernelConfig['enabled'] ?? false)) {

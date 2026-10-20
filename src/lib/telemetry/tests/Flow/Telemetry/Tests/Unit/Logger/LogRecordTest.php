@@ -190,6 +190,24 @@ final class LogRecordTest extends TestCase
         static::assertStringContainsString('LogRecordTest', $stacktrace);
     }
 
+    public function test_set_exception_stacktrace_has_no_argument_values(): void
+    {
+        $record = new LogRecord();
+        $previous = ini_set('zend.exception_ignore_args', '0');
+
+        try {
+            (static fn(string $argument): never => throw new RuntimeException('failure'))('SECRET_ARGUMENT');
+        } catch (RuntimeException $exception) {
+            $record = $record->setException($exception);
+        } finally {
+            ini_set('zend.exception_ignore_args', (string) $previous);
+        }
+
+        $stacktrace = $record->attributes->get('exception.stacktrace');
+        static::assertIsString($stacktrace);
+        static::assertStringNotContainsString('SECRET_', $stacktrace);
+    }
+
     public function test_set_observed_timestamp_returns_new_instance(): void
     {
         $record = new LogRecord();

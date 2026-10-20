@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Telemetry;
 
 use DateTimeInterface;
+use Flow\Telemetry\Sanitizer\StackTrace;
 use Throwable;
 
 use function array_filter;
@@ -220,7 +221,7 @@ final readonly class Attributes
             return [
                 'type' => $value::class,
                 'message' => $value->getMessage(),
-                'stacktrace' => $value->getTraceAsString(),
+                'stacktrace' => StackTrace::format($value),
             ];
         }
 

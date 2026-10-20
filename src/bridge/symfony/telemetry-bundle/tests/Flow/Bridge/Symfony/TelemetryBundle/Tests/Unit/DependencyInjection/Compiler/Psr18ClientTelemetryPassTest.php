@@ -8,6 +8,7 @@ use Flow\Bridge\Psr18\Telemetry\PSR18TraceableClient;
 use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\Psr18ClientTelemetryPass;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Psr18\MockPsr18Client;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Psr18\ResettablePsr18Client;
+use Flow\Telemetry\Sanitizer\UrlSanitizer;
 use Flow\Telemetry\Telemetry;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -15,6 +16,7 @@ use stdClass;
 use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\Compiler\PassConfig;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Contracts\Service\ResetInterface;
 
 #[CoversClass(Psr18ClientTelemetryPass::class)]
@@ -25,6 +27,7 @@ final class Psr18ClientTelemetryPassTest extends TestCase
         $container = new ContainerBuilder();
         $container->setParameter('flow.telemetry.psr18_client.enabled', true);
         $container->register(Telemetry::class)->setSynthetic(true);
+        $container->register('flow.telemetry.url_sanitizer', UrlSanitizer::class);
         $container->registerForAutoconfiguration(ResetInterface::class)->addTag('kernel.reset', ['method' => 'reset']);
         $container->register('app.http_client', ResettablePsr18Client::class)->setAutoconfigured(true)->setPublic(true);
         $container->addCompilerPass(new Psr18ClientTelemetryPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION);
@@ -39,6 +42,7 @@ final class Psr18ClientTelemetryPassTest extends TestCase
         $container = new ContainerBuilder();
         $container->setParameter('flow.telemetry.psr18_client.enabled', true);
         $container->register(Telemetry::class)->setSynthetic(true);
+        $container->register('flow.telemetry.url_sanitizer', UrlSanitizer::class);
         $container->register('app.base_client', MockPsr18Client::class)->setAbstract(true);
         $container->setDefinition('app.child_client', (new ChildDefinition('app.base_client'))->setPublic(true));
         $container->addCompilerPass(new Psr18ClientTelemetryPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION);
@@ -53,6 +57,7 @@ final class Psr18ClientTelemetryPassTest extends TestCase
         $container = new ContainerBuilder();
         $container->setParameter('flow.telemetry.psr18_client.enabled', true);
         $container->register(Telemetry::class)->setSynthetic(true);
+        $container->register('flow.telemetry.url_sanitizer', UrlSanitizer::class);
         $container->register('psr18.http_client', MockPsr18Client::class)->setPublic(true);
         $container->addCompilerPass(new Psr18ClientTelemetryPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION);
 
@@ -67,12 +72,27 @@ final class Psr18ClientTelemetryPassTest extends TestCase
         $container->setParameter('flow.telemetry.psr18_client.enabled', true);
         $container->setParameter('app.client.class', MockPsr18Client::class);
         $container->register(Telemetry::class)->setSynthetic(true);
+        $container->register('flow.telemetry.url_sanitizer', UrlSanitizer::class);
         $container->register('app.client', '%app.client.class%')->setPublic(true);
         $container->addCompilerPass(new Psr18ClientTelemetryPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION);
 
         $container->compile();
 
         static::assertSame(PSR18TraceableClient::class, $container->getDefinition('app.client')->getClass());
+    }
+
+    public function test_decorator_receives_url_sanitizer(): void
+    {
+        $container = new ContainerBuilder();
+        $container->setParameter('flow.telemetry.psr18_client.enabled', true);
+        $container->register('psr18.http_client', MockPsr18Client::class);
+
+        (new Psr18ClientTelemetryPass())->process($container);
+
+        static::assertEquals(
+            new Reference('flow.telemetry.url_sanitizer'),
+            $container->getDefinition('psr18.http_client.flow_telemetry')->getArgument(2),
+        );
     }
 
     public function test_non_existent_class_is_left_untouched(): void

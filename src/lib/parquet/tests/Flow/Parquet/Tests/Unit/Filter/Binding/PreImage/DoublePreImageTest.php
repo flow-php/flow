@@ -19,7 +19,7 @@ final class DoublePreImageTest extends TestCase
 
         static::assertSame([[0.0, true, 0.0, true]], PhysicalIntervalEdges::of($intervals));
         static::assertTrue($intervals?->covers(-0.0, -0.0));
-        static::assertFalse($intervals?->disjoint(-0.0, 0.0));
+        static::assertFalse($intervals->disjoint(-0.0, 0.0));
     }
 
     public function test_an_int_on_a_double_column_is_exact_up_to_2_pow_53(): void

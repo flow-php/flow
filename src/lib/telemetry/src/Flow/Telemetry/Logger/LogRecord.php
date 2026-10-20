@@ -7,6 +7,7 @@ namespace Flow\Telemetry\Logger;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Flow\Telemetry\Attributes;
+use Flow\Telemetry\Sanitizer\StackTrace;
 use Throwable;
 
 /**
@@ -167,7 +168,7 @@ final readonly class LogRecord
         return $this->setAttributes([
             'exception.type' => $exception::class,
             'exception.message' => $exception->getMessage(),
-            'exception.stacktrace' => $exception->getTraceAsString(),
+            'exception.stacktrace' => StackTrace::format($exception),
         ]);
     }
 

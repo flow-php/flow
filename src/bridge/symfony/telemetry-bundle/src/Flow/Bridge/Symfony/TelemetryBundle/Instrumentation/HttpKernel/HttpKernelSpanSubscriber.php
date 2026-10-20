@@ -14,6 +14,7 @@ use Flow\Telemetry\Context\Scope;
 use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Propagation\PropagationContext;
 use Flow\Telemetry\Propagation\Propagator;
+use Flow\Telemetry\Sanitizer\UrlSanitizer;
 use Flow\Telemetry\SemConvAttributes;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\Span;
@@ -63,6 +64,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         private bool $requireTraceContext = false,
         private ?RouteNamePathMap $routePaths = null,
         private RouteNaming $routeNaming = RouteNaming::Path,
+        private UrlSanitizer $urlSanitizer = new UrlSanitizer(),
     ) {
         $this->excludePathRules = array_map(
             static fn(array $config): PathExclusionRule => PathExclusionRule::fromConfig($config),
@@ -172,7 +174,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         $queryString = $request->server->getString('QUERY_STRING');
 
         if ($queryString !== '') {
-            $attributes[SemConvAttributes::URL_QUERY] = $queryString;
+            $attributes[SemConvAttributes::URL_QUERY] = $this->urlSanitizer->query($queryString);
         }
 
         $userAgent = $request->headers->get('User-Agent');

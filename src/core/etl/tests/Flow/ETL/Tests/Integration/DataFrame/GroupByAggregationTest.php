@@ -25,6 +25,7 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\uuid_schema;
+use function Flow\Types\DSL\type_string;
 use function iterator_to_array;
 
 final class GroupByAggregationTest extends FlowIntegrationTestCase
@@ -58,7 +59,10 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         $bySeller = [];
 
         foreach ($default as $row) {
-            $bySeller[$row['seller']] = ['count' => $row['seller_count'], 'sum' => $row['amount_sum']];
+            $bySeller[type_string()->assert($row['seller'])] = [
+                'count' => $row['seller_count'],
+                'sum' => $row['amount_sum'],
+            ];
         }
 
         static::assertSame(
@@ -122,7 +126,7 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         $bySeller = [];
 
         foreach ($result as $row) {
-            $bySeller[$row['seller'] ?? '__null__'] = $row['amount_sum'];
+            $bySeller[type_string()->assert($row['seller'] ?? '__null__')] = $row['amount_sum'];
         }
 
         static::assertSame(10.5, $bySeller['a']);
@@ -156,7 +160,7 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         $byRegion = [];
 
         foreach ($result as $row) {
-            $byRegion[$row['region']] = $row['region_count'];
+            $byRegion[type_string()->assert($row['region'])] = $row['region_count'];
         }
 
         static::assertSame(['north' => 3, 'south' => 3], $byRegion);
@@ -211,7 +215,7 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         $byKey = [];
 
         foreach ($default as $row) {
-            $byKey[$row['k']] = [
+            $byKey[type_string()->assert($row['k'])] = [
                 'collection' => $row['v_collection'],
                 'collection_unique' => $row['v_collection_unique'],
             ];
@@ -255,7 +259,7 @@ final class GroupByAggregationTest extends FlowIntegrationTestCase
         $byKey = [];
 
         foreach ($default as $row) {
-            $byKey[$row['k']] = $row['v_avg'];
+            $byKey[type_string()->assert($row['k'])] = $row['v_avg'];
         }
 
         static::assertSame(['a' => 3.0, 'b' => 20.0, 'c' => 7.0], $byKey);

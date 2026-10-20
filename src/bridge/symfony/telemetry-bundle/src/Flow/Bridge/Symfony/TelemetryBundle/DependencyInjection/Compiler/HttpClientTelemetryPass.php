@@ -45,6 +45,7 @@ final class HttpClientTelemetryPass implements CompilerPassInterface
             $definition->setArgument(0, new Reference($decoratedId));
             $definition->setArgument(1, new Reference(Telemetry::class));
             $definition->setArgument(2, $serviceId);
+            $definition->setArgument(3, new Reference('flow.telemetry.url_sanitizer'));
 
             $container->setDefinition($decoratorId, $definition);
         }

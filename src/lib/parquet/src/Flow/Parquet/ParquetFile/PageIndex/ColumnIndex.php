@@ -47,8 +47,11 @@ final readonly class ColumnIndex
     public static function fromThrift(ThriftColumnIndex $index): self
     {
         return new self(
+            // @mago-expect analysis:redundant-null-coalesce
             array_values($index->null_pages ?? []),
+            // @mago-expect analysis:redundant-null-coalesce
             array_values($index->min_values ?? []),
+            // @mago-expect analysis:redundant-null-coalesce
             array_values($index->max_values ?? []),
             BoundaryOrder::tryFrom((int) $index->boundary_order) ?? throw new InvalidArgumentException('Unknown column index boundary order '
             . $index->boundary_order),

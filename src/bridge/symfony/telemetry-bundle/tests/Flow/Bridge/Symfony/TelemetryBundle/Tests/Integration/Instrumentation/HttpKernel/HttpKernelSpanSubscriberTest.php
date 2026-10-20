@@ -1288,6 +1288,60 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         static::assertArrayNotHasKey('url.full', $attributes);
     }
 
+    public function test_redacts_configured_query_parameter_in_url_query(): void
+    {
+        $kernel = $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestBundle(FrameworkBundle::class);
+                $kernel->addTestExtensionConfig('framework', [
+                    'router' => [
+                        'utf8' => true,
+                        'resource' => __DIR__ . '/../../../Fixtures/config/routes.php',
+                    ],
+                    'http_method_override' => false,
+                    'handle_all_throwables' => true,
+                ]);
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => 'memory',
+                        ],
+                    ],
+                    'instrumentation' => [
+                        'sanitization' => ['url' => ['sensitive_query_parameters' => ['code']]],
+                        'http_kernel' => ['enabled' => true],
+                        'console' => ['enabled' => false],
+                        'messenger' => false,
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var Router $router */
+        $router = $container->get('router');
+        $router->getRouteCollection()->add('test_callback', new Route('/cb', [
+            '_controller' => TestController::class . '::index',
+        ]));
+
+        $request = Request::create('/cb?code=C&state=abc', 'GET');
+        $response = $kernel->handle($request);
+        $kernel->terminate($request, $response);
+
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+        $span = array_values(array_filter(
+            $processor->endedSpans(),
+            static fn(Span $s): bool => $s->kind() === SpanKind::SERVER,
+        ))[0];
+
+        static::assertSame('code=REDACTED&state=abc', $span->attributes()['url.query']);
+    }
+
     public function test_names_span_from_route_when_response_is_returned_before_the_controller(): void
     {
         $kernel = $this->bootKernel([

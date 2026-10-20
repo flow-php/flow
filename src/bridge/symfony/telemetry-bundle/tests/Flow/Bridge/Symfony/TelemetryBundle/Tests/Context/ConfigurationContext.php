@@ -27,6 +27,14 @@ final readonly class ConfigurationContext
      */
     public function processRawConfig(mixed $config): array
     {
+        return $this->processConfigs($config);
+    }
+
+    /**
+     * @return array<mixed>
+     */
+    public function processConfigs(mixed ...$configs): array
+    {
         $extension = (new FlowTelemetryBundle())->getContainerExtension();
 
         if (!$extension instanceof ConfigurationExtensionInterface) {
@@ -39,6 +47,6 @@ final readonly class ConfigurationContext
             throw new LogicException('FlowTelemetryBundle extension exposes no configuration tree.');
         }
 
-        return (new Processor())->processConfiguration($configuration, [$config]);
+        return (new Processor())->processConfiguration($configuration, $configs);
     }
 }

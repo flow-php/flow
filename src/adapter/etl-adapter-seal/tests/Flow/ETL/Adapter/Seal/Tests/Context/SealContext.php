@@ -29,7 +29,7 @@ final class SealContext
     {
         foreach ($this->indexes as [$engine, $index]) {
             if ($engine->existIndex($index)) {
-                $engine->dropIndex($index, ['return_slow_promise_result' => true])?->wait();
+                $engine->dropIndex($index, ['return_slow_promise_result' => true])->wait();
             }
         }
 
@@ -42,10 +42,10 @@ final class SealContext
 
         foreach ($schema->indexes as $index => $_value) {
             if ($engine->existIndex($index)) {
-                $engine->dropIndex($index, ['return_slow_promise_result' => true])?->wait();
+                $engine->dropIndex($index, ['return_slow_promise_result' => true])->wait();
             }
 
-            $engine->createIndex($index, ['return_slow_promise_result' => true])?->wait();
+            $engine->createIndex($index, ['return_slow_promise_result' => true])->wait();
 
             $this->indexes[] = [$engine, $index];
         }
