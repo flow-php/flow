@@ -75,6 +75,24 @@ runs:
       # Deliberately unquoted: apt-packages is a space-separated list that must word-split.
       run: sudo apt-get update && sudo apt-get install -y $APT_PACKAGES
 
+    - name: "Setup extensions cache"
+      id: extensions-cache
+      uses: shivammathur/cache-extensions@22e24453af1bf3851994136f122ce065ab828a74 # 1.15.2
+      with:
+        php-version: ${{ inputs.php-version }}
+        extensions: "${{ inputs.extensions }}, redis-6.3.0"
+        key: "php-extensions-${{ runner.os }}-${{ runner.arch }}-v1"
+      env:
+        share-cache-across-jobs: true
+        share-cache-across-workflows: true
+
+    - name: "Cache extensions"
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+      with:
+        path: ${{ steps.extensions-cache.outputs.dir }}
+        key: ${{ steps.extensions-cache.outputs.key }}
+        restore-keys: ${{ steps.extensions-cache.outputs.key }}
+
     - name: "Install PHP"
       uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
       with:

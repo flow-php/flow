@@ -48,24 +48,13 @@ jobs:
 
   phpunit-telemetry-tests:
     uses: ./.github/workflows/job-phpunit-telemetry-tests.yml
+    with:
+      full-matrix: ${{ github.event_name != 'pull_request' }}
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   extension-tests:
     uses: ./.github/workflows/job-extension-tests.yml
-    secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-  pg-query-extension:
-    uses: ./.github/workflows/job-pg-query-extension.yml
-
-  arrow-extension:
-    uses: ./.github/workflows/job-arrow-extension.yml
-    secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-  flow-php-extension:
-    uses: ./.github/workflows/job-flow-php-extension.yml
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
