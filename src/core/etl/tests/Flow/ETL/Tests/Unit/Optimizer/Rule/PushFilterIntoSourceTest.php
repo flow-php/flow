@@ -436,7 +436,7 @@ final class PushFilterIntoSourceTest extends FlowTestCase
             $frame->explain()->toString(Stage::unoptimized),
         );
         static::assertStringEndsWith(
-            "Extractor: RecordingFileExtractor\n      Source: file:///dev/null\n      Files: Filters\n      Filter: Equals",
+            "Extractor: RecordingFileExtractor\n      Source: file:///dev/null\n      Files: year = 2023\n      Filter: year = 2023",
             $frame->explain()->toString(),
         );
     }

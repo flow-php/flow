@@ -64,18 +64,17 @@ echo $dataFrame->explain()->toString();
 
 ```text
 Outputs
-├─ #4 Result
+├─ #3 Result
 │  │  Rows this plan hands out: to the trigger, or to the node reading it
-│  └─ #3 Select
+│  └─ #2 Select
 │     │  Keeps only: id, email
-│     └─ #2 Filter
-│        │  Condition: IsNotNull
-│        └─ #1 Read
-│              Extractor: CSVExtractor
-│              Source: file:///data/orders.csv
-└─ #5 Write
+│     └─ #1 Read
+│           Extractor: CSVExtractor
+│           Source: file:///data/orders.csv
+│           Filter: email IS NOT NULL
+└─ #4 Write
    │  Loader: JsonLoader
-   └─ #2 Filter (shared)
+   └─ #1 Read (shared)
 ```
 
 ```php
@@ -87,13 +86,12 @@ echo data_frame()
 ```
 
 ```text
-#3 Write
+#2 Write
 │  Loader: JsonLoader
-└─ #2 Filter
-   │  Condition: IsNotNull
-   └─ #1 Read
-         Extractor: CSVExtractor
-         Source: file:///data/orders.csv
+└─ #1 Read
+      Extractor: CSVExtractor
+      Source: file:///data/orders.csv
+      Filter: email IS NOT NULL
 ```
 
 `run()` takes no rows, so its plan carries only the sinks - the `Write` is the root and there is no `Result`. A
@@ -101,7 +99,7 @@ echo data_frame()
 it to pull the rows, and `run(analyze: ...)` still counts them.
 
 `Outputs` lists everything the frame produces: `Result` is what a rows-returning trigger reads, `Write` is the sink.
-A node several consumers read is printed once, and every other consumer points back at it by number - `#2 Filter (shared)` is that same filter, not a second one. A node keeps its number in every format.
+A node several consumers read is printed once, and every other consumer points back at it by number - `#1 Read (shared)` is that same read, not a second one. A node keeps its number in every format.
 A frame joined with `join()` / `crossJoin()` is part of the same tree: the join reads it the way it reads any other
 input, numbered with the rest of the plan, and it runs with this frame's configuration. A frame read with
 `from_data_frame()` is a `Read` of `DataFrameExtractor` and runs with its own.
@@ -126,14 +124,13 @@ echo $dataFrame->explain()->toString(format: Format::flow);
 #1 Read
 │  Extractor: CSVExtractor
 │  Source: file:///data/orders.csv
-└─ #2 Filter
-   │  Condition: IsNotNull
-   ├─ #3 Select
-   │  │  Keeps only: id, email
-   │  └─ #4 Result
-   │        Rows this plan hands out: to the trigger, or to the node reading it
-   └─ #5 Write
-         Loader: JsonLoader
+│  Filter: email IS NOT NULL
+├─ #2 Select
+│  │  Keeps only: id, email
+│  └─ #3 Result
+│        Rows this plan hands out: to the trigger, or to the node reading it
+└─ #4 Write
+      Loader: JsonLoader
 ```
 
 ```php
@@ -145,28 +142,24 @@ echo $dataFrame->explain()->toString(format: Format::boxes);
 │          Outputs          ├──────────────┐
 └─────────────┬─────────────┘              │
 ┌─────────────┴─────────────┐┌─────────────┴─────────────┐
-│         #4 Result         ││         #5 Write          │
+│         #3 Result         ││         #4 Write          │
 │   ────────────────────    ││   ────────────────────    │
 │ Rows this plan hands out: ││    Loader: JsonLoader     │
 │ to the trigger, or to the ││                           │
 │      node reading it      ││                           │
 └─────────────┬─────────────┘└─────────────┬─────────────┘
 ┌─────────────┴─────────────┐┌─────────────┴─────────────┐
-│         #3 Select         ││         #2 Filter         │
+│         #2 Select         ││          #1 Read          │
 │   ────────────────────    ││         (shared)          │
 │   Keeps only: id, email   ││                           │
 └─────────────┬─────────────┘└───────────────────────────┘
-┌─────────────┴─────────────┐
-│         #2 Filter         │
-│   ────────────────────    │
-│   Condition: IsNotNull    │
-└─────────────┬─────────────┘
 ┌─────────────┴─────────────┐
 │          #1 Read          │
 │   ────────────────────    │
 │  Extractor: CSVExtractor  │
 │          Source:          │
 │  file:///data/orders.csv  │
+│ Filter: email IS NOT NULL │
 └───────────────────────────┘
 ```
 

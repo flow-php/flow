@@ -6,6 +6,7 @@ namespace Flow\ETL\Plan\Explain;
 
 use Flow\ETL\Extractor\File\FileExtractor;
 use Flow\ETL\Extractor\File\FileScan;
+use Flow\ETL\Filesystem\ScalarFunctionFilter;
 use Flow\ETL\Join\Comparison\Any;
 use Flow\ETL\Plan\Materialization;
 use Flow\ETL\Plan\Node;
@@ -32,10 +33,13 @@ use Flow\ETL\Plan\Node\Validate;
 use Flow\ETL\Plan\Node\WithColumn;
 use Flow\ETL\Plan\Node\Write;
 use Flow\ETL\Row\Reference;
+use Flow\Filesystem\Path\Filter as PathFilter;
+use Flow\Filesystem\Path\Filter\Filters;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
 use ReflectionClass;
 
 use function array_map;
+use function array_merge;
 use function implode;
 use function sprintf;
 use function str_ends_with;
@@ -45,6 +49,7 @@ final readonly class Details
 {
     public function __construct(
         private Condition $condition = new Condition(),
+        private Expression $expression = new Expression(),
     ) {}
 
     public function name(object $object): string
@@ -72,9 +77,11 @@ final readonly class Details
             $node instanceof Join => $this->join($node),
             $node instanceof CrossJoin => $this->crossJoin($node),
             $node instanceof Result => ['Rows this plan hands out: to the trigger, or to the node reading it'],
-            $node instanceof Filter => ['Condition: ' . $this->name($node->function)],
-            $node instanceof Until => ['Until: ' . $this->name($node->function)],
-            $node instanceof WithColumn => [sprintf('Column: %s = %s', $node->name(), $this->name($node->function))],
+            $node instanceof Filter => ['Condition: ' . $this->expression->of($node->function)],
+            $node instanceof Until => ['Until: ' . $this->expression->of($node->function)],
+            $node instanceof WithColumn => [
+                sprintf('Column: %s = %s', $node->name(), $this->expression->of($node->function)),
+            ],
             $node instanceof ExpandColumn => $this->expandColumn($node),
             $node instanceof Write => ['Loader: ' . $this->name($node->loader)],
             $node instanceof Limit => ['Limit: ' . $node->limit],
@@ -168,7 +175,7 @@ final readonly class Details
      */
     public function expandColumn(ExpandColumn $node): array
     {
-        $lines = [sprintf('Column: %s = %s', $node->name(), $this->name($node->function))];
+        $lines = [sprintf('Column: %s = %s', $node->name(), $this->expression->of($node->function))];
 
         return match (true) {
             $node->carries->isAll() => $lines,
@@ -223,16 +230,31 @@ final readonly class Details
             $lines[] = 'Limit: ' . $scan->limit;
         }
 
-        // every file source reads only files unless a filter was pushed into it
-        if (!$scan->pathFilter instanceof OnlyFiles) {
-            $lines[] = 'Files: ' . $this->name($scan->pathFilter);
+        foreach ($this->files($scan->pathFilter) as $filter) {
+            $lines[] = 'Files: ' . $filter;
         }
 
         foreach ($scan->conjuncts as $conjunct) {
-            $lines[] = 'Filter: ' . $this->name($conjunct);
+            $lines[] = 'Filter: ' . $this->expression->of($conjunct);
         }
 
         return $lines;
+    }
+
+    /**
+     * Each filter a file must pass, one per line.
+     *
+     * @return list<string>
+     */
+    public function files(PathFilter $filter): array
+    {
+        return match (true) {
+            // every file source reads only files, saying so on every read would only add noise
+            $filter instanceof OnlyFiles => [],
+            $filter instanceof Filters => array_merge(...array_map($this->files(...), $filter->filters())),
+            $filter instanceof ScalarFunctionFilter => [$this->expression->of($filter->function())],
+            default => [$this->name($filter)],
+        };
     }
 
     /**

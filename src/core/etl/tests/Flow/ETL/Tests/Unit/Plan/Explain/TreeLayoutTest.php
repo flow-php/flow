@@ -61,7 +61,7 @@ final class TreeLayoutTest extends FlowTestCase
             ├─ #3 Result
             │  │  Rows this plan hands out: to the trigger, or to the node reading it
             │  └─ #2 Filter
-            │     │  Condition: IsNotNull
+            │     │  Condition: id IS NOT NULL
             │     └─ #1 Read
             │           Extractor: ArrayExtractor
             └─ #4 Write
@@ -122,7 +122,7 @@ final class TreeLayoutTest extends FlowTestCase
             ├─ #3 Result  preserving · transparent · streaming
             │  │  Rows this plan hands out: to the trigger, or to the node reading it
             │  └─ #2 Filter  reducing · transparent · streaming
-            │     │  Condition: IsNotNull
+            │     │  Condition: id IS NOT NULL
             │     └─ #1 Read  source · transparent · streaming
             │           Extractor: ArrayExtractor
             └─ #4 Write  preserving · opaque · streaming
@@ -152,13 +152,13 @@ final class TreeLayoutTest extends FlowTestCase
             #7 Result  preserving · transparent · streaming
             │  Rows this plan hands out: to the trigger, or to the node reading it
             └─ #6 Until  reducing · transparent · streaming
-               │  Until: Literal
+               │  Until: true
                └─ #5 Offset  reducing · transparent · streaming
                   │  Skip: 2
                   └─ #4 Rename  preserving · transparent · streaming · redefines m, n
                      │  Rename: n → m
                      └─ #3 WithColumn  preserving · transparent · streaming · redefines n
-                        │  Column: n = Literal
+                        │  Column: n = 1
                         └─ #2 RenameEach  preserving · transparent · streaming · redefines unknown
                            └─ #1 Read  source · transparent · streaming
                                  Extractor: ArrayExtractor

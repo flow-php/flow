@@ -23,7 +23,7 @@ final readonly class ScalarFunctionFilter implements Filter
     private ScalarFunction $resolved;
 
     public function __construct(
-        ScalarFunction $function,
+        private ScalarFunction $function,
         private Schema $partitions,
         private FlowContext $context,
     ) {
@@ -36,6 +36,11 @@ final readonly class ScalarFunctionFilter implements Filter
         if ($this->resolved->resolved()) {
             $this->resolved->returns();
         }
+    }
+
+    public function function(): ScalarFunction
+    {
+        return $this->function;
     }
 
     public function accept(FileStatus $status): bool

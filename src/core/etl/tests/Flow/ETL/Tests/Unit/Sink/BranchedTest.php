@@ -35,7 +35,7 @@ final class BranchedTest extends FlowTestCase
             └─ #4 Write  preserving · opaque · streaming
                │  Loader: MemoryLoader
                └─ #3 Filter  reducing · transparent · streaming
-                  │  Condition: Equals
+                  │  Condition: id = 1
                   └─ #1 Read (shared)
             PLAN, $dataFrame->explain()->toString(format: Format::declarations));
 
@@ -75,7 +75,7 @@ final class BranchedTest extends FlowTestCase
                └─ #4 Select  preserving · transparent · streaming · redefines all but id
                   │  Keeps only: id
                   └─ #3 Filter  reducing · transparent · streaming
-                     │  Condition: Equals
+                     │  Condition: id = 1
                      └─ #1 Read (shared)
             PLAN, $dataFrame->explain()->toString(format: Format::declarations));
     }

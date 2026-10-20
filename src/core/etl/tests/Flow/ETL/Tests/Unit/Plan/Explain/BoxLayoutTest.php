@@ -85,7 +85,7 @@ final class BoxLayoutTest extends FlowTestCase
             ┌─────────────┴─────────────┐┌─────────────┴─────────────┐
             │         #2 Filter         ││         #2 Filter         │
             │   ────────────────────    ││         (shared)          │
-            │   Condition: IsNotNull    ││                           │
+            │ Condition: id IS NOT NULL ││                           │
             └─────────────┬─────────────┘└───────────────────────────┘
             ┌─────────────┴─────────────┐
             │          #1 Read          │

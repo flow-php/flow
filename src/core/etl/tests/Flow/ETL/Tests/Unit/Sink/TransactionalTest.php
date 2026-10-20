@@ -57,7 +57,7 @@ final class TransactionalTest extends FlowTestCase
                └─ #6 Write  preserving · opaque · streaming
                   │  Loader: MemoryLoader
                   └─ #5 Filter  reducing · transparent · streaming
-                     │  Condition: Equals
+                     │  Condition: id = 1
                      └─ #1 Read (shared)
             PLAN, $dataFrame->explain()->toString(format: Format::declarations));
 

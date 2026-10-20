@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Plan\Explain;
 
+use Flow\ETL\Filesystem\ScalarFunctionFilter;
 use Flow\ETL\Join\Comparison\Equal;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
@@ -28,14 +29,19 @@ use Flow\ETL\Plan\RequiredColumns;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\NodeMother;
 use Flow\ETL\Tests\Mother\PartitionedSourceMother;
+use Flow\Filesystem\Path\Filter\Filters;
 use Flow\Filesystem\Path\Filter\KeepAll;
+use Flow\Filesystem\Path\Filter\OnlyFiles;
 
+use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\hash_join;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\rename_replace;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\to_memory;
 
 final class DetailsTest extends FlowTestCase
@@ -57,9 +63,9 @@ final class DetailsTest extends FlowTestCase
                 'Extractor: RecordingFileExtractor',
                 'Source: file:///dev/null',
                 'Limit: 3',
-                'Files: Filters',
-                'Filter: GreaterThan',
-                'Filter: IsNotNull',
+                'Files: KeepAll',
+                'Filter: year > 1',
+                'Filter: month IS NOT NULL',
             ],
             (new Details())->lines(
                 (new Read(PartitionedSourceMother::yearMonth()))
@@ -70,13 +76,31 @@ final class DetailsTest extends FlowTestCase
         );
     }
 
+    public function test_files_are_each_pushed_file_filter_but_the_default_one(): void
+    {
+        static::assertSame(
+            ["country IN ('PL', 'DE')", 'KeepAll', 'year > 2020'],
+            (new Details())->files(
+                new Filters(
+                    new OnlyFiles(),
+                    new ScalarFunctionFilter(ref('country')->isIn(lit(['PL', 'DE'])), schema(), flow_context(config())),
+                    new Filters(
+                        new KeepAll(),
+                        new ScalarFunctionFilter(ref('year')->greaterThan(lit(2020)), schema(), flow_context(config())),
+                    ),
+                ),
+            ),
+        );
+        static::assertSame([], (new Details())->files(new OnlyFiles()));
+    }
+
     public function test_nodes_with_arguments_label_them(): void
     {
         $read = NodeMother::read();
         $details = new Details();
 
-        static::assertSame(['Condition: IsNotNull'], $details->lines(new Filter($read, ref('id')->isNotNull())));
-        static::assertSame(['Until: Literal'], $details->lines(new Until($read, lit(true))));
+        static::assertSame(['Condition: id IS NOT NULL'], $details->lines(new Filter($read, ref('id')->isNotNull())));
+        static::assertSame(['Until: true'], $details->lines(new Until($read, lit(true))));
         static::assertSame(['Loader: MemoryLoader'], $details->lines(new Write($read, to_memory(new ArrayMemory()))));
         static::assertSame(['Limit: 5'], $details->lines(NodeMother::limit($read, 5)));
         static::assertSame(['Skip: 2'], $details->lines(new Offset($read, 2)));
@@ -164,17 +188,17 @@ final class DetailsTest extends FlowTestCase
         $details = new Details();
         $expand = new ExpandColumn($read, 'item', ref('items')->expand());
 
-        static::assertSame(['Column: item = ArrayExpand'], $details->labelled($expand));
+        static::assertSame(['Column: item = ArrayExpand(items)'], $details->labelled($expand));
         static::assertSame(
-            ['Column: item = ArrayExpand', 'Keeps: id, item'],
+            ['Column: item = ArrayExpand(items)', 'Keeps: id, item'],
             $details->labelled($expand->withCarries(RequiredColumns::only('id', 'item'))),
         );
         static::assertSame(
-            ['Column: item = ArrayExpand', 'Keeps: no input column'],
+            ['Column: item = ArrayExpand(items)', 'Keeps: no input column'],
             $details->labelled($expand->withCarries(RequiredColumns::only())),
         );
         static::assertSame(
-            ['Column: item = ArrayExpand', 'Keeps: every column but items, body'],
+            ['Column: item = ArrayExpand(items)', 'Keeps: every column but items, body'],
             $details->labelled($expand->withCarries(RequiredColumns::allBut('items', 'body'))),
         );
     }
@@ -185,7 +209,7 @@ final class DetailsTest extends FlowTestCase
         $details = new Details();
 
         static::assertSame(
-            ['Column: n = Literal', 'Changes columns: n'],
+            ['Column: n = 1', 'Changes columns: n'],
             $details->lines(new WithColumn($read, int_schema('n'), lit(1))),
         );
         static::assertSame(['Rename: n → m', 'Changes columns: m, n'], $details->lines(new Rename($read, 'n', 'm')));
