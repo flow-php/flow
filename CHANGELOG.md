@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-10-21
 
 ### Added
+- [#2701](https://github.com/flow-php/flow/pull/2701) - **flow-php/etl - PSRCacheBuckets rejects prefixes containing PSR-16 reserved characters** - [@norberttech](https://github.com/norberttech)
 - [#2698](https://github.com/flow-php/flow/pull/2698) - **flow-php/flow - CI cache for compiled PHP extensions** - [@norberttech](https://github.com/norberttech)
 - [#2698](https://github.com/flow-php/flow/pull/2698) - **flow-php/flow - shared Rust extension toolchain action** - [@norberttech](https://github.com/norberttech)
 - [#2697](https://github.com/flow-php/flow/pull/2697) - **flow-php/flow - CI cache for compiled PHP extensions** - [@norberttech](https://github.com/norberttech)
@@ -20,6 +21,7 @@
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/arrow-ext - page-range reads and row filtering through arrow-rs** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2701](https://github.com/flow-php/flow/pull/2701) - **flow-php/etl - PSRCacheBuckets default prefix changed from flow:buckets to flow.buckets** - [@norberttech](https://github.com/norberttech)
 - [#2700](https://github.com/flow-php/flow/pull/2700) - **flow-php/flow - playground WASM runtime rebuilt with PHP 8.5.12** - [@norberttech](https://github.com/norberttech)
 - [#2700](https://github.com/flow-php/flow/pull/2700) - **flow-php/flow - tools resolve dependencies against PHP 8.3** - [@norberttech](https://github.com/norberttech)
 - [#2698](https://github.com/flow-php/flow/pull/2698) - **flow-php/flow - extension workflows run on pull requests only when their code changes** - [@norberttech](https://github.com/norberttech)
@@ -49,6 +51,7 @@
 - [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/flow - updated dev dependencies, mago 1.57 and GitHub Actions** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2701](https://github.com/flow-php/flow/pull/2701) - **flow-php/etl - PSRCacheBuckets keys no longer contain PSR-16 reserved characters** - [@norberttech](https://github.com/norberttech)
 - [#2700](https://github.com/flow-php/flow/pull/2700) - **flow-php/flow - PHPUnit 11 telemetry CI rows now actually run PHPUnit 11** - [@norberttech](https://github.com/norberttech)
 - [#2698](https://github.com/flow-php/flow/pull/2698) - **flow-php/flow - CI Azurite readiness check that always waited 30 seconds** - [@norberttech](https://github.com/norberttech)
 - [#2697](https://github.com/flow-php/flow/pull/2697) - **flow-php/flow - CI Azurite readiness check that always waited 30 seconds** - [@norberttech](https://github.com/norberttech)
@@ -61,6 +64,7 @@
 - [b5d097](https://github.com/flow-php/flow/commit/b5d097c5cabde914624be59774dd8a8d6fafe294) - **bump setup-php to 2.40.0 in extension release workflows** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2701](https://github.com/flow-php/flow/pull/2701) - **flow-php/etl - Redis from the dev environment, CI and tests** - [@norberttech](https://github.com/norberttech)
 - [#2698](https://github.com/flow-php/flow/pull/2698) - **flow-php/flow - redundant apt installs from CI jobs** - [@norberttech](https://github.com/norberttech)
 - [#2697](https://github.com/flow-php/flow/pull/2697) - **flow-php/flow - redundant apt installs from CI jobs** - [@norberttech](https://github.com/norberttech)
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/parquet - unused DICTIONARY_PAGE_MIN_CARDINALITY_RATION option** - [@norberttech](https://github.com/norberttech)
