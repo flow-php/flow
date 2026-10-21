@@ -4,13 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Data;
 
+use function abs;
 use function bcadd;
 use function bccomp;
 use function bcsub;
 use function is_float;
+use function max;
+use function min;
 
 final readonly class DeltaCalculator
 {
+    /**
+     * Values within ±2^61 add and subtract without integer overflow, so they skip the BCMath fallback.
+     */
+    private const int OVERFLOW_FREE_MAGNITUDE = 1 << 61;
+
     public function calculateDelta(int $previous, int $current): int
     {
         $result = $current - $previous;
@@ -59,8 +67,65 @@ final readonly class DeltaCalculator
         $deltas = [];
         $valuesCount = count($values);
 
+        if ($valuesCount < 2) {
+            return $deltas;
+        }
+
+        if (min($values) >= -self::OVERFLOW_FREE_MAGNITUDE && max($values) <= self::OVERFLOW_FREE_MAGNITUDE) {
+            for ($i = 1; $i < $valuesCount; $i++) {
+                $deltas[] = $values[$i] - $values[$i - 1];
+            }
+
+            return $deltas;
+        }
+
         for ($i = 1; $i < $valuesCount; $i++) {
             $deltas[] = $this->calculateDelta($values[$i - 1], $values[$i]);
+        }
+
+        return $deltas;
+    }
+
+    /**
+     * @param array<int> $relativeDeltas
+     *
+     * @return array<int>
+     */
+    public function calculateAbsoluteDeltas(array $relativeDeltas, int $minDelta): array
+    {
+        $deltas = [];
+
+        if (
+            $relativeDeltas === []
+            || abs($minDelta) <= self::OVERFLOW_FREE_MAGNITUDE
+            && max($relativeDeltas) <= self::OVERFLOW_FREE_MAGNITUDE
+            && min($relativeDeltas) >= -self::OVERFLOW_FREE_MAGNITUDE
+        ) {
+            foreach ($relativeDeltas as $relativeDelta) {
+                $deltas[] = $relativeDelta + $minDelta;
+            }
+
+            return $deltas;
+        }
+
+        foreach ($relativeDeltas as $relativeDelta) {
+            // PHP converts int overflow to float at runtime, so $result may be float even though both operands are int.
+            $result = $relativeDelta + $minDelta;
+
+            // @mago-ignore analysis:impossible-condition
+            if (is_float($result)) {
+                $preciseResult = bcadd((string) $relativeDelta, (string) $minDelta, 0);
+
+                if (bccomp($preciseResult, (string) PHP_INT_MAX, 0) > 0) {
+                    $preciseResult = bcsub($preciseResult, '18446744073709551616', 0);
+                } elseif (bccomp($preciseResult, (string) PHP_INT_MIN, 0) < 0) {
+                    $preciseResult = bcadd($preciseResult, '18446744073709551616', 0);
+                }
+
+                $result = (int) $preciseResult;
+            }
+
+            $deltas[] = $result;
         }
 
         return $deltas;
@@ -102,6 +167,33 @@ final readonly class DeltaCalculator
         }
 
         return (int) $result;
+    }
+
+    /**
+     * @param array<int> $deltas
+     *
+     * @return array<int>
+     */
+    public function calculateRelativeDeltas(array $deltas, int $minDelta): array
+    {
+        $relativeDeltas = [];
+
+        if (
+            $deltas === []
+            || $minDelta >= -self::OVERFLOW_FREE_MAGNITUDE && max($deltas) <= self::OVERFLOW_FREE_MAGNITUDE
+        ) {
+            foreach ($deltas as $delta) {
+                $relativeDeltas[] = $delta - $minDelta;
+            }
+
+            return $relativeDeltas;
+        }
+
+        foreach ($deltas as $delta) {
+            $relativeDeltas[] = $this->calculateRelativeDelta($delta, $minDelta);
+        }
+
+        return $relativeDeltas;
     }
 
     /**
@@ -155,5 +247,12 @@ final readonly class DeltaCalculator
         }
 
         return $values;
+    }
+
+    public function toInt32(int $value): int
+    {
+        $unsigned = $value & 0xFFFFFFFF;
+
+        return $unsigned >= 0x80000000 ? $unsigned - 0x100000000 : $unsigned;
     }
 }

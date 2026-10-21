@@ -12,14 +12,18 @@ use Flow\Parquet\BloomFilter\BloomFilterOptions;
 use Flow\Parquet\BloomFilter\BloomHash;
 use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Engine\RustParquetEngine;
+use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
+use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile;
 use Flow\Parquet\ParquetFile\ColumnOrder;
+use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Page\ColumnPageHeader;
 use Flow\Parquet\ParquetFile\PageIndex\BoundaryOrder;
 use Flow\Parquet\ParquetFile\PageIndex\ColumnIndex;
 use Flow\Parquet\ParquetFile\PageIndex\PageLocation;
+use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\ConvertedType;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
@@ -42,9 +46,12 @@ use Flow\Parquet\Writer;
 use Flow\Parquet\Writer\StatisticsLevel;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
+use PHPUnit\Framework\Attributes\TestWith;
 use RuntimeException;
 
 use function array_combine;
+use function array_filter;
 use function array_map;
 use function array_unique;
 use function array_values;
@@ -88,6 +95,125 @@ class WriterTest extends ParquetIntegrationTestCase
         $this->expectExceptionMessage('Writer is not open');
 
         $writer->close();
+    }
+
+    #[RequiresPhpExtension('arrow')]
+    #[TestWith([1, true])]
+    #[TestWith([2, true])]
+    #[TestWith([1, false])]
+    #[TestWith([2, false])]
+    public function test_both_engines_write_the_same_default_encodings(
+        int $writerVersion,
+        bool $dictionaryEnabled,
+    ): void {
+        $schema = Schema::with(
+            FlatColumn::boolean('boolean'),
+            FlatColumn::int32('int32'),
+            FlatColumn::int64('int64'),
+            FlatColumn::float('float'),
+            FlatColumn::double('double'),
+            FlatColumn::string('string'),
+            FlatColumn::fixedSizeByteArray('flba', 4),
+        );
+        $rows = [
+            [
+                'boolean' => true,
+                'int32' => 1,
+                'int64' => 1,
+                'float' => 1.5,
+                'double' => 1.5,
+                'string' => 'a',
+                'flba' => 'aaaa',
+            ],
+            [
+                'boolean' => null,
+                'int32' => null,
+                'int64' => null,
+                'float' => null,
+                'double' => null,
+                'string' => null,
+                'flba' => null,
+            ],
+            [
+                'boolean' => false,
+                'int32' => 1,
+                'int64' => 2,
+                'float' => 1.5,
+                'double' => 2.5,
+                'string' => 'a',
+                'flba' => 'bbbb',
+            ],
+        ];
+        $options = Options::default()->set(Option::WRITER_VERSION, $writerVersion)->set(
+            Option::DICTIONARY_ENABLED,
+            $dictionaryEnabled,
+        );
+        $php = MemoryParquetFile::read(Reader::php(), MemoryParquetFile::written(
+            new Writer(options: $options, engine: new PhpParquetEngine()),
+            $schema,
+            $rows,
+        ));
+        $arrow = MemoryParquetFile::read(Reader::php(), MemoryParquetFile::written(
+            new Writer(options: $options, engine: new RustParquetEngine()),
+            $schema,
+            $rows,
+        ));
+        $encodings = static fn(ParquetFile $file): array => array_map(static fn(ColumnChunk $chunk): array => array_map(
+            static fn(Encodings $encoding): string => $encoding->name,
+            $chunk->encodings(),
+        ), $file->metadata()->columnChunks());
+
+        foreach ($encodings($php) as $index => $chunkEncodings) {
+            static::assertEqualsCanonicalizing($encodings($arrow)[$index], $chunkEncodings, "column {$index}");
+        }
+
+        static::assertCount(7, $encodings($php));
+        static::assertSame(iterator_to_array($arrow->values(), false), iterator_to_array($php->values(), false));
+    }
+
+    public function test_a_write_that_throws_leaves_no_file(): void
+    {
+        $path = TestParquetFile::path($this);
+
+        try {
+            Writer::php(options: Options::default()->set(Option::COLUMNS_ENCODINGS, [
+                's' => Encodings::DELTA_BINARY_PACKED,
+            ]))->write($path, Schema::with(FlatColumn::string('s')), [['s' => 'a']]);
+            static::fail('write() was expected to throw');
+        } catch (InvalidArgumentException) {
+        }
+
+        static::assertFileDoesNotExist($path);
+    }
+
+    public function test_an_open_that_throws_leaves_no_file(): void
+    {
+        $path = TestParquetFile::path($this);
+
+        try {
+            Writer::php(options: Options::default()->set(Option::COLUMNS_ENCODINGS, [
+                's' => Encodings::DELTA_BINARY_PACKED,
+            ]))->open($path, Schema::with(FlatColumn::string('s')));
+            static::fail('open() was expected to throw');
+        } catch (InvalidArgumentException) {
+        }
+
+        static::assertFileDoesNotExist($path);
+    }
+
+    public function test_opening_a_stream_with_invalid_options_writes_nothing_to_it(): void
+    {
+        $memory = memory_filesystem();
+
+        try {
+            Writer::php(options: Options::default()->set(Option::COLUMNS_ENCODINGS, [
+                's' => Encodings::DELTA_BINARY_PACKED,
+            ]))->openForStream($memory->writeTo(path('memory://file.parquet')), Schema::with(FlatColumn::string('s')));
+            static::fail('openForStream() was expected to throw');
+        } catch (InvalidArgumentException) {
+        }
+
+        static::assertSame('', $memory->readFrom(path('memory://file.parquet'))->content());
     }
 
     #[DataProvider('engine_provider')]
@@ -536,6 +662,10 @@ class WriterTest extends ParquetIntegrationTestCase
         foreach ((new Reader(options: $options, engine: new PhpParquetEngine()))
             ->read($path)
             ->pageHeaders() as $pageHeader) {
+            if (!$pageHeader->pageHeader->type()->isDataPage()) {
+                continue;
+            }
+
             $dataPageHeaderV2 = $pageHeader->pageHeader->dataPageHeaderV2();
             static::assertNotNull($dataPageHeaderV2);
             $statistics = $dataPageHeaderV2->statistics();
@@ -726,11 +856,28 @@ class WriterTest extends ParquetIntegrationTestCase
         static::assertFileExists($path);
     }
 
-    #[DataProvider('engine_provider')]
-    public function test_writing_to_file_v2(string $engineClass): void
+    /**
+     * @return Generator<string, array{class-string<ParquetEngine>, bool}>
+     */
+    public static function engine_dictionary_provider(): Generator
+    {
+        foreach (self::engine_provider() as $engine => [$engineClass]) {
+            yield "{$engine} dictionary" => [$engineClass, true];
+            yield "{$engine} without dictionary" => [$engineClass, false];
+        }
+    }
+
+    #[DataProvider('engine_dictionary_provider')]
+    public function test_writing_to_file_v2(string $engineClass, bool $dictionaryEnabled): void
     {
         $engine = ParquetEngineMother::create($engineClass);
-        $writer = new Writer(options: Options::default()->set(Option::WRITER_VERSION, 2), engine: $engine);
+        $writer = new Writer(
+            options: Options::default()->set(Option::WRITER_VERSION, 2)->set(
+                Option::DICTIONARY_ENABLED,
+                $dictionaryEnabled,
+            ),
+            engine: $engine,
+        );
 
         $path = TestParquetFile::path($this);
 
@@ -1056,14 +1203,17 @@ class WriterTest extends ParquetIntegrationTestCase
     {
         $headers = static fn(Options $options): array => array_map(
             static fn(ColumnPageHeader $header) => $header->pageHeader->dataPageHeader()?->statistics(),
-            iterator_to_array(
-                MemoryParquetFile::read(Reader::php(), MemoryParquetFile::written(
-                    Writer::php(options: $options),
-                    Schema::with(FlatColumn::int64('id')),
-                    [['id' => 1], ['id' => 2]],
-                ))->pageHeaders(),
-                false,
-            ),
+            array_values(array_filter(
+                iterator_to_array(
+                    MemoryParquetFile::read(Reader::php(), MemoryParquetFile::written(
+                        Writer::php(options: $options),
+                        Schema::with(FlatColumn::int64('id')),
+                        [['id' => 1], ['id' => 2]],
+                    ))->pageHeaders(),
+                    false,
+                ),
+                static fn(ColumnPageHeader $header): bool => $header->pageHeader->type()->isDataPage(),
+            )),
         );
 
         static::assertSame([null], $headers(new Options()));

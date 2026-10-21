@@ -7,6 +7,7 @@ namespace Flow\Parquet\Writer\ValueStorage;
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
 use Flow\Parquet\Data\PlainValuesPacker;
+use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
 use function strlen;
@@ -32,6 +33,11 @@ final class BufferValueStorage implements ValueStorage
         $this->size += strlen($localBuffer);
     }
 
+    public function encoding(): Encodings
+    {
+        return Encodings::PLAIN;
+    }
+
     public function getBuffer(): string
     {
         return $this->buffer;
@@ -48,7 +54,7 @@ final class BufferValueStorage implements ValueStorage
         $this->size = 0;
     }
 
-    public function size(): int
+    public function plainSize(): int
     {
         return $this->size;
     }

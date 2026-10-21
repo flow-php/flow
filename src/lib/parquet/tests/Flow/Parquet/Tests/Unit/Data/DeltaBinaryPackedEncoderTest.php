@@ -51,7 +51,7 @@ final class DeltaBinaryPackedEncoderTest extends TestCase
         $encoder = new DeltaBinaryPackedEncoder();
         $result = $encoder->encode([]);
 
-        static::assertSame('', $result);
+        static::assertSame("\x80\x01\x04\x00\x00", $result);
     }
 
     public function test_encode_extreme_values(): void

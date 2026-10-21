@@ -6,9 +6,20 @@ namespace Flow\Parquet\Data;
 
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
 use Flow\Parquet\Exception\InvalidArgumentException;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 
+use function array_fill;
+use function array_map;
 use function array_pad;
+use function array_slice;
+use function ceil;
+use function chr;
 use function count;
+use function intdiv;
+use function max;
+use function min;
+use function pack;
+use function str_pad;
 
 final readonly class DeltaBinaryPackedEncoder
 {
@@ -21,6 +32,7 @@ final readonly class DeltaBinaryPackedEncoder
         private int $miniblockSize = self::DEFAULT_MINIBLOCK_SIZE,
         private DeltaCalculator $deltaCalculator = new DeltaCalculator(),
         private ZigZag $zigzag = new ZigZag(),
+        private PhysicalType $physicalType = PhysicalType::INT64,
     ) {
         if (($this->blockSize % 128) !== 0) {
             throw new InvalidArgumentException('Block size must be a multiple of 128');
@@ -40,10 +52,6 @@ final readonly class DeltaBinaryPackedEncoder
      */
     public function encode(array $values): string
     {
-        if (!count($values)) {
-            return '';
-        }
-
         $buffer = '';
         $writer = new BinaryBufferWriter($buffer);
 
@@ -63,15 +71,11 @@ final readonly class DeltaBinaryPackedEncoder
             return '';
         }
 
-        $buffer = '';
-        $writer = new BinaryBufferWriter($buffer);
-
-        // For large bit widths (>= 62), use bit-by-bit packing to avoid overflow
-        if ($bitWidth >= 62) {
-            return $this->packMiniblockSafe($values, $bitWidth, $writer);
+        if ($bitWidth > BitWidth::MAX_PACKED_IN_ACCUMULATOR) {
+            return $this->packMiniblockSafe($values, $bitWidth);
         }
 
-        // Use the original fast method for smaller bit widths
+        $buffer = '';
         $currentByte = 0;
         $bitsInByte = 0;
 
@@ -80,23 +84,17 @@ final readonly class DeltaBinaryPackedEncoder
             $bitsInByte += $bitWidth;
 
             while ($bitsInByte >= 8) {
-                $writer->writeBytes([$currentByte & 0xFF]);
+                $buffer .= chr($currentByte & 0xFF);
                 $currentByte >>= 8;
                 $bitsInByte -= 8;
             }
         }
 
         if ($bitsInByte > 0) {
-            $writer->writeBytes([$currentByte & 0xFF]);
+            $buffer .= chr($currentByte & 0xFF);
         }
 
-        $expectedByteCount = (int) ceil(($this->miniblockSize * $bitWidth) / 8);
-
-        while (strlen($buffer) < $expectedByteCount) {
-            $writer->writeBytes([0]);
-        }
-
-        return $buffer;
+        return str_pad($buffer, (int) ceil(($this->miniblockSize * $bitWidth) / 8), "\0");
     }
 
     /**
@@ -105,7 +103,7 @@ final readonly class DeltaBinaryPackedEncoder
      *
      * @param array<int> $values
      */
-    private function packMiniblockSafe(array $values, int $bitWidth, BinaryBufferWriter $writer): string
+    private function packMiniblockSafe(array $values, int $bitWidth): string
     {
         $expectedByteCount = (int) ceil(($this->miniblockSize * $bitWidth) / 8);
         $bytes = array_fill(0, max(0, $expectedByteCount), 0);
@@ -130,7 +128,6 @@ final readonly class DeltaBinaryPackedEncoder
             }
         }
 
-        // Return the packed data as a string (don't write to the passed writer)
         return pack('C*', ...$bytes);
     }
 
@@ -141,13 +138,7 @@ final readonly class DeltaBinaryPackedEncoder
      */
     private function padMiniblock(array $miniblockDeltas): array
     {
-        $padded = $miniblockDeltas;
-
-        while (count($padded) < $this->miniblockSize) {
-            $padded[] = 0;
-        }
-
-        return $padded;
+        return array_pad($miniblockDeltas, $this->miniblockSize, 0);
     }
 
     /**
@@ -162,10 +153,7 @@ final readonly class DeltaBinaryPackedEncoder
         $minDelta = min($blockDeltas);
         $this->writeSignedLEB128($writer, $minDelta);
 
-        $relativeDeltas = array_map(fn($delta) => $this->deltaCalculator->calculateRelativeDelta(
-            $delta,
-            $minDelta,
-        ), $blockDeltas);
+        $relativeDeltas = $this->deltaCalculator->calculateRelativeDeltas($blockDeltas, $minDelta);
         $miniblockCount = (int) ceil(count($relativeDeltas) / $this->miniblockSize);
 
         $bitWidths = [];
@@ -201,6 +189,11 @@ final readonly class DeltaBinaryPackedEncoder
         }
 
         $deltas = $this->deltaCalculator->calculateDeltas($values);
+
+        // INT32 deltas wrap at 32 bits, as arrow-rs and parquet-java write them, so relative deltas need at most 32 bits
+        if ($this->physicalType === PhysicalType::INT32) {
+            $deltas = array_map($this->deltaCalculator->toInt32(...), $deltas);
+        }
         $blockCount = (int) ceil(count($deltas) / $this->blockSize);
 
         for ($blockIndex = 0; $blockIndex < $blockCount; $blockIndex++) {
@@ -222,7 +215,7 @@ final readonly class DeltaBinaryPackedEncoder
         $this->writeULEB128($writer, $this->blockSize);
         $this->writeULEB128($writer, $miniblockCount);
         $this->writeULEB128($writer, count($values));
-        $this->writeSignedLEB128($writer, $values[0]);
+        $this->writeSignedLEB128($writer, $values[0] ?? 0);
     }
 
     private function writeSignedLEB128(BinaryBufferWriter $writer, int $value): void

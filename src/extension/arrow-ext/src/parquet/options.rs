@@ -10,9 +10,9 @@ use arrow_schema::{
 };
 use ext_php_rs::ffi::zend_ulong;
 use ext_php_rs::types::{ZendHashTable, ZendStr};
-use parquet::basic::{BrotliLevel, Compression, Encoding, GzipLevel, ZstdLevel};
+use parquet::basic::{BrotliLevel, Compression, Encoding, GzipLevel, Type as PhysicalType, ZstdLevel};
 use parquet::file::properties::{EnabledStatistics, WriterProperties, WriterVersion, DEFAULT_WRITE_BATCH_SIZE};
-use parquet::schema::types::ColumnPath;
+use parquet::schema::types::{ColumnPath, SchemaDescriptor};
 
 use crate::parquet::error::Error;
 use crate::php::ht_for_each;
@@ -24,14 +24,19 @@ pub fn schema(ht: &ZendHashTable) -> Result<Schema, Error> {
     php_schema_to_arrow(ht).map_err(Error::Options)
 }
 
-pub fn properties(compression: &str, options: &ZendHashTable) -> Result<WriterProperties, Error> {
+/// `leaves`: the parquet leaves the written schema converts to, which `COLUMNS_ENCODINGS` entries are checked against.
+pub fn properties(
+    compression: &str,
+    options: &ZendHashTable,
+    leaves: &SchemaDescriptor,
+) -> Result<WriterProperties, Error> {
     if options.is_empty() {
         let codec = parse_compression(compression, None, None, None).map_err(Error::Options)?;
 
         return Ok(WriterProperties::builder().set_compression(codec).build());
     }
 
-    Ok(apply_writer_options(WriterProperties::builder(), options, compression)
+    Ok(apply_writer_options(WriterProperties::builder(), options, compression, leaves)
         .map_err(Error::Options)?
         .build())
 }
@@ -253,6 +258,7 @@ fn apply_writer_options(
     mut builder: parquet::file::properties::WriterPropertiesBuilder,
     options: &ZendHashTable,
     compression_str: &str,
+    leaves: &SchemaDescriptor,
 ) -> Result<parquet::file::properties::WriterPropertiesBuilder, String> {
     let gzip_level = options
         .get("GZIP_COMPRESSION_LEVEL")
@@ -332,6 +338,10 @@ fn apply_writer_options(
         builder = builder.set_write_page_header_statistics(enabled);
     }
 
+    if let Some(enabled) = options.get("DICTIONARY_ENABLED").and_then(|z| z.bool()) {
+        builder = builder.set_dictionary_enabled(enabled);
+    }
+
     if let Some(val) = options.get("DICTIONARY_PAGE_SIZE").and_then(|z| z.long()) {
         builder = builder.set_dictionary_page_size_limit(val as usize);
     }
@@ -374,18 +384,33 @@ fn apply_writer_options(
             let encoding = value
                 .str()
                 .ok_or_else(|| format!("COLUMNS_ENCODINGS['{path}'] must be a string"))?;
-            encodings.push((column_path(&path), parse_encoding(encoding)?));
+            let encoding = parse_encoding(encoding)?;
+            let writer_version = options.get("WRITER_VERSION").and_then(|z| z.long()).unwrap_or(1);
+
+            if let Some(column) = leaves.columns().iter().find(|column| column.path().string() == path) {
+                if let Some(requirement) = encoding_requirement(encoding, column.physical_type(), writer_version) {
+                    return Err(format!(
+                        "{encoding:?} encoding {requirement}. Column '{path}' has type: {:?}",
+                        column.physical_type()
+                    ));
+                }
+            }
+
+            encodings.push((column_path(&path), encoding));
 
             Ok::<(), String>(())
         })?;
 
         for (path, encoding) in encodings {
-            // arrow-rs panics on a dictionary encoding set as the column encoding: the dictionary is its own flag
+            // arrow-rs panics on a dictionary encoding set as the column encoding, and uses any other one only once the
+            // dictionary falls back: turning the dictionary off makes it the column's encoding, as the PHP writer writes it
             builder = match encoding {
                 Encoding::PLAIN_DICTIONARY | Encoding::RLE_DICTIONARY => {
                     builder.set_column_dictionary_enabled(path, true)
                 }
-                encoding => builder.set_column_encoding(path, encoding),
+                encoding => builder
+                    .set_column_encoding(path.clone(), encoding)
+                    .set_column_dictionary_enabled(path, false),
             };
         }
     }
@@ -444,6 +469,45 @@ fn column_key(option: &str, key: Option<&ZendStr>, index: zend_ulong) -> Result<
             .map(str::to_string)
             .map_err(|_| format!("{option} has a key that is not a column path")),
         None => Ok(index.to_string()),
+    }
+}
+
+/// The PHP writer's `ColumnEncodingPolicy` rules: what an encoding requires of the column, when the column lacks it.
+fn encoding_requirement(encoding: Encoding, physical: PhysicalType, writer_version: i64) -> Option<&'static str> {
+    match encoding {
+        Encoding::RLE if physical != PhysicalType::BOOLEAN => Some("is only supported for BOOLEAN columns"),
+        Encoding::RLE_DICTIONARY | Encoding::PLAIN_DICTIONARY if physical == PhysicalType::BOOLEAN => {
+            Some("is not supported for BOOLEAN columns")
+        }
+        Encoding::RLE_DICTIONARY | Encoding::PLAIN_DICTIONARY
+            if physical == PhysicalType::FIXED_LEN_BYTE_ARRAY && writer_version != 2 =>
+        {
+            Some("is not supported for FIXED_LEN_BYTE_ARRAY columns under WRITER_VERSION 1")
+        }
+        Encoding::DELTA_BINARY_PACKED if !matches!(physical, PhysicalType::INT32 | PhysicalType::INT64) => {
+            Some("is only supported for INT32 and INT64 columns")
+        }
+        Encoding::DELTA_LENGTH_BYTE_ARRAY if physical != PhysicalType::BYTE_ARRAY => {
+            Some("is only supported for BYTE_ARRAY columns")
+        }
+        Encoding::DELTA_BYTE_ARRAY
+            if !matches!(physical, PhysicalType::BYTE_ARRAY | PhysicalType::FIXED_LEN_BYTE_ARRAY) =>
+        {
+            Some("is only supported for BYTE_ARRAY and FIXED_LEN_BYTE_ARRAY columns")
+        }
+        Encoding::BYTE_STREAM_SPLIT
+            if !matches!(
+                physical,
+                PhysicalType::FLOAT
+                    | PhysicalType::DOUBLE
+                    | PhysicalType::INT32
+                    | PhysicalType::INT64
+                    | PhysicalType::FIXED_LEN_BYTE_ARRAY
+            ) =>
+        {
+            Some("is only supported for FLOAT, DOUBLE, INT32, INT64 and FIXED_LEN_BYTE_ARRAY columns")
+        }
+        _ => None,
     }
 }
 

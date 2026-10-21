@@ -4,17 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Data;
 
-use function ceil;
 use function count;
-use function log;
+use function decbin;
 use function max;
 use function min;
+use function strlen;
 
 final class BitWidth
 {
+    /**
+     * Packing through one int accumulator holds the value's bits plus up to 7 pending bits, which must stay below the
+     * sign bit: 56 + 7 = 63.
+     */
+    public const int MAX_PACKED_IN_ACCUMULATOR = 56;
+
     public static function calculate(int $value): int
     {
-        return (int) ceil(log($value + 1, 2));
+        return $value === 0 ? 0 : strlen(decbin($value));
     }
 
     /**

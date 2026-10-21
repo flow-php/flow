@@ -34,20 +34,11 @@ final class DictionaryBuilder
             PhysicalType::BOOLEAN => (new ScalarDictionaryBuilder())->build($data, $dictionary),
             PhysicalType::FLOAT, PhysicalType::DOUBLE => (new FloatDictionaryBuilder())->build($data, $dictionary),
             PhysicalType::FIXED_LEN_BYTE_ARRAY, PhysicalType::BYTE_ARRAY => match ($column->logicalType()?->name()) {
-                LogicalType::STRING,
-                LogicalType::JSON,
-                LogicalType::BSON,
-                LogicalType::UUID,
-                LogicalType::ENUM,
-                LogicalType::DECIMAL,
-                    => (new ScalarDictionaryBuilder())->build($data, $dictionary),
                 LogicalType::DATE, LogicalType::TIME, LogicalType::TIMESTAMP => (new ObjectDictionaryBuilder())->build(
                     $data,
                     $dictionary,
                 ),
-                default => throw new RuntimeException(
-                    'Building dictionary for "' . ($column->logicalType()?->name() ?? 'null') . '" is not supported',
-                ),
+                default => (new ScalarDictionaryBuilder())->build($data, $dictionary),
             },
             default => throw new RuntimeException(
                 'Building dictionary for "' . $column->type()->name . '" is not supported',

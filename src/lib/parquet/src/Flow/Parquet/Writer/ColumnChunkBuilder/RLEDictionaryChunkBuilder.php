@@ -24,6 +24,7 @@ use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\Column;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Writer\ColumnChunkBuilder;
 use Flow\Parquet\Writer\ColumnChunkContainer;
 use Flow\Parquet\Writer\PageBuilder\Dictionary;
@@ -34,9 +35,15 @@ use Flow\Parquet\Writer\PageContainers;
 use Flow\Parquet\Writer\PageIndexBuilder;
 use Flow\Parquet\Writer\StatisticsCounter;
 use Flow\Parquet\Writer\StatisticsOptions;
+use Flow\Parquet\Writer\ValueStorage\ValueStorage;
 
+use function array_filter;
+use function array_push;
 use function array_slice;
 use function count;
+use function implode;
+use function intdiv;
+use function is_string;
 use function strlen;
 
 final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
@@ -60,6 +67,11 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
      */
     private int $dictionaryBytes = 0;
 
+    /**
+     * Built once the dictionary overflows, when it can no longer change, so its values are freed before the flush.
+     */
+    private ?PageContainer $dictionaryPage = null;
+
     private int $nullCount = 0;
 
     private PageContainers $pages;
@@ -81,16 +93,22 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
     private int $rowsCount = 0;
 
     /**
-     * Set once a page would grow the dictionary past Option::DICTIONARY_PAGE_SIZE: that page and the rest of the chunk
-     * are PLAIN, as arrow-rs falls back.
+     * Set once a page would grow the dictionary to Option::DICTIONARY_PAGE_SIZE: that page and the rest of the chunk
+     * use the fallback storage's encoding, as arrow-rs falls back.
      */
-    private bool $plain = false;
+    private bool $overflowed = false;
+
+    /**
+     * Set once a page of the chunk is written with dictionary indices, which needs a dictionary page even when empty.
+     */
+    private bool $indexed = false;
 
     public function __construct(
         private readonly FlatColumn $column,
         private readonly Options $options,
         private readonly Compressions $compression,
         private readonly StatisticsOptions $statistics,
+        private readonly ValueStorage $fallback,
     ) {
         $this->pageIndex = $this->statistics->pageIndex($this->column);
         $this->pages = new PageContainers();
@@ -118,7 +136,12 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
             }
         }
 
-        array_push($this->pageValues, ...$columnValues->values());
+        if ($this->overflowed) {
+            $this->fallback->addValues($this->column, $columnValues->values());
+        } else {
+            array_push($this->pageValues, ...$columnValues->values());
+        }
+
         $this->pageStatistics->addBatch($columnValues->values());
 
         if ($nullsInBatch > 0) {
@@ -135,7 +158,11 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
         }
 
         $codec = new Codec($this->options);
-        $indices = $this->plain ? null : $this->dictionaryIndices();
+        $indices = $this->overflowed ? null : $this->dictionaryIndices();
+
+        if ($indices !== null) {
+            $this->indexed = true;
+        }
 
         $pageContainer = match ($writerVersion = $this->options->getInt(Option::WRITER_VERSION)) {
             1 => $this->buildDataPage($codec, $this->compression, $indices),
@@ -153,6 +180,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
         $this->repetitionLevels = [];
         $this->definitionLevels = [];
         $this->pageValues = [];
+        $this->fallback->reset();
         $this->rowsCount = 0;
         $this->nullCount = 0;
         $this->pageStatistics = $this->statistics->counter($this->column);
@@ -167,7 +195,9 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
     {
         $this->closePage();
 
-        if ($this->dictionary->dictionary !== []) {
+        if ($this->dictionaryPage !== null) {
+            $this->pages->add($this->dictionaryPage);
+        } elseif ($this->indexed) {
             $this->pages->add($this->buildDictionaryPage(new Codec($this->options), $this->compression));
         }
 
@@ -203,9 +233,12 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
         $this->definitionLevels = [];
         $this->repetitionLevels = [];
         $this->pageValues = [];
+        $this->fallback->reset();
         $this->dictionary = new Dictionary([], []);
         $this->dictionaryBytes = 0;
-        $this->plain = false;
+        $this->dictionaryPage = null;
+        $this->overflowed = false;
+        $this->indexed = false;
         $this->rowsCount = 0;
         $this->nullCount = 0;
 
@@ -216,6 +249,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
     {
         return (
             count($this->pageValues) === 0
+            && $this->fallback->isEmpty()
             && count($this->definitionLevels) === 0
             && count($this->repetitionLevels) === 0
         );
@@ -223,7 +257,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
 
     public function isFull(): bool
     {
-        return (count($this->pageValues) * 4) >= $this->options->getInt(Option::PAGE_SIZE_BYTES);
+        return $this->pageValuesSize() >= $this->options->getInt(Option::PAGE_SIZE_BYTES);
     }
 
     public function uncompressedSize(): int
@@ -232,7 +266,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
     }
 
     /**
-     * @param null|array<int, int> $indices the page's dictionary indices, null for a PLAIN page
+     * @param null|array<int, int> $indices the page's dictionary indices, null for a fallback page
      */
     private function buildDataPage(Codec $codec, Compressions $compression, ?array $indices): PageContainer
     {
@@ -265,7 +299,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
             strlen($compressedBuffer),
             strlen($pageBuffer),
             dataPageHeader: new DataPageHeader(
-                encoding: $indices === null ? Encodings::PLAIN : Encodings::RLE_DICTIONARY,
+                encoding: $indices === null ? $this->fallback->encoding() : Encodings::RLE_DICTIONARY,
                 repetitionLevelEncoding: Encodings::RLE,
                 definitionLevelEncoding: Encodings::RLE,
                 valuesCount: count($this->definitionLevels),
@@ -279,7 +313,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
     }
 
     /**
-     * @param null|array<int, int> $indices the page's dictionary indices, null for a PLAIN page
+     * @param null|array<int, int> $indices the page's dictionary indices, null for a fallback page
      */
     private function buildDataPageV2(Codec $codec, Compressions $compression, ?array $indices): PageContainer
     {
@@ -322,7 +356,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
                 valuesCount: count($this->definitionLevels),
                 nullsCount: $this->nullCount,
                 rowsCount: $this->rowsCount,
-                encoding: $indices === null ? Encodings::PLAIN : Encodings::RLE_DICTIONARY,
+                encoding: $indices === null ? $this->fallback->encoding() : Encodings::RLE_DICTIONARY,
                 definitionsByteLength: $definitionsLength,
                 repetitionsByteLength: $repetitionsLength,
                 isCompressed: !($compression === Compressions::UNCOMPRESSED),
@@ -356,8 +390,8 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
     }
 
     /**
-     * The page's values in the chunk dictionary, extending it; null when that would grow it past
-     * Option::DICTIONARY_PAGE_SIZE, which turns this page and the rest of the chunk PLAIN.
+     * The page's values in the chunk dictionary, extending it; null when that would grow it to
+     * Option::DICTIONARY_PAGE_SIZE, which turns this page and the rest of the chunk to the fallback encoding.
      *
      * @return null|array<int, int>
      */
@@ -373,20 +407,22 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
             ),
             $this->dictionary,
         );
-        $added = '';
-        (new PlainValuesPacker(new BinaryBufferWriter($added), $this->byteOrder))->packValues(
-            $this->column,
-            array_slice($extended->dictionary, count($this->dictionary->dictionary)),
-        );
+        $addedBytes = $this->plainSize(array_slice($extended->dictionary, count($this->dictionary->dictionary)));
 
-        if (($this->dictionaryBytes + strlen($added)) > $this->options->getInt(Option::DICTIONARY_PAGE_SIZE)) {
-            $this->plain = true;
+        if (($this->dictionaryBytes + $addedBytes) >= $this->options->getInt(Option::DICTIONARY_PAGE_SIZE)) {
+            $this->overflowed = true;
+
+            if ($this->indexed) {
+                $this->dictionaryPage = $this->buildDictionaryPage(new Codec($this->options), $this->compression);
+            }
+
+            $this->dictionary = new Dictionary([], []);
 
             return null;
         }
 
         $this->dictionary = $extended;
-        $this->dictionaryBytes += strlen($added);
+        $this->dictionaryBytes += $addedBytes;
 
         return $extended->indices;
     }
@@ -397,22 +433,37 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
     private function values(RLEBitPackedPacker $packer, ?array $indices): string
     {
         if ($indices === null) {
-            $values = '';
-            (new PlainValuesPacker(new BinaryBufferWriter($values), $this->byteOrder))->packValues(
-                $this->column,
-                $this->pageValues,
-            );
+            $this->fallback->addValues($this->column, $this->pageValues);
 
-            return $values;
+            return $this->fallback->getBuffer();
         }
 
-        return $indices === [] ? '' : $packer->packWithBitWidth(BitWidth::fromArray($indices), $indices);
+        return $packer->packWithBitWidth(BitWidth::fromArray($indices), $indices);
     }
 
     private function currentPageUncompressedSize(): int
     {
-        return (
-            (count($this->pageValues) * 4) + (count($this->repetitionLevels) * 4) + (count($this->definitionLevels) * 4)
-        );
+        return $this->pageValuesSize() + (count($this->repetitionLevels) * 4) + (count($this->definitionLevels) * 4);
+    }
+
+    private function pageValuesSize(): int
+    {
+        return $this->overflowed ? $this->fallback->plainSize() : count($this->pageValues) * 4;
+    }
+
+    /**
+     * @param array<mixed> $values
+     */
+    private function plainSize(array $values): int
+    {
+        return match ($this->column->type()) {
+            PhysicalType::BYTE_ARRAY => (count($values) * 4)
+                + strlen(implode('', array_filter($values, is_string(...)))),
+            PhysicalType::FIXED_LEN_BYTE_ARRAY => strlen(implode('', array_filter($values, is_string(...)))),
+            PhysicalType::BOOLEAN => intdiv(count($values) + 7, 8),
+            PhysicalType::INT32, PhysicalType::FLOAT => count($values) * 4,
+            PhysicalType::INT64, PhysicalType::DOUBLE => count($values) * 8,
+            PhysicalType::INT96 => count($values) * 12,
+        };
     }
 }

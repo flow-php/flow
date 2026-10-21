@@ -74,7 +74,7 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
             $file->metadata()->rowGroups()->all()[0]->columnChunks()[0]->encodings(),
         );
         static::assertSame(
-            ['DICTIONARY_PAGE', 'RLE_DICTIONARY', 'RLE_DICTIONARY', 'PLAIN'],
+            ['DICTIONARY_PAGE', 'RLE_DICTIONARY', 'PLAIN', 'PLAIN'],
             array_map(
                 static fn(ColumnPageHeader $header): string => $header->pageHeader->type()->isDataPage()
                     ? $header->pageHeader->dataPageHeader()?->encoding()->name ?? ''

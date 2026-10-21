@@ -79,9 +79,6 @@ final class PhpParquetFileWriter implements ParquetFileWriter
         Options $options,
         private readonly int $rowGroupSizeCheckInterval,
     ) {
-        $stream->append(ParquetFile::PARQUET_MAGIC_NUMBER);
-        $this->stream = $stream;
-        $this->fileOffset = strlen(ParquetFile::PARQUET_MAGIC_NUMBER);
         $this->metadata = new Metadata(
             $schema,
             new RowGroups([]),
@@ -99,6 +96,9 @@ final class PhpParquetFileWriter implements ParquetFileWriter
                 DataConverter::initialize($options),
             ),
         );
+        $stream->append(ParquetFile::PARQUET_MAGIC_NUMBER);
+        $this->stream = $stream;
+        $this->fileOffset = strlen(ParquetFile::PARQUET_MAGIC_NUMBER);
     }
 
     public function close(): void

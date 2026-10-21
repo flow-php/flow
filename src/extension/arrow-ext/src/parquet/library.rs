@@ -13,6 +13,7 @@ use ext_php_rs::flags::{ClassFlags, DataType};
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendClassObject, ZendHashTable, Zval};
 use ext_php_rs::zend::ce;
+use parquet::arrow::ArrowSchemaConverter;
 use parquet::basic::Type as PhysicalType;
 use parquet::file::metadata::ParquetMetaData;
 
@@ -911,10 +912,14 @@ impl RustParquetFileWriter {
             .collect::<Result<Vec<_>, Error>>()
             .map_err(refused)?;
         let scalar = columns.iter().all(|column| column.cell.is_scalar());
+        let leaves = ArrowSchemaConverter::new()
+            .convert(&schema)
+            .map_err(Error::Parquet)
+            .map_err(refused)?;
         let writer = ParquetWriter::open(
             PhpSink::new(Arc::clone(&stream)),
             schema,
-            options::properties(compression, options).map_err(refused)?,
+            options::properties(compression, options, &leaves).map_err(refused)?,
         )
         .map_err(refused)?;
 

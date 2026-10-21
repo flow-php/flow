@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Flow\Parquet\Writer\ValueStorage;
 
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
+use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
 use function count;
+use function intdiv;
 use function is_bool;
 
 final class BooleanValueStorage implements ValueStorage
@@ -25,6 +27,11 @@ final class BooleanValueStorage implements ValueStorage
                 $this->values[] = $value;
             }
         }
+    }
+
+    public function encoding(): Encodings
+    {
+        return Encodings::PLAIN;
     }
 
     public function getBuffer(): string
@@ -55,8 +62,8 @@ final class BooleanValueStorage implements ValueStorage
         $this->values = [];
     }
 
-    public function size(): int
+    public function plainSize(): int
     {
-        return count($this->values);
+        return intdiv(count($this->values) + 7, 8);
     }
 }

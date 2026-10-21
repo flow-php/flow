@@ -20,6 +20,8 @@ final class PageContainers
 
     private ?PageContainer $dictionaryPageContainer = null;
 
+    private int $uncompressedSize = 0;
+
     /**
      * @param array<PageContainer> $containers
      */
@@ -38,11 +40,13 @@ final class PageContainers
             }
 
             $this->dictionaryPageContainer = $container;
+            $this->uncompressedSize += $container->totalUncompressedSize();
 
             return;
         }
 
         $this->dataPageContainers[] = $container;
+        $this->uncompressedSize += $container->totalUncompressedSize();
     }
 
     public function buffer(): string
@@ -113,6 +117,8 @@ final class PageContainers
             $dataPageHeaderV2 = $pageContainer->pageHeader->dataPageHeaderV2();
 
             if ($dataPageHeaderV2 !== null) {
+                // v2 levels are always RLE, arrow-rs lists it for every chunk
+                $encodings[] = Encodings::RLE->value;
                 $encodings[] = $dataPageHeaderV2->encoding()->value;
             }
         }
@@ -124,17 +130,7 @@ final class PageContainers
 
     public function uncompressedSize(): int
     {
-        $size = 0;
-
-        if ($this->dictionaryPageContainer) {
-            $size += $this->dictionaryPageContainer->totalUncompressedSize();
-        }
-
-        foreach ($this->dataPageContainers as $pageContainer) {
-            $size += $pageContainer->totalUncompressedSize();
-        }
-
-        return $size;
+        return $this->uncompressedSize;
     }
 
     public function valuesCount(): int

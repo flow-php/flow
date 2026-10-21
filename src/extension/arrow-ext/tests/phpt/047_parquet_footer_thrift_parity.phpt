@@ -66,6 +66,8 @@ $file->close();
 columns.required.parquet: thrift identical, schema identical, footer reads 1
 decimals_fixed_len.parquet: thrift identical, schema identical, footer reads 1
 delta_binary_acked_encoded_integers.parquet: thrift identical, schema identical, footer reads 1
+delta_byte_array_arrow_v2.parquet: thrift identical, schema identical, footer reads 1
+delta_length_byte_array_duckdb_v2.parquet: thrift identical, schema identical, footer reads 1
 lists.parquet: thrift identical, schema identical, footer reads 1
 logical_types.parquet: thrift identical, schema identical, footer reads 1
 maps.parquet: thrift identical, schema identical, footer reads 1

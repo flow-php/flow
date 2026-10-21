@@ -38,6 +38,16 @@ final class OptionsConverterTest extends TestCase
         );
     }
 
+    public function test_dictionary_enabled_is_mapped(): void
+    {
+        static::assertFalse(
+            OptionsConverter::toExtension((new Options())->set(
+                Option::DICTIONARY_ENABLED,
+                false,
+            ))['DICTIONARY_ENABLED'],
+        );
+    }
+
     public function test_page_maximum_rows_count_is_mapped(): void
     {
         static::assertSame(
@@ -150,6 +160,7 @@ final class OptionsConverterTest extends TestCase
         static::assertArrayHasKey('ZSTD_COMPRESSION_LEVEL', $result);
         static::assertArrayHasKey('ROW_GROUP_SIZE_BYTES', $result);
         static::assertArrayHasKey('PAGE_SIZE_BYTES', $result);
+        static::assertTrue($result['DICTIONARY_ENABLED']);
         static::assertArrayHasKey('DICTIONARY_PAGE_SIZE', $result);
         static::assertArrayHasKey('WRITER_VERSION', $result);
         static::assertArrayNotHasKey('COLUMNS_COMPRESSIONS', $result);

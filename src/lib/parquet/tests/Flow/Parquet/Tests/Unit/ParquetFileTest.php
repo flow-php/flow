@@ -324,7 +324,7 @@ final class ParquetFileTest extends TestCase
         ));
 
         static::assertSame(
-            [['id', 'id'], ['name', 'name']],
+            [['id', 'id'], ['id', 'id'], ['name', 'name'], ['name', 'name']],
             array_map(
                 static fn(ColumnPageHeader $header): array => [
                     $header->column->flatPath(),

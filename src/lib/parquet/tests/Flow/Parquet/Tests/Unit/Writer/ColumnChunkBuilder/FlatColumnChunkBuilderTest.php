@@ -14,9 +14,15 @@ use Flow\Parquet\ParquetFile\PageIndex\PageLocation;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\LogicalType;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
-use Flow\Parquet\Writer\ColumnChunkBuilder\PlainFlatColumnChunkBuilder;
+use Flow\Parquet\Writer\ColumnChunkBuilder\FlatColumnChunkBuilder;
 use Flow\Parquet\Writer\ColumnChunkContainer;
 use Flow\Parquet\Writer\StatisticsOptions;
+use Flow\Parquet\Writer\ValueStorage\BooleanValueStorage;
+use Flow\Parquet\Writer\ValueStorage\BufferValueStorage;
+use Flow\Parquet\Writer\ValueStorage\DeltaBinaryPackedValueStorage;
+use Flow\Parquet\Writer\ValueStorage\DeltaByteArrayValueStorage;
+use Flow\Parquet\Writer\ValueStorage\DeltaLengthByteArrayValueStorage;
+use Flow\Parquet\Writer\ValueStorage\ValueStorage;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -26,7 +32,7 @@ use function array_map;
 use function pack;
 use function strlen;
 
-final class PlainFlatColumnChunkBuilderTest extends TestCase
+final class FlatColumnChunkBuilderTest extends TestCase
 {
     public static function compression_types_provider(): Generator
     {
@@ -52,6 +58,49 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         yield 'byte_array' => [PhysicalType::BYTE_ARRAY, 'test_string'];
     }
 
+    public static function delta_binary_packed_is_full_provider(): Generator
+    {
+        yield 'int32' => [PhysicalType::INT32, 25];
+        yield 'int64' => [PhysicalType::INT64, 13];
+    }
+
+    public static function page_index_storages_provider(): Generator
+    {
+        yield 'PLAIN' => [new BufferValueStorage()];
+        yield 'DELTA_BINARY_PACKED' => [new DeltaBinaryPackedValueStorage()];
+    }
+
+    public static function storage_encodings_provider(): Generator
+    {
+        foreach ([1, 2] as $writerVersion) {
+            yield "PLAIN v{$writerVersion}" => [FlatColumn::int32('c'), new BufferValueStorage(), 7, $writerVersion];
+            yield "PLAIN boolean v{$writerVersion}" => [
+                FlatColumn::boolean('c'),
+                new BooleanValueStorage(),
+                true,
+                $writerVersion,
+            ];
+            yield "DELTA_BINARY_PACKED v{$writerVersion}" => [
+                FlatColumn::int64('c'),
+                new DeltaBinaryPackedValueStorage(),
+                7,
+                $writerVersion,
+            ];
+            yield "DELTA_LENGTH_BYTE_ARRAY v{$writerVersion}" => [
+                FlatColumn::string('c'),
+                new DeltaLengthByteArrayValueStorage(),
+                'a',
+                $writerVersion,
+            ];
+            yield "DELTA_BYTE_ARRAY v{$writerVersion}" => [
+                FlatColumn::string('c'),
+                new DeltaByteArrayValueStorage(),
+                'a',
+                $writerVersion,
+            ];
+        }
+    }
+
     public static function writer_version_provider(): Generator
     {
         yield 'version 1' => [1];
@@ -63,11 +112,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         for ($i = 0; $i < 5; $i++) {
@@ -83,11 +133,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('bool_col', PhysicalType::BOOLEAN);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BooleanValueStorage(),
         );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0, 0], [1, 1], [true, false]));
@@ -101,11 +152,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [], [], []));
@@ -119,11 +171,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT64);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0, 0], [1, 1], [PHP_INT_MAX, PHP_INT_MIN]));
@@ -140,11 +193,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0, 0, 0], [1, 1, 0], [42, 100]));
@@ -158,11 +212,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [0], []));
@@ -176,11 +231,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0, 1], [1, 1], [42, 100]));
@@ -197,11 +253,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [42]));
@@ -215,11 +272,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('str_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0, 0], [1, 1], ['hello', 'world']));
@@ -233,11 +291,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [255], [42]));
@@ -254,11 +313,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [42]));
@@ -275,11 +335,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [42]));
@@ -297,11 +358,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $options->set(Option::WRITER_VERSION, $writerVersion);
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [42]));
@@ -316,11 +378,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $builder->closePage();
@@ -335,11 +398,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $options->set(Option::WRITER_VERSION, 3);
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [42]));
@@ -357,11 +421,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $result = $builder->column();
@@ -375,34 +440,18 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
-        static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $builder);
+        static::assertInstanceOf(FlatColumnChunkBuilder::class, $builder);
         static::assertSame($column, $builder->column());
         static::assertFalse($builder->isFull());
         static::assertSame(0, $builder->uncompressedSize());
-    }
-
-    public function test_constructor_with_boolean_column_uses_boolean_storage(): void
-    {
-        $column = new FlatColumn('bool_col', PhysicalType::BOOLEAN);
-        $options = new Options();
-        $compression = Compressions::UNCOMPRESSED;
-
-        $builder = new PlainFlatColumnChunkBuilder(
-            $column,
-            $options,
-            $compression,
-            StatisticsOptions::fromOptions($options),
-        );
-
-        static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $builder);
-        static::assertSame($column, $builder->column());
     }
 
     public function test_constructor_with_byte_array_logical_type(): void
@@ -411,14 +460,15 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
-        static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $builder);
+        static::assertInstanceOf(FlatColumnChunkBuilder::class, $builder);
         static::assertSame($column, $builder->column());
     }
 
@@ -428,14 +478,15 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
 
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
-        static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $builder);
+        static::assertInstanceOf(FlatColumnChunkBuilder::class, $builder);
     }
 
     #[DataProvider('physical_types_provider')]
@@ -445,14 +496,15 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
-        static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $builder);
+        static::assertInstanceOf(FlatColumnChunkBuilder::class, $builder);
         static::assertSame($column, $builder->column());
     }
 
@@ -461,11 +513,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('bool_col', PhysicalType::BOOLEAN);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BooleanValueStorage(),
         );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [false]));
@@ -482,11 +535,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('str_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], ['']));
@@ -503,11 +557,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('str_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $largeString = str_repeat('x', 10000);
@@ -525,11 +580,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [0]));
@@ -546,11 +602,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [42]));
@@ -568,11 +625,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0, 0], [1, 1], [42, 84]));
@@ -597,11 +655,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::GZIP;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [42]));
@@ -620,11 +679,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [42]));
@@ -643,11 +703,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $offsets = [0, 100, 1000, 50000];
@@ -666,11 +727,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $containers = $builder->flush(0);
@@ -686,11 +748,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $containers = $builder->flush(-100);
@@ -705,11 +768,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         static::assertFalse($builder->isFull());
@@ -722,11 +786,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $options->set(Option::PAGE_SIZE_BYTES, $pageSize);
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         static::assertFalse($builder->isFull());
@@ -748,11 +813,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $options = new Options();
         $options->set(Option::PAGE_SIZE_BYTES, 0);
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [42]));
@@ -765,11 +831,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0, 0, 0], [1, 0, 1], [42, 100]));
@@ -786,11 +853,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [42]));
@@ -807,11 +875,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $containers1 = $builder->flush(0);
@@ -832,11 +901,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0, 0, 0], [1, 1, 1], [10, 50, 30]));
@@ -852,11 +922,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = FlatColumn::string('all_null');
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0, 0, 0], [0, 0, 0], []));
@@ -874,11 +945,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = FlatColumn::string('mixed');
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0, 0, 0], [1, 0, 1], ['x', 'z']));
@@ -898,11 +970,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $sizes = [];
@@ -923,11 +996,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $initialSize = $builder->uncompressedSize();
@@ -945,11 +1019,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         static::assertSame(0, $builder->uncompressedSize());
@@ -960,11 +1035,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('str_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $largeString = str_repeat('A', 50000);
@@ -981,11 +1057,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [42]));
@@ -1004,11 +1081,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         for ($i = 0; $i < 5; $i++) {
@@ -1030,11 +1108,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         for ($cycle = 0; $cycle < 3; $cycle++) {
@@ -1055,11 +1134,12 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             $options,
             $compression,
             StatisticsOptions::fromOptions($options),
+            new BufferValueStorage(),
         );
 
         for ($i = 0; $i < 5; $i++) {
@@ -1073,14 +1153,16 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         static::assertSame(5, $containers[0]->columnChunk->valuesCount());
     }
 
-    public function test_each_page_gets_a_column_index_entry_and_an_offset_index_location(): void
+    #[DataProvider('page_index_storages_provider')]
+    public function test_each_page_gets_a_column_index_entry_and_an_offset_index_location(ValueStorage $storage): void
     {
         $column = FlatColumn::int64('id');
-        $builder = new PlainFlatColumnChunkBuilder(
+        $builder = new FlatColumnChunkBuilder(
             $column,
             new Options(),
             Compressions::UNCOMPRESSED,
             StatisticsOptions::fromOptions(new Options()),
+            $storage,
         );
         $builder->addColumn(new WriteFlatColumnValues($column, [0, 0], [1, 1], [1, 2]));
         $builder->closePage();
@@ -1098,5 +1180,71 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         );
         static::assertSame($container->columnChunk->dataPageOffset(), $container->offsetIndex->pages[0]->offset);
         static::assertSame(4 + strlen($container->binaryBuffer), $last->offset + $last->compressedPageSize);
+    }
+
+    #[DataProvider('delta_binary_packed_is_full_provider')]
+    public function test_delta_binary_packed_storage_is_full_at_its_plain_size(
+        PhysicalType $type,
+        int $valuesToFill,
+    ): void {
+        $options = (new Options())->set(Option::PAGE_SIZE_BYTES, 100)->set(Option::WRITER_VERSION, 2);
+        $column = new FlatColumn('test_col', $type);
+        $builder = new FlatColumnChunkBuilder(
+            $column,
+            $options,
+            Compressions::UNCOMPRESSED,
+            StatisticsOptions::fromOptions($options),
+            new DeltaBinaryPackedValueStorage(),
+        );
+
+        for ($i = 1; $i < $valuesToFill; $i++) {
+            $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [$i]));
+        }
+
+        static::assertFalse($builder->isFull());
+
+        $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [$valuesToFill]));
+
+        static::assertTrue($builder->isFull());
+    }
+
+    #[DataProvider('compression_types_provider')]
+    public function test_delta_binary_packed_storage_writes_with_every_compression(Compressions $compression): void
+    {
+        $options = (new Options())->set(Option::WRITER_VERSION, 2);
+        $column = FlatColumn::int32('test_col');
+        $builder = new FlatColumnChunkBuilder(
+            $column,
+            $options,
+            $compression,
+            StatisticsOptions::fromOptions($options),
+            new DeltaBinaryPackedValueStorage(),
+        );
+        $builder->addColumn(new WriteFlatColumnValues($column, [0, 0], [1, 1], [42, 84]));
+
+        $chunk = $builder->flush(0)[0]->columnChunk;
+
+        static::assertSame($compression, $chunk->codec());
+        static::assertSame(2, $chunk->valuesCount());
+    }
+
+    #[DataProvider('storage_encodings_provider')]
+    public function test_pages_carry_the_storage_encoding(
+        FlatColumn $column,
+        ValueStorage $storage,
+        bool|int|string $value,
+        int $writerVersion,
+    ): void {
+        $options = (new Options())->set(Option::WRITER_VERSION, $writerVersion);
+        $builder = new FlatColumnChunkBuilder(
+            $column,
+            $options,
+            Compressions::UNCOMPRESSED,
+            StatisticsOptions::fromOptions($options),
+            $storage,
+        );
+        $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [$value]));
+
+        static::assertContains($storage->encoding(), $builder->flush(0)[0]->columnChunk->encodings());
     }
 }
