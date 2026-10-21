@@ -4,6 +4,9 @@
   "config": {
     "allow-plugins": {
       "phpdocumentor/shim": true
+    },
+    "platform": {
+      "php": "8.3.0"
     }
   },
   "require-dev": {

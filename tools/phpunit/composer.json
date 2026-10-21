@@ -6,6 +6,9 @@
     "phpunit/phpunit": "^12.5"
   },
   "config": {
-    "allow-plugins": false
+    "allow-plugins": false,
+    "platform": {
+      "php": "8.3.0"
+    }
   }
 }
