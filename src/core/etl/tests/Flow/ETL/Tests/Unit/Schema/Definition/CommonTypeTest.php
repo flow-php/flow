@@ -124,7 +124,7 @@ final class CommonTypeTest extends FlowTestCase
             'c',
             (new CommonType())
                 ->merge(str_schema('c'), int_schema('c'))
-                ->entry()
+                ->reference()
                 ->name(),
         );
     }

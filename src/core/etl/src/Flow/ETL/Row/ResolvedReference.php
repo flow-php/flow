@@ -25,7 +25,7 @@ final class ResolvedReference implements Reference
      * @param Type<mixed> $type
      */
     public function __construct(
-        private readonly string $entry,
+        private readonly string $column,
         private readonly Type $type,
         private readonly ?string $alias = null,
         private readonly SortOrder $sort = SortOrder::ASC,
@@ -39,17 +39,17 @@ final class ResolvedReference implements Reference
 
     public function as(string $alias): self
     {
-        return new self($this->entry, $this->type, $alias, $this->sort, $this->nulls);
+        return new self($this->column, $this->type, $alias, $this->sort, $this->nulls);
     }
 
     public function asc(NullsOrder $nulls = NullsOrder::FIRST): self
     {
-        return new self($this->entry, $this->type, $this->alias, SortOrder::ASC, $nulls);
+        return new self($this->column, $this->type, $this->alias, SortOrder::ASC, $nulls);
     }
 
     public function base(): string
     {
-        return $this->entry;
+        return $this->column;
     }
 
     /**
@@ -70,7 +70,7 @@ final class ResolvedReference implements Reference
 
     public function desc(NullsOrder $nulls = NullsOrder::LAST): self
     {
-        return new self($this->entry, $this->type, $this->alias, SortOrder::DESC, $nulls);
+        return new self($this->column, $this->type, $this->alias, SortOrder::DESC, $nulls);
     }
 
     public function eval(Rows $rows, FlowContext $context): Column
@@ -95,7 +95,7 @@ final class ResolvedReference implements Reference
 
     public function name(): string
     {
-        return $this->alias ?? $this->entry;
+        return $this->alias ?? $this->column;
     }
 
     /**
@@ -123,6 +123,6 @@ final class ResolvedReference implements Reference
 
     public function to(): string
     {
-        return $this->entry;
+        return $this->column;
     }
 }

@@ -27,7 +27,7 @@ data_frame()
         ['id' => 2, 'name' => 'jane'],
         ['id' => 3, 'name' => 'john'],
     ], schema(int_schema('id'), str_schema('name'))))
-    ->withEntry('name', ref('name')->upper())
+    ->withColumn('name', ref('name')->upper())
     ->cache()
     ->collect()
     ->write(to_output(truncate: false))

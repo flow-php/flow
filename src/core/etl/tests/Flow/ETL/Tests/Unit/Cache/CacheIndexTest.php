@@ -70,7 +70,7 @@ final class CacheIndexTest extends FlowTestCase
     public function test_from_rows_with_non_string_key_entry_throws(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('CacheIndex expects rows with a string "key" entry, got: null');
+        $this->expectExceptionMessage('CacheIndex expects rows with a string "key" column, got: null');
 
         CacheIndex::fromRows('dataset-id', array_to_rows([['key' => null]], schema(str_schema('key', nullable: true))));
     }
@@ -78,7 +78,7 @@ final class CacheIndexTest extends FlowTestCase
     public function test_from_rows_with_non_integer_rows_entry_throws(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('CacheIndex expects rows with an integer "rows" entry, got: string');
+        $this->expectExceptionMessage('CacheIndex expects rows with an integer "rows" column, got: string');
 
         CacheIndex::fromRows('dataset-id', array_to_rows(
             [['key' => 'chunk-1', 'rows' => 'three']],

@@ -7,34 +7,37 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\BoundStep;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row\Reference;
-use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 use Throwable;
 
-final readonly class SelectEntriesTransformer implements Transformer
+final readonly class RenameColumnTransformer implements Transformer
 {
-    private References $refs;
-
-    public function __construct(string|Reference ...$refs)
-    {
-        $this->refs = References::init(...$refs);
-    }
+    public function __construct(
+        private string $from,
+        private string $to,
+    ) {}
 
     public function bind(Schema $input): BoundStep
     {
-        return new BoundStep($this, $input->keep(...$this->refs)->reorder(...$this->refs));
+        if ($this->from === $this->to) {
+            return new BoundStep($this, $input);
+        }
+
+        return new BoundStep($this, $input->rename($this->from, $this->to));
     }
 
     public function transform(Rows $rows, FlowContext $context): Rows
     {
+        if ($this->from === $this->to) {
+            return $rows;
+        }
+
         $context->telemetry()->transformationStarted($this);
 
         try {
-            $schema = $rows->schema()->keep(...$this->refs)->reorder(...$this->refs);
-            $result = $rows->project($schema, $context->backend());
+            $result = $rows->withSchema($rows->schema()->rename($this->from, $this->to));
 
             $context->telemetry()->transformationCompleted($this, [
                 TelemetryAttributes::ATTR_TRANSFORMATION_INPUT_ROWS => $rows->count(),

@@ -29,8 +29,8 @@ final class RepeatTest extends FlowTestCase
                 ['text' => null, 'times' => 3],
                 ['text' => 'world', 'times' => 1],
             ]))
-            ->withEntry('repeated', optional(ref('text')->repeat(ref('times'))))
-            ->withEntry('repeated_fixed', optional(ref('text')->repeat(2)))
+            ->withColumn('repeated', optional(ref('text')->repeat(ref('times'))))
+            ->withColumn('repeated_fixed', optional(ref('text')->repeat(2)))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

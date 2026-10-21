@@ -87,7 +87,7 @@ final class SchemaConverter
 
         foreach ($schema->definitions() as $definition) {
             $columns[] = $this->flowToParquet(
-                $definition->entry()->name(),
+                $definition->reference()->name(),
                 $definition->type(),
                 $definition->isNullable(),
             );

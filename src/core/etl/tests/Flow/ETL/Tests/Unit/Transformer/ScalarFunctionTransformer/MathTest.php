@@ -143,9 +143,9 @@ final class MathTest extends FlowTestCase
         ?Rounding $rounding,
         array $result,
     ): void {
-        $rows = (new ScalarFunctionTransformer('result', ref($a->entry()->name())
-            ->divide(ref($b->entry()->name()), $scale, $rounding)))->transform(
-            array_to_rows([[$a->entry()->name() => $aValue, $b->entry()->name() => $bValue]], schema($a, $b)),
+        $rows = (new ScalarFunctionTransformer('result', ref($a->reference()->name())
+            ->divide(ref($b->reference()->name()), $scale, $rounding)))->transform(
+            array_to_rows([[$a->reference()->name() => $aValue, $b->reference()->name() => $bValue]], schema($a, $b)),
             flow_context(),
         );
 
@@ -162,9 +162,9 @@ final class MathTest extends FlowTestCase
     {
         $rows = (new ScalarFunctionTransformer(
             'result',
-            ref($a->entry()->name())->minus(ref($b->entry()->name())),
+            ref($a->reference()->name())->minus(ref($b->reference()->name())),
         ))->transform(
-            array_to_rows([[$a->entry()->name() => $aValue, $b->entry()->name() => $bValue]], schema($a, $b)),
+            array_to_rows([[$a->reference()->name() => $aValue, $b->reference()->name() => $bValue]], schema($a, $b)),
             flow_context(),
         );
 
@@ -181,9 +181,9 @@ final class MathTest extends FlowTestCase
     {
         $rows = (new ScalarFunctionTransformer(
             'result',
-            ref($a->entry()->name())->multiply(ref($b->entry()->name())),
+            ref($a->reference()->name())->multiply(ref($b->reference()->name())),
         ))->transform(
-            array_to_rows([[$a->entry()->name() => $aValue, $b->entry()->name() => $bValue]], schema($a, $b)),
+            array_to_rows([[$a->reference()->name() => $aValue, $b->reference()->name() => $bValue]], schema($a, $b)),
             flow_context(),
         );
 
@@ -200,9 +200,9 @@ final class MathTest extends FlowTestCase
     {
         $rows = (new ScalarFunctionTransformer(
             'result',
-            ref($a->entry()->name())->plus(ref($b->entry()->name())),
+            ref($a->reference()->name())->plus(ref($b->reference()->name())),
         ))->transform(
-            array_to_rows([[$a->entry()->name() => $aValue, $b->entry()->name() => $bValue]], schema($a, $b)),
+            array_to_rows([[$a->reference()->name() => $aValue, $b->reference()->name() => $bValue]], schema($a, $b)),
             flow_context(),
         );
 
@@ -219,9 +219,9 @@ final class MathTest extends FlowTestCase
     {
         $rows = (new ScalarFunctionTransformer(
             'result',
-            ref($a->entry()->name())->power(ref($b->entry()->name())),
+            ref($a->reference()->name())->power(ref($b->reference()->name())),
         ))->transform(
-            array_to_rows([[$a->entry()->name() => $aValue, $b->entry()->name() => $bValue]], schema($a, $b)),
+            array_to_rows([[$a->reference()->name() => $aValue, $b->reference()->name() => $bValue]], schema($a, $b)),
             flow_context(),
         );
 

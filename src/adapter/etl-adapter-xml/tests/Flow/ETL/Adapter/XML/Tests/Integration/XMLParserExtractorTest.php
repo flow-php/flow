@@ -174,7 +174,7 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
     {
         $rows = df()
             ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_feed.xml', 'feed/entry'))
-            ->withEntry('title', ref('node')->xpath('/entry/g:title')->domElementValue())
+            ->withColumn('title', ref('node')->xpath('/entry/g:title')->domElementValue())
             ->fetch();
 
         static::assertSame(['Product 1', 'Product 2'], [
@@ -219,7 +219,7 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
     {
         $rows = df()
             ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_on_captured_root.xml', 'feed/entry'))
-            ->withEntry('title', ref('node')->xpath('/entry/g:title')->domElementValue())
+            ->withColumn('title', ref('node')->xpath('/entry/g:title')->domElementValue())
             ->fetch();
 
         static::assertSame('Product 1', $rows->column('title')->value(0));

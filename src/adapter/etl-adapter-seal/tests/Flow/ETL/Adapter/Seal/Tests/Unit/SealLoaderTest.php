@@ -27,7 +27,7 @@ final class SealLoaderTest extends SealTestCase
         $engine = $this->sealContext()->engine(to_seal_schema(schema(str_schema('id')), 'users', 'id'));
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Entry "id" cannot be used as a document identifier for DELETE operation');
+        $this->expectExceptionMessage('Column "id" cannot be used as a document identifier for DELETE operation');
 
         to_seal_delete($engine, 'users')->load(array_to_rows([['id' => [
             '1',
@@ -73,6 +73,6 @@ final class SealLoaderTest extends SealTestCase
             'users',
         );
 
-        static::assertSame($loader, $loader->withIdentifierEntry('sku'));
+        static::assertSame($loader, $loader->withIdentifierColumn('sku'));
     }
 }

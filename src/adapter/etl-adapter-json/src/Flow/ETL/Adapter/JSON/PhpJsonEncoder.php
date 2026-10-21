@@ -47,8 +47,11 @@ final class PhpJsonEncoder implements JsonEncoder
         $columns = [];
 
         foreach ($rows->schema()->definitions() as $definition) {
-            $names[] = $definition->entry()->name();
-            $columns[] = $this->text->of($definition->type(), $rows->column($definition->entry()->name())->physicals());
+            $names[] = $definition->reference()->name();
+            $columns[] = $this->text->of(
+                $definition->type(),
+                $rows->column($definition->reference()->name())->physicals(),
+            );
         }
 
         if ($columns === []) {

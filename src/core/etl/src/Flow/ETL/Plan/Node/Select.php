@@ -15,11 +15,11 @@ use Flow\ETL\Row\References;
 final readonly class Select implements Node
 {
     /**
-     * @param list<Reference|string> $entries
+     * @param list<Reference|string> $columns
      */
     public function __construct(
         private Node $input,
-        public array $entries,
+        public array $columns,
     ) {}
 
     /**
@@ -32,7 +32,7 @@ final readonly class Select implements Node
 
     public function withChildren(array $children): self
     {
-        return $children[0] === $this->input ? $this : new self($children[0], $this->entries);
+        return $children[0] === $this->input ? $this : new self($children[0], $this->columns);
     }
 
     public function rowCount(): RowCount
@@ -52,6 +52,6 @@ final readonly class Select implements Node
 
     public function redefines(): Redefined
     {
-        return Redefined::allBut(...References::init(...$this->entries)->names());
+        return Redefined::allBut(...References::init(...$this->columns)->names());
     }
 }

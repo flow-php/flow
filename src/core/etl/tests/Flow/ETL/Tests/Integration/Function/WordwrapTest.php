@@ -20,7 +20,7 @@ final class WordwrapTest extends FlowTestCase
                 ['text' => 'Hello World Test', 'width' => 10],
                 ['text' => 'PHP is awesome', 'width' => 8],
             ]))
-            ->withEntry('wrapped_text', ref('text')->wordwrap(ref('width')));
+            ->withColumn('wrapped_text', ref('text')->wordwrap(ref('width')));
 
         static::assertEquals(
             [

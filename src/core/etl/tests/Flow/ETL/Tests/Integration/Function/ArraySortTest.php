@@ -24,7 +24,7 @@ final class ArraySortTest extends FlowTestCase
                 ['id' => 1, 'array' => ['a' => 1, 'c' => 3, 'b' => 2]],
                 ['id' => 2],
             ]))
-            ->withEntry('array', optional(array_sort(ref('array'), Sort::ksort)))
+            ->withColumn('array', optional(array_sort(ref('array'), Sort::ksort)))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

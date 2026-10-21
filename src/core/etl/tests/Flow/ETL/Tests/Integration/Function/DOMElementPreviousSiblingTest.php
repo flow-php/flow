@@ -29,9 +29,9 @@ final class DOMElementPreviousSiblingTest extends FlowTestCase
                     '<article>01<section><h1>User Name</h1></section></article>',
                 ),
             ]], schema(html_element_schema('html_element')))))
-            ->withEntry('user_details', ref('html_element')->htmlQuerySelector('section'))
-            ->withEntry('user_name', ref('user_details')->htmlQuerySelector('h1')->domElementValue())
-            ->withEntry('user_id', optional(ref('user_details')->domElementPreviousSibling()->domElementValue()))
+            ->withColumn('user_details', ref('html_element')->htmlQuerySelector('section'))
+            ->withColumn('user_name', ref('user_details')->htmlQuerySelector('h1')->domElementValue())
+            ->withColumn('user_id', optional(ref('user_details')->domElementPreviousSibling()->domElementValue()))
             ->select('user_name', 'user_id')
             ->fetch();
 
@@ -55,9 +55,9 @@ final class DOMElementPreviousSiblingTest extends FlowTestCase
                     '<article>01<section><h1>User Name</h1></section></article>',
                 ),
             ]], schema(html_element_schema('html_element')))))
-            ->withEntry('user_details', ref('html_element')->htmlQuerySelector('section'))
-            ->withEntry('user_name', ref('user_details')->htmlQuerySelector('h1')->domElementValue())
-            ->withEntry('user_id', optional(ref('user_details')->domElementPreviousSibling()->domElementValue()))
+            ->withColumn('user_details', ref('html_element')->htmlQuerySelector('section'))
+            ->withColumn('user_name', ref('user_details')->htmlQuerySelector('h1')->domElementValue())
+            ->withColumn('user_id', optional(ref('user_details')->domElementPreviousSibling()->domElementValue()))
             ->select('user_name', 'user_id')
             ->fetch();
 
@@ -80,8 +80,8 @@ final class DOMElementPreviousSiblingTest extends FlowTestCase
         // a batch stores an element's own markup, so siblings are reached from the document it belongs to
         $rows = df()
             ->read(from_rows(array_to_rows([['xml' => $dom]], schema(xml_schema('xml')))))
-            ->withEntry('user_id', ref('xml')->xpath('/user/number')->arrayGet('0')->domElementValue())
-            ->withEntry(
+            ->withColumn('user_id', ref('xml')->xpath('/user/number')->arrayGet('0')->domElementValue())
+            ->withColumn(
                 'user_name',
                 ref('xml')->xpath('/user/number')->arrayGet('0')->domElementPreviousSibling()->domElementValue(),
             )

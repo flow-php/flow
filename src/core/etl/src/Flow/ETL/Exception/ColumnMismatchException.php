@@ -36,7 +36,7 @@ final class ColumnMismatchException extends InvalidArgumentException
      */
     public static function missingColumn(Definition $definition): self
     {
-        return new self($definition->entry()->name(), ' declared by the schema is missing from the row');
+        return new self($definition->reference()->name(), ' declared by the schema is missing from the row');
     }
 
     public static function unexpectedColumn(string $column): self
@@ -49,7 +49,7 @@ final class ColumnMismatchException extends InvalidArgumentException
      */
     public static function retype(Definition $definition, string $reason): self
     {
-        return new self($definition->entry()->name(), sprintf(
+        return new self($definition->reference()->name(), sprintf(
             ': cannot retype the column to %s, %s',
             $definition->type()->toString(),
             $reason,
@@ -61,7 +61,7 @@ final class ColumnMismatchException extends InvalidArgumentException
      */
     public static function unsupportedType(Definition $definition, string $reason): self
     {
-        return new self($definition->entry()->name(), sprintf(
+        return new self($definition->reference()->name(), sprintf(
             ': %s cannot be a batch column, %s',
             $definition->type()->toString(),
             $reason,
@@ -74,7 +74,7 @@ final class ColumnMismatchException extends InvalidArgumentException
     public static function untypedColumn(Definition $definition): self
     {
         return new self(
-            $definition->entry()->name(),
+            $definition->reference()->name(),
             ': mixed cannot be a batch column, an untyped function result exists only inside function evaluation',
         );
     }
@@ -85,7 +85,7 @@ final class ColumnMismatchException extends InvalidArgumentException
     public static function valueDoesNotMatch(Definition $definition, mixed $value, ?TypesException $reason = null): self
     {
         return new self(
-            $definition->entry()->name(),
+            $definition->reference()->name(),
             (
                 $value === null
                     ? sprintf(': could not convert null to %s, column is not nullable', $definition->type()->toString())

@@ -272,7 +272,7 @@ sink. Three groups:
 |----------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
 | Grows with the whole stream            | `sortBy()`, `aggregate()`, `groupBy()->aggregate()`, `pivot()`, window functions, `collect()`, `join()`, `repartition()`              |
 | Grows with the number of distinct keys | `dropDuplicates()`, `constrain()` with a `UniqueConstraint`                                                                           |
-| Constant                               | `select()`, `withEntry()`, `filter()`, `add_row_index()`, `limit()`, `until()`, `offset()`, `cache($id)`, `batch_size()`, `batchBy()` |
+| Constant                               | `select()`, `withColumn()`, `filter()`, `add_row_index()`, `limit()`, `until()`, `offset()`, `cache($id)`, `batch_size()`, `batchBy()` |
 
 The first group buffers - in memory, or spilled to disk by the external sort - exactly as it does on an outer frame.
 `offset()` and `cache($id)` are in the constant group: `offset()` counts the rows it skips, and `cache($id)` writes each
@@ -326,7 +326,7 @@ final class UppercaseNames implements Transformation
 {
     public function transform(DataFrame $dataFrame): DataFrame
     {
-        return $dataFrame->withEntry(
+        return $dataFrame->withColumn(
             'name',
             ref('name')->upper()
         );

@@ -67,13 +67,13 @@ final readonly class PackageMeta
      */
     public function forPackage(string $packageName): ?array
     {
-        $entry = $this->manifest->byName($packageName);
+        $package = $this->manifest->byName($packageName);
 
-        if ($entry === null) {
+        if ($package === null) {
             return null;
         }
 
-        $type = is_string($entry['type'] ?? null) ? $entry['type'] : null;
+        $type = is_string($package['type'] ?? null) ? $package['type'] : null;
 
         if ($type === null || !isset(self::TYPE_LABEL[$type])) {
             return null;

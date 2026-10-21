@@ -20,7 +20,7 @@ final class EnsureStartTest extends FlowTestCase
                 ['url' => 'https://github.com', 'prefix' => 'https://'],
                 ['url' => 'ftp://files.example.com', 'prefix' => 'https://'],
             ]))
-            ->withEntry('normalized_url', ref('url')->ensureStart(ref('prefix')));
+            ->withColumn('normalized_url', ref('url')->ensureStart(ref('prefix')));
 
         static::assertEquals(
             [

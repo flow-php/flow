@@ -88,10 +88,10 @@ final readonly class Details
             $node instanceof Offset => ['Skip: ' . $node->offset],
             $node instanceof TopN => ['Top: ' . $node->limit],
             $node instanceof Rename => [sprintf('Rename: %s → %s', $node->from, $node->to)],
-            $node instanceof Select => ['Keeps only: ' . $this->columns($node->entries)],
-            $node instanceof Drop => ['Drops: ' . $this->columns($node->entries)],
+            $node instanceof Select => ['Keeps only: ' . $this->columns($node->columns)],
+            $node instanceof Drop => ['Drops: ' . $this->columns($node->columns)],
             $node instanceof Distinct => [
-                'Distinct on: ' . ($node->entries === [] ? 'every column' : $this->columns($node->entries)),
+                'Distinct on: ' . ($node->columns === [] ? 'every column' : $this->columns($node->columns)),
             ],
             $node instanceof Batch => ['Batch size: ' . $node->size],
             $node instanceof Repartition => ['Partition by: ' . implode(', ', $node->by->names())],

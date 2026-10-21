@@ -8,7 +8,7 @@ use Flow\ETL\Schema;
 
 use function str_replace;
 
-final readonly class RenameReplaceEntryStrategy implements RenameEntryStrategy
+final readonly class RenameReplaceColumnStrategy implements RenameColumnStrategy
 {
     /**
      * @param array<string>|string $search

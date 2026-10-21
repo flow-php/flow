@@ -92,7 +92,7 @@ final class AggregatedGroups
         foreach ($groups as $group) {
             // @mago-ignore analysis:mixed-assignment
             foreach ($group->key as $name => $value) {
-                $values[$output->get($name)->entry()->name()][] = $value;
+                $values[$output->get($name)->reference()->name()][] = $value;
             }
 
             foreach ($group->aggregators as $aggregator) {

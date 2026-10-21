@@ -20,7 +20,7 @@ final class StrReplaceTest extends FlowTestCase
             ->read(from_array([
                 ['key' => 'value'],
             ]))
-            ->withEntry('str_replace', ref('key')->strReplace('e', 'es'))
+            ->withColumn('str_replace', ref('key')->strReplace('e', 'es'))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

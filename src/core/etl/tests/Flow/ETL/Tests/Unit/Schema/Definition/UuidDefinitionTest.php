@@ -236,8 +236,8 @@ final class UuidDefinitionTest extends FlowTestCase
 
         $renamed = $def->rename('new_id');
 
-        static::assertSame('new_id', $renamed->entry()->name());
-        static::assertSame('id', $def->entry()->name());
+        static::assertSame('new_id', $renamed->reference()->name());
+        static::assertSame('id', $def->reference()->name());
     }
 
     public function test_set_metadata(): void

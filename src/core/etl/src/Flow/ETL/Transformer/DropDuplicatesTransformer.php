@@ -26,17 +26,17 @@ final readonly class DropDuplicatesTransformer implements Transformer
     /**
      * @var array<Reference|string>
      */
-    private array $entries;
+    private array $references;
 
     private Algorithm $hashAlgorithm;
 
-    public function __construct(string|Reference ...$entries)
+    public function __construct(string|Reference ...$columns)
     {
-        if ([] === $entries) {
-            throw new InvalidArgumentException('DropDuplicatesTransformer requires at least one entry');
+        if ([] === $columns) {
+            throw new InvalidArgumentException('DropDuplicatesTransformer requires at least one column');
         }
 
-        $this->entries = $entries;
+        $this->references = $columns;
         $this->deduplication = new Hashes();
         $this->hashAlgorithm = new NativePHPHash();
     }
@@ -53,8 +53,8 @@ final readonly class DropDuplicatesTransformer implements Transformer
         try {
             $columns = [];
 
-            foreach ($this->entries as $entry) {
-                $name = $entry instanceof Reference ? $entry->base() : $entry;
+            foreach ($this->references as $reference) {
+                $name = $reference instanceof Reference ? $reference->base() : $reference;
 
                 $columns[] = $rows->schema()->findDefinition($name) === null ? [] : $rows->column($name)->values();
             }

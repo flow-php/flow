@@ -45,7 +45,7 @@ constant memory regardless of input size.
 Every Flow pipeline has three stages:
 
 - **Extract** - `->read(...)` pulls rows from a source (file, API, database).
-- **Transform** - `->filter()`, `->withEntry()`, `->join()`, `->groupBy()`,
+- **Transform** - `->filter()`, `->withColumn()`, `->join()`, `->groupBy()`,
   `->window()`, and friends shape the rows.
 - **Load** - `->write(...)` streams the result into a sink; `->run()` executes
   the whole thing.

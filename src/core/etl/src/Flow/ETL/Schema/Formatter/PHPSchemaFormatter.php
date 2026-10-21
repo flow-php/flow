@@ -71,7 +71,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
         return sprintf(
             '\%s("%s", nullable: %s, metadata: %s, zone: "%s")',
             $reflection->getName(),
-            $definition->entry()->name(),
+            $definition->reference()->name(),
             $definition->isNullable() ? 'true' : 'false',
             $this->formatMetadata($definition->metadata()),
             $type->zoneName(),
@@ -89,7 +89,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
         return sprintf(
             '\%s("%s", type: \%s::class, nullable: %s, metadata: %s)',
             $reflection->getName(),
-            $definition->entry()->name(),
+            $definition->reference()->name(),
             $type->class,
             $definition->isNullable() ? 'true' : 'false',
             $this->formatMetadata($definition->metadata()),
@@ -106,7 +106,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
         return sprintf(
             '\%s("%s", nullable: %s, metadata: %s)',
             $reflection->getName(),
-            $definition->entry()->name(),
+            $definition->reference()->name(),
             $definition->isNullable() ? 'true' : 'false',
             $this->formatMetadata($definition->metadata()),
         );
@@ -177,7 +177,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
         return sprintf(
             '\%s("%s", type: %s, nullable: %s, metadata: %s)',
             $reflection->getName(),
-            $definition->entry()->name(),
+            $definition->reference()->name(),
             $this->typeFormatter->format($type),
             $definition->isNullable() ? 'true' : 'false',
             $this->formatMetadata($definition->metadata()),
@@ -196,7 +196,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
         return sprintf(
             '\%s("%s", type: %s, nullable: %s, metadata: %s)',
             $reflection->getName(),
-            $definition->entry()->name(),
+            $definition->reference()->name(),
             $this->typeFormatter->format($type),
             $definition->isNullable() ? 'true' : 'false',
             $this->formatMetadata($definition->metadata()),
@@ -213,7 +213,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
         return sprintf(
             '\%s("%s", type: %s, nullable: %s, metadata: %s)',
             $reflection->getName(),
-            $definition->entry()->name(),
+            $definition->reference()->name(),
             $this->typeFormatter->format($definition->type()),
             $definition->isNullable() ? 'true' : 'false',
             $this->formatMetadata($definition->metadata()),
@@ -247,7 +247,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
         return sprintf(
             '\%s("%s", nullable: %s, metadata: %s)',
             $reflection->getName(),
-            $definition->entry()->name(),
+            $definition->reference()->name(),
             $definition->isNullable() ? 'true' : 'false',
             $this->formatMetadata($definition->metadata()),
         );
@@ -265,7 +265,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
         return sprintf(
             '\%s("%s", type: %s, nullable: %s, metadata: %s)',
             $reflection->getName(),
-            $definition->entry()->name(),
+            $definition->reference()->name(),
             $this->typeFormatter->format($type),
             $definition->isNullable() ? 'true' : 'false',
             $this->formatMetadata($definition->metadata()),

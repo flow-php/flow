@@ -18,7 +18,7 @@ data_frame()
             ['id' => 7, 'name' => 'Ann', 'department' => 'Finances', 'salary' => 8000],
         ])
     )
-    ->withEntry('rank', rank()->over(window()->partitionBy(ref('department'))->orderBy(ref('salary')->desc())))
+    ->withColumn('rank', rank()->over(window()->partitionBy(ref('department'))->orderBy(ref('salary')->desc())))
     ->sortBy([ref('department'), ref('rank')])
     ->collect()
     ->write(to_output(truncate: false))

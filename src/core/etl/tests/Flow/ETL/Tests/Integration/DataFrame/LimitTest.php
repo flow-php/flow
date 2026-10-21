@@ -217,7 +217,7 @@ final class LimitTest extends FlowIntegrationTestCase
                     return new Statistics();
                 }
             })
-            ->withEntries([
+            ->withColumns([
                 'expanded' => ref('ids')->expand(),
                 'element' => ref('expanded')->unpack(schema(
                     int_schema('id'),

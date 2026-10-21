@@ -29,7 +29,7 @@ final class IndexOfLastTest extends FlowTestCase
                 ['text' => 'abababa', 'needle' => 'aba'],
                 ['text' => 'नमस्ते', 'needle' => 'स्ते'],
             ]))
-            ->withEntry('last_index', optional(ref('text')->indexOfLast(ref('needle'))))
+            ->withColumn('last_index', optional(ref('text')->indexOfLast(ref('needle'))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

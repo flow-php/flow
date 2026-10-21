@@ -260,7 +260,7 @@ final class PhpCSVEncoderTest extends FlowTestCase
         $cells = [];
 
         foreach ($rows->schema()->definitions() as $definition) {
-            $cells[] = $encoder->cells($definition->type(), $rows->column($definition->entry()->name()));
+            $cells[] = $encoder->cells($definition->type(), $rows->column($definition->reference()->name()));
         }
 
         static::assertSame(

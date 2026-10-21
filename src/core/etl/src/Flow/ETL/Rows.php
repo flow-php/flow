@@ -340,7 +340,7 @@ final class Rows implements Countable
         }
 
         foreach ($this->schema->definitions() as $definition) {
-            $name = $definition->entry()->name();
+            $name = $definition->reference()->name();
 
             if ($this->count > 0 && $schema->findDefinition($name) === null) {
                 throw new SchemaMismatchException(0, ColumnMismatchException::unexpectedColumn($name));
@@ -352,7 +352,7 @@ final class Rows implements Countable
         $retyping = new ColumnRetyping();
 
         foreach ($schema->definitions() as $name => $definition) {
-            $own = $this->schema->findDefinition($definition->entry()->name());
+            $own = $this->schema->findDefinition($definition->reference()->name());
 
             if ($own === null) {
                 $columns[$name] = $retyping->absent($definition, $this->count, $backend);
@@ -392,7 +392,7 @@ final class Rows implements Countable
         $columns = [];
 
         foreach ($schema->definitions() as $name => $definition) {
-            $own = $this->schema->findDefinition($definition->entry()->name());
+            $own = $this->schema->findDefinition($definition->reference()->name());
 
             if ($own !== null) {
                 $definitions[] = $own;
@@ -416,7 +416,7 @@ final class Rows implements Countable
         $columns = [];
 
         foreach ($this->schema->definitions() as $name => $definition) {
-            if (array_key_exists($definition->entry()->name(), $keep)) {
+            if (array_key_exists($definition->reference()->name(), $keep)) {
                 $definitions[] = $definition;
                 $columns[$name] = $this->columns[$name];
             }

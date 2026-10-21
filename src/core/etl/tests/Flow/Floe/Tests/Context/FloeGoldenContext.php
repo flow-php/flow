@@ -22,7 +22,7 @@ final class FloeGoldenContext
     public static function batches(): array
     {
         return [
-            'all-entry-types' => [RowsMother::withAllEntryTypes()],
+            'all-column-types' => [RowsMother::withAllColumnTypes()],
             'heterogeneous' => [RowsMother::heterogeneous()],
             'empty' => [RowsMother::empty()],
         ];

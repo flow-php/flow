@@ -17,7 +17,7 @@ data_frame()
     ], schema(int_schema('id'), int_schema('divisor'))))
     ->batchSize(2)
     ->onError(skip_rows_handler())
-    ->withEntry('result', lit(100)->divide(ref('divisor')))
+    ->withColumn('result', lit(100)->divide(ref('divisor')))
     ->collect()
     ->write(to_output(truncate: false))
     ->run();

@@ -7,7 +7,7 @@ namespace Flow\ETL\Transformer\Rename;
 use Flow\ETL\Schema;
 use Flow\ETL\String\StringStyles;
 
-final readonly class RenameCaseEntryStrategy implements RenameEntryStrategy
+final readonly class RenameCaseColumnStrategy implements RenameColumnStrategy
 {
     public function __construct(
         private StringStyles $style,

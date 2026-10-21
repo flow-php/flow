@@ -24,7 +24,7 @@ final class ArrayUnpackTest extends FlowTestCase
                 ['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]],
                 ['id' => 2, 'array' => []],
             ]))
-            ->withEntry('array', ref('array')->unpack(schema(int_schema('a'), int_schema('b'), int_schema('c'))))
+            ->withColumn('array', ref('array')->unpack(schema(int_schema('a'), int_schema('b'), int_schema('c'))))
             ->renameEach(rename_replace('array.', ''))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))

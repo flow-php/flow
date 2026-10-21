@@ -24,7 +24,7 @@ final readonly class ParquetSchemaConformance
         foreach ((new SchemaConverter())
             ->toFlow($schema)
             ->definitions() as $definition) {
-            $definitions[$definition->entry()->name()] = $definition;
+            $definitions[$definition->reference()->name()] = $definition;
         }
 
         $this->definitions = $definitions;
@@ -37,7 +37,7 @@ final readonly class ParquetSchemaConformance
         $cast = false;
 
         foreach ($rows->schema()->definitions() as $key => $own) {
-            $writer = $this->definitions[$own->entry()->name()] ?? null;
+            $writer = $this->definitions[$own->reference()->name()] ?? null;
 
             if (
                 $writer === null

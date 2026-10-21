@@ -29,7 +29,7 @@ final class OrdersSchemaTest extends TestCase
     {
         foreach (Source::cases() as $source) {
             foreach (OrdersSchema::of($source)->definitions() as $definition) {
-                static::assertTrue($definition->isNullable(), $source->value . '.' . $definition->entry()->name());
+                static::assertTrue($definition->isNullable(), $source->value . '.' . $definition->reference()->name());
             }
         }
     }
@@ -40,7 +40,7 @@ final class OrdersSchemaTest extends TestCase
             $names = [];
 
             foreach (OrdersSchema::of($source)->definitions() as $definition) {
-                $names[] = $definition->entry()->name();
+                $names[] = $definition->reference()->name();
             }
 
             foreach (['order_id', 'seller_id', 'created_at', 'customer', 'email'] as $projected) {

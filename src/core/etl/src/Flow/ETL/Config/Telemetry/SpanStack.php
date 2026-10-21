@@ -20,9 +20,9 @@ final class SpanStack
 
     public function drain(Tracer $tracer, string $reason): void
     {
-        while (($entry = array_pop($this->spans)) !== null) {
-            $entry->scope->detach();
-            $tracer->complete($entry->span->setStatus(SpanStatus::error($reason)));
+        while (($spanScope = array_pop($this->spans)) !== null) {
+            $spanScope->scope->detach();
+            $tracer->complete($spanScope->span->setStatus(SpanStatus::error($reason)));
         }
     }
 

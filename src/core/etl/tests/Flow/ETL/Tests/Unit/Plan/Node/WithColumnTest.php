@@ -43,7 +43,7 @@ final class WithColumnTest extends FlowTestCase
 
         static::assertNotSame($node, $rebuilt);
         static::assertSame([$other], $rebuilt->children());
-        static::assertSame('doubled', $rebuilt->entry);
+        static::assertSame('doubled', $rebuilt->column);
         static::assertSame($function, $rebuilt->function);
     }
 
@@ -52,7 +52,7 @@ final class WithColumnTest extends FlowTestCase
         $function = ref('id')->multiply(lit(2));
         $node = new WithColumn(NodeMother::read(), 'doubled', $function);
 
-        static::assertSame('doubled', $node->entry);
+        static::assertSame('doubled', $node->column);
         static::assertSame($function, $node->function);
     }
 

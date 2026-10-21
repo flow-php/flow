@@ -69,7 +69,7 @@ final class PivotShapeTest extends FlowTestCase
         $groupBy->aggregate(sum(ref('a')));
 
         $this->expectException(SchemaDefinitionNotFoundException::class);
-        $this->expectExceptionMessage('Schema definition for entry "nope" not found');
+        $this->expectExceptionMessage('Schema definition for column "nope" not found');
 
         PivotShape::of($groupBy, schema(str_schema('k'), str_schema('p'), int_schema('a')));
     }
@@ -81,7 +81,7 @@ final class PivotShapeTest extends FlowTestCase
         $groupBy->aggregate(min(ref('nope')));
 
         $this->expectException(SchemaDefinitionNotFoundException::class);
-        $this->expectExceptionMessage('Schema definition for entry "nope" not found');
+        $this->expectExceptionMessage('Schema definition for column "nope" not found');
 
         PivotShape::of($groupBy, schema(str_schema('k'), str_schema('p'), int_schema('a')));
     }

@@ -29,7 +29,7 @@ final class ArrayGetCollectionTest extends FlowTestCase
                 ],
                 ['id' => 2],
             ]))
-            ->withEntry('result', optional(ref('array')->arrayGetCollection(['a', 'c'])))
+            ->withColumn('result', optional(ref('array')->arrayGetCollection(['a', 'c'])))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();

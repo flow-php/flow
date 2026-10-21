@@ -39,11 +39,11 @@ use function usort;
  */
 final readonly class SchemaConverter
 {
-    private EntryTypesMap $typesMap;
+    private TypesMap $typesMap;
 
-    public function __construct(?EntryTypesMap $typesMap = null)
+    public function __construct(?TypesMap $typesMap = null)
     {
-        $this->typesMap = $typesMap ?? new EntryTypesMap();
+        $this->typesMap = $typesMap ?? new TypesMap();
     }
 
     public function toFlowSchema(Table $table): Schema
@@ -175,7 +175,7 @@ final readonly class SchemaConverter
             : null;
 
         return Column::create(
-            name: $definition->entry()->name(),
+            name: $definition->reference()->name(),
             type: $this->columnType($definition->type(), $metadata),
             nullable: $definition->isNullable() && !$metadata->has(PostgreSqlMetadata::PRIMARY_KEY->value),
             default: $default,
@@ -222,7 +222,7 @@ final readonly class SchemaConverter
         foreach ($schema->definitions() as $definition) {
             if ($definition->metadata()->has($key)) {
                 $name = (string) $definition->metadata()->getAs($key, type_string());
-                $grouped[$name][] = $definition->entry()->name();
+                $grouped[$name][] = $definition->reference()->name();
             }
         }
 
@@ -244,7 +244,7 @@ final readonly class SchemaConverter
             foreach ($definition->metadata()->normalize() as $key => $value) {
                 if (str_starts_with($key, $prefix)) {
                     $grouped[substr($key, strlen($prefix))][] = [
-                        'column' => $definition->entry()->name(),
+                        'column' => $definition->reference()->name(),
                         'position' => is_int($value) ? $value : PHP_INT_MAX,
                         'ordinal' => $ordinal,
                     ];

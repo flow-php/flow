@@ -22,7 +22,7 @@ final class EndsWithTest extends FlowTestCase
             ->read(from_array([
                 ['key' => 'value'],
             ]))
-            ->withEntry('ends_with', ref('key')->endsWith(lit('e')))
+            ->withColumn('ends_with', ref('key')->endsWith(lit('e')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -40,7 +40,7 @@ final class EndsWithTest extends FlowTestCase
             ->read(from_array([
                 ['id' => 1],
             ]))
-            ->withEntry('ends_with', optional(ref('id')->endsWith(lit('1'))))
+            ->withColumn('ends_with', optional(ref('id')->endsWith(lit('1'))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -58,7 +58,7 @@ final class EndsWithTest extends FlowTestCase
             ->read(from_array([
                 ['id' => '1'],
             ]))
-            ->withEntry('ends_with', optional(ref('id')->endsWith(lit(1))))
+            ->withColumn('ends_with', optional(ref('id')->endsWith(lit(1))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

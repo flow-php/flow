@@ -46,11 +46,11 @@ final class ManifestTest extends TestCase
             ['name' => 'flow-php/parquet', 'path' => 'src/lib/parquet', 'type' => 'lib'],
         ]));
 
-        $entry = $manifest->byName('flow-php/parquet');
+        $package = $manifest->byName('flow-php/parquet');
 
-        static::assertNotNull($entry);
-        static::assertSame('flow-php/parquet', $entry['name']);
-        static::assertSame('lib', $entry['type']);
+        static::assertNotNull($package);
+        static::assertSame('flow-php/parquet', $package['name']);
+        static::assertSame('lib', $package['type']);
     }
 
     public function test_load_is_cached_between_calls(): void

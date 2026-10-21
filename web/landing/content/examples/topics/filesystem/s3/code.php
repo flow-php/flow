@@ -57,7 +57,7 @@ data_frame()
     ->write(to_csv(path('aws-s3://test.csv'), filesystem: $s3)->saveMode(overwrite()))
     ->write(to_xml(path('aws-s3://test.xml'), filesystem: $s3)->saveMode(overwrite()))
     ->write(to_json(path('aws-s3://test.json'), filesystem: $s3)->saveMode(overwrite()))
-    ->withEntry('line', ref('id')->concat(lit('_'), ref('name')))
+    ->withColumn('line', ref('id')->concat(lit('_'), ref('name')))
     ->drop('id', 'name')
     ->write(to_text(path('aws-s3://test.txt'), filesystem: $s3)->saveMode(overwrite()))
     ->run();

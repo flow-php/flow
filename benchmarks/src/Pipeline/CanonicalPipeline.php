@@ -18,7 +18,7 @@ use function uniqid;
  * The one pipeline shape every source is measured through, so a source's number differs only by its
  * read leg. Every subject that claims to be comparable with the others must run through here.
  *
- * withEntry is the only verb that adds a column, so it forces schema widening at plan-bind time.
+ * withColumn is the only verb that adds a column, so it forces schema widening at plan-bind time.
  * filter is deliberately non-selective - created_at is never null - so the row count reaching the sink
  * cannot move for a second reason. select re-converges every source onto the same five columns, so the
  * sink does identical work whatever was read. Floe stores typed values, adding no stringification the
@@ -42,7 +42,7 @@ final readonly class CanonicalPipeline
     {
         data_frame(BenchmarkConfig::builder())
             ->read($this->extractor)
-            ->withEntry('contact', ref('customer')->concat(lit(' <'), ref('email'), lit('>')))
+            ->withColumn('contact', ref('customer')->concat(lit(' <'), ref('email'), lit('>')))
             ->filter(ref('created_at')->isNotNull())
             ->select('order_id', 'seller_id', 'created_at', 'customer', 'contact')
             ->write(to_floe($this->sink))

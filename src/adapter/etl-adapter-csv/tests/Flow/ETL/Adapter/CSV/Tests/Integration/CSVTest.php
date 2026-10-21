@@ -101,7 +101,7 @@ final class CSVTest extends FlowTestCase
         df()
             ->read(new FakeExtractor(100))
             ->drop('array', 'list', 'map', 'struct', 'object', 'enum', 'list_of_datetimes')
-            ->withEntry('datetime', ref('datetime')->dateFormat('Y-m-d H:i:s'))
+            ->withColumn('datetime', ref('datetime')->dateFormat('Y-m-d H:i:s'))
             ->load(to_csv($path = __DIR__ . '/var/test_loading_csv_files.csv')->saveMode(overwrite()))
             ->run();
 
@@ -132,7 +132,7 @@ final class CSVTest extends FlowTestCase
     {
         df()
             ->read(from_sequence_number('id', 1, 12))
-            ->withEntry('name', lit('dropped by the transformation'))
+            ->withColumn('name', lit('dropped by the transformation'))
             ->batchSize(4)
             ->write(to_transformation(
                 select('id'),

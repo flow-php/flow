@@ -483,7 +483,7 @@ Two helpers convert between a Flow `Schema` and a PostgreSQL table definition:
   (and related index/constraint) SQL via `toSql()`.
 - `pgsql_table_to_flow_schema()` turns a `Flow\PostgreSql\Schema\Table` back into a Flow `Schema`.
 
-Column types are resolved through the shared `EntryTypesMap` (Flow type → PostgreSQL column type), and per-column
+Column types are resolved through the shared `TypesMap` (Flow type → PostgreSQL column type), and per-column
 details - primary keys, unique constraints, indexes, length, precision/scale, defaults, identity, generated columns,
 and explicit type overrides - are driven by `PostgreSqlMetadata` entries attached to each schema definition.
 
@@ -625,11 +625,11 @@ $schema = pgsql_table_to_flow_schema($table);
 
 ### Customizing the Type Mapping
 
-Both helpers accept an optional `EntryTypesMap`. Its second constructor argument overrides the Flow type → PostgreSQL
+Both helpers accept an optional `TypesMap`. Its second constructor argument overrides the Flow type → PostgreSQL
 column type mapping (the first argument keeps overriding the value-binding types used by the loader):
 
 ```php
-use Flow\ETL\Adapter\PostgreSql\EntryTypesMap;
+use Flow\ETL\Adapter\PostgreSql\TypesMap;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\Types\Type\Native\StringType;
 
@@ -638,7 +638,7 @@ use function Flow\ETL\Adapter\PostgreSql\to_pgsql_schema_table;
 $table = to_pgsql_schema_table(
     $schema,
     'users',
-    typesMap: new EntryTypesMap([], [
+    typesMap: new TypesMap([], [
         StringType::class => ColumnType::varchar(255),  // default strings to varchar(255) instead of text
     ]),
 );

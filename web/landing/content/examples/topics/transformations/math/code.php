@@ -11,6 +11,6 @@ data_frame()
         [['a' => 100, 'b' => 200]],
         schema(int_schema('a'), int_schema('b')),
     ))
-    ->withEntry('d', ref('b')->minus(ref('a')))
+    ->withColumn('d', ref('b')->minus(ref('a')))
     ->write(to_output(truncate: false))
     ->run();

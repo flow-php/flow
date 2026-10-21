@@ -78,7 +78,7 @@ final class XMLEncoder
         $children = [];
 
         foreach ($definitions as $definition) {
-            $name = $definition->entry()->name();
+            $name = $definition->reference()->name();
             $type = $definition->type();
             $bare = type_bare($type);
             $physicals = $rows->column($name)->physicals();

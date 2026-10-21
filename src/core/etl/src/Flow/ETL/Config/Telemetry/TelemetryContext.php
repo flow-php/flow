@@ -278,14 +278,14 @@ final class TelemetryContext
      */
     public function loadingCompleted(Loader $loader, array $attributes = []): void
     {
-        $entry = $this->loadingSpans->pop();
+        $spanScope = $this->loadingSpans->pop();
 
-        if ($entry === null) {
+        if ($spanScope === null) {
             return;
         }
 
-        $entry->scope->detach();
-        $this->tracer->complete($entry->span->setAttributes($attributes));
+        $spanScope->scope->detach();
+        $this->tracer->complete($spanScope->span->setAttributes($attributes));
     }
 
     /**
@@ -293,16 +293,16 @@ final class TelemetryContext
      */
     public function loadingFailed(Loader $loader, Throwable $exception, array $attributes = []): void
     {
-        $entry = $this->loadingSpans->pop();
+        $spanScope = $this->loadingSpans->pop();
 
-        if ($entry === null) {
+        if ($spanScope === null) {
             return;
         }
 
-        $entry->scope->detach();
+        $spanScope->scope->detach();
         $this->logger->error('Loading failed', ['exception' => $exception->getMessage(), 'loader' => $loader::class]);
         $this->tracer->complete(
-            $entry
+            $spanScope
                 ->span
                 ->setAttributes($attributes)
                 ->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class)
@@ -342,14 +342,14 @@ final class TelemetryContext
      */
     public function transformationCompleted(Transformer $transformer, array $attributes = []): void
     {
-        $entry = $this->transformationSpans->pop();
+        $spanScope = $this->transformationSpans->pop();
 
-        if ($entry === null) {
+        if ($spanScope === null) {
             return;
         }
 
-        $entry->scope->detach();
-        $this->tracer->complete($entry->span->setAttributes($attributes));
+        $spanScope->scope->detach();
+        $this->tracer->complete($spanScope->span->setAttributes($attributes));
     }
 
     /**
@@ -357,19 +357,19 @@ final class TelemetryContext
      */
     public function transformationFailed(Transformer $transformer, Throwable $exception, array $attributes = []): void
     {
-        $entry = $this->transformationSpans->pop();
+        $spanScope = $this->transformationSpans->pop();
 
-        if ($entry === null) {
+        if ($spanScope === null) {
             return;
         }
 
-        $entry->scope->detach();
+        $spanScope->scope->detach();
         $this->logger->error('Transformation failed', [
             'exception' => $exception->getMessage(),
             'transformer' => $transformer::class,
         ]);
         $this->tracer->complete(
-            $entry
+            $spanScope
                 ->span
                 ->setAttributes($attributes)
                 ->setAttribute(SemConvAttributes::ERROR_TYPE, $exception::class)

@@ -136,7 +136,7 @@ final class AllFunctionsDeclareTheirTypeTest extends FlowTestCase
     public function test_the_fixture_schema_is_entirely_nullable(): void
     {
         foreach (ScalarFunctionFixtures::schema()->definitions() as $definition) {
-            static::assertTrue($definition->isNullable(), $definition->entry()->name());
+            static::assertTrue($definition->isNullable(), $definition->reference()->name());
         }
     }
 

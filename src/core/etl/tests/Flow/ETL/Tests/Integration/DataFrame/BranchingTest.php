@@ -35,7 +35,7 @@ final class BranchingTest extends FlowIntegrationTestCase
             ->write(to_branch(
                 ref('group')->equals(lit('A')),
                 to_memory($memory = new ArrayMemory()),
-            )->withTransformation(new CallbackTransformation(static fn(DataFrame $dataFrame): DataFrame => $dataFrame->withEntry(
+            )->withTransformation(new CallbackTransformation(static fn(DataFrame $dataFrame): DataFrame => $dataFrame->withColumn(
                 'group_name',
                 lit('A'),
             ))))
@@ -188,7 +188,7 @@ final class BranchingTest extends FlowIntegrationTestCase
             )->withTransformation(new class implements Transformation {
                 public function transform(DataFrame $dataFrame): DataFrame
                 {
-                    return $dataFrame->withEntry('group_name', lit('A'));
+                    return $dataFrame->withColumn('group_name', lit('A'));
                 }
             }))
             ->write(to_branch(
@@ -197,7 +197,7 @@ final class BranchingTest extends FlowIntegrationTestCase
             )->withTransformation(new class implements Transformation {
                 public function transform(DataFrame $dataFrame): DataFrame
                 {
-                    return $dataFrame->withEntry('group_name', lit('BC'));
+                    return $dataFrame->withColumn('group_name', lit('BC'));
                 }
             }))
             ->run();

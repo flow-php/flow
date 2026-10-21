@@ -61,7 +61,7 @@ final class XMLLoaderTest extends FlowIntegrationTestCase
             $dataset,
             df()
                 ->read(from_xml(__DIR__ . '/var/test_partitioning_xml_file/**/*.xml')->withXMLNodePath('rows/row'))
-                ->withEntry('id', ref('node')->xpath('id')->domElementValue()->cast('int'))
+                ->withColumn('id', ref('node')->xpath('id')->domElementValue()->cast('int'))
                 // color and size are no longer in the body; the read takes them from the path
                 ->drop('node')
                 ->sortBy([ref('id')->asc()])
@@ -74,7 +74,7 @@ final class XMLLoaderTest extends FlowIntegrationTestCase
     {
         df()
             ->read(from_sequence_number('id', 1, 12))
-            ->withEntry('name', lit('dropped by the transformation'))
+            ->withColumn('name', lit('dropped by the transformation'))
             ->batchSize(4)
             ->write(to_transformation(
                 select('id'),

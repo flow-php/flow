@@ -31,7 +31,7 @@ final readonly class ExpandingFunctions
         if ($this->in($tree) !== []) {
             throw InvalidArgumentException::because(
                 '%s() cannot contain array_expand(), it turns one row into many rows. '
-                . 'Expand with withEntry() first, then use the new column.',
+                . 'Expand with withColumn() first, then use the new column.',
                 $method,
             );
         }
@@ -46,7 +46,7 @@ final readonly class ExpandingFunctions
             foreach ($expand->children() as $child) {
                 if ($this->in($child) !== []) {
                     throw InvalidArgumentException::because(
-                        'array_expand() cannot contain another array_expand(). Expand one level per withEntry().',
+                        'array_expand() cannot contain another array_expand(). Expand one level per withColumn().',
                     );
                 }
             }

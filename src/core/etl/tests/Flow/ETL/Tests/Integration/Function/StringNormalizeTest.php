@@ -29,7 +29,7 @@ final class StringNormalizeTest extends FlowTestCase
                 ['text' => 'καλημέρα'],
                 ['text' => '👋🏻'],
             ]))
-            ->withEntry('normalized', optional(ref('text')->stringNormalize()))
+            ->withColumn('normalized', optional(ref('text')->stringNormalize()))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

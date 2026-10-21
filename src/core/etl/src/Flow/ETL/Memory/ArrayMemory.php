@@ -71,8 +71,8 @@ final class ArrayMemory implements Countable, Memory
     {
         $data = [];
 
-        foreach ($this->memory as $entry) {
-            $data[] = array_values($entry);
+        foreach ($this->memory as $row) {
+            $data[] = array_values($row);
         }
 
         return array_merge(...$data);
@@ -87,8 +87,8 @@ final class ArrayMemory implements Countable, Memory
     {
         $data = [];
 
-        foreach ($this->memory as $entry) {
-            $data[] = $callback($entry);
+        foreach ($this->memory as $row) {
+            $data[] = $callback($row);
         }
 
         return $data;
@@ -101,8 +101,8 @@ final class ArrayMemory implements Countable, Memory
     {
         $this->assertMemoryStructure($data);
 
-        foreach ($data as $entry) {
-            $this->memory[] = $entry;
+        foreach ($data as $row) {
+            $this->memory[] = $row;
         }
     }
 
@@ -114,8 +114,8 @@ final class ArrayMemory implements Countable, Memory
     private function assertMemoryStructure(array $memory): void
     {
         // @mago-ignore analysis:mixed-assignment
-        foreach ($memory as $entry) {
-            if (!is_array($entry)) {
+        foreach ($memory as $row) {
+            if (!is_array($row)) {
                 throw new InvalidArgumentException('Memory expects nested array data structure: array<array<mixed>>');
             }
         }

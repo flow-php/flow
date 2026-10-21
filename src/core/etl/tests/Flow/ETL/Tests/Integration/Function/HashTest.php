@@ -30,7 +30,7 @@ final class HashTest extends FlowTestCase
             ->read(from_array([
                 ['key' => $value],
             ]))
-            ->withEntry('hash', ref('key')->hash())
+            ->withColumn('hash', ref('key')->hash())
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -48,7 +48,7 @@ final class HashTest extends FlowTestCase
             ->read(from_array([
                 ['key' => 'value'],
             ]))
-            ->withEntry('hash', ref('key')->hash(new NativePHPHash('sha512')))
+            ->withColumn('hash', ref('key')->hash(new NativePHPHash('sha512')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

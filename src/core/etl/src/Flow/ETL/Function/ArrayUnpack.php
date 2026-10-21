@@ -74,7 +74,7 @@ final class ArrayUnpack implements ScalarFunction, UnpackResults
 
         // every declared column is nullable - a payload that omits a key still has to produce it
         foreach ($this->schema->definitions() as $definition) {
-            $name = $definition->entry()->name();
+            $name = $definition->reference()->name();
             $elements[$name] = structure_element($name, type_optional($definition->type()));
         }
 

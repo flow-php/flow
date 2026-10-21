@@ -53,7 +53,7 @@ final class JsonExtractor implements
 
     private ?string $pointer = null;
 
-    private bool $pointerToEntryName = false;
+    private bool $pointerToColumnName = false;
 
     /**
      * What the last schema inference sampled; null until one ran.
@@ -110,7 +110,7 @@ final class JsonExtractor implements
                     $this->filesystem,
                     $this->format,
                     $this->pointer,
-                    $this->pointerToEntryName,
+                    $this->pointerToColumnName,
                     $sources,
                 ),
                 $this->format,
@@ -163,7 +163,7 @@ final class JsonExtractor implements
                 $this->filesystem,
                 $this->format,
                 $this->pointer,
-                $this->pointerToEntryName,
+                $this->pointerToColumnName,
                 iterator_to_array($this->sourceFiles($this->filesystem, $this->path), false),
             );
 
@@ -217,15 +217,15 @@ final class JsonExtractor implements
 
     /**
      * @param string $pointer
-     * @param bool $pointerToEntryName - when true pointer will be used as entry name for extracted data
+     * @param bool $pointerToColumnName - when true pointer will be used as column name for extracted data
      */
-    public function withPointer(string $pointer, bool $pointerToEntryName = false): self
+    public function withPointer(string $pointer, bool $pointerToColumnName = false): self
     {
         $this->derivedSchema = null;
         $this->sampled = null;
         $this->statistics = null;
         $this->pointer = $pointer;
-        $this->pointerToEntryName = $pointerToEntryName;
+        $this->pointerToColumnName = $pointerToColumnName;
 
         return $this;
     }

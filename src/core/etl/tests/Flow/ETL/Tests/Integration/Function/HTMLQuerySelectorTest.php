@@ -33,7 +33,7 @@ final class HTMLQuerySelectorTest extends TestCase
             ],
             df()
                 ->read(from_rows(array_to_rows([['html_raw' => $html]], schema(html_schema('html_raw')))))
-                ->withEntry('html_element', ref('html_raw')->htmlQuerySelector('body div p'))
+                ->withColumn('html_element', ref('html_raw')->htmlQuerySelector('body div p'))
                 ->drop('html_raw')
                 ->fetch()
                 ->toArray(),
@@ -71,9 +71,9 @@ final class HTMLQuerySelectorTest extends TestCase
             ],
             df()
                 ->read(from_rows(array_to_rows([['html_raw' => $html]], schema(html_schema('html_raw')))))
-                ->withEntry('containers', ref('html_raw')->htmlQuerySelectorAll('body div')->expand())
-                ->withEntry('span_element', ref('containers')->htmlQuerySelector('body span')->domElementValue())
-                ->withEntry('p_element', ref('containers')->htmlQuerySelector('p')->domElementValue())
+                ->withColumn('containers', ref('html_raw')->htmlQuerySelectorAll('body div')->expand())
+                ->withColumn('span_element', ref('containers')->htmlQuerySelector('body span')->domElementValue())
+                ->withColumn('p_element', ref('containers')->htmlQuerySelector('p')->domElementValue())
                 ->select('span_element', 'p_element')
                 ->fetch()
                 ->toArray(),

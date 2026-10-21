@@ -107,8 +107,8 @@ impl RustBackend {
         .map_err(|e| decode_exception(e, &plan.type_zv, &plan.kind))?;
 
         if bytes.len() > needed {
-            let entry = call_method(definition, "entry", &mut [])?;
-            let name = call_method(&entry, "name", &mut [])?;
+            let reference = call_method(definition, "reference", &mut [])?;
+            let name = call_method(&reference, "name", &mut [])?;
 
             return Err(invalid_argument(format!(
                 "Column \"{}\": {} buffers left after decoding",

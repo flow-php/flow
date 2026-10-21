@@ -30,7 +30,7 @@ final class StringWidthTest extends FlowTestCase
                 ['text' => 'hello中文'],
                 ['text' => '！'],
             ]))
-            ->withEntry('width', optional(ref('text')->stringWidth()))
+            ->withColumn('width', optional(ref('text')->stringWidth()))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

@@ -64,7 +64,7 @@ final class Column
      */
     public function __construct(Definition $definition, ColumnData $column)
     {
-        $this->reference = $definition->entry();
+        $this->reference = $definition->reference();
         $this->distinctCounter = new DistinctCounter();
         $this->add($definition, $column);
     }
@@ -76,7 +76,7 @@ final class Column
      */
     public function add(Definition $definition, ColumnData $column): void
     {
-        if ($this->reference->name() !== $definition->entry()->name()) {
+        if ($this->reference->name() !== $definition->reference()->name()) {
             return;
         }
 

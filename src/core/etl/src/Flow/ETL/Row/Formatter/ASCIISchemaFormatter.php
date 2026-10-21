@@ -42,7 +42,7 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
         $buffer = [];
 
         foreach ($schema->definitions() as $definition) {
-            $buffer = $this->formatEntry($definition, $buffer);
+            $buffer = $this->formatColumn($definition, $buffer);
         }
 
         ksort($buffer);
@@ -59,7 +59,7 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
 
         foreach ($schema->definitions() as $definition) {
             $values = [
-                'name' => $definition->entry()->name(),
+                'name' => $definition->reference()->name(),
                 'type' => $definition->type()->normalize()['type'],
                 'nullable' => $definition->isNullable(),
             ];
@@ -89,14 +89,14 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
      *
      * @return array<string>
      */
-    private function formatEntry(Definition $definition, array $buffer): array
+    private function formatColumn(Definition $definition, array $buffer): array
     {
-        $entry = $definition->entry()->name();
+        $column = $definition->reference()->name();
 
         $indention = '';
 
         if ($definition->type() instanceof StructureType) {
-            $buffer[] = $indention . '|-- ' . $entry . ': structure';
+            $buffer[] = $indention . '|-- ' . $column . ': structure';
 
             /** @var StructureType<array<array-key, mixed>> $structureType */
             $structureType = $definition->type();
@@ -117,7 +117,7 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
             $buffer[] =
                 $indention
                 . '|-- '
-                . $entry
+                . $column
                 . ': '
                 . ($definition->isNullable() ? '?' : '')
                 . $definition->type()->toString();

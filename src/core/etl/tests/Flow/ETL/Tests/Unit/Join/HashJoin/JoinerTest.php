@@ -318,7 +318,7 @@ final class JoinerTest extends FlowTestCase
         };
 
         $this->expectException(SchemaDefinitionNotUniqueException::class);
-        $this->expectExceptionMessage('Entry definitions must be unique, duplicated entries: [left_name]');
+        $this->expectExceptionMessage('Column definitions must be unique, duplicated columns: [left_name]');
 
         $joiner = new Joiner(join_on(['id' => 'user_id'], join_prefix: 'left_'), Join::inner, new AdaptiveBackend());
 

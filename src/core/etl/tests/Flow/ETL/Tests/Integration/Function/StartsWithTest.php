@@ -22,7 +22,7 @@ final class StartsWithTest extends FlowTestCase
             ->read(from_array([
                 ['key' => 'value'],
             ]))
-            ->withEntry('starts_with', ref('key')->startsWith(lit('v')))
+            ->withColumn('starts_with', ref('key')->startsWith(lit('v')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -40,7 +40,7 @@ final class StartsWithTest extends FlowTestCase
             ->read(from_array([
                 ['id' => 1],
             ]))
-            ->withEntry('starts_with', optional(ref('id')->startsWith(lit('1'))))
+            ->withColumn('starts_with', optional(ref('id')->startsWith(lit('1'))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -58,7 +58,7 @@ final class StartsWithTest extends FlowTestCase
             ->read(from_array([
                 ['id' => '1'],
             ]))
-            ->withEntry('starts_with', optional(ref('id')->startsWith(lit(1))))
+            ->withColumn('starts_with', optional(ref('id')->startsWith(lit(1))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

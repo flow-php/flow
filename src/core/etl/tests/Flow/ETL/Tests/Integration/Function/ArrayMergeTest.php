@@ -23,7 +23,7 @@ final class ArrayMergeTest extends FlowTestCase
                 ['id' => 1, 'first' => ['a' => 1, 'b' => 2], 'second' => ['c' => 3]],
                 ['id' => 2],
             ]))
-            ->withEntry('array', optional(array_merge(ref('first'), ref('second'))))
+            ->withColumn('array', optional(array_merge(ref('first'), ref('second'))))
             ->drop('first', 'second')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();

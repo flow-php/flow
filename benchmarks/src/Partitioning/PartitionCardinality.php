@@ -32,7 +32,7 @@ enum PartitionCardinality: string
      */
     public function derive(DataFrame $frame): DataFrame
     {
-        return $frame->withEntry('day', ref('created_at')->dateFormat('Y-m-d'));
+        return $frame->withColumn('day', ref('created_at')->dateFormat('Y-m-d'));
     }
 
     public function reference(): Reference

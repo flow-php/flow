@@ -10,12 +10,12 @@ use Flow\ETL\Plan\Node;
 use Flow\ETL\Plan\Redefined;
 use Flow\ETL\Plan\RowCount;
 use Flow\ETL\Plan\Transparency;
-use Flow\ETL\Transformer\Rename\RenameEntryStrategy;
+use Flow\ETL\Transformer\Rename\RenameColumnStrategy;
 
 final readonly class RenameEach implements Node
 {
     /**
-     * @param list<RenameEntryStrategy> $strategies
+     * @param list<RenameColumnStrategy> $strategies
      *
      * @throws InvalidArgumentException
      */

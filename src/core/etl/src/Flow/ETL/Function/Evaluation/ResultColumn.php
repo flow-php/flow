@@ -64,7 +64,7 @@ final readonly class ResultColumn
             return new ValueColumn($values);
         }
 
-        // nullable on purpose: only the step that stores the column (withEntry/filter gate) enforces NOT NULL, as today
+        // nullable on purpose: only the step that stores the column (withColumn/filter gate) enforces NOT NULL, as today
         return $this->typed($returns instanceof NullType ? $returns : type_optional(type_bare($returns)), $values);
     }
 

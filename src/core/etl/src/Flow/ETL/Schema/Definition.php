@@ -19,7 +19,7 @@ interface Definition
      */
     public function addMetadata(string $key, int|string|bool|float|array $value): static;
 
-    public function entry(): Reference;
+    public function reference(): Reference;
 
     /**
      * Checks if another type is compatible with this type. Nullability is validated from a schema evolution perspective.

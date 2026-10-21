@@ -25,13 +25,13 @@ use function Flow\Types\DSL\type_array;
 final readonly class ScalarFunctionTransformer implements Transformer
 {
     /**
-     * @param Definition<mixed>|string $entry
+     * @param Definition<mixed>|string $column
      * @param null|ScalarFunction $resolved the function resolved against the bound schema
      * @param null|Definition<mixed> $derived the column this step declares
      * @param null|Schema $output the schema this step declares
      */
     public function __construct(
-        private string|Definition $entry,
+        private string|Definition $column,
         public ScalarFunction $function,
         private ?ScalarFunction $resolved = null,
         private ?Definition $derived = null,
@@ -41,23 +41,23 @@ final readonly class ScalarFunctionTransformer implements Transformer
     public function bind(Schema $input): BoundStep
     {
         // unpack declares its own columns, so the check comes first - a Definition passed to
-        // withEntry() cannot describe an N-column result
+        // withColumn() cannot describe an N-column result
         if ($this->function instanceof UnpackResults) {
             $resolved = $this->resolve($input);
             $output = (new UnpackedColumns())->of(
                 $input,
-                $this->entryName() . '.',
+                $this->columnName() . '.',
                 (new UnpackedColumns())->declared($resolved),
             );
 
-            return new BoundStep(new self($this->entry, $this->function, $resolved, null, $output), $output);
+            return new BoundStep(new self($this->column, $this->function, $resolved, null, $output), $output);
         }
 
         $resolved = $this->resolve($input);
         $derived = $this->derived($resolved);
         $output = (new DerivedColumns())->declare($input, $derived);
 
-        return new BoundStep(new self($this->entry, $this->function, $resolved, $derived, $output), $output);
+        return new BoundStep(new self($this->column, $this->function, $resolved, $derived, $output), $output);
     }
 
     public function transform(Rows $rows, FlowContext $context): Rows
@@ -89,9 +89,9 @@ final readonly class ScalarFunctionTransformer implements Transformer
      */
     private function derived(ScalarFunction $source): Definition
     {
-        return $this->entry instanceof Definition
-            ? $this->entry
-            : definition_from_type($this->entryName(), $source->returns());
+        return $this->column instanceof Definition
+            ? $this->column
+            : definition_from_type($this->columnName(), $source->returns());
     }
 
     /**
@@ -108,9 +108,9 @@ final readonly class ScalarFunctionTransformer implements Transformer
         return $resolved;
     }
 
-    private function entryName(): string
+    private function columnName(): string
     {
-        return $this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry;
+        return $this->column instanceof Definition ? $this->column->reference()->name() : $this->column;
     }
 
     private function map(Rows $rows, FlowContext $context): Rows
@@ -124,7 +124,7 @@ final readonly class ScalarFunctionTransformer implements Transformer
             $rows,
             $declared,
             $output,
-            $derived->entry()->name(),
+            $derived->reference()->name(),
             $columns->stored($derived, $function->eval($rows, $context), $context->backend()),
             $context->backend(),
         );
@@ -136,8 +136,8 @@ final readonly class ScalarFunctionTransformer implements Transformer
         $function = $this->resolved ?? $this->resolve($rows->schema());
         $declared = (new UnpackedColumns())->declared($function);
         $columns = new UnpackedColumns();
-        $output = $this->output ?? $columns->of($rows->schema(), $this->entryName() . '.', $declared);
-        $prefix = $this->entryName() . '.';
+        $output = $this->output ?? $columns->of($rows->schema(), $this->columnName() . '.', $declared);
+        $prefix = $this->columnName() . '.';
         $values = [];
 
         foreach ($declared->definitions() as $name => $_) {

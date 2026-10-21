@@ -69,7 +69,7 @@ final class ExcelLoader implements Closure, Discardable, FileLoader, Loader, Par
 
     private ?string $sheetName = null;
 
-    private ?string $sheetNameEntryName = null;
+    private ?string $sheetNameColumn = null;
 
     private string $timeFormat = '%H:%I:%S';
 
@@ -159,9 +159,8 @@ final class ExcelLoader implements Closure, Discardable, FileLoader, Loader, Par
                 $manager->open($stream->path()->path());
 
                 $sheetColumn =
-                    $this->sheetNameEntryName !== null
-                    && $group->schema()->findDefinition($this->sheetNameEntryName) !== null
-                        ? $this->sheetNameEntryName
+                    $this->sheetNameColumn !== null && $group->schema()->findDefinition($this->sheetNameColumn) !== null
+                        ? $this->sheetNameColumn
                         : null;
                 $written = $sheetColumn === null
                     ? $group
@@ -249,9 +248,9 @@ final class ExcelLoader implements Closure, Discardable, FileLoader, Loader, Par
 
     public function withSheetName(?string $sheetName): self
     {
-        if ($sheetName !== null && $this->sheetNameEntryName !== null) {
+        if ($sheetName !== null && $this->sheetNameColumn !== null) {
             throw new InvalidArgumentException(
-                'Cannot set both sheetName and sheetNameFromEntry. These options are mutually exclusive.',
+                'Cannot set both sheetName and sheetNameFromColumn. These options are mutually exclusive.',
             );
         }
 
@@ -264,15 +263,15 @@ final class ExcelLoader implements Closure, Discardable, FileLoader, Loader, Par
         return $this;
     }
 
-    public function withSheetNameFromEntry(string $entryName): self
+    public function withSheetNameFromColumn(string $columnName): self
     {
         if ($this->sheetName !== null) {
             throw new InvalidArgumentException(
-                'Cannot set both sheetName and sheetNameFromEntry. These options are mutually exclusive.',
+                'Cannot set both sheetName and sheetNameFromColumn. These options are mutually exclusive.',
             );
         }
 
-        $this->sheetNameEntryName = $entryName;
+        $this->sheetNameColumn = $columnName;
 
         return $this;
     }

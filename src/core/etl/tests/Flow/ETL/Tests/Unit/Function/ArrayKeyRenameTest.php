@@ -117,7 +117,7 @@ final class ArrayKeyRenameTest extends FlowTestCase
 
     public function test_renames_array_entry_keys_in_single_array_entry(): void
     {
-        $rows = RowsMother::arrayEntry();
+        $rows = RowsMother::arrayColumn();
 
         static::assertEquals(
             [
@@ -136,7 +136,7 @@ final class ArrayKeyRenameTest extends FlowTestCase
 
     public function test_throws_exception_for_invalid_path(): void
     {
-        $rows = RowsMother::arrayEntry();
+        $rows = RowsMother::arrayColumn();
 
         try {
             (new FunctionContext(flow_context()))->eval(

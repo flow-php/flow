@@ -58,7 +58,7 @@ use const PHP_INT_MIN;
  */
 final class FloeValueRoundTripTest extends TestCase
 {
-    public function test_datetime_entries(): void
+    public function test_datetime_columns(): void
     {
         static::assertEquals(
             $rows = array_to_rows(
@@ -84,7 +84,7 @@ final class FloeValueRoundTripTest extends TestCase
         );
     }
 
-    public function test_entries_with_null_values(): void
+    public function test_columns_with_null_values(): void
     {
         $rows = array_to_rows(
             [[
@@ -122,7 +122,7 @@ final class FloeValueRoundTripTest extends TestCase
         static::assertEquals($rows, FloeStreamReaderContext::roundTrip($rows));
     }
 
-    public function test_enum_entries(): void
+    public function test_enum_columns(): void
     {
         static::assertEquals(
             $rows = array_to_rows(
@@ -134,7 +134,7 @@ final class FloeValueRoundTripTest extends TestCase
     }
 
     #[RequiresPhp('>= 8.4.0')]
-    public function test_html_entries(): void
+    public function test_html_columns(): void
     {
         $rows = array_to_rows([[
             'html' => type_html()->cast('<!DOCTYPE html><html><head></head><body><p>hello</p></body></html>'),
@@ -146,7 +146,7 @@ final class FloeValueRoundTripTest extends TestCase
         );
     }
 
-    public function test_interval_entries(): void
+    public function test_interval_columns(): void
     {
         $negative = new DateInterval('PT5H30M');
         // @mago-ignore analysis:invalid-property-write
@@ -170,7 +170,7 @@ final class FloeValueRoundTripTest extends TestCase
         );
     }
 
-    public function test_json_entries(): void
+    public function test_json_columns(): void
     {
         static::assertEquals(
             $rows = array_to_rows(
@@ -191,7 +191,7 @@ final class FloeValueRoundTripTest extends TestCase
         );
     }
 
-    public function test_list_entries(): void
+    public function test_list_columns(): void
     {
         static::assertEquals(
             $rows = array_to_rows(
@@ -220,7 +220,7 @@ final class FloeValueRoundTripTest extends TestCase
         );
     }
 
-    public function test_map_entries(): void
+    public function test_map_columns(): void
     {
         static::assertEquals(
             $rows = array_to_rows(
@@ -235,7 +235,7 @@ final class FloeValueRoundTripTest extends TestCase
         );
     }
 
-    public function test_uuid_entries_round_trip_under_format_v2(): void
+    public function test_uuid_columns_round_trip_under_format_v2(): void
     {
         static::assertEquals(
             $rows = array_to_rows(
@@ -250,7 +250,7 @@ final class FloeValueRoundTripTest extends TestCase
         );
     }
 
-    public function test_scalar_entries(): void
+    public function test_scalar_columns(): void
     {
         static::assertEquals(
             $rows = array_to_rows(
@@ -285,7 +285,7 @@ final class FloeValueRoundTripTest extends TestCase
         );
     }
 
-    public function test_structure_entries(): void
+    public function test_structure_columns(): void
     {
         $type = type_structure([
             'street' => type_string(),
@@ -323,7 +323,7 @@ final class FloeValueRoundTripTest extends TestCase
         );
     }
 
-    public function test_interleaved_structure_entries(): void
+    public function test_interleaved_structure_columns(): void
     {
         $type = type_structure([
             'z' => type_integer(),
@@ -354,7 +354,7 @@ final class FloeValueRoundTripTest extends TestCase
         static::assertSame(['a' => 1, 'b' => 'x'], $decoded->column('s')->value(0));
     }
 
-    public function test_uuid_entries(): void
+    public function test_uuid_columns(): void
     {
         static::assertEquals(
             $rows = array_to_rows([[
@@ -364,7 +364,7 @@ final class FloeValueRoundTripTest extends TestCase
         );
     }
 
-    public function test_xml_entries(): void
+    public function test_xml_columns(): void
     {
         static::assertEquals(
             $rows = array_to_rows(

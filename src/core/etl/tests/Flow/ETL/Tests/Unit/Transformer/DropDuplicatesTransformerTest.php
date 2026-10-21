@@ -27,7 +27,7 @@ final class DropDuplicatesTransformerTest extends FlowTestCase
     public function test_drop_duplicates_without_providing_entries(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('DropDuplicatesTransformer requires at least one entry');
+        $this->expectExceptionMessage('DropDuplicatesTransformer requires at least one column');
 
         new DropDuplicatesTransformer();
     }

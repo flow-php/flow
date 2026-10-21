@@ -21,8 +21,8 @@ final class JsonEncodeTest extends FlowTestCase
     {
         data_frame()
             ->read(from_array([['id' => 1]]))
-            ->withEntry('json', lit(['id' => 1, 'name' => 'test']))
-            ->withEntry('json', ref('json')->jsonEncode(JSON_FORCE_OBJECT))
+            ->withColumn('json', lit(['id' => 1, 'name' => 'test']))
+            ->withColumn('json', ref('json')->jsonEncode(JSON_FORCE_OBJECT))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -41,8 +41,8 @@ final class JsonEncodeTest extends FlowTestCase
     {
         data_frame()
             ->read(from_array([['id' => 1]]))
-            ->withEntry('json', lit([1, 2, 3]))
-            ->withEntry('json', ref('json')->jsonEncode())
+            ->withColumn('json', lit([1, 2, 3]))
+            ->withColumn('json', ref('json')->jsonEncode())
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

@@ -21,7 +21,7 @@ require __DIR__ . '/vendor/autoload.php';
             ]
         )
     )
-    ->withEntry(
+    ->withColumn(
         'integers',
         ref('integers')->call(lit('explode'), type_list(type_integer()), ['separator' => ','], refAlias: 'string')
     )

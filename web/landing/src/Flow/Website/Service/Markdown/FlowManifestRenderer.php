@@ -201,9 +201,9 @@ final readonly class FlowManifestRenderer
     {
         $packages = [];
 
-        foreach ($this->manifest->all() as $entry) {
-            $type = is_string($entry['type'] ?? null) ? $entry['type'] : null;
-            $name = is_string($entry['name'] ?? null) ? $entry['name'] : null;
+        foreach ($this->manifest->all() as $package) {
+            $type = is_string($package['type'] ?? null) ? $package['type'] : null;
+            $name = is_string($package['name'] ?? null) ? $package['name'] : null;
 
             if ($type === null || $name === null) {
                 continue;

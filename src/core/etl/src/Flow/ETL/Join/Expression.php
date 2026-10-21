@@ -40,7 +40,7 @@ final readonly class Expression
 
                 if (!is_string($left)) {
                     throw new RuntimeException(
-                        'Expected left entry name to be string, got ' . gettype($left) . ". Example: ['id' => 'id']",
+                        'Expected left column name to be string, got ' . gettype($left) . ". Example: ['id' => 'id']",
                     );
                 }
 
@@ -48,7 +48,7 @@ final readonly class Expression
                 if (!is_string($right)) {
                     // @mago-ignore analysis:no-value
                     throw new RuntimeException(
-                        'Expected right entry name to be string, got ' . gettype($right) . ". Example: ['id' => 'id']",
+                        'Expected right column name to be string, got ' . gettype($right) . ". Example: ['id' => 'id']",
                     );
                 }
 

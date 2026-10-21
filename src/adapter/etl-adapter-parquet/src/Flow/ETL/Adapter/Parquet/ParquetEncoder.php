@@ -41,7 +41,7 @@ final class ParquetEncoder
         $columns = [];
 
         foreach ($rows->schema()->definitions() as $definition) {
-            $name = $definition->entry()->name();
+            $name = $definition->reference()->name();
             $values = $rows->column($name)->values();
 
             if (array_key_exists($name, $this->encodePlan)) {

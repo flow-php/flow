@@ -23,7 +23,7 @@ final class ArrayKeyRenameTest extends FlowTestCase
                 ['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]],
                 ['id' => 2],
             ]))
-            ->withEntry('array', optional(array_key_rename(ref('array'), 'a', 'd')))
+            ->withColumn('array', optional(array_key_rename(ref('array'), 'a', 'd')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

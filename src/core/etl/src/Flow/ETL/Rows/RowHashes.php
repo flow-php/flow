@@ -34,7 +34,7 @@ final readonly class RowHashes
         $strings = array_fill(0, $rows->count(), '');
 
         foreach ($rows->schema()->sort()->definitions() as $definition) {
-            $name = $definition->entry()->name();
+            $name = $definition->reference()->name();
             $type = $definition->type();
             $column = $rows->column($name);
 

@@ -484,7 +484,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">array_expand</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$function</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ArrayExpand</span> <span class=\"fn-param\">$expand</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Function\\ArrayExpand\\ArrayExpand::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayExpand</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Expands each value into entry, if there are more than one value, multiple rows will be created.<br>Array keys are ignored, only values are used to create new rows.<br>Nested in another function (structure(), concat(), ...) it still gives one row per element. Several<br>expands in one expression are zipped to the longest list; a shorter one gives null, so its element<br>type becomes nullable. It is refused inside another array_expand() and in filter(), until(),<br>duplicateRow(), aggregate(), over() and onEach().<br>Before:<br>  +--+-------------------+<br>  |id|              array|<br>  +--+-------------------+<br>  | 1|{\"a\":1,\"b\":2,\"c\":3}|<br>  +--+-------------------+<br>After:<br>  +--+--------+<br>  |id|expanded|<br>  +--+--------+<br>  | 1|       1|<br>  | 1|       2|<br>  | 1|       3|<br>  +--+--------+
+                    Expands each value into a column, if there are more than one value, multiple rows will be created.<br>Array keys are ignored, only values are used to create new rows.<br>Nested in another function (structure(), concat(), ...) it still gives one row per element. Several<br>expands in one expression are zipped to the longest list; a shorter one gives null, so its element<br>type becomes nullable. It is refused inside another array_expand() and in filter(), until(),<br>duplicateRow(), aggregate(), over() and onEach().<br>Before:<br>  +--+-------------------+<br>  |id|              array|<br>  +--+-------------------+<br>  | 1|{\"a\":1,\"b\":2,\"c\":3}|<br>  +--+-------------------+<br>After:<br>  +--+--------+<br>  |id|expanded|<br>  +--+--------+<br>  | 1|       1|<br>  | 1|       2|<br>  | 1|       3|<br>  +--+--------+
                 </div>
                             `
             return div
@@ -721,7 +721,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">array_unpack</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction|array</span> <span class=\"fn-param\">$array</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayUnpack</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Unpacks each element of an array into a new entry, using the array key as the entry name.<br>Before:<br>+--+-------------------+<br>|id|              array|<br>+--+-------------------+<br>| 1|{\"a\":1,\"b\":2,\"c\":3}|<br>| 2|{\"d\":4,\"e\":5,\"f\":6}|<br>+--+-------------------+<br>After:<br>+--+-----+-----+-----+-----+-----+<br>|id|arr.b|arr.c|arr.d|arr.e|arr.f|<br>+--+-----+-----+-----+-----+-----+<br>| 1|    2|    3|     |     |     |<br>| 2|     |     |    4|    5|    6|<br>+--+-----+-----+-----+-----+-----+<br>@param array<array-key, mixed>|ScalarFunction $array
+                    Unpacks each element of an array into a new column, using the array key as the column name.<br>Before:<br>+--+-------------------+<br>|id|              array|<br>+--+-------------------+<br>| 1|{\"a\":1,\"b\":2,\"c\":3}|<br>| 2|{\"d\":4,\"e\":5,\"f\":6}|<br>+--+-------------------+<br>After:<br>+--+-----+-----+-----+-----+-----+<br>|id|arr.b|arr.c|arr.d|arr.e|arr.f|<br>+--+-----+-----+-----+-----+-----+<br>| 1|    2|    3|     |     |     |<br>| 2|     |     |    4|    5|    6|<br>+--+-----+-----+-----+-----+-----+<br>@param array<array-key, mixed>|ScalarFunction $array
                 </div>
                             `
             return div
@@ -1600,7 +1600,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">col</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$entry</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">UnresolvedReference</span>
+                    <span class=\"fn-name\">col</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$column</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">UnresolvedReference</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     An alias for \`ref\`.
@@ -1608,7 +1608,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\col(" + "$" + "{" + "1:entry" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\col(" + "$" + "{" + "1:column" + "}" + ")"),
         boost: 10
     },                {
         label: "col",
@@ -3322,12 +3322,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">drop</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$entries</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Drop</span>
+                    <span class=\"fn-name\">drop</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Drop</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\drop(" + "$" + "{" + "1:entries" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\drop(" + "$" + "{" + "1:columns" + "}" + ")"),
         boost: 10
     },                {
         label: "drop",
@@ -3400,24 +3400,6 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\Telemetry\\DSL\\enriching_log_middleware(" + "$" + "{" + "1:attributes" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "entry",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dscalar\u002Dfunctions",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">entry</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$entry</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">UnresolvedReference</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    An alias for \`ref\`.
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\entry(" + "$" + "{" + "1:entry" + "}" + ")"),
         boost: 10
     },                {
         label: "enum_name",
@@ -4540,12 +4522,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_sequence_date_period</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$entry_name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DateTimeInterface</span> <span class=\"fn-param\">$start</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DateInterval</span> <span class=\"fn-param\">$interval</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DateTimeInterface</span> <span class=\"fn-param\">$end</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">0</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SequenceExtractor</span>
+                    <span class=\"fn-name\">from_sequence_date_period</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$column_name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DateTimeInterface</span> <span class=\"fn-param\">$start</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DateInterval</span> <span class=\"fn-param\">$interval</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DateTimeInterface</span> <span class=\"fn-param\">$end</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">0</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SequenceExtractor</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\from_sequence_date_period(" + "$" + "{" + "1:entry_name" + "}" + ", " + "$" + "{" + "2:start" + "}" + ", " + "$" + "{" + "3:interval" + "}" + ", " + "$" + "{" + "4:end" + "}" + ", " + "$" + "{" + "5:options" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\from_sequence_date_period(" + "$" + "{" + "1:column_name" + "}" + ", " + "$" + "{" + "2:start" + "}" + ", " + "$" + "{" + "3:interval" + "}" + ", " + "$" + "{" + "4:end" + "}" + ", " + "$" + "{" + "5:options" + "}" + ")"),
         boost: 10
     },                {
         label: "from_sequence_date_period_recurrences",
@@ -4555,12 +4537,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_sequence_date_period_recurrences</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$entry_name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DateTimeInterface</span> <span class=\"fn-param\">$start</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DateInterval</span> <span class=\"fn-param\">$interval</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$recurrences</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">0</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SequenceExtractor</span>
+                    <span class=\"fn-name\">from_sequence_date_period_recurrences</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$column_name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DateTimeInterface</span> <span class=\"fn-param\">$start</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DateInterval</span> <span class=\"fn-param\">$interval</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$recurrences</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">0</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SequenceExtractor</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\from_sequence_date_period_recurrences(" + "$" + "{" + "1:entry_name" + "}" + ", " + "$" + "{" + "2:start" + "}" + ", " + "$" + "{" + "3:interval" + "}" + ", " + "$" + "{" + "4:recurrences" + "}" + ", " + "$" + "{" + "5:options" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\from_sequence_date_period_recurrences(" + "$" + "{" + "1:column_name" + "}" + ", " + "$" + "{" + "2:start" + "}" + ", " + "$" + "{" + "3:interval" + "}" + ", " + "$" + "{" + "4:recurrences" + "}" + ", " + "$" + "{" + "5:options" + "}" + ")"),
         boost: 10
     },                {
         label: "from_sequence_number",
@@ -4570,12 +4552,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_sequence_number</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$entry_name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string|int|float</span> <span class=\"fn-param\">$start</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string|int|float</span> <span class=\"fn-param\">$end</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int|float</span> <span class=\"fn-param\">$step</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">1</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SequenceExtractor</span>
+                    <span class=\"fn-name\">from_sequence_number</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$column_name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string|int|float</span> <span class=\"fn-param\">$start</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string|int|float</span> <span class=\"fn-param\">$end</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int|float</span> <span class=\"fn-param\">$step</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">1</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SequenceExtractor</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\from_sequence_number(" + "$" + "{" + "1:entry_name" + "}" + ", " + "$" + "{" + "2:start" + "}" + ", " + "$" + "{" + "3:end" + "}" + ", " + "$" + "{" + "4:step" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\from_sequence_number(" + "$" + "{" + "1:column_name" + "}" + ", " + "$" + "{" + "2:start" + "}" + ", " + "$" + "{" + "3:end" + "}" + ", " + "$" + "{" + "4:step" + "}" + ")"),
         boost: 10
     },                {
         label: "from_static_http_requests",
@@ -5935,12 +5917,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">list_ref</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$entry</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ListFunctions</span>
+                    <span class=\"fn-name\">list_ref</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$column</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ListFunctions</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\list_ref(" + "$" + "{" + "1:entry" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\list_ref(" + "$" + "{" + "1:column" + "}" + ")"),
         boost: 10
     },                {
         label: "list_schema",
@@ -7303,12 +7285,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">partition_by</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$entry</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$entries</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Partitioning</span>
+                    <span class=\"fn-name\">partition_by</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$column</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Partitioning</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\partition_by(" + "$" + "{" + "1:entry" + "}" + ", " + "$" + "{" + "2:entries" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\partition_by(" + "$" + "{" + "1:column" + "}" + ", " + "$" + "{" + "2:columns" + "}" + ")"),
         boost: 10
     },                {
         label: "partition_types",
@@ -7579,7 +7561,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pgsql_schema_sort_by_type</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">EntryTypesMap</span> <span class=\"fn-param\">$typesMap</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TypeStrategy</span>
+                    <span class=\"fn-name\">pgsql_schema_sort_by_type</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">TypesMap</span> <span class=\"fn-param\">$typesMap</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TypeStrategy</span>
                 </div>
                             `
             return div
@@ -7594,7 +7576,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pgsql_table_to_flow_schema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Table</span> <span class=\"fn-param\">$table</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">EntryTypesMap</span> <span class=\"fn-param\">$typesMap</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Schema</span>
+                    <span class=\"fn-name\">pgsql_table_to_flow_schema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Table</span> <span class=\"fn-param\">$table</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">TypesMap</span> <span class=\"fn-param\">$typesMap</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Schema</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     Convert a PostgreSQL table definition into a Flow Schema.
@@ -7903,12 +7885,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">psr18_traceable_client</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ClientInterface</span> <span class=\"fn-param\">$client</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Telemetry</span> <span class=\"fn-param\">$telemetry</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PSR18TraceableClient</span>
+                    <span class=\"fn-name\">psr18_traceable_client</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ClientInterface</span> <span class=\"fn-param\">$client</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Telemetry</span> <span class=\"fn-param\">$telemetry</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">UrlSanitizer</span> <span class=\"fn-param\">$urlSanitizer</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Sanitizer\\UrlSanitizer::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PSR18TraceableClient</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Bridge\\Psr18\\Telemetry\\DSL\\psr18_traceable_client(" + "$" + "{" + "1:client" + "}" + ", " + "$" + "{" + "2:telemetry" + "}" + ")"),
+        apply: snippet("\\Flow\\Bridge\\Psr18\\Telemetry\\DSL\\psr18_traceable_client(" + "$" + "{" + "1:client" + "}" + ", " + "$" + "{" + "2:telemetry" + "}" + ", " + "$" + "{" + "3:urlSanitizer" + "}" + ")"),
         boost: 10
     },                {
         label: "random_string",
@@ -7966,12 +7948,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">ref</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$entry</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">UnresolvedReference</span>
+                    <span class=\"fn-name\">ref</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$column</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">UnresolvedReference</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\ref(" + "$" + "{" + "1:entry" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\ref(" + "$" + "{" + "1:column" + "}" + ")"),
         boost: 10
     },                {
         label: "refresh_materialized_view",
@@ -7999,12 +7981,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">refs</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$entries</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">References</span>
+                    <span class=\"fn-name\">refs</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">References</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\refs(" + "$" + "{" + "1:entries" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\refs(" + "$" + "{" + "1:columns" + "}" + ")"),
         boost: 10
     },                {
         label: "ref_action_cascade",
@@ -8305,7 +8287,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">rename_map</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$renames</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RenameMapEntryStrategy</span>
+                    <span class=\"fn-name\">rename_map</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$renames</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RenameMapColumnStrategy</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param array<array-key, string> $renames Map of old_name => new_name
@@ -8323,7 +8305,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">rename_replace</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array|string</span> <span class=\"fn-param\">$search</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array|string</span> <span class=\"fn-param\">$replace</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RenameReplaceEntryStrategy</span>
+                    <span class=\"fn-name\">rename_replace</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array|string</span> <span class=\"fn-param\">$search</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array|string</span> <span class=\"fn-param\">$replace</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RenameReplaceColumnStrategy</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param array<string>|string $search<br>@param array<string>|string $replace
@@ -8341,7 +8323,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">rename_style</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">StringStyles</span> <span class=\"fn-param\">$style</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RenameCaseEntryStrategy</span>
+                    <span class=\"fn-name\">rename_style</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">StringStyles</span> <span class=\"fn-param\">$style</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RenameCaseColumnStrategy</span>
                 </div>
                             `
             return div
@@ -9673,12 +9655,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">select</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$entries</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Select</span>
+                    <span class=\"fn-name\">select</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Select</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\select(" + "$" + "{" + "1:entries" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\select(" + "$" + "{" + "1:columns" + "}" + ")"),
         boost: 10
     },                {
         label: "select",
@@ -10681,12 +10663,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">structure_ref</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$entry</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StructureFunctions</span>
+                    <span class=\"fn-name\">structure_ref</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$column</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StructureFunctions</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\structure_ref(" + "$" + "{" + "1:entry" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\structure_ref(" + "$" + "{" + "1:column" + "}" + ")"),
         boost: 10
     },                {
         label: "structure_schema",
@@ -11353,7 +11335,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_pgsql_schema_table</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$tableName</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$databaseSchema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;public&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">EntryTypesMap</span> <span class=\"fn-param\">$typesMap</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">TableOptions</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Table</span>
+                    <span class=\"fn-name\">to_pgsql_schema_table</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$tableName</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$databaseSchema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;public&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">TypesMap</span> <span class=\"fn-param\">$typesMap</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">TableOptions</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Table</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     Convert a Flow Schema into a PostgreSQL table definition.<br>@param string $databaseSchema PostgreSQL schema (namespace) the table belongs to<br>@param ?TableOptions $options table-level options the Flow Schema cannot express (e.g. UNLOGGED)
@@ -12579,6 +12561,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\upper(" + "$" + "{" + "1:value" + "}" + ")"),
         boost: 10
     },                {
+        label: "url_sanitizer",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">url_sanitizer</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$sensitiveQueryParameters</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[...]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">UrlSanitizer</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a UrlSanitizer. The given list replaces the OpenTelemetry semantic-convention default list.<br>@param list<string> $sensitiveQueryParameters Case-sensitive query parameter keys whose values are replaced with REDACTED
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\url_sanitizer(" + "$" + "{" + "1:sensitiveQueryParameters" + "}" + ")"),
+        boost: 10
+    },                {
         label: "uuid_schema",
         type: "function",
         detail: "flow\u002Ddsl\u002Dschema",
@@ -13626,19 +13626,19 @@ const dslFunctions = [
         apply: snippet("\\Flow\\PostgreSql\\DSL\\with(" + "$" + "{" + "1:ctes" + "}" + ")"),
         boost: 10
     },                {
-        label: "with_entry",
+        label: "with_column",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">with_entry</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$function</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">WithEntry</span>
+                    <span class=\"fn-name\">with_column</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$function</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">WithColumn</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\with_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:function" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\with_column(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:function" + "}" + ")"),
         boost: 10
     },                {
         label: "xml_element_schema",

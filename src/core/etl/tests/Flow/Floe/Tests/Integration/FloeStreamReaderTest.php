@@ -110,9 +110,9 @@ final class FloeStreamReaderTest extends FlowIntegrationTestCase
         static::assertSame($written, $read);
     }
 
-    public function test_round_trip_of_all_entry_types_through_local_filesystem(): void
+    public function test_round_trip_of_all_column_types_through_local_filesystem(): void
     {
-        $rows = RowsMother::withAllEntryTypes();
+        $rows = RowsMother::withAllColumnTypes();
         $path = $this->cacheDir->suffix('all-types.floe');
 
         $writer = new FloeWriter($this->fs(), $rows->schema(), new AdaptiveBackend());

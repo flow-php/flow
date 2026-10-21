@@ -335,7 +335,7 @@ final class PhpJsonEncoderTest extends FlowTestCase
         $fragments = [];
 
         foreach ($rows->schema()->definitions() as $definition) {
-            $fragments[] = $encoder->fragments($definition->type(), $rows->column($definition->entry()->name()));
+            $fragments[] = $encoder->fragments($definition->type(), $rows->column($definition->reference()->name()));
         }
 
         static::assertSame([['{"a":{}}', 'null'], ['{}', '{"1":2.0}'], ['"a/b"', 'null']], $fragments);

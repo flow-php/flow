@@ -22,7 +22,7 @@ final class RegexAllTest extends FlowTestCase
             ->read(from_array([
                 ['key' => '124.23 EUR 12 USD 45 PLN'],
             ]))
-            ->withEntry('result', ref('key')->regexAll(lit('/(\d+(?:\.\d+)?)\s+([A-Z]{3})/')))
+            ->withColumn('result', ref('key')->regexAll(lit('/(\d+(?:\.\d+)?)\s+([A-Z]{3})/')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -47,7 +47,7 @@ final class RegexAllTest extends FlowTestCase
             ->read(from_array([
                 ['id' => 1],
             ]))
-            ->withEntry('regex', optional(ref('id')->regexAll(lit('1'))))
+            ->withColumn('regex', optional(ref('id')->regexAll(lit('1'))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -65,7 +65,7 @@ final class RegexAllTest extends FlowTestCase
             ->read(from_array([
                 ['id' => '1'],
             ]))
-            ->withEntry('regex', optional(ref('id')->regexAll(lit(1))))
+            ->withColumn('regex', optional(ref('id')->regexAll(lit(1))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

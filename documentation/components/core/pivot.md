@@ -95,7 +95,7 @@ column at all.
 
 `discover_pivot_values()` scans the pivot column once, before the plan runs, and resolves to the declared form.
 It scans **the frame as it stands at the `pivot()` call**, not the bare source - so the pivot column may be one
-an earlier `withEntry()` produced, and an earlier `filter()` narrows which values exist:
+an earlier `withColumn()` produced, and an earlier `filter()` narrows which values exist:
 
 ```php
 data_frame()

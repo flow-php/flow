@@ -318,7 +318,7 @@ final class ExcelExtractorTest extends FlowTestCase
                 ['sheet' => 'This is a very long sheet name that exceeds the 31 character limit'],
                 ['sheet' => 'Normal'],
             ], schema(string_schema('sheet')))))
-            ->withEntry('is_valid', is_valid_excel_sheet_name(ref('sheet')))
+            ->withColumn('is_valid', is_valid_excel_sheet_name(ref('sheet')))
             ->fetch()
             ->toArray();
 

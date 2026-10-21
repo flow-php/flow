@@ -20,7 +20,7 @@ final class CapitalizeTest extends FlowTestCase
             ->read(from_array([
                 ['key' => 'this is title'],
             ]))
-            ->withEntry('capitalized', ref('key')->capitalize())
+            ->withColumn('capitalized', ref('key')->capitalize())
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

@@ -259,8 +259,8 @@ final class FloatDefinitionTest extends FlowTestCase
 
         $renamed = $def->rename('new_amount');
 
-        static::assertSame('new_amount', $renamed->entry()->name());
-        static::assertSame('amount', $def->entry()->name());
+        static::assertSame('new_amount', $renamed->reference()->name());
+        static::assertSame('amount', $def->reference()->name());
     }
 
     public function test_set_metadata(): void

@@ -20,7 +20,7 @@ final class StrPadTest extends FlowTestCase
             ->read(from_array([
                 ['key' => 'value'],
             ]))
-            ->withEntry('strpad', ref('key')->strPad(10, '*'))
+            ->withColumn('strpad', ref('key')->strPad(10, '*'))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

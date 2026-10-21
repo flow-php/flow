@@ -213,7 +213,7 @@ final class SchemaConverter
         $required = [];
 
         foreach ($schema->definitions() as $definition) {
-            $name = $definition->entry()->name();
+            $name = $definition->reference()->name();
             $properties[$name] = $this->definitionToJsonSchema($definition);
 
             if (!$definition->isNullable()) {

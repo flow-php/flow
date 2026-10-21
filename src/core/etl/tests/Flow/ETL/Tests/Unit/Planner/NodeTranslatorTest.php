@@ -69,20 +69,19 @@ use Flow\ETL\Transformation\AddRowIndex\StartFrom;
 use Flow\ETL\Transformer\AddRowIndexTransformer;
 use Flow\ETL\Transformer\CollectReferencesTransformer;
 use Flow\ETL\Transformer\CrossJoinRowsTransformer;
+use Flow\ETL\Transformer\DropColumnsTransformer;
 use Flow\ETL\Transformer\DropDuplicatesTransformer;
-use Flow\ETL\Transformer\DropEntriesTransformer;
 use Flow\ETL\Transformer\DuplicateRowTransformer;
 use Flow\ETL\Transformer\JoinEachRowsTransformer;
 use Flow\ETL\Transformer\LimitTransformer;
-use Flow\ETL\Transformer\PruneEntriesTransformer;
-use Flow\ETL\Transformer\Rename\RenameMapEntryStrategy;
-use Flow\ETL\Transformer\RenameEachEntryTransformer;
-use Flow\ETL\Transformer\RenameEntryTransformer;
+use Flow\ETL\Transformer\PruneColumnsTransformer;
+use Flow\ETL\Transformer\Rename\RenameMapColumnStrategy;
+use Flow\ETL\Transformer\RenameColumnTransformer;
+use Flow\ETL\Transformer\RenameEachColumnTransformer;
 use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
-use Flow\ETL\Transformer\SelectEntriesTransformer;
+use Flow\ETL\Transformer\SelectColumnsTransformer;
 use Flow\ETL\Transformer\UntilTransformer;
-use Flow\ETL\WithEntry;
 use PHPUnit\Framework\Attributes\TestWith;
 
 use function array_map;
@@ -102,13 +101,14 @@ use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\to_memory;
 use function Flow\ETL\DSL\window;
+use function Flow\ETL\DSL\with_column;
 
 final class NodeTranslatorTest extends FlowTestCase
 {
     public function test_aggregate_steps_are_the_exact_list_in_order(): void
     {
         static::assertSame(
-            [PruneEntriesTransformer::class, GroupByAggregationProcessor::class],
+            [PruneColumnsTransformer::class, GroupByAggregationProcessor::class],
             array_map(
                 static fn($step) => $step::class,
                 NodeTranslator::toSteps(
@@ -249,7 +249,7 @@ final class NodeTranslatorTest extends FlowTestCase
     public function test_drop_steps_are_the_exact_list_in_order(): void
     {
         static::assertSame(
-            [DropEntriesTransformer::class],
+            [DropColumnsTransformer::class],
             array_map(
                 static fn($step) => $step::class,
                 NodeTranslator::toSteps(new Drop(NodeMother::read(), ['id']), NodeMother::context(), []),
@@ -263,7 +263,7 @@ final class NodeTranslatorTest extends FlowTestCase
             [DuplicateRowTransformer::class],
             array_map(
                 static fn($step) => $step::class,
-                NodeTranslator::toSteps(new DuplicateRow(NodeMother::read(), lit(true), [new WithEntry(
+                NodeTranslator::toSteps(new DuplicateRow(NodeMother::read(), lit(true), [with_column(
                     'copy',
                     lit(1),
                 )]), NodeMother::context(), []),
@@ -350,11 +350,11 @@ final class NodeTranslatorTest extends FlowTestCase
     public function test_rename_each_steps_are_the_exact_list_in_order(): void
     {
         static::assertSame(
-            [RenameEachEntryTransformer::class],
+            [RenameEachColumnTransformer::class],
             array_map(
                 static fn($step) => $step::class,
                 NodeTranslator::toSteps(
-                    new RenameEach(NodeMother::read(), [new RenameMapEntryStrategy(['id' => 'user_id'])]),
+                    new RenameEach(NodeMother::read(), [new RenameMapColumnStrategy(['id' => 'user_id'])]),
                     NodeMother::context(),
                     [],
                 ),
@@ -365,7 +365,7 @@ final class NodeTranslatorTest extends FlowTestCase
     public function test_rename_steps_are_the_exact_list_in_order(): void
     {
         static::assertSame(
-            [RenameEntryTransformer::class],
+            [RenameColumnTransformer::class],
             array_map(
                 static fn($step) => $step::class,
                 NodeTranslator::toSteps(new Rename(NodeMother::read(), 'id', 'user_id'), NodeMother::context(), []),
@@ -387,7 +387,7 @@ final class NodeTranslatorTest extends FlowTestCase
     public function test_select_steps_are_the_exact_list_in_order(): void
     {
         static::assertSame(
-            [SelectEntriesTransformer::class],
+            [SelectColumnsTransformer::class],
             array_map(
                 static fn($step) => $step::class,
                 NodeTranslator::toSteps(new Select(NodeMother::read(), ['id']), NodeMother::context(), []),
@@ -427,7 +427,7 @@ final class NodeTranslatorTest extends FlowTestCase
 
     public function test_transform_the_instance_the_node_holds_is_the_step(): void
     {
-        $transformer = new SelectEntriesTransformer('id');
+        $transformer = new SelectColumnsTransformer('id');
 
         static::assertSame(
             [$transformer],

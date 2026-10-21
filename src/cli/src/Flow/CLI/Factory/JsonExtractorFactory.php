@@ -16,7 +16,7 @@ final readonly class JsonExtractorFactory
     public function __construct(
         private Path $path,
         private string $pointerOption = 'input-json-pointer',
-        private string $pointerAsEntryNameOption = 'input-json-pointer-entry-name',
+        private string $pointerAsColumnNameOption = 'input-json-pointer-column-name',
     ) {}
 
     public function get(InputInterface $input): JsonExtractor
@@ -26,7 +26,7 @@ final readonly class JsonExtractorFactory
         $pointer = option_string_nullable($this->pointerOption, $input);
 
         if ($pointer !== null) {
-            $extractor->withPointer($pointer, option_bool($this->pointerAsEntryNameOption, $input));
+            $extractor->withPointer($pointer, option_bool($this->pointerAsColumnNameOption, $input));
         }
 
         return $extractor;

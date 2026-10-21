@@ -146,7 +146,7 @@ final class ArrayGetTest extends FlowTestCase
 
     public function test_array_accessor_transformer(): void
     {
-        $rows = RowsMother::arrayEntry();
+        $rows = RowsMother::arrayColumn();
         static::assertEquals('bar', (new FunctionContext(flow_context()))->eval(
             array_get(ref('array_entry'), 'array.foo'),
             $rows->values(0),

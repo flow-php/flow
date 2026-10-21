@@ -9,7 +9,7 @@ require __DIR__ . '/vendor/autoload.php';
 data_frame()
     ->read(from_sequence_number('number', 1, 100))
     ->collect()
-    ->withEntry(
+    ->withColumn(
         'type',
         when(
             ref('number')->isOdd(),

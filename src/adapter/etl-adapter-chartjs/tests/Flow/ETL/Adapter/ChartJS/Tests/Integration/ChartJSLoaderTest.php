@@ -103,7 +103,7 @@ final class ChartJSLoaderTest extends FlowTestCase
 
         df()
             ->read(from_array($data))
-            ->withEntry(
+            ->withColumn(
                 'Profit',
                 ref('Revenue')
                     ->minus(ref('CM'))
@@ -231,7 +231,7 @@ final class ChartJSLoaderTest extends FlowTestCase
 
         df()
             ->read(from_array($data))
-            ->withEntry(
+            ->withColumn(
                 'Profit',
                 ref('Revenue')
                     ->minus(ref('CM'))
@@ -354,7 +354,7 @@ final class ChartJSLoaderTest extends FlowTestCase
 
         df()
             ->read(from_array($data))
-            ->withEntry(
+            ->withColumn(
                 'Profit',
                 ref('Revenue')
                     ->minus(ref('CM'))
@@ -490,7 +490,7 @@ final class ChartJSLoaderTest extends FlowTestCase
 
         df()
             ->read(from_array($data))
-            ->withEntry(
+            ->withColumn(
                 'Profit',
                 ref('Revenue')
                     ->minus(ref('CM'))

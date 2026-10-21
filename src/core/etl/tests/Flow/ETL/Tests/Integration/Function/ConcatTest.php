@@ -25,7 +25,7 @@ final class ConcatTest extends FlowTestCase
                 ['id' => 1],
                 ['id' => 2],
             ]))
-            ->withEntry('concat', concat(ref('id'), lit(null)))
+            ->withColumn('concat', concat(ref('id'), lit(null)))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -45,7 +45,7 @@ final class ConcatTest extends FlowTestCase
                 ['id' => 1, 'array' => ['field' => 'value']],
                 ['id' => 2],
             ]))
-            ->withEntry('concat', concat(lit(null), lit(null)))
+            ->withColumn('concat', concat(lit(null), lit(null)))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
@@ -66,7 +66,7 @@ final class ConcatTest extends FlowTestCase
                 ['id' => 1, 'array' => ['field' => 'value']],
                 ['id' => 2],
             ]))
-            ->withEntry('concat', optional(concat(ref('id'), '-', array_get(ref('array'), 'field'))))
+            ->withColumn('concat', optional(concat(ref('id'), '-', array_get(ref('array'), 'field'))))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();

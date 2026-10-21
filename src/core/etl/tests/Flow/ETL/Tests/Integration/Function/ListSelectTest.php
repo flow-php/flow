@@ -66,7 +66,7 @@ final class ListSelectTest extends FlowTestCase
                     ],
                 ],
             ]))
-            ->withEntry('list', list_ref('list')->select('id'))
+            ->withColumn('list', list_ref('list')->select('id'))
             ->fetch();
 
         static::assertEquals(

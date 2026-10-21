@@ -20,7 +20,7 @@ final class CollapseWhitespaceTest extends FlowTestCase
                 ['text' => 'Multiple   spaces   between   words'],
                 ['text' => "Mixed\t\twhitespace\n\ntypes"],
             ]))
-            ->withEntry('cleaned_text', ref('text')->collapseWhitespace());
+            ->withColumn('cleaned_text', ref('text')->collapseWhitespace());
 
         static::assertEquals(
             [

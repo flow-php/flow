@@ -61,7 +61,7 @@ final readonly class PhpBackend implements Backend
         if ($cursor->remaining() !== 0) {
             throw new InvalidArgumentException(sprintf(
                 'Column "%s": %d buffers left after decoding',
-                $definition->entry()->name(),
+                $definition->reference()->name(),
                 $cursor->remaining(),
             ));
         }

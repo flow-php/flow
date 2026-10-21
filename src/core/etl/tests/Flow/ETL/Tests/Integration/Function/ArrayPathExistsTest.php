@@ -23,7 +23,7 @@ final class ArrayPathExistsTest extends FlowTestCase
                 ['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]],
                 ['id' => 2],
             ]))
-            ->withEntry('has_array', optional(ref('array')->arrayPathExists('a')))
+            ->withColumn('has_array', optional(ref('array')->arrayPathExists('a')))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
@@ -44,7 +44,7 @@ final class ArrayPathExistsTest extends FlowTestCase
                 ['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]],
                 ['id' => 2],
             ]))
-            ->withEntry('has_array', optional(array_exists(ref('array'), 'a')))
+            ->withColumn('has_array', optional(array_exists(ref('array'), 'a')))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();

@@ -32,7 +32,7 @@ final class MatchCasesTest extends FlowTestCase
 
         $output = df()
             ->read(from_rows($rows))
-            ->withEntry('string', match_cases([
+            ->withColumn('string', match_cases([
                 match_condition(ref('string')->contains('-'), ref('string')->strReplace('-', ' ')),
                 match_condition(
                     ref('string')->call(lit('is_numeric'), type_boolean()),

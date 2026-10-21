@@ -126,7 +126,7 @@ final class JoinSchemaTest extends FlowTestCase
     {
         $this->expectException(SchemaDefinitionNotUniqueException::class);
         $this->expectExceptionMessageMatches(
-            '/Entry definitions must be unique.*\. Please consider using join prefix option$/',
+            '/Column definitions must be unique.*\. Please consider using join prefix option$/',
         );
 
         (new JoinSchema())->cross(schema(int_schema('id')), schema(int_schema('id')));
@@ -136,7 +136,7 @@ final class JoinSchemaTest extends FlowTestCase
     {
         $this->expectException(SchemaDefinitionNotUniqueException::class);
         $this->expectExceptionMessageMatches(
-            '/Entry definitions must be unique.*\. Please consider using join prefix option$/',
+            '/Column definitions must be unique.*\. Please consider using join prefix option$/',
         );
 
         (new JoinSchema())->of(Join::left, schema(int_schema('id'), str_schema('name')), schema(str_schema('name')));

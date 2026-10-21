@@ -145,7 +145,7 @@ final readonly class MapColumn implements Column
     {
         $offsets = [0];
         $nulls = [];
-        $entryIndices = [];
+        $pairIndices = [];
 
         foreach ($indices as $position => $index) {
             if (array_key_exists($index, $this->nulls)) {
@@ -153,17 +153,17 @@ final readonly class MapColumn implements Column
             }
 
             for ($j = $this->offsets[$index], $end = $this->offsets[$index + 1]; $j < $end; $j++) {
-                $entryIndices[] = $j;
+                $pairIndices[] = $j;
             }
 
-            $offsets[] = count($entryIndices);
+            $offsets[] = count($pairIndices);
         }
 
         return new self(
             $this->type,
             $offsets,
-            $this->keys->take($entryIndices),
-            $this->values->take($entryIndices),
+            $this->keys->take($pairIndices),
+            $this->values->take($pairIndices),
             $nulls,
         );
     }

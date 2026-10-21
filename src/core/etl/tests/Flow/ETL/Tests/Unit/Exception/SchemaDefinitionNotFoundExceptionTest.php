@@ -14,17 +14,17 @@ final class SchemaDefinitionNotFoundExceptionTest extends FlowTestCase
         $exception = SchemaDefinitionNotFoundException::withAvailable('scoree', 'id', 'score', 'name');
 
         static::assertSame(
-            'Schema definition for entry "scoree" not found. Did you mean one of: [score]?',
+            'Schema definition for column "scoree" not found. Did you mean one of: [score]?',
             $exception->getMessage(),
         );
-        static::assertSame('scoree', $exception->entry());
+        static::assertSame('scoree', $exception->column());
         static::assertSame(['score'], $exception->suggestions());
     }
 
     public function test_the_single_argument_form_keeps_its_message(): void
     {
         static::assertSame(
-            'Schema definition for entry "scoree" not found.',
+            'Schema definition for column "scoree" not found.',
             (new SchemaDefinitionNotFoundException('scoree'))->getMessage(),
         );
     }

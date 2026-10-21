@@ -18,12 +18,12 @@ use Flow\ETL\Plan\Redefined;
 use Flow\ETL\Tests\Double\RedefiningNode;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\NodeMother;
-use Flow\ETL\WithEntry;
 
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\rename_replace;
+use function Flow\ETL\DSL\with_column;
 
 final class FilterWalkTest extends FlowTestCase
 {
@@ -229,7 +229,7 @@ final class FilterWalkTest extends FlowTestCase
         static::assertNull((new FilterWalk())->predicateAtLeaf(new Filter(new DuplicateRow(
             $read,
             lit(true),
-            [new WithEntry('year', lit(2023))],
+            [with_column('year', lit(2023))],
         ), lit(true)), $read, ref('year')->isNotNull()));
     }
 
@@ -240,7 +240,7 @@ final class FilterWalkTest extends FlowTestCase
         static::assertNotNull((new FilterWalk())->predicateAtLeaf(new Filter(new DuplicateRow(
             $read,
             lit(true),
-            [new WithEntry('copy', lit(1))],
+            [with_column('copy', lit(1))],
         ), lit(true)), $read, ref('year')->isNotNull()));
     }
 

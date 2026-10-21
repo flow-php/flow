@@ -14,7 +14,7 @@ try {
             ['id' => 2, 'divisor' => 0],
         ], schema(int_schema('id'), int_schema('divisor'))))
         ->onError(throw_error_handler())
-        ->withEntry('result', lit(100)->divide(ref('divisor')))
+        ->withColumn('result', lit(100)->divide(ref('divisor')))
         ->collect()
         ->write(to_output(truncate: false))
         ->run();

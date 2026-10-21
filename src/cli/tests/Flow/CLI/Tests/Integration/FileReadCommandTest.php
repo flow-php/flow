@@ -129,6 +129,30 @@ final class FileReadCommandTest extends TestCase
             OUTPUT, $tester->getDisplay());
     }
 
+    public function test_read_rows_json_with_pointer_as_column_name(): void
+    {
+        $tester = new CommandTester(new FileReadCommand('read'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/pointer.json',
+            '--input-json-pointer' => '/orders',
+            '--input-json-pointer-column-name' => true,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        self::assertCommandOutputIdentical(<<<'OUTPUT'
+            +----------+
+            |  /orders |
+            +----------+
+            | {"id":1} |
+            | {"id":2} |
+            +----------+
+            2 rows
+
+            OUTPUT, $tester->getDisplay());
+    }
+
     public function test_read_rows_parquet(): void
     {
         $tester = new CommandTester(new FileReadCommand('read'));
@@ -315,7 +339,7 @@ final class FileReadCommandTest extends TestCase
         // selecting a column the schema does not declare is an error, not an empty column - there is
         // no type to give it and no reader could see a value that row storage does not carry
         $this->expectException(SchemaDefinitionNotFoundException::class);
-        $this->expectExceptionMessage('Schema definition for entry "nonexistent_column" not found');
+        $this->expectExceptionMessage('Schema definition for column "nonexistent_column" not found');
 
         $tester->execute([
             'input-file' => __DIR__ . '/Fixtures/orders.csv',

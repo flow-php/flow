@@ -218,7 +218,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
                 schema(int_schema('id'), str_schema('v')),
             )->withBatchSize(1))
             ->onError(skip_rows_handler())
-            ->withEntry('doubled', ref('v')->cast('integer')->multiply(lit(2)))
+            ->withColumn('doubled', ref('v')->cast('integer')->multiply(lit(2)))
             ->fetch();
 
         static::assertSame(

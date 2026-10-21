@@ -47,7 +47,7 @@ final class WindowFunctionsTest extends FlowTestCase
                     ['id' => 6, 'name' => 'Janet', 'department' => 'Finances', 'salary' => 4000],
                 ]),
             ))
-            ->withEntry(
+            ->withColumn(
                 'rank',
                 dense_rank()->over(window()->partitionBy(ref('department'))->orderBy(ref('salary')->desc())),
             )
@@ -82,7 +82,7 @@ final class WindowFunctionsTest extends FlowTestCase
                     ['id' => 6, 'name' => 'Janet', 'department' => 'Finances', 'salary' => 4000],
                 ]),
             ))
-            ->withEntry('rank', rank()->over(window()->orderBy(ref('salary')->desc())))
+            ->withColumn('rank', rank()->over(window()->orderBy(ref('salary')->desc())))
             ->get();
 
         static::assertSame(
@@ -180,7 +180,7 @@ final class WindowFunctionsTest extends FlowTestCase
                 ['at' => new DateTimeImmutable('2024-01-01 09:00:00'), 'amount' => 3],
                 ['at' => new DateTimeImmutable('2024-01-01 21:00:00'), 'amount' => 4],
             ]))
-            ->withEntry('n', sum(ref('amount'))->over(window()->partitionBy(ref('at'))->orderBy(ref('amount'))))
+            ->withColumn('n', sum(ref('amount'))->over(window()->partitionBy(ref('at'))->orderBy(ref('amount'))))
             ->fetch()
             ->toArray();
 
@@ -208,7 +208,7 @@ final class WindowFunctionsTest extends FlowTestCase
                 ['region' => 'us', 'amount' => 20],
                 ['region' => 'eu', 'amount' => 3],
             ]))
-            ->withEntry('total', sum(ref('amount'))->over(window()->partitionBy(ref('region'))))
+            ->withColumn('total', sum(ref('amount'))->over(window()->partitionBy(ref('region'))))
             ->fetch()
             ->toArray();
 

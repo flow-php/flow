@@ -40,7 +40,7 @@ use Flow\ETL\Tests\Mother\NodeMother;
 use Flow\ETL\Transformer\CrossJoinRowsTransformer;
 use Flow\ETL\Transformer\JoinEachRowsTransformer;
 use Flow\ETL\Transformer\LimitTransformer;
-use Flow\ETL\Transformer\SelectEntriesTransformer;
+use Flow\ETL\Transformer\SelectColumnsTransformer;
 
 use function array_map;
 use function Flow\ETL\DSL\df;
@@ -143,12 +143,12 @@ final class PipelineSplitTest extends FlowTestCase
 
         static::assertCount(2, $segments);
         static::assertSame(
-            [SelectEntriesTransformer::class],
+            [SelectColumnsTransformer::class],
             array_map(static fn($step) => $step::class, $segments[0]->steps()),
         );
         static::assertNotNull($segments[0]->processor());
         static::assertSame(
-            [SelectEntriesTransformer::class, ArrayLoader::class],
+            [SelectColumnsTransformer::class, ArrayLoader::class],
             array_map(static fn($step) => $step::class, $segments[1]->steps()),
         );
     }
@@ -171,7 +171,7 @@ final class PipelineSplitTest extends FlowTestCase
         static::assertInstanceOf(Raw::class, $plan);
         static::assertNull($plan->schema);
         static::assertSame(
-            [JoinEachRowsTransformer::class, SelectEntriesTransformer::class, CollectingProcessor::class],
+            [JoinEachRowsTransformer::class, SelectColumnsTransformer::class, CollectingProcessor::class],
             PipelineSteps::classes($plan->root()->segments()),
         );
         static::assertSame($planned->of($root)->steps[0], PipelineSteps::of($plan->root()->segments())[2]);
@@ -322,7 +322,7 @@ final class PipelineSplitTest extends FlowTestCase
         static::assertCount(2, $segments);
         static::assertInstanceOf(BatchingProcessor::class, $segments[0]->processor());
         static::assertSame(
-            [MemoryLoader::class, SelectEntriesTransformer::class],
+            [MemoryLoader::class, SelectColumnsTransformer::class],
             array_map(static fn($step) => $step::class, $segments[1]->steps()),
         );
     }
@@ -595,7 +595,7 @@ final class PipelineSplitTest extends FlowTestCase
         static::assertSame(
             [
                 JoinEachRowsTransformer::class,
-                SelectEntriesTransformer::class,
+                SelectColumnsTransformer::class,
                 MemoryLoader::class,
                 TransactionalSinks::class,
                 CollectingProcessor::class,

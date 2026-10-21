@@ -537,7 +537,7 @@ final class ParquetTest extends FlowTestCase
     {
         data_frame()
             ->read(from_sequence_number('id', 1, 12))
-            ->withEntry('name', lit('dropped by the transformation'))
+            ->withColumn('name', lit('dropped by the transformation'))
             ->batchSize(4)
             ->write(to_transformation(
                 select('id'),
@@ -847,7 +847,7 @@ final class ParquetTest extends FlowTestCase
             ],
             data_frame()
                 ->read(from_parquet($loaded, filesystem: $memory))
-                ->withEntry('node', ref('node')->cast(type_string()))
+                ->withColumn('node', ref('node')->cast(type_string()))
                 ->fetch()
                 ->toArray(),
         );

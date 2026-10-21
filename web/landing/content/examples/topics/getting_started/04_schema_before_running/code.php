@@ -12,7 +12,7 @@ $frame = data_frame()
         ['id' => 2, 'name' => 'Jane'],
     ], schema(int_schema('id'), str_schema('name'))))
     ->filter(ref('id')->greaterThan(lit(1)))
-    ->withEntry('greeting', ref('name')->concat(lit('!')));
+    ->withColumn('greeting', ref('name')->concat(lit('!')));
 
 // answered from the plan: not one row has been read
 echo schema_to_ascii($frame->schema());

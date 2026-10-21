@@ -189,7 +189,7 @@ final class DataFrameExtractorTest extends FlowTestCase
         $inner = df()->read(from_rows(array_to_rows([['id' => 1]], schema(int_schema('id')))));
 
         $extractor = from_data_frame($inner);
-        $inner->withEntry('doubled', ref('id')->multiply(lit(2)));
+        $inner->withColumn('doubled', ref('id')->multiply(lit(2)));
 
         static::assertSame([['id' => 1]], iterator_to_array($extractor->extract(flow_context(config())))[0]->toArray());
     }

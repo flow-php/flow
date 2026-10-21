@@ -174,7 +174,7 @@ final class GroupByTest extends FlowIntegrationTestCase
             )))
             ->groupBy(['country', 'gender'])
             ->aggregate(average(ref('age')))
-            ->withEntry('age_avg', ref('age_avg')->round(lit(2)))
+            ->withColumn('age_avg', ref('age_avg')->round(lit(2)))
             ->batchSize(1)
             ->write($loader)
             ->fetch();
@@ -794,10 +794,10 @@ final class GroupByTest extends FlowIntegrationTestCase
             ],
             df()
                 ->from(from_all(from_memory($memoryPage1), from_memory($memoryPage2)))
-                ->withEntry('avg_salary', average(ref('salary'))->over(window()->partitionBy(ref('department'))))
+                ->withColumn('avg_salary', average(ref('salary'))->over(window()->partitionBy(ref('department'))))
                 ->select('department', 'avg_salary')
                 ->dropDuplicates(ref('department'), ref('avg_salary'))
-                ->withEntry('avg_salary', ref('avg_salary')->round(lit(0)))
+                ->withColumn('avg_salary', ref('avg_salary')->round(lit(0)))
                 ->fetch()
                 ->toArray(),
         );
@@ -841,7 +841,7 @@ final class GroupByTest extends FlowIntegrationTestCase
             df()
                 ->from(from_all(from_memory($memoryPage1), from_memory($memoryPage2)))
                 ->dropDuplicates(ref('employee_name'), ref('department'))
-                ->withEntry(
+                ->withColumn(
                     'rank',
                     rank()->over(window()->partitionBy(ref('department'))->orderBy(ref('salary')->desc())),
                 )

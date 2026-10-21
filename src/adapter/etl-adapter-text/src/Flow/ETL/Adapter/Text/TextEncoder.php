@@ -55,7 +55,7 @@ final class TextEncoder
         return (
             implode(
                 $this->newLineSeparator,
-                (new TextValues())->texts($type, $rows->column($definitions[0]->entry()->name())->physicals()),
+                (new TextValues())->texts($type, $rows->column($definitions[0]->reference()->name())->physicals()),
             ) . $this->newLineSeparator
         );
     }

@@ -53,7 +53,7 @@ final class JsonFixtureContext
         JsonFormat $format = JsonFormat::Document,
         Filesystem $filesystem = new NativeLocalFilesystem(),
         ?string $pointer = null,
-        bool $pointerToEntryName = false,
+        bool $pointerToColumnName = false,
     ): JsonFileReader {
         $sources = [];
 
@@ -61,7 +61,7 @@ final class JsonFixtureContext
             $sources[] = new SourceFile($status->path);
         }
 
-        return new JsonFileReader($filesystem, $format, $pointer, $pointerToEntryName, $sources);
+        return new JsonFileReader($filesystem, $format, $pointer, $pointerToColumnName, $sources);
     }
 
     /**
@@ -197,9 +197,9 @@ final class JsonFixtureContext
         Filesystem $filesystem = new NativeLocalFilesystem(),
         array $sources = [],
         ?string $pointer = null,
-        bool $pointerToEntryName = false,
+        bool $pointerToColumnName = false,
     ): JsonFileReader {
-        return new JsonFileReader($filesystem, $format, $pointer, $pointerToEntryName, $sources);
+        return new JsonFileReader($filesystem, $format, $pointer, $pointerToColumnName, $sources);
     }
 
     public static function source(string $fixture): SourceFile

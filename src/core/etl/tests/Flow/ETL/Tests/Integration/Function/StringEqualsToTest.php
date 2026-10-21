@@ -30,7 +30,7 @@ final class StringEqualsToTest extends FlowTestCase
                 ['text' => 'hello', 'compare' => null],
                 ['text' => '🚀🌟', 'compare' => '🚀🌟'],
             ]))
-            ->withEntry('equals', optional(ref('text')->stringEqualsTo(ref('compare'))))
+            ->withColumn('equals', optional(ref('text')->stringEqualsTo(ref('compare'))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

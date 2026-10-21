@@ -326,8 +326,8 @@ final class MapDefinitionTest extends FlowTestCase
 
         $renamed = $def->rename('new_data');
 
-        static::assertSame('new_data', $renamed->entry()->name());
-        static::assertSame('data', $def->entry()->name());
+        static::assertSame('new_data', $renamed->reference()->name());
+        static::assertSame('data', $def->reference()->name());
     }
 
     public function test_set_metadata(): void

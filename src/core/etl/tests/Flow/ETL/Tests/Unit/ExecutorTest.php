@@ -32,7 +32,7 @@ use Flow\ETL\Tests\Mother\NodeMother;
 use Flow\ETL\Tests\Mother\PhysicalPlanMother;
 use Flow\ETL\Tests\Mother\RowsMother;
 use Flow\ETL\Transformer\LimitTransformer;
-use Flow\ETL\Transformer\RenameEntryTransformer;
+use Flow\ETL\Transformer\RenameColumnTransformer;
 use Flow\Filesystem\Tests\Double\RejectingFilter;
 use RuntimeException;
 
@@ -95,9 +95,9 @@ final class ExecutorTest extends FlowTestCase
     public function test_a_single_pipeline_runs_its_segments_in_order(): void
     {
         $segments = new Segments(from_rows(RowsMother::sequentialIds(3)));
-        $segments->add(new RenameEntryTransformer('id', 'a'));
+        $segments->add(new RenameColumnTransformer('id', 'a'));
         $segments->add(new BatchingProcessor(2));
-        $segments->add(new RenameEntryTransformer('a', 'b'));
+        $segments->add(new RenameColumnTransformer('a', 'b'));
         $segments->add($loader = new SpyLoader());
 
         $batches = iterator_to_array((new Executor())->executePipeline(
@@ -111,10 +111,10 @@ final class ExecutorTest extends FlowTestCase
     public function test_an_input_chain_is_flattened_into_one_generator_chain(): void
     {
         $upstream = new Segments(from_rows(RowsMother::sequentialIds(5)));
-        $upstream->add(new RenameEntryTransformer('id', 'a'));
+        $upstream->add(new RenameColumnTransformer('id', 'a'));
         $upstream->add(new BatchingProcessor(2));
         $downstream = new Segments();
-        $downstream->add(new RenameEntryTransformer('a', 'b'));
+        $downstream->add(new RenameColumnTransformer('a', 'b'));
         $downstream->add(new LimitTransformer(3));
         $context = NodeMother::context();
 
@@ -229,7 +229,7 @@ final class ExecutorTest extends FlowTestCase
     {
         $segments = new Segments(from_rows(RowsMother::sequentialIds(3)));
         $segments->add(new BatchingProcessor(2));
-        $segments->add(new RenameEntryTransformer('id', 'b'));
+        $segments->add(new RenameColumnTransformer('id', 'b'));
 
         $batches = iterator_to_array((new Executor())->execute(
             new Described(new Pipeline(0, $segments, NodeMother::context()), schema(int_schema('b'))),

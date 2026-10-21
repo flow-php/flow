@@ -19,8 +19,8 @@ use function is_string;
 final readonly class Equal implements Comparison
 {
     public function __construct(
-        private string|Reference $entryLeft,
-        private string|Reference $entryRight,
+        private string|Reference $leftReference,
+        private string|Reference $rightReference,
     ) {}
 
     public function compare(Rows $left, Rows $right): array
@@ -54,7 +54,9 @@ final readonly class Equal implements Comparison
      */
     public function left(): array
     {
-        return [is_string($this->entryLeft) ? UnresolvedReference::init($this->entryLeft) : $this->entryLeft];
+        return [
+            is_string($this->leftReference) ? UnresolvedReference::init($this->leftReference) : $this->leftReference,
+        ];
     }
 
     /**
@@ -62,6 +64,8 @@ final readonly class Equal implements Comparison
      */
     public function right(): array
     {
-        return [is_string($this->entryRight) ? UnresolvedReference::init($this->entryRight) : $this->entryRight];
+        return [
+            is_string($this->rightReference) ? UnresolvedReference::init($this->rightReference) : $this->rightReference,
+        ];
     }
 }

@@ -22,7 +22,7 @@ final class SanitizeTest extends FlowTestCase
             ->read(from_array([
                 ['id' => 1],
             ]))
-            ->withEntry('sanitize', optional(ref('id')->sanitize(lit('1'))))
+            ->withColumn('sanitize', optional(ref('id')->sanitize(lit('1'))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -40,7 +40,7 @@ final class SanitizeTest extends FlowTestCase
             ->read(from_array([
                 ['key' => 'value'],
             ]))
-            ->withEntry('sanitize', ref('key')->sanitize(lit('*'), lit(2)))
+            ->withColumn('sanitize', ref('key')->sanitize(lit('*'), lit(2)))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -58,7 +58,7 @@ final class SanitizeTest extends FlowTestCase
             ->read(from_array([
                 ['key' => 'value'],
             ]))
-            ->withEntry('sanitize', ref('key')->sanitize(lit('*')))
+            ->withColumn('sanitize', ref('key')->sanitize(lit('*')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

@@ -21,7 +21,7 @@ final readonly class DerivedColumns
      */
     public function declare(Schema $input, Definition $derived): Schema
     {
-        $name = $derived->entry()->name();
+        $name = $derived->reference()->name();
 
         return $input->findDefinition($name) === null ? $input->add($derived) : $input->replace($name, $derived);
     }

@@ -23,7 +23,7 @@ final class CallUserFuncTest extends FlowTestCase
             ->read(from_array([
                 ['integers' => '1,2,3'],
             ]))
-            ->withEntry('integers', ref('integers')->call(
+            ->withColumn('integers', ref('integers')->call(
                 lit('explode'),
                 type_list(type_integer()),
                 ['separator' => ','],

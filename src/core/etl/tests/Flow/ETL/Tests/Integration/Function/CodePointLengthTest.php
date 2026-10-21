@@ -33,7 +33,7 @@ final class CodePointLengthTest extends FlowTestCase
                 ['text' => '👨‍👩‍👧‍👦'],
                 ['text' => '𝐇'],
             ]))
-            ->withEntry('code_point_length', optional(ref('text')->codePointLength()))
+            ->withColumn('code_point_length', optional(ref('text')->codePointLength()))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

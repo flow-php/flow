@@ -36,7 +36,7 @@ final class HTMLQuerySelectorAllTest extends TestCase
             ],
             df()
                 ->read(from_rows(array_to_rows([['html_raw' => $html]], schema(html_schema('html_raw')))))
-                ->withEntry('html', ref('html_raw')->htmlQuerySelectorAll('body div p'))
+                ->withColumn('html', ref('html_raw')->htmlQuerySelectorAll('body div p'))
                 ->drop('html_raw')
                 ->fetch()
                 ->toArray(),
@@ -63,7 +63,7 @@ final class HTMLQuerySelectorAllTest extends TestCase
             ],
             df()
                 ->read(from_rows(array_to_rows([['html_raw' => $html]], schema(html_schema('html_raw')))))
-                ->withEntry('html', ref('html_raw')->htmlQuerySelectorAll('body div span'))
+                ->withColumn('html', ref('html_raw')->htmlQuerySelectorAll('body div span'))
                 ->drop('html_raw')
                 ->fetch()
                 ->toArray(),

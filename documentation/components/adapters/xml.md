@@ -45,7 +45,7 @@ use function Flow\ETL\DSL\{data_frame, ref, to_output};
 
 data_frame()
     ->read(from_xml(__DIR__ . '/simple_items.xml')->withXMLNodePath('root/items/item'))
-    ->withEntry('id', ref('node')->xpath('id')->domElementValue())
+    ->withColumn('id', ref('node')->xpath('id')->domElementValue())
     ->write(to_output(truncate: false))
     ->run();
 ```

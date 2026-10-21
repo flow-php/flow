@@ -277,7 +277,7 @@ final class FlowToOpenAPIConverterTest extends TestCase
             [
                 'type' => 'object',
                 'properties' => [
-                    $definition->entry()->name() => $expected,
+                    $definition->reference()->name() => $expected,
                 ],
             ],
             $result,
@@ -681,7 +681,7 @@ final class FlowToOpenAPIConverterTest extends TestCase
             [
                 'type' => 'object',
                 'properties' => [
-                    $definition->entry()->name() => $expected,
+                    $definition->reference()->name() => $expected,
                 ],
             ],
             $result,

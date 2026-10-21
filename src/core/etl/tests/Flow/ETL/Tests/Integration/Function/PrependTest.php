@@ -21,7 +21,7 @@ final class PrependTest extends FlowTestCase
             ->read(from_array([
                 ['name' => 'Doe'],
             ]))
-            ->withEntry('greeting', ref('name')->prepend(lit('Mr. ')))
+            ->withColumn('greeting', ref('name')->prepend(lit('Mr. ')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

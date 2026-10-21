@@ -20,8 +20,8 @@ final readonly class ProjectionWalk
         $refs = new ReferencedColumns();
 
         return match (true) {
-            $node instanceof Node\Select => RequiredColumns::only(...References::init(...$node->entries)->names()),
-            $node instanceof Node\Drop => $above->without(...References::init(...$node->entries)->names()),
+            $node instanceof Node\Select => RequiredColumns::only(...References::init(...$node->columns)->names()),
+            $node instanceof Node\Drop => $above->without(...References::init(...$node->columns)->names()),
             // an unpack writes "name.*", known only once bound: keep the demand, add what it reads
             ($node instanceof Node\WithColumn || $node instanceof Node\ExpandColumn)
                 && $node->function instanceof UnpackResults

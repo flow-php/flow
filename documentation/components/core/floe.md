@@ -52,7 +52,7 @@ use function Flow\Floe\DSL\from_floe;
 
 data_frame()
     ->read(from_floe(__DIR__ . '/output.floe'))
-    ->withEntry('at', to_timezone(ref('at'), 'Europe/Warsaw'))
+    ->withColumn('at', to_timezone(ref('at'), 'Europe/Warsaw'))
     ->write(to_output())
     ->run();
 ```

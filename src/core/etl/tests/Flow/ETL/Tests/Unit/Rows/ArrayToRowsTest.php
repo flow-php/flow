@@ -20,7 +20,7 @@ use function Flow\Types\DSL\type_string;
 
 final class ArrayToRowsTest extends FlowTestCase
 {
-    public function test_building_array_to_rows_with_entry_that_is_list_of_strings(): void
+    public function test_building_array_to_rows_with_column_that_is_list_of_strings(): void
     {
         $rows = array_to_rows(
             [
@@ -40,7 +40,7 @@ final class ArrayToRowsTest extends FlowTestCase
         );
     }
 
-    public function test_building_array_to_rows_with_entry_that_is_list_of_strings_with_one_row(): void
+    public function test_building_array_to_rows_with_column_that_is_list_of_strings_with_one_row(): void
     {
         $rows = array_to_rows(
             [

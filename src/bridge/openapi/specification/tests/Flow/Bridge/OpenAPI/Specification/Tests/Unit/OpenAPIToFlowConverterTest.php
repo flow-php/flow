@@ -40,15 +40,15 @@ final class OpenAPIToFlowConverterTest extends TestCase
 
         static::assertCount(3, $convertedSchema->definitions());
         $definitions = array_values($convertedSchema->definitions());
-        static::assertSame('id', $definitions[0]->entry()->name());
+        static::assertSame('id', $definitions[0]->reference()->name());
         static::assertSame(IntegerType::class, $definitions[0]->type()::class);
         static::assertFalse($definitions[0]->isNullable());
 
-        static::assertSame('name', $definitions[1]->entry()->name());
+        static::assertSame('name', $definitions[1]->reference()->name());
         static::assertSame(StringType::class, $definitions[1]->type()::class);
         static::assertTrue($definitions[1]->isNullable());
 
-        static::assertSame('active', $definitions[2]->entry()->name());
+        static::assertSame('active', $definitions[2]->reference()->name());
         static::assertSame(BooleanType::class, $definitions[2]->type()::class);
         static::assertFalse($definitions[2]->isNullable());
     }
@@ -67,8 +67,8 @@ final class OpenAPIToFlowConverterTest extends TestCase
 
         static::assertCount(2, $schema->definitions());
         $definitions = array_values($schema->definitions());
-        static::assertSame('id', $definitions[0]->entry()->name());
-        static::assertSame('name', $definitions[1]->entry()->name());
+        static::assertSame('id', $definitions[0]->reference()->name());
+        static::assertSame('name', $definitions[1]->reference()->name());
     }
 
     public function test_from_openapi_throws_exception_for_invalid_property_spec(): void
@@ -167,7 +167,7 @@ final class OpenAPIToFlowConverterTest extends TestCase
         static::assertCount(1, $schema->definitions());
         $definitions = array_values($schema->definitions());
         $definition = $definitions[0];
-        static::assertSame('tags', $definition->entry()->name());
+        static::assertSame('tags', $definition->reference()->name());
         static::assertSame(ListType::class, $definition->type()::class);
         static::assertFalse($definition->isNullable());
     }
@@ -189,11 +189,11 @@ final class OpenAPIToFlowConverterTest extends TestCase
 
         static::assertCount(4, $schema->definitions());
         $definitions = array_values($schema->definitions());
-        static::assertSame('id', $definitions[0]->entry()->name());
+        static::assertSame('id', $definitions[0]->reference()->name());
         static::assertSame(IntegerType::class, $definitions[0]->type()::class);
         static::assertFalse($definitions[0]->isNullable());
 
-        static::assertSame('name', $definitions[1]->entry()->name());
+        static::assertSame('name', $definitions[1]->reference()->name());
         static::assertSame(StringType::class, $definitions[1]->type()::class);
         static::assertTrue($definitions[1]->isNullable());
     }
@@ -223,27 +223,27 @@ final class OpenAPIToFlowConverterTest extends TestCase
         static::assertCount(5, $schema->definitions());
         $definitions = array_values($schema->definitions());
 
-        static::assertSame('id', $definitions[0]->entry()->name());
+        static::assertSame('id', $definitions[0]->reference()->name());
         static::assertSame(IntegerType::class, $definitions[0]->type()::class);
         static::assertFalse($definitions[0]->isNullable());
 
-        static::assertSame('name', $definitions[1]->entry()->name());
+        static::assertSame('name', $definitions[1]->reference()->name());
         static::assertSame(StringType::class, $definitions[1]->type()::class);
         static::assertTrue($definitions[1]->isNullable());
         static::assertTrue($definitions[1]->metadata()->has('description'));
         static::assertSame('User name', $definitions[1]->metadata()->get('description'));
 
-        static::assertSame('active', $definitions[2]->entry()->name());
+        static::assertSame('active', $definitions[2]->reference()->name());
         static::assertSame(BooleanType::class, $definitions[2]->type()::class);
         static::assertFalse($definitions[2]->isNullable());
         static::assertTrue($definitions[2]->metadata()->has('example'));
         static::assertTrue($definitions[2]->metadata()->get('example'));
 
-        static::assertSame('tags', $definitions[3]->entry()->name());
+        static::assertSame('tags', $definitions[3]->reference()->name());
         static::assertSame(ListType::class, $definitions[3]->type()::class);
         static::assertTrue($definitions[3]->isNullable());
 
-        static::assertSame('address', $definitions[4]->entry()->name());
+        static::assertSame('address', $definitions[4]->reference()->name());
         static::assertSame(StructureType::class, $definitions[4]->type()::class);
         static::assertFalse($definitions[4]->isNullable());
     }
@@ -281,7 +281,7 @@ final class OpenAPIToFlowConverterTest extends TestCase
         static::assertCount(1, $schema->definitions());
         $definitions = array_values($schema->definitions());
         $definition = $definitions[0];
-        static::assertSame('name', $definition->entry()->name());
+        static::assertSame('name', $definition->reference()->name());
         static::assertTrue($definition->metadata()->has('description'));
         static::assertSame('User name', $definition->metadata()->get('description'));
         static::assertTrue($definition->metadata()->has('example'));
@@ -310,7 +310,7 @@ final class OpenAPIToFlowConverterTest extends TestCase
         static::assertCount(1, $schema->definitions());
         $definitions = array_values($schema->definitions());
         $definition = $definitions[0];
-        static::assertSame('address', $definition->entry()->name());
+        static::assertSame('address', $definition->reference()->name());
         static::assertSame(StructureType::class, $definition->type()::class);
         static::assertFalse($definition->isNullable());
     }
@@ -334,7 +334,7 @@ final class OpenAPIToFlowConverterTest extends TestCase
         static::assertCount(1, $schema->definitions());
         $definitions = array_values($schema->definitions());
         $definition = $definitions[0];
-        static::assertSame('metadata', $definition->entry()->name());
+        static::assertSame('metadata', $definition->reference()->name());
         static::assertSame(MapType::class, $definition->type()::class);
         static::assertFalse($definition->isNullable());
     }

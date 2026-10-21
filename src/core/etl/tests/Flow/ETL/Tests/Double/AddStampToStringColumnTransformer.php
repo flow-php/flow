@@ -14,10 +14,10 @@ use function Flow\ETL\DSL\array_to_rows;
 use function Flow\Types\DSL\type_string;
 use function sprintf;
 
-final readonly class AddStampToStringEntryTransformer implements Transformer
+final readonly class AddStampToStringColumnTransformer implements Transformer
 {
     public function __construct(
-        private string $entryName,
+        private string $columnName,
         private string $stamp,
         private string $divider,
     ) {}
@@ -27,9 +27,9 @@ final readonly class AddStampToStringEntryTransformer implements Transformer
         return new BoundStep($this, $input);
     }
 
-    public static function divideBySemicolon(string $entryName, string $stamp): self
+    public static function divideBySemicolon(string $columnName, string $stamp): self
     {
-        return new self($entryName, $stamp, ':');
+        return new self($columnName, $stamp, ':');
     }
 
     public function transform(Rows $rows, FlowContext $context): Rows
@@ -39,9 +39,9 @@ final readonly class AddStampToStringEntryTransformer implements Transformer
         for ($i = 0; $i < $rows->count(); $i++) {
             $stamped[] = [
                 ...$rows->values($i),
-                $this->entryName => sprintf(
+                $this->columnName => sprintf(
                     '%s%s%s',
-                    type_string()->assert($rows->column($this->entryName)->value($i)),
+                    type_string()->assert($rows->column($this->columnName)->value($i)),
                     $this->divider,
                     $this->stamp,
                 ),

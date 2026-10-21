@@ -75,7 +75,7 @@ final class RowsMother
     /**
      * One row whose "array_entry" structure nests a structure: {id, status, enabled, array: {foo}}.
      */
-    public static function arrayEntry(): Rows
+    public static function arrayColumn(): Rows
     {
         return array_to_rows([[
             'array_entry' => ['id' => 1, 'status' => 'PENDING', 'enabled' => true, 'array' => ['foo' => 'bar']],

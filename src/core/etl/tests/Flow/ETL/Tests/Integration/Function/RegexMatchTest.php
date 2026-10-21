@@ -22,7 +22,7 @@ final class RegexMatchTest extends FlowTestCase
             ->read(from_array([
                 ['key' => 'value'],
             ]))
-            ->withEntry('preg_match', ref('key')->regexMatch(lit('/a/')))
+            ->withColumn('preg_match', ref('key')->regexMatch(lit('/a/')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -40,7 +40,7 @@ final class RegexMatchTest extends FlowTestCase
             ->read(from_array([
                 ['id' => 1],
             ]))
-            ->withEntry('preg_match', optional(ref('id')->regexMatch(lit('1'))))
+            ->withColumn('preg_match', optional(ref('id')->regexMatch(lit('1'))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -58,7 +58,7 @@ final class RegexMatchTest extends FlowTestCase
             ->read(from_array([
                 ['id' => '1'],
             ]))
-            ->withEntry('preg_match', optional(ref('id')->regexMatch(lit(1))))
+            ->withColumn('preg_match', optional(ref('id')->regexMatch(lit(1))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

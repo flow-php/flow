@@ -22,7 +22,7 @@ final class SplitTest extends FlowTestCase
             ->read(from_array([
                 ['key' => '1-2'],
             ]))
-            ->withEntry('split', split(ref('key'), '-'))
+            ->withColumn('split', split(ref('key'), '-'))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -40,7 +40,7 @@ final class SplitTest extends FlowTestCase
             ->read(from_array([
                 ['key' => 1],
             ]))
-            ->withEntry('split', optional(split(ref('key'), '-')))
+            ->withColumn('split', optional(split(ref('key'), '-')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -58,7 +58,7 @@ final class SplitTest extends FlowTestCase
             ->read(from_array([
                 ['key' => '1'],
             ]))
-            ->withEntry('split', split(ref('key'), '-'))
+            ->withColumn('split', split(ref('key'), '-'))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

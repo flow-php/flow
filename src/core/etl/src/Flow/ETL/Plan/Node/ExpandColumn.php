@@ -18,12 +18,12 @@ final readonly class ExpandColumn implements Node
     public RequiredColumns $carries;
 
     /**
-     * @param Definition<mixed>|string $entry
+     * @param Definition<mixed>|string $column
      * @param null|RequiredColumns $carries what the consumers above read; null means every column
      */
     public function __construct(
         private Node $input,
-        public string|Definition $entry,
+        public string|Definition $column,
         public ScalarFunction $function,
         ?RequiredColumns $carries = null,
     ) {
@@ -42,12 +42,12 @@ final readonly class ExpandColumn implements Node
     {
         return $children[0] === $this->input
             ? $this
-            : new self($children[0], $this->entry, $this->function, $this->carries);
+            : new self($children[0], $this->column, $this->function, $this->carries);
     }
 
     public function withCarries(RequiredColumns $carries): self
     {
-        return new self($this->input, $this->entry, $this->function, $carries);
+        return new self($this->input, $this->column, $this->function, $carries);
     }
 
     public function rowCount(): RowCount
@@ -72,6 +72,6 @@ final readonly class ExpandColumn implements Node
 
     public function name(): string
     {
-        return $this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry;
+        return $this->column instanceof Definition ? $this->column->reference()->name() : $this->column;
     }
 }

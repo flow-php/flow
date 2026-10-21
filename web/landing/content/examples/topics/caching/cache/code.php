@@ -38,9 +38,9 @@ data_frame(config_builder()->cacheDir(__DIR__ . '/output/cache'))
         )
     )
     ->cache('github_api')
-    ->withEntry('unpacked', ref('response_body')->jsonDecode())
+    ->withColumn('unpacked', ref('response_body')->jsonDecode())
     ->select('unpacked')
-    ->withEntry('unpacked', ref('unpacked')->unpack(schema(
+    ->withColumn('unpacked', ref('unpacked')->unpack(schema(
         str_schema('name'),
         str_schema('html_url'),
         str_schema('blog'),

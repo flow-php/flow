@@ -291,8 +291,8 @@ final class DateTimeDefinitionTest extends FlowTestCase
 
         $renamed = $def->rename('updated_at');
 
-        static::assertSame('updated_at', $renamed->entry()->name());
-        static::assertSame('created_at', $def->entry()->name());
+        static::assertSame('updated_at', $renamed->reference()->name());
+        static::assertSame('created_at', $def->reference()->name());
     }
 
     public function test_set_metadata(): void

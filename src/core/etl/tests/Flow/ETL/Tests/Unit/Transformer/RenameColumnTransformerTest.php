@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Transformer;
 
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\ETL\Transformer\RenameEntryTransformer;
+use Flow\ETL\Transformer\RenameColumnTransformer;
 
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_schema;
@@ -20,11 +20,11 @@ use function Flow\ETL\DSL\string_schema;
 use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_json;
 
-final class RenameEntryTransformerTest extends FlowTestCase
+final class RenameColumnTransformerTest extends FlowTestCase
 {
     public function test_renaming_keeps_the_column_position_and_its_values(): void
     {
-        $renamed = (new RenameEntryTransformer('a', 'x'))->transform(
+        $renamed = (new RenameColumnTransformer('a', 'x'))->transform(
             array_to_rows([['a' => 1, 'b' => 2]], schema(integer_schema('a'), integer_schema('b'))),
             flow_context(config()),
         );
@@ -37,7 +37,7 @@ final class RenameEntryTransformerTest extends FlowTestCase
     {
         static::assertEquals(
             schema(integer_schema('new_int'), string_schema('status')),
-            (new RenameEntryTransformer('old_int', 'new_int'))->bind(schema(
+            (new RenameColumnTransformer('old_int', 'new_int'))->bind(schema(
                 integer_schema('old_int'),
                 string_schema('status'),
             ))->output,
@@ -48,14 +48,14 @@ final class RenameEntryTransformerTest extends FlowTestCase
     {
         $input = schema(integer_schema('id'));
 
-        static::assertEquals($input, (new RenameEntryTransformer('id', 'id'))->bind($input)->output);
+        static::assertEquals($input, (new RenameColumnTransformer('id', 'id'))->bind($input)->output);
     }
 
     public function test_renaming_entries(): void
     {
         $context = flow_context(config());
 
-        $rows = (new RenameEntryTransformer('old_int', 'new_int'))->transform(
+        $rows = (new RenameColumnTransformer('old_int', 'new_int'))->transform(
             array_to_rows(
                 [[
                     'old_int' => 1000,
@@ -100,7 +100,7 @@ final class RenameEntryTransformerTest extends FlowTestCase
                     string_schema('nothing', nullable: true),
                 ),
             ),
-            (new RenameEntryTransformer('null', 'nothing'))->transform($rows, $context),
+            (new RenameColumnTransformer('null', 'nothing'))->transform($rows, $context),
         );
     }
 
@@ -108,7 +108,7 @@ final class RenameEntryTransformerTest extends FlowTestCase
     {
         $metadata = schema_metadata(['description' => 'test metadata', 'priority' => 1]);
 
-        $outputRows = (new RenameEntryTransformer('old_name', 'new_name'))->transform(array_to_rows([[
+        $outputRows = (new RenameColumnTransformer('old_name', 'new_name'))->transform(array_to_rows([[
             'old_name' => 'test value',
         ]], schema(string_schema('old_name', metadata: $metadata))), flow_context(config()));
 
@@ -120,7 +120,7 @@ final class RenameEntryTransformerTest extends FlowTestCase
     {
         $inputRows = array_to_rows([['name' => 'value']], schema(string_schema('name')));
 
-        static::assertSame($inputRows, (new RenameEntryTransformer('name', 'name'))->transform(
+        static::assertSame($inputRows, (new RenameColumnTransformer('name', 'name'))->transform(
             $inputRows,
             flow_context(config()),
         ));

@@ -28,7 +28,7 @@ data_frame()
         ],
         schema(str_schema('string')),
     ))
-    ->withEntry(
+    ->withColumn(
         'string',
         match_cases(
             [

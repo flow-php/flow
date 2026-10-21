@@ -40,7 +40,7 @@ final readonly class KeyValues
         $comparable = new ComparableValues();
 
         foreach ($this->refs as $ref) {
-            $column = $rows->column($rows->schema()->get($ref)->entry()->name());
+            $column = $rows->column($rows->schema()->get($ref)->reference()->name());
 
             // @mago-ignore analysis:mixed-assignment
             foreach ($comparable->equality($column) as $i => $value) {

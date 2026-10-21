@@ -30,7 +30,7 @@ final class IsEmptyTest extends FlowTestCase
                 ['text' => 'a'],
                 ['text' => '!@#$%'],
             ]))
-            ->withEntry('is_empty', optional(ref('text')->isEmpty()))
+            ->withColumn('is_empty', optional(ref('text')->isEmpty()))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

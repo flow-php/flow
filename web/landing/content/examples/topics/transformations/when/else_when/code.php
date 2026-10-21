@@ -14,7 +14,7 @@ data_frame()
         ['id' => 4, 'score' => 30, 'email' => 'user04@flow-php.com'],
     ]))
     ->collect()
-    ->withEntry(
+    ->withColumn(
         'grade',
         when(
             ref('score')->greaterThanEqual(lit(90)),

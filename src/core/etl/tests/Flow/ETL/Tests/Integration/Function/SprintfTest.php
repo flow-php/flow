@@ -22,7 +22,7 @@ final class SprintfTest extends FlowTestCase
             ->read(from_array([
                 ['key' => 'test %s'],
             ]))
-            ->withEntry('sprintf', ref('key')->sprintf(lit('value')))
+            ->withColumn('sprintf', ref('key')->sprintf(lit('value')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -40,7 +40,7 @@ final class SprintfTest extends FlowTestCase
             ->read(from_array([
                 ['id' => 1],
             ]))
-            ->withEntry('sprintf', optional(ref('id')->sprintf(lit('1'))))
+            ->withColumn('sprintf', optional(ref('id')->sprintf(lit('1'))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -58,7 +58,7 @@ final class SprintfTest extends FlowTestCase
             ->read(from_array([
                 ['id' => '1'],
             ]))
-            ->withEntry('sprintf', optional(ref('id')->sprintf(lit(null))))
+            ->withColumn('sprintf', optional(ref('id')->sprintf(lit(null))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

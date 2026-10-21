@@ -48,7 +48,7 @@ use function substr;
 /**
  * Maps between Flow ETL types and PostgreSQL types.
  */
-final readonly class EntryTypesMap
+final readonly class TypesMap
 {
     /**
      * Default mapping of Flow type classes to PostgreSQL value types.

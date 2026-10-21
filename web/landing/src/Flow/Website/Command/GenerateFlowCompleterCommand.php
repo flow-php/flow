@@ -59,7 +59,7 @@ final class GenerateFlowCompleterCommand extends Command
             ->read(from_json($dslJsonPath))
             ->collect()
             ->filter(ref('return_type')->isNotNull())
-            ->withEntry(
+            ->withColumn(
                 'has_flow_return',
                 ref('return_type')
                     ->onEach(

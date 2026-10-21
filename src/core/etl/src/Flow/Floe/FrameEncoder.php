@@ -35,7 +35,7 @@ final readonly class FrameEncoder
         $bufferCount = 0;
 
         foreach ($rows->schema()->definitions() as $definition) {
-            $column = $rows->column($definition->entry()->name());
+            $column = $rows->column($definition->reference()->name());
             $buffers = $column->encode();
 
             $columnNodes = $this->layout->nodeCount($definition->type()) === 1

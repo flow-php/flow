@@ -21,7 +21,7 @@ use Flow\ETL\Tests\Double\RecordingFileExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\NodeMother;
 use Flow\ETL\Tests\Mother\PartitionedSourceMother;
-use Flow\ETL\WithEntry;
+use Flow\ETL\WithColumn;
 use Flow\Filesystem\Path\Filter\Filters;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -251,13 +251,13 @@ final class PushFilterIntoSourceTest extends FlowTestCase
         static::assertEquals(new OnlyFiles(), $extractor->scans[0]->pathFilter);
     }
 
-    public function test_a_with_entry_redefining_the_partition_column_blocks_the_push(): void
+    public function test_a_with_column_redefining_the_partition_column_blocks_the_push(): void
     {
         $extractor = PartitionedSourceMother::yearMonth();
 
         df()
             ->read($extractor)
-            ->withEntry('year', lit(2023))
+            ->withColumn('year', lit(2023))
             ->filter(ref('year')->equals(lit(2023)))
             ->fetch();
 
@@ -270,7 +270,7 @@ final class PushFilterIntoSourceTest extends FlowTestCase
 
         $rows = df()
             ->read($extractor)
-            ->duplicateRow(lit(true), new WithEntry('year', lit(2023)))
+            ->duplicateRow(lit(true), new WithColumn('year', lit(2023)))
             ->filter(ref('year')->equals(lit(2023)))
             ->fetch();
 
@@ -285,7 +285,7 @@ final class PushFilterIntoSourceTest extends FlowTestCase
 
         df()
             ->read($extractor)
-            ->duplicateRow(lit(true), new WithEntry('copy', lit(1)))
+            ->duplicateRow(lit(true), new WithColumn('copy', lit(1)))
             ->filter(ref('year')->equals(lit(2023)))
             ->fetch();
 
@@ -464,7 +464,7 @@ final class PushFilterIntoSourceTest extends FlowTestCase
 
         $rows = df()
             ->read($extractor)
-            ->withEntry('y', ref('year'))
+            ->withColumn('y', ref('year'))
             ->filter(ref('y')->equals(lit(2023)))
             ->fetch();
 
@@ -481,7 +481,7 @@ final class PushFilterIntoSourceTest extends FlowTestCase
 
         df()
             ->read($extractor)
-            ->withEntry('v', ref('value'))
+            ->withColumn('v', ref('value'))
             ->filter(ref('v')->equals($literal = lit('a')))
             ->fetch();
 

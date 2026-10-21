@@ -208,14 +208,16 @@ final readonly class FilterTranslator
             $strict,
         );
 
-        return $value === null ? null : new Comparison(parquet_column($definition->entry()->name()), $operator, $value);
+        return $value === null
+            ? null
+            : new Comparison(parquet_column($definition->reference()->name()), $operator, $value);
     }
 
     private function isNull(FunctionTree $reference, Schema $body): ?Filter
     {
         $definition = $this->definition($reference, $body);
 
-        return $definition === null ? null : parquet_column($definition->entry()->name())->isNull();
+        return $definition === null ? null : parquet_column($definition->reference()->name())->isNull();
     }
 
     private function in(FunctionTree $haystack, FunctionTree $needle, Schema $body): ?Filter
@@ -239,7 +241,7 @@ final readonly class FilterTranslator
             false,
         ), $present);
 
-        return in_array(null, $values, true) ? null : parquet_column($definition->entry()->name())->in($values);
+        return in_array(null, $values, true) ? null : parquet_column($definition->reference()->name())->in($values);
     }
 
     private function startsWith(FunctionTree $haystack, FunctionTree $needle, Schema $body): ?Filter
@@ -249,7 +251,7 @@ final readonly class FilterTranslator
         $prefix = $needle instanceof Literal ? $needle->value() : null;
 
         return $definition !== null && type_bare($definition->type()) instanceof StringType && is_string($prefix)
-            ? parquet_column($definition->entry()->name())->startsWith($prefix)
+            ? parquet_column($definition->reference()->name())->startsWith($prefix)
             : null;
     }
 

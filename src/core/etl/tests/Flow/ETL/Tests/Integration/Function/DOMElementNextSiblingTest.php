@@ -31,9 +31,9 @@ final class DOMElementNextSiblingTest extends FlowTestCase
                     '<article><section><h1>User Name</h1></section>01</article>',
                 ),
             ]], schema(html_element_schema('html_element')))))
-            ->withEntry('user_details', ref('html_element')->htmlQuerySelector('section'))
-            ->withEntry('user_name', ref('user_details')->htmlQuerySelector('h1')->domElementValue())
-            ->withEntry('user_id', optional(ref('user_details')->domElementNextSibling()->domElementValue()))
+            ->withColumn('user_details', ref('html_element')->htmlQuerySelector('section'))
+            ->withColumn('user_name', ref('user_details')->htmlQuerySelector('h1')->domElementValue())
+            ->withColumn('user_id', optional(ref('user_details')->domElementNextSibling()->domElementValue()))
             ->select('user_name', 'user_id')
             ->fetch();
 
@@ -57,9 +57,9 @@ final class DOMElementNextSiblingTest extends FlowTestCase
                     '<article><section><h1>User Name</h1></section>01</article>',
                 ),
             ]], schema(html_element_schema('html_element')))))
-            ->withEntry('user_details', ref('html_element')->htmlQuerySelector('section'))
-            ->withEntry('user_name', ref('user_details')->htmlQuerySelector('h1')->domElementValue())
-            ->withEntry('user_id', optional(ref('user_details')->domElementNextSibling()->domElementValue()))
+            ->withColumn('user_details', ref('html_element')->htmlQuerySelector('section'))
+            ->withColumn('user_name', ref('user_details')->htmlQuerySelector('h1')->domElementValue())
+            ->withColumn('user_id', optional(ref('user_details')->domElementNextSibling()->domElementValue()))
             ->select('user_name', 'user_id')
             ->fetch();
 
@@ -82,8 +82,8 @@ final class DOMElementNextSiblingTest extends FlowTestCase
         // a batch stores an element's own markup, so siblings are reached from the document it belongs to
         $rows = df()
             ->read(from_rows(array_to_rows([['xml' => $dom]], schema(xml_schema('xml')))))
-            ->withEntry('user_name', ref('xml')->xpath('/user/name')->arrayGet('0')->domElementValue())
-            ->withEntry(
+            ->withColumn('user_name', ref('xml')->xpath('/user/name')->arrayGet('0')->domElementValue())
+            ->withColumn(
                 'user_id',
                 ref('xml')->xpath('/user/name')->arrayGet('0')->domElementNextSibling()->domElementValue(),
             )
@@ -108,7 +108,7 @@ final class DOMElementNextSiblingTest extends FlowTestCase
 
         $rows = df()
             ->read(from_rows(array_to_rows([['xml' => $dom]], schema(xml_schema('xml')))))
-            ->withEntry('sibling', ref('xml')->xpath('/user/name')->arrayGet('0')->domElementNextSibling())
+            ->withColumn('sibling', ref('xml')->xpath('/user/name')->arrayGet('0')->domElementNextSibling())
             ->select('sibling')
             ->fetch();
 

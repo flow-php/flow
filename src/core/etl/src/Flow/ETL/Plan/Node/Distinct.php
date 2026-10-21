@@ -18,16 +18,16 @@ use Flow\ETL\Row\Reference;
 final readonly class Distinct implements Node
 {
     /**
-     * @param list<Reference|string> $entries
+     * @param list<Reference|string> $columns
      *
      * @throws InvalidArgumentException
      */
     public function __construct(
         private Node $input,
-        public array $entries,
+        public array $columns,
     ) {
-        if ($this->entries === []) {
-            throw new InvalidArgumentException('DropDuplicatesTransformer requires at least one entry');
+        if ($this->columns === []) {
+            throw new InvalidArgumentException('DropDuplicatesTransformer requires at least one column');
         }
     }
 
@@ -41,7 +41,7 @@ final readonly class Distinct implements Node
 
     public function withChildren(array $children): self
     {
-        return $children[0] === $this->input ? $this : new self($children[0], $this->entries);
+        return $children[0] === $this->input ? $this : new self($children[0], $this->columns);
     }
 
     public function rowCount(): RowCount

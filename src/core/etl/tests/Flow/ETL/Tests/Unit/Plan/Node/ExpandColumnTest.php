@@ -55,7 +55,7 @@ final class ExpandColumnTest extends FlowTestCase
         ))->withChildren([$other]);
 
         static::assertSame([$other], $rebuilt->children());
-        static::assertSame('item', $rebuilt->entry);
+        static::assertSame('item', $rebuilt->column);
         static::assertSame($function, $rebuilt->function);
         static::assertEquals(RequiredColumns::only('item'), $rebuilt->carries);
     }

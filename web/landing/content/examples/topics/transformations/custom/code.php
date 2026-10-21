@@ -23,7 +23,7 @@ data_frame()
         new class implements Transformation {
             public function transform(Flow\ETL\DataFrame $dataFrame) : Flow\ETL\DataFrame
             {
-                return $dataFrame->withEntry('name', concat_ws(lit(' '), ref('first_name'), ref('last_name')));
+                return $dataFrame->withColumn('name', concat_ws(lit(' '), ref('first_name'), ref('last_name')));
             }
         }
     )

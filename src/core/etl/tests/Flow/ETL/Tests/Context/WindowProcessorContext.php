@@ -16,11 +16,11 @@ final class WindowProcessorContext
     /**
      * Rows the processor produced, as arrays.
      *
-     * @param Definition<mixed>|string $entry
+     * @param Definition<mixed>|string $column
      *
      * @return list<Rows>
      */
-    public static function batches(string|Definition $entry, WindowFunction $function, Rows $rows): array
+    public static function batches(string|Definition $column, WindowFunction $function, Rows $rows): array
     {
         $input = (static function () use ($rows) {
             yield $rows;
@@ -28,7 +28,7 @@ final class WindowProcessorContext
 
         $batches = [];
 
-        foreach ((new WindowProcessor($entry, $function))->process($input, flow_context()) as $batch) {
+        foreach ((new WindowProcessor($column, $function))->process($input, flow_context()) as $batch) {
             $batches[] = $batch;
         }
 
@@ -36,18 +36,18 @@ final class WindowProcessorContext
     }
 
     /**
-     * Values the processor wrote into $entry, in partition-processing order.
+     * Values the processor wrote into $column, in partition-processing order.
      *
-     * @param Definition<mixed>|string $entry
+     * @param Definition<mixed>|string $column
      *
      * @return list<mixed>
      */
-    public static function values(string|Definition $entry, WindowFunction $function, Rows $rows): array
+    public static function values(string|Definition $column, WindowFunction $function, Rows $rows): array
     {
-        $name = $entry instanceof Definition ? $entry->entry()->name() : $entry;
+        $name = $column instanceof Definition ? $column->reference()->name() : $column;
         $values = [];
 
-        foreach (self::batches($entry, $function, $rows) as $batch) {
+        foreach (self::batches($column, $function, $rows) as $batch) {
             foreach ($batch->toArray() as $row) {
                 $values[] = $row[$name];
             }

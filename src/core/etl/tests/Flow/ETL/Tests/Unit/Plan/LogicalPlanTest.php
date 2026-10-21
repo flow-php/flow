@@ -131,7 +131,7 @@ final class LogicalPlanTest extends FlowTestCase
 
         $spineSelect = $rewritten->root->children()[0]->children()[0]->children()[0];
         static::assertInstanceOf(Node\Select::class, $spineSelect);
-        static::assertSame(['name'], $spineSelect->entries);
+        static::assertSame(['name'], $spineSelect->columns);
         static::assertSame($spineSelect, $rewritten->sinks()->all()[0]->children()[0]);
     }
 

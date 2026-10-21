@@ -186,7 +186,7 @@ Write each row to the sheet named by its `category` value:
 <?php
 
 $loader = to_excel('path/to/output.xlsx')
-    ->withSheetNameFromEntry('category');
+    ->withSheetNameFromColumn('category');
 
 data_frame()
     ->read($extractor)

@@ -21,7 +21,7 @@ final class OnEachTest extends FlowTestCase
                 ['array' => ['a' => 1, 'b' => 2, 'c' => 3, 'd' => 4, 'e' => 5]],
                 ['array' => ['f' => 1, 'g' => 2.3, 'h' => 3, 'i' => 4, 'j' => null]],
             ]))
-            ->withEntry('array', ref('array')->onEach(optional(ref('element')->cast(type_string()))))
+            ->withColumn('array', ref('array')->onEach(optional(ref('element')->cast(type_string()))))
             ->fetch()
             ->toArray();
 

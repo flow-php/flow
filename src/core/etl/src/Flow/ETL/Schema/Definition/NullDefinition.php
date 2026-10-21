@@ -50,14 +50,14 @@ final readonly class NullDefinition implements Definition
         return new self($this->ref, $this->metadata->add($key, $value));
     }
 
-    public function entry(): Reference
+    public function reference(): Reference
     {
         return $this->ref;
     }
 
     public function isCompatible(Definition $definition): bool
     {
-        if (!$this->ref->is($definition->entry())) {
+        if (!$this->ref->is($definition->reference())) {
             return false;
         }
 
@@ -94,11 +94,11 @@ final readonly class NullDefinition implements Definition
 
     public function merge(Definition $definition): Definition
     {
-        if (!$this->ref->is($definition->entry())) {
+        if (!$this->ref->is($definition->reference())) {
             throw new RuntimeException(sprintf(
                 'Cannot merge different definitions, %s and %s',
                 $this->ref->name(),
-                $definition->entry()->name(),
+                $definition->reference()->name(),
             ));
         }
 

@@ -36,7 +36,7 @@ final class CastTest extends FlowTestCase
             ], schema(structure_schema('record', type_structure([
                 'deleteTime' => structure_element('deleteTime', type_string(), optional: true),
             ])))))
-            ->withEntry('delete_time', cast(array_get(ref('record'), '?deleteTime'), type_optional(type_datetime())))
+            ->withColumn('delete_time', cast(array_get(ref('record'), '?deleteTime'), type_optional(type_datetime())))
             ->drop('record')
             ->fetch();
 
@@ -53,7 +53,7 @@ final class CastTest extends FlowTestCase
             ->read(from_array([
                 ['date' => new DateTimeImmutable('2023-01-01')],
             ]))
-            ->withEntry('date', ref('date')->cast('string'))
+            ->withColumn('date', ref('date')->cast('string'))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -69,7 +69,7 @@ final class CastTest extends FlowTestCase
     {
         $rows = df()
             ->read(from_array([['a' => '[1,2,3]']]))
-            ->withEntry('b', ref('a')->cast('array'))
+            ->withColumn('b', ref('a')->cast('array'))
             ->fetch();
 
         // Cast declares type_array (a json column) and the bind enforces that declaration.
@@ -88,7 +88,7 @@ final class CastTest extends FlowTestCase
                 ->read(from_array([
                     ['array' => []],
                 ]))
-                ->withEntry('list_int', ref('array')->cast(type_optional(type_list(type_integer()))))
+                ->withColumn('list_int', ref('array')->cast(type_optional(type_list(type_integer()))))
                 ->drop('array')
                 ->fetch()
                 ->column('list_int')

@@ -11,17 +11,17 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
-use Flow\ETL\Transformer\Rename\RenameEntryStrategy;
+use Flow\ETL\Transformer\Rename\RenameColumnStrategy;
 use Throwable;
 
-final readonly class RenameEachEntryTransformer implements Transformer
+final readonly class RenameEachColumnTransformer implements Transformer
 {
     /**
-     * @var array<RenameEntryStrategy>
+     * @var array<RenameColumnStrategy>
      */
     private array $strategies;
 
-    public function __construct(RenameEntryStrategy ...$strategies)
+    public function __construct(RenameColumnStrategy ...$strategies)
     {
         if ([] === $strategies) {
             throw new InvalidArgumentException('At least one strategy must be provided.');
@@ -52,7 +52,7 @@ final readonly class RenameEachEntryTransformer implements Transformer
             // strategies chain, so a later one renames what an earlier one produced
             foreach ($this->strategies as $strategy) {
                 foreach ($strategy->renames($schema) as $from => $to) {
-                    // a numeric entry name arrives as int - PHP casts numeric-string array keys
+                    // a numeric column name arrives as int - PHP casts numeric-string array keys
                     $schema = $schema->rename((string) $from, $to);
                 }
             }

@@ -62,7 +62,7 @@ final class ArrayGetCollectionTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('ArrayGetCollection function failed to evaluate parameters.');
 
-        $rows = RowsMother::arrayEntry();
+        $rows = RowsMother::arrayColumn();
 
         (new FunctionContext(flow_context()))->eval(
             array_get_collection(ref('array_entry'), ['id']),

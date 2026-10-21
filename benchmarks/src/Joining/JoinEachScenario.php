@@ -24,7 +24,7 @@ final readonly class JoinEachScenario
         data_frame(BenchmarkConfig::builder())
             ->read(from_floe(Datasets::orders($this->rows)->floe()))
             ->batchSize(1000)
-            ->withEntry('seller_id', ref('seller_id')->cast(type_string()))
+            ->withColumn('seller_id', ref('seller_id')->cast(type_string()))
             ->joinEach(new SellersDataFrameFactory(Datasets::sellers($this->rows)->parquet()), join_on([
                 'seller_id' => 'id',
             ], join_prefix: 'sellers_'))

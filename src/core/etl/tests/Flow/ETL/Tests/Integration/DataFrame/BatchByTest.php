@@ -137,7 +137,7 @@ final class BatchByTest extends FlowIntegrationTestCase
                 ['order_id' => 2, 'amount' => 300],
             ]))
             ->batchBy('order_id')
-            ->withEntry('total', ref('amount')->multiply(lit(2)))
+            ->withColumn('total', ref('amount')->multiply(lit(2)))
             ->forEach(static function ($rows) use (&$results): void {
                 $results = array_merge($results, $rows->toArray());
             });

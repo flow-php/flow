@@ -319,7 +319,7 @@ trait ScalarFunctionChain
     }
 
     /**
-     * Expands each value into entry, if there are more than one value, multiple rows will be created.
+     * Expands each value into a column, if there are more than one value, multiple rows will be created.
      * Array keys are ignored, only values are used to create new rows.
      * Nested in another function (structure(), concat(), ...) it still gives one row per element. Several
      * expands in one expression are zipped to the longest list; a shorter one gives null, so its element
@@ -536,10 +536,10 @@ trait ScalarFunctionChain
     }
 
     /**
-     * Execute a scalar function on each element of an array/list/map/structure entry.
+     * Execute a scalar function on each element of an array/list/map/structure column.
      * In order to use this function, you need to provide a reference to the "element" that will be used in the function.
      *
-     * Example: $df->withEntry('array', ref('array')->onEach(ref('element')->cast(type_string())))
+     * Example: $df->withColumn('array', ref('array')->onEach(ref('element')->cast(type_string())))
      */
     public function onEach(ScalarFunction $function, bool $preserveKeys = true): OnEach
     {
@@ -825,7 +825,7 @@ trait ScalarFunctionChain
     }
 
     /**
-     * Unpacks each element of an array into a new entry, using the array key as the entry name.
+     * Unpacks each element of an array into a new column, using the array key as the column name.
      *
      * Before:
      *   +--+-------------------+

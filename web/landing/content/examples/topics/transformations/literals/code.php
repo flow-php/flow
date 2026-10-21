@@ -11,6 +11,6 @@ data_frame()
         [['name' => 'Norbert']],
         schema(str_schema('name')),
     ))
-    ->withEntry('number', lit(1))
+    ->withColumn('number', lit(1))
     ->write(to_output(truncate: false))
     ->run();

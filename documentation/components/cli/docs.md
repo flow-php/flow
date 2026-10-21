@@ -112,7 +112,7 @@ Options:
       --analyze[=ANALYZE]                                            Collect processing statistics and print them. [default: false]
       --config=CONFIG                                                Path to a local php file that MUST return instance of: Flow\ETL\Config
       --input-json-pointer=INPUT-JSON-POINTER                        JSON Pointer to a subtree from which schema should be extracted
-      --input-json-pointer-entry-name                                When set, JSON Pointer will be used as an entry name in the schema
+      --input-json-pointer-column-name                               When set, JSON Pointer will be used as a column name in the schema
       --output-json-date-time-format=OUTPUT-JSON-DATE-TIME-FORMAT    Date time format used in JSON output
       --output-json-rows-in-new-line                                 When set, each row will be printed in a new line
       --input-csv-header[=INPUT-CSV-HEADER]                          When set, CSV header will be used as a schema
@@ -174,7 +174,7 @@ Options:
       --output-ascii                                       Print schema as ascii list
       --config=CONFIG                                      Path to a local php file that MUST return instance of: Flow\ETL\Config
       --input-json-pointer=INPUT-JSON-POINTER              JSON Pointer to a subtree from which schema should be extracted
-      --input-json-pointer-entry-name                      When set, JSON Pointer will be used as an entry name in the schema
+      --input-json-pointer-column-name                     When set, JSON Pointer will be used as a column name in the schema
       --input-csv-header[=INPUT-CSV-HEADER]                When set, CSV header will be used as a schema
       --input-csv-empty-to-null[=INPUT-CSV-EMPTY-TO-NULL]  When set, empty CSV values will be treated as NULL values
       --input-csv-separator=INPUT-CSV-SEPARATOR            CSV separator character
@@ -243,7 +243,7 @@ Options:
       --input-file-offset=INPUT-FILE-OFFSET                Number of rows to skip before starting to read data
       --config=CONFIG                                      Path to a local php file that MUST return instance of: Flow\ETL\Config
       --input-json-pointer=INPUT-JSON-POINTER              JSON Pointer to a subtree from which schema should be extracted
-      --input-json-pointer-entry-name                      When set, JSON Pointer will be used as an entry name in the schema
+      --input-json-pointer-column-name                     When set, JSON Pointer will be used as a column name in the schema
       --input-csv-header[=INPUT-CSV-HEADER]                When set, CSV header will be used as a schema
       --input-csv-empty-to-null[=INPUT-CSV-EMPTY-TO-NULL]  When set, empty CSV values will be treated as NULL values
       --input-csv-separator=INPUT-CSV-SEPARATOR            CSV separator character
@@ -295,7 +295,7 @@ Options:
       --output-columns=OUTPUT-COLUMNS                      Columns to include in output, when not set all columns are displayed (multiple values allowed)
       --config=CONFIG                                      Path to a local php file that MUST return instance of: Flow\ETL\Config
       --input-json-pointer=INPUT-JSON-POINTER              JSON Pointer to a subtree from which schema should be extracted
-      --input-json-pointer-entry-name                      When set, JSON Pointer will be used as an entry name in the schema
+      --input-json-pointer-column-name                     When set, JSON Pointer will be used as a column name in the schema
       --input-csv-header[=INPUT-CSV-HEADER]                When set, CSV header will be used as a schema
       --input-csv-empty-to-null[=INPUT-CSV-EMPTY-TO-NULL]  When set, empty CSV values will be treated as NULL values
       --input-csv-separator=INPUT-CSV-SEPARATOR            CSV separator character
@@ -341,7 +341,7 @@ Options:
       --input-file-offset=INPUT-FILE-OFFSET                Number of rows to skip before starting to read data
       --config=CONFIG                                      Path to a local php file that MUST return instance of: Flow\ETL\Config
       --input-json-pointer=INPUT-JSON-POINTER              JSON Pointer to a subtree from which schema should be extracted
-      --input-json-pointer-entry-name                      When set, JSON Pointer will be used as an entry name in the schema
+      --input-json-pointer-column-name                     When set, JSON Pointer will be used as a column name in the schema
       --input-excel-header[=INPUT-EXCEL-HEADER]            When set, Excel header will be used as a schema
       --input-excel-sheet-name=INPUT-EXCEL-SHEET-NAME      When set, Excel sheet name will be selected for reading
       --input-excel-offset=INPUT-EXCEL-OFFSET              Offset to start reading from

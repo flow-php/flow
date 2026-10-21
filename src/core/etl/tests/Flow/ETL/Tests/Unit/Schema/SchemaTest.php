@@ -358,7 +358,7 @@ final class SchemaTest extends FlowTestCase
     {
         $this->expectException(SchemaDefinitionNotUniqueException::class);
         $this->expectExceptionMessage(
-            'Entry definitions must be unique, duplicated entries: [str], all: [id, str, str]',
+            'Column definitions must be unique, duplicated columns: [str], all: [id, str, str]',
         );
         schema(int_schema('id'), str_schema('str', true))->add(int_schema('str'));
     }
@@ -586,7 +586,7 @@ final class SchemaTest extends FlowTestCase
     public function test_move_relative_to_itself(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Cannot move entry "id" relative to itself');
+        $this->expectExceptionMessage('Cannot move column "id" relative to itself');
 
         schema(int_schema('id'), str_schema('name'))->moveBefore('id', 'id');
     }
@@ -616,7 +616,7 @@ final class SchemaTest extends FlowTestCase
     public function test_move_to_out_of_range(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Cannot move entry "id" to index 2, schema has 2 definitions');
+        $this->expectExceptionMessage('Cannot move column "id" to index 2, schema has 2 definitions');
 
         schema(int_schema('id'), str_schema('name'))->moveTo('id', 2);
     }
@@ -720,7 +720,7 @@ final class SchemaTest extends FlowTestCase
     public function test_reorder_duplicate_name(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Cannot reorder entry "id" more than once');
+        $this->expectExceptionMessage('Cannot reorder column "id" more than once');
 
         schema(int_schema('id'), str_schema('name'))->reorder('id', 'id');
     }

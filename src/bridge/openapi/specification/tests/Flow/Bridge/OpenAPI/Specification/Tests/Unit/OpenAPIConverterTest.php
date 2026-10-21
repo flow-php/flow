@@ -59,26 +59,26 @@ final class OpenAPIConverterTest extends TestCase
 
         $definitions = array_values($convertedSchema->definitions());
 
-        static::assertSame('id', $definitions[0]->entry()->name());
+        static::assertSame('id', $definitions[0]->reference()->name());
         static::assertSame(IntegerType::class, $definitions[0]->type()::class);
         static::assertFalse($definitions[0]->isNullable());
         static::assertTrue($definitions[0]->metadata()->has('description'));
         static::assertTrue($definitions[0]->metadata()->has('example'));
 
-        static::assertSame('name', $definitions[1]->entry()->name());
+        static::assertSame('name', $definitions[1]->reference()->name());
         static::assertSame(StringType::class, $definitions[1]->type()::class);
         static::assertTrue($definitions[1]->isNullable());
         static::assertTrue($definitions[1]->metadata()->has('description'));
 
-        static::assertSame('active', $definitions[2]->entry()->name());
+        static::assertSame('active', $definitions[2]->reference()->name());
         static::assertSame(BooleanType::class, $definitions[2]->type()::class);
         static::assertFalse($definitions[2]->isNullable());
 
-        static::assertSame('tags', $definitions[4]->entry()->name());
+        static::assertSame('tags', $definitions[4]->reference()->name());
         static::assertSame(ListType::class, $definitions[4]->type()::class);
         static::assertTrue($definitions[4]->isNullable());
 
-        static::assertSame('address', $definitions[5]->entry()->name());
+        static::assertSame('address', $definitions[5]->reference()->name());
         static::assertSame(StructureType::class, $definitions[5]->type()::class);
         static::assertFalse($definitions[5]->isNullable());
     }
@@ -114,9 +114,9 @@ final class OpenAPIConverterTest extends TestCase
 
         static::assertCount(3, $convertedSchema->definitions());
         $definitions = array_values($convertedSchema->definitions());
-        static::assertSame('id', $definitions[0]->entry()->name());
-        static::assertSame('name', $definitions[1]->entry()->name());
-        static::assertSame('active', $definitions[2]->entry()->name());
+        static::assertSame('id', $definitions[0]->reference()->name());
+        static::assertSame('name', $definitions[1]->reference()->name());
+        static::assertSame('active', $definitions[2]->reference()->name());
 
         static::assertTrue($definitions[1]->metadata()->has('description'));
         static::assertSame('User name', $definitions[1]->metadata()->get('description'));

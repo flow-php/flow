@@ -45,7 +45,7 @@ final class ArrayExpandTest extends FlowTestCase
             25_000,
             data_frame()
                 ->read(from_array([['body' => ExpansionMother::page(25_000)]], schema(str_schema('body'))))
-                ->withEntry(
+                ->withColumn(
                     'body',
                     ref('body')
                         ->jsonDecode()
@@ -53,7 +53,7 @@ final class ArrayExpandTest extends FlowTestCase
                             'rows' => type_list(ExpansionMother::pageRowType()),
                         ])),
                 )
-                ->withEntry('record', array_expand(array_get(ref('body'), 'rows')))
+                ->withColumn('record', array_expand(array_get(ref('body'), 'rows')))
                 ->select('record')
                 ->fetch()
                 ->count(),
@@ -66,7 +66,7 @@ final class ArrayExpandTest extends FlowTestCase
             25_000,
             data_frame()
                 ->read(from_array([['body' => ExpansionMother::page(25_000)]], schema(str_schema('body'))))
-                ->withEntry(
+                ->withColumn(
                     'body',
                     ref('body')
                         ->jsonDecode()
@@ -74,7 +74,7 @@ final class ArrayExpandTest extends FlowTestCase
                             'rows' => type_list(ExpansionMother::pageRowType()),
                         ])),
                 )
-                ->withEntry('body', array_expand(array_get(ref('body'), 'rows')))
+                ->withColumn('body', array_expand(array_get(ref('body'), 'rows')))
                 ->select('body')
                 ->fetch()
                 ->count(),
@@ -89,7 +89,7 @@ final class ArrayExpandTest extends FlowTestCase
                 ->read(from_array([[
                     'items' => ExpansionMother::terms(100_000),
                 ]], schema(list_schema('items', type_list(type_string())))))
-                ->withEntry('item', array_expand(ref('items')))
+                ->withColumn('item', array_expand(ref('items')))
                 ->select('item')
                 ->fetch()
                 ->count(),
@@ -104,7 +104,7 @@ final class ArrayExpandTest extends FlowTestCase
                 ->read(from_array([[
                     'items' => ExpansionMother::terms(100_000),
                 ]], schema(list_schema('items', type_list(type_string())))))
-                ->withEntry('items', array_expand(ref('items')))
+                ->withColumn('items', array_expand(ref('items')))
                 ->select('items')
                 ->fetch()
                 ->count(),
@@ -118,7 +118,7 @@ final class ArrayExpandTest extends FlowTestCase
                 [['id' => 7, 'items' => ExpansionMother::terms(100_000)]],
                 schema(int_schema('id'), list_schema('items', type_list(type_string()))),
             ))
-            ->withEntry('item', array_expand(ref('items')))
+            ->withColumn('item', array_expand(ref('items')))
             ->select('id', 'item')
             ->fetch();
 
@@ -133,7 +133,7 @@ final class ArrayExpandTest extends FlowTestCase
             25_000,
             data_frame()
                 ->read(from_array([['body' => ExpansionMother::page(25_000)]], schema(str_schema('body'))))
-                ->withEntry(
+                ->withColumn(
                     'body',
                     ref('body')
                         ->jsonDecode()
@@ -141,7 +141,7 @@ final class ArrayExpandTest extends FlowTestCase
                             'rows' => type_list(ExpansionMother::pageRowType()),
                         ])),
                 )
-                ->withEntry('record', array_get(array_expand(array_get(ref('body'), 'rows')), 'clicks'))
+                ->withColumn('record', array_get(array_expand(array_get(ref('body'), 'rows')), 'clicks'))
                 ->select('record')
                 ->fetch()
                 ->count(),
@@ -154,7 +154,7 @@ final class ArrayExpandTest extends FlowTestCase
             25_000,
             data_frame()
                 ->read(from_array([['body' => ExpansionMother::page(25_000)]], schema(str_schema('body'))))
-                ->withEntry(
+                ->withColumn(
                     'body',
                     ref('body')
                         ->jsonDecode()
@@ -162,7 +162,7 @@ final class ArrayExpandTest extends FlowTestCase
                             'rows' => type_list(ExpansionMother::pageRowType()),
                         ])),
                 )
-                ->withEntry(
+                ->withColumn(
                     'record',
                     array_expand(array_get(ref('body'), 'rows'))->unpack(schema(int_schema('clicks'))),
                 )
@@ -178,7 +178,7 @@ final class ArrayExpandTest extends FlowTestCase
             ->read(from_array([[
                 'items' => ExpansionMother::terms(2_500),
             ]], schema(list_schema('items', type_list(type_string())))))
-            ->withEntry('item', array_expand(ref('items')))
+            ->withColumn('item', array_expand(ref('items')))
             ->get();
 
         static::assertSame(
@@ -187,7 +187,7 @@ final class ArrayExpandTest extends FlowTestCase
         );
     }
 
-    public function test_an_expanding_with_entry_runs_on_the_expanding_processor(): void
+    public function test_an_expanding_with_column_runs_on_the_expanding_processor(): void
     {
         $steps = static function (DataFrame $frame): array {
             $plan = $frame->explain();
@@ -206,9 +206,9 @@ final class ArrayExpandTest extends FlowTestCase
 
         static::assertContains(
             ExpandingProcessor::class,
-            $steps($frame()->withEntry('item', array_expand(ref('items')))),
+            $steps($frame()->withColumn('item', array_expand(ref('items')))),
         );
-        static::assertNotContains(ExpandingProcessor::class, $steps($frame()->withEntry('item', lit(1))));
+        static::assertNotContains(ExpandingProcessor::class, $steps($frame()->withColumn('item', lit(1))));
     }
 
     public function test_explain_shows_the_columns_an_expand_keeps(): void
@@ -217,7 +217,7 @@ final class ArrayExpandTest extends FlowTestCase
             ->read(from_array([[
                 'items' => ExpansionMother::terms(3),
             ]], schema(list_schema('items', type_list(type_string())))))
-            ->withEntry('item', array_expand(ref('items')))
+            ->withColumn('item', array_expand(ref('items')))
             ->select('item')
             ->explain();
 
@@ -234,7 +234,7 @@ final class ArrayExpandTest extends FlowTestCase
                 [['id' => 1, 'tags' => ['a', 'b']], ['id' => 2, 'tags' => []]],
                 schema(int_schema('id'), list_schema('tags', type_list(type_string()))),
             ))
-            ->withEntry('tag', structure(['name' => ref('tags')->expand()]))
+            ->withColumn('tag', structure(['name' => ref('tags')->expand()]))
             ->drop('tags');
 
         static::assertSame('structure{name: string}', $frame()->schema()->get('tag')->type()->toString());
@@ -261,7 +261,7 @@ final class ArrayExpandTest extends FlowTestCase
                     list_schema('scores', type_list(type_integer())),
                 ),
             ))
-            ->withEntry('pair', structure(['tag' => ref('tags')->expand(), 'score' => ref('scores')->expand()]))
+            ->withColumn('pair', structure(['tag' => ref('tags')->expand(), 'score' => ref('scores')->expand()]))
             ->drop('tags', 'scores');
 
         static::assertSame(
@@ -285,7 +285,7 @@ final class ArrayExpandTest extends FlowTestCase
             ->read(from_array([
                 ['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]],
             ]))
-            ->withEntry('expanded', array_expand(ref('array'), ArrayExpand::BOTH))
+            ->withColumn('expanded', array_expand(ref('array'), ArrayExpand::BOTH))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
@@ -306,7 +306,7 @@ final class ArrayExpandTest extends FlowTestCase
             ->read(from_array([
                 ['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]],
             ]))
-            ->withEntry('expanded', array_expand(ref('array'), ArrayExpand::KEYS))
+            ->withColumn('expanded', array_expand(ref('array'), ArrayExpand::KEYS))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
@@ -327,7 +327,7 @@ final class ArrayExpandTest extends FlowTestCase
             ->read(from_array([
                 ['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]],
             ]))
-            ->withEntry('expanded', array_expand(ref('array')))
+            ->withColumn('expanded', array_expand(ref('array')))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
@@ -354,7 +354,7 @@ final class ArrayExpandTest extends FlowTestCase
                     ])),
                 ),
             ))
-            ->withEntry('item', array_expand(structure_get(ref('b'), '?x')))
+            ->withColumn('item', array_expand(structure_get(ref('b'), '?x')))
             ->drop('b')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
@@ -369,7 +369,7 @@ final class ArrayExpandTest extends FlowTestCase
                 [['id' => 1, 'data' => [1, 2]], ['id' => 2, 'data' => null]],
                 schema(int_schema('id'), list_schema('data', type_list(type_integer()), nullable: true)),
             ))
-            ->withEntry('item', optional(array_expand(ref('data'))))
+            ->withColumn('item', optional(array_expand(ref('data'))))
             ->drop('data')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();

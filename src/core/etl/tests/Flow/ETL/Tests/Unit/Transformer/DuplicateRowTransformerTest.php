@@ -11,7 +11,7 @@ use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\ListColumnsMother;
 use Flow\ETL\Transformer\DuplicateRowTransformer;
-use Flow\ETL\WithEntry;
+use Flow\ETL\WithColumn;
 use Flow\Types\Exception\InvalidTypeException;
 
 use function Flow\ETL\DSL\array_to_rows;
@@ -26,7 +26,7 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\string_schema;
-use function Flow\ETL\DSL\with_entry;
+use function Flow\ETL\DSL\with_column;
 use function Flow\Types\DSL\type_date;
 
 final class DuplicateRowTransformerTest extends FlowTestCase
@@ -35,7 +35,7 @@ final class DuplicateRowTransformerTest extends FlowTestCase
     {
         static::assertEquals(
             schema(float_schema('amount')),
-            (new DuplicateRowTransformer(lit(true), with_entry('amount', lit(1.5))))->bind(schema(int_schema(
+            (new DuplicateRowTransformer(lit(true), with_column('amount', lit(1.5))))->bind(schema(int_schema(
                 'amount',
             )))->output,
         );
@@ -48,7 +48,9 @@ final class DuplicateRowTransformerTest extends FlowTestCase
             'Cannot combine types "integer", "list<integer>" - an explicit cast is required.',
         );
 
-        (new DuplicateRowTransformer(lit(true), with_entry('amount', lit([1, 2]))))->bind(schema(int_schema('amount')));
+        (new DuplicateRowTransformer(lit(true), with_column('amount', lit([1, 2]))))->bind(schema(int_schema(
+            'amount',
+        )));
     }
 
     public function test_a_literal_condition_duplicates_every_row(): void
@@ -60,7 +62,7 @@ final class DuplicateRowTransformerTest extends FlowTestCase
                 ['id' => 2, 'flag' => null],
                 ['id' => 2, 'flag' => true],
             ],
-            (new DuplicateRowTransformer(true, with_entry('flag', lit(true))))
+            (new DuplicateRowTransformer(true, with_column('flag', lit(true))))
                 ->transform(array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))), flow_context(config()))
                 ->toArray(),
         );
@@ -70,7 +72,7 @@ final class DuplicateRowTransformerTest extends FlowTestCase
     {
         $transformed = (new DuplicateRowTransformer(
             ref('status')->equals(lit('inactive')),
-            with_entry('flag', lit(true)),
+            with_column('flag', lit(true)),
         ))->transform(
             array_to_rows(
                 [['id' => 1, 'status' => 'active'], ['id' => 2, 'status' => 'inactive']],
@@ -94,7 +96,7 @@ final class DuplicateRowTransformerTest extends FlowTestCase
     {
         $transformed = (new DuplicateRowTransformer(
             ref('status')->equals(lit('inactive')),
-            with_entry('amount', ref('amount')->multiply(lit(-1))),
+            with_column('amount', ref('amount')->multiply(lit(-1))),
         ))->transform(
             array_to_rows(
                 [
@@ -149,8 +151,8 @@ final class DuplicateRowTransformerTest extends FlowTestCase
 
         $transformedRows = (new DuplicateRowTransformer(
             ref('status')->equals(lit('inactive')),
-            with_entry('amount', ref('amount')->multiply(lit(-1))),
-            with_entry('date_updated', ref('date_deactivated')),
+            with_column('amount', ref('amount')->multiply(lit(-1))),
+            with_column('date_updated', ref('date_deactivated')),
         ))->transform($rows, flow_context());
 
         static::assertCount(4, $transformedRows);
@@ -200,7 +202,7 @@ final class DuplicateRowTransformerTest extends FlowTestCase
             schema(int_schema('id'), string_schema('status'), bool_schema('flag', nullable: true)),
             (new DuplicateRowTransformer(
                 ref('status')->equals(lit('inactive')),
-                with_entry('flag', lit(true)),
+                with_column('flag', lit(true)),
             ))->bind(schema(int_schema('id'), string_schema('status')))->output,
         );
     }
@@ -211,7 +213,7 @@ final class DuplicateRowTransformerTest extends FlowTestCase
 
         (new DuplicateRowTransformer(
             ref('missing')->equals(lit('x')),
-            with_entry('flag', lit(true)),
+            with_column('flag', lit(true)),
         ))->bind(schema(int_schema('id')));
     }
 
@@ -228,7 +230,7 @@ final class DuplicateRowTransformerTest extends FlowTestCase
 
         $transformedRows = (new DuplicateRowTransformer(
             ref('status')->equals(lit('inactive')),
-            new WithEntry('amount', ref('amount')->multiply(lit(-1))),
+            new WithColumn('amount', ref('amount')->multiply(lit(-1))),
         ))->transform($rows, flow_context());
 
         static::assertCount(3, $transformedRows);
@@ -256,7 +258,7 @@ final class DuplicateRowTransformerTest extends FlowTestCase
 
         $transformedRows = (new DuplicateRowTransformer(
             ref('status')->equals(lit('inactive')),
-            new WithEntry('amount', ref('amount')->multiply(lit(-1))),
+            new WithColumn('amount', ref('amount')->multiply(lit(-1))),
         ))->transform($rows, flow_context());
 
         static::assertCount(4, $transformedRows);
@@ -283,10 +285,10 @@ final class DuplicateRowTransformerTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(
-            'duplicateRow() cannot contain array_expand(), it turns one row into many rows. Expand with withEntry() first, then use the new column.',
+            'duplicateRow() cannot contain array_expand(), it turns one row into many rows. Expand with withColumn() first, then use the new column.',
         );
 
-        (new DuplicateRowTransformer(ref('flags')->expand()->equals(lit(true)), with_entry('flag', lit(true))))->bind(
+        (new DuplicateRowTransformer(ref('flags')->expand()->equals(lit(true)), with_column('flag', lit(true))))->bind(
             ListColumnsMother::schema(),
         );
     }
@@ -295,10 +297,10 @@ final class DuplicateRowTransformerTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(
-            'duplicateRow() cannot contain array_expand(), it turns one row into many rows. Expand with withEntry() first, then use the new column.',
+            'duplicateRow() cannot contain array_expand(), it turns one row into many rows. Expand with withColumn() first, then use the new column.',
         );
 
-        (new DuplicateRowTransformer(lit(true), with_entry('t', ref('tags')->expand())))->bind(
+        (new DuplicateRowTransformer(lit(true), with_column('t', ref('tags')->expand())))->bind(
             ListColumnsMother::schema(),
         );
     }
@@ -307,10 +309,10 @@ final class DuplicateRowTransformerTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(
-            'duplicateRow() cannot contain array_expand(), it turns one row into many rows. Expand with withEntry() first, then use the new column.',
+            'duplicateRow() cannot contain array_expand(), it turns one row into many rows. Expand with withColumn() first, then use the new column.',
         );
 
-        (new DuplicateRowTransformer(lit(true), with_entry('t', ref('tags')->expand())))->transform(
+        (new DuplicateRowTransformer(lit(true), with_column('t', ref('tags')->expand())))->transform(
             ListColumnsMother::rows()->matchTo(ListColumnsMother::schema(), new AdaptiveBackend()),
             flow_context(config()),
         );

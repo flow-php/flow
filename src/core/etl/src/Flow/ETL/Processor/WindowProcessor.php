@@ -29,10 +29,10 @@ use function Flow\ETL\DSL\definition_from_type;
 final class WindowProcessor implements Processor
 {
     /**
-     * @param Definition<mixed>|string $entry
+     * @param Definition<mixed>|string $column
      */
     public function __construct(
-        public readonly string|Definition $entry,
+        public readonly string|Definition $column,
         public readonly WindowFunction $function,
         public readonly ?BoundWindow $bound = null,
     ) {}
@@ -41,7 +41,7 @@ final class WindowProcessor implements Processor
     {
         $bound = $this->boundTo($input);
 
-        return new BoundStep(new self($this->entry, $this->function, $bound), $bound->output);
+        return new BoundStep(new self($this->column, $this->function, $bound), $bound->output);
     }
 
     public function process(Generator $rows, FlowContext $context): Generator
@@ -75,11 +75,11 @@ final class WindowProcessor implements Processor
         (new ExpandingFunctions())->refuse($resolved, 'over');
         self::assertWindowReferences($resolved, $input);
 
-        $derived = $this->entry instanceof Definition
-            ? $this->entry
-            : definition_from_type($this->entry, $resolved->returns());
+        $derived = $this->column instanceof Definition
+            ? $this->column
+            : definition_from_type($this->column, $resolved->returns());
 
-        $name = $derived->entry()->name();
+        $name = $derived->reference()->name();
 
         return new BoundWindow(
             $resolved,
@@ -191,6 +191,6 @@ final class WindowProcessor implements Processor
         $builder = $context->backend()->builder($derived);
         $builder->appendMany($values);
 
-        return $partitionRows->withColumns($bound->output, [$derived->entry()->name() => $builder->finish()]);
+        return $partitionRows->withColumns($bound->output, [$derived->reference()->name() => $builder->finish()]);
     }
 }

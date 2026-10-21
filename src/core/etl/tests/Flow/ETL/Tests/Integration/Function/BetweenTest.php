@@ -22,11 +22,11 @@ final class BetweenTest extends FlowTestCase
             ->read(from_array([
                 ['val' => new DateTimeImmutable('2023-01-10 00:00:00')],
             ]))
-            ->withEntry('between', ref('val')->between(
+            ->withColumn('between', ref('val')->between(
                 lit(new DateTimeImmutable('2023-01-01 00:00:00')),
                 lit(new DateTimeImmutable('2023-01-20 00:00:00')),
             ))
-            ->withEntry('not_between', ref('val')->between(
+            ->withColumn('not_between', ref('val')->between(
                 lit(new DateTimeImmutable('2023-01-01 00:00:00')),
                 lit(new DateTimeImmutable('2023-01-08 00:00:00')),
             ))
