@@ -20,6 +20,8 @@
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/arrow-ext - page-range reads and row filtering through arrow-rs** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2700](https://github.com/flow-php/flow/pull/2700) - **flow-php/flow - playground WASM runtime rebuilt with PHP 8.5.12** - [@norberttech](https://github.com/norberttech)
+- [#2700](https://github.com/flow-php/flow/pull/2700) - **flow-php/flow - tools resolve dependencies against PHP 8.3** - [@norberttech](https://github.com/norberttech)
 - [#2698](https://github.com/flow-php/flow/pull/2698) - **flow-php/flow - extension workflows run on pull requests only when their code changes** - [@norberttech](https://github.com/norberttech)
 - [#2698](https://github.com/flow-php/flow/pull/2698) - **flow-php/flow - reduced macOS and telemetry matrices on pull requests, full matrix on 1.x and nightly** - [@norberttech](https://github.com/norberttech)
 - [#2698](https://github.com/flow-php/flow/pull/2698) - **flow-php/flow - Rust builds cached with rust-cache** - [@norberttech](https://github.com/norberttech)
@@ -47,6 +49,7 @@
 - [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/flow - updated dev dependencies, mago 1.57 and GitHub Actions** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2700](https://github.com/flow-php/flow/pull/2700) - **flow-php/flow - PHPUnit 11 telemetry CI rows now actually run PHPUnit 11** - [@norberttech](https://github.com/norberttech)
 - [#2698](https://github.com/flow-php/flow/pull/2698) - **flow-php/flow - CI Azurite readiness check that always waited 30 seconds** - [@norberttech](https://github.com/norberttech)
 - [#2697](https://github.com/flow-php/flow/pull/2697) - **flow-php/flow - CI Azurite readiness check that always waited 30 seconds** - [@norberttech](https://github.com/norberttech)
 - [#2696](https://github.com/flow-php/flow/pull/2696) - **flow-php/etl - an empty source under a declared schema reads 0 rows instead of failing at plan time** - [@norberttech](https://github.com/norberttech)
