@@ -6,6 +6,7 @@ namespace Flow\ETL\Bucketing\Storage;
 
 use DateInterval;
 use Flow\ETL\Bucketing\BucketsStorage;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Rows;
 use Flow\Serializer\Serializer;
 use Generator;
@@ -15,15 +16,21 @@ use function Flow\Serializer\DSL\serialize_to_string;
 use function Flow\Serializer\DSL\unserialize_from_string;
 use function is_int;
 use function is_string;
+use function strpbrk;
 
 final readonly class PSRCacheBuckets implements BucketsStorage
 {
     public function __construct(
         private CacheInterface $cache,
         private Serializer $serializer,
-        private string $prefix = 'flow:buckets',
+        private string $prefix = 'flow.buckets',
         private ?DateInterval $ttl = null,
-    ) {}
+    ) {
+        if (strpbrk($this->prefix, '{}()/\\@:') !== false) {
+            throw new InvalidArgumentException('Prefix must not contain PSR-16 reserved characters {}()/\\@:, given: '
+            . $this->prefix);
+        }
+    }
 
     public function append(string $bucketId, Rows $rows): void
     {
@@ -81,11 +88,11 @@ final readonly class PSRCacheBuckets implements BucketsStorage
 
     private function chunkKey(string $bucketId, int $n): string
     {
-        return $this->prefix . ':' . $bucketId . ':chunk:' . $n;
+        return $this->prefix . '.' . $bucketId . '.chunk.' . $n;
     }
 
     private function chunksKey(string $bucketId): string
     {
-        return $this->prefix . ':' . $bucketId . ':chunks';
+        return $this->prefix . '.' . $bucketId . '.chunks';
     }
 }

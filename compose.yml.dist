@@ -53,13 +53,6 @@ services:
             - ./var/azurite:/workspace
         networks:
             - flow-php
-    redis:
-        image: redis:latest
-        container_name: flow-php-redis
-        ports:
-            - "6379:6379"
-        networks:
-            - flow-php
     rustfs:
         image: rustfs/rustfs:1.0.0
         container_name: flow-php-rustfs
@@ -117,6 +110,5 @@ services:
             - aspire
             - postgres
             - mysql
-            - redis
         networks:
             - flow-php

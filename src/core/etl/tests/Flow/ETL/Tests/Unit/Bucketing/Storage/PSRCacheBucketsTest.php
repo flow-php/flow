@@ -6,10 +6,12 @@ namespace Flow\ETL\Tests\Unit\Bucketing\Storage;
 
 use Flow\ETL\Bucketing\Storage\PSRCacheBuckets;
 use Flow\ETL\Column\AdaptiveBackend;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\Context\BucketsStorageContext;
 use Flow\ETL\Tests\Double\ArrayCache;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Floe\FloeSerializer;
+use PHPUnit\Framework\Attributes\TestWith;
 
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
@@ -33,20 +35,20 @@ final class PSRCacheBucketsTest extends FlowTestCase
         (new PSRCacheBuckets(
             $cache,
             new FloeSerializer(new AdaptiveBackend()),
-            prefix: 'custom:pfx',
+            prefix: 'custom.pfx',
         ))->append('bucket', array_to_rows([[
             'id' => 1,
         ]], schema(int_schema('id'))));
 
-        static::assertTrue($cache->has('custom:pfx:bucket:chunks'));
-        static::assertTrue($cache->has('custom:pfx:bucket:chunk:0'));
+        static::assertTrue($cache->has('custom.pfx.bucket.chunks'));
+        static::assertTrue($cache->has('custom.pfx.bucket.chunk.0'));
     }
 
     public function test_get_skips_non_string_chunk_payloads(): void
     {
         $cache = new ArrayCache();
-        $cache->set('flow:buckets:bucket:chunks', 1);
-        $cache->set('flow:buckets:bucket:chunk:0', 123);
+        $cache->set('flow.buckets.bucket.chunks', 1);
+        $cache->set('flow.buckets.bucket.chunk.0', 123);
 
         static::assertSame(
             [],
@@ -59,7 +61,7 @@ final class PSRCacheBucketsTest extends FlowTestCase
     public function test_get_treats_non_integer_chunk_counter_as_empty(): void
     {
         $cache = new ArrayCache();
-        $cache->set('flow:buckets:bucket:chunks', 'garbage');
+        $cache->set('flow.buckets.bucket.chunks', 'garbage');
 
         static::assertSame(
             [],
@@ -89,9 +91,9 @@ final class PSRCacheBucketsTest extends FlowTestCase
 
         $storage->remove('bucket');
 
-        static::assertFalse($cache->has('flow:buckets:bucket:chunks'));
-        static::assertFalse($cache->has('flow:buckets:bucket:chunk:0'));
-        static::assertFalse($cache->has('flow:buckets:bucket:chunk:1'));
+        static::assertFalse($cache->has('flow.buckets.bucket.chunks'));
+        static::assertFalse($cache->has('flow.buckets.bucket.chunk.0'));
+        static::assertFalse($cache->has('flow.buckets.bucket.chunk.1'));
         static::assertSame([], BucketsStorageContext::rows($storage->get('bucket')));
     }
 
@@ -105,6 +107,23 @@ final class PSRCacheBucketsTest extends FlowTestCase
         $storage->append('bucket', $input);
 
         static::assertSame($input->toArray(), BucketsStorageContext::rows($storage->get('bucket')));
+    }
+
+    #[TestWith(['flow{buckets'])]
+    #[TestWith(['flow}buckets'])]
+    #[TestWith(['flow(buckets'])]
+    #[TestWith(['flow)buckets'])]
+    #[TestWith(['flow/buckets'])]
+    #[TestWith(['flow\\buckets'])]
+    #[TestWith(['flow@buckets'])]
+    #[TestWith(['flow:buckets'])]
+    public function test_rejects_prefix_with_psr16_reserved_character(string $prefix): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Prefix must not contain PSR-16 reserved characters {}()/\\@:, given: '
+        . $prefix);
+
+        new PSRCacheBuckets(new ArrayCache(), new FloeSerializer(new AdaptiveBackend()), prefix: $prefix);
     }
 
     public function test_set_replaces_previous_content(): void
