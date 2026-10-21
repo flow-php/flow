@@ -80,7 +80,7 @@ runs:
       uses: shivammathur/cache-extensions@22e24453af1bf3851994136f122ce065ab828a74 # 1.15.2
       with:
         php-version: ${{ inputs.php-version }}
-        extensions: "${{ inputs.extensions }}, redis-6.3.0"
+        extensions: "${{ inputs.extensions }}, :redis"
         key: "php-extensions-${{ runner.os }}-${{ runner.arch }}-v1"
       env:
         share-cache-across-jobs: true
@@ -101,9 +101,7 @@ runs:
         ini-values: ${{ inputs.ini-values }}
         # The runner image ships ext-redis 5.3.7 pre-installed, which conflicts with
         # symfony/cache (requires ext-redis >= 6.1) and breaks `composer install`.
-        # Pin a compatible phpredis (>= 6.1, and new enough to build on PHP 8.5) so the
-        # extension stays available for the redis cache tests instead of being dropped.
-        extensions: "${{ inputs.extensions }}, redis-6.3.0"
+        extensions: "${{ inputs.extensions }}, :redis"
         coverage: ${{ inputs.coverage != '' && inputs.coverage || null }}
       env: ${{ inputs.php-env != '' && fromJSON(inputs.php-env) || fromJSON('{}') }}
 

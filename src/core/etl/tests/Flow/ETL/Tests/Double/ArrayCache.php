@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Double;
 
 use DateInterval;
 use Psr\SimpleCache\CacheInterface;
+use Symfony\Component\Cache\CacheItem;
 
 use function array_key_exists;
 
@@ -34,7 +35,7 @@ final class ArrayCache implements CacheInterface
      */
     public function delete($key): bool
     {
-        unset($this->values[$key]);
+        unset($this->values[CacheItem::validateKey($key)]);
 
         return true;
     }
@@ -56,7 +57,7 @@ final class ArrayCache implements CacheInterface
      */
     public function get($key, mixed $default = null): mixed
     {
-        return array_key_exists($key, $this->values) ? $this->values[$key] : $default;
+        return array_key_exists(CacheItem::validateKey($key), $this->values) ? $this->values[$key] : $default;
     }
 
     /**
@@ -80,7 +81,7 @@ final class ArrayCache implements CacheInterface
      */
     public function has($key): bool
     {
-        return array_key_exists($key, $this->values);
+        return array_key_exists(CacheItem::validateKey($key), $this->values);
     }
 
     /**
@@ -89,7 +90,7 @@ final class ArrayCache implements CacheInterface
      */
     public function set($key, mixed $value, $ttl = null): bool
     {
-        $this->values[$key] = $value;
+        $this->values[CacheItem::validateKey($key)] = $value;
 
         return true;
     }
