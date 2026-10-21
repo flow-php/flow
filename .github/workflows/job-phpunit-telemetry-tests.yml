@@ -62,8 +62,8 @@ jobs:
         uses: "./.github/actions/pg-query-ext"
 
       - name: "Install PHPUnit ${{ matrix.phpunit-version }}"
-        if: ${{ matrix.phpunit-version != '11' }}
         run: |
+          composer config --working-dir=tools/phpunit --unset platform
           composer require --working-dir=tools/phpunit --no-interaction --no-progress -W \
             "phpunit/phpunit:^${{ matrix.phpunit-version }}"
 

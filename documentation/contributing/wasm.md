@@ -7,7 +7,7 @@ This document describes how to build PHP to WebAssembly (WASM) for use in the Fl
 ## Overview
 
 The WASM build creates a browser-compatible PHP runtime that powers the interactive playground
-at [flow-php.com](https://flow-php.com). It compiles PHP 8.5.8 with the necessary extensions to run Flow PHP ETL
+at [flow-php.com](https://flow-php.com). It compiles PHP 8.5.12 with the necessary extensions to run Flow PHP ETL
 pipelines directly in the browser. The version is kept in step with the Docker image
 (`Dockerfile` `FLOW_PHP_VERSION`) so both distributions ship the same PHP.
 

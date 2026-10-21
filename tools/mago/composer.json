@@ -6,6 +6,9 @@
     "carthage-software/mago": "^1.29"
   },
   "config": {
-    "allow-plugins": false
+    "allow-plugins": false,
+    "platform": {
+      "php": "8.3.0"
+    }
   }
 }

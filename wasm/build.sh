@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Build script for Flow PHP Interactive Playground
-# Builds PHP 8.5.8 as 64-bit wasm (see WASM64_MODE below) with a forced mmap Opcache shared-memory
+# Builds PHP 8.5.12 as 64-bit wasm (see WASM64_MODE below) with a forced mmap Opcache shared-memory
 # backend (see php_cv_shm_mmap_anon below).
 
 set -xeu
@@ -13,7 +13,7 @@ rm -f build.log
 exec > >(tee -a build.log) 2>&1
 echo "=== Build started at $(date) ==="
 
-PHP_VERSION=8.5.8
+PHP_VERSION=8.5.12
 PHP_PATH=php-$PHP_VERSION
 
 # MEMORY64=2 is wasm64 for clang/lld lowered to wasm32 by Binaryen, so PHP gets an 8-byte zend_long
