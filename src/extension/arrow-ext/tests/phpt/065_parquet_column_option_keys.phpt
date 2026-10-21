@@ -1,5 +1,5 @@
 --TEST--
-COLUMNS_COMPRESSIONS, COLUMNS_ENCODINGS and COLUMNS_BLOOM_FILTERS reach the arrow writer by column path: a digit-only path (an int array key) applies to its column, a dictionary encoding enables the column's dictionary as the PHP writer writes it, a key that is not UTF-8 or a value that is not a string is refused instead of crashing
+COLUMNS_COMPRESSIONS, COLUMNS_ENCODINGS and COLUMNS_BLOOM_FILTERS reach the arrow writer by column path: a digit-only path (an int array key) applies to its column, a dictionary encoding enables the column's dictionary, any other encoding is the column's only encoding, as the PHP writer writes them, an encoding the column type cannot take is refused with the PHP writer's message, a key that is not UTF-8 or a value that is not a string is refused instead of crashing
 --SKIPIF--
 <?php if (!extension_loaded("arrow")) die("skip arrow extension not loaded"); ?>
 --FILE--
@@ -25,8 +25,7 @@ use function Flow\Filesystem\DSL\path;
 
 $write = static fn(Option $option, array $columns): string => MemoryParquetFile::written(
     new Writer(
-        // a dictionary page of one byte falls back to the column encoding at once
-        options: (new Options())->set($option, $columns)->set(Option::DICTIONARY_PAGE_SIZE, 1),
+        options: (new Options())->set($option, $columns),
         engine: new RustParquetEngine(),
     ),
     Schema::with(FlatColumn::int64('2024'), FlatColumn::int64('other')),
@@ -53,12 +52,38 @@ foreach (['php' => static fn(Options $options): Writer => Writer::php(options: $
     }
 }
 
+foreach (['php' => static fn(Options $options): Writer => Writer::php(options: $options), 'arrow' => static fn(Options $options): Writer => new Writer(options: $options, engine: new RustParquetEngine())] as $engine => $writer) {
+    $file = MemoryParquetFile::read(Reader::php(), MemoryParquetFile::written(
+        $writer((new Options())->set(Option::COLUMNS_ENCODINGS, ['word' => Encodings::DELTA_BYTE_ARRAY])),
+        Schema::with(FlatColumn::string('word')),
+        [['word' => 'a'], ['word' => 'b'], ['word' => 'a']],
+    ));
+
+    foreach ($file->pageHeaders() as $page) {
+        echo $engine, ': ', $page->pageHeader->type()->name, ' ', $page->pageHeader->encoding()->name, "\n";
+    }
+}
+
 foreach (MemoryParquetFile::read(Reader::php(), MemoryParquetFile::written(
     new Writer(options: (new Options())->set(Option::COLUMNS_ENCODINGS, ['word' => Encodings::PLAIN_DICTIONARY]), engine: new RustParquetEngine()),
     Schema::with(FlatColumn::string('word')),
     [['word' => 'a']],
 ))->pageHeaders() as $page) {
     echo 'arrow PLAIN_DICTIONARY: ', $page->pageHeader->type()->name, ' ', $page->pageHeader->encoding()->name, "\n";
+}
+
+foreach ([
+    'flag' => [FlatColumn::boolean('flag'), Encodings::RLE_DICTIONARY, true],
+    'fixed' => [FlatColumn::fixedSizeByteArray('fixed', 4), Encodings::RLE_DICTIONARY, 'abcd'],
+    'amount' => [FlatColumn::double('amount'), Encodings::DELTA_BINARY_PACKED, 1.5],
+] as $name => [$column, $encoding, $value]) {
+    foreach (['php' => static fn(Options $options): Writer => Writer::php(options: $options), 'arrow' => static fn(Options $options): Writer => new Writer(options: $options, engine: new RustParquetEngine())] as $engine => $writer) {
+        echo $engine, ' ', $name, ': ', arrow_outcome(static fn() => MemoryParquetFile::written(
+            $writer((new Options())->set(Option::COLUMNS_ENCODINGS, [$name => $encoding])),
+            Schema::with($column),
+            [[$name => $value]],
+        )), "\n";
+    }
 }
 
 echo arrow_outcome(static fn() => new RustParquetFileWriter(new StringDestinationStream(path('memory://file.parquet')), SchemaConverter::toExtension(Schema::with(FlatColumn::int64('id'))), Compressions::SNAPPY, ['COLUMNS_COMPRESSIONS' => ['id' => 1]], 100)), "\n";
@@ -76,8 +101,16 @@ php: DICTIONARY_PAGE PLAIN
 php: DATA_PAGE RLE_DICTIONARY
 arrow: DICTIONARY_PAGE PLAIN
 arrow: DATA_PAGE RLE_DICTIONARY
+php: DATA_PAGE DELTA_BYTE_ARRAY
+arrow: DATA_PAGE DELTA_BYTE_ARRAY
 arrow PLAIN_DICTIONARY: DICTIONARY_PAGE PLAIN
 arrow PLAIN_DICTIONARY: DATA_PAGE RLE_DICTIONARY
+php flag: Flow\Parquet\Exception\InvalidArgumentException: RLE_DICTIONARY encoding is not supported for BOOLEAN columns. Column 'flag' has type: BOOLEAN
+arrow flag: Flow\Parquet\Exception\InvalidArgumentException: RLE_DICTIONARY encoding is not supported for BOOLEAN columns. Column 'flag' has type: BOOLEAN
+php fixed: Flow\Parquet\Exception\InvalidArgumentException: RLE_DICTIONARY encoding is not supported for FIXED_LEN_BYTE_ARRAY columns under WRITER_VERSION 1. Column 'fixed' has type: FIXED_LEN_BYTE_ARRAY
+arrow fixed: Flow\Parquet\Exception\InvalidArgumentException: RLE_DICTIONARY encoding is not supported for FIXED_LEN_BYTE_ARRAY columns under WRITER_VERSION 1. Column 'fixed' has type: FIXED_LEN_BYTE_ARRAY
+php amount: Flow\Parquet\Exception\InvalidArgumentException: DELTA_BINARY_PACKED encoding is only supported for INT32 and INT64 columns. Column 'amount' has type: DOUBLE
+arrow amount: Flow\Parquet\Exception\InvalidArgumentException: DELTA_BINARY_PACKED encoding is only supported for INT32 and INT64 columns. Column 'amount' has type: DOUBLE
 Flow\Parquet\Exception\InvalidArgumentException: COLUMNS_COMPRESSIONS['id'] must be a string
 Flow\Parquet\Exception\InvalidArgumentException: COLUMNS_ENCODINGS['id'] must be a string
 Flow\Parquet\Exception\InvalidArgumentException: COLUMNS_COMPRESSIONS has a key that is not a column path

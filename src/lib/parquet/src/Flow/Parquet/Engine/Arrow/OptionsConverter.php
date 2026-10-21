@@ -46,6 +46,7 @@ final class OptionsConverter
             [Option::ROW_GROUP_SIZE_BYTES,         'ROW_GROUP_SIZE_BYTES'],
             [Option::PAGE_SIZE_BYTES,              'PAGE_SIZE_BYTES'],
             [Option::PAGE_MAXIMUM_ROWS_COUNT,      'PAGE_MAXIMUM_ROWS_COUNT'],
+            [Option::DICTIONARY_ENABLED,           'DICTIONARY_ENABLED'],
             [Option::DICTIONARY_PAGE_SIZE,         'DICTIONARY_PAGE_SIZE'],
             [Option::WRITER_VERSION,               'WRITER_VERSION'],
             [Option::STATISTICS_TRUNCATE_LENGTH,   'STATISTICS_TRUNCATE_LENGTH'],

@@ -47,6 +47,11 @@ final readonly class DataPageHeaderV2
         return $this->encoding;
     }
 
+    public function isCompressed(): bool
+    {
+        return $this->isCompressed ?? true;
+    }
+
     public function repetitionsByteLength(): int
     {
         return $this->repetitionsByteLength;

@@ -7,11 +7,10 @@ namespace Flow\Parquet\Data;
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Exception\RuntimeException;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 
-use function bcadd;
-use function bccomp;
-use function bcsub;
-use function is_float;
+use function array_map;
+use function array_merge;
 use function ord;
 use function strlen;
 
@@ -26,6 +25,7 @@ final readonly class DeltaBinaryPackedDecoder
         private int $miniblockSize = self::DEFAULT_MINIBLOCK_SIZE,
         private DeltaCalculator $deltaCalculator = new DeltaCalculator(),
         private ZigZag $zigzag = new ZigZag(),
+        private PhysicalType $physicalType = PhysicalType::INT64,
     ) {
         if (($this->blockSize % 128) !== 0) {
             throw new InvalidArgumentException('Block size must be a multiple of 128');
@@ -43,27 +43,31 @@ final readonly class DeltaBinaryPackedDecoder
     /**
      * @return array<int>
      */
-    public function decode(string $data, int $valueCount): array
+    public function decode(BinaryBufferReader $reader, int $valueCount): array
     {
         if ($valueCount === 0) {
             return [];
         }
 
-        if ($data === '') {
+        if ($reader->remainingLength()->bytes() === 0) {
             throw new RuntimeException('Cannot decode empty data when value count is greater than 0');
         }
 
-        $header = $this->readHeader($reader = new BinaryBufferReader($data));
+        $header = $this->readHeader($reader);
 
         if ($header->totalValues !== $valueCount) {
             throw new RuntimeException("Value count mismatch: expected {$valueCount}, got {$header->totalValues}");
         }
 
-        if ($valueCount === 1) {
-            return [$header->firstValue];
-        }
+        $values = $valueCount === 1
+            ? [$header->firstValue]
+            : $this->reconstructValues($header->firstValue, $this->readBlocks($reader, $valueCount - 1, $header));
 
-        return $this->reconstructValues($header->firstValue, $this->readBlocks($reader, $valueCount - 1, $header));
+        return (
+            $this->physicalType === PhysicalType::INT32
+                ? array_map($this->deltaCalculator->toInt32(...), $values)
+                : $values
+        );
     }
 
     /**
@@ -82,7 +86,7 @@ final readonly class DeltaBinaryPackedDecoder
             $bitWidths[] = ord($reader->readBytes(1));
         }
 
-        $deltas = [];
+        $miniblocks = [];
         $deltasRead = 0;
 
         for (
@@ -108,41 +112,12 @@ final readonly class DeltaBinaryPackedDecoder
                 $miniblockDeltas = $this->unpackMiniblockFromString($packedRaw, $bitWidth, $valuesToRead);
             }
 
-            $actualDeltas = array_map(
-                static function ($delta) use ($minDelta) {
-                    // PHP converts int overflow to float at runtime, so $result may be float even though both operands are int.
-                    // PHPStan models int arithmetic as never overflowing, which is why the is_float check below is suppressed.
-                    $result = $delta + $minDelta;
-
-                    // Handle float overflow precisely using BCMath
-                    // @mago-ignore analysis:impossible-condition
-                    if (is_float($result)) {
-                        // Use BCMath for precise integer arithmetic
-                        $preciseResult = bcadd((string) $delta, (string) $minDelta, 0);
-
-                        // Apply 2's complement wrapping for 64-bit integers
-                        // @mago-ignore analysis:redundant-condition
-                        // @mago-ignore analysis:redundant-comparison
-                        if (PHP_INT_SIZE === 8) {
-                            if (bccomp($preciseResult, (string) PHP_INT_MAX, 0) > 0) {
-                                $preciseResult = bcsub($preciseResult, '18446744073709551616', 0);
-                            } elseif (bccomp($preciseResult, (string) PHP_INT_MIN, 0) < 0) {
-                                $preciseResult = bcadd($preciseResult, '18446744073709551616', 0);
-                            }
-                        }
-
-                        return (int) $preciseResult;
-                    }
-
-                    return $result;
-                },
-                $miniblockDeltas,
-            );
-            $deltas = array_merge($deltas, $actualDeltas);
+            $actualDeltas = $this->deltaCalculator->calculateAbsoluteDeltas($miniblockDeltas, $minDelta);
+            $miniblocks[] = $actualDeltas;
             $deltasRead += count($actualDeltas);
         }
 
-        return array_slice($deltas, 0, $blockDeltaCount);
+        return array_slice(array_merge(...$miniblocks), 0, $blockDeltaCount);
     }
 
     /**
@@ -150,7 +125,7 @@ final readonly class DeltaBinaryPackedDecoder
      */
     private function readBlocks(BinaryBufferReader $reader, int $deltaCount, DeltaHeader $header): array
     {
-        $deltas = [];
+        $blocks = [];
         $deltasRead = 0;
 
         while ($deltasRead < $deltaCount) {
@@ -158,11 +133,11 @@ final readonly class DeltaBinaryPackedDecoder
             $blockDeltaCount = min($header->blockSize, $remainingDeltas);
 
             $blockDeltas = $this->readBlock($reader, $blockDeltaCount, $header);
-            $deltas = array_merge($deltas, $blockDeltas);
+            $blocks[] = $blockDeltas;
             $deltasRead += count($blockDeltas);
         }
 
-        return $deltas;
+        return array_merge(...$blocks);
     }
 
     private function readHeader(BinaryBufferReader $reader): DeltaHeader
@@ -205,32 +180,27 @@ final readonly class DeltaBinaryPackedDecoder
      */
     private function unpackMiniblockFromString(string $packedData, int $bitWidth, int $valuesToRead): array
     {
-        if ($bitWidth >= 62) {
+        if ($bitWidth > BitWidth::MAX_PACKED_IN_ACCUMULATOR) {
             return $this->unpackMiniblockFromStringSafe($packedData, $bitWidth, $valuesToRead);
         }
 
         $values = [];
-        $bitOffset = 0;
+        $mask = (1 << $bitWidth) - 1;
+        $accumulator = 0;
+        $accumulatedBits = 0;
+        $byteIndex = 0;
         $dataLen = strlen($packedData);
 
         for ($valueIndex = 0; $valueIndex < $valuesToRead; $valueIndex++) {
-            $value = 0;
-
-            for ($bit = 0; $bit < $bitWidth; $bit++) {
-                $byteIndex = intdiv($bitOffset, 8);
-                $bitIndex = $bitOffset % 8;
-
-                if ($byteIndex >= $dataLen) {
-                    break;
-                }
-
-                $byte = ord($packedData[$byteIndex]);
-                $bitValue = ($byte >> $bitIndex) & 1;
-                $value |= $bitValue << $bit;
-                $bitOffset++;
+            while ($accumulatedBits < $bitWidth) {
+                $accumulator |= ($byteIndex < $dataLen ? ord($packedData[$byteIndex]) : 0) << $accumulatedBits;
+                $byteIndex++;
+                $accumulatedBits += 8;
             }
 
-            $values[] = $value;
+            $values[] = $accumulator & $mask;
+            $accumulator >>= $bitWidth;
+            $accumulatedBits -= $bitWidth;
         }
 
         return $values;

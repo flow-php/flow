@@ -82,7 +82,17 @@ enum Option
     case COLUMN_INDEX_TRUNCATE_LENGTH;
 
     /**
-     * Whenever size of the dictionary goes above this value, PagesBuilders is going to fallback to PLAIN encoding.
+     * Columns without a COLUMNS_ENCODINGS entry are dictionary-encoded (RLE_DICTIONARY), except BOOLEAN and, under
+     * writer version 1, FIXED_LEN_BYTE_ARRAY, as arrow-rs and parquet-java write them. False writes the writer
+     * version's fallback encoding instead. A COLUMNS_ENCODINGS entry always wins.
+     *
+     * Default value is true
+     */
+    case DICTIONARY_ENABLED;
+
+    /**
+     * Once the column chunk's dictionary reaches this size, the rest of the chunk falls back to the writer version's
+     * fallback encoding (PLAIN under v1).
      *
      * Default value is 1Mb
      */

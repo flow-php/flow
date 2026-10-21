@@ -12,9 +12,11 @@ use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Schema;
+use Throwable;
 
 use function file_exists;
 use function Flow\Filesystem\DSL\path;
+use function unlink;
 
 final class Writer
 {
@@ -78,12 +80,16 @@ final class Writer
             throw new InvalidArgumentException("File {$path} already exists");
         }
 
-        $this->file = $this->engine->openForWrite(
-            NativeLocalDestinationStream::openBlank(path($path)),
-            $schema,
-            $this->compression,
-            $this->options,
-        );
+        $stream = NativeLocalDestinationStream::openBlank(path($path));
+
+        try {
+            $this->file = $this->engine->openForWrite($stream, $schema, $this->compression, $this->options);
+        } catch (Throwable $exception) {
+            $stream->close();
+            unlink($path);
+
+            throw $exception;
+        }
     }
 
     public function openForStream(DestinationStream $stream, Schema $schema): void
@@ -100,13 +106,16 @@ final class Writer
             throw new InvalidArgumentException("File {$path} already exists");
         }
 
-        $this->engine->writeRows(
-            NativeLocalDestinationStream::openBlank(path($path)),
-            $schema,
-            $this->compression,
-            $this->options,
-            $rows,
-        );
+        $stream = NativeLocalDestinationStream::openBlank(path($path));
+
+        try {
+            $this->engine->writeRows($stream, $schema, $this->compression, $this->options, $rows);
+        } catch (Throwable $exception) {
+            $stream->close();
+            unlink($path);
+
+            throw $exception;
+        }
     }
 
     /**

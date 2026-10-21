@@ -22,8 +22,7 @@ use Flow\Parquet\ParquetFile\Schema\MapValue;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Writer\ColumnChunkBuilder;
-use Flow\Parquet\Writer\ColumnChunkBuilder\DeltaBinaryPackedColumnChunkBuilder;
-use Flow\Parquet\Writer\ColumnChunkBuilder\PlainFlatColumnChunkBuilder;
+use Flow\Parquet\Writer\ColumnChunkBuilder\FlatColumnChunkBuilder;
 use Flow\Parquet\Writer\ColumnChunkBuilder\RLEDictionaryChunkBuilder;
 use Flow\Parquet\Writer\ColumnChunkBuilders;
 use Flow\Parquet\Writer\ColumnChunkContainer;
@@ -323,11 +322,25 @@ final class ColumnChunkBuildersTest extends TestCase
         $buildersArray = $buildersProperty->getValue($builders);
 
         // Verify custom encodings
-        static::assertInstanceOf(DeltaBinaryPackedColumnChunkBuilder::class, $buildersArray['user_id']);
+        static::assertInstanceOf(FlatColumnChunkBuilder::class, $buildersArray['user_id']);
+        $buildersArray['user_id']->addColumn(
+            new WriteFlatColumnValues($userIdColumn, [0], [$userIdColumn->maxDefinitionsLevel()], [7]),
+        );
+        static::assertContains(
+            Encodings::DELTA_BINARY_PACKED,
+            $buildersArray['user_id']->flush(0)[0]->columnChunk->encodings(),
+        );
         static::assertInstanceOf(RLEDictionaryChunkBuilder::class, $buildersArray['status']);
 
         // Verify default encoding is used for description (not specified in custom encodings)
-        static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['description']);
+        static::assertInstanceOf(RLEDictionaryChunkBuilder::class, $buildersArray['description']);
+        $buildersArray['description']->addColumn(
+            new WriteFlatColumnValues($descriptionColumn, [0], [$descriptionColumn->maxDefinitionsLevel()], ['a']),
+        );
+        static::assertContains(
+            Encodings::RLE_DICTIONARY,
+            $buildersArray['description']->flush(0)[0]->columnChunk->encodings(),
+        );
     }
 
     public function test_custom_encoding_overrides_automatic_delta_selection(): void
@@ -350,7 +363,11 @@ final class ColumnChunkBuildersTest extends TestCase
         $buildersArray = $buildersProperty->getValue($builders);
         static::assertIsArray($buildersArray);
 
-        static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['user_id']);
+        static::assertInstanceOf(FlatColumnChunkBuilder::class, $buildersArray['user_id']);
+        $buildersArray['user_id']->addColumn(
+            new WriteFlatColumnValues($flatColumn, [0], [$flatColumn->maxDefinitionsLevel()], [7]),
+        );
+        static::assertContains(Encodings::PLAIN, $buildersArray['user_id']->flush(0)[0]->columnChunk->encodings());
     }
 
     public function test_custom_encoding_selection_in_options(): void
@@ -376,9 +393,16 @@ final class ColumnChunkBuildersTest extends TestCase
         $buildersArray = $buildersProperty->getValue($builders);
         static::assertIsArray($buildersArray);
 
-        static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['col1']);
+        static::assertInstanceOf(FlatColumnChunkBuilder::class, $buildersArray['col1']);
+        $buildersArray['col1']->addColumn(new WriteFlatColumnValues($col1, [0], [$col1->maxDefinitionsLevel()], ['a']));
+        static::assertContains(Encodings::PLAIN, $buildersArray['col1']->flush(0)[0]->columnChunk->encodings());
         static::assertInstanceOf(RLEDictionaryChunkBuilder::class, $buildersArray['col2']);
-        static::assertInstanceOf(DeltaBinaryPackedColumnChunkBuilder::class, $buildersArray['col3']);
+        static::assertInstanceOf(FlatColumnChunkBuilder::class, $buildersArray['col3']);
+        $buildersArray['col3']->addColumn(new WriteFlatColumnValues($col3, [0], [$col3->maxDefinitionsLevel()], [7]));
+        static::assertContains(
+            Encodings::DELTA_BINARY_PACKED,
+            $buildersArray['col3']->flush(0)[0]->columnChunk->encodings(),
+        );
     }
 
     // Custom encoding selection tests
@@ -402,7 +426,14 @@ final class ColumnChunkBuildersTest extends TestCase
         $buildersArray = $buildersProperty->getValue($builders);
         static::assertIsArray($buildersArray);
 
-        static::assertInstanceOf(DeltaBinaryPackedColumnChunkBuilder::class, $buildersArray['user_id']);
+        static::assertInstanceOf(FlatColumnChunkBuilder::class, $buildersArray['user_id']);
+        $buildersArray['user_id']->addColumn(
+            new WriteFlatColumnValues($flatColumn, [0], [$flatColumn->maxDefinitionsLevel()], [7]),
+        );
+        static::assertContains(
+            Encodings::DELTA_BINARY_PACKED,
+            $buildersArray['user_id']->flush(0)[0]->columnChunk->encodings(),
+        );
     }
 
     public function test_custom_encoding_selection_with_nested_columns(): void
@@ -442,7 +473,14 @@ final class ColumnChunkBuildersTest extends TestCase
 
         // Verify the correct encoding builders were created
         // Order: [0] = user.id (DELTA_BINARY_PACKED), [1] = user.name (RLE_DICTIONARY)
-        static::assertInstanceOf(DeltaBinaryPackedColumnChunkBuilder::class, $childBuilderValues[0]);
+        static::assertInstanceOf(FlatColumnChunkBuilder::class, $childBuilderValues[0]);
+        $childBuilderValues[0]->addColumn(
+            new WriteFlatColumnValues($userIdColumn, [0], [$userIdColumn->maxDefinitionsLevel()], [7]),
+        );
+        static::assertContains(
+            Encodings::DELTA_BINARY_PACKED,
+            $childBuilderValues[0]->flush(0)[0]->columnChunk->encodings(),
+        );
         static::assertInstanceOf(RLEDictionaryChunkBuilder::class, $childBuilderValues[1]);
     }
 
@@ -465,7 +503,11 @@ final class ColumnChunkBuildersTest extends TestCase
         $buildersArray = $buildersProperty->getValue($builders);
         static::assertIsArray($buildersArray);
 
-        static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['description']);
+        static::assertInstanceOf(FlatColumnChunkBuilder::class, $buildersArray['description']);
+        $buildersArray['description']->addColumn(
+            new WriteFlatColumnValues($flatColumn, [0], [$flatColumn->maxDefinitionsLevel()], ['a']),
+        );
+        static::assertContains(Encodings::PLAIN, $buildersArray['description']->flush(0)[0]->columnChunk->encodings());
     }
 
     public function test_custom_encoding_selection_with_rle_dictionary(): void
@@ -593,7 +635,14 @@ final class ColumnChunkBuildersTest extends TestCase
         static::assertIsArray($buildersArray);
 
         // Should use default PLAIN encoding since no custom encoding specified
-        static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['user_id']);
+        static::assertInstanceOf(RLEDictionaryChunkBuilder::class, $buildersArray['user_id']);
+        $buildersArray['user_id']->addColumn(
+            new WriteFlatColumnValues($flatColumn, [0], [$flatColumn->maxDefinitionsLevel()], [7]),
+        );
+        static::assertContains(
+            Encodings::RLE_DICTIONARY,
+            $buildersArray['user_id']->flush(0)[0]->columnChunk->encodings(),
+        );
     }
 
     public function test_flush_calculates_offset_correctly(): void

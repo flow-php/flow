@@ -37,6 +37,7 @@ final class Options
             Option::STATISTICS_TRUNCATE_LENGTH->name => 64,
             Option::COLUMN_INDEX_TRUNCATE_LENGTH->name => 64,
             Option::PAGE_HEADER_STATISTICS->name => false,
+            Option::DICTIONARY_ENABLED->name => true,
             Option::DICTIONARY_PAGE_SIZE->name => SizeUnits::MiB_SIZE,
             Option::BROTLI_COMPRESSION_LEVEL->name => 11,
             Option::GZIP_COMPRESSION_LEVEL->name => 9,

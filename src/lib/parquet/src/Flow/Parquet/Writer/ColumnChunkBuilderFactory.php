@@ -4,16 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Writer;
 
-use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
-use Flow\Parquet\Writer\ColumnChunkBuilder\DeltaBinaryPackedColumnChunkBuilder;
-use Flow\Parquet\Writer\ColumnChunkBuilder\PlainFlatColumnChunkBuilder;
+use Flow\Parquet\Writer\ColumnChunkBuilder\FlatColumnChunkBuilder;
 use Flow\Parquet\Writer\ColumnChunkBuilder\RLEDictionaryChunkBuilder;
+use Flow\Parquet\Writer\ValueStorage\BooleanValueStorage;
+use Flow\Parquet\Writer\ValueStorage\BufferValueStorage;
+use Flow\Parquet\Writer\ValueStorage\DeltaBinaryPackedValueStorage;
+use Flow\Parquet\Writer\ValueStorage\DeltaByteArrayValueStorage;
+use Flow\Parquet\Writer\ValueStorage\DeltaLengthByteArrayValueStorage;
+use Flow\Parquet\Writer\ValueStorage\RLEBooleanValueStorage;
+use Flow\Parquet\Writer\ValueStorage\ValueStorage;
 
 use function array_key_exists;
 
@@ -42,75 +47,52 @@ final class ColumnChunkBuilderFactory
             }
         }
 
+        $policy = new ColumnEncodingPolicy(
+            $options->getInt(Option::WRITER_VERSION),
+            $options->getBool(Option::DICTIONARY_ENABLED),
+        );
+        $requested = null;
+
         if ($options->has(Option::COLUMNS_ENCODINGS)) {
             $columnsEncodings = $options->getArray(Option::COLUMNS_ENCODINGS);
 
             if ($columnsEncodings !== null && array_key_exists($flatPath, $columnsEncodings)) {
                 // @mago-ignore analysis:mixed-assignment
-                $encoding = $columnsEncodings[$flatPath];
+                $columnEncoding = $columnsEncodings[$flatPath];
 
-                if ($encoding instanceof Encodings) {
-                    return self::createForEncoding($column, $encoding, $options, $columnCompression, $statistics);
+                if ($columnEncoding instanceof Encodings) {
+                    $requested = $columnEncoding;
                 }
             }
         }
 
-        if (
-            ($column->type() === PhysicalType::INT32 || $column->type() === PhysicalType::INT64)
-            && $options->getInt(Option::WRITER_VERSION) === 2
-        ) {
-            return new DeltaBinaryPackedColumnChunkBuilder($column, $options, $columnCompression, $statistics);
-        }
+        $encoding = $policy->encodingFor($column, $requested);
 
-        return new PlainFlatColumnChunkBuilder($column, $options, $columnCompression, $statistics);
-    }
-
-    private static function createForEncoding(
-        FlatColumn $column,
-        Encodings $encoding,
-        Options $options,
-        Compressions $compressions,
-        StatisticsOptions $statistics,
-    ): ColumnChunkBuilder {
-        self::validateEncodingForColumn($column, $encoding);
-
-        return match ($encoding) {
-            Encodings::PLAIN => new PlainFlatColumnChunkBuilder($column, $options, $compressions, $statistics),
-            Encodings::RLE_DICTIONARY => new RLEDictionaryChunkBuilder($column, $options, $compressions, $statistics),
-            Encodings::DELTA_BINARY_PACKED => new DeltaBinaryPackedColumnChunkBuilder(
+        return $encoding === Encodings::RLE_DICTIONARY
+            ? new RLEDictionaryChunkBuilder(
                 $column,
                 $options,
-                $compressions,
+                $columnCompression,
                 $statistics,
-            ),
-            default => throw new InvalidArgumentException("Unsupported encoding for column builder: {$encoding->name}"),
-        };
+                self::valueStorage($policy->fallbackEncoding($column->type()), $column),
+            )
+            : new FlatColumnChunkBuilder(
+                $column,
+                $options,
+                $columnCompression,
+                $statistics,
+                self::valueStorage($encoding, $column),
+            );
     }
 
-    private static function validateEncodingForColumn(FlatColumn $column, Encodings $encoding): void
+    private static function valueStorage(Encodings $encoding, FlatColumn $column): ValueStorage
     {
-        $columnType = $column->type();
-        $encodingName = $encoding->name;
-        $flatPath = $column->flatPath();
-
-        match ($encoding) {
-            Encodings::DELTA_BINARY_PACKED => $columnType !== PhysicalType::INT32 && $columnType !== PhysicalType::INT64
-                ? throw new InvalidArgumentException(
-                    'DELTA_BINARY_PACKED encoding is only supported for INT32 and INT64 columns. '
-                    . "Column '{$flatPath}' has type: {$columnType->name}",
-                )
-                : null,
-            Encodings::RLE_DICTIONARY => $columnType === PhysicalType::FIXED_LEN_BYTE_ARRAY
-                ? throw new InvalidArgumentException(
-                    'RLE_DICTIONARY encoding is not supported for FIXED_LEN_BYTE_ARRAY columns. '
-                    . "Column '{$flatPath}' has type: {$columnType->name}",
-                )
-                : null,
-            Encodings::PLAIN => null,
-            default => throw new InvalidArgumentException(
-                "Encoding '{$encodingName}' is not implemented. "
-                . 'Supported encodings: PLAIN, RLE_DICTIONARY, DELTA_BINARY_PACKED',
-            ),
+        return match ($encoding) {
+            Encodings::DELTA_BINARY_PACKED => new DeltaBinaryPackedValueStorage(),
+            Encodings::DELTA_LENGTH_BYTE_ARRAY => new DeltaLengthByteArrayValueStorage(),
+            Encodings::DELTA_BYTE_ARRAY => new DeltaByteArrayValueStorage(),
+            Encodings::RLE => new RLEBooleanValueStorage(),
+            default => $column->type() === PhysicalType::BOOLEAN ? new BooleanValueStorage() : new BufferValueStorage(),
         };
     }
 }

@@ -21,7 +21,6 @@ use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\Column;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Writer\ColumnChunkBuilder;
 use Flow\Parquet\Writer\ColumnChunkContainer;
 use Flow\Parquet\Writer\PageBuilder\RLEBitPackedPacker;
@@ -30,15 +29,13 @@ use Flow\Parquet\Writer\PageContainers;
 use Flow\Parquet\Writer\PageIndexBuilder;
 use Flow\Parquet\Writer\StatisticsCounter;
 use Flow\Parquet\Writer\StatisticsOptions;
-use Flow\Parquet\Writer\ValueStorage\BooleanValueStorage;
-use Flow\Parquet\Writer\ValueStorage\BufferValueStorage;
 use Flow\Parquet\Writer\ValueStorage\ValueStorage;
 use RuntimeException;
 
 use function count;
 use function strlen;
 
-final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
+final class FlatColumnChunkBuilder implements ColumnChunkBuilder
 {
     private readonly ByteOrder $byteOrder;
 
@@ -66,23 +63,18 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
 
     private int $rowsCount = 0;
 
-    private readonly ValueStorage $valueStorage;
-
     public function __construct(
         private readonly FlatColumn $column,
         private readonly Options $options,
         private readonly Compressions $compression,
         private readonly StatisticsOptions $statistics,
+        private readonly ValueStorage $valueStorage,
     ) {
         $this->pageIndex = $this->statistics->pageIndex($this->column);
         $this->pages = new PageContainers();
         $this->chunkStatistics = $this->statistics->counter($this->column);
         $this->pageStatistics = $this->statistics->counter($this->column);
         $this->byteOrder = ByteOrder::LITTLE_ENDIAN;
-
-        $this->valueStorage = $this->column->type() === PhysicalType::BOOLEAN
-            ? new BooleanValueStorage()
-            : new BufferValueStorage();
     }
 
     public function addColumn(WriteFlatColumnValues $columnValues): void
@@ -196,7 +188,7 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
     public function isEmpty(): bool
     {
         return (
-            $this->valueStorage->size() === 0
+            $this->valueStorage->isEmpty()
             && count($this->definitionLevels) === 0
             && count($this->repetitionLevels) === 0
         );
@@ -204,7 +196,7 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
 
     public function isFull(): bool
     {
-        return $this->valueStorage->size() >= $this->options->getInt(Option::PAGE_SIZE_BYTES);
+        return $this->valueStorage->plainSize() >= $this->options->getInt(Option::PAGE_SIZE_BYTES);
     }
 
     public function uncompressedSize(): int
@@ -243,7 +235,7 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
             strlen($compressedBuffer),
             strlen($pageBuffer),
             dataPageHeader: new DataPageHeader(
-                encoding: Encodings::PLAIN,
+                encoding: $this->valueStorage->encoding(),
                 repetitionLevelEncoding: Encodings::RLE,
                 definitionLevelEncoding: Encodings::RLE,
                 valuesCount: count($this->definitionLevels),
@@ -285,18 +277,19 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
             $definitionsLength = 0;
         }
 
-        $compressedBuffer = $codec->compress($this->valueStorage->getBuffer(), $compression);
+        $encodedValues = $this->valueStorage->getBuffer();
+        $compressedBuffer = $codec->compress($encodedValues, $compression);
 
         $pageHeader = new PageHeader(
             Type::DATA_PAGE_V2,
             strlen($compressedBuffer) + $repetitionsLength + $definitionsLength,
-            strlen($this->valueStorage->getBuffer()) + $repetitionsLength + $definitionsLength,
+            strlen($encodedValues) + $repetitionsLength + $definitionsLength,
             dataPageHeader: null,
             dataPageHeaderV2: new DataPageHeaderV2(
                 valuesCount: count($this->definitionLevels),
                 nullsCount: $this->nullCount,
                 rowsCount: $this->rowsCount,
-                encoding: Encodings::PLAIN,
+                encoding: $this->valueStorage->encoding(),
                 definitionsByteLength: $definitionsLength,
                 repetitionsByteLength: $repetitionsLength,
                 isCompressed: !($compression === Compressions::UNCOMPRESSED),
@@ -311,7 +304,9 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
     private function currentPageUncompressedSize(): int
     {
         return (
-            $this->valueStorage->size() + (count($this->repetitionLevels) * 4) + (count($this->definitionLevels) * 4)
+            $this->valueStorage->plainSize()
+            + (count($this->repetitionLevels) * 4)
+            + (count($this->definitionLevels) * 4)
         );
     }
 }

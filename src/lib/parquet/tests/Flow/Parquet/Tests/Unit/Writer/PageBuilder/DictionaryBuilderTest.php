@@ -318,15 +318,14 @@ final class DictionaryBuilderTest extends TestCase
         static::assertSame([0, 0, 0, 0], $result->indices);
     }
 
-    public function test_unsupported_byte_array_logical_type_throws_exception(): void
+    public function test_byte_array_without_a_listed_logical_type_builds_a_scalar_dictionary(): void
     {
-        $column = new FlatColumn('test_column', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::integer(32, true));
-        $data = new WriteFlatColumnValues($column, values: [1, 2, 3]);
+        $column = new FlatColumn('test_column', PhysicalType::FIXED_LEN_BYTE_ARRAY, typeLength: 2);
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Building dictionary for "INTEGER" is not supported');
+        $dictionary = $this->builder->build($column, new WriteFlatColumnValues($column, values: ['ab', 'cd', 'ab']));
 
-        $this->builder->build($column, $data);
+        static::assertSame(['ab', 'cd'], $dictionary->dictionary);
+        static::assertSame([0, 1, 0], $dictionary->indices);
     }
 
     public function test_unsupported_physical_type_throws_exception(): void

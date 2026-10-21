@@ -391,8 +391,11 @@ $writer->close();
 ### Writer Options
 
 - `COLUMN_INDEX_TRUNCATE_LENGTH` - default: `64` - bytes a string/binary page's min/max in the column index are cut to.
+- `DICTIONARY_ENABLED` - default: `true` - columns without a `COLUMNS_ENCODINGS` entry are written `RLE_DICTIONARY`,
+  except BOOLEAN and, under `WRITER_VERSION` 1, FIXED_LEN_BYTE_ARRAY (as arrow-rs and parquet-java); `false` writes the
+  fallback encoding instead.
 - `DICTIONARY_PAGE_SIZE` - default: `1Mb` - maximum size of dictionary page; the pages of a column chunk after it is
-  reached are written `PLAIN`.
+  reached use the fallback encoding.
 - `GZIP_COMPRESSION_LEVEL` - default: `9` - compression level for GZIP compression (applied only when GZIP compression
   is enabled).
 - `COLUMNS_BLOOM_FILTERS` - default: `null` - `BloomFilterOptions` by column flat path: those columns get a bloom filter
@@ -409,7 +412,9 @@ $writer->close();
   column index); the offset index is written at every level.
 - `STATISTICS_TRUNCATE_LENGTH` - default: `64` - bytes a string/binary column chunk's min/max statistics are cut to.
 - `VALIDATE_DATA` - default: `true` - if set to `true` then writer will validate data against schema.
-- `WRITER_VERSION` - default `1` - tells writer which version of parquet format should be used.
+- `WRITER_VERSION` - default `1` - `2` writes data page v2. It also picks the fallback encoding used without a
+  dictionary: `PLAIN` under `1`; under `2` `RLE` (BOOLEAN), `DELTA_BINARY_PACKED` (INT32/INT64), `DELTA_BYTE_ARRAY`
+  (BYTE_ARRAY/FIXED_LEN_BYTE_ARRAY), `PLAIN` otherwise, as arrow-rs and parquet-java fall back.
 
 Two most important options that can heavily affect memory usage are:
 
@@ -715,9 +720,12 @@ You can specify custom encodings for individual columns using flat path notation
 
 ### Available Encodings
 
+Without a `COLUMNS_ENCODINGS` entry both engines write `RLE_DICTIONARY` (see `DICTIONARY_ENABLED`), and the
+`WRITER_VERSION` fallback encoding past `DICTIONARY_PAGE_SIZE`.
+
 #### PLAIN
 
-The default encoding that stores values as-is without any compression scheme.
+Stores values as-is without any compression scheme.
 
 **When to use:**
 
@@ -748,7 +756,7 @@ Run Length Encoding with Dictionary compression. Values are stored in a dictiona
 - Enumeration-like data
 - Significant file size reduction (often 50-90% smaller)
 
-**Supported types:** All types except `FIXED_LEN_BYTE_ARRAY`
+**Supported types:** All types except `BOOLEAN`; `FIXED_LEN_BYTE_ARRAY` only under `WRITER_VERSION` 2
 
 ```php
 $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
@@ -757,6 +765,8 @@ $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
     'department' => Encodings::RLE_DICTIONARY       // 'engineering', 'sales', 'marketing'
 ]);
 ```
+
+Past `DICTIONARY_PAGE_SIZE`, the rest of the chunk uses the `WRITER_VERSION` fallback encoding (PLAIN under v1).
 
 #### DELTA_BINARY_PACKED
 
@@ -778,7 +788,34 @@ $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
 ]);
 ```
 
+#### DELTA_LENGTH_BYTE_ARRAY
+
+**Supported types:** Only `BYTE_ARRAY`
+
+```php
+$options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
+    'comment' => Encodings::DELTA_LENGTH_BYTE_ARRAY,
+]);
+```
+
+**When to use:** many distinct strings.
+
+#### DELTA_BYTE_ARRAY
+
+**Supported types:** `BYTE_ARRAY` and `FIXED_LEN_BYTE_ARRAY`
+
+```php
+$options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
+    'url' => Encodings::DELTA_BYTE_ARRAY,
+]);
+```
+
+**When to use:** sorted strings sharing prefixes.
+
 ### Using Custom Encodings
+
+Both engines write exactly the encoding given and refuse one the column type cannot take; only `RLE_DICTIONARY` adds a
+dictionary.
 
 #### Basic Column Encoding
 
@@ -914,11 +951,14 @@ $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
 
 ### Encoding Compatibility
 
-| Encoding            | INT32/INT64 | BYTE_ARRAY | BOOLEAN | FLOAT/DOUBLE | FIXED_LEN_BYTE_ARRAY |
-|---------------------|-------------|------------|---------|--------------|----------------------|
-| PLAIN               | yes         | yes        | yes     | yes          | yes                  |
-| RLE_DICTIONARY      | yes         | yes        | yes     | yes          | no                   |
-| DELTA_BINARY_PACKED | yes         | no         | no      | no           | no                   |
+| Encoding                | INT32/INT64 | BYTE_ARRAY | BOOLEAN | FLOAT/DOUBLE | FIXED_LEN_BYTE_ARRAY |
+|-------------------------|-------------|------------|---------|--------------|----------------------|
+| PLAIN                   | yes         | yes        | yes     | yes          | yes                  |
+| RLE                     | no          | no         | yes     | no           | no                   |
+| RLE_DICTIONARY          | yes         | yes        | no      | yes          | v2 only              |
+| DELTA_BINARY_PACKED     | yes         | no         | no      | no           | no                   |
+| DELTA_LENGTH_BYTE_ARRAY | no          | yes        | no      | no           | no                   |
+| DELTA_BYTE_ARRAY        | no          | yes        | no      | no           | yes                  |
 
 ### Performance Guidelines
 

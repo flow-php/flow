@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Unit\Data;
 
 use Flow\Parquet\Data\DeltaCalculator;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
 final class DeltaCalculatorTest extends TestCase
@@ -336,5 +337,60 @@ final class DeltaCalculatorTest extends TestCase
                 'Roundtrip failed for values: ' . implode(', ', $originalValues),
             );
         }
+    }
+
+    /**
+     * @param list<int> $deltas
+     * @param list<int> $expected
+     */
+    #[TestWith([[5, 7, 9], 5, [0, 2, 4]])]
+    #[TestWith([[2305843009213693952, -1], -1, [2305843009213693953, 0]])]
+    #[TestWith([[2305843009213693953, -1], -1, [2305843009213693954, 0]])]
+    #[TestWith([[PHP_INT_MAX, PHP_INT_MIN], PHP_INT_MIN, [-1, 0]])]
+    public function test_calculate_relative_deltas(array $deltas, int $minDelta, array $expected): void
+    {
+        static::assertSame($expected, (new DeltaCalculator())->calculateRelativeDeltas($deltas, $minDelta));
+    }
+
+    /**
+     * @param list<int> $relativeDeltas
+     * @param list<int> $expected
+     */
+    #[TestWith([[0, 2, 4], 5, [5, 7, 9]])]
+    #[TestWith([[2305843009213693952, 0], 1, [2305843009213693953, 1]])]
+    #[TestWith([[2305843009213693953, 0], 1, [2305843009213693954, 1]])]
+    #[TestWith([[-1, 0], PHP_INT_MIN, [PHP_INT_MAX, PHP_INT_MIN]])]
+    public function test_calculate_absolute_deltas(array $relativeDeltas, int $minDelta, array $expected): void
+    {
+        static::assertSame($expected, (new DeltaCalculator())->calculateAbsoluteDeltas($relativeDeltas, $minDelta));
+    }
+
+    public function test_calculate_absolute_and_relative_deltas_of_nothing(): void
+    {
+        static::assertSame([], (new DeltaCalculator())->calculateAbsoluteDeltas([], 3));
+        static::assertSame([], (new DeltaCalculator())->calculateRelativeDeltas([], 3));
+    }
+
+    /**
+     * @param list<int> $values
+     * @param list<int> $expected
+     */
+    #[TestWith([[2305843009213693952, -2305843009213693952], [-4611686018427387904]])]
+    #[TestWith([[2305843009213693953, -2305843009213693953], [-4611686018427387906]])]
+    public function test_calculate_deltas_at_the_overflow_free_bound(array $values, array $expected): void
+    {
+        static::assertSame($expected, (new DeltaCalculator())->calculateDeltas($values));
+    }
+
+    #[TestWith([0, 0])]
+    #[TestWith([2147483647, 2147483647])]
+    #[TestWith([2147483648, -2147483648])]
+    #[TestWith([-2147483649, 2147483647])]
+    #[TestWith([4294967295, -1])]
+    #[TestWith([PHP_INT_MAX, -1])]
+    #[TestWith([PHP_INT_MIN, 0])]
+    public function test_to_int32_wraps_to_signed_32_bits(int $value, int $expected): void
+    {
+        static::assertSame($expected, (new DeltaCalculator())->toInt32($value));
     }
 }

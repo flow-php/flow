@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Writer\ValueStorage;
 
+use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
 interface ValueStorage
@@ -13,11 +14,13 @@ interface ValueStorage
      */
     public function addValues(FlatColumn $column, array $values): void;
 
+    public function encoding(): Encodings;
+
     public function getBuffer(): string;
 
     public function isEmpty(): bool;
 
     public function reset(): void;
 
-    public function size(): int;
+    public function plainSize(): int;
 }

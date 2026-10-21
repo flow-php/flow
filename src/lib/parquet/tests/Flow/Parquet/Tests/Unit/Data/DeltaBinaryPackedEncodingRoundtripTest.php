@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\Data;
 
+use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\Data\DeltaBinaryPackedDecoder;
 use Flow\Parquet\Data\DeltaBinaryPackedEncoder;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -35,7 +36,7 @@ final class DeltaBinaryPackedEncodingRoundtripTest extends TestCase
     public function test_roundtrip_problematic_int64_values(array $values): void
     {
         $encoded = (new DeltaBinaryPackedEncoder())->encode($values);
-        $decoded = (new DeltaBinaryPackedDecoder())->decode($encoded, count($values));
+        $decoded = (new DeltaBinaryPackedDecoder())->decode(new BinaryBufferReader($encoded), count($values));
 
         static::assertSame($values, $decoded, 'Values should roundtrip correctly through delta encoding');
     }

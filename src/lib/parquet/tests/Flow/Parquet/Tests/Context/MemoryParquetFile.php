@@ -97,25 +97,17 @@ final class MemoryParquetFile
      */
     public static function pagedColumns(): string
     {
-        return self::written(
-            Writer::php(options: (new Options())->set(Option::PAGE_SIZE_BYTES, 16)->set(
-                Option::PAGE_SIZE_CHECK_INTERVAL,
-                2,
-            )->set(Option::COLUMNS_ENCODINGS, ['word' => Encodings::RLE_DICTIONARY])),
-            Schema::with(
-                FlatColumn::int64('id'),
-                FlatColumn::string('word'),
-                NestedColumn::list('tags', ListElement::int64()),
-            ),
-            array_map(
-                static fn(int $id): array => [
-                    'id' => $id,
-                    'word' => 'w' . ($id % 3),
-                    'tags' => array_map(static fn(): int => $id, range(0, $id % 3)),
-                ],
-                range(0, 11),
-            ),
-        );
+        return self::written(Writer::php(options: (new Options())
+            ->set(Option::DICTIONARY_ENABLED, false)
+            ->set(Option::PAGE_SIZE_BYTES, 16)
+            ->set(Option::PAGE_SIZE_CHECK_INTERVAL, 2)
+            ->set(Option::COLUMNS_ENCODINGS, [
+                'word' => Encodings::RLE_DICTIONARY,
+            ])), Schema::with(FlatColumn::int64('id'), FlatColumn::string('word'), NestedColumn::list('tags', ListElement::int64())), array_map(static fn(int $id): array => [
+            'id' => $id,
+            'word' => 'w' . ($id % 3),
+            'tags' => array_map(static fn(): int => $id, range(0, $id % 3)),
+        ], range(0, 11)));
     }
 
     /**

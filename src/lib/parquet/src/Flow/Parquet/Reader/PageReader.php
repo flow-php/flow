@@ -19,10 +19,14 @@ use function fread;
 
 final readonly class PageReader
 {
+    private ColumnDataDecoder $decoder;
+
     public function __construct(
         private ByteOrder $byteOrder,
         private Options $options,
-    ) {}
+    ) {
+        $this->decoder = new ColumnDataDecoder($this->byteOrder);
+    }
 
     /**
      * @param resource $stream
@@ -48,12 +52,7 @@ final readonly class PageReader
                     $pageHeader->uncompressedPageSize(),
                 );
 
-                return (new ColumnDataDecoder($this->byteOrder))->decodeData(
-                    $data,
-                    $column,
-                    $dataPageHeader,
-                    $dictionary,
-                );
+                return $this->decoder->decodeData($data, $column, $dataPageHeader, $dictionary);
             case Type::DATA_PAGE_V2:
                 $dataPageHeaderV2 = $pageHeader->dataPageHeaderV2();
 
@@ -65,18 +64,16 @@ final readonly class PageReader
 
                 $levels = $levelsLength > 0 ? $this->readBytes($stream, $levelsLength) : '';
 
-                $data = (new Codec($this->options))->decompress(
-                    $this->readBytes($stream, $pageHeader->compressedPageSize() - $levelsLength),
-                    $codec,
-                    $pageHeader->uncompressedPageSize() - $levelsLength,
-                );
+                $values = $this->readBytes($stream, $pageHeader->compressedPageSize() - $levelsLength);
+                $data = $dataPageHeaderV2->isCompressed()
+                    ? (new Codec($this->options))->decompress(
+                        $values,
+                        $codec,
+                        $pageHeader->uncompressedPageSize() - $levelsLength,
+                    )
+                    : $values;
 
-                return (new ColumnDataDecoder($this->byteOrder))->decodeDataV2(
-                    $levels . $data,
-                    $column,
-                    $dataPageHeaderV2,
-                    $dictionary,
-                );
+                return $this->decoder->decodeDataV2($levels . $data, $column, $dataPageHeaderV2, $dictionary);
 
             default:
                 throw new RuntimeException("Unknown page header type '{$pageHeader->type()->name}'");
@@ -97,7 +94,7 @@ final readonly class PageReader
         $compressedSize = $pageHeader->compressedPageSize();
         $compressed = $compressedSize === 0 ? '' : $this->readBytes($stream, $compressedSize);
 
-        return (new ColumnDataDecoder($this->byteOrder))->decodeDictionary(
+        return $this->decoder->decodeDictionary(
             (new Codec($this->options))->decompress($compressed, $codec, $pageHeader->uncompressedPageSize()),
             $column,
             $dictionaryPageHeader,

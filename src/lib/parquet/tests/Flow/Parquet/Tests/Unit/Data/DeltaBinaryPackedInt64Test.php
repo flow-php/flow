@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\Data;
 
+use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\Data\DeltaBinaryPackedDecoder;
 use Flow\Parquet\Data\DeltaBinaryPackedEncoder;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -59,7 +60,7 @@ final class DeltaBinaryPackedInt64Test extends TestCase
 
         foreach ($workingValues as $values) {
             $encoded = (new DeltaBinaryPackedEncoder())->encode($values);
-            $decoded = (new DeltaBinaryPackedDecoder())->decode($encoded, count($values));
+            $decoded = (new DeltaBinaryPackedDecoder())->decode(new BinaryBufferReader($encoded), count($values));
 
             static::assertSame(
                 $values,
@@ -76,7 +77,7 @@ final class DeltaBinaryPackedInt64Test extends TestCase
     public function test_int64_delta_encoding_roundtrip(array $values): void
     {
         $encoded = (new DeltaBinaryPackedEncoder())->encode($values);
-        $decoded = (new DeltaBinaryPackedDecoder())->decode($encoded, count($values));
+        $decoded = (new DeltaBinaryPackedDecoder())->decode(new BinaryBufferReader($encoded), count($values));
 
         $testName = $this->dataName();
 
