@@ -79,7 +79,7 @@ final class TransformUpTest extends FlowTestCase
         static::assertInstanceOf(Limit::class, $rewritten);
         $select = $rewritten->children()[0];
         static::assertInstanceOf(Select::class, $select);
-        static::assertSame(['name'], $select->entries);
+        static::assertSame(['name'], $select->columns);
     }
 
     /**
@@ -104,7 +104,7 @@ final class TransformUpTest extends FlowTestCase
         static::assertInstanceOf(JoinsFrame::class, $rewritten);
         $left = $rewritten->children()[0];
         static::assertInstanceOf(Select::class, $left);
-        static::assertSame(['name'], $left->entries);
+        static::assertSame(['name'], $left->columns);
         static::assertSame($join->right(), $rewritten->right());
     }
 }

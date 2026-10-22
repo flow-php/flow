@@ -18,7 +18,7 @@ data_frame()
             ['id' => 7, 'name' => 'Ann', 'department' => 'Finances', 'salary' => 8000],
         ])
     )
-    ->withEntry('dense_rank', dense_rank()->over(window()->partitionBy(ref('department'))->orderBy(ref('salary')->desc())))
+    ->withColumn('dense_rank', dense_rank()->over(window()->partitionBy(ref('department'))->orderBy(ref('salary')->desc())))
     ->sortBy([ref('department'), ref('dense_rank')])
     ->collect()
     ->write(to_output(truncate: false))

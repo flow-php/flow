@@ -264,7 +264,7 @@ final class SinkRootTest extends FlowIntegrationTestCase
 
             static::fail('Expected the plan to refuse to bind the sink root against the prefix shape.');
         } catch (SchemaDefinitionNotFoundException $e) {
-            static::assertSame('Schema definition for entry "nope" not found.', $e->getMessage());
+            static::assertSame('Schema definition for column "nope" not found.', $e->getMessage());
         }
 
         static::assertSame(0, $sink->loadsCount);

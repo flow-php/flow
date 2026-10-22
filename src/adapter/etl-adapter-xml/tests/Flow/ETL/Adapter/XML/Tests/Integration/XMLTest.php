@@ -22,21 +22,21 @@ final class XMLTest extends FlowIntegrationTestCase
     {
         $rows = df()
             ->read(from_xml(path(__DIR__ . '/../Fixtures/simple_items.xml'))->withXMLNodePath('root/items'))
-            ->withEntry(
+            ->withColumn(
                 'parent_attribute_01',
                 ref('node')->domElementAttributeValue('items_attribute_01')->cast(type_integer()),
             )
-            ->withEntry(
+            ->withColumn(
                 'parent_attribute_02',
                 ref('node')->domElementAttributeValue('items_attribute_02')->cast(type_integer()),
             )
-            ->withEntry('items', ref('node')->xpath('/*/item'))
-            ->withEntry('item', ref('items')->expand())
-            ->withEntry(
+            ->withColumn('items', ref('node')->xpath('/*/item'))
+            ->withColumn('item', ref('items')->expand())
+            ->withColumn(
                 'item_attribute_01',
                 ref('item')->domElementAttributeValue('item_attribute_01')->cast(type_integer()),
             )
-            ->withEntry('value', ref('item')->cast(type_integer()))
+            ->withColumn('value', ref('item')->cast(type_integer()))
             ->drop('node', 'items', 'item')
             ->fetch();
 
@@ -66,22 +66,22 @@ final class XMLTest extends FlowIntegrationTestCase
     {
         $rows = df()
             ->read(from_xml(path(__DIR__ . '/../Fixtures/partitioned/date=*/*.xml'))->withXMLNodePath('root/items'))
-            ->withEntry(
+            ->withColumn(
                 'parent_attribute_01',
                 ref('node')->domElementAttributeValue('items_attribute_01')->cast(type_integer()),
             )
-            ->withEntry(
+            ->withColumn(
                 'parent_attribute_02',
                 ref('node')->domElementAttributeValue('items_attribute_02')->cast(type_integer()),
             )
-            ->withEntry('items', ref('node')->xpath('/*/item'))
-            ->withEntry('item', ref('items')->expand())
-            ->withEntry(
+            ->withColumn('items', ref('node')->xpath('/*/item'))
+            ->withColumn('item', ref('items')->expand())
+            ->withColumn(
                 'item_attribute_01',
                 ref('item')->domElementAttributeValue('item_attribute_01')->cast(type_integer()),
             )
-            ->withEntry('value', ref('item')->cast(type_integer()))
-            ->withEntry('date', ref('date')->cast('date'))
+            ->withColumn('value', ref('item')->cast(type_integer()))
+            ->withColumn('date', ref('date')->cast('date'))
             ->sortBy([ref('date')->asc()])
             ->drop('node', 'items', 'item')
             ->fetch();

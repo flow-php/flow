@@ -29,7 +29,7 @@ final class StructureTest extends FlowTestCase
                 [['line_id' => 'li-1', 'quantity' => 2], ['line_id' => 'li-2', 'quantity' => null]],
                 schema(str_schema('line_id'), int_schema('quantity', nullable: true)),
             ))
-            ->withEntry('line_item', structure(['id' => ref('line_id'), 'quantity' => ref('quantity')]));
+            ->withColumn('line_item', structure(['id' => ref('line_id'), 'quantity' => ref('quantity')]));
 
         static::assertEquals(
             schema(
@@ -55,7 +55,7 @@ final class StructureTest extends FlowTestCase
     {
         $frame = static fn(): DataFrame => df()
             ->read(from_array([['id' => 1, 'city' => 'Krakow']], schema(int_schema('id'), str_schema('city'))))
-            ->withEntry('user', structure([5 => ref('id'), 7 => ref('city')]));
+            ->withColumn('user', structure([5 => ref('id'), 7 => ref('city')]));
 
         static::assertSame('structure{5: integer, 7: string}', $frame()->schema()->get('user')->type()->toString());
         static::assertSame(
@@ -68,7 +68,7 @@ final class StructureTest extends FlowTestCase
     {
         $frame = static fn(): DataFrame => df()
             ->read(from_array([['id' => 1, 'city' => 'Krakow']], schema(int_schema('id'), str_schema('city'))))
-            ->withEntry('user', structure(['id' => ref('id'), 'address' => structure(['city' => ref('city')])]));
+            ->withColumn('user', structure(['id' => ref('id'), 'address' => structure(['city' => ref('city')])]));
 
         static::assertSame(
             'structure{id: integer, address: structure{city: string}}',

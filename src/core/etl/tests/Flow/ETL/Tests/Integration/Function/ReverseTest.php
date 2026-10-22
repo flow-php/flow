@@ -25,7 +25,7 @@ final class ReverseTest extends FlowTestCase
                 ['text' => ''],
                 ['text' => null],
             ]))
-            ->withEntry('reversed', optional(ref('text')->reverse()))
+            ->withColumn('reversed', optional(ref('text')->reverse()))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

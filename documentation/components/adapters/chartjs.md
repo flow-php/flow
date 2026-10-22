@@ -43,7 +43,7 @@ $data = [
 
 df()
     ->read(from_array($data))
-    ->withEntry('Profit', ref('Revenue')->minus(ref('CM'))->minus(ref('Ads Spends'))->minus(ref('Storage Costs'))->minus(ref('Shipping Costs'))->round(lit(2)))
+    ->withColumn('Profit', ref('Revenue')->minus(ref('CM'))->minus(ref('Ads Spends'))->minus(ref('Storage Costs'))->minus(ref('Shipping Costs'))->round(lit(2)))
     ->write(
         to_chartjs_file(
             $chart = bar_chart(

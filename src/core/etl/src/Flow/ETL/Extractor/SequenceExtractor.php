@@ -34,7 +34,7 @@ final class SequenceExtractor implements BatchableExtractor, Extractor, InfersSc
 
     public function __construct(
         private readonly SequenceGenerator $generator,
-        private readonly string $entryName = 'entry',
+        private readonly string $columnName,
     ) {
         $this->inference = new SchemaInference();
     }
@@ -56,7 +56,7 @@ final class SequenceExtractor implements BatchableExtractor, Extractor, InfersSc
 
         /** @var mixed $item */
         foreach ($this->generator->generate() as $item) {
-            $buffer[] = [$this->entryName => $item];
+            $buffer[] = [$this->columnName => $item];
 
             if (count($buffer) < $batchSize) {
                 continue;
@@ -109,14 +109,14 @@ final class SequenceExtractor implements BatchableExtractor, Extractor, InfersSc
         $items = function (): Generator {
             /** @var mixed $item */
             foreach ($this->generator->generate() as $item) {
-                yield [$this->entryName => $item];
+                yield [$this->columnName => $item];
             }
         };
 
         // No spill: generate() returns a fresh Generator per call, so extract() gets its own pass and
         // spilling a generated sequence would write gigabytes to learn "integer".
         //
-        // No seeded name either: PHP re-keys a canonical-integer entry name to an int inside $items, so
+        // No seeded name either: PHP re-keys a canonical-integer column name to an int inside $items, so
         // InMemoryRows renames it through ColumnName and a raw seed would describe a second, empty column.
         return $this->derivedSchema = (new SchemaInferrer($this->inference, new InstanceOfTypeNarrower()))->infer(
             [],

@@ -99,7 +99,7 @@ final class RowsMother
     /**
      * Every column type except html/html_element, which require PHP 8.4.
      */
-    public static function withAllEntryTypes(): Rows
+    public static function withAllColumnTypes(): Rows
     {
         $structure = type_structure([
             'street' => type_string(),

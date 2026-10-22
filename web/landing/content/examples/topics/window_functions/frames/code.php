@@ -15,11 +15,11 @@ data_frame()
         ['day' => '2024-01-04', 'sales' => 40],
     ], schema(str_schema('day'), int_schema('sales'))))
     // everything from the start of the partition up to this row
-    ->withEntry('running_total', sum(ref('sales'))->over(
+    ->withColumn('running_total', sum(ref('sales'))->over(
         window()->orderBy(ref('day'))->rowsBetween(unbounded_preceding(), current_row()),
     ))
     // this row and the one before it
-    ->withEntry('moving_average', average(ref('sales'))->over(
+    ->withColumn('moving_average', average(ref('sales'))->over(
         window()->orderBy(ref('day'))->rowsBetween(preceding(1), current_row()),
     ))
     ->collect()

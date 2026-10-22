@@ -46,10 +46,10 @@ final readonly class NodePipelineScenario
                 ->read(from_xml($this->source->path($this->rows), self::XML_NODE_PATH)->withSchema(schema(xml_schema(
                     'node',
                 ))))
-                ->withEntry('body', ref('node')->cast(type_string())),
+                ->withColumn('body', ref('node')->cast(type_string())),
             NodeSource::text => data_frame(BenchmarkConfig::builder())
                 ->read(from_text($this->source->path($this->rows))->withSchema(schema(str_schema('text'))))
-                ->withEntry('body', ref('text')->concat(lit(' |'))),
+                ->withColumn('body', ref('text')->concat(lit(' |'))),
         };
 
         $frame

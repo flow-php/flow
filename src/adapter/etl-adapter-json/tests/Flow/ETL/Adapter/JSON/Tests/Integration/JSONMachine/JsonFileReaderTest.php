@@ -197,7 +197,7 @@ final class JsonFileReaderTest extends FlowTestCase
         string $pointer,
         int $expectedRows,
     ): void {
-        $reader = JsonFixtureContext::reader($format, pointer: $pointer, pointerToEntryName: true);
+        $reader = JsonFixtureContext::reader($format, pointer: $pointer, pointerToColumnName: true);
 
         $rows = iterator_to_array($reader->sample(JsonFixtureContext::source($fixture)), false);
 

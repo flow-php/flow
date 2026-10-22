@@ -165,7 +165,7 @@ function to_pgsql_schema_table(
     Schema $schema,
     string $tableName,
     string $databaseSchema = 'public',
-    ?EntryTypesMap $typesMap = null,
+    ?TypesMap $typesMap = null,
     ?TableOptions $options = null,
 ): Table {
     return (new SchemaConverter($typesMap))->toPostgreSqlTable($schema, $tableName, $databaseSchema, $options);
@@ -175,13 +175,13 @@ function to_pgsql_schema_table(
  * Convert a PostgreSQL table definition into a Flow Schema.
  */
 #[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::HELPER)]
-function pgsql_table_to_flow_schema(Table $table, ?EntryTypesMap $typesMap = null): Schema
+function pgsql_table_to_flow_schema(Table $table, ?TypesMap $typesMap = null): Schema
 {
     return (new SchemaConverter($typesMap))->toFlowSchema($table);
 }
 
 #[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::HELPER)]
-function pgsql_schema_sort_by_type(?EntryTypesMap $typesMap = null): TypeStrategy
+function pgsql_schema_sort_by_type(?TypesMap $typesMap = null): TypeStrategy
 {
-    return new TypeStrategy($typesMap ?? new EntryTypesMap());
+    return new TypeStrategy($typesMap ?? new TypesMap());
 }

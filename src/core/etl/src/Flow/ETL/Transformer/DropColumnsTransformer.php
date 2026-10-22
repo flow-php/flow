@@ -14,31 +14,18 @@ use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
 use Throwable;
 
-/**
- * Unlike {@see SelectEntriesTransformer}, which throws when a reference is not declared by the
- * schema, prune keeps what is there and silently skips absent references - pruned rows are spilled
- * to storage, where the pruning is opportunistic rather than a contract.
- */
-final readonly class PruneEntriesTransformer implements Transformer
+final readonly class DropColumnsTransformer implements Transformer
 {
     private References $refs;
 
-    public function __construct(string|Reference ...$refs)
+    public function __construct(string|Reference ...$names)
     {
-        $this->refs = References::init(...$refs);
+        $this->refs = References::init(...$names);
     }
 
     public function bind(Schema $input): BoundStep
     {
-        $present = [];
-
-        foreach ($this->refs as $ref) {
-            if ($input->findDefinition($ref) !== null) {
-                $present[] = $ref;
-            }
-        }
-
-        return new BoundStep($this, $input->keep(...$present)->reorder(...$present));
+        return new BoundStep($this, $input->gracefulRemove(...$this->refs));
     }
 
     public function transform(Rows $rows, FlowContext $context): Rows
@@ -46,15 +33,7 @@ final readonly class PruneEntriesTransformer implements Transformer
         $context->telemetry()->transformationStarted($this);
 
         try {
-            $present = [];
-
-            foreach ($this->refs as $ref) {
-                if ($rows->schema()->findDefinition($ref) !== null) {
-                    $present[] = $ref;
-                }
-            }
-
-            $schema = $rows->schema()->keep(...$present)->reorder(...$present);
+            $schema = $rows->schema()->gracefulRemove(...$this->refs);
             $result = $rows->project($schema, $context->backend());
 
             $context->telemetry()->transformationCompleted($this, [

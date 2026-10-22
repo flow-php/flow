@@ -30,7 +30,7 @@ final class EnumNameTest extends FlowTestCase
                 ->read(from_rows(array_to_rows([[
                     'e' => BackedIntEnum::one,
                 ]], schema(enum_schema('e', BackedIntEnum::class)))))
-                ->withEntry('code', enum_name(ref('e')))
+                ->withColumn('code', enum_name(ref('e')))
                 ->schema()
                 ->get('code')
                 ->type(),
@@ -44,7 +44,7 @@ final class EnumNameTest extends FlowTestCase
                 ['e' => BackedIntEnum::one],
                 ['e' => null],
             ], schema(enum_schema('e', BackedIntEnum::class, nullable: true)))))
-            ->withEntry('code', optional(enum_name(ref('e'))))
+            ->withColumn('code', optional(enum_name(ref('e'))))
             ->select('code')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
@@ -59,7 +59,7 @@ final class EnumNameTest extends FlowTestCase
                 ['e' => BackedIntEnum::one],
                 ['e' => BackedIntEnum::two],
             ], schema(enum_schema('e', BackedIntEnum::class)))))
-            ->withEntry('code', enum_name(ref('e')))
+            ->withColumn('code', enum_name(ref('e')))
             ->select('code')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();

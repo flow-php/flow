@@ -37,7 +37,7 @@ final class GroupByShapeTest extends FlowTestCase
         $groupBy->aggregate(sum(ref('age')));
 
         $this->expectException(SchemaDefinitionNotFoundException::class);
-        $this->expectExceptionMessage('Schema definition for entry "missing" not found');
+        $this->expectExceptionMessage('Schema definition for column "missing" not found');
 
         GroupByShape::of($groupBy, schema(str_schema('country'), int_schema('age')));
     }
@@ -48,7 +48,7 @@ final class GroupByShapeTest extends FlowTestCase
         $groupBy->aggregate(sum(ref('missing')));
 
         $this->expectException(SchemaDefinitionNotFoundException::class);
-        $this->expectExceptionMessage('Schema definition for entry "missing" not found');
+        $this->expectExceptionMessage('Schema definition for column "missing" not found');
 
         GroupByShape::of($groupBy, schema(str_schema('country'), int_schema('age')));
     }

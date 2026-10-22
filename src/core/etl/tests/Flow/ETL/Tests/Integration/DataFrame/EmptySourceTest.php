@@ -60,7 +60,7 @@ final class EmptySourceTest extends FlowIntegrationTestCase
             . '->withSchema(...).',
         );
 
-        df()->read(from_array([]))->withEntry('status', ref('response_status_code'))->fetch();
+        df()->read(from_array([]))->withColumn('status', ref('response_status_code'))->fetch();
     }
 
     public function test_a_missing_column_in_non_empty_input_still_fails(): void

@@ -17,7 +17,7 @@ data_frame()
         ],
         schema(int_schema('id'), int_schema('value', nullable: true)),
     ))
-    ->withEntry(
+    ->withColumn(
         'value',
         when(ref('value')->isNull(), then: lit(0), else: ref('value'))
     )

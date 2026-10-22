@@ -21,7 +21,7 @@ final class AddJsonTest extends FlowTestCase
     {
         data_frame()
             ->read(from_array([['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]]]))
-            ->withEntry('array', ref('array')->arrayMerge(lit(['d' => 4])))
+            ->withColumn('array', ref('array')->arrayMerge(lit(['d' => 4])))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -37,8 +37,8 @@ final class AddJsonTest extends FlowTestCase
     {
         data_frame()
             ->read(from_array([['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]]]))
-            ->withEntry('json', lit('{"d": 4}'))
-            ->withEntry('array', ref('array')->arrayMerge(ref('json')->jsonDecode()))
+            ->withColumn('json', lit('{"d": 4}'))
+            ->withColumn('array', ref('array')->arrayMerge(ref('json')->jsonDecode()))
             ->drop('json')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
@@ -55,8 +55,8 @@ final class AddJsonTest extends FlowTestCase
     {
         data_frame()
             ->read(from_array([['id' => 1]]))
-            ->withEntry('json', lit(['id' => 1, 'name' => 'test']))
-            ->withEntry('json', ref('json')->jsonEncode(JSON_FORCE_OBJECT))
+            ->withColumn('json', lit(['id' => 1, 'name' => 'test']))
+            ->withColumn('json', ref('json')->jsonEncode(JSON_FORCE_OBJECT))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -75,7 +75,7 @@ final class AddJsonTest extends FlowTestCase
     {
         data_frame()
             ->read(from_array([['id' => 1]]))
-            ->withEntry('json', lit('[{"id":1},{"id":2}]')->jsonDecode())
+            ->withColumn('json', lit('[{"id":1},{"id":2}]')->jsonDecode())
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

@@ -763,7 +763,7 @@ final class ParquetExtractorTest extends FlowIntegrationTestCase
         mixed $value,
     ): void {
         $memory = memory_filesystem();
-        $name = $definition->entry()->name();
+        $name = $definition->reference()->name();
 
         df()
             ->read(from_array([['id' => 'a', $name => $value]], schema(str_schema('id'), $definition)))

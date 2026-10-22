@@ -110,7 +110,7 @@ final readonly class ExcelEncoder
         $columns = [];
 
         foreach ($rows->schema()->definitions() as $definition) {
-            $columns[] = $this->column($definition->type(), $rows->column($definition->entry()->name()));
+            $columns[] = $this->column($definition->type(), $rows->column($definition->reference()->name()));
         }
 
         $encoded = [];

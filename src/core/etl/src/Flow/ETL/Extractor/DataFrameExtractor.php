@@ -50,11 +50,11 @@ final class DataFrameExtractor implements RewindableExtractor
                 $columns = [];
 
                 foreach ($this->schema->definitions() as $name => $definition) {
-                    $own = $rows->schema()->findDefinition($definition->entry()->name());
+                    $own = $rows->schema()->findDefinition($definition->reference()->name());
 
                     $columns[$name] = $own === null
                         ? $retyping->absent($definition, $rows->count(), $backend)
-                        : $retyping->cast($rows->column($definition->entry()->name()), $own, $definition, $backend);
+                        : $retyping->cast($rows->column($definition->reference()->name()), $own, $definition, $backend);
                 }
 
                 $rows = Rows::fromColumns($this->schema, $columns, $rows->count());

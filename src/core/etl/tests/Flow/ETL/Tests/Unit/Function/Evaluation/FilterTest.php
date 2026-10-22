@@ -94,7 +94,7 @@ final class FilterTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(
-            'filter() cannot contain array_expand(), it turns one row into many rows. Expand with withEntry() first, then use the new column.',
+            'filter() cannot contain array_expand(), it turns one row into many rows. Expand with withColumn() first, then use the new column.',
         );
 
         Filter::bind(ListColumnsMother::schema(), ref('tags')->expand()->equals(lit('x')));

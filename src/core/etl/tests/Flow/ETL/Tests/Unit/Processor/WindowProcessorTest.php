@@ -195,7 +195,7 @@ final class WindowProcessorTest extends FlowTestCase
     public function test_an_unknown_partition_reference_is_refused_at_bind(): void
     {
         $this->expectException(SchemaDefinitionNotFoundException::class);
-        $this->expectExceptionMessage('Schema definition for entry "missing" not found.');
+        $this->expectExceptionMessage('Schema definition for column "missing" not found.');
 
         WindowProcessorContext::values(
             'row_number',
@@ -207,7 +207,7 @@ final class WindowProcessorTest extends FlowTestCase
     public function test_an_unknown_order_reference_is_refused_at_bind(): void
     {
         $this->expectException(SchemaDefinitionNotFoundException::class);
-        $this->expectExceptionMessage('Schema definition for entry "missing" not found.');
+        $this->expectExceptionMessage('Schema definition for column "missing" not found.');
 
         WindowProcessorContext::values(
             'row_number',
@@ -476,7 +476,7 @@ final class WindowProcessorTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(
-            'over() cannot contain array_expand(), it turns one row into many rows. Expand with withEntry() first, then use the new column.',
+            'over() cannot contain array_expand(), it turns one row into many rows. Expand with withColumn() first, then use the new column.',
         );
 
         (new WindowProcessor(

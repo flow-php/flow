@@ -301,7 +301,7 @@ final class ExcelLoaderTest extends FlowTestCase
         $outputPath = __DIR__ . '/var/output_dynamic_sheets.xlsx';
 
         $loader = to_excel($outputPath);
-        $loader = $loader->withSheetNameFromEntry('category');
+        $loader = $loader->withSheetNameFromColumn('category');
 
         df()
             ->read(from_rows(array_to_rows(
@@ -434,17 +434,17 @@ final class ExcelLoaderTest extends FlowTestCase
     public function test_sheet_name_and_sheet_name_from_entry_are_mutually_exclusive(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Cannot set both sheetName and sheetNameFromEntry');
+        $this->expectExceptionMessage('Cannot set both sheetName and sheetNameFromColumn');
 
-        to_excel('/tmp/test.xlsx')->withSheetName('MySheet')->withSheetNameFromEntry('category');
+        to_excel('/tmp/test.xlsx')->withSheetName('MySheet')->withSheetNameFromColumn('category');
     }
 
     public function test_sheet_name_from_entry_and_sheet_name_are_mutually_exclusive(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Cannot set both sheetName and sheetNameFromEntry');
+        $this->expectExceptionMessage('Cannot set both sheetName and sheetNameFromColumn');
 
-        to_excel('/tmp/test.xlsx')->withSheetNameFromEntry('category')->withSheetName('MySheet');
+        to_excel('/tmp/test.xlsx')->withSheetNameFromColumn('category')->withSheetName('MySheet');
     }
 
     public function test_transformation_loader_writes_all_batches_to_excel(): void
@@ -453,7 +453,7 @@ final class ExcelLoaderTest extends FlowTestCase
 
         df()
             ->read(from_sequence_number('id', 1, 12))
-            ->withEntry('name', lit('dropped by the transformation'))
+            ->withColumn('name', lit('dropped by the transformation'))
             ->batchSize(4)
             ->write(to_transformation(select('id'), to_excel($outputPath)->saveMode(overwrite())))
             ->run();
@@ -524,7 +524,7 @@ final class ExcelLoaderTest extends FlowTestCase
             ->batchSize(2)
             ->write(
                 to_excel(__DIR__ . '/var/output_row_number.xlsx')
-                    ->withSheetNameFromEntry('sheet')
+                    ->withSheetNameFromColumn('sheet')
                     ->withCellStyler($styler)
                     ->saveMode(overwrite()),
             )

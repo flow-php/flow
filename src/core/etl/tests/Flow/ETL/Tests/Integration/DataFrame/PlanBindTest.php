@@ -39,7 +39,7 @@ use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\to_memory;
 use function Flow\ETL\DSL\window;
-use function Flow\ETL\DSL\with_entry;
+use function Flow\ETL\DSL\with_column;
 
 final class PlanBindTest extends FlowTestCase
 {
@@ -79,20 +79,20 @@ final class PlanBindTest extends FlowTestCase
             static fn(): DataFrame => df()->read(from_array(self::ROWS))->dropDuplicates(ref('group')),
         ];
 
-        yield 'withEntry' => [
-            static fn(): DataFrame => df()->read(from_array(self::ROWS))->withEntry('upper', ref('name')->upper()),
+        yield 'withColumn' => [
+            static fn(): DataFrame => df()->read(from_array(self::ROWS))->withColumn('upper', ref('name')->upper()),
         ];
 
         yield 'unpack' => [
             static fn(): DataFrame => df()
                 ->read(from_array(self::ROWS))
-                ->withEntry('p', ref('payload')->unpack(schema(str_schema('colour'), int_schema('size')))),
+                ->withColumn('p', ref('payload')->unpack(schema(str_schema('colour'), int_schema('size')))),
         ];
 
         yield 'duplicateRow' => [
             static fn(): DataFrame => df()
                 ->read(from_array(self::ROWS))
-                ->duplicateRow(lit(true), with_entry('id', ref('id')->multiply(lit(-1)))),
+                ->duplicateRow(lit(true), with_column('id', ref('id')->multiply(lit(-1)))),
         ];
 
         yield 'crossJoin' => [
@@ -129,7 +129,7 @@ final class PlanBindTest extends FlowTestCase
         yield 'window' => [
             static fn(): DataFrame => df()
                 ->read(from_array(self::ROWS))
-                ->withEntry('position', rank()->over(window()->partitionBy(ref('group'))->orderBy(ref('amount')))),
+                ->withColumn('position', rank()->over(window()->partitionBy(ref('group'))->orderBy(ref('amount')))),
         ];
 
         yield 'sortBy' => [static fn(): DataFrame => df()->read(from_array(self::ROWS))->sortBy(ref('amount'))];
@@ -224,7 +224,7 @@ final class PlanBindTest extends FlowTestCase
         $extractor = new CountingExtractor(schema(int_schema('a'), int_schema('b')));
 
         $this->expectException(SchemaDefinitionNotFoundException::class);
-        $this->expectExceptionMessage('Schema definition for entry "nope" not found');
+        $this->expectExceptionMessage('Schema definition for column "nope" not found');
 
         try {
             df()->read($extractor)->select('nope')->fetch();
@@ -243,13 +243,13 @@ final class PlanBindTest extends FlowTestCase
             try {
                 if ($order === 'get-then-select') {
                     $df
-                        ->withEntry('g', array_get(ref('s'), 'typo'))
+                        ->withColumn('g', array_get(ref('s'), 'typo'))
                         ->select('nope')
                         ->schema();
                 } else {
                     $df
                         ->select('nope')
-                        ->withEntry('g', array_get(ref('s'), 'typo'))
+                        ->withColumn('g', array_get(ref('s'), 'typo'))
                         ->schema();
                 }
             } catch (Throwable $e) {
@@ -380,7 +380,7 @@ final class PlanBindTest extends FlowTestCase
 
         $schema = df()
             ->read($extractor)
-            ->withEntry('p', ref('payload')->unpack(schema(str_schema('colour'), int_schema('size'))))
+            ->withColumn('p', ref('payload')->unpack(schema(str_schema('colour'), int_schema('size'))))
             ->schema();
 
         static::assertSame(['id', 'payload', 'p.colour', 'p.size'], $schema->references()->names());
@@ -406,7 +406,7 @@ final class PlanBindTest extends FlowTestCase
                 ['id' => 1, 'name' => 'a', 'when' => new DateTimeImmutable('2024-01-01')],
                 ['id' => 2, 'name' => 'b', 'when' => new DateTimeImmutable('2024-01-02')],
             ]))
-            ->withEntry('upper', ref('name')->upper())
+            ->withColumn('upper', ref('name')->upper())
             ->drop('when')
             ->select('id', 'upper');
 
@@ -432,7 +432,7 @@ final class PlanBindTest extends FlowTestCase
             ['a', 'b'],
             df()
                 ->read(from_rows(rows(schema(int_schema('a'), int_schema('b')))))
-                ->withEntry('b', ref('a')->plus(lit(1)))
+                ->withColumn('b', ref('a')->plus(lit(1)))
                 ->fetch()
                 ->schema()
                 ->references()

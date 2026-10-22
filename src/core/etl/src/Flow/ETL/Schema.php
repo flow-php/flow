@@ -126,7 +126,7 @@ final readonly class Schema implements Countable
         $definitions = [];
 
         foreach ($authority->definitions() as $authorityDefinition) {
-            $definition = $this->findDefinition($authorityDefinition->entry());
+            $definition = $this->findDefinition($authorityDefinition->reference());
 
             if ($definition === null) {
                 continue;
@@ -136,7 +136,7 @@ final readonly class Schema implements Countable
         }
 
         foreach ($this->definitions as $definition) {
-            if ($authority->findDefinition($definition->entry()) === null) {
+            if ($authority->findDefinition($definition->reference()) === null) {
                 $definitions[] = $definition;
             }
         }
@@ -191,16 +191,16 @@ final readonly class Schema implements Countable
     }
 
     /**
-     * Gracefully remove entries from schema without throwing an exception if entry does not exist.
+     * Gracefully remove columns from schema without throwing an exception if column does not exist.
      */
-    public function gracefulRemove(string|Reference ...$entries): self
+    public function gracefulRemove(string|Reference ...$columns): self
     {
-        $refs = References::init(...$entries);
+        $refs = References::init(...$columns);
 
         $definitions = [];
 
         foreach ($this->definitions as $definition) {
-            if (!$refs->has($definition->entry())) {
+            if (!$refs->has($definition->reference())) {
                 $definitions[] = $definition;
             }
         }
@@ -249,8 +249,8 @@ final readonly class Schema implements Countable
             return false;
         }
 
-        foreach ($this->definitions as $entry => $definition) {
-            if (!$definition->isSame($schema->definitions[$entry])) {
+        foreach ($this->definitions as $column => $definition) {
+            if (!$definition->isSame($schema->definitions[$column])) {
                 return false;
             }
         }
@@ -263,23 +263,23 @@ final readonly class Schema implements Countable
     /**
      * @return Schema
      */
-    public function keep(string|Reference ...$entries): self
+    public function keep(string|Reference ...$columns): self
     {
-        $refs = References::init(...$entries);
+        $refs = References::init(...$columns);
 
         $definitions = [];
 
-        foreach ($entries as $entry) {
-            if (!$this->findDefinition($entry)) {
+        foreach ($columns as $column) {
+            if (!$this->findDefinition($column)) {
                 throw SchemaDefinitionNotFoundException::withAvailable(
-                    (string) $entry,
+                    (string) $column,
                     ...$this->references()->names(),
                 );
             }
         }
 
         foreach ($this->definitions as $definition) {
-            if ($refs->has($definition->entry())) {
+            if ($refs->has($definition->reference())) {
                 $definitions[] = $definition;
             }
         }
@@ -321,17 +321,17 @@ final readonly class Schema implements Countable
 
         $newDefinitions = $this->definitions;
 
-        foreach ($schema->definitions as $entry => $definition) {
-            if (!array_key_exists($definition->entry()->name(), $newDefinitions)) {
-                $newDefinitions[$entry] = $definition->makeNullable();
+        foreach ($schema->definitions as $column => $definition) {
+            if (!array_key_exists($definition->reference()->name(), $newDefinitions)) {
+                $newDefinitions[$column] = $definition->makeNullable();
             } else {
-                $newDefinitions[$entry] = $newDefinitions[$entry]->merge($definition);
+                $newDefinitions[$column] = $newDefinitions[$column]->merge($definition);
             }
         }
 
-        foreach ($newDefinitions as $entry => $definition) {
-            if (!array_key_exists($definition->entry()->name(), $schema->definitions)) {
-                $newDefinitions[$entry] = $definition->makeNullable();
+        foreach ($newDefinitions as $column => $definition) {
+            if (!array_key_exists($definition->reference()->name(), $schema->definitions)) {
+                $newDefinitions[$column] = $definition->makeNullable();
             }
         }
 
@@ -380,7 +380,7 @@ final readonly class Schema implements Countable
 
         if ($index < 0 || $index >= count($definitionsList)) {
             throw new InvalidArgumentException(sprintf(
-                'Cannot move entry "%s" to index %d, schema has %d definitions',
+                'Cannot move column "%s" to index %d, schema has %d definitions',
                 (string) $name,
                 $index,
                 count($definitionsList),
@@ -424,7 +424,7 @@ final readonly class Schema implements Countable
         $refs = [];
 
         foreach ($this->definitions as $definition) {
-            $refs[] = $definition->entry();
+            $refs[] = $definition->reference();
         }
 
         return References::init(...$refs);
@@ -433,23 +433,23 @@ final readonly class Schema implements Countable
     /**
      * @return Schema
      */
-    public function remove(string|Reference ...$entries): self
+    public function remove(string|Reference ...$columns): self
     {
-        $refs = References::init(...$entries);
+        $refs = References::init(...$columns);
 
         $definitions = [];
 
-        foreach ($entries as $entry) {
-            if (!$this->findDefinition($entry)) {
+        foreach ($columns as $column) {
+            if (!$this->findDefinition($column)) {
                 throw SchemaDefinitionNotFoundException::withAvailable(
-                    (string) $entry,
+                    (string) $column,
                     ...$this->references()->names(),
                 );
             }
         }
 
         foreach ($this->definitions as $definition) {
-            if (!$refs->has($definition->entry())) {
+            if (!$refs->has($definition->reference())) {
                 $definitions[] = $definition;
             }
         }
@@ -460,16 +460,16 @@ final readonly class Schema implements Countable
     /**
      * @return Schema
      */
-    public function rename(string|Reference $entry, string $newName): self
+    public function rename(string|Reference $column, string $newName): self
     {
         $definitions = [];
 
-        if (!$this->findDefinition($entry)) {
-            throw SchemaDefinitionNotFoundException::withAvailable((string) $entry, ...$this->references()->names());
+        if (!$this->findDefinition($column)) {
+            throw SchemaDefinitionNotFoundException::withAvailable((string) $column, ...$this->references()->names());
         }
 
         foreach ($this->definitions as $nextDefinition) {
-            if ($nextDefinition->entry()->is(UnresolvedReference::init($entry))) {
+            if ($nextDefinition->reference()->is(UnresolvedReference::init($column))) {
                 $definitions[] = $nextDefinition->rename($newName);
             } else {
                 $definitions[] = $nextDefinition;
@@ -495,10 +495,13 @@ final readonly class Schema implements Countable
         foreach ($names as $name) {
             $definition = $this->findDefinition($name)
             ?: throw SchemaDefinitionNotFoundException::withAvailable((string) $name, ...$this->references()->names());
-            $key = $definition->entry()->name();
+            $key = $definition->reference()->name();
 
             if (array_key_exists($key, $reordered)) {
-                throw new InvalidArgumentException(sprintf('Cannot reorder entry "%s" more than once', (string) $name));
+                throw new InvalidArgumentException(sprintf(
+                    'Cannot reorder column "%s" more than once',
+                    (string) $name,
+                ));
             }
 
             $reordered[$key] = true;
@@ -519,16 +522,16 @@ final readonly class Schema implements Countable
      *
      * @return Schema
      */
-    public function replace(string|Reference $entry, Definition $definition): self
+    public function replace(string|Reference $column, Definition $definition): self
     {
         $definitions = [];
 
-        if (!$this->findDefinition($entry)) {
-            throw SchemaDefinitionNotFoundException::withAvailable((string) $entry, ...$this->references()->names());
+        if (!$this->findDefinition($column)) {
+            throw SchemaDefinitionNotFoundException::withAvailable((string) $column, ...$this->references()->names());
         }
 
         foreach ($this->definitions as $nextDefinition) {
-            if ($nextDefinition->entry()->is(UnresolvedReference::init($entry))) {
+            if ($nextDefinition->reference()->is(UnresolvedReference::init($column))) {
                 $definitions[] = $definition;
             } else {
                 $definitions[] = $nextDefinition;
@@ -589,7 +592,7 @@ final readonly class Schema implements Countable
         }
 
         if (UnresolvedReference::init($name)->name() === $referenceName) {
-            throw new InvalidArgumentException(sprintf('Cannot move entry "%s" relative to itself', (string) $name));
+            throw new InvalidArgumentException(sprintf('Cannot move column "%s" relative to itself', (string) $name));
         }
 
         $definitionsList = array_values($this->definitions);
@@ -599,7 +602,7 @@ final readonly class Schema implements Countable
         $referenceIndex = 0;
 
         foreach ($definitionsList as $position => $definition) {
-            if ($definition->entry()->name() === $referenceName) {
+            if ($definition->reference()->name() === $referenceName) {
                 $referenceIndex = $position;
 
                 break;
@@ -620,17 +623,17 @@ final readonly class Schema implements Countable
         $duplicatedDefinitions = [];
 
         foreach ($definitions as $definition) {
-            if (array_key_exists($definition->entry()->name(), $uniqueDefinitions)) {
-                $duplicatedDefinitions[] = $definition->entry()->name();
+            if (array_key_exists($definition->reference()->name(), $uniqueDefinitions)) {
+                $duplicatedDefinitions[] = $definition->reference()->name();
             }
-            $uniqueDefinitions[$definition->entry()->name()] = $definition;
+            $uniqueDefinitions[$definition->reference()->name()] = $definition;
         }
 
         if (count($uniqueDefinitions) !== count($definitions)) {
             throw new SchemaDefinitionNotUniqueException(sprintf(
-                'Entry definitions must be unique, duplicated entries: [%s], all: [%s]',
+                'Column definitions must be unique, duplicated columns: [%s], all: [%s]',
                 implode(', ', $duplicatedDefinitions),
-                implode(', ', array_map(static fn(Definition $d) => $d->entry()->name(), $definitions)),
+                implode(', ', array_map(static fn(Definition $d) => $d->reference()->name(), $definitions)),
             ));
         }
 

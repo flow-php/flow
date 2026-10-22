@@ -40,7 +40,7 @@ final class FloeSerializerTest extends TestCase
             )],
             'rows' => [array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id')))],
             'heterogeneous rows' => [RowsMother::heterogeneous()],
-            'all entry types' => [RowsMother::withAllEntryTypes()],
+            'all column types' => [RowsMother::withAllColumnTypes()],
             'empty rows' => [rows(schema())],
             'empty rows with a declared column' => [rows(schema(str_schema('country')))],
         ];
@@ -72,7 +72,7 @@ final class FloeSerializerTest extends TestCase
     public function test_streaming_mode_round_trip(): void
     {
         $serializer = new FloeSerializer(new AdaptiveBackend(), 2);
-        $value = RowsMother::withAllEntryTypes();
+        $value = RowsMother::withAllColumnTypes();
 
         static::assertEquals($value, unserialize_from_string($serializer, serialize_to_string($serializer, $value)));
     }
@@ -94,7 +94,7 @@ final class FloeSerializerTest extends TestCase
     {
         $serializer = new FloeSerializer(new AdaptiveBackend());
         // one write session = one schema: rows keep their own columns (unpadded) but
-        // entry types widen to the batch union - id and name become nullable because
+        // column types widen to the batch union - id and name become nullable because
         // each is absent from some row. Values are unchanged; only nullability widens.
         $value = array_to_rows(
             [['id' => 1], ['id' => 2, 'name' => 'John'], ['name' => 'Jane']],

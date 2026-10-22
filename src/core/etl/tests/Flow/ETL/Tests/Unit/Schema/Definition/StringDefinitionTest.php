@@ -251,8 +251,8 @@ final class StringDefinitionTest extends FlowTestCase
 
         $renamed = $def->rename('new_name');
 
-        static::assertSame('new_name', $renamed->entry()->name());
-        static::assertSame('name', $def->entry()->name());
+        static::assertSame('new_name', $renamed->reference()->name());
+        static::assertSame('name', $def->reference()->name());
     }
 
     public function test_set_metadata(): void

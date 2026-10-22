@@ -24,7 +24,7 @@ final class DOMElementAttributeValueTest extends FlowTestCase
             ->read(from_rows(array_to_rows([[
                 'node' => type_xml_element()->cast('<name id="1">User Name 01</name>'),
             ]], schema(xml_element_schema('node')))))
-            ->withEntry('user_id', ref('node')->domElementAttributeValue('id'))
+            ->withColumn('user_id', ref('node')->domElementAttributeValue('id'))
             ->drop('node')
             ->fetch();
 
@@ -42,7 +42,7 @@ final class DOMElementAttributeValueTest extends FlowTestCase
             ->read(from_rows(array_to_rows([[
                 'node' => type_xml()->cast('<name id="1">User Name 01</name>'),
             ]], schema(xml_schema('node')))))
-            ->withEntry('user_id', ref('node')->domElementAttributeValue('id'))
+            ->withColumn('user_id', ref('node')->domElementAttributeValue('id'))
             ->drop('node')
             ->fetch();
 
@@ -60,7 +60,7 @@ final class DOMElementAttributeValueTest extends FlowTestCase
             ->read(from_rows(array_to_rows([[
                 'node' => type_xml()->cast('<user><name id="1">User Name 01</name></user>'),
             ]], schema(xml_schema('node')))))
-            ->withEntry('user_id', ref('node')->xpath('name')->domElementAttributeValue('id'))
+            ->withColumn('user_id', ref('node')->xpath('name')->domElementAttributeValue('id'))
             ->drop('node')
             ->fetch();
 

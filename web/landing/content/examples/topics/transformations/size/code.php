@@ -12,6 +12,6 @@ data_frame()
         [['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]]],
         schema(int_schema('id'), map_schema('array', type_map(type_string(), type_integer()))),
     ))
-    ->withEntry('array_size', ref('array')->size())
+    ->withColumn('array_size', ref('array')->size())
     ->write(to_output(truncate: false))
     ->run();

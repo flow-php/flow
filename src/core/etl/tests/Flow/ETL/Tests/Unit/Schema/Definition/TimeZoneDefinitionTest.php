@@ -41,7 +41,7 @@ final class TimeZoneDefinitionTest extends FlowTestCase
 
     public function test_entry(): void
     {
-        static::assertSame('tz', time_zone_schema('tz')->entry()->name());
+        static::assertSame('tz', time_zone_schema('tz')->reference()->name());
     }
 
     /**
@@ -145,7 +145,7 @@ final class TimeZoneDefinitionTest extends FlowTestCase
 
     public function test_rename(): void
     {
-        static::assertSame('other', time_zone_schema('tz')->rename('other')->entry()->name());
+        static::assertSame('other', time_zone_schema('tz')->rename('other')->reference()->name());
     }
 
     public function test_set_metadata(): void

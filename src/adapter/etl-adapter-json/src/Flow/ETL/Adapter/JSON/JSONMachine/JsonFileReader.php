@@ -46,7 +46,7 @@ final readonly class JsonFileReader implements SchemaSampler
         private Filesystem $filesystem,
         private JsonFormat $format,
         private ?string $pointer,
-        private bool $pointerToEntryName,
+        private bool $pointerToColumnName,
         private array $sources,
     ) {
         $this->options = $pointer === null
@@ -173,7 +173,7 @@ final readonly class JsonFileReader implements SchemaSampler
 
             // @mago-ignore analysis:mixed-assignment
             foreach ($items as $row) {
-                if ($this->pointer !== null && $this->pointerToEntryName) {
+                if ($this->pointer !== null && $this->pointerToColumnName) {
                     $row = [$this->pointer => $row];
                 }
 

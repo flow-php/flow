@@ -11,14 +11,14 @@ use Flow\ETL\Plan\RowCount;
 use Flow\ETL\Plan\Transparency;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\NodeMother;
-use Flow\ETL\Transformer\SelectEntriesTransformer;
+use Flow\ETL\Transformer\SelectColumnsTransformer;
 
 final class TransformTest extends FlowTestCase
 {
     public function test_with_children_returns_the_same_instance_when_children_are_identical(): void
     {
         $input = NodeMother::read();
-        $node = new Transform($input, new SelectEntriesTransformer('id'));
+        $node = new Transform($input, new SelectColumnsTransformer('id'));
 
         static::assertSame($node, $node->withChildren([$input]));
     }
@@ -27,7 +27,7 @@ final class TransformTest extends FlowTestCase
     {
         $input = NodeMother::read();
         $other = NodeMother::read();
-        $transformer = new SelectEntriesTransformer('id');
+        $transformer = new SelectColumnsTransformer('id');
         $node = new Transform($input, $transformer);
 
         $rebuilt = $node->withChildren([$other]);
@@ -41,7 +41,7 @@ final class TransformTest extends FlowTestCase
     public function test_declarations(): void
     {
         $input = NodeMother::read();
-        $node = new Transform($input, new SelectEntriesTransformer('id'));
+        $node = new Transform($input, new SelectColumnsTransformer('id'));
 
         static::assertSame(RowCount::unknown, $node->rowCount());
         static::assertSame(Transparency::opaque, $node->transparency());

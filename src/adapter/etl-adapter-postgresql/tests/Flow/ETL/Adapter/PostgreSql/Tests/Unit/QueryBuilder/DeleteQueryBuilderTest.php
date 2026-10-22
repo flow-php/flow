@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\Tests\Unit\QueryBuilder;
 
-use Flow\ETL\Adapter\PostgreSql\EntryTypesMap;
 use Flow\ETL\Adapter\PostgreSql\Exception\RuntimeException;
 use Flow\ETL\Adapter\PostgreSql\LoaderOptions\DeleteOptions;
 use Flow\ETL\Adapter\PostgreSql\QueryBuilder\DeleteQueryBuilder;
+use Flow\ETL\Adapter\PostgreSql\TypesMap;
 use Flow\PostgreSql\Client\TypedValue;
 use Flow\PostgreSql\Client\Types\ValueType;
 use PHPUnit\Framework\TestCase;
@@ -20,7 +20,7 @@ final class DeleteQueryBuilderTest extends TestCase
 {
     public function test_build_returns_typed_values(): void
     {
-        $builder = new DeleteQueryBuilder('users', new EntryTypesMap());
+        $builder = new DeleteQueryBuilder('users', new TypesMap());
 
         [$_query, $params] = $builder->build(['id' => 1], schema(int_schema('id')), new DeleteOptions(['id']));
 
@@ -32,7 +32,7 @@ final class DeleteQueryBuilderTest extends TestCase
 
     public function test_build_simple_delete(): void
     {
-        $builder = new DeleteQueryBuilder('users', new EntryTypesMap());
+        $builder = new DeleteQueryBuilder('users', new TypesMap());
 
         [$query, $params] = $builder->build(['id' => 1], schema(int_schema('id')), new DeleteOptions(['id']));
 
@@ -44,7 +44,7 @@ final class DeleteQueryBuilderTest extends TestCase
 
     public function test_build_throws_when_no_primary_keys(): void
     {
-        $builder = new DeleteQueryBuilder('users', new EntryTypesMap());
+        $builder = new DeleteQueryBuilder('users', new TypesMap());
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Primary keys must be specified for DELETE operation');
@@ -54,7 +54,7 @@ final class DeleteQueryBuilderTest extends TestCase
 
     public function test_build_throws_when_primary_key_not_in_row(): void
     {
-        $builder = new DeleteQueryBuilder('users', new EntryTypesMap());
+        $builder = new DeleteQueryBuilder('users', new TypesMap());
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Primary key "id" not found in row');
@@ -64,7 +64,7 @@ final class DeleteQueryBuilderTest extends TestCase
 
     public function test_build_with_multiple_primary_keys(): void
     {
-        $builder = new DeleteQueryBuilder('order_items', new EntryTypesMap());
+        $builder = new DeleteQueryBuilder('order_items', new TypesMap());
 
         [$query, $params] = $builder->build(
             ['order_id' => 1, 'product_id' => 2],

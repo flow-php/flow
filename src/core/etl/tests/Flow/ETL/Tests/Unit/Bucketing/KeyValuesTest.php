@@ -20,7 +20,7 @@ final class KeyValuesTest extends FlowTestCase
     public function test_a_missing_ref_throws(): void
     {
         $this->expectException(SchemaDefinitionNotFoundException::class);
-        $this->expectExceptionMessage('Schema definition for entry "id" not found');
+        $this->expectExceptionMessage('Schema definition for column "id" not found');
 
         (new KeyValues([ref('id')]))->of(array_to_rows([['name' => 'flow']], schema(str_schema('name'))));
     }

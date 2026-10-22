@@ -64,7 +64,7 @@ final class GenerateDataFrameCompleterCommand extends Command
             ->read(from_json($dslJsonPath))
             ->collect()
             ->filter(ref('return_type')->isNotNull())
-            ->withEntry(
+            ->withColumn(
                 'has_flow_return',
                 ref('return_type')
                     ->onEach(
@@ -87,7 +87,7 @@ final class GenerateDataFrameCompleterCommand extends Command
             ->read(from_json($apiJsonPath))
             ->collect()
             ->filter(ref('return_type')->isNotNull())
-            ->withEntry(
+            ->withColumn(
                 'returns_dataframe',
                 ref('return_type')
                     ->onEach(

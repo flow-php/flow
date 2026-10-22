@@ -26,7 +26,7 @@ final class NotTest extends FlowTestCase
                 ['id' => 3],
                 ['id' => 4, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]],
             ]))
-            ->withEntry('result', when(not(ref('array')->isNotNull()), lit('not found'), lit('found')))
+            ->withColumn('result', when(not(ref('array')->isNotNull()), lit('not found'), lit('found')))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();

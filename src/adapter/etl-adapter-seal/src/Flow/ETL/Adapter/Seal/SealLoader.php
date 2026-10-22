@@ -28,7 +28,7 @@ final class SealLoader implements Loader
 
     private ?SealEncoder $encoder = null;
 
-    private string $identifierEntry = 'id';
+    private string $identifierColumn = 'id';
 
     public function __construct(
         private readonly EngineInterface $engine,
@@ -81,9 +81,9 @@ final class SealLoader implements Loader
         return $this;
     }
 
-    public function withIdentifierEntry(string $entry): self
+    public function withIdentifierColumn(string $column): self
     {
-        $this->identifierEntry = $entry;
+        $this->identifierColumn = $column;
 
         return $this;
     }
@@ -100,14 +100,14 @@ final class SealLoader implements Loader
     {
         foreach ($this->encoder()->encode($rows) as $document) {
             // @mago-ignore analysis:mixed-assignment
-            $identifier = array_key_exists($this->identifierEntry, $document)
-                ? $document[$this->identifierEntry]
+            $identifier = array_key_exists($this->identifierColumn, $document)
+                ? $document[$this->identifierColumn]
                 : null;
 
             if (!is_string($identifier) && !is_int($identifier)) {
                 throw new RuntimeException(
-                    'Entry "'
-                    . $this->identifierEntry
+                    'Column "'
+                    . $this->identifierColumn
                     . '" cannot be used as a document identifier for DELETE operation',
                 );
             }

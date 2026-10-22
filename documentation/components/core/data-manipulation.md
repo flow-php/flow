@@ -37,7 +37,7 @@ data_frame()
 > the richest type that parses, so `'19.99'` read from a CSV infers as `?float`. Restrict the candidates with
 > `->types(...)`, or take strings only with `->allStrings()`.
 
-## Adding Columns with withEntry()
+## Adding Columns with withColumn()
 
 Add new columns or modify existing ones using expressions:
 
@@ -51,8 +51,8 @@ data_frame()
         ['first_name' => 'John', 'last_name' => 'Doe', 'salary' => 50000],
         ['first_name' => 'Jane', 'last_name' => 'Smith', 'salary' => 60000],
     ]))
-    ->withEntry('full_name', concat(col('first_name'), lit(' '), col('last_name')))
-    ->withEntry('annual_bonus', col('salary')->multiply(lit(0.1)))
+    ->withColumn('full_name', concat(col('first_name'), lit(' '), col('last_name')))
+    ->withColumn('annual_bonus', col('salary')->multiply(lit(0.1)))
     ->write(to_output())
     ->run();
 ```

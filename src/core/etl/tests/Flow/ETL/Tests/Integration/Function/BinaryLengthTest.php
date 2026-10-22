@@ -30,7 +30,7 @@ final class BinaryLengthTest extends FlowTestCase
                 ['text' => 'é'],
                 ['text' => "\x00\x01\x02\xFF"],
             ]))
-            ->withEntry('binary_length', optional(ref('text')->binaryLength()))
+            ->withColumn('binary_length', optional(ref('text')->binaryLength()))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

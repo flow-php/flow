@@ -19,7 +19,7 @@ use function Flow\ETL\DSL\{config_builder, data_frame, from_array, lit, ref};
 
 $rows = data_frame(config_builder()->backend(new PhpBackend()))
     ->read(from_array([['id' => 1], ['id' => 2]]))
-    ->withEntry('double', ref('id')->multiply(lit(2)))
+    ->withColumn('double', ref('id')->multiply(lit(2)))
     ->fetch();
 
 $rows->column('double')::class; // Flow\ETL\Column\Php\ScalarColumn
@@ -43,7 +43,7 @@ Both produce the same values: `PhpBackend` is the reference implementation, the 
 The configured backend builds every column a pipeline produces:
 
 - every batch an extractor yields: a batch built elsewhere is adopted (copied once) before the first step sees it,
-- function results (`withEntry()`, `filter()`, `lit()`, ...),
+- function results (`withColumn()`, `filter()`, `lit()`, ...),
 - joins, sorts, group-by, window and repartition outputs, including their spilled reads,
 - cache and Floe reads (the default `FloeSerializer` takes the same backend).
 

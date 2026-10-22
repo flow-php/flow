@@ -22,7 +22,7 @@ final class RegexTest extends FlowTestCase
             ->read(from_array([
                 ['key' => 'value'],
             ]))
-            ->withEntry('result', ref('key')->regex(lit('/lue/')))
+            ->withColumn('result', ref('key')->regex(lit('/lue/')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -40,7 +40,7 @@ final class RegexTest extends FlowTestCase
             ->read(from_array([
                 ['id' => 1],
             ]))
-            ->withEntry('regex', optional(ref('id')->regex(lit('1'))))
+            ->withColumn('regex', optional(ref('id')->regex(lit('1'))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -58,7 +58,7 @@ final class RegexTest extends FlowTestCase
             ->read(from_array([
                 ['id' => '1'],
             ]))
-            ->withEntry('regex', optional(ref('id')->regex(lit(1))))
+            ->withColumn('regex', optional(ref('id')->regex(lit(1))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

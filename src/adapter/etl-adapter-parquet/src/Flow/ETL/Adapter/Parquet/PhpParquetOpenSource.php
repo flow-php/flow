@@ -28,7 +28,7 @@ final class PhpParquetOpenSource implements ParquetOpenSource
     public function batches(Schema $schema, int $batchSize, ReadPlan $plan, Backend $backend): Generator
     {
         $names = array_values(array_map(static fn(Definition $definition): string => $definition
-            ->entry()
+            ->reference()
             ->name(), $schema->definitions()));
 
         foreach ($this->file->reader()->readColumns($names, $batchSize, $plan) as $chunk) {

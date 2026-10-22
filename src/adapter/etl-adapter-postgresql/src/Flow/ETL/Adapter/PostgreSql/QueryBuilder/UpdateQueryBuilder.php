@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\QueryBuilder;
 
-use Flow\ETL\Adapter\PostgreSql\EntryTypesMap;
 use Flow\ETL\Adapter\PostgreSql\Exception\RuntimeException;
 use Flow\ETL\Adapter\PostgreSql\LoaderOptions\UpdateOptions;
+use Flow\ETL\Adapter\PostgreSql\TypesMap;
 use Flow\ETL\Schema;
 use Flow\PostgreSql\Client\TypedValue;
 use Flow\PostgreSql\QueryBuilder\Sql;
@@ -25,7 +25,7 @@ final readonly class UpdateQueryBuilder
 {
     public function __construct(
         private string $table,
-        private EntryTypesMap $typesMap,
+        private TypesMap $typesMap,
     ) {}
 
     /**

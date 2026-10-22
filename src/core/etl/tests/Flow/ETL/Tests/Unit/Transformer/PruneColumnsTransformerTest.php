@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Transformer;
 
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\ETL\Transformer\PruneEntriesTransformer;
+use Flow\ETL\Transformer\PruneColumnsTransformer;
 
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\flow_context;
@@ -14,13 +14,13 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
-final class PruneEntriesTransformerTest extends FlowTestCase
+final class PruneColumnsTransformerTest extends FlowTestCase
 {
     public function test_bind_keeps_only_the_declared_refs_in_ref_order(): void
     {
         static::assertEquals(
             schema(str_schema('name'), int_schema('id')),
-            (new PruneEntriesTransformer(ref('name'), ref('id'), ref('missing')))->bind(schema(
+            (new PruneColumnsTransformer(ref('name'), ref('id'), ref('missing')))->bind(schema(
                 int_schema('id'),
                 str_schema('name'),
                 int_schema('dropped'),
@@ -32,7 +32,7 @@ final class PruneEntriesTransformerTest extends FlowTestCase
     {
         static::assertEquals(
             schema(),
-            (new PruneEntriesTransformer(ref('missing')))->bind(schema(int_schema('id')))->output,
+            (new PruneColumnsTransformer(ref('missing')))->bind(schema(int_schema('id')))->output,
         );
     }
 
@@ -40,7 +40,7 @@ final class PruneEntriesTransformerTest extends FlowTestCase
     {
         static::assertSame(
             [['id' => 1, 'name' => 'a']],
-            (new PruneEntriesTransformer(ref('id'), ref('name')))
+            (new PruneColumnsTransformer(ref('id'), ref('name')))
                 ->transform(
                     array_to_rows(
                         [['id' => 1, 'name' => 'a', 'dropped' => 9]],
@@ -56,7 +56,7 @@ final class PruneEntriesTransformerTest extends FlowTestCase
     {
         static::assertSame(
             [['id' => 1, 'name' => 'a'], ['id' => 2, 'name' => null]],
-            (new PruneEntriesTransformer(ref('id'), ref('name')))
+            (new PruneColumnsTransformer(ref('id'), ref('name')))
                 ->transform(
                     array_to_rows(
                         [['id' => 1, 'name' => 'a'], ['id' => 2]],
@@ -72,7 +72,7 @@ final class PruneEntriesTransformerTest extends FlowTestCase
     {
         static::assertSame(
             [[]],
-            (new PruneEntriesTransformer(ref('missing')))
+            (new PruneColumnsTransformer(ref('missing')))
                 ->transform(array_to_rows([['id' => 1]], schema(int_schema('id'))), flow_context())
                 ->toArray(),
         );

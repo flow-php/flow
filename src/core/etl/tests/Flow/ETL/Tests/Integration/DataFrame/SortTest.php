@@ -81,7 +81,7 @@ final class SortTest extends FlowIntegrationTestCase
                 ['id' => 2, 'price' => 2.0],
                 ['id' => 3, 'price' => 2.2],
             ]))
-            ->withEntry('total', ref('price')->multiply(lit(2)))
+            ->withColumn('total', ref('price')->multiply(lit(2)))
             ->sortBy([ref('total')])
             ->fetch();
 

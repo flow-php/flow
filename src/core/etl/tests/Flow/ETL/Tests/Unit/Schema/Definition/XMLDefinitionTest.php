@@ -236,8 +236,8 @@ final class XMLDefinitionTest extends FlowTestCase
 
         $renamed = $def->rename('new_document');
 
-        static::assertSame('new_document', $renamed->entry()->name());
-        static::assertSame('document', $def->entry()->name());
+        static::assertSame('new_document', $renamed->reference()->name());
+        static::assertSame('document', $def->reference()->name());
     }
 
     public function test_set_metadata(): void

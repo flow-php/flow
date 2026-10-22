@@ -23,7 +23,7 @@ final class StringMatchAllTest extends FlowTestCase
                 ['text' => 'no prices here'],
                 ['text' => 'total: 100.00'],
             ]))
-            ->withEntry('match_results', ref('text')->stringMatchAll(lit('/\d+\.\d+/')))
+            ->withColumn('match_results', ref('text')->stringMatchAll(lit('/\d+\.\d+/')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

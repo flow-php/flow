@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\QueryBuilder;
 
-use Flow\ETL\Adapter\PostgreSql\EntryTypesMap;
 use Flow\ETL\Adapter\PostgreSql\LoaderOptions\InsertOptions;
+use Flow\ETL\Adapter\PostgreSql\TypesMap;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Schema;
 use Flow\PostgreSql\Client\ConvertedParameters;
@@ -26,7 +26,7 @@ final readonly class InsertQueryBuilder
 {
     public function __construct(
         private string $table,
-        private EntryTypesMap $typesMap,
+        private TypesMap $typesMap,
     ) {}
 
     /**

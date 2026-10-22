@@ -9,7 +9,7 @@ use Flow\ETL\Schema\Definition\NullDefinition;
 use Flow\ETL\SchemaValidator;
 
 /**
- * Matches only entries defined in the expected schema allowing for extra entries in given schema.
+ * Matches only columns defined in the expected schema allowing for extra columns in given schema.
  */
 final class SelectiveValidator implements SchemaValidator
 {
@@ -19,7 +19,7 @@ final class SelectiveValidator implements SchemaValidator
         $mismatchedDefinitions = [];
 
         foreach ($expected->definitions() as $expectedDefinition) {
-            $givenDefinition = $given->findDefinition($expectedDefinition->entry());
+            $givenDefinition = $given->findDefinition($expectedDefinition->reference());
 
             if ($givenDefinition === null) {
                 $missingDefinitions[] = $expectedDefinition;

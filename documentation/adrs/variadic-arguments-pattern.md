@@ -17,13 +17,13 @@ Several Flow PHP methods accept multiple arguments where at least one is require
 A proposal was made to simplify the API signatures from:
 
 ```php ignore
-public function partitionBy(string|Reference $entry, string|Reference ...$entries) : self
+public function partitionBy(string|Reference $column, string|Reference ...$columns) : self
 ```
 
 To:
 
 ```php ignore
-public function partitionBy(string|Reference ...$entries) : self
+public function partitionBy(string|Reference ...$columns) : self
 ```
 
 The rationale for the proposal was to reduce array operations like `array_unshift()` used internally to merge the first required argument with the variadic rest.
@@ -67,10 +67,10 @@ public function method(Type ...$args) : ReturnType
 ### 1. Pure variadic with runtime validation
 
 ```php ignore
-public function partitionBy(string|Reference ...$entries) : self
+public function partitionBy(string|Reference ...$columns) : self
 {
-    if ([] === $entries) {
-        throw new InvalidArgumentException('At least one entry is required.');
+    if ([] === $columns) {
+        throw new InvalidArgumentException('At least one column is required.');
     }
     // ...
 }

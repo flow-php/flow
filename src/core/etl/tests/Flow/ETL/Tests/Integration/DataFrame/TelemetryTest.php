@@ -44,7 +44,7 @@ use function Flow\ETL\DSL\telemetry_options;
 use function Flow\ETL\DSL\to_array;
 use function Flow\ETL\DSL\to_branch;
 use function Flow\ETL\DSL\to_transformation;
-use function Flow\ETL\DSL\with_entry;
+use function Flow\ETL\DSL\with_column;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function in_array;
@@ -286,7 +286,7 @@ final class TelemetryTest extends FlowTestCase
                 ['id' => 1, 'name' => 'John'],
                 ['id' => 2, 'name' => 'Jane'],
             ]))
-            ->withEntry('upper_name', ref('name')->upper())
+            ->withColumn('upper_name', ref('name')->upper())
             ->limit(10)
             ->run();
 
@@ -323,7 +323,7 @@ final class TelemetryTest extends FlowTestCase
         $output = [];
         df($context->config)
             ->read(from_array([['id' => 1], ['id' => 2]])->withBatchSize(1))
-            ->duplicateRow(condition: lit(true), entries: with_entry('id', ref('id')->multiply(lit(-1))))
+            ->duplicateRow(condition: lit(true), columns: with_column('id', ref('id')->multiply(lit(-1))))
             ->write(to_array($output))
             ->run();
 
@@ -397,11 +397,11 @@ final class TelemetryTest extends FlowTestCase
 
         df($context->config)->read(from_array($rows))->limit(5)->run();
 
-        $entries = $context->logs->entriesContaining('Limit reached');
+        $logEntries = $context->logs->entriesContaining('Limit reached');
 
-        static::assertCount(1, $entries);
-        static::assertFalse($entries[0]->record->attributes->has('limit_exception'));
-        static::assertSame(5, $entries[0]->record->attributes->get('limit'));
+        static::assertCount(1, $logEntries);
+        static::assertFalse($logEntries[0]->record->attributes->has('limit_exception'));
+        static::assertSame(5, $logEntries[0]->record->attributes->get('limit'));
     }
 
     public function test_telemetry_disabled_by_default_uses_void_providers(): void
@@ -500,12 +500,12 @@ final class TelemetryTest extends FlowTestCase
             ->until(ref('id')->lessThan(lit(5)))
             ->run();
 
-        $entries = $context->logs->entriesContaining('Limit reached');
+        $logEntries = $context->logs->entriesContaining('Limit reached');
 
-        static::assertCount(1, $entries);
-        static::assertFalse($entries[0]->record->attributes->has('limit_exception'));
+        static::assertCount(1, $logEntries);
+        static::assertFalse($logEntries[0]->record->attributes->has('limit_exception'));
         // UntilTransformer has no limit to report and throws LimitReachedException(0).
-        static::assertSame(0, $entries[0]->record->attributes->get('limit'));
+        static::assertSame(0, $logEntries[0]->record->attributes->get('limit'));
     }
 
     public function test_a_join_builds_one_balanced_dataframe_span_per_run(): void

@@ -254,7 +254,7 @@ final class OffsetTest extends FlowIntegrationTestCase
                     return new Statistics();
                 }
             })
-            ->withEntries([
+            ->withColumns([
                 'expanded' => ref('ids')->expand(),
                 'element' => ref('expanded')->unpack(schema(int_schema('id'))),
             ])
@@ -342,7 +342,7 @@ final class OffsetTest extends FlowIntegrationTestCase
     {
         $rows = df()
             ->read(from_array(array_map(static fn(int $id): array => ['id' => $id, 'value' => $id * 2], range(1, 10))))
-            ->withEntry('sum', ref('id')->plus(ref('value')))
+            ->withColumn('sum', ref('id')->plus(ref('value')))
             ->offset(3)
             ->fetch();
         static::assertCount(7, $rows);

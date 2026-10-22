@@ -309,7 +309,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
             ->filter(ref('month')->cast('int')->greaterThanEqual(lit(1)))
             ->filter(ref('day')->cast('int')->lessThan(lit(3)))
             ->filter(ref('text')->notEquals(lit('something')))
-            ->withEntry('day', ref('day')->cast('int'))
+            ->withColumn('day', ref('day')->cast('int'))
             ->collect()
             ->fetch();
 
@@ -362,7 +362,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
             )
             ->collect()
             ->select('year')
-            ->withEntry('year', ref('year')->cast('int'))
+            ->withColumn('year', ref('year')->cast('int'))
             ->groupBy([ref('year')])
             ->aggregate(collect(ref('year')))
             ->fetch();

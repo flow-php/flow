@@ -23,7 +23,7 @@ final class ConcatWithSeparatorTest extends FlowTestCase
             ->read(from_array([
                 ['tags' => ['a', 'b', 'c', 'd']],
             ]))
-            ->withEntry('tags', ref('tags')->concatWithSeparator(lit(', '), lit(null)))
+            ->withColumn('tags', ref('tags')->concatWithSeparator(lit(', '), lit(null)))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -42,7 +42,7 @@ final class ConcatWithSeparatorTest extends FlowTestCase
                 ['id' => 1],
                 ['id' => 2],
             ]))
-            ->withEntry('concat', concat_ws(lit(','), ref('id'), lit(null)))
+            ->withColumn('concat', concat_ws(lit(','), ref('id'), lit(null)))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -62,7 +62,7 @@ final class ConcatWithSeparatorTest extends FlowTestCase
                 ['id' => 1, 'array' => ['field' => 'value']],
                 ['id' => 2],
             ]))
-            ->withEntry('concat', optional(concat_ws(lit(null), lit(null))))
+            ->withColumn('concat', optional(concat_ws(lit(null), lit(null))))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
@@ -83,7 +83,7 @@ final class ConcatWithSeparatorTest extends FlowTestCase
                 ['id' => 1],
                 ['id' => 2],
             ]))
-            ->withEntry('concat', concat_ws(lit('->'), lit('id'), ref('id')))
+            ->withColumn('concat', concat_ws(lit('->'), lit('id'), ref('id')))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();

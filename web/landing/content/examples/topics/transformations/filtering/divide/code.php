@@ -12,6 +12,6 @@ data_frame()
         schema(int_schema('a'), int_schema('b')),
     ))
     ->filter(ref('b')->divide(lit(2))->equals(ref('a')))
-    ->withEntry('new_b', ref('b')->multiply(lit(2))->multiply(lit(5)))
+    ->withColumn('new_b', ref('b')->multiply(lit(2))->multiply(lit(5)))
     ->write(to_output(truncate: false))
     ->run();

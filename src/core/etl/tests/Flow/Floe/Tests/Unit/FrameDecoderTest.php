@@ -46,7 +46,7 @@ final class FrameDecoderTest extends TestCase
     public static function round_trips(): Generator
     {
         $cases = [
-            'all entry types' => RowsMother::withAllEntryTypes(),
+            'all column types' => RowsMother::withAllColumnTypes(),
             'worked example' => RowsMother::workedExample(),
             'list with a null slot' => array_to_rows([
                 ['l' => [1, 2]],

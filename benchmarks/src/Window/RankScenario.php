@@ -27,7 +27,7 @@ final readonly class RankScenario
 
         $partitioning
             ->derive(data_frame(BenchmarkConfig::builder())->read(from_floe(Datasets::orders($this->rows)->floe())))
-            ->withEntry(
+            ->withColumn(
                 'rank',
                 rank()->over(window()->partitionBy($partitioning->reference())->orderBy(ref('created_at'))),
             )

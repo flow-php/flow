@@ -22,9 +22,9 @@ final readonly class Body
     /**
      * @return int<0, max>
      */
-    public function maximumLength(string $entry, int|bool $truncate = 20): int
+    public function maximumLength(string $column, int|bool $truncate = 20): int
     {
-        $definition = $this->schema()->findDefinition($entry);
+        $definition = $this->schema()->findDefinition($column);
 
         if ($definition === null) {
             return 0;
@@ -33,7 +33,7 @@ final readonly class Body
         $max = 0;
 
         // @mago-ignore analysis:mixed-assignment
-        foreach ($this->rows->column($definition->entry()->name())->values() as $cell) {
+        foreach ($this->rows->column($definition->reference()->name())->values() as $cell) {
             $value = new ASCIIValue($definition->type(), $cell);
 
             if ($value->length($truncate) >= $max) {
@@ -50,10 +50,10 @@ final readonly class Body
     }
 
     /**
-     * @throws InvalidArgumentException the batch has no $entry column
+     * @throws InvalidArgumentException the batch has no $column column
      */
-    public function value(string $entry, int $index): mixed
+    public function value(string $column, int $index): mixed
     {
-        return $this->rows->column($entry)->value($index);
+        return $this->rows->column($column)->value($index);
     }
 }

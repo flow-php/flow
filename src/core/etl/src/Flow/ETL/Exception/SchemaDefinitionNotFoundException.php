@@ -17,23 +17,23 @@ final class SchemaDefinitionNotFoundException extends InvalidArgumentException
      * @param list<string> $suggestions
      */
     public function __construct(
-        private readonly string $entry,
+        private readonly string $column,
         private readonly array $suggestions = [],
     ) {
         parent::__construct(
             count($this->suggestions) > 0
                 ? sprintf(
-                    'Schema definition for entry "%s" not found. Did you mean one of: [%s]?',
-                    $entry,
+                    'Schema definition for column "%s" not found. Did you mean one of: [%s]?',
+                    $column,
                     implode(', ', $this->suggestions),
                 )
-                : sprintf('Schema definition for entry "%s" not found.', $entry),
+                : sprintf('Schema definition for column "%s" not found.', $column),
         );
     }
 
-    public static function withAvailable(string $entry, string ...$available): self
+    public static function withAvailable(string $column, string ...$available): self
     {
-        return new self($entry, (new SimilarNames())->closestTo($entry, array_values($available)));
+        return new self($column, (new SimilarNames())->closestTo($column, array_values($available)));
     }
 
     /**
@@ -47,8 +47,8 @@ final class SchemaDefinitionNotFoundException extends InvalidArgumentException
         return $this->suggestions;
     }
 
-    public function entry(): string
+    public function column(): string
     {
-        return $this->entry;
+        return $this->column;
     }
 }

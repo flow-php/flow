@@ -72,7 +72,7 @@ final class PhpCSVEncoder implements CSVEncoder
         $columns = [];
 
         foreach ($rows->schema()->definitions() as $definition) {
-            $cells = $this->cells($definition->type(), $rows->column($definition->entry()->name()));
+            $cells = $this->cells($definition->type(), $rows->column($definition->reference()->name()));
             $bare = type_bare($definition->type());
 
             if (

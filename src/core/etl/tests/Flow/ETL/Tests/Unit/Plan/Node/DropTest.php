@@ -33,7 +33,7 @@ final class DropTest extends FlowTestCase
         static::assertNotSame($node, $rebuilt);
         static::assertInstanceOf(Drop::class, $rebuilt);
         static::assertSame([$other], $rebuilt->children());
-        static::assertSame(['id'], $rebuilt->entries);
+        static::assertSame(['id'], $rebuilt->columns);
     }
 
     public function test_declarations(): void

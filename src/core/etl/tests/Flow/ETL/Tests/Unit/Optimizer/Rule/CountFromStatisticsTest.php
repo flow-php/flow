@@ -202,7 +202,7 @@ final class CountFromStatisticsTest extends FlowTestCase
             ->dropDuplicates('id')];
         yield 'a transform that keeps the rows' => [df()
             ->read(from_array([['id' => 1]]))
-            ->withEntry('copy', ref('id'))];
+            ->withColumn('copy', ref('id'))];
         yield 'a sink' => [df()->read(from_array([['id' => 1]]))->write(to_memory(new ArrayMemory()))];
     }
 

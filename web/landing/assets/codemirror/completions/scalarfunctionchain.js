@@ -2,7 +2,7 @@
  * CodeMirror Completer for Flow PHP ScalarFunctionChain Methods
  *
  * ScalarFunctionChain methods: 128
- * ScalarFunctionChain-returning functions: 59
+ * ScalarFunctionChain-returning functions: 58
  *
  * This completer triggers after ScalarFunctionChain-returning DSL functions
  */
@@ -11,7 +11,7 @@ import { CompletionContext, snippet } from "@codemirror/autocomplete"
 
 // DSL functions that return ScalarFunctionChain (have scalar_function_chain: true)
 const scalarFunctionChainFunctions = [
-    "col", "entry", "ref", "structure", "optional", "lit", "exists", "when", "structure_get", "array_get", "structure_get_collection", "array_get_collection", "structure_get_collection_first", "array_get_collection_first", "array_exists", "array_merge", "array_merge_collection", "array_key_rename", "array_keys_style_convert", "array_sort", "array_reverse", "now", "between", "to_date_time", "to_date", "date_time_format", "split", "combine", "concat", "concat_ws", "hash", "cast", "coalesce", "enum_name", "enum_value", "call", "array_unpack", "array_expand", "size", "uuid_v4", "uuid_v7", "ulid", "lower", "capitalize", "upper", "not", "to_timezone", "regex_replace", "regex_match_all", "regex_match", "regex", "regex_all", "sprintf", "sanitize", "round", "number_format", "greatest", "least", "match_cases"]
+    "col", "ref", "structure", "optional", "lit", "exists", "when", "structure_get", "array_get", "structure_get_collection", "array_get_collection", "structure_get_collection_first", "array_get_collection_first", "array_exists", "array_merge", "array_merge_collection", "array_key_rename", "array_keys_style_convert", "array_sort", "array_reverse", "now", "between", "to_date_time", "to_date", "date_time_format", "split", "combine", "concat", "concat_ws", "hash", "cast", "coalesce", "enum_name", "enum_value", "call", "array_unpack", "array_expand", "size", "uuid_v4", "uuid_v7", "ulid", "lower", "capitalize", "upper", "not", "to_timezone", "regex_replace", "regex_match_all", "regex_match", "regex", "regex_all", "sprintf", "sanitize", "round", "number_format", "greatest", "least", "match_cases"]
 
 // ScalarFunctionChain methods
 const scalarFunctionChainMethods = [
@@ -728,7 +728,7 @@ const scalarFunctionChainMethods = [
                     <span class=\"fn-name\">expand</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ArrayExpand</span> <span class=\"fn-param\">$expand</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Function\\ArrayExpand\\ArrayExpand::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayExpand</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Expands each value into entry, if there are more than one value, multiple rows will be created.<br>Array keys are ignored, only values are used to create new rows.<br>Nested in another function (structure(), concat(), ...) it still gives one row per element. Several<br>expands in one expression are zipped to the longest list; a shorter one gives null, so its element<br>type becomes nullable. It is refused inside another array_expand() and in filter(), until(),<br>duplicateRow(), aggregate(), over() and onEach().<br>Before:<br>  +--+-------------------+<br>  |id|              array|<br>  +--+-------------------+<br>  | 1|{\"a\":1,\"b\":2,\"c\":3}|<br>  +--+-------------------+<br>After:<br>  +--+--------+<br>  |id|expanded|<br>  +--+--------+<br>  | 1|       1|<br>  | 1|       2|<br>  | 1|       3|<br>  +--+--------+
+                    Expands each value into a column, if there are more than one value, multiple rows will be created.<br>Array keys are ignored, only values are used to create new rows.<br>Nested in another function (structure(), concat(), ...) it still gives one row per element. Several<br>expands in one expression are zipped to the longest list; a shorter one gives null, so its element<br>type becomes nullable. It is refused inside another array_expand() and in filter(), until(),<br>duplicateRow(), aggregate(), over() and onEach().<br>Before:<br>  +--+-------------------+<br>  |id|              array|<br>  +--+-------------------+<br>  | 1|{\"a\":1,\"b\":2,\"c\":3}|<br>  +--+-------------------+<br>After:<br>  +--+--------+<br>  |id|expanded|<br>  +--+--------+<br>  | 1|       1|<br>  | 1|       2|<br>  | 1|       3|<br>  +--+--------+
                 </div>
                             `
             return div
@@ -1241,7 +1241,7 @@ const scalarFunctionChainMethods = [
                     <span class=\"fn-name\">onEach</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$function</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$preserveKeys</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">OnEach</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Execute a scalar function on each element of an array/list/map/structure entry.<br>In order to use this function, you need to provide a reference to the \"element\" that will be used in the function.<br>Example: $df->withEntry(\'array\', ref(\'array\')->onEach(ref(\'element\')->cast(type_string())))
+                    Execute a scalar function on each element of an array/list/map/structure column.<br>In order to use this function, you need to provide a reference to the \"element\" that will be used in the function.<br>Example: $df->withColumn(\'array\', ref(\'array\')->onEach(ref(\'element\')->cast(type_string())))
                 </div>
                             `
             return div
@@ -1940,7 +1940,7 @@ const scalarFunctionChainMethods = [
                     <span class=\"fn-name\">unpack</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayUnpack</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Unpacks each element of an array into a new entry, using the array key as the entry name.<br>Before:<br>  +--+-------------------+<br>  |id|              array|<br>  +--+-------------------+<br>  | 1|{\"a\":1,\"b\":2,\"c\":3}|<br>  | 2|{\"d\":4,\"e\":5,\"f\":6}|<br>  +--+-------------------+<br>After:<br>  +--+-----+-----+-----+-----+-----+<br>  |id|arr.b|arr.c|arr.d|arr.e|arr.f|<br>  +--+-----+-----+-----+-----+-----+<br>  | 1|    2|    3|     |     |     |<br>  | 2|     |     |    4|    5|    6|<br>  +--+-----+-----+-----+-----+-----+
+                    Unpacks each element of an array into a new column, using the array key as the column name.<br>Before:<br>  +--+-------------------+<br>  |id|              array|<br>  +--+-------------------+<br>  | 1|{\"a\":1,\"b\":2,\"c\":3}|<br>  | 2|{\"d\":4,\"e\":5,\"f\":6}|<br>  +--+-------------------+<br>After:<br>  +--+-----+-----+-----+-----+-----+<br>  |id|arr.b|arr.c|arr.d|arr.e|arr.f|<br>  +--+-----+-----+-----+-----+-----+<br>  | 1|    2|    3|     |     |     |<br>  | 2|     |     |    4|    5|    6|<br>  +--+-----+-----+-----+-----+-----+
                 </div>
                             `
             return div

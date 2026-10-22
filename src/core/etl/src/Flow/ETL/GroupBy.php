@@ -31,9 +31,9 @@ final class GroupBy
 
     private readonly References $refs;
 
-    public function __construct(string|Reference ...$entries)
+    public function __construct(string|Reference ...$columns)
     {
-        $this->refs = References::init(...array_unique($entries));
+        $this->refs = References::init(...array_unique($columns));
         $this->aggregations = new Aggregators();
     }
 

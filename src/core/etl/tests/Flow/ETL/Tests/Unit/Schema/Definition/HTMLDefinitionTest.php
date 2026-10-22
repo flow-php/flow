@@ -240,8 +240,8 @@ final class HTMLDefinitionTest extends FlowTestCase
 
         $renamed = $def->rename('new_content');
 
-        static::assertSame('new_content', $renamed->entry()->name());
-        static::assertSame('content', $def->entry()->name());
+        static::assertSame('new_content', $renamed->reference()->name());
+        static::assertSame('content', $def->reference()->name());
     }
 
     public function test_set_metadata(): void

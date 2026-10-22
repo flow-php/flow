@@ -26,7 +26,7 @@ final class ModifyDateTimeTest extends FlowTestCase
                 ['id' => 1, 'created_at' => new DateTimeImmutable('2025-01-01')],
                 ['id' => 2, 'created_at' => new DateTimeImmutable('2025-02-01')],
             ]))
-            ->withEntry('expiration_at', ref('created_at')->modifyDateTime('last day of this month'))
+            ->withColumn('expiration_at', ref('created_at')->modifyDateTime('last day of this month'))
             ->fetch()
             ->toArray();
 
@@ -54,7 +54,7 @@ final class ModifyDateTimeTest extends FlowTestCase
                 ['id' => 1, 'array' => ['field' => 'value']],
                 ['id' => 2],
             ]))
-            ->withEntry('concat', concat(lit(null), lit(null)))
+            ->withColumn('concat', concat(lit(null), lit(null)))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
@@ -75,7 +75,7 @@ final class ModifyDateTimeTest extends FlowTestCase
                 ['id' => 1, 'array' => ['field' => 'value']],
                 ['id' => 2],
             ]))
-            ->withEntry('concat', optional(concat(ref('id'), '-', array_get(ref('array'), 'field'))))
+            ->withColumn('concat', optional(concat(ref('id'), '-', array_get(ref('array'), 'field'))))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();

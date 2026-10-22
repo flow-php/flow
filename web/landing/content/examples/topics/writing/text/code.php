@@ -17,7 +17,7 @@ data_frame()
             ['id' => 5, 'name' => 'Charlie', 'age' => 32],
         ])
     )
-    ->withEntry('line', concat_ws('_', ref('id'), ref('name'), ref('age')))
+    ->withColumn('line', concat_ws('_', ref('id'), ref('name'), ref('age')))
     ->select('line')
     ->collect()
     ->write(to_text(__DIR__ . '/lines.txt')->saveMode(overwrite()))

@@ -24,7 +24,7 @@ final readonly class ResultSchema
     private const array QUERY_OWN_STATES = ['42P01', '42703', '42883', '42704', '42501'];
 
     public function __construct(
-        private EntryTypesMap $typesMap = new EntryTypesMap(),
+        private TypesMap $typesMap = new TypesMap(),
     ) {}
 
     /**

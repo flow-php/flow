@@ -86,7 +86,7 @@ final class InvalidLogicException extends Exception
     {
         return new self(sprintf(
             'Cannot %s this plan: it reads from a DataFrame that reads back from it. A DataFrame is mutable, '
-            . 'so join(), select() and withEntry() can add that edge after both frames exist. Break the cycle '
+            . 'so join(), select() and withColumn() can add that edge after both frames exist. Break the cycle '
             . 'by reading the nested frame from its own source.',
             $operation,
         ));

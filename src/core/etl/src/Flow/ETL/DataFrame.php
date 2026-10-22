@@ -31,7 +31,7 @@ use Flow\ETL\Row\UnresolvedReference;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\SchemaFormatter;
 use Flow\ETL\Schema\Validator\StrictValidator;
-use Flow\ETL\Transformer\Rename\RenameEntryStrategy;
+use Flow\ETL\Transformer\Rename\RenameColumnStrategy;
 use Generator;
 
 use function array_unshift;
@@ -173,7 +173,7 @@ final class DataFrame
     }
 
     /**
-     * This method allows to collect references to all entries used in this pipeline.
+     * This method allows to collect references to all columns used in this pipeline.
      *
      * ```php
      * (new Flow())
@@ -262,34 +262,34 @@ final class DataFrame
     }
 
     /**
-     * Drop given entries.
+     * Drop given columns.
      *
      * @lazy
      */
-    public function drop(string|Reference ...$entries): self
+    public function drop(string|Reference ...$columns): self
     {
-        $this->root = new Node\Drop($this->root, array_values($entries));
+        $this->root = new Node\Drop($this->root, array_values($columns));
 
         return $this;
     }
 
     /**
-     * @param Reference|string ...$entries
+     * @param Reference|string ...$columns
      *
      * @lazy
      *
      * @return $this
      */
-    public function dropDuplicates(string|Reference ...$entries): self
+    public function dropDuplicates(string|Reference ...$columns): self
     {
-        $this->root = new Node\Distinct($this->root, array_values($entries));
+        $this->root = new Node\Distinct($this->root, array_values($columns));
 
         return $this;
     }
 
-    public function duplicateRow(mixed $condition, WithEntry ...$entries): self
+    public function duplicateRow(mixed $condition, WithColumn ...$columns): self
     {
-        $this->root = new Node\DuplicateRow($this->root, $condition, array_values($entries));
+        $this->root = new Node\DuplicateRow($this->root, $condition, array_values($columns));
 
         return $this;
     }
@@ -425,15 +425,15 @@ final class DataFrame
     /**
      * @lazy
      *
-     * @param GroupByReferences|Reference|string $entries a single column is grouped by on its own
+     * @param GroupByReferences|Reference|string $columns a single column is grouped by on its own
      * @param null|GroupByAlgorithmBuilder $algorithm null defers to configuration; a builder pins the
      *                                               algorithm for this operation and skips any automatic choice
      */
     public function groupBy(
-        array|Reference|string $entries,
+        array|Reference|string $columns,
         ?GroupByAlgorithmBuilder $algorithm = null,
     ): GroupedDataFrame {
-        $groupBy = new GroupBy(...is_array($entries) ? $entries : [$entries]);
+        $groupBy = new GroupBy(...is_array($columns) ? $columns : [$columns]);
         // the rows feeding the aggregate, without the frame's writes - what pivot discovery scans
         $input = new self($this->extractor, $this->context);
         $input->root = $this->root;
@@ -599,11 +599,11 @@ final class DataFrame
      * Shuffles the stream so every row sharing the given columns arrives in one batch. It does not
      * write directories - that is declared on the loader, `to_csv(...)->partitionBy('region')`.
      */
-    public function repartition(string|Reference $entry, string|Reference ...$entries): self
+    public function repartition(string|Reference $column, string|Reference ...$columns): self
     {
-        array_unshift($entries, $entry);
+        array_unshift($columns, $column);
 
-        $this->root = new Node\Repartition($this->root, References::init(...$entries));
+        $this->root = new Node\Repartition($this->root, References::init(...$columns));
 
         return $this;
     }
@@ -656,7 +656,7 @@ final class DataFrame
         return $this;
     }
 
-    public function renameEach(RenameEntryStrategy ...$strategies): self
+    public function renameEach(RenameColumnStrategy ...$strategies): self
     {
         $this->root = new Node\RenameEach($this->root, array_values($strategies));
 
@@ -723,11 +723,11 @@ final class DataFrame
 
     /**
      * @lazy
-     * Keep only given entries.
+     * Keep only given columns.
      */
-    public function select(string|Reference ...$entries): self
+    public function select(string|Reference ...$columns): self
     {
-        $this->root = new Node\Select($this->root, array_values($entries));
+        $this->root = new Node\Select($this->root, array_values($columns));
 
         return $this;
     }
@@ -735,13 +735,13 @@ final class DataFrame
     /**
      * @lazy
      *
-     * @param Reference|SortReferences|string $entries a single column is sorted by on its own
+     * @param Reference|SortReferences|string $columns a single column is sorted by on its own
      * @param null|SortAlgorithmBuilder $algorithm null defers to configuration; a builder pins the algorithm
      *                                            for this operation and skips any automatic choice
      */
-    public function sortBy(array|Reference|string $entries, ?SortAlgorithmBuilder $algorithm = null): self
+    public function sortBy(array|Reference|string $columns, ?SortAlgorithmBuilder $algorithm = null): self
     {
-        $references = is_array($entries) ? $entries : [$entries];
+        $references = is_array($columns) ? $columns : [$columns];
 
         $this->root = new Node\Sort($this->root, refs(...$references), $algorithm);
 
@@ -753,7 +753,7 @@ final class DataFrame
      *
      * @lazy
      */
-    public function transform(Transformer|Transformation|Transformations|WithEntry $transformer): self
+    public function transform(Transformer|Transformation|Transformations|WithColumn $transformer): self
     {
         return $this->with($transformer);
     }
@@ -788,7 +788,7 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function with(Transformer|Transformation|Transformations|WithEntry $transformer): self
+    public function with(Transformer|Transformation|Transformations|WithColumn $transformer): self
     {
         if ($transformer instanceof Transformer) {
             $this->root = new Node\Transform($this->root, $transformer);
@@ -802,8 +802,8 @@ final class DataFrame
             return $this;
         }
 
-        if ($transformer instanceof WithEntry) {
-            $this->withEntry($transformer->name, $transformer->function);
+        if ($transformer instanceof WithColumn) {
+            $this->withColumn($transformer->name, $transformer->function);
 
             return $this;
         }
@@ -812,17 +812,37 @@ final class DataFrame
     }
 
     /**
+     * @param Definition<mixed>|string $column
+     *
+     * @lazy
+     */
+    public function withColumn(string|Definition $column, ScalarFunction|WindowFunction $reference): self
+    {
+        $this->root = match (true) {
+            $reference instanceof WindowFunction => new Node\WindowColumn($this->root, $column, $reference),
+            (new ExpandingFunctions())->in($reference) !== [] => new Node\ExpandColumn(
+                $this->root,
+                $column,
+                $reference,
+            ),
+            default => new Node\WithColumn($this->root, $column, $reference),
+        };
+
+        return $this;
+    }
+
+    /**
      * @lazy
      *
-     * @param array<int, WithEntry>|array<string, ScalarFunction|WindowFunction|WithEntry> $references
+     * @param array<int, WithColumn>|array<string, ScalarFunction|WindowFunction|WithColumn> $references
      */
-    public function withEntries(array $references): self
+    public function withColumns(array $references): self
     {
-        foreach ($references as $entryName => $ref) {
-            if ($ref instanceof WithEntry) {
-                $this->withEntry($ref->name, $ref->function);
+        foreach ($references as $name => $ref) {
+            if ($ref instanceof WithColumn) {
+                $this->withColumn($ref->name, $ref->function);
             } else {
-                $this->withEntry((string) $entryName, $ref);
+                $this->withColumn((string) $name, $ref);
             }
         }
 
@@ -830,19 +850,27 @@ final class DataFrame
     }
 
     /**
+     * @deprecated Use {@see DataFrame::withColumns()} instead.
+     *
+     * @lazy
+     *
+     * @param array<int, WithColumn>|array<string, ScalarFunction|WindowFunction|WithColumn> $references
+     */
+    public function withEntries(array $references): self
+    {
+        return $this->withColumns($references);
+    }
+
+    /**
+     * @deprecated Use {@see DataFrame::withColumn()} instead.
+     *
      * @param Definition<mixed>|string $entry
      *
      * @lazy
      */
     public function withEntry(string|Definition $entry, ScalarFunction|WindowFunction $reference): self
     {
-        $this->root = match (true) {
-            $reference instanceof WindowFunction => new Node\WindowColumn($this->root, $entry, $reference),
-            (new ExpandingFunctions())->in($reference) !== [] => new Node\ExpandColumn($this->root, $entry, $reference),
-            default => new Node\WithColumn($this->root, $entry, $reference),
-        };
-
-        return $this;
+        return $this->withColumn($entry, $reference);
     }
 
     /**

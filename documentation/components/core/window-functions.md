@@ -38,7 +38,7 @@ data_frame()
             ['id' => 6, 'name' => 'Janet', 'department' => 'Finances', 'salary' => 4000],
         ])
     )
-    ->withEntry('rank', dense_rank()->over(window()->partitionBy(ref('department'))->orderBy(ref('salary')->desc())))
+    ->withColumn('rank', dense_rank()->over(window()->partitionBy(ref('department'))->orderBy(ref('salary')->desc())))
     ->sortBy([ref('department'), ref('rank')])
     ->write(to_output(false))
     ->run();
@@ -148,7 +148,7 @@ data_frame()
             ['id' => 4, 'department' => 'IT', 'date' => '2024-01-04', 'salary' => 400],
         ])
     )
-    ->withEntry(
+    ->withColumn(
         'moving_avg',
         average(ref('salary'))->over(
             window()

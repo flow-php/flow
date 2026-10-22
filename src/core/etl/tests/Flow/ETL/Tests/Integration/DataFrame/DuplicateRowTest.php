@@ -10,7 +10,7 @@ use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\with_entry;
+use function Flow\ETL\DSL\with_column;
 
 final class DuplicateRowTest extends FlowTestCase
 {
@@ -24,7 +24,7 @@ final class DuplicateRowTest extends FlowTestCase
             ]))
             ->duplicateRow(
                 condition: ref('status')->equals('inactive'),
-                entries: with_entry('amount', ref('amount')->multiply(lit(-1))),
+                columns: with_column('amount', ref('amount')->multiply(lit(-1))),
             )
             ->fetch()
             ->toArray();

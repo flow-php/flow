@@ -123,7 +123,7 @@ final class OpenAPIConverter
         $properties = [];
 
         foreach ($schema->definitions() as $definition) {
-            $properties[$definition->entry()->name()] = $this->convertDefinitionToOpenAPI($definition);
+            $properties[$definition->reference()->name()] = $this->convertDefinitionToOpenAPI($definition);
         }
 
         return [

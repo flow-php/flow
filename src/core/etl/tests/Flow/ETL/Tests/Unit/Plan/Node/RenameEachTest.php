@@ -12,14 +12,14 @@ use Flow\ETL\Plan\RowCount;
 use Flow\ETL\Plan\Transparency;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\NodeMother;
-use Flow\ETL\Transformer\Rename\RenameMapEntryStrategy;
+use Flow\ETL\Transformer\Rename\RenameMapColumnStrategy;
 
 final class RenameEachTest extends FlowTestCase
 {
     public function test_with_children_returns_the_same_instance_when_children_are_identical(): void
     {
         $input = NodeMother::read();
-        $node = new RenameEach($input, [new RenameMapEntryStrategy(['id' => 'user_id'])]);
+        $node = new RenameEach($input, [new RenameMapColumnStrategy(['id' => 'user_id'])]);
 
         static::assertSame($node, $node->withChildren([$input]));
     }
@@ -28,7 +28,7 @@ final class RenameEachTest extends FlowTestCase
     {
         $input = NodeMother::read();
         $other = NodeMother::read();
-        $strategies = [new RenameMapEntryStrategy(['id' => 'user_id'])];
+        $strategies = [new RenameMapColumnStrategy(['id' => 'user_id'])];
         $node = new RenameEach($input, $strategies);
 
         $rebuilt = $node->withChildren([$other]);
@@ -42,7 +42,7 @@ final class RenameEachTest extends FlowTestCase
     public function test_declarations(): void
     {
         $input = NodeMother::read();
-        $node = new RenameEach($input, [new RenameMapEntryStrategy(['id' => 'user_id'])]);
+        $node = new RenameEach($input, [new RenameMapColumnStrategy(['id' => 'user_id'])]);
 
         static::assertSame(RowCount::preserving, $node->rowCount());
         static::assertSame(Transparency::transparent, $node->transparency());

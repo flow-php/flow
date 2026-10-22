@@ -6,7 +6,7 @@ namespace Flow\ETL\Tests\Unit\Transformer;
 
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\ETL\Transformer\SelectEntriesTransformer;
+use Flow\ETL\Transformer\SelectColumnsTransformer;
 
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
@@ -18,13 +18,13 @@ use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\Types\DSL\type_json;
 
-final class SelectEntriesTransformerTest extends FlowTestCase
+final class SelectColumnsTransformerTest extends FlowTestCase
 {
     public function test_bind_projects_and_reorders_to_the_selected_columns(): void
     {
         static::assertEquals(
             schema(str_schema('name'), int_schema('id')),
-            (new SelectEntriesTransformer('name', 'id'))->bind(schema(
+            (new SelectColumnsTransformer('name', 'id'))->bind(schema(
                 int_schema('id'),
                 str_schema('name'),
                 json_schema('array'),
@@ -35,9 +35,9 @@ final class SelectEntriesTransformerTest extends FlowTestCase
     public function test_bind_refuses_a_column_missing_from_the_input(): void
     {
         $this->expectException(SchemaDefinitionNotFoundException::class);
-        $this->expectExceptionMessage('Schema definition for entry "not_existing" not found');
+        $this->expectExceptionMessage('Schema definition for column "not_existing" not found');
 
-        (new SelectEntriesTransformer('not_existing'))->bind(schema(int_schema('id')));
+        (new SelectColumnsTransformer('not_existing'))->bind(schema(int_schema('id')));
     }
 
     public function test_selecting_entries(): void
@@ -47,7 +47,7 @@ final class SelectEntriesTransformerTest extends FlowTestCase
             schema(int_schema('id'), str_schema('name'), json_schema('array')),
         );
 
-        $transformer = new SelectEntriesTransformer('name');
+        $transformer = new SelectColumnsTransformer('name');
         static::assertSame(
             [
                 ['name' => 'Row Name'],
@@ -64,14 +64,14 @@ final class SelectEntriesTransformerTest extends FlowTestCase
         );
 
         $this->expectException(SchemaDefinitionNotFoundException::class);
-        $this->expectExceptionMessage('Schema definition for entry "not_existing" not found');
+        $this->expectExceptionMessage('Schema definition for column "not_existing" not found');
 
-        (new SelectEntriesTransformer('not_existing'))->transform($rows, flow_context(config()));
+        (new SelectColumnsTransformer('not_existing'))->transform($rows, flow_context(config()));
     }
 
     public function test_selecting_an_entry_missing_from_some_rows_widens_to_a_nullable_real_type(): void
     {
-        $transformer = new SelectEntriesTransformer('id');
+        $transformer = new SelectColumnsTransformer('id');
 
         static::assertEquals(
             schema(int_schema('id', nullable: true)),
@@ -94,7 +94,7 @@ final class SelectEntriesTransformerTest extends FlowTestCase
             schema(int_schema('id'), str_schema('name'), json_schema('array')),
         );
 
-        $result = (new SelectEntriesTransformer('name', 'id', 'array'))->transform($rows, flow_context(config()));
+        $result = (new SelectColumnsTransformer('name', 'id', 'array'))->transform($rows, flow_context(config()));
 
         static::assertSame(['name', 'id', 'array'], $result->schema()->references()->names());
         static::assertSame(
@@ -109,7 +109,7 @@ final class SelectEntriesTransformerTest extends FlowTestCase
     {
         static::assertEquals(
             schema(int_schema('id')),
-            (new SelectEntriesTransformer('id'))
+            (new SelectColumnsTransformer('id'))
                 ->transform(
                     array_to_rows(
                         [['id' => 1, 'name' => 'Alice'], ['id' => 2, 'name' => 'Bob']],

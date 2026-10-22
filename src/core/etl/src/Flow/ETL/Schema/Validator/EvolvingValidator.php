@@ -32,7 +32,7 @@ final class EvolvingValidator implements SchemaValidator
         $unexpectedDefinitions = [];
 
         foreach ($expected->definitions() as $expectedDefinition) {
-            $givenDefinition = $given->findDefinition($expectedDefinition->entry());
+            $givenDefinition = $given->findDefinition($expectedDefinition->reference());
 
             if ($givenDefinition === null) {
                 if (!$expectedDefinition->isNullable()) {
@@ -54,7 +54,7 @@ final class EvolvingValidator implements SchemaValidator
         }
 
         foreach ($given->definitions() as $givenDefinition) {
-            if ($expected->findDefinition($givenDefinition->entry()) === null && !$givenDefinition->isNullable()) {
+            if ($expected->findDefinition($givenDefinition->reference()) === null && !$givenDefinition->isNullable()) {
                 $unexpectedDefinitions[] = $givenDefinition;
             }
         }

@@ -55,7 +55,7 @@ final class ExpandingFunctionsTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(
-            'filter() cannot contain array_expand(), it turns one row into many rows. Expand with withEntry() first, then use the new column.',
+            'filter() cannot contain array_expand(), it turns one row into many rows. Expand with withColumn() first, then use the new column.',
         );
 
         (new ExpandingFunctions())->refuse(ref('tags')->expand()->equals(lit('x')), 'filter');
@@ -73,7 +73,7 @@ final class ExpandingFunctionsTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(
-            'array_expand() cannot contain another array_expand(). Expand one level per withEntry().',
+            'array_expand() cannot contain another array_expand(). Expand one level per withColumn().',
         );
 
         (new ExpandingFunctions())->refuseNested($tree);

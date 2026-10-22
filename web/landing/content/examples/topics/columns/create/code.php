@@ -12,8 +12,8 @@ data_frame()
         ['id' => 2, 'name' => 'John'],
         ['id' => 3, 'name' => 'Jane'],
     ]))
-    ->withEntry('active', ref('id')->isOdd())
-    ->withEntry('number', lit(5))
+    ->withColumn('active', ref('id')->isOdd())
+    ->withColumn('number', lit(5))
     ->collect()
     ->write(to_output(truncate: false))
     ->run();

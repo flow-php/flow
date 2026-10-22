@@ -34,7 +34,7 @@ final class UnicodeLengthTest extends FlowTestCase
                 ['text' => '👋🏻'],
                 ['text' => '👨‍👩‍👧‍👦'],
             ]))
-            ->withEntry('unicode_length', optional(ref('text')->unicodeLength()))
+            ->withColumn('unicode_length', optional(ref('text')->unicodeLength()))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

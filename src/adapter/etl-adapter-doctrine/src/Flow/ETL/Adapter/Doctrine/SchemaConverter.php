@@ -51,7 +51,7 @@ final readonly class SchemaConverter
 
         foreach ($schema->definitions() as $definition) {
             $column = $this->flowToColumn(
-                $definition->entry()->name(),
+                $definition->reference()->name(),
                 $definition->type(),
                 $definition->isNullable(),
                 $definition->metadata(),
@@ -263,7 +263,7 @@ final readonly class SchemaConverter
                     $indexesData[$index] = [];
                 }
 
-                $indexesData[$index][] = $definition->entry()->name();
+                $indexesData[$index][] = $definition->reference()->name();
             }
 
             if ($definition->metadata()->has(DbalMetadata::INDEX_UNIQUE->value)) {
@@ -276,7 +276,7 @@ final readonly class SchemaConverter
                     $uniqueIndexesData[$uniqueIndex] = [];
                 }
 
-                $uniqueIndexesData[$uniqueIndex][] = $definition->entry()->name();
+                $uniqueIndexesData[$uniqueIndex][] = $definition->reference()->name();
             }
 
             if ($definition->metadata()->has(DbalMetadata::PRIMARY_KEY->value)) {
@@ -284,7 +284,7 @@ final readonly class SchemaConverter
                     DbalMetadata::PRIMARY_KEY->value,
                     type_string(),
                 );
-                $primaryKey[$primaryKeyName][] = $definition->entry()->name();
+                $primaryKey[$primaryKeyName][] = $definition->reference()->name();
 
                 if (count($primaryKey) > 1) {
                     throw new InvalidArgumentException(

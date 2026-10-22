@@ -195,7 +195,7 @@ final class ColumnTypesTest extends FlowTestCase
         // PHP re-keys a numeric column name to int, so the fold has to survive an int key
         $columns->observe(['1' => 'x']);
 
-        static::assertSame('1', $columns->schema(ColumnTypesMother::floor())->get('1')->entry()->name());
+        static::assertSame('1', $columns->schema(ColumnTypesMother::floor())->get('1')->reference()->name());
     }
 
     public function test_a_saturated_string_column_widens_to_optional_string_on_a_later_null(): void

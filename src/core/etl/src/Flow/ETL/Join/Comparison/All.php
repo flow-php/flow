@@ -57,13 +57,13 @@ final readonly class All implements Comparison
      */
     public function left(): array
     {
-        $entries = [];
+        $columns = [];
 
         foreach ($this->comparisons as $comparison) {
-            $entries[] = $comparison->left();
+            $columns[] = $comparison->left();
         }
 
-        return array_unique(array_merge(...$entries));
+        return array_unique(array_merge(...$columns));
     }
 
     /**
@@ -71,12 +71,12 @@ final readonly class All implements Comparison
      */
     public function right(): array
     {
-        $entries = [];
+        $columns = [];
 
         foreach ($this->comparisons as $comparison) {
-            $entries[] = $comparison->right();
+            $columns[] = $comparison->right();
         }
 
-        return array_unique(array_merge(...$entries));
+        return array_unique(array_merge(...$columns));
     }
 }

@@ -58,7 +58,7 @@ final class AggregatorsTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(
-            'aggregate() cannot contain array_expand(), it turns one row into many rows. Expand with withEntry() first, then use the new column.',
+            'aggregate() cannot contain array_expand(), it turns one row into many rows. Expand with withColumn() first, then use the new column.',
         );
 
         (new Aggregators(new UnenumerableSum(ref('n'), ref('flags')->expand()->equals(lit(true)))))->resolved(

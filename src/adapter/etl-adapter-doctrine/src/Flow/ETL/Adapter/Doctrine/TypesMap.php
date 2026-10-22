@@ -151,7 +151,7 @@ final class TypesMap
                 throw new BaseInvalidArgumentException(sprintf('DBAL type "%s" is not registered.', $dbalTypeClass));
             }
 
-            $types[$definition->entry()->name()] = DbalType::getType($typeClassToName[$dbalTypeClass]);
+            $types[$definition->reference()->name()] = DbalType::getType($typeClassToName[$dbalTypeClass]);
         }
 
         return $types;

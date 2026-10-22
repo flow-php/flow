@@ -67,8 +67,8 @@ use function Flow\Types\DSL\type_json;
 
 data_frame()
     ->read(from_parquet(__DIR__ . '/orders.parquet', columns: ['id', 'payload', 'created_at']))
-    ->withEntry('payload', ref('payload')->cast(type_json()))
-    ->withEntry('created_at', to_timezone(ref('created_at'), 'Europe/Warsaw'))
+    ->withColumn('payload', ref('payload')->cast(type_json()))
+    ->withColumn('created_at', to_timezone(ref('created_at'), 'Europe/Warsaw'))
     ->write(to_output())
     ->run();
 ```

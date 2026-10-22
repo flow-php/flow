@@ -76,7 +76,7 @@ data_frame()
         ['text' => 'hello'],
         ['text' => null],
     ]))
-    ->withEntry('upper', optional(ref('text')->upper()))
+    ->withColumn('upper', optional(ref('text')->upper()))
     ->write(to_stream(__DIR__ . '/output.csv', truncate: false))
     ->run();
 

@@ -123,7 +123,7 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
     public function test_plus_expression_on_non_existing_rows(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Schema definition for entry "num" not found.');
+        $this->expectExceptionMessage('Schema definition for column "num" not found.');
 
         static::assertEquals(
             [
@@ -150,9 +150,9 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
         );
     }
 
-    public function test_unpack_results_ignores_a_definition_passed_to_with_entry(): void
+    public function test_unpack_results_ignores_a_definition_passed_to_with_column(): void
     {
-        // a Definition passed to withEntry() cannot describe an N-column result, so unpack's own
+        // a Definition passed to withColumn() cannot describe an N-column result, so unpack's own
         // declared Schema is what names and types the produced columns
         $result = (new ScalarFunctionTransformer(
             str_schema('array'),
@@ -289,7 +289,7 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(
             'transform() cannot contain array_expand(), it turns one row into many rows. '
-            . 'Expand with withEntry() first, then use the new column.',
+            . 'Expand with withColumn() first, then use the new column.',
         );
 
         (new ScalarFunctionTransformer('v', $function))->bind(ListColumnsMother::schema());

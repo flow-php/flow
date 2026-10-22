@@ -206,13 +206,13 @@ use Flow\ETL\Transformation\Limit;
 use Flow\ETL\Transformation\MaskColumns;
 use Flow\ETL\Transformation\Select;
 use Flow\ETL\Transformer;
-use Flow\ETL\Transformer\Rename\RenameCaseEntryStrategy;
-use Flow\ETL\Transformer\Rename\RenameMapEntryStrategy;
-use Flow\ETL\Transformer\Rename\RenameReplaceEntryStrategy;
+use Flow\ETL\Transformer\Rename\RenameCaseColumnStrategy;
+use Flow\ETL\Transformer\Rename\RenameMapColumnStrategy;
+use Flow\ETL\Transformer\Rename\RenameReplaceColumnStrategy;
 use Flow\ETL\Window;
 use Flow\ETL\Window\FrameBound;
 use Flow\ETL\Window\FrameBoundType;
-use Flow\ETL\WithEntry;
+use Flow\ETL\WithColumn;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
@@ -420,7 +420,7 @@ function from_data_frame(DataFrame $data_frame): DataFrameExtractor
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
 function from_sequence_date_period(
-    string $entry_name,
+    string $column_name,
     DateTimeInterface $start,
     DateInterval $interval,
     DateTimeInterface $end,
@@ -428,13 +428,13 @@ function from_sequence_date_period(
 ): SequenceExtractor {
     return new SequenceExtractor(
         new DatePeriodSequenceGenerator(new DatePeriod($start, $interval, $end, $options)),
-        $entry_name,
+        $column_name,
     );
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
 function from_sequence_date_period_recurrences(
-    string $entry_name,
+    string $column_name,
     DateTimeInterface $start,
     DateInterval $interval,
     int $recurrences,
@@ -442,18 +442,18 @@ function from_sequence_date_period_recurrences(
 ): SequenceExtractor {
     return new SequenceExtractor(
         new DatePeriodSequenceGenerator(new DatePeriod($start, $interval, $recurrences, $options)),
-        $entry_name,
+        $column_name,
     );
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
 function from_sequence_number(
-    string $entry_name,
+    string $column_name,
     string|int|float $start,
     string|int|float $end,
     int|float $step = 1,
 ): SequenceExtractor {
-    return new SequenceExtractor(new NumberSequenceGenerator($start, $end, $step), $entry_name);
+    return new SequenceExtractor(new NumberSequenceGenerator($start, $end, $step), $column_name);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
@@ -541,9 +541,9 @@ function to_branch(ScalarFunction $condition, Loader|Sink $sink): Branched
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
-function rename_style(StringStyles $style): RenameCaseEntryStrategy
+function rename_style(StringStyles $style): RenameCaseColumnStrategy
 {
-    return new RenameCaseEntryStrategy($style);
+    return new RenameCaseColumnStrategy($style);
 }
 
 /**
@@ -551,18 +551,18 @@ function rename_style(StringStyles $style): RenameCaseEntryStrategy
  * @param array<string>|string $replace
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
-function rename_replace(string|array $search, string|array $replace): RenameReplaceEntryStrategy
+function rename_replace(string|array $search, string|array $replace): RenameReplaceColumnStrategy
 {
-    return new RenameReplaceEntryStrategy($search, $replace);
+    return new RenameReplaceColumnStrategy($search, $replace);
 }
 
 /**
  * @param array<array-key, string> $renames Map of old_name => new_name
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
-function rename_map(array $renames): RenameMapEntryStrategy
+function rename_map(array $renames): RenameMapColumnStrategy
 {
-    return new RenameMapEntryStrategy($renames);
+    return new RenameMapColumnStrategy($renames);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
@@ -575,32 +575,22 @@ function rows(Schema $schema, Backend $backend = new AdaptiveBackend()): Rows
  * An alias for `ref`.
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function col(string $entry): UnresolvedReference
+function col(string $column): UnresolvedReference
 {
-    return new UnresolvedReference($entry);
-}
-
-/**
- * An alias for `ref`.
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-#[DocumentationExample(topic: 'columns', example: 'create')]
-function entry(string $entry): UnresolvedReference
-{
-    return new UnresolvedReference($entry);
+    return new UnresolvedReference($column);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
 #[DocumentationExample(topic: 'columns', example: 'create')]
-function ref(string $entry): UnresolvedReference
+function ref(string $column): UnresolvedReference
 {
-    return new UnresolvedReference($entry);
+    return new UnresolvedReference($column);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function structure_ref(string $entry): StructureFunctions
+function structure_ref(string $column): StructureFunctions
 {
-    return ref($entry)->structure();
+    return ref($column)->structure();
 }
 
 /**
@@ -616,27 +606,27 @@ function structure(array $elements): Structure
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function list_ref(string $entry): ListFunctions
+function list_ref(string $column): ListFunctions
 {
-    return ref($entry)->list();
+    return ref($column)->list();
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function refs(string|Reference ...$entries): References
+function refs(string|Reference ...$columns): References
 {
-    return new References(...$entries);
+    return new References(...$columns);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
-function select(string|Reference ...$entries): Select
+function select(string|Reference ...$columns): Select
 {
-    return new Select(...$entries);
+    return new Select(...$columns);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
-function drop(string|Reference ...$entries): Drop
+function drop(string|Reference ...$columns): Drop
 {
-    return new Drop(...$entries);
+    return new Drop(...$columns);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
@@ -934,7 +924,7 @@ function call(ScalarFunction $callable, Type $return_type, array $parameters = [
 }
 
 /**
- * Unpacks each element of an array into a new entry, using the array key as the entry name.
+ * Unpacks each element of an array into a new column, using the array key as the column name.
  *
  * Before:
  * +--+-------------------+
@@ -961,7 +951,7 @@ function array_unpack(ScalarFunction|array $array, Schema $schema): ArrayUnpack
 }
 
 /**
- * Expands each value into entry, if there are more than one value, multiple rows will be created.
+ * Expands each value into a column, if there are more than one value, multiple rows will be created.
  * Array keys are ignored, only values are used to create new rows.
  * Nested in another function (structure(), concat(), ...) it still gives one row per element. Several
  * expands in one expression are zipped to the longest list; a shorter one gives null, so its element
@@ -1742,9 +1732,9 @@ function discover_pivot_values(int $maxValues = 10_000): DiscoveredPivotValues
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
-function partition_by(string|Reference $entry, string|Reference ...$entries): Partitioning
+function partition_by(string|Reference $column, string|Reference ...$columns): Partitioning
 {
-    return Partitioning::by($entry, ...$entries);
+    return Partitioning::by($column, ...$columns);
 }
 
 /**
@@ -2010,9 +2000,9 @@ function date_interval_to_microseconds(DateInterval $interval): int
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function with_entry(string $name, ScalarFunction $function): WithEntry
+function with_column(string $name, ScalarFunction $function): WithColumn
 {
-    return new WithEntry($name, $function);
+    return new WithColumn($name, $function);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]

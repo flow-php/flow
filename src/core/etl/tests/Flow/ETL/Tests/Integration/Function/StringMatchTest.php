@@ -23,7 +23,7 @@ final class StringMatchTest extends FlowTestCase
                 ['text' => 'foo bar'],
                 ['text' => 'hello universe'],
             ]))
-            ->withEntry('match_result', ref('text')->stringMatch(lit('/hello/')))
+            ->withColumn('match_result', ref('text')->stringMatch(lit('/hello/')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

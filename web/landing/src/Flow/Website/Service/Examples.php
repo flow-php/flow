@@ -210,7 +210,7 @@ final readonly class Examples
         // say) would otherwise be walked as one and scandir() would return false on it
         $examples = array_values(array_filter(
             array_diff(type_list(type_string())->assert(scandir($path)), ['..', '.']),
-            fn(string $entry): bool => is_dir(sprintf('%s/%s', $path, $entry)),
+            fn(string $name): bool => is_dir(sprintf('%s/%s', $path, $name)),
         ));
 
         if (0 === count($examples)) {

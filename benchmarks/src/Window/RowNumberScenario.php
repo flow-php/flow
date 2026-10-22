@@ -27,7 +27,7 @@ final readonly class RowNumberScenario
 
         $partitioning
             ->derive(data_frame(BenchmarkConfig::builder())->read(from_floe(Datasets::orders($this->rows)->floe())))
-            ->withEntry(
+            ->withColumn(
                 'row_number',
                 row_number()->over(window()->partitionBy($partitioning->reference())->orderBy(ref('created_at'))),
             )

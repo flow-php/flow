@@ -10,7 +10,7 @@ require __DIR__ . '/vendor/autoload.php';
 
 $rows = data_frame(config_builder()->backend(new PhpBackend()))
     ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]))
-    ->withEntry('double', ref('id')->multiply(lit(2)))
+    ->withColumn('double', ref('id')->multiply(lit(2)))
     ->fetch();
 
 foreach (['id', 'double'] as $name) {

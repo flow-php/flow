@@ -309,8 +309,8 @@ final class EnumDefinitionTest extends FlowTestCase
 
         $renamed = $def->rename('new_status');
 
-        static::assertSame('new_status', $renamed->entry()->name());
-        static::assertSame('status', $def->entry()->name());
+        static::assertSame('new_status', $renamed->reference()->name());
+        static::assertSame('status', $def->reference()->name());
     }
 
     public function test_set_metadata(): void

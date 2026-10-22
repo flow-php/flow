@@ -41,12 +41,12 @@ final readonly class BoundExpansion
     ) {}
 
     /**
-     * @param Definition<mixed>|string $entry
+     * @param Definition<mixed>|string $column
      *
      * @throws InvalidLogicException when $function holds no expand
      */
     public static function of(
-        string|Definition $entry,
+        string|Definition $column,
         ScalarFunction $function,
         RequiredColumns $carries,
         Schema $input,
@@ -61,7 +61,7 @@ final readonly class BoundExpansion
             $function::class,
         );
         $root = $expansion->root();
-        $name = $entry instanceof Definition ? $entry->entry()->name() : $entry;
+        $name = $column instanceof Definition ? $column->reference()->name() : $column;
         $synthesized = $expansion->synthesized();
         $synthesizedNames = $synthesized->references()->names();
         $written = [$name];
@@ -77,16 +77,16 @@ final readonly class BoundExpansion
             }
         }
 
-        $inner = new ScalarFunctionTransformer($entry, $root);
+        $inner = new ScalarFunctionTransformer($column, $root);
         $full = $inner->bind($input->add(...array_values($synthesized->definitions())))->output;
         $output = [];
 
         foreach ($full->definitions() as $definition) {
-            $column = $definition->entry()->name();
+            $columnName = $definition->reference()->name();
 
             if (
-                !in_array($column, $synthesizedNames, true)
-                && (in_array($column, $written, true) || $carries->requires($column))
+                !in_array($columnName, $synthesizedNames, true)
+                && (in_array($columnName, $written, true) || $carries->requires($columnName))
             ) {
                 $output[] = $definition;
             }
@@ -96,13 +96,13 @@ final readonly class BoundExpansion
         $gathered = [];
 
         foreach ($input->definitions() as $definition) {
-            $column = $definition->entry()->name();
+            $columnName = $definition->reference()->name();
 
             if (
-                !in_array($column, $written, true) && $carries->requires($column)
-                || in_array($column, $rootReads, true)
+                !in_array($columnName, $written, true) && $carries->requires($columnName)
+                || in_array($columnName, $rootReads, true)
             ) {
-                $gathered[] = $column;
+                $gathered[] = $columnName;
             }
         }
 

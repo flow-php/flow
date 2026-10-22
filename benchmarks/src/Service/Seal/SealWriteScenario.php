@@ -38,7 +38,7 @@ final readonly class SealWriteScenario
         data_frame()
             ->read(from_floe(Datasets::orders($this->rows)->floe()))
             ->batchSize(1000)
-            ->write(to_seal_upsert($engine, $this->index())->withIdentifierEntry('order_id')->withBulkSize(1000))
+            ->write(to_seal_upsert($engine, $this->index())->withIdentifierColumn('order_id')->withBulkSize(1000))
             ->run();
     }
 

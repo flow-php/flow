@@ -97,7 +97,7 @@ to_seal_upsert($engine, 'users')->withBulkSize(500);
 
 ### Deleting Documents
 
-`to_seal_delete()` removes documents by their identifiers, read from the `id` column. `withIdentifierEntry()` names
+`to_seal_delete()` removes documents by their identifiers, read from the `id` column. `withIdentifierColumn()` names
 another column.
 
 ```php
@@ -111,7 +111,7 @@ data_frame()
 ```
 
 ```php
-to_seal_delete($engine, 'products')->withIdentifierEntry('sku');
+to_seal_delete($engine, 'products')->withIdentifierColumn('sku');
 ```
 
 ### Data Normalization

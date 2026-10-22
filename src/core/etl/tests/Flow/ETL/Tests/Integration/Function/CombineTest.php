@@ -23,7 +23,7 @@ final class CombineTest extends FlowTestCase
                 ['id' => 1, 'first' => ['a', 'b', 'c'], 'second' => [1, 2, 3]],
                 ['id' => 2],
             ]))
-            ->withEntry('array', optional(combine(ref('first'), ref('second'))))
+            ->withColumn('array', optional(combine(ref('first'), ref('second'))))
             ->drop('first', 'second')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();

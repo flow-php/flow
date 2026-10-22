@@ -22,7 +22,7 @@ final class RegexMatchAllTest extends FlowTestCase
             ->read(from_array([
                 ['key' => 'value'],
             ]))
-            ->withEntry('preg_match', ref('key')->regexMatchAll(lit('/a/')))
+            ->withColumn('preg_match', ref('key')->regexMatchAll(lit('/a/')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -40,7 +40,7 @@ final class RegexMatchAllTest extends FlowTestCase
             ->read(from_array([
                 ['key' => 'value'],
             ]))
-            ->withEntry('preg_match', optional(ref('key')->regexMatchAll(lit('1'), lit('1'))))
+            ->withColumn('preg_match', optional(ref('key')->regexMatchAll(lit('1'), lit('1'))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -58,7 +58,7 @@ final class RegexMatchAllTest extends FlowTestCase
             ->read(from_array([
                 ['id' => 1],
             ]))
-            ->withEntry('preg_match', optional(ref('id')->regexMatchAll(lit('1'))))
+            ->withColumn('preg_match', optional(ref('id')->regexMatchAll(lit('1'))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -76,7 +76,7 @@ final class RegexMatchAllTest extends FlowTestCase
             ->read(from_array([
                 ['id' => '1'],
             ]))
-            ->withEntry('preg_match', optional(ref('id')->regexMatchAll(lit(1))))
+            ->withColumn('preg_match', optional(ref('id')->regexMatchAll(lit(1))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

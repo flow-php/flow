@@ -495,7 +495,7 @@ final class ExpandingProcessorTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(
-            'array_expand() cannot contain another array_expand(). Expand one level per withEntry().',
+            'array_expand() cannot contain another array_expand(). Expand one level per withColumn().',
         );
 
         (new ExpandingProcessor('v', $function, RequiredColumns::all()))->bind(ListColumnsMother::schema());
@@ -514,7 +514,7 @@ final class ExpandingProcessorTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(
-            'array_expand() cannot contain another array_expand(). Expand one level per withEntry().',
+            'array_expand() cannot contain another array_expand(). Expand one level per withColumn().',
         );
 
         ExpandingProcessorContext::rows(

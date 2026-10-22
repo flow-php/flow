@@ -22,7 +22,7 @@ final class RegexReplaceTest extends FlowTestCase
             ->read(from_array([
                 ['key' => 'value'],
             ]))
-            ->withEntry('preg_replace', ref('key')->regexReplace(lit('/e/'), lit('es')))
+            ->withColumn('preg_replace', ref('key')->regexReplace(lit('/e/'), lit('es')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -40,7 +40,7 @@ final class RegexReplaceTest extends FlowTestCase
             ->read(from_array([
                 ['id' => 1],
             ]))
-            ->withEntry('preg_replace', optional(ref('id')->regexReplace(lit('1'), lit(1))))
+            ->withColumn('preg_replace', optional(ref('id')->regexReplace(lit('1'), lit(1))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -58,7 +58,7 @@ final class RegexReplaceTest extends FlowTestCase
             ->read(from_array([
                 ['id' => '1'],
             ]))
-            ->withEntry('preg_replace', optional(ref('id')->regexReplace(lit(1), lit('1'))))
+            ->withColumn('preg_replace', optional(ref('id')->regexReplace(lit(1), lit('1'))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

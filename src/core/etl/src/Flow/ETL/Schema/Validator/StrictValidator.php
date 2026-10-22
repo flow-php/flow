@@ -9,7 +9,7 @@ use Flow\ETL\Schema\Definition\NullDefinition;
 use Flow\ETL\SchemaValidator;
 
 /**
- * Matches all entries in the schema, if row comes with any extra entry it will fail validation.
+ * Matches all columns in the schema, if row comes with any extra column it will fail validation.
  */
 final class StrictValidator implements SchemaValidator
 {
@@ -20,7 +20,7 @@ final class StrictValidator implements SchemaValidator
         $unexpectedDefinitions = [];
 
         foreach ($expected->definitions() as $expectedDefinition) {
-            $givenDefinition = $given->findDefinition($expectedDefinition->entry());
+            $givenDefinition = $given->findDefinition($expectedDefinition->reference());
 
             if ($givenDefinition === null) {
                 $missingDefinitions[] = $expectedDefinition;
@@ -38,7 +38,7 @@ final class StrictValidator implements SchemaValidator
         }
 
         foreach ($given->definitions() as $givenDefinition) {
-            if ($expected->findDefinition($givenDefinition->entry()) === null) {
+            if ($expected->findDefinition($givenDefinition->reference()) === null) {
                 $unexpectedDefinitions[] = $givenDefinition;
             }
         }

@@ -341,7 +341,7 @@ final class GroupByTest extends FlowTestCase
         $groupBy->aggregate(count());
 
         $this->expectException(SchemaDefinitionNotFoundException::class);
-        $this->expectExceptionMessage('Schema definition for entry "missing" not found');
+        $this->expectExceptionMessage('Schema definition for column "missing" not found');
 
         GroupByContext::aggregated(
             $groupBy,

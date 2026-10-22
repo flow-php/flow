@@ -235,8 +235,8 @@ final class BooleanDefinitionTest extends FlowTestCase
 
         $renamed = $def->rename('new_name');
 
-        static::assertSame('new_name', $renamed->entry()->name());
-        static::assertSame('flag', $def->entry()->name());
+        static::assertSame('new_name', $renamed->reference()->name());
+        static::assertSame('flag', $def->reference()->name());
     }
 
     public function test_set_metadata(): void

@@ -13,7 +13,7 @@ use Flow\ETL\Bucketing\ResidentBucketsStorage;
 use Flow\ETL\Bucketing\SingleBucketHasher;
 use Flow\ETL\Dataset\Memory\BoundedRead;
 use Flow\ETL\Dataset\Memory\Unit;
-use Flow\ETL\Exception\DuplicatedEntriesException;
+use Flow\ETL\Exception\DuplicatedColumnsException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\JoinException;
 use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
@@ -236,7 +236,7 @@ final class HashJoinProcessor implements Processor
                     yield $joinedBatch;
                 }
             }
-        } catch (DuplicatedEntriesException|SchemaDefinitionNotUniqueException $e) {
+        } catch (DuplicatedColumnsException|SchemaDefinitionNotUniqueException $e) {
             throw new JoinException($e->getMessage(), (int) $e->getCode(), $e);
         } finally {
             $this->leftBuckets->clear();

@@ -29,7 +29,7 @@ final readonly class MovingAverageScenario
 
         $partitioning
             ->derive(data_frame(BenchmarkConfig::builder())->read(from_floe(Datasets::orders($this->rows)->floe())))
-            ->withEntry(
+            ->withColumn(
                 'moving_average',
                 average(ref('discount'))
                     ->over(

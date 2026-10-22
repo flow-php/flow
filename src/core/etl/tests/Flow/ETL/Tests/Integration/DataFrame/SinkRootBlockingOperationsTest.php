@@ -308,7 +308,7 @@ final class SinkRootBlockingOperationsTest extends FlowIntegrationTestCase
     {
         // An unpartitioned window covers the stream, so the numbering runs 1..6 over the ordered rows.
         $spy = new SpyLoader();
-        $numberByValue = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->withEntry(
+        $numberByValue = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->withColumn(
             'rn',
             row_number()->over(window()->orderBy(ref('v'))),
         ));
@@ -383,7 +383,7 @@ final class SinkRootBlockingOperationsTest extends FlowIntegrationTestCase
     {
         // Each partition holds every row of its group across the stream, so the averages are the group averages.
         $spy = new SpyLoader();
-        $averageOverGroup = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->withEntry(
+        $averageOverGroup = new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->withColumn(
             'avg',
             average(ref('v'))->over(window()->partitionBy(ref('g'))),
         ));

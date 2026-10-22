@@ -15,7 +15,7 @@ use Flow\ETL\Processor;
 use Flow\ETL\Processor\GroupByAggregationProcessor;
 use Flow\ETL\Processor\PivotProcessor;
 use Flow\ETL\Transformer;
-use Flow\ETL\Transformer\PruneEntriesTransformer;
+use Flow\ETL\Transformer\PruneColumnsTransformer;
 
 use function array_values;
 
@@ -45,7 +45,7 @@ final readonly class GroupBySteps
                 $pruned[$ref->base()] ??= $ref->base();
             }
 
-            $steps[] = new PruneEntriesTransformer(...array_values($pruned));
+            $steps[] = new PruneColumnsTransformer(...array_values($pruned));
         }
 
         $buckets = new Buckets(SpillingBuckets::around(

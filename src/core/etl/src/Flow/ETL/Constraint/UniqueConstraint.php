@@ -58,7 +58,7 @@ final class UniqueConstraint implements Constraint
         $violations = [];
 
         foreach ($rows->schema()->keep(...$this->reference)->definitions() as $definition) {
-            $name = $definition->entry()->name();
+            $name = $definition->reference()->name();
             $violations[] =
                 $name
                 . '<'

@@ -45,11 +45,11 @@ data_frame()
         ),
     ))
     // response_body is declared as a string, so its shape must be declared before it can be indexed
-    ->withEntry('body', ref('response_body')->jsonDecode()->unpack(schema(
+    ->withColumn('body', ref('response_body')->jsonDecode()->unpack(schema(
         list_schema('items', type_list($product)),
     )))
-    ->withEntry('product', ref('body.items')->expand())
-    ->withEntry('product', ref('product')->unpack(schema(
+    ->withColumn('product', ref('body.items')->expand())
+    ->withColumn('product', ref('product')->unpack(schema(
         int_schema('id'),
         str_schema('name'),
         str_schema('category'),

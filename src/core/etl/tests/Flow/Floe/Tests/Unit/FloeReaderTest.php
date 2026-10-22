@@ -35,11 +35,11 @@ use function strlen;
 
 final class FloeReaderTest extends TestCase
 {
-    public function test_all_entry_types_round_trip(): void
+    public function test_all_column_types_round_trip(): void
     {
         $filesystem = memory_filesystem();
         $path = path('memory://all-types.floe');
-        $rows = RowsMother::withAllEntryTypes();
+        $rows = RowsMother::withAllColumnTypes();
 
         $writer = new FloeWriter($filesystem, $rows->schema(), new AdaptiveBackend());
         $writer->create($path);

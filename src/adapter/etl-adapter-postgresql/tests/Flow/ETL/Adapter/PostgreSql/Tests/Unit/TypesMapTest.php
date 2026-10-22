@@ -6,8 +6,8 @@ namespace Flow\ETL\Adapter\PostgreSql\Tests\Unit;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use Flow\ETL\Adapter\PostgreSql\EntryTypesMap;
 use Flow\ETL\Adapter\PostgreSql\Exception\TypeMappingException;
+use Flow\ETL\Adapter\PostgreSql\TypesMap;
 use Flow\PostgreSql\Client\TypedValue;
 use Flow\PostgreSql\Client\Types\ResultCaster;
 use Flow\PostgreSql\Client\Types\ValueType;
@@ -38,7 +38,7 @@ use function Flow\Types\DSL\type_time_zone;
 use function Flow\Types\DSL\type_uuid;
 use function Flow\Types\DSL\type_xml;
 
-final class EntryTypesMapTest extends TestCase
+final class TypesMapTest extends TestCase
 {
     /**
      * The exact Flow type each pg name maps to.
@@ -140,10 +140,7 @@ final class EntryTypesMapTest extends TestCase
     #[DataProvider('provide_mapped_types_with_their_flow_type')]
     public function test_every_mapped_postgresql_type_becomes_its_flow_type(string $pgType, Type $expected): void
     {
-        static::assertEquals(
-            $expected,
-            (new EntryTypesMap())->toFlowTypeWithTextFloor(column_type_from_string($pgType)),
-        );
+        static::assertEquals($expected, (new TypesMap())->toFlowTypeWithTextFloor(column_type_from_string($pgType)));
     }
 
     public function test_an_unrecognised_name_is_refused_on_the_catalog_route(): void
@@ -153,14 +150,14 @@ final class EntryTypesMapTest extends TestCase
         // to map the type explicitly instead of silently receiving a string column.
         $this->expectException(TypeMappingException::class);
 
-        (new EntryTypesMap())->toFlowType(column_type_from_string('hstore'));
+        (new TypesMap())->toFlowType(column_type_from_string('hstore'));
     }
 
     public function test_an_unrecognised_name_takes_the_text_floor_on_the_result_route(): void
     {
         static::assertEquals(
             type_string(),
-            (new EntryTypesMap())->toFlowTypeWithTextFloor(column_type_from_string('hstore')),
+            (new TypesMap())->toFlowTypeWithTextFloor(column_type_from_string('hstore')),
         );
     }
 
@@ -169,7 +166,7 @@ final class EntryTypesMapTest extends TestCase
     {
         // Map subset of arms, not pairwise: a mapping is only legitimate while the caster produces
         // a value the derived schema accepts.
-        $flowType = (new EntryTypesMap())->toFlowTypeWithTextFloor(column_type_from_string($pgType));
+        $flowType = (new TypesMap())->toFlowTypeWithTextFloor(column_type_from_string($pgType));
 
         static::assertTrue($flowType->isValid($flowType->cast((new ResultCaster())->cast($wireValue, $pgType))));
     }
@@ -179,19 +176,19 @@ final class EntryTypesMapTest extends TestCase
     {
         $this->expectException(TypeMappingException::class);
 
-        (new EntryTypesMap())->toFlowTypeWithTextFloor(column_type_from_string($pgType));
+        (new TypesMap())->toFlowTypeWithTextFloor(column_type_from_string($pgType));
     }
 
     public function test_an_array_of_an_unmapped_element_type_is_refused(): void
     {
         $this->expectException(TypeMappingException::class);
 
-        (new EntryTypesMap())->toFlowTypeWithTextFloor(column_type_from_string('_point'));
+        (new TypesMap())->toFlowTypeWithTextFloor(column_type_from_string('_point'));
     }
 
     public function test_an_array_type_becomes_a_list_of_its_element_type(): void
     {
-        $map = new EntryTypesMap();
+        $map = new TypesMap();
 
         // A pg array may hold SQL NULLs, which the caster preserves, so the element type has to
         // admit them or the read corrupts them.
@@ -212,7 +209,7 @@ final class EntryTypesMapTest extends TestCase
     #[DataProvider('provide_catalog_array_types')]
     public function test_an_array_column_becomes_a_list_on_the_catalog_route(string $pgType, Type $expected): void
     {
-        static::assertEquals($expected, (new EntryTypesMap())->toFlowType(column_type_from_string($pgType)));
+        static::assertEquals($expected, (new TypesMap())->toFlowType(column_type_from_string($pgType)));
     }
 
     /**
@@ -227,7 +224,7 @@ final class EntryTypesMapTest extends TestCase
 
     public function test_allows_override_for_integer_type_to_int2(): void
     {
-        $map = new EntryTypesMap([
+        $map = new TypesMap([
             IntegerType::class => ValueType::INT2,
         ]);
 
@@ -240,7 +237,7 @@ final class EntryTypesMapTest extends TestCase
 
     public function test_value_type_is_the_one_map_wraps_values_in(): void
     {
-        $map = new EntryTypesMap([IntegerType::class => ValueType::INT2]);
+        $map = new TypesMap([IntegerType::class => ValueType::INT2]);
 
         static::assertSame(ValueType::INT2, $map->valueType('small_count', type_integer()));
         static::assertSame(ValueType::TEXT, $map->valueType('name', type_string()));
@@ -250,12 +247,12 @@ final class EntryTypesMapTest extends TestCase
     {
         $this->expectException(TypeMappingException::class);
 
-        (new EntryTypesMap())->valueType('payload', type_array());
+        (new TypesMap())->valueType('payload', type_array());
     }
 
     public function test_maps_boolean_type_to_bool(): void
     {
-        $result = (new EntryTypesMap())->map('active', type_boolean(), true);
+        $result = (new TypesMap())->map('active', type_boolean(), true);
 
         static::assertInstanceOf(TypedValue::class, $result);
         static::assertSame(ValueType::BOOL, $result->targetType);
@@ -265,7 +262,7 @@ final class EntryTypesMapTest extends TestCase
     public function test_maps_datetime_type_to_timestamp(): void
     {
         $date = new DateTimeImmutable('2024-01-15 10:30:00');
-        $result = (new EntryTypesMap())->map('created_at', type_datetime(), $date);
+        $result = (new TypesMap())->map('created_at', type_datetime(), $date);
 
         static::assertInstanceOf(TypedValue::class, $result);
         static::assertSame(ValueType::TIMESTAMP, $result->targetType);
@@ -274,7 +271,7 @@ final class EntryTypesMapTest extends TestCase
 
     public function test_maps_float_type_to_float8(): void
     {
-        $result = (new EntryTypesMap())->map('price', type_float(), 99.99);
+        $result = (new TypesMap())->map('price', type_float(), 99.99);
 
         static::assertInstanceOf(TypedValue::class, $result);
         static::assertSame(ValueType::FLOAT8, $result->targetType);
@@ -283,7 +280,7 @@ final class EntryTypesMapTest extends TestCase
 
     public function test_maps_integer_type_to_int8(): void
     {
-        $result = (new EntryTypesMap())->map('count', type_integer(), 42);
+        $result = (new TypesMap())->map('count', type_integer(), 42);
 
         static::assertInstanceOf(TypedValue::class, $result);
         static::assertSame(ValueType::INT8, $result->targetType);
@@ -292,7 +289,7 @@ final class EntryTypesMapTest extends TestCase
 
     public function test_maps_json_type_to_jsonb(): void
     {
-        $result = (new EntryTypesMap())->map('data', type_json(), ['key' => 'value']);
+        $result = (new TypesMap())->map('data', type_json(), ['key' => 'value']);
 
         static::assertInstanceOf(TypedValue::class, $result);
         static::assertSame(ValueType::JSONB, $result->targetType);
@@ -300,7 +297,7 @@ final class EntryTypesMapTest extends TestCase
 
     public function test_maps_list_type_to_jsonb(): void
     {
-        $result = (new EntryTypesMap())->map('tags', type_list(type_integer()), [1, 2, 3]);
+        $result = (new TypesMap())->map('tags', type_list(type_integer()), [1, 2, 3]);
 
         static::assertInstanceOf(TypedValue::class, $result);
         static::assertSame(ValueType::JSONB, $result->targetType);
@@ -309,7 +306,7 @@ final class EntryTypesMapTest extends TestCase
 
     public function test_maps_map_type_to_jsonb(): void
     {
-        $result = (new EntryTypesMap())->map('metadata', type_map(type_string(), type_string()), ['key' => 'value']);
+        $result = (new TypesMap())->map('metadata', type_map(type_string(), type_string()), ['key' => 'value']);
 
         static::assertInstanceOf(TypedValue::class, $result);
         static::assertSame(ValueType::JSONB, $result->targetType);
@@ -318,12 +315,12 @@ final class EntryTypesMapTest extends TestCase
 
     public function test_maps_null_value_to_null(): void
     {
-        static::assertNull((new EntryTypesMap())->map('name', type_string(), null));
+        static::assertNull((new TypesMap())->map('name', type_string(), null));
     }
 
     public function test_maps_string_type_to_text(): void
     {
-        $result = (new EntryTypesMap())->map('name', type_string(), 'Alice');
+        $result = (new TypesMap())->map('name', type_string(), 'Alice');
 
         static::assertInstanceOf(TypedValue::class, $result);
         static::assertSame(ValueType::TEXT, $result->targetType);
@@ -332,11 +329,10 @@ final class EntryTypesMapTest extends TestCase
 
     public function test_maps_structure_type_to_jsonb(): void
     {
-        $result = (new EntryTypesMap())->map(
-            'user',
-            type_structure(['name' => type_string(), 'age' => type_integer()]),
-            ['name' => 'Alice', 'age' => 30],
-        );
+        $result = (new TypesMap())->map('user', type_structure(['name' => type_string(), 'age' => type_integer()]), [
+            'name' => 'Alice',
+            'age' => 30,
+        ]);
 
         static::assertInstanceOf(TypedValue::class, $result);
         static::assertSame(ValueType::JSONB, $result->targetType);
@@ -344,7 +340,7 @@ final class EntryTypesMapTest extends TestCase
 
     public function test_maps_uuid_type_to_uuid(): void
     {
-        $result = (new EntryTypesMap())->map('id', type_uuid(), '550e8400-e29b-41d4-a716-446655440000');
+        $result = (new TypesMap())->map('id', type_uuid(), '550e8400-e29b-41d4-a716-446655440000');
 
         static::assertInstanceOf(TypedValue::class, $result);
         static::assertSame(ValueType::UUID, $result->targetType);
@@ -352,7 +348,7 @@ final class EntryTypesMapTest extends TestCase
 
     public function test_maps_time_zone_type_to_text(): void
     {
-        $result = (new EntryTypesMap())->map('tz', type_time_zone(), new DateTimeZone('Europe/Warsaw'));
+        $result = (new TypesMap())->map('tz', type_time_zone(), new DateTimeZone('Europe/Warsaw'));
 
         static::assertInstanceOf(TypedValue::class, $result);
         static::assertSame(ValueType::TEXT, $result->targetType);
@@ -360,7 +356,7 @@ final class EntryTypesMapTest extends TestCase
 
     public function test_to_column_type_allows_override(): void
     {
-        $map = new EntryTypesMap([], [
+        $map = new TypesMap([], [
             StringType::class => ColumnType::varchar(255),
         ]);
 
@@ -369,42 +365,42 @@ final class EntryTypesMapTest extends TestCase
 
     public function test_to_column_type_maps_integer_to_bigint(): void
     {
-        $map = new EntryTypesMap();
+        $map = new TypesMap();
 
         static::assertTrue($map->toColumnType(type_integer())->isEqual(ColumnType::bigint()));
     }
 
     public function test_to_column_type_maps_json_to_jsonb(): void
     {
-        $map = new EntryTypesMap();
+        $map = new TypesMap();
 
         static::assertTrue($map->toColumnType(type_json())->isEqual(ColumnType::jsonb()));
     }
 
     public function test_to_column_type_maps_xml_to_xml(): void
     {
-        $map = new EntryTypesMap();
+        $map = new TypesMap();
 
         static::assertTrue($map->toColumnType(type_xml())->isEqual(ColumnType::xml()));
     }
 
     public function test_to_flow_type_maps_bigint_to_integer(): void
     {
-        $map = new EntryTypesMap();
+        $map = new TypesMap();
 
         static::assertInstanceOf(IntegerType::class, $map->toFlowType(ColumnType::bigint()));
     }
 
     public function test_to_flow_type_maps_jsonb_to_json(): void
     {
-        $map = new EntryTypesMap();
+        $map = new TypesMap();
 
         static::assertInstanceOf(JsonType::class, $map->toFlowType(ColumnType::jsonb()));
     }
 
     public function test_to_flow_type_maps_varchar_to_string(): void
     {
-        $map = new EntryTypesMap();
+        $map = new TypesMap();
 
         static::assertInstanceOf(StringType::class, $map->toFlowType(ColumnType::varchar(100)));
     }
@@ -414,9 +410,6 @@ final class EntryTypesMapTest extends TestCase
         // The result route cannot ask the catalog whether an unknown name is an enum, a domain or
         // an extension type, and pg transmits all of them as text, so they take the string floor.
         // Only record and the geometric types still throw - see the test below.
-        static::assertEquals(
-            type_string(),
-            (new EntryTypesMap())->toFlowTypeWithTextFloor(ColumnType::custom('hstore')),
-        );
+        static::assertEquals(type_string(), (new TypesMap())->toFlowTypeWithTextFloor(ColumnType::custom('hstore')));
     }
 }

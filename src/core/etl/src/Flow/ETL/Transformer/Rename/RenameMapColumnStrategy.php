@@ -9,7 +9,7 @@ use Flow\ETL\Schema;
 use function array_flip;
 use function array_intersect_key;
 
-final readonly class RenameMapEntryStrategy implements RenameEntryStrategy
+final readonly class RenameMapColumnStrategy implements RenameColumnStrategy
 {
     /**
      * @param array<array-key, string> $renames Map of old_name => new_name

@@ -20,7 +20,7 @@ final class ToUpperTest extends FlowTestCase
             ->read(from_array([
                 ['key' => 'value'],
             ]))
-            ->withEntry('to_upper', ref('key')->upper())
+            ->withColumn('to_upper', ref('key')->upper())
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

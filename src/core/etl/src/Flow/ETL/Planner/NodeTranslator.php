@@ -30,16 +30,16 @@ use Flow\ETL\Sort\SortSteps;
 use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\CollectReferencesTransformer;
 use Flow\ETL\Transformer\CrossJoinRowsTransformer;
+use Flow\ETL\Transformer\DropColumnsTransformer;
 use Flow\ETL\Transformer\DropDuplicatesTransformer;
-use Flow\ETL\Transformer\DropEntriesTransformer;
 use Flow\ETL\Transformer\DuplicateRowTransformer;
 use Flow\ETL\Transformer\JoinEachRowsTransformer;
 use Flow\ETL\Transformer\LimitTransformer;
-use Flow\ETL\Transformer\RenameEachEntryTransformer;
-use Flow\ETL\Transformer\RenameEntryTransformer;
+use Flow\ETL\Transformer\RenameColumnTransformer;
+use Flow\ETL\Transformer\RenameEachColumnTransformer;
 use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
-use Flow\ETL\Transformer\SelectEntriesTransformer;
+use Flow\ETL\Transformer\SelectColumnsTransformer;
 use Flow\ETL\Transformer\Stateful;
 use Flow\ETL\Transformer\UntilTransformer;
 
@@ -80,12 +80,12 @@ final readonly class NodeTranslator
                 $node->prefix,
             )],
             $node instanceof Node\Discard => [new VoidProcessor()],
-            $node instanceof Node\Distinct => [new DropDuplicatesTransformer(...$node->entries)],
-            $node instanceof Node\Drop => [new DropEntriesTransformer(...$node->entries)],
+            $node instanceof Node\Distinct => [new DropDuplicatesTransformer(...$node->columns)],
+            $node instanceof Node\Drop => [new DropColumnsTransformer(...$node->columns)],
             $node instanceof Node\ExpandColumn => [
-                new ExpandingProcessor($node->entry, $node->function, $node->carries),
+                new ExpandingProcessor($node->column, $node->function, $node->carries),
             ],
-            $node instanceof Node\DuplicateRow => [new DuplicateRowTransformer($node->condition, ...$node->entries)],
+            $node instanceof Node\DuplicateRow => [new DuplicateRowTransformer($node->condition, ...$node->columns)],
             $node instanceof Node\Filter => [new ScalarFunctionFilterTransformer($node->function)],
             $node instanceof Node\JoinEach => match ($node->type) {
                 JoinType::left => [JoinEachRowsTransformer::left($node->factory, $node->on)],
@@ -102,10 +102,10 @@ final readonly class NodeTranslator
             ),
             $node instanceof Node\Limit => [new LimitTransformer($node->limit)],
             $node instanceof Node\Offset => [new OffsetProcessor($node->offset)],
-            $node instanceof Node\RenameEach => [new RenameEachEntryTransformer(...$node->strategies)],
-            $node instanceof Node\Rename => [new RenameEntryTransformer($node->from, $node->to)],
+            $node instanceof Node\RenameEach => [new RenameEachColumnTransformer(...$node->strategies)],
+            $node instanceof Node\Rename => [new RenameColumnTransformer($node->from, $node->to)],
             $node instanceof Node\Repartition => RepartitionSteps::of($node->by, $context->config),
-            $node instanceof Node\Select => [new SelectEntriesTransformer(...$node->entries)],
+            $node instanceof Node\Select => [new SelectColumnsTransformer(...$node->columns)],
             $node instanceof Node\Sort => SortSteps::of($node->refs, $context->config, $node->algorithm),
             $node instanceof Node\TopN => [new TopNProcessor(
                 $node->refs,
@@ -120,10 +120,10 @@ final readonly class NodeTranslator
             $node instanceof Node\WindowColumn => $node->function->window()->partitions()->count()
                 ? [
                     ...RepartitionSteps::of($node->function->window()->partitions(), $context->config),
-                    new WindowProcessor($node->entry, $node->function),
+                    new WindowProcessor($node->column, $node->function),
                 ]
-                : [new CollectingProcessor(), new WindowProcessor($node->entry, $node->function)],
-            $node instanceof Node\WithColumn => [new ScalarFunctionTransformer($node->entry, $node->function)],
+                : [new CollectingProcessor(), new WindowProcessor($node->column, $node->function)],
+            $node instanceof Node\WithColumn => [new ScalarFunctionTransformer($node->column, $node->function)],
             $node instanceof Node\Write => [$node->loader],
             default => throw InvalidLogicException::nodeNotTranslatable($node::class),
         };

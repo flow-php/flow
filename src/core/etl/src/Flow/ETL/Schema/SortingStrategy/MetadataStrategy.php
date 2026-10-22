@@ -33,7 +33,7 @@ final readonly class MetadataStrategy implements SortingStrategy
                 return $comparison;
             }
 
-            return $left->entry()->name() <=> $right->entry()->name();
+            return $left->reference()->name() <=> $right->reference()->name();
         }
 
         if ($leftHas) {
@@ -44,6 +44,6 @@ final readonly class MetadataStrategy implements SortingStrategy
             return 1;
         }
 
-        return $left->entry()->name() <=> $right->entry()->name();
+        return $left->reference()->name() <=> $right->reference()->name();
     }
 }

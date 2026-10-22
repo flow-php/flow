@@ -29,7 +29,7 @@ final readonly class ForeignTypeDefinition implements Definition
         return $this;
     }
 
-    public function entry(): Reference
+    public function reference(): Reference
     {
         return ref($this->name);
     }

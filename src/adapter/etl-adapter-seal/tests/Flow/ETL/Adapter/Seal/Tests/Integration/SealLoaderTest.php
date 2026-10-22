@@ -63,7 +63,7 @@ final class SealLoaderTest extends IntegrationTestCase
         $this->sealContext()->refresh();
 
         to_seal_delete($engine, 'products')
-            ->withIdentifierEntry('sku')
+            ->withIdentifierColumn('sku')
             ->load(array_to_rows([['sku' => 'SKU_0001']], schema(string_schema('sku'))), flow_context());
         $this->sealContext()->refresh();
 

@@ -16,11 +16,11 @@ use Flow\ETL\Schema\Definition;
 final readonly class WithColumn implements Node
 {
     /**
-     * @param Definition<mixed>|string $entry
+     * @param Definition<mixed>|string $column
      */
     public function __construct(
         private Node $input,
-        public string|Definition $entry,
+        public string|Definition $column,
         public ScalarFunction $function,
     ) {}
 
@@ -34,7 +34,7 @@ final readonly class WithColumn implements Node
 
     public function withChildren(array $children): self
     {
-        return $children[0] === $this->input ? $this : new self($children[0], $this->entry, $this->function);
+        return $children[0] === $this->input ? $this : new self($children[0], $this->column, $this->function);
     }
 
     public function rowCount(): RowCount
@@ -54,14 +54,14 @@ final readonly class WithColumn implements Node
 
     public function redefines(): Redefined
     {
-        // only a bare column reference under a plain name: a Definition entry may cast the value
-        return is_string($this->entry) && $this->function instanceof UnresolvedReference
+        // only a bare column reference under a plain name: a Definition column may cast the value
+        return is_string($this->column) && $this->function instanceof UnresolvedReference
             ? Redefined::alias($this->name(), $this->function->to())
             : Redefined::names($this->name());
     }
 
     public function name(): string
     {
-        return $this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry;
+        return $this->column instanceof Definition ? $this->column->reference()->name() : $this->column;
     }
 }

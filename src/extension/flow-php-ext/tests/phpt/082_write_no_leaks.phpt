@@ -24,7 +24,7 @@ $schema = all_types_schema();
 $native = native_rows($schema, all_types_values());
 $php = php_rows($schema, all_types_values());
 // the string column holds bytes that are not UTF-8: JSON writes the batch without it
-$jsonSchema = schema(...array_filter($schema->definitions(), static fn($definition): bool => $definition->entry()->name() !== 'string'));
+$jsonSchema = schema(...array_filter($schema->definitions(), static fn($definition): bool => $definition->reference()->name() !== 'string'));
 $refusedSchema = schema(str_schema('s'), float_schema('f'), list_schema('l', type_list(type_float())));
 $refused = native_rows($refusedSchema, [['s' => "\xff", 'f' => NAN, 'l' => [INF]]]);
 $dateTimeFormat = 'Y-m-d\TH:i:s.uP T';

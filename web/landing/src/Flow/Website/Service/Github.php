@@ -52,10 +52,10 @@ final readonly class Github
             df($this->configFactory->configBuilderWithCache('github_contributors'))
                 ->read(from_cache('flow_github_contributors', $from_github))
                 ->cache('flow_github_contributors')
-                ->withEntry('unpacked', ref('response_body')->jsonDecode())
+                ->withColumn('unpacked', ref('response_body')->jsonDecode())
                 ->select('unpacked')
-                ->withEntry('data', ref('unpacked')->expand())
-                ->withEntry(
+                ->withColumn('data', ref('unpacked')->expand())
+                ->withColumn(
                     'data',
                     ref('data')->unpack(schema(str_schema('login'), str_schema('avatar_url'), str_schema('html_url'))),
                 )
@@ -64,7 +64,7 @@ final readonly class Github
                 ->filter(not(ref('login')->endsWith(lit('[bot]'))))
                 ->filter(not(ref('login')->equals(lit('aeon-automation'))))
                 ->filter(not(ref('login')->equals(lit('norbertmwk'))))
-                ->withEntry('avatar_url', ref('avatar_url')->concat(lit('&s=128')))
+                ->withColumn('avatar_url', ref('avatar_url')->concat(lit('&s=128')))
                 ->limit(24)
                 ->write(to_memory($memory = new ArrayMemory()))
                 ->run();

@@ -30,7 +30,7 @@ final class ArrayGetTest extends FlowTestCase
                 ['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]],
                 ['id' => 2],
             ]))
-            ->withEntry('result', optional(ref('array')->arrayGet('b')))
+            ->withColumn('result', optional(ref('array')->arrayGet('b')))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
@@ -56,7 +56,7 @@ final class ArrayGetTest extends FlowTestCase
                     ])),
                 ),
             ))
-            ->withEntry('v', structure_get(ref('b'), '?x'))
+            ->withColumn('v', structure_get(ref('b'), '?x'))
             ->drop('b')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();

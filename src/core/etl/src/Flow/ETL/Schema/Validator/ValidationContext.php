@@ -98,7 +98,7 @@ final readonly class ValidationContext
     private function definitionToString(Definition $definition): string
     {
         return (
-            $definition->entry()->name()
+            $definition->reference()->name()
             . '<'
             . ($definition->isNullable() ? '?' : '')
             . $definition->type()->toString()

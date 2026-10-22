@@ -64,7 +64,7 @@ final class SchemaConverter
         $identifiers = 0;
 
         foreach ($schema->definitions() as $definition) {
-            $name = $definition->entry()->name();
+            $name = $definition->reference()->name();
             $metadata = $definition->metadata();
 
             if ($name === $identifier || $metadata->has(SealMetadata::IDENTIFIER->value)) {

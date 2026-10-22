@@ -311,8 +311,8 @@ final class ListDefinitionTest extends FlowTestCase
 
         $renamed = $def->rename('new_items');
 
-        static::assertSame('new_items', $renamed->entry()->name());
-        static::assertSame('items', $def->entry()->name());
+        static::assertSame('new_items', $renamed->reference()->name());
+        static::assertSame('items', $def->reference()->name());
     }
 
     public function test_set_metadata(): void

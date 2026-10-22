@@ -35,7 +35,7 @@ final readonly class PostgreSqlEncoder
         $columns = [];
 
         foreach ($rows->schema()->definitions() as $definition) {
-            $name = $definition->entry()->name();
+            $name = $definition->reference()->name();
             $columns[$name] = $this->column($definition->type(), $rows->column($name));
         }
 

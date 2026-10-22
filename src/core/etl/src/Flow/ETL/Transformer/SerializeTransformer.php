@@ -47,7 +47,7 @@ final readonly class SerializeTransformer implements Transformer
 
         try {
             $target = $this->target instanceof Reference ? $this->target : ref($this->target);
-            // base64 keeps serialized rows text-safe inside string entries, no matter which serializer is configured
+            // base64 keeps serialized rows text-safe inside string columns, no matter which serializer is configured
             $serializer = new Base64Serializer($context->config->serializer());
 
             $inputSchema = $rows->schema();

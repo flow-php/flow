@@ -21,7 +21,7 @@ final class TrimTest extends FlowTestCase
             ->read(from_array([
                 ['key' => ' value '],
             ]))
-            ->withEntry('trim', ref('key')->trim())
+            ->withColumn('trim', ref('key')->trim())
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -39,7 +39,7 @@ final class TrimTest extends FlowTestCase
             ->read(from_array([
                 ['key' => '-value '],
             ]))
-            ->withEntry('trim', ref('key')->trim(characters: '-'))
+            ->withColumn('trim', ref('key')->trim(characters: '-'))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -57,7 +57,7 @@ final class TrimTest extends FlowTestCase
             ->read(from_array([
                 ['key' => ' value '],
             ]))
-            ->withEntry('trim', ref('key')->trim(Type::LEFT))
+            ->withColumn('trim', ref('key')->trim(Type::LEFT))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -75,7 +75,7 @@ final class TrimTest extends FlowTestCase
             ->read(from_array([
                 ['key' => ' value '],
             ]))
-            ->withEntry('trim', ref('key')->trim(Type::RIGHT))
+            ->withColumn('trim', ref('key')->trim(Type::RIGHT))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

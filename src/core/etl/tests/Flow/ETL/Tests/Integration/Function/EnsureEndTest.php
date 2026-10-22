@@ -20,7 +20,7 @@ final class EnsureEndTest extends FlowTestCase
                 ['filename' => 'image.png', 'extension' => '.txt'],
                 ['filename' => 'config.yml', 'extension' => '.txt'],
             ]))
-            ->withEntry('normalized_filename', ref('filename')->ensureEnd(ref('extension')));
+            ->withColumn('normalized_filename', ref('filename')->ensureEnd(ref('extension')));
 
         static::assertEquals(
             [

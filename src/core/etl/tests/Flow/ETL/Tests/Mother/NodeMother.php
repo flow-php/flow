@@ -68,9 +68,9 @@ final class NodeMother
         return new Read($extractor ?? from_array([['id' => 1]]));
     }
 
-    public static function select(Node $input, string ...$entries): Select
+    public static function select(Node $input, string ...$columns): Select
     {
-        return new Select($input, $entries === [] ? ['id'] : array_values($entries));
+        return new Select($input, $columns === [] ? ['id'] : array_values($columns));
     }
 
     public static function sort(Node $input, ?References $refs = null): Sort

@@ -29,9 +29,9 @@ final readonly class CommonType
         $metadata = $left->metadata()->merge($right->metadata());
 
         if (in_array($left::class, self::CONTAINERS, true) && in_array($right::class, self::CONTAINERS, true)) {
-            return new JsonDefinition($left->entry(), $nullable, $metadata);
+            return new JsonDefinition($left->reference(), $nullable, $metadata);
         }
 
-        return new StringDefinition($left->entry(), $nullable, $metadata);
+        return new StringDefinition($left->reference(), $nullable, $metadata);
     }
 }

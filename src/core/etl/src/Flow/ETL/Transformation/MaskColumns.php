@@ -26,7 +26,7 @@ final readonly class MaskColumns implements Transformation
     public function transform(DataFrame $dataFrame): DataFrame
     {
         foreach ($this->columns as $column) {
-            $dataFrame->withEntry($column, lit($this->mask));
+            $dataFrame->withColumn($column, lit($this->mask));
         }
 
         return $dataFrame;

@@ -27,7 +27,7 @@ final class ArrayKeysStyleConvertTest extends FlowTestCase
             ->read(from_array([
                 ['id' => 1, 'array' => ['camelCased' => 1, 'snake_cased' => 2, 'space word' => 3]],
             ]))
-            ->withEntry('array', array_keys_style_convert(ref('array'), 'camel'))
+            ->withColumn('array', array_keys_style_convert(ref('array'), 'camel'))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -60,7 +60,7 @@ final class ArrayKeysStyleConvertTest extends FlowTestCase
             ->read(from_array([
                 ['id' => 1, 'array' => ['itemId' => 1, 'itemVariants' => [['variantName' => 'a']]]],
             ]))
-            ->withEntry('array', array_keys_style_convert(ref('array'), 'snake'))
+            ->withColumn('array', array_keys_style_convert(ref('array'), 'snake'))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

@@ -115,7 +115,7 @@ final class RowsJoinTest extends FlowTestCase
     {
         $this->expectException(SchemaDefinitionNotUniqueException::class);
         $this->expectExceptionMessage(
-            'Entry definitions must be unique, duplicated entries: [active], all: [id, country, active, active]',
+            'Column definitions must be unique, duplicated columns: [active], all: [id, country, active, active]',
         );
 
         $left = array_to_rows(
@@ -264,7 +264,7 @@ final class RowsJoinTest extends FlowTestCase
     {
         $this->expectException(SchemaDefinitionNotUniqueException::class);
         $this->expectExceptionMessage(
-            'Entry definitions must be unique, duplicated entries: [id], all: [id, country, id, code, name]',
+            'Column definitions must be unique, duplicated columns: [id], all: [id, country, id, code, name]',
         );
 
         $left = array_to_rows(
@@ -499,7 +499,7 @@ final class RowsJoinTest extends FlowTestCase
     {
         $this->expectException(SchemaDefinitionNotUniqueException::class);
         $this->expectExceptionMessage(
-            'Entry definitions must be unique, duplicated entries: [id], all: [id, country, id, code, name]',
+            'Column definitions must be unique, duplicated columns: [id], all: [id, country, id, code, name]',
         );
 
         $left = array_to_rows(
@@ -646,7 +646,7 @@ final class RowsJoinTest extends FlowTestCase
     {
         $this->expectException(SchemaDefinitionNotUniqueException::class);
         $this->expectExceptionMessage(
-            'Entry definitions must be unique, duplicated entries: [id], all: [id, country, id, code, name]',
+            'Column definitions must be unique, duplicated columns: [id], all: [id, country, id, code, name]',
         );
 
         $left = array_to_rows(

@@ -10,7 +10,7 @@ use function Flow\ETL\DSL\rename_map;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
-final class RenameMapEntryStrategyTest extends FlowTestCase
+final class RenameMapColumnStrategyTest extends FlowTestCase
 {
     public function test_renames_filters_only_existing_names(): void
     {

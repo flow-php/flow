@@ -13,9 +13,9 @@ final readonly class Select implements Transformation
 {
     private References $references;
 
-    public function __construct(string|Reference ...$entries)
+    public function __construct(string|Reference ...$columns)
     {
-        $this->references = References::init(...$entries);
+        $this->references = References::init(...$columns);
     }
 
     public function transform(DataFrame $dataFrame): DataFrame

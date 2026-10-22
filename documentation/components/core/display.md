@@ -21,7 +21,7 @@ echo data_frame()
         ['id' => 2, 'name' => 'jane'],
         ['id' => 3, 'name' => 'john'],
     ], schema(int_schema('id'), str_schema('name'))))
-    ->withEntry('name', ref('name')->upper())
+    ->withColumn('name', ref('name')->upper())
     ->collect()
     ->display($limit = 2);
 ```
@@ -48,7 +48,7 @@ data_frame()
         ['id' => 1, 'name' => 'norbert'],
         ['id' => 2, 'name' => 'jane'],
     ], schema(int_schema('id'), str_schema('name'))))
-    ->withEntry('name', ref('name')->upper())
+    ->withColumn('name', ref('name')->upper())
     ->collect()
     ->write(to_output(truncate: false))
     ->run();

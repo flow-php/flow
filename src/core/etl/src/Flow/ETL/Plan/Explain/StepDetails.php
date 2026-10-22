@@ -169,7 +169,8 @@ final readonly class StepDetails
     public function window(WindowProcessor $window): array
     {
         return [
-            'Column: ' . ($window->entry instanceof Definition ? $window->entry->entry()->name() : $window->entry),
+            'Column: '
+                . ($window->column instanceof Definition ? $window->column->reference()->name() : $window->column),
             'Function: ' . $this->details->name($window->function),
             ...($window->bound === null ? [] : ['Frame: bound']),
         ];

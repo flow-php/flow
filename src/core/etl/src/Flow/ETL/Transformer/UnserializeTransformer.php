@@ -44,7 +44,7 @@ final readonly class UnserializeTransformer implements Transformer
 
         try {
             $source = $this->source instanceof Reference ? $this->source : ref($this->source);
-            // base64 keeps serialized rows text-safe inside string entries, no matter which serializer is configured
+            // base64 keeps serialized rows text-safe inside string columns, no matter which serializer is configured
             $serializer = new Base64Serializer($context->config->serializer());
 
             // a payload that fails to decode still has to produce the declared shape, so every declared
@@ -55,8 +55,8 @@ final readonly class UnserializeTransformer implements Transformer
             $outputNames = [];
 
             foreach ($this->target->definitions() as $definition) {
-                $names[] = $definition->entry()->name();
-                $outputNames[] = $prefix . $definition->entry()->name();
+                $names[] = $definition->reference()->name();
+                $outputNames[] = $prefix . $definition->reference()->name();
             }
 
             $decoder = SerializedPayloadDecoder::of($source, $serializer, $names, $prefix);

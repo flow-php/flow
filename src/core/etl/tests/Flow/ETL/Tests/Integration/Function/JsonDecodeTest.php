@@ -19,8 +19,8 @@ final class JsonDecodeTest extends FlowTestCase
     {
         data_frame()
             ->read(from_array([['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]]]))
-            ->withEntry('json', lit('{"d": 4}'))
-            ->withEntry('array', ref('array')->arrayMerge(ref('json')->jsonDecode()))
+            ->withColumn('json', lit('{"d": 4}'))
+            ->withColumn('array', ref('array')->arrayMerge(ref('json')->jsonDecode()))
             ->drop('json')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();

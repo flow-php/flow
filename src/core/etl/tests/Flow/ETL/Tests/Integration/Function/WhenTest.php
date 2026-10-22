@@ -21,7 +21,7 @@ final class WhenTest extends FlowTestCase
         df()
             ->read(from_sequence_number('id', 1, 10))
             ->collect()
-            ->withEntry('type', when(ref('id')->isOdd(), lit('odd'), lit('even')))
+            ->withColumn('type', when(ref('id')->isOdd(), lit('odd'), lit('even')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

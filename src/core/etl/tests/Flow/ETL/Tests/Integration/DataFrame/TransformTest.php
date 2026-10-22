@@ -10,11 +10,11 @@ use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\with_entry;
+use function Flow\ETL\DSL\with_column;
 
 final class TransformTest extends FlowTestCase
 {
-    public function test_transform_with_entries(): void
+    public function test_transform_with_columns(): void
     {
         $rows = df()
             ->read(from_array([
@@ -22,8 +22,8 @@ final class TransformTest extends FlowTestCase
                 ['id' => 2, 'status' => 'inactive', 'amount' => 250],
                 ['id' => 3, 'status' => 'active', 'amount' => 1_000],
             ]))
-            ->transform(with_entry('amount', ref('amount')->divide(100, scale: 2)))
-            ->transform(with_entry('currency', lit('PLN')))
+            ->transform(with_column('amount', ref('amount')->divide(100, scale: 2)))
+            ->transform(with_column('currency', lit('PLN')))
             ->fetch()
             ->toArray();
 
@@ -37,7 +37,7 @@ final class TransformTest extends FlowTestCase
         );
     }
 
-    public function test_with_entries(): void
+    public function test_with_columns(): void
     {
         $rows = df()
             ->read(from_array([
@@ -45,7 +45,7 @@ final class TransformTest extends FlowTestCase
                 ['id' => 2, 'status' => 'inactive', 'amount' => 250],
                 ['id' => 3, 'status' => 'active', 'amount' => 1_000],
             ]))
-            ->withEntries([
+            ->withColumns([
                 'amount' => ref('amount')->divide(100, scale: 2),
                 'currency' => lit('PLN'),
             ])
@@ -62,7 +62,7 @@ final class TransformTest extends FlowTestCase
         );
     }
 
-    public function test_with_entries_object_oriented(): void
+    public function test_with_columns_object_oriented(): void
     {
         $rows = df()
             ->read(from_array([
@@ -70,9 +70,9 @@ final class TransformTest extends FlowTestCase
                 ['id' => 2, 'status' => 'inactive', 'amount' => 250],
                 ['id' => 3, 'status' => 'active', 'amount' => 1_000],
             ]))
-            ->withEntries([
-                with_entry('amount', ref('amount')->divide(100, scale: 2)),
-                with_entry('currency', lit('PLN')),
+            ->withColumns([
+                with_column('amount', ref('amount')->divide(100, scale: 2)),
+                with_column('currency', lit('PLN')),
             ])
             ->fetch()
             ->toArray();
@@ -87,7 +87,7 @@ final class TransformTest extends FlowTestCase
         );
     }
 
-    public function test_with_entry(): void
+    public function test_with_column(): void
     {
         $rows = df()
             ->read(from_array([
@@ -95,8 +95,8 @@ final class TransformTest extends FlowTestCase
                 ['id' => 2, 'status' => 'inactive', 'amount' => 250],
                 ['id' => 3, 'status' => 'active', 'amount' => 1_000],
             ]))
-            ->withEntry('amount', ref('amount')->divide(100, scale: 2))
-            ->withEntry('currency', lit('PLN'))
+            ->withColumn('amount', ref('amount')->divide(100, scale: 2))
+            ->withColumn('currency', lit('PLN'))
             ->fetch()
             ->toArray();
 
@@ -111,7 +111,7 @@ final class TransformTest extends FlowTestCase
         );
     }
 
-    public function test_with_with_entries(): void
+    public function test_with_with_columns(): void
     {
         $rows = df()
             ->read(from_array([
@@ -119,8 +119,8 @@ final class TransformTest extends FlowTestCase
                 ['id' => 2, 'status' => 'inactive', 'amount' => 250],
                 ['id' => 3, 'status' => 'active', 'amount' => 1_000],
             ]))
-            ->with(with_entry('amount', ref('amount')->divide(100, scale: 2)))
-            ->with(with_entry('currency', lit('PLN')))
+            ->with(with_column('amount', ref('amount')->divide(100, scale: 2)))
+            ->with(with_column('currency', lit('PLN')))
             ->fetch()
             ->toArray();
 

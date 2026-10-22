@@ -9,7 +9,7 @@ use Flow\ETL\Bucketing\KeyValues;
 use Flow\ETL\Bucketing\NativeHasher;
 use Flow\ETL\Bucketing\SingleBucketHasher;
 use Flow\ETL\Column\Backend;
-use Flow\ETL\Exception\DuplicatedEntriesException;
+use Flow\ETL\Exception\DuplicatedColumnsException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
@@ -72,7 +72,7 @@ final class Joiner
     /**
      * @param bool $buildLeft - build the hash table from the left side and stream the right one, memory is then bounded by the left side
      *
-     * @throws DuplicatedEntriesException
+     * @throws DuplicatedColumnsException
      *
      * @return Generator<Rows>
      */
@@ -328,14 +328,14 @@ final class Joiner
     }
 
     /**
-     * @throws DuplicatedEntriesException
+     * @throws DuplicatedColumnsException
      */
     private function merge(Rows $left, Rows $right): Rows
     {
         try {
             return $this->merger->merge($left, $right);
-        } catch (DuplicatedEntriesException $e) {
-            throw new DuplicatedEntriesException(
+        } catch (DuplicatedColumnsException $e) {
+            throw new DuplicatedColumnsException(
                 $e->getMessage() . ' try to use a different join prefix than: "' . $this->expression->prefix() . '"',
                 (int) $e->getCode(),
                 $e,

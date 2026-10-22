@@ -702,7 +702,7 @@ final class HashJoinProcessorTest extends FlowTestCase
 
         $this->expectException(JoinException::class);
         $this->expectExceptionMessage(
-            'Entry definitions must be unique, duplicated entries: [name], all: [id, name, user_id, name]',
+            'Column definitions must be unique, duplicated columns: [name], all: [id, name, user_id, name]',
         );
 
         iterator_to_array($processor->process($generator, flow_context()), false);

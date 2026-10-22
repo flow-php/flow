@@ -49,7 +49,7 @@ use Flow\ETL\Tests\Mother\NodeMother;
 use Flow\ETL\Transformer\CrossJoinRowsTransformer;
 use Flow\ETL\Transformer\JoinEachRowsTransformer;
 use Flow\ETL\Transformer\LimitTransformer;
-use Flow\ETL\Transformer\SelectEntriesTransformer;
+use Flow\ETL\Transformer\SelectColumnsTransformer;
 
 use function array_map;
 use function Flow\ETL\Adapter\CSV\from_csv;
@@ -92,7 +92,7 @@ final class PlannerTest extends FlowTestCase
         $steps = PipelineSteps::of($plan->root()->segments());
         static::assertSame(4, $plan->root()->scan()->limit);
         static::assertSame(
-            [SinkFeed::class, LimitTransformer::class, MemoryLoader::class, SelectEntriesTransformer::class],
+            [SinkFeed::class, LimitTransformer::class, MemoryLoader::class, SelectColumnsTransformer::class],
             array_map(static fn($step) => $step::class, $steps),
         );
         static::assertSame($loader, $steps[2]);
@@ -115,7 +115,7 @@ final class PlannerTest extends FlowTestCase
 
         // both sinks are children of the one root, so a rule copying the root cannot lose them
         static::assertSame(
-            [SelectEntriesTransformer::class, MemoryLoader::class, SinkFeed::class],
+            [SelectColumnsTransformer::class, MemoryLoader::class, SinkFeed::class],
             PipelineSteps::classes($plan->root()->segments()),
         );
     }
@@ -133,7 +133,7 @@ final class PlannerTest extends FlowTestCase
 
         static::assertSame(0, $plan->root()->id);
         static::assertSame(
-            [SelectEntriesTransformer::class, LimitTransformer::class, CSVLoader::class],
+            [SelectColumnsTransformer::class, LimitTransformer::class, CSVLoader::class],
             PipelineSteps::classes($plan->root()->segments()),
         );
         static::assertNull($plan->root()->input());
@@ -567,7 +567,7 @@ final class PlannerTest extends FlowTestCase
 
             static::fail('Expected the bind failure to be rethrown.');
         } catch (SchemaDefinitionNotFoundException $e) {
-            static::assertSame('Schema definition for entry "nope" not found.', $e->getMessage());
+            static::assertSame('Schema definition for column "nope" not found.', $e->getMessage());
         }
 
         static::assertCount(1, $telemetry->spans->startedSpans());

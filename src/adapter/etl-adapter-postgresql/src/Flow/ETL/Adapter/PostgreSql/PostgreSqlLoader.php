@@ -44,7 +44,7 @@ final class PostgreSqlLoader implements Loader
     public function __construct(
         private readonly Client $client,
         private readonly string $table,
-        private EntryTypesMap $typesMap = new EntryTypesMap(),
+        private TypesMap $typesMap = new TypesMap(),
     ) {
         $this->client->converters()->register(new EnumConverter());
         $this->client->converters()->register(new XMLConverter());
@@ -94,7 +94,7 @@ final class PostgreSqlLoader implements Loader
         return $this;
     }
 
-    public function withTypesMap(EntryTypesMap $typesMap): self
+    public function withTypesMap(TypesMap $typesMap): self
     {
         $this->typesMap = $typesMap;
 

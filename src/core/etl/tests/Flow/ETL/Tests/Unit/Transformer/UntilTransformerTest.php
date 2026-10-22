@@ -147,7 +147,7 @@ final class UntilTransformerTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(
-            'until() cannot contain array_expand(), it turns one row into many rows. Expand with withEntry() first, then use the new column.',
+            'until() cannot contain array_expand(), it turns one row into many rows. Expand with withColumn() first, then use the new column.',
         );
 
         (new UntilTransformer(ref('tags')->expand()->equals(lit('x'))))->bind(ListColumnsMother::schema());

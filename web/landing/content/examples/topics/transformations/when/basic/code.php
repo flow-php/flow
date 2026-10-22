@@ -13,7 +13,7 @@ data_frame()
         ['id' => 3, 'email' => 'user03@flow-php.com', 'active' => true, 'tags' => ['bar', 'baz']],
     ]))
     ->collect()
-    ->withEntry(
+    ->withColumn(
         'is_special',
         when(
             ref('active')->isTrue()->and(ref('tags')->contains('foo')),

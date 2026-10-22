@@ -28,7 +28,7 @@ final class UnresolvedReference implements Reference
             . 'be resolved against a Schema before it can describe itself.';
 
     public function __construct(
-        private readonly string $entry,
+        private readonly string $column,
         private readonly ?string $alias = null,
         private readonly SortOrder $sort = SortOrder::ASC,
         private readonly NullsOrder $nulls = NullsOrder::FIRST,
@@ -50,17 +50,17 @@ final class UnresolvedReference implements Reference
 
     public function as(string $alias): self
     {
-        return new self($this->entry, $alias, $this->sort, $this->nulls);
+        return new self($this->column, $alias, $this->sort, $this->nulls);
     }
 
     public function asc(NullsOrder $nulls = NullsOrder::FIRST): self
     {
-        return new self($this->entry, $this->alias, SortOrder::ASC, $nulls);
+        return new self($this->column, $this->alias, SortOrder::ASC, $nulls);
     }
 
     public function base(): string
     {
-        return $this->entry;
+        return $this->column;
     }
 
     /**
@@ -89,17 +89,17 @@ final class UnresolvedReference implements Reference
      */
     public function returns(): Type
     {
-        throw InvalidLogicException::because(self::UNRESOLVED, 'returns', $this->entry);
+        throw InvalidLogicException::because(self::UNRESOLVED, 'returns', $this->column);
     }
 
     public function desc(NullsOrder $nulls = NullsOrder::LAST): self
     {
-        return new self($this->entry, $this->alias, SortOrder::DESC, $nulls);
+        return new self($this->column, $this->alias, SortOrder::DESC, $nulls);
     }
 
     public function eval(Rows $rows, FlowContext $context): Column
     {
-        throw InvalidLogicException::because(self::UNRESOLVED, 'eval', $this->entry);
+        throw InvalidLogicException::because(self::UNRESOLVED, 'eval', $this->column);
     }
 
     public function hasAlias(): bool
@@ -119,7 +119,7 @@ final class UnresolvedReference implements Reference
 
     public function name(): string
     {
-        return $this->alias ?? $this->entry;
+        return $this->alias ?? $this->column;
     }
 
     /**
@@ -133,7 +133,7 @@ final class UnresolvedReference implements Reference
         $type = $definition->type();
 
         return new ResolvedReference(
-            $this->entry,
+            $this->column,
             $definition->isNullable() ? type_optional($type) : $type,
             $this->alias,
             $this->sort,
@@ -158,6 +158,6 @@ final class UnresolvedReference implements Reference
 
     public function to(): string
     {
-        return $this->entry;
+        return $this->column;
     }
 }

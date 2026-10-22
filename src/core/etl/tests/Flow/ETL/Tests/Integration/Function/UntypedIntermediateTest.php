@@ -39,7 +39,7 @@ final class UntypedIntermediateTest extends FlowTestCase
     {
         $rows = data_frame()
             ->read(from_array([['j' => '{"name":"ann","tags":["a","b"],"n":3}']], schema(json_schema('j'))))
-            ->withEntry('x', $tree)
+            ->withColumn('x', $tree)
             ->fetch();
 
         static::assertSame($type, $rows->schema()->get('x')->type()->toString());
@@ -52,7 +52,7 @@ final class UntypedIntermediateTest extends FlowTestCase
 
         data_frame()
             ->read(from_array([['j' => '{"name":"ann"}']], schema(json_schema('j'))))
-            ->withEntry('x', ref('j')->jsonDecode()->arrayGet('name'))
+            ->withColumn('x', ref('j')->jsonDecode()->arrayGet('name'))
             ->fetch();
     }
 }

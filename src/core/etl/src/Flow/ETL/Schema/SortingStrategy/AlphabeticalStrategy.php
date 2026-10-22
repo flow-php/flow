@@ -21,9 +21,9 @@ final readonly class AlphabeticalStrategy implements SortingStrategy
     public function compare(Definition $left, Definition $right): int
     {
         if ($this->order === SortOrder::ASC) {
-            return $left->entry()->name() <=> $right->entry()->name();
+            return $left->reference()->name() <=> $right->reference()->name();
         }
 
-        return $right->entry()->name() <=> $left->entry()->name();
+        return $right->reference()->name() <=> $left->reference()->name();
     }
 }

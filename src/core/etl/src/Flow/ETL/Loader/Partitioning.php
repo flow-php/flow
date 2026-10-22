@@ -15,9 +15,9 @@ final readonly class Partitioning
         public bool $writeColumns = false,
     ) {}
 
-    public static function by(string|Reference $entry, string|Reference ...$entries): self
+    public static function by(string|Reference $column, string|Reference ...$columns): self
     {
-        return new self(References::init($entry, ...$entries));
+        return new self(References::init($column, ...$columns));
     }
 
     public static function none(): self

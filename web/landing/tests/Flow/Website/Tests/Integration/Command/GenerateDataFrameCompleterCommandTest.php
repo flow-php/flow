@@ -25,7 +25,7 @@ final class GenerateDataFrameCompleterCommandTest extends CompleterCommandTestCa
 
         $content = type_string()->assert(file_get_contents($this->getOutputPath('dataframe.js')));
 
-        $coreMethods = ['write', 'collect', 'fetch', 'run', 'withEntry', 'select', 'drop', 'filter', 'limit'];
+        $coreMethods = ['write', 'collect', 'fetch', 'run', 'withColumn', 'select', 'drop', 'filter', 'limit'];
 
         foreach ($coreMethods as $method) {
             static::assertStringContainsString(

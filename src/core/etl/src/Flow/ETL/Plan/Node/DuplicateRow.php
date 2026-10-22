@@ -9,19 +9,19 @@ use Flow\ETL\Plan\Node;
 use Flow\ETL\Plan\Redefined;
 use Flow\ETL\Plan\RowCount;
 use Flow\ETL\Plan\Transparency;
-use Flow\ETL\WithEntry;
+use Flow\ETL\WithColumn;
 
 use function array_map;
 
 final readonly class DuplicateRow implements Node
 {
     /**
-     * @param list<WithEntry> $entries
+     * @param list<WithColumn> $columns
      */
     public function __construct(
         private Node $input,
         public mixed $condition,
-        public array $entries,
+        public array $columns,
     ) {}
 
     /**
@@ -34,7 +34,7 @@ final readonly class DuplicateRow implements Node
 
     public function withChildren(array $children): self
     {
-        return $children[0] === $this->input ? $this : new self($children[0], $this->condition, $this->entries);
+        return $children[0] === $this->input ? $this : new self($children[0], $this->condition, $this->columns);
     }
 
     public function rowCount(): RowCount
@@ -54,6 +54,6 @@ final readonly class DuplicateRow implements Node
 
     public function redefines(): Redefined
     {
-        return Redefined::names(...array_map(static fn(WithEntry $entry): string => $entry->name, $this->entries));
+        return Redefined::names(...array_map(static fn(WithColumn $column): string => $column->name, $this->columns));
     }
 }

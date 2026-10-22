@@ -18,10 +18,10 @@ trait JSONOptions
             'JSON Pointer to a subtree from which schema should be extracted',
             null,
         )->addOption(
-            'input-json-pointer-entry-name',
+            'input-json-pointer-column-name',
             null,
             InputOption::VALUE_NONE,
-            'When set, JSON Pointer will be used as an entry name in the schema',
+            'When set, JSON Pointer will be used as a column name in the schema',
             null,
         );
     }

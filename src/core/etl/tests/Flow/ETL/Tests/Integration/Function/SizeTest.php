@@ -20,7 +20,7 @@ final class SizeTest extends FlowTestCase
             ->read(from_array([
                 ['array' => [1, 2, 3]],
             ]))
-            ->withEntry('count', ref('array')->size())
+            ->withColumn('count', ref('array')->size())
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -38,7 +38,7 @@ final class SizeTest extends FlowTestCase
             ->read(from_array([
                 ['key' => 1],
             ]))
-            ->withEntry('count', ref('key')->size())
+            ->withColumn('count', ref('key')->size())
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

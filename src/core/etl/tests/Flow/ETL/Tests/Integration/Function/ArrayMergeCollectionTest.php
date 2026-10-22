@@ -29,7 +29,7 @@ final class ArrayMergeCollectionTest extends FlowTestCase
                 ],
                 ['id' => 2],
             ]))
-            ->withEntry('result', optional(ref('array')->arrayMergeCollection()))
+            ->withColumn('result', optional(ref('array')->arrayMergeCollection()))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();

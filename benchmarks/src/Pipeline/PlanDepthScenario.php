@@ -13,7 +13,7 @@ use function Flow\ETL\DSL\ref;
 
 /**
  * schema() answers from the plan without executing it, so this prices Planner::plan() alone (optimize, translate,
- * bind, split) rather than $depth withEntry calls per row.
+ * bind, split) rather than $depth withColumn calls per row.
  *
  * One call plans PLANS identical plans, because a single plan is far below timer resolution.
  */
@@ -33,7 +33,7 @@ final readonly class PlanDepthScenario
             ->read((new SourceExtractor($this->source, SchemaMode::declared, $this->rows))->extractor());
 
         for ($step = 0; $step < $this->depth; $step++) {
-            $frame = $frame->withEntry('c' . $step, ref('customer')->concat(lit((string) $step)));
+            $frame = $frame->withColumn('c' . $step, ref('customer')->concat(lit((string) $step)));
         }
 
         return $frame->schema();

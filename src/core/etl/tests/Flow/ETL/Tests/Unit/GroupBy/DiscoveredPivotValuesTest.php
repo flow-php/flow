@@ -43,7 +43,7 @@ final class DiscoveredPivotValuesTest extends FlowTestCase
         static::assertSame(
             ['a!', 'b!'],
             (new DiscoveredPivotValues())->resolve(
-                df()->read(from_array([['k' => 'a'], ['k' => 'b']]))->withEntry('k2', concat(ref('k'), lit('!'))),
+                df()->read(from_array([['k' => 'a'], ['k' => 'b']]))->withColumn('k2', concat(ref('k'), lit('!'))),
                 ref('k2'),
             )->all(),
         );

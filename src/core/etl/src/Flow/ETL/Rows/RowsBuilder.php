@@ -69,7 +69,7 @@ final class RowsBuilder
     ) {
         foreach ($schema->definitions() as $name => $definition) {
             $this->builders[$name] = $backend->builder($definition);
-            $this->names[] = $definition->entry()->name();
+            $this->names[] = $definition->reference()->name();
             $this->definitions[] = $definition;
         }
     }
@@ -118,8 +118,8 @@ final class RowsBuilder
 
             if (count($sources) > $present) {
                 foreach ($sources as $definition) {
-                    if (!array_key_exists($definition->entry()->name(), $this->builders)) {
-                        $this->unexpected = $definition->entry()->name();
+                    if (!array_key_exists($definition->reference()->name(), $this->builders)) {
+                        $this->unexpected = $definition->reference()->name();
 
                         break;
                     }
@@ -382,7 +382,7 @@ final class RowsBuilder
     public function appendTake(Rows $rows, array $indices): self
     {
         foreach ($this->schema->definitions() as $definition) {
-            $name = $definition->entry()->name();
+            $name = $definition->reference()->name();
             $this->builders[$name]->appendTake($rows->column($name), $indices);
         }
 

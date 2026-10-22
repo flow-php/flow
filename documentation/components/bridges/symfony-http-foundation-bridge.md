@@ -96,7 +96,7 @@ use function Flow\ETL\DSL\lit;
 new class implements Transformation {
     public function transform(DataFrame $dataFrame): DataFrame
     {
-        return $dataFrame->withEntry('time', lit(\time()));
+        return $dataFrame->withColumn('time', lit(\time()));
     }
 };
 ```

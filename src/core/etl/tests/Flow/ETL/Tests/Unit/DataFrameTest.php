@@ -28,7 +28,7 @@ use Flow\ETL\Schema;
 use Flow\ETL\Schema\Validator\SelectiveValidator;
 use Flow\ETL\Sink\Branched;
 use Flow\ETL\Sink\Transformed;
-use Flow\ETL\Tests\Double\AddStampToStringEntryTransformer;
+use Flow\ETL\Tests\Double\AddStampToStringColumnTransformer;
 use Flow\ETL\Tests\Double\CallbackTransformation;
 use Flow\ETL\Tests\Double\CallOrderLoader;
 use Flow\ETL\Tests\Double\RecordingErrorHandler;
@@ -101,7 +101,7 @@ final class DataFrameTest extends FlowTestCase
             ]))
             ->batchSize(1)
             ->load($spy)
-            ->withEntry('element', ref('elements')->expand())
+            ->withColumn('element', ref('elements')->expand())
             ->batchSize(3)
             ->forEach(function (Rows $rows): void {
                 $this->assertLessThanOrEqual(3, $rows->count());
@@ -250,7 +250,7 @@ final class DataFrameTest extends FlowTestCase
             ->rows(new class implements Transformation {
                 public function transform(DataFrame $dataFrame): DataFrame
                 {
-                    return $dataFrame->withEntry('country', ref('country')->lower())->withEntry('age', ref(
+                    return $dataFrame->withColumn('country', ref('country')->lower())->withColumn('age', ref(
                         'age',
                     )->divide(lit(10), scale: 2));
                 }
@@ -450,7 +450,7 @@ final class DataFrameTest extends FlowTestCase
                     return new Statistics();
                 }
             })
-            ->withEntry('odd', ref('id')->mod(lit(2))->equals(lit(0)))
+            ->withColumn('odd', ref('id')->mod(lit(2))->equals(lit(0)))
             ->fetch();
 
         static::assertCount(10, $rows);
@@ -576,9 +576,9 @@ final class DataFrameTest extends FlowTestCase
                     throw new RuntimeException('Unexpected exception');
                 }
             })
-            ->rows(AddStampToStringEntryTransformer::divideBySemicolon('stamp', 'one'))
-            ->rows(AddStampToStringEntryTransformer::divideBySemicolon('stamp', 'two'))
-            ->rows(AddStampToStringEntryTransformer::divideBySemicolon('stamp', 'three'))
+            ->rows(AddStampToStringColumnTransformer::divideBySemicolon('stamp', 'one'))
+            ->rows(AddStampToStringColumnTransformer::divideBySemicolon('stamp', 'two'))
+            ->rows(AddStampToStringColumnTransformer::divideBySemicolon('stamp', 'three'))
             ->write($loader)
             ->run();
 
@@ -951,7 +951,7 @@ final class DataFrameTest extends FlowTestCase
         );
         $frame = df()
             ->read($extractor)
-            ->withEntry('doubled', ref('id')->multiply(lit(2)))
+            ->withColumn('doubled', ref('id')->multiply(lit(2)))
             ->limit(1);
 
         $frame->schema();
@@ -1073,7 +1073,7 @@ final class DataFrameTest extends FlowTestCase
     {
         $frame = df()
             ->read(from_array([['id' => 1], ['id' => 2]], schema(int_schema('id'))))
-            ->withEntry('double', ref('id')->multiply(lit(2)))
+            ->withColumn('double', ref('id')->multiply(lit(2)))
             ->write(to_transformation(new CallbackTransformation(static fn(DataFrame $df): DataFrame => $df->joinEach(
                 new StaticDataFrameFactory(df()->read(from_array([['id' => 1, 'name' => 'a']]))),
                 join_on(['id' => 'id'], 'joined_'),

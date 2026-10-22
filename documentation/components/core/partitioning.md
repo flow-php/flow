@@ -150,7 +150,7 @@ data_frame()
         ['created_at' => new DateTimeImmutable('2024-01-01 09:00:00'), 'amount' => 100],
         ['created_at' => new DateTimeImmutable('2024-01-01 13:00:00'), 'amount' => 200],
     ]))
-    ->withEntry('day', ref('created_at')->cast(type_date()))
+    ->withColumn('day', ref('created_at')->cast(type_date()))
     ->write(to_parquet(__DIR__ . '/output/events.parquet')
         ->partitionBy(partition_by('day'))
         ->saveMode(overwrite()))
@@ -272,7 +272,7 @@ The optimizer moves a `filter()` into the file source, which returns only matchi
 partition columns skips whole directories; a filter on a body column reads every file and drops the rows it does not
 match (Parquet skips row groups, see [filter pushdown](/documentation/components/adapters/parquet.md#filter-pushdown)).
 A `limit()` after the filter reaches the source with it ([filter pushdown](/documentation/components/adapters/parquet.md#filter-pushdown)). A partition column renamed
-with `rename()` or copied with `withEntry('day', ref('date'))` is still pruned; any other redefinition of it
+with `rename()` or copied with `withColumn('day', ref('date'))` is still pruned; any other redefinition of it
 stops the push. A filter whose answer can change between two evaluations - `call()`, `now()`, `uuid()`,
 `to_date_time()` with a format that leaves fields out (`'Y-m-d'`) - still filters rows but prunes nothing.
 

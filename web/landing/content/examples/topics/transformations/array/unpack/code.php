@@ -14,7 +14,7 @@ data_frame()
         ],
         schema(int_schema('id'), json_schema('array')),
     ))
-    ->withEntry('unpacked', ref('array')->unpack(schema(
+    ->withColumn('unpacked', ref('array')->unpack(schema(
         int_schema('a'),
         int_schema('b'),
         int_schema('c'),

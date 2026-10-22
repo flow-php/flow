@@ -12,7 +12,7 @@ use function Flow\ETL\Adapter\Seal\to_seal_upsert;
 use function Flow\ETL\DSL\analyze;
 use function Flow\ETL\DSL\data_frame;
 
-final class SealAllEntryTypesTest extends IntegrationTestCase
+final class SealAllColumnTypesTest extends IntegrationTestCase
 {
     public function test_indexing_pipeline_loads_all_flow_entry_types(): void
     {

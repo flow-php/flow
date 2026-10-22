@@ -27,7 +27,7 @@ final class Columns
      */
     public function add(Definition $definition, ColumnData $column): void
     {
-        $name = $definition->entry()->name();
+        $name = $definition->reference()->name();
 
         if (!array_key_exists($name, $this->columns)) {
             $this->columns[$name] = new Column($definition, $column);

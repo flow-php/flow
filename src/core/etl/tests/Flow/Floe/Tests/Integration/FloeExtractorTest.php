@@ -287,7 +287,7 @@ final class FloeExtractorTest extends FlowIntegrationTestCase
                 ->assert(
                     df()
                         ->read(from_floe($path, filesystem: $this->fs()))
-                        ->withEntry('at', to_timezone(ref('at'), 'Europe/Warsaw'))
+                        ->withColumn('at', to_timezone(ref('at'), 'Europe/Warsaw'))
                         ->fetch()
                         ->column('at')
                         ->value(0),
@@ -344,7 +344,7 @@ final class FloeExtractorTest extends FlowIntegrationTestCase
             ],
             df()
                 ->read(from_floe($loaded, filesystem: $this->fs()))
-                ->withEntry('node', ref('node')->cast(type_string()))
+                ->withColumn('node', ref('node')->cast(type_string()))
                 ->fetch()
                 ->toArray(),
         );

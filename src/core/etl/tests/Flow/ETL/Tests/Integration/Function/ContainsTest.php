@@ -23,7 +23,7 @@ final class ContainsTest extends FlowTestCase
             ->read(from_array([
                 ['key' => 'value'],
             ]))
-            ->withEntry('contains', ref('key')->contains(lit('a')))
+            ->withColumn('contains', ref('key')->contains(lit('a')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -41,7 +41,7 @@ final class ContainsTest extends FlowTestCase
             ->read(from_array([
                 ['key' => 'value', 'tags' => ['A', 'B']],
             ]))
-            ->withEntry('contains', ref('tags')->contains(lit('A')))
+            ->withColumn('contains', ref('tags')->contains(lit('A')))
             ->drop('tags')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
@@ -60,7 +60,7 @@ final class ContainsTest extends FlowTestCase
             ->read(from_array([
                 ['id' => 1],
             ]))
-            ->withEntry('contains', optional(ref('id')->contains(lit('1'))))
+            ->withColumn('contains', optional(ref('id')->contains(lit('1'))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -78,7 +78,7 @@ final class ContainsTest extends FlowTestCase
             ->read(from_array([
                 ['id' => '1'],
             ]))
-            ->withEntry('contains', optional(ref('id')->contains(lit(1))))
+            ->withColumn('contains', optional(ref('id')->contains(lit(1))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -96,7 +96,7 @@ final class ContainsTest extends FlowTestCase
             ->read(from_array([
                 ['key' => 'value', 'tags' => ['A', 'B']],
             ]))
-            ->withEntry('contains', not(ref('tags')->contains(lit('A'))))
+            ->withColumn('contains', not(ref('tags')->contains(lit('A'))))
             ->drop('tags')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();

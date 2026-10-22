@@ -48,7 +48,7 @@ final class WindowFrameContext
                     ['id' => 4, 'department' => 'IT', 'date' => '2024-01-04', 'salary' => 400],
                     ['id' => 5, 'department' => 'IT', 'date' => '2024-01-05', 'salary' => 500],
                 ]))
-                ->withEntry('result', $function),
+                ->withColumn('result', $function),
         );
     }
 
@@ -67,7 +67,7 @@ final class WindowFrameContext
                     ['id' => 3, 'department' => 'IT', 'date' => '2024-01-02', 'salary' => 300],
                     ['id' => 4, 'department' => 'IT', 'date' => '2024-01-03', 'salary' => 400],
                 ]))
-                ->withEntry('result', $function),
+                ->withColumn('result', $function),
         );
     }
 }

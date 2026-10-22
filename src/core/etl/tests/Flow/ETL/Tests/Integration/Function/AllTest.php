@@ -25,7 +25,7 @@ final class AllTest extends FlowTestCase
                 ['id' => 3],
                 ['id' => 4, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]],
             ]))
-            ->withEntry('result', when(
+            ->withColumn('result', when(
                 ref('id')->isEven()->and(ref('array')->isNotNull()),
                 lit('found'),
                 lit('not found'),

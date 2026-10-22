@@ -27,7 +27,7 @@ final class DOMElementValueTest extends FlowTestCase
 
         $rows = df()
             ->read(from_rows(array_to_rows([['html_raw' => $document]], schema(xml_schema('html_raw')))))
-            ->withEntry('html', ref('html_raw')->cast(type_string()))
+            ->withColumn('html', ref('html_raw')->cast(type_string()))
             ->drop('html_raw')
             ->fetch();
 
@@ -45,7 +45,7 @@ final class DOMElementValueTest extends FlowTestCase
             ->read(from_rows(array_to_rows([[
                 'node' => type_xml_element()->cast('<name>User Name 01</name>'),
             ]], schema(xml_element_schema('node')))))
-            ->withEntry('user_name', ref('node')->domElementValue())
+            ->withColumn('user_name', ref('node')->domElementValue())
             ->drop('node')
             ->fetch();
 
@@ -63,7 +63,7 @@ final class DOMElementValueTest extends FlowTestCase
             ->read(from_rows(array_to_rows([[
                 'node' => type_xml()->cast('<name>User Name 01</name>'),
             ]], schema(xml_schema('node')))))
-            ->withEntry('user_name', ref('node')->domElementValue())
+            ->withColumn('user_name', ref('node')->domElementValue())
             ->drop('node')
             ->fetch();
 
@@ -82,7 +82,7 @@ final class DOMElementValueTest extends FlowTestCase
 
         $rows = df()
             ->read(from_rows(array_to_rows([['html_raw' => $document]], schema(xml_schema('html_raw')))))
-            ->withEntry('html', ref('html_raw')->domElementValue())
+            ->withColumn('html', ref('html_raw')->domElementValue())
             ->drop('html_raw')
             ->fetch();
 
@@ -100,7 +100,7 @@ final class DOMElementValueTest extends FlowTestCase
             ->read(from_rows(array_to_rows([[
                 'node' => type_xml()->cast('<user><name>User Name 01</name></user>'),
             ]], schema(xml_schema('node')))))
-            ->withEntry('user_name', ref('node')->xpath('name')->domElementValue())
+            ->withColumn('user_name', ref('node')->xpath('name')->domElementValue())
             ->drop('node')
             ->fetch();
 

@@ -20,7 +20,7 @@ final class AddRowIndexTransformerTest extends FlowTestCase
     public function test_an_index_column_colliding_with_an_existing_column_is_rejected(): void
     {
         $this->expectException(SchemaDefinitionNotUniqueException::class);
-        $this->expectExceptionMessage('Entry definitions must be unique, duplicated entries: [id]');
+        $this->expectExceptionMessage('Column definitions must be unique, duplicated columns: [id]');
 
         (new AddRowIndexTransformer('id', StartFrom::ZERO))->transform(array_to_rows([[
             'id' => 1,

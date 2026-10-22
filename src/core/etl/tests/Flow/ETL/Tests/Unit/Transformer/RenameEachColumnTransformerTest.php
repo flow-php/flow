@@ -7,23 +7,23 @@ namespace Flow\ETL\Tests\Unit\Transformer;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\String\StringStyles;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\ETL\Transformer\Rename\RenameCaseEntryStrategy;
-use Flow\ETL\Transformer\Rename\RenameMapEntryStrategy;
-use Flow\ETL\Transformer\RenameEachEntryTransformer;
+use Flow\ETL\Transformer\Rename\RenameCaseColumnStrategy;
+use Flow\ETL\Transformer\Rename\RenameMapColumnStrategy;
+use Flow\ETL\Transformer\RenameEachColumnTransformer;
 
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
-final class RenameEachEntryTransformerTest extends FlowTestCase
+final class RenameEachColumnTransformerTest extends FlowTestCase
 {
     public function test_bind_feeds_each_strategy_the_output_of_the_previous_one(): void
     {
         static::assertEquals(
             schema(int_schema('uid'), str_schema('user_name')),
-            (new RenameEachEntryTransformer(
-                new RenameMapEntryStrategy(['id' => 'user_id']),
-                new RenameMapEntryStrategy(['user_id' => 'uid', 'name' => 'user_name']),
+            (new RenameEachColumnTransformer(
+                new RenameMapColumnStrategy(['id' => 'user_id']),
+                new RenameMapColumnStrategy(['user_id' => 'uid', 'name' => 'user_name']),
             ))->bind(schema(int_schema('id'), str_schema('name')))->output,
         );
     }
@@ -32,7 +32,7 @@ final class RenameEachEntryTransformerTest extends FlowTestCase
     {
         static::assertEquals(
             schema(int_schema('userId'), str_schema('userName')),
-            (new RenameEachEntryTransformer(new RenameCaseEntryStrategy(StringStyles::CAMEL)))->bind(schema(
+            (new RenameEachColumnTransformer(new RenameCaseColumnStrategy(StringStyles::CAMEL)))->bind(schema(
                 int_schema('user_id'),
                 str_schema('user_name'),
             ))->output,
@@ -43,7 +43,7 @@ final class RenameEachEntryTransformerTest extends FlowTestCase
     {
         static::assertEquals(
             schema(str_schema('broker'), int_schema('y_2023')),
-            (new RenameEachEntryTransformer(new RenameMapEntryStrategy(['2023' => 'y_2023'])))->bind(schema(
+            (new RenameEachColumnTransformer(new RenameMapColumnStrategy(['2023' => 'y_2023'])))->bind(schema(
                 str_schema('broker'),
                 int_schema('2023'),
             ))->output,
@@ -54,9 +54,9 @@ final class RenameEachEntryTransformerTest extends FlowTestCase
     {
         static::assertEquals(
             schema(int_schema('year')),
-            (new RenameEachEntryTransformer(
-                new RenameMapEntryStrategy(['id' => '2023']),
-                new RenameMapEntryStrategy(['2023' => 'year']),
+            (new RenameEachColumnTransformer(
+                new RenameMapColumnStrategy(['id' => '2023']),
+                new RenameMapColumnStrategy(['2023' => 'year']),
             ))->bind(schema(int_schema('id')))->output,
         );
     }
@@ -66,6 +66,6 @@ final class RenameEachEntryTransformerTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('At least one strategy must be provided.');
 
-        new RenameEachEntryTransformer();
+        new RenameEachColumnTransformer();
     }
 }

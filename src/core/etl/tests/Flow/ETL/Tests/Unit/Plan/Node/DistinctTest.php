@@ -34,7 +34,7 @@ final class DistinctTest extends FlowTestCase
         static::assertNotSame($node, $rebuilt);
         static::assertInstanceOf(Distinct::class, $rebuilt);
         static::assertSame([$other], $rebuilt->children());
-        static::assertSame(['id'], $rebuilt->entries);
+        static::assertSame(['id'], $rebuilt->columns);
     }
 
     public function test_declarations(): void
@@ -51,7 +51,7 @@ final class DistinctTest extends FlowTestCase
     public function test_no_entries_is_refused(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('DropDuplicatesTransformer requires at least one entry');
+        $this->expectExceptionMessage('DropDuplicatesTransformer requires at least one column');
 
         new Distinct(NodeMother::read(), []);
     }

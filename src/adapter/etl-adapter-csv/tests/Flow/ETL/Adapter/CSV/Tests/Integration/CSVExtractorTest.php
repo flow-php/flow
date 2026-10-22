@@ -228,7 +228,7 @@ final class CSVExtractorTest extends FlowTestCase
         static::assertSame('string', $schema->get('Value')->type()->toString());
 
         foreach ($schema->definitions() as $definition) {
-            static::assertTrue($definition->isNullable(), $definition->entry()->name() . ' must be nullable');
+            static::assertTrue($definition->isNullable(), $definition->reference()->name() . ' must be nullable');
         }
     }
 
@@ -1108,7 +1108,7 @@ final class CSVExtractorTest extends FlowTestCase
             ],
             df()
                 ->read(from_csv(__DIR__ . '/../Fixtures/partitioned/group=*/*.csv'))
-                ->withEntry('id', ref('id')->cast('int'))
+                ->withColumn('id', ref('id')->cast('int'))
                 ->sortBy([ref('id')])
                 ->fetch()
                 ->toArray(),

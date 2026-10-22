@@ -55,11 +55,11 @@ final class Manifest
 
         $byName = [];
 
-        foreach ($decoded['packages'] ?? [] as $entry) {
-            if (!isset($entry['name']) || !is_string($entry['name'])) {
+        foreach ($decoded['packages'] ?? [] as $package) {
+            if (!isset($package['name']) || !is_string($package['name'])) {
                 continue;
             }
-            $byName[$entry['name']] = $entry;
+            $byName[$package['name']] = $package;
         }
 
         return $this->byName = $byName;

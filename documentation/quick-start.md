@@ -21,16 +21,16 @@ require __DIR__ . '/vendor/autoload.php';
 data_frame()
     ->read(from_csv(__DIR__ . '/orders_flow.csv'))
     ->select('created_at', 'total_price', 'discount')
-    ->withEntry('created_at', ref('created_at')->cast('date')->dateFormat('Y/m'))
-    ->withEntry('revenue', ref('total_price')->minus(ref('discount')))
+    ->withColumn('created_at', ref('created_at')->cast('date')->dateFormat('Y/m'))
+    ->withColumn('revenue', ref('total_price')->minus(ref('discount')))
     ->select('created_at', 'revenue')
     ->groupBy(['created_at'])
     ->aggregate(sum(ref('revenue')))
     ->sortBy([ref('created_at')->desc()])
-    ->withEntry('daily_revenue', ref('revenue_sum')->round(lit(2))->numberFormat(lit(2)))
+    ->withColumn('daily_revenue', ref('revenue_sum')->round(lit(2))->numberFormat(lit(2)))
     ->drop('revenue_sum')
     ->write(to_output(truncate: false))
-    ->withEntry('created_at', ref('created_at')->toDate('Y/m'))
+    ->withColumn('created_at', ref('created_at')->toDate('Y/m'))
     ->write(to_csv(__DIR__ . '/daily_revenue.csv')->saveMode(overwrite()))
     ->run();
 ```
@@ -82,14 +82,14 @@ Alternatively you can use the `drop()` function to drop columns you don't need.
     ->select('created_at', 'total_price', 'discount')
 ```
 
-One of the most powerful features of Flow ETL is the ability to transform data using the `withEntry()` function.
+One of the most powerful features of Flow ETL is the ability to transform data using the `withColumn()` function.
 
 ```php ignore
-    ->withEntry('created_at', ref('created_at')->cast('date')->dateFormat('Y/m'))
-    ->withEntry('revenue', ref('total_price')->minus(ref('discount')))
+    ->withColumn('created_at', ref('created_at')->cast('date')->dateFormat('Y/m'))
+    ->withColumn('revenue', ref('total_price')->minus(ref('discount')))
 ```
 
-`withEntry()` function accepts two arguments, the first one is the name of the new column, the second one is the value of the new column.
+`withColumn()` function accepts two arguments, the first one is the name of the new column, the second one is the value of the new column.
 The value of the new column can be a literal value, a reference to an existing column or a function call.
 
 - `ref('created_at')` - creates a reference to the `created_at` column.

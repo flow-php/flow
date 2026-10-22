@@ -14,7 +14,7 @@ use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Transformer;
-use Flow\ETL\WithEntry;
+use Flow\ETL\WithColumn;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type\Unifier\NullabilityRule;
 use Flow\Types\Type\Unifier\PromotingUnifier;
@@ -27,9 +27,9 @@ use function Flow\Types\DSL\type_equals;
 final class DuplicateRowTransformer implements Transformer
 {
     /**
-     * @var list<WithEntry>
+     * @var list<WithColumn>
      */
-    private readonly array $entries;
+    private readonly array $columns;
 
     /**
      * The condition resolved against the bound schema, and the schema this step declares. Only
@@ -41,14 +41,14 @@ final class DuplicateRowTransformer implements Transformer
 
     public function __construct(
         private readonly mixed $condition,
-        WithEntry ...$entries,
+        WithColumn ...$columns,
     ) {
-        $this->entries = array_values($entries);
+        $this->columns = array_values($columns);
     }
 
     public function bind(Schema $input): BoundStep
     {
-        $bound = new self($this->condition, ...$this->entries);
+        $bound = new self($this->condition, ...$this->columns);
         $bound->resolved = $this->resolve($input);
         $bound->output = $this->declare($input);
 
@@ -75,11 +75,11 @@ final class DuplicateRowTransformer implements Transformer
 
             if ($duplicated !== []) {
                 // The maps inside ScalarFunctionTransformer are column-wise and stateless, so applying
-                // each entry once over all duplicated rows is equivalent to applying it per row.
+                // each column once over all duplicated rows is equivalent to applying it per row.
                 $copies = $rows->gather($duplicated);
 
-                foreach ($this->entries as $entry) {
-                    $copies = (new ScalarFunctionTransformer($entry->name, $entry->function))->transform(
+                foreach ($this->columns as $column) {
+                    $copies = (new ScalarFunctionTransformer($column->name, $column->function))->transform(
                         $copies,
                         $context,
                     );
@@ -126,9 +126,9 @@ final class DuplicateRowTransformer implements Transformer
     {
         $duplicated = $input;
 
-        foreach ($this->entries as $entry) {
-            (new ExpandingFunctions())->refuse($entry->function, 'duplicateRow');
-            $duplicated = (new ScalarFunctionTransformer($entry->name, $entry->function))->bind($duplicated)->output;
+        foreach ($this->columns as $column) {
+            (new ExpandingFunctions())->refuse($column->function, 'duplicateRow');
+            $duplicated = (new ScalarFunctionTransformer($column->name, $column->function))->bind($duplicated)->output;
         }
 
         $output = $input;
@@ -137,7 +137,7 @@ final class DuplicateRowTransformer implements Transformer
             $existing = $output->findDefinition($name);
 
             if ($existing === null) {
-                // the entries only apply to rows that matched the condition, so a column the
+                // the columns only apply to rows that matched the condition, so a column the
                 // untouched half of the batch never carries has to be declared nullable
                 $output = $output->add($definition->makeNullable());
 

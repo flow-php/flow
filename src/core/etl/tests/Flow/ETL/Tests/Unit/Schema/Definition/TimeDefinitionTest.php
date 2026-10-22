@@ -268,8 +268,8 @@ final class TimeDefinitionTest extends FlowTestCase
 
         $renamed = $def->rename('new_duration');
 
-        static::assertSame('new_duration', $renamed->entry()->name());
-        static::assertSame('duration', $def->entry()->name());
+        static::assertSame('new_duration', $renamed->reference()->name());
+        static::assertSame('duration', $def->reference()->name());
     }
 
     public function test_set_metadata(): void

@@ -49,7 +49,7 @@ final class CacheIndex
         foreach ($keys as $i => $value) {
             if (!is_string($value)) {
                 throw new InvalidArgumentException(sprintf(
-                    'CacheIndex expects rows with a string "key" entry, got: %s',
+                    'CacheIndex expects rows with a string "key" column, got: %s',
                     get_debug_type($value),
                 ));
             }
@@ -59,7 +59,7 @@ final class CacheIndex
 
             if ($chunkRows !== null && !is_int($chunkRows)) {
                 throw new InvalidArgumentException(sprintf(
-                    'CacheIndex expects rows with an integer "rows" entry, got: %s',
+                    'CacheIndex expects rows with an integer "rows" column, got: %s',
                     get_debug_type($chunkRows),
                 ));
             }

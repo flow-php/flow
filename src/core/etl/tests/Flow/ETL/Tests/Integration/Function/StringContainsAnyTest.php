@@ -30,7 +30,7 @@ final class StringContainsAnyTest extends FlowTestCase
                 ['text' => 'hello🚀world', 'needles' => ['🚀', 'bar']],
                 ['text' => 'testing', 'needles' => ['test', 'ing']],
             ]))
-            ->withEntry('contains_any', optional(ref('text')->stringContainsAny(ref('needles'))))
+            ->withColumn('contains_any', optional(ref('text')->stringContainsAny(ref('needles'))))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

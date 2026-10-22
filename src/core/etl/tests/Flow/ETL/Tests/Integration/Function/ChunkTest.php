@@ -29,8 +29,8 @@ final class ChunkTest extends FlowTestCase
                 ['text' => 'chunk', 'size' => 0],
                 ['text' => null, 'size' => 3],
             ]))
-            ->withEntry('chunked', optional(ref('text')->chunk(ref('size'))))
-            ->withEntry('chunked_fixed', optional(ref('text')->chunk(2)))
+            ->withColumn('chunked', optional(ref('text')->chunk(ref('size'))))
+            ->withColumn('chunked_fixed', optional(ref('text')->chunk(2)))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

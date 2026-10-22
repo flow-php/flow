@@ -27,7 +27,7 @@ final class ReplaceNullsTest extends FlowIntegrationTestCase
                 ['id' => 2, 'tags' => null],
                 ['id' => 3, 'tags' => ['D']],
             ])->withSchema(schema(int_schema('id'), list_schema('tags', type_list(type_string()), true))))
-            ->withEntry('tags', coalesce(ref('tags'), lit([])))
+            ->withColumn('tags', coalesce(ref('tags'), lit([])))
             ->fetch();
 
         static::assertEquals(
@@ -48,7 +48,7 @@ final class ReplaceNullsTest extends FlowIntegrationTestCase
                 ['id' => 2, 'name' => null],
                 ['id' => 3, 'name' => 'Doe'],
             ]))
-            ->withEntry('name', coalesce(ref('name'), lit('N/A')))
+            ->withColumn('name', coalesce(ref('name'), lit('N/A')))
             ->fetch();
 
         static::assertEquals(

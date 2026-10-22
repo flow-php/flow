@@ -33,7 +33,7 @@ final readonly class PipelineReportFormatter
 
             foreach ($schema->definitions() as $definition) {
                 $normalizedSchema[] = [
-                    'name' => $definition->entry()->name(),
+                    'name' => $definition->reference()->name(),
                     'type' => $definition->type()->toString(),
                     'nullable' => $definition->isNullable() ? 'true' : 'false',
                     'metadata' => json_encode($definition->metadata(), JSON_PRETTY_PRINT),

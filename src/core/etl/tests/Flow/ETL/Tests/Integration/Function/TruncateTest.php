@@ -26,8 +26,8 @@ final class TruncateTest extends FlowTestCase
                 ['text' => '', 'length' => 5],
                 ['text' => null, 'length' => 5],
             ]))
-            ->withEntry('truncated', optional(ref('text')->truncate(ref('length'))))
-            ->withEntry('truncated_custom', optional(ref('text')->truncate(ref('length'), '>>')))
+            ->withColumn('truncated', optional(ref('text')->truncate(ref('length'))))
+            ->withColumn('truncated_custom', optional(ref('text')->truncate(ref('length'), '>>')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

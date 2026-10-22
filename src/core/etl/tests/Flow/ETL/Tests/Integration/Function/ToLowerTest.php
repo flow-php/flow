@@ -20,7 +20,7 @@ final class ToLowerTest extends FlowTestCase
             ->read(from_array([
                 ['key' => 'VALUE'],
             ]))
-            ->withEntry('to_lower', ref('key')->lower())
+            ->withColumn('to_lower', ref('key')->lower())
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

@@ -24,13 +24,13 @@ final readonly class ExpandingProcessor implements Processor
     private int $batchSize;
 
     /**
-     * @param Definition<mixed>|string $entry
+     * @param Definition<mixed>|string $column
      * @param int $batchSize the most rows one output batch holds
      *
      * @throws InvalidArgumentException
      */
     public function __construct(
-        private string|Definition $entry,
+        private string|Definition $column,
         public ScalarFunction $function,
         private RequiredColumns $carries,
         int $batchSize = 1000,
@@ -45,10 +45,10 @@ final readonly class ExpandingProcessor implements Processor
 
     public function bind(Schema $input): BoundStep
     {
-        $bound = BoundExpansion::of($this->entry, $this->function, $this->carries, $input);
+        $bound = BoundExpansion::of($this->column, $this->function, $this->carries, $input);
 
         return new BoundStep(
-            new self($this->entry, $this->function, $this->carries, $this->batchSize, $bound),
+            new self($this->column, $this->function, $this->carries, $this->batchSize, $bound),
             $bound->output,
         );
     }
@@ -65,7 +65,7 @@ final readonly class ExpandingProcessor implements Processor
             $batch = $rows->current();
             // a plan that refused a schema runs this step unbound
             $bound = $this->bound ?? BoundExpansion::of(
-                $this->entry,
+                $this->column,
                 $this->function,
                 $this->carries,
                 $batch->schema(),

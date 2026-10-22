@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Join\HashJoin;
 
-use Flow\ETL\Exception\DuplicatedEntriesException;
+use Flow\ETL\Exception\DuplicatedColumnsException;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 
@@ -31,8 +31,8 @@ final class RowMerger
     private array $plans = [];
 
     /**
-     * @param array<string> $dropLeft - left side entries skipped in the output (duplicated join columns)
-     * @param array<string> $dropRight - right side entries skipped in the output (duplicated join columns)
+     * @param array<string> $dropLeft - left side columns skipped in the output (duplicated join columns)
+     * @param array<string> $dropRight - right side columns skipped in the output (duplicated join columns)
      */
     public function __construct(
         private readonly string $prefix = '',
@@ -58,7 +58,7 @@ final class RowMerger
     /**
      * Pair-aligned: row i of the result is left row i merged with right row i.
      *
-     * @throws DuplicatedEntriesException
+     * @throws DuplicatedColumnsException
      */
     public function merge(Rows $left, Rows $right): Rows
     {
@@ -102,7 +102,7 @@ final class RowMerger
      * @param list<array-key> $leftNames
      * @param list<array-key> $rightNames
      *
-     * @throws DuplicatedEntriesException
+     * @throws DuplicatedColumnsException
      *
      * @return array{array<array-key, true>, array<array-key, true>, array<array-key, string>}
      */
@@ -148,8 +148,8 @@ final class RowMerger
         }
 
         if ($collision) {
-            throw new DuplicatedEntriesException(sprintf(
-                'Merged entries names must be unique, given: [%s] + [%s]',
+            throw new DuplicatedColumnsException(sprintf(
+                'Merged column names must be unique, given: [%s] + [%s]',
                 implode(', ', array_keys($keepLeft)),
                 implode(', ', $rightOutputNames),
             ));

@@ -45,7 +45,7 @@ final class NullDefinitionTest extends FlowTestCase
 
     public function test_entry(): void
     {
-        static::assertSame('id', null_schema('id')->entry()->name());
+        static::assertSame('id', null_schema('id')->reference()->name());
     }
 
     public function test_is_always_nullable(): void
@@ -197,7 +197,7 @@ final class NullDefinitionTest extends FlowTestCase
     {
         $renamed = null_schema('id')->rename('new_id');
 
-        static::assertSame('new_id', $renamed->entry()->name());
+        static::assertSame('new_id', $renamed->reference()->name());
         static::assertInstanceOf(NullDefinition::class, $renamed);
     }
 

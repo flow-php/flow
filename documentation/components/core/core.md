@@ -31,7 +31,7 @@ DataFrame methods fall into two categories based on when they execute:
 
 These methods build the processing pipeline without executing it immediately:
 
-- **Transformations**: `filter()`, `withEntry()`, `select()`, `drop()`, `rename()`, `with()`
+- **Transformations**: `filter()`, `withColumn()`, `select()`, `drop()`, `rename()`, `with()`
 - **Memory-intensive**: `collect()`, `sortBy()`, `groupBy()`, `join()`, `cache()`
 - **Processing control**: `batchSize()`, `limit()`, `offset()`, `partitionBy()`
 

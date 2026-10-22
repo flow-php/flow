@@ -21,7 +21,7 @@ final class AppendTest extends FlowTestCase
             ->read(from_array([
                 ['name' => 'John'],
             ]))
-            ->withEntry('greeting', ref('name')->append(lit(' Doe')))
+            ->withColumn('greeting', ref('name')->append(lit(' Doe')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

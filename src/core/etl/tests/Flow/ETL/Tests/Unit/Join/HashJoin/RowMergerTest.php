@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Join\HashJoin;
 
-use Flow\ETL\Exception\DuplicatedEntriesException;
+use Flow\ETL\Exception\DuplicatedColumnsException;
 use Flow\ETL\Join\HashJoin\RowMerger;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -17,8 +17,8 @@ final class RowMergerTest extends FlowTestCase
 {
     public function test_collision_between_left_and_right_names_throws(): void
     {
-        $this->expectException(DuplicatedEntriesException::class);
-        $this->expectExceptionMessage('Merged entries names must be unique');
+        $this->expectException(DuplicatedColumnsException::class);
+        $this->expectExceptionMessage('Merged column names must be unique');
 
         (new RowMerger())
             ->merge(
@@ -73,7 +73,7 @@ final class RowMergerTest extends FlowTestCase
 
     public function test_prefix_collision_with_left_name_throws(): void
     {
-        $this->expectException(DuplicatedEntriesException::class);
+        $this->expectException(DuplicatedColumnsException::class);
 
         (new RowMerger('left_'))
             ->merge(

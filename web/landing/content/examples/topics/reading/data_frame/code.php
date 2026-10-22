@@ -19,7 +19,7 @@ data_frame()
                         ['id' => 5],
                     ]
                 ))
-                ->withEntry('timestamp', ref('id')->multiply(lit(10000)))
+                ->withColumn('timestamp', ref('id')->multiply(lit(10000)))
         )
     )
     ->collect()

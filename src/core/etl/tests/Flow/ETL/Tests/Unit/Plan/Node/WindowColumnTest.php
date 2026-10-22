@@ -38,7 +38,7 @@ final class WindowColumnTest extends FlowTestCase
         static::assertNotSame($node, $rebuilt);
         static::assertInstanceOf(WindowColumn::class, $rebuilt);
         static::assertSame([$other], $rebuilt->children());
-        static::assertSame('rank', $rebuilt->entry);
+        static::assertSame('rank', $rebuilt->column);
         static::assertSame($function, $rebuilt->function);
     }
 

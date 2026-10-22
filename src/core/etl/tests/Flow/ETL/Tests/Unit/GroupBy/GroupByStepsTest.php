@@ -14,7 +14,7 @@ use Flow\ETL\Tests\Context\GroupByContext;
 use Flow\ETL\Tests\Double\SpyBucketsStorage;
 use Flow\ETL\Tests\Double\UnenumerableSum;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\ETL\Transformer\PruneEntriesTransformer;
+use Flow\ETL\Transformer\PruneColumnsTransformer;
 
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_schema;
@@ -55,7 +55,7 @@ final class GroupByStepsTest extends FlowTestCase
         $steps = GroupBySteps::of($groupBy, config());
 
         static::assertCount(2, $steps);
-        static::assertInstanceOf(PruneEntriesTransformer::class, $steps[0]);
+        static::assertInstanceOf(PruneColumnsTransformer::class, $steps[0]);
         static::assertInstanceOf(GroupByAggregationProcessor::class, $steps[1]);
     }
 

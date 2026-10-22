@@ -26,9 +26,9 @@ final class DOMElementParentTest extends FlowTestCase
                     '<article><section><h1>User Name</h1></section><span>01</span></article>',
                 ),
             ]], schema(html_element_schema('html_element')))))
-            ->withEntry('user_details', ref('html_element')->htmlQuerySelector('section'))
-            ->withEntry('user_name', ref('user_details')->htmlQuerySelector('h1')->domElementValue())
-            ->withEntry(
+            ->withColumn('user_details', ref('html_element')->htmlQuerySelector('section'))
+            ->withColumn('user_name', ref('user_details')->htmlQuerySelector('h1')->domElementValue())
+            ->withColumn(
                 'user_id',
                 ref('user_details')->domElementParent()->htmlQuerySelector('span')->domElementValue(),
             )

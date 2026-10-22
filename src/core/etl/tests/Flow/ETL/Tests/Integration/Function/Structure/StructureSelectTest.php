@@ -60,7 +60,7 @@ final class StructureSelectTest extends FlowTestCase
                     ],
                 ],
             ]))
-            ->withEntry('user', structure_ref('user')->select('id', 'email', 'tags'))
+            ->withColumn('user', structure_ref('user')->select('id', 'email', 'tags'))
             ->fetch();
 
         static::assertEquals(

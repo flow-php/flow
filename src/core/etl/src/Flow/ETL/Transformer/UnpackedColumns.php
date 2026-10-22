@@ -49,7 +49,7 @@ final readonly class UnpackedColumns
         $output = $base;
 
         foreach ($declared->makeNullable()->definitions() as $definition) {
-            $name = $prefix . $definition->entry()->name();
+            $name = $prefix . $definition->reference()->name();
 
             $output = $output->findDefinition($name) === null
                 ? $output->add($definition->rename($name))
