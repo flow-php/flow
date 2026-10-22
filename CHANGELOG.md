@@ -1,6 +1,7 @@
-## [Unreleased] - 2026-10-21
+## [Unreleased] - 2026-10-22
 
 ### Added
+- [#2703](https://github.com/flow-php/flow/pull/2703) - **flow-php/etl - DataFrame::withColumn() and DataFrame::withColumns()** - [@norberttech](https://github.com/norberttech)
 - [#2702](https://github.com/flow-php/flow/pull/2702) - **flow-php/parquet - read and write DELTA_LENGTH_BYTE_ARRAY and DELTA_BYTE_ARRAY** - [@norberttech](https://github.com/norberttech)
 - [#2702](https://github.com/flow-php/flow/pull/2702) - **flow-php/parquet - Option::DICTIONARY_ENABLED** - [@norberttech](https://github.com/norberttech)
 - [#2701](https://github.com/flow-php/flow/pull/2701) - **flow-php/etl - PSRCacheBuckets rejects prefixes containing PSR-16 reserved characters** - [@norberttech](https://github.com/norberttech)
@@ -23,6 +24,17 @@
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/arrow-ext - page-range reads and row filtering through arrow-rs** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2703](https://github.com/flow-php/flow/pull/2703) - **flow-php/etl - with_entry() / WithEntry renamed to with_column() / WithColumn** - [@norberttech](https://github.com/norberttech)
+- [#2703](https://github.com/flow-php/flow/pull/2703) - **flow-php/etl - Definition::entry() renamed to Definition::reference()** - [@norberttech](https://github.com/norberttech)
+- [#2703](https://github.com/flow-php/flow/pull/2703) - **flow-php/etl - Entry-named transformers, rename strategies and DuplicatedEntriesException renamed to Column** - [@norberttech](https://github.com/norberttech)
+- [#2703](https://github.com/flow-php/flow/pull/2703) - **flow-php/etl - entry parameters, properties and exception messages renamed to column** - [@norberttech](https://github.com/norberttech)
+- [#2703](https://github.com/flow-php/flow/pull/2703) - **flow-php/etl - SequenceExtractor requires a column name** - [@norberttech](https://github.com/norberttech)
+- [#2703](https://github.com/flow-php/flow/pull/2703) - **flow-php/etl-adapter-postgresql - EntryTypesMap renamed to TypesMap** - [@norberttech](https://github.com/norberttech)
+- [#2703](https://github.com/flow-php/flow/pull/2703) - **flow-php/etl-adapter-excel - withSheetNameFromEntry() renamed to withSheetNameFromColumn()** - [@norberttech](https://github.com/norberttech)
+- [#2703](https://github.com/flow-php/flow/pull/2703) - **flow-php/etl-adapter-seal - withIdentifierEntry() renamed to withIdentifierColumn()** - [@norberttech](https://github.com/norberttech)
+- [#2703](https://github.com/flow-php/flow/pull/2703) - **flow-php/etl-adapter-json - pointerToEntryName renamed to pointerToColumnName** - [@norberttech](https://github.com/norberttech)
+- [#2703](https://github.com/flow-php/flow/pull/2703) - **flow-php/cli - --input-json-pointer-entry-name renamed to --input-json-pointer-column-name** - [@norberttech](https://github.com/norberttech)
+- [#2703](https://github.com/flow-php/flow/pull/2703) - **flow-php/flow-php-ext - calls Definition::reference()** - [@norberttech](https://github.com/norberttech)
 - [#2702](https://github.com/flow-php/flow/pull/2702) - **flow-php/parquet - dictionary encoding on by default, arrow-rs fallback encodings under WRITER_VERSION 2** - [@norberttech](https://github.com/norberttech)
 - [#2702](https://github.com/flow-php/flow/pull/2702) - **flow-php/parquet - RLE_DICTIONARY on BOOLEAN columns is refused** - [@norberttech](https://github.com/norberttech)
 - [#2702](https://github.com/flow-php/flow/pull/2702) - **flow-php/arrow-ext - COLUMNS_ENCODINGS writes exactly the given encoding** - [@norberttech](https://github.com/norberttech)
@@ -74,11 +86,15 @@
 - [b5d097](https://github.com/flow-php/flow/commit/b5d097c5cabde914624be59774dd8a8d6fafe294) - **bump setup-php to 2.40.0 in extension release workflows** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2703](https://github.com/flow-php/flow/pull/2703) - **flow-php/etl - entry() DSL function, use ref() or col()** - [@norberttech](https://github.com/norberttech)
 - [#2702](https://github.com/flow-php/flow/pull/2702) - **flow-php/parquet - PlainFlatColumnChunkBuilder and DeltaBinaryPackedColumnChunkBuilder, replaced by FlatColumnChunkBuilder** - [@norberttech](https://github.com/norberttech)
 - [#2701](https://github.com/flow-php/flow/pull/2701) - **flow-php/etl - Redis from the dev environment, CI and tests** - [@norberttech](https://github.com/norberttech)
 - [#2698](https://github.com/flow-php/flow/pull/2698) - **flow-php/flow - redundant apt installs from CI jobs** - [@norberttech](https://github.com/norberttech)
 - [#2697](https://github.com/flow-php/flow/pull/2697) - **flow-php/flow - redundant apt installs from CI jobs** - [@norberttech](https://github.com/norberttech)
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/parquet - unused DICTIONARY_PAGE_MIN_CARDINALITY_RATION option** - [@norberttech](https://github.com/norberttech)
+
+### Deprecated
+- [#2703](https://github.com/flow-php/flow/pull/2703) - **flow-php/etl - DataFrame::withEntry() and DataFrame::withEntries()** - [@norberttech](https://github.com/norberttech)
 
 ### Security
 - [#2695](https://github.com/flow-php/flow/pull/2695) - **flow-php/telemetry - exception.stacktrace no longer carries function argument values** - [@norberttech](https://github.com/norberttech)
