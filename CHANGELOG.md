@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-10-22
+## [Unreleased] - 2026-10-23
 
 ### Added
 - [#2703](https://github.com/flow-php/flow/pull/2703) - **flow-php/etl - DataFrame::withColumn() and DataFrame::withColumns()** - [@norberttech](https://github.com/norberttech)
@@ -68,6 +68,7 @@
 - [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/flow - updated dev dependencies, mago 1.57 and GitHub Actions** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2704](https://github.com/flow-php/flow/pull/2704) - **Prevent PHPStan reporting unknown variable passed to `StructureElement`** - [@stloyd](https://github.com/stloyd)
 - [#2702](https://github.com/flow-php/flow/pull/2702) - **flow-php/parquet - reading v2 pages flagged as uncompressed** - [@norberttech](https://github.com/norberttech)
 - [#2702](https://github.com/flow-php/flow/pull/2702) - **flow-php/parquet - DELTA_BINARY_PACKED corruption for INT32 and wide bit widths** - [@norberttech](https://github.com/norberttech)
 - [#2702](https://github.com/flow-php/flow/pull/2702) - **flow-php/parquet - all-null pages readable by arrow-rs and DuckDB** - [@norberttech](https://github.com/norberttech)
