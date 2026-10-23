@@ -44,12 +44,12 @@ use const JSON_THROW_ON_ERROR;
 final readonly class StructureType implements Type
 {
     /**
-     * @var non-empty-list<StructureElement<value-of<T>>>
+     * @var non-empty-list<StructureElement<value-of<T>, bool>>
      */
     private array $elements;
 
     /**
-     * @param list<StructureElement<value-of<T>>> $elements
+     * @param list<StructureElement<value-of<T>, bool>> $elements
      *
      * @throws InvalidArgumentException
      */
@@ -82,7 +82,7 @@ final readonly class StructureType implements Type
     /**
      * @template E
      *
-     * @param array<array-key, StructureElement<E>|Type<E>> $elements insertion order is field order; a StructureElement value carries its own optional flag
+     * @param array<array-key, StructureElement<E, bool>|Type<E>> $elements insertion order is field order; a StructureElement value carries its own optional flag
      *
      * @return self<array<array-key, E>>
      */
@@ -211,7 +211,7 @@ final readonly class StructureType implements Type
     }
 
     /**
-     * @return null|StructureElement<value-of<T>>
+     * @return null|StructureElement<value-of<T>, bool>
      */
     public function element(int|string $name): ?StructureElement
     {
@@ -225,7 +225,7 @@ final readonly class StructureType implements Type
     }
 
     /**
-     * @return non-empty-list<StructureElement<value-of<T>>>
+     * @return non-empty-list<StructureElement<value-of<T>, bool>>
      */
     public function elements(): array
     {

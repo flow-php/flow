@@ -57,7 +57,7 @@ use UnitEnum;
 /**
  * @template T
  *
- * @param array<array-key, StructureElement<T>|Type<T>> $elements
+ * @param array<array-key, StructureElement<T, bool>|Type<T>> $elements
  *
  * @return StructureType<array<array-key, T>>
  */
