@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Plan\Materialization;
-use Flow\ETL\Plan\Node;
-use Flow\ETL\Plan\Redefined;
-use Flow\ETL\Plan\RowCount;
-use Flow\ETL\Plan\Transparency;
+use Flow\ETL\Planning\Logical\Node;
+use Flow\ETL\Planning\Logical\Redefined;
+use Flow\ETL\Planning\Logical\RowCount;
+use Flow\ETL\Planning\Logical\Transparency;
 
 /**
  * A preserving, transparent, streaming node that declares whatever redefinition the test hands it.
@@ -41,11 +40,6 @@ final readonly class RedefiningNode implements Node
     public function transparency(): Transparency
     {
         return Transparency::transparent;
-    }
-
-    public function materialization(): Materialization
-    {
-        return Materialization::streaming;
     }
 
     public function redefines(): Redefined

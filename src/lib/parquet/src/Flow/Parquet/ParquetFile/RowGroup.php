@@ -35,11 +35,6 @@ final class RowGroup
         );
     }
 
-    public function addColumnChunk(ColumnChunk $columnChunk): void
-    {
-        $this->columnChunks[] = $columnChunk;
-    }
-
     /**
      * @return array<ColumnChunk>
      */
@@ -64,15 +59,6 @@ final class RowGroup
     public function rowsCount(): int
     {
         return $this->rowsCount;
-    }
-
-    public function setRowsCount(int $rowsCount): void
-    {
-        if ($rowsCount < 0) {
-            throw new InvalidArgumentException('Rows count must be greater than 0');
-        }
-
-        $this->rowsCount = $rowsCount;
     }
 
     public function totalByteSize(): int

@@ -404,8 +404,8 @@ class WriterTest extends ParquetIntegrationTestCase
         static::assertSame(100, $statistics->max($column));
         static::assertSame(1, $statistics->minValue($column));
         static::assertSame(100, $statistics->maxValue($column));
-        static::assertNull($statistics->distinctCount());
-        static::assertSame(0, $statistics->nullCount());
+        static::assertNull($statistics->distinctCount);
+        static::assertSame(0, $statistics->nullCount);
 
         static::assertFileExists($path);
     }
@@ -486,11 +486,11 @@ class WriterTest extends ParquetIntegrationTestCase
         static::assertNotNull($statistics);
         static::assertSame('-0.0', var_export($statistics->minValue($column), true));
         static::assertSame(1.5, $statistics->maxValue($column));
-        static::assertSame(2, $statistics->nanCount());
+        static::assertSame(2, $statistics->nanCount);
         static::assertNull($statistics->min($column));
         static::assertNull($statistics->max($column));
-        static::assertTrue($statistics->isMinValueExact());
-        static::assertTrue($statistics->isMaxValueExact());
+        static::assertTrue($statistics->isMinValueExact);
+        static::assertTrue($statistics->isMaxValueExact);
     }
 
     #[DataProvider('engine_pair_provider')]
@@ -643,9 +643,9 @@ class WriterTest extends ParquetIntegrationTestCase
             $chunks[$chunk->flatPath()] = $chunk;
         }
 
-        static::assertSame(3, $chunks['all_null']->statistics()?->nullCount());
-        static::assertSame(0, $chunks['all_string']->statistics()?->nullCount());
-        static::assertSame(1, $chunks['mixed']->statistics()?->nullCount());
+        static::assertSame(3, $chunks['all_null']->statistics()?->nullCount);
+        static::assertSame(0, $chunks['all_string']->statistics()?->nullCount);
+        static::assertSame(1, $chunks['mixed']->statistics()?->nullCount);
     }
 
     public function test_writing_data_page_v2_statistics(): void
@@ -675,8 +675,8 @@ class WriterTest extends ParquetIntegrationTestCase
             static::assertSame(100, $statistics->max($column));
             static::assertSame(1, $statistics->minValue($column));
             static::assertSame(100, $statistics->maxValue($column));
-            static::assertNull($statistics->distinctCount());
-            static::assertSame(0, $statistics->nullCount());
+            static::assertNull($statistics->distinctCount);
+            static::assertSame(0, $statistics->nullCount);
         }
     }
 
@@ -710,6 +710,33 @@ class WriterTest extends ParquetIntegrationTestCase
             ),
         );
         static::assertFileExists($path);
+    }
+
+    public function test_writer_options_apply_on_open_as_on_write(): void
+    {
+        $options = (new Options())->set(Option::ROW_GROUP_SIZE_BYTES, 1)->set(
+            Option::ROW_GROUP_SIZE_CHECK_INTERVAL,
+            1,
+        )->set(Option::PAGE_SIZE_CHECK_INTERVAL, 1);
+        $schema = Schema::with(FlatColumn::int64('id'));
+        $rows = array_map(static fn(int $id): array => ['id' => $id], range(1, 4));
+        $writer = Writer::php(options: $options);
+        $writer->open($path = TestParquetFile::path($this), $schema);
+        $writer->writeBatch($rows);
+        $writer->close();
+
+        static::assertCount(
+            4,
+            MemoryParquetFile::read(Reader::php(), MemoryParquetFile::written(
+                Writer::php(options: $options),
+                $schema,
+                $rows,
+            ))
+                ->metadata()
+                ->rowGroups()
+                ->all(),
+        );
+        static::assertCount(4, Reader::php()->read($path)->metadata()->rowGroups()->all());
     }
 
     #[DataProvider('engine_provider')]

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\OpenAPI\Specification\DSL;
 
 use Flow\Bridge\OpenAPI\Specification\OpenAPIConverter;
-use Flow\ETL\Schema;
+use Flow\ETL\Values\Schema;
 
 /**
  * Convert Flow Schema to OpenAPI specification format.

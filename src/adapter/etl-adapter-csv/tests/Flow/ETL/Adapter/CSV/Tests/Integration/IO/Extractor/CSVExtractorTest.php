@@ -1,0 +1,1793 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Adapter\CSV\Tests\Integration\IO\Extractor;
+
+use Closure;
+use DateTimeImmutable;
+use Flow\ETL\Adapter\CSV\IO\Extractor\CSVExtractor;
+use Flow\ETL\Adapter\CSV\Tests\Context\CSVFixtureContext;
+use Flow\ETL\Foundation\Exception\InferredSchemaException;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Exception\SchemaDefinitionNotUniqueException;
+use Flow\ETL\Foundation\Exception\SchemaMismatchException;
+use Flow\ETL\Functions\ScalarFunction;
+use Flow\ETL\IO\Extractor\Criteria;
+use Flow\ETL\IO\Extractor\File\FileSplit;
+use Flow\ETL\IO\Extractor\Signal;
+use Flow\ETL\IO\Filesystem\ScalarFunctionFilter;
+use Flow\ETL\Planning\Logical\Stage;
+use Flow\ETL\Tests\Context\ExtractedRows;
+use Flow\ETL\Tests\Context\SplitCoverage;
+use Flow\ETL\Tests\Double\CountingFilesystem;
+use Flow\ETL\Tests\Double\RecordingFilesystem;
+use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Values\Rows;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
+use Flow\Filesystem\Tests\Context\OperatingSystem;
+use Flow\Filesystem\Tests\Double\RejectingFilter;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\DataProviderExternal;
+use PHPUnit\Framework\Attributes\TestWith;
+use RuntimeException;
+
+use function array_filter;
+use function array_keys;
+use function array_map;
+use function array_slice;
+use function array_sum;
+use function array_unique;
+use function array_values;
+use function count;
+use function fclose;
+use function fgetcsv;
+use function Flow\ETL\Adapter\CSV\from_csv;
+use function Flow\ETL\Adapter\CSV\to_csv;
+use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\config_builder;
+use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\from_all;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\infer_schema;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\overwrite;
+use function Flow\ETL\DSL\partition_by;
+use function Flow\ETL\DSL\partition_types;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\schema_metadata;
+use function Flow\ETL\DSL\schema_to_ascii;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\Filesystem\DSL\memory_filesystem;
+use function Flow\Filesystem\DSL\native_local_filesystem;
+use function Flow\Filesystem\DSL\path;
+use function Flow\Filesystem\DSL\path_real;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_html;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_xml;
+use function fopen;
+use function iterator_to_array;
+use function max;
+use function sort;
+use function str_repeat;
+
+final class CSVExtractorTest extends FlowTestCase
+{
+    public function test_an_empty_glob_refuses_to_infer_a_schema(): void
+    {
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'from_csv() has nothing to infer a schema from: no file matching "memory://empty/*.csv" carries a column. '
+            . 'Declare the schema with ->withSchema(...).',
+        );
+
+        from_csv(path('memory://empty/*.csv'), filesystem: memory_filesystem())->schema();
+    }
+
+    public function test_an_empty_glob_with_metadata_columns_refuses_to_infer_a_schema(): void
+    {
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'from_csv() has nothing to infer a schema from: no file matching "memory://empty/*.csv" carries a column. '
+            . 'Declare the schema with ->withSchema(...).',
+        );
+
+        from_csv(path('memory://empty/*.csv'), filesystem: memory_filesystem())->withMetadataColumns(true)->schema();
+    }
+
+    public function test_an_empty_glob_with_a_declared_schema_answers_it_and_extracts_nothing(): void
+    {
+        $extractor = from_csv(
+            path('memory://empty/*.csv'),
+            filesystem: memory_filesystem(),
+        )->withSchema(schema(int_schema('id')));
+
+        static::assertEquals(schema(int_schema('id')), $extractor->schema());
+        static::assertSame(
+            [],
+            iterator_to_array($extractor->extract(flow_context()->backend(), new Criteria()), false),
+        );
+    }
+
+    public function test_a_hive_null_partition_value_reads_back_as_null(): void
+    {
+        $dir = __DIR__ . '/var/test_a_hive_null_partition_value_reads_back_as_null';
+
+        df()
+            ->read(from_array(
+                [['id' => 1, 'year' => null], ['id' => 2, 'year' => '2024']],
+                schema(int_schema('id'), str_schema('year', nullable: true)),
+            ))
+            ->write(to_csv($dir . '/data.csv')->saveMode(overwrite())->partitionBy(partition_by('year')))
+            ->run();
+
+        $years = df()
+            ->read(from_csv($dir . '/*/*.csv')->withSchema(schema(int_schema('id'))))
+            ->fetch()
+            ->column('year')
+            ->values();
+        sort($years);
+
+        static::assertSame([null, '2024'], $years);
+    }
+
+    public function test_declared_partition_types_reach_the_rows(): void
+    {
+        $extractor = from_csv(__DIR__ . '/../../../Fixtures/partitioned/group=*/*.csv')
+            ->withSchema(schema(int_schema('id'), str_schema('value')))
+            ->partitionTypes(partition_types(group: type_integer()));
+
+        foreach ($extractor->extract(flow_context(config())->backend(), new Criteria()) as $rows) {
+            static::assertEquals($extractor->schema(), $rows->schema());
+            static::assertSame(1, $rows->column('group')->value(0));
+
+            return;
+        }
+
+        static::fail('extractor yielded nothing');
+    }
+
+    public function test_partition_columns_are_typed_without_a_declared_schema(): void
+    {
+        $extractor = from_csv(__DIR__ . '/../../../Fixtures/partitioned/group=*/*.csv')->partitionTypes(
+            partition_types(group: type_integer()),
+        );
+
+        foreach ($extractor->extract(flow_context(config())->backend(), new Criteria()) as $rows) {
+            static::assertSame(1, $rows->column('group')->value(0));
+
+            return;
+        }
+
+        static::fail('extractor yielded nothing');
+    }
+
+    public function test_a_source_column_named_input_file_uri_throws_instead_of_being_overwritten(): void
+    {
+        $this->expectException(SchemaDefinitionNotUniqueException::class);
+
+        df()
+            ->read(from_csv(__DIR__ . '/../../../Fixtures/metadata_column_collision.csv', schema: schema(
+                str_schema('_input_file_uri'),
+                str_schema('name'),
+            ))->withMetadataColumns(true))
+            ->fetch();
+    }
+
+    public function test_schema_appends_the_metadata_column(): void
+    {
+        static::assertEquals(
+            schema(str_schema('name'), str_schema('_input_file_uri')),
+            from_csv(
+                __DIR__ . '/../../../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv',
+                schema: schema(str_schema('name')),
+            )
+                ->withMetadataColumns(true)
+                ->schema(),
+        );
+    }
+
+    public function test_characters_read_in_line_must_be_greater_than_zero(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Characters read in line must be greater than 0');
+
+        from_csv(CSVFixtureContext::path('two_rows.csv'))->withCharactersReadInLine(0);
+    }
+
+    public function test_source_is_the_path_it_was_built_with(): void
+    {
+        static::assertSame(
+            path_real(CSVFixtureContext::path('two_rows.csv'))->uri(),
+            from_csv(CSVFixtureContext::path('two_rows.csv'))->source()->uri(),
+        );
+    }
+
+    /**
+     * @param Closure(CSVExtractor): CSVExtractor $setter
+     */
+    #[DataProvider('multiCharacterDialectSetters')]
+    public function test_a_multi_character_dialect_value_is_refused(Closure $setter): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $setter(from_csv(CSVFixtureContext::path('two_rows.csv')));
+    }
+
+    /**
+     * @return Generator<string, array{Closure(CSVExtractor): CSVExtractor}>
+     */
+    public static function multiCharacterDialectSetters(): Generator
+    {
+        yield 'withSeparator' => [static fn(CSVExtractor $e): CSVExtractor => $e->withSeparator('||')];
+        yield 'withEnclosure' => [static fn(CSVExtractor $e): CSVExtractor => $e->withEnclosure('||')];
+        yield 'withEscape' => [static fn(CSVExtractor $e): CSVExtractor => $e->withEscape('ab')];
+    }
+
+    public function test_schema_is_inferred_when_it_was_not_declared(): void
+    {
+        $schema = from_csv(CSVFixtureContext::path(
+            'annual-enterprise-survey-2019-financial-year-provisional-csv.csv',
+        ))->schema();
+
+        static::assertSame('integer', $schema->get('Year')->type()->toString());
+        static::assertSame('string', $schema->get('Industry_code_NZSIOC')->type()->toString());
+        static::assertSame('string', $schema->get('Value')->type()->toString());
+
+        foreach ($schema->definitions() as $definition) {
+            static::assertTrue($definition->isNullable(), $definition->name() . ' must be nullable');
+        }
+    }
+
+    public function test_every_batch_carries_the_inferred_schema(): void
+    {
+        $extractor = from_csv(CSVFixtureContext::path('orders_flow.csv'));
+        $schema = $extractor->schema();
+        $sizes = [];
+
+        foreach ($extractor->withBatchSize(3)->extract(flow_context()->backend(), new Criteria()) as $rows) {
+            static::assertTrue($schema->isSame($rows->schema()));
+            $sizes[] = $rows->count();
+
+            if (count($sizes) === 10) {
+                break;
+            }
+        }
+
+        static::assertLessThanOrEqual(3, max($sizes));
+        static::assertContains(3, $sizes);
+        static::assertSame(30, array_sum($sizes));
+    }
+
+    public function test_a_declared_schema_opens_each_file_once(): void
+    {
+        $counting = new CountingFilesystem(new NativeLocalFilesystem());
+        $extractor = from_csv(CSVFixtureContext::path('two_rows.csv'), filesystem: $counting)->withSchema(schema(
+            int_schema('id'),
+            str_schema('name'),
+        ));
+
+        $extractor->schema();
+        iterator_to_array($extractor->extract(flow_context(config())->backend(), new Criteria()));
+
+        static::assertSame(1, $counting->readFromCalls);
+    }
+
+    public function test_a_serial_read_of_a_glob_lists_the_source_once(): void
+    {
+        $counting = new CountingFilesystem(new NativeLocalFilesystem());
+
+        static::assertCount(
+            8,
+            df()->read(from_csv(CSVFixtureContext::path('partitioned') . '/*/*.csv', filesystem: $counting))->fetch(),
+        );
+        static::assertSame(1, $counting->listCalls);
+    }
+
+    public function test_a_second_run_reads_a_file_added_after_the_first(): void
+    {
+        native_local_filesystem()->rm(path(
+            $dir = __DIR__ . '/var/test_a_second_run_reads_a_file_added_after_the_first',
+        ));
+        df()
+            ->read(from_array([['id' => 1]]))
+            ->write(to_csv($dir . '/a.csv'))
+            ->run();
+        $frame = df()->read(from_csv($dir . '/*.csv'));
+
+        static::assertCount(1, $frame->fetch());
+
+        df()
+            ->read(from_array([['id' => 2]]))
+            ->write(to_csv($dir . '/b.csv'))
+            ->run();
+
+        static::assertCount(2, $frame->fetch());
+    }
+
+    public function test_a_second_run_reads_the_column_of_a_partition_added_after_the_first(): void
+    {
+        native_local_filesystem()->rm(path(
+            $dir = __DIR__ . '/var/test_a_second_run_reads_the_column_of_a_partition_added_after_the_first',
+        ));
+        df()
+            ->read(from_array([['id' => 1]]))
+            ->write(to_csv($dir . '/plain/a.csv'))
+            ->run();
+        $frame = df()->read(from_csv($dir . '/*/*.csv'));
+
+        static::assertSame(['id'], $frame->fetch()->schema()->names());
+
+        df()
+            ->read(from_array([['id' => 2]]))
+            ->write(to_csv($dir . '/year=2025/b.csv'))
+            ->run();
+
+        static::assertSame(['id', 'year'], $frame->fetch()->schema()->names());
+    }
+
+    public function test_a_second_run_reads_a_file_added_behind_a_wrapping_source(): void
+    {
+        native_local_filesystem()->rm(path(
+            $dir = __DIR__ . '/var/test_a_second_run_reads_a_file_added_behind_a_wrapping_source',
+        ));
+        df()
+            ->read(from_array([['id' => 1]]))
+            ->write(to_csv($dir . '/a.csv'))
+            ->run();
+        $frame = df()->read(from_all(from_csv($dir . '/*.csv')));
+
+        static::assertCount(1, $frame->fetch());
+
+        df()
+            ->read(from_array([['id' => 2]]))
+            ->write(to_csv($dir . '/b.csv'))
+            ->run();
+
+        static::assertCount(2, $frame->fetch());
+    }
+
+    public function test_an_inferred_extractor_ships_the_sampled_files_dialect(): void
+    {
+        $source = CSVFixtureContext::source('semicolon.csv');
+        $extractor = from_csv($source->path);
+        $extractor->schema();
+        $counting = new CountingFilesystem(new NativeLocalFilesystem());
+        $counted = from_csv($source->path, filesystem: $counting);
+        $counted->schema();
+        $opened = $counting->readFromCalls;
+        $counted->reader();
+
+        static::assertSame(
+            [$source->uri() => ['separator' => ';', 'enclosure' => '"', 'escape' => '\\']],
+            $extractor->reader()->describe()?->normalize()['data']['batches']['data']['opener']['data']['dialects']
+            ?? null,
+        );
+        static::assertSame($opened, $counting->readFromCalls);
+    }
+
+    public function test_the_inferred_schema_is_memoised_across_schema_and_extract(): void
+    {
+        $counting = new CountingFilesystem(new NativeLocalFilesystem());
+        $extractor = from_csv(CSVFixtureContext::path('two_rows.csv'), filesystem: $counting);
+
+        $extractor->schema();
+        iterator_to_array($extractor->extract(flow_context(config())->backend(), new Criteria()));
+
+        static::assertSame(3, $counting->readFromCalls, 'header() + sample + read');
+        static::assertSame(3, $counting->closedStreams());
+        static::assertSame(1, $counting->listCalls);
+    }
+
+    public function test_an_explain_before_the_run_lists_and_infers_no_second_time(): void
+    {
+        $alone = new CountingFilesystem(new NativeLocalFilesystem());
+        df()->read(from_csv(CSVFixtureContext::path('two_rows.csv'), filesystem: $alone))->fetch();
+        $explained = new CountingFilesystem(new NativeLocalFilesystem());
+        $frame = df()->read(from_csv(CSVFixtureContext::path('two_rows.csv'), filesystem: $explained));
+
+        $frame->explain()->toString(Stage::physical);
+        $frame->fetch();
+
+        static::assertSame($alone->readFromCalls, $explained->readFromCalls);
+        static::assertSame($alone->listCalls, $explained->listCalls);
+    }
+
+    /**
+     * @param Closure(CSVExtractor): void $setter
+     */
+    #[DataProvider('shapeChangingSetters')]
+    public function test_a_shape_changing_setter_drops_the_inferred_schema(Closure $setter): void
+    {
+        $counting = new CountingFilesystem(new NativeLocalFilesystem());
+        $extractor = from_csv(CSVFixtureContext::path('file_with_empty_columns.csv'), filesystem: $counting);
+
+        $extractor->schema();
+        $cold = $counting->readFromCalls;
+
+        $setter($extractor);
+        $extractor->schema();
+
+        static::assertGreaterThan($cold, $counting->readFromCalls);
+    }
+
+    /**
+     * @return Generator<string, array{Closure(CSVExtractor): void}>
+     */
+    public static function shapeChangingSetters(): Generator
+    {
+        yield 'withBOMRemoval' => [static fn(CSVExtractor $e) => $e->withBOMRemoval(false)];
+        yield 'withCharactersReadInLine' => [static fn(CSVExtractor $e) => $e->withCharactersReadInLine(2000)];
+        yield 'withEmptyToNull' => [static fn(CSVExtractor $e) => $e->withEmptyToNull(false)];
+        yield 'withEnclosure' => [static fn(CSVExtractor $e) => $e->withEnclosure("'")];
+        yield 'withEscape' => [static fn(CSVExtractor $e) => $e->withEscape('/')];
+        yield 'withHeader' => [static fn(CSVExtractor $e) => $e->withHeader(false)];
+        yield 'withSeparator' => [static fn(CSVExtractor $e) => $e->withSeparator(';')];
+    }
+
+    public function test_infer_schema_drops_the_inferred_schema_and_all_strings_floors_it(): void
+    {
+        $counting = new CountingFilesystem(new NativeLocalFilesystem());
+        $extractor = from_csv(CSVFixtureContext::path('file_with_empty_columns.csv'), filesystem: $counting);
+
+        $extractor->schema();
+        $cold = $counting->readFromCalls;
+
+        $schema = $extractor->inferSchema(infer_schema()->allStrings())->schema();
+
+        static::assertGreaterThan($cold, $counting->readFromCalls);
+        static::assertSame(['id', 'name', 'active'], array_keys($schema->definitions()));
+
+        foreach ($schema->definitions() as $definition) {
+            static::assertSame('string', $definition->type()->toString());
+            static::assertTrue($definition->isNullable());
+        }
+    }
+
+    public function test_without_header_generates_the_column_names(): void
+    {
+        $schema = from_csv(CSVFixtureContext::path('file_with_empty_columns.csv'))->withHeader(false)->schema();
+
+        static::assertSame(['e00', 'e01', 'e02'], array_keys($schema->definitions()));
+
+        // the header line is data now, so it is type evidence and every column floors to string
+        foreach ($schema->definitions() as $definition) {
+            static::assertSame('string', $definition->type()->toString());
+        }
+    }
+
+    public function test_metadata_and_partition_setters_keep_the_inferred_schema(): void
+    {
+        $counting = new CountingFilesystem(new NativeLocalFilesystem());
+        $extractor = from_csv(CSVFixtureContext::path('metadata_column_collision.csv'), filesystem: $counting);
+
+        $extractor->schema();
+        $cold = $counting->readFromCalls;
+
+        $schema = $extractor->withMetadataColumns(true)->schema();
+
+        static::assertSame($cold, $counting->readFromCalls);
+        static::assertCount(1, array_filter(
+            array_keys($schema->definitions()),
+            static fn($n) => $n === '_input_file_uri',
+        ));
+
+        // Ruling B's mirror arm: turning metadata columns back off must leave the BODY column of that name
+        static::assertArrayHasKey('_input_file_uri', $extractor->withMetadataColumns(false)->schema()->definitions());
+        static::assertSame($cold, $counting->readFromCalls);
+    }
+
+    public function test_partition_types_keep_the_inferred_schema(): void
+    {
+        $counting = new CountingFilesystem(new NativeLocalFilesystem());
+        $extractor = from_csv(CSVFixtureContext::path('partitioned/group=*/*.csv'), filesystem: $counting);
+
+        $extractor->schema();
+        $cold = $counting->readFromCalls;
+
+        static::assertSame(
+            'integer',
+            $extractor
+                ->partitionTypes(partition_types(group: type_integer()))
+                ->schema()
+                ->get('group')
+                ->type()
+                ->toString(),
+        );
+        static::assertSame($cold, $counting->readFromCalls);
+    }
+
+    public function test_sample_size_bounds_the_inferred_schema(): void
+    {
+        $path = CSVFixtureContext::path('annual-enterprise-survey-2019-financial-year-provisional-csv.csv');
+
+        static::assertSame(
+            'integer',
+            from_csv($path)
+                ->inferSchema(infer_schema()->sampleSize(10))
+                ->schema()
+                ->get('Industry_code_NZSIOC')
+                ->type()
+                ->toString(),
+        );
+        static::assertSame('string', from_csv($path)->schema()->get('Industry_code_NZSIOC')->type()->toString());
+    }
+
+    public function test_a_value_past_the_sample_is_reported(): void
+    {
+        $this->expectException(SchemaMismatchException::class);
+
+        iterator_to_array(
+            from_csv(CSVFixtureContext::path('annual-enterprise-survey-2019-financial-year-provisional-csv.csv'))
+                ->inferSchema(infer_schema()->sampleSize(10))
+                ->extract(flow_context(config())->backend(), new Criteria()),
+        );
+    }
+
+    public function test_files_to_sniff_bounds_the_sources_opened(): void
+    {
+        $counting = new CountingFilesystem(new NativeLocalFilesystem());
+
+        from_csv(CSVFixtureContext::path('partitioned/group=*/*.csv'), filesystem: $counting)
+            ->inferSchema(infer_schema()->filesToSniff(1))
+            ->schema();
+
+        static::assertSame(2, $counting->readFromCalls, 'header() + the single sniffed source');
+    }
+
+    public function test_columns_that_diverge_from_the_inferred_schema_are_rejected(): void
+    {
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessageMatches('/unexpected \[label\].+missing \[name\]/');
+
+        iterator_to_array(
+            from_csv(CSVFixtureContext::path('columns_diverge/*.csv'))
+                ->inferSchema(infer_schema()->filesToSniff(1))
+                ->extract(flow_context(config())->backend(), new Criteria()),
+        );
+    }
+
+    /**
+     * unionByName() disables the column-set check entirely (08c's two-resolver split), so a glob whose files
+     * carry different columns reads as one wider schema instead of throwing.
+     */
+    public function test_union_by_name_reads_diverging_columns_as_one_wider_schema(): void
+    {
+        $extractor = from_csv(CSVFixtureContext::path('columns_diverge/*.csv'))
+            ->inferSchema(infer_schema()->unionByName());
+
+        static::assertSame(['id', 'name', 'label'], array_keys($extractor->schema()->definitions()));
+
+        $rows = [];
+
+        foreach ($extractor->extract(flow_context(config())->backend(), new Criteria()) as $batch) {
+            foreach ($batch->toArray() as $row) {
+                $rows[] = $row;
+            }
+        }
+
+        static::assertSame(
+            [
+                ['id' => 1, 'name' => 'a', 'label' => null],
+                ['id' => 2, 'name' => 'b', 'label' => null],
+                ['id' => 3, 'name' => null, 'label' => 'c'],
+            ],
+            $rows,
+        );
+    }
+
+    public function test_the_divergence_message_names_both_sources(): void
+    {
+        try {
+            iterator_to_array(
+                from_csv(CSVFixtureContext::path('columns_diverge/*.csv'))
+                    ->inferSchema(infer_schema()->filesToSniff(1))
+                    ->extract(flow_context(config())->backend(), new Criteria()),
+            );
+            static::fail('a divergent column set must throw');
+        } catch (InferredSchemaException $e) {
+            static::assertStringContainsString('b.csv', $e->getMessage());
+            static::assertStringContainsString('a.csv', $e->getMessage());
+            static::assertStringContainsString('20480 rows', $e->getMessage());
+            static::assertStringContainsString('1 sources', $e->getMessage());
+        }
+    }
+
+    public function test_divergence_is_reported_before_a_refused_cell(): void
+    {
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessageMatches('/unexpected \[label\]/');
+
+        iterator_to_array(
+            from_csv(CSVFixtureContext::path('columns_diverge_refused/*.csv'))
+                ->inferSchema(infer_schema()->filesToSniff(1))
+                ->extract(flow_context(config())->backend(), new Criteria()),
+        );
+    }
+
+    public function test_a_header_only_file_with_a_divergent_header_is_rejected(): void
+    {
+        try {
+            iterator_to_array(
+                from_csv(CSVFixtureContext::path('columns_diverge_header_only/*.csv'))
+                    ->inferSchema(infer_schema()->filesToSniff(1))
+                    ->extract(flow_context(config())->backend(), new Criteria()),
+            );
+            static::fail('a divergent header-only source must throw');
+        } catch (InferredSchemaException $e) {
+            static::assertMatchesRegularExpression('/unexpected \[label\].+missing \[name\]/', $e->getMessage());
+            // the zero-row arm is the SECOND columnsDiverge() call site - it pins its source label too
+            static::assertStringContainsString('b.csv', $e->getMessage());
+            static::assertStringContainsString('a.csv', $e->getMessage());
+        }
+    }
+
+    public function test_a_header_only_file_infers_every_column_as_string(): void
+    {
+        $extractor = from_csv(CSVFixtureContext::path('header_only.csv'));
+
+        static::assertSame('string', $extractor->schema()->get('id')->type()->toString());
+        static::assertSame('string', $extractor->schema()->get('name')->type()->toString());
+        static::assertSame(
+            [],
+            iterator_to_array($extractor->extract(flow_context(config())->backend(), new Criteria())),
+        );
+    }
+
+    public function test_an_empty_file_refuses_to_infer_a_schema_and_extracts_nothing(): void
+    {
+        $extractor = from_csv(CSVFixtureContext::path('empty.csv'));
+
+        static::assertSame(
+            [],
+            iterator_to_array($extractor->extract(flow_context(config())->backend(), new Criteria())),
+        );
+
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'from_csv() has nothing to infer a schema from: no file matching "'
+            . path_real(CSVFixtureContext::path('empty.csv'))->uri()
+            . '" carries a column. Declare the schema with ->withSchema(...).',
+        );
+
+        $extractor->schema();
+    }
+
+    public function test_a_glob_of_only_empty_files_refuses_to_infer_a_schema(): void
+    {
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessage(
+            'from_csv() has nothing to infer a schema from: no file matching "'
+            . path_real(CSVFixtureContext::path('two_empty/*.csv'))->uri()
+            . '" carries a column. Declare the schema with ->withSchema(...).',
+        );
+
+        from_csv(CSVFixtureContext::path('two_empty/*.csv'))->schema();
+    }
+
+    public function test_an_empty_file_in_a_glob_is_skipped(): void
+    {
+        $extractor = from_csv(CSVFixtureContext::path('glob_with_empty/*.csv'));
+
+        static::assertSame('integer', $extractor->schema()->get('id')->type()->toString());
+        static::assertSame('string', $extractor->schema()->get('name')->type()->toString());
+        self::assertExtractedRowsCount(1, $extractor, flow_context(config()));
+    }
+
+    #[TestWith(['empty_then_header_only'])]
+    #[TestWith(['header_only_then_empty'])]
+    public function test_a_glob_of_an_empty_and_a_header_only_file_infers_the_header_columns(string $dir): void
+    {
+        $extractor = from_csv(CSVFixtureContext::path($dir . '/*.csv'));
+
+        static::assertSame(['id', 'name'], array_keys($extractor->schema()->definitions()));
+        static::assertSame(
+            [],
+            iterator_to_array($extractor->extract(flow_context(config())->backend(), new Criteria())),
+        );
+    }
+
+    public function test_empty_cells_are_not_type_evidence(): void
+    {
+        $schema = from_csv(CSVFixtureContext::path('file_with_empty_columns.csv'))->schema();
+
+        static::assertSame('integer', $schema->get('id')->type()->toString());
+        static::assertSame('string', $schema->get('name')->type()->toString());
+        static::assertSame('boolean', $schema->get('active')->type()->toString());
+    }
+
+    public function test_without_empty_to_null_empty_cells_are_string_evidence(): void
+    {
+        $schema = from_csv(CSVFixtureContext::path('file_with_empty_columns.csv'))->withEmptyToNull(false)->schema();
+
+        static::assertSame(['id', 'name', 'active'], array_keys($schema->definitions()));
+        static::assertSame('string', $schema->get('id')->type()->toString());
+        static::assertSame('string', $schema->get('name')->type()->toString());
+        // the last line has no `active` cell at all: an absent cell is null, not '' evidence
+        static::assertSame('boolean', $schema->get('active')->type()->toString());
+    }
+
+    public function test_partition_columns_are_not_typed_by_the_sample(): void
+    {
+        $extractor = from_csv(CSVFixtureContext::path('partitioned/group=*/*.csv'));
+
+        static::assertSame('string', $extractor->schema()->get('group')->type()->toString());
+
+        foreach ($extractor->extract(flow_context(config())->backend(), new Criteria()) as $rows) {
+            static::assertSame('1', $rows->toArray()[0]['group']);
+
+            break;
+        }
+    }
+
+    #[TestWith(['limit'])]
+    #[TestWith(['stop'])]
+    #[TestWith(['hydrator-throws'])]
+    public function test_a_stream_is_closed_when_the_read_stops_early(string $mode): void
+    {
+        $counting = new CountingFilesystem(new NativeLocalFilesystem());
+
+        if ($mode === 'hydrator-throws') {
+            $extractor = from_csv(
+                CSVFixtureContext::path('annual-enterprise-survey-2019-financial-year-provisional-csv.csv'),
+                filesystem: $counting,
+            )->inferSchema(infer_schema()->sampleSize(10));
+
+            try {
+                iterator_to_array($extractor->extract(flow_context(config())->backend(), new Criteria()));
+                static::fail('a value past the sample must stop the read');
+            } catch (SchemaMismatchException) {
+            }
+        } else {
+            $extractor = from_csv(CSVFixtureContext::path('orders_flow.csv'), filesystem: $counting);
+
+            if ($mode === 'limit') {
+                iterator_to_array($extractor->extract(flow_context(config())->backend(), new Criteria(limit: 2)));
+            } else {
+                $rows = $extractor->extract(flow_context(config())->backend(), new Criteria());
+                $rows->current();
+                $rows->send(Signal::STOP);
+            }
+        }
+
+        static::assertGreaterThan(0, $counting->readFromCalls);
+        static::assertSame($counting->readFromCalls, $counting->closedStreams());
+    }
+
+    public function test_schema_is_the_declared_one(): void
+    {
+        static::assertEquals(
+            schema(str_schema('name')),
+            from_csv(
+                __DIR__ . '/../../../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv',
+                schema: schema(str_schema('name')),
+            )->schema(),
+        );
+    }
+
+    /**
+     * Pins the half that is NOT closed: with no declared schema there is no Schema::add() to
+     * refuse, and the row-value write still clobbers the source column. The value-write sites are
+     * deliberately untouched in this phase.
+     */
+    public function test_without_a_declared_schema_the_metadata_column_still_overwrites_silently(): void
+    {
+        static::assertStringEndsWith(
+            'metadata_column_collision.csv',
+            type_string()->assert(
+                df()
+                    ->read(from_csv(__DIR__ . '/../../../Fixtures/metadata_column_collision.csv')->withMetadataColumns(
+                        true,
+                    ))
+                    ->fetch()
+                    ->column('_input_file_uri')
+                    ->value(0),
+            ),
+        );
+    }
+
+    public function test_bom_removal_utf16_be(): void
+    {
+        $extractor = from_csv($path = path_real(__DIR__ . '/../../../Fixtures/with_utf16be_bom.csv'))
+            ->withMetadataColumns(true);
+        static::assertTrue($this->ensureBOMExists(__DIR__ . '/../../../Fixtures/with_utf16be_bom.csv', "\xFE\xFF"));
+
+        static::assertSame(
+            [
+                [
+                    [
+                        'id' => 2,
+                        'name' => 'asd',
+                        'reference' => 144,
+                        '_input_file_uri' => $path->uri(),
+                    ],
+                ],
+            ],
+            array_map(
+                static fn(Rows $r) => $r->toArray(),
+                iterator_to_array($extractor->extract(
+                    flow_context(config_builder()->build())->backend(),
+                    new Criteria(),
+                )),
+            ),
+        );
+    }
+
+    public function test_bom_removal_utf16_le(): void
+    {
+        $extractor = from_csv($path = path_real(__DIR__ . '/../../../Fixtures/with_utf16le_bom.csv'))
+            ->withMetadataColumns(true);
+        static::assertTrue($this->ensureBOMExists(__DIR__ . '/../../../Fixtures/with_utf16le_bom.csv', "\xFF\xFE"));
+
+        static::assertSame(
+            [
+                [
+                    [
+                        'id' => 2,
+                        'name' => 'asd',
+                        'reference' => 144,
+                        '_input_file_uri' => $path->uri(),
+                    ],
+                ],
+            ],
+            array_map(
+                static fn(Rows $r) => $r->toArray(),
+                iterator_to_array($extractor->extract(
+                    flow_context(config_builder()->build())->backend(),
+                    new Criteria(),
+                )),
+            ),
+        );
+    }
+
+    public function test_bom_removal_utf32_be(): void
+    {
+        $extractor = from_csv($path = path_real(__DIR__ . '/../../../Fixtures/with_utf32be_bom.csv'))
+            ->withMetadataColumns(true);
+
+        static::assertTrue($this->ensureBOMExists(
+            __DIR__ . '/../../../Fixtures/with_utf32be_bom.csv',
+            "\x00\x00\xFE\xFF",
+        ));
+
+        static::assertSame(
+            [
+                [
+                    [
+                        'id' => 2,
+                        'name' => 'asd',
+                        'reference' => 144,
+                        '_input_file_uri' => $path->uri(),
+                    ],
+                ],
+            ],
+            array_map(
+                static fn(Rows $r) => $r->toArray(),
+                iterator_to_array($extractor->extract(
+                    flow_context(config_builder()->build())->backend(),
+                    new Criteria(),
+                )),
+            ),
+        );
+    }
+
+    public function test_bom_removal_utf32_le(): void
+    {
+        $extractor = from_csv($path = path_real(__DIR__ . '/../../../Fixtures/with_utf32le_bom.csv'))
+            ->withMetadataColumns(true);
+
+        static::assertTrue($this->ensureBOMExists(
+            __DIR__ . '/../../../Fixtures/with_utf32le_bom.csv',
+            "\xFF\xFE\x00\x00",
+        ));
+
+        static::assertSame(
+            [
+                [
+                    [
+                        'id' => 2,
+                        'name' => 'asd',
+                        'reference' => 144,
+                        '_input_file_uri' => $path->uri(),
+                    ],
+                ],
+            ],
+            array_map(
+                static fn(Rows $r) => $r->toArray(),
+                iterator_to_array($extractor->extract(
+                    flow_context(config_builder()->build())->backend(),
+                    new Criteria(),
+                )),
+            ),
+        );
+    }
+
+    public function test_bom_removal_utf8(): void
+    {
+        $extractor = from_csv($path = path_real(__DIR__ . '/../../../Fixtures/with_utf8_bom.csv'))
+            ->withMetadataColumns(true);
+
+        static::assertTrue($this->ensureBOMExists(__DIR__ . '/../../../Fixtures/with_utf8_bom.csv', "\xEF\xBB\xBF"));
+
+        static::assertSame(
+            [
+                [
+                    [
+                        'id' => 2,
+                        'name' => 'asd',
+                        'reference' => 144,
+                        '_input_file_uri' => $path->uri(),
+                    ],
+                ],
+            ],
+            array_map(
+                static fn(Rows $r) => $r->toArray(),
+                iterator_to_array($extractor->extract(
+                    flow_context(config_builder()->build())->backend(),
+                    new Criteria(),
+                )),
+            ),
+        );
+    }
+
+    public function test_extract_does_not_mutate_metadata_of_user_provided_schema(): void
+    {
+        $schema = schema(int_schema('id', metadata: schema_metadata(['primary_key' => true])), str_schema('value'));
+
+        $before = $schema->normalize();
+
+        $extractor = from_csv(
+            __DIR__ . '/../../../Fixtures/cross_stream/*/data.csv',
+            schema: $schema,
+        )->withMetadataColumns(true);
+
+        df(config_builder())->read($extractor)->run();
+        df(config_builder())->read($extractor)->run();
+
+        static::assertSame($before, $schema->normalize());
+    }
+
+    public function test_extract_does_not_mutate_user_provided_schema(): void
+    {
+        $schema = schema(int_schema('id'), str_schema('value'));
+
+        $extractor = from_csv(
+            __DIR__ . '/../../../Fixtures/cross_stream/*/data.csv',
+            schema: $schema,
+        )->withMetadataColumns(true);
+
+        df(config_builder())->read($extractor)->run();
+        df(config_builder())->read($extractor)->run();
+
+        static::assertNull($schema->findDefinition('date'));
+        static::assertNull($schema->findDefinition('_input_file_uri'));
+    }
+
+    public function test_extracting_csv_empty_columns_as_empty_strings(): void
+    {
+        $extractor = from_csv(
+            $path = path_real(__DIR__ . '/../../../Fixtures/file_with_empty_columns.csv'),
+            empty_to_null: false,
+        )->withMetadataColumns(true);
+
+        static::assertSame(
+            [
+                [
+                    'id' => '',
+                    'name' => '',
+                    'active' => false,
+                    '_input_file_uri' => $path->uri(),
+                ],
+                [
+                    'id' => '1',
+                    'name' => 'Norbert',
+                    'active' => null,
+                    '_input_file_uri' => $path->uri(),
+                ],
+            ],
+            ExtractedRows::of($extractor, flow_context(config_builder()->build()))->toArray(),
+        );
+    }
+
+    public function test_extracting_csv_empty_columns_as_null(): void
+    {
+        static::assertSame(
+            [
+                [
+                    'id' => null,
+                    'name' => null,
+                    'active' => false,
+                ],
+                [
+                    'id' => 1,
+                    'name' => 'Norbert',
+                    'active' => null,
+                ],
+            ],
+            ExtractedRows::of(
+                from_csv(__DIR__ . '/../../../Fixtures/file_with_empty_columns.csv'),
+                flow_context(config()),
+            )->toArray(),
+        );
+    }
+
+    public function test_extracting_csv_empty_headers(): void
+    {
+        static::assertSame(
+            [
+                ['e00' => null, 'name' => null, 'active' => false],
+                ['e00' => 1, 'name' => 'Norbert', 'active' => null],
+            ],
+            ExtractedRows::of(
+                from_csv(__DIR__ . '/../../../Fixtures/file_with_empty_headers.csv'),
+                flow_context(config()),
+            )->toArray(),
+        );
+    }
+
+    public function test_extracting_csv_files_with_header(): void
+    {
+        $rows = df()
+            ->read(from_csv(__DIR__
+            . '/../../../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv'))
+            ->fetch();
+
+        foreach ($rows->toArray() as $row) {
+            static::assertSame(
+                [
+                    'Year',
+                    'Industry_aggregation_NZSIOC',
+                    'Industry_code_NZSIOC',
+                    'Industry_name_NZSIOC',
+                    'Units',
+                    'Variable_code',
+                    'Variable_name',
+                    'Variable_category',
+                    'Value',
+                    'Industry_code_ANZSIC06',
+                ],
+                array_keys($row),
+            );
+        }
+
+        static::assertSame(998, $rows->count());
+    }
+
+    public function test_extracting_csv_files_with_schema(): void
+    {
+        $path = __DIR__ . '/../../../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv';
+
+        $rows = df()->read(from_csv($path, schema: $schema = df()->read(from_csv($path))->schema()))->fetch();
+
+        foreach ($rows->toArray() as $row) {
+            static::assertSame(
+                [
+                    'Year',
+                    'Industry_aggregation_NZSIOC',
+                    'Industry_code_NZSIOC',
+                    'Industry_name_NZSIOC',
+                    'Units',
+                    'Variable_code',
+                    'Variable_name',
+                    'Variable_category',
+                    'Value',
+                    'Industry_code_ANZSIC06',
+                ],
+                array_keys($row),
+            );
+        }
+
+        static::assertSame(998, $rows->count());
+        static::assertEquals($schema, $rows->schema());
+
+        static::assertSame(<<<'SCHEMA'
+            schema
+            |-- Year: ?integer
+            |-- Industry_aggregation_NZSIOC: ?string
+            |-- Industry_code_NZSIOC: ?string
+            |-- Industry_name_NZSIOC: ?string
+            |-- Units: ?string
+            |-- Variable_code: ?string
+            |-- Variable_name: ?string
+            |-- Variable_category: ?string
+            |-- Value: ?string
+            |-- Industry_code_ANZSIC06: ?string
+
+            SCHEMA, schema_to_ascii($rows->schema()));
+    }
+
+    public function test_extracting_csv_files_without_header(): void
+    {
+        $extractor = from_csv(
+            __DIR__ . '/../../../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv',
+            false,
+        );
+
+        $total = 0;
+
+        foreach ($extractor->extract(flow_context(config())->backend(), new Criteria()) as $rows) {
+            foreach ($rows->toArray() as $row) {
+                static::assertSame(
+                    ['e00', 'e01', 'e02', 'e03', 'e04', 'e05', 'e06', 'e07', 'e08', 'e09'],
+                    array_keys($row),
+                );
+            }
+            $total += $rows->count();
+        }
+
+        static::assertSame(999, $total);
+    }
+
+    public function test_extracting_csv_with_corrupted_row(): void
+    {
+        static::assertSame(
+            3,
+            df()
+                ->read(from_csv(__DIR__ . '/../../../Fixtures/corrupted_row.csv'))
+                ->fetch()
+                ->count(),
+        );
+    }
+
+    public function test_extracting_csv_with_more_columns_than_headers(): void
+    {
+        $extractor = from_csv(__DIR__ . '/../../../Fixtures/more_columns_than_headers.csv');
+
+        $total = 0;
+
+        foreach ($extractor->extract(flow_context(config())->backend(), new Criteria()) as $rows) {
+            foreach ($rows->toArray() as $row) {
+                static::assertSame(['id', 'name'], array_keys($row));
+            }
+            $total += $rows->count();
+        }
+
+        static::assertSame(1, $total);
+    }
+
+    public function test_extracting_csv_with_more_headers_than_columns(): void
+    {
+        $extractor = from_csv(path_real(__DIR__ . '/../../../Fixtures/more_headers_than_columns.csv'));
+
+        $total = 0;
+
+        foreach ($extractor->extract(flow_context(config())->backend(), new Criteria()) as $rows) {
+            foreach ($rows->toArray() as $row) {
+                static::assertSame(['id', 'name', 'active'], array_keys($row));
+            }
+            $total += $rows->count();
+        }
+
+        static::assertSame(1, $total);
+    }
+
+    public function test_extracting_csv_with_more_than_1000_characters_per_line_reads_one_row(): void
+    {
+        static::assertCount(
+            1,
+            df()
+                ->read(from_csv(__DIR__ . '/../../../Fixtures/more_than_1000_characters_per_line.csv'))
+                ->fetch()
+                ->toArray(),
+            'Long line was read as one row.',
+        );
+    }
+
+    public function test_characters_read_in_line_shorter_than_the_line_does_not_split_it(): void
+    {
+        static::assertCount(
+            1,
+            df()
+                ->read(from_csv(__DIR__
+                . '/../../../Fixtures/more_than_1000_characters_per_line.csv')->withCharactersReadInLine(100))
+                ->fetch()
+                ->toArray(),
+            'Long line was read as one row.',
+        );
+    }
+
+    public function test_extracting_csv_with_multiline_strings(): void
+    {
+        if (OperatingSystem::isWindows()) {
+            static::markTestSkipped('This test is failing on windows due to different new line characters.');
+        }
+
+        $rows = df()->read(from_csv(__DIR__ . '/../../../Fixtures/multiline_strings.csv'))->fetch();
+
+        static::assertSame(1, $rows->count());
+
+        static::assertSame('ABBA', $rows->column('artist')->value(0));
+        static::assertSame("Ahe's My Kind Of Girl", $rows->column('song')->value(0));
+        static::assertSame('/a/abba/ahes+my+kind+of+girl_20598417.html', $rows->column('link')->value(0));
+
+        static::assertSame(
+            "Look at her face, it's a wonderful face  \nAnd it means something special to me  \nLook at the way that she smiles when she sees me  \nHow lucky can one fellow be?  \n  \nShe's just my kind of girl, she makes me feel fine  \nWho could ever believe that she could be mine?  \nShe's just my kind of girl, without her I'm blue  \nAnd if she ever leaves me what could I do, what could I do?  \n  \nAnd when we go for a walk in the park  \nAnd she holds me and squeezes my hand  \nWe'll go on walking for hours and talking  \nAbout all the things that we plan  \n  \nShe's just my kind of girl, she makes me feel fine  \nWho could ever believe that she could be mine?  \nShe's just my kind of girl, without her I'm blue  \nAnd if she ever leaves me what could I do, what could I do?\n\n",
+            $rows->column('text')->value(0),
+        );
+    }
+
+    public function test_limit(): void
+    {
+        $extractor = from_csv(path_real(__DIR__ . '/../../../Fixtures/orders_flow.csv'));
+        $extractor->withBatchSize(1);
+
+        self::assertExtractedRowsCount(2, $extractor, flow_context(config()), criteria: new Criteria(2));
+    }
+
+    /**
+     * p3's divergence: the fixture's own header is `group,id,value`, so before D4 extract() emitted
+     * `group` first while schema() never mentioned it at all. Both now emit the partition block last.
+     */
+    public function test_schema_and_extract_agree_on_partition_columns(): void
+    {
+        $extractor = from_csv(__DIR__ . '/../../../Fixtures/partitioned/group=*/*.csv')->withSchema(schema(
+            int_schema('group'),
+            int_schema('id'),
+            str_schema('value'),
+        ));
+
+        static::assertSame(['id', 'value', 'group'], $extractor->schema()->names());
+
+        foreach ($extractor->extract(flow_context(config_builder()->build())->backend(), new Criteria()) as $rows) {
+            static::assertEquals($extractor->schema(), $rows->schema());
+        }
+    }
+
+    public function test_schema_lists_the_path_once_per_instance(): void
+    {
+        $extractor = from_csv(__DIR__ . '/../../../Fixtures/partitioned/group=*/*.csv')->withSchema(schema(
+            int_schema('id'),
+            str_schema('value'),
+        ));
+
+        static::assertEquals($extractor->schema(), $extractor->schema());
+        static::assertSame(['id', 'value', 'group'], $extractor->schema()->names());
+    }
+
+    public function test_loading_data_from_all_partitions(): void
+    {
+        static::assertSame(
+            [
+                ['id' => 1, 'value' => 'a', 'group' => '1'],
+                ['id' => 2, 'value' => 'b', 'group' => '1'],
+                ['id' => 3, 'value' => 'c', 'group' => '1'],
+                ['id' => 4, 'value' => 'd', 'group' => '1'],
+                ['id' => 5, 'value' => 'e', 'group' => '2'],
+                ['id' => 6, 'value' => 'f', 'group' => '2'],
+                ['id' => 7, 'value' => 'g', 'group' => '2'],
+                ['id' => 8, 'value' => 'h', 'group' => '2'],
+            ],
+            df()
+                ->read(from_csv(__DIR__ . '/../../../Fixtures/partitioned/group=*/*.csv'))
+                ->withColumn('id', ref('id')->cast('int'))
+                ->sortBy([ref('id')])
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    public function test_partition_columns_are_not_leaking_between_streams(): void
+    {
+        static::assertSame(
+            [
+                ['id' => 1, 'value' => 'a', 'date' => '2026-01-01'],
+                ['id' => 2, 'value' => 'b', 'date' => null],
+            ],
+            df()
+                ->read(from_csv(__DIR__ . '/../../../Fixtures/cross_stream/*/data.csv', schema: schema(
+                    int_schema('id'),
+                    str_schema('value'),
+                )))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    public function test_signal_stop(): void
+    {
+        $generator = from_csv(path_real(__DIR__ . '/../../../Fixtures/orders_flow.csv'))
+            ->extract(flow_context(config())->backend(), new Criteria());
+
+        static::assertTrue($generator->valid());
+        $generator->next();
+        static::assertTrue($generator->valid());
+        $generator->next();
+        static::assertTrue($generator->valid());
+        $generator->send(Signal::STOP);
+        static::assertFalse($generator->valid());
+    }
+
+    public function test_without_bom_removal_utf8(): void
+    {
+        $extractor = from_csv($path = path_real(__DIR__ . '/../../../Fixtures/with_utf8_bom.csv'))
+            ->withMetadataColumns(true);
+
+        $extractor = $extractor->withBOMRemoval(false);
+
+        static::assertTrue($this->ensureBOMExists(__DIR__ . '/../../../Fixtures/with_utf8_bom.csv', "\xEF\xBB\xBF"));
+
+        static::assertSame(
+            [
+                [
+                    [
+                        "\xEF\xBB\xBFid" => 2,
+                        'name' => 'asd',
+                        'reference' => 144,
+                        '_input_file_uri' => $path->uri(),
+                    ],
+                ],
+            ],
+            array_map(
+                static fn(Rows $r) => $r->toArray(),
+                iterator_to_array($extractor->extract(
+                    flow_context(config_builder()->build())->backend(),
+                    new Criteria(),
+                )),
+            ),
+        );
+    }
+
+    public function test_is_repeatable(): void
+    {
+        static::assertTrue(from_csv(CSVFixtureContext::path('two_rows.csv'))->isRepeatable());
+    }
+
+    private function ensureBOMExists(string $path, string $BOM): bool
+    {
+        $handle = fopen($path, 'rb');
+
+        if ($handle === false) {
+            throw new RuntimeException('Failed to open file: ' . $path);
+        }
+
+        $bomLength = strlen($BOM);
+
+        if ($bomLength === 0) {
+            fclose($handle);
+
+            return true;
+        }
+
+        $contents = fread($handle, $bomLength);
+        fclose($handle);
+
+        return $contents === $BOM;
+    }
+
+    public function test_an_escaped_quote_does_not_glue_the_following_record(): void
+    {
+        static::assertSame(
+            [['a' => 'x\"y', 'b' => 1], ['a' => 'p', 'b' => 2]],
+            df()
+                ->read(from_csv(CSVFixtureContext::path('escaped_quote_then_row.csv')))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    public function test_a_bare_quote_in_an_unenclosed_field_does_not_glue_the_following_record(): void
+    {
+        static::assertSame(
+            [['a' => 'x"y', 'b' => 1], ['a' => 'p', 'b' => 2]],
+            df()
+                ->read(from_csv(CSVFixtureContext::path('bare_quote_then_row.csv')))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    public function test_an_escaped_quote_next_to_an_embedded_newline_keeps_one_record(): void
+    {
+        static::assertSame(
+            [['a' => "x\\\"y\nz", 'b' => 1], ['a' => 'p', 'b' => 2]],
+            df()
+                ->read(from_csv(CSVFixtureContext::path('escaped_quote_with_newline.csv')))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    public function test_an_escaped_quote_next_to_an_embedded_separator_keeps_one_record(): void
+    {
+        static::assertSame(
+            [['a' => 'x\"y,z', 'b' => 1], ['a' => 'p', 'b' => 2]],
+            df()
+                ->read(from_csv(CSVFixtureContext::path('escaped_quote_with_separator.csv')))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    public function test_an_escaped_quote_read_without_an_escape_character_closes_the_field(): void
+    {
+        static::assertSame(
+            [['a' => 'x\y"', 'b' => 1], ['a' => 'p', 'b' => 2]],
+            df()
+                ->read(from_csv(CSVFixtureContext::path('escaped_quote_no_escape_char.csv'))->withEscape(''))
+                ->fetch()
+                ->toArray(),
+        );
+    }
+
+    #[DataProviderExternal(CSVFixtureContext::class, 'fixtures')]
+    public function test_record_counts_match_fgetcsv_for_every_fixture(string $fixture): void
+    {
+        $path = CSVFixtureContext::path($fixture);
+        $stream = native_local_filesystem()->readFrom(path_real($path));
+        $dialect = CSVFixtureContext::dialect($stream);
+        $stream->close();
+
+        $handle = fopen($path, 'rb');
+        $records = 0;
+
+        while (fgetcsv($handle, 0, $dialect->separator, $dialect->enclosure, $dialect->escape) !== false) {
+            $records++;
+        }
+
+        fclose($handle);
+
+        self::assertExtractedRowsCount(
+            max(0, $records - 1),
+            from_csv($path)
+                ->withSeparator($dialect->separator)
+                ->withEnclosure($dialect->enclosure)
+                ->withEscape($dialect->escape),
+        );
+    }
+
+    #[DataProviderExternal(CSVFixtureContext::class, 'fixtures')]
+    public function test_native_and_php_inference_agree_on_every_fixture(string $fixture): void
+    {
+        static::assertEquals(
+            CSVFixtureContext::inferPhp(infer_schema()->build(), $fixture),
+            CSVFixtureContext::infer(infer_schema()->build(), $fixture),
+        );
+    }
+
+    public function test_sample_size_minus_one_agrees_on_both_paths(): void
+    {
+        $inference = infer_schema()->sampleSize(-1)->build();
+
+        static::assertEquals(
+            CSVFixtureContext::inferPhp($inference, 'orders_flow.csv'),
+            CSVFixtureContext::infer($inference, 'orders_flow.csv'),
+        );
+    }
+
+    public function test_union_by_name_over_a_glob_agrees_on_both_paths(): void
+    {
+        $inference = infer_schema()->unionByName()->build();
+
+        static::assertEquals(
+            CSVFixtureContext::inferPhp($inference, 'columns_diverge/a.csv', 'columns_diverge/b.csv'),
+            CSVFixtureContext::infer($inference, 'columns_diverge/a.csv', 'columns_diverge/b.csv'),
+        );
+    }
+
+    public function test_a_restricted_candidate_set_agrees_on_both_paths(): void
+    {
+        $inference = infer_schema()->types(type_integer(), type_boolean())->build();
+
+        static::assertEquals(
+            CSVFixtureContext::inferPhp($inference, 'orders_flow.csv'),
+            CSVFixtureContext::infer($inference, 'orders_flow.csv'),
+        );
+    }
+
+    public function test_html_or_xml_candidates_fall_back_to_the_php_path(): void
+    {
+        $inference = infer_schema()->types(type_html(), type_xml(), type_integer())->build();
+
+        static::assertEquals(
+            CSVFixtureContext::inferPhp($inference, 'orders_flow.csv'),
+            CSVFixtureContext::infer($inference, 'orders_flow.csv'),
+        );
+    }
+
+    public function test_one_extractor_read_twice_interleaved_gives_each_read_every_row_and_closes_every_stream(): void
+    {
+        $filesystem = new RecordingFilesystem(native_local_filesystem());
+        [$first, $second] = ExtractedRows::interleaved((new CSVExtractor(
+            path_real(__DIR__ . '/../../../Fixtures/glob_with_empty/*.csv'),
+            $filesystem,
+        ))->withBatchSize(7));
+
+        static::assertGreaterThan(0, $first->count());
+        static::assertSame($first->toArray(), $second->toArray());
+        static::assertSame(
+            count(array_keys($filesystem->calls, 'readFrom', true)),
+            count(array_keys($filesystem->calls, 'closeSource', true)),
+        );
+    }
+
+    public function test_partition_schema_is_the_partition_block_of_the_read_schema(): void
+    {
+        $memory = memory_filesystem();
+
+        df()
+            ->read(from_array(
+                [
+                    ['date' => new DateTimeImmutable('2026-10-01 00:00:00 UTC'), 'text' => 'a'],
+                    ['date' => new DateTimeImmutable('2026-10-02 00:00:00 UTC'), 'text' => 'b'],
+                ],
+                schema(datetime_schema('date'), str_schema('text')),
+            ))
+            ->write(
+                to_csv(path('memory://var/csv/file.csv'), filesystem: $memory)->partitionBy(
+                    partition_by('date')->writeColumns(),
+                ),
+            )
+            ->run();
+
+        $extractor = from_csv(path('memory://var/csv/**/*.csv'), filesystem: $memory);
+
+        static::assertEquals($extractor->schema()->keep('date'), $extractor->partitionSchema());
+    }
+
+    public function test_a_file_smaller_than_the_target_is_one_split(): void
+    {
+        static::assertCount(1, from_csv(CSVFixtureContext::path('two_rows.csv'))
+            ->splits(new Criteria(), 8 * 1024 * 1024));
+    }
+
+    /**
+     * @param int<1, max> $targetSplitBytes
+     */
+    #[TestWith([50])]
+    #[TestWith([400])]
+    public function test_a_file_with_quoted_newlines_splits_without_losing_rows(int $targetSplitBytes): void
+    {
+        $extractor = from_csv(CSVFixtureContext::path('multiline_strings.csv'));
+
+        static::assertSame(
+            1,
+            array_sum(SplitCoverage::rowCountPerSplit($extractor, flow_context(), $targetSplitBytes)),
+        );
+        static::assertEquals(
+            ExtractedRows::of($extractor),
+            SplitCoverage::rowsFromSplits($extractor, flow_context(), $targetSplitBytes),
+        );
+    }
+
+    public function test_a_split_of_a_file_whose_columns_diverge_from_the_inferred_schema_is_refused(): void
+    {
+        $this->expectException(InferredSchemaException::class);
+        $this->expectExceptionMessageMatches(
+            '#columns_diverge/b\.csv do not match the schema inferred from .*columns_diverge/a\.csv#',
+        );
+
+        SplitCoverage::rowCountPerSplit(from_csv(CSVFixtureContext::path('columns_diverge/*.csv')), flow_context(), 1);
+    }
+
+    public function test_a_split_that_lands_past_the_last_record_yields_no_rows(): void
+    {
+        $counts = SplitCoverage::rowCountPerSplit(
+            from_csv(
+                'memory://source.csv',
+                filesystem: CSVFixtureContext::memory("id,text\n1,\"" . str_repeat('x', 200) . "\"\n"),
+            ),
+            flow_context(),
+            20,
+        );
+
+        static::assertSame(1, array_sum($counts));
+        static::assertSame([1], array_values(array_filter($counts)));
+        static::assertGreaterThan(5, count($counts));
+    }
+
+    public function test_extract_split_stops_on_the_stop_signal(): void
+    {
+        $extractor = from_csv(
+            'memory://source.csv',
+            filesystem: CSVFixtureContext::memory(CSVFixtureContext::tenByteRows(30)),
+        );
+        $extractor->withBatchSize(1);
+        $generator = $extractor->extract(
+            flow_context()->backend(),
+            (new Criteria())->withSplit($extractor->splits(new Criteria(), 100)[1]),
+        );
+        $totalRows = 0;
+
+        foreach ($generator as $rows) {
+            $totalRows += $rows->count();
+            $generator->send(Signal::STOP);
+        }
+
+        static::assertSame(1, $totalRows);
+    }
+
+    public function test_extract_split_reads_no_more_than_the_limit(): void
+    {
+        $extractor = from_csv(
+            'memory://source.csv',
+            filesystem: CSVFixtureContext::memory(CSVFixtureContext::tenByteRows(30)),
+        );
+        $extractor->withBatchSize(2);
+        $total = 0;
+
+        foreach ($extractor->extract(
+            flow_context()->backend(),
+            (new Criteria(3))->withSplit($extractor->splits(new Criteria(), 100)[1]),
+        ) as $rows) {
+            $total += $rows->count();
+        }
+
+        static::assertSame(3, $total);
+    }
+
+    public function test_only_the_first_split_consumes_the_header(): void
+    {
+        $extractor = from_csv(
+            'memory://source.csv',
+            filesystem: CSVFixtureContext::memory(CSVFixtureContext::tenByteRows(20)),
+        );
+        $rows = SplitCoverage::rowsFromSplits($extractor, flow_context(), 30);
+
+        static::assertCount(20, $rows);
+        static::assertSame(['id', 'name'], array_keys($rows->toArray()[0]));
+        static::assertEquals(ExtractedRows::of($extractor), $rows);
+    }
+
+    /**
+     * @param int<1, max> $targetSplitBytes
+     */
+    #[TestWith([13])]
+    #[TestWith([64])]
+    #[TestWith([333])]
+    public function test_quoted_values_that_look_like_records_never_fool_the_resync(int $targetSplitBytes): void
+    {
+        $extractor = from_csv(
+            'memory://source.csv',
+            filesystem: CSVFixtureContext::memory(CSVFixtureContext::quotedMultilineRows(12)),
+        );
+
+        static::assertEquals(
+            ExtractedRows::of($extractor),
+            SplitCoverage::rowsFromSplits($extractor, flow_context(), $targetSplitBytes),
+        );
+    }
+
+    /**
+     * @param int<1, max> $targetSplitBytes
+     */
+    #[TestWith([30])]
+    #[TestWith([100])]
+    #[TestWith([8 * 1024 * 1024])]
+    public function test_splits_cover_every_row_exactly_once(int $targetSplitBytes): void
+    {
+        static::assertSame(
+            50,
+            array_sum(SplitCoverage::rowCountPerSplit(
+                from_csv(
+                    'memory://source.csv',
+                    filesystem: CSVFixtureContext::memory(CSVFixtureContext::tenByteRows(50)),
+                ),
+                flow_context(),
+                $targetSplitBytes,
+            )),
+        );
+    }
+
+    public function test_splits_of_a_headerless_file_name_every_window_alike(): void
+    {
+        $extractor = from_csv(
+            'memory://source.csv',
+            filesystem: CSVFixtureContext::memory(CSVFixtureContext::tenByteRows(20)),
+        )->withHeader(false);
+
+        static::assertEquals(
+            ExtractedRows::of($extractor),
+            SplitCoverage::rowsFromSplits($extractor, flow_context(), 30),
+        );
+    }
+
+    public function test_splits_preserve_source_order(): void
+    {
+        $extractor = from_csv(
+            'memory://source.csv',
+            filesystem: CSVFixtureContext::memory(CSVFixtureContext::tenByteRows(50)),
+        );
+
+        static::assertEquals(
+            ExtractedRows::of($extractor),
+            SplitCoverage::rowsFromSplits($extractor, flow_context(), 100),
+        );
+    }
+
+    public function test_a_pushed_path_filter_prunes_the_files_splits_are_cut_from(): void
+    {
+        $extractor = from_csv(CSVFixtureContext::path('partitioned/group=*/*.csv'));
+
+        static::assertEquals(
+            [new FileSplit($extractor->source(), 0, null)],
+            $extractor->splits((new Criteria())->withPathFilter(new RejectingFilter()), 1),
+        );
+    }
+
+    public function test_a_pushed_partition_filter_splits_only_the_admitted_files(): void
+    {
+        $extractor = from_csv(CSVFixtureContext::path('partitioned/group=*/*.csv'));
+        $filter = ref('group')->equals(lit('1'));
+        $criteria = (new Criteria())
+            ->withFilter($filter)
+            ->withPathFilter(
+                new ScalarFunctionFilter($filter, $extractor->partitionSchema(), flow_context()->backend()),
+            );
+
+        static::assertSame(
+            ['file_01.csv', 'file_02.csv'],
+            array_map(
+                static fn(FileSplit $split): string => $split->path->basename(),
+                $extractor->splits($criteria, 1_024),
+            ),
+        );
+        static::assertEquals(
+            ExtractedRows::of($extractor, criteria: $criteria),
+            SplitCoverage::rowsFromSplits($extractor, flow_context(), 1_024, $criteria),
+        );
+    }
+
+    public function test_a_changed_option_forgets_the_learned_dialects(): void
+    {
+        $extractor = from_csv(CSVFixtureContext::source('semicolon.csv')->path);
+        $extractor->schema();
+
+        static::assertSame(
+            [['id;name' => '1;a']],
+            array_slice(
+                ExtractedRows::of($extractor->withSeparator(',')->withSchema(schema(str_schema('id;name'))))->toArray(),
+                0,
+                1,
+            ),
+        );
+    }
+
+    public function test_a_filter_csv_cannot_prune_with_stays_a_filter_node(): void
+    {
+        $extractor = from_csv(path_real(CSVFixtureContext::path('partitioned/group=*/*.csv')));
+
+        static::assertStringEndsWith(
+            "└─ #2 Filter\n   │  Condition: value IS NOT NULL\n   └─ #1 Read\n         Extractor: CSVExtractor\n"
+                . '         Source: '
+                . $extractor->source()->uri(),
+            df()->read($extractor)->filter(ref('value')->isNotNull())->explain()->toString(),
+        );
+    }
+
+    /**
+     * @return Generator<string, array{ScalarFunction}>
+     */
+    public static function filters_naming_one_partition(): Generator
+    {
+        yield 'partition only' => [ref('group')->equals(lit(1))];
+        yield 'partition after a conjunct csv cannot prune with' => [
+            ref('value')->isNotNull()->and(ref('group')->equals(lit(1))),
+        ];
+    }
+
+    #[DataProvider('filters_naming_one_partition')]
+    public function test_a_partition_filter_never_opens_the_files_of_other_partitions(ScalarFunction $filter): void
+    {
+        $counting = new CountingFilesystem(new NativeLocalFilesystem());
+        $extractor = from_csv(
+            CSVFixtureContext::path('partitioned/group=*/*.csv'),
+            filesystem: $counting,
+        )->withSchema(schema(int_schema('id'), str_schema('value')));
+
+        $rows = df()->read($extractor)->filter($filter)->fetch();
+
+        $read = array_values(array_unique(array_map(static fn($stream): string => $stream
+            ->path()
+            ->basename(), $counting->openedStreams)));
+        sort($read);
+        static::assertSame(['file_01.csv', 'file_02.csv'], $read);
+        static::assertSame([1, 2, 3, 4], $rows->reduceToArray('id'));
+    }
+}

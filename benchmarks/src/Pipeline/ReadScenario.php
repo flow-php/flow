@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Benchmarks\Pipeline;
 
 use Flow\Benchmarks\BenchmarkConfig;
-use Flow\ETL\Extractor;
+use Flow\ETL\IO\Extractor;
 
 use function Flow\ETL\DSL\data_frame;
 

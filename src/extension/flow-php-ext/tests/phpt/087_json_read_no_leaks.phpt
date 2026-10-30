@@ -6,9 +6,9 @@ RustJsonOpenSource reads, cast refusals and malformed refusals leak neither PHP 
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\JSON\RustJsonOpenSource;
-use Flow\ETL\Column\RustBackend;
-use Flow\ETL\Exception\{RuntimeException, SchemaMismatchException};
+use Flow\ETL\Adapter\JSON\IO\Extractor\RustJsonOpenSource;
+use Flow\ETL\Values\Column\RustBackend;
+use Flow\ETL\Foundation\Exception\{RuntimeException, SchemaMismatchException};
 use Flow\Filesystem\Stream\StringSourceStream;
 
 use function Flow\ETL\DSL\{int_schema, list_schema, map_schema, schema, str_schema, structure_schema};

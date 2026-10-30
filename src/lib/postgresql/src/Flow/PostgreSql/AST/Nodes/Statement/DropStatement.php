@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\AST\Nodes\Statement;
 
 use Flow\PostgreSql\AST\Nodes\Statement;
-use Flow\PostgreSql\AST\Nodes\StatementTrait;
 use Flow\PostgreSql\Protobuf\AST\DropdbStmt;
 use Flow\PostgreSql\Protobuf\AST\DropOwnedStmt;
 use Flow\PostgreSql\Protobuf\AST\DropRoleStmt;
@@ -21,8 +20,6 @@ use Flow\PostgreSql\Protobuf\AST\DropUserMappingStmt;
  */
 final readonly class DropStatement implements Statement
 {
-    use StatementTrait;
-
     public function __construct(
         private DropStmt|DropRoleStmt|DropdbStmt|DropTableSpaceStmt|DropUserMappingStmt|DropOwnedStmt|DropSubscriptionStmt $stmt,
     ) {}

@@ -43,10 +43,10 @@ final class RowGroupZoneMaps implements ZoneMaps
                 columnOrder: $this->chunks->columnOrder($column),
                 min: $statistics->minValue($column),
                 max: $statistics->maxValue($column),
-                minExact: $statistics->isMinValueExact(),
-                maxExact: $statistics->isMaxValueExact(),
-                nullCount: $statistics->nullCount(),
-                nanCount: $statistics->nanCount(),
+                minExact: $statistics->isMinValueExact,
+                maxExact: $statistics->isMaxValueExact,
+                nullCount: $statistics->nullCount,
+                nanCount: $statistics->nanCount,
                 rowCount: $this->chunks->rowCounts()[$this->rowGroup],
             );
     }

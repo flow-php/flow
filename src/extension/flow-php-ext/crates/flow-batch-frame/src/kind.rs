@@ -1,4 +1,5 @@
-//! Flow schema and type JSON (`Schema::normalize()`, `Type::normalize()`) and the column kind a type is stored as.
+//! Flow schema and type JSON (`Schema::normalize()`, `Type::normalize()`), the column kind a type is stored as and the
+//! shape its logical values are built in.
 
 use std::sync::Arc;
 
@@ -203,4 +204,146 @@ pub fn data_type(kind: &Kind) -> DataType {
 /// Nullable: only map entries and keys are not, and data_type() builds those itself.
 pub fn field(name: &str, kind: &Kind) -> FieldRef {
     Arc::new(ArrowField::new(name, data_type(kind), true))
+}
+
+/// How a logical value is built from its physical one. `M` is what builds a markup value: [`Markup`] names the
+/// physical class, flow_php replaces it with that class's instance.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ValueNode<M> {
+    Plain,
+    Null,
+    DateTime(Vec<u8>),
+    Date,
+    Time,
+    Uuid,
+    Json,
+    Enum(Vec<u8>),
+    TimeZone,
+    /// A markup `Physical` whose `fromPhysical()` builds the DOM value (D4).
+    Markup(M),
+    List(Box<ValueNode<M>>),
+    Map(Box<ValueNode<M>>),
+    Struct(Vec<ValueNode<M>>),
+}
+
+/// The `Flow\ETL\Column\Physical` class of a markup type.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Markup {
+    XmlDocument,
+    XmlElement,
+    HtmlDocument,
+    HtmlElement,
+}
+
+impl<M> ValueNode<M> {
+    /// The same shape with every markup payload replaced by `markup(payload)`.
+    pub fn map_markup<N, E>(self, markup: &mut impl FnMut(M) -> Result<N, E>) -> Result<ValueNode<N>, E> {
+        Ok(match self {
+            ValueNode::Plain => ValueNode::Plain,
+            ValueNode::Null => ValueNode::Null,
+            ValueNode::DateTime(zone) => ValueNode::DateTime(zone),
+            ValueNode::Date => ValueNode::Date,
+            ValueNode::Time => ValueNode::Time,
+            ValueNode::Uuid => ValueNode::Uuid,
+            ValueNode::Json => ValueNode::Json,
+            ValueNode::Enum(class) => ValueNode::Enum(class),
+            ValueNode::TimeZone => ValueNode::TimeZone,
+            ValueNode::Markup(payload) => ValueNode::Markup(markup(payload)?),
+            ValueNode::List(element) => ValueNode::List(Box::new(element.map_markup(markup)?)),
+            ValueNode::Map(value) => ValueNode::Map(Box::new(value.map_markup(markup)?)),
+            ValueNode::Struct(elements) => ValueNode::Struct(
+                elements
+                    .into_iter()
+                    .map(|element| element.map_markup(markup))
+                    .collect::<Result<_, _>>()?,
+            ),
+        })
+    }
+}
+
+/// The value shape of `parsed`; an optional type has its base's shape.
+pub fn value_node(parsed: &TypeJson) -> Result<ValueNode<Markup>, Error> {
+    let child = |part: Option<&TypeJson>| -> Result<Box<ValueNode<Markup>>, Error> {
+        Ok(Box::new(value_node(part.ok_or(Error::MissingNestedType)?)?))
+    };
+
+    Ok(match parsed.type_.as_str() {
+        "datetime" => ValueNode::DateTime(parsed.zone().unwrap_or(b"UTC").to_vec()),
+        "date" => ValueNode::Date,
+        "time" => ValueNode::Time,
+        "uuid" => ValueNode::Uuid,
+        "json" => ValueNode::Json,
+        "enum" => ValueNode::Enum(parsed.class().ok_or(Error::MissingEnumClass)?.to_vec()),
+        "timezone" => ValueNode::TimeZone,
+        "xml" => ValueNode::Markup(Markup::XmlDocument),
+        "xml_element" => ValueNode::Markup(Markup::XmlElement),
+        "html" => ValueNode::Markup(Markup::HtmlDocument),
+        "html_element" => ValueNode::Markup(Markup::HtmlElement),
+        "null" => ValueNode::Null,
+        "list" => ValueNode::List(child(parsed.element())?),
+        "map" => ValueNode::Map(child(parsed.value())?),
+        "structure_v2" => ValueNode::Struct(
+            parsed
+                .fields()
+                .iter()
+                .map(|field| value_node(&field.type_))
+                .collect::<Result<_, _>>()?,
+        ),
+        "optional" => *child(parsed.base())?,
+        _ => ValueNode::Plain,
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{parse_type, value_node, Markup, ValueNode};
+
+    #[test]
+    fn a_value_node_follows_the_type_json_and_an_optional_is_its_base() {
+        let parsed = parse_type(
+            br#"{"type":"structure_v2","fields":[
+                {"name":"at","type":{"type":"datetime","zone":"Europe/Warsaw"}},
+                {"name":"tags","type":{"type":"list","element":{"type":"optional","base":{"type":"xml"}}}},
+                {"name":"n","type":{"type":"integer"}}
+            ]}"#,
+        )
+        .unwrap();
+
+        assert_eq!(
+            value_node(&parsed).unwrap(),
+            ValueNode::Struct(vec![
+                ValueNode::DateTime(b"Europe/Warsaw".to_vec()),
+                ValueNode::List(Box::new(ValueNode::Markup(Markup::XmlDocument))),
+                ValueNode::Plain,
+            ])
+        );
+    }
+
+    #[test]
+    fn map_markup_replaces_every_payload_in_place() {
+        let node = ValueNode::Map(Box::new(ValueNode::Struct(vec![
+            ValueNode::Markup(Markup::HtmlElement),
+            ValueNode::Uuid,
+        ])));
+        let mapped: ValueNode<&str> = node
+            .map_markup(&mut |markup| {
+                Ok::<_, ()>(match markup {
+                    Markup::HtmlElement => "html element",
+                    _ => "other",
+                })
+            })
+            .unwrap();
+
+        assert_eq!(
+            mapped,
+            ValueNode::Map(Box::new(ValueNode::Struct(vec![
+                ValueNode::Markup("html element"),
+                ValueNode::Uuid
+            ])))
+        );
+        assert_eq!(
+            ValueNode::Markup(Markup::XmlElement).map_markup(&mut |_| Err::<(), _>("refused")),
+            Err("refused")
+        );
+    }
 }

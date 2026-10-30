@@ -1,0 +1,116 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Tests\Unit\Functions;
+
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Functions\ReferenceResolver;
+use Flow\ETL\Tests\Context\FunctionContext;
+use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\structure_schema;
+use function Flow\Types\DSL\structure_element;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
+
+final class ArrayReverseTest extends FlowTestCase
+{
+    public function test_array_reverse_array_entry(): void
+    {
+        static::assertSame(
+            [5, 3, 10, 4],
+            (new FunctionContext(flow_context()))->eval(
+                ref('a')->arrayReverse(),
+                ['a' => [
+                    4,
+                    10,
+                    3,
+                    5,
+                ]],
+                schema(list_schema('a', type_list(type_integer()))),
+            ),
+        );
+    }
+
+    public function test_array_reverse_in_strict_mode(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Expected type "array<mixed>", got "integer".');
+
+        (new FunctionContext(flow_context(config())))->eval(
+            ref('a')->arrayReverse(),
+            ['a' => 123],
+            schema(int_schema('a')),
+        );
+    }
+
+    public function test_array_reverse_non_array_entry(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Expected type "array<mixed>", got "integer".');
+
+        (new FunctionContext(flow_context()))->eval(ref('a')->arrayReverse(), ['a' => 123], schema(int_schema('a')));
+    }
+
+    public function test_a_structure_operand_declares_reversed_fields(): void
+    {
+        static::assertSame(
+            'structure{b: string, a: integer}',
+            (new ReferenceResolver())
+                ->resolve(
+                    ref('structure')->arrayReverse(),
+                    schema(structure_schema('structure', type_structure([
+                        'a' => type_integer(),
+                        'b' => type_string(),
+                    ]))),
+                )
+                ->returns()
+                ->toString(),
+        );
+    }
+
+    public function test_optional_structure_fields_are_reversed_too(): void
+    {
+        static::assertSame(
+            'structure{y?: string, x?: string, a: integer}',
+            (new ReferenceResolver())
+                ->resolve(
+                    ref('structure')->arrayReverse(),
+                    schema(structure_schema('structure', type_structure([
+                        'a' => type_integer(),
+                        'x' => structure_element('x', type_string(), optional: true),
+                        'y' => structure_element('y', type_string(), optional: true),
+                    ]))),
+                )
+                ->returns()
+                ->toString(),
+        );
+    }
+
+    public function test_reversal_crosses_the_required_and_optional_buckets(): void
+    {
+        static::assertSame(
+            'structure{x?: string, b: integer, a: integer}',
+            (new ReferenceResolver())
+                ->resolve(
+                    ref('structure')->arrayReverse(),
+                    schema(structure_schema('structure', type_structure([
+                        'a' => type_integer(),
+                        'b' => type_integer(),
+                        'x' => structure_element('x', type_string(), optional: true),
+                    ]))),
+                )
+                ->returns()
+                ->toString(),
+        );
+    }
+}

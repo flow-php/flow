@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Extractor;
-use Flow\ETL\Extractor\Statistics;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Schema;
+use Flow\ETL\IO\Extractor;
+use Flow\ETL\IO\Extractor\Criteria;
+use Flow\ETL\IO\Extractor\Statistics;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Schema;
 use Generator;
 use RuntimeException;
 
@@ -17,7 +18,7 @@ use function Flow\ETL\DSL\schema;
 
 final class ThrowingAfterFirstBatchExtractor implements Extractor
 {
-    public function extract(FlowContext $context, ?int $limit = null): Generator
+    public function extract(Backend $backend, Criteria $criteria): Generator
     {
         yield array_to_rows([['id' => 1]], $this->schema());
 
@@ -37,5 +38,10 @@ final class ThrowingAfterFirstBatchExtractor implements Extractor
     public function statistics(): Statistics
     {
         return new Statistics();
+    }
+
+    public function isRepeatable(): bool
+    {
+        return false;
     }
 }

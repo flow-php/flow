@@ -4,13 +4,21 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../../../../vendor/autoload.php';
 
-use Flow\ETL\Adapter\Parquet\RustParquetOpenSource;
-use Flow\ETL\Column\PhpBackend;
-use Flow\ETL\Column\RustBackend;
-use Flow\ETL\Rows;
-use Flow\ETL\Rows\RowsBuilder;
-use Flow\ETL\Schema;
+use Flow\ETL\Adapter\CSV\IO\Extractor\CSVDecoder;
+use Flow\ETL\Adapter\CSV\IO\Extractor\CSVLineReader;
+use Flow\ETL\Adapter\CSV\IO\Extractor\RustCSVOpenSource;
+use Flow\ETL\Adapter\CSV\IO\Loader\PhpCSVEncoder;
+use Flow\ETL\Adapter\JSON\IO\Loader\PhpJsonEncoder;
+use Flow\ETL\Adapter\Parquet\IO\Extractor\RustParquetOpenSource;
+use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\IO\Inference\ColumnTypes;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
+use Flow\ETL\Values\Column\Column;
+use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Values\Column\RustBackend;
+use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Rows\RowsBuilder;
+use Flow\ETL\Values\Schema;
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Engine\RustParquetFileReader;
 use Flow\Parquet\Reader\ReadPlan;
@@ -77,7 +85,6 @@ function all_types_schema(string $zone = 'Europe/Warsaw'): Schema
  */
 function all_types_values(): array
 {
-    $negative = (new DateTimeImmutable('2024-01-01 01:02:03'))->diff(new DateTimeImmutable('2024-01-01'));
     $rows = [
         [
             'int' => 1,
@@ -104,7 +111,7 @@ function all_types_values(): array
             'bool' => false,
             'datetime' => '2024-10-27T00:30:00Z',
             'date' => '2024-02-29',
-            'time' => $negative,
+            'time' => (new DateTimeImmutable('2024-01-01 01:02:03'))->diff(new DateTimeImmutable('2024-01-01')),
             'uuid' => '00000000-0000-0000-0000-000000000000',
             'json' => '[1,2]',
             'enum' => BasicEnum::two,
@@ -321,15 +328,15 @@ function interfaces_reflection(): string
     $interfaces = [];
 
     foreach ([
-        'Flow\\ETL\\Column\\Backend',
-        'Flow\\ETL\\Column\\Column',
-        'Flow\\ETL\\Column\\ColumnBuilder',
-        'Flow\\ETL\\Adapter\\Parquet\\ParquetOpenSink',
-        'Flow\\ETL\\Adapter\\CSV\\CSVEncoder',
-        'Flow\\ETL\\Adapter\\JSON\\JsonEncoder',
-        'Flow\\ETL\\Adapter\\CSV\\CSVOpenSource',
-        'Flow\\ETL\\Adapter\\JSON\\JsonOpenSource',
-        'Flow\\ETL\\Adapter\\Parquet\\ParquetOpenSource',
+        'Flow\\ETL\\Values\\Column\\Backend',
+        'Flow\\ETL\\Values\\Column\\Column',
+        'Flow\\ETL\\Values\\Column\\ColumnBuilder',
+        'Flow\\ETL\\IO\\Loader\\File\\FileWriter',
+        'Flow\\ETL\\Adapter\\CSV\\IO\\Loader\\CSVEncoder',
+        'Flow\\ETL\\Adapter\\JSON\\IO\\Loader\\JsonEncoder',
+        'Flow\\ETL\\Adapter\\CSV\\IO\\Extractor\\CSVOpenSource',
+        'Flow\\ETL\\Adapter\\JSON\\IO\\Extractor\\JsonOpenSource',
+        'Flow\\ETL\\Adapter\\Parquet\\IO\\Extractor\\ParquetOpenSource',
     ] as $name) {
         $class = new ReflectionClass($name);
         // PHP 8.5 reports a userland `self` resolved to the class, an internal one stays `self` - the same type
@@ -358,7 +365,7 @@ function expect_exception(callable $fn): void
     try {
         $fn();
         echo "FAIL: no exception thrown\n";
-    } catch (Flow\ETL\Exception\RuntimeException $e) {
+    } catch (RuntimeException $e) {
         echo get_class($e), ': ', $e->getMessage(), "\n";
     }
 }
@@ -376,15 +383,18 @@ function csv_php_rows(
     bool $withHeader = true,
     bool $emptyToNull = true,
     bool $removeBOM = true,
+    ?array $headers = null,
 ): array {
-    $decoder = new Flow\ETL\Adapter\CSV\CSVDecoder(
+    /** @var null|list<string> $headers */
+    $decoder = new CSVDecoder(
         withHeader: $withHeader,
         separator: $separator,
         enclosure: $enclosure,
         escape: $escape,
         emptyToNull: $emptyToNull,
+        headers: $headers,
     );
-    $lines = new Flow\ETL\Adapter\CSV\CSVLineReader($enclosure, $separator, $escape, removeBOM: $removeBOM);
+    $lines = new CSVLineReader($enclosure, $separator, $escape, removeBOM: $removeBOM);
     $rows = [];
 
     foreach ($lines->readLines(
@@ -414,8 +424,10 @@ function csv_native_rows(
     bool $emptyToNull = true,
     bool $removeBOM = true,
     int $chunk = 4096,
+    ?array $headers = null,
 ): array {
-    $source = new Flow\ETL\Adapter\CSV\RustCSVOpenSource(
+    /** @var null|list<string> $headers */
+    $source = new RustCSVOpenSource(
         new Flow\Filesystem\Stream\StringSourceStream(Flow\Filesystem\DSL\path('memory://phpt.csv'), $raw),
         $separator,
         $enclosure,
@@ -424,6 +436,7 @@ function csv_native_rows(
         $emptyToNull,
         $removeBOM,
         $chunk,
+        $headers,
     );
     $rows = iterator_to_array($source->records(), false);
 
@@ -455,10 +468,9 @@ function assert_csv_identical(string $label, array $expected, array $actual): vo
  */
 function string_type_narrower_fixture_values(): array
 {
-    $lexemes = token_get_all((string) file_get_contents(__DIR__
-    . '/../../../../lib/types/tests/Flow/Types/Tests/Unit/Type/Native/String/StringTypeNarrowerTest.php'));
     $significant = array_values(array_filter(
-        $lexemes,
+        token_get_all((string) file_get_contents(__DIR__
+        . '/../../../../lib/types/tests/Flow/Types/Tests/Unit/Type/Native/String/StringTypeNarrowerTest.php')),
         static fn(array|string $lexeme): bool => (
             !is_array($lexeme) || !in_array($lexeme[0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)
         ),
@@ -640,18 +652,15 @@ function csv_narrow_corpus(): array
  *
  * @param list<?string> $values
  */
-function rust_sniff_column(
-    array $values,
-    Flow\Types\Type\TypeNarrower $typer,
-    bool $emptyToNull = true,
-): Flow\ETL\Schema\Inference\ColumnTypes {
+function rust_sniff_column(array $values, Flow\Types\Type\TypeNarrower $typer, bool $emptyToNull = true): ColumnTypes
+{
     $csv = "v\n";
 
     foreach ($values as $value) {
         $csv .= ($value === null ? '' : '"' . str_replace('"', '""', $value) . '"') . "\n";
     }
 
-    return (new Flow\ETL\Adapter\CSV\RustCSVOpenSource(
+    return (new RustCSVOpenSource(
         new Flow\Filesystem\Stream\MemorySourceStream($csv),
         ',',
         '"',
@@ -659,7 +668,7 @@ function rust_sniff_column(
         true,
         $emptyToNull,
         false,
-    ))->sniff([], -1, new Flow\ETL\Schema\Inference\SchemaInference(), $typer);
+    ))->sniff([], -1, $typer);
 }
 
 /**
@@ -675,7 +684,7 @@ function assert_narrow_parity(string $label, array $candidates, array $corpus): 
     $mismatches = 0;
 
     foreach ($corpus as $value) {
-        $php = new Flow\ETL\Schema\Inference\ColumnTypes([], $typer);
+        $php = new ColumnTypes([], $typer);
         $php->observe(['v' => $value]);
 
         if ($php != rust_sniff_column([$value], $typer, false)) {
@@ -861,9 +870,7 @@ function write_random_type(int $depth): array
     static $keys = ['a', 'b c', 'k/1', 'ż', '"q"', 'x,y'];
     static $fields = ['a', 'b', 'c d', 'e"f', 'g/h'];
 
-    $kind = mt_rand(0, $depth > 0 ? 15 : 11);
-
-    [$type, $value] = match ($kind) {
+    [$type, $value] = match (mt_rand(0, $depth > 0 ? 15 : 11)) {
         0 => [
             Flow\Types\DSL\type_integer(),
             static fn(): int => mt_rand(0, 3) === 0 ? mt_rand(-5, 5) : mt_rand() * (mt_rand(0, 1) ? 1 : -1),
@@ -877,10 +884,8 @@ function write_random_type(int $depth): array
         2 => [Flow\Types\DSL\type_boolean(), static fn(): bool => mt_rand(0, 1) === 1],
         3 => [Flow\Types\DSL\type_string(), write_random_string(...)],
         4 => (static function () use ($zones): array {
-            $zone = $zones[mt_rand(0, count($zones) - 1)];
-
             return [
-                Flow\Types\DSL\type_datetime($zone),
+                Flow\Types\DSL\type_datetime($zones[mt_rand(0, count($zones) - 1)]),
                 static fn(): DateTimeImmutable => (new DateTimeImmutable(
                     '@' . mt_rand(-3_000_000_000, 5_000_000_000),
                 ))->modify('+' . mt_rand(0, 999_999) . ' usec'),
@@ -1042,8 +1047,6 @@ function cast_random_input(Flow\Types\Type $type, mixed $value): mixed
             : ['not a value', [1], -1.5][mt_rand(0, 2)];
     }
 
-    $raw = $roll < 10;
-
     return match (true) {
         $type instanceof Flow\Types\Type\Logical\ListType => (static function () use ($type, $value, $roll): array {
             $list = array_map(static fn(mixed $item): mixed => cast_random_input(
@@ -1090,7 +1093,7 @@ function cast_random_input(Flow\Types\Type $type, mixed $value): mixed
                 default => $structure,
             };
         })(),
-        !$raw => $value,
+        !($roll < 10) => $value,
         $type instanceof Flow\Types\Type\Native\IntegerType,
         $type instanceof Flow\Types\Type\Native\FloatType,
             => Flow\Types\DSL\type_string()->cast($value),
@@ -1146,7 +1149,7 @@ function write_random_batch(): array
 }
 
 /**
- * The bytes a text sink wrote, or the class and message of what it threw.
+ * The bytes a text file writer wrote, or the class and message of what it threw.
  *
  * @param callable(Flow\Filesystem\Stream\StringDestinationStream): void $write
  */
@@ -1236,18 +1239,18 @@ function chunked_source_stream(string $raw, int $chunk): Flow\Filesystem\SourceS
 final class RecordingPhpCSVEncoder
 {
     /**
-     * @var list<Flow\ETL\Column\Column>
+     * @var list<\Flow\ETL\Values\Column\Column>
      */
     public array $columns = [];
 
     public function __construct(
-        private readonly Flow\ETL\Adapter\CSV\PhpCSVEncoder $php,
+        private readonly PhpCSVEncoder $php,
     ) {}
 
     /**
      * @return list<?string>
      */
-    public function cells(Flow\Types\Type $type, Flow\ETL\Column\Column $column): array
+    public function cells(Flow\Types\Type $type, Column $column): array
     {
         $this->columns[] = $column;
 
@@ -1269,18 +1272,28 @@ final class RecordingPhpCSVEncoder
 final class RecordingPhpJsonEncoder
 {
     /**
-     * @var list<Flow\ETL\Column\Column>
+     * @var list<\Flow\ETL\Values\Column\Column>
      */
     public array $columns = [];
 
+    public readonly int $flags;
+
+    public readonly string $dateTimeFormat;
+
+    public readonly string $dateFormat;
+
     public function __construct(
-        private readonly Flow\ETL\Adapter\JSON\PhpJsonEncoder $php,
-    ) {}
+        private readonly PhpJsonEncoder $php,
+    ) {
+        $this->flags = $php->flags;
+        $this->dateTimeFormat = $php->dateTimeFormat;
+        $this->dateFormat = $php->dateFormat;
+    }
 
     /**
      * @return list<string>
      */
-    public function fragments(Flow\Types\Type $type, Flow\ETL\Column\Column $column): array
+    public function fragments(Flow\Types\Type $type, Column $column): array
     {
         $this->columns[] = $column;
 
@@ -1291,7 +1304,7 @@ final class RecordingPhpJsonEncoder
 /**
  * The names of the columns of `$rows` among `$recorded`.
  *
- * @param list<Flow\ETL\Column\Column> $recorded
+ * @param list<\Flow\ETL\Values\Column\Column> $recorded
  *
  * @return list<string>
  */
@@ -1299,7 +1312,7 @@ function recorded_names(array $recorded, Rows $rows): array
 {
     return array_map(
         'strval',
-        array_keys(array_filter($rows->columns(), static fn(Flow\ETL\Column\Column $column): bool => in_array(
+        array_keys(array_filter($rows->columns(), static fn(Column $column): bool => in_array(
             $column,
             $recorded,
             true,

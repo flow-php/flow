@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
-use Flow\ETL\Rows;
+use Flow\ETL\IO\Extractor\Criteria;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Values\Rows;
 use Flow\Parquet\Reader;
 
 use function array_map;
@@ -24,11 +25,10 @@ final class PaginationTest extends FlowTestCase
 {
     public function test_multifile_pagination_from_beginning(): void
     {
-        $extractor = from_parquet(path_real(__DIR__ . '/Fixtures/Pagination/*.parquet'))->withOffset(0);
-
         $extractedRows = 0;
 
-        foreach ($extractor->extract(flow_context(config())) as $batch) {
+        foreach (from_parquet(path_real(__DIR__ . '/../Fixtures/Pagination/*.parquet'))
+            ->extract(flow_context(config())->backend(), new Criteria()) as $batch) {
             $extractedRows += $batch->count();
         }
 
@@ -37,11 +37,10 @@ final class PaginationTest extends FlowTestCase
 
     public function test_multifile_pagination_from_middle(): void
     {
-        $extractor = from_parquet(path_real(__DIR__ . '/Fixtures/Pagination/*.parquet'))->withOffset(2500);
-
         $extractedRows = 0;
 
-        foreach ($extractor->extract(flow_context(config())) as $batch) {
+        foreach (from_parquet(path_real(__DIR__ . '/../Fixtures/Pagination/*.parquet'))
+            ->extract(flow_context(config())->backend(), new Criteria(offset: 2500)) as $batch) {
             $extractedRows += $batch->count();
         }
 
@@ -50,12 +49,10 @@ final class PaginationTest extends FlowTestCase
 
     public function test_multifile_pagination_from_middle_partitioned(): void
     {
-        $extractor = from_parquet(path_real(__DIR__ . '/Fixtures/Pagination/partitioned/date=*/*.parquet'))
-            ->withOffset(2500);
-
         $extractedRows = 0;
 
-        foreach ($extractor->extract(flow_context(config())) as $batch) {
+        foreach (from_parquet(path_real(__DIR__ . '/../Fixtures/Pagination/partitioned/date=*/*.parquet'))
+            ->extract(flow_context(config())->backend(), new Criteria(offset: 2500)) as $batch) {
             $extractedRows += $batch->count();
         }
 
@@ -64,11 +61,10 @@ final class PaginationTest extends FlowTestCase
 
     public function test_multifile_pagination_from_offset_bigger_than_total_rows(): void
     {
-        $extractor = from_parquet(path_real(__DIR__ . '/Fixtures/Pagination/*.parquet'))->withOffset(10_000);
-
         $extractedRows = 0;
 
-        foreach ($extractor->extract(flow_context(config())) as $batch) {
+        foreach (from_parquet(path_real(__DIR__ . '/../Fixtures/Pagination/*.parquet'))
+            ->extract(flow_context(config())->backend(), new Criteria(offset: 10_000)) as $batch) {
             $extractedRows += $batch->count();
         }
 
@@ -77,16 +73,13 @@ final class PaginationTest extends FlowTestCase
 
     public function test_reading_file_from_given_offset(): void
     {
-        $totalRows = (new Reader())
-            ->read(__DIR__ . '/Fixtures/orders_1k.parquet')
-            ->metadata()
-            ->rowsNumber();
-
-        $extractor = from_parquet(path_real(__DIR__ . '/Fixtures/orders_1k.parquet'))->withOffset($totalRows - 100);
-
         $extractedRows = 0;
 
-        foreach ($extractor->extract(flow_context(config())) as $batch) {
+        foreach (from_parquet(path_real(__DIR__ . '/../Fixtures/orders_1k.parquet'))
+            ->extract(flow_context(config())->backend(), new Criteria(offset: (new Reader())
+                ->read(__DIR__ . '/../Fixtures/orders_1k.parquet')
+                ->metadata()
+                ->rowsNumber() - 100)) as $batch) {
             $extractedRows += $batch->count();
         }
 
@@ -104,10 +97,10 @@ final class PaginationTest extends FlowTestCase
                 ->run();
         }
 
-        $extractor = from_parquet('memory://window/*.parquet', filesystem: $filesystem)->withOffset(4);
+        $extractor = from_parquet('memory://window/*.parquet', filesystem: $filesystem);
         $read = static fn(): array => array_merge(...array_map(
             static fn(Rows $rows): array => $rows->column('id')->values(),
-            iterator_to_array($extractor->extract(flow_context(), limit: 4), false),
+            iterator_to_array($extractor->extract(flow_context()->backend(), new Criteria(limit: 4, offset: 4)), false),
         ));
 
         static::assertSame([5, 6, 7, 8], $read());

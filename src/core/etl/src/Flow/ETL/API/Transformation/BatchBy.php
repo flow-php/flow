@@ -1,0 +1,33 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\API\Transformation;
+
+use Flow\ETL\API\DataFrame;
+use Flow\ETL\API\Transformation;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Functions\Reference\Reference;
+
+final readonly class BatchBy implements Transformation
+{
+    /**
+     * @param null|int<1, max> $minSize
+     *
+     * @throws InvalidArgumentException
+     */
+    public function __construct(
+        private string|Reference $column,
+        private ?int $minSize = null,
+    ) {
+        // @mago-ignore analysis:invalid-operand,impossible-condition,redundant-comparison,redundant-logical-operation
+        if ($this->minSize !== null && $this->minSize <= 0) {
+            throw new InvalidArgumentException('Minimum batch size must be greater than 0, given: ' . $this->minSize);
+        }
+    }
+
+    public function transform(DataFrame $dataFrame): DataFrame
+    {
+        return $dataFrame->batchBy($this->column, $this->minSize);
+    }
+}

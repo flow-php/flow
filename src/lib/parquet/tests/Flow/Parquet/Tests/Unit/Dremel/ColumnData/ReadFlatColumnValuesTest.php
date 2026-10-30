@@ -16,7 +16,6 @@ use PHPUnit\Framework\TestCase;
 
 use function Flow\ETL\Adapter\Parquet\array_to_generator;
 use function Flow\Parquet\empty_generator;
-use function iterator_to_array;
 
 final class ReadFlatColumnValuesTest extends TestCase
 {
@@ -76,7 +75,7 @@ final class ReadFlatColumnValuesTest extends TestCase
 
         static::assertSame([0, 0, 1, 1], $selected->repetitionLevels());
         static::assertSame([1, 3, 3, 3], $selected->definitionLevels());
-        static::assertSame([3, 4, 5], iterator_to_array($selected->rawValues(), false));
+        static::assertSame([3, 4, 5], $selected->rawValues());
     }
 
     public function test_a_selection_over_another_row_count_is_refused(): void

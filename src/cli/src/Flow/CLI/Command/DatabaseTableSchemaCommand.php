@@ -8,10 +8,10 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Schema\Name\OptionallyQualifiedName;
 use Doctrine\DBAL\Tools\DsnParser;
-use Flow\CLI\Command\Traits\ConfigOptions;
-use Flow\CLI\Command\Traits\DBOptions;
-use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
-use Flow\ETL\Schema\Formatter\PHPSchemaFormatter;
+use Flow\CLI\Options\ConfigOption;
+use Flow\CLI\Options\DbConnectionOptions;
+use Flow\ETL\IO\Formatter\Row\ASCIISchemaFormatter;
+use Flow\ETL\IO\Formatter\Schema\PHPSchemaFormatter;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -33,15 +33,12 @@ use function Flow\Types\DSL\type_string;
 #[AsCommand(name: 'db:table:schema', description: 'Read data schema from a database table.')]
 final class DatabaseTableSchemaCommand extends Command
 {
-    use ConfigOptions;
-    use DBOptions;
-
     private ?Connection $connection = null;
 
     public function configure(): void
     {
         $this
-            ->setHelp(self::DB_CONNECTION_HELP)
+            ->setHelp(DbConnectionOptions::HELP)
             ->addArgument(
                 'input-db-table',
                 InputArgument::OPTIONAL,
@@ -57,8 +54,8 @@ final class DatabaseTableSchemaCommand extends Command
                 'Filter schema by column name(s)',
             );
 
-        $this->addConfigOptions($this);
-        $this->addDbOptions($this);
+        (new ConfigOption('config'))->configure($this);
+        (new DbConnectionOptions())->configure($this);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int

@@ -4,19 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel\Tests\Context;
 
-use Flow\ETL\Adapter\Excel\CellTypeNarrower;
-use Flow\ETL\Adapter\Excel\ExcelFormatDetector;
-use Flow\ETL\Adapter\Excel\ExcelReader;
-use Flow\ETL\Adapter\Excel\ExcelReadOptions;
-use Flow\ETL\Adapter\Excel\Sheet\SheetCells;
-use Flow\ETL\Adapter\Excel\Sheet\SheetsManager;
-use Flow\ETL\Adapter\Excel\WorkbookReader;
-use Flow\ETL\Adapter\Excel\WorkbookSampler;
-use Flow\ETL\Adapter\Excel\WorkbookSheet;
-use Flow\ETL\Extractor\File\SourceFile;
-use Flow\ETL\Schema;
-use Flow\ETL\Schema\Inference\SchemaInference;
-use Flow\ETL\Schema\Inference\SchemaInferrer;
+use Flow\ETL\Adapter\Excel\IO\Extractor\ExcelFormatDetector;
+use Flow\ETL\Adapter\Excel\IO\Extractor\ExcelReader;
+use Flow\ETL\Adapter\Excel\IO\Extractor\ExcelReadOptions;
+use Flow\ETL\Adapter\Excel\IO\Extractor\Sheet\SheetCells;
+use Flow\ETL\Adapter\Excel\IO\Extractor\Sheet\SheetsManager;
+use Flow\ETL\Adapter\Excel\IO\Extractor\WorkbookReader;
+use Flow\ETL\Adapter\Excel\IO\Extractor\WorkbookSheet;
+use Flow\ETL\Adapter\Excel\IO\Inference\ExcelSniffer;
+use Flow\ETL\IO\Extractor\File\SourceFile;
+use Flow\ETL\IO\Inference\SchemaInference;
+use Flow\ETL\IO\Inference\SchemaInferrer;
+use Flow\ETL\Values\Schema;
 use Flow\Filesystem\FileListing;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
@@ -34,20 +33,25 @@ use function sys_get_temp_dir;
 
 final class ExcelFixtureContext
 {
-    public static function infer(WorkbookSampler $sampler, SchemaInference $inference = new SchemaInference()): Schema
+    public static function infer(ExcelSniffer $sniffer, SchemaInference $inference = new SchemaInference()): Schema
     {
-        return (new SchemaInferrer($inference, new CellTypeNarrower($inference->candidates())))->infer(
-            $sampler->header()->names,
-            $sampler->samples($inference->sampleSize),
-        );
+        return (new SchemaInferrer($inference))->infer($sniffer)->schema;
     }
 
-    public static function globSampler(
+    /**
+     * @param SchemaInference $inference its candidates build the narrower, as ExcelExtractor builds it
+     */
+    public static function globSniffer(
         string $glob,
         Filesystem $filesystem = new NativeLocalFilesystem(),
         ExcelReadOptions $options = new ExcelReadOptions(),
-    ): WorkbookSampler {
-        return new WorkbookSampler(self::reader($filesystem, $options), self::globSources($glob, $filesystem));
+        SchemaInference $inference = new SchemaInference(),
+    ): ExcelSniffer {
+        return new ExcelSniffer(
+            self::reader($filesystem, $options),
+            self::globSources($glob, $filesystem),
+            $inference->candidates(),
+        );
     }
 
     /**
@@ -60,7 +64,7 @@ final class ExcelFixtureContext
         $sources = [];
 
         foreach ((new FileListing($filesystem))->list(path(self::file($glob)), new OnlyFiles()) as $status) {
-            $sources[] = new SourceFile($status->path);
+            $sources[] = new SourceFile($status->path, $status->size);
         }
 
         return $sources;
@@ -107,15 +111,23 @@ final class ExcelFixtureContext
         return new WorkbookReader($options, new ExcelFormatDetector($filesystem));
     }
 
-    public static function sampler(
+    /**
+     * @param SchemaInference $inference its candidates build the narrower, as ExcelExtractor builds it
+     */
+    public static function sniffer(
         string $fixture,
         Filesystem $filesystem = new NativeLocalFilesystem(),
         ExcelReadOptions $options = new ExcelReadOptions(),
-    ): WorkbookSampler {
-        return new WorkbookSampler(self::reader($filesystem, $options), [self::source($fixture)]);
+        SchemaInference $inference = new SchemaInference(),
+    ): ExcelSniffer {
+        return new ExcelSniffer(
+            self::reader($filesystem, $options),
+            [self::source($fixture)],
+            $inference->candidates(),
+        );
     }
 
-    public static function openSheetCells(string $fixture, bool $withHeader, int $offset): OpenSheetCells
+    public static function openSheetCells(string $fixture, bool $withHeader): OpenSheetCells
     {
         $reader = (new ExcelFormatDetector(new NativeLocalFilesystem()))->detect(self::path($fixture))
         === ExcelReader::ODS
@@ -126,7 +138,7 @@ final class ExcelFixtureContext
 
         return new OpenSheetCells(
             $reader,
-            new SheetCells((new SheetsManager($reader->getSheetIterator()))->first(), $withHeader, $offset),
+            new SheetCells((new SheetsManager($reader->getSheetIterator()))->first(), $withHeader),
         );
     }
 

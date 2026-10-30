@@ -13,15 +13,13 @@ use Flow\PostgreSql\Protobuf\AST\PBList;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\TypeName;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 use function strtolower;
 
 final readonly class CreateSequenceBuilder implements CreateSequenceNameStep, CreateSequenceOptionsStep
 {
-    use AstToSql;
-
     /**
      * @param array<array{name: string, arg: null|Node}> $options
      */
@@ -197,6 +195,11 @@ final readonly class CreateSequenceBuilder implements CreateSequenceNameStep, Cr
     public function temporary(): self
     {
         return new self($this->name, $this->schema, $this->ifNotExists, true, false, $this->options);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): CreateSeqStmt

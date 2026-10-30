@@ -15,6 +15,8 @@ final class PhpParquetFooter implements Footer
 {
     private ?Metadata $metadata = null;
 
+    private ?MetadataRowGroupChunks $rowGroupChunks = null;
+
     public function __construct(
         private readonly FileMetaData $thrift,
     ) {}
@@ -26,7 +28,8 @@ final class PhpParquetFooter implements Footer
 
     public function rowGroupChunks(array $columns): RowGroupChunks
     {
-        return new MetadataRowGroupChunks($this->metadata());
+        // the metadata is decoded whole, so one instance answers every column set
+        return $this->rowGroupChunks ??= new MetadataRowGroupChunks($this->metadata());
     }
 
     public function rowsNumber(): int

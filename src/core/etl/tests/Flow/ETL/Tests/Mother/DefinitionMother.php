@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Mother;
 
-use Flow\ETL\Schema\Definition;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
+use Flow\ETL\Values\Schema\Definition;
 
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\date_schema;

@@ -125,10 +125,10 @@ final class StatisticsParityRows
                 $chunk->max($column),
                 $chunk->minValue($column),
                 $chunk->maxValue($column),
-                $chunk->nullCount(),
-                $chunk->nanCount(),
-                $chunk->isMinValueExact(),
-                $chunk->isMaxValueExact(),
+                $chunk->nullCount,
+                $chunk->nanCount,
+                $chunk->isMinValueExact,
+                $chunk->isMaxValueExact,
                 $metadata->columnOrder($column),
             ];
         }

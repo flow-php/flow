@@ -6,8 +6,8 @@ native narrowing matches StringTypeNarrower::narrow() on its fixtures, the byte-
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Schema\Inference\InferredTypes;
-use Flow\ETL\Schema\Inference\TypeFloor;
+use Flow\ETL\IO\Inference\InferredTypes;
+use Flow\ETL\IO\Inference\TypeFloor;
 use Flow\Types\Type\Native\String\StringTypeNarrower;
 
 use function Flow\Types\DSL\type_date;
@@ -65,7 +65,7 @@ $typer = new StringTypeNarrower($candidates);
 $floor = new TypeFloor(new InferredTypes(...$candidates));
 
 foreach ($temporal as $value) {
-    printf("%-32s %s\n", $value, rust_sniff_column([$value], $typer, false)->schema($floor)->get('v')->type()->toString());
+    printf("%-32s %s\n", $value, rust_sniff_column([$value], $typer, false)->folded()->schema($floor)->get('v')->type()->toString());
 }
 
 assert_narrow_parity('temporal candidates', $candidates, $temporal);

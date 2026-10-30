@@ -1,0 +1,77 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Tests\Unit\Foundation\Exception;
+
+use Flow\ETL\Foundation\Exception\SchemaNotDerivableException;
+use Flow\ETL\Tests\FlowTestCase;
+use RuntimeException;
+
+final class SchemaNotDerivableExceptionTest extends FlowTestCase
+{
+    public function test_extractor_names_the_extractor_and_the_way_out(): void
+    {
+        static::assertSame(
+            'CallbackExtractor cannot describe what it will produce before producing it. Declare the schema with '
+            . '->withSchema(), or read from a source that describes itself.',
+            SchemaNotDerivableException::extractor('CallbackExtractor')->getMessage(),
+        );
+    }
+
+    public function test_extractor_with_a_reason_names_it_in_the_message(): void
+    {
+        static::assertSame(
+            'PostgreSqlCursorExtractor cannot describe what it will produce before producing it: column "location" '
+            . 'has PostgreSQL type "point", which Flow has no type for. Declare the schema with ->withSchema().',
+            SchemaNotDerivableException::extractor(
+                'PostgreSqlCursorExtractor',
+                'column "location" has PostgreSQL type "point", which Flow has no type for',
+            )->getMessage(),
+        );
+    }
+
+    public function test_function_names_the_function_and_the_reason(): void
+    {
+        static::assertSame(
+            'array_get() cannot describe the column it produces: the array operand declares "list<string>", which is not a structure.',
+            SchemaNotDerivableException::function(
+                'array_get',
+                'the array operand declares "list<string>", which is not a structure',
+            )->getMessage(),
+        );
+    }
+
+    public function test_probe_refused_chains_the_driver_error(): void
+    {
+        $cause = new RuntimeException('relation "missing" does not exist');
+
+        static::assertSame(
+            $cause,
+            SchemaNotDerivableException::probeRefused('PostgreSqlCursorExtractor', 'refused', $cause)->getPrevious(),
+        );
+    }
+
+    public function test_probe_refused_names_the_refusal_and_the_conditional_way_out(): void
+    {
+        static::assertSame(
+            'PostgreSqlCursorExtractor cannot describe what it will produce before producing it: PostgreSQL refused '
+            . 'the zero-row probe of this query (boom). If the query runs as written, declare the schema with '
+            . '->withSchema() to skip the probe.',
+            SchemaNotDerivableException::probeRefused(
+                'PostgreSqlCursorExtractor',
+                'PostgreSQL refused the zero-row probe of this query (boom)',
+                new RuntimeException('boom'),
+            )->getMessage(),
+        );
+    }
+
+    public function test_non_rewindable_names_the_way_out(): void
+    {
+        static::assertSame(
+            'The frame reads a source that cannot read its dataset twice, so discover_pivot_values() cannot scan it '
+            . 'before the pivot runs. Declare the values with pivot_values(...).',
+            SchemaNotDerivableException::nonRewindable()->getMessage(),
+        );
+    }
+}

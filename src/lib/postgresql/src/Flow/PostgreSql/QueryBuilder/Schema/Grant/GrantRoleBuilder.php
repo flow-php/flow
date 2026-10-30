@@ -10,14 +10,12 @@ use Flow\PostgreSql\Protobuf\AST\GrantRoleStmt;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\RoleSpec;
 use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 use function array_values;
 
 final readonly class GrantRoleBuilder implements GrantRoleFinalStep, GrantRoleToStep
 {
-    use AstToSql;
-
     /**
      * @param list<string> $grantedRoles
      * @param list<string> $granteeRoles
@@ -36,6 +34,11 @@ final readonly class GrantRoleBuilder implements GrantRoleFinalStep, GrantRoleTo
     public function to(string ...$roles): GrantRoleFinalStep
     {
         return new self($this->grantedRoles, array_values($roles), $this->adminOption);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): GrantRoleStmt

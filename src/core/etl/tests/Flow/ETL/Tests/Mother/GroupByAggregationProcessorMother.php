@@ -4,15 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Mother;
 
-use Flow\ETL\Bucketing\Buckets;
-use Flow\ETL\Bucketing\BucketsStorage;
-use Flow\ETL\Bucketing\HashBucketing;
-use Flow\ETL\Bucketing\NativeHasher;
-use Flow\ETL\Bucketing\Storage\MemoryBuckets;
-use Flow\ETL\Dataset\Memory\Unit;
-use Flow\ETL\GroupBy;
-use Flow\ETL\NativePHPRandomValueGenerator;
-use Flow\ETL\Processor\GroupByAggregationProcessor;
+use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
+use Flow\ETL\Operators\GroupBy;
+use Flow\ETL\Operators\Processor\GroupByAggregationProcessor;
+use Flow\ETL\Storage\BucketingConfig;
+use Flow\ETL\Storage\MemoryRowsStorage;
+use Flow\ETL\Storage\RowsStorage;
+use Flow\ETL\Values\Memory\Unit;
 
 final class GroupByAggregationProcessorMother
 {
@@ -21,7 +19,7 @@ final class GroupByAggregationProcessorMother
      */
     public static function inMemory(
         GroupBy $groupBy,
-        BucketsStorage $storage = new MemoryBuckets(),
+        RowsStorage $storage = new MemoryRowsStorage(),
     ): GroupByAggregationProcessor {
         return self::with($groupBy, $storage, Unit::fromGb(64));
     }
@@ -32,23 +30,15 @@ final class GroupByAggregationProcessorMother
      */
     public static function with(
         GroupBy $groupBy,
-        BucketsStorage $storage,
+        RowsStorage $storage,
         Unit $memoryLimit,
         int $bucketsCount = 4,
         int $batchSize = 1000,
     ): GroupByAggregationProcessor {
         return new GroupByAggregationProcessor(
             $groupBy,
-            new HashBucketing(
-                $groupBy->references(),
-                $bucketsCount,
-                new NativeHasher(),
-                new NativePHPRandomValueGenerator(),
-                'group-by',
-            ),
-            new Buckets($storage),
-            $memoryLimit,
-            $batchSize,
+            new BucketingConfig($storage, $bucketsCount, $batchSize, $memoryLimit),
+            new NativePHPRandomValueGenerator(),
         );
     }
 }

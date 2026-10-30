@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Integration\OS\Unix;
 
-use Flow\Filesystem\Tests\OperatingSystem;
+use Flow\Filesystem\Tests\Context\OperatingSystem;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -14,8 +14,6 @@ use function Flow\Filesystem\DSL\path_real;
 
 final class RealpathTest extends TestCase
 {
-    use OperatingSystem;
-
     public static function double_dots_paths(): Generator
     {
         yield ['/path/../file.txt', '/file.txt'];
@@ -28,7 +26,7 @@ final class RealpathTest extends TestCase
     {
         parent::setUp();
 
-        if ($this->isWindows()) {
+        if (OperatingSystem::isWindows()) {
             self::markTestSkipped('Realpath is not supported on Windows');
         }
     }

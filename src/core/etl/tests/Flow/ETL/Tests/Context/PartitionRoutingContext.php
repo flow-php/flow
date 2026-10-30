@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Context;
 
-use Flow\ETL\Loader\File\PartitionRouter;
-use Flow\ETL\Loader\Partitioning;
-use Flow\ETL\Rows;
+use Flow\ETL\IO\Loader\File\PartitionRouter;
+use Flow\ETL\IO\Loader\Partitioning;
+use Flow\ETL\Values\Rows;
 use Flow\Filesystem\Partitions;
 
 use function iterator_to_array;
@@ -28,7 +28,7 @@ final class PartitionRoutingContext
         return $groups;
     }
 
-    private static function sortKey(Partitions $partitions): string
+    public static function sortKey(Partitions $partitions): string
     {
         $key = '';
 

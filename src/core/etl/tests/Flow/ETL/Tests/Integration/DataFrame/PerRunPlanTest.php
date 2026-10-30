@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use Flow\ETL\Sink\Transformed;
+use Flow\ETL\API\TransformedBranch;
+use Flow\ETL\Operators\Transformer\AddRowIndex\StartFrom;
+use Flow\ETL\Operators\Transformer\AddRowIndexTransformer;
 use Flow\ETL\Tests\Double\SpyLoader;
 use Flow\ETL\Tests\Double\SpyTransformer;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
-use Flow\ETL\Transformation\AddRowIndex\StartFrom;
-use Flow\ETL\Transformer\AddRowIndexTransformer;
 
 use function array_column;
 use function Flow\ETL\DSL\df;
@@ -32,7 +32,7 @@ final class PerRunPlanTest extends FlowIntegrationTestCase
     {
         $dataFrame = df()
             ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]))
-            ->transform(new AddRowIndexTransformer('idx', StartFrom::ZERO));
+            ->with(new AddRowIndexTransformer('idx', StartFrom::ZERO));
 
         static::assertSame([0, 1, 2], array_column($dataFrame->fetch()->toArray(), 'idx'));
         static::assertSame([0, 1, 2], array_column($dataFrame->fetch()->toArray(), 'idx'));
@@ -41,7 +41,7 @@ final class PerRunPlanTest extends FlowIntegrationTestCase
     public function test_the_users_own_transformer_keeps_its_state_across_runs(): void
     {
         $transformer = new SpyTransformer();
-        $dataFrame = df()->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]))->transform($transformer);
+        $dataFrame = df()->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]))->with($transformer);
 
         $dataFrame->run();
         $dataFrame->run();
@@ -54,7 +54,7 @@ final class PerRunPlanTest extends FlowIntegrationTestCase
         $loader = new SpyLoader();
         $dataFrame = df()
             ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]))
-            ->write(new Transformed(limit(1), $loader));
+            ->write(new TransformedBranch(limit(1), $loader));
 
         $dataFrame->run();
         $dataFrame->run();

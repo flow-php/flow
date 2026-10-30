@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Flow\CLI\Command;
 
 use Flow\CLI\Arguments\FilePathArgument;
-use Flow\CLI\Command\Traits\ConfigOptions;
-use Flow\CLI\Command\Traits\StatisticsOptions;
 use Flow\CLI\Formatter\PipelineReportFormatter;
+use Flow\CLI\Options\ConfigOption;
+use Flow\CLI\Options\StatisticsOptions;
 use Flow\CLI\PipelineFactory;
-use Flow\ETL\Exception\Exception;
-use Flow\ETL\Exception\InvalidFileFormatException;
+use Flow\ETL\Foundation\Exception\Exception;
+use Flow\ETL\Foundation\Exception\InvalidFileFormatException;
 use Flow\Filesystem\Path;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -28,9 +28,6 @@ use function is_string;
 #[AsCommand(name: 'pipeline:run', description: 'Execute data processing pipeline from a php file.', aliases: ['run'])]
 final class PipelineRunCommand extends Command
 {
-    use ConfigOptions;
-    use StatisticsOptions;
-
     private ?Path $pipelinePath = null;
 
     public function configure(): void
@@ -60,8 +57,8 @@ final class PipelineRunCommand extends Command
                 false,
             );
 
-        $this->addConfigOptions($this);
-        $this->addStatisticsOptions($this);
+        (new ConfigOption('config'))->configure($this);
+        (new StatisticsOptions())->configure($this);
     }
 
     public function execute(InputInterface $input, OutputInterface $output): int

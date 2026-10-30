@@ -4,22 +4,26 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use Flow\ETL\Bucketing\Storage\FilesystemBuckets;
-use Flow\ETL\Bucketing\Storage\MemoryBuckets;
-use Flow\ETL\Cache\Implementation\FilesystemCache;
-use Flow\ETL\Cache\Implementation\InMemoryCache;
-use Flow\ETL\Config\Cache\CacheConfig;
-use Flow\ETL\Config\Sort\ExternalSortConfig;
-use Flow\ETL\Config\Sort\MemorySortConfig;
-use Flow\ETL\Executor;
-use Flow\ETL\Optimizer;
-use Flow\ETL\Optimizer\Rule\PushLimitIntoSource;
-use Flow\ETL\Planner;
+use Flow\ETL\Kernels\Sort\ExternalSortConfig;
+use Flow\ETL\Kernels\Sort\MemorySortConfig;
+use Flow\ETL\Planning\Optimizer\Optimizer;
+use Flow\ETL\Planning\Optimizer\Rule\PushLimitIntoSource;
+use Flow\ETL\Planning\Physical\Planner;
+use Flow\ETL\Runtime\CacheConfig;
+use Flow\ETL\Runtime\Executor\Executor;
+use Flow\ETL\Storage\FilesystemRowsStorage;
+use Flow\ETL\Storage\MemoryRowsStorage;
+use Flow\ETL\Tests\Double\RecordingLauncher;
 use Flow\ETL\Tests\Double\SpyBackend;
-use Flow\ETL\Tests\Double\SpySerializer;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\ETL\Tests\Mother\NodeTranslatorMother;
+use Flow\ETL\Values\Column\Php\ScalarColumn;
+use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Values\Rows;
 use Override;
 
+use function array_map;
+use function array_merge;
 use function Flow\ETL\DSL\analyze;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config_builder;
@@ -29,6 +33,8 @@ use function Flow\ETL\DSL\memory_sort;
 use function Flow\ETL\DSL\schema;
 use function Flow\Serializer\DSL\serialize_to_string;
 use function Flow\Serializer\DSL\unserialize_from_string;
+use function iterator_to_array;
+use function putenv;
 use function str_replace;
 
 final class ConfigBuilderTest extends FlowIntegrationTestCase
@@ -41,38 +47,41 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         parent::tearDown();
     }
 
+    public function test_there_is_no_launcher_unless_one_is_set(): void
+    {
+        $launcher = new RecordingLauncher();
+
+        static::assertNull(config_builder()->build()->launcher());
+        static::assertSame($launcher, config_builder()->launcher($launcher)->build()->launcher());
+    }
+
     public function test_cache_override_takes_a_cache_object(): void
     {
-        $cache = new InMemoryCache();
+        $cache = new MemoryRowsStorage();
 
         static::assertSame($cache, config_builder()->cache($cache)->build()->cache->cache);
     }
 
-    public function test_config_serializer_reaches_the_default_cache(): void
+    public function test_the_default_cache_is_floe_files_in_the_cache_dir_on_the_configured_backend(): void
     {
-        putenv(CacheConfig::CACHE_DIR_ENV . '=' . __DIR__ . '/var/cache-serializer-mode');
+        putenv(CacheConfig::CACHE_DIR_ENV . '=' . __DIR__ . '/var/cache-default-storage');
 
-        $config = config_builder()->serializer($spy = new SpySerializer())->build();
+        $cache = config_builder()->backend(new PhpBackend())->build()->cache->cache;
+        $cache->append('key', array_to_rows([['id' => 1], ['id' => 2]], schema(int_schema('id'))));
 
-        $config->cache->cache->set(
-            'key',
-            $rows = array_to_rows([['id' => 1], ['id' => 2], ['id' => 3]], schema(int_schema('id'))),
-        );
+        static::assertInstanceOf(FilesystemRowsStorage::class, $cache);
+        static::assertSame([[['id' => 1], ['id' => 2]], [ScalarColumn::class]], [
+            array_merge(...array_map(
+                static fn(Rows $batch): array => $batch->toArray(),
+                iterator_to_array($cache->get('key'), false),
+            )),
+            array_map(
+                static fn(Rows $batch): string => $batch->column('id')::class,
+                iterator_to_array($cache->get('key'), false),
+            ),
+        ]);
 
-        static::assertEquals($rows, $config->cache->cache->get('key'));
-        static::assertCount(1, $spy->serialized);
-        static::assertCount(1, $spy->unserialized);
-
-        $config->cache->cache->clear();
-    }
-
-    public function test_custom_cache_is_untouched_by_config_serializer(): void
-    {
-        $custom = new InMemoryCache();
-
-        $config = config_builder()->cache($custom)->serializer(new SpySerializer())->build();
-
-        static::assertSame($custom, $config->cache->cache);
+        $cache->remove('key');
     }
 
     public function test_external_sort_batch_size_flows_into_sort_config(): void
@@ -87,25 +96,20 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
     {
         $analyze = analyze()->withSchema()->withColumnStatistics();
 
-        $config = config_builder()->analyze($analyze)->build();
-
-        static::assertSame($analyze, $config->analyze());
+        static::assertSame($analyze, config_builder()->analyze($analyze)->build()->analyze());
     }
 
     public function test_config_without_analyze_returns_null(): void
     {
-        $config = config_builder()->build();
-
-        static::assertNull($config->analyze());
+        static::assertNull(config_builder()->build()->analyze());
     }
 
     public function test_creating_custom_cache_dir(): void
     {
         putenv(CacheConfig::CACHE_DIR_ENV . '=' . __DIR__ . '/var/cache');
-        $config = config_builder()->build();
 
         static::assertSame(
-            str_replace('\\', '/', $config->cache->localFilesystemCacheDir->path()),
+            str_replace('\\', '/', config_builder()->build()->cache->localFilesystemCacheDir->path()),
             str_replace('\\', '/', __DIR__ . '/var/cache'),
         );
     }
@@ -114,22 +118,26 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
     {
         putenv(CacheConfig::CACHE_DIR_ENV . '=' . __DIR__ . '/var/cache-from-env');
 
-        $config = config_builder()->cacheDir(__DIR__ . '/var/cache-explicit')->build();
-
         static::assertSame(
             str_replace('\\', '/', __DIR__ . '/var/cache-explicit'),
-            str_replace('\\', '/', $config->cache->localFilesystemCacheDir->path()),
+            str_replace(
+                '\\',
+                '/',
+                config_builder()
+                    ->cacheDir(__DIR__ . '/var/cache-explicit')
+                    ->build()
+                    ->cache->localFilesystemCacheDir->path(),
+            ),
         );
     }
 
     public function test_default_cache_dir(): void
     {
         putenv(CacheConfig::CACHE_DIR_ENV . '=');
-        $config = config_builder()->build();
 
         static::assertSame(
             str_replace('\\', '/', sys_get_temp_dir() . '/flow_php/cache'),
-            str_replace('\\', '/', $config->cache->localFilesystemCacheDir->path()),
+            str_replace('\\', '/', config_builder()->build()->cache->localFilesystemCacheDir->path()),
         );
     }
 
@@ -137,7 +145,7 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
     {
         $config = config_builder()->build();
 
-        static::assertInstanceOf(FilesystemCache::class, $config->cache->cache);
+        static::assertInstanceOf(FilesystemRowsStorage::class, $config->cache->cache);
         static::assertSame($this->cacheDir->path(), $config->cache->localFilesystemCacheDir->path());
     }
 
@@ -146,7 +154,7 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         $config = config_builder()->build();
 
         static::assertInstanceOf(ExternalSortConfig::class, $config->sort);
-        static::assertInstanceOf(FilesystemBuckets::class, $config->sort->bucketing->storage);
+        static::assertInstanceOf(FilesystemRowsStorage::class, $config->sort->bucketing->storage);
     }
 
     public function test_default_sorting_algorithm_is_external_sort(): void
@@ -161,7 +169,7 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
 
     public function test_external_sort_storage_override(): void
     {
-        $storage = new MemoryBuckets();
+        $storage = new MemoryRowsStorage();
 
         $config = config_builder()->sort(external_sort()->storage($storage))->build();
 
@@ -185,7 +193,12 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
     {
         $optimizer = Optimizer::default()->without(PushLimitIntoSource::class);
 
-        static::assertEquals(new Planner($optimizer), config_builder()->optimizer($optimizer)->build()->planner());
+        $config = config_builder()->optimizer($optimizer)->build();
+
+        static::assertEquals(
+            new Planner($optimizer, NodeTranslatorMother::of($config), $config->backend()),
+            $config->planner(),
+        );
     }
 
     public function test_executor_defaults_to_an_executor(): void
@@ -211,6 +224,6 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
             'id' => 1,
         ]], schema(int_schema('id')))));
 
-        static::assertSame(1, $backend->decodes());
+        static::assertSame(1, $backend->decodeFrames());
     }
 }

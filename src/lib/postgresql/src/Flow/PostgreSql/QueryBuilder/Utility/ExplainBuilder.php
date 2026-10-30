@@ -12,7 +12,7 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\SelectStmt;
 use Flow\PostgreSql\Protobuf\AST\UpdateStmt;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\Delete\DeleteFinalStep;
 use Flow\PostgreSql\QueryBuilder\Insert\InsertFinalStep;
 use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
@@ -20,8 +20,6 @@ use Flow\PostgreSql\QueryBuilder\Update\UpdateFinalStep;
 
 final readonly class ExplainBuilder implements ExplainFinalStep
 {
-    use AstToSql;
-
     private function __construct(
         private SelectFinalStep|InsertFinalStep|UpdateFinalStep|DeleteFinalStep $query,
         private bool $analyze = false,
@@ -175,6 +173,11 @@ final readonly class ExplainBuilder implements ExplainFinalStep
             $this->memory,
             $this->format,
         );
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): ExplainStmt

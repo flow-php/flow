@@ -7,6 +7,8 @@ use std::rc::Rc;
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::types::{ZendHashTable, Zval};
+use flow_batch_frame::builder::KindBuilder;
+use flow_batch_frame::key::Key;
 use flow_batch_frame::kind::Kind;
 
 use crate::builder::{definition_nullable, schema_mismatch};
@@ -18,26 +20,9 @@ use crate::ctx::{self, call_method, call_static, ht_for_each, ht_insert, ht_inse
 use crate::date_check::iso_instant_micros;
 use crate::exception::ext_exception;
 use crate::json_check::json_valid;
-use crate::kind_builder::KindBuilder;
 use crate::plan::{type_plan, TypePlan};
-use crate::render::invalid_argument;
 use crate::uuid_check::is_uuid;
 use crate::values::{datetime_days, datetime_micros, uuid_bytes};
-
-/// A `Schema::definitions()` key: an int for a numeric name, as PHP keys it.
-pub enum Key {
-    Index(i64),
-    Name(Vec<u8>),
-}
-
-impl Key {
-    pub fn name(&self) -> Vec<u8> {
-        match self {
-            Key::Index(index) => index.to_string().into_bytes(),
-            Key::Name(name) => name.clone(),
-        }
-    }
-}
 
 pub struct BatchColumn {
     pub key: Key,
@@ -58,6 +43,8 @@ pub struct BatchColumns {
     pub batch_size: usize,
     pub columns: Vec<BatchColumn>,
     pub rows: usize,
+    /// Rows already handed out from this source: a refusal names its row in the whole source, as `RecordBatch` does.
+    emitted: usize,
 }
 
 /// A PHP `$batchSize` as a row count: refused unless greater than 0.
@@ -112,6 +99,7 @@ impl BatchColumns {
             batch_size,
             columns,
             rows: 0,
+            emitted: 0,
         })
     }
 
@@ -139,7 +127,10 @@ impl BatchColumns {
                     )));
                 }
                 _ => {
-                    *pending = Some(Self::new(schema, json, batch_size)?);
+                    let emitted = pending.as_ref().map_or(0, |state| state.emitted);
+                    let mut state = Self::new(schema, json, batch_size)?;
+                    state.emitted = emitted;
+                    *pending = Some(state);
                     rebuilt = true;
                 }
             }
@@ -160,26 +151,33 @@ impl BatchColumns {
         Ok((state, rebuilt))
     }
 
+    /// Empties the batch; the builders keep their capacity.
     pub fn reset(&mut self) {
         self.rows = 0;
 
         for column in &mut self.columns {
-            column.values = KindBuilder::new(&column.plan.kind);
+            column.values.truncate(0);
             column.refusal = None;
             column.absent = None;
         }
     }
 
-    /// The batch's columns, or its refusal: the lowest refused row (ties: the earliest definition), else the lowest
-    /// absent row (ties: the earliest definition) as `missingColumn`. The state is reset either way.
+    /// The batch's columns, or its refusal at its row in the whole source: the lowest refused row (ties: the earliest
+    /// definition), else the lowest absent row (ties: the earliest definition) as `missingColumn`. The state is reset
+    /// either way.
     pub fn finish(&mut self) -> Result<HeldBatch, PhpException> {
         let batch = self.build();
+
+        if batch.is_ok() {
+            self.emitted += self.rows;
+        }
+
         self.reset();
 
         batch
     }
 
-    fn build(&self) -> Result<HeldBatch, PhpException> {
+    fn build(&mut self) -> Result<HeldBatch, PhpException> {
         // min_by_key() keeps the first of equal rows: the earliest definition
         if let Some((row, cause)) = self
             .columns
@@ -187,7 +185,10 @@ impl BatchColumns {
             .filter_map(|column| column.refusal.as_ref())
             .min_by_key(|(row, _)| *row)
         {
-            return Err(schema_mismatch(zval_long(*row as i64), cause.shallow_clone()));
+            return Err(schema_mismatch(
+                zval_long((self.emitted + *row) as i64),
+                cause.shallow_clone(),
+            ));
         }
 
         if let Some((row, column)) = self
@@ -197,21 +198,18 @@ impl BatchColumns {
             .min_by_key(|(row, _)| *row)
         {
             let cause = call_static(
-                "Flow\\ETL\\Exception\\ColumnMismatchException",
+                "Flow\\ETL\\Foundation\\Exception\\ColumnMismatchException",
                 "missingColumn",
-                &mut [column.definition.shallow_clone()],
+                &mut [call_method(&column.definition, "name", &mut [])?],
             )?;
 
-            return Err(schema_mismatch(zval_long(row as i64), cause));
+            return Err(schema_mismatch(zval_long((self.emitted + row) as i64), cause));
         }
 
         let mut columns = ZendHashTable::with_capacity(self.columns.len() as u32);
 
-        for column in &self.columns {
-            let data = column
-                .values
-                .finish(&column.plan.kind)
-                .map_err(|e| invalid_argument(format!("flow_php built an invalid column: {e}")))?;
+        for column in &mut self.columns {
+            let data = column.values.take(&column.plan.kind);
             let mut native = Zval::new();
             ext_php_rs::convert::IntoZval::set_zval(
                 RustColumn::new(arrow_array::make_array(data), Rc::clone(&column.plan)),
@@ -241,12 +239,8 @@ pub struct HeldBatch {
 /// A text value `cast.rs` casts natively, appended in its physical form; `false` hands it to the PHP lane.
 pub fn native_text(values: &mut KindBuilder, kind: &Kind, cast: &CastKind, bytes: &[u8]) -> Result<bool, PhpException> {
     match (kind, cast) {
-        (Kind::Int64, CastKind::Integer) => Ok(integer_from_str(bytes)
-            .map(|value| values.append_fixed(&value.to_le_bytes()))
-            .is_some()),
-        (Kind::Float64, CastKind::Float) => Ok(float_from_str(bytes)
-            .map(|value| values.append_fixed(&value.to_le_bytes()))
-            .is_some()),
+        (Kind::Int64, CastKind::Integer) => Ok(integer_from_str(bytes).map(|value| values.append_i64(value)).is_some()),
+        (Kind::Float64, CastKind::Float) => Ok(float_from_str(bytes).map(|value| values.append_f64(value)).is_some()),
         (Kind::Boolean, CastKind::Boolean) => Ok(bool_from_str(bytes).map(|value| values.append_bool(value)).is_some()),
         (Kind::Bytes, CastKind::String) => {
             values.append_bytes(bytes);
@@ -272,11 +266,11 @@ pub fn native_text(values: &mut KindBuilder, kind: &Kind, cast: &CastKind, bytes
                 parse_iso_datetime(bytes, zone)?.and_then(|(_, instant)| instant.object().and_then(datetime_micros))
             }
         }
-        .map(|micros| values.append_fixed(&micros.to_le_bytes()))
+        .map(|micros| values.append_i64(micros))
         .is_some()),
         (Kind::Int32, CastKind::Date) => Ok(parse_iso_date(bytes)?
             .and_then(|instant| instant.object().and_then(datetime_days))
-            .map(|days| values.append_fixed(&(days as i32).to_le_bytes()))
+            .map(|days| values.append_i32(days as i32))
             .is_some()),
         _ => Ok(false),
     }

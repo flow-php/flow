@@ -6,12 +6,10 @@ namespace Flow\PostgreSql\QueryBuilder\Transaction;
 
 use Flow\PostgreSql\Protobuf\AST\TransactionStmt;
 use Flow\PostgreSql\Protobuf\AST\TransactionStmtKind;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class PreparedTransactionBuilder implements PreparedTransactionFinalStep
 {
-    use AstToSql;
-
     private function __construct(
         private string $gid,
         private int $kind,
@@ -30,6 +28,11 @@ final readonly class PreparedTransactionBuilder implements PreparedTransactionFi
     public static function rollbackPrepared(string $gid): PreparedTransactionFinalStep
     {
         return new self($gid, TransactionStmtKind::TRANS_STMT_ROLLBACK_PREPARED);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): TransactionStmt

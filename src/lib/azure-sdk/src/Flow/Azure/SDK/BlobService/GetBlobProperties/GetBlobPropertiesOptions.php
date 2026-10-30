@@ -6,11 +6,10 @@ namespace Flow\Azure\SDK\BlobService\GetBlobProperties;
 
 use Flow\Azure\SDK\BlobService;
 use Flow\Azure\SDK\EndpointOptions;
-use Flow\Azure\SDK\Endpoints\UserAgentHeader;
 
 final class GetBlobPropertiesOptions implements EndpointOptions
 {
-    use UserAgentHeader;
+    private string $userAgentHeader = 'flow-php/azure-sdk';
 
     private ?string $encryptionAlgorithm = null;
 
@@ -137,5 +136,15 @@ final class GetBlobPropertiesOptions implements EndpointOptions
         $this->versionId = $versionId;
 
         return $this;
+    }
+
+    public function userAgentHeader(): string
+    {
+        return $this->userAgentHeader;
+    }
+
+    public function withUserAgent(string $userAgentHeader): void
+    {
+        $this->userAgentHeader = $userAgentHeader;
     }
 }

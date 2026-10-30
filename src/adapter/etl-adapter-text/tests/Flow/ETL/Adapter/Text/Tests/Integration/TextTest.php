@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Text\Tests\Integration;
 
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\Filesystem\Tests\OperatingSystem;
+use Flow\Filesystem\Tests\Context\OperatingSystem;
 
 use function file_exists;
 use function file_get_contents;
@@ -25,11 +25,9 @@ use function unlink;
 
 final class TextTest extends FlowTestCase
 {
-    use OperatingSystem;
-
     public function test_loading_text_files(): void
     {
-        if ($this->isWindows()) {
+        if (OperatingSystem::isWindows()) {
             static::markTestSkipped('This test is failing on windows due to different new line characters.');
         }
 

@@ -11,6 +11,7 @@
     ],
     "require": {
         "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+        "ext-dom": "*",
         "ext-json": "*",
         "flow-php/array-dot": "self.version",
         "flow-php/etl": "self.version",

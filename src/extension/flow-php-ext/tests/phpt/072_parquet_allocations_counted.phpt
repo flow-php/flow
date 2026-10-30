@@ -7,10 +7,12 @@ Batches RustParquetOpenSource holds are counted by RustBackend::allocatedBytes()
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\Parquet\Engine\RustParquetFileWriter;
+use Flow\Parquet\Engine\RustParquetFileWriter as ArrowRustParquetFileWriter;
 
-use Flow\ETL\Adapter\Parquet\{RustParquetOpenSink, SchemaConverter};
-use Flow\ETL\Column\RustBackend;
+use Flow\ETL\Adapter\Parquet\IO\Loader\{ParquetSchemaConformance, RustParquetFileWriter};
+use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Adapter\Parquet\Values\Schema\SchemaConverter;
+use Flow\ETL\Values\Column\RustBackend;
 use Flow\Parquet\Engine\Arrow\{OptionsConverter, SchemaConverter as ArrowSchemaConverter};
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
@@ -20,13 +22,17 @@ use function Flow\Filesystem\DSL\{memory_filesystem, path};
 
 $schema = schema(int_schema('id'), str_schema('email'), float_schema('amount', nullable: true));
 $filesystem = memory_filesystem();
-$writer = new RustParquetOpenSink(new RustParquetFileWriter(
-    $filesystem->writeTo(path('memory://held.parquet')),
-    ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquet($schema)),
-    Compressions::SNAPPY,
-    OptionsConverter::toExtension(Options::default()),
-    1_000,
-));
+$writer = new RustParquetFileWriter(
+    new ArrowRustParquetFileWriter(
+        $filesystem->writeTo(path('memory://held.parquet')),
+        ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquetSchema($schema)),
+        Compressions::SNAPPY,
+        OptionsConverter::toExtension(Options::default()),
+        1_000,
+    ),
+    new ParquetSchemaConformance((new SchemaConverter())->toParquetSchema($schema)),
+    new PhpBackend(),
+);
 
 foreach (array_chunk(range(0, 65_535), 8_192) as $ids) {
     $writer->write(native_rows($schema, array_map(static fn(int $i): array => ['id' => $i, 'email' => "user{$i}@example.com", 'amount' => $i % 5 ? $i / 7 : null], $ids)));

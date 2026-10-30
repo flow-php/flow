@@ -8,7 +8,8 @@ use Flow\Parquet\Filter\All;
 use Flow\Parquet\Filter\Any;
 use Flow\Parquet\Filter\Binding\AbsentLeaf;
 use Flow\Parquet\Filter\Binding\BoundFilter;
-use Flow\Parquet\Filter\Binding\ResolvedLeaf;
+use Flow\Parquet\Filter\Binding\ExactLeaf;
+use Flow\Parquet\Filter\Binding\InexactLeaf;
 use Flow\Parquet\Filter\Comparison;
 use Flow\Parquet\Filter\Filter;
 use Flow\Parquet\Filter\FilterVisitor;
@@ -64,7 +65,10 @@ final readonly class StatisticsEvaluator implements FilterVisitor
             return $this->negated ? Truth::Never : Truth::Always;
         }
 
-        $zone = $resolution instanceof ResolvedLeaf ? $this->zones->zone($resolution->column) : null;
+        $zone =
+            $resolution instanceof ExactLeaf || $resolution instanceof InexactLeaf
+                ? $this->zones->zone($resolution->column)
+                : null;
 
         if ($zone === null) {
             return Truth::Maybe;
@@ -90,7 +94,7 @@ final readonly class StatisticsEvaluator implements FilterVisitor
             return Truth::Never;
         }
 
-        if (!$resolution instanceof ResolvedLeaf || $resolution->intervals === null) {
+        if (!$resolution instanceof ExactLeaf) {
             return Truth::Maybe;
         }
 
@@ -123,7 +127,7 @@ final readonly class StatisticsEvaluator implements FilterVisitor
             return Truth::Never;
         }
 
-        if (!$resolution instanceof ResolvedLeaf || $resolution->intervals === null) {
+        if (!$resolution instanceof ExactLeaf) {
             return Truth::Maybe;
         }
 

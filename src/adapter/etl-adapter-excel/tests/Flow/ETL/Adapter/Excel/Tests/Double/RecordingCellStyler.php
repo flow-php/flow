@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel\Tests\Double;
 
-use Flow\ETL\Adapter\Excel\CellStyler;
-use Flow\ETL\Schema\Definition;
+use Flow\ETL\Adapter\Excel\IO\Loader\CellStyler;
+use Flow\ETL\Values\Schema\Definition;
 use OpenSpout\Common\Entity\Style\Style;
 
 use function is_scalar;

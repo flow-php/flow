@@ -583,6 +583,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "flow-arrow-c"
+version = "0.1.0"
+dependencies = [
+ "arrow-array",
+ "arrow-schema",
+]
+
+[[package]]
 name = "flow-batch-frame"
 version = "0.1.0"
 dependencies = [
@@ -593,6 +601,37 @@ dependencies = [
  "serde",
  "serde_json",
 ]
+
+[[package]]
+name = "flow-column-text"
+version = "0.1.0"
+dependencies = [
+ "arrow-array",
+ "arrow-buffer",
+ "arrow-schema",
+ "flow-batch-frame",
+]
+
+[[package]]
+name = "flow-csv-tokenizer"
+version = "0.1.0"
+dependencies = [
+ "memchr",
+]
+
+[[package]]
+name = "flow-json-records"
+version = "0.1.0"
+dependencies = [
+ "flow-batch-frame",
+ "memchr",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "flow-numeric-string"
+version = "0.1.0"
 
 [[package]]
 name = "flow_php"
@@ -606,7 +645,12 @@ dependencies = [
  "bytes",
  "ext-php-rs",
  "ext-php-rs-build",
+ "flow-arrow-c",
  "flow-batch-frame",
+ "flow-column-text",
+ "flow-csv-tokenizer",
+ "flow-json-records",
+ "flow-numeric-string",
  "memchr",
  "serde",
  "serde_json",

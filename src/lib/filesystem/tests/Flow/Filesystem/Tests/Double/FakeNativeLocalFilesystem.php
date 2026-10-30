@@ -19,6 +19,7 @@ use Flow\Filesystem\SourceStream;
 use Flow\Filesystem\Stream\NativeLocalDestinationStream;
 use Flow\Filesystem\Stream\NativeLocalSourceStream;
 use Generator;
+use SensitiveParameter;
 
 use function array_reverse;
 use function file_exists;
@@ -45,6 +46,13 @@ final class FakeNativeLocalFilesystem implements Filesystem
         $this->mount = new Mount($protocol);
     }
 
+    public static function fromArray(#[SensitiveParameter] array $configuration): static
+    {
+        throw new InvalidArgumentException(
+            'FakeNativeLocalFilesystem is a test double and cannot be rebuilt from a configuration',
+        );
+    }
+
     public function appendTo(Path $path): DestinationStream
     {
         if ($path->isEqual($this->getSystemTmpDir())) {
@@ -69,6 +77,11 @@ final class FakeNativeLocalFilesystem implements Filesystem
         }
 
         return NativeLocalDestinationStream::openAppend($path);
+    }
+
+    public function normalize(): ?array
+    {
+        return null;
     }
 
     public function getSystemTmpDir(): Path
@@ -115,6 +128,12 @@ final class FakeNativeLocalFilesystem implements Filesystem
 
         if (file_exists($to->path())) {
             $this->rm($to);
+        }
+
+        $directory = $to->parentDirectory()->path();
+
+        if (!is_dir($directory)) {
+            mkdir($directory, 0777, true);
         }
 
         if (!rename($from->path(), $to->path())) {

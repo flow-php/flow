@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Filter;
 
-use InvalidArgumentException;
+use Flow\Parquet\Exception\InvalidArgumentException;
 
 final readonly class ColumnRef
 {

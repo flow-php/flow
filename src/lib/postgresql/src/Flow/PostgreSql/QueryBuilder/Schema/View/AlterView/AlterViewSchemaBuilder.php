@@ -7,12 +7,10 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\View\AlterView;
 use Flow\PostgreSql\Protobuf\AST\AlterObjectSchemaStmt;
 use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class AlterViewSchemaBuilder implements AlterViewSchemaFinalStep
 {
-    use AstToSql;
-
     private function __construct(
         private string $view,
         private ?string $schema,
@@ -23,6 +21,11 @@ final readonly class AlterViewSchemaBuilder implements AlterViewSchemaFinalStep
     public static function create(string $view, ?string $schema, string $newSchema, bool $ifExists): self
     {
         return new self($view, $schema, $newSchema, $ifExists);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): AlterObjectSchemaStmt

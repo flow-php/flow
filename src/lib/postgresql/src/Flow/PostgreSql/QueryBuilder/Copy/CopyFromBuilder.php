@@ -10,7 +10,7 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBList;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
@@ -22,8 +22,6 @@ use function Flow\Types\DSL\type_string;
  */
 final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSourceStep, CopyFromTableStep
 {
-    use AstToSql;
-
     /**
      * @param list<string> $columns
      * @param list<string> $forceNotNullColumns
@@ -361,6 +359,11 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
             $this->encoding,
             $this->onError,
         );
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): CopyStmt

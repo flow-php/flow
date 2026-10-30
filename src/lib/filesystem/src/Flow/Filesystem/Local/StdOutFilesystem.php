@@ -18,6 +18,7 @@ use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\SourceStream;
 use Generator;
 use php_user_filter;
+use SensitiveParameter;
 
 use function array_key_exists;
 use function Flow\Types\DSL\type_string;
@@ -34,6 +35,13 @@ final class StdOutFilesystem implements Filesystem
         private readonly ?php_user_filter $filter = null,
     ) {}
 
+    public static function fromArray(#[SensitiveParameter] array $configuration): static
+    {
+        throw new InvalidArgumentException(
+            'StdOutFilesystem holds in-process state and cannot be rebuilt from a configuration',
+        );
+    }
+
     public function appendTo(Path $path): DestinationStream
     {
         if (!$this->mount->supports($path)) {
@@ -46,6 +54,11 @@ final class StdOutFilesystem implements Filesystem
         return new StdOutDestinationStream($path, $target, $this->filter, function () use ($target): void {
             $this->releaseTarget($target);
         });
+    }
+
+    public function normalize(): ?array
+    {
+        return null;
     }
 
     public function getSystemTmpDir(): Path

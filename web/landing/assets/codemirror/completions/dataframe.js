@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DataFrame Methods
  *
- * DataFrame methods: 48
+ * DataFrame methods: 44
  * DataFrame-returning methods from classes: 3
  *
  * This completer triggers after DataFrame-returning methods
@@ -10,22 +10,22 @@
 import { CompletionContext, snippet } from "@codemirror/autocomplete"
 
 // Map of DataFrame-returning methods grouped by class
-const dataframeReturningMethods = {"flow":["extract","from","process","read"],"dataframe":["aggregate","batchBy","batchSize","cache","collect","collectRefs","constrain","crossJoin","drop","dropDuplicates","duplicateRow","filter","filters","join","joinEach","limit","load","match","offset","onError","repartition","rename","renameEach","rows","select","sortBy","transform","until","void","with","withColumn","withColumns","withEntries","withEntry","write"],"groupeddataframe":["aggregate"]};
+const dataframeReturningMethods = {"flow":["process","read"],"dataframe":["aggregate","aggregateBy","batchBy","batchSize","cache","collect","collectRefs","constrain","crossJoin","drop","dropDuplicates","duplicateRow","filter","filters","join","joinEach","limit","match","offset","onError","repartition","rename","renameEach","select","sortBy","until","void","with","withColumn","withColumns","write"],"groupeddataframe":["aggregate"]};
 
 // DataFrame methods
 const dataframeMethods = [
     {
         label: "aggregate",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">aggregate</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$aggregations</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">GroupByAlgorithmBuilder</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                    <span class=\"fn-name\">aggregate</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$aggregations</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">BucketingAlgorithmBuilder</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @lazy<br>@param Aggregations $aggregations<br>@param null|GroupByAlgorithmBuilder $algorithm null defers to configuration; a builder pins the<br>                                              algorithm for this operation and skips any automatic choice
+                    @lazy<br>@param Aggregations $aggregations<br>@param null|BucketingAlgorithmBuilder $algorithm null defers to configuration; a builder pins the<br>                                              algorithm for this operation and skips any automatic choice
                 </div>
                             `
             return div
@@ -33,9 +33,27 @@ const dataframeMethods = [
         apply: snippet("aggregate(" + "$" + "{" + "1:aggregations" + "}" + ", " + "$" + "{" + "2:algorithm" + "}" + ")"),
         boost: 10
     },        {
+        label: "aggregateBy",
+        type: "method",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">aggregateBy</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">GroupBy</span> <span class=\"fn-param\">$groupBy</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">BucketingAlgorithmBuilder</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @lazy<br>@param null|BucketingAlgorithmBuilder $algorithm null defers to configuration; a builder pins the<br>                                              algorithm for this operation and skips any automatic choice
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("aggregateBy(" + "$" + "{" + "1:groupBy" + "}" + ", " + "$" + "{" + "2:algorithm" + "}" + ")"),
+        boost: 10
+    },        {
         label: "batchBy",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -53,7 +71,7 @@ const dataframeMethods = [
     },        {
         label: "batchSize",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -71,15 +89,15 @@ const dataframeMethods = [
     },        {
         label: "cache",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">cache</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$id</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$cacheBatchSize</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Cache</span> <span class=\"fn-param\">$cache</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                    <span class=\"fn-name\">cache</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$id</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$cacheBatchSize</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">RowsStorage</span> <span class=\"fn-param\">$cache</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Start processing rows up to this moment and put each instance of Rows<br>into previously defined cache.<br>Cache type can be set through ConfigBuilder.<br>By default everything is cached in system tmp dir.<br>Important: cache batch size might significantly improve performance when processing large amount of rows.<br>Larger batch size will increase memory consumption but will reduce number of IO operations.<br>When not set, the batch size is taken from the last DataFrame::batchSize() call.<br>@lazy<br>@param null|string $id<br>@param null|Cache $cache reads of this cache must pass the same instance to from_cache()<br>@throws InvalidArgumentException
+                    Start processing rows up to this moment and put each instance of Rows<br>into previously defined cache.<br>Cache type can be set through ConfigBuilder.<br>By default everything is cached in system tmp dir.<br>Important: cache batch size might significantly improve performance when processing large amount of rows.<br>Larger batch size will increase memory consumption but will reduce number of IO operations.<br>When not set, the batch size is taken from the last DataFrame::batchSize() call.<br>@lazy<br>@param null|string $id<br>@param null|RowsStorage $cache reads of this cache must pass the same instance to from_cache()<br>@throws InvalidArgumentException
                 </div>
                             `
             return div
@@ -89,7 +107,7 @@ const dataframeMethods = [
     },        {
         label: "collect",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -107,7 +125,7 @@ const dataframeMethods = [
     },        {
         label: "collectRefs",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -125,7 +143,7 @@ const dataframeMethods = [
     },        {
         label: "constrain",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -140,7 +158,7 @@ const dataframeMethods = [
     },        {
         label: "count",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -158,7 +176,7 @@ const dataframeMethods = [
     },        {
         label: "crossJoin",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -176,12 +194,12 @@ const dataframeMethods = [
     },        {
         label: "display",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">display</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">20</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int|bool</span> <span class=\"fn-param\">$truncate</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">20</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Formatter</span> <span class=\"fn-param\">$formatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Formatter\\AsciiTableFormatter::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
+                    <span class=\"fn-name\">display</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">20</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int|bool</span> <span class=\"fn-param\">$truncate</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">20</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Formatter</span> <span class=\"fn-param\">$formatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\IO\\Formatter\\AsciiTableFormatter::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param int $limit maximum numbers of rows to display<br>@param bool|int $truncate false or if set to 0 columns are not truncated, otherwise default truncate to 20<br>                          characters<br>@param Formatter $formatter<br>@trigger<br>@throws InvalidArgumentException
@@ -194,7 +212,7 @@ const dataframeMethods = [
     },        {
         label: "drop",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -212,7 +230,7 @@ const dataframeMethods = [
     },        {
         label: "dropDuplicates",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -230,7 +248,7 @@ const dataframeMethods = [
     },        {
         label: "duplicateRow",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -245,7 +263,7 @@ const dataframeMethods = [
     },        {
         label: "fetch",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -263,7 +281,7 @@ const dataframeMethods = [
     },        {
         label: "filter",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -281,7 +299,7 @@ const dataframeMethods = [
     },        {
         label: "filters",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -299,7 +317,7 @@ const dataframeMethods = [
     },        {
         label: "forEach",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -317,7 +335,7 @@ const dataframeMethods = [
     },        {
         label: "get",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -335,7 +353,7 @@ const dataframeMethods = [
     },        {
         label: "getAsArray",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -353,7 +371,7 @@ const dataframeMethods = [
     },        {
         label: "getEachAsArray",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -371,15 +389,15 @@ const dataframeMethods = [
     },        {
         label: "groupBy",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">groupBy</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|array|string</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">GroupByAlgorithmBuilder</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">GroupedDataFrame</span>
+                    <span class=\"fn-name\">groupBy</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|array|string</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">BucketingAlgorithmBuilder</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">GroupedDataFrame</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @lazy<br>@param GroupByReferences|Reference|string $columns a single column is grouped by on its own<br>@param null|GroupByAlgorithmBuilder $algorithm null defers to configuration; a builder pins the<br>                                              algorithm for this operation and skips any automatic choice
+                    @lazy<br>@param GroupByReferences|Reference|string $columns a single column is grouped by on its own<br>@param null|BucketingAlgorithmBuilder $algorithm null defers to configuration; a builder pins the<br>                                              algorithm for this operation and skips any automatic choice
                 </div>
                             `
             return div
@@ -389,12 +407,12 @@ const dataframeMethods = [
     },        {
         label: "join",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">join</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">self</span> <span class=\"fn-param\">$dataFrame</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$on</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Join|string</span> <span class=\"fn-param\">$type</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Join\\Join::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">JoinAlgorithmBuilder</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                    <span class=\"fn-name\">join</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">self</span> <span class=\"fn-param\">$dataFrame</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$on</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">JoinType|string</span> <span class=\"fn-param\">$type</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Values\\Join\\JoinType::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">JoinAlgorithmBuilder</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @lazy<br>@param null|JoinAlgorithmBuilder $algorithm null defers to configuration; a builder pins the algorithm<br>                                           for this operation and skips any automatic choice
@@ -407,15 +425,15 @@ const dataframeMethods = [
     },        {
         label: "joinEach",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">joinEach</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">DataFrameFactory</span> <span class=\"fn-param\">$factory</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$on</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Join|string</span> <span class=\"fn-param\">$type</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Join\\Join::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                    <span class=\"fn-name\">joinEach</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ExtractorFactory</span> <span class=\"fn-param\">$factory</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Expression</span> <span class=\"fn-param\">$on</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">JoinType|string</span> <span class=\"fn-param\">$type</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Values\\Join\\JoinType::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Joins in memory per batch; it is not governed by the join algorithm and takes no algorithm override.<br>@lazy<br>@param string|Join $type
+                    Joins in memory per batch; it is not governed by the join algorithm and takes no algorithm override.<br>@lazy<br>@param string|JoinType $type
                 </div>
                             `
             return div
@@ -425,7 +443,7 @@ const dataframeMethods = [
     },        {
         label: "limit",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -441,27 +459,9 @@ const dataframeMethods = [
         apply: snippet("limit(" + "$" + "{" + "1:limit" + "}" + ")"),
         boost: 10
     },        {
-        label: "load",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">load</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Loader|Sink</span> <span class=\"fn-param\">$sink</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @lazy
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("load(" + "$" + "{" + "1:sink" + "}" + ")"),
-        boost: 10
-    },        {
         label: "match",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -479,7 +479,7 @@ const dataframeMethods = [
     },        {
         label: "offset",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -487,7 +487,7 @@ const dataframeMethods = [
                     <span class=\"fn-name\">offset</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$offset</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Skip given number of rows from the beginning of the dataset.<br>When $offset is null, nothing happens (no rows are skipped).<br>Performance Note: DataFrame must iterate through and process all skipped rows<br>to reach the offset position. For large offsets, this can impact performance<br>as the data source still needs to be read and processed up to the offset point.<br>@param ?int<0, max> $offset<br>@lazy<br>@throws InvalidArgumentException
+                    Skip given number of rows from the beginning of the dataset.<br>When $offset is null, nothing happens (no rows are skipped).<br>Performance Note: directly over a file source, the source skips the rows itself (Parquet and Floe by their<br>footer, without decoding them). Any other source, or an offset after a step that drops or reorders rows, still<br>reads and processes every skipped row.<br>@param ?int<0, max> $offset<br>@lazy<br>@throws InvalidArgumentException
                 </div>
                             `
             return div
@@ -497,7 +497,7 @@ const dataframeMethods = [
     },        {
         label: "onError",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -515,7 +515,7 @@ const dataframeMethods = [
     },        {
         label: "repartition",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -533,12 +533,12 @@ const dataframeMethods = [
     },        {
         label: "printRows",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">printRows</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">20</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int|bool</span> <span class=\"fn-param\">$truncate</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">20</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Formatter</span> <span class=\"fn-param\">$formatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Formatter\\AsciiTableFormatter::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">void</span>
+                    <span class=\"fn-name\">printRows</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">20</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int|bool</span> <span class=\"fn-param\">$truncate</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">20</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Formatter</span> <span class=\"fn-param\">$formatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\IO\\Formatter\\AsciiTableFormatter::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">void</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @trigger
@@ -551,15 +551,15 @@ const dataframeMethods = [
     },        {
         label: "explain",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">explain</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Trigger</span> <span class=\"fn-param\">$trigger</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Plan\\Trigger::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Plan</span>
+                    <span class=\"fn-name\">explain</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Trigger</span> <span class=\"fn-param\">$trigger</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Planning\\Logical\\Trigger::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Plan</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    The plan $trigger would run over this frame, frozen: later verbs on this frame do not reach it. The default<br>adds no consumer of its own - it draws the frame as built, its chain and its sinks. toString() prints it as a<br>tree. Answers from the plan without reading a row.
+                    The plan $trigger would run over this frame, frozen: later verbs on this frame do not reach it. The default<br>adds no consumer of its own - it draws the frame as built, its chain and its writes. toString() prints it as a<br>tree. Answers from the plan without reading a row.
                 </div>
                             `
             return div
@@ -569,12 +569,12 @@ const dataframeMethods = [
     },        {
         label: "printSchema",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">printSchema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SchemaFormatter</span> <span class=\"fn-param\">$formatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Row\\Formatter\\ASCIISchemaFormatter::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">void</span>
+                    <span class=\"fn-name\">printSchema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SchemaFormatter</span> <span class=\"fn-param\">$formatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\IO\\Formatter\\Row\\ASCIISchemaFormatter::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">void</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @lazy<br>@throws SchemaNotDerivableException
@@ -587,7 +587,7 @@ const dataframeMethods = [
     },        {
         label: "rename",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -605,7 +605,7 @@ const dataframeMethods = [
     },        {
         label: "renameEach",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -618,27 +618,9 @@ const dataframeMethods = [
         apply: snippet("renameEach(" + "$" + "{" + "1:strategies" + "}" + ")"),
         boost: 10
     },        {
-        label: "rows",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">rows</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Transformer|Transformation</span> <span class=\"fn-param\">$transformer</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @lazy<br>Alias for ETL::transform method.
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("rows(" + "$" + "{" + "1:transformer" + "}" + ")"),
-        boost: 10
-    },        {
         label: "run",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -656,7 +638,7 @@ const dataframeMethods = [
     },        {
         label: "schema",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -674,7 +656,7 @@ const dataframeMethods = [
     },        {
         label: "select",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -692,15 +674,15 @@ const dataframeMethods = [
     },        {
         label: "sortBy",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">sortBy</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|array|string</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SortAlgorithmBuilder</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                    <span class=\"fn-name\">sortBy</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|SortColumn|array|string</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SortAlgorithmBuilder</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @lazy<br>@param Reference|SortReferences|string $columns a single column is sorted by on its own<br>@param null|SortAlgorithmBuilder $algorithm null defers to configuration; a builder pins the algorithm<br>                                           for this operation and skips any automatic choice
+                    @lazy<br>@param Reference|SortColumn|SortColumns|string $columns a single column is sorted by on its own; a reference sorts ascending<br>@param null|SortAlgorithmBuilder $algorithm null defers to configuration; a builder pins the algorithm<br>                                           for this operation and skips any automatic choice
                 </div>
                             `
             return div
@@ -708,27 +690,9 @@ const dataframeMethods = [
         apply: snippet("sortBy(" + "$" + "{" + "1:columns" + "}" + ", " + "$" + "{" + "2:algorithm" + "}" + ")"),
         boost: 10
     },        {
-        label: "transform",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">transform</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Transformer|Transformation|Transformations|WithColumn</span> <span class=\"fn-param\">$transformer</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Alias for DataFrame::with().<br>@lazy
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("transform(" + "$" + "{" + "1:transformer" + "}" + ")"),
-        boost: 10
-    },        {
         label: "until",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -746,7 +710,7 @@ const dataframeMethods = [
     },        {
         label: "void",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -764,12 +728,12 @@ const dataframeMethods = [
     },        {
         label: "with",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">with</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Transformer|Transformation|Transformations|WithColumn</span> <span class=\"fn-param\">$transformer</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                    <span class=\"fn-name\">with</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Transformer|Transformation|WithColumn</span> <span class=\"fn-param\">$transformer</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @lazy
@@ -782,7 +746,7 @@ const dataframeMethods = [
     },        {
         label: "withColumn",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -800,7 +764,7 @@ const dataframeMethods = [
     },        {
         label: "withColumns",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -816,58 +780,22 @@ const dataframeMethods = [
         apply: snippet("withColumns(" + "$" + "{" + "1:references" + "}" + ")"),
         boost: 10
     },        {
-        label: "withEntries",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">withEntries</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$references</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @deprecated Use {@see DataFrame::withColumns()} instead.<br>@lazy<br>@param array<int, WithColumn>|array<string, ScalarFunction|WindowFunction|WithColumn> $references
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("withEntries(" + "$" + "{" + "1:references" + "}" + ")"),
-        boost: 10
-    },        {
-        label: "withEntry",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">withEntry</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Definition|string</span> <span class=\"fn-param\">$entry</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ScalarFunction|WindowFunction</span> <span class=\"fn-param\">$reference</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @deprecated Use {@see DataFrame::withColumn()} instead.<br>@param Definition<mixed>|string $entry<br>@lazy
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("withEntry(" + "$" + "{" + "1:entry" + "}" + ", " + "$" + "{" + "2:reference" + "}" + ")"),
-        boost: 10
-    },        {
         label: "write",
         type: "method",
-        detail: "Flow\\\\ETL\\\\DataFrame",
+        detail: "Flow\\\\ETL\\\\API\\\\DataFrame",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">write</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Loader|Sink</span> <span class=\"fn-param\">$sink</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                    <span class=\"fn-name\">write</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Loader|Branch|Transactional</span> <span class=\"fn-param\">$write</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @lazy<br>Alias for ETL::load function.
+                    @lazy
                 </div>
                             `
             return div
         },
-        apply: snippet("write(" + "$" + "{" + "1:sink" + "}" + ")"),
+        apply: snippet("write(" + "$" + "{" + "1:write" + "}" + ")"),
         boost: 10
     }        ]
 

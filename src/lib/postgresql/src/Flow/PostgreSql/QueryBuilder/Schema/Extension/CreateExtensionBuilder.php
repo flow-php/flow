@@ -9,12 +9,10 @@ use Flow\PostgreSql\Protobuf\AST\DefElem;
 use Flow\PostgreSql\Protobuf\AST\Integer;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBString;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class CreateExtensionBuilder implements CreateExtensionOptionsStep
 {
-    use AstToSql;
-
     /**
      * @param list<array{name: string, arg: ?Node}> $options
      */
@@ -42,6 +40,11 @@ final readonly class CreateExtensionBuilder implements CreateExtensionOptionsSte
     public function schema(string $schema): CreateExtensionOptionsStep
     {
         return $this->withStringOption('schema', $schema);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): CreateExtensionStmt

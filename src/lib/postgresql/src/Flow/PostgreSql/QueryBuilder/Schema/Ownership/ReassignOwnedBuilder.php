@@ -8,14 +8,12 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ReassignOwnedStmt;
 use Flow\PostgreSql\Protobuf\AST\RoleSpec;
 use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 use function array_values;
 
 final readonly class ReassignOwnedBuilder implements ReassignOwnedFinalStep, ReassignOwnedToStep
 {
-    use AstToSql;
-
     /**
      * @param list<string> $roles
      */
@@ -32,6 +30,11 @@ final readonly class ReassignOwnedBuilder implements ReassignOwnedFinalStep, Rea
     public function to(string $newRole): ReassignOwnedFinalStep
     {
         return new self($this->roles, $newRole);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): ReassignOwnedStmt

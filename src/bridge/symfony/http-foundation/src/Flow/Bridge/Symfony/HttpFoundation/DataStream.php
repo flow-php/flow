@@ -6,11 +6,13 @@ namespace Flow\Bridge\Symfony\HttpFoundation;
 
 use Flow\Bridge\Symfony\HttpFoundation\Response\FlowBufferedResponse;
 use Flow\Bridge\Symfony\HttpFoundation\Response\FlowStreamedResponse;
-use Flow\ETL\Config;
-use Flow\ETL\Config\ConfigBuilder;
-use Flow\ETL\Extractor;
-use Flow\ETL\Transformation;
-use Flow\ETL\Transformations;
+use Flow\ETL\API\Config\ConfigBuilder;
+use Flow\ETL\API\DataFrame;
+use Flow\ETL\API\Transformation;
+use Flow\ETL\API\Transformations;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\IO\Extractor;
+use Flow\ETL\Runtime\Config;
 use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -43,12 +45,15 @@ final class DataStream
     private array $transformations = [];
 
     public function __construct(
-        private readonly Extractor $extractor,
+        private readonly Extractor|DataFrame $source,
     ) {}
 
-    public static function open(Extractor $extractor): self
+    /**
+     * A DataFrame source runs under its own config, and the response appends its steps to that frame.
+     */
+    public static function open(Extractor|DataFrame $source): self
     {
-        return new self($extractor);
+        return new self($source);
     }
 
     /**
@@ -69,9 +74,15 @@ final class DataStream
     /**
      * Set the Config for the DataFrame execution.
      * Use this to configure Analyze for enabling Report generation.
+     *
+     * @throws InvalidArgumentException when the source is a DataFrame, which carries its own config
      */
     public function config(Config|ConfigBuilder $config): self
     {
+        if ($this->source instanceof DataFrame) {
+            throw new InvalidArgumentException('A DataFrame source carries its own config');
+        }
+
         $this->config = $config;
 
         return $this;
@@ -112,7 +123,7 @@ final class DataStream
         $this->headers['Content-Type'] = $output->type()->toContentTypeHeader();
 
         return new FlowBufferedResponse(
-            $this->extractor,
+            $this->source,
             $output,
             count($this->transformations) ? new Transformations(...$this->transformations) : new Transformations(),
             $this->status,
@@ -139,7 +150,7 @@ final class DataStream
         $this->headers['Content-Type'] = $output->type()->toContentTypeHeader();
 
         return new FlowStreamedResponse(
-            $this->extractor,
+            $this->source,
             $output,
             count($this->transformations) ? new Transformations(...$this->transformations) : new Transformations(),
             $this->status,

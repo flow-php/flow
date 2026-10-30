@@ -28,7 +28,7 @@ final class DataPageHeaderTest extends TestCase
 
         static::assertSame(1, $header->statistics()?->minValue(FlatColumn::int64('id')));
         static::assertSame(9, $header->statistics()?->maxValue(FlatColumn::int64('id')));
-        static::assertSame(1, $header->statistics()?->nullCount());
+        static::assertSame(1, $header->statistics()?->nullCount);
     }
 
     public function test_a_page_without_statistics_has_none(): void

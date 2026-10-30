@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace Flow\CLI\Command;
 
 use Flow\CLI\Arguments\FilePathArgument;
-use Flow\CLI\Command\Traits\ConfigOptions;
 use Flow\CLI\Options\ConfigOption;
-use Flow\ETL\Config;
-use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
-use Flow\ETL\Schema\Formatter\PHPSchemaFormatter;
+use Flow\ETL\IO\Formatter\Row\ASCIISchemaFormatter;
+use Flow\ETL\IO\Formatter\Schema\PHPSchemaFormatter;
+use Flow\ETL\Runtime\Config;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 use RuntimeException;
@@ -32,8 +31,6 @@ use function Flow\ETL\DSL\schema_to_json;
 )]
 final class SchemaFormatCommand extends Command
 {
-    use ConfigOptions;
-
     private ?Config $flowConfig = null;
 
     private ?Path $schemaPath = null;
@@ -46,7 +43,7 @@ final class SchemaFormatCommand extends Command
             ->addOption('output-table', null, InputOption::VALUE_NONE, 'Print schema as ascii table')
             ->addOption('output-ascii', null, InputOption::VALUE_NONE, 'Print schema as ascii list');
 
-        $this->addConfigOptions($this);
+        (new ConfigOption('config'))->configure($this);
     }
 
     public function execute(InputInterface $input, OutputInterface $output): int

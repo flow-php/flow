@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Mother;
 
-use Flow\ETL\Config;
-use Flow\ETL\Extractor;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Join\Join;
-use Flow\ETL\Plan\LogicalPlan;
-use Flow\ETL\Plan\Node;
-use Flow\ETL\Plan\Node\Limit;
-use Flow\ETL\Plan\Node\Read;
-use Flow\ETL\Plan\Node\Select;
-use Flow\ETL\Plan\Node\Sort;
-use Flow\ETL\Plan\Trigger;
-use Flow\ETL\Row\References;
+use Flow\ETL\IO\Extractor;
+use Flow\ETL\Kernels\Sort\SortColumn;
+use Flow\ETL\Planning\Logical\LogicalPlan;
+use Flow\ETL\Planning\Logical\Node;
+use Flow\ETL\Planning\Logical\Node\Limit;
+use Flow\ETL\Planning\Logical\Node\Read;
+use Flow\ETL\Planning\Logical\Node\Select;
+use Flow\ETL\Planning\Logical\Node\Sort;
+use Flow\ETL\Planning\Logical\Trigger;
+use Flow\ETL\Runtime\Config;
+use Flow\ETL\Runtime\FlowContext;
 use Flow\ETL\Tests\Double\RepeatableExtractor;
+use Flow\ETL\Values\Join\JoinType;
 
 use function array_values;
 use function Flow\ETL\DSL\config;
@@ -24,7 +24,6 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\refs;
 
 final class NodeMother
 {
@@ -35,7 +34,7 @@ final class NodeMother
 
     public static function join(Node $left, Node $right): Node\Join
     {
-        return new Node\Join($left, $right, join_on(['id' => 'id']), Join::left, null);
+        return new Node\Join($left, $right, join_on(['id' => 'id']), JoinType::left, null);
     }
 
     public static function crossJoin(Node $left, Node $right): Node\CrossJoin
@@ -73,8 +72,11 @@ final class NodeMother
         return new Select($input, $columns === [] ? ['id'] : array_values($columns));
     }
 
-    public static function sort(Node $input, ?References $refs = null): Sort
+    /**
+     * @param null|list<SortColumn> $columns
+     */
+    public static function sort(Node $input, ?array $columns = null): Sort
     {
-        return new Sort($input, $refs ?? refs(ref('id')));
+        return new Sort($input, $columns ?? [ref('id')->asc()]);
     }
 }

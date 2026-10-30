@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use Flow\ETL\Exception\SchemaValidationException;
+use Flow\ETL\Foundation\Exception\SchemaValidationException;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Types\Type;
 use Generator;

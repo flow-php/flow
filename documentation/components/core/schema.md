@@ -359,11 +359,11 @@ cannot be null.
 
 Flow PHP provides three built-in validation strategies:
 
-- **[StrictValidator](/src/core/etl/src/Flow/ETL/Schema/Validator/StrictValidator.php)** - Rows must exactly match the
+- **[StrictValidator](/src/core/etl/src/Flow/ETL/Values/Schema/Validator/StrictValidator.php)** - Rows must exactly match the
   schema; extra columns cause validation failure
-- **[SelectiveValidator](/src/core/etl/src/Flow/ETL/Schema/Validator/SelectiveValidator.php)** - Only validates columns
+- **[SelectiveValidator](/src/core/etl/src/Flow/ETL/Values/Schema/Validator/SelectiveValidator.php)** - Only validates columns
   defined in schema; ignores extra columns
-- **[EvolvingValidator](/src/core/etl/src/Flow/ETL/Schema/Validator/EvolvingValidator.php)** - Allows missing and extra
+- **[EvolvingValidator](/src/core/etl/src/Flow/ETL/Values/Schema/Validator/EvolvingValidator.php)** - Allows missing and extra
   columns as long as nullability permits it
 
 By default, DataFrame uses `StrictValidator`, but you can specify a different validator as the second parameter to
@@ -377,8 +377,8 @@ expected schema declares them nullable too:
 ```php 
 <?php
 
-use Flow\ETL\Loader\StreamLoader\Output;
-use Flow\ETL\Schema\Metadata;
+use Flow\ETL\IO\Loader\StreamLoader\Output;
+use Flow\ETL\Values\Schema\Metadata;
 
 use function Flow\ETL\DSL\{data_frame, from_array, schema, int_schema, str_schema, bool_schema, to_output};
 

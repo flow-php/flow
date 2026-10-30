@@ -9,7 +9,7 @@ use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\ViewCheckOption;
 use Flow\PostgreSql\Protobuf\AST\ViewStmt;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
@@ -22,8 +22,6 @@ final readonly class CreateViewBuilder implements
     CreateViewFinalStep,
     CreateViewOptionsStep
 {
-    use AstToSql;
-
     /**
      * @param list<string> $columns
      */
@@ -98,6 +96,11 @@ final readonly class CreateViewBuilder implements
             true,
             $this->checkOption,
         );
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): ViewStmt

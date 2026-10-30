@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Benchmarks\Partitioning;
 
 use Flow\Benchmarks\BenchmarkConfig;
-use Flow\ETL\Rows;
+use Flow\ETL\Values\Rows;
 
 use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\DSL\data_frame;

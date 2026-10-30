@@ -11,7 +11,14 @@ use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
 use Flow\Filesystem\Stream\BlockFactory;
 
 use function Flow\Filesystem\DSL\path;
+use function is_array;
+use function is_int;
+use function is_string;
 
+/**
+ * @type SFTPOptions = array{block_location: string, block_size: int, read_chunk_size: int, tmp_dir: PathData}
+ * @import-type PathData from Path
+ */
 final class Options
 {
     /** @var int<1, max> */
@@ -55,6 +62,48 @@ final class Options
     public function readChunkSize(): int
     {
         return $this->readChunkSize;
+    }
+
+    /**
+     * @param array<array-key, mixed> $data the shape of normalize()
+     *
+     * @throws InvalidArgumentException
+     */
+    public static function fromArray(array $data): self
+    {
+        if (
+            !is_string($data['block_location'] ?? null)
+            || !is_int($data['block_size'] ?? null)
+            || !is_int($data['read_chunk_size'] ?? null)
+            || !is_array($data['tmp_dir'] ?? null)
+        ) {
+            throw new InvalidArgumentException(
+                'SFTP options must hold block_location (string), block_size (int), read_chunk_size (int) and tmp_dir',
+            );
+        }
+
+        return (new self())
+            ->withBlockFactory(new NativeLocalFileBlocksFactory($data['block_location']))
+            ->withBlockSize($data['block_size'])
+            ->withReadChunkSize($data['read_chunk_size'])
+            ->withTmpDir(Path::fromArray($data['tmp_dir']));
+    }
+
+    /**
+     * @return null|SFTPOptions null when the block factory is not the native local one
+     */
+    public function normalize(): ?array
+    {
+        if (!$this->blockFactory instanceof NativeLocalFileBlocksFactory) {
+            return null;
+        }
+
+        return [
+            'block_location' => $this->blockFactory->blockLocation(),
+            'block_size' => $this->blockSize,
+            'read_chunk_size' => $this->readChunkSize,
+            'tmp_dir' => $this->tmpDir->normalize(),
+        ];
     }
 
     public function tmpDir(): Path

@@ -138,7 +138,7 @@ final class ConsoleOutput
     /**
      * Multi-byte safe string padding that accounts for ANSI color codes.
      *
-     * @see Flow\ETL\Formatter\ASCII\ASCIIValue::mb_str_pad
+     * @see Flow\ETL\IO\Formatter\ASCII\ASCIIValue::mb_str_pad
      */
     public function pad(string $input, int $length, string $padding = ' ', int $padType = STR_PAD_RIGHT): string
     {

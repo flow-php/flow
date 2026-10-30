@@ -7,9 +7,9 @@ namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 use DateTimeImmutable;
 use Flow\ETL\Adapter\Parquet\Tests\Context\ParquetFilesContext;
 use Flow\ETL\Adapter\Parquet\Tests\Context\PushdownParityContext;
-use Flow\ETL\Function\ScalarFunction;
-use Flow\ETL\Optimizer;
-use Flow\ETL\Optimizer\Rule\PushFilterIntoSource;
+use Flow\ETL\Functions\ScalarFunction;
+use Flow\ETL\Planning\Optimizer\Optimizer;
+use Flow\ETL\Planning\Optimizer\Rule\PushFilterIntoSource;
 use Flow\ETL\Tests\Double\CountingFilesystem;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Parquet\Engine\PhpParquetEngine;
@@ -155,6 +155,37 @@ final class PushdownParityTest extends FlowTestCase
         static::assertLessThan(
             ParquetFilesContext::bytesRead($unlimitedFilesystem),
             ParquetFilesContext::bytesRead($limitedFilesystem),
+        );
+    }
+
+    public function test_a_conjunct_the_parquet_filter_translates_leaves_its_filter_node(): void
+    {
+        $memory = memory_filesystem();
+        PushdownParityContext::write($memory);
+
+        static::assertStringEndsWith(
+            "└─ #1 Read\n      Extractor: ParquetExtractor\n      Source: memory://parity/*.parquet\n      Filter: id > 1",
+            df()
+                ->read(from_parquet(path(PushdownParityContext::GLOB), filesystem: $memory)->unionByName())
+                ->filter(ref('id')->greaterThan(lit(1)))
+                ->explain()
+                ->toString(),
+        );
+    }
+
+    public function test_a_conjunct_the_parquet_filter_cannot_translate_stays_a_filter_node(): void
+    {
+        $memory = memory_filesystem();
+        PushdownParityContext::write($memory);
+
+        static::assertStringEndsWith(
+            "└─ #2 Filter\n   │  Condition: EndsWith(name, '1')\n   └─ #1 Read\n         Extractor: ParquetExtractor\n"
+            . '         Source: memory://parity/*.parquet',
+            df()
+                ->read(from_parquet(path(PushdownParityContext::GLOB), filesystem: $memory)->unionByName())
+                ->filter(ref('name')->endsWith(lit('1')))
+                ->explain()
+                ->toString(),
         );
     }
 }

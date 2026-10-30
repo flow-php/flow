@@ -13,23 +13,12 @@ use ext_php_rs::ffi::{
 use ext_php_rs::flags::ClassFlags;
 use ext_php_rs::types::{ZendHashTable, ZendObject, ZendStr, Zval};
 use ext_php_rs::zend::{ClassEntry, ExecutorGlobals, Function};
+use flow_batch_frame::key::array_key_index;
 
 use crate::exception::ext_exception;
 use crate::globals::with_ctx;
 use crate::plan::TypePlan;
 
-/// PHP array-key coercion (`_zend_handle_numeric_str`): parse + canonical
-/// re-format equality rejects "+5", "-0", leading zeros and whitespace exactly
-/// like the engine.
-pub fn array_key_index(key: &[u8]) -> Option<i64> {
-    let string = std::str::from_utf8(key).ok()?;
-    let value: i64 = string.parse().ok()?;
-
-    (value.to_string().as_bytes() == key).then_some(value)
-}
-
-/// Inserts with PHP array-assignment semantics; ownership of `value` moves
-/// into the table.
 pub fn ht_insert(ht: &mut ZendHashTable, key: &[u8], mut value: Zval) {
     unsafe {
         match array_key_index(key) {

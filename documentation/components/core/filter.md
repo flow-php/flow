@@ -36,11 +36,12 @@ Business logic the built-in functions do not cover goes into a `ScalarFunction` 
 ```php
 <?php
 
-use Flow\ETL\Column\Column;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Function\Evaluation\ResultColumn;
-use Flow\ETL\Function\{Parameter, ScalarFunction, ScalarFunctionChain};
-use Flow\ETL\Rows;
+use Flow\ETL\Foundation\Describe\{Description, Rebuild};
+use Flow\ETL\Values\Column\Column;
+use Flow\ETL\Functions\Evaluation\ResultColumn;
+use Flow\ETL\Functions\{Parameter, ScalarFunction, ScalarFunctionChain};
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Rows;
 use Flow\Types\Type;
 
 use function Flow\ETL\DSL\{data_frame, from_array, ref, to_output};
@@ -51,6 +52,16 @@ final class HighValuePurchase implements ScalarFunction
     use ScalarFunctionChain;
 
     public function __construct(private readonly ScalarFunction $amount, private readonly ScalarFunction $type) {}
+
+    public static function fromDescription(array $data, Rebuild $rebuild): static
+    {
+        return new self($rebuild->of($data['amount'], ScalarFunction::class), $rebuild->of($data['type'], ScalarFunction::class));
+    }
+
+    public function describe(): ?Description
+    {
+        return Description::compose(self::class, ['amount' => $this->amount, 'type' => $this->type]);
+    }
 
     public function children(): array
     {
@@ -67,17 +78,17 @@ final class HighValuePurchase implements ScalarFunction
         return type_boolean();
     }
 
-    public function eval(Rows $rows, FlowContext $context): Column
+    public function eval(Rows $rows, Backend $backend): Column
     {
-        $amounts = (new Parameter($this->amount))->asNumbers($rows, $context);
-        $types = (new Parameter($this->type))->asStrings($rows, $context);
+        $amounts = (new Parameter($this->amount))->asNumbers($rows, $backend);
+        $types = (new Parameter($this->type))->asStrings($rows, $backend);
         $results = [];
 
         foreach ($amounts as $i => $amount) {
             $results[] = $amount > 1000 && $types[$i] === 'purchase';
         }
 
-        return (new ResultColumn($context->backend()))->of($this, $results);
+        return (new ResultColumn($backend))->of($this, $results);
     }
 }
 

@@ -11,7 +11,7 @@ use Flow\Parquet\Filter\All;
 use Flow\Parquet\Filter\Binding\BoundFilter;
 use Flow\Parquet\Options;
 use Flow\Parquet\Reader;
-use Flow\Parquet\Reader\ReadPlanner;
+use Flow\Parquet\Reader\ReadPlan;
 use Flow\Parquet\Tests\Context\FilterRows;
 use Flow\Parquet\Tests\Context\MemoryParquetFile;
 
@@ -25,7 +25,7 @@ foreach ([
     parquet_column('missing')->isNull()->and(parquet_column('id')->lessThan(3)),
 ] as $filter) {
     $php = MemoryParquetFile::read(Reader::php(), $bytes);
-    $plan = (new ReadPlanner())->plan(
+    $plan = ReadPlan::forFilter(
         $php->reader()->footer(),
         $php->indexes(),
         BoundFilter::bind($filter, $php->schema(), new Options()),

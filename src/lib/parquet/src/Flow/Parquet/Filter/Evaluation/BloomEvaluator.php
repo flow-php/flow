@@ -8,7 +8,7 @@ use Flow\Parquet\BloomFilter\BloomHash;
 use Flow\Parquet\Filter\All;
 use Flow\Parquet\Filter\Any;
 use Flow\Parquet\Filter\Binding\BoundFilter;
-use Flow\Parquet\Filter\Binding\ResolvedLeaf;
+use Flow\Parquet\Filter\Binding\ExactLeaf;
 use Flow\Parquet\Filter\Comparison;
 use Flow\Parquet\Filter\Filter;
 use Flow\Parquet\Filter\FilterVisitor;
@@ -35,6 +35,7 @@ final readonly class BloomEvaluator implements FilterVisitor
         private BoundFilter $filter,
         private Indexes $indexes,
         private int $rowGroup,
+        private BloomHash $hash = new BloomHash(),
     ) {}
 
     public static function evaluate(BoundFilter $filter, Indexes $indexes, int $rowGroup): Truth
@@ -88,7 +89,7 @@ final readonly class BloomEvaluator implements FilterVisitor
     {
         $resolution = $this->filter->leaf($node);
 
-        if (!$resolution instanceof ResolvedLeaf || $resolution->intervals === null) {
+        if (!$resolution instanceof ExactLeaf) {
             return Truth::Maybe;
         }
 
@@ -121,10 +122,8 @@ final readonly class BloomEvaluator implements FilterVisitor
             return Truth::Maybe;
         }
 
-        $hash = new BloomHash();
-
         foreach ($points as $point) {
-            if ($bloomFilter->check($hash->of($resolution->column, $point))) {
+            if ($bloomFilter->check($this->hash->of($resolution->column, $point))) {
                 return Truth::Maybe;
             }
         }

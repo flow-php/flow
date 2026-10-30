@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile;
 
+use Flow\Parquet\Data\PhysicalCodec;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ThriftModel\Statistics as ThriftStatistics;
 
 final readonly class Statistics
 {
+    private PhysicalCodec $codec;
+
     public function __construct(
         public ?string $max,
         public ?string $min,
@@ -18,7 +22,9 @@ final readonly class Statistics
         public ?bool $isMaxValueExact = null,
         public ?bool $isMinValueExact = null,
         public ?int $nanCount = null,
-    ) {}
+    ) {
+        $this->codec = new PhysicalCodec();
+    }
 
     public static function fromThrift(ThriftStatistics $thrift): self
     {
@@ -48,5 +54,25 @@ final readonly class Statistics
             'is_min_value_exact' => $this->isMinValueExact,
             'nan_count' => $this->nanCount,
         ]);
+    }
+
+    public function max(FlatColumn $column): bool|float|int|string|null
+    {
+        return $this->max === null ? null : $this->codec->decodeStatistic($column, $this->max);
+    }
+
+    public function maxValue(FlatColumn $column): bool|float|int|string|null
+    {
+        return $this->maxValue === null ? null : $this->codec->decodeStatistic($column, $this->maxValue);
+    }
+
+    public function min(FlatColumn $column): bool|float|int|string|null
+    {
+        return $this->min === null ? null : $this->codec->decodeStatistic($column, $this->min);
+    }
+
+    public function minValue(FlatColumn $column): bool|float|int|string|null
+    {
+        return $this->minValue === null ? null : $this->codec->decodeStatistic($column, $this->minValue);
     }
 }

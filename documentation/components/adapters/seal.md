@@ -136,7 +136,7 @@ Each row becomes one document:
 field per index - name it with the `identifier` argument or mark a definition with `SealMetadata::identifier()`.
 
 ```php
-use Flow\ETL\Adapter\Seal\SealMetadata;
+use Flow\ETL\Adapter\Seal\Values\Schema\SealMetadata;
 
 use function Flow\ETL\Adapter\Seal\to_seal_schema;
 use function Flow\ETL\DSL\{datetime_schema, float_schema, int_schema, schema, str_schema};

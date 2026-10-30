@@ -1,0 +1,16 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Adapter\Parquet\IO\Loader;
+
+use function Flow\Types\DSL\type_string;
+use function is_object;
+
+final readonly class UuidValueConverter implements ValueConverter
+{
+    public function encode(mixed $value): mixed
+    {
+        return is_object($value) ? type_string()->cast($value) : $value;
+    }
+}

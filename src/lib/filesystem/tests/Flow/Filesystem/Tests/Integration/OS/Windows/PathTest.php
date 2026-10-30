@@ -4,20 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Integration\OS\Windows;
 
-use Flow\ETL\Tests\FlowIntegrationTestCase;
-use Flow\Filesystem\Tests\OperatingSystem;
+use Flow\Filesystem\Tests\Context\OperatingSystem;
+use PHPUnit\Framework\TestCase;
 
 use function Flow\Filesystem\DSL\path_real;
 
-final class PathTest extends FlowIntegrationTestCase
+final class PathTest extends TestCase
 {
-    use OperatingSystem;
-
     protected function setUp(): void
     {
-        parent::setUp();
-
-        if ($this->isUnix()) {
+        if (OperatingSystem::isUnix()) {
             self::markTestSkipped('Windows-specific tests should only run on Windows');
         }
     }

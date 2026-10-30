@@ -19,7 +19,9 @@ use Flow\Filesystem\SourceStream;
 use Flow\Filesystem\Stream\NativeLocalDestinationStream;
 use Flow\Filesystem\Stream\NativeLocalSourceStream;
 use Generator;
+use SensitiveParameter;
 
+use function array_key_exists;
 use function array_reverse;
 use function file_exists;
 use function filemtime;
@@ -30,6 +32,7 @@ use function in_array;
 use function is_dir;
 use function is_file;
 use function is_link;
+use function is_string;
 use function mkdir;
 use function rename;
 use function rmdir;
@@ -39,11 +42,24 @@ use function str_ends_with;
 use function sys_get_temp_dir;
 use function unlink;
 
+/**
+ * @type NativeLocalConfiguration = array{protocol: string}
+ *
+ */
 final readonly class NativeLocalFilesystem implements Filesystem
 {
     public function __construct(
         private Mount $mount = new Mount('file'),
     ) {}
+
+    public static function fromArray(#[SensitiveParameter] array $configuration): static
+    {
+        if (!array_key_exists('protocol', $configuration) || !is_string($configuration['protocol'])) {
+            throw new InvalidArgumentException('NativeLocalFilesystem configuration must hold a "protocol" string');
+        }
+
+        return new self(new Mount($configuration['protocol']));
+    }
 
     public function appendTo(Path $path): DestinationStream
     {
@@ -69,6 +85,14 @@ final readonly class NativeLocalFilesystem implements Filesystem
         }
 
         return NativeLocalDestinationStream::openAppend($path);
+    }
+
+    /**
+     * @return NativeLocalConfiguration
+     */
+    public function normalize(): array
+    {
+        return ['protocol' => $this->mount->protocol];
     }
 
     public function getSystemTmpDir(): Path
@@ -117,6 +141,12 @@ final readonly class NativeLocalFilesystem implements Filesystem
             $this->rm($to);
         }
 
+        $directory = $to->parentDirectory()->path();
+
+        if (!is_dir($directory) && !mkdir($directory, 0777, true) && !is_dir($directory)) {
+            throw new RuntimeException('Failed to create directory: ' . $directory);
+        }
+
         if (!rename($from->path(), $to->path())) {
             return false;
         }
@@ -132,15 +162,6 @@ final readonly class NativeLocalFilesystem implements Filesystem
 
         if ($path->isPattern()) {
             throw new InvalidArgumentException("Pattern paths can't be open: " . $path->uri());
-        }
-
-        if (!$this->status($path->parentDirectory())) {
-            if (
-                !mkdir($concurrentDirectory = $path->parentDirectory()->path(), recursive: true)
-                && !is_dir($concurrentDirectory)
-            ) {
-                throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
-            }
         }
 
         return NativeLocalSourceStream::open($path);

@@ -935,7 +935,7 @@ final class FlatColumnChunkBuilderTest extends TestCase
         $statistics = $builder->flush(0)[0]->columnChunk->statistics();
 
         static::assertNotNull($statistics);
-        static::assertSame(3, $statistics->nullCount());
+        static::assertSame(3, $statistics->nullCount);
         static::assertNull($statistics->min($column));
         static::assertNull($statistics->max($column));
     }
@@ -958,7 +958,7 @@ final class FlatColumnChunkBuilderTest extends TestCase
         $statistics = $builder->flush(0)[0]->columnChunk->statistics();
 
         static::assertNotNull($statistics);
-        static::assertSame(1, $statistics->nullCount());
+        static::assertSame(1, $statistics->nullCount);
         static::assertSame('x', $statistics->minValue($column));
         static::assertSame('z', $statistics->maxValue($column));
         static::assertNull($statistics->min($column));

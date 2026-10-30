@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\AST\Nodes\Statement;
 
 use Flow\PostgreSql\AST\Nodes\Statement;
-use Flow\PostgreSql\AST\Nodes\StatementTrait;
 use Flow\PostgreSql\Protobuf\AST\CompositeTypeStmt;
 use Flow\PostgreSql\Protobuf\AST\CreateAmStmt;
 use Flow\PostgreSql\Protobuf\AST\CreateCastStmt;
@@ -45,8 +44,6 @@ use Flow\PostgreSql\Protobuf\AST\DefineStmt;
  */
 final readonly class CreateStatement implements Statement
 {
-    use StatementTrait;
-
     public function __construct(
         private CreateStmt|CreateSchemaStmt|CreateSeqStmt|CreateTableAsStmt|CreateTableSpaceStmt|CreateFunctionStmt|CreateTrigStmt|CreateRoleStmt|CreateDomainStmt|CreateEnumStmt|CreateRangeStmt|CreateExtensionStmt|CreateFdwStmt|CreateForeignServerStmt|CreateForeignTableStmt|CreateUserMappingStmt|CreatePolicyStmt|CreateAmStmt|CreatePublicationStmt|CreateSubscriptionStmt|CreateStatsStmt|CreateCastStmt|CreateConversionStmt|CreateOpClassStmt|CreateOpFamilyStmt|CreatePLangStmt|CreateTransformStmt|CreateEventTrigStmt|CreatedbStmt|CompositeTypeStmt|DefineStmt $stmt,
     ) {}

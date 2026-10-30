@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Bridge\SFTP\Tests\Unit;
 
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Filesystem\Bridge\SFTP\SFTPFilesystem;
 use Flow\Filesystem\Exception\InvalidSchemeException;
 use Flow\Filesystem\Exception\RuntimeException;
+use Flow\Types\Exception\InvalidArgumentException;
 use phpseclib4\Net\SFTP;
 
 use function Flow\Filesystem\Bridge\SFTP\DSL\sftp_filesystem;
@@ -119,5 +121,32 @@ final class SFTPFilesystemTest extends FlowTestCase
         $this->expectExceptionMessage('Cannot write to system tmp directory');
 
         $filesystem->writeTo($filesystem->getSystemTmpDir());
+    }
+
+    public function test_a_configured_filesystem_round_trips_its_configuration(): void
+    {
+        $filesystem = sftp_filesystem([
+            'host' => 'sftp.test',
+            'user' => 'bob',
+            'password' => 'secret',
+        ], protocol: 'files');
+        $configuration = $filesystem->normalize();
+
+        static::assertNotNull($configuration);
+        static::assertSame('files', $configuration['protocol']);
+        static::assertSame('bob', $configuration['client']['user']);
+        static::assertSame($configuration, SFTPFilesystem::fromArray($configuration)->normalize());
+    }
+
+    public function test_a_filesystem_over_a_live_client_has_no_configuration(): void
+    {
+        static::assertNull(sftp_filesystem(new SFTP('localhost'))->normalize());
+    }
+
+    public function test_a_configuration_without_a_client_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        SFTPFilesystem::fromArray(['protocol' => 'sftp', 'options' => []]);
     }
 }

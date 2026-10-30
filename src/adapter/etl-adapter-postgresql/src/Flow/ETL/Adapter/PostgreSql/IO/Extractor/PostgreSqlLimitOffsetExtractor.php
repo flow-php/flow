@@ -1,0 +1,198 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Adapter\PostgreSql\IO\Extractor;
+
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Exception\SchemaNotDerivableException;
+use Flow\ETL\IO\Extractor;
+use Flow\ETL\IO\Extractor\BatchableExtractor;
+use Flow\ETL\IO\Extractor\Criteria;
+use Flow\ETL\IO\Extractor\Signal;
+use Flow\ETL\IO\Extractor\Statistics;
+use Flow\ETL\Values\BatchSize;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Rows\RowsBuilder;
+use Flow\ETL\Values\Schema;
+use Flow\PostgreSql\Client\Client;
+use Flow\PostgreSql\QueryBuilder\Sql;
+use Generator;
+
+use function ceil;
+use function count;
+use function min;
+
+final class PostgreSqlLimitOffsetExtractor implements BatchableExtractor, Extractor
+{
+    private BatchSize $batchSize;
+
+    private ?int $maximum = null;
+
+    private ?Schema $derivedSchema = null;
+
+    private ?ReadQuery $read = null;
+
+    private ?SchemaNotDerivableException $refusal = null;
+
+    private ?Schema $schema = null;
+
+    private ?Statistics $statistics = null;
+
+    /**
+     * @param list<mixed> $parameters
+     */
+    public function __construct(
+        private readonly Client $client,
+        private readonly string|Sql $query,
+        private readonly array $parameters = [],
+    ) {
+        // a page is a network round trip, not a buffer: 100 would cost 10x the round trips
+        $this->batchSize = new BatchSize(1_000);
+    }
+
+    /**
+     * @return int<1, max>
+     */
+    public function batchSize(): int
+    {
+        return $this->batchSize->size;
+    }
+
+    /**
+     * @return Generator<int, Rows, Signal|null, void>
+     */
+    public function extract(Backend $backend, Criteria $criteria): Generator
+    {
+        $read = $this->read ??= ReadQuery::of($this->query, self::class);
+
+        if (!$read->isOrdered()) {
+            throw new InvalidArgumentException(
+                'LIMIT/OFFSET pagination requires ORDER BY clause for deterministic results',
+            );
+        }
+
+        $schema = $this->schema();
+        $maximum = match (true) {
+            $this->maximum !== null && $criteria->limit !== null => min($this->maximum, $criteria->limit),
+            $this->maximum !== null => $this->maximum,
+            default => $criteria->limit,
+        };
+
+        $total = $maximum ?? $this->client->fetchScalarInt($read->count(), $this->parameters);
+
+        if ($total === 0) {
+            return;
+        }
+
+        $yielded = 0;
+        $pages = (int) ceil($total / $this->batchSize->size);
+        $pageSql = $read->page(count($this->parameters) + 1);
+
+        for ($page = 0; $page < $pages; $page++) {
+            // the request asks only for what is still wanted, while the offset keeps striding by the batch size
+            $pageSize = $maximum === null ? $this->batchSize->size : min($this->batchSize->size, $maximum - $yielded);
+
+            $cursor = $this->client->cursor($pageSql, [
+                ...$this->parameters,
+                $pageSize,
+                $page * $this->batchSize->size,
+            ]);
+
+            $rawBatch = [];
+
+            foreach ($cursor->iterate() as $row) {
+                $rawBatch[] = $row;
+            }
+
+            $cursor->free();
+
+            if ($rawBatch === []) {
+                return;
+            }
+
+            $rows = (new RowsBuilder($schema, $backend))
+                ->appendRows($rawBatch)
+                ->finish();
+
+            $yielded += $rows->count();
+
+            $signal = yield $rows;
+
+            if ($signal === Signal::STOP) {
+                return;
+            }
+
+            // a short page means the source ran out, whatever $total promised
+            if (count($rawBatch) < $pageSize) {
+                return;
+            }
+        }
+    }
+
+    public function isRepeatable(): bool
+    {
+        return true;
+    }
+
+    public function schema(): Schema
+    {
+        if ($this->schema !== null) {
+            return $this->schema;
+        }
+
+        if ($this->refusal !== null) {
+            throw $this->refusal;
+        }
+
+        try {
+            return $this->derivedSchema ??= (new ResultSchema())->of(
+                $this->client,
+                $this->read ??= ReadQuery::of($this->query, self::class),
+                $this->parameters,
+                self::class,
+            );
+        } catch (SchemaNotDerivableException $refusal) {
+            $this->refusal = $refusal;
+
+            throw $refusal;
+        }
+    }
+
+    public function statistics(): Statistics
+    {
+        return $this->statistics ??= new Statistics(rows: (new ExplainedRows())->of(
+            $this->client,
+            $this->query,
+            $this->parameters,
+            $this->maximum,
+        ));
+    }
+
+    public function withBatchSize(int $batchSize): static
+    {
+        $this->batchSize = new BatchSize($batchSize);
+
+        return $this;
+    }
+
+    public function withMaximum(int $maximum): self
+    {
+        if ($maximum <= 0) {
+            throw new InvalidArgumentException('Maximum must be greater than 0, got ' . $maximum);
+        }
+
+        $this->maximum = $maximum;
+        $this->statistics = null;
+
+        return $this;
+    }
+
+    public function withSchema(Schema $schema): static
+    {
+        $this->schema = $schema;
+
+        return $this;
+    }
+}

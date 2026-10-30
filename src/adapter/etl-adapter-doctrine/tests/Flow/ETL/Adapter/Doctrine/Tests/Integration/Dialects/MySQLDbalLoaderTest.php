@@ -40,7 +40,7 @@ final class MySQLDbalLoaderTest extends IntegrationTestCase
                 ['id' => 1, 'name' => 'Name One'],
                 ['id' => 2, 'name' => 'Name Two'],
             ]))
-            ->load(to_dbal_table_insert($this->mysqlConnectionParams(), $table))
+            ->write(to_dbal_table_insert($this->mysqlConnectionParams(), $table))
             ->run();
 
         static::assertEquals(2, $this->mysqlDatabaseContext->tableCount($table));
@@ -50,7 +50,7 @@ final class MySQLDbalLoaderTest extends IntegrationTestCase
                 ['id' => 3],
                 ['id' => 4],
             ]))
-            ->load(to_dbal_table_delete($this->mysqlConnectionParams(), $table))
+            ->write(to_dbal_table_delete($this->mysqlConnectionParams(), $table))
             ->run();
 
         static::assertEquals(2, $this->mysqlDatabaseContext->tableCount($table));
@@ -81,7 +81,7 @@ final class MySQLDbalLoaderTest extends IntegrationTestCase
                 ['id' => 2, 'name' => 'Name Two'],
                 ['id' => 3, 'name' => 'Name Three'],
             ]))
-            ->load(to_dbal_table_insert($this->mysqlDatabaseContext->connection(), $table))
+            ->write(to_dbal_table_insert($this->mysqlDatabaseContext->connection(), $table))
             ->run();
 
         static::assertEquals(3, $this->mysqlDatabaseContext->tableCount($table));
@@ -90,7 +90,7 @@ final class MySQLDbalLoaderTest extends IntegrationTestCase
             ->read(from_array([
                 ['id' => 2],
             ]))
-            ->load(to_dbal_table_delete($this->mysqlDatabaseContext->connection(), $table))
+            ->write(to_dbal_table_delete($this->mysqlDatabaseContext->connection(), $table))
             ->run();
 
         static::assertEquals(2, $this->mysqlDatabaseContext->tableCount($table));
@@ -125,7 +125,7 @@ final class MySQLDbalLoaderTest extends IntegrationTestCase
                 ['id' => 1, 'group_id' => 2, 'name' => 'Group 2 - Item 1'],
                 ['id' => 2, 'group_id' => 2, 'name' => 'Group 2 - Item 2'],
             ]))
-            ->load(to_dbal_table_insert($this->mysqlConnectionParams(), $table))
+            ->write(to_dbal_table_insert($this->mysqlConnectionParams(), $table))
             ->run();
 
         static::assertEquals(4, $this->mysqlDatabaseContext->tableCount($table));
@@ -135,7 +135,7 @@ final class MySQLDbalLoaderTest extends IntegrationTestCase
                 ['id' => 1, 'group_id' => 2],
                 ['id' => 2, 'group_id' => 1],
             ]))
-            ->load(to_dbal_table_delete($this->mysqlConnectionParams(), $table))
+            ->write(to_dbal_table_delete($this->mysqlConnectionParams(), $table))
             ->run();
 
         static::assertEquals(2, $this->mysqlDatabaseContext->tableCount($table));
@@ -169,7 +169,7 @@ final class MySQLDbalLoaderTest extends IntegrationTestCase
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
                 ['id' => 4, 'name' => 'Name Four', 'description' => 'Description Four'],
             ]))
-            ->load(to_dbal_table_insert($this->mysqlConnectionParams(), $table))
+            ->write(to_dbal_table_insert($this->mysqlConnectionParams(), $table))
             ->run();
 
         static::assertEquals(4, $this->mysqlDatabaseContext->tableCount($table));
@@ -179,7 +179,7 @@ final class MySQLDbalLoaderTest extends IntegrationTestCase
                 ['id' => 2],
                 ['id' => 4],
             ]))
-            ->load(to_dbal_table_delete($this->mysqlConnectionParams(), $table))
+            ->write(to_dbal_table_delete($this->mysqlConnectionParams(), $table))
             ->run();
 
         static::assertEquals(2, $this->mysqlDatabaseContext->tableCount($table));
@@ -215,7 +215,7 @@ final class MySQLDbalLoaderTest extends IntegrationTestCase
             ]))
             ->collect()
             ->filter(ref('id')->equals(0))
-            ->load($loader)
+            ->write($loader)
             ->run();
 
         static::assertEquals(0, $this->mysqlDatabaseContext->tableCount($table));
@@ -242,7 +242,7 @@ final class MySQLDbalLoaderTest extends IntegrationTestCase
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
             ]))
-            ->load($loader)
+            ->write($loader)
             ->run();
 
         static::assertEquals(3, $this->mysqlDatabaseContext->tableCount($table));
@@ -269,7 +269,7 @@ final class MySQLDbalLoaderTest extends IntegrationTestCase
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
             ]))
-            ->load($loader)
+            ->write($loader)
             ->run();
 
         static::assertEquals(3, $this->mysqlDatabaseContext->tableCount($table));
@@ -295,7 +295,7 @@ final class MySQLDbalLoaderTest extends IntegrationTestCase
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
             ]))
-            ->load(to_dbal_table_insert($this->mysqlConnectionParams(), $table))
+            ->write(to_dbal_table_insert($this->mysqlConnectionParams(), $table))
             ->run();
 
         static::assertEquals(3, $this->mysqlDatabaseContext->tableCount($table));
@@ -319,7 +319,7 @@ final class MySQLDbalLoaderTest extends IntegrationTestCase
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
             ]))
-            ->load(to_dbal_table_insert($this->mysqlConnectionParams(), $table))
+            ->write(to_dbal_table_insert($this->mysqlConnectionParams(), $table))
             ->run();
 
         data_frame()
@@ -328,7 +328,7 @@ final class MySQLDbalLoaderTest extends IntegrationTestCase
                 ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three'],
                 ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Three'],
             ]))
-            ->load(to_dbal_table_insert(
+            ->write(to_dbal_table_insert(
                 $this->mysqlConnectionParams(),
                 $table,
                 MySQLInsertOptions::new()->skipConflicts(),
@@ -377,7 +377,7 @@ final class MySQLDbalLoaderTest extends IntegrationTestCase
                 ['id' => 2, 'name' => 'Name Two', 'description' => $documentB->getElementsByTagName('xml')[0]],
                 ['id' => 3, 'name' => 'Name Three', 'description' => $documentC->getElementsByTagName('xml')[0]],
             ]))
-            ->load($loader)
+            ->write($loader)
             ->run();
 
         static::assertEquals(3, $this->mysqlDatabaseContext->tableCount($table));
@@ -421,7 +421,7 @@ final class MySQLDbalLoaderTest extends IntegrationTestCase
                 ['id' => 2, 'name' => 'Name Two', 'description' => $documentB],
                 ['id' => 3, 'name' => 'Name Three', 'description' => $documentC],
             ]))
-            ->load($loader)
+            ->write($loader)
             ->run();
 
         static::assertEquals(3, $this->mysqlDatabaseContext->tableCount($table));
@@ -452,12 +452,12 @@ final class MySQLDbalLoaderTest extends IntegrationTestCase
         $updateLoader = to_dbal_table_update($this->mysqlConnectionParams(), $table, MySQLUpdateOptions::new());
 
         data_frame()
-            ->extract(from_array([
+            ->read(from_array([
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
             ]))
-            ->load($insertLoader)
+            ->write($insertLoader)
             ->run();
 
         data_frame()
@@ -466,7 +466,7 @@ final class MySQLDbalLoaderTest extends IntegrationTestCase
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                 ['id' => 3, 'name' => 'Changed Name Three', 'description' => 'Description Three'],
             ]))
-            ->load($updateLoader)
+            ->write($updateLoader)
             ->run();
 
         static::assertSame(

@@ -33,42 +33,41 @@ final class OpenAPIToFlowConverterTest extends TestCase
 {
     public function test_bidirectional_conversion_consistency(): void
     {
-        $originalSchema = schema(int_schema('id', false), str_schema('name', true), bool_schema('active', false));
-
-        $openApiSpec = schema_to_openapi_specification($originalSchema);
-        $convertedSchema = schema_from_openapi_specification($openApiSpec);
+        $convertedSchema = schema_from_openapi_specification(schema_to_openapi_specification(schema(
+            int_schema('id', false),
+            str_schema('name', true),
+            bool_schema('active', false),
+        )));
 
         static::assertCount(3, $convertedSchema->definitions());
         $definitions = array_values($convertedSchema->definitions());
-        static::assertSame('id', $definitions[0]->reference()->name());
+        static::assertSame('id', $definitions[0]->name());
         static::assertSame(IntegerType::class, $definitions[0]->type()::class);
         static::assertFalse($definitions[0]->isNullable());
 
-        static::assertSame('name', $definitions[1]->reference()->name());
+        static::assertSame('name', $definitions[1]->name());
         static::assertSame(StringType::class, $definitions[1]->type()::class);
         static::assertTrue($definitions[1]->isNullable());
 
-        static::assertSame('active', $definitions[2]->reference()->name());
+        static::assertSame('active', $definitions[2]->name());
         static::assertSame(BooleanType::class, $definitions[2]->type()::class);
         static::assertFalse($definitions[2]->isNullable());
     }
 
     public function test_from_openapi_spec_dsl_function(): void
     {
-        $openApiSpec = [
+        $schema = schema_from_openapi_specification([
             'type' => 'object',
             'properties' => [
                 'id' => ['type' => 'integer', 'nullable' => false],
                 'name' => ['type' => 'string', 'nullable' => true],
             ],
-        ];
-
-        $schema = schema_from_openapi_specification($openApiSpec);
+        ]);
 
         static::assertCount(2, $schema->definitions());
         $definitions = array_values($schema->definitions());
-        static::assertSame('id', $definitions[0]->reference()->name());
-        static::assertSame('name', $definitions[1]->reference()->name());
+        static::assertSame('id', $definitions[0]->name());
+        static::assertSame('name', $definitions[1]->name());
     }
 
     public function test_from_openapi_throws_exception_for_invalid_property_spec(): void
@@ -150,8 +149,7 @@ final class OpenAPIToFlowConverterTest extends TestCase
 
     public function test_from_openapi_with_array_type(): void
     {
-        $converter = new OpenAPIConverter();
-        $openApiSpec = [
+        $schema = (new OpenAPIConverter())->fromOpenAPI([
             'type' => 'object',
             'properties' => [
                 'tags' => [
@@ -160,22 +158,18 @@ final class OpenAPIToFlowConverterTest extends TestCase
                     'nullable' => false,
                 ],
             ],
-        ];
-
-        $schema = $converter->fromOpenAPI($openApiSpec);
+        ]);
 
         static::assertCount(1, $schema->definitions());
-        $definitions = array_values($schema->definitions());
-        $definition = $definitions[0];
-        static::assertSame('tags', $definition->reference()->name());
+        $definition = array_values($schema->definitions())[0];
+        static::assertSame('tags', $definition->name());
         static::assertSame(ListType::class, $definition->type()::class);
         static::assertFalse($definition->isNullable());
     }
 
     public function test_from_openapi_with_basic_types(): void
     {
-        $converter = new OpenAPIConverter();
-        $openApiSpec = [
+        $schema = (new OpenAPIConverter())->fromOpenAPI([
             'type' => 'object',
             'properties' => [
                 'id' => ['type' => 'integer', 'nullable' => false],
@@ -183,24 +177,22 @@ final class OpenAPIToFlowConverterTest extends TestCase
                 'active' => ['type' => 'boolean', 'nullable' => false],
                 'price' => ['type' => 'number', 'nullable' => true],
             ],
-        ];
-
-        $schema = $converter->fromOpenAPI($openApiSpec);
+        ]);
 
         static::assertCount(4, $schema->definitions());
         $definitions = array_values($schema->definitions());
-        static::assertSame('id', $definitions[0]->reference()->name());
+        static::assertSame('id', $definitions[0]->name());
         static::assertSame(IntegerType::class, $definitions[0]->type()::class);
         static::assertFalse($definitions[0]->isNullable());
 
-        static::assertSame('name', $definitions[1]->reference()->name());
+        static::assertSame('name', $definitions[1]->name());
         static::assertSame(StringType::class, $definitions[1]->type()::class);
         static::assertTrue($definitions[1]->isNullable());
     }
 
     public function test_from_openapi_with_complex_schema(): void
     {
-        $openApiSpec = [
+        $schema = schema_from_openapi_specification([
             'type' => 'object',
             'properties' => [
                 'id' => ['type' => 'integer', 'nullable' => false],
@@ -216,55 +208,50 @@ final class OpenAPIToFlowConverterTest extends TestCase
                     'nullable' => false,
                 ],
             ],
-        ];
-
-        $schema = schema_from_openapi_specification($openApiSpec);
+        ]);
 
         static::assertCount(5, $schema->definitions());
         $definitions = array_values($schema->definitions());
 
-        static::assertSame('id', $definitions[0]->reference()->name());
+        static::assertSame('id', $definitions[0]->name());
         static::assertSame(IntegerType::class, $definitions[0]->type()::class);
         static::assertFalse($definitions[0]->isNullable());
 
-        static::assertSame('name', $definitions[1]->reference()->name());
+        static::assertSame('name', $definitions[1]->name());
         static::assertSame(StringType::class, $definitions[1]->type()::class);
         static::assertTrue($definitions[1]->isNullable());
         static::assertTrue($definitions[1]->metadata()->has('description'));
         static::assertSame('User name', $definitions[1]->metadata()->get('description'));
 
-        static::assertSame('active', $definitions[2]->reference()->name());
+        static::assertSame('active', $definitions[2]->name());
         static::assertSame(BooleanType::class, $definitions[2]->type()::class);
         static::assertFalse($definitions[2]->isNullable());
         static::assertTrue($definitions[2]->metadata()->has('example'));
         static::assertTrue($definitions[2]->metadata()->get('example'));
 
-        static::assertSame('tags', $definitions[3]->reference()->name());
+        static::assertSame('tags', $definitions[3]->name());
         static::assertSame(ListType::class, $definitions[3]->type()::class);
         static::assertTrue($definitions[3]->isNullable());
 
-        static::assertSame('address', $definitions[4]->reference()->name());
+        static::assertSame('address', $definitions[4]->name());
         static::assertSame(StructureType::class, $definitions[4]->type()::class);
         static::assertFalse($definitions[4]->isNullable());
     }
 
     public function test_from_openapi_with_empty_properties(): void
     {
-        $converter = new OpenAPIConverter();
-        $openApiSpec = [
-            'type' => 'object',
-            'properties' => [],
-        ];
-
-        $schema = $converter->fromOpenAPI($openApiSpec);
-
-        static::assertCount(0, $schema->definitions());
+        static::assertCount(
+            0,
+            (new OpenAPIConverter())->fromOpenAPI([
+                'type' => 'object',
+                'properties' => [],
+            ])->definitions(),
+        );
     }
 
     public function test_from_openapi_with_metadata(): void
     {
-        $converter = new OpenAPIConverter();
-        $openApiSpec = [
+        $schema = (new OpenAPIConverter())->fromOpenAPI([
             'type' => 'object',
             'properties' => [
                 'name' => [
@@ -274,14 +261,11 @@ final class OpenAPIToFlowConverterTest extends TestCase
                     'example' => 'John Doe',
                 ],
             ],
-        ];
-
-        $schema = $converter->fromOpenAPI($openApiSpec);
+        ]);
 
         static::assertCount(1, $schema->definitions());
-        $definitions = array_values($schema->definitions());
-        $definition = $definitions[0];
-        static::assertSame('name', $definition->reference()->name());
+        $definition = array_values($schema->definitions())[0];
+        static::assertSame('name', $definition->name());
         static::assertTrue($definition->metadata()->has('description'));
         static::assertSame('User name', $definition->metadata()->get('description'));
         static::assertTrue($definition->metadata()->has('example'));
@@ -290,8 +274,7 @@ final class OpenAPIToFlowConverterTest extends TestCase
 
     public function test_from_openapi_with_nested_structure(): void
     {
-        $converter = new OpenAPIConverter();
-        $openApiSpec = [
+        $schema = (new OpenAPIConverter())->fromOpenAPI([
             'type' => 'object',
             'properties' => [
                 'address' => [
@@ -303,22 +286,18 @@ final class OpenAPIToFlowConverterTest extends TestCase
                     'nullable' => false,
                 ],
             ],
-        ];
-
-        $schema = $converter->fromOpenAPI($openApiSpec);
+        ]);
 
         static::assertCount(1, $schema->definitions());
-        $definitions = array_values($schema->definitions());
-        $definition = $definitions[0];
-        static::assertSame('address', $definition->reference()->name());
+        $definition = array_values($schema->definitions())[0];
+        static::assertSame('address', $definition->name());
         static::assertSame(StructureType::class, $definition->type()::class);
         static::assertFalse($definition->isNullable());
     }
 
     public function test_from_openapi_with_object_with_additional_properties(): void
     {
-        $converter = new OpenAPIConverter();
-        $openApiSpec = [
+        $schema = (new OpenAPIConverter())->fromOpenAPI([
             'type' => 'object',
             'properties' => [
                 'metadata' => [
@@ -327,22 +306,18 @@ final class OpenAPIToFlowConverterTest extends TestCase
                     'nullable' => false,
                 ],
             ],
-        ];
-
-        $schema = $converter->fromOpenAPI($openApiSpec);
+        ]);
 
         static::assertCount(1, $schema->definitions());
-        $definitions = array_values($schema->definitions());
-        $definition = $definitions[0];
-        static::assertSame('metadata', $definition->reference()->name());
+        $definition = array_values($schema->definitions())[0];
+        static::assertSame('metadata', $definition->name());
         static::assertSame(MapType::class, $definition->type()::class);
         static::assertFalse($definition->isNullable());
     }
 
     public function test_from_openapi_with_special_string_formats(): void
     {
-        $converter = new OpenAPIConverter();
-        $openApiSpec = [
+        $schema = (new OpenAPIConverter())->fromOpenAPI([
             'type' => 'object',
             'properties' => [
                 'birth_date' => ['type' => 'string', 'format' => 'date', 'nullable' => false],
@@ -352,9 +327,7 @@ final class OpenAPIToFlowConverterTest extends TestCase
                 'data' => ['type' => 'string', 'format' => 'json', 'nullable' => false],
                 'xml' => ['type' => 'string', 'format' => 'xml', 'nullable' => false],
             ],
-        ];
-
-        $schema = $converter->fromOpenAPI($openApiSpec);
+        ]);
 
         static::assertCount(6, $schema->definitions());
         $definitions = array_values($schema->definitions());

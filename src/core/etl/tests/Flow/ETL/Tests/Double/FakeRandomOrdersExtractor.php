@@ -6,11 +6,12 @@ namespace Flow\ETL\Tests\Double;
 
 use DateTimeImmutable;
 use Faker\Factory;
-use Flow\ETL\Extractor;
-use Flow\ETL\Extractor\Signal;
-use Flow\ETL\Extractor\Statistics;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Schema;
+use Flow\ETL\IO\Extractor;
+use Flow\ETL\IO\Extractor\Criteria;
+use Flow\ETL\IO\Extractor\Signal;
+use Flow\ETL\IO\Extractor\Statistics;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Schema;
 use Generator;
 
 use function array_map;
@@ -74,12 +75,12 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
         );
     }
 
-    public function extract(FlowContext $context, ?int $limit = null): Generator
+    public function extract(Backend $backend, Criteria $criteria): Generator
     {
         $schema = self::schema();
 
         foreach ($this->rawData() as $row) {
-            yield array_to_rows($row, $schema, $context->backend());
+            yield array_to_rows($row, $schema, $backend);
         }
     }
 
@@ -166,5 +167,10 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
     public function statistics(): Statistics
     {
         return new Statistics();
+    }
+
+    public function isRepeatable(): bool
+    {
+        return false;
     }
 }

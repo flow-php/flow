@@ -49,7 +49,8 @@ You can implement custom constraints by creating classes that implement the `Con
 ```php
 <?php
 
-use Flow\ETL\{Constraint, Rows};
+use Flow\ETL\Operators\Constraint;
+use Flow\ETL\Values\Rows;
 
 final class AgeRangeConstraint implements Constraint
 {

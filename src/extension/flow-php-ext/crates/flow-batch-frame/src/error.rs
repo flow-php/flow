@@ -53,6 +53,10 @@ pub enum Error {
     UnknownType {
         type_name: String,
     },
+    /// A list, map, structure or optional type JSON without the type it nests.
+    MissingNestedType,
+    /// An enum type JSON without its class.
+    MissingEnumClass,
     BufferCount {
         node: usize,
         buffers: usize,
@@ -148,6 +152,12 @@ pub enum Error {
     },
     CompressedBuffer {
         buffer: usize,
+        prefix: i64,
+    },
+    /// A codec's output is not as long as the buffer's prefix declares.
+    DecodedLength {
+        buffer: usize,
+        decoded: u64,
         prefix: i64,
     },
     NodesDisagree {

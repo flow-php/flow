@@ -18,24 +18,25 @@ var_dump(class_exists('Flow\Floe\Exception\ExtensionException', false) === false
 ?>
 --EXPECT--
 bool(true)
-interface Flow\ETL\Adapter\CSV\CSVEncoder
-interface Flow\ETL\Adapter\CSV\CSVOpenSource
-class Flow\ETL\Adapter\CSV\RustCSVEncoder implements Flow\ETL\Adapter\CSV\CSVEncoder
-class Flow\ETL\Adapter\CSV\RustCSVOpenSource implements Flow\ETL\Adapter\CSV\CSVOpenSource
-interface Flow\ETL\Adapter\JSON\JsonEncoder
-interface Flow\ETL\Adapter\JSON\JsonOpenSource
-class Flow\ETL\Adapter\JSON\RustJsonEncoder implements Flow\ETL\Adapter\JSON\JsonEncoder
-class Flow\ETL\Adapter\JSON\RustJsonOpenSource implements Flow\ETL\Adapter\JSON\JsonOpenSource
-interface Flow\ETL\Adapter\Parquet\ParquetOpenSink
-interface Flow\ETL\Adapter\Parquet\ParquetOpenSource
-class Flow\ETL\Adapter\Parquet\RustParquetOpenSink implements Flow\ETL\Adapter\Parquet\ParquetOpenSink
-class Flow\ETL\Adapter\Parquet\RustParquetOpenSource implements Flow\ETL\Adapter\Parquet\ParquetOpenSource
-interface Flow\ETL\Column\Backend
-interface Flow\ETL\Column\Column
-interface Flow\ETL\Column\ColumnBuilder
-class Flow\ETL\Column\RustBackend implements Flow\ETL\Column\Backend
-class Flow\ETL\Column\RustColumn implements Flow\ETL\Column\Column
-class Flow\ETL\Column\RustColumnBuilder implements Flow\ETL\Column\ColumnBuilder
-class Flow\ETL\Column\RustColumnsBatch implements 
-class Flow\ETL\RustIterator implements Iterator
+interface Flow\ETL\Adapter\CSV\IO\Extractor\CSVOpenSource
+class Flow\ETL\Adapter\CSV\IO\Extractor\RustCSVOpenSource implements Flow\ETL\Adapter\CSV\IO\Extractor\CSVOpenSource
+interface Flow\ETL\Adapter\CSV\IO\Loader\CSVEncoder
+class Flow\ETL\Adapter\CSV\IO\Loader\RustCSVEncoder implements Flow\ETL\Adapter\CSV\IO\Loader\CSVEncoder
+interface Flow\ETL\Adapter\JSON\IO\Extractor\JsonOpenSource
+class Flow\ETL\Adapter\JSON\IO\Extractor\RustJsonOpenSource implements Flow\ETL\Adapter\JSON\IO\Extractor\JsonOpenSource
+interface Flow\ETL\Adapter\JSON\IO\Loader\JsonEncoder
+class Flow\ETL\Adapter\JSON\IO\Loader\RustJsonEncoder implements Flow\ETL\Adapter\JSON\IO\Loader\JsonEncoder
+interface Flow\ETL\Adapter\Parquet\IO\Extractor\ParquetOpenSource
+class Flow\ETL\Adapter\Parquet\IO\Extractor\RustParquetOpenSource implements Flow\ETL\Adapter\Parquet\IO\Extractor\ParquetOpenSource
+class Flow\ETL\Adapter\Parquet\IO\Loader\RustParquetFileWriter implements Flow\ETL\IO\Loader\File\FileWriter
+interface Flow\ETL\Foundation\Describe\Describable
+interface Flow\ETL\IO\Loader\File\FileWriter
+interface Flow\ETL\Values\Column\Backend
+interface Flow\ETL\Values\Column\Column
+interface Flow\ETL\Values\Column\ColumnBuilder
+class Flow\ETL\Values\Column\RustBackend implements Flow\ETL\Values\Column\Backend, Flow\ETL\Foundation\Describe\Describable
+class Flow\ETL\Values\Column\RustColumn implements Flow\ETL\Values\Column\Column
+class Flow\ETL\Values\Column\RustColumnBuilder implements Flow\ETL\Values\Column\ColumnBuilder
+class Flow\ETL\Values\Column\RustColumnsBatch implements 
+class Flow\ETL\Values\RustIterator implements Iterator
 bool(true)

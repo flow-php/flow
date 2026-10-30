@@ -1,0 +1,120 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Tests\Unit\Foundation\Exception;
+
+use DateTimeImmutable;
+use DateTimeZone;
+use Flow\ETL\Foundation\Exception\ColumnMismatchException;
+use Flow\ETL\Tests\FlowTestCase;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
+
+use function str_repeat;
+
+final class ColumnMismatchExceptionTest extends FlowTestCase
+{
+    /**
+     * @return \Generator<string, array{mixed, string}>
+     */
+    public static function provide_rendered_values(): Generator
+    {
+        yield 'short string' => ['AB-01', "could not convert 'AB-01' (string) to integer"];
+        yield 'long string' => [
+            str_repeat('x', 40),
+            "could not convert '" . str_repeat('x', 32) . "...' (string) to integer",
+        ];
+        yield 'float' => [1.5, 'could not convert 1.5 (float) to integer'];
+        yield 'true' => [true, 'could not convert true (boolean) to integer'];
+        yield 'false' => [false, 'could not convert false (boolean) to integer'];
+        yield 'array' => [[1, 2], 'could not convert array (list<integer>) to integer'];
+        yield 'datetime with its offset' => [
+            new DateTimeImmutable('2026-01-01 00:00:00.5', new DateTimeZone('Europe/Warsaw')),
+            'could not convert 2026-01-01T00:00:00.500000+01:00 (datetime) to integer',
+        ];
+    }
+
+    public function test_a_message_carries_no_row_coordinate(): void
+    {
+        static::assertSame(
+            'Row does not match its schema: column "extra" is not declared by the schema',
+            ColumnMismatchException::unexpectedColumn('extra')->getMessage(),
+        );
+    }
+
+    #[DataProvider('provide_rendered_values')]
+    public function test_how_a_value_is_rendered_in_the_message(mixed $value, string $expected): void
+    {
+        static::assertStringContainsString(
+            $expected,
+            ColumnMismatchException::valueDoesNotMatch('id', 'integer', $value)->getMessage(),
+        );
+    }
+
+    public function test_missing_column(): void
+    {
+        $exception = ColumnMismatchException::missingColumn('amount');
+
+        static::assertSame(
+            'Row does not match its schema: column "amount" declared by the schema is missing from the row',
+            $exception->getMessage(),
+        );
+    }
+
+    public function test_null_in_a_not_null_column(): void
+    {
+        $exception = ColumnMismatchException::valueDoesNotMatch('code', 'string', null);
+
+        static::assertSame(
+            'Row does not match its schema: column "code": could not convert null to string, '
+            . 'column is not nullable',
+            $exception->getMessage(),
+        );
+    }
+
+    public function test_retype(): void
+    {
+        static::assertSame(
+            'Row does not match its schema: column "amount": cannot retype the column to integer, it holds strings',
+            ColumnMismatchException::retype('amount', 'integer', 'it holds strings')->getMessage(),
+        );
+    }
+
+    public function test_unexpected_column(): void
+    {
+        $exception = ColumnMismatchException::unexpectedColumn('extra');
+
+        static::assertSame(
+            'Row does not match its schema: column "extra" is not declared by the schema',
+            $exception->getMessage(),
+        );
+    }
+
+    public function test_unsupported_type(): void
+    {
+        static::assertSame(
+            'Row does not match its schema: column "payload": resource cannot be a batch column, it has no column kind',
+            ColumnMismatchException::unsupportedType('payload', 'resource', 'it has no column kind')->getMessage(),
+        );
+    }
+
+    public function test_untyped_column(): void
+    {
+        static::assertSame(
+            'Row does not match its schema: column "result": mixed cannot be a batch column, an untyped function '
+            . 'result exists only inside function evaluation',
+            ColumnMismatchException::untypedColumn('result')->getMessage(),
+        );
+    }
+
+    public function test_value_does_not_match(): void
+    {
+        $exception = ColumnMismatchException::valueDoesNotMatch('code', 'string', 1000);
+
+        static::assertSame(
+            'Row does not match its schema: column "code": could not convert 1000 (integer) to string',
+            $exception->getMessage(),
+        );
+    }
+}

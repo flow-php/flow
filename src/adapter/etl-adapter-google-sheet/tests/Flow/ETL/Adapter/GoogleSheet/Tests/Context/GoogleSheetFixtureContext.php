@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\GoogleSheet\Tests\Context;
 
-use Flow\ETL\Adapter\GoogleSheet\Columns;
-use Flow\ETL\Adapter\GoogleSheet\GoogleSheetExtractor;
-use Flow\ETL\Adapter\GoogleSheet\GoogleSheetReader;
-use Flow\ETL\Adapter\GoogleSheet\GoogleSheetReadOptions;
-use Flow\ETL\Adapter\GoogleSheet\GoogleSheetSampler;
+use Flow\ETL\Adapter\GoogleSheet\IO\Extractor\Columns;
+use Flow\ETL\Adapter\GoogleSheet\IO\Extractor\GoogleSheetExtractor;
+use Flow\ETL\Adapter\GoogleSheet\IO\Extractor\GoogleSheetReader;
+use Flow\ETL\Adapter\GoogleSheet\IO\Extractor\GoogleSheetReadOptions;
+use Flow\ETL\Adapter\GoogleSheet\IO\Inference\GoogleSheetSniffer;
 use Flow\ETL\Adapter\GoogleSheet\Tests\Double\SpySpreadsheetsValuesResource;
 use Flow\ETL\Adapter\GoogleSheet\Tests\Mother\SheetsServiceMother;
-use Flow\ETL\Schema;
-use Flow\ETL\Schema\Inference\SchemaInference;
-use Flow\ETL\Schema\Inference\SchemaInferrer;
+use Flow\ETL\IO\Inference\SchemaInference;
+use Flow\ETL\IO\Inference\SchemaInferrer;
+use Flow\ETL\Values\Schema;
 use Google\Service\Sheets;
 use Google\Service\Sheets\BatchGetValuesResponse;
 use Google\Service\Sheets\ValueRange;
@@ -45,12 +45,9 @@ final class GoogleSheetFixtureContext
         SchemaInference $inference,
         GoogleSheetReadOptions $options = new GoogleSheetReadOptions(),
     ): Schema {
-        $sampler = new GoogleSheetSampler($reader, $inference->sampleSize);
-
-        return (new SchemaInferrer($inference, $options->typer($inference->candidates())))->infer(
-            $sampler->header(),
-            $sampler->samples($inference->sampleSize),
-        );
+        return (new SchemaInferrer($inference))->infer(
+            new GoogleSheetSniffer($reader, $inference->sampleSize, $options->typer($inference->candidates())),
+        )->schema;
     }
 
     public static function reader(
@@ -63,13 +60,17 @@ final class GoogleSheetFixtureContext
     /**
      * @param int<1, max>|-1 $rowBudget
      */
-    public static function sampler(
+    public static function sniffer(
         SpySpreadsheetsValuesResource $values,
         int $rowBudget = 20_480,
         int $rowCount = 100,
         GoogleSheetReadOptions $options = new GoogleSheetReadOptions(),
-    ): GoogleSheetSampler {
-        return new GoogleSheetSampler(self::reader(self::service($rowCount, $values), $options), $rowBudget);
+    ): GoogleSheetSniffer {
+        return new GoogleSheetSniffer(
+            self::reader(self::service($rowCount, $values), $options),
+            $rowBudget,
+            $options->typer((new SchemaInference())->candidates()),
+        );
     }
 
     public static function service(

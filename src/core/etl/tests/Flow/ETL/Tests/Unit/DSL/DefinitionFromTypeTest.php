@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\DSL;
 
-use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Exception\UnsupportedUnionTypeException;
-use Flow\ETL\Schema\Definition\IntegerDefinition;
-use Flow\ETL\Schema\Definition\ListDefinition;
-use Flow\ETL\Schema\Definition\NullDefinition;
-use Flow\ETL\Schema\Definition\StringDefinition;
-use Flow\ETL\Schema\Definition\TimeZoneDefinition;
+use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Foundation\Exception\UnsupportedUnionTypeException;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Values\Schema\Definition\IntegerDefinition;
+use Flow\ETL\Values\Schema\Definition\ListDefinition;
+use Flow\ETL\Values\Schema\Definition\NullDefinition;
+use Flow\ETL\Values\Schema\Definition\StringDefinition;
+use Flow\ETL\Values\Schema\Definition\TimeZoneDefinition;
 use Flow\Types\Type\Logical\DateTimeType;
 use Flow\Types\Type\Native\String\StringTypeNarrower;
 

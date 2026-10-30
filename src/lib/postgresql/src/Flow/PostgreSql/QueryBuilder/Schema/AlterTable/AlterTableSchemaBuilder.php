@@ -7,12 +7,10 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\AlterTable;
 use Flow\PostgreSql\Protobuf\AST\AlterObjectSchemaStmt;
 use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class AlterTableSchemaBuilder
 {
-    use AstToSql;
-
     private function __construct(
         private string $table,
         private ?string $schema,
@@ -23,6 +21,11 @@ final readonly class AlterTableSchemaBuilder
     public static function create(string $table, ?string $schema, string $newSchema, bool $ifExists): self
     {
         return new self($table, $schema, $newSchema, $ifExists);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): AlterObjectSchemaStmt

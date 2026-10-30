@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use function Flow\ETL\DSL\{data_frame, from_array, to_output};
-use Flow\ETL\Loader\StreamLoader\Output;
+use Flow\ETL\IO\Loader\StreamLoader\Output;
 
 require __DIR__ . '/vendor/autoload.php';
 

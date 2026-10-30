@@ -17,20 +17,37 @@ use Flow\Filesystem\SourceStream;
 use Generator;
 use phpseclib4\Exception\BaseException;
 use phpseclib4\Exception\FileSystemException;
-use phpseclib4\Net\SFTP;
+use SensitiveParameter;
 
 use function Flow\Filesystem\DSL\path;
+use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_string;
 use function rtrim;
 
+/**
+ * @type SFTPConfiguration = array{protocol: string, client: SFTPClientConfiguration, options: SFTPOptions}
+ * @import-type SFTPOptions from Options
+ * @import-type SFTPClientConfiguration from ConfiguredSFTPClient
+ *
+ */
 final readonly class SFTPFilesystem implements Filesystem
 {
     public function __construct(
         private Mount $mount,
-        private SFTP $sftp,
+        private SFTPClientSource $client,
         private Options $options = new Options(),
     ) {}
+
+    public static function fromArray(#[SensitiveParameter] array $configuration): static
+    {
+        return new self(
+            new Mount(type_string()->assert($configuration['protocol'] ?? null)),
+            ConfiguredSFTPClient::fromArray(type_array()->assert($configuration['client'] ?? null)),
+            Options::fromArray(type_array()->assert($configuration['options'] ?? null)),
+        );
+    }
 
     public function appendTo(Path $path): DestinationStream
     {
@@ -38,11 +55,26 @@ final readonly class SFTPFilesystem implements Filesystem
         $this->createParentDirectory($path);
 
         return SFTPDestinationStream::openAppend(
-            $this->sftp,
+            $this->client->client(),
             $path,
             $this->options->blockFactory(),
             $this->options->blockSize(),
         );
+    }
+
+    /**
+     * @return null|SFTPConfiguration
+     */
+    public function normalize(): ?array
+    {
+        $client = $this->client->normalize();
+        $options = $this->options->normalize();
+
+        if ($client === null || $options === null) {
+            return null;
+        }
+
+        return ['protocol' => $this->mount->protocol, 'client' => $client, 'options' => $options];
     }
 
     public function getSystemTmpDir(): Path
@@ -61,12 +93,12 @@ final readonly class SFTPFilesystem implements Filesystem
             $remotePath = $path->path();
 
             try {
-                if ($this->sftp->is_file($remotePath)) {
+                if ($this->client->client()->is_file($remotePath)) {
                     $fileStatus = new FileStatus(
                         $path,
                         true,
-                        type_integer()->assert($this->sftp->filesize($remotePath)),
-                        type_datetime()->cast($this->sftp->filemtime($remotePath)),
+                        type_integer()->assert($this->client->client()->filesize($remotePath)),
+                        type_datetime()->cast($this->client->client()->filemtime($remotePath)),
                     );
 
                     if ($pathFilter->accept($fileStatus)) {
@@ -82,7 +114,7 @@ final readonly class SFTPFilesystem implements Filesystem
 
         $root = rtrim(($path->isPattern() ? $path->staticPart() : $path)->path(), '/') ?: '/';
 
-        foreach ((new DirectoryListing($this->sftp))->read($root) as $entry) {
+        foreach ((new DirectoryListing($this->client->client()))->read($root) as $entry) {
             $entryPath = path($path->protocol() . '://' . $entry->path, $path->options());
 
             if ($path->isPattern() && !$path->matches($entryPath)) {
@@ -111,14 +143,14 @@ final readonly class SFTPFilesystem implements Filesystem
         $remoteTo = $to->path();
 
         try {
-            if (!$this->sftp->file_exists($remoteFrom)) {
+            if (!$this->client->client()->file_exists($remoteFrom)) {
                 return false;
             }
 
             $this->createParentDirectory($to);
 
-            $this->sftp->delete($remoteTo, true);
-            $this->sftp->rename($remoteFrom, $remoteTo);
+            $this->client->client()->delete($remoteTo, true);
+            $this->client->client()->rename($remoteFrom, $remoteTo);
         } catch (FileSystemException) {
             return false;
         } catch (BaseException) {
@@ -132,7 +164,7 @@ final readonly class SFTPFilesystem implements Filesystem
     {
         $this->guardScheme($path);
 
-        return new SFTPSourceStream($path, $this->sftp, $this->options);
+        return new SFTPSourceStream($path, $this->client->client(), $this->options);
     }
 
     public function rm(Path $path): bool
@@ -157,11 +189,11 @@ final readonly class SFTPFilesystem implements Filesystem
 
         foreach ($remotePaths as $remotePath) {
             try {
-                if (!$this->sftp->file_exists($remotePath)) {
+                if (!$this->client->client()->file_exists($remotePath)) {
                     continue;
                 }
 
-                $this->sftp->delete($remotePath, true);
+                $this->client->client()->delete($remotePath, true);
                 $removed++;
             } catch (FileSystemException) {
                 continue;
@@ -182,7 +214,7 @@ final readonly class SFTPFilesystem implements Filesystem
         $this->guardScheme($path);
 
         if (!$path->isPattern()) {
-            if ($this->sftp->is_dir($path->path())) {
+            if ($this->client->client()->is_dir($path->path())) {
                 return new FileStatus($path, false);
             }
         }
@@ -205,7 +237,7 @@ final readonly class SFTPFilesystem implements Filesystem
         $this->createParentDirectory($path);
 
         return SFTPDestinationStream::openBlank(
-            $this->sftp,
+            $this->client->client(),
             $path,
             $this->options->blockFactory(),
             $this->options->blockSize(),
@@ -217,11 +249,11 @@ final readonly class SFTPFilesystem implements Filesystem
         $parent = $path->parentDirectory()->path();
 
         try {
-            if ($this->sftp->is_dir($parent)) {
+            if ($this->client->client()->is_dir($parent)) {
                 return;
             }
 
-            $this->sftp->mkdir($parent, recursive: true);
+            $this->client->client()->mkdir($parent, recursive: true);
         } catch (FileSystemException $e) {
             throw new RuntimeException('Could not create directory: ' . $parent, previous: $e);
         }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration;
 
+use Flow\Parquet\BloomFilter\BloomFilterOptions;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
@@ -234,5 +235,62 @@ final class OptionsTest extends TestCase
             Option::STATISTICS_LEVEL,
             StatisticsLevel::class,
         );
+    }
+
+    public function test_normalize_round_trips_every_default_option(): void
+    {
+        $options = Options::default();
+
+        static::assertEquals($options, Options::fromArray($options->normalize()));
+        static::assertSame(
+            ['enum' => StatisticsLevel::class, 'case' => 'PAGE'],
+            $options->normalize()['STATISTICS_LEVEL'],
+        );
+    }
+
+    public function test_normalize_round_trips_enum_maps_and_bloom_filters(): void
+    {
+        $options = Options::default()->set(Option::COLUMNS_COMPRESSIONS, [
+            'a' => Compressions::SNAPPY,
+        ])->set(Option::COLUMNS_ENCODINGS, [
+            'a' => Encodings::PLAIN,
+        ])->set(Option::COLUMNS_BLOOM_FILTERS, ['a' => new BloomFilterOptions(0.1, 200)]);
+
+        static::assertSame(
+            ['a' => ['bloom_filter' => ['fpp' => 0.1, 'ndv' => 200]]],
+            $options->normalize()['COLUMNS_BLOOM_FILTERS'],
+        );
+        static::assertEquals($options, Options::fromArray($options->normalize()));
+    }
+
+    public function test_from_array_refuses_an_unknown_option(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Unknown parquet option: NOPE');
+
+        Options::fromArray(['NOPE' => 1]);
+    }
+
+    public function test_from_array_refuses_a_value_naming_a_class_that_is_not_an_enum(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Option enum values must name an enum class and one of its cases');
+
+        Options::fromArray(['STATISTICS_LEVEL' => ['enum' => Options::class, 'case' => 'PAGE']]);
+    }
+
+    public function test_from_array_refuses_a_bloom_filter_without_fpp(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('A bloom filter option must hold a numeric "fpp"');
+
+        Options::fromArray(['COLUMNS_BLOOM_FILTERS' => ['a' => ['bloom_filter' => ['ndv' => 1]]]]);
+    }
+
+    public function test_from_array_refuses_an_object_value(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        Options::fromArray(['PAGE_SIZE_BYTES' => new BloomFilterOptions()]);
     }
 }

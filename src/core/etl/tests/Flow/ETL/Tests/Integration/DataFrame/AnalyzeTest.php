@@ -5,30 +5,25 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use DateTimeImmutable;
-use Flow\Clock\FakeClock;
-use Flow\ETL\Cardinality;
-use Flow\ETL\Dataset\Report;
-use Flow\ETL\Dataset\SourceStatistics;
-use Flow\ETL\Dataset\Statistics\Columns;
-use Flow\ETL\Dataset\Statistics\HighResolutionTime;
-use Flow\ETL\Extractor\Statistics;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Join\Join;
-use Flow\ETL\Rows;
+use Flow\ETL\Foundation\Clock\FakeClock;
+use Flow\ETL\Foundation\Clock\HighResolutionTime;
+use Flow\ETL\IO\Extractor\Statistics;
+use Flow\ETL\Runtime\Metrics\Report;
+use Flow\ETL\Runtime\Metrics\SourceStatistics;
+use Flow\ETL\Runtime\Metrics\Statistics\Columns;
+use Flow\ETL\Tests\Context\FloeFilesContext;
 use Flow\ETL\Tests\Double\InlineLoader;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\ETL\Tests\Mother\MarketRowsMother;
-use Flow\Parquet\Option;
-use Flow\Parquet\Options;
+use Flow\ETL\Values\Cardinality;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Join\JoinType;
+use Flow\ETL\Values\Rows;
 
-use function Flow\ETL\Adapter\Parquet\from_parquet;
-use function Flow\ETL\Adapter\Parquet\to_parquet;
-use function Flow\ETL\Adapter\Text\from_text;
 use function Flow\ETL\DSL\analyze;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\infer_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\join_on;
@@ -36,8 +31,8 @@ use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
-use function Flow\Filesystem\DSL\memory_filesystem;
-use function Flow\Filesystem\DSL\path;
+use function Flow\Filesystem\DSL\native_local_filesystem;
+use function Flow\Floe\DSL\from_floe;
 
 final class AnalyzeTest extends FlowIntegrationTestCase
 {
@@ -49,12 +44,8 @@ final class AnalyzeTest extends FlowIntegrationTestCase
         $report = df($config)
             ->read(from_array(MarketRowsMother::fiveDays())->inferSchema(infer_schema()))
             ->collect()
-            ->write(new InlineLoader(static function (Rows $rows, FlowContext $context): void {
-                $clock = $context->config->clock();
-
-                if ($clock instanceof FakeClock) {
-                    $clock->modify('+5 minutes');
-                }
+            ->write(new InlineLoader(static function (Rows $rows, Backend $backend) use ($clock): void {
+                $clock->modify('+5 minutes');
             }))
             ->run(analyze: analyze()->withSchema()->withColumnStatistics());
 
@@ -118,12 +109,8 @@ final class AnalyzeTest extends FlowIntegrationTestCase
         $report = df($config)
             ->read(from_array(MarketRowsMother::fiveDays())->inferSchema(infer_schema()))
             ->collect()
-            ->write(new InlineLoader(static function (Rows $rows, FlowContext $context): void {
-                $clock = $context->config->clock();
-
-                if ($clock instanceof FakeClock) {
-                    $clock->modify('+5 minutes');
-                }
+            ->write(new InlineLoader(static function (Rows $rows, Backend $backend) use ($clock): void {
+                $clock->modify('+5 minutes');
             }))
             ->run(analyze: analyze()->withSchema());
 
@@ -153,12 +140,8 @@ final class AnalyzeTest extends FlowIntegrationTestCase
         $report = df($config)
             ->read(from_array(MarketRowsMother::fiveDays()))
             ->collect()
-            ->write(new InlineLoader(static function (Rows $rows, FlowContext $context): void {
-                $clock = $context->config->clock();
-
-                if ($clock instanceof FakeClock) {
-                    $clock->modify('+5 minutes');
-                }
+            ->write(new InlineLoader(static function (Rows $rows, Backend $backend) use ($clock): void {
+                $clock->modify('+5 minutes');
             }))
             ->run(analyze: analyze());
 
@@ -170,10 +153,14 @@ final class AnalyzeTest extends FlowIntegrationTestCase
 
     public function test_analyzing_partitioned_datasets(): void
     {
-        $report = df()->read(from_text(__DIR__
-        . '/Fixtures/Partitioning/multi_partition_pruning_test/year=*/month=*/day=*/*.txt'))->run(
-            analyze: analyze()->withSchema()->withColumnStatistics(),
+        FloeFilesContext::writeDailyPartitionedFiles(
+            native_local_filesystem(),
+            $this->cacheDir->path() . '/multi_partitioned',
         );
+
+        $report = df()->read(from_floe(
+            $this->cacheDir->path() . '/multi_partitioned/year=*/month=*/day=*/*.floe',
+        ))->run(analyze: analyze()->withSchema()->withColumnStatistics());
 
         static::assertNotNull($report);
         static::assertSame(7, $report->statistics()->totalRows());
@@ -191,7 +178,7 @@ final class AnalyzeTest extends FlowIntegrationTestCase
             ->join(
                 df()->read(from_array([['id' => 3], ['id' => 4], ['id' => 5]])),
                 join_on(['id' => 'id']),
-                Join::inner,
+                JoinType::inner,
             )
             ->run(analyze: analyze()->withSourceStatistics());
 
@@ -223,40 +210,11 @@ final class AnalyzeTest extends FlowIntegrationTestCase
         static::assertNull($sources[0]->rowsError());
     }
 
-    public function test_a_source_read_under_a_pushed_filter_reports_no_rows_error(): void
-    {
-        $memory = memory_filesystem();
-        df()
-            ->read(from_sequence_number('id', 1, 3000))
-            ->write(to_parquet(
-                path('memory://analyze/ids.parquet'),
-                Options::default()->set(Option::ROW_GROUP_SIZE_BYTES, 1)->set(
-                    Option::ROW_GROUP_SIZE_CHECK_INTERVAL,
-                    1000,
-                ),
-                filesystem: $memory,
-            ))
-            ->run();
-
-        $report = df()
-            ->read(from_parquet(path('memory://analyze/ids.parquet'), filesystem: $memory))
-            ->filter(ref('id')->greaterThan(lit(2500)))
-            ->run(analyze: analyze()->withSourceStatistics());
-
-        static::assertNotNull($report);
-        $sources = $report->sources();
-        static::assertNotNull($sources);
-        static::assertCount(1, $sources);
-        static::assertFalse($sources[0]->complete);
-        static::assertLessThan(3000, $sources[0]->rows);
-        static::assertNull($sources[0]->rowsError());
-    }
-
     public function test_run_explicit_analyze_overrides_config(): void
     {
-        $config = config_builder()->analyze(analyze())->build();
-
-        $report = df($config)->read(from_array([['id' => 1]]))->run(analyze: analyze()->withSchema());
+        $report = df(config_builder()->analyze(analyze())->build())
+            ->read(from_array([['id' => 1]]))
+            ->run(analyze: analyze()->withSchema());
 
         static::assertNotNull($report);
         static::assertNotNull($report->schema());
@@ -264,9 +222,7 @@ final class AnalyzeTest extends FlowIntegrationTestCase
 
     public function test_run_uses_analyze_from_config(): void
     {
-        $config = config_builder()->analyze(analyze())->build();
-
-        $report = df($config)->read(from_array([['id' => 1]]))->run();
+        $report = df(config_builder()->analyze(analyze())->build())->read(from_array([['id' => 1]]))->run();
 
         // @mago-ignore analysis:impossible-type-comparison
         static::assertInstanceOf(Report::class, $report);

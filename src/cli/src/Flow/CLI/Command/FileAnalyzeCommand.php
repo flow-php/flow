@@ -5,22 +5,21 @@ declare(strict_types=1);
 namespace Flow\CLI\Command;
 
 use Flow\CLI\Arguments\FilePathArgument;
-use Flow\CLI\Command\Traits\ConfigOptions;
-use Flow\CLI\Command\Traits\CSVOptions;
-use Flow\CLI\Command\Traits\ExcelOptions;
-use Flow\CLI\Command\Traits\JSONOptions;
-use Flow\CLI\Command\Traits\ParquetOptions;
-use Flow\CLI\Command\Traits\SchemaInferenceOptions;
-use Flow\CLI\Command\Traits\StatisticsOptions;
-use Flow\CLI\Command\Traits\XMLOptions;
 use Flow\CLI\Factory\ExtractorFactory;
 use Flow\CLI\Formatter\PipelineReportFormatter;
 use Flow\CLI\Loader\ProgressBarLoader;
 use Flow\CLI\Options\ConfigOption;
+use Flow\CLI\Options\CSVInputOptions;
+use Flow\CLI\Options\ExcelInputOptions;
 use Flow\CLI\Options\FileFormat;
 use Flow\CLI\Options\FileFormatOption;
+use Flow\CLI\Options\JSONInputOptions;
+use Flow\CLI\Options\ParquetInputOptions;
+use Flow\CLI\Options\SchemaInferenceOptions;
+use Flow\CLI\Options\StatisticsOptions;
+use Flow\CLI\Options\XMLInputOptions;
 use Flow\CLI\Style\FlowStyle;
-use Flow\ETL\Config;
+use Flow\ETL\Runtime\Config;
 use Flow\Filesystem\Path;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -39,15 +38,6 @@ use function Flow\ETL\DSL\df;
 #[AsCommand(name: 'file:analyze', description: 'Analyze a file.', aliases: ['analyze'])]
 final class FileAnalyzeCommand extends Command
 {
-    use ConfigOptions;
-    use CSVOptions;
-    use ExcelOptions;
-    use JSONOptions;
-    use ParquetOptions;
-    use SchemaInferenceOptions;
-    use StatisticsOptions;
-    use XMLOptions;
-
     private const int DEFAULT_BATCH_SIZE = 1_000;
 
     private ?FileFormat $fileFormat = null;
@@ -93,14 +83,14 @@ final class FileAnalyzeCommand extends Command
                 null,
             );
 
-        $this->addConfigOptions($this);
-        $this->addJSONInputOptions($this);
-        $this->addCSVInputOptions($this);
-        $this->addExcelInputOptions($this);
-        $this->addXMLInputOptions($this);
-        $this->addParquetInputOptions($this);
-        $this->addSchemaInferenceOptions($this);
-        $this->addStatisticsOptions($this);
+        (new ConfigOption('config'))->configure($this);
+        (new JSONInputOptions())->configure($this);
+        (new CSVInputOptions())->configure($this);
+        (new ExcelInputOptions())->configure($this);
+        (new XMLInputOptions())->configure($this);
+        (new ParquetInputOptions())->configure($this);
+        (new SchemaInferenceOptions())->configure($this);
+        (new StatisticsOptions())->configure($this);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -116,7 +106,7 @@ final class FileAnalyzeCommand extends Command
 
         $extractor = (new ExtractorFactory($this->sourcePath, $this->fileFormat))->get($input);
 
-        if (!$this->applySchemaInference($extractor, $input, $style)) {
+        if (!(new SchemaInferenceOptions())->apply($extractor, $input, $style)) {
             return Command::FAILURE;
         }
 

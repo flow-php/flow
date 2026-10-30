@@ -13,7 +13,7 @@ use Flow\PostgreSql\Protobuf\AST\Integer;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBList;
 use Flow\PostgreSql\Protobuf\AST\PBString;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 
@@ -26,8 +26,6 @@ final readonly class CreateFunctionBuilder implements
     CreateFunctionOptionsStep,
     CreateFunctionReturnsStep
 {
-    use AstToSql;
-
     /**
      * @param list<FunctionArgument> $arguments
      * @param list<array{name: string, arg: ?Node}> $options
@@ -230,6 +228,11 @@ final readonly class CreateFunctionBuilder implements
     public function strict(): CreateFunctionOptionsStep
     {
         return $this->withBooleanOption('strict', true);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): CreateFunctionStmt

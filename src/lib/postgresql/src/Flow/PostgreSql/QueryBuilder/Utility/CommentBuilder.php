@@ -9,15 +9,13 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\PBList;
 use Flow\PostgreSql\Protobuf\AST\PBString;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 use function in_array;
 
 final readonly class CommentBuilder implements CommentFinalStep
 {
-    use AstToSql;
-
     private function __construct(
         private CommentTarget $target,
         private string $name,
@@ -37,6 +35,11 @@ final readonly class CommentBuilder implements CommentFinalStep
     public function isNull(): CommentFinalStep
     {
         return new self($this->target, $this->name, null);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): CommentStmt

@@ -9,14 +9,12 @@ use Flow\PostgreSql\Protobuf\AST\DropOwnedStmt;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\RoleSpec;
 use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 use function array_values;
 
 final readonly class DropOwnedBuilder implements DropOwnedFinalStep
 {
-    use AstToSql;
-
     /**
      * @param list<string> $roles
      */
@@ -38,6 +36,11 @@ final readonly class DropOwnedBuilder implements DropOwnedFinalStep
     public function restrict(): DropOwnedFinalStep
     {
         return new self($this->roles, DropBehavior::DROP_RESTRICT);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): DropOwnedStmt

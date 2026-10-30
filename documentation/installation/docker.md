@@ -95,7 +95,7 @@ The backend is chosen per data frame, the Parquet engine per read:
 ```php
 <?php
 
-use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Values\Column\PhpBackend;
 use Flow\Parquet\Engine\PhpParquetEngine;
 
 use function Flow\ETL\Adapter\Parquet\from_parquet;
@@ -117,5 +117,5 @@ $ docker run --rm -v /dev/null:/usr/local/etc/php/conf.d/docker-php-ext-flow_php
 ```
 
 Once a native path is selected it does **not** silently degrade. `flow_php` failures surface as
-`Flow\ETL\Exception\RuntimeException`; a Floe read wraps them as `Flow\Floe\Exception\FloeException`. arrow-ext
+`Flow\ETL\Foundation\Exception\RuntimeException`; a Floe read wraps them as `Flow\ETL\Values\Column\Frame\FloeException`. arrow-ext
 failures surface as `Flow\Parquet\Exception\*`.

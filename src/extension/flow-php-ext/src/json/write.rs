@@ -1,4 +1,4 @@
-//! `Flow\ETL\Adapter\JSON\RustJsonEncoder`: a `Rows` batch as the text `PhpJsonEncoder::encode()` returns, rendered
+//! `Flow\ETL\Adapter\JSON\IO\Loader\RustJsonEncoder`: a `Rows` batch as the text `PhpJsonEncoder::encode()` returns, rendered
 //! from the arrow arrays; the columns it does not render are the fragments the held `PhpJsonEncoder::fragments()`
 //! produces.
 
@@ -8,13 +8,14 @@ use ext_php_rs::exception::PhpException;
 use ext_php_rs::flags::ClassFlags;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, Zval};
+use flow_column_text::json::{self, Flags};
+use flow_column_text::value::{Formats, Renderer};
+use flow_column_text::Error;
 
+use crate::ctx::read_property;
 use crate::interfaces::json_encoder_ce;
 use crate::render::{invalid_argument, runtime};
 use crate::text::batch::{batch, cells, renderer, Unrendered};
-use crate::text::json::{self, Flags};
-use crate::text::value::{Formats, Renderer};
-use crate::text::Error;
 
 const JSON_UNESCAPED_SLASHES: i64 = 64;
 const JSON_UNESCAPED_UNICODE: i64 = 256;
@@ -32,9 +33,9 @@ enum Cells<'a> {
 
 #[php_class]
 #[php(
-    name = "Flow\\ETL\\Adapter\\JSON\\RustJsonEncoder",
+    name = "Flow\\ETL\\Adapter\\JSON\\IO\\Loader\\RustJsonEncoder",
     flags = ClassFlags::Final,
-    implements(ce = json_encoder_ce, stub = "Flow\\ETL\\Adapter\\JSON\\JsonEncoder")
+    implements(ce = json_encoder_ce, stub = "Flow\\ETL\\Adapter\\JSON\\IO\\Loader\\JsonEncoder")
 )]
 pub struct RustJsonEncoder {
     flags: Flags,
@@ -46,12 +47,22 @@ pub struct RustJsonEncoder {
 
 #[php_impl]
 impl RustJsonEncoder {
-    pub fn __construct(
-        flags: i64,
-        date_time_format: BinarySlice<u8>,
-        date_format: BinarySlice<u8>,
-        php: &Zval,
-    ) -> PhpResult<Self> {
+    /// `$php` is the `PhpJsonEncoder` this one falls back to; its flags and formats are read once here.
+    pub fn __construct(php: &Zval) -> PhpResult<Self> {
+        let encoder = php
+            .object()
+            .ok_or_else(|| invalid_argument("RustJsonEncoder expects a PhpJsonEncoder".to_string()))?;
+        let text = |name: &str| -> PhpResult<Vec<u8>> {
+            read_property(encoder, name)?
+                .zend_str()
+                .map(|value| value.as_bytes().to_vec())
+                .ok_or_else(|| invalid_argument(format!("PhpJsonEncoder::${name} must be a string")))
+        };
+        let flags = read_property(encoder, "flags")?
+            .long()
+            .ok_or_else(|| invalid_argument("PhpJsonEncoder::$flags must be an int".to_string()))?;
+        let (date_time_format, date_format) = (text("dateTimeFormat")?, text("dateFormat")?);
+
         if flags
             & !(JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION)
             != 0

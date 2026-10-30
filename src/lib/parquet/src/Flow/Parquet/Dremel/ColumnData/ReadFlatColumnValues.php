@@ -10,7 +10,10 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\Reader\RowSelection;
 use Generator;
 
+use function array_values;
 use function count;
+use function is_array;
+use function iterator_to_array;
 use function sprintf;
 
 final readonly class ReadFlatColumnValues
@@ -18,17 +21,23 @@ final readonly class ReadFlatColumnValues
     private int $rowsCount;
 
     /**
-     * @param FlatColumn $column
-     * @param \Generator<mixed, mixed, mixed, mixed> $values
+     * @var list<mixed> the decoded values, kept so the page can be read again
+     */
+    private array $values;
+
+    /**
+     * @param iterable<mixed> $values
      * @param array<int> $repetitionLevels
      * @param array<int> $definitionLevels
      */
     public function __construct(
         public FlatColumn $column,
-        private Generator $values,
+        iterable $values,
         private array $repetitionLevels,
         private array $definitionLevels,
     ) {
+        $this->values = is_array($values) ? array_values($values) : iterator_to_array($values, false);
+
         $rowsCount = 0;
 
         foreach ($repetitionLevels as $repetitionLevel) {
@@ -44,13 +53,13 @@ final readonly class ReadFlatColumnValues
     public function assembleFlat(DataConverter $dataConverter): Generator
     {
         $maxDefinitionLevel = $this->column->repetitions()->maxDefinitionLevel();
+        $next = 0;
 
         foreach ($this->definitionLevels as $definitionLevel) {
             if ($definitionLevel === $maxDefinitionLevel) {
-                // Iterator over decoded parquet column values (any scalar/object the converter accepts).
+                // decoded parquet column values: any scalar/object the converter accepts
                 // @mago-ignore analysis:mixed-assignment
-                $value = $this->values->valid() ? $this->values->current() : null;
-                $this->values->next();
+                $value = $this->values[$next++] ?? null;
 
                 yield $dataConverter->fromParquetType($this->column, $value);
             } else {
@@ -83,12 +92,12 @@ final readonly class ReadFlatColumnValues
     public function iterator(): Generator
     {
         $maxDefinitionLevel = $this->column->repetitions()->maxDefinitionLevel();
+        $next = 0;
 
         foreach ($this->definitionLevels as $index => $definitionLevel) {
             if ($definitionLevel === $maxDefinitionLevel) {
                 /** @var null|scalar $value */
-                $value = $this->values->valid() ? $this->values->current() : null;
-                $this->values->next();
+                $value = $this->values[$next++] ?? null;
             } else {
                 $value = null;
             }
@@ -98,11 +107,11 @@ final readonly class ReadFlatColumnValues
     }
 
     /**
-     * @return \Generator<mixed>
+     * @return list<mixed>
      */
-    public function rawValues(): Generator
+    public function rawValues(): array
     {
-        yield from $this->values;
+        return $this->values;
     }
 
     /**
@@ -134,6 +143,7 @@ final readonly class ReadFlatColumnValues
         $repetitionLevels = [];
         $definitionLevels = [];
         $keptValues = [];
+        $next = 0;
 
         foreach ($this->repetitionLevels as $index => $repetitionLevel) {
             if ($repetitionLevel === 0) {
@@ -146,7 +156,11 @@ final readonly class ReadFlatColumnValues
             }
 
             if ($this->definitionLevels[$index] === $maxDefinitionLevel) {
-                $keptValues[] = !$skip;
+                if (!$skip) {
+                    $keptValues[] = $this->values[$next] ?? null;
+                }
+
+                $next++;
             }
 
             if (!$skip) {
@@ -155,22 +169,7 @@ final readonly class ReadFlatColumnValues
             }
         }
 
-        $values = $this->values;
-
-        return new self(
-            $this->column,
-            (static function () use ($values, $keptValues): Generator {
-                foreach ($keptValues as $kept) {
-                    if ($kept) {
-                        yield $values->current();
-                    }
-
-                    $values->next();
-                }
-            })(),
-            $repetitionLevels,
-            $definitionLevels,
-        );
+        return new self($this->column, $keptValues, $repetitionLevels, $definitionLevels);
     }
 
     public function rowsCount(): int

@@ -9,13 +9,11 @@ use Flow\PostgreSql\Protobuf\AST\DefElem;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\TypeName;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class CreateRangeTypeBuilder implements CreateRangeTypeOptionsStep, CreateRangeTypeSubtypeStep
 {
-    use AstToSql;
-
     /**
      * @param list<array{name: string, arg: Node}> $params
      */
@@ -60,6 +58,11 @@ final readonly class CreateRangeTypeBuilder implements CreateRangeTypeOptionsSte
     public function subtypeOpclass(string $opclass): CreateRangeTypeOptionsStep
     {
         return $this->withStringParam('subtype_opclass', $opclass);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): CreateRangeStmt

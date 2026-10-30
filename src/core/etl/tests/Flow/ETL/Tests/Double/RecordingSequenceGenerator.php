@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Cardinality;
-use Flow\ETL\Extractor\SequenceGenerator\SequenceGenerator;
+use Flow\ETL\IO\Extractor\SequenceGenerator\SequenceGenerator;
+use Flow\ETL\Values\Cardinality;
 use Generator;
 
 /**

@@ -7,8 +7,10 @@ arrow-ext's canonical Arrow layout (parquet/canonical.rs) is the layout flow_php
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\Parquet\Engine\RustParquetFileWriter;
-use Flow\ETL\Adapter\Parquet\{RustParquetOpenSink, SchemaConverter};
+use Flow\Parquet\Engine\RustParquetFileWriter as ArrowRustParquetFileWriter;
+use Flow\ETL\Adapter\Parquet\IO\Loader\{ParquetSchemaConformance, RustParquetFileWriter};
+use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Adapter\Parquet\Values\Schema\SchemaConverter;
 use Flow\Parquet\Engine\Arrow\{OptionsConverter, SchemaConverter as ArrowSchemaConverter};
 use Flow\Parquet\Options;
 use Flow\Types\Value\Uuid;
@@ -47,13 +49,17 @@ $values = [
 ];
 
 $filesystem = memory_filesystem();
-$writer = new RustParquetOpenSink(new RustParquetFileWriter(
-    $filesystem->writeTo(path('memory://layout.parquet')),
-    ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquet($schema)),
-    Compressions::SNAPPY,
-    OptionsConverter::toExtension(Options::default()),
-    1_000,
-));
+$writer = new RustParquetFileWriter(
+    new ArrowRustParquetFileWriter(
+        $filesystem->writeTo(path('memory://layout.parquet')),
+        ArrowSchemaConverter::toExtension((new SchemaConverter())->toParquetSchema($schema)),
+        Compressions::SNAPPY,
+        OptionsConverter::toExtension(Options::default()),
+        1_000,
+    ),
+    new ParquetSchemaConformance((new SchemaConverter())->toParquetSchema($schema)),
+    new PhpBackend(),
+);
 $writer->write(php_rows($schema, $values));
 $writer->close();
 

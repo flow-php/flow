@@ -34,9 +34,9 @@ namespace Symfony\Application\Controller;
 
 use Flow\Bridge\Symfony\HttpFoundation\Response\FlowBufferedResponse;
 use Flow\Bridge\Symfony\HttpFoundation\Response\FlowStreamedResponse;
-use Flow\ETL\Transformation\AddRowIndex;
-use Flow\ETL\Transformation\Limit;
-use Flow\ETL\Transformation\MaskColumns;
+use Flow\ETL\API\Transformation\AddRowIndex;
+use Flow\ETL\API\Transformation\Limit;
+use Flow\ETL\API\Transformation\MaskColumns;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Attribute\Route;
 use function Flow\Bridge\Symfony\HttpFoundation\http_csv_output;
@@ -74,6 +74,42 @@ final class ReportsController extends AbstractController
 }
 ```
 
+## Stream a DataFrame
+
+`http_stream_open()` also takes a DataFrame. The frame runs under its own config, so `config()` is refused for it: set
+`analyze()` on the frame's config instead. The response adds its transformations and its output to the frame, so do not
+use the frame again after you build the response.
+
+```php
+<?php
+
+namespace Symfony\Application\Controller;
+
+use Flow\Bridge\Symfony\HttpFoundation\Response\FlowStreamedResponse;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Routing\Attribute\Route;
+use function Flow\Bridge\Symfony\HttpFoundation\http_csv_output;
+use function Flow\Bridge\Symfony\HttpFoundation\http_stream_open;
+use function Flow\ETL\Adapter\Parquet\from_parquet;
+use function Flow\ETL\DSL\{config_builder, df, lit, ref};
+
+final class OrdersController extends AbstractController
+{
+    #[Route('/orders/paid', name: 'orders_paid')]
+    public function paidOrders() : FlowStreamedResponse
+    {
+        $orders = df(config_builder())
+            ->read(from_parquet(__DIR__ . '/reports/orders.parquet'))
+            ->filter(ref('status')->equals(lit('paid')))
+            ->select('id', 'total');
+
+        return http_stream_open($orders)
+            ->as('paid_orders.csv')
+            ->streamedResponse(http_csv_output());
+    }
+}
+```
+
 ## Available Outputs
 
 - `Flow\Bridge\Symfony\HttpFoundation\Output\CSVOutput` - `http_csv_output()` - converts dataset to CSV format.
@@ -89,7 +125,7 @@ To do that, FlowStreamedResponse allows passing a Transformation that will be ap
 ```php
 <?php
 
-use Flow\ETL\{DataFrame, Transformation};
+use Flow\ETL\API\{DataFrame, Transformation};
 
 use function Flow\ETL\DSL\lit;
 
@@ -119,8 +155,7 @@ To receive a `Report`, you need to:
 namespace Symfony\Application\Controller;
 
 use Flow\Bridge\Symfony\HttpFoundation\Response\FlowStreamedResponse;
-use Flow\ETL\Config;
-use Flow\ETL\Dataset\Report;
+use Flow\ETL\Runtime\Metrics\Report;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Attribute\Route;
@@ -128,7 +163,7 @@ use function Flow\Bridge\Symfony\HttpFoundation\http_json_output;
 use function Flow\Bridge\Symfony\HttpFoundation\http_on_complete;
 use function Flow\Bridge\Symfony\HttpFoundation\http_stream_open;
 use function Flow\ETL\Adapter\Parquet\from_parquet;
-use function Flow\ETL\DSL\analyze;
+use function Flow\ETL\DSL\{analyze, config_builder};
 
 final class ReportsController extends AbstractController
 {
@@ -140,7 +175,7 @@ final class ReportsController extends AbstractController
     public function streamReport() : FlowStreamedResponse
     {
         return http_stream_open(from_parquet(__DIR__ . '/reports/orders.parquet'))
-            ->config(Config::builder()->analyze(analyze()))
+            ->config(config_builder()->analyze(analyze()))
             ->onComplete(http_on_complete(function (?Report $report) : void {
                 if ($report === null) {
                     return;
@@ -169,10 +204,10 @@ The `analyze()` function supports additional options for collecting more detaile
 
 ```php ignore
 // Collect schema information along with basic statistics
-->config(Config::builder()->analyze(analyze()->withSchema()))
+->config(config_builder()->analyze(analyze()->withSchema()))
 
 // Collect everything
-->config(Config::builder()->analyze(analyze()->withSchema()->withColumnStatistics()))
+->config(config_builder()->analyze(analyze()->withSchema()->withColumnStatistics()))
 ```
 
 ### Report Contents

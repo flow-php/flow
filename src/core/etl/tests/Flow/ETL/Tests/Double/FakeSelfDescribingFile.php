@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Extractor\File\SelfDescribingFile;
-use Flow\ETL\Extractor\File\SourceFile;
-use Flow\ETL\Extractor\Statistics;
-use Flow\ETL\Schema;
+use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\IO\Extractor\File\SelfDescribingFile;
+use Flow\ETL\IO\Extractor\File\SourceFile;
+use Flow\ETL\IO\Extractor\Statistics;
+use Flow\ETL\Values\Schema;
 
 final class FakeSelfDescribingFile implements SelfDescribingFile
 {
@@ -43,5 +43,10 @@ final class FakeSelfDescribingFile implements SelfDescribingFile
     public function statistics(): Statistics
     {
         return $this->statistics;
+    }
+
+    public function units(): array
+    {
+        return [];
     }
 }

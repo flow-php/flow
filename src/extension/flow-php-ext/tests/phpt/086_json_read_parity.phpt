@@ -6,12 +6,15 @@ RustJsonOpenSource reads random valid JSON, whole or a byte at a time, into the 
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\JSON\JSONMachine\{JsonFileReader, JsonFormat};
-use Flow\ETL\Adapter\JSON\{PhpJsonOpenSource, RustJsonOpenSource};
-use Flow\ETL\Column\{RustBackend, RustColumn, PhpBackend};
-use Flow\ETL\Extractor\File\SourceFile;
-use Flow\ETL\{Rows, Schema};
+use Flow\ETL\Adapter\JSON\IO\Extractor\JsonFileReader;
+use Flow\ETL\Adapter\JSON\IO\JsonFraming;
+use Flow\ETL\Adapter\JSON\IO\Extractor\PhpJsonOpenSource;
+use Flow\ETL\Adapter\JSON\IO\Extractor\RustJsonOpenSource;
+use Flow\ETL\Values\Column\{RustBackend, RustColumn, PhpBackend};
+use Flow\ETL\IO\Extractor\File\SourceFile;
+use Flow\ETL\Values\{Rows, Schema};
 use Flow\Filesystem\Stream\StringSourceStream;
+use Flow\ETL\Values\Column\Frame\NoopCodec;
 
 use function Flow\ETL\DSL\{bool_schema, date_schema, datetime_schema, float_schema, int_schema, json_schema, list_schema, map_schema, schema, str_schema, structure_schema, uuid_schema};
 use function Flow\Filesystem\DSL\{memory_filesystem, path};
@@ -120,7 +123,7 @@ $frames = static function (iterable $batches, object $backend): array {
             }
         }
 
-        $frames[] = bin2hex($batch->encodeFrame());
+        $frames[] = bin2hex((new PhpBackend())->encodeFrame($batch, new NoopCodec()));
     }
 
     return $frames;
@@ -170,7 +173,7 @@ for ($t = 0; $t < 400; $t++) {
         $stream->append($raw);
         $stream->close();
         $source = new SourceFile(path('memory://phpt.json'));
-        $reader = new JsonFileReader($filesystem, $lines ? JsonFormat::Lines : JsonFormat::Document, null, false, [$source]);
+        $reader = new JsonFileReader($filesystem, $lines ? JsonFraming::Lines : JsonFraming::Array, null, false, [$source]);
         $php = outcome(static fn(): array => $frames((new PhpJsonOpenSource($reader, $source))->batches($schema, 2, new PhpBackend()), new PhpBackend()));
 
         foreach ([new RustBackend(), new PhpBackend()] as $backend) {

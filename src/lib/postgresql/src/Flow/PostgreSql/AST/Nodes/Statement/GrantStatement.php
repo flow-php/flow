@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\AST\Nodes\Statement;
 
 use Flow\PostgreSql\AST\Nodes\Statement;
-use Flow\PostgreSql\AST\Nodes\StatementTrait;
 use Flow\PostgreSql\Protobuf\AST\GrantRoleStmt;
 use Flow\PostgreSql\Protobuf\AST\GrantStmt;
 
@@ -14,8 +13,6 @@ use Flow\PostgreSql\Protobuf\AST\GrantStmt;
  */
 final readonly class GrantStatement implements Statement
 {
-    use StatementTrait;
-
     public function __construct(
         private GrantStmt|GrantRoleStmt $stmt,
     ) {}

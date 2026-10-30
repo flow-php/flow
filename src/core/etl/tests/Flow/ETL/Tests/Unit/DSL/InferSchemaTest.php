@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\DSL;
 
-use Flow\ETL\Schema\Inference\SchemaInferenceBuilder;
+use Flow\ETL\IO\Inference\SchemaInferenceBuilder;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\infer_schema;

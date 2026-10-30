@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\Tests\Mother;
 
-use Flow\ETL\Rows;
+use Flow\ETL\Values\Rows;
 
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;

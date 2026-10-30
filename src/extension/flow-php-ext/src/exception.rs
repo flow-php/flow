@@ -34,6 +34,8 @@ pub fn json_exception(error: Error) -> PhpException {
         Error::UnknownType { type_name } => {
             format!("flow_php cannot build a column for type \"{type_name}\"")
         }
+        Error::MissingNestedType => "flow_php type JSON is missing a nested type".to_string(),
+        Error::MissingEnumClass => "flow_php enum type JSON is missing its class".to_string(),
         error => unreachable!("kind returns JSON refusals only, got {error}"),
     })
 }

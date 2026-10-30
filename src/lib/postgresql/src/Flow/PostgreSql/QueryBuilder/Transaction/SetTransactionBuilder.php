@@ -11,12 +11,10 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\VariableSetKind;
 use Flow\PostgreSql\Protobuf\AST\VariableSetStmt;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class SetTransactionBuilder implements SetTransactionOptionsStep
 {
-    use AstToSql;
-
     private function __construct(
         private bool $isSession = false,
         private ?string $snapshotId = null,
@@ -63,6 +61,11 @@ final readonly class SetTransactionBuilder implements SetTransactionOptionsStep
     public function snapshot(string $snapshotId): SetTransactionFinalStep
     {
         return new self($this->isSession, $snapshotId, $this->isolationLevel, $this->readOnly, $this->deferrable);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): VariableSetStmt

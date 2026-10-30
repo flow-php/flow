@@ -1,9 +1,14 @@
-//! `Flow\ETL\Adapter\CSV\RustCSVOpenSource`: one CSV file read through the native tokenizer - the stream fed in chunks
-//! (a `NativeLocalSourceStream` in `CHUNK`s, any other stream in `$charactersReadInLine`), batches as native columns
-//! adopted by the configured backend, records as PHP arrays, the type sniff folded natively.
+//! `Flow\ETL\Adapter\CSV\IO\Extractor\RustCSVOpenSource`: one CSV file read through the native tokenizer - a local file (or a
+//! window of one) read by Rust in `NATIVE_CHUNK` preads, any other stream fed in `$charactersReadInLine` chunks through
+//! its PHP `iterate()` - batches as native columns adopted by the configured backend, records as PHP arrays, the type
+//! sniff folded natively.
 
 use std::cell::{Cell, RefCell};
 use std::collections::VecDeque;
+use std::ffi::OsStr;
+use std::fs::File;
+use std::os::unix::ffi::OsStrExt;
+use std::os::unix::fs::FileExt;
 use std::rc::Rc;
 
 use ext_php_rs::binary_slice::BinarySlice;
@@ -17,17 +22,21 @@ use crate::batch_columns::{batch_size_of, HeldBatch};
 use crate::csv::columns::{next_columns, CsvColumns};
 use crate::csv::fold::{string_values, Fold};
 use crate::csv::CsvReader;
-use crate::ctx::{call_function, call_method, call_static, construct, find_class, ht_insert, zval_long, zval_str};
+use crate::ctx::{call_function, call_method, call_static, ht_insert, zval_long, zval_str};
 use crate::exception::ext_exception;
 use crate::interfaces::csv_open_source_ce;
 use crate::iterator::RustIterator;
+use crate::render::runtime;
 use crate::source::{self, reading, Fed, CHUNK};
 
 const CLASS: &str = "RustCSVOpenSource";
 const RECORDS_BATCH: usize = 1000;
 const NATIVE_LOCAL_SOURCE_STREAM: &str = "Flow\\Filesystem\\Stream\\NativeLocalSourceStream";
+const RANGE_SOURCE_STREAM: &str = "Flow\\Filesystem\\Stream\\RangeSourceStream";
+/// One pread of a local file (DuckDB's CSV buffers are 2 MB): about 512 per GiB. `CHUNK` stays the PHP arm's.
+const NATIVE_CHUNK: usize = 2 << 20;
 const STRING_TYPE_NARROWER: &str = "Flow\\Types\\Type\\Native\\String\\StringTypeNarrower";
-const SCHEMA_INFERRER: &str = "Flow\\ETL\\Schema\\Inference\\SchemaInferrer";
+const COLUMN_TYPES: &str = "Flow\\ETL\\IO\\Inference\\ColumnTypes";
 /// The candidates the native fold narrows to, in `StringTypeNarrower`'s order; HTML and XML are never folded natively.
 const FOLDED: [&str; 8] = [
     "Flow\\Types\\DSL\\type_json",
@@ -54,11 +63,11 @@ impl IntoZval for ArrayValue {
     }
 }
 
-/// `CSVOpenSource::sniff()`'s return, typed `Flow\ETL\Schema\Inference\ColumnTypes`.
+/// `CSVOpenSource::sniff()`'s return, typed `Flow\ETL\IO\Inference\ColumnTypes`.
 pub struct ColumnTypesValue(Zval);
 
 impl IntoZval for ColumnTypesValue {
-    const TYPE: DataType = DataType::object("Flow\\ETL\\Schema\\Inference\\ColumnTypes");
+    const TYPE: DataType = DataType::object("Flow\\ETL\\IO\\Inference\\ColumnTypes");
     const NULLABLE: bool = false;
 
     fn set_zval(self, zv: &mut Zval, _persistent: bool) -> ZvalResult<()> {
@@ -73,9 +82,77 @@ struct Reading {
     columns: CsvColumns,
 }
 
+/// Where the bytes come from.
+enum Feed {
+    /// A `NativeLocalSourceStream`, or a `RangeSourceStream` whose `stream()` is one: the file reopened by its path and
+    /// read `[at, end)` by `pread`, the position shared by every consumer as the PHP stream's would be.
+    Native {
+        file: File,
+        uri: String,
+        at: Cell<u64>,
+        end: u64,
+    },
+    /// Everything else (remote, traced, block-cached, a window over any of those): `$stream->iterate($chunkSize)`.
+    Php { chunk_size: i64 },
+}
+
+/// `Feed::Native` when `stream` is a local file or a window of one, else `Feed::Php` reading `chunk_size` at a time.
+fn feed_of(stream: &Zval, chunk_size: i64) -> PhpResult<Feed> {
+    let instance_of = |zv: &Zval, class: &str| {
+        matches!(
+            (zv.object(), ext_php_rs::zend::ClassEntry::try_find(class)),
+            (Some(object), Some(ce)) if object.instance_of(ce)
+        )
+    };
+    let (local, window) = if instance_of(stream, NATIVE_LOCAL_SOURCE_STREAM) {
+        (stream.shallow_clone(), None)
+    } else if instance_of(stream, RANGE_SOURCE_STREAM)
+        && instance_of(&call_method(stream, "stream", &mut [])?, NATIVE_LOCAL_SOURCE_STREAM)
+    {
+        let bound = |method: &str| -> PhpResult<u64> {
+            let bound = call_method(stream, method, &mut [])?;
+
+            u64::try_from(bound.long().unwrap_or(-1)).map_err(|_| {
+                ext_exception(format!(
+                    "flow_php expected RangeSourceStream::{method}() to be an int >= 0"
+                ))
+            })
+        };
+
+        (
+            call_method(stream, "stream", &mut [])?,
+            Some((bound("start")?, bound("end")?)),
+        )
+    } else {
+        return Ok(Feed::Php { chunk_size });
+    };
+
+    let path = call_method(&local, "path", &mut [])?;
+    let uri = call_method(&path, "uri", &mut [])?;
+    let uri = String::from_utf8_lossy(uri.zend_str().map_or(&b""[..], |uri| uri.as_bytes())).into_owned();
+    let path = call_method(&path, "path", &mut [])?;
+    let path = path
+        .zend_str()
+        .ok_or_else(|| ext_exception("flow_php expected Path::path() to return a string"))?;
+    let file = File::open(OsStr::from_bytes(path.as_bytes()))
+        .map_err(|error| runtime(format!("Cannot open file: {uri} ({error})")))?;
+    let size = file
+        .metadata()
+        .map_err(|error| runtime(format!("Cannot get file size: {uri} ({error})")))?
+        .len();
+    let (at, end) = window.unwrap_or((0, size));
+
+    Ok(Feed::Native {
+        file,
+        uri,
+        at: Cell::new(at),
+        end,
+    })
+}
+
 struct Shared {
     stream: Zval,
-    chunk_size: i64,
+    feed: Feed,
     reading: RefCell<Reading>,
     produced_rows: Cell<u64>,
     produced_bytes: Cell<u64>,
@@ -95,31 +172,64 @@ impl Shared {
         self.produced_rows.set(self.produced_rows.get() + rows);
     }
 
-    /// `$stream->iterate($chunkSize)`, the generator one consuming method feeds from.
-    fn chunks(&self) -> PhpResult<Zval> {
-        call_method(&self.stream, "iterate", &mut [zval_long(self.chunk_size)])
+    /// `$stream->iterate($chunkSize)`, the generator one consuming method feeds from; `None` on the native arm, which
+    /// reads the file itself.
+    fn chunks(&self) -> PhpResult<Option<Zval>> {
+        match &self.feed {
+            Feed::Native { .. } => Ok(None),
+            Feed::Php { chunk_size } => call_method(&self.stream, "iterate", &mut [zval_long(*chunk_size)]).map(Some),
+        }
     }
 
-    /// The next chunk of `chunks` fed to the reader; false once the generator is exhausted. The generator runs with no
-    /// borrow held: the stream may call back into the source.
-    fn feed(&self, chunks: &Zval) -> PhpResult<bool> {
-        if !call_method(chunks, "valid", &mut [])?.bool().unwrap_or(false) {
-            return Ok(false);
+    /// The next `NATIVE_CHUNK` of the file's window, or the next chunk of `chunks`, fed to the reader; false at the
+    /// window's end, at EOF before it, or once the generator is exhausted. The generator runs with no borrow held: the
+    /// stream may call back into the source.
+    fn feed(&self, chunks: &Option<Zval>) -> PhpResult<bool> {
+        match &self.feed {
+            Feed::Native { file, uri, at, end } => {
+                let want = NATIVE_CHUNK.min(end.saturating_sub(at.get()) as usize);
+
+                if want == 0 {
+                    return Ok(false);
+                }
+
+                let got = self.with(|reading| {
+                    reading
+                        .reader
+                        .fill_with(want, |buffer| file.read_at(buffer, at.get()))
+                        .map_err(|error| runtime(format!("Cannot read file: {uri} ({error})")))
+                })?;
+
+                if got == 0 {
+                    return Ok(false);
+                }
+
+                at.set(at.get() + got as u64);
+
+                Ok(true)
+            }
+            Feed::Php { .. } => {
+                let chunks = chunks.as_ref().expect("the PHP arm feeds from its generator");
+
+                if !call_method(chunks, "valid", &mut [])?.bool().unwrap_or(false) {
+                    return Ok(false);
+                }
+
+                let chunk = call_method(chunks, "current", &mut [])?;
+                let bytes = chunk
+                    .zend_str()
+                    .ok_or_else(|| ext_exception("flow_php expected SourceStream::iterate() to yield strings"))?
+                    .as_bytes();
+                self.with(|reading| {
+                    reading.reader.feed(bytes);
+
+                    Ok(())
+                })?;
+                call_method(chunks, "next", &mut [])?;
+
+                Ok(true)
+            }
         }
-
-        let chunk = call_method(chunks, "current", &mut [])?;
-        let bytes = chunk
-            .zend_str()
-            .ok_or_else(|| ext_exception("flow_php expected SourceStream::iterate() to yield strings"))?
-            .as_bytes();
-        self.with(|reading| {
-            reading.reader.feed(bytes);
-
-            Ok(())
-        })?;
-        call_method(chunks, "next", &mut [])?;
-
-        Ok(true)
     }
 
     fn finish(&self) -> PhpResult<()> {
@@ -134,7 +244,7 @@ impl Shared {
 /// One `batches()` call over the shared reader.
 struct CsvFeed {
     shared: Rc<Shared>,
-    chunks: Zval,
+    chunks: Option<Zval>,
     schema: Zval,
     batch_size: usize,
 }
@@ -163,9 +273,9 @@ impl Fed for CsvFeed {
 
 #[php_class]
 #[php(
-    name = "Flow\\ETL\\Adapter\\CSV\\RustCSVOpenSource",
+    name = "Flow\\ETL\\Adapter\\CSV\\IO\\Extractor\\RustCSVOpenSource",
     flags = ClassFlags::Final,
-    implements(ce = csv_open_source_ce, stub = "Flow\\ETL\\Adapter\\CSV\\CSVOpenSource")
+    implements(ce = csv_open_source_ce, stub = "Flow\\ETL\\Adapter\\CSV\\IO\\Extractor\\CSVOpenSource")
 )]
 pub struct RustCSVOpenSource {
     shared: Rc<Shared>,
@@ -216,27 +326,24 @@ impl RustCSVOpenSource {
         emptyToNull: bool,
         removeBOM: bool,
         charactersReadInLine: Option<i64>,
+        headers: Option<&ZendHashTable>,
     ) -> PhpResult<Self> {
-        // a local file ignores the read length, as NativeLocalSourceStream::readLines() does on the PHP path; for
-        // S3/Azure it is the range-request size - and from_csv() defaults it to 10 MB, which would be the chunk
-        let local = match (
-            stream.object(),
-            ext_php_rs::zend::ClassEntry::try_find(NATIVE_LOCAL_SOURCE_STREAM),
-        ) {
-            (Some(object), Some(ce)) => object.instance_of(ce),
-            _ => false,
-        };
-
+        // a local file is read by Rust and ignores the read length, as NativeLocalSourceStream::readLines() does on
+        // the PHP path; for S3/Azure it is the range-request size - and from_csv() defaults it to 10 MB
         Ok(Self {
             shared: Rc::new(Shared {
                 stream: stream.shallow_clone(),
-                chunk_size: if local {
-                    CHUNK
-                } else {
-                    charactersReadInLine.unwrap_or(CHUNK)
-                },
+                feed: feed_of(stream, charactersReadInLine.unwrap_or(CHUNK))?,
                 reading: RefCell::new(Reading {
-                    reader: CsvReader::new(&separator, &enclosure, &escape, withHeader, emptyToNull, removeBOM)?,
+                    reader: CsvReader::new(
+                        &separator,
+                        &enclosure,
+                        &escape,
+                        withHeader,
+                        emptyToNull,
+                        removeBOM,
+                        headers.map(string_values),
+                    )?,
                     columns: CsvColumns::default(),
                 }),
                 produced_rows: Cell::new(0),
@@ -276,7 +383,7 @@ impl RustCSVOpenSource {
     }
 
     /// Exactly `$batchSize` rows keyed and ordered by `$schema` (the last may be shorter), every column adopted by
-    /// `$backend`; refusals are `RowsBuilder::appendRows()`'s, row indexes relative to the batch.
+    /// `$backend`; refusals are `RowsBuilder::appendRows()`'s, row indexes relative to the source.
     pub fn batches(&self, schema: &Zval, batchSize: i64, backend: &Zval) -> PhpResult<RustIterator> {
         let fed = CsvFeed {
             shared: Rc::clone(&self.shared),
@@ -285,7 +392,7 @@ impl RustCSVOpenSource {
             batch_size: batch_size_of(batchSize, "CSV")?,
         };
 
-        Ok(source::batches(fed, schema, backend))
+        source::batches(fed, schema, backend)
     }
 
     pub fn headers(&self) -> PhpResult<ArrayValue> {
@@ -296,14 +403,8 @@ impl RustCSVOpenSource {
         self.records_iterator()
     }
 
-    /// `SchemaInferrer::sniff()` over `records()`; a `StringTypeNarrower` without its HTML and XML rungs folds natively.
-    pub fn sniff(
-        &self,
-        names: &ZendHashTable,
-        rowBudget: i64,
-        inference: &Zval,
-        typer: &Zval,
-    ) -> PhpResult<ColumnTypesValue> {
+    /// `ColumnTypes::sniff()` over `records()`; a `StringTypeNarrower` without its HTML and XML rungs folds natively.
+    pub fn sniff(&self, names: &ZendHashTable, rowBudget: i64, typer: &Zval) -> PhpResult<ColumnTypesValue> {
         if rowBudget < -1 {
             return Err(ext_exception("flow_php CSV fold limit must be -1 or at least 0"));
         }
@@ -313,14 +414,13 @@ impl RustCSVOpenSource {
             self.records_iterator()?.set_zval(&mut records, false)?;
             let mut names_zv = Zval::new();
             names_zv.set_hashtable(names.to_owned());
-            let inferrer = construct(
-                find_class(SCHEMA_INFERRER)?,
-                &mut [inference.shallow_clone(), typer.shallow_clone()],
-            )?
-            .into_zval(false)?;
 
-            return call_method(&inferrer, "sniff", &mut [names_zv, records, zval_long(rowBudget)])
-                .map(ColumnTypesValue);
+            return call_static(
+                COLUMN_TYPES,
+                "sniff",
+                &mut [names_zv, records, zval_long(rowBudget), typer.shallow_clone()],
+            )
+            .map(ColumnTypesValue);
         }
 
         let mut candidates = Vec::new();
@@ -384,7 +484,7 @@ impl RustCSVOpenSource {
         types_zv.set_hashtable(types);
 
         call_static(
-            "Flow\\ETL\\Schema\\Inference\\ColumnTypes",
+            "Flow\\ETL\\IO\\Inference\\ColumnTypes",
             "fromColumnTypes",
             &mut [types_zv, zval_long(fold.rows() as i64), typer.shallow_clone()],
         )

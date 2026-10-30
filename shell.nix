@@ -2,7 +2,11 @@
     php-version ? 8.3,
     with-blackfire ? false,
     with-xdebug ? false,
-    with-pcov ? !with-blackfire,
+    with-pcov ? !with-blackfire && !with-php-benchmark,
+    with-php-benchmark ? false,
+    with-duckdb ? false,
+    with-polars ? false,
+    with-spark ? false,
     with-pg-query-ext ? !with-c,
     with-arrow-ext ? !with-rust,
     with-flow-php-ext ? !with-rust,
@@ -18,6 +22,9 @@
 assert (!(with-rust && with-arrow-ext)) || builtins.throw "Cannot use --arg with-rust true and --arg with-arrow-ext true together. Use: --arg with-arrow-ext false --arg with-rust true";
 assert (!(with-rust && with-flow-php-ext)) || builtins.throw "Cannot use --arg with-rust true and --arg with-flow-php-ext true together. Use: --arg with-flow-php-ext false --arg with-rust true";
 assert (!(with-c && with-pg-query-ext)) || builtins.throw "Cannot use --arg with-c true and --arg with-pg-query-ext true together. Use: --arg with-pg-query-ext false --arg with-c true";
+assert (!(with-php-benchmark && with-pcov)) || builtins.throw "Cannot use --arg with-php-benchmark true and --arg with-pcov true together: pcov distorts timings.";
+assert (!(with-php-benchmark && with-xdebug)) || builtins.throw "Cannot use --arg with-php-benchmark true and --arg with-xdebug true together: xdebug distorts timings.";
+assert (!(with-php-benchmark && with-blackfire)) || builtins.throw "Cannot use --arg with-php-benchmark true and --arg with-blackfire true together: time without the probe, profile with --arg with-blackfire true alone.";
 
 let
     nixpkgs = fetchTarball {
@@ -97,8 +104,11 @@ let
     php = pkgs.callPackage ./.nix/pkgs/flow-php/package.nix {
         php = base-php;
         inherit php-snappy php-lz4 php-brotli php-zstd php-pg-query-ext php-arrow-ext php-flow-php-ext
-                with-pcov with-xdebug with-blackfire with-pg-query-ext with-arrow-ext with-flow-php-ext with-grpc with-protobuf;
+                with-pcov with-xdebug with-blackfire with-php-benchmark with-pg-query-ext with-arrow-ext with-flow-php-ext with-grpc with-protobuf;
     };
+
+    polars-python = pkgs.python3.withPackages (ps: [ ps.polars ps.pyarrow ]);
+    spark = pkgs.spark.override { RSupport = false; };
 in
 pkgs.mkShell {
     buildInputs = [
@@ -162,6 +172,9 @@ pkgs.mkShell {
             pkgs.grpc
             pkgs.git
         ]
+        ++ pkgs.lib.optional with-duckdb pkgs.duckdb
+        ++ pkgs.lib.optional with-polars polars-python
+        ++ pkgs.lib.optional with-spark spark
     ;
 
     shellHook = ''

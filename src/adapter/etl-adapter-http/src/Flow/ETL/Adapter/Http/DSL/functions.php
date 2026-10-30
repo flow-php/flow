@@ -7,26 +7,31 @@ namespace Flow\ETL\Adapter\Http;
 use Flow\Documentation\Attribute\DocumentationDSL;
 use Flow\Documentation\Attribute\Module;
 use Flow\Documentation\Attribute\Type;
-use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
-use Flow\ETL\Adapter\Http\Pagination\Paginator;
-use Flow\ETL\Adapter\Http\Pagination\RequestOption;
-use Flow\ETL\Adapter\Http\Pagination\StopWhen;
-use Flow\ETL\Adapter\Http\Pagination\StopWhen\EmptyPath;
-use Flow\ETL\Adapter\Http\Pagination\StopWhen\EmptyResponseBody;
-use Flow\ETL\Adapter\Http\Pagination\StopWhen\FlagFalse;
-use Flow\ETL\Adapter\Http\Pagination\StopWhen\FlagTrue;
-use Flow\ETL\Adapter\Http\Pagination\StopWhen\MaxPages;
-use Flow\ETL\Adapter\Http\Pagination\StopWhen\MaxResults;
-use Flow\ETL\Adapter\Http\Pagination\StopWhen\NeverStop;
-use Flow\ETL\Adapter\Http\Pagination\StopWhen\PathMissing;
-use Flow\ETL\Adapter\Http\Pagination\StopWhen\TotalReached;
-use Flow\ETL\Adapter\Http\Pagination\Strategy\CursorFromBody;
-use Flow\ETL\Adapter\Http\Pagination\Strategy\LastRecordCursor;
-use Flow\ETL\Adapter\Http\Pagination\Strategy\LinkHeader;
-use Flow\ETL\Adapter\Http\Pagination\Strategy\NextUrlFromBody;
-use Flow\ETL\Adapter\Http\Pagination\Strategy\OffsetLimit;
-use Flow\ETL\Adapter\Http\Pagination\Strategy\PageNumber;
-use Flow\ETL\Schema;
+use Flow\ETL\Adapter\Http\IO\Extractor\NextRequestFactory;
+use Flow\ETL\Adapter\Http\IO\Extractor\Pagination\Paginator;
+use Flow\ETL\Adapter\Http\IO\Extractor\Pagination\RequestOption;
+use Flow\ETL\Adapter\Http\IO\Extractor\Pagination\StopWhen;
+use Flow\ETL\Adapter\Http\IO\Extractor\Pagination\StopWhen\AllOf;
+use Flow\ETL\Adapter\Http\IO\Extractor\Pagination\StopWhen\AnyOf;
+use Flow\ETL\Adapter\Http\IO\Extractor\Pagination\StopWhen\EmptyPath;
+use Flow\ETL\Adapter\Http\IO\Extractor\Pagination\StopWhen\EmptyResponseBody;
+use Flow\ETL\Adapter\Http\IO\Extractor\Pagination\StopWhen\FlagFalse;
+use Flow\ETL\Adapter\Http\IO\Extractor\Pagination\StopWhen\FlagTrue;
+use Flow\ETL\Adapter\Http\IO\Extractor\Pagination\StopWhen\MaxPages;
+use Flow\ETL\Adapter\Http\IO\Extractor\Pagination\StopWhen\MaxResults;
+use Flow\ETL\Adapter\Http\IO\Extractor\Pagination\StopWhen\NeverStop;
+use Flow\ETL\Adapter\Http\IO\Extractor\Pagination\StopWhen\PathMissing;
+use Flow\ETL\Adapter\Http\IO\Extractor\Pagination\StopWhen\TotalReached;
+use Flow\ETL\Adapter\Http\IO\Extractor\Pagination\Strategy\CursorFromBody;
+use Flow\ETL\Adapter\Http\IO\Extractor\Pagination\Strategy\LastRecordCursor;
+use Flow\ETL\Adapter\Http\IO\Extractor\Pagination\Strategy\LinkHeader;
+use Flow\ETL\Adapter\Http\IO\Extractor\Pagination\Strategy\NextUrlFromBody;
+use Flow\ETL\Adapter\Http\IO\Extractor\Pagination\Strategy\OffsetLimit;
+use Flow\ETL\Adapter\Http\IO\Extractor\Pagination\Strategy\PageNumber;
+use Flow\ETL\Adapter\Http\IO\Extractor\PsrHttpClientDynamicExtractor;
+use Flow\ETL\Adapter\Http\IO\Extractor\PsrHttpClientPaginatedExtractor;
+use Flow\ETL\Adapter\Http\IO\Extractor\PsrHttpClientStaticExtractor;
+use Flow\ETL\Values\Schema;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamFactoryInterface;
@@ -95,7 +100,7 @@ function http_pagination_page_number(
 
     return new Paginator(
         new PageNumber($inject, $start_page, $page_size, $size_option, $inject_on_first_request, $records_path),
-        $stop_when === null ? $default : $default->or($stop_when),
+        $stop_when === null ? $default : new AnyOf($default, $stop_when),
         $stop_on_client_error,
     );
 }
@@ -115,7 +120,7 @@ function http_pagination_offset(
 
     return new Paginator(
         new OffsetLimit($offset_option, $limit_option, $limit, $start_offset, $inject_on_first_request),
-        $stop_when === null ? $default : $default->or($stop_when),
+        $stop_when === null ? $default : new AnyOf($default, $stop_when),
         $stop_on_client_error,
     );
 }
@@ -131,7 +136,7 @@ function http_pagination_cursor(
 
     return new Paginator(
         new CursorFromBody($cursor_path, $inject),
-        $stop_when === null ? $default : $default->or($stop_when),
+        $stop_when === null ? $default : new AnyOf($default, $stop_when),
         $stop_on_client_error,
     );
 }
@@ -146,7 +151,7 @@ function http_pagination_next_url(
 
     return new Paginator(
         new NextUrlFromBody($path),
-        $stop_when === null ? $default : $default->or($stop_when),
+        $stop_when === null ? $default : new AnyOf($default, $stop_when),
         $stop_on_client_error,
     );
 }
@@ -171,7 +176,7 @@ function http_pagination_last_record_cursor(
 
     return new Paginator(
         new LastRecordCursor($record_path, $inject),
-        $stop_when === null ? $default : $default->or($stop_when),
+        $stop_when === null ? $default : new AnyOf($default, $stop_when),
         $stop_on_client_error,
     );
 }
@@ -240,4 +245,16 @@ function http_stop_when_max_pages(int $pages): StopWhen
 function http_stop_when_max_results(int $count): StopWhen
 {
     return new MaxResults($count);
+}
+
+#[DocumentationDSL(module: Module::HTTP, type: Type::HELPER)]
+function http_stop_when_any_of(StopWhen ...$conditions): StopWhen
+{
+    return new AnyOf(...$conditions);
+}
+
+#[DocumentationDSL(module: Module::HTTP, type: Type::HELPER)]
+function http_stop_when_all_of(StopWhen ...$conditions): StopWhen
+{
+    return new AllOf(...$conditions);
 }

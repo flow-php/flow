@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Double;
 
 use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Filesystem;
@@ -14,10 +15,12 @@ use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\SourceStream;
 use Generator;
+use SensitiveParameter;
 
 /**
  * Every call is delegated except rm(), which throws - so a test can assert that a caller cleaning up
  * in a destructor swallows the failure instead of turning it into a shutdown fatal.
+ *
  */
 final readonly class ThrowingRmFilesystem implements Filesystem
 {
@@ -25,9 +28,21 @@ final readonly class ThrowingRmFilesystem implements Filesystem
         private Filesystem $inner,
     ) {}
 
+    public static function fromArray(#[SensitiveParameter] array $configuration): static
+    {
+        throw new InvalidArgumentException(
+            'ThrowingRmFilesystem is a test double and cannot be rebuilt from a configuration',
+        );
+    }
+
     public function appendTo(Path $path): DestinationStream
     {
         return $this->inner->appendTo($path);
+    }
+
+    public function normalize(): ?array
+    {
+        return null;
     }
 
     public function getSystemTmpDir(): Path

@@ -6,9 +6,9 @@ use crate::parquet::error::Error;
 use crate::parquet::source::PhpStream;
 use crate::php::{find_class, transparent_exception};
 
-const RUNTIME: &str = "Flow\\Parquet\\Exception\\RuntimeException";
+pub const RUNTIME: &str = "Flow\\Parquet\\Exception\\RuntimeException";
 const VALIDATION: &str = "Flow\\Parquet\\Exception\\ValidationException";
-const INVALID_ARGUMENT: &str = "Flow\\Parquet\\Exception\\InvalidArgumentException";
+pub const INVALID_ARGUMENT: &str = "Flow\\Parquet\\Exception\\InvalidArgumentException";
 
 pub fn exception(class: &str, message: String) -> PhpException {
     match find_class(class) {

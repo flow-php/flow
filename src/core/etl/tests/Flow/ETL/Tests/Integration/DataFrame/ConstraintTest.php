@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use Flow\ETL\Exception\ConstraintViolationException;
+use Flow\ETL\Foundation\Exception\ConstraintViolationException;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\constraint_sorted_by;
@@ -87,6 +87,14 @@ final class ConstraintTest extends FlowTestCase
             ]))
             ->constrain(constraint_sorted_by(ref('price')->desc()))
             ->run();
+    }
+
+    public function test_sorted_frame_passes_a_second_run(): void
+    {
+        $frame = df()->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]))->constrain(constraint_sorted_by('id'));
+
+        static::assertSame(3, $frame->count());
+        static::assertSame(3, $frame->count());
     }
 
     public function test_sorted_multiple_columns(): void
@@ -204,6 +212,14 @@ final class ConstraintTest extends FlowTestCase
             ]))
             ->constrain(constraint_sorted_by(ref('id')))
             ->run();
+    }
+
+    public function test_unique_frame_passes_a_second_run(): void
+    {
+        $frame = df()->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]))->constrain(constraint_unique('id'));
+
+        static::assertSame(3, $frame->count());
+        static::assertSame(3, $frame->count());
     }
 
     public function test_unique_on_multiple_fields(): void

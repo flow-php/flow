@@ -18,7 +18,25 @@ For detailed installation instructions, see the [installation page](/documentati
 
 ## Opening a connection
 
-The bridge never handles credentials itself, it takes an already authenticated phpseclib client.
+The plain form takes the host, the user and one credential, and logs in on first use:
+
+```php
+use function Flow\Filesystem\Bridge\SFTP\DSL\sftp_filesystem;
+
+// password authentication
+$sftp = sftp_filesystem(['host' => $_ENV['SFTP_HOST'], 'user' => $_ENV['SFTP_USER'], 'password' => $_ENV['SFTP_PASSWORD']]);
+
+// key based authentication, port 2222
+$sftp = sftp_filesystem([
+    'host' => $_ENV['SFTP_HOST'],
+    'user' => $_ENV['SFTP_USER'],
+    'private_key' => \file_get_contents($_ENV['SFTP_PRIVATE_KEY']),
+    'passphrase' => $_ENV['SFTP_PASSPHRASE'] ?? null,
+    'port' => 2222,
+]);
+```
+
+A filesystem built from an already authenticated phpseclib `SFTP` client stays in this process and reads serially.
 `sftp_client()` covers the common cases and returns phpseclib's own `SFTP` object, so you can
 configure it further before handing it over.
 

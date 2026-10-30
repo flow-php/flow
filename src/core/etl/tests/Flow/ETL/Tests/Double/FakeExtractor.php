@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Double;
 
 use DateTimeImmutable;
-use Flow\ETL\Extractor;
-use Flow\ETL\Extractor\Signal;
-use Flow\ETL\Extractor\Statistics;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Rows;
-use Flow\ETL\Schema;
+use Flow\ETL\IO\Extractor;
+use Flow\ETL\IO\Extractor\Criteria;
+use Flow\ETL\IO\Extractor\Signal;
+use Flow\ETL\IO\Extractor\Statistics;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Schema;
 use Flow\Types\Value\Uuid as FlowUuid;
 use Generator;
 use Ramsey\Uuid\Uuid;
@@ -81,11 +82,9 @@ final readonly class FakeExtractor implements Extractor
     }
 
     /**
-     * @param FlowContext $context
-     *
      * @return \Generator<int, Rows, Signal|null, void>
      */
-    public function extract(FlowContext $context, ?int $limit = null): Generator
+    public function extract(Backend $backend, Criteria $criteria): Generator
     {
         for ($i = 0; $i < $this->total; $i++) {
             $id = $i;
@@ -148,5 +147,10 @@ final readonly class FakeExtractor implements Extractor
     public function statistics(): Statistics
     {
         return new Statistics();
+    }
+
+    public function isRepeatable(): bool
+    {
+        return false;
     }
 }

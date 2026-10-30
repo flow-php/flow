@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Column\Backend;
-use Flow\ETL\Column\Column;
-use Flow\ETL\Column\ColumnBuilder;
-use Flow\ETL\Column\PhpBackend;
-use Flow\ETL\Schema\Definition;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Column\Column;
+use Flow\ETL\Values\Column\ColumnBuilder;
+use Flow\ETL\Values\Column\Frame\Codec;
+use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Schema;
+use Flow\ETL\Values\Schema\Definition;
 
 /**
  * A PHP backend whose native memory is whatever the test reports - far above PHP's own allocations, so a memory limit
@@ -44,5 +47,15 @@ final class ReportedMemoryBackend implements Backend
     public function decode(Definition $definition, array $buffers, int $count, int $nullCount): Column
     {
         return $this->php->decode($definition, $buffers, $count, $nullCount);
+    }
+
+    public function decodeFrame(string $body, Schema $schema, Codec $codec): Rows
+    {
+        return $this->php->decodeFrame($body, $schema, $codec);
+    }
+
+    public function encodeFrame(Rows $rows, Codec $codec): string
+    {
+        return $this->php->encodeFrame($rows, $codec);
     }
 }

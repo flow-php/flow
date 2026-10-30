@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\CLI\Tests\Integration;
 
 use Flow\CLI\Command\PipelineRunCommand;
-use Flow\ETL\Tests\CommandOutputNormalizer;
+use Flow\ETL\Tests\Context\CommandOutputNormalizer;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
@@ -13,8 +13,6 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 final class PipelineRunCommandTest extends TestCase
 {
-    use CommandOutputNormalizer;
-
     public function test_run_and_analyze_command(): void
     {
         $tester = new CommandTester(new PipelineRunCommand('run'));
@@ -28,7 +26,7 @@ final class PipelineRunCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputContains(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputContains(<<<'OUTPUT'
             +----+---------+--------+
             | id |    name | active |
             +----+---------+--------+
@@ -76,7 +74,7 @@ final class PipelineRunCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputContains(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputContains(<<<'OUTPUT'
             Sources
             -------
 
@@ -96,7 +94,7 @@ final class PipelineRunCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputContains(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputContains(<<<'OUTPUT'
             +----+---------+--------+
             | id |    name | active |
             +----+---------+--------+

@@ -6,8 +6,8 @@ The native JSON writer escapes a string as json_encode() does: random valid and 
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\JSON\PhpJsonEncoder;
-use Flow\ETL\Adapter\JSON\RustJsonEncoder;
+use Flow\ETL\Adapter\JSON\IO\Loader\PhpJsonEncoder;
+use Flow\ETL\Adapter\JSON\IO\Loader\RustJsonEncoder;
 
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
@@ -52,8 +52,8 @@ function random_bytes_seeded(int $length): string
 }
 
 $schema = schema(str_schema('s'));
-$php = array_map(static fn(string $text): Flow\ETL\Rows => php_rows($schema, [['s' => $text]]), $strings);
-$native = array_map(static fn(string $text): Flow\ETL\Rows => native_rows($schema, [['s' => $text]]), $strings);
+$php = array_map(static fn(string $text): Flow\ETL\Values\Rows => php_rows($schema, [['s' => $text]]), $strings);
+$native = array_map(static fn(string $text): Flow\ETL\Values\Rows => native_rows($schema, [['s' => $text]]), $strings);
 $encoded = static function (callable $encode): string {
     try {
         return $encode();
@@ -68,7 +68,7 @@ for ($combination = 0; $combination < 16; $combination++) {
         | ($combination & 4 ? JSON_UNESCAPED_UNICODE : 0)
         | ($combination & 8 ? JSON_PRESERVE_ZERO_FRACTION : 0);
     $encoder = new PhpJsonEncoder($flags);
-    $writer = new RustJsonEncoder($flags, DATE_ATOM, 'Y-m-d', $encoder);
+    $writer = new RustJsonEncoder($encoder);
     $different = 0;
     $refused = 0;
 

@@ -4,19 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Integration\Local;
 
-use DateTimeImmutable;
-use Flow\ETL\Filesystem\ScalarFunctionFilter;
+use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Exception\InvalidSchemeException;
 use Flow\Filesystem\FileStatus;
+use Flow\Filesystem\Local\MemoryFilesystem;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\Tests\Integration\NativeLocalFilesystemTestCase;
 
 use function array_map;
-use function Flow\ETL\DSL\all;
-use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function fopen;
@@ -174,15 +169,55 @@ final class MemoryFilesystemTest extends NativeLocalFilesystemTestCase
         static::assertTrue(memory_filesystem()->supports(path('memory://orders.csv')));
     }
 
-    public function test_move_blob(): void
+    public function test_move_a_file(): void
+    {
+        $fs = memory_filesystem();
+        $fs->writeTo(path('memory:///var/file.txt'))->append('Hello, World!');
+
+        static::assertTrue($fs->mv(path('memory:///var/file.txt'), path('memory:///var/file_mv.txt')));
+        static::assertNull($fs->status(path('memory:///var/file.txt')));
+        static::assertSame('Hello, World!', $fs->readFrom(path('memory:///var/file_mv.txt'))->content());
+    }
+
+    public function test_move_a_directory_rebases_every_file_under_it(): void
+    {
+        $fs = memory_filesystem();
+        $fs->writeTo(path('memory://tmp/a.txt'))->append('a');
+        $fs->writeTo(path('memory://tmp/nested/b.txt'))->append('b');
+        $fs->writeTo(path('memory://tmp-sibling.txt'))->append('c');
+
+        static::assertTrue($fs->mv(path('memory://tmp'), path('memory://out')));
+        static::assertSame('a', $fs->readFrom(path('memory://out/a.txt'))->content());
+        static::assertSame('b', $fs->readFrom(path('memory://out/nested/b.txt'))->content());
+        static::assertNull($fs->status(path('memory://tmp/a.txt')));
+        static::assertNull($fs->status(path('memory://tmp/nested/b.txt')));
+        static::assertSame('c', $fs->readFrom(path('memory://tmp-sibling.txt'))->content());
+    }
+
+    public function test_move_replaces_an_existing_file(): void
+    {
+        $fs = memory_filesystem();
+        $fs->writeTo(path('memory://new.txt'))->append('new');
+        $fs->writeTo(path('memory://old.txt'))->append('old content');
+
+        static::assertTrue($fs->mv(path('memory://new.txt'), path('memory://old.txt')));
+        static::assertSame('new', $fs->readFrom(path('memory://old.txt'))->content());
+        static::assertNull($fs->status(path('memory://new.txt')));
+    }
+
+    public function test_move_a_missing_source_returns_false(): void
     {
         $fs = memory_filesystem();
 
-        $fs->writeTo(path('memory:///var/file.txt'))->append('Hello, World!');
+        static::assertFalse($fs->mv(path('memory://missing.txt'), path('memory://target.txt')));
+        static::assertNull($fs->status(path('memory://target.txt')));
+    }
 
-        $this->expectExceptionMessage('Cannot move files around in memory');
+    public function test_move_rejects_a_mismatched_scheme(): void
+    {
+        $this->expectException(InvalidSchemeException::class);
 
-        $fs->mv(path('memory:///var/file.txt'), path('memory:///var/file_mv.txt'));
+        memory_filesystem()->mv(path('memory://a.txt'), path('file:///tmp/a.txt'));
     }
 
     public function test_read_from_rejects_mismatched_scheme(): void
@@ -190,54 +225,6 @@ final class MemoryFilesystemTest extends NativeLocalFilesystemTestCase
         $this->expectException(InvalidSchemeException::class);
 
         memory_filesystem()->readFrom(path('file:///var/foo.txt'));
-    }
-
-    public function test_reading_multi_partitioned_path(): void
-    {
-        $fs = memory_filesystem();
-
-        $fs->writeTo(path('memory:///var/multi_partitions/date=2022-01-01/country=de/file.txt'))->append(
-            'Hello, World!',
-        );
-        $fs->writeTo(path('memory:///var/multi_partitions/date=2022-01-01/country=pl/file.txt'))->append(
-            'Hello, World!',
-        );
-        $fs->writeTo(path('memory:///var/multi_partitions/date=2022-01-02/country=de/file.txt'))->append(
-            'Hello, World!',
-        );
-        $fs->writeTo(path('memory:///var/multi_partitions/date=2022-01-02/country=pl/file.txt'))->append(
-            'Hello, World!',
-        );
-        $fs->writeTo(path('memory:///var/multi_partitions/date=2022-01-03/country=de/file.txt'))->append(
-            'Hello, World!',
-        );
-        $fs->writeTo(path('memory:///var/multi_partitions/date=2022-01-03/country=pl/file.txt'))->append(
-            'Hello, World!',
-        );
-
-        $paths = iterator_to_array($fs->list(
-            path('memory:///var/multi_partitions/**/*.txt'),
-            new ScalarFunctionFilter(
-                all(
-                    ref('country')->equals(lit('pl')),
-                    all(
-                        ref('date')->cast('date')->greaterThanEqual(lit(new DateTimeImmutable('2022-01-02'))),
-                        ref('date')->cast('date')->lessThan(lit(new DateTimeImmutable('2022-01-04'))),
-                    ),
-                ),
-                schema(),
-                flow_context(),
-            ),
-        ));
-        sort($paths);
-
-        $path1 = path('memory:///var/multi_partitions/date=2022-01-02/country=pl/file.txt');
-        $path1->partitions();
-        $path2 = path('memory:///var/multi_partitions/date=2022-01-03/country=pl/file.txt');
-        $path2->partitions();
-
-        $uris = array_map(static fn(FileStatus $s): string => $s->path->uri(), $paths);
-        static::assertSame([$path1->uri(), $path2->uri()], $uris);
     }
 
     public function test_remove_file_when_exists(): void
@@ -254,6 +241,24 @@ final class MemoryFilesystemTest extends NativeLocalFilesystemTestCase
         static::assertTrue($fs->rm($stream->path()));
 
         static::assertNull($fs->status($stream->path()));
+    }
+
+    public function test_remove_directory_removes_every_file_under_it(): void
+    {
+        $fs = memory_filesystem();
+        $fs->writeTo(path('memory://dir/a.txt'))->append('a');
+        $fs->writeTo(path('memory://dir/nested/b.txt'))->append('b');
+        $fs->writeTo(path('memory://dir-sibling.txt'))->append('c');
+
+        static::assertTrue($fs->rm(path('memory://dir')));
+        static::assertNull($fs->status(path('memory://dir/a.txt')));
+        static::assertNull($fs->status(path('memory://dir/nested/b.txt')));
+        static::assertNotNull($fs->status(path('memory://dir-sibling.txt')));
+    }
+
+    public function test_remove_missing_directory_returns_false(): void
+    {
+        static::assertFalse(memory_filesystem()->rm(path('memory://missing')));
     }
 
     public function test_remove_pattern(): void
@@ -332,5 +337,20 @@ final class MemoryFilesystemTest extends NativeLocalFilesystemTestCase
         $this->expectException(InvalidSchemeException::class);
 
         memory_filesystem()->writeTo(path('file:///var/foo.txt'));
+    }
+
+    public function test_a_memory_filesystem_has_no_configuration(): void
+    {
+        static::assertNull((new MemoryFilesystem())->normalize());
+    }
+
+    public function test_a_memory_filesystem_cannot_be_rebuilt_from_a_configuration(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'MemoryFilesystem holds in-process state and cannot be rebuilt from a configuration',
+        );
+
+        MemoryFilesystem::fromArray([]);
     }
 }

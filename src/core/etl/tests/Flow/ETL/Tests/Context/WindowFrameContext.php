@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Context;
 
-use Flow\ETL\DataFrame;
-use Flow\ETL\Function\WindowFunction;
+use Flow\ETL\API\DataFrame;
+use Flow\ETL\Functions\WindowFunction;
 
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;

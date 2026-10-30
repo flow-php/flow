@@ -1,5 +1,5 @@
-//! `Flow\ETL\Adapter\Parquet\{RustParquetOpenSource, RustParquetOpenSink}`: `Rows` of `RustColumn`s straight from
-//! arrow-ext's Parquet batches, and any `Rows` straight to its writer, through the Arrow C Data Interface.
+//! `Flow\ETL\Adapter\Parquet\{RustParquetOpenSource, RustParquetFileWriter}`: `Rows` of `RustColumn`s straight from
+//! arrow-ext's Parquet batches, and any conformed `Rows` straight to its writer, through the Arrow C Data Interface.
 
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -9,47 +9,35 @@ use ext_php_rs::convert::IntoZval;
 use ext_php_rs::flags::ClassFlags;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, Zval};
+use flow_arrow_c::Expected;
 
 use crate::arrow_c;
-use crate::backend::{adopt_batch, native_column};
+use crate::backend::{adopt_batch, native_column, Adoption, Definitions};
 use crate::batch_columns::HeldBatch;
 use crate::column::RustColumn;
 use crate::ctx::{call_method, column_key, construct, find_class, ht_for_each, ht_insert, zval_long, zval_str};
 use crate::exception::ext_exception;
-use crate::interfaces::{parquet_open_sink_ce, parquet_open_source_ce};
+use crate::interfaces::{file_writer_ce, parquet_open_source_ce};
 use crate::iterator::RustIterator;
-use crate::plan::{type_plan, TypePlan};
+use crate::plan::TypePlan;
 
 const FILE_READER: &str = "Flow\\Parquet\\Engine\\RustParquetFileReader";
-const FILE_WRITER: &str = "Flow\\Parquet\\Engine\\RustParquetFileWriter";
+const ARROW_FILE_WRITER: &str = "Flow\\Parquet\\Engine\\RustParquetFileWriter";
 const BATCH_READER: &str = "Flow\\Arrow\\Parquet\\RustBatchReader";
 
-/// `Schema::definitions()` as (name, definition): an int key is a numeric column name.
-fn definitions(schema: &Zval) -> PhpResult<Vec<(Vec<u8>, Zval)>> {
-    let definitions = call_method(schema, "definitions", &mut [])?;
-    let definitions = definitions
-        .array()
-        .ok_or_else(|| ext_exception("flow_php expected Schema::definitions() to return an array"))?;
-    let mut named = Vec::with_capacity(definitions.len());
-
-    ht_for_each(definitions, |name, index, definition| {
-        named.push((column_key(name, index), definition.shallow_clone()));
-
-        Ok(())
-    })?;
-
-    Ok(named)
-}
-
 /// The next Arrow C batch of `RustBatchReader` as `RustColumn`s under `columns`' plans.
-fn next_batch(batches: &Zval, columns: &[(Vec<u8>, Rc<TypePlan>)]) -> PhpResult<Option<HeldBatch>> {
+fn next_batch(
+    batches: &Zval,
+    expected: &Expected,
+    columns: &[(Vec<u8>, Rc<TypePlan>)],
+) -> PhpResult<Option<HeldBatch>> {
     let batch = call_method(batches, "next", &mut [])?;
 
     if batch.is_null() {
         return Ok(None);
     }
 
-    let (count, arrays) = arrow_c::import(&batch, columns)?;
+    let (count, arrays) = arrow_c::import(&batch, expected, columns)?;
     let mut held = ZendHashTable::with_capacity(columns.len() as u32);
 
     for ((name, plan), array) in columns.iter().zip(arrays) {
@@ -75,9 +63,9 @@ fn expect_arrow(object: &Zval, class: &str) -> PhpResult<()> {
 
 #[php_class]
 #[php(
-    name = "Flow\\ETL\\Adapter\\Parquet\\RustParquetOpenSource",
+    name = "Flow\\ETL\\Adapter\\Parquet\\IO\\Extractor\\RustParquetOpenSource",
     flags = ClassFlags::Final,
-    implements(ce = parquet_open_source_ce, stub = "Flow\\ETL\\Adapter\\Parquet\\ParquetOpenSource")
+    implements(ce = parquet_open_source_ce, stub = "Flow\\ETL\\Adapter\\Parquet\\IO\\Extractor\\ParquetOpenSource")
 )]
 pub struct RustParquetOpenSource {
     file: Zval,
@@ -100,12 +88,12 @@ impl RustParquetOpenSource {
     /// Batches of at most `$batchSize` rows of `$schema`'s columns, the rows `$plan` selects, every column adopted by
     /// `$backend`; the file's schema is checked before any batch.
     pub fn batches(&self, schema: &Zval, batchSize: i64, plan: &Zval, backend: &Zval) -> PhpResult<RustIterator> {
-        let mut columns = Vec::new();
+        let definitions = Definitions::of(schema)?;
+        let columns = definitions.plans();
         let mut names = ZendHashTable::new();
 
-        for (name, definition) in definitions(schema)? {
-            columns.push((name.clone(), type_plan(&call_method(&definition, "type", &mut [])?)?));
-            names.push(zval_str(&name))?;
+        for (name, _) in &columns {
+            names.push(zval_str(name))?;
         }
 
         let mut names_zv = Zval::new();
@@ -125,13 +113,12 @@ impl RustParquetOpenSource {
         .into_zval(false)?;
         *self.batches.borrow_mut() = Some(batches.shallow_clone());
 
-        arrow_c::check_schema(&call_method(&batches, "schema", &mut [])?, &columns)?;
-
-        let (schema, backend) = (schema.shallow_clone(), backend.shallow_clone());
+        let expected = arrow_c::check_schema(&call_method(&batches, "schema", &mut [])?, &columns)?;
+        let adoption = Adoption::new(definitions, schema, backend);
 
         Ok(RustIterator::new(Box::new(move || {
-            next_batch(&batches, &columns)?
-                .map(|batch| adopt_batch(&schema, &backend, batch))
+            next_batch(&batches, &expected, &columns)?
+                .map(|batch| adopt_batch(&adoption, batch))
                 .transpose()
         })))
     }
@@ -150,28 +137,40 @@ impl RustParquetOpenSource {
 
 #[php_class]
 #[php(
-    name = "Flow\\ETL\\Adapter\\Parquet\\RustParquetOpenSink",
+    name = "Flow\\ETL\\Adapter\\Parquet\\IO\\Loader\\RustParquetFileWriter",
     flags = ClassFlags::Final,
-    implements(ce = parquet_open_sink_ce, stub = "Flow\\ETL\\Adapter\\Parquet\\ParquetOpenSink")
+    implements(ce = file_writer_ce, stub = "Flow\\ETL\\IO\\Loader\\File\\FileWriter")
 )]
-pub struct RustParquetOpenSink {
+pub struct RustParquetFileWriter {
     writer: Zval,
+    conformance: Zval,
+    backend: Zval,
 }
 
 #[php_impl]
-impl RustParquetOpenSink {
-    /// `$writer`: arrow-ext's `Flow\Parquet\Engine\RustParquetFileWriter`, which owns the stream.
-    pub fn __construct(writer: &Zval) -> PhpResult<Self> {
-        expect_arrow(writer, FILE_WRITER)?;
+impl RustParquetFileWriter {
+    /// `$writer`: arrow-ext's `Flow\Parquet\Engine\RustParquetFileWriter`, which owns the stream; `$conformance`: the
+    /// run's `ParquetSchemaConformance`; `$backend`: the backend a cast column is built with.
+    pub fn __construct(writer: &Zval, conformance: &Zval, backend: &Zval) -> PhpResult<Self> {
+        expect_arrow(writer, ARROW_FILE_WRITER)?;
 
         Ok(Self {
             writer: writer.shallow_clone(),
+            conformance: conformance.shallow_clone(),
+            backend: backend.shallow_clone(),
         })
     }
 
-    /// Every column of `$rows` - a `RustColumn` as it is, any other column adopted into one - as one batch; the
-    /// writer takes its columns by name and writes a column the batch lacks as nulls.
+    /// Every column of `$rows` conformed to the run's Parquet schema - a `RustColumn` as it is, any other column
+    /// adopted into one - as one batch; the writer takes its columns by name and writes a column the batch lacks as
+    /// nulls.
     pub fn write(&mut self, rows: &Zval) -> PhpResult<()> {
+        let rows = call_method(
+            &self.conformance,
+            "conform",
+            &mut [rows.shallow_clone(), self.backend.shallow_clone()],
+        )?;
+        let rows = &rows;
         let count = call_method(rows, "count", &mut [])?
             .long()
             .ok_or_else(|| ext_exception("flow_php expected Rows::count() to return an int"))?

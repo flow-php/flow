@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Mother;
 
-use Flow\ETL\Function\AggregatingFunction;
-use Flow\ETL\GroupBy;
-use Flow\ETL\GroupBy\PivotedTable;
-use Flow\ETL\GroupBy\PivotShape;
-use Flow\ETL\Schema;
+use Flow\ETL\Functions\AggregatingFunction;
+use Flow\ETL\Operators\GroupBy;
+use Flow\ETL\Operators\GroupBy\Aggregators;
+use Flow\ETL\Operators\GroupBy\Pivot;
+use Flow\ETL\Operators\GroupBy\PivotedTable;
+use Flow\ETL\Operators\GroupBy\PivotShape;
+use Flow\ETL\Values\Schema;
 
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\pivot_values;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
@@ -32,9 +35,11 @@ final class PivotedTableMother
      */
     public static function boundTo(Schema $input, AggregatingFunction $aggregate, string ...$values): PivotedTable
     {
-        $groupBy = new GroupBy(ref('product'));
-        $groupBy->pivot(ref('country'), pivot_values(...$values));
-        $groupBy->aggregate($aggregate);
+        $groupBy = new GroupBy(
+            refs(ref('product')),
+            new Aggregators($aggregate),
+            new Pivot(ref('country'), pivot_values(...$values)),
+        );
 
         return new PivotedTable($groupBy, PivotShape::of($groupBy, $input));
     }

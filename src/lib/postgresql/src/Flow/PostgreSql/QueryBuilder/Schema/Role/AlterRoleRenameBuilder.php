@@ -6,12 +6,10 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\Role;
 
 use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\RenameStmt;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class AlterRoleRenameBuilder implements AlterRoleRenameFinalStep
 {
-    use AstToSql;
-
     private function __construct(
         private string $name,
         private string $newName,
@@ -20,6 +18,11 @@ final readonly class AlterRoleRenameBuilder implements AlterRoleRenameFinalStep
     public static function create(string $name, string $newName): self
     {
         return new self($name, $newName);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): RenameStmt

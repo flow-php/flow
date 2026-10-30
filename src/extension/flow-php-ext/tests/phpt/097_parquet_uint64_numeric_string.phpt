@@ -1,5 +1,5 @@
 --TEST--
-A UINT_64 leaf crosses RustBatchReader → RustParquetOpenSource as a numeric_string column (arrow-ext hands it over as LargeBinary decimal text, the Bytes kind flow_php stores numeric_string in); DataFrame rows written through RustParquetOpenSink into an explicit UINT_64 schema take an integer column (negatives refused) and a numeric_string column (non-canonical text refused)
+A UINT_64 leaf crosses RustBatchReader → RustParquetOpenSource as a numeric_string column (arrow-ext hands it over as LargeBinary decimal text, the Bytes kind flow_php stores numeric_string in); DataFrame rows written through RustParquetFileWriter into an explicit UINT_64 schema take an integer column (negatives refused) and a numeric_string column (non-canonical text refused)
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 <?php extension_loaded('arrow') || die('skip arrow'); ?>
@@ -7,8 +7,10 @@ A UINT_64 leaf crosses RustBatchReader → RustParquetOpenSource as a numeric_st
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\Parquet\{RustParquetOpenSink, SchemaConverter};
-use Flow\Parquet\Engine\RustParquetFileWriter;
+use Flow\ETL\Adapter\Parquet\IO\Loader\{ParquetSchemaConformance, RustParquetFileWriter};
+use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Adapter\Parquet\Values\Schema\SchemaConverter;
+use Flow\Parquet\Engine\RustParquetFileWriter as ArrowRustParquetFileWriter;
 use Flow\Parquet\Engine\Arrow\{OptionsConverter, SchemaConverter as ArrowSchemaConverter};
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
@@ -31,7 +33,7 @@ $writer->openForStream($filesystem->writeTo(path('memory://uint64.parquet')), $p
 $writer->writeBatch([['u' => 0], ['u' => null], ['u' => '9223372036854775808'], ['u' => '18446744073709551615']]);
 $writer->close();
 
-$schema = (new SchemaConverter())->toFlow($parquet);
+$schema = (new SchemaConverter())->toFlowSchema($parquet);
 var_dump(type_equals(type_numeric_string(), $schema->get('u')->type()));
 
 foreach (rust_parquet_batches($filesystem->readFrom(path('memory://uint64.parquet')), $schema, 10) as $batch) {
@@ -39,20 +41,24 @@ foreach (rust_parquet_batches($filesystem->readFrom(path('memory://uint64.parque
     var_dump($batch->column('u')->values());
 }
 
-$write = static function (Flow\ETL\Schema $schema, array $values) use ($parquet, $filesystem): string {
+$write = static function (Flow\ETL\Values\Schema $schema, array $values) use ($parquet, $filesystem): string {
     return outcome(static function () use ($schema, $values, $parquet, $filesystem): array {
-        $sink = new RustParquetOpenSink(new RustParquetFileWriter(
-            $filesystem->writeTo(path('memory://uint64_write.parquet')),
-            ArrowSchemaConverter::toExtension($parquet),
-            Compressions::SNAPPY,
-            OptionsConverter::toExtension(Options::default()),
-            1_000,
-        ));
+        $fileWriter = new RustParquetFileWriter(
+            new ArrowRustParquetFileWriter(
+                $filesystem->writeTo(path('memory://uint64_write.parquet')),
+                ArrowSchemaConverter::toExtension($parquet),
+                Compressions::SNAPPY,
+                OptionsConverter::toExtension(Options::default()),
+                1_000,
+            ),
+            new ParquetSchemaConformance($parquet),
+            new PhpBackend(),
+        );
 
         try {
-            $sink->write(php_rows($schema, $values));
+            $fileWriter->write(php_rows($schema, $values));
         } finally {
-            $sink->close();
+            $fileWriter->close();
         }
 
         return iterator_to_array(Reader::php()->readStream($filesystem->readFrom(path('memory://uint64_write.parquet')))->values());
@@ -78,6 +84,6 @@ array(4) {
   string(20) "18446744073709551615"
 }
 a:3:{i:0;a:1:{s:1:"u";s:1:"0";}i:1;a:1:{s:1:"u";N;}i:2;a:1:{s:1:"u";s:19:"9223372036854775807";}}
-Flow\Parquet\Exception\RuntimeException: Parquet column "u" row 1 holds a value out of the range arrow stores it in
+Flow\Parquet\Exception\ValidationException: Column "u" row 1: expected int >= 0 or digit string, got string
 a:3:{i:0;a:1:{s:1:"u";s:20:"18446744073709551615";}i:1;a:1:{s:1:"u";N;}i:2;a:1:{s:1:"u";s:1:"0";}}
 Flow\Parquet\Exception\ValidationException: Column "u" row 1: expected int >= 0 or digit string, got string

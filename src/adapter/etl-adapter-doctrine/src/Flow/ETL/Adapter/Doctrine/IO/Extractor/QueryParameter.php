@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Adapter\Doctrine\IO\Extractor;
+
+use Doctrine\DBAL\ArrayParameterType;
+use Flow\ETL\Values\Rows;
+
+interface QueryParameter
+{
+    public function queryParamName(): string;
+
+    /**
+     * @return null|array<array-key, null|bool|float|int|string>|bool|float|int|string
+     */
+    public function toQueryParam(Rows $rows): mixed;
+
+    public function type(): ?ArrayParameterType;
+}

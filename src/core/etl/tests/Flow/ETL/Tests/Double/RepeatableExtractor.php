@@ -4,47 +4,27 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Column\AdaptiveBackend;
-use Flow\ETL\Extractor;
-use Flow\ETL\Extractor\OverridingExtractor;
-use Flow\ETL\Extractor\RewindableExtractor;
-use Flow\ETL\Extractor\Statistics;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Rows;
-use Flow\ETL\Schema;
+use Flow\ETL\IO\Extractor;
+use Flow\ETL\IO\Extractor\Criteria;
+use Flow\ETL\IO\Extractor\Statistics;
+use Flow\ETL\Values\Column\AdaptiveBackend;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Schema;
 use Generator;
 
-use function array_values;
-
 /**
- * Answers isRepeatable() with whatever the test needs, and optionally wraps other extractors so the
- * Repeatability recursion can be exercised.
+ * Answers isRepeatable() with whatever the test needs.
  */
-final class RepeatableExtractor implements Extractor, OverridingExtractor, RewindableExtractor
+final class RepeatableExtractor implements Extractor
 {
-    /**
-     * @var list<Extractor>
-     */
-    private readonly array $wrapped;
-
     public function __construct(
         private readonly bool $repeatable,
-        Extractor ...$wrapped,
-    ) {
-        $this->wrapped = array_values($wrapped);
-    }
+    ) {}
 
-    public function extract(FlowContext $context, ?int $limit = null): Generator
+    public function extract(Backend $backend, Criteria $criteria): Generator
     {
         yield Rows::empty($this->schema(), new AdaptiveBackend());
-    }
-
-    /**
-     * @return array<Extractor>
-     */
-    public function extractors(): array
-    {
-        return $this->wrapped;
     }
 
     public function isRepeatable(): bool

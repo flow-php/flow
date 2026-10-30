@@ -25,7 +25,7 @@ final class GenerateFlowCompleterCommandTest extends CompleterCommandTestCase
 
         $content = type_string()->assert(file_get_contents($this->getOutputPath('flow.js')));
 
-        $coreMethods = ['setUp', 'extract', 'from', 'process', 'read'];
+        $coreMethods = ['setUp', 'process', 'read'];
 
         foreach ($coreMethods as $method) {
             static::assertStringContainsString(

@@ -86,8 +86,10 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
 
     /**
      * @param array<array-key, mixed> $clientConfig
+     *
+     * @return array<string, mixed>|BlobServiceInterface the plain configuration when no service is injected (describable for another process), a built service otherwise
      */
-    private function buildBlobService(string $containerName, array $clientConfig): BlobServiceInterface
+    private function buildBlobService(string $containerName, array $clientConfig): BlobServiceInterface|array
     {
         $allowed = [
             'account_name',
@@ -137,6 +139,41 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
             ));
         }
 
+        // @mago-expect analysis:mixed-assignment
+        $urlFactoryConfig = $clientConfig['url_factory'] ?? null;
+        $azurite = null;
+
+        if (
+            is_array($urlFactoryConfig)
+            && is_string($urlFactoryConfig['host'] ?? null)
+            && $urlFactoryConfig['host'] !== ''
+        ) {
+            // @mago-expect analysis:mixed-assignment
+            $portRaw = $urlFactoryConfig['port'] ?? '10000';
+            $azurite = [
+                'host' => $urlFactoryConfig['host'],
+                'port' => is_string($portRaw) ? $portRaw : (string) (is_int($portRaw) ? $portRaw : '10000'),
+                'https' => ($urlFactoryConfig['https'] ?? false) === true,
+            ];
+        }
+
+        $injected = false;
+
+        foreach (['http_client', 'request_factory', 'stream_factory', 'logger'] as $service) {
+            if (($clientConfig[$service] ?? null) !== null) {
+                $injected = true;
+            }
+        }
+
+        if (!$injected) {
+            return [
+                'account_name' => $accountName,
+                'container' => $containerName,
+                'shared_key' => $clientConfig['auth']['shared_key'],
+                'url' => $azurite === null ? ['azure' => ['host' => 'blob.core.windows.net']] : ['azurite' => $azurite],
+            ];
+        }
+
         $authFactory = azure_shared_key_authorization_factory($accountName, $clientConfig['auth']['shared_key']);
         $configuration = azure_blob_service_config($accountName, $containerName);
 
@@ -161,27 +198,16 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
             'logger_service_id',
         );
 
-        $httpFactory = azure_http_factory($requestFactory, $streamFactory);
-
-        // @mago-expect analysis:mixed-assignment
-        $urlFactoryConfig = $clientConfig['url_factory'] ?? null;
-
-        if (
-            is_array($urlFactoryConfig)
-            && is_string($urlFactoryConfig['host'] ?? null)
-            && $urlFactoryConfig['host'] !== ''
-        ) {
-            $host = $urlFactoryConfig['host'];
-            // @mago-expect analysis:mixed-assignment
-            $portRaw = $urlFactoryConfig['port'] ?? '10000';
-            $port = is_string($portRaw) ? $portRaw : (string) (is_int($portRaw) ? $portRaw : '10000');
-            $https = ($urlFactoryConfig['https'] ?? false) === true;
-            $urlFactory = azurite_url_factory($host, $port, $https);
-        } else {
-            $urlFactory = azure_url_factory();
-        }
-
-        return azure_blob_service($configuration, $authFactory, $httpClient, $httpFactory, $urlFactory, $logger);
+        return azure_blob_service(
+            $configuration,
+            $authFactory,
+            $httpClient,
+            azure_http_factory($requestFactory, $streamFactory),
+            $azurite === null
+                ? azure_url_factory()
+                : azurite_url_factory($azurite['host'], $azurite['port'], $azurite['https']),
+            $logger,
+        );
     }
 
     private function buildOptions(mixed $optionsConfig): Options

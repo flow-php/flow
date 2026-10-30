@@ -9,7 +9,10 @@ use CmsIg\Seal\Schema\Schema as SealSchema;
 use Flow\Documentation\Attribute\DocumentationDSL;
 use Flow\Documentation\Attribute\Module;
 use Flow\Documentation\Attribute\Type;
-use Flow\ETL\Schema;
+use Flow\ETL\Adapter\Seal\IO\Loader\Operation;
+use Flow\ETL\Adapter\Seal\IO\Loader\SealLoader;
+use Flow\ETL\Adapter\Seal\Values\Schema\SchemaConverter;
+use Flow\ETL\Values\Schema;
 
 #[DocumentationDSL(module: Module::SEAL, type: Type::LOADER)]
 function to_seal_upsert(EngineInterface $engine, string $index): SealLoader

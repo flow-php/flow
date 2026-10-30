@@ -18,6 +18,9 @@
     "require-dev": {
         "fig/log-test": "^1.1"
     },
+    "suggest": {
+        "symfony/var-dumper": "DumpLogger dumps through VarDumper when it is installed"
+    },
     "config": {
         "optimize-autoloader": true,
         "sort-packages": true

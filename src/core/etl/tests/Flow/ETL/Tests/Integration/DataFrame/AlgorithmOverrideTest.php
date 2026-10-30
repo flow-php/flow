@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use Flow\ETL\Bucketing\Storage\MemoryBuckets;
-use Flow\ETL\Cache\Implementation\InMemoryCache;
-use Flow\ETL\DataFrame;
-use Flow\ETL\DataFrameFactory;
-use Flow\ETL\Dataset\Memory\Unit;
-use Flow\ETL\Join\Join;
-use Flow\ETL\Rows;
-use Flow\ETL\Tests\Double\RecordingBucketsStorage;
+use Flow\ETL\IO\Extractor;
+use Flow\ETL\IO\Extractor\ExtractorFactory;
+use Flow\ETL\Storage\MemoryRowsStorage;
+use Flow\ETL\Tests\Double\RecordingRowsStorage;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\ETL\Values\Join\JoinType;
+use Flow\ETL\Values\Memory\Unit;
+use Flow\ETL\Values\Rows;
 use Flow\Filesystem\Path\Filter\KeepAll;
 
 use function array_column;
@@ -23,6 +22,7 @@ use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\external_sort;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_cache;
+use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\hash_group_by;
 use function Flow\ETL\DSL\hash_join;
 use function Flow\ETL\DSL\int_schema;
@@ -39,7 +39,7 @@ final class AlgorithmOverrideTest extends FlowIntegrationTestCase
 {
     public function test_cache_override_and_from_cache_override_pair_up(): void
     {
-        $cache = new InMemoryCache();
+        $cache = new MemoryRowsStorage();
 
         df()
             ->read(from_array([['id' => 1], ['id' => 2]]))
@@ -60,8 +60,8 @@ final class AlgorithmOverrideTest extends FlowIntegrationTestCase
 
     public function test_aggregate_override_reaches_the_aggregation(): void
     {
-        $pinned = new RecordingBucketsStorage(new MemoryBuckets());
-        $configured = new RecordingBucketsStorage(new MemoryBuckets());
+        $pinned = new RecordingRowsStorage(new MemoryRowsStorage());
+        $configured = new RecordingRowsStorage(new MemoryRowsStorage());
 
         $output = [];
         df(
@@ -83,8 +83,8 @@ final class AlgorithmOverrideTest extends FlowIntegrationTestCase
 
     public function test_group_by_override_reaches_the_aggregation(): void
     {
-        $pinned = new RecordingBucketsStorage(new MemoryBuckets());
-        $configured = new RecordingBucketsStorage(new MemoryBuckets());
+        $pinned = new RecordingRowsStorage(new MemoryRowsStorage());
+        $configured = new RecordingRowsStorage(new MemoryRowsStorage());
 
         $output = [];
         df(
@@ -119,16 +119,16 @@ final class AlgorithmOverrideTest extends FlowIntegrationTestCase
 
     public function test_join_each_is_not_governed_by_the_join_algorithm(): void
     {
-        $pinned = new RecordingBucketsStorage(new MemoryBuckets());
+        $pinned = new RecordingRowsStorage(new MemoryRowsStorage());
 
         $output = [];
         df(config_builder()->join(hash_join()->storage($pinned))->build())
             ->read(from_array([['id' => 1], ['id' => 2]]))
             ->joinEach(
-                new class implements DataFrameFactory {
-                    public function from(Rows $rows): DataFrame
+                new class implements ExtractorFactory {
+                    public function from(Rows $rows): Extractor
                     {
-                        return df()->process(array_to_rows(
+                        return from_rows(array_to_rows(
                             [['id' => 1, 'n' => 'a']],
                             schema(int_schema('id'), str_schema('n')),
                         ));
@@ -145,8 +145,8 @@ final class AlgorithmOverrideTest extends FlowIntegrationTestCase
 
     public function test_join_override_reaches_the_hash_join(): void
     {
-        $pinned = new RecordingBucketsStorage(new MemoryBuckets());
-        $configured = new RecordingBucketsStorage(new MemoryBuckets());
+        $pinned = new RecordingRowsStorage(new MemoryRowsStorage());
+        $configured = new RecordingRowsStorage(new MemoryRowsStorage());
 
         $output = [];
         df(
@@ -158,7 +158,7 @@ final class AlgorithmOverrideTest extends FlowIntegrationTestCase
             ->join(
                 df()->read(from_array([['id' => 1, 'n' => 'a']])),
                 join_on(['id' => 'id'], 'joined_'),
-                Join::left,
+                JoinType::left,
                 hash_join()->storage($pinned)->memoryLimit(Unit::fromBytes(1))->batchSize(1),
             )
             ->write(to_array($output))
@@ -174,7 +174,7 @@ final class AlgorithmOverrideTest extends FlowIntegrationTestCase
         // the configured algorithm spills to memory, so any file under the spill root proves the
         // override built its own FilesystemBuckets over $config->cache->localFilesystemCacheDir
         $output = [];
-        df(config_builder()->sort(external_sort()->storage(new MemoryBuckets()))->build())
+        df(config_builder()->sort(external_sort()->storage(new MemoryRowsStorage()))->build())
             ->read(from_array([['id' => 3], ['id' => 1], ['id' => 2]]))
             ->sortBy([ref('id')], external_sort()->memoryLimit(Unit::fromBytes(1))->batchSize(1)->bucketsCount(2))
             ->write(to_array($output))
@@ -192,8 +192,8 @@ final class AlgorithmOverrideTest extends FlowIntegrationTestCase
 
     public function test_sort_by_pins_the_algorithm_for_this_operation(): void
     {
-        $pinned = new RecordingBucketsStorage(new MemoryBuckets());
-        $configured = new RecordingBucketsStorage(new MemoryBuckets());
+        $pinned = new RecordingRowsStorage(new MemoryRowsStorage());
+        $configured = new RecordingRowsStorage(new MemoryRowsStorage());
 
         $output = [];
         df(
@@ -213,7 +213,7 @@ final class AlgorithmOverrideTest extends FlowIntegrationTestCase
 
     public function test_sort_by_without_an_algorithm_uses_the_configured_one(): void
     {
-        $configured = new RecordingBucketsStorage(new MemoryBuckets());
+        $configured = new RecordingRowsStorage(new MemoryRowsStorage());
 
         $output = [];
         df(

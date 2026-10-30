@@ -1,0 +1,371 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Tests\Unit\Operators\Transformer;
+
+use DOMDocument;
+use DOMNodeList;
+use DOMXPath;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Exception\InvalidLogicException;
+use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
+use Flow\ETL\Foundation\Exception\SchemaMismatchException;
+use Flow\ETL\Functions\ArrayUnpack;
+use Flow\ETL\Functions\ScalarFunction;
+use Flow\ETL\Operators\Transformer\ScalarFunctionTransformer;
+use Flow\ETL\Tests\Context\DescribeRoundTrip;
+use Flow\ETL\Tests\Context\StepRoundTrip;
+use Flow\ETL\Tests\Double\NonStructureUnpackStub;
+use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\ListColumnsMother;
+use Flow\ETL\Values\Column\AdaptiveBackend;
+use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Values\Rows;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
+
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\concat;
+use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\structure;
+use function Flow\ETL\DSL\structure_schema;
+use function Flow\ETL\DSL\xml_schema;
+use function Flow\Types\DSL\type_instance_of;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
+use function Flow\Types\DSL\type_xml;
+use function Flow\Types\DSL\type_xml_element;
+
+final class ScalarFunctionTransformerTest extends FlowTestCase
+{
+    public function test_bind_adds_the_derived_column(): void
+    {
+        static::assertEquals(
+            schema(int_schema('a'), str_schema('b')),
+            (new ScalarFunctionTransformer('b', lit('x')))->bind(schema(int_schema('a')))->output,
+        );
+    }
+
+    public function test_bind_declares_one_prefixed_nullable_column_per_unpacked_column(): void
+    {
+        static::assertEquals(
+            schema(int_schema('id'), int_schema('data.a', nullable: true), str_schema('data.b', nullable: true)),
+            (new ScalarFunctionTransformer(
+                'data',
+                new ArrayUnpack(lit(['a' => 1, 'b' => 'x']), schema(int_schema('a'), str_schema('b'))),
+            ))->bind(schema(int_schema('id')))->output,
+        );
+    }
+
+    public function test_bind_replaces_an_existing_column_with_the_derived_one(): void
+    {
+        static::assertEquals(
+            schema(str_schema('a')),
+            (new ScalarFunctionTransformer('a', lit('x')))->bind(schema(int_schema('a')))->output,
+        );
+    }
+
+    public function test_lit_expression_on_empty_rows(): void
+    {
+        static::assertEquals(
+            [],
+            (new ScalarFunctionTransformer('number', lit(1_000)))
+                ->transform(rows(schema()), flow_context(config())->backend())
+                ->toArray(),
+        );
+    }
+
+    public function test_lit_expression_on_non_empty_rows(): void
+    {
+        static::assertEquals(
+            [
+                ['name' => 'Norbert', 'number' => 1],
+            ],
+            (new ScalarFunctionTransformer('number', lit(1)))
+                ->transform(array_to_rows([[
+                    'name' => 'Norbert',
+                ]], schema(str_schema('name'))), flow_context(config())->backend())
+                ->toArray(),
+        );
+    }
+
+    public function test_plus_expression_on_an_empty_batch_that_declares_its_columns(): void
+    {
+        static::assertEquals(
+            [],
+            (new ScalarFunctionTransformer('number', ref('num')->plus(ref('num1'))))
+                ->transform(rows(schema(int_schema('num'), int_schema('num1'))), flow_context(config())->backend())
+                ->toArray(),
+        );
+    }
+
+    public function test_plus_expression_on_non_empty_rows(): void
+    {
+        static::assertEquals(
+            [
+                ['a' => 1, 'b' => 2, 'c' => 3],
+            ],
+            (new ScalarFunctionTransformer('c', ref('a')->plus(ref('b'))))
+                ->transform(
+                    array_to_rows([['a' => 1, 'b' => 2]], schema(int_schema('a'), int_schema('b'))),
+                    flow_context(config())->backend(),
+                )
+                ->toArray(),
+        );
+    }
+
+    public function test_plus_expression_on_non_existing_rows(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Schema definition for column "num" not found.');
+
+        static::assertEquals(
+            [
+                ['a' => 1, 'number' => 0],
+            ],
+            (new ScalarFunctionTransformer('number', ref('num')->plus(ref('num1'))))
+                ->transform(array_to_rows([['a' => 1]], schema(int_schema('a'))), flow_context(config())->backend())
+                ->toArray(),
+        );
+    }
+
+    public function test_an_undeclared_payload_key_is_dropped(): void
+    {
+        static::assertEquals(
+            [
+                ['array.id' => 1],
+            ],
+            (new ScalarFunctionTransformer(
+                'array',
+                new ArrayUnpack(lit(['id' => 1, 'secret' => 'dropped']), schema(int_schema('id'))),
+            ))
+                ->transform(array_to_rows([[]], schema()), flow_context(config())->backend())
+                ->toArray(),
+        );
+    }
+
+    public function test_unpack_results_ignores_a_definition_passed_to_with_column(): void
+    {
+        // a Definition passed to withColumn() cannot describe an N-column result, so unpack's own
+        // declared Schema is what names and types the produced columns
+        $result = (new ScalarFunctionTransformer(
+            str_schema('array'),
+            new ArrayUnpack(lit(['id' => 1, 'name' => 'Norbert']), schema(int_schema('id'), str_schema('name'))),
+        ))->transform(array_to_rows([[]], schema()), flow_context(config())->backend());
+
+        static::assertEquals([['array.id' => 1, 'array.name' => 'Norbert']], $result->toArray());
+        static::assertEquals(
+            schema(int_schema('array.id', nullable: true), str_schema('array.name', nullable: true)),
+            $result->schema(),
+        );
+    }
+
+    public function test_xml_xpath_expression_when_there_is_more_than_one_node_under_given_path(): void
+    {
+        $xml = '<root><foo baz="buz">bar</foo><foo>baz</foo></root>';
+        $document = new DOMDocument();
+        $document->loadXML($xml);
+        $nodes = type_instance_of(DOMNodeList::class)->assert((new DOMXPath($document))->query('/root/foo'));
+        $expected = [$nodes->item(0), $nodes->item(1)];
+
+        $result = (new ScalarFunctionTransformer('xpath', ref('xml')->xpath('/root/foo')))->transform(array_to_rows([[
+            'xml' => type_xml()->cast($xml),
+        ]], schema(xml_schema('xml'))), flow_context(config())->backend());
+
+        static::assertEquals($expected, $result->column('xpath')->value(0));
+        static::assertEquals(type_list(type_xml_element()), $result->schema()->get('xpath')->type());
+        static::assertTrue($result->schema()->get('xpath')->isNullable());
+    }
+
+    public function test_a_declared_output_definition_coerces_the_produced_value(): void
+    {
+        static::assertSame(
+            [
+                ['v' => 1, 'out' => '1'],
+                ['v' => 2, 'out' => '2'],
+            ],
+            (new ScalarFunctionTransformer(str_schema('out'), ref('v')))
+                ->transform(array_to_rows([
+                    ['v' => 1],
+                    ['v' => 2],
+                ], schema(int_schema('v'))), flow_context(config())->backend())
+                ->toArray(),
+        );
+    }
+
+    public function test_the_produced_column_takes_the_declared_definition(): void
+    {
+        static::assertEquals(
+            type_string(),
+            (new ScalarFunctionTransformer(str_schema('out'), ref('v')))
+                ->transform(array_to_rows([
+                    ['v' => 1],
+                    ['v' => 2],
+                ], schema(int_schema('v'))), flow_context(config())->backend())
+                ->schema()
+                ->get('out')
+                ->type(),
+        );
+    }
+
+    public function test_the_produced_definition_does_not_depend_on_batch_size(): void
+    {
+        $wholeBatch = (new ScalarFunctionTransformer('out', ref('v')->plus(lit(1))))->transform(array_to_rows([
+            ['v' => 1],
+            ['v' => 2],
+        ], schema(int_schema('v'))), flow_context(config())->backend());
+
+        $transformer = new ScalarFunctionTransformer('out', ref('v')->plus(lit(1)));
+        $single = Rows::concat(
+            $wholeBatch->schema(),
+            new PhpBackend(),
+            $transformer->transform(array_to_rows([[
+                'v' => 1,
+            ]], schema(int_schema('v'))), flow_context(config())->backend()),
+            $transformer->transform(array_to_rows([[
+                'v' => 2,
+            ]], schema(int_schema('v'))), flow_context(config())->backend()),
+        );
+
+        static::assertEquals($wholeBatch->schema()->get('out'), $single->schema()->get('out'));
+        static::assertEquals($wholeBatch->toArray(), $single->toArray());
+    }
+
+    public function test_a_null_produced_under_a_not_null_declaration_names_its_row(): void
+    {
+        $this->expectException(SchemaMismatchException::class);
+        $this->expectExceptionMessage('column "out" (row 1)');
+
+        (new ScalarFunctionTransformer(int_schema('out'), ref('v')))->transform(array_to_rows([
+            ['v' => 1],
+            ['v' => null],
+        ], schema(int_schema('v', nullable: true))), flow_context(config())->backend());
+    }
+
+    public function test_a_batch_arriving_under_another_schema_than_the_bound_one_is_conformed_to_the_bound_output(): void
+    {
+        static::assertSame(
+            [['id' => 1, 'name' => null, 'out' => 'x']],
+            type_instance_of(ScalarFunctionTransformer::class)
+                ->assert((new ScalarFunctionTransformer('out', lit('x')))->bind(schema(
+                    int_schema('id'),
+                    str_schema('name', nullable: true),
+                ))->step)
+                ->transform(array_to_rows([['id' => 1]], schema(int_schema('id'))), flow_context(config())->backend())
+                ->toArray(),
+        );
+    }
+
+    public function test_an_empty_batch_is_bound_against_its_own_schema(): void
+    {
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+
+        (new ScalarFunctionTransformer('out', ref('missing')->upper()))->transform(
+            rows(schema()),
+            flow_context(config())->backend(),
+        );
+    }
+
+    #[DataProvider('trees_without_an_expand')]
+    public function test_bind_keeps_a_tree_without_an_expand_on_itself(ScalarFunction $function): void
+    {
+        static::assertInstanceOf(
+            ScalarFunctionTransformer::class,
+            (new ScalarFunctionTransformer('s', $function))->bind(ListColumnsMother::schema())->step,
+        );
+    }
+
+    /**
+     * @return Generator<string, array{ScalarFunction}>
+     */
+    public static function trees_without_an_expand(): Generator
+    {
+        yield 'no expand' => [concat(ref('id'), lit('x'))];
+    }
+
+    #[DataProvider('expanding_functions')]
+    public function test_bind_refuses_an_expanding_function(ScalarFunction $function): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'transform() cannot contain array_expand(), it turns one row into many rows. '
+            . 'Expand with withColumn() first, then use the new column.',
+        );
+
+        (new ScalarFunctionTransformer('v', $function))->bind(ListColumnsMother::schema());
+    }
+
+    /**
+     * @return Generator<string, array{ScalarFunction}>
+     */
+    public static function expanding_functions(): Generator
+    {
+        yield 'at the root' => [ref('tags')->expand()];
+        yield 'inside a structure' => [structure(['v' => ref('tags')->expand()])];
+        yield 'unpacked' => [structure(['v' => ref('tags')->expand()])->unpack(schema(str_schema('v')))];
+    }
+
+    public function test_transform_refuses_an_expanding_function(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('transform() cannot contain array_expand()');
+
+        (new ScalarFunctionTransformer('v', ref('tags')->expand()))->transform(
+            ListColumnsMother::rows()->matchTo(ListColumnsMother::schema(), new AdaptiveBackend()),
+            flow_context(config())->backend(),
+        );
+    }
+
+    public function test_bind_refuses_an_unpack_whose_type_is_not_a_structure(): void
+    {
+        $this->expectException(InvalidLogicException::class);
+        $this->expectExceptionMessage(NonStructureUnpackStub::class
+        . ' unpacks into N columns, so returns() must be a StructureType, got "string".');
+
+        (new ScalarFunctionTransformer('u', new NonStructureUnpackStub()))->bind(schema());
+    }
+
+    public function test_an_unpack_fills_one_column_per_declared_element_for_every_row(): void
+    {
+        static::assertSame(
+            [['s.a' => 1, 's.b' => 'x'], ['s.a' => 2, 's.b' => null]],
+            (new ScalarFunctionTransformer('s', ref('s')->unpack(schema(int_schema('a'), str_schema('b')))))
+                ->transform(array_to_rows([
+                    ['s' => ['a' => 1, 'b' => 'x']],
+                    ['s' => ['a' => 2, 'b' => null]],
+                ], schema(structure_schema('s', type_structure(['a' => type_integer(), 'b' => type_optional(type_string())])))), flow_context()->backend())
+                ->project(
+                    schema(int_schema('s.a', nullable: true), str_schema('s.b', nullable: true)),
+                    new AdaptiveBackend(),
+                )
+                ->toArray(),
+        );
+    }
+
+    public function test_describe_round_trips(): void
+    {
+        $transformer = new ScalarFunctionTransformer('doubled', ref('id')->multiply(lit(2)));
+        $rebuilt = DescribeRoundTrip::rebuilt($transformer);
+        $rows = array_to_rows(
+            [['id' => 1, 'name' => 'a'], ['id' => 2, 'name' => 'b'], ['id' => 3, 'name' => 'c']],
+            schema(int_schema('id'), str_schema('name')),
+        );
+        $schema = schema(int_schema('id'), str_schema('name'));
+
+        static::assertSame(
+            StepRoundTrip::transformed($transformer, $schema, $rows, flow_context()),
+            StepRoundTrip::transformed($rebuilt, $schema, $rows, flow_context()),
+        );
+    }
+}

@@ -14,7 +14,7 @@ use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\RoleSpec;
 use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 use function array_map;
@@ -23,8 +23,6 @@ use function strtolower;
 
 final readonly class RevokeBuilder implements RevokeFinalStep, RevokeFromStep, RevokeOnStep
 {
-    use AstToSql;
-
     /**
      * @param list<string> $privileges
      * @param list<string> $objects
@@ -111,6 +109,11 @@ final readonly class RevokeBuilder implements RevokeFinalStep, RevokeFromStep, R
             $this->grantees,
             DropBehavior::DROP_RESTRICT,
         );
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): GrantStmt

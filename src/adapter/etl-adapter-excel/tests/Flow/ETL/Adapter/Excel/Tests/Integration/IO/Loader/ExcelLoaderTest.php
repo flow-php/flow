@@ -1,0 +1,687 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Adapter\Excel\Tests\Integration\IO\Loader;
+
+use DateInterval;
+use DateTimeImmutable;
+use Flow\ETL\Adapter\Excel\IO\Loader\CellStyler;
+use Flow\ETL\Adapter\Excel\IO\Loader\ExcelWriter;
+use Flow\ETL\Adapter\Excel\Tests\Double\RecordingCellStyler;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\IO\Filesystem\SaveMode;
+use Flow\ETL\IO\Loader\File\FileCommit;
+use Flow\ETL\IO\Loader\File\Part;
+use Flow\ETL\IO\Loader\Partitioning;
+use Flow\ETL\Tests\Context\ReaderRoundTrip;
+use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Values\Schema\Definition;
+use Flow\Filesystem\Exception\RuntimeException as FilesystemRuntimeException;
+use Flow\Filesystem\Tests\Double\FailingCloseFilesystem;
+use OpenSpout\Common\Entity\Style\Style;
+use OpenSpout\Writer\ODS\Options as OdsOptions;
+use OpenSpout\Writer\XLSX\Options as XlsxOptions;
+use PHPUnit\Framework\Attributes\DataProvider;
+use ZipArchive;
+
+use function Flow\ETL\Adapter\Excel\DSL\from_excel;
+use function Flow\ETL\Adapter\Excel\DSL\to_excel;
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\date_schema;
+use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\from_sequence_number;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\json_schema;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\overwrite;
+use function Flow\ETL\DSL\partition_by;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\select;
+use function Flow\ETL\DSL\string_schema;
+use function Flow\ETL\DSL\time_schema;
+use function Flow\ETL\DSL\to_transformation;
+use function Flow\ETL\DSL\uuid_schema;
+use function Flow\Filesystem\DSL\native_local_filesystem;
+use function Flow\Filesystem\DSL\path;
+use function Flow\Types\DSL\type_json;
+use function Flow\Types\DSL\type_uuid;
+use function iterator_to_array;
+use function md5_file;
+
+final class ExcelLoaderTest extends FlowTestCase
+{
+    /**
+     * @return iterable<string, array{ExcelWriter, string}>
+     */
+    public static function provide_writers(): iterable
+    {
+        yield 'xlsx' => [ExcelWriter::XLSX, 'xlsx'];
+        yield 'ods' => [ExcelWriter::ODS, 'ods'];
+    }
+
+    public function test_auto_detects_ods_writer_from_extension(): void
+    {
+        $outputPath = __DIR__ . '/var/output_auto.ods';
+
+        df()
+            ->read(from_rows(array_to_rows(
+                [['id' => 1, 'name' => 'Test']],
+                schema(int_schema('id'), string_schema('name')),
+            )))
+            ->write(to_excel($outputPath)->saveMode(overwrite()))
+            ->run();
+
+        static::assertEquals(
+            [
+                ['id' => 1, 'name' => 'Test'],
+            ],
+            df()->read(from_excel($outputPath))->fetch()->toArray(),
+        );
+    }
+
+    public function test_auto_detects_xlsx_writer_from_extension(): void
+    {
+        $outputPath = __DIR__ . '/var/output_auto.xlsx';
+
+        df()
+            ->read(from_rows(array_to_rows(
+                [['id' => 1, 'name' => 'Test']],
+                schema(int_schema('id'), string_schema('name')),
+            )))
+            ->write(to_excel($outputPath)->saveMode(overwrite()))
+            ->run();
+
+        static::assertEquals(
+            [
+                ['id' => 1, 'name' => 'Test'],
+            ],
+            df()->read(from_excel($outputPath))->fetch()->toArray(),
+        );
+    }
+
+    public function test_multiple_rows_in_single_batch(): void
+    {
+        $outputPath = __DIR__ . '/var/output_batches.xlsx';
+
+        df()
+            ->read(from_rows(array_to_rows(
+                [['id' => 1, 'name' => 'First'], ['id' => 2, 'name' => 'Second'], ['id' => 3, 'name' => 'Third']],
+                schema(int_schema('id'), string_schema('name')),
+            )))
+            ->batchSize(2)
+            ->write(to_excel($outputPath)->saveMode(overwrite()))
+            ->run();
+
+        static::assertEquals(
+            [
+                ['id' => 1, 'name' => 'First'],
+                ['id' => 2, 'name' => 'Second'],
+                ['id' => 3, 'name' => 'Third'],
+            ],
+            df()->read(from_excel($outputPath))->fetch()->toArray(),
+        );
+    }
+
+    #[DataProvider('provide_writers')]
+    public function test_round_trip_with_basic_data(ExcelWriter $writer, string $extension): void
+    {
+        $outputPath = __DIR__ . '/var/output.' . $extension;
+
+        df()
+            ->read(from_rows(array_to_rows(
+                [
+                    ['id' => 1, 'name' => 'Alice', 'email' => 'alice@example.com'],
+                    ['id' => 2, 'name' => 'Bob', 'email' => 'bob@example.com'],
+                    ['id' => 3, 'name' => 'Charlie', 'email' => 'charlie@example.com'],
+                ],
+                schema(int_schema('id'), string_schema('name'), string_schema('email')),
+            )))
+            ->write(to_excel($outputPath)->saveMode(overwrite())->withWriter($writer))
+            ->run();
+
+        static::assertEquals(
+            [
+                ['id' => 1, 'name' => 'Alice', 'email' => 'alice@example.com'],
+                ['id' => 2, 'name' => 'Bob', 'email' => 'bob@example.com'],
+                ['id' => 3, 'name' => 'Charlie', 'email' => 'charlie@example.com'],
+            ],
+            df()->read(from_excel($outputPath))->fetch()->toArray(),
+        );
+    }
+
+    public function test_round_trip_with_custom_datetime_and_time_formats(): void
+    {
+        $outputPath = __DIR__ . '/var/output_custom_formats.xlsx';
+        $date = new DateTimeImmutable('2024-06-15');
+        $datetime = new DateTimeImmutable('2024-06-15 14:30:45');
+
+        df()
+            ->read(from_rows(array_to_rows(
+                [['date_val' => $date, 'datetime_val' => $datetime, 'time_val' => new DateInterval('PT14H30M45S')]],
+                schema(date_schema('date_val'), datetime_schema('datetime_val'), time_schema('time_val')),
+            )))
+            ->write(
+                to_excel($outputPath)
+                    ->saveMode(overwrite())
+                    ->withDateTimeFormat('dd/mm/yyyy hh:mm')
+                    ->withTimeFormat('%H:%I'),
+            )
+            ->run();
+
+        // the number format is how Excel DISPLAYS the cell; the value round-trips whole. time has no cell type,
+        // so it stays text and keeps its PHP format.
+        static::assertEquals(
+            [['date_val' => $date, 'datetime_val' => $datetime, 'time_val' => '14:30']],
+            df()->read(from_excel($outputPath))->fetch()->toArray(),
+        );
+    }
+
+    #[DataProvider('provide_writers')]
+    public function test_round_trip_with_custom_sheet_name(ExcelWriter $writer, string $extension): void
+    {
+        $outputPath = __DIR__ . '/var/output_custom_sheet.' . $extension;
+
+        df()
+            ->read(from_rows(array_to_rows(
+                [['id' => 1, 'name' => 'Test']],
+                schema(int_schema('id'), string_schema('name')),
+            )))
+            ->write(to_excel($outputPath)->saveMode(overwrite())->withSheetName('MySheet')->withWriter($writer))
+            ->run();
+
+        static::assertEquals(
+            [
+                ['id' => 1, 'name' => 'Test'],
+            ],
+            df()->read(from_excel($outputPath)->withSheetName('MySheet'))->fetch()->toArray(),
+        );
+    }
+
+    public function test_round_trip_preserves_every_type_a_workbook_can_carry(): void
+    {
+        $outputPath = __DIR__ . '/var/output_round_trip_types.xlsx';
+
+        df()
+            ->read(from_rows(array_to_rows(
+                [[
+                    'i' => 1,
+                    'f' => 1.5,
+                    'b' => true,
+                    'd' => new DateTimeImmutable('2024-06-15'),
+                    'dt' => new DateTimeImmutable('2024-06-15 14:30:00'),
+                    'u' => type_uuid()->cast('f47ac10b-58cc-4372-a567-0e02b2c3d479'),
+                    'j' => type_json()->cast(['key' => 'value']),
+                ]],
+                schema(
+                    int_schema('i'),
+                    float_schema('f'),
+                    bool_schema('b'),
+                    date_schema('d'),
+                    datetime_schema('dt'),
+                    uuid_schema('u'),
+                    json_schema('j'),
+                ),
+            )))
+            ->write(to_excel($outputPath)->saveMode(overwrite()))
+            ->run();
+
+        static::assertEquals(
+            schema(
+                int_schema('i', nullable: true),
+                float_schema('f', nullable: true),
+                bool_schema('b', nullable: true),
+                date_schema('d', nullable: true),
+                datetime_schema('dt', nullable: true),
+                uuid_schema('u', nullable: true),
+                json_schema('j', nullable: true),
+            ),
+            from_excel($outputPath)->schema(),
+        );
+    }
+
+    public function test_round_trip_with_datetime_xlsx(): void
+    {
+        $outputPath = __DIR__ . '/var/output_datetime.xlsx';
+        $date = new DateTimeImmutable('2024-06-15');
+        $datetime = new DateTimeImmutable('2024-06-15 14:30:00');
+
+        df()
+            ->read(from_rows(array_to_rows(
+                [['date_val' => $date, 'datetime_val' => $datetime]],
+                schema(date_schema('date_val'), datetime_schema('datetime_val')),
+            )))
+            ->write(to_excel($outputPath)->saveMode(overwrite())->withWriter(ExcelWriter::XLSX))
+            ->run();
+
+        static::assertEquals(
+            [['date_val' => $date, 'datetime_val' => $datetime]],
+            df()->read(from_excel($outputPath))->fetch()->toArray(),
+        );
+        static::assertEquals(
+            schema(date_schema('date_val', nullable: true), datetime_schema('datetime_val', nullable: true)),
+            from_excel($outputPath)->schema(),
+        );
+    }
+
+    public function test_temporal_cells_share_one_cell_format_per_format(): void
+    {
+        $outputPath = __DIR__ . '/var/output_shared_formats.xlsx';
+
+        df()
+            ->read(from_rows(array_to_rows(
+                [
+                    ['d' => new DateTimeImmutable('2024-06-15'), 'dt' => new DateTimeImmutable('2024-06-15 14:30:00')],
+                    ['d' => new DateTimeImmutable('2024-06-16'), 'dt' => new DateTimeImmutable('2024-06-16 14:30:00')],
+                    ['d' => new DateTimeImmutable('2024-06-17'), 'dt' => new DateTimeImmutable('2024-06-17 14:30:00')],
+                ],
+                schema(date_schema('d'), datetime_schema('dt')),
+            )))
+            ->write(to_excel($outputPath)->saveMode(overwrite())->withWriter(ExcelWriter::XLSX))
+            ->run();
+
+        $workbook = new ZipArchive();
+        $workbook->open($outputPath);
+
+        // the default format, one date format and one datetime format - not one per cell
+        static::assertStringContainsString('<cellXfs count="3">', (string) $workbook->getFromName('xl/styles.xml'));
+    }
+
+    public function test_round_trip_with_dynamic_sheet_names(): void
+    {
+        $outputPath = __DIR__ . '/var/output_dynamic_sheets.xlsx';
+
+        $loader = to_excel($outputPath);
+        $loader = $loader->withSheetNameFromColumn('category');
+
+        df()
+            ->read(from_rows(array_to_rows(
+                [
+                    ['id' => 1, 'name' => 'Alice', 'category' => 'Users'],
+                    ['id' => 2, 'name' => 'Bob', 'category' => 'Users'],
+                    ['id' => 3, 'name' => 'Product A', 'category' => 'Products'],
+                ],
+                schema(int_schema('id'), string_schema('name'), string_schema('category')),
+            )))
+            ->write($loader->saveMode(overwrite()))
+            ->run();
+
+        static::assertEquals(
+            [
+                ['id' => 1, 'name' => 'Alice'],
+                ['id' => 2, 'name' => 'Bob'],
+            ],
+            df()->read(from_excel($outputPath)->withSheetName('Users'))->fetch()->toArray(),
+        );
+
+        static::assertEquals(
+            [
+                ['id' => 3, 'name' => 'Product A'],
+            ],
+            df()->read(from_excel($outputPath)->withSheetName('Products'))->fetch()->toArray(),
+        );
+    }
+
+    #[DataProvider('provide_writers')]
+    public function test_round_trip_with_null_values(ExcelWriter $writer, string $extension): void
+    {
+        $outputPath = __DIR__ . '/var/output_nulls.' . $extension;
+
+        df()
+            ->read(from_rows(array_to_rows(
+                [
+                    ['id' => 1, 'name' => 'Alice', 'email' => null],
+                    ['id' => 2, 'name' => null, 'email' => 'bob@example.com'],
+                ],
+                schema(int_schema('id'), string_schema('name', nullable: true), string_schema('email', nullable: true)),
+            )))
+            ->write(to_excel($outputPath)->saveMode(overwrite())->withWriter($writer))
+            ->run();
+
+        static::assertEquals(
+            [
+                ['id' => 1, 'name' => 'Alice', 'email' => null],
+                ['id' => 2, 'name' => null, 'email' => 'bob@example.com'],
+            ],
+            df()->read(from_excel($outputPath))->fetch()->toArray(),
+        );
+    }
+
+    #[DataProvider('provide_writers')]
+    public function test_round_trip_with_various_data_types(ExcelWriter $writer, string $extension): void
+    {
+        $outputPath = __DIR__ . '/var/output_types.' . $extension;
+        $uuidString = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
+
+        df()
+            ->read(from_rows(array_to_rows(
+                [[
+                    'int_val' => 42,
+                    'float_val' => 3.14,
+                    'bool_val' => true,
+                    'string_val' => 'hello',
+                    'uuid_val' => type_uuid()->cast($uuidString),
+                    'json_val' => type_json()->cast(['key' => 'value']),
+                ]],
+                schema(
+                    int_schema('int_val'),
+                    float_schema('float_val'),
+                    bool_schema('bool_val'),
+                    string_schema('string_val'),
+                    uuid_schema('uuid_val'),
+                    json_schema('json_val'),
+                ),
+            )))
+            ->write(to_excel($outputPath)->saveMode(overwrite())->withWriter($writer))
+            ->run();
+
+        $rows = df()->read(from_excel($outputPath))->fetch()->toArray();
+
+        static::assertEquals(
+            [
+                [
+                    'int_val' => 42,
+                    'float_val' => 3.14,
+                    'bool_val' => true,
+                    'string_val' => 'hello',
+                    'uuid_val' => type_uuid()->cast($uuidString),
+                    'json_val' => ['key' => 'value'],
+                ],
+            ],
+            $rows,
+        );
+    }
+
+    #[DataProvider('provide_writers')]
+    public function test_round_trip_without_header(ExcelWriter $writer, string $extension): void
+    {
+        $outputPath = __DIR__ . '/var/output_no_header.' . $extension;
+
+        df()
+            ->read(from_rows(array_to_rows(
+                [['id' => 1, 'name' => 'Alice'], ['id' => 2, 'name' => 'Bob']],
+                schema(int_schema('id'), string_schema('name')),
+            )))
+            ->write(to_excel($outputPath)->saveMode(overwrite())->withHeader(false)->withWriter($writer))
+            ->run();
+
+        static::assertEquals(
+            [
+                ['e00' => 1, 'e01' => 'Alice'],
+                ['e00' => 2, 'e01' => 'Bob'],
+            ],
+            df()->read(from_excel($outputPath)->withHeader(false))->fetch()->toArray(),
+        );
+    }
+
+    public function test_sheet_name_and_sheet_name_from_entry_are_mutually_exclusive(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot set both sheetName and sheetNameFromColumn');
+
+        to_excel('/tmp/test.xlsx')->withSheetName('MySheet')->withSheetNameFromColumn('category');
+    }
+
+    public function test_sheet_name_from_entry_and_sheet_name_are_mutually_exclusive(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot set both sheetName and sheetNameFromColumn');
+
+        to_excel('/tmp/test.xlsx')->withSheetNameFromColumn('category')->withSheetName('MySheet');
+    }
+
+    public function test_transformation_loader_writes_all_batches_to_excel(): void
+    {
+        $outputPath = __DIR__ . '/var/output_transformation.xlsx';
+
+        df()
+            ->read(from_sequence_number('id', 1, 12))
+            ->withColumn('name', lit('dropped by the transformation'))
+            ->batchSize(4)
+            ->write(to_transformation(select('id'), to_excel($outputPath)->saveMode(overwrite())))
+            ->run();
+
+        $rows = df()->read(from_excel($outputPath))->fetch();
+
+        static::assertCount(12, $rows);
+        static::assertSame(1, $rows->schema()->count());
+    }
+
+    public function test_with_cell_styler(): void
+    {
+        $outputPath = __DIR__ . '/var/output_cell_styler.xlsx';
+
+        $cellStyler = new class implements CellStyler {
+            public function style(
+                mixed $value,
+                Definition $definition,
+                int $rowNumber,
+                int $columnIndex,
+                string $sheetName,
+            ): ?Style {
+                if ($columnIndex === 0) {
+                    return new Style(fontBold: true);
+                }
+
+                return null;
+            }
+        };
+
+        $loader = to_excel($outputPath);
+        $loader = $loader->withCellStyler($cellStyler);
+
+        df()
+            ->read(from_rows(array_to_rows(
+                [['id' => 1, 'name' => 'Alice'], ['id' => 2, 'name' => 'Bob']],
+                schema(int_schema('id'), string_schema('name')),
+            )))
+            ->write($loader->saveMode(overwrite()))
+            ->run();
+
+        static::assertEquals(
+            [
+                ['id' => 1, 'name' => 'Alice'],
+                ['id' => 2, 'name' => 'Bob'],
+            ],
+            df()->read(from_excel($outputPath))->fetch()->toArray(),
+        );
+    }
+
+    public function test_cell_styler_receives_the_row_index_within_the_batch(): void
+    {
+        $styler = new RecordingCellStyler();
+
+        df()
+            ->read(from_rows(array_to_rows(
+                [
+                    ['id' => 1, 'sheet' => 'A'],
+                    ['id' => 2, 'sheet' => 'B'],
+                    ['id' => 3, 'sheet' => 'A'],
+                    ['id' => 4, 'sheet' => 'A'],
+                    ['id' => 5, 'sheet' => 'B'],
+                ],
+                schema(int_schema('id'), string_schema('sheet')),
+            )))
+            ->batchSize(2)
+            ->write(
+                to_excel(__DIR__ . '/var/output_row_number.xlsx')
+                    ->withSheetNameFromColumn('sheet')
+                    ->withCellStyler($styler)
+                    ->saveMode(overwrite()),
+            )
+            ->run();
+
+        static::assertSame(['A:1@1', 'B:2@2', 'A:3@1', 'A:4@2', 'B:5@1'], $styler->firstColumnCells);
+    }
+
+    public function test_with_header_style(): void
+    {
+        $outputPath = __DIR__ . '/var/output_header_style.xlsx';
+
+        $headerStyle = new Style(fontBold: true);
+
+        $loader = to_excel($outputPath);
+        $loader = $loader->withHeaderStyle($headerStyle);
+
+        df()
+            ->read(from_rows(array_to_rows(
+                [['id' => 1, 'name' => 'Test']],
+                schema(int_schema('id'), string_schema('name')),
+            )))
+            ->write($loader->saveMode(overwrite()))
+            ->run();
+
+        static::assertEquals(
+            [
+                ['id' => 1, 'name' => 'Test'],
+            ],
+            df()->read(from_excel($outputPath))->fetch()->toArray(),
+        );
+    }
+
+    public function test_with_ods_options(): void
+    {
+        $outputPath = __DIR__ . '/var/output_with_ods_options.ods';
+
+        df()
+            ->read(from_rows(array_to_rows(
+                [['id' => 1, 'name' => 'Test']],
+                schema(int_schema('id'), string_schema('name')),
+            )))
+            ->write(
+                to_excel($outputPath)
+                    ->saveMode(overwrite())
+                    ->withWriterOptions(new OdsOptions(DEFAULT_COLUMN_WIDTH: 15.0, DEFAULT_ROW_HEIGHT: 20.0)),
+            )
+            ->run();
+
+        static::assertEquals(
+            [
+                ['id' => 1, 'name' => 'Test'],
+            ],
+            df()->read(from_excel($outputPath))->fetch()->toArray(),
+        );
+    }
+
+    public function test_with_xlsx_options(): void
+    {
+        $outputPath = __DIR__ . '/var/output_with_options.xlsx';
+
+        df()
+            ->read(from_rows(array_to_rows(
+                [['id' => 1, 'name' => 'Test']],
+                schema(int_schema('id'), string_schema('name')),
+            )))
+            ->write(
+                to_excel($outputPath)
+                    ->saveMode(overwrite())
+                    ->withWriterOptions(new XlsxOptions(SHOULD_USE_INLINE_STRINGS: false, DEFAULT_COLUMN_WIDTH: 15.0)),
+            )
+            ->run();
+
+        static::assertEquals(
+            [
+                ['id' => 1, 'name' => 'Test'],
+            ],
+            df()->read(from_excel($outputPath))->fetch()->toArray(),
+        );
+    }
+
+    public function test_a_close_that_fails_during_closure_leaves_no_file(): void
+    {
+        try {
+            df()
+                ->read(from_array([['p' => 'a', 't' => 'x'], ['p' => 'b', 't' => 'y'], ['p' => 'c', 't' => 'z']]))
+                ->write(
+                    to_excel(
+                        __DIR__ . '/var/staged/file.xlsx',
+                        new FailingCloseFilesystem(native_local_filesystem(), failingStreams: 2),
+                    )
+                        ->saveMode(overwrite())
+                        ->partitionBy(partition_by('p')),
+                )
+                ->run();
+            static::fail('the run was expected to throw');
+        } catch (FilesystemRuntimeException $failure) {
+            static::assertStringStartsWith('Closing "', $failure->getMessage());
+        }
+
+        static::assertSame(
+            [],
+            iterator_to_array(native_local_filesystem()->list(path(__DIR__ . '/var/staged/**/*')), false),
+        );
+    }
+
+    public function test_ignore_keeps_an_existing_workbook(): void
+    {
+        $scratch = ReaderRoundTrip::scratch('excel-ignore');
+        $file = $scratch->suffix('/out.xlsx');
+        df()
+            ->read(from_array([['id' => 1]]))
+            ->write(to_excel($file))
+            ->run();
+        $before = md5_file($file->path());
+
+        df()
+            ->read(from_array([['id' => 2], ['id' => 3]]))
+            ->write(to_excel($file)->saveMode(SaveMode::Ignore))
+            ->run();
+
+        static::assertSame($before, md5_file($file->path()));
+
+        native_local_filesystem()->rm($scratch);
+    }
+
+    public function test_in_task_copies_every_setting_and_leaves_the_original(): void
+    {
+        $scratch = ReaderRoundTrip::scratch('in-task');
+        $loader = to_excel($scratch->suffix('/rows.out'))
+            ->saveMode(SaveMode::Overwrite)
+            ->partitionBy(partition_by('name'))
+            ->withSheetName('rows')
+            ->withHeader(false);
+        $copy = $loader->inTask(new Part(3, 4, '1a2b3c4d5e6f7a8b', false));
+
+        static::assertSame($loader->destination()->uri(), $copy->destination()->uri());
+        static::assertSame($scratch->suffix('/rows.out')->uri(), $loader->destination()->uri());
+        static::assertEquals($loader->partitioning(), $copy->partitioning());
+
+        native_local_filesystem()->rm($scratch);
+    }
+
+    public function test_commit_applies_the_save_mode_on_the_loader_filesystem(): void
+    {
+        $scratch = ReaderRoundTrip::scratch('commit');
+        $filesystem = native_local_filesystem();
+        $filesystem->writeTo($scratch->suffix('/rows.xlsx'))->append('old')->close();
+        $loader = to_excel($scratch->suffix('/rows.xlsx'), filesystem: $filesystem);
+
+        try {
+            static::assertNull($loader->saveMode(SaveMode::Ignore)->commit('r1', 1));
+            static::assertInstanceOf(FileCommit::class, $loader->saveMode(SaveMode::Overwrite)->commit('r1', 1));
+
+            $this->expectException(RuntimeException::class);
+
+            $loader->saveMode(SaveMode::ExceptionIfExists)->commit('r1', 1);
+        } finally {
+            $filesystem->rm($scratch);
+        }
+    }
+
+    public function test_partitioning_returns_what_partition_by_set(): void
+    {
+        $loader = to_excel(path('file:///tmp/rows.xlsx'), filesystem: native_local_filesystem());
+
+        static::assertEquals(Partitioning::none(), $loader->partitioning());
+        static::assertEquals(
+            partition_by('name')->writeColumns(),
+            $loader->partitionBy(partition_by('name')->writeColumns())->partitioning(),
+        );
+    }
+}

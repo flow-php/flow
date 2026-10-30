@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Factory;
 
-use Flow\ETL\Adapter\JSON\JsonLoader;
+use Flow\ETL\Adapter\JSON\IO\Loader\JsonLoader;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
 

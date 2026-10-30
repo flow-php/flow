@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Mother;
 
-use Flow\ETL\Column\Column;
-use Flow\ETL\Column\PhpBackend;
-use Flow\ETL\Schema\Definition;
+use Flow\ETL\Values\Column\Column;
+use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Values\Schema\Definition;
 
 final class ColumnMother
 {

@@ -13,7 +13,7 @@ use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\RoleSpec;
 use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 use function array_map;
@@ -22,8 +22,6 @@ use function strtolower;
 
 final readonly class GrantBuilder implements GrantFinalStep, GrantOnStep, GrantToStep
 {
-    use AstToSql;
-
     /**
      * @param list<string> $privileges
      * @param list<string> $objects
@@ -81,6 +79,11 @@ final readonly class GrantBuilder implements GrantFinalStep, GrantOnStep, GrantT
             array_values($roles),
             $this->grantOption,
         );
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): GrantStmt

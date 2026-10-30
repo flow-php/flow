@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Column\Column;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Function\Evaluation\ResultColumn;
-use Flow\ETL\Function\FunctionTree;
-use Flow\ETL\Function\ScalarFunction;
-use Flow\ETL\Function\ScalarFunctionChain;
-use Flow\ETL\Rows;
+use Flow\ETL\Foundation\Describe\Description;
+use Flow\ETL\Foundation\Describe\Rebuild;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Functions\Evaluation\ResultColumn;
+use Flow\ETL\Functions\FunctionTree;
+use Flow\ETL\Functions\ScalarFunction;
+use Flow\ETL\Functions\ScalarFunctionChain;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Column\Column;
+use Flow\ETL\Values\Rows;
 use Flow\Types\Type;
+use SensitiveParameter;
 
 use function array_fill;
 use function Flow\Types\DSL\type_boolean;
@@ -35,6 +39,16 @@ final class ReportsResolvedOperand implements ScalarFunction
         return [$this->operand];
     }
 
+    public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
+    {
+        throw InvalidArgumentException::because('%s holds live state and is never described', self::class);
+    }
+
+    public function describe(): ?Description
+    {
+        return null;
+    }
+
     /**
      * @param list<FunctionTree> $children
      */
@@ -44,14 +58,10 @@ final class ReportsResolvedOperand implements ScalarFunction
         return new self($children[0]);
     }
 
-    public function eval(Rows $rows, FlowContext $context): Column
+    public function eval(Rows $rows, Backend $backend): Column
     {
         // @mago-ignore analysis:possibly-invalid-argument
-        return (new ResultColumn($context->backend()))->of($this, array_fill(
-            0,
-            $rows->count(),
-            $this->operand->resolved(),
-        ));
+        return (new ResultColumn($backend))->of($this, array_fill(0, $rows->count(), $this->operand->resolved()));
     }
 
     /**

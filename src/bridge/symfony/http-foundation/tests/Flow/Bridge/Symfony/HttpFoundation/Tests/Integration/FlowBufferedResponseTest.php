@@ -4,15 +4,37 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\HttpFoundation\Tests\Integration;
 
+use Flow\Bridge\Symfony\HttpFoundation\Response\FlowBufferedResponse;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\Bridge\Symfony\HttpFoundation\http_csv_output;
 use function Flow\Bridge\Symfony\HttpFoundation\http_json_output;
 use function Flow\Bridge\Symfony\HttpFoundation\http_stream_open;
+use function Flow\ETL\DSL\config_builder;
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 
 final class FlowBufferedResponseTest extends TestCase
 {
+    public function test_a_buffered_response_refuses_a_config_for_a_data_frame_source(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('A DataFrame source carries its own config');
+
+        new FlowBufferedResponse(df()->read(from_array([['id' => 1]])), http_csv_output(), config: config_builder());
+    }
+
+    public function test_a_data_frame_source_is_buffered_with_the_headers(): void
+    {
+        $response = http_stream_open(df()->read(from_array([['id' => 1], ['id' => 2]]))->limit(1))
+            ->headers(['X-Total-Rows' => '2'])
+            ->response(http_csv_output());
+
+        static::assertSame("id\n1\n", $response->getContent());
+        static::assertSame('2', $response->headers->get('X-Total-Rows'));
+    }
+
     public function test_buffered_response_reads_back_what_it_wrote(): void
     {
         // identity, not protocol, makes a MemoryFilesystem a buffer: reading back through a different

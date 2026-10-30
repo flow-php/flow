@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use Flow\ETL\DataFrame;
-use Flow\ETL\DataFrameFactory;
-use Flow\ETL\Join\Expression;
-use Flow\ETL\Loader;
-use Flow\ETL\Rows;
+use Flow\ETL\Functions\Join\Expression;
+use Flow\ETL\IO\Extractor;
+use Flow\ETL\IO\Extractor\ExtractorFactory;
+use Flow\ETL\IO\Loader;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Values\Rows;
 
 use function Flow\ETL\DSL\array_to_rows;
-use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
@@ -43,10 +42,10 @@ final class JoinEachTest extends FlowTestCase
             )))
             ->batchSize(4)
             ->joinEach(
-                new class implements DataFrameFactory {
-                    public function from(Rows $rows): DataFrame
+                new class implements ExtractorFactory {
+                    public function from(Rows $rows): Extractor
                     {
-                        return data_frame()->process(array_to_rows(
+                        return from_rows(array_to_rows(
                             [['code' => 'PL', 'name' => 'Poland'], ['code' => 'US', 'name' => 'United States']],
                             schema(str_schema('code'), str_schema('name')),
                         ));
@@ -93,10 +92,10 @@ final class JoinEachTest extends FlowTestCase
             )))
             ->batchSize(4)
             ->joinEach(
-                new class implements DataFrameFactory {
-                    public function from(Rows $rows): DataFrame
+                new class implements ExtractorFactory {
+                    public function from(Rows $rows): Extractor
                     {
-                        return data_frame()->process(array_to_rows(
+                        return from_rows(array_to_rows(
                             [
                                 ['country_code' => 'PL', 'name' => 'Poland'],
                                 ['country_code' => 'US', 'name' => 'United States'],

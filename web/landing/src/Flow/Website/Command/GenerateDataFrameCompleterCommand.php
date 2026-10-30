@@ -9,6 +9,7 @@ use Flow\Website\Service\FlowConfigFactory;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Twig\Environment;
@@ -21,6 +22,7 @@ use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\Filesystem\DSL\path;
+use function Flow\Types\DSL\type_string;
 use function sprintf;
 
 #[AsCommand(
@@ -35,6 +37,17 @@ final class GenerateDataFrameCompleterCommand extends Command
         private readonly FlowConfigFactory $configFactory,
     ) {
         parent::__construct();
+    }
+
+    protected function configure(): void
+    {
+        $this->addOption(
+            'output-dir',
+            null,
+            InputOption::VALUE_REQUIRED,
+            'Directory the completer is written to',
+            $this->projectDir . '/assets/codemirror/completions',
+        );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -94,7 +107,7 @@ final class GenerateDataFrameCompleterCommand extends Command
                         ref('element')
                             ->arrayGet('name')
                             ->equals(lit('DataFrame'))
-                            ->and(ref('element')->arrayGet('namespace')->equals(lit('Flow\\ETL'))),
+                            ->and(ref('element')->arrayGet('namespace')->equals(lit('Flow\\ETL\\API'))),
                     )
                     ->arrayKeep(true)
                     ->size()
@@ -137,7 +150,7 @@ final class GenerateDataFrameCompleterCommand extends Command
             'total_count' => count($methodsData),
         ]);
 
-        $outputFile = $this->projectDir . '/assets/codemirror/completions/dataframe.js';
+        $outputFile = type_string()->assert($input->getOption('output-dir')) . '/dataframe.js';
 
         $fs->writeTo(path($outputFile))->append($content)->close();
 

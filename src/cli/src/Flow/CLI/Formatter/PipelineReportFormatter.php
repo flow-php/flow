@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Formatter;
 
-use Flow\ETL\Dataset\Report;
-use Flow\ETL\Plan\Explain\StatisticsLine;
+use Flow\ETL\Planning\Explain\StatisticsLine;
+use Flow\ETL\Runtime\Metrics\Report;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -33,7 +33,7 @@ final readonly class PipelineReportFormatter
 
             foreach ($schema->definitions() as $definition) {
                 $normalizedSchema[] = [
-                    'name' => $definition->reference()->name(),
+                    'name' => $definition->name(),
                     'type' => $definition->type()->toString(),
                     'nullable' => $definition->isNullable() ? 'true' : 'false',
                     'metadata' => json_encode($definition->metadata(), JSON_PRETTY_PRINT),
@@ -58,7 +58,9 @@ final readonly class PipelineReportFormatter
             foreach ($columnsStatistics->all() as $columnStatistics) {
                 $normalizedColumnStatistics[] = [
                     'name' => $columnStatistics->name(),
-                    'type' => $schema ? $schema->get($columnStatistics->reference())->type()->toString() : 'N/A',
+                    'type' => $schema
+                        ? $schema->get($columnStatistics->reference()->name())->type()->toString()
+                        : 'N/A',
                     'nulls_count' => $valueFormatter->format($columnStatistics->nullCount()),
                     'distinct_count' => $valueFormatter->format($columnStatistics->distinctCount()),
                     'min' => $valueFormatter->format($columnStatistics->min()),

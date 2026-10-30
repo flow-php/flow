@@ -4,29 +4,30 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Integration;
 
-use DateTimeImmutable;
-use Flow\ETL\Filesystem\ScalarFunctionFilter;
+use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Exception\InvalidSchemeException;
+use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\FileStatus;
+use Flow\Filesystem\Local\NativeLocalFilesystem;
+use Flow\Filesystem\Mount;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\Stream\NativeLocalDestinationStream;
 use PHPUnit\Framework\Attributes\TestWith;
 
 use function array_map;
+use function bin2hex;
 use function file_exists;
 use function file_get_contents;
-use function Flow\ETL\DSL\all;
-use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 use function fopen;
+use function is_dir;
 use function iterator_to_array;
 use function mb_substr;
 use function mkdir;
+use function random_bytes;
+use function sys_get_temp_dir;
 
 final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 {
@@ -35,6 +36,20 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         if (!file_exists(__DIR__ . '/var')) {
             mkdir(__DIR__ . '/var');
         }
+    }
+
+    public function test_reading_a_missing_file_creates_no_directory(): void
+    {
+        $path = path(__DIR__ . '/var/absent/dir/file.txt');
+
+        try {
+            native_local_filesystem()->readFrom($path);
+            static::fail('a missing file cannot be opened for reading');
+        } catch (RuntimeException $e) {
+            static::assertStringStartsWith('Cannot open file: ', $e->getMessage());
+        }
+
+        static::assertFalse(is_dir(__DIR__ . '/var/absent'));
     }
 
     public function test_append_to_rejects_mismatched_scheme(): void
@@ -300,32 +315,6 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         native_local_filesystem()->readFrom(path('memory:///var/foo.txt'));
     }
 
-    public function test_reading_multi_partitioned_path(): void
-    {
-        $paths = iterator_to_array(native_local_filesystem()->list(
-            path(__DIR__ . '/Fixtures/multi_partitions/**/*.txt'),
-            new ScalarFunctionFilter(
-                all(
-                    ref('country')->equals(lit('pl')),
-                    all(
-                        ref('date')->cast('date')->greaterThanEqual(lit(new DateTimeImmutable('2022-01-02'))),
-                        ref('date')->cast('date')->lessThan(lit(new DateTimeImmutable('2022-01-04'))),
-                    ),
-                ),
-                schema(),
-                flow_context(),
-            ),
-        ));
-
-        $path1 = path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-02/country=pl/file.txt');
-        $path1->partitions();
-        $path2 = path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-03/country=pl/file.txt');
-        $path2->partitions();
-
-        $uris = array_map(static fn(FileStatus $s): string => $s->path->uri(), $paths);
-        static::assertSame([$path1->uri(), $path2->uri()], $uris);
-    }
-
     public function test_reading_partitioned_folder(): void
     {
         $statuses = iterator_to_array(native_local_filesystem()->list(
@@ -341,20 +330,6 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
             ],
             $uris,
         );
-    }
-
-    public function test_reading_partitioned_folder_with_partitions_filtering(): void
-    {
-        $path = path(__DIR__ . '/Fixtures/partitioned/partition_01=b/file_02.txt');
-        $path->partitions();
-
-        $statuses = iterator_to_array(native_local_filesystem()->list(
-            path(__DIR__ . '/Fixtures/partitioned/**/*.txt'),
-            new ScalarFunctionFilter(ref('partition_01')->equals(lit('b')), schema(), flow_context()),
-        ));
-
-        $uris = array_map(static fn(FileStatus $s): string => $s->path->uri(), $statuses);
-        static::assertSame([$path->uri()], $uris);
     }
 
     public function test_reading_partitioned_folder_with_pattern(): void
@@ -675,5 +650,33 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         );
 
         $fs->rm(path(__DIR__ . '/var/orders.csv'));
+    }
+
+    public function test_configuration_round_trips_the_protocol(): void
+    {
+        $filesystem = new NativeLocalFilesystem(new Mount('local'));
+
+        static::assertSame(['protocol' => 'local'], $filesystem->normalize());
+        static::assertEquals($filesystem, NativeLocalFilesystem::fromArray($filesystem->normalize()));
+    }
+
+    public function test_a_configuration_without_a_protocol_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('NativeLocalFilesystem configuration must hold a "protocol" string');
+
+        NativeLocalFilesystem::fromArray([]);
+    }
+
+    public function test_mv_creates_the_target_parent_directory(): void
+    {
+        $fs = native_local_filesystem();
+        $root = path(sys_get_temp_dir() . '/flow-mv-' . bin2hex(random_bytes(4)));
+        $fs->writeTo($root->suffix('/a.txt'))->append('moved')->close();
+
+        static::assertTrue($fs->mv($root->suffix('/a.txt'), $root->suffix('/dept=x/deeper/a.txt')));
+        static::assertSame('moved', $fs->readFrom($root->suffix('/dept=x/deeper/a.txt'))->content());
+
+        $fs->rm($root);
     }
 }

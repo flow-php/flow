@@ -24,8 +24,8 @@ data_frame()
 +-------+----------+
 | group | id_count |
 +-------+----------+
-|     A |        3 |
-|     B |        2 |
+| A | 3 |
+| B | 2 |
 +-------+----------+
 2 rows
 ```
@@ -35,17 +35,17 @@ data_frame()
 ## Buckets Storage
 
 While the process stays under the memory limit, `groupBy()` aggregates in one pass and writes nothing. Past the limit it
-partitions the rest of the stream by the hashed grouping key into buckets of a `BucketsStorage` - the same abstraction
+partitions the rest of the stream by the hashed grouping key into buckets of a `RowsStorage` - the same abstraction
 used by [external sort](/documentation/components/core/sort.md) and [join](/documentation/components/core/join.md) -
 aggregates each bucket on its own and merges the groups aggregated before the limit into them. The default storage is
-`FilesystemBuckets` (Floe files in the local cache directory); `MemoryBuckets` and `PSRCacheBuckets` (any PSR-16
+`FilesystemRowsStorage` (Floe files in the local cache directory); `MemoryRowsStorage` and `PsrRowsStorage` (any PSR-16
 cache) are the alternatives.
 
-`groupBy()` takes an optional trailing `GroupByAlgorithmBuilder`, so one operation can override the configured
+`groupBy()` takes an optional trailing `BucketingAlgorithmBuilder`, so one operation can override the configured
 algorithm:
 
 ```php ignore
-->groupBy([ref('country')], hash_group_by()->storage(new MemoryBuckets()))
+->groupBy([ref('country')], hash_group_by()->storage(new MemoryRowsStorage()))
 ```
 
 The algorithm is configured through `config_builder()->groupBy(hash_group_by())`. `memoryLimit()` defaults to the

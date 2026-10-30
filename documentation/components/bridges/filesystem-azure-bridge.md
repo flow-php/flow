@@ -16,6 +16,24 @@ For detailed installation instructions, see the [installation page](/documentati
 
 ## Usage
 
+The plain form takes the account, the container and the shared key and builds the service itself:
+
+```php
+<?php
+
+use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem;
+
+$azure = azure_filesystem([
+    'account_name' => $_ENV['AZURE_ACCOUNT'],
+    'container' => $_ENV['AZURE_CONTAINER'],
+    'shared_key' => $_ENV['AZURE_SHARED_KEY'],
+    // 'url' => ['azurite' => ['host' => '127.0.0.1', 'port' => '10000', 'https' => false]],
+]);
+```
+
+A filesystem built from a `BlobServiceInterface` you assembled yourself - your own HTTP client, factories or logger -
+stays in this process and reads serially.
+
 > [!NOTE]  
 > Since the Azure SDK is not providing any http client or factories, you need to install them manually.
 > The following example uses the `php-http/discovery` package to find the factories in your project existing dependencies.

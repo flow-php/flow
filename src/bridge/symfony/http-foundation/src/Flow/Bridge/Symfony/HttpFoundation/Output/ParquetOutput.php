@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\HttpFoundation\Output;
 
 use Flow\Bridge\Symfony\HttpFoundation\Output;
-use Flow\ETL\Loader;
-use Flow\ETL\Schema;
+use Flow\ETL\IO\Loader;
+use Flow\ETL\Values\Schema;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
 use Flow\Parquet\Options;

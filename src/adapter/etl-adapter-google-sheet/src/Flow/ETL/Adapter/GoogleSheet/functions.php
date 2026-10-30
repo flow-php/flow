@@ -7,6 +7,8 @@ namespace Flow\ETL\Adapter\GoogleSheet;
 use Flow\Documentation\Attribute\DocumentationDSL;
 use Flow\Documentation\Attribute\Module;
 use Flow\Documentation\Attribute\Type;
+use Flow\ETL\Adapter\GoogleSheet\IO\Extractor\Columns;
+use Flow\ETL\Adapter\GoogleSheet\IO\Extractor\GoogleSheetExtractor;
 use Google\Client;
 use Google\Service\Sheets;
 

@@ -6,7 +6,7 @@ namespace Flow\Benchmarks\Pipeline;
 
 use Flow\Benchmarks\BenchmarkConfig;
 use Flow\Benchmarks\Datasets\Paths;
-use Flow\ETL\Extractor;
+use Flow\ETL\IO\Extractor;
 
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\lit;
@@ -19,23 +19,23 @@ use function uniqid;
  * read leg. Every subject that claims to be comparable with the others must run through here.
  *
  * withColumn is the only verb that adds a column, so it forces schema widening at plan-bind time.
- * filter is deliberately non-selective - created_at is never null - so the row count reaching the sink
+ * filter is deliberately non-selective - created_at is never null - so the row count reaching the loader
  * cannot move for a second reason. select re-converges every source onto the same five columns, so the
- * sink does identical work whatever was read. Floe stores typed values, adding no stringification the
+ * loader does identical work whatever was read. Floe stores typed values, adding no stringification the
  * source had not already paid.
  *
- * The sink path is unique per call because a fixed path re-run across iterations and revolutions would
+ * The output path is unique per call because a fixed path re-run across iterations and revolutions would
  * measure overwrite behaviour.
  */
 final readonly class CanonicalPipeline
 {
-    private string $sink;
+    private string $output;
 
     public function __construct(
         private Extractor $extractor,
         string $label,
     ) {
-        $this->sink = Paths::var() . '/pipeline_' . $label . '_' . uniqid('', true) . '.floe';
+        $this->output = Paths::var() . '/pipeline_' . $label . '_' . uniqid('', true) . '.floe';
     }
 
     public function run(): void
@@ -45,12 +45,12 @@ final readonly class CanonicalPipeline
             ->withColumn('contact', ref('customer')->concat(lit(' <'), ref('email'), lit('>')))
             ->filter(ref('created_at')->isNotNull())
             ->select('order_id', 'seller_id', 'created_at', 'customer', 'contact')
-            ->write(to_floe($this->sink))
+            ->write(to_floe($this->output))
             ->run();
     }
 
-    public function sink(): string
+    public function output(): string
     {
-        return $this->sink;
+        return $this->output;
     }
 }

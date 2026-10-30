@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Benchmarks\Schema;
 
-use Flow\ETL\Rows;
+use Flow\ETL\Values\Rows;
 
 use function array_key_exists;
 use function Flow\ETL\DSL\array_to_rows;

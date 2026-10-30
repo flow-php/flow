@@ -7,12 +7,10 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\AlterSequence;
 use Flow\PostgreSql\Protobuf\AST\AlterObjectSchemaStmt;
 use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class AlterSequenceSchemaBuilder implements AlterSequenceSchemaFinalStep
 {
-    use AstToSql;
-
     private function __construct(
         private string $sequence,
         private ?string $schema,
@@ -23,6 +21,11 @@ final readonly class AlterSequenceSchemaBuilder implements AlterSequenceSchemaFi
     public static function create(string $sequence, ?string $schema, string $newSchema, bool $ifExists): self
     {
         return new self($sequence, $schema, $newSchema, $ifExists);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): AlterObjectSchemaStmt

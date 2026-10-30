@@ -9,12 +9,12 @@ use Doctrine\DBAL\Schema\PrimaryKeyConstraint;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
-use Flow\ETL\Adapter\Doctrine\Order;
-use Flow\ETL\Adapter\Doctrine\OrderBy;
-use Flow\ETL\Adapter\Doctrine\Table as ETLTable;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\Order;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\OrderBy;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\Table as ETLTable;
 use Flow\ETL\Adapter\Doctrine\Tests\Context\PlannedTable;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
-use Flow\ETL\Cardinality;
+use Flow\ETL\Values\Cardinality;
 
 use function Flow\ETL\Adapter\Doctrine\from_dbal_limit_offset;
 use function Flow\ETL\Adapter\Doctrine\from_dbal_limit_offset_qb;
@@ -51,15 +51,6 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
             ]);
         }
 
-        $data = df()
-            ->read(from_dbal_limit_offset(
-                $this->pgsqlDatabaseContext->connection(),
-                $table,
-                new OrderBy('id', Order::ASC),
-                5,
-            ))
-            ->fetch();
-
         static::assertSame(
             [
                 ['id' => 1, 'name' => 'name_1', 'description' => 'description_1'],
@@ -71,7 +62,15 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
                 ['id' => 7, 'name' => 'name_7', 'description' => 'description_7'],
                 ['id' => 8, 'name' => 'name_8', 'description' => 'description_8'],
             ],
-            $data->toArray(),
+            df()
+                ->read(from_dbal_limit_offset(
+                    $this->pgsqlDatabaseContext->connection(),
+                    $table,
+                    new OrderBy('id', Order::ASC),
+                    5,
+                ))
+                ->fetch()
+                ->toArray(),
         );
     }
 
@@ -96,19 +95,6 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
             ]);
         }
 
-        $data = data_frame()
-            ->extract(from_dbal_limit_offset_qb(
-                $this->pgsqlDatabaseContext->connection(),
-                $this->pgsqlDatabaseContext
-                    ->connection()
-                    ->createQueryBuilder()
-                    ->from($table)
-                    ->select('*')
-                    ->orderBy('id', 'ASC'),
-                5,
-            ))
-            ->fetch();
-
         static::assertSame(
             [
                 ['id' => 1, 'name' => 'name_1', 'description' => 'description_1'],
@@ -120,11 +106,23 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
                 ['id' => 7, 'name' => 'name_7', 'description' => 'description_7'],
                 ['id' => 8, 'name' => 'name_8', 'description' => 'description_8'],
             ],
-            $data->toArray(),
+            data_frame()
+                ->read(from_dbal_limit_offset_qb(
+                    $this->pgsqlDatabaseContext->connection(),
+                    $this->pgsqlDatabaseContext
+                        ->connection()
+                        ->createQueryBuilder()
+                        ->from($table)
+                        ->select('*')
+                        ->orderBy('id', 'ASC'),
+                    5,
+                ))
+                ->fetch()
+                ->toArray(),
         );
     }
 
-    public function test_extracting_entire_table_using_qb_with_maximum_and_offset_set_on_extractor(): void
+    public function test_extracting_using_qb_with_offset_set_on_query_and_maximum_on_extractor(): void
     {
         $this->pgsqlDatabaseContext->createTable(
             (new Table($table = 'flow_doctrine_bulk_test', [
@@ -148,7 +146,7 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
         $this->pgsqlDatabaseContext->resetSelectQueryCounter();
 
         $rows = data_frame()
-            ->extract(
+            ->read(
                 from_dbal_limit_offset_qb(
                     $this->pgsqlDatabaseContext->connection(),
                     $this->pgsqlDatabaseContext
@@ -156,7 +154,8 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
                         ->createQueryBuilder()
                         ->from($table)
                         ->select('*')
-                        ->orderBy('id', 'ASC'),
+                        ->orderBy('id', 'ASC')
+                        ->setFirstResult(10),
                 )
                     ->withSchema(schema(
                         int_schema('id'),
@@ -164,7 +163,6 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
                         map_schema('tags', type_map(type_string(), type_integer())),
                     ))
                     ->withMaximum(5)
-                    ->withOffset(10)
                     ->withBatchSize(1),
             )
             ->fetch()
@@ -197,7 +195,7 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
         }
 
         $rows = data_frame()
-            ->extract(from_dbal_limit_offset_qb(
+            ->read(from_dbal_limit_offset_qb(
                 $this->pgsqlDatabaseContext->connection(),
                 $this->pgsqlDatabaseContext
                     ->connection()
@@ -243,7 +241,7 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
         $this->pgsqlDatabaseContext->resetSelectQueryCounter();
 
         $rows = data_frame()
-            ->extract(from_dbal_limit_offset_qb(
+            ->read(from_dbal_limit_offset_qb(
                 $this->pgsqlDatabaseContext->connection(),
                 $this->pgsqlDatabaseContext
                     ->connection()
@@ -286,23 +284,6 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
             ]);
         }
 
-        $schema = data_frame()
-            ->extract(from_dbal_limit_offset_qb(
-                $this->pgsqlDatabaseContext->connection(),
-                $this->pgsqlDatabaseContext
-                    ->connection()
-                    ->createQueryBuilder()
-                    ->from($table)
-                    ->select('*')
-                    ->orderBy('id', 'ASC'),
-                5,
-            )->withSchema(schema(
-                int_schema('id'),
-                str_schema('name'),
-                map_schema('tags', type_map(type_string(), type_integer())),
-            )))
-            ->schema();
-
         static::assertEquals(
             [
                 [
@@ -336,7 +317,23 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
                     'metadata' => [],
                 ],
             ],
-            $schema->normalize(),
+            data_frame()
+                ->read(from_dbal_limit_offset_qb(
+                    $this->pgsqlDatabaseContext->connection(),
+                    $this->pgsqlDatabaseContext
+                        ->connection()
+                        ->createQueryBuilder()
+                        ->from($table)
+                        ->select('*')
+                        ->orderBy('id', 'ASC'),
+                    5,
+                )->withSchema(schema(
+                    int_schema('id'),
+                    str_schema('name'),
+                    map_schema('tags', type_map(type_string(), type_integer())),
+                )))
+                ->schema()
+                ->normalize(),
         );
     }
 
@@ -363,20 +360,6 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
             ]);
         }
 
-        $data = df()
-            ->read(from_dbal_limit_offset_qb(
-                $this->pgsqlDatabaseContext->connection(),
-                $this->pgsqlDatabaseContext
-                    ->connection()
-                    ->createQueryBuilder()
-                    ->from($table)
-                    ->select('type, COUNT(id)')
-                    ->groupBy('type')
-                    ->orderBy('type', 'ASC'),
-                5,
-            ))
-            ->fetch();
-
         static::assertSame(
             [
                 ['type' => 'group_01', 'count' => 1],
@@ -390,7 +373,20 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
                 ['type' => 'group_09', 'count' => 1],
                 ['type' => 'group_10', 'count' => 1],
             ],
-            $data->toArray(),
+            df()
+                ->read(from_dbal_limit_offset_qb(
+                    $this->pgsqlDatabaseContext->connection(),
+                    $this->pgsqlDatabaseContext
+                        ->connection()
+                        ->createQueryBuilder()
+                        ->from($table)
+                        ->select('type, COUNT(id)')
+                        ->groupBy('type')
+                        ->orderBy('type', 'ASC'),
+                    5,
+                ))
+                ->fetch()
+                ->toArray(),
         );
     }
 
@@ -415,16 +411,6 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
             ]);
         }
 
-        $data = df()
-            ->read(from_dbal_limit_offset(
-                $this->pgsqlDatabaseContext->connection(),
-                $table,
-                new OrderBy('id', Order::ASC),
-                5,
-                7,
-            ))
-            ->fetch();
-
         static::assertSame(
             [
                 ['id' => 1, 'name' => 'name_1', 'description' => 'description_1'],
@@ -435,7 +421,16 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
                 ['id' => 6, 'name' => 'name_6', 'description' => 'description_6'],
                 ['id' => 7, 'name' => 'name_7', 'description' => 'description_7'],
             ],
-            $data->toArray(),
+            df()
+                ->read(from_dbal_limit_offset(
+                    $this->pgsqlDatabaseContext->connection(),
+                    $table,
+                    new OrderBy('id', Order::ASC),
+                    5,
+                    7,
+                ))
+                ->fetch()
+                ->toArray(),
         );
     }
 
@@ -460,16 +455,6 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
             ]);
         }
 
-        $data = df()
-            ->read(from_dbal_limit_offset(
-                $this->pgsqlDatabaseContext->connection(),
-                new ETLTable($table, ['name']),
-                new OrderBy('id', Order::ASC),
-                5,
-                7,
-            ))
-            ->fetch();
-
         static::assertSame(
             [
                 ['name' => 'name_1'],
@@ -480,11 +465,20 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
                 ['name' => 'name_6'],
                 ['name' => 'name_7'],
             ],
-            $data->toArray(),
+            df()
+                ->read(from_dbal_limit_offset(
+                    $this->pgsqlDatabaseContext->connection(),
+                    new ETLTable($table, ['name']),
+                    new OrderBy('id', Order::ASC),
+                    5,
+                    7,
+                ))
+                ->fetch()
+                ->toArray(),
         );
     }
 
-    public function test_statistics_apply_the_offset_and_the_query_builder_limit(): void
+    public function test_statistics_apply_the_query_builder_offset_and_limit(): void
     {
         PlannedTable::create($this->pgsqlDatabaseContext, 'flow_doctrine_statistics_test', 100);
         $queryBuilder = $this->pgsqlDatabaseContext
@@ -493,15 +487,12 @@ final class PosgreSQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
             ->select('*')
             ->from('flow_doctrine_statistics_test')
             ->orderBy('id')
-            ->setMaxResults(20);
+            ->setMaxResults(20)
+            ->setFirstResult(10);
 
         static::assertEquals(
-            new Cardinality(atMost: 20, estimate: 10, relativeError: Cardinality::DEFAULT_RELATIVE_ERROR),
-            from_dbal_limit_offset_qb(
-                $this->pgsqlDatabaseContext->connection(),
-                $queryBuilder,
-                offset: 10,
-            )->statistics()->rows,
+            new Cardinality(atMost: 20, estimate: 20, relativeError: Cardinality::DEFAULT_RELATIVE_ERROR),
+            from_dbal_limit_offset_qb($this->pgsqlDatabaseContext->connection(), $queryBuilder)->statistics()->rows,
         );
     }
 }

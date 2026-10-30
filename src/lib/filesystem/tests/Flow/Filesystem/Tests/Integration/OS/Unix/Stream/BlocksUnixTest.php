@@ -6,7 +6,7 @@ namespace Flow\Filesystem\Tests\Integration\OS\Unix\Stream;
 
 use Flow\Filesystem\SizeUnits;
 use Flow\Filesystem\Stream\Blocks;
-use Flow\Filesystem\Tests\OperatingSystem;
+use Flow\Filesystem\Tests\Context\OperatingSystem;
 use PHPUnit\Framework\TestCase;
 
 use function ceil;
@@ -22,13 +22,11 @@ use function unlink;
 
 final class BlocksUnixTest extends TestCase
 {
-    use OperatingSystem;
-
     protected function setUp(): void
     {
         parent::setUp();
 
-        if ($this->isWindows()) {
+        if (OperatingSystem::isWindows()) {
             self::markTestSkipped('Unix-specific stream tests should only run on Unix systems');
         }
     }

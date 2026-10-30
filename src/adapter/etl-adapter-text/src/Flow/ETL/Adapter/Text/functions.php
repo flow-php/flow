@@ -7,6 +7,8 @@ namespace Flow\ETL\Adapter\Text;
 use Flow\Documentation\Attribute\DocumentationDSL;
 use Flow\Documentation\Attribute\Module;
 use Flow\Documentation\Attribute\Type;
+use Flow\ETL\Adapter\Text\IO\Extractor\TextExtractor;
+use Flow\ETL\Adapter\Text\IO\Loader\TextLoader;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;

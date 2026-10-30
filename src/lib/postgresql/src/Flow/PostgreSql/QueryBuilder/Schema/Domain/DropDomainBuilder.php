@@ -10,15 +10,13 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\TypeName;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 use function array_values;
 
 final readonly class DropDomainBuilder implements DropDomainFinalStep
 {
-    use AstToSql;
-
     /**
      * @param list<string> $names
      */
@@ -46,6 +44,11 @@ final readonly class DropDomainBuilder implements DropDomainFinalStep
     public function restrict(): DropDomainFinalStep
     {
         return new self($this->names, $this->ifExists, DropBehavior::DROP_RESTRICT);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): DropStmt

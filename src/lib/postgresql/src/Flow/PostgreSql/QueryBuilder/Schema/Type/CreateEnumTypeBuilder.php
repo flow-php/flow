@@ -7,15 +7,13 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\Type;
 use Flow\PostgreSql\Protobuf\AST\CreateEnumStmt;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBString;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 use function array_values;
 
 final readonly class CreateEnumTypeBuilder implements CreateEnumTypeFinalStep, CreateEnumTypeLabelsStep
 {
-    use AstToSql;
-
     /**
      * @param list<string> $labels
      */
@@ -35,6 +33,11 @@ final readonly class CreateEnumTypeBuilder implements CreateEnumTypeFinalStep, C
     public function labels(string ...$labels): CreateEnumTypeFinalStep
     {
         return new self($this->name, $this->schema, array_values($labels));
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): CreateEnumStmt

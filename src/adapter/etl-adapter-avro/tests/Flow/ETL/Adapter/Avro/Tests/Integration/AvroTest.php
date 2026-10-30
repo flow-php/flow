@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Avro\Tests\Integration;
 
-use Flow\ETL\Extractor\Signal;
+use Flow\ETL\IO\Extractor\Criteria;
+use Flow\ETL\IO\Extractor\Signal;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\Adapter\Avro\from_avro;
@@ -25,7 +26,7 @@ final class AvroTest extends FlowTestCase
     {
         $extractor = from_avro(path_real(__DIR__ . '/../Fixtures/orders_flow.avro'));
 
-        $generator = $extractor->extract(flow_context(config()));
+        $generator = $extractor->extract(flow_context(config())->backend(), new Criteria());
 
         static::assertTrue($generator->valid());
         $generator->next();

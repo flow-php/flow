@@ -11,6 +11,7 @@ use Flow\Website\Service\FlowConfigFactory;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Twig\Environment;
@@ -34,6 +35,17 @@ final class GenerateDSLCompleterCommand extends Command
         private readonly FlowConfigFactory $configFactory,
     ) {
         parent::__construct();
+    }
+
+    protected function configure(): void
+    {
+        $this->addOption(
+            'output-dir',
+            null,
+            InputOption::VALUE_REQUIRED,
+            'Directory the completer is written to',
+            $this->projectDir . '/assets/codemirror/completions',
+        );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -64,7 +76,7 @@ final class GenerateDSLCompleterCommand extends Command
             'total_count' => count($functionsData),
         ]);
 
-        $outputFile = $this->projectDir . '/assets/codemirror/completions/dsl.js';
+        $outputFile = type_string()->assert($input->getOption('output-dir')) . '/dsl.js';
 
         $this->configFactory->filesystem()->writeTo(path($outputFile))->append($content)->close();
 

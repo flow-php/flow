@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\AST\Nodes\Statement;
 
 use Flow\PostgreSql\AST\Nodes\Statement;
-use Flow\PostgreSql\AST\Nodes\StatementTrait;
 use Flow\PostgreSql\Protobuf\AST\SecLabelStmt;
 
 /**
@@ -15,8 +14,6 @@ use Flow\PostgreSql\Protobuf\AST\SecLabelStmt;
  */
 final readonly class SecurityLabelStatement implements Statement
 {
-    use StatementTrait;
-
     public function __construct(
         private SecLabelStmt $stmt,
     ) {}

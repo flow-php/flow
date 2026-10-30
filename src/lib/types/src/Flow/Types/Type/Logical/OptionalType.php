@@ -67,7 +67,7 @@ final readonly class OptionalType implements Type
     }
 
     /**
-     * @return T
+     * @return null|T
      */
     public function assert(mixed $value): mixed
     {

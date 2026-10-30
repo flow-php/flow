@@ -1,0 +1,49 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Tests\Integration\Functions;
+
+use Flow\ETL\Storage\Memory\ArrayMemory;
+use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\to_memory;
+use function Flow\ETL\DSL\when;
+
+final class AllTest extends FlowTestCase
+{
+    public function test_all_cases_found(): void
+    {
+        data_frame()
+            ->read(from_array([
+                ['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]],
+                ['id' => 2],
+                ['id' => 3],
+                ['id' => 4, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]],
+            ]))
+            ->withColumn('result', when(
+                ref('id')->isEven()->and(ref('array')->isNotNull()),
+                lit('found'),
+                lit('not found'),
+            ))
+            ->drop('array')
+            ->write(to_memory($memory = new ArrayMemory()))
+            ->run();
+
+        static::assertSame(
+            // A ragged source now yields one column set, so `array` EXISTS on every row -
+            // null where the record omitted it. That is what makes sortBy() work on ragged data.
+            [
+                ['id' => 1, 'result' => 'not found'],
+                ['id' => 2, 'result' => 'not found'],
+                ['id' => 3, 'result' => 'not found'],
+                ['id' => 4, 'result' => 'found'],
+            ],
+            $memory->dump(),
+        );
+    }
+}

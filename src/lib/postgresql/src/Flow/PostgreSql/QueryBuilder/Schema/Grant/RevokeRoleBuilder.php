@@ -9,14 +9,12 @@ use Flow\PostgreSql\Protobuf\AST\GrantRoleStmt;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\RoleSpec;
 use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 use function array_values;
 
 final readonly class RevokeRoleBuilder implements RevokeRoleFinalStep, RevokeRoleFromStep
 {
-    use AstToSql;
-
     /**
      * @param list<string> $revokedRoles
      * @param list<string> $fromRoles
@@ -45,6 +43,11 @@ final readonly class RevokeRoleBuilder implements RevokeRoleFinalStep, RevokeRol
     public function restrict(): RevokeRoleFinalStep
     {
         return new self($this->revokedRoles, $this->fromRoles, DropBehavior::DROP_RESTRICT);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): GrantRoleStmt

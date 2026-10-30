@@ -1,5 +1,5 @@
 --TEST--
-native CSV rows match the PHP path over a seeded fuzz corpus, every dialect and chunk size
+native CSV rows match the PHP path over a seeded fuzz corpus (doubled enclosures and escapes land on every chunk boundary), every dialect and chunk size
 --SKIPIF--
 <?php if (!extension_loaded("flow_php")) die("skip flow_php extension not loaded"); ?>
 --FILE--
@@ -21,7 +21,7 @@ foreach ($named as $case => [$separator, $raw]) {
 }
 
 mt_srand(50);
-$alphabet = ['a', 'b', ' ', "\t", ',', ';', '"', "'", '\\', "\n", "\r"];
+$alphabet = ['a', 'b', ' ', "\t", ',', ';', '"', "'", '\\', "\n", "\r", '""', "''", '\\"', "\\'", '"",'];
 $dialects = [[',', '"', '\\'], [';', '"', '\\'], [',', "'", '\\'], [',', '"', ''], ["\t", '"', '\\']];
 $mismatches = 0;
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV\Tests\Double;
 
 use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Mount;
@@ -13,23 +14,39 @@ use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\SourceStream;
 use Generator;
+use SensitiveParameter;
 
 use function max;
 
 /**
  * Serves every read as a LengthCapturingSourceStream - a non-local stream - over the wrapped filesystem's bytes.
+ *
  */
 final class LengthCapturingFilesystem implements Filesystem
 {
     public ?LengthCapturingSourceStream $lastStream = null;
 
+    private int $opens = 0;
+
     public function __construct(
         private readonly Filesystem $wrapped,
     ) {}
 
+    public static function fromArray(#[SensitiveParameter] array $configuration): static
+    {
+        throw new InvalidArgumentException(
+            'LengthCapturingFilesystem is a test double and cannot be rebuilt from a configuration',
+        );
+    }
+
     public function appendTo(Path $path): DestinationStream
     {
         return $this->wrapped->appendTo($path);
+    }
+
+    public function normalize(): ?array
+    {
+        return null;
     }
 
     public function getSystemTmpDir(): Path
@@ -52,8 +69,14 @@ final class LengthCapturingFilesystem implements Filesystem
         return $this->wrapped->mv($from, $to);
     }
 
+    public function opens(): int
+    {
+        return $this->opens;
+    }
+
     public function readFrom(Path $path): SourceStream
     {
+        $this->opens++;
         $stream = $this->wrapped->readFrom($path);
 
         return $this->lastStream = new LengthCapturingSourceStream(

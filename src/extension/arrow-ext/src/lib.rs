@@ -30,7 +30,7 @@ pub extern "C" fn php_module_info(_module: *mut ModuleEntry) {
 
 /// The contract version flow-php/parquet expects (`Flow\Parquet\Engine\ArrowExtension::ABI`); both change together
 /// whenever a registered class or interface, or the schema, options or values crossing them, change.
-const FLOW_ARROW_ABI: i64 = 2;
+const FLOW_ARROW_ABI: i64 = 3;
 
 /// # Safety
 ///

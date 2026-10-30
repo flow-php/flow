@@ -7,12 +7,10 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\Schema;
 use Flow\PostgreSql\Protobuf\AST\CreateSchemaStmt;
 use Flow\PostgreSql\Protobuf\AST\RoleSpec;
 use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class CreateSchemaBuilder implements CreateSchemaFinalStep, CreateSchemaOptionsStep
 {
-    use AstToSql;
-
     private function __construct(
         private ?string $name = null,
         private ?string $authRole = null,
@@ -32,6 +30,11 @@ final readonly class CreateSchemaBuilder implements CreateSchemaFinalStep, Creat
     public function ifNotExists(): CreateSchemaOptionsStep
     {
         return new self($this->name, $this->authRole, true);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): CreateSchemaStmt

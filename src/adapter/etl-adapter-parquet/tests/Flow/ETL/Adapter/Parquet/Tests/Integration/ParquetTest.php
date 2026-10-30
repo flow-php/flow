@@ -492,7 +492,7 @@ final class ParquetTest extends FlowTestCase
         static::assertSame(
             [['id' => 1], ['id' => 2]],
             data_frame()
-                ->read(from_parquet(__DIR__ . '/Fixtures/EdgeCases/interval.parquet', ['id'], engine: $engine))
+                ->read(from_parquet(__DIR__ . '/../Fixtures/EdgeCases/interval.parquet', ['id'], engine: $engine))
                 ->fetch()
                 ->toArray(),
         );
@@ -505,7 +505,7 @@ final class ParquetTest extends FlowTestCase
             [4_000_000_000, 1],
             array_column(
                 data_frame()
-                    ->read(from_parquet(__DIR__ . '/Fixtures/EdgeCases/unsigned.parquet', ['u32'], engine: $engine))
+                    ->read(from_parquet(__DIR__ . '/../Fixtures/EdgeCases/unsigned.parquet', ['u32'], engine: $engine))
                     ->fetch()
                     ->toArray(),
                 'u32',
@@ -835,7 +835,7 @@ final class ParquetTest extends FlowTestCase
         $loaded = path('memory://var/xml-node-utf8.parquet');
 
         data_frame()
-            ->read(from_parquet(__DIR__ . '/Fixtures/xml-node-before-utf8.parquet'))
+            ->read(from_parquet(__DIR__ . '/../Fixtures/xml-node-before-utf8.parquet'))
             ->write(to_parquet($loaded, filesystem: $memory))
             ->run();
 

@@ -6,13 +6,13 @@ use std::cell::{RefCell, RefMut};
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::Zval;
 
-use crate::backend::adopt_batch;
+use crate::backend::{adopt_batch, Adoption, Definitions};
 use crate::batch_columns::HeldBatch;
 use crate::iterator::RustIterator;
 use crate::render::runtime;
 
 /// Each chunk is held as a PHP string, so it sets the read's peak memory: 32 KB matched the PHP path's own peak on wide
-/// and narrow files. `AdaptiveJsonOpenSource::CHUNK` is its PHP copy.
+/// and narrow files. `JsonFileBatches::CHUNK` is its PHP copy.
 pub const CHUNK: i64 = 1 << 15;
 
 /// A reader a stream is fed into, one consuming call at a time.
@@ -27,13 +27,13 @@ pub trait Fed {
 }
 
 /// The batches of `fed`, each adopted by `backend` into `Rows` of `schema`.
-pub fn batches(fed: impl Fed + 'static, schema: &Zval, backend: &Zval) -> RustIterator {
-    let (schema, backend) = (schema.shallow_clone(), backend.shallow_clone());
+pub fn batches(fed: impl Fed + 'static, schema: &Zval, backend: &Zval) -> PhpResult<RustIterator> {
+    let adoption = Adoption::new(Definitions::of(schema)?, schema, backend);
     let mut finished = false;
 
-    RustIterator::new(Box::new(move || loop {
+    Ok(RustIterator::new(Box::new(move || loop {
         if let Some(batch) = fed.next_batch()? {
-            return adopt_batch(&schema, &backend, batch).map(Some);
+            return adopt_batch(&adoption, batch).map(Some);
         }
 
         if finished {
@@ -44,7 +44,7 @@ pub fn batches(fed: impl Fed + 'static, schema: &Zval, backend: &Zval) -> RustIt
             fed.finish()?;
             finished = true;
         }
-    }))
+    })))
 }
 
 /// The reader, borrowed only while Rust code runs on it: a stream, a backend or an inferrer that calls back into the

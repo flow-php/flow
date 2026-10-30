@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Filter\Binding;
 
+use DateTimeImmutable;
+use Flow\Parquet\Data\PhysicalOrder;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Filter\All;
 use Flow\Parquet\Filter\Any;
+use Flow\Parquet\Filter\Binding\PreImage\BytesPreImage;
 use Flow\Parquet\Filter\Comparison;
 use Flow\Parquet\Filter\Filter;
 use Flow\Parquet\Filter\In;
@@ -19,9 +22,15 @@ use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use WeakMap;
 
+use function array_map;
+use function array_reverse;
 use function array_values;
 use function count;
 use function get_debug_type;
+use function sprintf;
+use function var_export;
+
+use const DATE_ATOM;
 
 final readonly class BoundFilter
 {
@@ -36,7 +45,7 @@ final readonly class BoundFilter
     private array $residualConjuncts;
 
     /**
-     * @param WeakMap<Comparison|In|IsNull|StartsWith, AbsentLeaf|RefusedLeaf|ResolvedLeaf> $leaves
+     * @param WeakMap<Comparison|In|IsNull|StartsWith, AbsentLeaf|RefusedLeaf|ExactLeaf|InexactLeaf> $leaves
      */
     private function __construct(
         private Filter $filter,
@@ -57,17 +66,97 @@ final readonly class BoundFilter
         $this->residualConjuncts = $residualConjuncts;
     }
 
+    public static function resolve(
+        Comparison|In|IsNull|StartsWith $leaf,
+        Schema $schema,
+        DataConverter $converters,
+    ): AbsentLeaf|RefusedLeaf|ExactLeaf|InexactLeaf {
+        $path = $leaf->column->path;
+
+        if (!$schema->has($path)) {
+            return new AbsentLeaf();
+        }
+
+        $column = $schema->get($path);
+
+        if (!$column instanceof FlatColumn) {
+            return new RefusedLeaf('Filter column "' . $path . '" is not a leaf column');
+        }
+
+        if ($column->maxRepetitionsLevel() > 0) {
+            return new RefusedLeaf(
+                'Filter column "' . $path . '" lies inside a list or a map, where a row holds no single value',
+            );
+        }
+
+        [$domain, $preImage] = LiteralDomain::forColumn($column, $converters->resolveConverter($column));
+        $literals = array_map($domain->normalise(...), match (true) {
+            $leaf instanceof Comparison => [$leaf->value],
+            $leaf instanceof In => $leaf->values,
+            default => [],
+        });
+
+        foreach ($literals as $literal) {
+            if (!$domain->holds($literal)) {
+                return new RefusedLeaf(sprintf(
+                    'Column "%s" (%s) cannot hold the %s literal %s',
+                    $path,
+                    $column->ddl()['type'],
+                    get_debug_type($literal),
+                    $literal instanceof DateTimeImmutable ? $literal->format(DATE_ATOM) : var_export($literal, true),
+                ));
+            }
+        }
+
+        if ($leaf instanceof StartsWith && !$domain->holdsPrefix()) {
+            return new RefusedLeaf(sprintf(
+                'Column "%s" (%s) holds no strings for a prefix',
+                $path,
+                $column->ddl()['type'],
+            ));
+        }
+
+        $fields = [];
+        $root = $column;
+
+        while (($parent = $root->parent()) !== null && !$parent->schemaRoot) {
+            $fields[] = $root->name();
+            $root = $parent;
+        }
+
+        $order = PhysicalOrder::forColumn($column);
+
+        $intervals = match (true) {
+            $leaf instanceof IsNull => new PhysicalIntervals($order, []),
+            $preImage === null => null,
+            $leaf instanceof Comparison => PhysicalIntervals::preImage(
+                $preImage,
+                $order,
+                $leaf->operator,
+                $literals[0],
+            ),
+            $leaf instanceof In => PhysicalIntervals::preImageOfSet($preImage, $order, $literals),
+            $leaf instanceof StartsWith => $preImage instanceof BytesPreImage
+                ? $preImage->startsWith($leaf->prefix)
+                : null,
+        };
+
+        return $intervals === null
+            ? new InexactLeaf($column, $domain, $root->name(), array_reverse($fields), $literals)
+            : new ExactLeaf($column, $domain, $root->name(), array_reverse($fields), $literals, $intervals);
+    }
+
     /**
      * Never throws for a reason that depends on the file: a leaf the file cannot answer is absent or refused.
      */
     public static function bind(Filter $filter, Schema $fileSchema, Options $options): self
     {
         $converters = DataConverter::initialize($options);
-        /** @var WeakMap<Comparison|In|IsNull|StartsWith, AbsentLeaf|RefusedLeaf|ResolvedLeaf> $leaves */
+        /** @var WeakMap<Comparison|In|IsNull|StartsWith, AbsentLeaf|RefusedLeaf|ExactLeaf|InexactLeaf> $leaves */
         $leaves = new WeakMap();
 
         foreach (self::leavesOf($filter) as $node) {
-            $leaves[$node] ??= LeafResolver::resolve($node, $fileSchema, $converters);
+            $leaves[$node] ??= self::resolve($node, $fileSchema, $converters);
         }
 
         return new self($filter, $leaves);
@@ -85,7 +174,7 @@ final readonly class BoundFilter
         foreach (self::leavesOf($this->filter) as $node) {
             $resolution = $this->leaf($node);
 
-            if ($resolution instanceof ResolvedLeaf && $resolution->intervals !== null) {
+            if ($resolution instanceof ExactLeaf) {
                 $columns[$resolution->column->flatPath()] = $resolution->column;
             }
         }
@@ -103,7 +192,7 @@ final readonly class BoundFilter
         return $this->residualConjuncts === [];
     }
 
-    public function leaf(Comparison|In|IsNull|StartsWith $node): AbsentLeaf|RefusedLeaf|ResolvedLeaf
+    public function leaf(Comparison|In|IsNull|StartsWith $node): AbsentLeaf|RefusedLeaf|ExactLeaf|InexactLeaf
     {
         return $this->leaves[$node] ?? throw new InvalidArgumentException('The leaf is not part of the bound filter');
     }
@@ -134,14 +223,11 @@ final readonly class BoundFilter
         return $this->residualConjuncts === [] && $this->rowConjuncts !== [] ? $this : $this->over($this->rowConjuncts);
     }
 
-    public function rowLeaf(Comparison|In|IsNull|StartsWith $node): AbsentLeaf|ResolvedLeaf
+    public function rowLeaf(Comparison|In|IsNull|StartsWith $node): AbsentLeaf|ExactLeaf
     {
         $resolution = $this->leaf($node);
 
-        if (
-            $resolution instanceof AbsentLeaf
-            || $resolution instanceof ResolvedLeaf && $resolution->intervals !== null
-        ) {
+        if ($resolution instanceof AbsentLeaf || $resolution instanceof ExactLeaf) {
             return $resolution;
         }
 
@@ -205,10 +291,7 @@ final readonly class BoundFilter
         foreach (self::leavesOf($conjunct) as $node) {
             $resolution = $this->leaf($node);
 
-            if (
-                !$resolution instanceof AbsentLeaf
-                && (!$resolution instanceof ResolvedLeaf || $resolution->intervals === null)
-            ) {
+            if (!$resolution instanceof AbsentLeaf && !$resolution instanceof ExactLeaf) {
                 return false;
             }
         }

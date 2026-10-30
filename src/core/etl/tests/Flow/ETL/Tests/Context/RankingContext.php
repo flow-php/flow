@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Context;
 
-use Flow\ETL\Rows;
+use Flow\ETL\Values\Rows;
 
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
 
 /**
- * Five salaries with a three-way tie, pre-sorted. A PartitionRanking function is always handed an
+ * Five salaries with a three-way tie, pre-sorted. A ranking function's values() is always handed an
  * already-sorted partition - WindowProcessor sorts before calling it - so the fixtures carry the order
  * rather than relying on the function to impose one.
  *

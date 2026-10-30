@@ -8,7 +8,7 @@ use Flow\PostgreSql\ParsedQuery;
 use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Protobuf\AST\DeclareCursorStmt;
 use Flow\PostgreSql\Protobuf\AST\Node;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use InvalidArgumentException;
@@ -17,8 +17,6 @@ use function count;
 
 final class DeclareCursorBuilder implements DeclareCursorOptionsStep
 {
-    use AstToSql;
-
     private int $options = CursorOption::NO_SCROLL;
 
     private function __construct(
@@ -87,6 +85,11 @@ final class DeclareCursorBuilder implements DeclareCursorOptionsStep
         $this->options &= ~CursorOption::NO_SCROLL;
 
         return $this;
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): DeclareCursorStmt

@@ -13,7 +13,9 @@ use Flow\Parquet\Engine\PhpParquetFileReader;
 use Flow\Parquet\Engine\PhpParquetFileWriter;
 use Flow\Parquet\Engine\RustParquetFileReader;
 use Flow\Parquet\Engine\RustParquetFileWriter;
+use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Exception\RuntimeException;
+use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Schema;
@@ -121,5 +123,22 @@ final class AdaptiveParquetEngineTest extends TestCase
             Compressions::UNCOMPRESSED,
             new Options(),
         ));
+    }
+
+    public function test_configuration_round_trips_the_byte_order_and_the_options(): void
+    {
+        $engine = new AdaptiveParquetEngine(ByteOrder::BIG_ENDIAN, Options::default()->set(Option::PAGE_SIZE_BYTES, 7));
+
+        static::assertSame(['byte_order' => 'N', 'options' => $engine->normalize()['options']], $engine->normalize());
+        static::assertSame(7, $engine->normalize()['options']['PAGE_SIZE_BYTES']);
+        static::assertEquals($engine, AdaptiveParquetEngine::fromArray($engine->normalize()));
+    }
+
+    public function test_a_configuration_without_a_byte_order_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Parquet engine configuration must hold a "byte_order" value');
+
+        AdaptiveParquetEngine::fromArray(['options' => []]);
     }
 }

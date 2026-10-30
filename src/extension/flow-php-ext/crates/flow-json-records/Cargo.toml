@@ -1,0 +1,13 @@
+[package]
+name = "flow-json-records"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+
+[dependencies]
+flow-batch-frame = { path = "../flow-batch-frame" }
+memchr.workspace = true
+serde.workspace = true
+serde_json.workspace = true

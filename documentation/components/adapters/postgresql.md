@@ -384,7 +384,7 @@ Update rows matching primary key values:
 
 ```php
 use function Flow\ETL\Adapter\PostgreSql\{pgsql_update_options, to_pgsql_table};
-use Flow\ETL\Adapter\PostgreSql\Operation;
+use Flow\ETL\Adapter\PostgreSql\IO\Loader\Operation;
 
 df()
     ->read(from_array([
@@ -405,7 +405,7 @@ Delete rows matching primary key values:
 
 ```php
 use function Flow\ETL\Adapter\PostgreSql\{pgsql_delete_options, to_pgsql_table};
-use Flow\ETL\Adapter\PostgreSql\Operation;
+use Flow\ETL\Adapter\PostgreSql\IO\Loader\Operation;
 
 df()
     ->read(from_array([
@@ -422,8 +422,8 @@ df()
 
 ### Transactional Loading
 
-`to_pgsql_transaction()` writes one or more sinks inside transactions: each batch of rows is written in its own
-transaction, and if any sink throws, the open transaction is rolled back:
+`to_pgsql_transaction()` writes one or more children inside transactions: each batch of rows is written in its own
+transaction, and if any child throws, the open transaction is rolled back:
 
 ```php
 use function Flow\ETL\Adapter\PostgreSql\{to_pgsql_table, to_pgsql_transaction};
@@ -438,23 +438,23 @@ df()
     ->run();
 ```
 
-Sinks with blocking operations (`to_transformation()` / `to_branch(...)->withTransformation(...)` with `sortBy()`,
+Branches with blocking operations (`to_transformation()`, also inside `to_branch()`, with `sortBy()`,
 `aggregate()`, `groupBy()->aggregate()`, `pivot()`, window functions, `collect()`, `join()` - see
 [transformations](../core/transformations.md)) buffer the stream and deliver it when the run ends;
 `to_pgsql_transaction()` opens one final transaction around that delivery - the whole drained stream commits
-atomically, a failure during it rolls back and surfaces from `run()`. A plain loader child is a bare sink root; a
-`to_transformation(...)` child delivers inside the same transaction. Every sink's loader must use the same `Client`
+atomically, a failure during it rolls back and surfaces from `run()`. A plain loader child is written directly; a
+`to_transformation(...)` child delivers inside the same transaction. Every child's loader must use the same `Client`
 instance as the transaction - a loader holding its own `Client` escapes it.
 
-Inside the transaction every sink runs throw-only: a failure rolls the batch back first, and only then the frame's
+Inside the transaction every child runs throw-only: a failure rolls the batch back first, and only then the frame's
 `onError()` handler decides whether the run continues.
 
 To set the isolation level, build the transaction yourself; it applies to every transaction opened, including the
 final one:
 
 ```php
-use Flow\ETL\Adapter\PostgreSql\PostgreSqlTransaction;
-use Flow\ETL\Sink\Transactional;
+use Flow\ETL\Adapter\PostgreSql\IO\Loader\PostgreSqlTransaction;
+use Flow\ETL\API\Transactional;
 use Flow\PostgreSql\QueryBuilder\Transaction\IsolationLevel;
 
 use function Flow\ETL\Adapter\PostgreSql\to_pgsql_table;
@@ -467,13 +467,13 @@ new Transactional(
 
 ## Loader DSL Functions Reference
 
-| Function                                   | Description                                      |
-|--------------------------------------------|--------------------------------------------------|
-| `to_pgsql_table($client, $table)`          | Create a PostgreSQL loader for a table           |
-| `to_pgsql_transaction($client, ...$sinks)` | Write sinks, every delivery inside a transaction |
-| `pgsql_insert_options(...)`                | Configure insert behavior (conflicts, upsert)    |
-| `pgsql_update_options($primaryKeys)`       | Configure update behavior (primary key columns)  |
-| `pgsql_delete_options($primaryKeys)`       | Configure delete behavior (primary key columns)  |
+| Function                                    | Description                                         |
+|---------------------------------------------|-----------------------------------------------------|
+| `to_pgsql_table($client, $table)`           | Create a PostgreSQL loader for a table              |
+| `to_pgsql_transaction($client, ...$writes)` | Write children, every delivery inside a transaction |
+| `pgsql_insert_options(...)`                 | Configure insert behavior (conflicts, upsert)       |
+| `pgsql_update_options($primaryKeys)`        | Configure update behavior (primary key columns)     |
+| `pgsql_delete_options($primaryKeys)`        | Configure delete behavior (primary key columns)     |
 
 ## Schema Conversion
 
@@ -493,7 +493,7 @@ and explicit type overrides - are driven by `PostgreSqlMetadata` entries attache
 table:
 
 ```php
-use Flow\ETL\Adapter\PostgreSql\PostgreSqlMetadata;
+use Flow\ETL\Adapter\PostgreSql\Values\Schema\PostgreSqlMetadata;
 
 use function Flow\ETL\Adapter\PostgreSql\to_pgsql_schema_table;
 use function Flow\ETL\DSL\{bool_schema, int_schema, json_schema, schema, str_schema};
@@ -526,7 +526,7 @@ $table = to_pgsql_schema_table($schema, 'users', 'analytics');
 schema DSL helpers. Combine multiple entries with `merge()`:
 
 ```php
-use Flow\ETL\Adapter\PostgreSql\PostgreSqlMetadata;
+use Flow\ETL\Adapter\PostgreSql\Values\Schema\PostgreSqlMetadata;
 use Flow\PostgreSql\Schema\IdentityGeneration;
 
 use function Flow\ETL\DSL\{float_schema, int_schema, schema, str_schema};
@@ -562,7 +562,7 @@ order independently of schema field order - useful, for example, for a keyset-pa
 column must serve `ORDER BY`:
 
 ```php
-use Flow\ETL\Adapter\PostgreSql\PostgreSqlMetadata;
+use Flow\ETL\Adapter\PostgreSql\Values\Schema\PostgreSqlMetadata;
 
 use function Flow\ETL\Adapter\PostgreSql\to_pgsql_schema_table;
 use function Flow\ETL\DSL\{datetime_schema, int_schema, schema};
@@ -588,7 +588,7 @@ Because each index is tracked under its own metadata key, a single column can be
 `merge()` to attach more than one:
 
 ```php
-use Flow\ETL\Adapter\PostgreSql\PostgreSqlMetadata;
+use Flow\ETL\Adapter\PostgreSql\Values\Schema\PostgreSqlMetadata;
 
 use function Flow\ETL\DSL\{datetime_schema, int_schema, schema};
 
@@ -629,7 +629,7 @@ Both helpers accept an optional `TypesMap`. Its second constructor argument over
 column type mapping (the first argument keeps overriding the value-binding types used by the loader):
 
 ```php
-use Flow\ETL\Adapter\PostgreSql\TypesMap;
+use Flow\ETL\Adapter\PostgreSql\Values\Schema\TypesMap;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\Types\Type\Native\StringType;
 

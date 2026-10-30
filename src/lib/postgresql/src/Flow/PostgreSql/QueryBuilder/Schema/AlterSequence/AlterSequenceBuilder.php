@@ -13,15 +13,13 @@ use Flow\PostgreSql\Protobuf\AST\PBList;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\TypeName;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 use function strtolower;
 
 final readonly class AlterSequenceBuilder implements AlterSequenceNameStep, AlterSequenceOptionsStep
 {
-    use AstToSql;
-
     /**
      * @param array<array{name: string, arg: null|Node}> $options
      */
@@ -210,6 +208,11 @@ final readonly class AlterSequenceBuilder implements AlterSequenceNameStep, Alte
     public function startWith(int $start): AlterSequenceOptionsStep
     {
         return $this->withIntegerOption('start', $start);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): AlterSeqStmt

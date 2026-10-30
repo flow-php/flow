@@ -4,9 +4,13 @@
 //! zeroed (0, 0.0, bit 0, 16 zero bytes, offset not advanced, structure children null under a null parent); offsets
 //! from 0 over exactly the rows' bytes and children, whatever slice or selection the array is.
 
+use std::ptr::NonNull;
+use std::sync::Arc;
+
 use arrow_array::cast::AsArray;
 use arrow_array::types::{Date32Type, DurationMicrosecondType, Float64Type, Int64Type, TimestampMicrosecondType};
 use arrow_array::{make_array, Array, ArrowPrimitiveType};
+use arrow_buffer::alloc::Allocation;
 use arrow_buffer::{Buffer, ToByteSlice};
 use arrow_data::ArrayData;
 use arrow_schema::DataType;
@@ -44,7 +48,22 @@ pub fn encode(data: &ArrayData, kind: &Kind) -> Result<Vec<Vec<u8>>, Error> {
 /// `ColumnDecoder::decode()` + `PhpBackend::decode()`: the same refusals in the same order. The result's data type is
 /// `data_type(kind)`. A top-level null under NOT NULL is not refused here (`Rows::fromColumns` does).
 pub fn decode(kind: &Kind, buffers: &[&[u8]], len: u32, null_count: u32) -> Result<ArrayData, Error> {
-    let mut cursor = Cursor::new(buffers);
+    decode_sources(
+        kind,
+        buffers.iter().map(|buffer| Source::Copy(buffer)).collect(),
+        len,
+        null_count,
+    )
+}
+
+/// `decode` over buffers that may be shared with their frame body (`frame::decode`).
+pub(crate) fn decode_sources(
+    kind: &Kind,
+    sources: Vec<Source<'_, '_>>,
+    len: u32,
+    null_count: u32,
+) -> Result<ArrayData, Error> {
+    let mut cursor = Cursor::new(sources);
     let data = decode_node(kind, 0, &mut cursor, len, null_count)?;
 
     if cursor.remaining() != 0 {
@@ -289,25 +308,59 @@ fn rebased(offsets: &[i32]) -> Vec<u8> {
         .collect()
 }
 
-struct Cursor<'b, 'a> {
-    buffers: &'b [&'a [u8]],
+/// Where one buffer's bytes come from, and so how its Arrow `Buffer` is built.
+pub(crate) enum Source<'o, 'a> {
+    /// A caller's slice: copied, as `decode` always did.
+    Copy(&'a [u8]),
+    /// A codec's output, owned until the column is built: copied once into an aligned buffer (a `Vec<u8>` is 1-byte
+    /// aligned, arrow refuses it under a fixed-width type).
+    Owned(Vec<u8>),
+    /// A raw slice of a frame body kept alive by `owner`: referenced in place when 8-byte aligned, copied otherwise.
+    Shared(&'a [u8], &'o Arc<dyn Allocation>),
+}
+
+impl Source<'_, '_> {
+    pub(crate) fn bytes(&self) -> &[u8] {
+        match self {
+            Source::Copy(bytes) | Source::Shared(bytes, _) => bytes,
+            Source::Owned(bytes) => bytes,
+        }
+    }
+
+    fn buffer(self) -> Buffer {
+        match self {
+            Source::Copy(bytes) => Buffer::from_slice_ref(bytes),
+            Source::Owned(bytes) => Buffer::from_slice_ref(&bytes),
+            Source::Shared(bytes, owner) => match NonNull::new(bytes.as_ptr().cast_mut()) {
+                Some(ptr) if !bytes.is_empty() && ptr.as_ptr().align_offset(8) == 0 => {
+                    // the owner keeps the body alive for as long as any buffer into it lives
+                    unsafe { Buffer::from_custom_allocation(ptr, bytes.len(), Arc::clone(owner)) }
+                }
+                _ => Buffer::from_slice_ref(bytes),
+            },
+        }
+    }
+}
+
+struct Cursor<'o, 'a> {
+    sources: Vec<Source<'o, 'a>>,
     position: usize,
 }
 
-impl<'b, 'a> Cursor<'b, 'a> {
-    fn new(buffers: &'b [&'a [u8]]) -> Self {
-        Self { buffers, position: 0 }
+impl<'o, 'a> Cursor<'o, 'a> {
+    fn new(sources: Vec<Source<'o, 'a>>) -> Self {
+        Self { sources, position: 0 }
     }
 
-    fn next(&mut self) -> Result<&'a [u8], Error> {
-        let buffer = self.buffers.get(self.position).ok_or(Error::BuffersExhausted)?;
+    fn next(&mut self) -> Result<Source<'o, 'a>, Error> {
+        let source = self.sources.get_mut(self.position).ok_or(Error::BuffersExhausted)?;
         self.position += 1;
 
-        Ok(buffer)
+        Ok(std::mem::replace(source, Source::Copy(&[])))
     }
 
     fn remaining(&self) -> usize {
-        self.buffers.len() - self.position
+        self.sources.len() - self.position
     }
 }
 
@@ -325,9 +378,15 @@ fn decode_node(
             subtree.push(cursor.next()?);
         }
 
-        let nodes = nodes_at(kind, node, len, null_count, &subtree)?;
+        let nodes = nodes_at(
+            kind,
+            node,
+            len,
+            null_count,
+            &subtree.iter().map(Source::bytes).collect::<Vec<_>>(),
+        )?;
 
-        return decode_nested(kind, node, &mut Cursor::new(&subtree), len, null_count, &nodes);
+        return decode_nested(kind, node, &mut Cursor::new(subtree), len, null_count, &nodes);
     }
 
     if let Kind::Null = kind {
@@ -356,37 +415,38 @@ fn decode_node(
             let buffer = cursor.next()?;
             let expected = (len as u64).div_ceil(8);
 
-            if (buffer.len() as u64) < expected {
+            if (buffer.bytes().len() as u64) < expected {
                 return Err(Error::ValuesLength {
                     values: Values::Boolean,
-                    bytes: buffer.len() as u64,
+                    bytes: buffer.bytes().len() as u64,
                     expected,
                     rows: len as u64,
                 });
             }
 
-            builder.add_buffer(Buffer::from_slice_ref(buffer))
+            builder.add_buffer(buffer.buffer())
         }
         Kind::Bytes => {
             let offsets = cursor.next()?;
-            let last = check_offsets(offsets, len, Of::Utf8)?;
+            let last = check_offsets(offsets.bytes(), len, Of::Utf8)?;
             let data = cursor.next()?;
 
-            if last as u64 != data.len() as u64 {
+            if last as u64 != data.bytes().len() as u64 {
                 return Err(Error::Utf8DataLength {
-                    bytes: data.len() as u64,
+                    bytes: data.bytes().len() as u64,
                     last_offset: last as u64,
                 });
             }
 
             let widened = offsets
-                .chunks_exact(4)
-                .map(|offset| i64::from(u32::from_le_bytes(offset.try_into().expect("4-byte chunk"))))
+                .bytes()
+                .as_chunks::<4>()
+                .0
+                .iter()
+                .map(|offset| i64::from(u32::from_le_bytes(*offset)))
                 .collect::<Vec<i64>>();
 
-            builder
-                .add_buffer(Buffer::from_vec(widened))
-                .add_buffer(Buffer::from_slice_ref(data))
+            builder.add_buffer(Buffer::from_vec(widened)).add_buffer(data.buffer())
         }
         Kind::Null | Kind::List(_) | Kind::Map(_, _) | Kind::Struct(_) => {
             unreachable!("returned above")
@@ -412,7 +472,7 @@ fn decode_nested(
     let builder = match kind {
         Kind::List(element) => {
             let offsets = own.next()?;
-            let last = check_offsets(offsets, len, Of::List)?;
+            let last = check_offsets(offsets.bytes(), len, Of::List)?;
             let (length, nulls) = nodes[1];
 
             if nulls > 0 && !element.optional && element.kind != Kind::Null {
@@ -426,13 +486,11 @@ fn decode_nested(
             let child = decode_node(&element.kind, node + 1, own, length, nulls)?;
             fits_i32(last)?;
 
-            builder
-                .add_buffer(Buffer::from_slice_ref(offsets))
-                .add_child_data(child)
+            builder.add_buffer(offsets.buffer()).add_child_data(child)
         }
         Kind::Map(key, value) => {
             let offsets = own.next()?;
-            let last = check_offsets(offsets, len, Of::Map)?;
+            let last = check_offsets(offsets.bytes(), len, Of::Map)?;
             own.next()?;
             let key_node = node + 2;
             let value_node = key_node + node_count(&key.kind);
@@ -468,9 +526,7 @@ fn decode_nested(
                 .build()
                 .map_err(Error::Arrow)?;
 
-            builder
-                .add_buffer(Buffer::from_slice_ref(offsets))
-                .add_child_data(entries)
+            builder.add_buffer(offsets.buffer()).add_child_data(entries)
         }
         Kind::Struct(fields) => {
             let mut child_node = node + 1;
@@ -491,8 +547,8 @@ fn decode_nested(
 }
 
 /// `Some` bitmap only when it holds a null: the canonical form omits it otherwise.
-fn validity(bitmap: &[u8], len: u32, declared: u32) -> Result<Option<Buffer>, Error> {
-    let derived = null_count_of(bitmap, len)?;
+fn validity(bitmap: Source<'_, '_>, len: u32, declared: u32) -> Result<Option<Buffer>, Error> {
+    let derived = null_count_of(bitmap.bytes(), len)?;
 
     if declared != derived {
         return Err(Error::NullCountMismatch {
@@ -502,22 +558,22 @@ fn validity(bitmap: &[u8], len: u32, declared: u32) -> Result<Option<Buffer>, Er
         });
     }
 
-    Ok((derived > 0).then(|| Buffer::from_slice_ref(bitmap)))
+    Ok((derived > 0).then(|| bitmap.buffer()))
 }
 
-fn fixed_values(buffer: &[u8], width: u64, len: u32, values: Values) -> Result<Buffer, Error> {
+fn fixed_values(buffer: Source<'_, '_>, width: u64, len: u32, values: Values) -> Result<Buffer, Error> {
     let expected = width * len as u64;
 
-    if buffer.len() as u64 != expected {
+    if buffer.bytes().len() as u64 != expected {
         return Err(Error::ValuesLength {
             values,
-            bytes: buffer.len() as u64,
+            bytes: buffer.bytes().len() as u64,
             expected,
             rows: len as u64,
         });
     }
 
-    Ok(Buffer::from_slice_ref(buffer))
+    Ok(buffer.buffer())
 }
 
 /// `Offsets::unpack()`: exactly (len + 1) * 4 bytes, from 0, monotonic. Returns the last offset.

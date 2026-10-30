@@ -1,0 +1,172 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Tests\Unit\Planning\Explain;
+
+use Flow\ETL\Planning\Explain\BoxLayout;
+use Flow\ETL\Planning\Explain\LogicalOutline;
+use Flow\ETL\Planning\Logical\Node\Collect;
+use Flow\ETL\Planning\Logical\Node\Filter;
+use Flow\ETL\Planning\Logical\Node\Outputs;
+use Flow\ETL\Planning\Logical\Node\Rename;
+use Flow\ETL\Planning\Logical\Node\Result;
+use Flow\ETL\Planning\Logical\Node\Write;
+use Flow\ETL\Storage\Memory\ArrayMemory;
+use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\NodeMother;
+
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\to_memory;
+
+final class BoxLayoutTest extends FlowTestCase
+{
+    public function test_a_single_node_is_one_box(): void
+    {
+        static::assertSame(<<<'PLAN'
+            ┌───────────────────────────┐
+            │          #1 Read          │
+            │   ────────────────────    │
+            │ Extractor: ArrayExtractor │
+            └───────────────────────────┘
+            PLAN, (new BoxLayout())->render((new LogicalOutline())->of(NodeMother::read())));
+    }
+
+    public function test_a_chain_stacks_boxes_joined_at_their_centers(): void
+    {
+        static::assertSame(<<<'PLAN'
+            ┌───────────────────────────┐
+            │         #4 Result         │
+            │   ────────────────────    │
+            │ Rows this plan hands out: │
+            │ to the trigger, or to the │
+            │      node reading it      │
+            └─────────────┬─────────────┘
+            ┌─────────────┴─────────────┐
+            │         #3 Limit          │
+            │   ────────────────────    │
+            │         Limit: 5          │
+            └─────────────┬─────────────┘
+            ┌─────────────┴─────────────┐
+            │        #2 Collect         │
+            └─────────────┬─────────────┘
+            ┌─────────────┴─────────────┐
+            │          #1 Read          │
+            │   ────────────────────    │
+            │ Extractor: ArrayExtractor │
+            │         Limit: 5          │
+            └───────────────────────────┘
+            PLAN, (new BoxLayout())->render((new LogicalOutline())->of(new Result(NodeMother::limit(
+            new Collect(NodeMother::read()->withLimit(5)),
+            5,
+        )))));
+    }
+
+    public function test_a_later_child_hangs_off_the_right_edge_and_a_shared_node_is_a_leaf(): void
+    {
+        $filter = new Filter(NodeMother::read(), ref('id')->isNotNull());
+
+        static::assertSame(<<<'PLAN'
+            ┌───────────────────────────┐
+            │          Outputs          ├──────────────┐
+            └─────────────┬─────────────┘              │
+            ┌─────────────┴─────────────┐┌─────────────┴─────────────┐
+            │         #3 Result         ││         #4 Write          │
+            │   ────────────────────    ││   ────────────────────    │
+            │ Rows this plan hands out: ││   Loader: MemoryLoader    │
+            │ to the trigger, or to the ││                           │
+            │      node reading it      ││                           │
+            └─────────────┬─────────────┘└─────────────┬─────────────┘
+            ┌─────────────┴─────────────┐┌─────────────┴─────────────┐
+            │         #2 Filter         ││         #2 Filter         │
+            │   ────────────────────    ││         (shared)          │
+            │ Condition: id IS NOT NULL ││                           │
+            └─────────────┬─────────────┘└───────────────────────────┘
+            ┌─────────────┴─────────────┐
+            │          #1 Read          │
+            │   ────────────────────    │
+            │ Extractor: ArrayExtractor │
+            └───────────────────────────┘
+            PLAN, (new BoxLayout())->render((new LogicalOutline())->of(
+            new Outputs(new Result($filter), new Write($filter, to_memory(new ArrayMemory()))),
+        )));
+    }
+
+    public function test_a_middle_child_branches_off_the_same_line(): void
+    {
+        $read = NodeMother::read();
+
+        static::assertSame(<<<'PLAN'
+            ┌───────────────────────────┐
+            │          Outputs          ├──────────────┬────────────────────────────┐
+            └─────────────┬─────────────┘              │                            │
+            ┌─────────────┴─────────────┐┌─────────────┴─────────────┐┌─────────────┴─────────────┐
+            │         #2 Result         ││         #3 Write          ││         #5 Write          │
+            │   ────────────────────    ││   ────────────────────    ││   ────────────────────    │
+            │ Rows this plan hands out: ││   Loader: MemoryLoader    ││   Loader: MemoryLoader    │
+            │ to the trigger, or to the ││                           ││                           │
+            │      node reading it      ││                           ││                           │
+            └─────────────┬─────────────┘└─────────────┬─────────────┘└─────────────┬─────────────┘
+            ┌─────────────┴─────────────┐┌─────────────┴─────────────┐┌─────────────┴─────────────┐
+            │          #1 Read          ││          #1 Read          ││         #4 Select         │
+            │   ────────────────────    ││         (shared)          ││   ────────────────────    │
+            │ Extractor: ArrayExtractor ││                           ││      Keeps only: id       │
+            └───────────────────────────┘└───────────────────────────┘└─────────────┬─────────────┘
+                                                                      ┌─────────────┴─────────────┐
+                                                                      │          #1 Read          │
+                                                                      │         (shared)          │
+                                                                      └───────────────────────────┘
+            PLAN, (new BoxLayout())->render((new LogicalOutline())->of(
+            new Outputs(
+                new Result($read),
+                new Write($read, to_memory(new ArrayMemory())),
+                new Write(NodeMother::select($read), to_memory(new ArrayMemory())),
+            ),
+        )));
+    }
+
+    public function test_long_text_wraps_and_a_word_longer_than_the_box_is_split(): void
+    {
+        static::assertSame(<<<'PLAN'
+            ┌───────────────────────────┐
+            │         #2 Rename         │
+            │   ────────────────────    │
+            │       Rename: id →        │
+            │ identifier_of_the_custome │
+            │          r_order          │
+            │     Changes columns:      │
+            │ identifier_of_the_custome │
+            │        r_order, id        │
+            └─────────────┬─────────────┘
+            ┌─────────────┴─────────────┐
+            │          #1 Read          │
+            │   ────────────────────    │
+            │ Extractor: ArrayExtractor │
+            └───────────────────────────┘
+            PLAN, (new BoxLayout())->render((new LogicalOutline())->of(
+            new Rename(NodeMother::read(), 'id', 'identifier_of_the_customer_order'),
+        )));
+    }
+
+    public function test_span_counts_the_leaves_under_an_entry(): void
+    {
+        $read = NodeMother::read();
+
+        static::assertSame(
+            3,
+            (new BoxLayout())->span((new LogicalOutline())->of(
+                new Outputs(
+                    new Result($read),
+                    new Write($read, to_memory(new ArrayMemory())),
+                    new Write($read, to_memory(new ArrayMemory())),
+                ),
+            )),
+        );
+        static::assertSame(1, (new BoxLayout())->span((new LogicalOutline())->of($read)));
+    }
+
+    public function test_wrap_keeps_short_text_on_one_line(): void
+    {
+        static::assertSame(['Limit: 5'], (new BoxLayout())->wrap('Limit: 5'));
+    }
+}

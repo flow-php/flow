@@ -21,6 +21,7 @@ const OPTIONS: DataType = DataType::object("Flow\\Parquet\\Options");
 const FOOTER: DataType = DataType::object("Flow\\Parquet\\ParquetFile\\Footer");
 const PARQUET_FILE_READER: DataType = DataType::object("Flow\\Parquet\\ParquetFileReader");
 const PARQUET_FILE_WRITER: DataType = DataType::object("Flow\\Parquet\\ParquetFileWriter");
+const PARQUET_ENGINE: DataType = DataType::object("Flow\\Parquet\\ParquetEngine");
 const ITERATOR: DataType = DataType::object("Iterator");
 
 // ClassEntry::try_find reads EG(class_table), which MINIT has not set, so each CE is kept from its registration
@@ -80,17 +81,33 @@ fn method(name: &str, args: Vec<Arg<'static>>, returns: DataType) -> FunctionBui
         .returns(returns, false, false)
 }
 
+fn nullable_method(name: &str, args: Vec<Arg<'static>>, returns: DataType) -> FunctionBuilder<'static> {
+    method(name, args, returns).returns(returns, false, true)
+}
+
+/// `$static_methods` are registered `public static abstract` first, the rest `public abstract` after them - the
+/// package files declare them in that order, and 051 reflects both sides.
 fn interface(
     name: &str,
     store: fn(&'static mut ClassEntry, ArgInfoTables),
     methods: Vec<FunctionBuilder<'static>>,
+    static_methods: Vec<FunctionBuilder<'static>>,
 ) -> Result<()> {
+    let class = static_methods.into_iter().fold(
+        ClassBuilder::new(name).flags(ClassFlags::Interface).registration(store),
+        |class, method| {
+            class.method(
+                method,
+                MethodFlags::Public | MethodFlags::Abstract | MethodFlags::Static,
+            )
+        },
+    );
+
     methods
         .into_iter()
-        .fold(
-            ClassBuilder::new(name).flags(ClassFlags::Interface).registration(store),
-            |class, method| class.method(method, MethodFlags::Public | MethodFlags::Abstract),
-        )
+        .fold(class, |class, method| {
+            class.method(method, MethodFlags::Public | MethodFlags::Abstract)
+        })
         .register()
 }
 
@@ -109,6 +126,7 @@ pub fn register() -> Result<()> {
             method("schema", vec![], SCHEMA),
             method("totalByteSize", vec![], DataType::Long),
         ],
+        vec![],
     )?;
     interface(
         "Flow\\Parquet\\ParquetFileReader",
@@ -126,6 +144,7 @@ pub fn register() -> Result<()> {
                 ITERATOR,
             ),
         ],
+        vec![],
     )?;
     interface(
         "Flow\\Parquet\\ParquetFileWriter",
@@ -140,11 +159,13 @@ pub fn register() -> Result<()> {
             ),
             method("writeRow", vec![Arg::new("row", DataType::Array)], DataType::Void),
         ],
+        vec![],
     )?;
     interface(
         "Flow\\Parquet\\ParquetEngine",
         store_parquet_engine,
         vec![
+            nullable_method("normalize", vec![], DataType::Array),
             method(
                 "openForRead",
                 vec![Arg::new("stream", SOURCE_STREAM)],
@@ -172,5 +193,10 @@ pub fn register() -> Result<()> {
                 DataType::Void,
             ),
         ],
+        vec![method(
+            "fromArray",
+            vec![Arg::new("configuration", DataType::Array)],
+            PARQUET_ENGINE,
+        )],
     )
 }

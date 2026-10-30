@@ -7,8 +7,8 @@ namespace Flow\CLI\Command;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
-use Flow\CLI\Command\Traits\ConfigOptions;
-use Flow\CLI\Command\Traits\DBOptions;
+use Flow\CLI\Options\ConfigOption;
+use Flow\CLI\Options\DbConnectionOptions;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -27,14 +27,11 @@ use function in_array;
 #[AsCommand(name: 'db:table:list', description: 'Print list of datasets from a database.')]
 final class DatabaseTableListCommand extends Command
 {
-    use ConfigOptions;
-    use DBOptions;
-
     private ?Connection $connection = null;
 
     public function configure(): void
     {
-        $this->setHelp(self::DB_CONNECTION_HELP)->addOption(
+        $this->setHelp(DbConnectionOptions::HELP)->addOption(
             'db-namespace',
             null,
             InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY,
@@ -42,8 +39,8 @@ final class DatabaseTableListCommand extends Command
             [],
         );
 
-        $this->addConfigOptions($this);
-        $this->addDbOptions($this);
+        (new ConfigOption('config'))->configure($this);
+        (new DbConnectionOptions())->configure($this);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int

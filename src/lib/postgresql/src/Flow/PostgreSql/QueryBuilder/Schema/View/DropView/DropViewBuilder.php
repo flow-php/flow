@@ -10,15 +10,13 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\PBList;
 use Flow\PostgreSql\Protobuf\AST\PBString;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 use function array_values;
 
 final readonly class DropViewBuilder implements DropViewFinalStep
 {
-    use AstToSql;
-
     /**
      * @param list<string> $views
      */
@@ -46,6 +44,11 @@ final readonly class DropViewBuilder implements DropViewFinalStep
     public function restrict(): DropViewFinalStep
     {
         return new self($this->views, $this->ifExists, DropBehavior::DROP_RESTRICT);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): DropStmt

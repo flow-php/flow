@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Mother;
 
-use Flow\ETL\Schema;
+use Flow\ETL\Values\Schema;
 
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\date_schema;

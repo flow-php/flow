@@ -8,11 +8,10 @@ use Flow\Azure\SDK\BlobService;
 use Flow\Azure\SDK\BlobService\DeleteBlob\DeleteSnapshots;
 use Flow\Azure\SDK\BlobService\DeleteBlob\DeleteType;
 use Flow\Azure\SDK\EndpointOptions;
-use Flow\Azure\SDK\Endpoints\UserAgentHeader;
 
 final class CopyBlobOptions implements EndpointOptions
 {
-    use UserAgentHeader;
+    private string $userAgentHeader = 'flow-php/azure-sdk';
 
     private ?DeleteSnapshots $deleteSnapshots = null;
 
@@ -136,5 +135,15 @@ final class CopyBlobOptions implements EndpointOptions
         $this->versionId = $versionId;
 
         return $this;
+    }
+
+    public function userAgentHeader(): string
+    {
+        return $this->userAgentHeader;
+    }
+
+    public function withUserAgent(string $userAgentHeader): void
+    {
+        $this->userAgentHeader = $userAgentHeader;
     }
 }

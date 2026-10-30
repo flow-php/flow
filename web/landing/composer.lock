@@ -402,10 +402,10 @@
             "dist": {
                 "type": "path",
                 "url": "../../src/core/etl",
-                "reference": "eb62891efe2225170e1871372df4d05a6e1828ff"
+                "reference": "55c5a21c8c0a8f87cdbb0937dd6a5d6baedd11fe"
             },
             "require": {
-                "brick/math": "^0.12 || ^0.13 || ^0.14 || ^0.15 || ^0.16 || ^0.17 || ^0.18",
+                "brick/math": "^0.12 || ^0.13 || ^0.14 || ^0.15 || ^0.16 || ^0.17 || ^0.18 || ^1.0",
                 "composer-runtime-api": "^2.2",
                 "ext-json": "*",
                 "flow-php/array-dot": "self.version",
@@ -416,6 +416,9 @@
                 "psr/clock": "^1.0",
                 "psr/simple-cache": "^1.0 || ^2.0 || ^3.0",
                 "symfony/string": "^6.4 || ^7.4 || ^8.0"
+            },
+            "conflict": {
+                "ext-flow_php": "<0.45"
             },
             "require-dev": {
                 "ramsey/uuid": "^4.5",
@@ -465,9 +468,10 @@
             "dist": {
                 "type": "path",
                 "url": "../../src/adapter/etl-adapter-http",
-                "reference": "d1a91dc67c6fe67996c3bed8223ef5ba35347f5e"
+                "reference": "e3e38ca3e04d36423ef023ac7c41ce0368648511"
             },
             "require": {
+                "ext-dom": "*",
                 "ext-json": "*",
                 "flow-php/array-dot": "self.version",
                 "flow-php/etl": "self.version",
@@ -517,7 +521,7 @@
             "dist": {
                 "type": "path",
                 "url": "../../src/adapter/etl-adapter-json",
-                "reference": "50ba6f9b9eafe275b9cc423fb54e67b01d4bfda0"
+                "reference": "8d84ef246c9364a27081e0953a148471362c2645"
             },
             "require": {
                 "ext-json": "*",
@@ -527,6 +531,9 @@
                 "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
                 "psr/http-client": "^1.0",
                 "psr/http-factory": "^1.0"
+            },
+            "conflict": {
+                "ext-flow_php": "<0.45"
             },
             "type": "library",
             "autoload": {
@@ -757,7 +764,7 @@
             "dist": {
                 "type": "path",
                 "url": "../../src/bridge/symfony/telemetry-bundle",
-                "reference": "44e09a5d4bfddc58de889536d6c9eb72c1623363"
+                "reference": "2fd5806ec657dc434856376ce1c118622d1cd744"
             },
             "require": {
                 "flow-php/psr3-telemetry-bridge": "self.version",
@@ -774,12 +781,13 @@
             "require-dev": {
                 "composer-runtime-api": "^2.2",
                 "composer/semver": "^3.4",
-                "doctrine/dbal": "^4.4",
+                "doctrine/dbal": "^4.5",
                 "flow-php/psr18-telemetry-bridge": "self.version",
                 "flow-php/symfony-http-foundation-telemetry-bridge": "self.version",
                 "flow-php/telemetry-otlp-bridge": "self.version",
                 "nyholm/psr7": "^1.8",
                 "symfony/framework-bundle": "^6.4 || ^7.4 || ^8.0",
+                "symfony/http-client": "^6.4 || ^7.4 || ^8.0",
                 "symfony/messenger": "^6.4 || ^7.4 || ^8.0",
                 "symfony/routing": "^6.4 || ^7.4 || ^8.0",
                 "symfony/security-bundle": "^6.4 || ^7.4 || ^8.0",
@@ -791,7 +799,7 @@
                 "twig/twig": "^3.0"
             },
             "suggest": {
-                "doctrine/dbal": "Required for Doctrine DBAL tracing (^4.4)",
+                "doctrine/dbal": "Required for Doctrine DBAL tracing (^4.5)",
                 "flow-php/psr18-telemetry-bridge": "Required for PSR-18 HTTP client tracing",
                 "flow-php/symfony-http-foundation-telemetry-bridge": "Required for HTTP trace context propagation (extract incoming / inject outgoing W3C trace headers)",
                 "flow-php/telemetry-otlp-bridge": "Required for OTLP exporter support",

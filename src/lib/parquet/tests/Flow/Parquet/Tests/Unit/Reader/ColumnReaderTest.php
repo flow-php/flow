@@ -28,6 +28,7 @@ use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
+use function array_keys;
 use function array_map;
 use function iterator_to_array;
 
@@ -201,15 +202,9 @@ final class ColumnReaderTest extends TestCase
             new InMemoryIndexes(),
         );
 
-        static::assertSame(
-            [
-                0 => [
-                    'values' => [1, 3, 4],
-                    'definitionLevels' => [1, 0, 1, 1],
-                ],
-            ],
-            $day['chunk']['pages'],
-        );
+        static::assertSame([0], array_keys($day['chunk']['pages']));
+        static::assertSame([1, 3, 4], $day['chunk']['pages'][0]->rawValues());
+        static::assertSame([1, 0, 1, 1], $day['chunk']['pages'][0]->definitionLevels());
         static::assertSame([1, null, 3], $day['values']);
         static::assertSame(
             ['a', null, null],

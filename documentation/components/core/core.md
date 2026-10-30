@@ -64,17 +64,18 @@ echo $dataFrame->explain()->toString();
 
 ```text
 Outputs
-├─ #3 Result
+├─ #4 Result
 │  │  Rows this plan hands out: to the trigger, or to the node reading it
-│  └─ #2 Select
+│  └─ #3 Select
 │     │  Keeps only: id, email
-│     └─ #1 Read
-│           Extractor: CSVExtractor
-│           Source: file:///data/orders.csv
-│           Filter: email IS NOT NULL
-└─ #4 Write
+│     └─ #2 Filter
+│        │  Condition: email IS NOT NULL
+│        └─ #1 Read
+│              Extractor: CSVExtractor
+│              Source: file:///data/orders.csv
+└─ #5 Write
    │  Loader: JsonLoader
-   └─ #1 Read (shared)
+   └─ #2 Filter (shared)
 ```
 
 ```php
@@ -86,23 +87,23 @@ echo data_frame()
 ```
 
 ```text
-#2 Write
+#3 Write
 │  Loader: JsonLoader
-└─ #1 Read
-      Extractor: CSVExtractor
-      Source: file:///data/orders.csv
-      Filter: email IS NOT NULL
+└─ #2 Filter
+   │  Condition: email IS NOT NULL
+   └─ #1 Read
+         Extractor: CSVExtractor
+         Source: file:///data/orders.csv
 ```
 
-`run()` takes no rows, so its plan carries only the sinks - the `Write` is the root and there is no `Result`. A
+`run()` takes no rows, so its plan carries only the writes - the `Write` is the root and there is no `Result`. A
 `Result` comes back only when a verb follows the last `write()`: nothing would read that chain end, so one is put on
 it to pull the rows, and `run(analyze: ...)` still counts them.
 
-`Outputs` lists everything the frame produces: `Result` is what a rows-returning trigger reads, `Write` is the sink.
-A node several consumers read is printed once, and every other consumer points back at it by number - `#1 Read (shared)` is that same read, not a second one. A node keeps its number in every format.
+`Outputs` lists everything the frame produces: `Result` is what a rows-returning trigger reads, `Write` is a write.
+A node several consumers read is printed once, and every other consumer points back at it by number - `#2 Filter (shared)` is that same filter, not a second one. A node keeps its number in every format.
 A frame joined with `join()` / `crossJoin()` is part of the same tree: the join reads it the way it reads any other
-input, numbered with the rest of the plan, and it runs with this frame's configuration. A frame read with
-`from_data_frame()` is a `Read` of `DataFrameExtractor` and runs with its own.
+input, numbered with the rest of the plan, and it runs with this frame's configuration.
 
 `toString()` takes the stage and the format to print:
 
@@ -124,13 +125,14 @@ echo $dataFrame->explain()->toString(format: Format::flow);
 #1 Read
 │  Extractor: CSVExtractor
 │  Source: file:///data/orders.csv
-│  Filter: email IS NOT NULL
-├─ #2 Select
-│  │  Keeps only: id, email
-│  └─ #3 Result
-│        Rows this plan hands out: to the trigger, or to the node reading it
-└─ #4 Write
-      Loader: JsonLoader
+└─ #2 Filter
+   │  Condition: email IS NOT NULL
+   ├─ #3 Select
+   │  │  Keeps only: id, email
+   │  └─ #4 Result
+   │        Rows this plan hands out: to the trigger, or to the node reading it
+   └─ #5 Write
+         Loader: JsonLoader
 ```
 
 ```php
@@ -142,30 +144,36 @@ echo $dataFrame->explain()->toString(format: Format::boxes);
 │          Outputs          ├──────────────┐
 └─────────────┬─────────────┘              │
 ┌─────────────┴─────────────┐┌─────────────┴─────────────┐
-│         #3 Result         ││         #4 Write          │
+│         #4 Result         ││         #5 Write          │
 │   ────────────────────    ││   ────────────────────    │
 │ Rows this plan hands out: ││    Loader: JsonLoader     │
 │ to the trigger, or to the ││                           │
 │      node reading it      ││                           │
 └─────────────┬─────────────┘└─────────────┬─────────────┘
 ┌─────────────┴─────────────┐┌─────────────┴─────────────┐
-│         #2 Select         ││          #1 Read          │
+│         #3 Select         ││         #2 Filter         │
 │   ────────────────────    ││         (shared)          │
 │   Keeps only: id, email   ││                           │
 └─────────────┬─────────────┘└───────────────────────────┘
+┌─────────────┴─────────────┐
+│         #2 Filter         │
+│   ────────────────────    │
+│  Condition: email IS NOT  │
+│           NULL            │
+└─────────────┬─────────────┘
 ┌─────────────┴─────────────┐
 │          #1 Read          │
 │   ────────────────────    │
 │  Extractor: CSVExtractor  │
 │          Source:          │
 │  file:///data/orders.csv  │
-│ Filter: email IS NOT NULL │
 └───────────────────────────┘
 ```
 
-`Stage::physical` prints what the executor runs. A pipeline ends where a blocking step cuts it, so the pipeline a
-step sits in is where rows stop flowing through, and every step lists the settings it was given - the algorithm's
-storage among them, which the logical stages cannot know because the planner picks it.
+`Stage::physical` prints what the executor runs. A pipeline ends at a step that needs every row before it emits one
+(a sort, a group by, a join, `collect()`), so the pipeline a step sits in is where rows stop flowing through. Every
+step lists the settings it was given - the algorithm's storage among them, which the logical stages cannot know
+because the planner picks it.
 
 ```php
 $users = [['id' => 1, 'name' => 'Alice'], ['id' => 2, 'name' => 'Bob']];
@@ -173,7 +181,7 @@ $emails = [['id' => 1, 'email' => 'alice@example.com']];
 
 echo data_frame()
     ->read(from_array($users))
-    ->join(data_frame()->read(from_array($emails)), join_on(['id' => 'id'], join_prefix: 'joined_'), Join::left)
+    ->join(data_frame()->read(from_array($emails)), join_on(['id' => 'id'], join_prefix: 'joined_'), JoinType::left)
     ->collect()
     ->write(to_output(truncate: false))
     ->explain()->toString(Stage::physical);
@@ -182,24 +190,25 @@ echo data_frame()
 ```text
 Physical plan
 │  Columns: id, name, joined_id, joined_email
-└─ Pipeline #1
-   │  Processor: CollectingProcessor
-   │     Schema: declared
+└─ Pipeline #2
    │  Loader: StreamLoader
-   └─ Pipeline #0
-      │  Extractor: ArrayExtractor
-      │     Statistics: rows exact 2 · size unknown
-      │  Processor: HashJoinProcessor
-      │     Join: left
-      │     On: id = id
-      │     Prefix: joined_
-      │     Storage: FilesystemBuckets
-      │     Memory: 1000 MB
-      │     Buckets: 64
-      │     Batch: 1000
-      └─ Right side: Pipeline #0
-            Extractor: ArrayExtractor
-               Statistics: rows exact 1 · size unknown
+   └─ Pipeline #1
+      │  Processor: CollectingProcessor
+      │     Schema: declared
+      └─ Pipeline #0
+         │  Extractor: ArrayExtractor
+         │     Statistics: rows exact 2 · size unknown
+         │  Join: HashJoin
+         │     Type: left
+         │     On: id = id
+         │     Prefix: joined_
+         │     Storage: FilesystemRowsStorage
+         │     Memory: 1000 MB
+         │     Buckets: 64
+         │     Batch: 1000
+         └─ Right side: Pipeline #0
+               Extractor: ArrayExtractor
+                  Statistics: rows exact 1 · size unknown
 ```
 
 `Memory: 1000 MB` is the default limit under `memory_limit = -1`. With a set `memory_limit` it is 70% of it, or
@@ -276,13 +285,13 @@ Before a frame runs, the optimizer rewrites its plan. `Optimizer::default()` run
 | `PushFilterIntoSource` | a `filter()` on partition columns skips whole partition directories             |
 | `CountFromStatistics`  | `count()` over a source that knows its rows exactly reads that number, no rows  |
 
-Rules live in `Flow\ETL\Optimizer\Rule` and are configured through `config_builder()->optimizer()`:
+Rules live in `Flow\ETL\Planning\Optimizer\Rule` and are configured through `config_builder()->optimizer()`:
 
 ```php
 <?php
 
-use Flow\ETL\Optimizer;
-use Flow\ETL\Optimizer\Rule\CombineSortAndLimit;
+use Flow\ETL\Planning\Optimizer\Optimizer;
+use Flow\ETL\Planning\Optimizer\Rule\CombineSortAndLimit;
 
 use function Flow\ETL\DSL\{config_builder, data_frame};
 
@@ -292,7 +301,7 @@ data_frame(config_builder()->optimizer(new Optimizer()));
 // the defaults without one rule
 data_frame(config_builder()->optimizer(Optimizer::default()->without(CombineSortAndLimit::class)));
 
-// the defaults followed by your own Optimizer\Rule implementation
+// the defaults followed by your own Rule implementation
 data_frame(config_builder()->optimizer(Optimizer::default()->with(new MyRule())));
 ```
 

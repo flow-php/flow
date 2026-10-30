@@ -6,9 +6,8 @@ RustCSVOpenSource rejects an invalid dialect, batch size and sniff row budget
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\CSV\RustCSVOpenSource;
-use Flow\ETL\Column\RustBackend;
-use Flow\ETL\Schema\Inference\SchemaInference;
+use Flow\ETL\Adapter\CSV\IO\Extractor\RustCSVOpenSource;
+use Flow\ETL\Values\Column\RustBackend;
 use Flow\Filesystem\Stream\MemorySourceStream;
 use Flow\Types\Type\Native\String\StringTypeNarrower;
 
@@ -29,12 +28,12 @@ expect_exception(static fn() => $source(',', ''));
 expect_exception(static fn() => $source(',', '"', '\\\\'));
 expect_exception(static fn() => $source()->batches(schema(int_schema('id')), 0, new RustBackend()));
 expect_exception(static fn() => $source()->batches(schema(int_schema('id')), -1, new RustBackend()));
-expect_exception(static fn() => $source()->sniff(['id'], -2, new SchemaInference(), new StringTypeNarrower()));
+expect_exception(static fn() => $source()->sniff(['id'], -2, new StringTypeNarrower()));
 ?>
 --EXPECT--
-Flow\ETL\Exception\RuntimeException: flow_php CSV separator must be exactly one byte
-Flow\ETL\Exception\RuntimeException: flow_php CSV enclosure must be exactly one byte
-Flow\ETL\Exception\RuntimeException: flow_php CSV escape must be empty or exactly one byte
-Flow\ETL\Exception\RuntimeException: flow_php CSV batch size must be greater than 0
-Flow\ETL\Exception\RuntimeException: flow_php CSV batch size must be greater than 0
-Flow\ETL\Exception\RuntimeException: flow_php CSV fold limit must be -1 or at least 0
+Flow\ETL\Foundation\Exception\RuntimeException: flow_php CSV separator must be exactly one byte
+Flow\ETL\Foundation\Exception\RuntimeException: flow_php CSV enclosure must be exactly one byte
+Flow\ETL\Foundation\Exception\RuntimeException: flow_php CSV escape must be empty or exactly one byte
+Flow\ETL\Foundation\Exception\RuntimeException: flow_php CSV batch size must be greater than 0
+Flow\ETL\Foundation\Exception\RuntimeException: flow_php CSV batch size must be greater than 0
+Flow\ETL\Foundation\Exception\RuntimeException: flow_php CSV fold limit must be -1 or at least 0

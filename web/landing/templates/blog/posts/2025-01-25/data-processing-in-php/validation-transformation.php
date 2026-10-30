@@ -1,7 +1,7 @@
 <?php
 
-use Flow\ETL\DataFrame;
-use Flow\ETL\Transformation;
+use Flow\ETL\API\DataFrame;
+use Flow\ETL\API\Transformation;
 use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\lit;

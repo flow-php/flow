@@ -17,7 +17,7 @@ use Flow\Parquet\ParquetFile\Schema\Column;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\Reader\ColumnChunkViewer;
 use Flow\Parquet\Reader\FilteredBatches;
-use Flow\Parquet\Reader\ReadPlanner;
+use Flow\Parquet\Reader\ReadPlan;
 use Generator;
 
 use function array_keys;
@@ -131,7 +131,7 @@ final class ParquetFile
         $filter = $query->filter === null ? null : BoundFilter::bind($query->filter, $schema, $this->options);
         // a filtered plan counts matching rows from the start, so the offset is applied here; it takes the limit only
         // when it answers every conjunct, otherwise the residual ones below decide which rows count
-        $plan = (new ReadPlanner())->plan(
+        $plan = ReadPlan::forFilter(
             $this->reader->footer(),
             $this->indexes(),
             $filter,

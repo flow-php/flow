@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\HttpFoundation;
 
-use Flow\ETL\Dataset\Report;
+use Flow\ETL\Runtime\Metrics\Report;
 
 /**
  * Interface for closures that are called after streaming completes.

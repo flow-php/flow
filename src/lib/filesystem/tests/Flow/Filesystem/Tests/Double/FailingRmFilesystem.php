@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Tests\Double;
 
 use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Mount;
@@ -13,6 +14,7 @@ use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\SourceStream;
 use Generator;
+use SensitiveParameter;
 
 final readonly class FailingRmFilesystem implements Filesystem
 {
@@ -20,9 +22,21 @@ final readonly class FailingRmFilesystem implements Filesystem
         private Filesystem $wrapped,
     ) {}
 
+    public static function fromArray(#[SensitiveParameter] array $configuration): static
+    {
+        throw new InvalidArgumentException(
+            'FailingRmFilesystem is a test double and cannot be rebuilt from a configuration',
+        );
+    }
+
     public function appendTo(Path $path): DestinationStream
     {
         return $this->wrapped->appendTo($path);
+    }
+
+    public function normalize(): ?array
+    {
+        return null;
     }
 
     public function getSystemTmpDir(): Path

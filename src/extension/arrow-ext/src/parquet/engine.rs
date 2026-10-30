@@ -1,15 +1,19 @@
 //! `Flow\Parquet\Engine\RustParquetEngine`: `flow-php/parquet`'s arrow engine, its files read and written by
 //! `RustParquetFileReader` / `RustParquetFileWriter`.
 
+use ext_php_rs::boxed::ZBox;
 use ext_php_rs::flags::ClassFlags;
 use ext_php_rs::prelude::*;
-use ext_php_rs::types::Zval;
+use ext_php_rs::types::{ZendHashTable, Zval};
 
 use crate::exception::ext_exception;
 use crate::interfaces::parquet_engine_ce;
-use crate::parquet::lib_calls::{call_static, OPTIONS_TO_ENGINE, OPTIONS_TO_EXTENSION, SCHEMA_TO_EXTENSION};
+use crate::parquet::lib_calls::{
+    call_static, OPTIONS_DEFAULT, OPTIONS_FROM_ARRAY, OPTIONS_TO_ENGINE, OPTIONS_TO_EXTENSION, SCHEMA_TO_EXTENSION,
+};
 use crate::parquet::library::{RustParquetFileReader, RustParquetFileWriter};
-use crate::php::{ht_get, IterableArg};
+use crate::php::{call_method, ht_get, ht_insert, IterableArg};
+use crate::render::{exception, INVALID_ARGUMENT};
 
 #[php_class]
 #[php(
@@ -19,17 +23,26 @@ use crate::php::{ht_get, IterableArg};
 )]
 pub struct RustParquetEngine {
     int96_as_datetime: bool,
-    write_batch_size: i64,
+    /// `Options::normalize()` of the options this engine was built with, what `normalize()` hands back
+    options: Zval,
 }
 
 #[php_impl]
 impl RustParquetEngine {
     pub fn __construct(options: Option<&Zval>) -> PhpResult<Self> {
-        let mut options = [options.map_or_else(Zval::new, Zval::shallow_clone)];
-        let engine = call_static(OPTIONS_TO_ENGINE, &mut options)?;
+        let options = match options {
+            Some(options) if !options.is_null() => options.shallow_clone(),
+            _ => call_static(OPTIONS_DEFAULT, &mut [])?,
+        };
+        let engine = call_static(OPTIONS_TO_ENGINE, &mut [options.shallow_clone()])?;
         let engine = engine
             .array()
             .ok_or_else(|| ext_exception("arrow expected OptionsConverter::toEngine() to return an array"))?;
+        let normalized = call_method(&options, "normalize", &mut [])?;
+
+        if normalized.array().is_none() {
+            return Err(ext_exception("arrow expected Options::normalize() to return an array"));
+        }
 
         Ok(Self {
             int96_as_datetime: ht_get(engine, b"INT_96_AS_DATETIME")
@@ -37,12 +50,31 @@ impl RustParquetEngine {
                 .ok_or_else(|| {
                     ext_exception("arrow expected OptionsConverter::toEngine() to hold INT_96_AS_DATETIME")
                 })?,
-            write_batch_size: ht_get(engine, b"ARROW_WRITE_BATCH_SIZE")
-                .and_then(Zval::long)
-                .ok_or_else(|| {
-                    ext_exception("arrow expected OptionsConverter::toEngine() to hold ARROW_WRITE_BATCH_SIZE")
-                })?,
+            options: normalized,
         })
+    }
+
+    /// `['options' => Options::normalize()]`, what `fromArray()` rebuilds this engine from.
+    pub fn normalize(&self) -> ZBox<ZendHashTable> {
+        let mut configuration = ZendHashTable::new();
+        ht_insert(&mut configuration, b"options", self.options.shallow_clone());
+
+        configuration
+    }
+
+    #[php(name = "fromArray")]
+    pub fn from_array(configuration: &ZendHashTable) -> PhpResult<Self> {
+        let options = ht_get(configuration, b"options")
+            .filter(|options| options.array().is_some())
+            .ok_or_else(|| {
+                exception(
+                    INVALID_ARGUMENT,
+                    "Parquet engine configuration must hold an \"options\" array".to_string(),
+                )
+            })?;
+        let options = call_static(OPTIONS_FROM_ARRAY, &mut [options.shallow_clone()])?;
+
+        Self::__construct(Some(&options))
     }
 
     #[php(name = "openForRead")]
@@ -60,6 +92,9 @@ impl RustParquetEngine {
     ) -> PhpResult<RustParquetFileWriter> {
         let schema = call_static(SCHEMA_TO_EXTENSION, &mut [schema.shallow_clone()])?;
         let options = call_static(OPTIONS_TO_EXTENSION, &mut [options.shallow_clone()])?;
+        let options = options
+            .array()
+            .ok_or_else(|| ext_exception("arrow expected OptionsConverter::toExtension() to return an array"))?;
 
         RustParquetFileWriter::__construct(
             stream,
@@ -67,10 +102,12 @@ impl RustParquetEngine {
                 .array()
                 .ok_or_else(|| ext_exception("arrow expected SchemaConverter::toExtension() to return an array"))?,
             compression,
-            options
-                .array()
-                .ok_or_else(|| ext_exception("arrow expected OptionsConverter::toExtension() to return an array"))?,
-            self.write_batch_size,
+            options,
+            ht_get(options, b"ARROW_WRITE_BATCH_SIZE")
+                .and_then(Zval::long)
+                .ok_or_else(|| {
+                    ext_exception("arrow expected OptionsConverter::toExtension() to hold ARROW_WRITE_BATCH_SIZE")
+                })?,
         )
     }
 

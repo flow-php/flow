@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Column\Column;
-use Flow\ETL\Column\ColumnBuilder;
-use Flow\ETL\Column\Php\ConstantColumn;
-use Flow\ETL\Column\Physical\NullPhysical;
+use Flow\ETL\Values\Column\Column;
+use Flow\ETL\Values\Column\ColumnBuilder;
+use Flow\ETL\Values\Column\Php\ConstantColumn;
+use Flow\ETL\Values\Column\Physical\NullPhysical;
 
 use function count;
 use function Flow\Types\DSL\type_null;

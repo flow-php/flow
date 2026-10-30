@@ -19,7 +19,7 @@ final class AccountSummariesExtractor implements Extractor, LimitableExtractor
         private readonly int $pageSize = 200
     ) {
         if ($this->pageSize < 1 || $this->pageSize > 200) {
-            throw new \Flow\ETL\Exception\InvalidArgumentException('Page size must be greater than 0 and lower than 200.');
+            throw new \Flow\ETL\Foundation\Exception\InvalidArgumentException('Page size must be greater than 0 and lower than 200.');
         }
     }
 

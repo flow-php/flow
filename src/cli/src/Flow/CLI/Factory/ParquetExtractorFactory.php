@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Factory;
 
-use Flow\ETL\Adapter\Parquet\ParquetExtractor;
+use Flow\ETL\Adapter\Parquet\IO\Extractor\ParquetExtractor;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
 
 use function count;
-use function Flow\CLI\option_int_nullable;
 use function Flow\CLI\option_list_of_strings;
 use function Flow\ETL\Adapter\Parquet\from_parquet;
 
@@ -18,7 +17,6 @@ final readonly class ParquetExtractorFactory
     public function __construct(
         private Path $path,
         private string $columns = 'input-parquet-columns',
-        private string $offset = 'input-parquet-offset',
     ) {}
 
     public function get(InputInterface $input): ParquetExtractor
@@ -26,14 +24,9 @@ final readonly class ParquetExtractorFactory
         $extractor = from_parquet($this->path);
 
         $columns = option_list_of_strings($this->columns, $input);
-        $offset = option_int_nullable($this->offset, $input);
 
         if (count($columns)) {
             $extractor->withColumns($columns);
-        }
-
-        if ($offset !== null) {
-            $extractor->withOffset($offset);
         }
 
         return $extractor;

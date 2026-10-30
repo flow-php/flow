@@ -11,13 +11,11 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\RoleSpec;
 use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use SensitiveParameter;
 
 final readonly class AlterRoleBuilder implements AlterRoleActionStep, AlterRoleFinalStep
 {
-    use AstToSql;
-
     /**
      * @param list<array{name: string, arg: ?Node}> $options
      */
@@ -114,6 +112,11 @@ final readonly class AlterRoleBuilder implements AlterRoleActionStep, AlterRoleF
     public function superuser(): AlterRoleFinalStep
     {
         return $this->withBooleanOption(RoleOption::SUPERUSER->value, true);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): AlterRoleStmt

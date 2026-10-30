@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Bucketing;
 
-use Flow\ETL\Bucketing\Storage\MemoryBuckets;
-use Flow\ETL\Config\ConfigBuilder;
-use Flow\ETL\DataFrame;
-use Flow\ETL\Dataset\Memory\Unit;
-use Flow\ETL\Rows;
-use Flow\ETL\Tests\Double\SpyBucketsStorage;
+use Flow\ETL\API\Config\ConfigBuilder;
+use Flow\ETL\API\DataFrame;
+use Flow\ETL\Storage\MemoryRowsStorage;
+use Flow\ETL\Tests\Double\SpyRowsStorage;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\ETL\Values\Memory\Unit;
+use Flow\ETL\Values\Rows;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -38,7 +38,7 @@ final class SpillingPathsTest extends FlowIntegrationTestCase
         }
 
         yield 'group by' => [
-            static fn(SpyBucketsStorage $storage, Unit $limit): ConfigBuilder => config_builder()->groupBy(
+            static fn(SpyRowsStorage $storage, Unit $limit): ConfigBuilder => config_builder()->groupBy(
                 hash_group_by()->storage($storage)->memoryLimit($limit)->batchSize(2)->bucketsCount(4),
             ),
             static fn(ConfigBuilder $config): DataFrame => data_frame($config->build())
@@ -50,7 +50,7 @@ final class SpillingPathsTest extends FlowIntegrationTestCase
         ];
 
         yield 'repartition' => [
-            static fn(SpyBucketsStorage $storage, Unit $limit): ConfigBuilder => config_builder()->repartition(
+            static fn(SpyRowsStorage $storage, Unit $limit): ConfigBuilder => config_builder()->repartition(
                 hash_repartition()->storage($storage)->memoryLimit($limit)->batchSize(2)->bucketsCount(4),
             ),
             static fn(ConfigBuilder $config): DataFrame => data_frame($config->build())
@@ -61,7 +61,7 @@ final class SpillingPathsTest extends FlowIntegrationTestCase
         ];
 
         yield 'join' => [
-            static fn(SpyBucketsStorage $storage, Unit $limit): ConfigBuilder => config_builder()->join(
+            static fn(SpyRowsStorage $storage, Unit $limit): ConfigBuilder => config_builder()->join(
                 hash_join()->storage($storage)->memoryLimit($limit)->batchSize(2)->bucketsCount(4),
             ),
             static fn(ConfigBuilder $config): DataFrame => data_frame($config->build())
@@ -76,20 +76,20 @@ final class SpillingPathsTest extends FlowIntegrationTestCase
     }
 
     /**
-     * @param callable(SpyBucketsStorage, Unit): ConfigBuilder $config
+     * @param callable(SpyRowsStorage, Unit): ConfigBuilder $config
      * @param callable(ConfigBuilder): DataFrame $pipeline
      */
     #[DataProvider('paths')]
     public function test_under_the_limit_no_frame_is_written(callable $config, callable $pipeline, int $rows): void
     {
-        $storage = new SpyBucketsStorage(new MemoryBuckets());
+        $storage = new SpyRowsStorage(new MemoryRowsStorage());
 
         static::assertCount($rows, $pipeline($config($storage, Unit::fromGb(64)))->fetch()->toArray());
         static::assertSame([], $storage->appendedRows());
     }
 
     /**
-     * @param callable(SpyBucketsStorage, Unit): ConfigBuilder $config
+     * @param callable(SpyRowsStorage, Unit): ConfigBuilder $config
      * @param callable(ConfigBuilder): DataFrame $pipeline
      */
     #[DataProvider('paths')]
@@ -98,7 +98,7 @@ final class SpillingPathsTest extends FlowIntegrationTestCase
         callable $pipeline,
         int $rows,
     ): void {
-        $storage = new SpyBucketsStorage(new MemoryBuckets());
+        $storage = new SpyRowsStorage(new MemoryRowsStorage());
 
         static::assertCount($rows, $pipeline($config($storage, Unit::fromBytes(1)))->fetch()->toArray());
 

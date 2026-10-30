@@ -6,8 +6,9 @@ namespace Flow\Parquet\Filter\Evaluation;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Filter\Binding\BoundFilter;
+use Flow\Parquet\Filter\Binding\ExactLeaf;
+use Flow\Parquet\Filter\Binding\InexactLeaf;
 use Flow\Parquet\Filter\Binding\RefusedLeaf;
-use Flow\Parquet\Filter\Binding\ResolvedLeaf;
 use Flow\Parquet\Filter\Comparison;
 use Flow\Parquet\Filter\In;
 use Flow\Parquet\Filter\IsNull;
@@ -29,7 +30,7 @@ final readonly class FilterEvaluator
     private WeakMap $keys;
 
     /**
-     * @var WeakMap<Comparison|In|IsNull|StartsWith, ResolvedLeaf>
+     * @var WeakMap<Comparison|In|IsNull|StartsWith, ExactLeaf|InexactLeaf>
      */
     private WeakMap $leaves;
 
@@ -39,7 +40,7 @@ final readonly class FilterEvaluator
     public function __construct(
         private BoundFilter $filter,
     ) {
-        /** @var WeakMap<Comparison|In|IsNull|StartsWith, ResolvedLeaf> $leaves */
+        /** @var WeakMap<Comparison|In|IsNull|StartsWith, ExactLeaf|InexactLeaf> $leaves */
         $leaves = new WeakMap();
         /** @var WeakMap<In, array<int|string, true>> $keys */
         $keys = new WeakMap();
@@ -51,7 +52,7 @@ final readonly class FilterEvaluator
                 throw new InvalidArgumentException($resolution->reason);
             }
 
-            if (!$resolution instanceof ResolvedLeaf) {
+            if (!$resolution instanceof ExactLeaf && !$resolution instanceof InexactLeaf) {
                 continue;
             }
 

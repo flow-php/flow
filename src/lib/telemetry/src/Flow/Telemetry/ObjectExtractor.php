@@ -6,14 +6,16 @@ namespace Flow\Telemetry;
 
 final class ObjectExtractor
 {
-    public static function shortName(object $object): string
+    public static function shortName(object|string $objectOrClass): string
     {
-        if (str_contains($object::class, '@anonymous')) {
+        $class = is_string($objectOrClass) ? $objectOrClass : $objectOrClass::class;
+
+        if (str_contains($class, '@anonymous')) {
             return 'class@anonymous';
         }
 
-        $shortName = strrchr($object::class, '\\');
+        $shortName = strrchr($class, '\\');
 
-        return $shortName !== false ? substr($shortName, 1) : $object::class;
+        return $shortName !== false ? substr($shortName, 1) : $class;
     }
 }

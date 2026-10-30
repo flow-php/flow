@@ -46,15 +46,9 @@ final class ColumnChunkBuildersTest extends TestCase
             ]),
             Compressions::UNCOMPRESSED,
         );
-        $ids = new WriteFlatColumnValues($schema->getFlat('id'));
-        $ids->addRaw(0, 1, 7);
-        $ids->addRaw(0, 0, null);
-        $cities = new WriteFlatColumnValues($schema->getFlat('address.city'));
-        $cities->addRaw(0, 2, 'Oslo');
-        $cities->addRaw(0, 0, null);
-        $others = new WriteFlatColumnValues($schema->getFlat('other'));
-        $others->addRaw(0, 1, 1);
-        $others->addRaw(0, 1, 2);
+        $ids = new WriteFlatColumnValues($schema->getFlat('id'), [0, 0], [1, 0], [7]);
+        $cities = new WriteFlatColumnValues($schema->getFlat('address.city'), [0, 0], [2, 0], ['Oslo']);
+        $others = new WriteFlatColumnValues($schema->getFlat('other'), [0, 0], [1, 1], [1, 2]);
         $builders->addColumnByFlatPath('id', $ids);
         $builders->addColumnByFlatPath('address.city', $cities);
         $builders->addColumnByFlatPath('other', $others);
@@ -84,8 +78,7 @@ final class ColumnChunkBuildersTest extends TestCase
             (new Options())->set(Option::COLUMNS_BLOOM_FILTERS, ['id' => new BloomFilterOptions()]),
             Compressions::UNCOMPRESSED,
         );
-        $ids = new WriteFlatColumnValues($schema->getFlat('id'));
-        $ids->addRaw(0, 0, null);
+        $ids = new WriteFlatColumnValues($schema->getFlat('id'), [0], [0], []);
         $builders->addColumnByFlatPath('id', $ids);
 
         static::assertEquals(Sbbf::fromBytes(str_repeat("\0", Sbbf::BLOCK_BYTES)), $builders->flush(4)[0]->bloomFilter);

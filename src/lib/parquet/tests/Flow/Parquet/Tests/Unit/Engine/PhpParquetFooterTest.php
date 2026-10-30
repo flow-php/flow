@@ -8,6 +8,8 @@ use Flow\Parquet\Reader;
 use Flow\Parquet\Tests\Context\MemoryParquetFile;
 use PHPUnit\Framework\TestCase;
 
+use function array_values;
+
 final class PhpParquetFooterTest extends TestCase
 {
     public function test_the_metadata_is_built_once_and_answers_the_schema_and_row_count(): void
@@ -47,5 +49,16 @@ final class PhpParquetFooterTest extends TestCase
         static::assertSame([2, 2, 2], $chunks->rowCounts());
         static::assertSame(3, $chunks->chunk(1, $id)->statistics()?->minValue($id));
         static::assertSame($footer->metadata()->columnOrder($id), $chunks->columnOrder($id));
+    }
+
+    public function test_one_row_group_chunks_answers_every_column_set(): void
+    {
+        $file = MemoryParquetFile::read(Reader::php(), MemoryParquetFile::threeRowGroups());
+        $footer = $file->reader()->footer();
+
+        static::assertSame(
+            $footer->rowGroupChunks([]),
+            $footer->rowGroupChunks(array_values($footer->schema()->columnsFlat())),
+        );
     }
 }

@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Notify;
 
 use Flow\PostgreSql\Protobuf\AST\NotifyStmt;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class NotifyBuilder implements NotifyFinalStep
 {
-    use AstToSql;
-
     private function __construct(
         private string $channel,
         private string $payload = '',
@@ -19,6 +17,11 @@ final readonly class NotifyBuilder implements NotifyFinalStep
     public static function create(string $channel): NotifyFinalStep
     {
         return new self($channel);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): NotifyStmt

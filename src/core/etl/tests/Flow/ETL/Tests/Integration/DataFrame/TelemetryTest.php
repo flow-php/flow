@@ -4,15 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use Flow\Clock\FakeClock;
-use Flow\ETL\Bucketing\Storage\FilesystemBuckets;
-use Flow\ETL\DataFrame;
-use Flow\ETL\Sink\Transactional;
+use Flow\ETL\API\DataFrame;
+use Flow\ETL\API\Transactional;
+use Flow\ETL\Foundation\Clock\FakeClock;
+use Flow\ETL\Operators\Processor\BatchingProcessor;
+use Flow\ETL\Operators\Processor\DistinctProcessor;
+use Flow\ETL\Operators\Transformer\LimitTransformer;
+use Flow\ETL\Operators\Transformer\UntilTransformer;
+use Flow\ETL\Storage\FilesystemRowsStorage;
 use Flow\ETL\Tests\Context\MemoryTelemetryContext;
 use Flow\ETL\Tests\Double\RecordingTransaction;
+use Flow\ETL\Tests\Double\ThrowingLoader;
+use Flow\ETL\Tests\Double\ThrowingTransformer;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Mother\RowsMother;
-use Flow\ETL\Transformer\LimitTransformer;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Logger\Severity;
@@ -25,8 +30,10 @@ use Flow\Telemetry\Resource;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\TracerProvider;
+use RuntimeException;
 
 use function array_filter;
+use function array_key_exists;
 use function array_keys;
 use function array_map;
 use function array_values;
@@ -34,7 +41,6 @@ use function count;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\from_data_frame;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\join_on;
 use function Flow\ETL\DSL\limit;
@@ -69,13 +75,12 @@ final class TelemetryTest extends FlowTestCase
             new LoggerProvider($logProcessor, $clock, $contextStorage),
         );
 
-        $config = config_builder()->withTelemetry($telemetry, telemetry_options(collect_metrics: true))->build();
-
-        df($config)->read(from_array([
-            ['id' => 1, 'name' => 'John'],
-            ['id' => 2, 'name' => 'Jane'],
-            ['id' => 3, 'name' => 'Doe'],
-        ]))->run();
+        df(config_builder()->withTelemetry($telemetry, telemetry_options(collect_metrics: true))->build())
+            ->read(from_array([
+                ['id' => 1, 'name' => 'John'],
+                ['id' => 2, 'name' => 'Jane'],
+                ['id' => 3, 'name' => 'Doe'],
+            ]))->run();
 
         $telemetry->flush();
 
@@ -92,14 +97,17 @@ final class TelemetryTest extends FlowTestCase
         $clock = new FakeClock();
         $contextStorage = new MemoryContextStorage();
 
-        $telemetry = new Telemetry(
-            Resource::create(['service.name' => 'flow-test']),
-            new TracerProvider($spanProcessor, $clock, $contextStorage),
-            new MeterProvider($metricProcessor, $clock),
-            new LoggerProvider($logProcessor, $clock, $contextStorage),
-        );
-
-        $config = config_builder()->withTelemetry($telemetry, telemetry_options(trace_loading: true))->build();
+        $config = config_builder()
+            ->withTelemetry(
+                new Telemetry(
+                    Resource::create(['service.name' => 'flow-test']),
+                    new TracerProvider($spanProcessor, $clock, $contextStorage),
+                    new MeterProvider($metricProcessor, $clock),
+                    new LoggerProvider($logProcessor, $clock, $contextStorage),
+                ),
+                telemetry_options(trace_loading: true),
+            )
+            ->build();
 
         $output = [];
         df($config)
@@ -141,19 +149,22 @@ final class TelemetryTest extends FlowTestCase
         $clock = new FakeClock();
         $contextStorage = new MemoryContextStorage();
 
-        $telemetry = new Telemetry(
-            Resource::create(['service.name' => 'flow-test']),
-            new TracerProvider($spanProcessor, $clock, $contextStorage),
-            new MeterProvider($metricProcessor, $clock),
-            new LoggerProvider($logProcessor, $clock, $contextStorage),
-        );
-
-        $config = config_builder()->withTelemetry($telemetry)->build();
-
-        df($config)->read(from_array([
-            ['id' => 1, 'name' => 'John'],
-            ['id' => 2, 'name' => 'Jane'],
-        ]))->run();
+        df(
+            config_builder()
+                ->withTelemetry(
+                    new Telemetry(
+                        Resource::create(['service.name' => 'flow-test']),
+                        new TracerProvider($spanProcessor, $clock, $contextStorage),
+                        new MeterProvider($metricProcessor, $clock),
+                        new LoggerProvider($logProcessor, $clock, $contextStorage),
+                    ),
+                )
+                ->build(),
+        )
+            ->read(from_array([
+                ['id' => 1, 'name' => 'John'],
+                ['id' => 2, 'name' => 'Jane'],
+            ]))->run();
 
         $endedSpans = $spanProcessor->endedSpans();
         static::assertCount(1, $endedSpans);
@@ -182,7 +193,7 @@ final class TelemetryTest extends FlowTestCase
         $spill = type_map(type_string(), type_string())->assert($attributes->get('spill'));
 
         static::assertSame(['sort', 'group_by', 'join'], array_keys($spill));
-        static::assertSame(FilesystemBuckets::class, $spill['sort']);
+        static::assertSame(FilesystemRowsStorage::class, $spill['sort']);
     }
 
     public function test_dataframe_run_logs_start_and_completion(): void
@@ -193,19 +204,22 @@ final class TelemetryTest extends FlowTestCase
         $clock = new FakeClock();
         $contextStorage = new MemoryContextStorage();
 
-        $telemetry = new Telemetry(
-            Resource::create(['service.name' => 'flow-test']),
-            new TracerProvider($spanProcessor, $clock, $contextStorage),
-            new MeterProvider($metricProcessor, $clock),
-            new LoggerProvider($logProcessor, $clock, $contextStorage),
-        );
-
-        $config = config_builder()->withTelemetry($telemetry)->build();
-
-        df($config)->read(from_array([
-            ['id' => 1, 'name' => 'John'],
-            ['id' => 2, 'name' => 'Jane'],
-        ]))->run();
+        df(
+            config_builder()
+                ->withTelemetry(
+                    new Telemetry(
+                        Resource::create(['service.name' => 'flow-test']),
+                        new TracerProvider($spanProcessor, $clock, $contextStorage),
+                        new MeterProvider($metricProcessor, $clock),
+                        new LoggerProvider($logProcessor, $clock, $contextStorage),
+                    ),
+                )
+                ->build(),
+        )
+            ->read(from_array([
+                ['id' => 1, 'name' => 'John'],
+                ['id' => 2, 'name' => 'Jane'],
+            ]))->run();
 
         $debugLogs = $logProcessor->entriesWithSeverity(Severity::DEBUG);
         static::assertGreaterThanOrEqual(2, count($debugLogs));
@@ -235,28 +249,30 @@ final class TelemetryTest extends FlowTestCase
         $clock = new FakeClock();
         $contextStorage = new MemoryContextStorage();
 
-        $telemetry = new Telemetry(
-            Resource::create(['service.name' => 'flow-test']),
-            new TracerProvider($spanProcessor, $clock, $contextStorage),
-            new MeterProvider($metricProcessor, $clock),
-            new LoggerProvider($logProcessor, $clock, $contextStorage),
-        );
-
-        $config = config_builder()->withTelemetry($telemetry)->build();
-
-        df($config)->read(from_array([
-            ['id' => 1, 'name' => 'John'],
-            ['id' => 2, 'name' => 'Jane'],
-            ['id' => 3, 'name' => 'Doe'],
-            ['id' => 4, 'name' => 'Smith'],
-            ['id' => 5, 'name' => 'Brown'],
-        ]))->run();
+        df(
+            config_builder()
+                ->withTelemetry(
+                    new Telemetry(
+                        Resource::create(['service.name' => 'flow-test']),
+                        new TracerProvider($spanProcessor, $clock, $contextStorage),
+                        new MeterProvider($metricProcessor, $clock),
+                        new LoggerProvider($logProcessor, $clock, $contextStorage),
+                    ),
+                )
+                ->build(),
+        )
+            ->read(from_array([
+                ['id' => 1, 'name' => 'John'],
+                ['id' => 2, 'name' => 'Jane'],
+                ['id' => 3, 'name' => 'Doe'],
+                ['id' => 4, 'name' => 'Smith'],
+                ['id' => 5, 'name' => 'Brown'],
+            ]))->run();
 
         $endedSpans = $spanProcessor->endedSpans();
         static::assertCount(1, $endedSpans);
 
-        $dataFrameSpan = $endedSpans[0];
-        $attributes = $dataFrameSpan->attributes();
+        $attributes = $endedSpans[0]->attributes();
 
         static::assertArrayHasKey('flow.etl.rows.total', $attributes);
         static::assertSame(5, $attributes['flow.etl.rows.total']);
@@ -272,16 +288,19 @@ final class TelemetryTest extends FlowTestCase
         $clock = new FakeClock();
         $contextStorage = new MemoryContextStorage();
 
-        $telemetry = new Telemetry(
-            Resource::create(['service.name' => 'flow-test']),
-            new TracerProvider($spanProcessor, $clock, $contextStorage),
-            new MeterProvider($metricProcessor, $clock),
-            new LoggerProvider($logProcessor, $clock, $contextStorage),
-        );
-
-        $config = config_builder()->withTelemetry($telemetry, telemetry_options(trace_transformations: true))->build();
-
-        df($config)
+        df(
+            config_builder()
+                ->withTelemetry(
+                    new Telemetry(
+                        Resource::create(['service.name' => 'flow-test']),
+                        new TracerProvider($spanProcessor, $clock, $contextStorage),
+                        new MeterProvider($metricProcessor, $clock),
+                        new LoggerProvider($logProcessor, $clock, $contextStorage),
+                    ),
+                    telemetry_options(trace_transformations: true),
+                )
+                ->build(),
+        )
             ->read(from_array([
                 ['id' => 1, 'name' => 'John'],
                 ['id' => 2, 'name' => 'Jane'],
@@ -316,7 +335,102 @@ final class TelemetryTest extends FlowTestCase
         }
     }
 
-    public function test_duplicate_row_transformer_exports_nested_spans_once(): void
+    public function test_each_operator_of_a_drained_chain_closes_its_own_span_under_the_dataframe_span(): void
+    {
+        $context = new MemoryTelemetryContext(telemetry_options(trace_transformations: true));
+
+        df($context->config)
+            ->read(from_array([['id' => 1], ['id' => 2], ['id' => 2], ['id' => 3]])->withBatchSize(1))
+            ->batchSize(2)
+            ->dropDuplicates(ref('id'))
+            ->fetch();
+
+        $dataFrameSpan = array_values(array_filter(
+            $context->spans->endedSpans(),
+            static fn(Span $span): bool => $span->name() === 'DataFrame flow_dataframe',
+        ))[0];
+
+        static::assertSame(
+            [
+                ['BatchingProcessor', BatchingProcessor::class, true, null],
+                ['DistinctProcessor', DistinctProcessor::class, true, null],
+            ],
+            array_values(array_map(
+                static fn(Span $span): array => [
+                    $span->name(),
+                    $span->attributes()['flow.etl.operator.class'],
+                    $span->context()->parentSpanId?->toHex() === $dataFrameSpan->context()->spanId->toHex(),
+                    $span->status(),
+                ],
+                array_filter($context->spans->endedSpans(), static fn(Span $span): bool => array_key_exists(
+                    'flow.etl.operator.class',
+                    $span->attributes(),
+                )),
+            )),
+        );
+        static::assertNull($context->telemetry->tracer('flow-php')->context()->activeSpan());
+    }
+
+    public function test_each_operator_of_a_chain_a_limit_stops_closes_its_own_span(): void
+    {
+        $context = new MemoryTelemetryContext(telemetry_options(trace_transformations: true));
+
+        df($context->config)
+            ->read(from_array([['id' => 1], ['id' => 2], ['id' => 2], ['id' => 3]])->withBatchSize(1))
+            ->batchSize(1)
+            ->dropDuplicates(ref('id'))
+            ->withColumn('x', lit(1))
+            ->limit(1)
+            ->fetch();
+
+        static::assertSame(
+            [
+                ['BatchingProcessor', BatchingProcessor::class, null],
+                ['DistinctProcessor', DistinctProcessor::class, null],
+            ],
+            array_values(array_map(
+                static fn(Span $span): array => [
+                    $span->name(),
+                    $span->attributes()['flow.etl.operator.class'],
+                    $span->status(),
+                ],
+                array_filter($context->spans->endedSpans(), static fn(Span $span): bool => array_key_exists(
+                    'flow.etl.operator.class',
+                    $span->attributes(),
+                )),
+            )),
+        );
+        static::assertNull($context->telemetry->tracer('flow-php')->context()->activeSpan());
+    }
+
+    public function test_each_operator_of_a_chain_its_consumer_abandons_closes_its_own_span(): void
+    {
+        $context = new MemoryTelemetryContext(telemetry_options(trace_transformations: true));
+
+        foreach (df($context->config)
+            ->read(from_array([['id' => 1], ['id' => 2], ['id' => 2], ['id' => 3]])->withBatchSize(1))
+            ->batchSize(1)
+            ->dropDuplicates(ref('id'))
+            ->get() as $_rows) {
+            break;
+        }
+
+        static::assertSame(
+            [
+                ['DistinctProcessor',        DistinctProcessor::class, null],
+                ['BatchingProcessor',        BatchingProcessor::class, null],
+                ['DataFrame flow_dataframe', null,                     null],
+            ],
+            array_map(static fn(Span $span): array => [
+                $span->name(),
+                $span->attributes()['flow.etl.operator.class'] ?? null,
+                $span->status(),
+            ], $context->spans->endedSpans()),
+        );
+        static::assertNull($context->telemetry->tracer('flow-php')->context()->activeSpan());
+    }
+
+    public function test_duplicate_row_transformer_opens_no_nested_span(): void
     {
         $context = new MemoryTelemetryContext(telemetry_options(trace_transformations: true));
 
@@ -333,13 +447,13 @@ final class TelemetryTest extends FlowTestCase
             $endedSpans,
             static fn(Span $span): bool => $span->name() === 'DuplicateRowTransformer',
         ));
-        static::assertCount(2, array_filter(
+        static::assertCount(0, array_filter(
             $endedSpans,
             static fn(Span $span): bool => $span->name() === 'ScalarFunctionTransformer',
         ));
     }
 
-    public function test_limit_reached_inside_a_sink_root_is_not_reported_as_failure(): void
+    public function test_limit_reached_inside_a_branch_is_not_reported_as_failure(): void
     {
         $context = new MemoryTelemetryContext(telemetry_options(trace_loading: true));
 
@@ -352,11 +466,11 @@ final class TelemetryTest extends FlowTestCase
         $output = [];
         df($context->config)
             ->read(from_array($rows))
-            ->load(to_transformation(new LimitTransformer(10), to_array($output)))
+            ->write(to_transformation(new LimitTransformer(10), to_array($output)))
             ->run();
 
         static::assertEmpty($context->logs->entriesContaining('Loading failed'));
-        static::assertEmpty($context->logs->entriesContaining('Error during ETL segment execution.'));
+        static::assertEmpty($context->logs->entriesContaining('Error during ETL pipeline execution.'));
         static::assertEmpty($context->logs->entriesContaining('Data frame processing failed'));
         static::assertCount(1, $context->logs->entriesContaining('Limit reached'));
         static::assertEmpty(array_filter(
@@ -385,7 +499,7 @@ final class TelemetryTest extends FlowTestCase
         static::assertCount(1, $context->logs->entriesContaining('Limit reached'));
     }
 
-    public function test_limit_reached_is_logged_without_exception_attribute(): void
+    public function test_limit_reached_is_logged_with_the_step_that_reached_it(): void
     {
         $context = new MemoryTelemetryContext();
 
@@ -401,7 +515,7 @@ final class TelemetryTest extends FlowTestCase
 
         static::assertCount(1, $logEntries);
         static::assertFalse($logEntries[0]->record->attributes->has('limit_exception'));
-        static::assertSame(5, $logEntries[0]->record->attributes->get('limit'));
+        static::assertSame(LimitTransformer::class, $logEntries[0]->record->attributes->get('step'));
     }
 
     public function test_telemetry_disabled_by_default_uses_void_providers(): void
@@ -442,7 +556,7 @@ final class TelemetryTest extends FlowTestCase
         );
     }
 
-    public function test_planner_built_sink_steps_emit_no_span(): void
+    public function test_planner_built_write_steps_emit_no_span(): void
     {
         $context = new MemoryTelemetryContext(telemetry_options(trace_loading: true));
 
@@ -457,13 +571,13 @@ final class TelemetryTest extends FlowTestCase
             [],
             array_values(array_filter($context->spans->endedSpans(), static fn(Span $span): bool => in_array(
                 $span->name(),
-                ['SinkFeed', 'TransactionalSinks'],
+                ['BranchLoader', 'TransactionLoader'],
                 true,
             ))),
         );
     }
 
-    public function test_a_sink_root_builds_no_dataframe_span_of_its_own(): void
+    public function test_a_branch_builds_no_dataframe_span_of_its_own(): void
     {
         $context = new MemoryTelemetryContext();
 
@@ -485,7 +599,7 @@ final class TelemetryTest extends FlowTestCase
         static::assertCount(1, array_filter($context->spans->endedSpans(), $isDataFrameSpan));
     }
 
-    public function test_until_condition_is_logged_without_exception_attribute(): void
+    public function test_until_condition_is_logged_with_the_step_that_reached_it(): void
     {
         $context = new MemoryTelemetryContext();
 
@@ -504,18 +618,15 @@ final class TelemetryTest extends FlowTestCase
 
         static::assertCount(1, $logEntries);
         static::assertFalse($logEntries[0]->record->attributes->has('limit_exception'));
-        // UntilTransformer has no limit to report and throws LimitReachedException(0).
-        static::assertSame(0, $logEntries[0]->record->attributes->get('limit'));
+        static::assertSame(UntilTransformer::class, $logEntries[0]->record->attributes->get('step'));
     }
 
     public function test_a_join_builds_one_balanced_dataframe_span_per_run(): void
     {
         $context = new MemoryTelemetryContext();
-        $right = df($context->config)->read(from_array([['id' => 1, 'name' => 'a']]));
-
         df($context->config)
             ->read(from_array([['id' => 1]]))
-            ->join($right, join_on(['id' => 'id'], 'r_'))
+            ->join(df($context->config)->read(from_array([['id' => 1, 'name' => 'a']])), join_on(['id' => 'id'], 'r_'))
             ->run();
 
         $isDataFrameSpan = static fn(Span $span): bool => str_starts_with($span->name(), 'DataFrame ');
@@ -527,11 +638,12 @@ final class TelemetryTest extends FlowTestCase
     public function test_a_join_over_frames_sharing_one_flow_context_builds_one_balanced_dataframe_span(): void
     {
         $context = new MemoryTelemetryContext();
-        $right = new DataFrame(from_array([['id' => 1, 'x' => 'a']]), $context->flowContext);
-
-        (new DataFrame(from_array([['id' => 1]]), $context->flowContext))->join($right, join_on([
-            'id' => 'id',
-        ], 'r_'))->run();
+        (new DataFrame(from_array([['id' => 1]]), $context->flowContext))->join(
+            new DataFrame(from_array([['id' => 1, 'x' => 'a']]), $context->flowContext),
+            join_on([
+                'id' => 'id',
+            ], 'r_'),
+        )->run();
 
         $isDataFrameSpan = static fn(Span $span): bool => str_starts_with($span->name(), 'DataFrame ');
 
@@ -542,58 +654,15 @@ final class TelemetryTest extends FlowTestCase
     public function test_a_cross_join_builds_one_balanced_dataframe_span_per_run(): void
     {
         $context = new MemoryTelemetryContext();
-        $right = df($context->config)->read(from_array([['name' => 'a']]));
-
         df($context->config)
             ->read(from_array([['id' => 1]]))
-            ->crossJoin($right, 'r_')
+            ->crossJoin(df($context->config)->read(from_array([['name' => 'a']])), 'r_')
             ->run();
 
         $isDataFrameSpan = static fn(Span $span): bool => str_starts_with($span->name(), 'DataFrame ');
 
         static::assertCount(1, array_filter($context->spans->startedSpans(), $isDataFrameSpan));
         static::assertCount(1, array_filter($context->spans->endedSpans(), $isDataFrameSpan));
-    }
-
-    public function test_a_read_frame_builds_its_own_balanced_dataframe_span_per_run(): void
-    {
-        $context = new MemoryTelemetryContext();
-        $inner = df($context->config)->read(from_array([['id' => 1]]))->select('id');
-
-        df($context->config)->read(from_data_frame($inner))->run();
-
-        $isDataFrameSpan = static fn(Span $span): bool => str_starts_with($span->name(), 'DataFrame ');
-
-        static::assertCount(2, array_filter($context->spans->startedSpans(), $isDataFrameSpan));
-        static::assertCount(2, array_filter($context->spans->endedSpans(), $isDataFrameSpan));
-    }
-
-    public function test_a_read_frame_sharing_the_outer_flow_context_builds_balanced_dataframe_spans(): void
-    {
-        $context = new MemoryTelemetryContext();
-        $inner = new DataFrame(from_array([['id' => 1]]), $context->flowContext);
-
-        (new DataFrame(from_data_frame($inner), $context->flowContext))->run();
-
-        $isDataFrameSpan = static fn(Span $span): bool => str_starts_with($span->name(), 'DataFrame ');
-
-        static::assertCount(2, array_filter($context->spans->startedSpans(), $isDataFrameSpan));
-        static::assertCount(2, array_filter($context->spans->endedSpans(), $isDataFrameSpan));
-    }
-
-    public function test_an_abandoned_run_over_a_read_frame_closes_both_dataframe_spans(): void
-    {
-        $context = new MemoryTelemetryContext();
-        $inner = df($context->config)->read(from_array([['id' => 1], ['id' => 2]]))->select('id');
-
-        foreach (df($context->config)->read(from_data_frame($inner))->batchSize(1)->get() as $_rows) {
-            break;
-        }
-
-        $isDataFrameSpan = static fn(Span $span): bool => str_starts_with($span->name(), 'DataFrame ');
-
-        static::assertCount(2, array_filter($context->spans->startedSpans(), $isDataFrameSpan));
-        static::assertCount(2, array_filter($context->spans->endedSpans(), $isDataFrameSpan));
     }
 
     public function test_a_frame_run_twice_builds_two_balanced_dataframe_spans(): void
@@ -608,5 +677,242 @@ final class TelemetryTest extends FlowTestCase
 
         static::assertCount(2, array_filter($context->spans->startedSpans(), $isDataFrameSpan));
         static::assertCount(2, array_filter($context->spans->endedSpans(), $isDataFrameSpan));
+    }
+
+    public function test_a_run_with_a_transformer_a_sort_and_a_loader_emits_these_signals(): void
+    {
+        $telemetry = new MemoryTelemetryContext(telemetry_options(
+            trace_loading: true,
+            trace_transformations: true,
+            collect_metrics: true,
+        ));
+        $output = [];
+
+        df($telemetry->config)
+            ->read(from_array([['id' => 3], ['id' => 1], ['id' => 2]]))
+            ->withColumn('flag', lit(true))
+            ->sortBy(ref('id'))
+            ->write(to_array($output))
+            ->run();
+
+        static::assertSame(
+            [
+                'spans' => [
+                    [
+                        'ScalarFunctionTransformer',
+                        'INTERNAL',
+                        null,
+                        [
+                            'flow.etl.dataframe.name',
+                            'flow.etl.scalar.function',
+                            'flow.etl.transformation.input_rows',
+                            'flow.etl.transformation.output_rows',
+                            'flow.etl.transformer.class',
+                        ],
+                    ],
+                    [
+                        'ArrayLoader',
+                        'INTERNAL',
+                        null,
+                        [
+                            'flow.etl.dataframe.name',
+                            'flow.etl.loader.class',
+                            'flow.etl.loading.rows',
+                        ],
+                    ],
+                    [
+                        'MergeSortProcessor',
+                        'INTERNAL',
+                        null,
+                        [
+                            'flow.etl.dataframe.name',
+                            'flow.etl.operator.class',
+                        ],
+                    ],
+                    [
+                        'DataFrame flow_dataframe',
+                        'INTERNAL',
+                        null,
+                        [
+                            'flow.etl.dataframe.id',
+                            'flow.etl.dataframe.name',
+                            'flow.etl.memory.max',
+                            'flow.etl.memory.min',
+                            'flow.etl.rows.throughput.per_second',
+                            'flow.etl.rows.total',
+                        ],
+                    ],
+                ],
+                'logs' => [
+                    [
+                        5,
+                        'Data frame processing started',
+                        [
+                            'cache',
+                            'dataframe_id',
+                            'dataframe_name',
+                            'optimizer_rules',
+                            'serializer',
+                            'spill',
+                            'telemetry',
+                        ],
+                    ],
+                    [
+                        5,
+                        'Data frame processing completed',
+                        [
+                            'dataframe_id',
+                            'dataframe_name',
+                            'memory_max_mb',
+                            'memory_min_mb',
+                            'total_rows_processed',
+                        ],
+                    ],
+                ],
+                'metrics' => [
+                    ['flow.etl.rows.processed', 'counter', ['flow.etl.dataframe.name']],
+                    ['flow.etl.rows.throughput', 'gauge', ['flow.etl.dataframe.name']],
+                ],
+            ],
+            $telemetry->signals(),
+        );
+    }
+
+    public function test_a_failing_transformer_emits_these_signals(): void
+    {
+        $telemetry = new MemoryTelemetryContext(telemetry_options(
+            trace_loading: true,
+            trace_transformations: true,
+            collect_metrics: true,
+        ));
+
+        try {
+            df($telemetry->config)
+                ->read(from_array([['id' => 1]]))
+                ->with(new ThrowingTransformer(new RuntimeException('boom')))
+                ->run();
+            static::fail('expected the transformer to fail the run');
+        } catch (RuntimeException) {
+        }
+
+        static::assertSame(
+            [
+                'spans' => [
+                    [
+                        'ThrowingTransformer',
+                        'INTERNAL',
+                        'ERROR',
+                        [
+                            'error.type',
+                            'flow.etl.dataframe.name',
+                            'flow.etl.transformer.class',
+                        ],
+                    ],
+                    [
+                        'DataFrame flow_dataframe',
+                        'INTERNAL',
+                        'ERROR',
+                        [
+                            'error.type',
+                            'flow.etl.dataframe.id',
+                            'flow.etl.dataframe.name',
+                            'flow.etl.memory.max',
+                            'flow.etl.memory.min',
+                            'flow.etl.rows.throughput.per_second',
+                            'flow.etl.rows.total',
+                        ],
+                    ],
+                ],
+                'logs' => [
+                    [
+                        5,
+                        'Data frame processing started',
+                        [
+                            'cache',
+                            'dataframe_id',
+                            'dataframe_name',
+                            'optimizer_rules',
+                            'serializer',
+                            'spill',
+                            'telemetry',
+                        ],
+                    ],
+                    [17, 'Transformation failed', ['exception', 'transformer']],
+                    [17, 'Error during ETL pipeline execution.', ['exception']],
+                    [17, 'Data frame processing failed', ['dataframe_id', 'dataframe_name', 'exception']],
+                ],
+                'metrics' => [],
+            ],
+            $telemetry->signals(),
+        );
+    }
+
+    public function test_a_failing_loader_emits_these_signals(): void
+    {
+        $telemetry = new MemoryTelemetryContext(telemetry_options(
+            trace_loading: true,
+            trace_transformations: true,
+            collect_metrics: true,
+        ));
+
+        try {
+            df($telemetry->config)
+                ->read(from_array([['id' => 1]]))
+                ->write(new ThrowingLoader(new RuntimeException('boom')))
+                ->run();
+            static::fail('expected the loader to fail the run');
+        } catch (RuntimeException) {
+        }
+
+        static::assertSame(
+            [
+                'spans' => [
+                    [
+                        'ThrowingLoader',
+                        'INTERNAL',
+                        'ERROR',
+                        [
+                            'error.type',
+                            'flow.etl.dataframe.name',
+                            'flow.etl.loader.class',
+                        ],
+                    ],
+                    [
+                        'DataFrame flow_dataframe',
+                        'INTERNAL',
+                        'ERROR',
+                        [
+                            'error.type',
+                            'flow.etl.dataframe.id',
+                            'flow.etl.dataframe.name',
+                            'flow.etl.memory.max',
+                            'flow.etl.memory.min',
+                            'flow.etl.rows.throughput.per_second',
+                            'flow.etl.rows.total',
+                        ],
+                    ],
+                ],
+                'logs' => [
+                    [
+                        5,
+                        'Data frame processing started',
+                        [
+                            'cache',
+                            'dataframe_id',
+                            'dataframe_name',
+                            'optimizer_rules',
+                            'serializer',
+                            'spill',
+                            'telemetry',
+                        ],
+                    ],
+                    [17, 'Loading failed', ['exception', 'loader']],
+                    [17, 'Error during ETL pipeline execution.', ['exception']],
+                    [17, 'Data frame processing failed', ['dataframe_id', 'dataframe_name', 'exception']],
+                ],
+                'metrics' => [],
+            ],
+            $telemetry->signals(),
+        );
     }
 }

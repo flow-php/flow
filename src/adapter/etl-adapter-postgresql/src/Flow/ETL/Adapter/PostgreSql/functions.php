@@ -7,17 +7,24 @@ namespace Flow\ETL\Adapter\PostgreSql;
 use Flow\Documentation\Attribute\DocumentationDSL;
 use Flow\Documentation\Attribute\Module;
 use Flow\Documentation\Attribute\Type as DSLType;
-use Flow\ETL\Adapter\PostgreSql\LoaderOptions\DeleteOptions;
-use Flow\ETL\Adapter\PostgreSql\LoaderOptions\InsertOptions;
-use Flow\ETL\Adapter\PostgreSql\LoaderOptions\UpdateOptions;
-use Flow\ETL\Adapter\PostgreSql\Pagination\Key;
-use Flow\ETL\Adapter\PostgreSql\Pagination\KeySet;
-use Flow\ETL\Adapter\PostgreSql\Pagination\Order;
-use Flow\ETL\Adapter\PostgreSql\Schema\SortingStrategy\TypeStrategy;
-use Flow\ETL\Loader;
-use Flow\ETL\Schema;
-use Flow\ETL\Sink;
-use Flow\ETL\Sink\Transactional;
+use Flow\ETL\Adapter\PostgreSql\IO\Extractor\Pagination\Key;
+use Flow\ETL\Adapter\PostgreSql\IO\Extractor\Pagination\KeySet;
+use Flow\ETL\Adapter\PostgreSql\IO\Extractor\Pagination\Order;
+use Flow\ETL\Adapter\PostgreSql\IO\Extractor\PostgreSqlCursorExtractor;
+use Flow\ETL\Adapter\PostgreSql\IO\Extractor\PostgreSqlKeySetExtractor;
+use Flow\ETL\Adapter\PostgreSql\IO\Extractor\PostgreSqlLimitOffsetExtractor;
+use Flow\ETL\Adapter\PostgreSql\IO\Loader\LoaderOptions\DeleteOptions;
+use Flow\ETL\Adapter\PostgreSql\IO\Loader\LoaderOptions\InsertOptions;
+use Flow\ETL\Adapter\PostgreSql\IO\Loader\LoaderOptions\UpdateOptions;
+use Flow\ETL\Adapter\PostgreSql\IO\Loader\PostgreSqlLoader;
+use Flow\ETL\Adapter\PostgreSql\IO\Loader\PostgreSqlTransaction;
+use Flow\ETL\Adapter\PostgreSql\Values\Schema\SchemaConverter;
+use Flow\ETL\Adapter\PostgreSql\Values\Schema\SortingStrategy\TypeStrategy;
+use Flow\ETL\Adapter\PostgreSql\Values\Schema\TypesMap;
+use Flow\ETL\API\Branch;
+use Flow\ETL\API\Transactional;
+use Flow\ETL\IO\Loader;
+use Flow\ETL\Values\Schema;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\Table;
@@ -106,12 +113,12 @@ function to_pgsql_table(Client $client, string $table): PostgreSqlLoader
 }
 
 /**
- * Write every sink within PostgreSQL transactions.
+ * Write every child within PostgreSQL transactions.
  */
 #[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::LOADER)]
-function to_pgsql_transaction(Client $client, Loader|Sink ...$sinks): Transactional
+function to_pgsql_transaction(Client $client, Loader|Branch ...$writes): Transactional
 {
-    return new Transactional(new PostgreSqlTransaction($client), ...$sinks);
+    return new Transactional(new PostgreSqlTransaction($client), ...$writes);
 }
 
 /**

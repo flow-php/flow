@@ -1,4 +1,4 @@
-//! `Flow\ETL\Adapter\JSON\RustJsonOpenSource`: JSON lines or a top-level JSON array read from the stream in `CHUNK`s
+//! `Flow\ETL\Adapter\JSON\IO\Extractor\RustJsonOpenSource`: JSON lines or a top-level JSON array read from the stream in `CHUNK`s
 //! into native columns, every batch adopted by the configured backend.
 
 use std::cell::{Cell, RefCell};
@@ -76,9 +76,9 @@ impl Fed for JsonFeed {
 
 #[php_class]
 #[php(
-    name = "Flow\\ETL\\Adapter\\JSON\\RustJsonOpenSource",
+    name = "Flow\\ETL\\Adapter\\JSON\\IO\\Extractor\\RustJsonOpenSource",
     flags = ClassFlags::Final,
-    implements(ce = json_open_source_ce, stub = "Flow\\ETL\\Adapter\\JSON\\JsonOpenSource")
+    implements(ce = json_open_source_ce, stub = "Flow\\ETL\\Adapter\\JSON\\IO\\Extractor\\JsonOpenSource")
 )]
 pub struct RustJsonOpenSource {
     shared: Rc<Shared>,
@@ -100,7 +100,7 @@ impl RustJsonOpenSource {
     }
 
     /// Exactly `$batchSize` rows keyed and ordered by `$schema` (the last may be shorter), every column adopted by
-    /// `$backend`; refusals are `RowsBuilder::appendRows()`'s, row indexes relative to the batch.
+    /// `$backend`; refusals are `RowsBuilder::appendRows()`'s, row indexes relative to the source.
     pub fn batches(&self, schema: &Zval, batchSize: i64, backend: &Zval) -> PhpResult<RustIterator> {
         let fed = JsonFeed {
             shared: Rc::clone(&self.shared),
@@ -108,7 +108,7 @@ impl RustJsonOpenSource {
             batch_size: batch_size_of(batchSize, "JSON")?,
         };
 
-        Ok(source::batches(fed, schema, backend))
+        source::batches(fed, schema, backend)
     }
 
     pub fn close(&self) -> PhpResult<()> {

@@ -4,24 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\Tests\Context;
 
-use Flow\ETL\Adapter\JSON\AdaptiveJsonOpenSource;
-use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
-use Flow\ETL\Adapter\JSON\JSONMachine\JsonFileReader;
-use Flow\ETL\Adapter\JSON\JSONMachine\JsonFormat;
-use Flow\ETL\Adapter\JSON\JSONMachine\JsonSamples;
-use Flow\ETL\Adapter\JSON\JsonOpenSource;
-use Flow\ETL\Column\Backend;
-use Flow\ETL\Column\PhpBackend;
-use Flow\ETL\Exception\SchemaMismatchException;
-use Flow\ETL\Extractor\File\SourceFile;
-use Flow\ETL\Schema;
-use Flow\ETL\Schema\Inference\SchemaInference;
-use Flow\ETL\Schema\Inference\SchemaInferrer;
+use Flow\ETL\Adapter\JSON\IO\Extractor\JsonExtractor;
+use Flow\ETL\Adapter\JSON\IO\Extractor\JsonFileBatches;
+use Flow\ETL\Adapter\JSON\IO\Extractor\JsonFileReader;
+use Flow\ETL\Adapter\JSON\IO\Extractor\JsonOpenSource;
+use Flow\ETL\Adapter\JSON\IO\Inference\JsonSniffer;
+use Flow\ETL\Adapter\JSON\IO\JsonFraming;
+use Flow\ETL\Foundation\Exception\SchemaMismatchException;
+use Flow\ETL\IO\Extractor\File\SourceFile;
+use Flow\ETL\IO\Inference\SchemaInference;
+use Flow\ETL\IO\Inference\SchemaInferrer;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Values\Schema;
 use Flow\Filesystem\FileListing;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
-use Flow\Types\Type\Logical\InstanceOfTypeNarrower;
 use Generator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -46,22 +45,19 @@ use function substr;
 final class JsonFixtureContext
 {
     /**
-     * A reader over every file a glob under Fixtures/ lists, in listing order.
+     * Every file a glob under Fixtures/ lists, in listing order.
+     *
+     * @return list<SourceFile>
      */
-    public static function globReader(
-        string $glob,
-        JsonFormat $format = JsonFormat::Document,
-        Filesystem $filesystem = new NativeLocalFilesystem(),
-        ?string $pointer = null,
-        bool $pointerToColumnName = false,
-    ): JsonFileReader {
+    public static function globSources(string $glob, Filesystem $filesystem = new NativeLocalFilesystem()): array
+    {
         $sources = [];
 
         foreach ((new FileListing($filesystem))->list(path(self::path($glob)), new OnlyFiles()) as $status) {
-            $sources[] = new SourceFile($status->path);
+            $sources[] = new SourceFile($status->path, $status->size);
         }
 
-        return new JsonFileReader($filesystem, $format, $pointer, $pointerToColumnName, $sources);
+        return $sources;
     }
 
     /**
@@ -88,9 +84,9 @@ final class JsonFixtureContext
         }
     }
 
-    public static function format(string $fixture): JsonFormat
+    public static function format(string $fixture): JsonFraming
     {
-        return str_ends_with($fixture, '.jsonl') ? JsonFormat::Lines : JsonFormat::Document;
+        return str_ends_with($fixture, '.jsonl') ? JsonFraming::Lines : JsonFraming::Array;
     }
 
     /**
@@ -98,12 +94,9 @@ final class JsonFixtureContext
      */
     public static function infer(string $fixture, SchemaInference $inference = new SchemaInference()): Schema
     {
-        $reader = self::reader(self::format($fixture), sources: [self::source($fixture)]);
-
-        return (new SchemaInferrer($inference, new InstanceOfTypeNarrower()))->infer(
-            [],
-            new JsonSamples($reader->samples($inference->sampleSize)),
-        );
+        return (new SchemaInferrer($inference))->infer(self::sniffer(self::format($fixture), [self::source(
+            $fixture,
+        )]))->schema;
     }
 
     /**
@@ -127,18 +120,12 @@ final class JsonFixtureContext
      * The source JsonExtractor (Document or Lines) opens, over a reader of the same filesystem.
      */
     public static function open(
-        JsonFormat $format,
+        JsonFraming $format,
         SourceFile $source,
         Filesystem $filesystem = new NativeLocalFilesystem(),
         ?string $pointer = null,
-    ): AdaptiveJsonOpenSource {
-        return new AdaptiveJsonOpenSource(
-            $filesystem,
-            self::reader($format, $filesystem, pointer: $pointer),
-            $format,
-            $pointer,
-            $source,
-        );
+    ): JsonOpenSource {
+        return (new JsonFileBatches($filesystem, self::reader($format, $filesystem, pointer: $pointer)))->open($source);
     }
 
     /**
@@ -189,17 +176,24 @@ final class JsonFixtureContext
         return __DIR__ . '/../Fixtures/' . $fixture;
     }
 
-    /**
-     * @param list<SourceFile> $sources
-     */
     public static function reader(
-        JsonFormat $format = JsonFormat::Document,
+        JsonFraming $format = JsonFraming::Array,
         Filesystem $filesystem = new NativeLocalFilesystem(),
-        array $sources = [],
         ?string $pointer = null,
         bool $pointerToColumnName = false,
     ): JsonFileReader {
-        return new JsonFileReader($filesystem, $format, $pointer, $pointerToColumnName, $sources);
+        return new JsonFileReader($filesystem, $format, $pointer, $pointerToColumnName);
+    }
+
+    /**
+     * @param list<SourceFile> $sources
+     */
+    public static function sniffer(
+        JsonFraming $format,
+        array $sources,
+        Filesystem $filesystem = new NativeLocalFilesystem(),
+    ): JsonSniffer {
+        return new JsonSniffer(self::reader($format, $filesystem), $sources);
     }
 
     public static function source(string $fixture): SourceFile

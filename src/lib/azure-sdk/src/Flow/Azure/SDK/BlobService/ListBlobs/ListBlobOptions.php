@@ -6,13 +6,12 @@ namespace Flow\Azure\SDK\BlobService\ListBlobs;
 
 use Flow\Azure\SDK\BlobService;
 use Flow\Azure\SDK\EndpointOptions;
-use Flow\Azure\SDK\Endpoints\UserAgentHeader;
 
 use function array_map;
 
 final class ListBlobOptions implements EndpointOptions
 {
-    use UserAgentHeader;
+    private string $userAgentHeader = 'flow-php/azure-sdk';
 
     private ?string $delimiter = null;
 
@@ -153,5 +152,15 @@ final class ListBlobOptions implements EndpointOptions
         $this->version = $version;
 
         return $this;
+    }
+
+    public function userAgentHeader(): string
+    {
+        return $this->userAgentHeader;
+    }
+
+    public function withUserAgent(string $userAgentHeader): void
+    {
+        $this->userAgentHeader = $userAgentHeader;
     }
 }

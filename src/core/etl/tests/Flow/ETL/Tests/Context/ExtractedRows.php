@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Context;
 
-use Flow\ETL\Extractor;
-use Flow\ETL\Extractor\File\FileScan;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Rows;
+use Flow\ETL\IO\Extractor;
+use Flow\ETL\IO\Extractor\Criteria;
+use Flow\ETL\Runtime\FlowContext;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Values\Rows;
 
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\rows;
@@ -16,13 +16,18 @@ use function Flow\ETL\DSL\schema;
 
 final class ExtractedRows
 {
-    public static function of(Extractor $extractor, ?FlowContext $context = null, FileScan $scan = new FileScan()): Rows
-    {
+    public static function of(
+        Extractor $extractor,
+        ?FlowContext $context = null,
+        Criteria $criteria = new Criteria(),
+    ): Rows {
         $context ??= flow_context();
         $extracted = null;
 
-        foreach (FlowTestCase::extracted($extractor, $context, $scan) as $batch) {
-            $extracted = $extracted === null ? $batch : $extracted->concat($context->backend(), $batch);
+        foreach (FlowTestCase::extracted($extractor, $context, $criteria) as $batch) {
+            $extracted = $extracted === null
+                ? $batch
+                : Rows::concat($extracted->schema(), $context->backend(), $extracted, $batch);
         }
 
         return $extracted ?? rows(schema());
@@ -36,7 +41,10 @@ final class ExtractedRows
     public static function interleaved(Extractor $extractor, ?FlowContext $context = null): array
     {
         $context ??= flow_context();
-        $reads = [$extractor->extract($context), $extractor->extract($context)];
+        $reads = [
+            $extractor->extract($context->backend(), new Criteria()),
+            $extractor->extract($context->backend(), new Criteria()),
+        ];
         /** @var array{0: null|Rows, 1: null|Rows} $extracted */
         $extracted = [null, null];
 
@@ -45,7 +53,7 @@ final class ExtractedRows
                 if ($read->valid()) {
                     $extracted[$i] = $extracted[$i] === null
                         ? $read->current()
-                        : $extracted[$i]->concat($context->backend(), $read->current());
+                        : Rows::concat($extracted[$i]->schema(), $context->backend(), $extracted[$i], $read->current());
                     $read->next();
                 }
             }

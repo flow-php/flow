@@ -234,4 +234,57 @@ final class AzureBlobFilesystemFactoryTest extends TestCase
     {
         static::assertSame('azure_blob', (new AzureBlobFilesystemFactory())->type());
     }
+
+    public function test_an_inline_client_configuration_builds_a_describable_filesystem(): void
+    {
+        $filesystem = (new AzureBlobFilesystemFactory())->create('azure-blob', [
+            'container' => 'c',
+            'client' => [
+                'account_name' => 'a',
+                'auth' => ['shared_key' => base64_encode('k')],
+                'url_factory' => ['host' => '127.0.0.1', 'port' => '10000', 'https' => false],
+            ],
+        ]);
+        $configuration = $filesystem->normalize();
+
+        static::assertNotNull($configuration);
+        static::assertSame(
+            [
+                'account_name' => 'a',
+                'container' => 'c',
+                'shared_key' => base64_encode('k'),
+                'url' => ['azurite' => ['host' => '127.0.0.1', 'port' => '10000', 'https' => false]],
+            ],
+            $configuration['blob_service'],
+        );
+        static::assertSame($configuration, AzureBlobFilesystem::fromArray($configuration)->normalize());
+    }
+
+    public function test_an_injected_service_builds_a_filesystem_without_configuration(): void
+    {
+        static::assertNull(
+            (new AzureBlobFilesystemFactory())
+                ->create('azure-blob', [
+                    'container' => 'c',
+                    'client' => self::createStub(BlobServiceInterface::class),
+                ])
+                ->normalize(),
+        );
+    }
+
+    public function test_an_injected_logger_builds_a_filesystem_without_configuration(): void
+    {
+        static::assertNull(
+            (new AzureBlobFilesystemFactory())
+                ->create('azure-blob', [
+                    'container' => 'c',
+                    'client' => [
+                        'account_name' => 'a',
+                        'auth' => ['shared_key' => base64_encode('k')],
+                        'logger' => new NullLogger(),
+                    ],
+                ])
+                ->normalize(),
+        );
+    }
 }

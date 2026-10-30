@@ -5,13 +5,19 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Window;
 
 use DateTimeImmutable;
-use Flow\ETL\Rows;
+use Flow\ETL\Foundation\Exception\SchemaDefinitionNotFoundException;
+use Flow\ETL\Functions\AggregatingFunction;
+use Flow\ETL\Functions\WindowFunction;
 use Flow\ETL\Tests\Context\WindowFrameContext;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Values\Rows;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 use function array_map;
 use function array_merge;
 use function Flow\ETL\DSL\average;
+use function Flow\ETL\DSL\count;
 use function Flow\ETL\DSL\current_row;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\dense_rank;
@@ -32,28 +38,66 @@ use function iterator_to_array;
 
 final class WindowFunctionsTest extends FlowTestCase
 {
+    /**
+     * @return Generator<string, array{AggregatingFunction&WindowFunction, int|float}>
+     */
+    public static function frame_aggregates_over_nulls(): Generator
+    {
+        yield 'count' => [count(ref('x')), 2];
+        yield 'sum' => [sum(ref('x')), 4.0];
+        yield 'average' => [average(ref('x')), 2.0];
+    }
+
+    #[DataProvider('frame_aggregates_over_nulls')]
+    public function test_a_window_aggregate_equals_the_group_by_aggregate_over_nulls(
+        AggregatingFunction&WindowFunction $function,
+        int|float $expected,
+    ): void {
+        $rows = [['g' => 'a', 'x' => 1], ['g' => 'a', 'x' => null], ['g' => 'a', 'x' => 3]];
+
+        static::assertSame(
+            [$expected],
+            data_frame()
+                ->read(from_array($rows))
+                ->groupBy('g')
+                ->aggregate($function)
+                ->fetch()
+                ->reduceToArray($function->outputName()),
+        );
+        static::assertSame(
+            [$expected, $expected, $expected],
+            data_frame()
+                ->read(from_array($rows))
+                ->withColumn('w', $function->over(window()->partitionBy(ref('g'))))
+                ->fetch()
+                ->reduceToArray('w'),
+        );
+    }
+
+    /**
+     * @return Generator<string, array{AggregatingFunction&WindowFunction}>
+     */
+    public static function frame_aggregates_of_a_missing_column(): Generator
+    {
+        yield 'count' => [count(ref('missing'))];
+        yield 'sum' => [sum(ref('missing'))];
+        yield 'average' => [average(ref('missing'))];
+    }
+
+    #[DataProvider('frame_aggregates_of_a_missing_column')]
+    public function test_a_window_aggregate_of_a_missing_column_is_rejected_before_it_runs(AggregatingFunction&WindowFunction $function): void
+    {
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+        $this->expectExceptionMessage('Schema definition for column "missing" not found.');
+
+        data_frame()
+            ->read(from_array([['id' => 1], ['id' => 2]]))
+            ->withColumn('w', $function->over(window()))
+            ->fetch();
+    }
+
     public function test_rank_on_partitioned_window(): void
     {
-        $rows = data_frame()
-            ->read(from_all(
-                from_array([
-                    ['id' => 1, 'name' => 'Greg', 'department' => 'IT', 'salary' => 6000],
-                    ['id' => 2, 'name' => 'Michal', 'department' => 'IT', 'salary' => 5000],
-                    ['id' => 3, 'name' => 'Tomas', 'department' => 'Finances', 'salary' => 11_000],
-                ]),
-                from_array([
-                    ['id' => 4, 'name' => 'John', 'department' => 'Finances', 'salary' => 9000],
-                    ['id' => 5, 'name' => 'Jane', 'department' => 'Finances', 'salary' => 14_000],
-                    ['id' => 6, 'name' => 'Janet', 'department' => 'Finances', 'salary' => 4000],
-                ]),
-            ))
-            ->withColumn(
-                'rank',
-                dense_rank()->over(window()->partitionBy(ref('department'))->orderBy(ref('salary')->desc())),
-            )
-            ->sortBy([ref('department'), ref('rank')])
-            ->get();
-
         static::assertEquals(
             [
                 ['id' => 5, 'name' => 'Jane', 'department' => 'Finances', 'salary' => 14_000, 'rank' => 1],
@@ -63,28 +107,38 @@ final class WindowFunctionsTest extends FlowTestCase
                 ['id' => 1, 'name' => 'Greg', 'department' => 'IT', 'salary' => 6000, 'rank' => 1],
                 ['id' => 2, 'name' => 'Michal', 'department' => 'IT', 'salary' => 5000, 'rank' => 2],
             ],
-            array_merge(...array_map(static fn(Rows $r) => $r->toArray(), iterator_to_array($rows, false))),
+            array_merge(...array_map(
+                static fn(Rows $r) => $r->toArray(),
+                iterator_to_array(
+                    data_frame()
+                        ->read(from_all(
+                            from_array([
+                                ['id' => 1, 'name' => 'Greg', 'department' => 'IT', 'salary' => 6000],
+                                ['id' => 2, 'name' => 'Michal', 'department' => 'IT', 'salary' => 5000],
+                                ['id' => 3, 'name' => 'Tomas', 'department' => 'Finances', 'salary' => 11_000],
+                            ]),
+                            from_array([
+                                ['id' => 4, 'name' => 'John', 'department' => 'Finances', 'salary' => 9000],
+                                ['id' => 5, 'name' => 'Jane', 'department' => 'Finances', 'salary' => 14_000],
+                                ['id' => 6, 'name' => 'Janet', 'department' => 'Finances', 'salary' => 4000],
+                            ]),
+                        ))
+                        ->withColumn(
+                            'rank',
+                            dense_rank()->over(
+                                window()->partitionBy(ref('department'))->orderBy(ref('salary')->desc()),
+                            ),
+                        )
+                        ->sortBy([ref('department'), ref('rank')])
+                        ->get(),
+                    false,
+                ),
+            )),
         );
     }
 
     public function test_rank_without_partitioning(): void
     {
-        $rows = data_frame()
-            ->read(from_all(
-                from_array([
-                    ['id' => 1, 'name' => 'Greg', 'department' => 'IT', 'salary' => 6000],
-                    ['id' => 2, 'name' => 'Michal', 'department' => 'IT', 'salary' => 5000],
-                    ['id' => 3, 'name' => 'Tomas', 'department' => 'Finances', 'salary' => 11_000],
-                ]),
-                from_array([
-                    ['id' => 4, 'name' => 'John', 'department' => 'Finances', 'salary' => 9000],
-                    ['id' => 5, 'name' => 'Jane', 'department' => 'Finances', 'salary' => 14_000],
-                    ['id' => 6, 'name' => 'Janet', 'department' => 'Finances', 'salary' => 4000],
-                ]),
-            ))
-            ->withColumn('rank', rank()->over(window()->orderBy(ref('salary')->desc())))
-            ->get();
-
         static::assertSame(
             [
                 [
@@ -96,7 +150,27 @@ final class WindowFunctionsTest extends FlowTestCase
                     ['id' => 6, 'name' => 'Janet', 'department' => 'Finances', 'salary' => 4000, 'rank' => 6],
                 ],
             ],
-            array_map(static fn(Rows $r) => $r->toArray(), iterator_to_array($rows, false)),
+            array_map(
+                static fn(Rows $r) => $r->toArray(),
+                iterator_to_array(
+                    data_frame()
+                        ->read(from_all(
+                            from_array([
+                                ['id' => 1, 'name' => 'Greg', 'department' => 'IT', 'salary' => 6000],
+                                ['id' => 2, 'name' => 'Michal', 'department' => 'IT', 'salary' => 5000],
+                                ['id' => 3, 'name' => 'Tomas', 'department' => 'Finances', 'salary' => 11_000],
+                            ]),
+                            from_array([
+                                ['id' => 4, 'name' => 'John', 'department' => 'Finances', 'salary' => 9000],
+                                ['id' => 5, 'name' => 'Jane', 'department' => 'Finances', 'salary' => 14_000],
+                                ['id' => 6, 'name' => 'Janet', 'department' => 'Finances', 'salary' => 4000],
+                            ]),
+                        ))
+                        ->withColumn('rank', rank()->over(window()->orderBy(ref('salary')->desc())))
+                        ->get(),
+                    false,
+                ),
+            ),
         );
     }
 
@@ -187,8 +261,8 @@ final class WindowFunctionsTest extends FlowTestCase
         $sums = [];
 
         foreach ($rows as $row) {
-            $at = type_datetime()->assert($row['at']);
-            $sums[$at->format('H:i') . '/' . type_integer()->assert($row['amount'])] = $row['n'];
+            $sums[type_datetime()->assert($row['at'])->format('H:i') . '/' . type_integer()->assert($row['amount'])] =
+                $row['n'];
         }
 
         static::assertSame(['09:00/1' => 1.0, '09:00/3' => 4.0, '21:00/2' => 2.0, '21:00/4' => 6.0], $sums);

@@ -86,7 +86,7 @@ data_frame()
 ```
 
 > Floe additionally supports appending into a **single** file through the low-level
-> `Flow\Floe\FloeWriter::append()` API - appended batches must match the file's schema (a drifted
+> `Flow\ETL\Storage\Floe\FloeFiles::append()` API - appended batches must match the file's schema (a drifted
 > batch throws `IncompatibleSchemaException`; schema evolution is only available through
 > `merge_floe()`). Before the check, the appending schema is rewritten into the file's declared
 > column and structure-field order, so a batch that carries the same columns or the same structure
@@ -121,9 +121,9 @@ data_frame()
 
 ## Limit & Offset Pushdown
 
-`limit()` stops reading early, and `withOffset()` skips whole file sections using the footer before
+`limit()` stops reading early, and `offset()` skips whole file sections using the footer before
 reading, then passes over every BATCH frame whose row count lies inside the offset without decoding it, so
-neither scans the full file:
+neither scans the full file. A filter the source takes is applied first, and the offset then counts the rows it keeps:
 
 ```php
 <?php
@@ -132,7 +132,8 @@ use function Flow\ETL\DSL\data_frame;
 use function Flow\Floe\DSL\from_floe;
 
 data_frame()
-    ->read(from_floe(__DIR__ . '/output.floe')->withOffset(1_000))
+    ->read(from_floe(__DIR__ . '/output.floe'))
+    ->offset(1_000)
     ->limit(100)
     ->run();
 ```
@@ -150,34 +151,30 @@ use function Flow\Floe\DSL\from_floe;
 $schema = from_floe(__DIR__ . '/output.floe')->schema();
 ```
 
-## Reading the First or Last Rows
+## Reading a Range of Rows
 
-The low-level reader pulls just the head or tail of a single `.floe` file without a DataFrame. `tail()`
-reads the row count from the footer and seeks past the leading sections, so it decodes only from the
-boundary section onward - the leading rows are never read:
+The low-level reader reads a range of a single `.floe` file without a DataFrame. It seeks by the footer's sections,
+so it decodes only from the section holding the first requested row onward:
 
 ```php
 <?php
 
-use Flow\ETL\Column\AdaptiveBackend;
-use Flow\Floe\FloeReader;
+use Flow\ETL\Storage\Floe\FloeFiles;
+use Flow\ETL\Values\Column\AdaptiveBackend;
 use function Flow\Filesystem\DSL\{native_local_filesystem, path};
 
-$file = (new FloeReader(native_local_filesystem(), new AdaptiveBackend()))->read(path(__DIR__ . '/output.floe'));
+$file = (new FloeFiles(native_local_filesystem(), new AdaptiveBackend()))->read(path(__DIR__ . '/output.floe'));
 
-foreach ($file->head(300) as $rows) {
-    // first 300 rows; stops reading once 300 are yielded
+foreach ($file->rows(batchSize: 1000, offset: 0, limit: 300) as $rows) {
+    // the first 300 rows
 }
 
-foreach ($file->tail(300) as $rows) {
-    // last 300 rows; decoded from the boundary section onward
+foreach ($file->rows(batchSize: 1000, offset: max(0, $file->totalRows() - 300)) as $rows) {
+    // the last 300 rows
 }
+
+$file->close();
 ```
-
-Both yield `Rows` in batches of at most 1000 rows (override with the second argument) and return every row when
-the file holds fewer than the requested count. For the first N through the DataFrame API use `->limit(N)`
-(pushed into the extractor); `tail()` is a reader-level convenience because it needs the file's total
-from the footer.
 
 ## Merging Files
 
@@ -188,7 +185,7 @@ re-reads and re-writes every batch, coalescing same-schema runs into fewer secti
 ```php
 <?php
 
-use Flow\ETL\Column\AdaptiveBackend;
+use Flow\ETL\Values\Column\AdaptiveBackend;
 
 use function Flow\Floe\DSL\merge_floe;
 
@@ -200,12 +197,12 @@ merge_floe(
 ```
 
 Sources must evolve the running merged schema cleanly - otherwise `IncompatibleSchemaException` is
-thrown before anything is written. `merge_floe()` works on the local filesystem; for other filesystems use `Flow\Floe\FloeMerger` directly.
+thrown before anything is written. `merge_floe()` works on the local filesystem; for other filesystems use `Flow\ETL\Storage\Floe\FloeMerger` directly.
 
 ## Whole-Value Serialization
 
 The whole-value serialization paths - the [cache](/documentation/components/core/caching.md) and
-`Flow\Floe\FloeSerializer` (the config default serializer) - stream: `serialize(Rows, DestinationStream)`
+`Flow\ETL\Storage\Floe\FloeSerializer` (the config default serializer) - stream: `serialize(Rows, DestinationStream)`
 goes through `FloeStreamWriter`, which writes one BATCH frame, and `unserialize(SourceStream)` through the
 strict `FloeStreamReader::rows()`, read in frame-sized batches of at most `batchSize` rows (default 1000) and
 returned as one `Rows` in the serializer's backend. String payloads round-trip through the `Flow\Serializer\DSL`
@@ -216,7 +213,7 @@ count against the footer and rejects torn payloads.
 
 Floe never casts. Values are checked when a batch is built - a value that does not fit its column throws
 `SchemaMismatchException` before anything reaches the writer. The writer then checks each batch's schema against
-the file's schema, fixed when the write session starts: `FloeWriter` takes it as an argument, `to_floe()` takes
+the file's schema, fixed when the write session starts: `FloeFiles::create()` takes it as an argument, `to_floe()` takes
 `withSchema()` or else the first batch's schema:
 
 | Batch schema                                                  | Result                        |
@@ -229,13 +226,12 @@ the file's schema, fixed when the write session starts: `FloeWriter` takes it as
 ```php
 <?php
 
-use Flow\ETL\Column\PhpBackend;
-use Flow\Floe\FloeWriter;
+use Flow\ETL\Storage\Floe\FloeFiles;
+use Flow\ETL\Values\Column\PhpBackend;
 use function Flow\ETL\DSL\{array_to_rows, int_schema, schema, str_schema};
 use function Flow\Filesystem\DSL\{native_local_filesystem, path};
 
-$writer = new FloeWriter(native_local_filesystem(), schema(int_schema('id')), new PhpBackend());
-$writer->create(path(__DIR__ . '/orders.floe'));
+$writer = (new FloeFiles(native_local_filesystem(), new PhpBackend()))->create(path(__DIR__ . '/orders.floe'), schema(int_schema('id')));
 $writer->write(array_to_rows([['id' => 1]], schema(int_schema('id')), new PhpBackend()));
 $writer->write(array_to_rows([['id' => 'AB-1']], schema(str_schema('id')), new PhpBackend()));
 ```

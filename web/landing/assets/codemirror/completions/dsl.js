@@ -25,7 +25,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">add_row_index</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$column</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;index&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">StartFrom</span> <span class=\"fn-param\">$startFrom</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Transformation\\AddRowIndex\\StartFrom::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AddRowIndex</span>
+                    <span class=\"fn-name\">add_row_index</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$column</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;index&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">StartFrom</span> <span class=\"fn-param\">$startFrom</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Operators\\Transformer\\AddRowIndex\\StartFrom::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AddRowIndex</span>
                 </div>
                             `
             return div
@@ -481,7 +481,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">array_expand</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$function</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ArrayExpand</span> <span class=\"fn-param\">$expand</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Function\\ArrayExpand\\ArrayExpand::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayExpand</span>
+                    <span class=\"fn-name\">array_expand</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$function</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ArrayExpand</span> <span class=\"fn-param\">$expand</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Functions\\ArrayExpand\\ArrayExpand::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayExpand</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     Expands each value into a column, if there are more than one value, multiple rows will be created.<br>Array keys are ignored, only values are used to create new rows.<br>Nested in another function (structure(), concat(), ...) it still gives one row per element. Several<br>expands in one expression are zipped to the longest list; a shorter one gives null, so its element<br>type becomes nullable. It is refused inside another array_expand() and in filter(), until(),<br>duplicateRow(), aggregate(), over() and onEach().<br>Before:<br>  +--+-------------------+<br>  |id|              array|<br>  +--+-------------------+<br>  | 1|{\"a\":1,\"b\":2,\"c\":3}|<br>  +--+-------------------+<br>After:<br>  +--+--------+<br>  |id|expanded|<br>  +--+--------+<br>  | 1|       1|<br>  | 1|       2|<br>  | 1|       3|<br>  +--+--------+
@@ -565,7 +565,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">array_keys_style_convert</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">StringStyles|string</span> <span class=\"fn-param\">$style</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\String\\StringStyles::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayKeysStyleConvert</span>
+                    <span class=\"fn-name\">array_keys_style_convert</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">StringStyles|string</span> <span class=\"fn-param\">$style</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Functions\\String\\StringStyles::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayKeysStyleConvert</span>
                 </div>
                             `
             return div
@@ -700,7 +700,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">array_to_rows</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$data</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Backend</span> <span class=\"fn-param\">$backend</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Column\\AdaptiveBackend::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Rows</span>
+                    <span class=\"fn-name\">array_to_rows</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$data</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Backend</span> <span class=\"fn-param\">$backend</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Values\\Column\\AdaptiveBackend::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Rows</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param array<array<mixed>>|array<mixed|string> $data
@@ -877,7 +877,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">average</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$scale</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">2</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Rounding</span> <span class=\"fn-param\">$rounding</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Calculator\\Rounding::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$exact</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Average</span>
+                    <span class=\"fn-name\">average</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$scale</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">2</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Rounding</span> <span class=\"fn-param\">$rounding</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Foundation\\Calculator\\Rounding::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$exact</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Average</span>
                 </div>
                             `
             return div
@@ -910,7 +910,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">aws_s3_filesystem</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$bucket</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">S3Client</span> <span class=\"fn-param\">$s3Client</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Options</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Bridge\\AsyncAWS\\Options::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$protocol</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;aws-s3&#039;</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AsyncAWSS3Filesystem</span>
+                    <span class=\"fn-name\">aws_s3_filesystem</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$bucket</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">S3Client|array</span> <span class=\"fn-param\">$s3Client</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Options</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Bridge\\AsyncAWS\\Options::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$protocol</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;aws-s3&#039;</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AsyncAWSS3Filesystem</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @param array<Configuration::OPTION_*, null|string>|S3Client $s3Client a configuration array builds a client that can be described for another process; a live client stays in-process
                 </div>
                             `
             return div
@@ -955,7 +958,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">azure_filesystem</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">BlobServiceInterface</span> <span class=\"fn-param\">$blob_service</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Options</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Bridge\\Azure\\Options::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$protocol</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;azure-blob&#039;</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AzureBlobFilesystem</span>
+                    <span class=\"fn-name\">azure_filesystem</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">BlobServiceInterface|array</span> <span class=\"fn-param\">$blob_service</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Options</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Bridge\\Azure\\Options::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$protocol</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;azure-blob&#039;</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AzureBlobFilesystem</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @param array<array-key, mixed>|BlobServiceInterface $blob_service a configuration array (account_name, container, shared_key, url?) builds a service that can be described for another process; a live service stays in-process
                 </div>
                             `
             return div
@@ -1071,42 +1077,6 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\Adapter\\ChartJS\\bar_chart(" + "$" + "{" + "1:label" + "}" + ", " + "$" + "{" + "2:datasets" + "}" + ")"),
         boost: 10
     },                {
-        label: "batched_by",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dextractors",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">batched_by</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Extractor</span> <span class=\"fn-param\">$extractor</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$column</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$min_size</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">BatchByExtractor</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @param null|int<1, max> $min_size
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\batched_by(" + "$" + "{" + "1:extractor" + "}" + ", " + "$" + "{" + "2:column" + "}" + ", " + "$" + "{" + "3:min_size" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "batches",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dextractors",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">batches</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Extractor</span> <span class=\"fn-param\">$extractor</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$size</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">BatchExtractor</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @param int<1, max> $size
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\batches(" + "$" + "{" + "1:extractor" + "}" + ", " + "$" + "{" + "2:size" + "}" + ")"),
-        boost: 10
-    },                {
         label: "batching_log_processor",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -1161,6 +1131,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Telemetry\\DSL\\batching_span_processor(" + "$" + "{" + "1:exporter" + "}" + ", " + "$" + "{" + "2:batchSize" + "}" + ", " + "$" + "{" + "3:errorHandler" + "}" + ")"),
         boost: 10
     },                {
+        label: "batch_by",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dtransformers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">batch_by</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$column</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$min_size</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">BatchBy</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @param null|int<1, max> $min_size
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\DSL\\batch_by(" + "$" + "{" + "1:column" + "}" + ", " + "$" + "{" + "2:min_size" + "}" + ")"),
+        boost: 10
+    },                {
         label: "batch_size",
         type: "function",
         detail: "flow\u002Ddsl\u002Dtransformers",
@@ -1169,9 +1157,6 @@ const dslFunctions = [
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
                     <span class=\"fn-name\">batch_size</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$size</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">BatchSize</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    @param int<1, max> $size
                 </div>
                             `
             return div
@@ -1204,7 +1189,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">between</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$lower_bound</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$upper_bound</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ScalarFunction|Boundary</span> <span class=\"fn-param\">$boundary</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Function\\Between\\Boundary::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Between</span>
+                    <span class=\"fn-name\">between</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$lower_bound</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$upper_bound</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ScalarFunction|Boundary</span> <span class=\"fn-param\">$boundary</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Functions\\Between\\Boundary::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Between</span>
                 </div>
                             `
             return div
@@ -2314,7 +2299,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">compare_all</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Comparison</span> <span class=\"fn-param\">$comparison</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Comparison</span> <span class=\"fn-param\">$comparisons</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">All</span>
+                    <span class=\"fn-name\">compare_all</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Condition</span> <span class=\"fn-param\">$comparison</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Condition</span> <span class=\"fn-param\">$comparisons</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">All</span>
                 </div>
                             `
             return div
@@ -2329,7 +2314,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">compare_any</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Comparison</span> <span class=\"fn-param\">$comparison</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Comparison</span> <span class=\"fn-param\">$comparisons</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Any</span>
+                    <span class=\"fn-name\">compare_any</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Condition</span> <span class=\"fn-param\">$comparison</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Condition</span> <span class=\"fn-param\">$comparisons</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Any</span>
                 </div>
                             `
             return div
@@ -2662,7 +2647,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">constraint_sorted_by</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$column</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Reference|string</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SortedByConstraint</span>
+                    <span class=\"fn-name\">constraint_sorted_by</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|SortColumn|string</span> <span class=\"fn-param\">$column</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Reference|SortColumn|string</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SortedByConstraint</span>
                 </div>
                             `
             return div
@@ -2815,7 +2800,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">csv_detect_separator</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SourceStream</span> <span class=\"fn-param\">$stream</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$lines</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">5</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Option</span> <span class=\"fn-param\">$fallback</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Adapter\\CSV\\Detector\\Option::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Options</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Option</span>
+                    <span class=\"fn-name\">csv_detect_separator</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SourceStream</span> <span class=\"fn-param\">$stream</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$lines</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">5</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Option</span> <span class=\"fn-param\">$fallback</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Adapter\\CSV\\IO\\Extractor\\Detector\\Option::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Options</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Option</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param SourceStream $stream - valid resource to CSV file<br>@param int<1, max> $lines - number of lines to read from CSV file, default 5, more lines means more accurate detection but slower detection<br>@param null|Option $fallback - fallback option to use when no best option can be detected, default is Option(\',\', \'\"\', \'\\\\\')<br>@param null|Options $options - options to use for detection, default is Options::all()
@@ -3018,14 +3003,14 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\date_time_format(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:format" + "}" + ")"),
         boost: 10
     },                {
-        label: "dbal_dataframe_factory",
+        label: "dbal_extractor_factory",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">dbal_dataframe_factory</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Connection|array</span> <span class=\"fn-param\">$connection</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$query</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">QueryParameter</span> <span class=\"fn-param\">$parameters</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DbalDataFrameFactory</span>
+                    <span class=\"fn-name\">dbal_extractor_factory</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Connection|array</span> <span class=\"fn-param\">$connection</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$query</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">QueryParameter</span> <span class=\"fn-param\">$parameters</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DbalExtractorFactory</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param array<string, mixed>|Connection $connection<br>@param string $query<br>@param QueryParameter ...$parameters
@@ -3033,7 +3018,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\dbal_dataframe_factory(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:query" + "}" + ", " + "$" + "{" + "3:parameters" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\dbal_extractor_factory(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:query" + "}" + ", " + "$" + "{" + "3:parameters" + "}" + ")"),
         boost: 10
     },                {
         label: "dbal_from_queries",
@@ -3748,7 +3733,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">files</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$directory</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FilesExtractor</span>
+                    <span class=\"fn-name\">files</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$directory</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FileListingExtractor</span>
                 </div>
                             `
             return div
@@ -3763,12 +3748,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">filesystem_cache</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Serializer</span> <span class=\"fn-param\">$serializer</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Path|string|null</span> <span class=\"fn-param\">$cache_dir</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FilesystemCache</span>
+                    <span class=\"fn-name\">filesystem_cache</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string|null</span> <span class=\"fn-param\">$cache_dir</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Backend</span> <span class=\"fn-param\">$backend</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Values\\Column\\AdaptiveBackend::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FilesystemRowsStorage</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\filesystem_cache(" + "$" + "{" + "1:serializer" + "}" + ", " + "$" + "{" + "2:cache_dir" + "}" + ", " + "$" + "{" + "3:filesystem" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\filesystem_cache(" + "$" + "{" + "1:cache_dir" + "}" + ", " + "$" + "{" + "2:filesystem" + "}" + ", " + "$" + "{" + "3:backend" + "}" + ")"),
         boost: 10
     },                {
         label: "filesystem_telemetry_config",
@@ -3880,7 +3865,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">floe_options</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$buffer_size</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">65536</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Codec</span> <span class=\"fn-param\">$codec</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Floe\\Codec\\NoopCodec::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Options</span>
+                    <span class=\"fn-name\">floe_options</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$buffer_size</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">65536</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Codec</span> <span class=\"fn-param\">$codec</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Values\\Column\\Frame\\NoopCodec::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Options</span>
                 </div>
                             `
             return div
@@ -4132,7 +4117,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_cache</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$id</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Extractor</span> <span class=\"fn-param\">$fallback_extractor</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$clear</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Cache</span> <span class=\"fn-param\">$cache</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CacheExtractor</span>
+                    <span class=\"fn-name\">from_cache</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$id</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Extractor</span> <span class=\"fn-param\">$fallback_extractor</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$clear</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">RowsStorage</span> <span class=\"fn-param\">$cache</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CacheExtractor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param string $id - cache id from which data will be extracted<br>@param null|Extractor $fallback_extractor - extractor that will be used when cache is empty - @deprecated use withFallbackExtractor() method instead<br>@param bool $clear - clear cache after extraction - @deprecated use withClearOnFinish() method instead
@@ -4159,21 +4144,6 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\Adapter\\CSV\\from_csv(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:with_header" + "}" + ", " + "$" + "{" + "3:empty_to_null" + "}" + ", " + "$" + "{" + "4:separator" + "}" + ", " + "$" + "{" + "5:enclosure" + "}" + ", " + "$" + "{" + "6:escape" + "}" + ", " + "$" + "{" + "7:characters_read_in_line" + "}" + ", " + "$" + "{" + "8:schema" + "}" + ", " + "$" + "{" + "9:filesystem" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "from_data_frame",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dextractors",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_data_frame</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">DataFrame</span> <span class=\"fn-param\">$data_frame</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DataFrameExtractor</span>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\DSL\\from_data_frame(" + "$" + "{" + "1:data_frame" + "}" + ")"),
         boost: 10
     },                {
         label: "from_dbal_key_set_qb",
@@ -4216,15 +4186,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_dbal_limit_offset_qb</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Connection</span> <span class=\"fn-param\">$connection</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">QueryBuilder</span> <span class=\"fn-param\">$queryBuilder</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$page_size</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">1000</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$maximum</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$offset</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">0</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DbalLimitOffsetExtractor</span>
+                    <span class=\"fn-name\">from_dbal_limit_offset_qb</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Connection</span> <span class=\"fn-param\">$connection</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">QueryBuilder</span> <span class=\"fn-param\">$queryBuilder</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$page_size</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">1000</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$maximum</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DbalLimitOffsetExtractor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param Connection $connection<br>@param int $page_size - becomes the extractor\'s batch size: rows per page<br>@param null|int $maximum - maximum can also be taken from a query builder, $maximum however is used regardless of the query builder if it\'s set<br>@param int $offset - offset can also be taken from a query builder, $offset however is used regardless of the query builder if it\'s set to non 0 value
+                    @param Connection $connection<br>@param int $page_size - becomes the extractor\'s batch size: rows per page<br>@param null|int $maximum - maximum can also be taken from a query builder, $maximum however is used regardless of the query builder if it\'s set
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\from_dbal_limit_offset_qb(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:queryBuilder" + "}" + ", " + "$" + "{" + "3:page_size" + "}" + ", " + "$" + "{" + "4:maximum" + "}" + ", " + "$" + "{" + "5:offset" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\from_dbal_limit_offset_qb(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:queryBuilder" + "}" + ", " + "$" + "{" + "3:page_size" + "}" + ", " + "$" + "{" + "4:maximum" + "}" + ")"),
         boost: 10
     },                {
         label: "from_dbal_queries",
@@ -4300,7 +4270,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_floe</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Codec</span> <span class=\"fn-param\">$codec</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Floe\\Codec\\NoopCodec::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$chunk_size</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">65536</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FloeExtractor</span>
+                    <span class=\"fn-name\">from_floe</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Codec</span> <span class=\"fn-param\">$codec</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Values\\Column\\Frame\\NoopCodec::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$chunk_size</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">65536</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FloeExtractor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param Path|string $path
@@ -4405,7 +4375,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_memory</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Memory</span> <span class=\"fn-param\">$memory</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">MemoryExtractor</span>
+                    <span class=\"fn-name\">from_memory</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Memory</span> <span class=\"fn-param\">$memory</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayExtractor</span>
                 </div>
                             `
             return div
@@ -4420,15 +4390,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_parquet</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$columns</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Options</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Parquet\\Options::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ByteOrder</span> <span class=\"fn-param\">$byte_order</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Parquet\\Binary\\ByteOrder::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$offset</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ParquetEngine</span> <span class=\"fn-param\">$engine</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ParquetExtractor</span>
+                    <span class=\"fn-name\">from_parquet</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$columns</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Options</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Parquet\\Options::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ByteOrder</span> <span class=\"fn-param\">$byte_order</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Parquet\\Binary\\ByteOrder::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ParquetEngine</span> <span class=\"fn-param\">$engine</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ParquetExtractor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param Path|string $path<br>@param array<string> $columns - list of columns to read from parquet file - @deprecated use \`withColumns\` method instead<br>@param Options $options - @deprecated use \`withOptions\` method instead<br>@param ByteOrder $byte_order - @deprecated use \`withByteOrder\` method instead<br>@param null|int $offset - @deprecated use \`withOffset\` method instead
+                    @param Path|string $path<br>@param array<string> $columns - list of columns to read from parquet file - @deprecated use \`withColumns\` method instead<br>@param Options $options - @deprecated use \`withOptions\` method instead<br>@param ByteOrder $byte_order - @deprecated use \`withByteOrder\` method instead
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\Adapter\\Parquet\\from_parquet(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:columns" + "}" + ", " + "$" + "{" + "3:options" + "}" + ", " + "$" + "{" + "4:byte_order" + "}" + ", " + "$" + "{" + "5:offset" + "}" + ", " + "$" + "{" + "6:engine" + "}" + ", " + "$" + "{" + "7:filesystem" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Parquet\\from_parquet(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:columns" + "}" + ", " + "$" + "{" + "3:options" + "}" + ", " + "$" + "{" + "4:byte_order" + "}" + ", " + "$" + "{" + "5:engine" + "}" + ", " + "$" + "{" + "6:filesystem" + "}" + ")"),
         boost: 10
     },                {
         label: "from_path_partitions",
@@ -4438,7 +4408,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_path_partitions</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PathPartitionsExtractor</span>
+                    <span class=\"fn-name\">from_path_partitions</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FileListingExtractor</span>
                 </div>
                             `
             return div
@@ -4693,7 +4663,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">generate_random_int</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$start</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">-9223372036854775808</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$end</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">9223372036854775807</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">RandomValueGenerator</span> <span class=\"fn-param\">$generator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\NativePHPRandomValueGenerator::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">int</span>
+                    <span class=\"fn-name\">generate_random_int</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$start</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">-9223372036854775808</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$end</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">9223372036854775807</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">RandomValueGenerator</span> <span class=\"fn-param\">$generator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Foundation\\NativePHPRandomValueGenerator::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">int</span>
                 </div>
                             `
             return div
@@ -4708,7 +4678,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">generate_random_string</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$length</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">32</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">RandomValueGenerator</span> <span class=\"fn-param\">$generator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\NativePHPRandomValueGenerator::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
+                    <span class=\"fn-name\">generate_random_string</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$length</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">32</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">RandomValueGenerator</span> <span class=\"fn-param\">$generator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Foundation\\NativePHPRandomValueGenerator::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
                 </div>
                             `
             return div
@@ -4846,7 +4816,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">hash</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Algorithm</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Hash\\NativePHPHash::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Hash</span>
+                    <span class=\"fn-name\">hash</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Algorithm</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Kernels\\Hash\\NativePHPHash::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Hash</span>
                 </div>
                             `
             return div
@@ -4861,7 +4831,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">hash_group_by</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">HashGroupByBuilder</span>
+                    <span class=\"fn-name\">hash_group_by</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">BucketingConfigBuilder</span>
                 </div>
                             `
             return div
@@ -4891,7 +4861,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">hash_repartition</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">HashRepartitionBuilder</span>
+                    <span class=\"fn-name\">hash_repartition</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">BucketingConfigBuilder</span>
                 </div>
                             `
             return div
@@ -5095,6 +5065,36 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\Adapter\\Http\\http_request_option_uri()"),
+        boost: 10
+    },                {
+        label: "http_stop_when_all_of",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">http_stop_when_all_of</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">StopWhen</span> <span class=\"fn-param\">$conditions</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StopWhen</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\Http\\http_stop_when_all_of(" + "$" + "{" + "1:conditions" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "http_stop_when_any_of",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">http_stop_when_any_of</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">StopWhen</span> <span class=\"fn-param\">$conditions</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StopWhen</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\Http\\http_stop_when_any_of(" + "$" + "{" + "1:conditions" + "}" + ")"),
         boost: 10
     },                {
         label: "http_stop_when_empty_path",
@@ -5572,10 +5572,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">join_on</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Comparison|array</span> <span class=\"fn-param\">$comparisons</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$join_prefix</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;&#039;</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Expression</span>
+                    <span class=\"fn-name\">join_on</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Condition|array</span> <span class=\"fn-param\">$comparisons</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$join_prefix</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;&#039;</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Expression</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param array<Comparison|string>|Comparison $comparisons
+                    @param array<Condition|string>|Condition $comparisons
                 </div>
                             `
             return div
@@ -7900,7 +7900,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">random_string</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction|int</span> <span class=\"fn-param\">$length</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">RandomValueGenerator</span> <span class=\"fn-param\">$generator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\NativePHPRandomValueGenerator::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RandomString</span>
+                    <span class=\"fn-name\">random_string</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction|int</span> <span class=\"fn-param\">$length</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">RandomValueGenerator</span> <span class=\"fn-param\">$generator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Foundation\\NativePHPRandomValueGenerator::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">RandomString</span>
                 </div>
                             `
             return div
@@ -8515,7 +8515,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">rows</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Backend</span> <span class=\"fn-param\">$backend</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Column\\AdaptiveBackend::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Rows</span>
+                    <span class=\"fn-name\">rows</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Backend</span> <span class=\"fn-param\">$backend</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Values\\Column\\AdaptiveBackend::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Rows</span>
                 </div>
                             `
             return div
@@ -9367,7 +9367,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">schema_sort_by_metadata</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$key</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SortOrder</span> <span class=\"fn-param\">$order</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Row\\SortOrder::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SortingStrategy</span>
+                    <span class=\"fn-name\">schema_sort_by_metadata</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$key</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SortOrder</span> <span class=\"fn-param\">$order</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Values\\SortOrder::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SortingStrategy</span>
                 </div>
                             `
             return div
@@ -9382,7 +9382,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">schema_sort_by_name</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SortOrder</span> <span class=\"fn-param\">$order</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Row\\SortOrder::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SortingStrategy</span>
+                    <span class=\"fn-name\">schema_sort_by_name</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SortOrder</span> <span class=\"fn-param\">$order</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Values\\SortOrder::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SortingStrategy</span>
                 </div>
                             `
             return div
@@ -9397,7 +9397,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">schema_sort_by_type</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$priorities</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[...]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SortOrder</span> <span class=\"fn-param\">$order</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Row\\SortOrder::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SortingStrategy</span>
+                    <span class=\"fn-name\">schema_sort_by_type</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$priorities</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[...]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SortOrder</span> <span class=\"fn-param\">$order</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Values\\SortOrder::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SortingStrategy</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param array<class-string<Type<mixed>>, int> $priorities
@@ -9415,7 +9415,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">schema_sort_by_type_and_name</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$priorities</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[...]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SortOrder</span> <span class=\"fn-param\">$order</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Row\\SortOrder::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SortingStrategy</span>
+                    <span class=\"fn-name\">schema_sort_by_type_and_name</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$priorities</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[...]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SortOrder</span> <span class=\"fn-param\">$order</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Values\\SortOrder::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SortingStrategy</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param array<class-string<Type<mixed>>, int> $priorities
@@ -9553,7 +9553,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">schema_to_php</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ValueFormatter</span> <span class=\"fn-param\">$valueFormatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Schema\\Formatter\\PHPFormatter\\ValueFormatter::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">TypeFormatter</span> <span class=\"fn-param\">$typeFormatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Schema\\Formatter\\PHPFormatter\\TypeFormatter::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
+                    <span class=\"fn-name\">schema_to_php</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ValueFormatter</span> <span class=\"fn-param\">$valueFormatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\IO\\Formatter\\Schema\\PHPFormatter\\ValueFormatter::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">TypeFormatter</span> <span class=\"fn-param\">$typeFormatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\IO\\Formatter\\Schema\\PHPFormatter\\TypeFormatter::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param Schema $schema
@@ -9607,7 +9607,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">schema_validate</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$expected</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$given</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SchemaValidator</span> <span class=\"fn-param\">$validator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Schema\\Validator\\StrictValidator::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ValidationContext</span>
+                    <span class=\"fn-name\">schema_validate</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$expected</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$given</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SchemaValidator</span> <span class=\"fn-param\">$validator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Values\\Schema\\Validator\\StrictValidator::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ValidationContext</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param Schema $expected<br>@param Schema $given
@@ -9811,7 +9811,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">sftp_filesystem</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SFTP</span> <span class=\"fn-param\">$sftp</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Options</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Bridge\\SFTP\\Options::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$protocol</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;sftp&#039;</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SFTPFilesystem</span>
+                    <span class=\"fn-name\">sftp_filesystem</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SFTP|array</span> <span class=\"fn-param\">$sftp</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Options</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Bridge\\SFTP\\Options::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$protocol</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;sftp&#039;</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SFTPFilesystem</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @param array<array-key, mixed>|SFTP $sftp a configuration array (host, user, port?, password | private_key + passphrase?) builds a client that can be described for another process; a live client stays in-process
                 </div>
                             `
             return div
@@ -10852,7 +10855,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">table_schema_to_flow_schema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Table</span> <span class=\"fn-param\">$table</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$types_map</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Schema</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Converts a Doctrine\\DBAL\\Schema\\Table to a Flow\\ETL\\Schema.<br>@param array<class-string<\\Flow\\Types\\Type<mixed>>, class-string<\\Doctrine\\DBAL\\Types\\Type>> $types_map<br>@return Schema
+                    Converts a Doctrine\\DBAL\\Schema\\Table to a Flow\\ETL\\Values\\Schema.<br>@param array<class-string<\\Flow\\Types\\Type<mixed>>, class-string<\\Doctrine\\DBAL\\Types\\Type>> $types_map<br>@return Schema
                 </div>
                             `
             return div
@@ -11014,12 +11017,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_branch</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$condition</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Loader|Sink</span> <span class=\"fn-param\">$sink</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Branched</span>
+                    <span class=\"fn-name\">to_branch</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$condition</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Loader|Branch|Transactional</span> <span class=\"fn-param\">$write</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FilteredBranch</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\to_branch(" + "$" + "{" + "1:condition" + "}" + ", " + "$" + "{" + "2:sink" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\to_branch(" + "$" + "{" + "1:condition" + "}" + ", " + "$" + "{" + "2:write" + "}" + ")"),
         boost: 10
     },                {
         label: "to_chartjs",
@@ -11131,7 +11134,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">to_dbal_schema_table</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$table_name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$table_options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$types_map</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Table</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Converts a Flow\\ETL\\Schema to a Doctrine\\DBAL\\Schema\\Table.<br>@param Schema $schema<br>@param array<string, mixed> $table_options<br>@param array<class-string<\\Flow\\Types\\Type<mixed>>, class-string<\\Doctrine\\DBAL\\Types\\Type>> $types_map
+                    Converts a Flow\\ETL\\Values\\Schema to a Doctrine\\DBAL\\Schema\\Table.<br>@param Schema $schema<br>@param array<string, mixed> $table_options<br>@param array<class-string<\\Flow\\Types\\Type<mixed>>, class-string<\\Doctrine\\DBAL\\Types\\Type>> $types_map
                 </div>
                             `
             return div
@@ -11200,15 +11203,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_dbal_transaction</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Connection|array</span> <span class=\"fn-param\">$connection</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Loader|Sink</span> <span class=\"fn-param\">$sinks</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Transactional</span>
+                    <span class=\"fn-name\">to_dbal_transaction</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Connection|array</span> <span class=\"fn-param\">$connection</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Loader|Branch</span> <span class=\"fn-param\">$writes</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Transactional</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Write every sink within database transactions.<br>Each batch of rows is written in its own transaction; rows a sink\'s Transformation delivers when<br>the run ends (blocking operations drain there) are committed in one final transaction.<br>If any sink fails, the open transaction is rolled back.<br>A plain Loader child is a bare sink root; a to_transformation(...) child delivers inside the same<br>transaction. Every child\'s loader must use the same connection as the transaction: pass one live<br>Connection to both - a loader built from array params opens its own connection and escapes the<br>transaction.<br>@param array<string, mixed>|Connection $connection<br>@param Loader|Sink ...$sinks - sinks written within the transaction<br>@throws InvalidArgumentException
+                    Write every child within database transactions.<br>Each batch of rows is written in its own transaction; rows a branch\'s Transformation delivers when<br>the run ends (blocking operations drain there) are committed in one final transaction.<br>If any write fails, the open transaction is rolled back.<br>A plain Loader child is written directly; a to_transformation(...) child delivers inside the same<br>transaction. Every child\'s loader must use the same connection as the transaction: pass one live<br>Connection to both - a loader built from array params opens its own connection and escapes the<br>transaction.<br>@param array<string, mixed>|Connection $connection<br>@param Loader|Branch ...$writes - written within the transaction<br>@throws InvalidArgumentException
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\to_dbal_transaction(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:sinks" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\to_dbal_transaction(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:writes" + "}" + ")"),
         boost: 10
     },                {
         label: "to_excel",
@@ -11233,7 +11236,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_floe</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Options</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Floe\\Options::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FloeLoader</span>
+                    <span class=\"fn-name\">to_floe</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Options</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Storage\\Floe\\Options::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">FloeLoader</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param Path|string $path
@@ -11302,7 +11305,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_output</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int|bool</span> <span class=\"fn-param\">$truncate</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">20</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Output</span> <span class=\"fn-param\">$output</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Loader\\StreamLoader\\Output::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Formatter</span> <span class=\"fn-param\">$formatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Formatter\\AsciiTableFormatter::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SchemaFormatter</span> <span class=\"fn-param\">$schemaFormatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Row\\Formatter\\ASCIISchemaFormatter::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StreamLoader</span>
+                    <span class=\"fn-name\">to_output</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int|bool</span> <span class=\"fn-param\">$truncate</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">20</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Output</span> <span class=\"fn-param\">$output</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\IO\\Loader\\StreamLoader\\Output::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Formatter</span> <span class=\"fn-param\">$formatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\IO\\Formatter\\AsciiTableFormatter::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SchemaFormatter</span> <span class=\"fn-param\">$schemaFormatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\IO\\Formatter\\Row\\ASCIISchemaFormatter::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StreamLoader</span>
                 </div>
                             `
             return div
@@ -11368,15 +11371,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_pgsql_transaction</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Client</span> <span class=\"fn-param\">$client</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Loader|Sink</span> <span class=\"fn-param\">$sinks</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Transactional</span>
+                    <span class=\"fn-name\">to_pgsql_transaction</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Client</span> <span class=\"fn-param\">$client</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Loader|Branch</span> <span class=\"fn-param\">$writes</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Transactional</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Write every sink within PostgreSQL transactions.
+                    Write every child within PostgreSQL transactions.
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\Adapter\\PostgreSql\\to_pgsql_transaction(" + "$" + "{" + "1:client" + "}" + ", " + "$" + "{" + "2:sinks" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\PostgreSql\\to_pgsql_transaction(" + "$" + "{" + "1:client" + "}" + ", " + "$" + "{" + "2:writes" + "}" + ")"),
         boost: 10
     },                {
         label: "to_seal_delete",
@@ -11431,7 +11434,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_stderr</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int|bool</span> <span class=\"fn-param\">$truncate</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">20</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Output</span> <span class=\"fn-param\">$output</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Loader\\StreamLoader\\Output::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Formatter</span> <span class=\"fn-param\">$formatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Formatter\\AsciiTableFormatter::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SchemaFormatter</span> <span class=\"fn-param\">$schemaFormatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Row\\Formatter\\ASCIISchemaFormatter::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StreamLoader</span>
+                    <span class=\"fn-name\">to_stderr</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int|bool</span> <span class=\"fn-param\">$truncate</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">20</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Output</span> <span class=\"fn-param\">$output</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\IO\\Loader\\StreamLoader\\Output::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Formatter</span> <span class=\"fn-param\">$formatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\IO\\Formatter\\AsciiTableFormatter::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SchemaFormatter</span> <span class=\"fn-param\">$schemaFormatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\IO\\Formatter\\Row\\ASCIISchemaFormatter::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StreamLoader</span>
                 </div>
                             `
             return div
@@ -11446,7 +11449,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_stdout</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int|bool</span> <span class=\"fn-param\">$truncate</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">20</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Output</span> <span class=\"fn-param\">$output</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Loader\\StreamLoader\\Output::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Formatter</span> <span class=\"fn-param\">$formatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Formatter\\AsciiTableFormatter::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SchemaFormatter</span> <span class=\"fn-param\">$schemaFormatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Row\\Formatter\\ASCIISchemaFormatter::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StreamLoader</span>
+                    <span class=\"fn-name\">to_stdout</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int|bool</span> <span class=\"fn-param\">$truncate</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">20</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Output</span> <span class=\"fn-param\">$output</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\IO\\Loader\\StreamLoader\\Output::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Formatter</span> <span class=\"fn-param\">$formatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\IO\\Formatter\\AsciiTableFormatter::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SchemaFormatter</span> <span class=\"fn-param\">$schemaFormatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\IO\\Formatter\\Row\\ASCIISchemaFormatter::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StreamLoader</span>
                 </div>
                             `
             return div
@@ -11461,7 +11464,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_stream</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$uri</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int|bool</span> <span class=\"fn-param\">$truncate</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">20</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Output</span> <span class=\"fn-param\">$output</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Loader\\StreamLoader\\Output::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$mode</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;w&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Formatter</span> <span class=\"fn-param\">$formatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Formatter\\AsciiTableFormatter::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SchemaFormatter</span> <span class=\"fn-param\">$schemaFormatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Row\\Formatter\\ASCIISchemaFormatter::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StreamLoader</span>
+                    <span class=\"fn-name\">to_stream</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$uri</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int|bool</span> <span class=\"fn-param\">$truncate</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">20</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Output</span> <span class=\"fn-param\">$output</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\IO\\Loader\\StreamLoader\\Output::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$mode</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;w&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Formatter</span> <span class=\"fn-param\">$formatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\IO\\Formatter\\AsciiTableFormatter::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SchemaFormatter</span> <span class=\"fn-param\">$schemaFormatter</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\IO\\Formatter\\Row\\ASCIISchemaFormatter::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StreamLoader</span>
                 </div>
                             `
             return div
@@ -11509,12 +11512,12 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_transformation</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Transformer|Transformation</span> <span class=\"fn-param\">$transformer</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Loader|Sink</span> <span class=\"fn-param\">$sink</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Transformed</span>
+                    <span class=\"fn-name\">to_transformation</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Transformer|Transformation</span> <span class=\"fn-param\">$transformer</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Loader|Branch|Transactional</span> <span class=\"fn-param\">$write</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TransformedBranch</span>
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\ETL\\DSL\\to_transformation(" + "$" + "{" + "1:transformer" + "}" + ", " + "$" + "{" + "2:sink" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\to_transformation(" + "$" + "{" + "1:transformer" + "}" + ", " + "$" + "{" + "2:write" + "}" + ")"),
         boost: 10
     },                {
         label: "to_xml",
@@ -11524,7 +11527,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_xml</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$root_element_name</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;rows&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$row_element_name</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;row&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$attribute_prefix</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;_&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$date_time_format</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;Y-m-d\\\\TH:i:s.uP&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">XMLWriter</span> <span class=\"fn-param\">$xml_writer</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Adapter\\XML\\XMLWriter\\StringXMLWriter::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">XMLLoader</span>
+                    <span class=\"fn-name\">to_xml</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$root_element_name</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;rows&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$row_element_name</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;row&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$attribute_prefix</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;_&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$date_time_format</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;Y-m-d\\\\TH:i:s.uP&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">XMLWriter</span> <span class=\"fn-param\">$xml_writer</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Adapter\\XML\\IO\\Loader\\XMLWriter\\StringXMLWriter::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Filesystem</span> <span class=\"fn-param\">$filesystem</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Filesystem\\Local\\NativeLocalFilesystem::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">XMLLoader</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param Path|string $path<br>@param string $root_element_name - @deprecated use \`withRootElementName()\` method instead<br>@param string $row_element_name - @deprecated use \`withRowElementName()\` method instead<br>@param string $attribute_prefix - @deprecated use \`withAttributePrefix()\` method instead<br>@param string $date_time_format - @deprecated use \`withDateTimeFormat()\` method instead<br>@param XMLWriter $xml_writer
@@ -12313,7 +12316,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">type_structure</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$elements</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StructureType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @template T<br>@param array<array-key, StructureElement<T>|Type<T>> $elements<br>@return StructureType<array<array-key, T>>
+                    @template T<br>@param array<array-key, StructureElement<T, bool>|Type<T>> $elements<br>@return StructureType<array<array-key, T>>
                 </div>
                             `
             return div

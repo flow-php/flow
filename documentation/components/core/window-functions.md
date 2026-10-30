@@ -14,14 +14,14 @@ smaller partitions on which later window function will be applied.
 
 ### Window Functions:
 
-- [`ROW_NUMBER()`](/src/core/etl/src/Flow/ETL/Function/RowNumber.php)
-- [`RANK()`](/src/core/etl/src/Flow/ETL/Function/Rank.php)
-- [`DENSE_RANK()`](/src/core/etl/src/Flow/ETL/Function/DenseRank.php)
-- [`SUM`](/src/core/etl/src/Flow/ETL/Function/Sum.php)
-- [`AVERAGE`](/src/core/etl/src/Flow/ETL/Function/Average.php)
-- [`COUNT`](/src/core/etl/src/Flow/ETL/Function/Count.php)
+- [`ROW_NUMBER()`](/src/core/etl/src/Flow/ETL/Functions/RowNumber.php)
+- [`RANK()`](/src/core/etl/src/Flow/ETL/Functions/Rank.php)
+- [`DENSE_RANK()`](/src/core/etl/src/Flow/ETL/Functions/DenseRank.php)
+- [`SUM`](/src/core/etl/src/Flow/ETL/Functions/Sum.php)
+- [`AVERAGE`](/src/core/etl/src/Flow/ETL/Functions/Average.php)
+- [`COUNT`](/src/core/etl/src/Flow/ETL/Functions/Count.php)
 
-All window functions implement [`WindowFunction`](/src/core/etl/src/Flow/ETL/Function/WindowFunction.php)
+All window functions implement [`WindowFunction`](/src/core/etl/src/Flow/ETL/Functions/WindowFunction.php)
 interface.
 
 ### Example

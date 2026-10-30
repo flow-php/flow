@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\CLI\Factory;
 
 use Flow\CLI\Options\FileFormat;
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Loader;
-use Flow\ETL\Loader\File\FileLoader;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\IO\Loader;
+use Flow\ETL\IO\Loader\File\FileLoader;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
 

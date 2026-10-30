@@ -87,7 +87,7 @@ A custom map replaces the default one, so spread `TypesMap::FLOW_TYPES` to keep 
 
 ```php
 use Doctrine\DBAL\Types\TextType;
-use Flow\ETL\Adapter\Doctrine\TypesMap;
+use Flow\ETL\Adapter\Doctrine\Values\Schema\TypesMap;
 use Flow\Types\Type\Native\StringType;
 
 use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
@@ -126,8 +126,8 @@ data_frame()
 
 ## Transactional Loading
 
-`to_dbal_transaction()` writes one or more sinks inside transactions: each batch of rows is written in its own
-transaction, and if any sink throws, the open transaction is rolled back:
+`to_dbal_transaction()` writes one or more children inside transactions: each batch of rows is written in its own
+transaction, and if any child throws, the open transaction is rolled back:
 
 ```php
 use function Flow\ETL\Adapter\Doctrine\{to_dbal_table_insert, to_dbal_transaction};
@@ -143,18 +143,18 @@ data_frame()
     ->run();
 ```
 
-A plain loader child is a bare sink root; a `to_transformation(...)` child delivers inside the same transaction.
+A plain loader child is written directly; a `to_transformation(...)` child delivers inside the same transaction.
 Every child's loader must use the same connection as the transaction - pass one live `Connection` to
 `to_dbal_transaction()` and to every child. A loader built from array params (like
 `to_dbal_table_insert($params, 'users')`) opens its own connection and escapes the transaction.
 
-Sinks with blocking operations (`to_transformation()` / `to_branch(...)->withTransformation(...)` with `sortBy()`,
+Branches with blocking operations (`to_transformation()`, also inside `to_branch()`, with `sortBy()`,
 `aggregate()`, `groupBy()->aggregate()`, `pivot()`, window functions, `collect()`, `join()` - see
 [transformations](../core/transformations.md)) buffer the stream and deliver it when the run ends;
 `to_dbal_transaction()` opens one final transaction around that delivery - the whole drained stream commits
 atomically, a failure during it rolls back and surfaces from `run()`.
 
-Inside the transaction every sink runs throw-only: a failure rolls the batch back first, and only then the frame's
+Inside the transaction every child runs throw-only: a failure rolls the batch back first, and only then the frame's
 `onError()` handler decides whether the run continues.
 
 To set the isolation level, build the transaction yourself; it applies to every transaction opened, including the
@@ -162,8 +162,8 @@ final one, and the previous level is restored when each one ends:
 
 ```php
 use Doctrine\DBAL\TransactionIsolationLevel;
-use Flow\ETL\Adapter\Doctrine\DbalTransaction;
-use Flow\ETL\Sink\Transactional;
+use Flow\ETL\Adapter\Doctrine\IO\Loader\DbalTransaction;
+use Flow\ETL\API\Sink\Transactional;
 
 use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
 
@@ -205,7 +205,7 @@ data_frame()
 ### Multiple Parametrized Queries
 
 ```php
-use Flow\ETL\Adapter\Doctrine\ParametersSet;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\ParametersSet;
 
 use function Flow\ETL\Adapter\Doctrine\from_dbal_queries;
 use function Flow\ETL\DSL\{data_frame, to_output};
@@ -266,12 +266,12 @@ data_frame()
 With `to_dbal_schema_table()` function we can convert any Flow Schema (which represents a dataset)
 to Doctrine DBAL Schema Table.
 
-By providing metadata defined in `\Flow\ETL\Adapter\Doctrine\DbalMetadata` we can also add additional information to the schema,
+By providing metadata defined in `\Flow\ETL\Adapter\Doctrine\Values\Schema\DbalMetadata` we can also add additional information to the schema,
 like length, primary key, index, precision, etc
 
 
 ```php
-use Flow\ETL\Adapter\Doctrine\DbalMetadata;
+use Flow\ETL\Adapter\Doctrine\Values\Schema\DbalMetadata;
 
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\date_schema;
@@ -370,7 +370,7 @@ public const array FLOW_TYPES = [
 The `TypesMap` class provides bidirectional mapping between Flow types and Doctrine DBAL types, allowing for flexible type conversion in both directions:
 
 ```php
-use Flow\ETL\Adapter\Doctrine\TypesMap;
+use Flow\ETL\Adapter\Doctrine\Values\Schema\TypesMap;
 use Flow\Types\Type\Native\StringType;
 use Doctrine\DBAL\Types\TextType;
 

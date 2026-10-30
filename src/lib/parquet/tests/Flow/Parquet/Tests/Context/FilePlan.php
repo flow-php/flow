@@ -10,12 +10,11 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile;
 use Flow\Parquet\ParquetFileReader;
 use Flow\Parquet\Reader\ReadPlan;
-use Flow\Parquet\Reader\ReadPlanner;
 
 use function array_keys;
 
 /**
- * The read the adapter does: ReadPlanner's plan, its bound conjuncts filtered row by row, read through the reader.
+ * The read the adapter does: ReadPlan::forFilter(), its bound conjuncts filtered row by row, read through the reader.
  */
 final class FilePlan
 {
@@ -26,7 +25,7 @@ final class FilePlan
     {
         $footer = $file->reader()->footer();
 
-        return (new ReadPlanner())->plan(
+        return ReadPlan::forFilter(
             $footer,
             $file->indexes(),
             $filter === null ? null : BoundFilter::bind($filter, $footer->schema(), new Options()),

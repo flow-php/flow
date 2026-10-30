@@ -1,13 +1,11 @@
-use std::os::raw::{c_char, c_int};
-
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::types::{ZendObject, ZendStr, Zval};
 use ext_php_rs::zend::{ClassEntry, Function};
+use flow_batch_frame::key::array_key_index;
+use flow_numeric_string::{self as numeric, Numeric, IS_DOUBLE, IS_LONG};
 
-use crate::ctx::{
-    self, array_key_index, call_handle_on, call_handle_transparent, expect_object, null_zval, write_slot, zval_long,
-};
+use crate::ctx::{self, call_handle_on, call_handle_transparent, expect_object, null_zval, write_slot, zval_long};
 use crate::date_check::{iso_date_gate, iso_date_time_gate, IsoSuffix};
 use crate::exception::ext_exception;
 use crate::json_check::json_valid;
@@ -19,15 +17,6 @@ extern "C" {
     fn zval_get_long_func(op: *const Zval, is_strict: bool) -> i64;
     fn zval_get_double_func(op: *const Zval) -> f64;
     fn zval_get_string_func(op: *mut Zval) -> *mut ZendStr;
-    fn _is_numeric_string_ex(
-        str: *const c_char,
-        length: usize,
-        lval: *mut i64,
-        dval: *mut f64,
-        allow_errors: bool,
-        oflow_info: *mut c_int,
-        trailing_data: *mut bool,
-    ) -> u8;
 }
 
 pub enum MapKeyKind {
@@ -185,46 +174,15 @@ fn json_object_from(source: &Zval) -> Result<Zval, PhpException> {
     Ok(zv)
 }
 
-/// `IS_LONG` / `IS_DOUBLE` from zend_types.h - the codes `_is_numeric_string_ex` returns.
-const IS_LONG: u8 = 4;
-const IS_DOUBLE: u8 = 5;
-
-/// PHP's own `is_numeric()`, so the native path accepts exactly the strings
-/// `IntegerType`/`FloatType::cast` accept and bails on the rest instead of
-/// reproducing the grammar and drifting from it. Yields the type code together
-/// with the value `_is_numeric_string_ex` already computed, so the integer cast
-/// reads one parse instead of parsing the same bytes a second time.
-///
-/// The engine scans past `length` until a non-digit (it expects a zend_string's
-/// NUL terminator), so a CSV cell - a slice of the record buffer - is copied
-/// NUL-terminated first; unterminated, `"1"` followed by the next field's
-/// `"2..."` reads as trailing data and is refused.
+/// PHP's own `is_numeric()` grammar (`numeric::parse`), so the native path accepts exactly the strings
+/// `IntegerType`/`FloatType::cast` accept and bails on the rest. Yields the engine's type code together with the value
+/// one parse already computed, so the integer cast reads one parse instead of parsing the same bytes a second time.
 fn is_numeric_str(bytes: &[u8]) -> (u8, i64, f64) {
-    let mut lval: i64 = 0;
-    let mut dval: f64 = 0.0;
-    let mut short = [0u8; 64];
-    let long;
-    let terminated: &[u8] = if bytes.len() < short.len() {
-        short[..bytes.len()].copy_from_slice(bytes);
-        &short
-    } else {
-        long = [bytes, &[0]].concat();
-        &long
-    };
-
-    let code = unsafe {
-        _is_numeric_string_ex(
-            terminated.as_ptr().cast::<c_char>(),
-            bytes.len(),
-            &mut lval,
-            &mut dval,
-            false,
-            std::ptr::null_mut(),
-            std::ptr::null_mut(),
-        )
-    };
-
-    (code, lval, dval)
+    match numeric::parse(bytes) {
+        Some(Numeric::Long(value)) => (IS_LONG, value, 0.0),
+        Some(Numeric::Double(value)) => (IS_DOUBLE, 0, value),
+        None => (0, 0, 0.0),
+    }
 }
 
 /// `IntegerType::cast`'s integer-shaped-text test. Text of this shape that
@@ -258,7 +216,7 @@ fn fits_i64(value: f64) -> bool {
 /// implementation, so the fast path hands it back rather than guessing.
 fn numeric_scalar(value: &Zval) -> bool {
     match value.zend_str() {
-        Some(string) => is_numeric_str(string.as_bytes()).0 != 0,
+        Some(string) => numeric::parse(string.as_bytes()).is_some(),
         None => value.is_bool(),
     }
 }

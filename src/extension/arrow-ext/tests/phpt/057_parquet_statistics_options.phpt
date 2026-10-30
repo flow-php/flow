@@ -29,7 +29,7 @@ foreach ([null, 8] as $length) {
 
     echo $length ?? 'default', ': ',
         $statistics->minValue($column), ' ', $statistics->maxValue($column), ' ',
-        var_export($statistics->isMinValueExact(), true), ' ', var_export($statistics->isMaxValueExact(), true), "\n";
+        var_export($statistics->isMinValueExact, true), ' ', var_export($statistics->isMaxValueExact, true), "\n";
 }
 foreach ([0, -1] as $length) {
     foreach (['php' => Writer::php(options: (new Options())->set(Option::STATISTICS_TRUNCATE_LENGTH, $length)), 'arrow' => new Writer(options: (new Options())->set(Option::STATISTICS_TRUNCATE_LENGTH, $length), engine: new RustParquetEngine())] as $engine => $writer) {

@@ -62,7 +62,7 @@ data_frame()
     ->read(from_csv(__DIR__ . '/orders_flow.csv'));
 ```
 
-In this example we're using the `from_csv()` function to create a new instance of the `Flow\ETL\Adapter\CSV\CSVExtractor` class.
+In this example we're using the `from_csv()` function to create a new instance of the `Flow\ETL\Adapter\CSV\IO\Extractor\CSVExtractor` class.
 
 All file-based extractors accept [glob path patterns](/documentation/components/libs/filesystem.md#glob-patterns), allowing you to read multiple files at once.
 
@@ -101,7 +101,7 @@ You can find all available functions in the [DSL](/src/core/etl/src/Flow/ETL/DSL
 > [!TIP]
 > DSL is nothing more than a set of functions that return instances of Flow PHP objects. 
 > You can always create objects directly, but DSL is a more convenient way to build a pipeline.
-> All available ETL functions can be found in the [Function](/src/core/etl/src/Flow/ETL/Function) namespace.
+> All available ETL functions can be found in the [Functions](/src/core/etl/src/Flow/ETL/Functions) namespace.
 
 [Transformations Examples](/transformations/#example)
 
@@ -145,5 +145,5 @@ Flow ETL is using lazy execution, which means that the pipeline will not be exec
 ```
 
 There are few more triggering functions, like `fetch()`. You can find which functions are `@lazy` or `@trigger` by looking at
-the [DataFrame](/src/core/etl/src/Flow/ETL/DataFrame.php) source code.
+the [DataFrame](/src/core/etl/src/Flow/ETL/API/DataFrame.php) source code.
       

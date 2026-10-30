@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Context;
 
-use Flow\ETL\Rows;
+use Flow\ETL\Values\Rows;
 use Generator;
 
 use function array_map;

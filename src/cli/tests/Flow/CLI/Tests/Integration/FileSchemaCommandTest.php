@@ -6,7 +6,7 @@ namespace Flow\CLI\Tests\Integration;
 
 use Flow\CLI\Command\FileSchemaCommand;
 use Flow\CLI\Tests\Context\SchemaInferenceFixtureContext;
-use Flow\ETL\Tests\CommandOutputNormalizer;
+use Flow\ETL\Tests\Context\CommandOutputNormalizer;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Application;
@@ -15,8 +15,6 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 final class FileSchemaCommandTest extends TestCase
 {
-    use CommandOutputNormalizer;
-
     public function test_run_schema(): void
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
@@ -25,7 +23,7 @@ final class FileSchemaCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputIdentical(<<<'OUTPUT'
             [{"ref":"order_id","type":{"type":"uuid"},"nullable":true,"metadata":[]},{"ref":"created_at","type":{"type":"datetime","zone":"UTC"},"nullable":true,"metadata":[]},{"ref":"updated_at","type":{"type":"datetime","zone":"UTC"},"nullable":true,"metadata":[]},{"ref":"discount","type":{"type":"float"},"nullable":true,"metadata":[]},{"ref":"address","type":{"type":"json"},"nullable":true,"metadata":[]},{"ref":"notes","type":{"type":"json"},"nullable":true,"metadata":[]},{"ref":"items","type":{"type":"json"},"nullable":true,"metadata":[]}]
 
             OUTPUT, $tester->getDisplay());
@@ -44,7 +42,7 @@ final class FileSchemaCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputIdentical(<<<'OUTPUT'
             schema
             |-- a: ?string
 
@@ -59,7 +57,7 @@ final class FileSchemaCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputIdentical(<<<'OUTPUT'
             schema
             |-- order_id: ?uuid
             |-- created_at: ?datetime
@@ -84,7 +82,7 @@ final class FileSchemaCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputEquals(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputEquals(<<<'OUTPUT'
             +------------+--------------+----------+----------+
             |       name |         type | nullable | metadata |
             +------------+--------------+----------+----------+
@@ -116,7 +114,7 @@ final class FileSchemaCommandTest extends TestCase
         ]);
 
         $tester->assertCommandIsSuccessful();
-        self::assertCommandOutputIdentical("schema\n|-- a: ?integer\n", $tester->getDisplay());
+        CommandOutputNormalizer::assertCommandOutputIdentical("schema\n|-- a: ?integer\n", $tester->getDisplay());
     }
 
     public function test_run_schema_with_all_strings(): void
@@ -131,7 +129,7 @@ final class FileSchemaCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputEquals(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputEquals(<<<'OUTPUT'
             +------------+--------+----------+----------+
             |       name |   type | nullable | metadata |
             +------------+--------+----------+----------+
@@ -195,7 +193,7 @@ final class FileSchemaCommandTest extends TestCase
         $tester->assertCommandIsSuccessful();
 
         // Only the first source is opened, so the second file's "c" column is never seen
-        self::assertCommandOutputIdentical(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputIdentical(<<<'OUTPUT'
             schema
             |-- a: ?integer
             |-- b: ?integer
@@ -217,7 +215,7 @@ final class FileSchemaCommandTest extends TestCase
 
         // the schema comes from the source, not from the rows an offset happens to leave, so it no
         // longer depends on --input-file-offset
-        self::assertCommandOutputIdentical(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputIdentical(<<<'OUTPUT'
             schema
             |-- order_id: ?uuid
             |-- created_at: ?datetime
@@ -242,7 +240,7 @@ final class FileSchemaCommandTest extends TestCase
         $tester->assertCommandIsSuccessful();
 
         // Schema should be the same regardless of offset since schema is inferred from structure
-        self::assertCommandOutputIdentical(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputIdentical(<<<'OUTPUT'
             schema
             |-- order_id: ?uuid
             |-- created_at: ?datetime
@@ -269,7 +267,7 @@ final class FileSchemaCommandTest extends TestCase
         $tester->assertCommandIsSuccessful();
 
         // Schema should be the same even with offset and limit
-        self::assertCommandOutputEquals(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputEquals(<<<'OUTPUT'
             +------------+----------+----------+----------+
             |       name |     type | nullable | metadata |
             +------------+----------+----------+----------+
@@ -294,7 +292,7 @@ final class FileSchemaCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputIdentical(<<<'OUTPUT'
             \Flow\ETL\DSL\schema(
                 \Flow\ETL\DSL\uuid_schema("order_id", nullable: true, metadata: \Flow\ETL\DSL\schema_metadata()),
                 \Flow\ETL\DSL\datetime_schema("created_at", nullable: true, metadata: \Flow\ETL\DSL\schema_metadata()),
@@ -316,7 +314,7 @@ final class FileSchemaCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputIdentical(<<<'OUTPUT'
             [
                 {
                     "ref": "order_id",
@@ -393,7 +391,7 @@ final class FileSchemaCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputIdentical(<<<'OUTPUT'
             schema
             |-- a: ?integer
 
@@ -408,7 +406,7 @@ final class FileSchemaCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputEquals(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputEquals(<<<'OUTPUT'
             +------------+----------+----------+----------+
             |       name |     type | nullable | metadata |
             +------------+----------+----------+----------+
@@ -437,7 +435,7 @@ final class FileSchemaCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputIdentical(<<<'OUTPUT'
             +------------+----------+----------+----------+
             |       name |     type | nullable | metadata |
             +------------+----------+----------+----------+
@@ -462,7 +460,7 @@ final class FileSchemaCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputEquals(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputEquals(<<<'OUTPUT'
             +------------+--------+----------+----------+
             |       name |   type | nullable | metadata |
             +------------+--------+----------+----------+
@@ -491,7 +489,7 @@ final class FileSchemaCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputIdentical(<<<'OUTPUT'
             +--------------+--------------+----------+----------+
             |         name |         type | nullable | metadata |
             +--------------+--------------+----------+----------+
@@ -522,7 +520,7 @@ final class FileSchemaCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputIdentical(<<<'OUTPUT'
             +------------+--------------+----------+----------+
             |       name |         type | nullable | metadata |
             +------------+--------------+----------+----------+
@@ -552,7 +550,7 @@ final class FileSchemaCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputIdentical(<<<'OUTPUT'
             +------+--------+----------+----------+
             | name |   type | nullable | metadata |
             +------+--------+----------+----------+
@@ -576,7 +574,7 @@ final class FileSchemaCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputIdentical(<<<'OUTPUT'
             +------+------+----------+----------+
             | name | type | nullable | metadata |
             +------+------+----------+----------+
@@ -599,7 +597,7 @@ final class FileSchemaCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertCommandOutputIdentical(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputIdentical(<<<'OUTPUT'
             schema
             |-- a: ?integer
             |-- b: ?integer
@@ -621,7 +619,7 @@ final class FileSchemaCommandTest extends TestCase
         $tester->assertCommandIsSuccessful();
 
         // Zero offset should behave same as no offset
-        self::assertCommandOutputIdentical(<<<'OUTPUT'
+        CommandOutputNormalizer::assertCommandOutputIdentical(<<<'OUTPUT'
             schema
             |-- order_id: ?uuid
             |-- created_at: ?datetime
@@ -646,7 +644,10 @@ final class FileSchemaCommandTest extends TestCase
         ]);
 
         $tester->assertCommandIsSuccessful();
-        self::assertCommandOutputIdentical("schema\n|-- a: ?integer\n|-- b: ?integer\n", $tester->getDisplay());
+        CommandOutputNormalizer::assertCommandOutputIdentical(
+            "schema\n|-- a: ?integer\n|-- b: ?integer\n",
+            $tester->getDisplay(),
+        );
     }
 
     public function test_file_schema_command_registers_the_schema_alias(): void

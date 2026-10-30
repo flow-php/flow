@@ -8,7 +8,6 @@ use Flow\Parquet\Filter\All;
 use Flow\Parquet\Filter\Any;
 use Flow\Parquet\Filter\Binding\AbsentLeaf;
 use Flow\Parquet\Filter\Binding\BoundFilter;
-use Flow\Parquet\Filter\Binding\PhysicalIntervals;
 use Flow\Parquet\Filter\Comparison;
 use Flow\Parquet\Filter\Filter;
 use Flow\Parquet\Filter\FilterVisitor;
@@ -122,7 +121,6 @@ final readonly class ReadPlanConverter implements FilterVisitor
             return ['leaf' => 'absent', 'is_null' => false];
         }
 
-        /** @var PhysicalIntervals $intervals rowLeaf() resolves only leaves answered exactly */
         $intervals = $resolution->intervals;
 
         return [

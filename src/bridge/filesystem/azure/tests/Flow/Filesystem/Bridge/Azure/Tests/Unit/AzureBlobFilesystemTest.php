@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Bridge\Azure\Tests\Unit;
 
 use Flow\Azure\SDK\BlobServiceInterface;
+use Flow\Filesystem\Bridge\Azure\AzureBlobFilesystem;
 use Flow\Filesystem\Exception\InvalidSchemeException;
+use Flow\Types\Exception\InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem;
@@ -87,5 +89,32 @@ final class AzureBlobFilesystemTest extends TestCase
         $this->expectException(InvalidSchemeException::class);
 
         azure_filesystem($this->createStub(BlobServiceInterface::class))->writeTo(path('file:///var/foo.txt'));
+    }
+
+    public function test_a_configured_filesystem_round_trips_its_configuration(): void
+    {
+        $filesystem = azure_filesystem([
+            'account_name' => 'a',
+            'container' => 'c',
+            'shared_key' => 'c2VjcmV0',
+        ], protocol: 'blobs');
+        $configuration = $filesystem->normalize();
+
+        static::assertNotNull($configuration);
+        static::assertSame('blobs', $configuration['protocol']);
+        static::assertSame('c', $configuration['blob_service']['container']);
+        static::assertSame($configuration, AzureBlobFilesystem::fromArray($configuration)->normalize());
+    }
+
+    public function test_a_filesystem_over_a_live_service_has_no_configuration(): void
+    {
+        static::assertNull(azure_filesystem($this->createStub(BlobServiceInterface::class))->normalize());
+    }
+
+    public function test_a_configuration_without_a_protocol_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        AzureBlobFilesystem::fromArray(['blob_service' => [], 'options' => []]);
     }
 }

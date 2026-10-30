@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Row\Reference;
-use Flow\ETL\Schema\Definition;
-use Flow\ETL\Schema\Metadata;
+use Flow\ETL\Values\Schema\Definition;
+use Flow\ETL\Values\Schema\Metadata;
 use Flow\Types\Type;
-
-use function Flow\ETL\DSL\ref;
 
 /**
  * @implements Definition<mixed>
@@ -29,9 +26,9 @@ final readonly class ForeignTypeDefinition implements Definition
         return $this;
     }
 
-    public function reference(): Reference
+    public function name(): string
     {
-        return ref($this->name);
+        return $this->name;
     }
 
     public function isCompatible(Definition $definition): bool

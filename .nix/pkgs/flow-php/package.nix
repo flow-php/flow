@@ -1,6 +1,7 @@
 {
     php,
     fetchurl,
+    stdenv,
     php-snappy,
     php-lz4,
     php-brotli,
@@ -11,6 +12,7 @@
     with-pcov ? true,
     with-xdebug ? false,
     with-blackfire ? false,
+    with-php-benchmark ? false,
     with-pg-query-ext ? false,
     with-arrow-ext ? false,
     with-flow-php-ext ? false,
@@ -86,6 +88,19 @@ flowPHP.buildEnv {
             if builtins.pathExists ./../../php/lib/pcov.ini
                 then builtins.readFile ./../../php/lib/pcov.ini
                 else builtins.readFile ./../../php/lib/pcov.ini.dist
+        else ""
+      )
+    + "\n"
+    + (
+        if with-php-benchmark
+        then
+            (
+                if builtins.pathExists ./../../php/lib/benchmark.ini
+                    then builtins.readFile ./../../php/lib/benchmark.ini
+                    else builtins.readFile ./../../php/lib/benchmark.ini.dist
+            )
+            # macOS has no huge pages; OPcache warns on every process start, which lands in every worker's stderr.
+            + (if stdenv.hostPlatform.isLinux then "\nopcache.huge_code_pages=1\n" else "")
         else ""
       );
 }

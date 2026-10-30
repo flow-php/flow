@@ -8,7 +8,7 @@ This document describes how to develop the two Rust PHP extensions in this monor
 | Extension      | Package                 | What it provides                                                                                                                                                             |
 |----------------|-------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `arrow-ext`    | `flow-php/arrow-ext`    | Parquet reader and writer powered by the [Apache Arrow](https://arrow.apache.org/) Rust ecosystem, exposed as `Flow\Parquet\Engine\RustParquetEngine`                        |
-| `flow-php-ext` | `flow-php/flow-php-ext` | The native column backend (`Flow\ETL\Column\RustBackend`, `RustColumn`, `RustColumnBuilder` over Apache Arrow arrays) and the Rust CSV / JSON / Parquet sources and encoders |
+| `flow-php-ext` | `flow-php/flow-php-ext` | The native column backend (`Flow\ETL\Values\Column\RustBackend`, `RustColumn`, `RustColumnBuilder` over Apache Arrow arrays) and the Rust CSV / JSON / Parquet sources and encoders |
 
 Both are optional. The pure-PHP implementations in `flow-php/etl` and `flow-php/parquet` remain the behaviour
 reference; every contract has a `Php*`, a `Rust*` and an `Adaptive*` class that picks the Rust one when the extension
@@ -71,7 +71,6 @@ src/extension/flow-php-ext/
 │   ├── backend.rs          # RustBackend
 │   ├── column.rs           # RustColumn
 │   ├── builder.rs          # RustColumnBuilder: native cast lanes, PHP lane for the rest
-│   ├── kind_builder.rs     # Arrow storage appended row by row
 │   ├── physical.rs         # Arrow rows as physical and logical zvals
 │   ├── plan.rs             # Per-type plan, cached by Type object and type JSON
 │   ├── render.rs           # flow-batch-frame refusals as the PHP messages
@@ -79,18 +78,23 @@ src/extension/flow-php-ext/
 │   ├── json_check.rs       # JSON validation shared by casting and CSV inference
 │   ├── batch_columns.rs    # BatchColumns: one native builder per definition, shared by the CSV and JSON sources
 │   ├── source.rs           # Shared stream loop of the Rust open sources
-│   ├── csv/                # CSV tokenizer, RustCSVOpenSource, RustCSVEncoder, schema-inference fold
-│   ├── json/               # RustJsonOpenSource, RustJsonEncoder
-│   ├── text/               # Column values as the writers render them (TextValues)
-│   ├── parquet/            # RustParquetOpenSource, RustParquetOpenSink
-│   ├── arrow_c.rs          # Batches across the Arrow C Data Interface (arrow-ext)
+│   ├── csv/                # RustCSVOpenSource, RustCSVEncoder, schema-inference fold
+│   ├── json/               # RustJsonOpenSource, RustJsonEncoder, JSON values into columns
+│   ├── text/               # The PHP side of the text writers: Rows batches, DateTimeZone transitions
+│   ├── parquet/            # RustParquetOpenSource, RustParquetFileWriter
+│   ├── arrow_c.rs          # RustColumnsBatch and the PHP side of the Arrow C Data hand-off (arrow-ext)
 │   ├── ctx.rs              # Request-scoped context and engine helpers
 │   ├── globals.rs          # Module globals, RINIT/RSHUTDOWN
 │   ├── alloc.rs            # Counting global allocator (allocatedBytes())
 │   ├── values.rs           # Zval <-> PHP value helpers
 │   └── exception.rs        # Exception mapping
-├── crates/
-│   └── flow-batch-frame/   # Pure-Rust column buffers and BATCH frame bodies (no PHP types)
+├── crates/                 # The cargo workspace members: pure Rust, no PHP types, every #[test] lives here
+│   ├── flow-batch-frame/   # Column buffers, builders, BATCH frame bodies, kinds and value shapes, column keys
+│   ├── flow-column-text/   # Column values as the writers render them: floats, dates, JSON strings, uuids
+│   ├── flow-json-records/  # JSON lines / array framing and member-to-column mapping
+│   ├── flow-arrow-c/       # Batches across the Arrow C Data Interface, imported bytes counted
+│   ├── flow-csv-tokenizer/ # CSV records and fields as php_fgetcsv() produces them
+│   └── flow-numeric-string/ # PHP's is_numeric() grammar
 ├── php/                    # PHP stubs for static analysis
 │   └── Flow/
 ├── tests/
@@ -139,11 +143,11 @@ nix-shell --run "just test --testsuite=etl-unit"                     # flow-php-
 | `clean`   | Remove build artifacts                           |
 | `rebuild` | Full clean + build                               |
 
-The two PHPT runners differ in two ways:
-
-- `arrow-ext` runs each test with `php -n`, so `php.ini` is ignored and no other extension is loaded.
-  `flow-php-ext` does not, so the ambient extensions load alongside it.
-- `flow-php-ext` honours `--SKIPIF--` blocks and reports a skipped count. `arrow-ext` ignores them.
+The two PHPT runners are the same shell loop: each test runs with `php -d extension=<the built .so>` (not `php -n`, so
+the ambient `php.ini` and its extensions load alongside), `--SKIPIF--` blocks are honoured and the skipped count is
+reported, and the output is compared exactly (`--EXPECTF--` is accepted but `%s` is not expanded). `flow-php-ext`
+additionally takes `ARROW_SO=<path>` to pre-load arrow-ext, so the Parquet ETL phpts run instead of skipping:
+`make test ARROW_SO=../arrow-ext/ext/modules/arrow.so`.
 
 ## Rebuilding after a source change
 
@@ -157,17 +161,17 @@ Re-enter `nix-shell` to rebuild the derivation, or build and test the extension 
 nix-shell --arg with-rust true --run "cd src/extension/flow-php-ext && make build && make test"
 ```
 
-This covers `crates/flow-batch-frame`, which the flow-php-ext build compiles from the same directory.
+This covers every crate under `crates/`, which the flow-php-ext build compiles from the same workspace.
 
 ## Extension ABI
 
 Each extension registers an `int` constant with the version of the contract its PHP package expects. The PHP package
 holds the same number:
 
-| Extension | Constant (Rust `lib.rs`) | PHP side                                  |
-|-----------|--------------------------|-------------------------------------------|
-| flow_php  | `FLOW_PHP_ABI`           | `Flow\ETL\FlowPhpExtension::ABI`          |
-| arrow     | `FLOW_ARROW_ABI`         | `Flow\Parquet\Engine\ArrowExtension::ABI` |
+| Extension | Constant (Rust `lib.rs`) | PHP side                                    |
+|-----------|--------------------------|---------------------------------------------|
+| flow_php  | `FLOW_PHP_ABI`           | `Flow\ETL\Foundation\FlowPhpExtension::ABI` |
+| arrow     | `FLOW_ARROW_ABI`         | `Flow\Parquet\Engine\ArrowExtension::ABI`   |
 
 Bump both, in one change, whenever the contract changes: a class or interface the extension registers, or the
 schema, options or values that cross it. Every `Adaptive*` pick calls `available()`: an extension that is loaded with
@@ -177,17 +181,25 @@ another ABI, or with none, is refused with a `RuntimeException` naming the exten
 The PHP interfaces an extension also registers are guarded by `interface_exists(X::class, false)`, so an extension
 that does not register one still gets the PHP declaration and fails at the ABI check, not with "Class not found".
 
-## The flow-batch-frame crate
+## The flow-php-ext workspace
 
-`src/extension/flow-php-ext/crates/flow-batch-frame` holds Flow's batch layout in pure Rust: one column's buffers in the
-canonical form of `Column::encode()` and back, and the BATCH frame body around them. It returns every refusal as a data
-`Error` variant; `flow_php` renders each into the PHP message. flow-php-ext depends on it by `path`:
+`src/extension/flow-php-ext` is a cargo workspace: the root package is the extension (PHP glue only: ext-php-rs classes,
+Zval conversions, exception text), the members under `crates/` are pure Rust with no PHP types. Every `#[test]` lives in
+a member, so the test binaries link without a PHP engine; a member that reaches a Zend symbol fails to link on Linux,
+which CI runs for every push. Each member returns its refusals as data (`Error`, `Refusal`, `Malformed`); `flow_php`
+renders each into the PHP message. `flow-batch-frame` holds Flow's batch layout: one column's buffers in the canonical
+form of `Column::encode()` and back, the builders that append rows into it, and the BATCH frame body around them.
 
 ```bash
-nix-shell --arg with-rust true --run "cd src/extension/flow-php-ext/crates/flow-batch-frame && cargo test"
+nix-shell --arg with-rust true --run "cd src/extension/flow-php-ext && cargo test --workspace --features arrow-validate"
+nix-shell --arg with-rust true --run "cd src/extension/flow-php-ext && cargo fmt --all --check && cargo clippy --workspace --all-targets -- -D warnings"
 ```
 
-arrow-ext does not depend on the crate. Its `canonical_type()` (`src/parquet/canonical.rs`) must produce the Arrow
+`arrow-validate` turns on `arrow-data/force_validate`, which re-validates every array the builders hand over with
+`build_unchecked`; `make test` builds the extension with it, `make build` without. The same feature and the same three
+commands (without `--workspace`) apply to `src/extension/arrow-ext`.
+
+arrow-ext does not depend on the workspace. Its `canonical_type()` (`src/parquet/canonical.rs`) must produce the Arrow
 types of flow-batch-frame's `kind::data_type()`, pinned by flow-php-ext phpt 091.
 
 ## Releasing

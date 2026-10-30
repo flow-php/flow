@@ -8,13 +8,11 @@ use Flow\PostgreSql\Protobuf\AST\ClusterStmt;
 use Flow\PostgreSql\Protobuf\AST\DefElem;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class ClusterBuilder implements ClusterFinalStep
 {
-    use AstToSql;
-
     private function __construct(
         private ?string $table = null,
         private ?string $index = null,
@@ -34,6 +32,11 @@ final readonly class ClusterBuilder implements ClusterFinalStep
     public function table(string $table): ClusterFinalStep
     {
         return new self($table, $this->index, $this->verbose);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): ClusterStmt

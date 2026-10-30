@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Context;
 
-use Flow\ETL\Function\ReferenceResolver;
-use Flow\ETL\Function\ScalarFunction;
-use Flow\ETL\Schema;
+use Flow\ETL\Functions\ReferenceResolver;
+use Flow\ETL\Functions\ScalarFunction;
+use Flow\ETL\Operators\Transformer\Expansion;
 use Flow\ETL\Tests\Mother\ListColumnsMother;
-use Flow\ETL\Transformer\Expansion;
+use Flow\ETL\Values\Schema;
 
 use function Flow\Types\DSL\type_instance_of;
 

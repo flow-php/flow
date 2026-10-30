@@ -6,8 +6,8 @@ RustIterator behaves as the Generator it replaced: it starts on first use, ends 
 <?php
 require __DIR__ . '/bootstrap.php';
 
-use Flow\ETL\Adapter\JSON\RustJsonOpenSource;
-use Flow\ETL\Column\PhpBackend;
+use Flow\ETL\Adapter\JSON\IO\Extractor\RustJsonOpenSource;
+use Flow\ETL\Values\Column\PhpBackend;
 use Flow\Filesystem\Stream\StringSourceStream;
 
 use function Flow\ETL\DSL\{int_schema, schema};

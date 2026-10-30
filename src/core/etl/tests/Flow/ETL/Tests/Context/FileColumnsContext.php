@@ -4,11 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Context;
 
-use Flow\ETL\Extractor\File\FileColumns;
-use Flow\ETL\Extractor\File\PartitionColumns;
-use Flow\ETL\Extractor\File\PartitionTypes;
-
-use function Flow\Filesystem\DSL\memory_filesystem;
+use Flow\ETL\IO\Extractor\File\FileColumns;
+use Flow\ETL\IO\Extractor\File\PartitionTypes;
 
 final class FileColumnsContext
 {
@@ -20,6 +17,6 @@ final class FileColumnsContext
         PartitionTypes $types = new PartitionTypes(),
         bool $metadataColumns = false,
     ): FileColumns {
-        return new FileColumns(new PartitionColumns(memory_filesystem()), $names, $types, $metadataColumns);
+        return new FileColumns($names, $types, $metadataColumns);
     }
 }

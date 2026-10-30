@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Column\AdaptiveBackend;
-use Flow\ETL\Rows;
+use Flow\ETL\Storage\Floe\FloeSerializer;
+use Flow\ETL\Storage\Serializer\Serializer;
+use Flow\ETL\Values\Column\AdaptiveBackend;
+use Flow\ETL\Values\Rows;
 use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\SourceStream;
-use Flow\Floe\FloeSerializer;
-use Flow\Serializer\Serializer;
 
 use function Flow\Serializer\DSL\serialize_to_string;
 use function Flow\Serializer\DSL\unserialize_from_string;

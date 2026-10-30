@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Context;
 
-use Flow\ETL\Plan\LogicalPlan;
-use Flow\ETL\Plan\Node;
-use Flow\ETL\Plan\Node\ExpandColumn;
-use Flow\ETL\Plan\RequiredColumns;
+use Flow\ETL\Operators\Processor\RequiredColumns;
+use Flow\ETL\Planning\Logical\LogicalPlan;
+use Flow\ETL\Planning\Logical\Node;
+use Flow\ETL\Planning\Logical\Node\ExpandColumn;
 
 use function spl_object_id;
 

@@ -1,8 +1,8 @@
 <?php
 
-use Flow\ETL\DataFrame;
+use Flow\ETL\API\DataFrame;
 use Flow\ETL\Row\UnresolvedReference;
-use Flow\ETL\Transformation;
+use Flow\ETL\API\Transformation;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\Types\DSL\type_string;

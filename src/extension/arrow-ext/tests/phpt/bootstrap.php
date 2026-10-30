@@ -64,7 +64,7 @@ function arrow_interfaces_reflection(): string
 }
 
 /**
- * The plan of the rows [`$offset`, `$offset + $limit`) of `$file`, as `ReadPlanner::plan()` builds it without a filter.
+ * The plan of the rows [`$offset`, `$offset + $limit`) of `$file`, as `ReadPlan::forFilter()` builds it without a filter.
  */
 function arrow_read_plan(
     Flow\Parquet\ParquetFileReader $file,

@@ -9,9 +9,9 @@ use Doctrine\DBAL\Schema\PrimaryKeyConstraint;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
-use Flow\ETL\Adapter\Doctrine\Order;
-use Flow\ETL\Adapter\Doctrine\OrderBy;
-use Flow\ETL\Adapter\Doctrine\Table as ETLTable;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\Order;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\OrderBy;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\Table as ETLTable;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
 
 use function Flow\ETL\Adapter\Doctrine\from_dbal_limit_offset;
@@ -25,6 +25,7 @@ use function Flow\ETL\DSL\str_schema;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
+use function range;
 
 final class SqliteDbalLimitOffsetExtractorTest extends IntegrationTestCase
 {
@@ -95,7 +96,7 @@ final class SqliteDbalLimitOffsetExtractorTest extends IntegrationTestCase
         }
 
         $data = data_frame()
-            ->extract(from_dbal_limit_offset_qb(
+            ->read(from_dbal_limit_offset_qb(
                 $this->sqliteDatabaseContext->connection(),
                 $this->sqliteDatabaseContext
                     ->connection()
@@ -122,7 +123,7 @@ final class SqliteDbalLimitOffsetExtractorTest extends IntegrationTestCase
         );
     }
 
-    public function test_extracting_entire_table_using_qb_with_maximum_and_offset_set_on_extractor(): void
+    public function test_extracting_using_qb_with_offset_set_on_query_and_maximum_on_extractor(): void
     {
         $this->sqliteDatabaseContext->createTable(
             (new Table($table = 'flow_doctrine_bulk_test', [
@@ -146,7 +147,7 @@ final class SqliteDbalLimitOffsetExtractorTest extends IntegrationTestCase
         $this->sqliteDatabaseContext->resetSelectQueryCounter();
 
         $rows = data_frame()
-            ->extract(
+            ->read(
                 from_dbal_limit_offset_qb(
                     $this->sqliteDatabaseContext->connection(),
                     $this->sqliteDatabaseContext
@@ -154,7 +155,8 @@ final class SqliteDbalLimitOffsetExtractorTest extends IntegrationTestCase
                         ->createQueryBuilder()
                         ->from($table)
                         ->select('*')
-                        ->orderBy('id', 'ASC'),
+                        ->orderBy('id', 'ASC')
+                        ->setFirstResult(10),
                 )
                     ->withSchema(schema(
                         int_schema('id'),
@@ -162,7 +164,6 @@ final class SqliteDbalLimitOffsetExtractorTest extends IntegrationTestCase
                         map_schema('tags', type_map(type_string(), type_integer())),
                     ))
                     ->withMaximum(5)
-                    ->withOffset(10)
                     ->withBatchSize(1),
             )
             ->fetch()
@@ -195,7 +196,7 @@ final class SqliteDbalLimitOffsetExtractorTest extends IntegrationTestCase
         }
 
         $rows = data_frame()
-            ->extract(from_dbal_limit_offset_qb(
+            ->read(from_dbal_limit_offset_qb(
                 $this->sqliteDatabaseContext->connection(),
                 $this->sqliteDatabaseContext
                     ->connection()
@@ -215,6 +216,40 @@ final class SqliteDbalLimitOffsetExtractorTest extends IntegrationTestCase
 
         static::assertCount(5, $rows);
         static::assertSame(11, $rows[0]['id']);
+    }
+
+    public function test_extracting_using_qb_with_only_an_offset_set_on_query(): void
+    {
+        $this->sqliteDatabaseContext->createTable(
+            (new Table($table = 'flow_doctrine_bulk_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+            ]))
+                ->edit()
+                ->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create())
+                ->create(),
+        );
+
+        for ($i = 1; $i <= 25; $i++) {
+            $this->sqliteDatabaseContext->insert($table, ['id' => $i]);
+        }
+
+        static::assertSame(
+            range(11, 25),
+            data_frame()
+                ->read(from_dbal_limit_offset_qb(
+                    $this->sqliteDatabaseContext->connection(),
+                    $this->sqliteDatabaseContext
+                        ->connection()
+                        ->createQueryBuilder()
+                        ->from($table)
+                        ->select('id')
+                        ->orderBy('id', 'ASC')
+                        ->setFirstResult(10),
+                    page_size: 4,
+                )->withSchema(schema(int_schema('id'))))
+                ->fetch()
+                ->reduceToArray('id'),
+        );
     }
 
     public function test_extracting_entire_table_using_qb_with_maximum_set_on_query(): void
@@ -241,7 +276,7 @@ final class SqliteDbalLimitOffsetExtractorTest extends IntegrationTestCase
         $this->sqliteDatabaseContext->resetSelectQueryCounter();
 
         $rows = data_frame()
-            ->extract(from_dbal_limit_offset_qb(
+            ->read(from_dbal_limit_offset_qb(
                 $this->sqliteDatabaseContext->connection(),
                 $this->sqliteDatabaseContext
                     ->connection()
@@ -285,7 +320,7 @@ final class SqliteDbalLimitOffsetExtractorTest extends IntegrationTestCase
         }
 
         $schema = data_frame()
-            ->extract(from_dbal_limit_offset_qb(
+            ->read(from_dbal_limit_offset_qb(
                 $this->sqliteDatabaseContext->connection(),
                 $this->sqliteDatabaseContext
                     ->connection()

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\AST\Nodes\Statement;
 
 use Flow\PostgreSql\AST\Nodes\Statement;
-use Flow\PostgreSql\AST\Nodes\StatementTrait;
 use Flow\PostgreSql\Protobuf\AST\ViewStmt;
 
 /**
@@ -15,8 +14,6 @@ use Flow\PostgreSql\Protobuf\AST\ViewStmt;
  */
 final readonly class ViewStatement implements Statement
 {
-    use StatementTrait;
-
     public function __construct(
         private ViewStmt $stmt,
     ) {}

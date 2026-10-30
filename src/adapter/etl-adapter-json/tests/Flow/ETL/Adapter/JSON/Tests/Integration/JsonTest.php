@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\JSON\Tests\Integration;
 
 use DOMDocument;
-use Flow\ETL\Adapter\JSON\JsonLoader;
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Exception\RuntimeException as FilesystemRuntimeException;
@@ -17,9 +16,7 @@ use function Flow\ETL\Adapter\JSON\from_json;
 use function Flow\ETL\Adapter\Json\to_json;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\average;
-use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\from_sequence_number;
@@ -29,7 +26,6 @@ use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\partition_by;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\select;
 use function Flow\ETL\DSL\to_transformation;
@@ -75,30 +71,6 @@ final class JsonTest extends FlowTestCase
         df()->read(new FakeExtractor(100))->write(to_json($path))->run();
 
         static::assertEquals(100, df()->read(from_json($path))->count());
-
-        if (file_exists($path)) {
-            unlink($path);
-        }
-    }
-
-    public function test_json_loader_loading_empty_string(): void
-    {
-        $loader = new JsonLoader(path($path = __DIR__ . '/var/test_json_loader_loading_empty_string.json'));
-
-        $loader->load(rows(schema()), $context = flow_context(config()));
-
-        $loader->closure($context);
-
-        $content = file_get_contents($path);
-
-        if ($content === false) {
-            static::fail('Failed to read file content');
-        }
-
-        static::assertJsonStringEqualsJsonString(<<<'JSON'
-            [
-            ]
-            JSON, $content);
 
         if (file_exists($path)) {
             unlink($path);

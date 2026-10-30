@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Extractor;
-use Flow\ETL\Extractor\Signal;
-use Flow\ETL\Extractor\Statistics;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Rows;
-use Flow\ETL\Schema;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\IO\Extractor;
+use Flow\ETL\IO\Extractor\Criteria;
+use Flow\ETL\IO\Extractor\Signal;
+use Flow\ETL\IO\Extractor\Statistics;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Schema;
 use Generator;
 
 use function array_map;
@@ -62,36 +63,42 @@ final class OffsetTest extends FlowIntegrationTestCase
 
     public function test_offset_null(): void
     {
-        $rows = df()
-            ->read(from_array(array_map(static fn(int $id): array => ['id' => $id], range(1, 10))))
-            ->offset(null)
-            ->fetch();
-        static::assertCount(10, $rows);
+        static::assertCount(
+            10,
+            df()
+                ->read(from_array(array_map(static fn(int $id): array => ['id' => $id], range(1, 10))))
+                ->offset(null)
+                ->fetch(),
+        );
     }
 
     public function test_offset_skipping_all_rows(): void
     {
-        $rows = df()
-            ->read(from_array([
-                ['id' => 1],
-                ['id' => 2],
-                ['id' => 3],
-            ]))
-            ->offset(3)
-            ->fetch();
-        static::assertCount(0, $rows);
+        static::assertCount(
+            0,
+            df()
+                ->read(from_array([
+                    ['id' => 1],
+                    ['id' => 2],
+                    ['id' => 3],
+                ]))
+                ->offset(3)
+                ->fetch(),
+        );
     }
 
     public function test_offset_skipping_more_rows_than_available(): void
     {
-        $rows = df()
-            ->read(from_array([
-                ['id' => 1],
-                ['id' => 2],
-            ]))
-            ->offset(5)
-            ->fetch();
-        static::assertCount(0, $rows);
+        static::assertCount(
+            0,
+            df()
+                ->read(from_array([
+                    ['id' => 1],
+                    ['id' => 2],
+                ]))
+                ->offset(5)
+                ->fetch(),
+        );
     }
 
     public function test_offset_skipping_some_rows(): void
@@ -132,11 +139,9 @@ final class OffsetTest extends FlowIntegrationTestCase
                 }
 
                 /**
-                 * @param FlowContext $context
-                 *
                  * @return \Generator<int, Rows, Signal|null, void>
                  */
-                public function extract(FlowContext $context, ?int $limit = null): Generator
+                public function extract(Backend $backend, Criteria $criteria): Generator
                 {
                     for ($i = 0; $i < 10; $i++) {
                         yield array_to_rows([['id' => $i + 1]], schema(integer_schema('id')));
@@ -146,6 +151,11 @@ final class OffsetTest extends FlowIntegrationTestCase
                 public function statistics(): Statistics
                 {
                     return new Statistics();
+                }
+
+                public function isRepeatable(): bool
+                {
+                    return false;
                 }
             })
             ->batchSize(3)
@@ -180,11 +190,9 @@ final class OffsetTest extends FlowIntegrationTestCase
                 }
 
                 /**
-                 * @param FlowContext $context
-                 *
                  * @return \Generator<int, Rows, Signal|null, void>
                  */
-                public function extract(FlowContext $context, ?int $limit = null): Generator
+                public function extract(Backend $backend, Criteria $criteria): Generator
                 {
                     for ($i = 0; $i < 5; $i++) {
                         yield array_to_rows([['id' => $i + 1]], schema(integer_schema('id')));
@@ -194,6 +202,11 @@ final class OffsetTest extends FlowIntegrationTestCase
                 public function statistics(): Statistics
                 {
                     return new Statistics();
+                }
+
+                public function isRepeatable(): bool
+                {
+                    return false;
                 }
             })
             ->offset(2)
@@ -212,58 +225,63 @@ final class OffsetTest extends FlowIntegrationTestCase
 
     public function test_offset_with_expanding_transformations(): void
     {
-        $rows = df()
-            ->read(new class implements Extractor {
-                public function withSchema(Schema $schema): static
-                {
-                    return $this;
-                }
-
-                public function schema(): Schema
-                {
-                    return schema(list_schema(
-                        'ids',
-                        type_list(type_structure([
-                            'id' => type_integer(),
-                        ])),
-                    ));
-                }
-
-                /**
-                 * @param FlowContext $context
-                 *
-                 * @return \Generator<int, Rows, Signal|null, void>
-                 */
-                public function extract(FlowContext $context, ?int $limit = null): Generator
-                {
-                    for ($i = 0; $i < 100; $i++) {
-                        yield array_to_rows([[
-                            'ids' => [
-                                ['id' => $i + 1],
-                                ['id' => $i + 2],
-                                ['id' => $i + 3],
-                            ],
-                        ]], schema(list_schema('ids', type_list(type_structure([
-                            'id' => type_integer(),
-                        ])))));
+        static::assertCount(
+            3,
+            df()
+                ->read(new class implements Extractor {
+                    public function withSchema(Schema $schema): static
+                    {
+                        return $this;
                     }
-                }
 
-                public function statistics(): Statistics
-                {
-                    return new Statistics();
-                }
-            })
-            ->withColumns([
-                'expanded' => ref('ids')->expand(),
-                'element' => ref('expanded')->unpack(schema(int_schema('id'))),
-            ])
-            ->rename('element.id', 'id')
-            ->drop('expanded', 'ids', 'element')
-            ->offset(5)
-            ->limit(3)
-            ->fetch();
-        static::assertCount(3, $rows);
+                    public function schema(): Schema
+                    {
+                        return schema(list_schema(
+                            'ids',
+                            type_list(type_structure([
+                                'id' => type_integer(),
+                            ])),
+                        ));
+                    }
+
+                    /**
+                     * @return \Generator<int, Rows, Signal|null, void>
+                     */
+                    public function extract(Backend $backend, Criteria $criteria): Generator
+                    {
+                        for ($i = 0; $i < 100; $i++) {
+                            yield array_to_rows([[
+                                'ids' => [
+                                    ['id' => $i + 1],
+                                    ['id' => $i + 2],
+                                    ['id' => $i + 3],
+                                ],
+                            ]], schema(list_schema('ids', type_list(type_structure([
+                                'id' => type_integer(),
+                            ])))));
+                        }
+                    }
+
+                    public function statistics(): Statistics
+                    {
+                        return new Statistics();
+                    }
+
+                    public function isRepeatable(): bool
+                    {
+                        return false;
+                    }
+                })
+                ->withColumns([
+                    'expanded' => ref('ids')->expand(),
+                    'element' => ref('expanded')->unpack(schema(int_schema('id'))),
+                ])
+                ->rename('element.id', 'id')
+                ->drop('expanded', 'ids', 'element')
+                ->offset(5)
+                ->limit(3)
+                ->fetch(),
+        );
     }
 
     public function test_offset_with_limit(): void
@@ -306,11 +324,9 @@ final class OffsetTest extends FlowIntegrationTestCase
                 }
 
                 /**
-                 * @param FlowContext $context
-                 *
                  * @return \Generator<int, Rows, Signal|null, void>
                  */
-                public function extract(FlowContext $context, ?int $limit = null): Generator
+                public function extract(Backend $backend, Criteria $criteria): Generator
                 {
                     for ($i = 0; $i < 10; $i++) {
                         yield array_to_rows([['id' => $i + 1]], schema(integer_schema('id')));
@@ -320,6 +336,11 @@ final class OffsetTest extends FlowIntegrationTestCase
                 public function statistics(): Statistics
                 {
                     return new Statistics();
+                }
+
+                public function isRepeatable(): bool
+                {
+                    return false;
                 }
             })
             ->offset(4)

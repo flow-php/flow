@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use Flow\ETL\Sink\Transactional;
+use Flow\ETL\API\Transactional;
 use Flow\ETL\Tests\Double\RecordingTransaction;
 use Flow\ETL\Tests\Double\SpyLoader;
 use Flow\ETL\Tests\Double\SpyTransformer;
@@ -18,21 +18,21 @@ final class TriggerPlanTest extends FlowIntegrationTestCase
 {
     public function test_a_transform_after_the_last_write_sees_every_row_under_run(): void
     {
-        $sink = new SpyLoader();
+        $loader = new SpyLoader();
         $afterWrite = new SpyTransformer();
 
         df()
             ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]))
             ->batchSize(1)
-            ->write($sink)
-            ->transform($afterWrite)
+            ->write($loader)
+            ->with($afterWrite)
             ->run();
 
         static::assertSame(3, $afterWrite->seen);
-        static::assertSame([1, 1, 1], $sink->loadedRowCounts());
+        static::assertSame([1, 1, 1], $loader->loadedRowCounts());
     }
 
-    public function test_run_analyze_counts_the_rows_of_a_frame_with_a_sink(): void
+    public function test_run_analyze_counts_the_rows_of_a_frame_with_a_write(): void
     {
         $report = df()
             ->read(from_array([['id' => 1], ['id' => 2], ['id' => 3]]))
@@ -42,27 +42,27 @@ final class TriggerPlanTest extends FlowIntegrationTestCase
         static::assertSame(3, $report->statistics()->totalRows());
     }
 
-    public function test_run_analyze_counts_the_rows_of_a_frame_without_a_sink(): void
+    public function test_run_analyze_counts_the_rows_of_a_frame_without_a_write(): void
     {
         $report = df()->read(from_array([['id' => 1], ['id' => 2]]))->run(analyze: analyze()->withSchema());
 
         static::assertSame(2, $report->statistics()->totalRows());
     }
 
-    public function test_one_sink_is_written_exactly_once(): void
+    public function test_one_write_is_written_exactly_once(): void
     {
-        $sink = new SpyLoader();
+        $loader = new SpyLoader();
 
         df()
             ->read(from_array([['id' => 1], ['id' => 2]]))
             ->batchSize(1)
-            ->write($sink)
+            ->write($loader)
             ->run();
 
-        static::assertSame([1, 1], $sink->loadedRowCounts());
+        static::assertSame([1, 1], $loader->loadedRowCounts());
     }
 
-    public function test_two_sinks_are_each_written_exactly_once_in_write_order(): void
+    public function test_two_writes_are_each_written_exactly_once_in_write_order(): void
     {
         $first = new SpyLoader();
         $second = new SpyLoader();
@@ -78,17 +78,17 @@ final class TriggerPlanTest extends FlowIntegrationTestCase
         static::assertSame([1, 1], $second->loadedRowCounts());
     }
 
-    public function test_a_transactional_sink_is_written_exactly_once(): void
+    public function test_a_transaction_is_written_exactly_once(): void
     {
-        $sink = new SpyLoader();
+        $loader = new SpyLoader();
         $transaction = new RecordingTransaction();
 
         df()
             ->read(from_array([['id' => 1], ['id' => 2]]))
             ->batchSize(1)
-            ->write(new Transactional($transaction, $sink))
+            ->write(new Transactional($transaction, $loader))
             ->run();
 
-        static::assertSame([1, 1], $sink->loadedRowCounts());
+        static::assertSame([1, 1], $loader->loadedRowCounts());
     }
 }

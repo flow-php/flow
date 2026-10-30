@@ -1,4 +1,4 @@
-//! `Flow\ETL\Column\RustColumnBuilder`: `CastingColumnBuilder` over arrow storage. A value takes the native lane
+//! `Flow\ETL\Values\Column\RustColumnBuilder`: `CastingColumnBuilder` over arrow storage. A value takes the native lane
 //! where `cast.rs` casts it natively; every other value, and every value the native lane refuses, runs PHP's
 //! `$type->cast()` then `$physical->toPhysical()`, so results and refusals are PHP's own.
 
@@ -14,6 +14,7 @@ use ext_php_rs::exception::PhpException;
 use ext_php_rs::flags::ClassFlags;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, ZendObject, Zval};
+use flow_batch_frame::builder::KindBuilder;
 use flow_batch_frame::kind::Kind;
 
 use crate::cast::{cast_value, CastKind, MapKeyKind};
@@ -25,16 +26,15 @@ use crate::ctx::{
 use crate::date_check::iso_instant_micros;
 use crate::exception::ext_exception;
 use crate::interfaces::column_builder_ce;
-use crate::kind_builder::KindBuilder;
 use crate::physical::{append_physical, overflow};
 use crate::plan::TypePlan;
 use crate::render::invalid_argument;
 use crate::values::{datetime_days, datetime_micros, uuid_bytes};
 
-const COLUMN_MISMATCH: &str = "Flow\\ETL\\Exception\\ColumnMismatchException";
-const SCHEMA_MISMATCH: &str = "Flow\\ETL\\Exception\\SchemaMismatchException";
+const COLUMN_MISMATCH: &str = "Flow\\ETL\\Foundation\\Exception\\ColumnMismatchException";
+const SCHEMA_MISMATCH: &str = "Flow\\ETL\\Foundation\\Exception\\SchemaMismatchException";
 const TYPES_EXCEPTION: &str = "Flow\\Types\\Exception\\Exception";
-const NULL_DEFINITION: &str = "Flow\\ETL\\Schema\\Definition\\NullDefinition";
+const NULL_DEFINITION: &str = "Flow\\ETL\\Values\\Schema\\Definition\\NullDefinition";
 
 /// A value in its physical form, produced by the native lane without a PHP call.
 pub enum Native {
@@ -61,11 +61,10 @@ pub enum Refusal {
 /// What `append_one()` did with a value.
 pub enum Append {
     Done,
-    /// `cause` is the `ColumnMismatchException` a positioned append wraps; `raised` the `Flow\Types` exception an
-    /// unpositioned append rethrows (`None` for a NOT NULL null).
+    /// `cause` is the `ColumnMismatchException`: a positioned append wraps it in a `SchemaMismatchException`, an
+    /// unpositioned one throws it.
     Refused {
         cause: Zval,
-        raised: Option<ZBox<ZendObject>>,
     },
 }
 
@@ -266,7 +265,6 @@ pub fn append_one(
         if !nullable {
             return Ok(Append::Refused {
                 cause: value_does_not_match(definition, null_zval(), None)?,
-                raised: None,
             });
         }
 
@@ -298,10 +296,9 @@ pub fn append_one(
         Err(Refusal::Cast(mut exception) | Refusal::Physical(mut exception)) if !is_types_exception(&exception)? => {
             Err(transparent_exception(&mut exception))
         }
-        // the cast's own reason is dropped, as CastingColumnBuilder::appendMany drops it
-        Err(Refusal::Cast(exception)) => Ok(Append::Refused {
+        // the cast's own reason is dropped, as CastingColumnBuilder drops it
+        Err(Refusal::Cast(_)) => Ok(Append::Refused {
             cause: value_does_not_match(definition, value.shallow_clone(), None)?,
-            raised: Some(exception),
         }),
         Err(Refusal::Physical(mut exception)) => {
             let mut reason = Zval::new();
@@ -310,7 +307,6 @@ pub fn append_one(
             // the value cast, so only the physical form's reason (a range) tells the user why it was refused
             Ok(Append::Refused {
                 cause: value_does_not_match(definition, value.shallow_clone(), Some(reason))?,
-                raised: Some(exception),
             })
         }
     }
@@ -343,9 +339,13 @@ pub(crate) fn append_native(builder: &mut KindBuilder, native: Native) -> Result
     Ok(())
 }
 
-/// `ColumnMismatchException::valueDoesNotMatch($definition, $value[, $reason])`.
+/// `ColumnMismatchException::valueDoesNotMatch($definition->name(), $definition->type()->toString(), $value[, $reason])`.
 pub fn value_does_not_match(definition: &Zval, value: Zval, reason: Option<Zval>) -> Result<Zval, PhpException> {
-    let mut args = vec![definition.shallow_clone(), value];
+    let mut args = vec![
+        call_method(definition, "name", &mut [])?,
+        call_method(&call_method(definition, "type", &mut [])?, "toString", &mut [])?,
+        value,
+    ];
     args.extend(reason);
 
     call_static(COLUMN_MISMATCH, "valueDoesNotMatch", &mut args)
@@ -380,9 +380,9 @@ pub fn is_types_exception(exception: &ZendObject) -> Result<bool, PhpException> 
 
 #[php_class]
 #[php(
-    name = "Flow\\ETL\\Column\\RustColumnBuilder",
+    name = "Flow\\ETL\\Values\\Column\\RustColumnBuilder",
     flags = ClassFlags::Final,
-    implements(ce = column_builder_ce, stub = "Flow\\ETL\\Column\\ColumnBuilder")
+    implements(ce = column_builder_ce, stub = "Flow\\ETL\\Values\\Column\\ColumnBuilder")
 )]
 pub struct RustColumnBuilder {
     definition: Zval,
@@ -426,14 +426,13 @@ impl RustColumnBuilder {
     }
 
     /// One value cast and appended. With a `position`, refusals are `appendMany()`'s `SchemaMismatchException` at it;
-    /// without, they escape as PHP threw them, as `append()` lets them.
+    /// without, `append()`'s `ColumnMismatchException`.
     fn append_value(&mut self, value: &Zval, position: Option<&dyn Fn() -> Zval>) -> Result<(), PhpException> {
         match append_one(&mut self.values, &self.plan, &self.definition, self.nullable, value)? {
             Append::Done => Ok(()),
-            Append::Refused { cause, raised } => Err(match (position, raised) {
-                (Some(position), _) => schema_mismatch(position(), cause),
-                (None, Some(mut raised)) => transparent_exception(&mut raised),
-                (None, None) => throw(cause),
+            Append::Refused { cause } => Err(match position {
+                Some(position) => schema_mismatch(position(), cause),
+                None => throw(cause),
             }),
         }
     }
@@ -502,7 +501,7 @@ fn index(i: i64, count: usize) -> Result<usize, PhpException> {
 impl RustColumnBuilder {
     pub fn __construct() -> PhpResult<Self> {
         Err(ext_exception(
-            "Flow\\ETL\\Column\\RustColumnBuilder is built by RustBackend",
+            "Flow\\ETL\\Values\\Column\\RustColumnBuilder is built by RustBackend",
         ))
     }
 

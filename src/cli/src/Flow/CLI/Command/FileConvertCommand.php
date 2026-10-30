@@ -5,19 +5,21 @@ declare(strict_types=1);
 namespace Flow\CLI\Command;
 
 use Flow\CLI\Arguments\FilePathArgument;
-use Flow\CLI\Command\Traits\ConfigOptions;
-use Flow\CLI\Command\Traits\CSVOptions;
-use Flow\CLI\Command\Traits\ExcelOptions;
-use Flow\CLI\Command\Traits\JSONOptions;
-use Flow\CLI\Command\Traits\ParquetOptions;
-use Flow\CLI\Command\Traits\SchemaInferenceOptions;
-use Flow\CLI\Command\Traits\XMLOptions;
 use Flow\CLI\Factory\ExtractorFactory;
 use Flow\CLI\Factory\LoaderFactory;
 use Flow\CLI\Options\ConfigOption;
+use Flow\CLI\Options\CSVInputOptions;
+use Flow\CLI\Options\CSVOutputOptions;
+use Flow\CLI\Options\ExcelInputOptions;
 use Flow\CLI\Options\FileFormat;
 use Flow\CLI\Options\FileFormatOption;
-use Flow\ETL\Config;
+use Flow\CLI\Options\JSONInputOptions;
+use Flow\CLI\Options\JSONOutputOptions;
+use Flow\CLI\Options\ParquetInputOptions;
+use Flow\CLI\Options\SchemaInferenceOptions;
+use Flow\CLI\Options\XMLInputOptions;
+use Flow\CLI\Options\XMLOutputOptions;
+use Flow\ETL\Runtime\Config;
 use Flow\Filesystem\Path;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -38,14 +40,6 @@ use function number_format;
 #[AsCommand(name: 'file:convert', description: 'Convert data from one file format to another.', aliases: ['convert'])]
 final class FileConvertCommand extends Command
 {
-    use ConfigOptions;
-    use CSVOptions;
-    use ExcelOptions;
-    use JSONOptions;
-    use ParquetOptions;
-    use SchemaInferenceOptions;
-    use XMLOptions;
-
     private const int DEFAULT_BATCH_SIZE = 100;
 
     private ?Config $flowConfig = null;
@@ -116,16 +110,16 @@ final class FileConvertCommand extends Command
                 false,
             );
 
-        $this->addConfigOptions($this);
-        $this->addJSONInputOptions($this);
-        $this->addJSONOutputOptions($this);
-        $this->addCSVInputOptions($this);
-        $this->addCSVOutputOptions($this);
-        $this->addExcelInputOptions($this);
-        $this->addXMLInputOptions($this);
-        $this->addXMLOutputOptions($this);
-        $this->addParquetInputOptions($this);
-        $this->addSchemaInferenceOptions($this);
+        (new ConfigOption('config'))->configure($this);
+        (new JSONInputOptions())->configure($this);
+        (new JSONOutputOptions())->configure($this);
+        (new CSVInputOptions())->configure($this);
+        (new CSVOutputOptions())->configure($this);
+        (new ExcelInputOptions())->configure($this);
+        (new XMLInputOptions())->configure($this);
+        (new XMLOutputOptions())->configure($this);
+        (new ParquetInputOptions())->configure($this);
+        (new SchemaInferenceOptions())->configure($this);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -142,14 +136,9 @@ final class FileConvertCommand extends Command
 
         $style = new SymfonyStyle($input, $output);
 
-        // Hoisted: applySchemaInference() is a method call on $this, which drops the null-narrowing
-        // the guard above established on these properties.
-        $outputFile = $this->outputFile;
-        $outputFileFormat = $this->outputFileFormat;
-
         $extractor = (new ExtractorFactory($this->inputFile, $this->inputFileFormat))->get($input);
 
-        if (!$this->applySchemaInference($extractor, $input, $style)) {
+        if (!(new SchemaInferenceOptions())->apply($extractor, $input, $style)) {
             return Command::FAILURE;
         }
 
@@ -177,7 +166,7 @@ final class FileConvertCommand extends Command
             $df->offset($offset);
         }
 
-        $loader = (new LoaderFactory($outputFile, $outputFileFormat))->get($input);
+        $loader = (new LoaderFactory($this->outputFile, $this->outputFileFormat))->get($input);
 
         if (option_bool('output-overwrite', $input)) {
             $loader->saveMode(overwrite());
@@ -186,7 +175,7 @@ final class FileConvertCommand extends Command
         $report = $df->write($loader)->run(analyze: option_bool('analyze', $input));
 
         $style->success('File has been converted.');
-        $style->note('File has been saved to: ' . $outputFile->uri());
+        $style->note('File has been saved to: ' . $this->outputFile->uri());
 
         if ($report !== null) {
             $style->writeln(

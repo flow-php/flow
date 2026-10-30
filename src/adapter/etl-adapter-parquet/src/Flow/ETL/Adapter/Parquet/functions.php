@@ -8,7 +8,10 @@ use Flow\Documentation\Attribute\DocumentationDSL;
 use Flow\Documentation\Attribute\DocumentationExample;
 use Flow\Documentation\Attribute\Module;
 use Flow\Documentation\Attribute\Type as DSLType;
-use Flow\ETL\Schema;
+use Flow\ETL\Adapter\Parquet\IO\Extractor\ParquetExtractor;
+use Flow\ETL\Adapter\Parquet\IO\Loader\ParquetLoader;
+use Flow\ETL\Adapter\Parquet\Values\Schema\SchemaConverter;
+use Flow\ETL\Values\Schema;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
@@ -29,7 +32,6 @@ use function is_string;
  * @param array<string> $columns - list of columns to read from parquet file - @deprecated use `withColumns` method instead
  * @param Options $options - @deprecated use `withOptions` method instead
  * @param ByteOrder $byte_order - @deprecated use `withByteOrder` method instead
- * @param null|int $offset - @deprecated use `withOffset` method instead
  */
 #[DocumentationDSL(module: Module::PARQUET, type: DSLType::EXTRACTOR)]
 #[DocumentationExample(topic: 'reading', example: 'parquet')]
@@ -38,7 +40,6 @@ function from_parquet(
     array $columns = [],
     Options $options = new Options(),
     ByteOrder $byte_order = ByteOrder::LITTLE_ENDIAN,
-    ?int $offset = null,
     ?ParquetEngine $engine = null,
     Filesystem $filesystem = new NativeLocalFilesystem(),
 ): ParquetExtractor {
@@ -46,10 +47,6 @@ function from_parquet(
         ->withOptions($options)
         ->withByteOrder($byte_order)
         ->withEngine($engine);
-
-    if ($offset !== null) {
-        $loader->withOffset($offset);
-    }
 
     if (count($columns)) {
         $loader->withColumns($columns);
@@ -116,11 +113,11 @@ function empty_generator(): Generator
 #[DocumentationDSL(module: Module::PARQUET, type: DSLType::HELPER)]
 function schema_to_parquet(Schema $schema): ParquetSchema
 {
-    return (new SchemaConverter())->toParquet($schema);
+    return (new SchemaConverter())->toParquetSchema($schema);
 }
 
 #[DocumentationDSL(module: Module::PARQUET, type: DSLType::HELPER)]
 function schema_from_parquet(ParquetSchema $schema): Schema
 {
-    return (new SchemaConverter())->toFlow($schema);
+    return (new SchemaConverter())->toFlowSchema($schema);
 }

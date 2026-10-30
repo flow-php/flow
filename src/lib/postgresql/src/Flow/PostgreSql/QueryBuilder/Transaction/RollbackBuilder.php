@@ -6,12 +6,10 @@ namespace Flow\PostgreSql\QueryBuilder\Transaction;
 
 use Flow\PostgreSql\Protobuf\AST\TransactionStmt;
 use Flow\PostgreSql\Protobuf\AST\TransactionStmtKind;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class RollbackBuilder implements RollbackOptionsStep
 {
-    use AstToSql;
-
     private function __construct(
         private ?string $savepointName = null,
         private ?bool $chain = null,
@@ -30,6 +28,11 @@ final readonly class RollbackBuilder implements RollbackOptionsStep
     public function andNoChain(): RollbackFinalStep
     {
         return new self($this->savepointName, false);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): TransactionStmt

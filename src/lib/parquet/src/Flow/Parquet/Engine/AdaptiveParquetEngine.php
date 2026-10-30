@@ -7,6 +7,7 @@ namespace Flow\Parquet\Engine;
 use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Binary\ByteOrder;
+use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Compressions;
@@ -14,18 +15,53 @@ use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFileReader;
 use Flow\Parquet\ParquetFileWriter;
 
+use function array_key_exists;
+use function is_array;
+use function is_string;
+
+/**
+ * @type EngineConfiguration = array{byte_order: string, options: ParquetOptions}
+ * @import-type ParquetOptions from Options
+ *
+ */
 final readonly class AdaptiveParquetEngine implements ParquetEngine
 {
     private ParquetEngine $engine;
 
     public function __construct(
-        ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN,
-        Options $options = new Options(),
+        private ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN,
+        private Options $options = new Options(),
         ?ArrowExtension $extension = null,
     ) {
         $this->engine = ($extension ?? ArrowExtension::detect())->available() && $byteOrder === ByteOrder::LITTLE_ENDIAN
             ? new RustParquetEngine($options)
             : new PhpParquetEngine($byteOrder, $options);
+    }
+
+    public static function fromArray(array $configuration): static
+    {
+        if (!array_key_exists('byte_order', $configuration) || !is_string($configuration['byte_order'])) {
+            throw new InvalidArgumentException('Parquet engine configuration must hold a "byte_order" value');
+        }
+
+        if (!array_key_exists('options', $configuration) || !is_array($configuration['options'])) {
+            throw new InvalidArgumentException('Parquet engine configuration must hold an "options" array');
+        }
+
+        return new self(
+            ByteOrder::tryFrom($configuration['byte_order']) ?? throw new InvalidArgumentException(
+                "Unknown byte order: {$configuration['byte_order']}",
+            ),
+            Options::fromArray($configuration['options']),
+        );
+    }
+
+    /**
+     * @return EngineConfiguration
+     */
+    public function normalize(): array
+    {
+        return ['byte_order' => $this->byteOrder->value, 'options' => $this->options->normalize()];
     }
 
     public function openForRead(SourceStream $stream): ParquetFileReader

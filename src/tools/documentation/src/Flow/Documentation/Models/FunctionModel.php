@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Models;
 
-use Flow\ETL\Function\ScalarFunctionChain;
+use Flow\ETL\Functions\ScalarFunctionChain;
 use InvalidArgumentException;
 use ReflectionFunction;
 use ReflectionIntersectionType;

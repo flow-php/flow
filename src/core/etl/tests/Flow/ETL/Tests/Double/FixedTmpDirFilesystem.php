@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Double;
 
 use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Mount;
@@ -13,10 +14,12 @@ use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\SourceStream;
 use Generator;
+use SensitiveParameter;
 
 /**
  * Answers getSystemTmpDir() with a path the test chooses, so the default spill root is observable without
  * touching the real system tmp directory - which concurrent flow processes share.
+ *
  */
 final readonly class FixedTmpDirFilesystem implements Filesystem
 {
@@ -25,9 +28,21 @@ final readonly class FixedTmpDirFilesystem implements Filesystem
         private Path $tmpDir,
     ) {}
 
+    public static function fromArray(#[SensitiveParameter] array $configuration): static
+    {
+        throw new InvalidArgumentException(
+            'FixedTmpDirFilesystem is a test double and cannot be rebuilt from a configuration',
+        );
+    }
+
     public function appendTo(Path $path): DestinationStream
     {
         return $this->inner->appendTo($path);
+    }
+
+    public function normalize(): ?array
+    {
+        return null;
     }
 
     public function getSystemTmpDir(): Path

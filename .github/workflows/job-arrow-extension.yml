@@ -59,6 +59,16 @@ jobs:
           CLANG_PATH: ${{ steps.rust.outputs.clang-path }}
         run: make build
 
+      - name: Test arrow crate
+        working-directory: src/extension/arrow-ext
+        env: *rust-env
+        run: cargo test --locked --features arrow-validate
+
+      - name: Lint arrow crate
+        working-directory: src/extension/arrow-ext
+        env: *rust-env
+        run: cargo fmt --check && cargo clippy --locked --all-targets -- -D warnings
+
       - name: Install Composer Dependencies
         uses: ./.github/actions/composer-install
         with:
@@ -72,7 +82,9 @@ jobs:
 
       - name: Install extension and verify
         working-directory: src/extension/arrow-ext
+        env: *rust-env
         run: |
+          make build
           EXT_DIR=$(php -r 'echo ini_get("extension_dir");')
           sudo cp ext/modules/arrow.so "$EXT_DIR/"
           echo "extension=arrow.so" | sudo tee -a "$(php -r 'echo php_ini_loaded_file();')"

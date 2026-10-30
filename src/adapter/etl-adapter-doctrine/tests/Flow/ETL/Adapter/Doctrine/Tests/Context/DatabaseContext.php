@@ -8,6 +8,9 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
+use Flow\ETL\Adapter\Doctrine\Tests\Double\CommitCounter;
+use Flow\ETL\Adapter\Doctrine\Tests\Double\InsertQueryCounter;
+use Flow\ETL\Adapter\Doctrine\Tests\Double\SelectQueryCounter;
 
 use function is_numeric;
 

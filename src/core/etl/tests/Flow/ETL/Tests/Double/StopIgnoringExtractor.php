@@ -4,29 +4,39 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Extractor;
-use Flow\ETL\Extractor\BatchableExtractor;
-use Flow\ETL\Extractor\Batches;
-use Flow\ETL\Extractor\RewindableExtractor;
-use Flow\ETL\Extractor\Statistics;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Rows;
-use Flow\ETL\Schema;
+use Flow\ETL\IO\Extractor;
+use Flow\ETL\IO\Extractor\BatchableExtractor;
+use Flow\ETL\IO\Extractor\Criteria;
+use Flow\ETL\IO\Extractor\Statistics;
+use Flow\ETL\Values\BatchSize;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Rows;
+use Flow\ETL\Values\Schema;
 use Generator;
 
 /**
  * Breaks exactly one clause of the batch contract: it batches at its size, but never reads what is
  * sent into it, so Signal::STOP does not end it.
  */
-final class StopIgnoringExtractor implements BatchableExtractor, Extractor, RewindableExtractor
+final class StopIgnoringExtractor implements BatchableExtractor, Extractor
 {
-    use Batches;
+    private BatchSize $batchSize;
 
     public function __construct(
         private readonly Rows $rows,
-    ) {}
+    ) {
+        $this->batchSize = new BatchSize();
+    }
 
-    public function extract(FlowContext $context, ?int $limit = null): Generator
+    /**
+     * @return int<1, max>
+     */
+    public function batchSize(): int
+    {
+        return $this->batchSize->size;
+    }
+
+    public function extract(Backend $backend, Criteria $criteria): Generator
     {
         yield from $this->rows->chunks($this->batchSize());
     }
@@ -39,6 +49,13 @@ final class StopIgnoringExtractor implements BatchableExtractor, Extractor, Rewi
     public function schema(): Schema
     {
         return $this->rows->schema();
+    }
+
+    public function withBatchSize(int $batchSize): static
+    {
+        $this->batchSize = new BatchSize($batchSize);
+
+        return $this;
     }
 
     public function withSchema(Schema $schema): static

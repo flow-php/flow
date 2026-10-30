@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\HttpFoundation\Response;
 
 use Flow\Bridge\Symfony\HttpFoundation\Output;
-use Flow\ETL\Config;
-use Flow\ETL\Config\ConfigBuilder;
-use Flow\ETL\Extractor;
-use Flow\ETL\Transformation;
-use Flow\ETL\Transformations;
+use Flow\ETL\API\Config\ConfigBuilder;
+use Flow\ETL\API\DataFrame;
+use Flow\ETL\API\Transformation;
+use Flow\ETL\API\Transformations;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\IO\Extractor;
+use Flow\ETL\Runtime\Config;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\MemoryFilesystem;
 use Override;
@@ -28,9 +30,11 @@ final class FlowBufferedResponse extends Response
 
     /**
      * @param array<string, mixed> $headers
+     *
+     * @throws InvalidArgumentException when a config is given for a DataFrame source, which carries its own
      */
     public function __construct(
-        private readonly Extractor $extractor,
+        private readonly Extractor|DataFrame $source,
         private readonly Output $output,
         private readonly Transformation $transformations = new Transformations(),
         int $status = 200,
@@ -38,7 +42,11 @@ final class FlowBufferedResponse extends Response
         Config|ConfigBuilder|null $config = null,
         private readonly Filesystem $filesystem = new MemoryFilesystem(),
     ) {
-        $this->config = $config ?? Config::default();
+        if ($source instanceof DataFrame && $config !== null) {
+            throw new InvalidArgumentException('A DataFrame source carries its own config');
+        }
+
+        $this->config = $config ?? (new ConfigBuilder())->build();
 
         parent::__construct(null, $status, $headers);
     }
@@ -67,13 +75,10 @@ final class FlowBufferedResponse extends Response
             return;
         }
 
-        $config = $this->config instanceof ConfigBuilder ? $this->config->build() : $this->config;
-
         $id = bin2hex(random_bytes(16)) . '.memory';
         $bufferPath = path($this->filesystem->mount()->protocol . '://' . $id, ['stream' => 'temp']);
 
-        df($config)
-            ->read($this->extractor)
+        ($this->source instanceof DataFrame ? $this->source : df($this->config)->read($this->source))
             ->with($this->transformations)
             ->write($this->output->loader($bufferPath, $this->filesystem))
             ->run();

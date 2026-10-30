@@ -14,59 +14,31 @@ use Generator;
 use function fclose;
 use function fseek;
 use function ftell;
-use function fwrite;
-use function rewind;
 
 final readonly class ColumnChunkViewer
 {
+    private ChunkBuffer $buffer;
+
     public function __construct(
         private Options $options,
-    ) {}
+    ) {
+        $this->buffer = new ChunkBuffer($options);
+    }
 
     /**
+     * The chunk's dictionary page header, if any, then its data page headers.
+     *
      * @return \Generator<PageHeader>
      */
     public function view(ColumnChunk $columnChunk, SourceStream $stream): Generator
     {
-        $pageStream = fopen('php://temp', 'rb+');
-
-        if ($pageStream === false) {
-            throw new RuntimeException('Cannot open temporary stream');
-        }
-
-        $compressedSize = $columnChunk->totalCompressedSize();
-
-        if ($compressedSize <= 0) {
-            throw new RuntimeException('Cannot view column chunk with non-positive compressed size');
-        }
-
-        fwrite($pageStream, $stream->read($compressedSize, $columnChunk->pageOffset()));
-        rewind($pageStream);
-
-        if ($columnChunk->dictionaryPageOffset()) {
-            $dictionaryHeader = PageHeader::read($pageStream, $this->options);
-
-            if ($dictionaryHeader === null) {
-                throw new RuntimeException(
-                    'Dictionary page header not found in column chunk under offset: ' . $columnChunk->pageOffset(),
-                );
-            }
-
-            $currentPosition = ftell($pageStream);
-
-            if ($currentPosition === false) {
-                throw new RuntimeException('Cannot determine current page stream position');
-            }
-            fseek($pageStream, $currentPosition + $dictionaryHeader->compressedPageSize());
-
-            yield $dictionaryHeader;
-        }
+        $pageStream = $this->buffer->of($columnChunk, $stream);
 
         while (true) {
-            $dataHeader = PageHeader::read($pageStream, $this->options);
+            $header = PageHeader::read($pageStream, $this->options);
 
             /** There are no more pages in given column chunk */
-            if ($dataHeader === null || $dataHeader->type()->isDataPage() === false) {
+            if ($header === null || !$header->type()->isDataPage() && !$header->type()->isDictionaryPage()) {
                 break;
             }
 
@@ -75,9 +47,10 @@ final readonly class ColumnChunkViewer
             if ($currentPosition === false) {
                 throw new RuntimeException('Cannot determine current page stream position');
             }
-            fseek($pageStream, $currentPosition + $dataHeader->compressedPageSize());
 
-            yield $dataHeader;
+            fseek($pageStream, $currentPosition + $header->compressedPageSize());
+
+            yield $header;
         }
 
         fclose($pageStream);

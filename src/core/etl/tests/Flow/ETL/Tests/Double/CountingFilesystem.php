@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Double;
 
 use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Mount;
@@ -12,12 +13,13 @@ use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\SourceStream;
-use Flow\Floe\Tests\Double\ClosingSpySourceStream;
 use Generator;
+use SensitiveParameter;
 
 /**
  * Counts readFrom() and list() calls so a test can assert how many times a listed file is opened,
  * and hands back streams that record their own close() so opens and closes can be compared.
+ *
  */
 final class CountingFilesystem implements Filesystem
 {
@@ -34,9 +36,21 @@ final class CountingFilesystem implements Filesystem
         private readonly Filesystem $inner,
     ) {}
 
+    public static function fromArray(#[SensitiveParameter] array $configuration): static
+    {
+        throw new InvalidArgumentException(
+            'CountingFilesystem is a test double and cannot be rebuilt from a configuration',
+        );
+    }
+
     public function appendTo(Path $path): DestinationStream
     {
         return $this->inner->appendTo($path);
+    }
+
+    public function normalize(): ?array
+    {
+        return null;
     }
 
     public function getSystemTmpDir(): Path

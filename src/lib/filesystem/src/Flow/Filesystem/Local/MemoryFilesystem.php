@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Local;
 
 use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Exception\InvalidSchemeException;
 use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\FileStatus;
@@ -17,7 +18,12 @@ use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\SourceStream;
 use Generator;
 use php_user_filter;
+use SensitiveParameter;
 
+use function rtrim;
+use function str_starts_with;
+use function strlen;
+use function substr;
 use function usort;
 
 final readonly class MemoryFilesystem implements Filesystem
@@ -31,6 +37,13 @@ final readonly class MemoryFilesystem implements Filesystem
         $this->memory = new Memory($filter);
     }
 
+    public static function fromArray(#[SensitiveParameter] array $configuration): static
+    {
+        throw new InvalidArgumentException(
+            'MemoryFilesystem holds in-process state and cannot be rebuilt from a configuration',
+        );
+    }
+
     public function appendTo(Path $path): DestinationStream
     {
         if (!$this->mount->supports($path)) {
@@ -38,6 +51,11 @@ final readonly class MemoryFilesystem implements Filesystem
         }
 
         return $this->memory->for($path);
+    }
+
+    public function normalize(): ?array
+    {
+        return null;
     }
 
     public function getSystemTmpDir(): Path
@@ -77,7 +95,36 @@ final readonly class MemoryFilesystem implements Filesystem
 
     public function mv(Path $from, Path $to): bool
     {
-        throw new RuntimeException('Cannot move files around in memory');
+        if (!$this->mount->supports($from)) {
+            throw new InvalidSchemeException($from->protocol(), $this->mount->protocol);
+        }
+
+        if (!$this->mount->supports($to)) {
+            throw new InvalidSchemeException($to->protocol(), $this->mount->protocol);
+        }
+
+        if ($this->memory->has($from)) {
+            $content = $this->memory->for($from)->content();
+            $this->memory->close($from);
+            $this->writeTo($to)->append($content);
+
+            return true;
+        }
+
+        // a path naming no file is a directory: every file under it moves, as in the local filesystem
+        $directory = rtrim($from->uri(), '/') . '/';
+        $target = rtrim($to->uri(), '/') . '/';
+        $moved = false;
+
+        foreach ($this->memory->paths() as $path) {
+            if (str_starts_with($path->uri(), $directory)) {
+                $moved =
+                    $this->mv($path, Path::from($target . substr($path->uri(), strlen($directory)), $path->options()))
+                    || $moved;
+            }
+        }
+
+        return $moved;
     }
 
     public function readFrom(Path $path): SourceStream
@@ -99,20 +146,18 @@ final readonly class MemoryFilesystem implements Filesystem
             throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
         }
 
-        if (!$path->isPattern()) {
-            if (!$this->memory->has($path)) {
-                return false;
-            }
-
+        if (!$path->isPattern() && $this->memory->has($path)) {
             $this->memory->close($path);
 
             return true;
         }
 
+        // a path naming no file is a directory: every file under it goes, as in the local filesystem
+        $directory = rtrim($path->uri(), '/') . '/';
         $removed = false;
 
         foreach ($this->memory->paths() as $nextPath) {
-            if ($path->matches($nextPath)) {
+            if ($path->isPattern() ? $path->matches($nextPath) : str_starts_with($nextPath->uri(), $directory)) {
                 $this->memory->close($nextPath);
                 $removed = true;
             }

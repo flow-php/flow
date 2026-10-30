@@ -9,8 +9,8 @@ use Flow\Parquet\Filter\All;
 use Flow\Parquet\Filter\Any;
 use Flow\Parquet\Filter\Binding\AbsentLeaf;
 use Flow\Parquet\Filter\Binding\BoundFilter;
-use Flow\Parquet\Filter\Binding\PhysicalIntervals;
-use Flow\Parquet\Filter\Binding\ResolvedLeaf;
+use Flow\Parquet\Filter\Binding\ExactLeaf;
+use Flow\Parquet\Filter\Binding\InexactLeaf;
 use Flow\Parquet\Filter\Comparison;
 use Flow\Parquet\Filter\Filter;
 use Flow\Parquet\Filter\FilterVisitor;
@@ -153,7 +153,6 @@ final readonly class RowEvaluator implements FilterVisitor
             return array_fill(0, $this->rows, false);
         }
 
-        /** @var PhysicalIntervals $intervals rowLeaf() resolves only leaves answered exactly */
         $intervals = $resolution->intervals;
         $result = [];
 
@@ -168,7 +167,7 @@ final readonly class RowEvaluator implements FilterVisitor
     /**
      * @return list<mixed>
      */
-    private function values(ResolvedLeaf $resolution): array
+    private function values(ExactLeaf|InexactLeaf $resolution): array
     {
         $path = $resolution->column->flatPath();
 

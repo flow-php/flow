@@ -43,40 +43,41 @@ df()
     ->run();
 ```
 
-With the extension loaded, `Flow\ETL\Column\AdaptiveBackend` - the default of `config_builder()->backend()` - picks the
-extension's `RustBackend` and every batch column is a `Flow\ETL\Column\RustColumn` over an Apache Arrow array. How to
+With the extension loaded, `Flow\ETL\Values\Column\AdaptiveBackend` - the default of `config_builder()->backend()` - picks the
+extension's `RustBackend` and every batch column is a `Flow\ETL\Values\Column\RustColumn` over an Apache Arrow array. How to
 choose a backend and what it builds: [Column Backend](/documentation/components/core/column-backend.md).
 
 ```php
 <?php
 
-use Flow\ETL\Column\RustBackend;
+use Flow\ETL\Values\Column\RustBackend;
 
 use function Flow\ETL\DSL\int_schema;
 
 $builder = (new RustBackend())->builder(int_schema('id'));
 $builder->appendMany([1, '2', 3.0]);
 
-$column = $builder->finish();                        // Flow\ETL\Column\RustColumn
+$column = $builder->finish();                        // Flow\ETL\Values\Column\RustColumn
 $column->values();                                   // [1, 2, 3]
 (new RustBackend())->allocatedBytes();               // bytes held outside PHP's memory manager
 ```
 
 Every contract with a Rust and a PHP implementation follows one pattern: the extension registers the interface, the
-`Rust*` class implements it, `Php*` is the PHP implementation and `Adaptive*` picks one by `extension_loaded()`.
+`Rust*` class implements it, `Php*` is the PHP implementation and the class that builds it picks one by
+`extension_loaded()`.
 
-| contract                                     | Rust                    | PHP                    | picked by                   |
-|----------------------------------------------|-------------------------|------------------------|-----------------------------|
-| `Flow\ETL\Column\Backend`                    | `RustBackend`           | `PhpBackend`           | `AdaptiveBackend`           |
-| `Flow\ETL\Adapter\CSV\CSVOpenSource`         | `RustCSVOpenSource`     | `PhpCSVOpenSource`     | `AdaptiveCSVOpenSource`     |
-| `Flow\ETL\Adapter\CSV\CSVEncoder`            | `RustCSVEncoder`        | `PhpCSVEncoder`        | `AdaptiveCSVEncoder`        |
-| `Flow\ETL\Adapter\JSON\JsonOpenSource`       | `RustJsonOpenSource`    | `PhpJsonOpenSource`    | `AdaptiveJsonOpenSource`    |
-| `Flow\ETL\Adapter\JSON\JsonEncoder`          | `RustJsonEncoder`       | `PhpJsonEncoder`       | `AdaptiveJsonEncoder`       |
-| `Flow\ETL\Adapter\Parquet\ParquetOpenSource` | `RustParquetOpenSource` | `PhpParquetOpenSource` | `AdaptiveParquetOpenSource` |
-| `Flow\ETL\Adapter\Parquet\ParquetOpenSink`   | `RustParquetOpenSink`   | `PhpParquetOpenSink`   | `AdaptiveParquetOpenSink`   |
+| contract                                                  | Rust                    | PHP                    | picked by                            |
+|-----------------------------------------------------------|-------------------------|------------------------|--------------------------------------|
+| `Flow\ETL\Values\Column\Backend`                          | `RustBackend`           | `PhpBackend`           | `AdaptiveBackend`                    |
+| `Flow\ETL\Adapter\CSV\IO\Extractor\CSVOpenSource`         | `RustCSVOpenSource`     | `PhpCSVOpenSource`     | `CSVSourceOpener`                    |
+| `Flow\ETL\Adapter\CSV\IO\Loader\CSVEncoder`               | `RustCSVEncoder`        | `PhpCSVEncoder`        | `CSVLoader::writer()`                |
+| `Flow\ETL\Adapter\JSON\IO\Extractor\JsonOpenSource`       | `RustJsonOpenSource`    | `PhpJsonOpenSource`    | `JsonFileBatches::open()`            |
+| `Flow\ETL\Adapter\JSON\IO\Loader\JsonEncoder`             | `RustJsonEncoder`       | `PhpJsonEncoder`       | `JsonLoader::writer()`               |
+| `Flow\ETL\Adapter\Parquet\IO\Extractor\ParquetOpenSource` | `RustParquetOpenSource` | `PhpParquetOpenSource` | `ParquetSourceFile::open()`          |
+| `Flow\ETL\IO\Loader\File\FileWriter`                      | `RustParquetFileWriter` | `ParquetFileWriter`    | `ParquetFileWriterFactory::writer()` |
 
-The extension also registers `Flow\ETL\Column\{Column, ColumnBuilder}` (`RustColumn`, `RustColumnBuilder`) and
-`Flow\ETL\RustIterator`, the iterator its sources return.
+The extension also registers `Flow\ETL\Values\Column\{Column, ColumnBuilder}` (`RustColumn`, `RustColumnBuilder`) and
+`Flow\ETL\Values\RustIterator`, the iterator its sources return.
 
 ## CSV and JSON writers
 
@@ -129,7 +130,8 @@ use function Flow\ETL\Adapter\Parquet\{from_parquet, to_parquet};
 use function Flow\ETL\DSL\df;
 
 df()
-    ->read(from_parquet(__DIR__ . '/orders.parquet')->withOffset(50_000)) // only the row groups from row 50 000 are decoded
+    ->read(from_parquet(__DIR__ . '/orders.parquet'))
+    ->offset(50_000) // only the row groups from row 50 000 are decoded
     ->write(to_parquet(__DIR__ . '/copy.parquet'))
     ->run();
 
@@ -144,6 +146,6 @@ imported batches are counted by `RustBackend::allocatedBytes()` for as long as t
 buffers (a row group's projected column chunks, decode buffers) are not, so a `MemoryBudget` does not see them. Read and
 write refusals are arrow-ext's `Flow\Parquet\Exception\*`, as with `RustParquetEngine`.
 
-`RustParquetOpenSource` reads through arrow-ext's `Flow\Arrow\Parquet\RustBatchReader`, `RustParquetOpenSink` writes
+`RustParquetOpenSource` reads through arrow-ext's `Flow\Arrow\Parquet\RustBatchReader`, `RustParquetFileWriter` writes
 through its `Flow\Parquet\Engine\RustParquetFileWriter`.
 

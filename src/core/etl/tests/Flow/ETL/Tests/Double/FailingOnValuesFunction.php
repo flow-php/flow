@@ -5,17 +5,21 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Double;
 
 use Error;
-use Flow\ETL\Column\Column;
-use Flow\ETL\Exception\EvaluationException;
-use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Function\Evaluation\ResultColumn;
-use Flow\ETL\Function\FunctionTree;
-use Flow\ETL\Function\Parameter;
-use Flow\ETL\Function\ScalarFunction;
-use Flow\ETL\Function\ScalarFunctionChain;
-use Flow\ETL\Rows;
+use Flow\ETL\Foundation\Describe\Description;
+use Flow\ETL\Foundation\Describe\Rebuild;
+use Flow\ETL\Foundation\Exception\EvaluationException;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Foundation\Exception\RuntimeException;
+use Flow\ETL\Functions\Evaluation\ResultColumn;
+use Flow\ETL\Functions\FunctionTree;
+use Flow\ETL\Functions\Parameter;
+use Flow\ETL\Functions\ScalarFunction;
+use Flow\ETL\Functions\ScalarFunctionChain;
+use Flow\ETL\Values\Column\Backend;
+use Flow\ETL\Values\Column\Column;
+use Flow\ETL\Values\Rows;
 use Flow\Types\Type;
+use SensitiveParameter;
 
 use function Flow\Types\DSL\type_optional;
 use function in_array;
@@ -61,16 +65,26 @@ final class FailingOnValuesFunction implements ScalarFunction
         return [$this->operand];
     }
 
+    public static function fromDescription(#[SensitiveParameter] array $data, Rebuild $rebuild): static
+    {
+        throw InvalidArgumentException::because('%s holds live state and is never described', self::class);
+    }
+
+    public function describe(): ?Description
+    {
+        return null;
+    }
+
     public function counters(): self
     {
         return $this->owner ?? $this;
     }
 
-    public function eval(Rows $rows, FlowContext $context): Column
+    public function eval(Rows $rows, Backend $backend): Column
     {
         $this->counters()->evals++;
         $this->counters()->seen[] = $rows;
-        $values = (new Parameter($this->operand))->asInts($rows, $context);
+        $values = (new Parameter($this->operand))->asInts($rows, $backend);
 
         foreach ($values as $i => $value) {
             if (!in_array($value, $this->failing, true)) {
@@ -86,7 +100,7 @@ final class FailingOnValuesFunction implements ScalarFunction
             };
         }
 
-        return (new ResultColumn($context->backend()))->of($this, $values);
+        return (new ResultColumn($backend))->of($this, $values);
     }
 
     /**

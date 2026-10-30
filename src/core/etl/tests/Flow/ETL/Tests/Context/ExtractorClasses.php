@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Context;
 
 use FilesystemIterator;
-use Flow\ETL\Extractor;
+use Flow\ETL\IO\Extractor;
 use Generator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -18,19 +18,19 @@ use function preg_match;
 use function sort;
 
 /**
- * Every Extractor implementation shipped in src/, discovered by scanning rather than by an
- * allow-list, so a new source cannot be added without the guards seeing it.
+ * Every Extractor implementation one package ships, discovered by scanning rather than by an allow-list, so a new
+ * source cannot be added without the guards seeing it.
  */
 final class ExtractorClasses
 {
     /**
      * @return list<class-string<Extractor>>
      */
-    public static function all(): array
+    public static function all(string $sourceRoot): array
     {
         $found = [];
 
-        foreach (self::sourceFiles() as $file) {
+        foreach (self::sourceFiles($sourceRoot) as $file) {
             $class = self::classIn($file);
 
             if ($class === null || !class_exists($class)) {
@@ -53,39 +53,31 @@ final class ExtractorClasses
     }
 
     /**
+     * The src/ directory of one monorepo package, as "core/etl" or "adapter/etl-adapter-csv" names it.
+     */
+    public static function root(string $package): string
+    {
+        return dirname(__DIR__, 8) . '/src/' . $package . '/src';
+    }
+
+    /**
      * @return \Generator<int, string>
      */
-    public static function sourceFiles(): Generator
+    public static function sourceFiles(string $sourceRoot): Generator
     {
-        $root = dirname(__DIR__, 8);
+        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(
+            $sourceRoot,
+            FilesystemIterator::SKIP_DOTS,
+        ));
 
-        foreach (['core', 'adapter', 'bridge', 'lib', 'cli'] as $group) {
-            $directory = $root . '/src/' . $group;
-
-            if (!is_dir($directory)) {
+        foreach ($iterator as $file) {
+            if (!$file instanceof SplFileInfo) {
                 continue;
             }
 
-            $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(
-                $directory,
-                FilesystemIterator::SKIP_DOTS,
-            ));
+            $path = $file->getPathname();
 
-            foreach ($iterator as $file) {
-                if (!$file instanceof SplFileInfo) {
-                    continue;
-                }
-
-                $path = $file->getPathname();
-
-                if (!str_ends_with($path, '.php')) {
-                    continue;
-                }
-
-                if (str_contains($path, '/tests/') || str_contains($path, '/vendor/')) {
-                    continue;
-                }
-
+            if (str_ends_with($path, '.php')) {
                 yield $path;
             }
         }

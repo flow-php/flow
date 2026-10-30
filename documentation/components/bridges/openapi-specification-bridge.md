@@ -219,7 +219,7 @@ The OpenAPI bridge uses a priority system when handling metadata:
 ```php
 <?php
 
-use Flow\ETL\Schema\Metadata;
+use Flow\ETL\Values\Schema\Metadata;
 use Flow\Bridge\OpenAPI\Specification\OpenAPIMetadata;
 
 // OpenAPI metadata takes priority over legacy metadata

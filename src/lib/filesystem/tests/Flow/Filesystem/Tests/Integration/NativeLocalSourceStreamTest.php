@@ -15,6 +15,7 @@ use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function implode;
 use function iterator_to_array;
+use function rename;
 use function strlen;
 
 final class NativeLocalSourceStreamTest extends NativeLocalFilesystemTestCase
@@ -31,6 +32,24 @@ final class NativeLocalSourceStreamTest extends NativeLocalFilesystemTestCase
         yield [30];
         yield [40];
         yield [1024];
+    }
+
+    public function test_size_reads_the_open_file(): void
+    {
+        $this->givenFileExists(__DIR__ . '/var/sized.txt', 'twelve bytes');
+        $this->givenFileExists(__DIR__ . '/var/other.txt', 'other');
+
+        $stream = native_local_filesystem()->readFrom(path(__DIR__ . '/var/sized.txt'));
+
+        static::assertSame(12, $stream->size());
+
+        // a rename-over puts another file under the path; the open handle still reads the file it opened
+        rename(__DIR__ . '/var/other.txt', __DIR__ . '/var/sized.txt');
+
+        static::assertSame(12, $stream->size());
+        static::assertSame('twelve bytes', $stream->content());
+
+        $stream->close();
     }
 
     public function test_closing_a_stream_while_its_lines_are_being_iterated(): void

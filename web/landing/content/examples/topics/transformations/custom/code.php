@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
+use Flow\ETL\API\DataFrame;
 use function Flow\ETL\DSL\{concat_ws, data_frame, from_array, lit, ref, to_output};
-use Flow\ETL\Transformation;
+use Flow\ETL\API\Transformation;
 
 require __DIR__ . '/vendor/autoload.php';
 
@@ -21,7 +22,7 @@ data_frame()
          *  Create new column "name" by concatenating "first_name" and "last_name" columns.
          */
         new class implements Transformation {
-            public function transform(Flow\ETL\DataFrame $dataFrame) : Flow\ETL\DataFrame
+            public function transform(DataFrame $dataFrame) : DataFrame
             {
                 return $dataFrame->withColumn('name', concat_ws(lit(' '), ref('first_name'), ref('last_name')));
             }

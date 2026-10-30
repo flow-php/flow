@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use Flow\ETL\DataFrame;
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Memory\ArrayMemory;
+use Flow\ETL\API\DataFrame;
+use Flow\ETL\API\Transformation;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
+use Flow\ETL\Storage\Memory\ArrayMemory;
 use Flow\ETL\Tests\Double\CallbackTransformation;
 use Flow\ETL\Tests\Double\SpyLoader;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\ETL\Tests\Mother\RowsMother;
-use Flow\ETL\Transformation;
 
 use function array_column;
 use function Flow\ETL\DSL\df;
@@ -22,6 +22,7 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\to_branch;
 use function Flow\ETL\DSL\to_memory;
+use function Flow\ETL\DSL\to_transformation;
 
 final class BranchingTest extends FlowIntegrationTestCase
 {
@@ -34,11 +35,14 @@ final class BranchingTest extends FlowIntegrationTestCase
             ]))
             ->write(to_branch(
                 ref('group')->equals(lit('A')),
-                to_memory($memory = new ArrayMemory()),
-            )->withTransformation(new CallbackTransformation(static fn(DataFrame $dataFrame): DataFrame => $dataFrame->withColumn(
-                'group_name',
-                lit('A'),
-            ))))
+                to_transformation(
+                    new CallbackTransformation(static fn(DataFrame $dataFrame): DataFrame => $dataFrame->withColumn(
+                        'group_name',
+                        lit('A'),
+                    )),
+                    to_memory($memory = new ArrayMemory()),
+                ),
+            ))
             ->run();
 
         static::assertSame([['id' => 1, 'group' => 'A', 'group_name' => 'A']], $memory->dump());
@@ -50,9 +54,12 @@ final class BranchingTest extends FlowIntegrationTestCase
 
         df()
             ->read(from_array([['id' => 1], ['id' => 2]]))
-            ->write(to_branch(lit(false), $spy)->withTransformation(new CallbackTransformation(
-                static fn(DataFrame $dataFrame): DataFrame => $dataFrame->select('id'),
-            )))
+            ->write(to_branch(
+                lit(false),
+                to_transformation(new CallbackTransformation(
+                    static fn(DataFrame $dataFrame): DataFrame => $dataFrame->select('id'),
+                ), $spy),
+            ))
             ->run();
 
         static::assertSame(0, $spy->loadsCount);
@@ -117,15 +124,12 @@ final class BranchingTest extends FlowIntegrationTestCase
                 ['id' => 0, 'group' => 'B'],
             ]))
             ->batchSize(2)
-            ->write(to_branch(
-                ref('group')->equals(lit('A')),
-                to_memory($memoryA = new ArrayMemory()),
-            )->withTransformation(new class implements Transformation {
+            ->write(to_branch(ref('group')->equals(lit('A')), to_transformation(new class implements Transformation {
                 public function transform(DataFrame $dataFrame): DataFrame
                 {
                     return $dataFrame->aggregate([sum(ref('id'))]);
                 }
-            }))
+            }, to_memory($memoryA = new ArrayMemory()))))
             ->run();
 
         static::assertSame([['id_sum' => 9.0]], $memoryA->dump());
@@ -154,15 +158,12 @@ final class BranchingTest extends FlowIntegrationTestCase
                 ['id' => 0, 'group' => 'B'],
             ]))
             ->batchSize(2)
-            ->write(to_branch(
-                ref('group')->equals(lit('A')),
-                to_memory($memoryA = new ArrayMemory()),
-            )->withTransformation(new class implements Transformation {
+            ->write(to_branch(ref('group')->equals(lit('A')), to_transformation(new class implements Transformation {
                 public function transform(DataFrame $dataFrame): DataFrame
                 {
                     return $dataFrame->sortBy([ref('id')]);
                 }
-            }))
+            }, to_memory($memoryA = new ArrayMemory()))))
             ->run();
 
         static::assertSame(
@@ -182,24 +183,19 @@ final class BranchingTest extends FlowIntegrationTestCase
                 ['id' => 5, 'group' => 'A'],
                 ['id' => 6, 'group' => 'C'],
             ]))
-            ->write(to_branch(
-                ref('group')->equals(lit('A')),
-                to_memory($memoryA = new ArrayMemory()),
-            )->withTransformation(new class implements Transformation {
+            ->write(to_branch(ref('group')->equals(lit('A')), to_transformation(new class implements Transformation {
                 public function transform(DataFrame $dataFrame): DataFrame
                 {
                     return $dataFrame->withColumn('group_name', lit('A'));
                 }
-            }))
-            ->write(to_branch(
-                ref('group')->isIn(lit(['B', 'C'])),
-                to_memory($memoryBC = new ArrayMemory()),
-            )->withTransformation(new class implements Transformation {
+            }, to_memory($memoryA = new ArrayMemory()))))
+            ->write(to_branch(ref('group')->isIn(lit(['B', 'C'])), to_transformation(new class implements
+                Transformation {
                 public function transform(DataFrame $dataFrame): DataFrame
                 {
                     return $dataFrame->withColumn('group_name', lit('BC'));
                 }
-            }))
+            }, to_memory($memoryBC = new ArrayMemory()))))
             ->run();
 
         static::assertSame(

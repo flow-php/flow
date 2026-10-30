@@ -1,0 +1,10 @@
+[package]
+name = "flow-csv-tokenizer"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+
+[dependencies]
+memchr.workspace = true

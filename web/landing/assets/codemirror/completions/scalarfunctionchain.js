@@ -16,9 +16,39 @@ const scalarFunctionChainFunctions = [
 // ScalarFunctionChain methods
 const scalarFunctionChainMethods = [
                 {
+        label: "deterministic",
+        type: "method",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">deterministic</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">bool</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("deterministic()"),
+        boost: 10
+    },                {
+        label: "resolved",
+        type: "method",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">resolved</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">bool</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("resolved()"),
+        boost: 10
+    },                {
         label: "and",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -33,7 +63,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "andNot",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -48,7 +78,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "append",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -63,7 +93,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "arrayFilter",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -81,7 +111,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "arrayGet",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -96,7 +126,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "arrayGetCollection",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -114,7 +144,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "arrayGetCollectionFirst",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -129,7 +159,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "arrayKeep",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -147,7 +177,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "arrayKeys",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -165,7 +195,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "arrayMerge",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -183,7 +213,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "arrayMergeCollection",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -198,7 +228,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "arrayPathExists",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -213,7 +243,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "arrayReverse",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -228,7 +258,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "arraySort",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -243,7 +273,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "arrayValues",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -261,7 +291,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "ascii",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -276,12 +306,12 @@ const scalarFunctionChainMethods = [
     },                {
         label: "between",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">between</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$lowerBoundRef</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$upperBoundRef</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ScalarFunction|Boundary</span> <span class=\"fn-param\">$boundary</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Function\\Between\\Boundary::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Between</span>
+                    <span class=\"fn-name\">between</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$lowerBoundRef</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$upperBoundRef</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ScalarFunction|Boundary</span> <span class=\"fn-param\">$boundary</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Functions\\Between\\Boundary::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Between</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param mixed|ScalarFunction $lowerBoundRef<br>@param mixed|ScalarFunction $upperBoundRef<br>@param Boundary|ScalarFunction $boundary
@@ -294,7 +324,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "binaryLength",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -309,7 +339,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "call",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -327,7 +357,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "capitalize",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -342,7 +372,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "cast",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -360,7 +390,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "chunk",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -375,7 +405,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "coalesce",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -390,7 +420,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "codePointLength",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -405,7 +435,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "collapseWhitespace",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -420,7 +450,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "concat",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -435,7 +465,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "concatWithSeparator",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -450,7 +480,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "contains",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -465,7 +495,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "dateFormat",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -480,7 +510,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "dateTimeFormat",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -495,7 +525,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "divide",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -510,7 +540,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "domElementAttributesCount",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -525,7 +555,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "domElementAttributeValue",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -540,7 +570,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "domElementNamespace",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -555,7 +585,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "domElementNextSibling",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -570,7 +600,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "domElementParent",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -585,7 +615,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "domElementPreviousSibling",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -600,7 +630,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "domElementValue",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -615,7 +645,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "endsWith",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -630,7 +660,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "ensureEnd",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -645,7 +675,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "ensureStart",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -660,7 +690,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "enumName",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -675,7 +705,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "enumValue",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -690,12 +720,12 @@ const scalarFunctionChainMethods = [
     },                {
         label: "equals",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">equals</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Equals</span>
+                    <span class=\"fn-name\">equals</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Comparison</span>
                 </div>
                             `
             return div
@@ -705,7 +735,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "exists",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -720,12 +750,12 @@ const scalarFunctionChainMethods = [
     },                {
         label: "expand",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">expand</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ArrayExpand</span> <span class=\"fn-param\">$expand</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Function\\ArrayExpand\\ArrayExpand::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayExpand</span>
+                    <span class=\"fn-name\">expand</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ArrayExpand</span> <span class=\"fn-param\">$expand</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Functions\\ArrayExpand\\ArrayExpand::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayExpand</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     Expands each value into a column, if there are more than one value, multiple rows will be created.<br>Array keys are ignored, only values are used to create new rows.<br>Nested in another function (structure(), concat(), ...) it still gives one row per element. Several<br>expands in one expression are zipped to the longest list; a shorter one gives null, so its element<br>type becomes nullable. It is refused inside another array_expand() and in filter(), until(),<br>duplicateRow(), aggregate(), over() and onEach().<br>Before:<br>  +--+-------------------+<br>  |id|              array|<br>  +--+-------------------+<br>  | 1|{\"a\":1,\"b\":2,\"c\":3}|<br>  +--+-------------------+<br>After:<br>  +--+--------+<br>  |id|expanded|<br>  +--+--------+<br>  | 1|       1|<br>  | 1|       2|<br>  | 1|       3|<br>  +--+--------+
@@ -738,12 +768,12 @@ const scalarFunctionChainMethods = [
     },                {
         label: "greaterThan",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">greaterThan</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">GreaterThan</span>
+                    <span class=\"fn-name\">greaterThan</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Comparison</span>
                 </div>
                             `
             return div
@@ -753,12 +783,12 @@ const scalarFunctionChainMethods = [
     },                {
         label: "greaterThanEqual",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">greaterThanEqual</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">GreaterThanEqual</span>
+                    <span class=\"fn-name\">greaterThanEqual</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Comparison</span>
                 </div>
                             `
             return div
@@ -768,12 +798,12 @@ const scalarFunctionChainMethods = [
     },                {
         label: "hash",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">hash</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Algorithm</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Hash\\NativePHPHash::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Hash</span>
+                    <span class=\"fn-name\">hash</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Algorithm</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Kernels\\Hash\\NativePHPHash::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Hash</span>
                 </div>
                             `
             return div
@@ -783,7 +813,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "htmlQuerySelector",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -798,7 +828,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "htmlQuerySelectorAll",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -813,7 +843,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "indexOf",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -831,7 +861,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "indexOfLast",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -849,7 +879,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "isEmpty",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -864,12 +894,12 @@ const scalarFunctionChainMethods = [
     },                {
         label: "isEven",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">isEven</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Equals</span>
+                    <span class=\"fn-name\">isEven</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Comparison</span>
                 </div>
                             `
             return div
@@ -879,12 +909,12 @@ const scalarFunctionChainMethods = [
     },                {
         label: "isFalse",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">isFalse</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Same</span>
+                    <span class=\"fn-name\">isFalse</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Comparison</span>
                 </div>
                             `
             return div
@@ -894,7 +924,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "isIn",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -912,7 +942,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "isNotNull",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -927,7 +957,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "isNotNumeric",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -942,7 +972,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "isNull",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -957,7 +987,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "isNumeric",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -972,12 +1002,12 @@ const scalarFunctionChainMethods = [
     },                {
         label: "isOdd",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">isOdd</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">NotEquals</span>
+                    <span class=\"fn-name\">isOdd</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Comparison</span>
                 </div>
                             `
             return div
@@ -987,12 +1017,12 @@ const scalarFunctionChainMethods = [
     },                {
         label: "isTrue",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">isTrue</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Same</span>
+                    <span class=\"fn-name\">isTrue</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Comparison</span>
                 </div>
                             `
             return div
@@ -1002,7 +1032,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "isType",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1020,7 +1050,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "isUtf8",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1038,7 +1068,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "jsonDecode",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1053,7 +1083,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "jsonEncode",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1068,12 +1098,12 @@ const scalarFunctionChainMethods = [
     },                {
         label: "lessThan",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">lessThan</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">LessThan</span>
+                    <span class=\"fn-name\">lessThan</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Comparison</span>
                 </div>
                             `
             return div
@@ -1083,12 +1113,12 @@ const scalarFunctionChainMethods = [
     },                {
         label: "lessThanEqual",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">lessThanEqual</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">LessThanEqual</span>
+                    <span class=\"fn-name\">lessThanEqual</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Comparison</span>
                 </div>
                             `
             return div
@@ -1098,7 +1128,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "literal",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1113,7 +1143,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "lower",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1128,7 +1158,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "minus",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1143,7 +1173,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "mod",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1158,7 +1188,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "modifyDateTime",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1173,7 +1203,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "multiply",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1188,12 +1218,12 @@ const scalarFunctionChainMethods = [
     },                {
         label: "notEquals",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">notEquals</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">NotEquals</span>
+                    <span class=\"fn-name\">notEquals</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Comparison</span>
                 </div>
                             `
             return div
@@ -1203,12 +1233,12 @@ const scalarFunctionChainMethods = [
     },                {
         label: "notSame",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">notSame</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">NotSame</span>
+                    <span class=\"fn-name\">notSame</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Comparison</span>
                 </div>
                             `
             return div
@@ -1218,7 +1248,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "numberFormat",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1233,7 +1263,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "onEach",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1251,7 +1281,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "or",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1266,7 +1296,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "orNot",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1281,7 +1311,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "plus",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1296,7 +1326,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "power",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1311,7 +1341,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "prepend",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1326,7 +1356,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "regex",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1341,7 +1371,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "regexAll",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1356,7 +1386,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "regexMatch",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1371,7 +1401,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "regexMatchAll",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1386,7 +1416,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "regexReplace",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1401,7 +1431,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "repeat",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1416,7 +1446,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "reverse",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1431,7 +1461,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "round",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1446,12 +1476,12 @@ const scalarFunctionChainMethods = [
     },                {
         label: "same",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">same</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Same</span>
+                    <span class=\"fn-name\">same</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">mixed</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Comparison</span>
                 </div>
                             `
             return div
@@ -1461,7 +1491,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "sanitize",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1476,7 +1506,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "size",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1491,7 +1521,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "slug",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1509,7 +1539,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "split",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1524,7 +1554,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "sprintf",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1539,7 +1569,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "startsWith",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1554,7 +1584,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "stringAfter",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1572,7 +1602,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "stringAfterLast",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1590,7 +1620,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "stringBefore",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1608,7 +1638,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "stringBeforeLast",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1626,7 +1656,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "stringContainsAny",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1644,7 +1674,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "stringEqualsTo",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1659,7 +1689,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "stringFold",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1677,7 +1707,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "stringMatch",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1692,7 +1722,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "stringMatchAll",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1707,7 +1737,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "stringNormalize",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1722,7 +1752,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "stringStyle",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1740,7 +1770,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "stringTitle",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1758,7 +1788,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "stringWidth",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1773,7 +1803,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "strPad",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1788,7 +1818,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "strPadBoth",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1803,7 +1833,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "strPadLeft",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1818,7 +1848,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "strPadRight",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1833,7 +1863,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "strReplace",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1851,7 +1881,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "toDate",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1869,7 +1899,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "toDateTime",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1887,12 +1917,12 @@ const scalarFunctionChainMethods = [
     },                {
         label: "trim",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">trim</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Type</span> <span class=\"fn-param\">$type</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Function\\Trim\\Type::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$characters</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039; \\t\\n\\r\\0&#039;</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Trim</span>
+                    <span class=\"fn-name\">trim</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Type</span> <span class=\"fn-param\">$type</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Functions\\Trim\\Type::...</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$characters</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039; \\t\\n\\r\\0&#039;</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Trim</span>
                 </div>
                             `
             return div
@@ -1902,7 +1932,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "truncate",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1917,7 +1947,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "unicodeLength",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1932,7 +1962,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "unpack",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1950,7 +1980,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "upper",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1965,7 +1995,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "wordwrap",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1980,7 +2010,7 @@ const scalarFunctionChainMethods = [
     },                {
         label: "xpath",
         type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        detail: "Flow\\\\ETL\\\\Functions\\\\ScalarFunctionChain",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
@@ -1991,36 +2021,6 @@ const scalarFunctionChainMethods = [
             return div
         },
         apply: snippet("xpath(" + "$" + "{" + "1:string" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "resolved",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">resolved</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">bool</span>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("resolved()"),
-        boost: 10
-    },                {
-        label: "deterministic",
-        type: "method",
-        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">deterministic</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">bool</span>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("deterministic()"),
         boost: 10
     }    ]
 

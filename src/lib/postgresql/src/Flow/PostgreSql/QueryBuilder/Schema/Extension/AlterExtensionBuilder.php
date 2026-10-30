@@ -12,13 +12,11 @@ use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\ObjectWithArgs;
 use Flow\PostgreSql\Protobuf\AST\PBList;
 use Flow\PostgreSql\Protobuf\AST\PBString;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class AlterExtensionBuilder implements AlterExtensionActionStep, AlterExtensionFinalStep
 {
-    use AstToSql;
-
     private function __construct(
         private string $name,
         private bool $isUpdate = false,
@@ -51,6 +49,11 @@ final readonly class AlterExtensionBuilder implements AlterExtensionActionStep, 
     public function dropTable(string $table): AlterExtensionFinalStep
     {
         return new self($this->name, false, null, -1, ObjectType::OBJECT_TABLE, $table);
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): AlterExtensionStmt|AlterExtensionContentsStmt

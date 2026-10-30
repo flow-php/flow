@@ -9,12 +9,10 @@ use Flow\PostgreSql\Protobuf\AST\DefElem;
 use Flow\PostgreSql\Protobuf\AST\Integer;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBString;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 
 final readonly class CreateDatabaseBuilder implements CreateDatabaseOptionsStep
 {
-    use AstToSql;
-
     /**
      * @param list<array{name: string, arg: ?Node}> $options
      */
@@ -116,6 +114,11 @@ final readonly class CreateDatabaseBuilder implements CreateDatabaseOptionsStep
     public function template(string $name): self
     {
         return $this->withOption('template', $this->stringNode($name));
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): CreatedbStmt

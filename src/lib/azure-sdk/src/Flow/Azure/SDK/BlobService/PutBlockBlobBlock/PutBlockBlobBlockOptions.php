@@ -6,11 +6,10 @@ namespace Flow\Azure\SDK\BlobService\PutBlockBlobBlock;
 
 use Flow\Azure\SDK\BlobService;
 use Flow\Azure\SDK\EndpointOptions;
-use Flow\Azure\SDK\Endpoints\UserAgentHeader;
 
 final class PutBlockBlobBlockOptions implements EndpointOptions
 {
-    use UserAgentHeader;
+    private string $userAgentHeader = 'flow-php/azure-sdk';
 
     private ?string $encryptionAlgorithm = null;
 
@@ -99,5 +98,15 @@ final class PutBlockBlobBlockOptions implements EndpointOptions
         $this->version = $version;
 
         return $this;
+    }
+
+    public function userAgentHeader(): string
+    {
+        return $this->userAgentHeader;
+    }
+
+    public function withUserAgent(string $userAgentHeader): void
+    {
+        $this->userAgentHeader = $userAgentHeader;
     }
 }

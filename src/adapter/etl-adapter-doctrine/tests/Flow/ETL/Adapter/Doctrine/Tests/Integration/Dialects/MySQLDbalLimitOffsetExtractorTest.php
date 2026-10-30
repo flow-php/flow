@@ -9,9 +9,9 @@ use Doctrine\DBAL\Schema\PrimaryKeyConstraint;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
-use Flow\ETL\Adapter\Doctrine\Order;
-use Flow\ETL\Adapter\Doctrine\OrderBy;
-use Flow\ETL\Adapter\Doctrine\Table as ETLTable;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\Order;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\OrderBy;
+use Flow\ETL\Adapter\Doctrine\IO\Extractor\Table as ETLTable;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
 
 use function Flow\ETL\Adapter\Doctrine\from_dbal_limit_offset;
@@ -95,7 +95,7 @@ final class MySQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
         }
 
         $data = data_frame()
-            ->extract(from_dbal_limit_offset_qb(
+            ->read(from_dbal_limit_offset_qb(
                 $this->mysqlDatabaseContext->connection(),
                 $this->mysqlDatabaseContext
                     ->connection()
@@ -122,7 +122,7 @@ final class MySQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
         );
     }
 
-    public function test_extracting_entire_table_using_qb_with_maximum_and_offset_set_on_extractor(): void
+    public function test_extracting_using_qb_with_offset_set_on_query_and_maximum_on_extractor(): void
     {
         $this->mysqlDatabaseContext->createTable(
             (new Table($table = 'flow_doctrine_bulk_test', [
@@ -146,7 +146,7 @@ final class MySQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
         $this->mysqlDatabaseContext->resetSelectQueryCounter();
 
         $rows = data_frame()
-            ->extract(
+            ->read(
                 from_dbal_limit_offset_qb(
                     $this->mysqlDatabaseContext->connection(),
                     $this->mysqlDatabaseContext
@@ -154,7 +154,8 @@ final class MySQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
                         ->createQueryBuilder()
                         ->from($table)
                         ->select('*')
-                        ->orderBy('id', 'ASC'),
+                        ->orderBy('id', 'ASC')
+                        ->setFirstResult(10),
                 )
                     ->withSchema(schema(
                         int_schema('id'),
@@ -162,7 +163,6 @@ final class MySQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
                         map_schema('tags', type_map(type_string(), type_integer())),
                     ))
                     ->withMaximum(5)
-                    ->withOffset(10)
                     ->withBatchSize(1),
             )
             ->fetch()
@@ -195,7 +195,7 @@ final class MySQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
         }
 
         $rows = data_frame()
-            ->extract(from_dbal_limit_offset_qb(
+            ->read(from_dbal_limit_offset_qb(
                 $this->mysqlDatabaseContext->connection(),
                 $this->mysqlDatabaseContext
                     ->connection()
@@ -241,7 +241,7 @@ final class MySQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
         $this->mysqlDatabaseContext->resetSelectQueryCounter();
 
         $rows = data_frame()
-            ->extract(from_dbal_limit_offset_qb(
+            ->read(from_dbal_limit_offset_qb(
                 $this->mysqlDatabaseContext->connection(),
                 $this->mysqlDatabaseContext
                     ->connection()
@@ -285,7 +285,7 @@ final class MySQLDbalLimitOffsetExtractorTest extends IntegrationTestCase
         }
 
         $schema = data_frame()
-            ->extract(from_dbal_limit_offset_qb(
+            ->read(from_dbal_limit_offset_qb(
                 $this->mysqlDatabaseContext->connection(),
                 $this->mysqlDatabaseContext
                     ->connection()

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Factory;
 
-use Flow\ETL\Adapter\Parquet\ParquetLoader;
+use Flow\ETL\Adapter\Parquet\IO\Loader\ParquetLoader;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
 

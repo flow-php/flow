@@ -4,23 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Mother;
 
-use Flow\ETL\Bucketing\Buckets;
-use Flow\ETL\Bucketing\BucketsStorage;
-use Flow\ETL\Bucketing\HashBucketing;
-use Flow\ETL\Bucketing\NativeHasher;
-use Flow\ETL\Bucketing\Storage\MemoryBuckets;
-use Flow\ETL\Dataset\Memory\Unit;
-use Flow\ETL\NativePHPRandomValueGenerator;
-use Flow\ETL\Processor\RepartitionProcessor;
-use Flow\ETL\Row\References;
+use Flow\ETL\Foundation\NativePHPRandomValueGenerator;
+use Flow\ETL\Functions\Reference\References;
+use Flow\ETL\Operators\Processor\RepartitionProcessor;
+use Flow\ETL\Storage\BucketingConfig;
+use Flow\ETL\Storage\MemoryRowsStorage;
+use Flow\ETL\Storage\RowsStorage;
+use Flow\ETL\Values\Memory\Unit;
 
 final class RepartitionProcessorMother
 {
     /**
      * A limit no test reaches - the input is held and grouped in one pass.
      */
-    public static function inMemory(References $by, BucketsStorage $storage = new MemoryBuckets()): RepartitionProcessor
-    {
+    public static function inMemory(
+        References $by,
+        RowsStorage $storage = new MemoryRowsStorage(),
+    ): RepartitionProcessor {
         return self::with($by, $storage, Unit::fromGb(64));
     }
 
@@ -29,21 +29,14 @@ final class RepartitionProcessorMother
      */
     public static function with(
         References $by,
-        BucketsStorage $storage,
+        RowsStorage $storage,
         Unit $memoryLimit,
         int $bucketsCount = 4,
     ): RepartitionProcessor {
         return new RepartitionProcessor(
             $by,
-            new HashBucketing(
-                $by->all(),
-                $bucketsCount,
-                new NativeHasher(),
-                new NativePHPRandomValueGenerator(),
-                'repartition',
-            ),
-            new Buckets($storage),
-            $memoryLimit,
+            new BucketingConfig($storage, $bucketsCount, 1, $memoryLimit),
+            new NativePHPRandomValueGenerator(),
         );
     }
 }

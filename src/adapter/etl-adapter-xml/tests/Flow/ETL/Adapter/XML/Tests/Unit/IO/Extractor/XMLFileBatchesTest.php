@@ -1,0 +1,73 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Adapter\XML\Tests\Unit\IO\Extractor;
+
+use Flow\ETL\Adapter\XML\IO\Extractor\XMLFileBatches;
+use Flow\ETL\IO\Extractor\Criteria;
+use Flow\ETL\IO\Extractor\File\ReadWindow;
+use Flow\ETL\IO\Extractor\File\SourceFile;
+use Flow\ETL\Tests\Context\MemoryFiles;
+use Flow\ETL\Tests\Double\CountingFilesystem;
+use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\Mother\FileReadMother;
+use Flow\ETL\Values\Column\PhpBackend;
+use Flow\ETL\Values\Rows;
+
+use function array_map;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\Filesystem\DSL\path;
+use function iterator_to_array;
+
+final class XMLFileBatchesTest extends FlowTestCase
+{
+    public function test_matched_elements_land_in_the_node_column_and_no_offset_is_consumed(): void
+    {
+        $filesystem = new CountingFilesystem(MemoryFiles::with([
+            'memory://a.xml' => '<root><row><id>1</id></row><row><id>2</id></row></root>',
+        ]));
+        $file = (new XMLFileBatches('root/row', 8192))->batches(
+            FileReadMother::of(schema(str_schema('node')), null, 10, $filesystem),
+            new Criteria(),
+            new SourceFile(path('memory://a.xml')),
+            schema(str_schema('node')),
+            new PhpBackend(),
+            new ReadWindow(),
+        );
+
+        static::assertSame(
+            [[['node' => '<row><id>1</id></row>'], ['node' => '<row><id>2</id></row>']]],
+            array_map(static fn(Rows $rows): array => $rows->toArray(), iterator_to_array($file, false)),
+        );
+        static::assertSame(0, $file->getReturn());
+        static::assertSame($filesystem->readFromCalls, $filesystem->closedStreams());
+    }
+
+    public function test_a_column_the_body_declares_beside_node_is_padded_with_nulls(): void
+    {
+        static::assertSame(
+            [[['node' => '<row>1</row>', 'note' => null]]],
+            array_map(
+                static fn(Rows $rows): array => $rows->toArray(),
+                iterator_to_array(
+                    (new XMLFileBatches('root/row', 8192))->batches(
+                        FileReadMother::of(
+                            schema(str_schema('node'), str_schema('note', nullable: true)),
+                            null,
+                            10,
+                            MemoryFiles::with(['memory://a.xml' => '<root><row>1</row></root>']),
+                        ),
+                        new Criteria(),
+                        new SourceFile(path('memory://a.xml')),
+                        schema(str_schema('node'), str_schema('note', nullable: true)),
+                        new PhpBackend(),
+                        new ReadWindow(),
+                    ),
+                    false,
+                ),
+            ),
+        );
+    }
+}

@@ -11,7 +11,7 @@ use Flow\PostgreSql\Protobuf\AST\PartitionElem;
 use Flow\PostgreSql\Protobuf\AST\PartitionSpec;
 use Flow\PostgreSql\Protobuf\AST\PartitionStrategy;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
-use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\AstDeparser;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnDefinition;
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\TableConstraint;
 
@@ -22,8 +22,6 @@ final readonly class CreateTableBuilder implements
     CreateTableTemporaryStep,
     CreateTemporaryTableColumnsStep
 {
-    use AstToSql;
-
     /**
      * @param list<ColumnDefinition> $columns
      * @param list<TableConstraint> $constraints
@@ -269,6 +267,11 @@ final readonly class CreateTableBuilder implements
             $this->tablespace,
             null,
         );
+    }
+
+    public function toSql(): string
+    {
+        return (new AstDeparser())->deparse($this->toAst());
     }
 
     public function toAst(): CreateStmt
