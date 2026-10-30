@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Unit\Local\Memory;
 
+use Flow\Filesystem\Exception\FileExistsException;
+use Flow\Filesystem\Local\Memory\Memory;
 use Flow\Filesystem\Tests\Context\ReadLinesContext;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\TestCase;
@@ -14,6 +16,23 @@ use function iterator_to_array;
 
 final class MemoryStreamTest extends TestCase
 {
+    public function test_exclusive_stream_closes_once(): void
+    {
+        $memory = new Memory();
+        $memory->for(path('memory://file.txt'))->append('first');
+        $stream = $memory->exclusive(path('memory://file.txt'))->append('second');
+
+        try {
+            $stream->close();
+            static::fail('Expected the existing path to be refused');
+        } catch (FileExistsException) {
+        }
+
+        $stream->close();
+
+        static::assertSame('first', $memory->for(path('memory://file.txt'))->content());
+    }
+
     /**
      * @param non-empty-string $separator
      * @param null|int<1, max> $length

@@ -21,7 +21,10 @@ final class ConfiguredFilesystemTest extends FlowTestCase
         static::assertNotNull($description);
         static::assertTrue($description->sensitive());
         static::assertSame(
-            ['filesystem' => NativeLocalFilesystem::class, 'configuration' => ['protocol' => 'file']],
+            [
+                'filesystem' => NativeLocalFilesystem::class,
+                'configuration' => ['protocol' => 'file', 'permissions' => null],
+            ],
             $description->data,
         );
         static::assertEquals(

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Bridge\Azure\Tests\Integration;
 
 use Flow\Azure\SDK\BlobServiceInterface;
-use Flow\Azure\SDK\Exception\AzureException;
 use Flow\ETL\Tests\FlowTestCase;
 use Http\Discovery\Psr17FactoryDiscovery;
 use Http\Discovery\Psr18ClientDiscovery;
@@ -31,10 +30,7 @@ abstract class AzureBlobServiceTestCase extends FlowTestCase
     protected function tearDown(): void
     {
         foreach ($this->containers as $container) {
-            try {
-                $this->blobService($container)->deleteContainer();
-            } catch (AzureException) {
-            }
+            $this->blobService($container)->deleteContainer();
         }
     }
 

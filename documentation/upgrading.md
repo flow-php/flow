@@ -1866,6 +1866,29 @@ by Spark's hidden-path rule.
 | `Calculator::modulus(7, -3)` on `brick/math` 0.15+: `Brick\Math\Exception\InvalidArgumentException` | `Flow\ETL\Foundation\Exception\InvalidArgumentException` `Modulus must not be negative` |
 | `ref('a')->mod(lit(-3))`: a result or an `EvaluationException`, by `brick/math` version             | always an `EvaluationException` caused by `InvalidArgumentException`                    |
 
+### 123) `flow-php/filesystem` and the filesystem bridges - `Filesystem::create()` and non-recursive `rm()`
+
+| Before                                                   | After                                                                                    |
+|----------------------------------------------------------|------------------------------------------------------------------------------------------|
+| `interface Filesystem`                                   | `+ create(Path $path): DestinationStream` - custom implementations add it                |
+| `Filesystem::rm(Path $path): bool`                       | `rm(Path $path, bool $recursive = true): bool` - custom implementations add the argument |
+| `final class Flow\Filesystem\Exception\RuntimeException` | not final; `FileExistsException` extends it                                              |
+| `SFTPFilesystem`, `StdOutFilesystem`                     | `create()` throws `RuntimeException`                                                     |
+
+### 124) `flow-php/filesystem` - `NativeLocalFilesystem` takes `Permissions`
+
+| Before                                                                                                                                                 | After                                                                                  |
+|--------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|
+| `NativeLocalFilesystem::normalize()`: `{protocol}`                                                                                                     | `{protocol, permissions}`; `fromArray()` rejects a configuration without `permissions` |
+| `AsyncAWS\Options::normalize()`, `Azure\Options::normalize()`, `SFTP\Options::normalize()`                                                             | `+ block_permissions`; `fromArray()` rejects a configuration without it                |
+| `NativeLocalFilesystem::mv()` from a missing source raised an `E_WARNING`, created the target's parent directory, and removed an existing target first | returns `false` and changes nothing; an existing file target is replaced by `rename()` |
+
+### 125) `flow-php/filesystem-azure-bridge` - a blob written in blocks is invisible until `close()`
+
+| Before                                               | After                                                                 |
+|------------------------------------------------------|-----------------------------------------------------------------------|
+| the first filled block put an empty blob at the path | nothing is visible at the path until `close()` commits the block list |
+
 ## Upgrading from 0.45.x to 0.46.x
 
 ### 1) `flow-php/etl-adapter-postgresql`, `flow-php/etl-adapter-doctrine` - keyset reads reject NULL keys up front

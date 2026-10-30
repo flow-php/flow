@@ -39,6 +39,13 @@ final class RecordingFilesystem implements Filesystem
         return new RecordingDestinationStream($this->filesystem->appendTo($path), $this);
     }
 
+    public function create(Path $path): DestinationStream
+    {
+        $this->calls[] = 'create';
+
+        return $this->filesystem->create($path);
+    }
+
     public function normalize(): ?array
     {
         return null;
@@ -80,11 +87,11 @@ final class RecordingFilesystem implements Filesystem
         $this->calls[] = $call;
     }
 
-    public function rm(Path $path): bool
+    public function rm(Path $path, bool $recursive = true): bool
     {
         $this->calls[] = 'rm';
 
-        return $this->filesystem->rm($path);
+        return $this->filesystem->rm($path, $recursive);
     }
 
     public function status(Path $path): ?FileStatus

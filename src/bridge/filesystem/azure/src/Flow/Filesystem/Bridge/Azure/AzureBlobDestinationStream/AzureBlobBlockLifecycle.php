@@ -13,32 +13,20 @@ use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\Block;
 use Flow\Filesystem\Stream\BlockLifecycle;
 
-use function count;
 use function fclose;
 use function fopen;
 use function unlink;
 
 final class AzureBlobBlockLifecycle implements BlockLifecycle
 {
-    private bool $initialized = false;
-
     public function __construct(
         private readonly BlobServiceInterface $blobService,
         private readonly Path $path,
         private readonly BlockList $blockList,
-    ) {
-        if (count($this->blockList->all())) {
-            $this->initialized = true;
-        }
-    }
+    ) {}
 
     public function filled(Block $block): void
     {
-        if (!$this->initialized) {
-            $this->blobService->putBlockBlob($this->path->path());
-            $this->initialized = true;
-        }
-
         $handle = fopen($block->path()->path(), 'rb');
 
         if ($handle === false) {

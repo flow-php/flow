@@ -8,6 +8,7 @@ use Flow\Azure\SDK\BlobService\ListBlobs\ListBlobOptions;
 use Flow\Azure\SDK\BlobService\ListBlobs\OptionInclude;
 use Flow\Azure\SDK\BlobService\ListBlobs\OptionShowOnly;
 use Flow\Filesystem\Exception\InvalidArgumentException;
+use Flow\Filesystem\Local\Permissions;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
 use Flow\Filesystem\Stream\BlockFactory;
@@ -23,8 +24,9 @@ use function is_int;
 use function is_string;
 
 /**
- * @type AzureOptions = array{block_location: string, block_size: int, file_fast_path: bool, list_blob_include: null|list<string>, list_blob_max_results: null|int, list_blob_show_only: null|string, tmp_dir: PathData}
+ * @type AzureOptions = array{block_location: string, block_permissions: null|PermissionsShape, block_size: int, file_fast_path: bool, list_blob_include: null|list<string>, list_blob_max_results: null|int, list_blob_show_only: null|string, tmp_dir: PathData}
  * @import-type PathData from Path
+ * @import-type PermissionsShape from Permissions
  */
 final class Options
 {
@@ -98,6 +100,8 @@ final class Options
     {
         if (
             !is_string($data['block_location'] ?? null)
+            || !array_key_exists('block_permissions', $data)
+            || $data['block_permissions'] !== null && !is_array($data['block_permissions'])
             || !is_int($data['block_size'] ?? null)
             || !is_bool($data['file_fast_path'] ?? null)
             || !is_array($data['tmp_dir'] ?? null)
@@ -106,12 +110,17 @@ final class Options
             || !array_key_exists('list_blob_show_only', $data)
         ) {
             throw new InvalidArgumentException(
-                'Azure options must hold block_location, block_size, file_fast_path, list_blob_include, list_blob_max_results, list_blob_show_only and tmp_dir',
+                'Azure options must hold block_location, block_permissions, block_size, file_fast_path, list_blob_include, list_blob_max_results, list_blob_show_only and tmp_dir',
             );
         }
 
         $options = (new self())
-            ->withBlockFactory(new NativeLocalFileBlocksFactory($data['block_location']))
+            ->withBlockFactory(
+                new NativeLocalFileBlocksFactory(
+                    $data['block_location'],
+                    $data['block_permissions'] === null ? null : Permissions::fromArray($data['block_permissions']),
+                ),
+            )
             ->withBlockSize($data['block_size'])
             ->withFileFastPath($data['file_fast_path'])
             ->withTmpDir(Path::fromArray($data['tmp_dir']));
@@ -159,6 +168,7 @@ final class Options
 
         return [
             'block_location' => $this->blockFactory->blockLocation(),
+            'block_permissions' => $this->blockFactory->permissions()?->normalize(),
             'block_size' => $this->blockSize,
             'file_fast_path' => $this->fileFastPath,
             'list_blob_include' => $this->listBlobInclude === null

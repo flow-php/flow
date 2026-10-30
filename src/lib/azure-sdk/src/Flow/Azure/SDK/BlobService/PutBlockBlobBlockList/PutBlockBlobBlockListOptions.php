@@ -19,6 +19,8 @@ final class PutBlockBlobBlockListOptions implements EndpointOptions
 
     private ?string $encryptionKeySha256 = null;
 
+    private ?string $ifNoneMatch = null;
+
     private ?string $requestId = null;
 
     private ?int $timeoutSeconds = null;
@@ -50,6 +52,10 @@ final class PutBlockBlobBlockListOptions implements EndpointOptions
 
         if ($this->encryptionKeySha256 !== null) {
             $headers['x-ms-encryption-key-sha256'] = $this->encryptionKeySha256;
+        }
+
+        if ($this->ifNoneMatch !== null) {
+            $headers['If-None-Match'] = $this->ifNoneMatch;
         }
 
         if ($this->contentLength !== null) {
@@ -88,6 +94,13 @@ final class PutBlockBlobBlockListOptions implements EndpointOptions
         $this->encryptionKey = $encryptionKey;
         $this->encryptionKeySha256 = $encryptionKeySha256;
         $this->encryptionAlgorithm = $encryptionAlgorithm;
+
+        return $this;
+    }
+
+    public function withIfNoneMatch(string $ifNoneMatch): self
+    {
+        $this->ifNoneMatch = $ifNoneMatch;
 
         return $this;
     }

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\AsyncAWS\Tests\Integration;
 
+use AsyncAws\S3\ValueObject\AwsObject;
+use Flow\Filesystem\Exception\FileExistsException;
+use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Flow\Filesystem\Tests\Context\GlobMatrixContext;
@@ -96,6 +99,51 @@ final class AsyncAWSS3FilesystemTest extends AsyncAWSS3TestCase
             TXT, $fs->readFrom(path('aws-s3://var/file.txt'))->content());
 
         $fs->rm(path('aws-s3://var/file.txt'));
+    }
+
+    public function test_appending_nothing_to_an_empty_blob_leaves_only_that_blob(): void
+    {
+        $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
+        $fs->writeTo(path('aws-s3://var/empty.txt'))->close();
+
+        $fs->appendTo(path('aws-s3://var/empty.txt'))->close();
+
+        static::assertSame(
+            ['var/empty.txt'],
+            array_map(
+                static fn(AwsObject $object): ?string => $object->getKey(),
+                iterator_to_array(
+                    $this->s3Client()->listObjectsV2(['Bucket' => $this->bucket(), 'Prefix' => 'var/'])->getContents(),
+                    false,
+                ),
+            ),
+        );
+        static::assertSame('', $fs->readFrom(path('aws-s3://var/empty.txt'))->content());
+    }
+
+    public function test_create_of_existing_path_throws_at_close(): void
+    {
+        $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
+        $fs->create(path('aws-s3://claim.txt'))->append('first')->close();
+
+        try {
+            $fs->create(path('aws-s3://claim.txt'))->append('second')->close();
+            static::fail('Expected the second create to be refused');
+        } catch (FileExistsException) {
+        }
+
+        static::assertSame('first', $fs->readFrom(path('aws-s3://claim.txt'))->content());
+    }
+
+    public function test_second_close_is_a_no_op(): void
+    {
+        $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
+        $stream = $fs->writeTo(path('aws-s3://var/closed-twice.txt'))->append('once');
+
+        $stream->close();
+        $stream->close();
+
+        static::assertSame('once', $fs->readFrom(path('aws-s3://var/closed-twice.txt'))->content());
     }
 
     public function test_file_status_on_existing_file(): void
@@ -246,6 +294,40 @@ final class AsyncAWSS3FilesystemTest extends AsyncAWSS3TestCase
         static::assertTrue($fs->status(path('aws-s3://var/flow-fs-test-directory/'))?->isDirectory());
         static::assertNull($fs->status(path('aws-s3://var/flow-fs-test-directory/remove_file_when_exists.txt')));
         $fs->rm(path('aws-s3://var/flow-fs-test-directory/'));
+    }
+
+    public function test_removing_folder_removes_its_marker(): void
+    {
+        $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
+        $this->s3Client()->putObject(['Bucket' => $this->bucket(), 'Key' => 'marked/', 'Body' => ''])->resolve();
+        $fs->writeTo(path('aws-s3://marked/orders.csv'))->append('id')->close();
+
+        static::assertTrue($fs->rm(path('aws-s3://marked')));
+        static::assertSame([], iterator_to_array($fs->list(path('aws-s3://marked/'))));
+    }
+
+    public function test_removing_folder_without_recursion_refuses_non_empty_folder(): void
+    {
+        $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
+        $this->s3Client()->putObject(['Bucket' => $this->bucket(), 'Key' => 'marked/', 'Body' => ''])->resolve();
+        $fs->writeTo(path('aws-s3://marked/orders.csv'))->append('id')->close();
+
+        try {
+            $fs->rm(path('aws-s3://marked'), false);
+            static::fail('Expected a non-empty folder to be refused');
+        } catch (RuntimeException) {
+        }
+
+        static::assertCount(2, iterator_to_array($fs->list(path('aws-s3://marked/'))));
+    }
+
+    public function test_removing_folder_without_recursion_removes_folder_holding_only_its_marker(): void
+    {
+        $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
+        $this->s3Client()->putObject(['Bucket' => $this->bucket(), 'Key' => 'marked/', 'Body' => ''])->resolve();
+
+        static::assertTrue($fs->rm(path('aws-s3://marked'), false));
+        static::assertSame([], iterator_to_array($fs->list(path('aws-s3://marked/'))));
     }
 
     public function test_removing_folder(): void

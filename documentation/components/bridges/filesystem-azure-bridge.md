@@ -100,3 +100,6 @@ A source or sink given a filesystem that does not serve its path throws at const
 header / listing property) and `lastModifiedAt` (from the `Last-Modified` header, parsed as RFC 7231)
 populated directly from the Azure response - no extra stream is opened when the CLI
 `flow:filesystem:ls --long` or `flow:filesystem:stat` prints them.
+
+`create()` commits the blob with `If-None-Match: *`, so it throws `FileExistsException` when the blob exists. A
+blob written in blocks is invisible until `close()`.

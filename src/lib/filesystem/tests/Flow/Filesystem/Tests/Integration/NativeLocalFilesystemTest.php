@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Integration;
 
+use ErrorException;
+use Flow\Filesystem\Exception\FileExistsException;
 use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Exception\InvalidSchemeException;
 use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
+use Flow\Filesystem\Local\Permissions;
 use Flow\Filesystem\Mount;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\Stream\NativeLocalDestinationStream;
@@ -18,6 +21,7 @@ use function array_map;
 use function bin2hex;
 use function file_exists;
 use function file_get_contents;
+use function fileperms;
 use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
@@ -27,6 +31,8 @@ use function iterator_to_array;
 use function mb_substr;
 use function mkdir;
 use function random_bytes;
+use function restore_error_handler;
+use function set_error_handler;
 use function sys_get_temp_dir;
 
 final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
@@ -36,6 +42,8 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         if (!file_exists(__DIR__ . '/var')) {
             mkdir(__DIR__ . '/var');
         }
+
+        parent::setUp();
     }
 
     public function test_reading_a_missing_file_creates_no_directory(): void
@@ -247,6 +255,172 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
         static::assertNull($fs->status(path(__DIR__ . '/var/file.txt')));
         static::assertSame('Hello, World!', $fs->readFrom(path(__DIR__ . '/var/file_mv.txt'))->content());
+    }
+
+    public function test_create_applies_permissions_to_the_final_file(): void
+    {
+        $fs = native_local_filesystem(permissions: new Permissions(0o660, 0o770));
+
+        $fs
+            ->create(path(__DIR__ . '/var/create_permissions/file.txt'))
+            ->append('a')
+            ->close();
+
+        static::assertSame(0o660, fileperms(__DIR__ . '/var/create_permissions/file.txt') & 0o777);
+    }
+
+    public function test_create_makes_bytes_visible_only_at_close(): void
+    {
+        $fs = native_local_filesystem();
+
+        $stream = $fs->create(path(__DIR__ . '/var/create/file.txt'))->append('whole');
+
+        static::assertNull($fs->status(path(__DIR__ . '/var/create/file.txt')));
+
+        $stream->close();
+
+        static::assertSame('whole', $fs->readFrom(path(__DIR__ . '/var/create/file.txt'))->content());
+        static::assertCount(1, iterator_to_array($fs->list(path(__DIR__ . '/var/create/*'), new KeepAll())));
+    }
+
+    public function test_create_of_existing_path_throws_at_close_and_keeps_the_first_content(): void
+    {
+        $fs = native_local_filesystem();
+        $fs
+            ->create(path(__DIR__ . '/var/create/file.txt'))
+            ->append('first')
+            ->close();
+        $second = $fs->create(path(__DIR__ . '/var/create/file.txt'))->append('second');
+
+        try {
+            $second->close();
+            static::fail('Expected the second create to be refused');
+        } catch (FileExistsException) {
+        }
+
+        static::assertSame('first', $fs->readFrom(path(__DIR__ . '/var/create/file.txt'))->content());
+        static::assertCount(1, iterator_to_array($fs->list(path(__DIR__ . '/var/create/*'), new KeepAll())));
+    }
+
+    public function test_create_rejects_pattern_path(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        native_local_filesystem()->create(path(__DIR__ . '/var/*.txt'));
+    }
+
+    public function test_create_rejects_system_tmp_dir(): void
+    {
+        $this->expectException(RuntimeException::class);
+
+        native_local_filesystem()->create(path(sys_get_temp_dir()));
+    }
+
+    public function test_mv_from_missing_source_returns_false_without_a_warning_or_a_new_directory(): void
+    {
+        set_error_handler(
+            static fn(int $level, string $message): never => throw new ErrorException($message, 0, $level),
+        );
+
+        try {
+            static::assertFalse(native_local_filesystem()->mv(
+                path(__DIR__ . '/var/missing.txt'),
+                path(__DIR__ . '/var/mv_missing/target.txt'),
+            ));
+        } finally {
+            restore_error_handler();
+        }
+
+        static::assertNull(native_local_filesystem()->status(path(__DIR__ . '/var/mv_missing')));
+    }
+
+    public function test_mv_moves_directory_over_existing_file(): void
+    {
+        $fs = native_local_filesystem();
+        $fs
+            ->writeTo(path(__DIR__ . '/var/mv_dir/a.txt'))
+            ->append('a')
+            ->close();
+        $fs
+            ->writeTo(path(__DIR__ . '/var/mv_target'))
+            ->append('old')
+            ->close();
+
+        static::assertTrue($fs->mv(path(__DIR__ . '/var/mv_dir'), path(__DIR__ . '/var/mv_target')));
+        static::assertSame('a', $fs->readFrom(path(__DIR__ . '/var/mv_target/a.txt'))->content());
+    }
+
+    public function test_mv_moves_file_over_existing_directory(): void
+    {
+        $fs = native_local_filesystem();
+        $fs
+            ->writeTo(path(__DIR__ . '/var/mv_source.txt'))
+            ->append('new')
+            ->close();
+        $fs
+            ->writeTo(path(__DIR__ . '/var/mv_target/a.txt'))
+            ->append('a')
+            ->close();
+
+        static::assertTrue($fs->mv(path(__DIR__ . '/var/mv_source.txt'), path(__DIR__ . '/var/mv_target')));
+        static::assertSame('new', $fs->readFrom(path(__DIR__ . '/var/mv_target'))->content());
+    }
+
+    public function test_mv_replaces_existing_file(): void
+    {
+        $fs = native_local_filesystem();
+        $fs
+            ->writeTo(path(__DIR__ . '/var/mv_source.txt'))
+            ->append('new')
+            ->close();
+        $fs
+            ->writeTo(path(__DIR__ . '/var/mv_target.txt'))
+            ->append('old')
+            ->close();
+
+        static::assertTrue($fs->mv(path(__DIR__ . '/var/mv_source.txt'), path(__DIR__ . '/var/mv_target.txt')));
+        static::assertNull($fs->status(path(__DIR__ . '/var/mv_source.txt')));
+        static::assertSame('new', $fs->readFrom(path(__DIR__ . '/var/mv_target.txt'))->content());
+    }
+
+    public function test_permissions_apply_to_appended_new_file(): void
+    {
+        $fs = native_local_filesystem(permissions: new Permissions(0o660, 0o770));
+        $fs
+            ->appendTo(path(__DIR__ . '/var/permissions_append.txt'))
+            ->append('a')
+            ->close();
+
+        static::assertSame(0o660, fileperms(__DIR__ . '/var/permissions_append.txt') & 0o777);
+    }
+
+    public function test_permissions_apply_to_directory_created_by_mv(): void
+    {
+        $fs = native_local_filesystem(permissions: new Permissions(0o660, 0o770));
+        native_local_filesystem()
+            ->writeTo(path(__DIR__ . '/var/permissions_source.txt'))
+            ->append('a')
+            ->close();
+
+        $fs->mv(path(__DIR__ . '/var/permissions_source.txt'), path(__DIR__ . '/var/permissions_mv/target.txt'));
+
+        static::assertSame(0o770, fileperms(__DIR__ . '/var/permissions_mv') & 0o777);
+    }
+
+    public function test_permissions_apply_to_written_file_and_every_created_directory_only(): void
+    {
+        $existingMode = fileperms(__DIR__ . '/var') & 0o777;
+        $fs = native_local_filesystem(permissions: new Permissions(0o660, 0o770));
+
+        $fs
+            ->writeTo(path(__DIR__ . '/var/permissions_write/nested/file.txt'))
+            ->append('a')
+            ->close();
+
+        static::assertSame(0o660, fileperms(__DIR__ . '/var/permissions_write/nested/file.txt') & 0o777);
+        static::assertSame(0o770, fileperms(__DIR__ . '/var/permissions_write/nested') & 0o777);
+        static::assertSame(0o770, fileperms(__DIR__ . '/var/permissions_write') & 0o777);
+        static::assertSame($existingMode, fileperms(__DIR__ . '/var') & 0o777);
     }
 
     public function test_mv_rejects_mismatched_destination_scheme(): void
@@ -521,6 +695,50 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         native_local_filesystem()->rm(path('memory:///var/foo.txt'));
     }
 
+    public function test_rm_without_recursion_refuses_non_empty_directory(): void
+    {
+        $fs = native_local_filesystem();
+        $fs
+            ->writeTo(path(__DIR__ . '/var/rm_non_recursive/file.txt'))
+            ->append('data')
+            ->close();
+
+        try {
+            $fs->rm(path(__DIR__ . '/var/rm_non_recursive'), false);
+            static::fail('Expected a non-empty directory to be refused');
+        } catch (RuntimeException $e) {
+            static::assertStringContainsString('rm_non_recursive was not removed', $e->getMessage());
+        }
+
+        static::assertSame('data', $fs->readFrom(path(__DIR__ . '/var/rm_non_recursive/file.txt'))->content());
+    }
+
+    public function test_rm_without_recursion_refuses_pattern_matching_non_empty_directory(): void
+    {
+        $fs = native_local_filesystem();
+        $fs
+            ->writeTo(path(__DIR__ . '/var/rm_non_recursive_pattern/dir/file.txt'))
+            ->append('data')
+            ->close();
+
+        $this->expectException(RuntimeException::class);
+
+        $fs->rm(path(__DIR__ . '/var/rm_non_recursive_pattern/*'), false);
+    }
+
+    public function test_rm_without_recursion_removes_empty_directory(): void
+    {
+        $fs = native_local_filesystem();
+        $fs
+            ->writeTo(path(__DIR__ . '/var/rm_empty/file.txt'))
+            ->append('data')
+            ->close();
+        $fs->rm(path(__DIR__ . '/var/rm_empty/file.txt'), false);
+
+        static::assertTrue($fs->rm(path(__DIR__ . '/var/rm_empty'), false));
+        static::assertNull($fs->status(path(__DIR__ . '/var/rm_empty')));
+    }
+
     public function test_scan_yields_all_matching_files(): void
     {
         $statuses = iterator_to_array(native_local_filesystem()->list(path(__DIR__
@@ -656,8 +874,29 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $filesystem = new NativeLocalFilesystem(new Mount('local'));
 
-        static::assertSame(['protocol' => 'local'], $filesystem->normalize());
+        static::assertSame(['protocol' => 'local', 'permissions' => null], $filesystem->normalize());
         static::assertEquals($filesystem, NativeLocalFilesystem::fromArray($filesystem->normalize()));
+    }
+
+    public function test_configuration_round_trips_the_permissions(): void
+    {
+        $filesystem = native_local_filesystem(permissions: Permissions::private());
+
+        static::assertSame(
+            ['protocol' => 'file', 'permissions' => ['file' => 0o600, 'directory' => 0o700]],
+            $filesystem->normalize(),
+        );
+        static::assertEquals($filesystem, NativeLocalFilesystem::fromArray($filesystem->normalize()));
+    }
+
+    #[TestWith([['protocol' => 'file']])]
+    #[TestWith([['protocol' => 'file', 'permissions' => 'private']])]
+    #[TestWith([['protocol' => 'file', 'permissions' => ['file' => 0o600]]])]
+    public function test_a_configuration_with_invalid_permissions_is_refused(array $configuration): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        NativeLocalFilesystem::fromArray($configuration);
     }
 
     public function test_a_configuration_without_a_protocol_is_refused(): void

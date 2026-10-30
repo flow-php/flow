@@ -12,6 +12,16 @@ use PHPUnit\Framework\TestCase;
 
 final class BlobServiceTest extends TestCase
 {
+    public function test_delete_container_addresses_the_container(): void
+    {
+        $client = new FixedResponseClient(BlobServiceContext::response(202, ''));
+
+        BlobServiceContext::serviceWithClient($client)->deleteContainer();
+
+        static::assertSame('DELETE', $client->requests()[0]->getMethod());
+        static::assertStringContainsString('restype=container', $client->requests()[0]->getUri()->getQuery());
+    }
+
     public function test_get_block_blob_block_list_parses_single_committed_block(): void
     {
         $xml = <<<'XML'

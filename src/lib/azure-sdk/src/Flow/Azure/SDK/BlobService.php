@@ -138,7 +138,7 @@ final readonly class BlobService implements BlobServiceInterface
         $request = $this->httpFactory->delete($this->urlFactory->create(
             $this->configuration,
             null,
-            $options->toURIParameters(),
+            array_merge($options->toURIParameters(), ['restype' => 'container']),
         ));
 
         $request = $request->withHeader('date', gmdate('D, d M Y H:i:s T', time()));

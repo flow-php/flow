@@ -5,20 +5,25 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Stream;
 
 use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\Exception\FileExistsException;
 use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\Path;
 
+use function error_get_last;
 use function fclose;
+use function file_exists;
 use function fopen;
 use function fseek;
 use function fwrite;
 use function gettype;
 use function is_resource;
+use function link;
 use function rewind;
 use function stream_copy_to_stream;
 use function stream_get_meta_data;
 use function strlen;
+use function unlink;
 
 use const SEEK_END;
 
@@ -28,6 +33,8 @@ final class NativeLocalDestinationStream implements DestinationStream
      * @var null|closed-resource|resource
      */
     private $handle;
+
+    private ?Path $target = null;
 
     /**
      * @param Path $path
@@ -66,6 +73,14 @@ final class NativeLocalDestinationStream implements DestinationStream
         return new self($path, $resource);
     }
 
+    public static function openExclusive(Path $path, Path $temporary): self
+    {
+        $stream = self::openBlank($temporary);
+        $stream->target = $path;
+
+        return $stream;
+    }
+
     public function append(string $data): self
     {
         if (!$this->isOpen()) {
@@ -88,6 +103,9 @@ final class NativeLocalDestinationStream implements DestinationStream
         return $this;
     }
 
+    /**
+     * @throws FileExistsException when the stream is exclusive and the target exists
+     */
     public function close(): void
     {
         if (!is_resource($this->handle)) {
@@ -98,6 +116,25 @@ final class NativeLocalDestinationStream implements DestinationStream
 
         fclose($this->handle());
         $this->handle = null;
+
+        if ($this->target === null) {
+            return;
+        }
+
+        $linked = @link($this->path->path(), $this->target->path());
+        $error = error_get_last()['message'] ?? '';
+
+        unlink($this->path->path());
+
+        if ($linked) {
+            return;
+        }
+
+        if (file_exists($this->target->path())) {
+            throw new FileExistsException('File already exists: ' . $this->target->uri());
+        }
+
+        throw new RuntimeException("File {$this->target->uri()} was not created: {$error}");
     }
 
     /**
@@ -133,7 +170,7 @@ final class NativeLocalDestinationStream implements DestinationStream
 
     public function path(): Path
     {
-        return $this->path;
+        return $this->target ?? $this->path;
     }
 
     /**

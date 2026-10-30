@@ -52,6 +52,17 @@ final readonly class TraceableFilesystem implements Filesystem
         return new TraceableDestinationStream($stream, $this->telemetryConfig);
     }
 
+    public function create(Path $path): DestinationStream
+    {
+        $stream = $this->filesystem->create($path);
+
+        if (!$this->telemetryConfig->options->traceStreams && !$this->telemetryConfig->options->collectMetrics) {
+            return $stream;
+        }
+
+        return new TraceableDestinationStream($stream, $this->telemetryConfig);
+    }
+
     public function normalize(): ?array
     {
         return $this->filesystem->normalize();
@@ -95,11 +106,11 @@ final readonly class TraceableFilesystem implements Filesystem
         return new TraceableSourceStream($stream, $this->telemetryConfig);
     }
 
-    public function rm(Path $path): bool
+    public function rm(Path $path, bool $recursive = true): bool
     {
         $this->logOperation('rm', $path);
 
-        return $this->filesystem->rm($path);
+        return $this->filesystem->rm($path, $recursive);
     }
 
     public function status(Path $path): ?FileStatus

@@ -40,6 +40,11 @@ final readonly class FixedTmpDirFilesystem implements Filesystem
         return $this->inner->appendTo($path);
     }
 
+    public function create(Path $path): DestinationStream
+    {
+        return $this->inner->create($path);
+    }
+
     public function normalize(): ?array
     {
         return null;
@@ -70,9 +75,9 @@ final readonly class FixedTmpDirFilesystem implements Filesystem
         return $this->inner->readFrom($path);
     }
 
-    public function rm(Path $path): bool
+    public function rm(Path $path, bool $recursive = true): bool
     {
-        return $this->inner->rm($path);
+        return $this->inner->rm($path, $recursive);
     }
 
     public function status(Path $path): ?FileStatus

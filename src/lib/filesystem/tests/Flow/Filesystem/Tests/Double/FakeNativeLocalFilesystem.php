@@ -79,6 +79,11 @@ final class FakeNativeLocalFilesystem implements Filesystem
         return NativeLocalDestinationStream::openAppend($path);
     }
 
+    public function create(Path $path): DestinationStream
+    {
+        throw new RuntimeException('FakeNativeLocalFilesystem does not create files exclusively');
+    }
+
     public function normalize(): ?array
     {
         return null;
@@ -165,7 +170,7 @@ final class FakeNativeLocalFilesystem implements Filesystem
         return NativeLocalSourceStream::open($path);
     }
 
-    public function rm(Path $path): bool
+    public function rm(Path $path, bool $recursive = true): bool
     {
         if (!$this->mount->supports($path)) {
             throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);

@@ -58,3 +58,7 @@ A source or sink given a filesystem that does not serve its path throws at const
 `FileStatus` values returned from `list()` and `status()` carry `size` (from S3 `Size` / `ContentLength`)
 and `lastModifiedAt` (from `LastModified`) populated directly from the S3 response - no extra HEAD call
 is issued when the CLI `flow:filesystem:ls --long` or `flow:filesystem:stat` prints them.
+
+`create()` commits the multipart upload with `If-None-Match: *`, so it throws `FileExistsException` when the key
+exists. When a conflicting write aborts the upload, it throws `RuntimeException`; call `create()` again.
+S3-compatible stores that ignore conditional writes do not enforce it.

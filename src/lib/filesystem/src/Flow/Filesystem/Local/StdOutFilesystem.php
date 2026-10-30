@@ -61,6 +61,11 @@ final class StdOutFilesystem implements Filesystem
         return null;
     }
 
+    public function create(Path $path): DestinationStream
+    {
+        throw new RuntimeException('Cannot create files exclusively in stdout');
+    }
+
     public function getSystemTmpDir(): Path
     {
         throw new RuntimeException('StdOut does not have a system tmp directory');
@@ -86,7 +91,7 @@ final class StdOutFilesystem implements Filesystem
         throw new RuntimeException('Cannot read from stdout');
     }
 
-    public function rm(Path $path): bool
+    public function rm(Path $path, bool $recursive = true): bool
     {
         throw new RuntimeException('Cannot remove files from stdout');
     }

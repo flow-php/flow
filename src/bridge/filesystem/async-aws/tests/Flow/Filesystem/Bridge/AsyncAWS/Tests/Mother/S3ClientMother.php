@@ -9,11 +9,15 @@ use RuntimeException;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 
+use function parse_url;
 use function preg_match;
+use function str_contains;
 use function stripos;
 use function strlen;
 use function substr;
 use function trim;
+
+use const PHP_URL_QUERY;
 
 final class S3ClientMother
 {
@@ -77,6 +81,39 @@ final class S3ClientMother
                 }
 
                 return new MockResponse('', ['http_code' => 206]);
+            }),
+        );
+    }
+
+    /**
+     * @param list<string> $calls receives "METHOD query" of every request
+     */
+    public static function completingWith(int $status, array &$calls): S3Client
+    {
+        return new S3Client(
+            ['region' => 'eu-west-1', 'accessKeyId' => 'k', 'accessKeySecret' => 's', 'endpoint' => 'http://s3.test'],
+            null,
+            new MockHttpClient(static function (string $method, string $url) use ($status, &$calls): MockResponse {
+                $query = (string) parse_url($url, PHP_URL_QUERY);
+                $calls[] = $method . ' ' . $query;
+
+                if ($method === 'POST' && str_contains($query, 'uploads')) {
+                    return new MockResponse(
+                        '<InitiateMultipartUploadResult><UploadId>upload-1</UploadId></InitiateMultipartUploadResult>',
+                    );
+                }
+
+                if ($method === 'PUT') {
+                    return new MockResponse('', ['response_headers' => ['etag' => '"etag-1"']]);
+                }
+
+                if ($method === 'POST') {
+                    return new MockResponse('<Error><Code>Status' . $status . '</Code></Error>', [
+                        'http_code' => $status,
+                    ]);
+                }
+
+                return new MockResponse('', ['http_code' => 204]);
             }),
         );
     }

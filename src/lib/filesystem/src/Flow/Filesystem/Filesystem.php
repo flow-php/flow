@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem;
 
+use Flow\Filesystem\Exception\FileExistsException;
 use Flow\Filesystem\Exception\InvalidArgumentException;
+use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Generator;
@@ -20,6 +22,13 @@ interface Filesystem
     public static function fromArray(#[SensitiveParameter] array $configuration): static;
 
     public function appendTo(Path $path): DestinationStream;
+
+    /**
+     * Bytes become visible whole at close().
+     *
+     * @throws FileExistsException from DestinationStream::close() when the path exists at that moment
+     */
+    public function create(Path $path): DestinationStream;
 
     /**
      * @return null|array<string, mixed> null when this instance holds live state (a client, memory) and cannot be rebuilt
@@ -39,7 +48,10 @@ interface Filesystem
 
     public function readFrom(Path $path): SourceStream;
 
-    public function rm(Path $path): bool;
+    /**
+     * @throws RuntimeException when $recursive is false and a matched directory is not empty
+     */
+    public function rm(Path $path, bool $recursive = true): bool;
 
     public function status(Path $path): ?FileStatus;
 

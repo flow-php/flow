@@ -79,6 +79,22 @@ final readonly class AzureBlobFilesystem implements Filesystem
         return ['protocol' => $this->mount->protocol, 'blob_service' => $blobService, 'options' => $options];
     }
 
+    public function create(Path $path): DestinationStream
+    {
+        if ($path->isEqual($this->getSystemTmpDir())) {
+            throw new RuntimeException('Cannot write to system tmp directory');
+        }
+
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+
+        return AzureBlobDestinationStream::openExclusive(
+            $this->blobService->blobService(),
+            $path,
+            $this->options->blockFactory(),
+            $this->options->blockSize(),
+        );
+    }
+
     public function getSystemTmpDir(): Path
     {
         return $this->options->tmpDir();
@@ -169,7 +185,7 @@ final readonly class AzureBlobFilesystem implements Filesystem
         return new AzureBlobSourceStream($path, $this->blobService->blobService());
     }
 
-    public function rm(Path $path): bool
+    public function rm(Path $path, bool $recursive = true): bool
     {
         if ($path->isEqual($this->getSystemTmpDir())) {
             return false;
@@ -199,20 +215,19 @@ final readonly class AzureBlobFilesystem implements Filesystem
              * not delete files that would also match the prefix, like: azure-blob://nested/folder_but_file.txt.
              */
             $folderPath = path(trim($path->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR, $path->options());
-            $blobProperties = $this->blobService->blobService()->getBlobProperties($folderPath->path());
 
-            if ($blobProperties === null) {
-                $deletedCount = 0;
-
-                foreach ($this->list($folderPath) as $fileStatus) {
-                    $this->blobService->blobService()->deleteBlob($fileStatus->path->path());
-                    $deletedCount++;
-                }
-
-                return (bool) $deletedCount;
+            if (!$recursive && $this->list($folderPath)->valid()) {
+                throw new RuntimeException("Directory {$path->uri()} was not removed: it is not empty");
             }
 
-            return false;
+            $deletedCount = 0;
+
+            foreach ($this->list($folderPath) as $fileStatus) {
+                $this->blobService->blobService()->deleteBlob($fileStatus->path->path());
+                $deletedCount++;
+            }
+
+            return (bool) $deletedCount;
         }
     }
 

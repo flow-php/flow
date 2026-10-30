@@ -5,18 +5,21 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Bridge\SFTP;
 
 use Flow\Filesystem\Exception\InvalidArgumentException;
+use Flow\Filesystem\Local\Permissions;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\SizeUnits;
 use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
 use Flow\Filesystem\Stream\BlockFactory;
 
+use function array_key_exists;
 use function Flow\Filesystem\DSL\path;
 use function is_array;
 use function is_int;
 use function is_string;
 
 /**
- * @type SFTPOptions = array{block_location: string, block_size: int, read_chunk_size: int, tmp_dir: PathData}
+ * @type SFTPOptions = array{block_location: string, block_permissions: null|PermissionsShape, block_size: int, read_chunk_size: int, tmp_dir: PathData}
+ * @import-type PermissionsShape from Permissions
  * @import-type PathData from Path
  */
 final class Options
@@ -73,17 +76,24 @@ final class Options
     {
         if (
             !is_string($data['block_location'] ?? null)
+            || !array_key_exists('block_permissions', $data)
+            || $data['block_permissions'] !== null && !is_array($data['block_permissions'])
             || !is_int($data['block_size'] ?? null)
             || !is_int($data['read_chunk_size'] ?? null)
             || !is_array($data['tmp_dir'] ?? null)
         ) {
             throw new InvalidArgumentException(
-                'SFTP options must hold block_location (string), block_size (int), read_chunk_size (int) and tmp_dir',
+                'SFTP options must hold block_location (string), block_permissions (null or array), block_size (int), read_chunk_size (int) and tmp_dir',
             );
         }
 
         return (new self())
-            ->withBlockFactory(new NativeLocalFileBlocksFactory($data['block_location']))
+            ->withBlockFactory(
+                new NativeLocalFileBlocksFactory(
+                    $data['block_location'],
+                    $data['block_permissions'] === null ? null : Permissions::fromArray($data['block_permissions']),
+                ),
+            )
             ->withBlockSize($data['block_size'])
             ->withReadChunkSize($data['read_chunk_size'])
             ->withTmpDir(Path::fromArray($data['tmp_dir']));
@@ -100,6 +110,7 @@ final class Options
 
         return [
             'block_location' => $this->blockFactory->blockLocation(),
+            'block_permissions' => $this->blockFactory->permissions()?->normalize(),
             'block_size' => $this->blockSize,
             'read_chunk_size' => $this->readChunkSize,
             'tmp_dir' => $this->tmpDir->normalize(),

@@ -6,6 +6,7 @@ namespace Flow\Filesystem\Bridge\AsyncAWS\Tests\Unit;
 
 use Flow\Filesystem\Bridge\AsyncAWS\Options;
 use Flow\Filesystem\Exception\InvalidArgumentException;
+use Flow\Filesystem\Local\Permissions;
 use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
 use Flow\Filesystem\Stream\BlockFactory;
 use PHPUnit\Framework\TestCase;
@@ -35,7 +36,12 @@ final class OptionsTest extends TestCase
         $normalized = $options->normalize();
 
         static::assertSame(
-            ['block_location' => sys_get_temp_dir(), 'file_fast_path' => false, 'part_size' => 6 * 1024 * 1024],
+            [
+                'block_location' => sys_get_temp_dir(),
+                'block_permissions' => null,
+                'file_fast_path' => false,
+                'part_size' => 6 * 1024 * 1024,
+            ],
             $normalized,
         );
         static::assertEquals($options, Options::fromArray($normalized));
@@ -47,6 +53,18 @@ final class OptionsTest extends TestCase
         $normalized = $options->normalize();
 
         static::assertNotNull($normalized);
+        static::assertEquals($options, Options::fromArray($normalized));
+    }
+
+    public function test_block_permissions_round_trip(): void
+    {
+        $options = (new Options())->withBlockFactory(
+            new NativeLocalFileBlocksFactory(sys_get_temp_dir(), Permissions::private()),
+        );
+        $normalized = $options->normalize();
+
+        static::assertNotNull($normalized);
+        static::assertSame(['file' => 0o600, 'directory' => 0o700], $normalized['block_permissions']);
         static::assertEquals($options, Options::fromArray($normalized));
     }
 

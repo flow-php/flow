@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Stream\Block;
 
 use Flow\Filesystem\Exception\InvalidArgumentException;
+use Flow\Filesystem\Local\Permissions;
 use Flow\Filesystem\Stream\Block;
 use Flow\Filesystem\Stream\BlockFactory;
 
 use function bin2hex;
+use function chmod;
 use function file_exists;
 use function Flow\Filesystem\DSL\path;
 use function is_dir;
@@ -25,13 +27,19 @@ final readonly class NativeLocalFileBlocksFactory implements BlockFactory
      *
      * @throws InvalidArgumentException
      */
-    public function __construct(?string $blockLocation = null)
-    {
+    public function __construct(
+        ?string $blockLocation = null,
+        private ?Permissions $permissions = null,
+    ) {
         if ($blockLocation) {
             if (!file_exists($blockLocation) || !is_dir($blockLocation)) {
                 if (!mkdir($blockLocation, 0777, true) && !is_dir($blockLocation)) {
                     throw new InvalidArgumentException('Block location must be a valid directory, got: '
                     . $blockLocation);
+                }
+
+                if ($permissions !== null) {
+                    chmod($blockLocation, $permissions->directory);
                 }
             }
         }
@@ -44,10 +52,21 @@ final readonly class NativeLocalFileBlocksFactory implements BlockFactory
         return $this->blockLocation;
     }
 
+    public function permissions(): ?Permissions
+    {
+        return $this->permissions;
+    }
+
     public function create(int $size): Block
     {
         $id = bin2hex(random_bytes(16));
 
-        return new Block($id, $size, path($this->blockLocation . DIRECTORY_SEPARATOR . $id));
+        $block = new Block($id, $size, path($this->blockLocation . DIRECTORY_SEPARATOR . $id));
+
+        if ($this->permissions !== null) {
+            chmod($block->path()->path(), $this->permissions->file);
+        }
+
+        return $block;
     }
 }

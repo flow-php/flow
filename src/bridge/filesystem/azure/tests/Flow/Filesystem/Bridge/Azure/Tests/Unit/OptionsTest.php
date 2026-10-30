@@ -8,10 +8,13 @@ use Flow\Azure\SDK\BlobService\ListBlobs\OptionInclude;
 use Flow\Azure\SDK\BlobService\ListBlobs\OptionShowOnly;
 use Flow\Filesystem\Bridge\Azure\Options;
 use Flow\Filesystem\Exception\InvalidArgumentException;
+use Flow\Filesystem\Local\Permissions;
+use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
 use Flow\Filesystem\Stream\BlockFactory;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\Filesystem\DSL\path;
+use function sys_get_temp_dir;
 
 final class OptionsTest extends TestCase
 {
@@ -39,6 +42,18 @@ final class OptionsTest extends TestCase
 
         static::assertNotNull($normalized);
         static::assertNull($normalized['list_blob_include']);
+        static::assertEquals($options, Options::fromArray($normalized));
+    }
+
+    public function test_block_permissions_round_trip(): void
+    {
+        $options = (new Options())->withBlockFactory(
+            new NativeLocalFileBlocksFactory(sys_get_temp_dir(), Permissions::private()),
+        );
+        $normalized = $options->normalize();
+
+        static::assertNotNull($normalized);
+        static::assertSame(['file' => 0o600, 'directory' => 0o700], $normalized['block_permissions']);
         static::assertEquals($options, Options::fromArray($normalized));
     }
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Tests\Unit\Telemetry;
 
 use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\Exception\FileExistsException;
 use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Filesystem;
@@ -88,6 +89,22 @@ final class TraceableFilesystemTest extends TestCase
         $stream = $fs->appendTo($path);
 
         static::assertInstanceOf(TraceableDestinationStream::class, $stream);
+    }
+
+    public function test_create_returns_traceable_stream_that_keeps_exclusivity(): void
+    {
+        $fs = new TraceableFilesystem(
+            memory_filesystem(),
+            FilesystemTelemetryConfigMother::create(memory_span_processor(void_exporter())),
+        );
+        $fs->create(path('memory://claim.txt'))->append('first')->close();
+        $second = $fs->create(path('memory://claim.txt'));
+
+        static::assertInstanceOf(TraceableDestinationStream::class, $second);
+
+        $this->expectException(FileExistsException::class);
+
+        $second->append('second')->close();
     }
 
     public function test_get_system_tmp_dir_delegates_to_underlying_filesystem(): void
@@ -213,6 +230,19 @@ final class TraceableFilesystemTest extends TestCase
         static::assertEmpty($spanProcessor->endedSpans());
     }
 
+    public function test_rm_passes_recursion_to_underlying_filesystem(): void
+    {
+        $fs = new TraceableFilesystem(
+            memory_filesystem(),
+            FilesystemTelemetryConfigMother::create(memory_span_processor(void_exporter())),
+        );
+        $fs->writeTo(path('memory://dir/a.txt'))->append('a')->close();
+
+        $this->expectExceptionMessage('Directory memory://dir was not removed: it is not empty');
+
+        $fs->rm(path('memory://dir'), false);
+    }
+
     public function test_traceable_filesystem_delegates_supports_to_the_decorated_one(): void
     {
         $decorated = memory_filesystem();
@@ -313,7 +343,7 @@ final class TraceableFilesystemTest extends TestCase
         $config = FilesystemTelemetryConfigMother::create(memory_span_processor(void_exporter()));
 
         static::assertSame(
-            ['protocol' => 'file'],
+            ['protocol' => 'file', 'permissions' => null],
             (new TraceableFilesystem(new NativeLocalFilesystem(), $config))->normalize(),
         );
         static::assertNull((new TraceableFilesystem(memory_filesystem(), $config))->normalize());
