@@ -1,6 +1,11 @@
 ## [Unreleased] - 2026-10-30
 
 ### Added
+- [#2711](https://github.com/flow-php/flow/pull/2711) - **flow-php/filesystem - Filesystem::create() exclusive create, visible at close, throws FileExistsException** - [@norberttech](https://github.com/norberttech)
+- [#2711](https://github.com/flow-php/flow/pull/2711) - **flow-php/filesystem - Local\Permissions for local files, directories and block files** - [@norberttech](https://github.com/norberttech)
+- [#2711](https://github.com/flow-php/flow/pull/2711) - **flow-php/filesystem-async-aws-bridge - exclusive create() with If-None-Match** - [@norberttech](https://github.com/norberttech)
+- [#2711](https://github.com/flow-php/flow/pull/2711) - **flow-php/filesystem-azure-bridge - exclusive create() with If-None-Match** - [@norberttech](https://github.com/norberttech)
+- [#2711](https://github.com/flow-php/flow/pull/2711) - **flow-php/azure-sdk - withIfNoneMatch() on block blob put options** - [@norberttech](https://github.com/norberttech)
 - [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - splittable file sources with byte-window splits** - [@norberttech](https://github.com/norberttech)
 - [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - one schema inference contract with per-file sniffers** - [@norberttech](https://github.com/norberttech)
 - [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - launcher seam on Config** - [@norberttech](https://github.com/norberttech)
@@ -29,6 +34,8 @@
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/arrow-ext - page-range reads and row filtering through arrow-rs** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2711](https://github.com/flow-php/flow/pull/2711) - **flow-php/filesystem - rm() takes $recursive, false refuses a non-empty directory** - [@norberttech](https://github.com/norberttech)
+- [#2711](https://github.com/flow-php/flow/pull/2711) - **flow-php/filesystem - mv() replaces files atomically instead of delete then rename** - [@norberttech](https://github.com/norberttech)
 - [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - every namespace sits in one layer root, guarded per layer** - [@norberttech](https://github.com/norberttech)
 - [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - Sink renamed to Branch, file sinks to FileWriter, one FileCommit protocol** - [@norberttech](https://github.com/norberttech)
 - [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - readers skip hidden paths and temporary output** - [@norberttech](https://github.com/norberttech)
@@ -94,6 +101,10 @@
 - [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/flow - updated dev dependencies, mago 1.57 and GitHub Actions** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2711](https://github.com/flow-php/flow/pull/2711) - **flow-php/filesystem - mv() warning and leftover directory on a missing source** - [@norberttech](https://github.com/norberttech)
+- [#2711](https://github.com/flow-php/flow/pull/2711) - **flow-php/filesystem-azure-bridge - empty blob visible before close() on multi-block writes** - [@norberttech](https://github.com/norberttech)
+- [#2711](https://github.com/flow-php/flow/pull/2711) - **flow-php/filesystem-async-aws-bridge - stray key on an empty append** - [@norberttech](https://github.com/norberttech)
+- [#2711](https://github.com/flow-php/flow/pull/2711) - **flow-php/azure-sdk - deleteContainer() missing restype=container** - [@norberttech](https://github.com/norberttech)
 - [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - count(ref) skips nulls in group-by, pivot and window functions alike** - [@norberttech](https://github.com/norberttech)
 - [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - overwrite removes only files Flow wrote and never loses data on a failed commit** - [@norberttech](https://github.com/norberttech)
 - [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - 0-row loads write no file for every format** - [@norberttech](https://github.com/norberttech)
