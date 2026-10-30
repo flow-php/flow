@@ -130,6 +130,8 @@ $filesystem = sftp_filesystem(
 | `withBlockSize()` | 4 MB | size of a single block buffered locally before it is uploaded |
 | `withReadChunkSize()` | 1 MB | bytes `readLines()` pulls in one request when no length is given |
 
+`create()` is not supported and throws `RuntimeException`.
+
 ## Lost connections
 
 This bridge does not reconnect on your behalf. phpseclib raises `InvalidStateException` once a

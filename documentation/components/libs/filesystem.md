@@ -76,12 +76,13 @@ final readonly class Mount
 <?php
 
 Filesystem::appendTo(Path $path) : DestinationStream;
+Filesystem::create(Path $path) : DestinationStream; // visible whole at close(), FileExistsException when the path exists
 Filesystem::getSystemTmpDir() : Path;
 Filesystem::list(Path $path, Filter $pathFilter = new KeepAll()) : \Generator; // yields FileStatus
 Filesystem::mount() : Mount;
 Filesystem::mv(Path $from, Path $to) : bool;
 Filesystem::readFrom(Path $path) : SourceStream;
-Filesystem::rm(Path $path) : bool;
+Filesystem::rm(Path $path, bool $recursive = true) : bool; // $recursive = false refuses a non-empty directory
 Filesystem::status(Path $path) : ?FileStatus;
 Filesystem::writeTo(Path $path) : DestinationStream;
 ```
@@ -182,6 +183,43 @@ native_local_filesystem()->list(path(__DIR__ . '/data/**.parquet'));   // data/f
 
 Local listing follows symlinks a pattern names; `**` never descends into a symlinked directory. There is no escape
 character.
+
+## Exclusive create
+
+`create()` writes a file that becomes visible whole at `close()`. If the path exists by then, `close()` throws
+`FileExistsException` and the existing file stays as it was. Local, memory, S3 and Azure filesystems support it; SFTP
+and StdOut throw.
+
+```php
+<?php
+
+use Flow\Filesystem\Exception\FileExistsException;
+
+use function Flow\Filesystem\DSL\{native_local_filesystem, path};
+
+try {
+    native_local_filesystem()->create(path(__DIR__ . '/claims/42'))->append((string) getmypid())->close();
+} catch (FileExistsException) {
+    // another process created it first
+}
+```
+
+## Local permissions
+
+`NativeLocalFilesystem` applies `Permissions` to every file it writes and every directory it creates. Existing
+directories are not changed. Without `Permissions`, the umask decides.
+
+```php
+<?php
+
+use Flow\Filesystem\Local\Permissions;
+
+use function Flow\Filesystem\DSL\{native_local_filesystem, path};
+
+$filesystem = native_local_filesystem(permissions: Permissions::private()); // files 0600, directories 0700
+
+$filesystem->writeTo(path(__DIR__ . '/secrets/token.txt'))->append($token)->close();
+```
 
 ## Cross-filesystem copy & move
 

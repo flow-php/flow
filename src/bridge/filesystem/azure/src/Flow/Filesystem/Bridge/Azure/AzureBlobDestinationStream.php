@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Bridge\Azure;
 
 use Flow\Azure\SDK\BlobService\BlockBlob\BlockList;
+use Flow\Azure\SDK\BlobService\PutBlockBlob\PutBlockBlobOptions;
+use Flow\Azure\SDK\BlobService\PutBlockBlobBlockList\PutBlockBlobBlockListOptions;
 use Flow\Azure\SDK\BlobServiceInterface;
+use Flow\Azure\SDK\Exception\AzureException;
 use Flow\Filesystem\Bridge\Azure\AzureBlobDestinationStream\AzureBlobBlockLifecycle;
 use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\Exception\FileExistsException;
 use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\Path;
@@ -27,6 +31,8 @@ use function unlink;
 final class AzureBlobDestinationStream implements DestinationStream
 {
     private bool $closed = false;
+
+    private ?string $ifNoneMatch = null;
 
     public function __construct(
         private readonly BlobServiceInterface $blobService,
@@ -82,6 +88,21 @@ final class AzureBlobDestinationStream implements DestinationStream
         );
     }
 
+    /**
+     * @param int<1, max> $blockSize
+     */
+    public static function openExclusive(
+        BlobServiceInterface $blobService,
+        Path $path,
+        BlockFactory $blockFactory = new NativeLocalFileBlocksFactory(),
+        int $blockSize = 1024 * 1024 * 4,
+    ): self {
+        $stream = self::openBlank($blobService, $path, $blockFactory, $blockSize);
+        $stream->ifNoneMatch = '*';
+
+        return $stream;
+    }
+
     public function append(string $data): self
     {
         $this->blocks->append($data);
@@ -89,30 +110,61 @@ final class AzureBlobDestinationStream implements DestinationStream
         return $this;
     }
 
+    /**
+     * @throws FileExistsException when the stream is exclusive and the blob exists
+     */
     public function close(): void
     {
-        if ($this->blocks->size() === 0) {
-            $this->blobService->putBlockBlob($this->path->path());
-            $this->closed = true;
-
+        if ($this->closed) {
             return;
         }
 
-        if ($this->blocks->count() > 1) {
-            $this->blocks->done();
-            $this->blobService->putBlockBlobBlockList($this->path->path(), $this->blockList);
-        } else {
-            $handle = fopen($this->blocks->block()->path()->path(), 'rb');
+        $putOptions = new PutBlockBlobOptions();
+        $blockListOptions = new PutBlockBlobBlockListOptions();
 
-            if ($handle === false) {
-                throw new RuntimeException('Cannot open block file for reading');
+        if ($this->ifNoneMatch !== null) {
+            $putOptions->withIfNoneMatch($this->ifNoneMatch);
+            $blockListOptions->withIfNoneMatch($this->ifNoneMatch);
+        }
+
+        try {
+            if ($this->blocks->size() === 0) {
+                $this->blobService->putBlockBlob($this->path->path(), options: $putOptions);
+                $this->closed = true;
+
+                return;
             }
 
-            $this->blobService->putBlockBlob($this->path->path(), $handle, $this->blocks->block()->size());
+            if ($this->blocks->count() > 1) {
+                $this->blocks->done();
+                $this->blobService->putBlockBlobBlockList($this->path->path(), $this->blockList, $blockListOptions);
+            } else {
+                $handle = fopen($this->blocks->block()->path()->path(), 'rb');
 
-            fclose($handle);
+                if ($handle === false) {
+                    throw new RuntimeException('Cannot open block file for reading');
+                }
 
-            unlink($this->blocks->block()->path()->path());
+                try {
+                    $this->blobService->putBlockBlob(
+                        $this->path->path(),
+                        $handle,
+                        $this->blocks->block()->size(),
+                        $putOptions,
+                    );
+                } finally {
+                    fclose($handle);
+                    unlink($this->blocks->block()->path()->path());
+                }
+            }
+        } catch (AzureException $e) {
+            if ($this->ifNoneMatch === null || $e->response->getStatusCode() !== 409) {
+                throw $e;
+            }
+
+            $this->closed = true;
+
+            throw new FileExistsException('File already exists: ' . $this->path->uri());
         }
 
         $this->closed = true;

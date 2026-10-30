@@ -77,6 +77,11 @@ final readonly class SFTPFilesystem implements Filesystem
         return ['protocol' => $this->mount->protocol, 'client' => $client, 'options' => $options];
     }
 
+    public function create(Path $path): DestinationStream
+    {
+        throw new RuntimeException('SFTP does not support creating files exclusively');
+    }
+
     public function getSystemTmpDir(): Path
     {
         return $this->options->tmpDir();
@@ -167,7 +172,7 @@ final readonly class SFTPFilesystem implements Filesystem
         return new SFTPSourceStream($path, $this->client->client(), $this->options);
     }
 
-    public function rm(Path $path): bool
+    public function rm(Path $path, bool $recursive = true): bool
     {
         if ($path->isEqual($this->getSystemTmpDir())) {
             return false;
@@ -193,7 +198,16 @@ final readonly class SFTPFilesystem implements Filesystem
                     continue;
                 }
 
-                $this->client->client()->delete($remotePath, true);
+                if ($recursive || !$this->client->client()->is_dir($remotePath)) {
+                    $this->client->client()->delete($remotePath, true);
+                } else {
+                    try {
+                        $this->client->client()->rmdir($remotePath);
+                    } catch (FileSystemException $e) {
+                        throw new RuntimeException("Directory {$remotePath} was not removed: " . $e->getMessage());
+                    }
+                }
+
                 $removed++;
             } catch (FileSystemException) {
                 continue;

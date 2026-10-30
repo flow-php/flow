@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Integration\Local;
 
+use Flow\Filesystem\Exception\FileExistsException;
 use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Exception\InvalidSchemeException;
+use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Local\MemoryFilesystem;
 use Flow\Filesystem\Path\Filter\KeepAll;
@@ -273,11 +275,71 @@ final class MemoryFilesystemTest extends NativeLocalFilesystemTestCase
         static::assertEmpty(iterator_to_array($fs->list(path('memory:///*.txt'), new KeepAll())));
     }
 
+    public function test_create_makes_bytes_visible_only_at_close(): void
+    {
+        $fs = memory_filesystem();
+
+        $stream = $fs->create(path('memory://create/file.txt'))->append('whole');
+
+        static::assertNull($fs->status(path('memory://create/file.txt')));
+
+        $stream->close();
+        $stream->close();
+
+        static::assertSame('whole', $fs->readFrom(path('memory://create/file.txt'))->content());
+    }
+
+    public function test_create_of_existing_path_throws_at_close_and_keeps_the_first_content(): void
+    {
+        $fs = memory_filesystem();
+        $fs->create(path('memory://create/file.txt'))->append('first')->close();
+        $second = $fs->create(path('memory://create/file.txt'))->append('second');
+
+        try {
+            $second->close();
+            static::fail('Expected the second create to be refused');
+        } catch (FileExistsException) {
+        }
+
+        static::assertSame('first', $fs->readFrom(path('memory://create/file.txt'))->content());
+    }
+
+    public function test_create_rejects_mismatched_scheme(): void
+    {
+        $this->expectException(InvalidSchemeException::class);
+
+        memory_filesystem()->create(path('file:///var/foo.txt'));
+    }
+
     public function test_rm_rejects_mismatched_scheme(): void
     {
         $this->expectException(InvalidSchemeException::class);
 
         memory_filesystem()->rm(path('file:///var/foo.txt'));
+    }
+
+    public function test_rm_without_recursion_refuses_non_empty_directory(): void
+    {
+        $fs = memory_filesystem();
+        $fs->writeTo(path('memory://dir/a.txt'))->append('a');
+
+        try {
+            $fs->rm(path('memory://dir'), false);
+            static::fail('Expected a non-empty directory to be refused');
+        } catch (RuntimeException $e) {
+            static::assertSame('Directory memory://dir was not removed: it is not empty', $e->getMessage());
+        }
+
+        static::assertNotNull($fs->status(path('memory://dir/a.txt')));
+    }
+
+    public function test_rm_without_recursion_removes_file(): void
+    {
+        $fs = memory_filesystem();
+        $fs->writeTo(path('memory://dir/a.txt'))->append('a');
+
+        static::assertTrue($fs->rm(path('memory://dir/a.txt'), false));
+        static::assertNull($fs->status(path('memory://dir/a.txt')));
     }
 
     public function test_status_rejects_mismatched_scheme(): void

@@ -11,6 +11,7 @@ use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\FilesystemTable;
 use Flow\Filesystem\Local\MemoryFilesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
+use Flow\Filesystem\Local\Permissions;
 use Flow\Filesystem\Local\StdOutFilesystem;
 use Flow\Filesystem\Mount;
 use Flow\Filesystem\Operations\Copy;
@@ -77,9 +78,9 @@ function path_real(string $path, array $options = []): Path
 }
 
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
-function native_local_filesystem(string $protocol = 'file'): NativeLocalFilesystem
+function native_local_filesystem(string $protocol = 'file', ?Permissions $permissions = null): NativeLocalFilesystem
 {
-    return new NativeLocalFilesystem(new Mount($protocol));
+    return new NativeLocalFilesystem(new Mount($protocol), $permissions);
 }
 
 /**

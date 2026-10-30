@@ -6,10 +6,12 @@ namespace Flow\Filesystem\Bridge\Azure\Tests\Integration;
 
 use Flow\Filesystem\Bridge\Azure\Options;
 
+use function bin2hex;
 use function file_get_contents;
 use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function fopen;
+use function random_bytes;
 use function str_repeat;
 
 final class AzureBlobDestinationStreamTest extends AzureBlobServiceTestCase
@@ -38,6 +40,21 @@ final class AzureBlobDestinationStreamTest extends AzureBlobServiceTestCase
         static::assertSame($content, $fs->readFrom(path('azure-blob://file.txt'))->content());
 
         $fs->rm(path('azure-blob://file.txt'));
+    }
+
+    public function test_writing_content_bigger_than_block_size_is_invisible_until_close(): void
+    {
+        $blocks = path('azure-blob://blocks-' . bin2hex(random_bytes(4)) . '.txt');
+        $fs = azure_filesystem($this->blobService('flow-php'), (new Options())->withBlockSize(100));
+
+        $stream = $fs->writeTo($blocks);
+        $stream->append($content = str_repeat('a', 250));
+
+        static::assertNull($fs->status($blocks));
+
+        $stream->close();
+
+        static::assertSame($content, $fs->readFrom($blocks)->content());
     }
 
     public function test_writing_content_from_resource(): void

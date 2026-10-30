@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Bridge\Azure\Tests\Integration;
 
 use Flow\Filesystem\Bridge\Azure\Options;
+use Flow\Filesystem\Exception\FileExistsException;
+use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Flow\Filesystem\Tests\Context\GlobMatrixContext;
@@ -12,12 +14,14 @@ use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function array_map;
+use function bin2hex;
 use function file_get_contents;
 use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem;
 use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem_options;
 use function Flow\Filesystem\DSL\path;
 use function fopen;
 use function iterator_to_array;
+use function random_bytes;
 use function sort;
 use function str_repeat;
 use function strlen;
@@ -135,6 +139,21 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
         $fs->rm(path('azure-blob://file.txt'));
     }
 
+    public function test_create_of_existing_path_throws_at_close(): void
+    {
+        $claim = path('azure-blob://claim-' . bin2hex(random_bytes(4)) . '.txt');
+        $fs = azure_filesystem($this->blobService('flow-php'));
+        $fs->create($claim)->append('first')->close();
+
+        try {
+            $fs->create($claim)->append('second')->close();
+            static::fail('Expected the second create to be refused');
+        } catch (FileExistsException) {
+        }
+
+        static::assertSame('first', $fs->readFrom($claim)->content());
+    }
+
     public function test_file_status_on_existing_file(): void
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
@@ -241,6 +260,25 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
         static::assertTrue($fs->status(path('azure-blob://nested/orders/orders_01.csv'))?->isFile());
 
         static::assertFalse($fs->rm(path('azure-blob://nested/orders/ord')));
+    }
+
+    public function test_removing_folder_without_recursion_refuses_non_empty_folder(): void
+    {
+        $fs = azure_filesystem($this->blobService('flow-php'));
+        $fs->writeTo(path('azure-blob://folder/orders.csv'))->append('id')->close();
+
+        try {
+            $fs->rm(path('azure-blob://folder'), false);
+            static::fail('Expected a non-empty folder to be refused');
+        } catch (RuntimeException) {
+        }
+
+        static::assertTrue($fs->status(path('azure-blob://folder/orders.csv'))?->isFile());
+    }
+
+    public function test_removing_missing_folder_without_recursion(): void
+    {
+        static::assertFalse(azure_filesystem($this->blobService('flow-php'))->rm(path('azure-blob://missing'), false));
     }
 
     public function test_removing_folder(): void

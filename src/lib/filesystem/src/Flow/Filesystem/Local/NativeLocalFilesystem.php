@@ -23,17 +23,23 @@ use SensitiveParameter;
 
 use function array_key_exists;
 use function array_reverse;
+use function bin2hex;
+use function chmod;
+use function dirname;
+use function error_get_last;
 use function file_exists;
 use function filemtime;
 use function filesize;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 use function in_array;
+use function is_array;
 use function is_dir;
 use function is_file;
 use function is_link;
 use function is_string;
 use function mkdir;
+use function random_bytes;
 use function rename;
 use function rmdir;
 use function scandir;
@@ -43,13 +49,15 @@ use function sys_get_temp_dir;
 use function unlink;
 
 /**
- * @type NativeLocalConfiguration = array{protocol: string}
+ * @type NativeLocalConfiguration = array{protocol: string, permissions: null|PermissionsShape}
+ * @import-type PermissionsShape from Permissions
  *
  */
 final readonly class NativeLocalFilesystem implements Filesystem
 {
     public function __construct(
         private Mount $mount = new Mount('file'),
+        private ?Permissions $permissions = null,
     ) {}
 
     public static function fromArray(#[SensitiveParameter] array $configuration): static
@@ -58,33 +66,35 @@ final readonly class NativeLocalFilesystem implements Filesystem
             throw new InvalidArgumentException('NativeLocalFilesystem configuration must hold a "protocol" string');
         }
 
-        return new self(new Mount($configuration['protocol']));
+        if (
+            !array_key_exists('permissions', $configuration)
+            || $configuration['permissions'] !== null && !is_array($configuration['permissions'])
+        ) {
+            throw new InvalidArgumentException(
+                'NativeLocalFilesystem configuration must hold "permissions", null or an array',
+            );
+        }
+
+        return new self(
+            new Mount($configuration['protocol']),
+            $configuration['permissions'] === null ? null : Permissions::fromArray($configuration['permissions']),
+        );
     }
 
     public function appendTo(Path $path): DestinationStream
     {
-        if ($path->isEqual($this->getSystemTmpDir())) {
-            throw new RuntimeException('Cannot write to system tmp directory');
-        }
+        $this->ensureWritable($path);
 
-        if (!$this->mount->supports($path)) {
-            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
-        }
+        return $this->withFilePermissions($path, NativeLocalDestinationStream::openAppend($path));
+    }
 
-        if ($path->isPattern()) {
-            throw new InvalidArgumentException("Pattern paths can't be written: " . $path->uri());
-        }
+    public function create(Path $path): DestinationStream
+    {
+        $this->ensureWritable($path);
 
-        if (!$this->status($path->parentDirectory())) {
-            if (
-                !mkdir($concurrentDirectory = $path->parentDirectory()->path(), recursive: true)
-                && !is_dir($concurrentDirectory)
-            ) {
-                throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
-            }
-        }
+        $temporary = $path->basenamePrefix('.' . bin2hex(random_bytes(8)) . '.');
 
-        return NativeLocalDestinationStream::openAppend($path);
+        return $this->withFilePermissions($temporary, NativeLocalDestinationStream::openExclusive($path, $temporary));
     }
 
     /**
@@ -92,7 +102,7 @@ final readonly class NativeLocalFilesystem implements Filesystem
      */
     public function normalize(): array
     {
-        return ['protocol' => $this->mount->protocol];
+        return ['protocol' => $this->mount->protocol, 'permissions' => $this->permissions?->normalize()];
     }
 
     public function getSystemTmpDir(): Path
@@ -137,21 +147,18 @@ final readonly class NativeLocalFilesystem implements Filesystem
             throw new InvalidSchemeException($to->protocol(), $this->mount->protocol);
         }
 
-        if (file_exists($to->path())) {
-            $this->rm($to);
-        }
-
-        $directory = $to->parentDirectory()->path();
-
-        if (!is_dir($directory) && !mkdir($directory, 0777, true) && !is_dir($directory)) {
-            throw new RuntimeException('Failed to create directory: ' . $directory);
-        }
-
-        if (!rename($from->path(), $to->path())) {
+        if (!file_exists($from->path())) {
             return false;
         }
 
-        return true;
+        // rename() replaces a file with a file atomically; any directory on either side needs the target gone first
+        if (is_dir($from->path()) || is_dir($to->path())) {
+            $this->rm($to);
+        }
+
+        $this->createDirectory($to->parentDirectory()->path());
+
+        return @rename($from->path(), $to->path());
     }
 
     public function readFrom(Path $path): SourceStream
@@ -167,7 +174,7 @@ final readonly class NativeLocalFilesystem implements Filesystem
         return NativeLocalSourceStream::open($path);
     }
 
-    public function rm(Path $path): bool
+    public function rm(Path $path, bool $recursive = true): bool
     {
         if (!$this->mount->supports($path)) {
             throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
@@ -179,7 +186,7 @@ final readonly class NativeLocalFilesystem implements Filesystem
             }
 
             if (is_dir($path->path())) {
-                $this->rmdir($path->path());
+                $this->rmdir($path->path(), $recursive);
             } else {
                 unlink($path->path());
             }
@@ -191,7 +198,7 @@ final readonly class NativeLocalFilesystem implements Filesystem
 
         foreach (array_reverse((new GlobWalker())->walk($path)) as $filePath) {
             if (is_dir($filePath)) {
-                $this->rmdir($filePath);
+                $this->rmdir($filePath, $recursive);
             } else {
                 unlink($filePath);
             }
@@ -228,6 +235,30 @@ final readonly class NativeLocalFilesystem implements Filesystem
 
     public function writeTo(Path $path): DestinationStream
     {
+        $this->ensureWritable($path);
+
+        return $this->withFilePermissions($path, NativeLocalDestinationStream::openBlank($path));
+    }
+
+    private function createDirectory(string $directory): void
+    {
+        if (is_dir($directory)) {
+            return;
+        }
+
+        $this->createDirectory(dirname($directory));
+
+        if (!mkdir($directory) && !is_dir($directory)) {
+            throw new RuntimeException(sprintf('Directory "%s" was not created', $directory));
+        }
+
+        if ($this->permissions !== null) {
+            chmod($directory, $this->permissions->directory);
+        }
+    }
+
+    private function ensureWritable(Path $path): void
+    {
         if ($path->isEqual($this->getSystemTmpDir())) {
             throw new RuntimeException('Cannot write to system tmp directory');
         }
@@ -240,19 +271,10 @@ final readonly class NativeLocalFilesystem implements Filesystem
             throw new InvalidArgumentException("Pattern paths can't be written: " . $path->uri());
         }
 
-        if (!$this->status($path->parentDirectory())) {
-            if (
-                !mkdir($concurrentDirectory = $path->parentDirectory()->path(), recursive: true)
-                && !is_dir($concurrentDirectory)
-            ) {
-                throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
-            }
-        }
-
-        return NativeLocalDestinationStream::openBlank($path);
+        $this->createDirectory($path->parentDirectory()->path());
     }
 
-    private function rmdir(string $dirPath): void
+    private function rmdir(string $dirPath, bool $recursive): void
     {
         if (is_link($dirPath)) {
             unlink($dirPath);
@@ -262,6 +284,16 @@ final readonly class NativeLocalFilesystem implements Filesystem
 
         if (!is_dir($dirPath)) {
             throw new InvalidArgumentException("{$dirPath} must be a directory");
+        }
+
+        if (!$recursive) {
+            if (!@rmdir($dirPath)) {
+                throw new RuntimeException(
+                    "Directory {$dirPath} was not removed: " . (error_get_last()['message'] ?? ''),
+                );
+            }
+
+            return;
         }
 
         if (!str_ends_with($dirPath, '/')) {
@@ -288,13 +320,22 @@ final readonly class NativeLocalFilesystem implements Filesystem
             }
 
             if (is_dir($filePath)) {
-                $this->rmdir($filePath);
+                $this->rmdir($filePath, true);
             } else {
                 unlink($filePath);
             }
         }
 
         rmdir($dirPath);
+    }
+
+    private function withFilePermissions(Path $file, NativeLocalDestinationStream $stream): NativeLocalDestinationStream
+    {
+        if ($this->permissions !== null) {
+            chmod($file->path(), $this->permissions->file);
+        }
+
+        return $stream;
     }
 
     private static function statFor(Path $path, string $absolutePath): FileStatus

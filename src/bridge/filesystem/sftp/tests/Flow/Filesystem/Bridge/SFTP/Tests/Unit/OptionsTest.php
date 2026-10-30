@@ -7,10 +7,13 @@ namespace Flow\Filesystem\Bridge\SFTP\Tests\Unit;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Bridge\SFTP\Options;
 use Flow\Filesystem\Exception\InvalidArgumentException;
+use Flow\Filesystem\Local\Permissions;
+use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
 use Flow\Filesystem\Stream\BlockFactory;
 
 use function Flow\Filesystem\Bridge\SFTP\DSL\sftp_filesystem_options;
 use function Flow\Filesystem\DSL\path;
+use function sys_get_temp_dir;
 
 final class OptionsTest extends FlowTestCase
 {
@@ -42,6 +45,18 @@ final class OptionsTest extends FlowTestCase
         static::assertNotNull($normalized);
         static::assertSame(1024, $normalized['block_size']);
         static::assertSame(512, $normalized['read_chunk_size']);
+        static::assertEquals($options, Options::fromArray($normalized));
+    }
+
+    public function test_block_permissions_round_trip(): void
+    {
+        $options = (new Options())->withBlockFactory(
+            new NativeLocalFileBlocksFactory(sys_get_temp_dir(), Permissions::private()),
+        );
+        $normalized = $options->normalize();
+
+        static::assertNotNull($normalized);
+        static::assertSame(['file' => 0o600, 'directory' => 0o700], $normalized['block_permissions']);
         static::assertEquals($options, Options::fromArray($normalized));
     }
 

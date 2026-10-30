@@ -44,6 +44,13 @@ final class StdOutFilesystemTest extends TestCase
         $second->close();
     }
 
+    public function test_create(): void
+    {
+        $this->expectExceptionMessage('Cannot create files exclusively in stdout');
+
+        (new StdOutFilesystem())->create(path('stdout://a.stdout'));
+    }
+
     public function test_get_system_tmp_dir(): void
     {
         $filesystem = new StdOutFilesystem();

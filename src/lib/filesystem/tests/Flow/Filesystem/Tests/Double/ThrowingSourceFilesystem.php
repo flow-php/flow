@@ -36,6 +36,11 @@ final class ThrowingSourceFilesystem implements Filesystem
         return $this->wrapped->appendTo($path);
     }
 
+    public function create(Path $path): DestinationStream
+    {
+        return $this->wrapped->create($path);
+    }
+
     public function normalize(): ?array
     {
         return null;
@@ -66,9 +71,9 @@ final class ThrowingSourceFilesystem implements Filesystem
         return $this->lastStream = new ThrowingSourceStream($path);
     }
 
-    public function rm(Path $path): bool
+    public function rm(Path $path, bool $recursive = true): bool
     {
-        return $this->wrapped->rm($path);
+        return $this->wrapped->rm($path, $recursive);
     }
 
     public function status(Path $path): ?FileStatus

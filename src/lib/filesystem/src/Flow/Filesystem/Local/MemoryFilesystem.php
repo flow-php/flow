@@ -53,6 +53,15 @@ final readonly class MemoryFilesystem implements Filesystem
         return $this->memory->for($path);
     }
 
+    public function create(Path $path): DestinationStream
+    {
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
+
+        return $this->memory->exclusive($path);
+    }
+
     public function normalize(): ?array
     {
         return null;
@@ -140,7 +149,7 @@ final readonly class MemoryFilesystem implements Filesystem
         return $this->memory->for($path);
     }
 
-    public function rm(Path $path): bool
+    public function rm(Path $path, bool $recursive = true): bool
     {
         if (!$this->mount->supports($path)) {
             throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
@@ -158,6 +167,10 @@ final readonly class MemoryFilesystem implements Filesystem
 
         foreach ($this->memory->paths() as $nextPath) {
             if ($path->isPattern() ? $path->matches($nextPath) : str_starts_with($nextPath->uri(), $directory)) {
+                if (!$recursive && !$path->isPattern()) {
+                    throw new RuntimeException("Directory {$path->uri()} was not removed: it is not empty");
+                }
+
                 $this->memory->close($nextPath);
                 $removed = true;
             }

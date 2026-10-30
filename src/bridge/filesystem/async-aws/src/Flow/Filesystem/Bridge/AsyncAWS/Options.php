@@ -5,17 +5,21 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Bridge\AsyncAWS;
 
 use Flow\Filesystem\Exception\InvalidArgumentException;
+use Flow\Filesystem\Local\Permissions;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
 use Flow\Filesystem\Stream\BlockFactory;
 
+use function array_key_exists;
 use function Flow\Filesystem\DSL\path;
+use function is_array;
 use function is_bool;
 use function is_int;
 use function is_string;
 
 /**
- * @type S3Options = array{block_location: string, file_fast_path: bool, part_size: int}
+ * @type S3Options = array{block_location: string, block_permissions: null|PermissionsShape, file_fast_path: bool, part_size: int}
+ * @import-type PermissionsShape from Permissions
  */
 final class Options
 {
@@ -61,16 +65,23 @@ final class Options
     {
         if (
             !is_string($data['block_location'] ?? null)
+            || !array_key_exists('block_permissions', $data)
+            || $data['block_permissions'] !== null && !is_array($data['block_permissions'])
             || !is_bool($data['file_fast_path'] ?? null)
             || !is_int($data['part_size'] ?? null)
         ) {
             throw new InvalidArgumentException(
-                'AsyncAWS options must hold block_location (string), file_fast_path (bool) and part_size (int)',
+                'AsyncAWS options must hold block_location (string), block_permissions (null or array), file_fast_path (bool) and part_size (int)',
             );
         }
 
         return (new self())
-            ->withBlockFactory(new NativeLocalFileBlocksFactory($data['block_location']))
+            ->withBlockFactory(
+                new NativeLocalFileBlocksFactory(
+                    $data['block_location'],
+                    $data['block_permissions'] === null ? null : Permissions::fromArray($data['block_permissions']),
+                ),
+            )
             ->withFileFastPath($data['file_fast_path'])
             ->withBlockSize($data['part_size']);
     }
@@ -86,6 +97,7 @@ final class Options
 
         return [
             'block_location' => $this->blockFactory->blockLocation(),
+            'block_permissions' => $this->blockFactory->permissions()?->normalize(),
             'file_fast_path' => $this->fileFastPath,
             'part_size' => $this->partSize,
         ];

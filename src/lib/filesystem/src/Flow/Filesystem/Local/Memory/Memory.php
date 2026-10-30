@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Local\Memory;
 
 use DateTimeImmutable;
+use Flow\Filesystem\Exception\FileExistsException;
 use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Path;
 use php_user_filter;
@@ -50,31 +51,16 @@ final class Memory
         }
     }
 
+    public function exclusive(Path $path): MemoryStream
+    {
+        return new MemoryStream($this->openHandle($path), $path, $this);
+    }
+
     public function for(Path $path): MemoryStream
     {
-        if (array_key_exists($path->uri(), $this->streams)) {
-            return $this->streams[$path->uri()];
+        if (!array_key_exists($path->uri(), $this->streams)) {
+            $this->register($path, new MemoryStream($this->openHandle($path), $path));
         }
-
-        $outputStream = mb_strtolower(type_string()->cast($path->getOption('stream', 'temp')));
-
-        if (!in_array($outputStream, ['temp', 'memory'], true)) {
-            throw new InvalidArgumentException('Invalid memory stream, allowed values are "temp" and "memory", given: '
-            . $outputStream);
-        }
-
-        $handle = fopen('php://' . $outputStream, 'wb');
-
-        if ($this->filter !== null) {
-            stream_filter_register($outputStream, $this->filter::class);
-            stream_filter_append($handle, $this->filter::class);
-            $this->streams[$path->uri()] = new MemoryStream($handle, $path);
-        } else {
-            $this->streams[$path->uri()] = new MemoryStream($handle, $path);
-        }
-
-        $this->paths[$path->uri()] = $path;
-        $this->modifiedAt[$path->uri()] = new DateTimeImmutable();
 
         return $this->streams[$path->uri()];
     }
@@ -100,5 +86,41 @@ final class Memory
     public function size(Path $path): ?int
     {
         return array_key_exists($path->uri(), $this->streams) ? $this->streams[$path->uri()]->size() : null;
+    }
+
+    /**
+     * @throws FileExistsException when the path is already registered
+     */
+    public function register(Path $path, MemoryStream $stream): void
+    {
+        if ($this->has($path)) {
+            throw new FileExistsException('File already exists: ' . $path->uri());
+        }
+
+        $this->streams[$path->uri()] = $stream;
+        $this->paths[$path->uri()] = $path;
+        $this->modifiedAt[$path->uri()] = new DateTimeImmutable();
+    }
+
+    /**
+     * @return resource
+     */
+    private function openHandle(Path $path)
+    {
+        $outputStream = mb_strtolower(type_string()->cast($path->getOption('stream', 'temp')));
+
+        if (!in_array($outputStream, ['temp', 'memory'], true)) {
+            throw new InvalidArgumentException('Invalid memory stream, allowed values are "temp" and "memory", given: '
+            . $outputStream);
+        }
+
+        $handle = fopen('php://' . $outputStream, 'wb');
+
+        if ($this->filter !== null) {
+            stream_filter_register($outputStream, $this->filter::class);
+            stream_filter_append($handle, $this->filter::class);
+        }
+
+        return $handle;
     }
 }

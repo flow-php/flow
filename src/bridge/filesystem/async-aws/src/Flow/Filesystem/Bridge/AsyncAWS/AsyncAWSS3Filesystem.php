@@ -95,6 +95,23 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
         ];
     }
 
+    public function create(Path $path): DestinationStream
+    {
+        if ($path->isEqual($this->getSystemTmpDir())) {
+            throw new RuntimeException('Cannot write to system tmp directory');
+        }
+
+        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+
+        return AsyncAWSS3DestinationStream::openExclusive(
+            $this->client->client(),
+            $this->bucket,
+            $path,
+            $this->options->blockFactory(),
+            $this->options->partSize(),
+        );
+    }
+
     public function getSystemTmpDir(): Path
     {
         return $this->options->tmpDir();
@@ -217,7 +234,7 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
         return new AsyncAWSS3SourceStream($path, $this->bucket, $this->client->client());
     }
 
-    public function rm(Path $path): bool
+    public function rm(Path $path, bool $recursive = true): bool
     {
         if ($path->isEqual($this->getSystemTmpDir())) {
             return false;
@@ -257,6 +274,14 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
              * not delete files that would also match the prefix, like: aws-s3://nested/folder_but_file.txt.
              */
             $folderPath = path(trim($path->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR, $path->options());
+
+            if (!$recursive) {
+                foreach ($this->list($folderPath) as $fileStatus) {
+                    if ($fileStatus->path->path() !== $folderPath->path()) {
+                        throw new RuntimeException("Directory {$path->uri()} was not removed: it is not empty");
+                    }
+                }
+            }
 
             $deletedCount = 0;
 

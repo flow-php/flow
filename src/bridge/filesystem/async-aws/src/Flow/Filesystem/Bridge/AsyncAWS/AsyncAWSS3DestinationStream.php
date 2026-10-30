@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\AsyncAWS;
 
+use AsyncAws\Core\Exception\Http\ClientException;
 use AsyncAws\S3\Exception\NoSuchKeyException;
 use AsyncAws\S3\Input\CreateMultipartUploadRequest;
 use AsyncAws\S3\S3Client;
 use Flow\Filesystem\Bridge\AsyncAWS\AsyncAWSS3DesintationStream\AsyncAWSS3BlockLifecycle;
 use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\Exception\FileExistsException;
 use Flow\Filesystem\Exception\InvalidArgumentException;
+use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\SizeUnits;
 use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
@@ -29,6 +32,8 @@ use function unlink;
 final class AsyncAWSS3DestinationStream implements DestinationStream
 {
     private bool $closed;
+
+    private ?string $ifNoneMatch = null;
 
     public function __construct(
         private readonly S3Client $s3Client,
@@ -162,6 +167,22 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
         );
     }
 
+    /**
+     * @param int<1, max> $blockSize
+     */
+    public static function openExclusive(
+        S3Client $s3Client,
+        string $bucket,
+        Path $path,
+        BlockFactory $blockFactory = new NativeLocalFileBlocksFactory(),
+        int $blockSize = 1024 * 1024 * 4,
+    ): self {
+        $stream = self::openBlank($s3Client, $bucket, $path, $blockFactory, $blockSize);
+        $stream->ifNoneMatch = '*';
+
+        return $stream;
+    }
+
     public function append(string $data): DestinationStream
     {
         $this->blocks->append($data);
@@ -171,6 +192,10 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
 
     public function close(): void
     {
+        if ($this->closed) {
+            return;
+        }
+
         if ($this->blocks->size() === 0) {
             $handle = fopen($this->blocks->block()->path()->path(), 'rb');
 
@@ -189,27 +214,18 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
             fclose($handle);
             unlink($this->blocks->block()->path()->path());
 
-            $this->s3Client->completeMultipartUpload([
-                'Bucket' => $this->bucket,
-                'Key' => ltrim($this->path->path(), '/'),
-                'UploadId' => $this->uploadId,
-                'MultipartUpload' => [
-                    'Parts' => [
-                        ['PartNumber' => 1, 'ETag' => $partResponse->getEtag()],
-                    ],
-                ],
-            ]);
+            $this->complete([['PartNumber' => 1, 'ETag' => $partResponse->getEtag()]]);
 
             if ($this->path->endsWith('_flow_php_append_')) {
                 $this->s3Client->deleteObject([
                     'Bucket' => $this->bucket,
-                    'Key' => ltrim(str_replace('_flow_php_append_', '', $this->path->path()), '/'),
+                    'Key' => ltrim(str_replace('/_flow_php_append_', '', $this->path->path()), '/'),
                 ]);
 
                 $this->s3Client->copyObject([
                     'Bucket' => $this->bucket,
-                    'Key' => ltrim(str_replace('_flow_php_append_', '', $this->path->path()), '/'),
-                    'CopySource' => $this->bucket . '/' . $this->path->path(),
+                    'Key' => ltrim(str_replace('/_flow_php_append_', '', $this->path->path()), '/'),
+                    'CopySource' => $this->bucket . '/' . ltrim($this->path->path(), '/'),
                 ]);
 
                 $this->s3Client->deleteObject([
@@ -225,14 +241,7 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
 
         $this->blocks->done();
 
-        $this->s3Client->completeMultipartUpload([
-            'Bucket' => $this->bucket,
-            'Key' => ltrim($this->path->path(), '/'),
-            'UploadId' => $this->uploadId,
-            'MultipartUpload' => [
-                'Parts' => $this->blockList->toArray(),
-            ],
-        ]);
+        $this->complete($this->blockList->toArray());
 
         if ($this->path->endsWith('_flow_php_append_')) {
             $this->s3Client->deleteObject([
@@ -282,5 +291,45 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
     public function path(): Path
     {
         return $this->path;
+    }
+
+    /**
+     * @param array<array{PartNumber: int, ETag: null|string}> $parts
+     *
+     * @throws FileExistsException when the stream is exclusive and the key exists
+     * @throws RuntimeException when the stream is exclusive and a conflicting write aborted the upload
+     */
+    private function complete(array $parts): void
+    {
+        try {
+            $this->s3Client->completeMultipartUpload([
+                'Bucket' => $this->bucket,
+                'Key' => ltrim($this->path->path(), '/'),
+                'UploadId' => $this->uploadId,
+                'IfNoneMatch' => $this->ifNoneMatch,
+                'MultipartUpload' => ['Parts' => $parts],
+            ])->resolve();
+        } catch (ClientException $e) {
+            $status = $e->getResponse()->getStatusCode();
+
+            if ($this->ifNoneMatch === null || $status !== 409 && $status !== 412) {
+                throw $e;
+            }
+
+            $this->s3Client->abortMultipartUpload([
+                'Bucket' => $this->bucket,
+                'Key' => ltrim($this->path->path(), '/'),
+                'UploadId' => $this->uploadId,
+            ])->resolve();
+            $this->closed = true;
+
+            if ($status === 409) {
+                throw new RuntimeException(
+                    "A conflicting write to {$this->path->uri()} aborted the upload, call create() again",
+                );
+            }
+
+            throw new FileExistsException('File already exists: ' . $this->path->uri());
+        }
     }
 }

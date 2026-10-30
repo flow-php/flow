@@ -63,6 +63,13 @@ final class SFTPFilesystemTest extends SFTPTestCase
         $filesystem->writeTo($tmpDir);
     }
 
+    public function test_creating_a_file_exclusively_is_not_supported(): void
+    {
+        $this->expectExceptionMessage('SFTP does not support creating files exclusively');
+
+        $this->sftpContext()->filesystem()->create(path('sftp:///upload/claim.csv'));
+    }
+
     public function test_listing_a_directory_walks_it_recursively(): void
     {
         $this->sftpContext()->givenFileExists(path('sftp:///upload/2024/01/a.csv'), "id\n1\n");
@@ -200,6 +207,24 @@ final class SFTPFilesystemTest extends SFTPTestCase
         static::assertFalse($this->sftpContext()->exists(path('sftp:///upload/a.csv')));
         static::assertFalse($this->sftpContext()->exists(path('sftp:///upload/b.csv')));
         static::assertTrue($this->sftpContext()->exists(path('sftp:///upload/keep.json')));
+    }
+
+    public function test_removing_a_non_empty_directory_without_recursion_is_refused(): void
+    {
+        $this->sftpContext()->givenFileExists(path('sftp:///upload/archive/a.csv'), 'a');
+
+        $this->expectException(RuntimeException::class);
+
+        $this->sftpContext()->filesystem()->rm(path('sftp:///upload/archive'), false);
+    }
+
+    public function test_removing_an_empty_directory_without_recursion(): void
+    {
+        $this->sftpContext()->givenFileExists(path('sftp:///upload/archive/a.csv'), 'a');
+        $this->sftpContext()->filesystem()->rm(path('sftp:///upload/archive/a.csv'), false);
+
+        static::assertTrue($this->sftpContext()->filesystem()->rm(path('sftp:///upload/archive'), false));
+        static::assertFalse($this->sftpContext()->exists(path('sftp:///upload/archive')));
     }
 
     public function test_status_of_a_directory(): void

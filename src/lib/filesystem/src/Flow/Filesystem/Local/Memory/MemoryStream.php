@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Local\Memory;
 
 use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\Exception\FileExistsException;
 use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\Path;
@@ -32,6 +33,7 @@ final class MemoryStream implements DestinationStream, SourceStream
     public function __construct(
         private $handle,
         private readonly Path $path,
+        private ?Memory $registerIn = null,
     ) {
         if (!is_resource($this->handle)) {
             throw new InvalidArgumentException('Invalid memory stream handle');
@@ -64,8 +66,19 @@ final class MemoryStream implements DestinationStream, SourceStream
 
     /**
      * We are not closing memory streams, in order to cleanup memory use rm on Memory Filesystem.
+     *
+     * @throws FileExistsException when the path is already registered
      */
-    public function close(): void {}
+    public function close(): void
+    {
+        if ($this->registerIn === null) {
+            return;
+        }
+
+        $memory = $this->registerIn;
+        $this->registerIn = null;
+        $memory->register($this->path, $this);
+    }
 
     public function content(): string
     {
