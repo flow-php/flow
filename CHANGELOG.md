@@ -1,6 +1,11 @@
-## [Unreleased] - 2026-10-23
+## [Unreleased] - 2026-10-30
 
 ### Added
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - splittable file sources with byte-window splits** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - one schema inference contract with per-file sniffers** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - launcher seam on Config** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - Architecture documentation page** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl-adapter-http - http_stop_when_any_of() and http_stop_when_all_of()** - [@norberttech](https://github.com/norberttech)
 - [#2703](https://github.com/flow-php/flow/pull/2703) - **flow-php/etl - DataFrame::withColumn() and DataFrame::withColumns()** - [@norberttech](https://github.com/norberttech)
 - [#2702](https://github.com/flow-php/flow/pull/2702) - **flow-php/parquet - read and write DELTA_LENGTH_BYTE_ARRAY and DELTA_BYTE_ARRAY** - [@norberttech](https://github.com/norberttech)
 - [#2702](https://github.com/flow-php/flow/pull/2702) - **flow-php/parquet - Option::DICTIONARY_ENABLED** - [@norberttech](https://github.com/norberttech)
@@ -24,6 +29,27 @@
 - [#2693](https://github.com/flow-php/flow/pull/2693) - **flow-php/arrow-ext - page-range reads and row filtering through arrow-rs** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - every namespace sits in one layer root, guarded per layer** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - Sink renamed to Branch, file sinks to FileWriter, one FileCommit protocol** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - readers skip hidden paths and temporary output** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - the planner holds its settings, Rule::apply() takes a Backend** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - GroupBy and Repartition builders merged into BucketingAlgorithmBuilder** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl-adapter-csv - classes follow the etl layers (IO\Extractor, IO\Loader, IO\Inference)** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl-adapter-json - classes follow the etl layers** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl-adapter-parquet - classes follow the etl layers, one writer per lane** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl-adapter-text - classes follow the etl layers** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl-adapter-xml - classes follow the etl layers** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl-adapter-excel - classes follow the etl layers, Excel writes describe themselves** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl-adapter-doctrine - classes follow the etl layers** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl-adapter-postgresql - classes follow the etl layers** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl-adapter-http - classes follow the etl layers, StopWhen is an interface** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl-adapter-google-sheet - classes follow the etl layers** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl-adapter-avro - classes follow the etl layers** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl-adapter-chartjs - classes follow the etl layers** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl-adapter-logger - classes follow the etl layers** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl-adapter-seal - classes follow the etl layers** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/flow-php-ext - native classes follow the etl layer namespaces** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/cli - follows the etl namespace moves** - [@norberttech](https://github.com/norberttech)
 - [#2703](https://github.com/flow-php/flow/pull/2703) - **flow-php/etl - with_entry() / WithEntry renamed to with_column() / WithColumn** - [@norberttech](https://github.com/norberttech)
 - [#2703](https://github.com/flow-php/flow/pull/2703) - **flow-php/etl - Definition::entry() renamed to Definition::reference()** - [@norberttech](https://github.com/norberttech)
 - [#2703](https://github.com/flow-php/flow/pull/2703) - **flow-php/etl - Entry-named transformers, rename strategies and DuplicatedEntriesException renamed to Column** - [@norberttech](https://github.com/norberttech)
@@ -68,6 +94,12 @@
 - [#2687](https://github.com/flow-php/flow/pull/2687) - **flow-php/flow - updated dev dependencies, mago 1.57 and GitHub Actions** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - count(ref) skips nulls in group-by, pivot and window functions alike** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - overwrite removes only files Flow wrote and never loses data on a failed commit** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - 0-row loads write no file for every format** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - a frame with constraints runs more than once** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl-adapter-excel - Ignore no longer overwrites an existing workbook** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/filesystem - MemoryFilesystem::mv() moves files and directories** - [@norberttech](https://github.com/norberttech)
 - [#2704](https://github.com/flow-php/flow/pull/2704) - **Prevent PHPStan reporting unknown variable passed to `StructureElement`** - [@stloyd](https://github.com/stloyd)
 - [#2702](https://github.com/flow-php/flow/pull/2702) - **flow-php/parquet - reading v2 pages flagged as uncompressed** - [@norberttech](https://github.com/norberttech)
 - [#2702](https://github.com/flow-php/flow/pull/2702) - **flow-php/parquet - DELTA_BINARY_PACKED corruption for INT32 and wide bit widths** - [@norberttech](https://github.com/norberttech)
@@ -87,6 +119,9 @@
 - [b5d097](https://github.com/flow-php/flow/commit/b5d097c5cabde914624be59774dd8a8d6fafe294) - **bump setup-php to 2.40.0 in extension release workflows** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - LimitReachedException, replaced by the Limiting contract** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - FilteredBranch::withTransformation()** - [@norberttech](https://github.com/norberttech)
+- [#2710](https://github.com/flow-php/flow/pull/2710) - **flow-php/etl - window frame accumulators, windows reuse aggregate functions** - [@norberttech](https://github.com/norberttech)
 - [#2703](https://github.com/flow-php/flow/pull/2703) - **flow-php/etl - entry() DSL function, use ref() or col()** - [@norberttech](https://github.com/norberttech)
 - [#2702](https://github.com/flow-php/flow/pull/2702) - **flow-php/parquet - PlainFlatColumnChunkBuilder and DeltaBinaryPackedColumnChunkBuilder, replaced by FlatColumnChunkBuilder** - [@norberttech](https://github.com/norberttech)
 - [#2701](https://github.com/flow-php/flow/pull/2701) - **flow-php/etl - Redis from the dev environment, CI and tests** - [@norberttech](https://github.com/norberttech)
