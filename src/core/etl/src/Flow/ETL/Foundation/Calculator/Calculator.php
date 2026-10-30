@@ -12,6 +12,7 @@ use Brick\Math\RoundingMode;
 use DivisionByZeroError;
 use Flow\ETL\Foundation\Calculator\Exception\InvalidScaleException;
 use Flow\ETL\Foundation\Calculator\Exception\NonNumericValueException;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 
 use function abs;
 use function defined;
@@ -19,6 +20,7 @@ use function is_float;
 use function is_int;
 use function is_string;
 use function method_exists;
+use function sprintf;
 
 final class Calculator
 {
@@ -100,18 +102,27 @@ final class Calculator
     /**
      * @param int|numeric-string $a
      * @param int|numeric-string $b
+     *
+     * @throws InvalidArgumentException when $b is negative
      */
     public function modulus(int|string $a, int|string $b): int
     {
-        // ints under a positive modulus: PHP's % with the sign folded back, as BigInteger::mod() answers; a zero or
-        // negative modulus and numeric strings keep BigInteger's checks
+        // ints under a positive modulus: PHP's % with the sign folded back, as BigInteger::mod() answers; a zero
+        // modulus and numeric strings keep BigInteger's checks
         if (is_int($a) && is_int($b) && $b > 0) {
             $remainder = $a % $b;
 
             return $remainder < 0 ? $remainder + $b : $remainder;
         }
 
-        return BigInteger::of($a)->mod(BigInteger::of($b))->toInt();
+        $modulus = BigInteger::of($b);
+
+        // refused here, not by BigInteger::mod(): brick/math below 0.15 answers a negative modulus instead of throwing
+        if ($modulus->isNegative()) {
+            throw new InvalidArgumentException(sprintf('Modulus must not be negative, got "%s".', $b));
+        }
+
+        return BigInteger::of($a)->mod($modulus)->toInt();
     }
 
     /**

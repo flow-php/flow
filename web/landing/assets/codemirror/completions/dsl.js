@@ -12316,7 +12316,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">type_structure</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$elements</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">StructureType</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @template T<br>@param array<array-key, StructureElement<T>|Type<T>> $elements<br>@return StructureType<array<array-key, T>>
+                    @template T<br>@param array<array-key, StructureElement<T, bool>|Type<T>> $elements<br>@return StructureType<array<array-key, T>>
                 </div>
                             `
             return div

@@ -22,10 +22,10 @@ const dataframeMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">aggregate</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$aggregations</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">GroupByAlgorithmBuilder</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                    <span class=\"fn-name\">aggregate</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$aggregations</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">BucketingAlgorithmBuilder</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @lazy<br>@param Aggregations $aggregations<br>@param null|GroupByAlgorithmBuilder $algorithm null defers to configuration; a builder pins the<br>                                              algorithm for this operation and skips any automatic choice
+                    @lazy<br>@param Aggregations $aggregations<br>@param null|BucketingAlgorithmBuilder $algorithm null defers to configuration; a builder pins the<br>                                              algorithm for this operation and skips any automatic choice
                 </div>
                             `
             return div
@@ -40,10 +40,10 @@ const dataframeMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">aggregateBy</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">GroupBy</span> <span class=\"fn-param\">$groupBy</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">GroupByAlgorithmBuilder</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                    <span class=\"fn-name\">aggregateBy</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">GroupBy</span> <span class=\"fn-param\">$groupBy</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">BucketingAlgorithmBuilder</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @lazy<br>@param null|GroupByAlgorithmBuilder $algorithm null defers to configuration; a builder pins the<br>                                              algorithm for this operation and skips any automatic choice
+                    @lazy<br>@param null|BucketingAlgorithmBuilder $algorithm null defers to configuration; a builder pins the<br>                                              algorithm for this operation and skips any automatic choice
                 </div>
                             `
             return div
@@ -394,10 +394,10 @@ const dataframeMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">groupBy</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|array|string</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">GroupByAlgorithmBuilder</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">GroupedDataFrame</span>
+                    <span class=\"fn-name\">groupBy</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Reference|array|string</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">BucketingAlgorithmBuilder</span> <span class=\"fn-param\">$algorithm</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">GroupedDataFrame</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @lazy<br>@param GroupByReferences|Reference|string $columns a single column is grouped by on its own<br>@param null|GroupByAlgorithmBuilder $algorithm null defers to configuration; a builder pins the<br>                                              algorithm for this operation and skips any automatic choice
+                    @lazy<br>@param GroupByReferences|Reference|string $columns a single column is grouped by on its own<br>@param null|BucketingAlgorithmBuilder $algorithm null defers to configuration; a builder pins the<br>                                              algorithm for this operation and skips any automatic choice
                 </div>
                             `
             return div

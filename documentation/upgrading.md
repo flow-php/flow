@@ -1858,6 +1858,14 @@ by Spark's hidden-path rule.
 | `http_stop_when_flag_false('has_more')->or(http_stop_when_max_pages(1000))`                                                                      | `http_stop_when_any_of(http_stop_when_flag_false('has_more'), http_stop_when_max_pages(1000))`                                                                                                                                                                                                         |
 | `$a->and($b)` on a stop condition                                                                                                                | `http_stop_when_all_of($a, $b)`                                                                                                                                                                                                                                                                        |
 
+### 122) `flow-php/etl` - `mod()` refuses a negative modulus on every `brick/math` version
+
+| Before                                                                                              | After                                                                                   |
+|-----------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------|
+| `Calculator::modulus(7, -3)` on `brick/math` 0.12-0.14: `-2`                                        | `Flow\ETL\Foundation\Exception\InvalidArgumentException` `Modulus must not be negative` |
+| `Calculator::modulus(7, -3)` on `brick/math` 0.15+: `Brick\Math\Exception\InvalidArgumentException` | `Flow\ETL\Foundation\Exception\InvalidArgumentException` `Modulus must not be negative` |
+| `ref('a')->mod(lit(-3))`: a result or an `EvaluationException`, by `brick/math` version             | always an `EvaluationException` caused by `InvalidArgumentException`                    |
+
 ## Upgrading from 0.45.x to 0.46.x
 
 ### 1) `flow-php/etl-adapter-postgresql`, `flow-php/etl-adapter-doctrine` - keyset reads reject NULL keys up front

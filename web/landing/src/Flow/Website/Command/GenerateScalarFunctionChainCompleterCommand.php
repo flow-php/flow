@@ -9,6 +9,7 @@ use Flow\Website\Service\FlowConfigFactory;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Twig\Environment;
@@ -19,6 +20,7 @@ use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\Filesystem\DSL\path;
+use function Flow\Types\DSL\type_string;
 use function sprintf;
 
 #[AsCommand(
@@ -33,6 +35,17 @@ final class GenerateScalarFunctionChainCompleterCommand extends Command
         private readonly FlowConfigFactory $configFactory,
     ) {
         parent::__construct();
+    }
+
+    protected function configure(): void
+    {
+        $this->addOption(
+            'output-dir',
+            null,
+            InputOption::VALUE_REQUIRED,
+            'Directory the completer is written to',
+            $this->projectDir . '/assets/codemirror/completions',
+        );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -87,7 +100,7 @@ final class GenerateScalarFunctionChainCompleterCommand extends Command
             'total_count' => count($methodsData),
         ]);
 
-        $outputFile = $this->projectDir . '/assets/codemirror/completions/scalarfunctionchain.js';
+        $outputFile = type_string()->assert($input->getOption('output-dir')) . '/scalarfunctionchain.js';
 
         $fs->writeTo(path($outputFile))->append($content)->close();
 

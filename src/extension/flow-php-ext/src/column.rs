@@ -203,7 +203,9 @@ fn class_name(zv: &Zval) -> String {
 #[php_impl]
 impl RustColumn {
     pub fn __construct() -> PhpResult<Self> {
-        Err(ext_exception("Flow\\ETL\\Values\\Column\\RustColumn is built by RustBackend"))
+        Err(ext_exception(
+            "Flow\\ETL\\Values\\Column\\RustColumn is built by RustBackend",
+        ))
     }
 
     #[php(name = "type")]

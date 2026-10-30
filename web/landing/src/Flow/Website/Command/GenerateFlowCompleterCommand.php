@@ -9,6 +9,7 @@ use Flow\Website\Service\FlowConfigFactory;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Twig\Environment;
@@ -19,6 +20,7 @@ use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\Filesystem\DSL\path;
+use function Flow\Types\DSL\type_string;
 use function sprintf;
 
 #[AsCommand(name: 'app:generate:flow-completer', description: 'Generate CodeMirror completer for Flow methods')]
@@ -30,6 +32,17 @@ final class GenerateFlowCompleterCommand extends Command
         private readonly FlowConfigFactory $configFactory,
     ) {
         parent::__construct();
+    }
+
+    protected function configure(): void
+    {
+        $this->addOption(
+            'output-dir',
+            null,
+            InputOption::VALUE_REQUIRED,
+            'Directory the completer is written to',
+            $this->projectDir . '/assets/codemirror/completions',
+        );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -95,7 +108,7 @@ final class GenerateFlowCompleterCommand extends Command
             'total_count' => count($methodsData),
         ]);
 
-        $codeMirrorOutputFile = $this->projectDir . '/assets/codemirror/completions/flow.js';
+        $codeMirrorOutputFile = type_string()->assert($input->getOption('output-dir')) . '/flow.js';
 
         $fs->writeTo(path($codeMirrorOutputFile))->append($codeMirrorContent)->close();
 

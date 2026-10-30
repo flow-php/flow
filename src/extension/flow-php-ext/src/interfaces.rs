@@ -126,11 +126,17 @@ pub fn json_encoder_ce() -> &'static ClassEntry {
 }
 
 pub fn csv_open_source_ce() -> &'static ClassEntry {
-    load(&CSV_OPEN_SOURCE_CE, "Flow\\ETL\\Adapter\\CSV\\IO\\Extractor\\CSVOpenSource")
+    load(
+        &CSV_OPEN_SOURCE_CE,
+        "Flow\\ETL\\Adapter\\CSV\\IO\\Extractor\\CSVOpenSource",
+    )
 }
 
 pub fn json_open_source_ce() -> &'static ClassEntry {
-    load(&JSON_OPEN_SOURCE_CE, "Flow\\ETL\\Adapter\\JSON\\IO\\Extractor\\JsonOpenSource")
+    load(
+        &JSON_OPEN_SOURCE_CE,
+        "Flow\\ETL\\Adapter\\JSON\\IO\\Extractor\\JsonOpenSource",
+    )
 }
 
 pub fn parquet_open_source_ce() -> &'static ClassEntry {

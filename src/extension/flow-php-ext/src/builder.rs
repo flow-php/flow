@@ -63,7 +63,9 @@ pub enum Append {
     Done,
     /// `cause` is the `ColumnMismatchException`: a positioned append wraps it in a `SchemaMismatchException`, an
     /// unpositioned one throws it.
-    Refused { cause: Zval },
+    Refused {
+        cause: Zval,
+    },
 }
 
 fn string_slot(object: &ZendObject, slot: u32) -> Option<Zval> {

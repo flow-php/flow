@@ -185,7 +185,10 @@ impl BatchColumns {
             .filter_map(|column| column.refusal.as_ref())
             .min_by_key(|(row, _)| *row)
         {
-            return Err(schema_mismatch(zval_long((self.emitted + *row) as i64), cause.shallow_clone()));
+            return Err(schema_mismatch(
+                zval_long((self.emitted + *row) as i64),
+                cause.shallow_clone(),
+            ));
         }
 
         if let Some((row, column)) = self

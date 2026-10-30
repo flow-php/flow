@@ -9,20 +9,28 @@ use Brick\Math\Exception\MathException;
 use DivisionByZeroError;
 use Flow\ETL\Foundation\Calculator\Calculator;
 use Flow\ETL\Foundation\Calculator\Rounding;
+use Flow\ETL\Foundation\Exception\InvalidArgumentException;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
 final class CalculatorTest extends TestCase
 {
-    public function test_modulus_refuses_a_zero_or_negative_modulus_for_ints_as_for_strings(): void
+    /**
+     * @param int|numeric-string $a
+     * @param int|numeric-string $b
+     */
+    #[TestWith([7, -3])]
+    #[TestWith(['7', '-3'])]
+    public function test_modulus_refuses_a_negative_modulus_for_ints_as_for_strings(int|string $a, int|string $b): void
     {
         $calculator = new Calculator();
 
         static::assertSame(1, $calculator->modulus(7, 3));
 
-        $this->expectException(MathException::class);
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Modulus must not be negative, got "-3".');
 
-        $calculator->modulus(7, -3);
+        $calculator->modulus($a, $b);
     }
 
     public function test_modulus_by_zero_is_refused_for_ints(): void

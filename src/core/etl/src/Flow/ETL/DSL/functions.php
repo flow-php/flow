@@ -242,7 +242,6 @@ use function strtolower;
  * Alias for data_frame() : Flow.
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-#[DocumentationExample(topic: 'reading', example: 'data_frame')]
 #[DocumentationExample(topic: 'writing', example: 'overwrite')]
 function df(Config|ConfigBuilder|null $config = null): Flow
 {
@@ -250,7 +249,6 @@ function df(Config|ConfigBuilder|null $config = null): Flow
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-#[DocumentationExample(topic: 'reading', example: 'data_frame')]
 #[DocumentationExample(topic: 'writing', example: 'overwrite')]
 function data_frame(Config|ConfigBuilder|null $config = null): Flow
 {
@@ -268,7 +266,6 @@ function telemetry_options(
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-#[DocumentationExample(topic: 'reading', example: 'data_frame')]
 #[DocumentationExample(topic: 'writing', example: 'overwrite')]
 function from_rows(Rows ...$rows): RowsExtractor
 {
@@ -292,7 +289,6 @@ function from_path_partitions(
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
 #[DocumentationExample(topic: 'reading', example: 'array')]
-#[DocumentationExample(topic: 'reading', example: 'data_frame')]
 function from_array(
     iterable $array,
     ?Schema $schema = null,
